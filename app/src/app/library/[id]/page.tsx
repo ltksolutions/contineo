@@ -58,7 +58,7 @@ import { textDiff, type DiffKind } from "@/lib/textFix"
 import { listPeople } from "@/lib/people"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
 import LegalBasisForm from "@/components/LegalBasisForm"
-import { canSetLegalBasis } from "@/lib/versionResponsibility"
+import { canSetLegalBasis, legalBasisFields } from "@/lib/versionResponsibility"
 import { legalBasisOptions } from "@/lib/legalBases"
 
 export const dynamic = "force-dynamic"
@@ -343,6 +343,25 @@ export default async function DocumentDetailPage({
     responsibleActive: Boolean(v.responsiblePerson && activePersonIds.has(v.responsiblePerson.personId)),
   })
 
+  /*
+   * Právny základ pripravovaného znenia (ADR-023, D139). Správca obsahu ho
+   * v knižnici smie určiť len ako náhradník — keď príprava zodpovednú osobu
+   * nemá alebo odišla — alebo keď je sám tou osobou. To isté pravidlo stráži
+   * `setDraftLegalBasis()`; tu sa len neponúka formulár, ktorý by odmietol.
+   */
+  const draftResponsibleActive = Boolean(d.draftResponsible && activePersonIds.has(d.draftResponsible.personId))
+  const canSetDraftBasis = canSetLegalBasis({
+    actorPersonId: ctx.person.id,
+    isContentManager: true,
+    responsible: d.draftResponsible,
+    responsibleActive: draftResponsibleActive,
+  })
+  const draftBasisLabel = d.draftLegalBasis ? legalBasisFields(d.draftLegalBasis.entries).legalBasisLabel : null
+  const draftBasisNote = draftBasisLabel ? tflow.basisChosen(draftBasisLabel)
+    : !d.draftResponsible ? tflow.basisNoResponsible
+    : !draftResponsibleActive ? tflow.basisResponsibleGone
+    : tflow.basisWaiting(d.draftResponsible.fullName)
+
   const versionLinks = (v: V) => (
     <div className="cur-links">
       {v.pdf && <FileLink file={v.pdf} label="PDF" />}
@@ -476,6 +495,7 @@ export default async function DocumentDetailPage({
                         c.from ? tr.basisLabel[c.from] : tr.basisUnset,
                         `${c.toLabel ?? tr.basisLabel[c.to]}${c.toReference ? ` (${c.toReference})` : ""}`,
                       )}
+                      {c.inPreparation && ` · ${tr.basisInPreparation}`}
                     </div>
                   </li>
                 ))}
@@ -1077,6 +1097,34 @@ export default async function DocumentDetailPage({
               <Link href={assignHref([d.documentId])}>{tflow.assignElsewhere}</Link>
             </div>
           </form>
+        )}
+
+        {/*
+          Právny základ pripravovaného znenia (ADR-023, D139) — v každom kroku
+          pred zverejnením, **mimo formulára kroku** (formuláre sa nevnárajú).
+          Nezamyká sa počas kola: nie je súčasťou schválenia.
+        */}
+        {flow.step !== 4 && d.draftMarkdown && (
+          <div className="flow-foot" style={{ display: "grid", gap: 8 }}>
+            <p className="detail-block-note" style={{ margin: 0 }}>{draftBasisNote}</p>
+            {canSetDraftBasis && (
+              <details>
+                <summary className="quiet" style={{ cursor: "pointer", fontSize: "var(--fs-small)" }}>
+                  {d.draftLegalBasis ? tflow.basisChangeHere : tflow.basisSetHere}
+                </summary>
+                <div style={{ marginTop: 12 }}>
+                  <LegalBasisForm
+                    documentId={d.documentId}
+                    draft
+                    currentKeys={(d.draftLegalBasis?.entries ?? []).map(e => e.key ?? "").filter(Boolean)}
+                    options={basisOptions}
+                    language={language}
+                    back="library"
+                  />
+                </div>
+              </details>
+            )}
+          </div>
         )}
 
         {flow.step !== 4 && lastRound && (

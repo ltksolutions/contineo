@@ -44,6 +44,7 @@ function sentence(language: UiLanguage, kind: string, params: NotificationParams
     case "remindersSent": return t.remindersSent(params.count ?? 0)
     case "versionPublished": return t.versionPublished(title, params.versionLabel ?? "")
     case "responsibleAssigned": return t.responsibleAssigned(title, params.versionLabel ?? "")
+    case "draftResponsibleAssigned": return t.draftResponsibleAssigned(title)
     default: return title || kind
   }
 }

@@ -4,11 +4,13 @@
  *     node scripts/atlas_check.mjs
  *
  * Kontroluje pripojenie, kolekcie, oba indexy a ich stav. Index, ktorý sa
- * ešte buduje, vracia na dotazy PRÁZDNE VÝSLEDKY BEZ CHYBY — to je zradné,
- * preto sa stav kontroluje výslovne.
+ * buduje prvý raz, vracia na dotazy PRÁZDNE VÝSLEDKY BEZ CHYBY — to je zradné,
+ * preto sa stav kontroluje výslovne. Index upravovaný na mieste odpovedá
+ * počas stavby starou definíciou; to sa hlási osobitne.
  */
 
 import { MongoClient } from "mongodb"
+import { FILTER_PATHS } from "./lib/searchIndexes.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
@@ -72,8 +74,18 @@ try {
       continue
     }
     const state = idx.status ?? "?"
+    // Pri úprave na mieste (`atlas_init.mjs --upravit`) je `status` BUILDING,
+    // ale na každom uzle odpovedá stará definícia (`mainIndex`). Hľadanie
+    // funguje, len nové polia ešte nejdú filtrovať — to nie je výpadok.
+    const staging = state !== "READY" && idx.queryable === true &&
+      (idx.statusDetail ?? []).length > 0 &&
+      idx.statusDetail.every(d => d.queryable === true && d.mainIndex?.status === "READY")
     if (state === "READY") {
       console.log(`${OK} index ${name} · ${state}`)
+    } else if (staging) {
+      console.log(`${WARN} index ${name} · ${state} — stavia sa nová definícia, hľadanie zatiaľ odpovedá starou`)
+      console.log(`    filtre z novej definície ešte nejdú použiť; počkaj na READY`)
+      problems++
     } else {
       console.log(`${WARN} index ${name} · ${state} — ešte sa buduje, dotazy vrátia prázdno`)
       problems++
@@ -93,10 +105,11 @@ try {
         console.log(`    ${WARN} index nemá autoEmbed — vektory musí zapisovať aplikácia`)
       }
       const filters = fields.filter(f => f.type === "filter").map(f => f.path)
-      const needed = ["companyCode", "sectionKey", "accessLevel", "isActive"]
+      const needed = FILTER_PATHS
       const error = needed.filter(p => !filters.includes(p))
       if (error.length) {
-        console.log(`${FAIL} chýbajú filtre: ${error.join(", ")} — dotaz s nimi zlyhá`)
+        console.log(`${FAIL} chýbajú filtre: ${error.join(", ")} — dotaz s nimi vráti prázdno`)
+        console.log(`    uprav na mieste: node scripts/atlas_init.mjs --upravit --naozaj`)
         problems++
       } else {
         console.log(`    filtre: ${filters.join(", ")}`)

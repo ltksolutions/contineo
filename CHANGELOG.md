@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Právny základ už v príprave znenia (2026-09-28)
+
+Zodpovedná osoba nového znenia môže určiť **právny základ ešte pred
+zverejnením**. Upozornenie jej príde do zvončeka hneď, ako ju správca
+obsahu v príprave vyberie. Na stránke dokumentu uvidí pripravované znenie
+(PDF, text, účinnosť) a formulár — aj keď dokument inak nevidí. Pri
+zverejnení sa základ prenesie do znenia a v histórii je označený „určené
+v príprave". Karta postupu v knižnici ukazuje, či je základ určený.
+
+Znenie zverejnené s **budúcou účinnosťou** ponúkne zodpovednej osobe
+formulár na základ hneď, nie až v deň účinnosti (ADR-023).
+
+**Novela zverejnená vopred už neskryje platné znenie.** Do dňa účinnosti
+novely ľudia čítajú a potvrdzujú doterajšie znenie; dovtedy stránka
+dokumentu hlásila len „platnosť sa ešte nezačala".
+
 ### Pozvánky a ochrana osobných údajov podľa organizácie (2026-09-28)
 
 **Pozvánka** je univerzálna: „{Právny názov} vás pozýva do {Názov portálu}",

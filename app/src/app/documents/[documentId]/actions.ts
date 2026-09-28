@@ -30,7 +30,7 @@ import { dictionary, errorText } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { isContentManager } from "@/lib/library"
-import { setVersionLegalBasis } from "@/lib/versionResponsibilityDb"
+import { setVersionLegalBasis, setDraftLegalBasis } from "@/lib/versionResponsibilityDb"
 
 /**
  * Späť na dokument s hlásením. Chyba aj úspech idú tou istou cestou, takže
@@ -135,17 +135,35 @@ export async function setLegalBasisAction(fd: FormData) {
 
   let message = dictionary(language).responsibility.basisSaved
   let error = false
+  // Viac základov naraz (ADR-017, D115).
+  const legalBasisKeys = fd.getAll("legalBasisKey").filter((v): v is string => typeof v === "string")
+  // Náhradník len vo vlastnej organizácii — rovnako ako `libraryContext()`.
+  const contentManager = isContentManager(person) && person.companyCode === ctx.tenant.companyCode
   try {
-    await setVersionLegalBasis({
+    if (field("draft") === "1") {
+      /*
+       * Pripravované znenie (ADR-023, D139). Kto smie, overí
+       * `setDraftLegalBasis()` proti uloženému konceptu; rovnaký výber
+       * nič nezapíše a povie to — nie je to chyba.
+       */
+      const changed = await setDraftLegalBasis({
+        companyCode: person.companyCode,
+        documentId,
+        legalBasisKeys,
+        actor: { personId: person.id, email: person.email },
+        isContentManager: contentManager,
+      })
+      message = changed
+        ? dictionary(language).responsibility.draftBasisSaved
+        : dictionary(language).errors["legalBasis.noChange"]
+    } else await setVersionLegalBasis({
       companyCode: person.companyCode,
       documentId,
       versionId: field("versionId"),
-      // Viac základov naraz (ADR-017, D115).
-      legalBasisKeys: fd.getAll("legalBasisKey").filter((v): v is string => typeof v === "string"),
+      legalBasisKeys,
       reason: field("reason"),
       actor: { personId: person.id, email: person.email },
-      // Náhradník len vo vlastnej organizácii — rovnako ako `libraryContext()`.
-      isContentManager: isContentManager(person) && person.companyCode === ctx.tenant.companyCode,
+      isContentManager: contentManager,
     })
   } catch (e) {
     if (!(e instanceof AppError)) console.error("[pravny-zaklad] zápis zlyhal:", e)

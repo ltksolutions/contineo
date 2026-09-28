@@ -77,6 +77,21 @@ t("historický dotaz vráti vtedy platné znenie", (() => {
   return r.ok && r.version.versionId === "stara"
 })())
 
+// Znenie zverejnené vopred (ADR-023, D143): `publish()` starému dá
+// `isActive: false` a koniec = začiatok nového. Staré platí do toho dňa.
+t("nahradené znenie platí do účinnosti nového, zverejneného vopred", (() => {
+  const d = doc([
+    v({ versionId: "stara", isActive: false, effectiveFrom: day(2026, 1, 1), effectiveTo: day(2026, 9, 1) }),
+    v({ versionId: "nova", effectiveFrom: day(2026, 9, 1) }),
+  ])
+  const dnes = effectiveVersion(d, TODAY)
+  const potom = effectiveVersion(d, day(2026, 9, 1))
+  return dnes.ok && dnes.version.versionId === "stara" && potom.ok && potom.version.versionId === "nova"
+})())
+
+t("neaktívne znenie bez konca platnosti (z kanála, D25) sa ani tak nevyberie",
+  reason(doc([v({ isActive: false, effectiveTo: null })])) === "all-archived")
+
 // Hranica: effectiveTo je vylučujúce, effectiveFrom zahŕňajúce.
 t("v deň začiatku platnosti už verzia platí",
   effectiveVersion(doc([v({ effectiveFrom: TODAY })]), TODAY).ok)

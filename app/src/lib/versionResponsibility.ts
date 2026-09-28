@@ -81,6 +81,12 @@ export interface LegalBasisChange {
   toKey?: string
   /** Kópia názvu položky v čase výberu. */
   toLabel?: string
+  /**
+   * Základ určila zodpovedná osoba **ešte v príprave** (ADR-023, D139) a do
+   * znenia ho preniesol až `publish()`. `at` a `by` sú z okamihu určenia,
+   * nie zo zverejnenia — o rok má byť vidieť, kto a kedy rozhodol.
+   */
+  inPreparation?: true
 }
 
 export type ResponsibilityProblem =
@@ -207,6 +213,93 @@ export function legalBasesChoiceProblem(input: {
     if (!input.reason?.trim()) return "legalBasis.reasonRequired"
   }
   return null
+}
+
+/**
+ * Polia znenia zložené z vybraných základov (ADR-017, D115, D116).
+ *
+ * Zoznam je presný údaj. Staré polia nesú **rozhodujúci druh** (zákonná
+ * povinnosť má prednosť) a spojené názvy a odkazy — tak ich námietky,
+ * retencia, výkazy aj kópie v potvrdeniach čítajú ďalej správne. Na jednom
+ * mieste, lebo ich skladá určenie pri znení aj prenos z prípravy
+ * (`publish()`), a dve kópie toho istého pravidla sa raz rozídu.
+ */
+export function legalBasisFields(entries: LegalBasisEntry[]): {
+  legalBases: LegalBasisEntry[]
+  legalBasis: LegalBasis
+  legalBasisKey: string
+  legalBasisLabel: string
+  /** `null` = žiadny zo základov odkaz nemá. */
+  legalBasisReference: string | null
+} {
+  const list = entries.map(e => ({ basis: e.basis, key: e.key ?? null, label: e.label ?? null, reference: e.reference ?? null }))
+  const references = list.map(e => e.reference).filter((r): r is string => Boolean(r))
+  return {
+    legalBases: list,
+    legalBasis: dominantBasis(list) as LegalBasis,
+    legalBasisKey: list.map(e => e.key ?? "").join(","),
+    legalBasisLabel: list.map(e => e.label ?? "").join(" + "),
+    legalBasisReference: references.length ? references.join("; ") : null,
+  }
+}
+
+/** Je to ten istý výber? Poradie nerozhoduje (D115). */
+export function sameBasisKeys(a: string[], b: string[]): boolean {
+  const norm = (xs: string[]) => [...new Set(xs.map(x => x.trim()).filter(Boolean))].sort().join(",")
+  return norm(a) === norm(b)
+}
+
+/**
+ * Právny základ pripravovaného znenia (ADR-023, D139) — uložený na koncepte
+ * ako `draftLegalBasis`, pri zverejnení sa prenesie do znenia a z konceptu
+ * zmizne. Rovnako ako zodpovedná osoba v príprave (D109) **nie je súčasťou
+ * schválenia**: neschvaľuje sa, na akom základe sa budú spracúvať záznamy
+ * o oboznámení.
+ */
+export interface DraftLegalBasis {
+  entries: LegalBasisEntry[]
+  /** Kedy a kto výber naposledy určil — prenesie sa do histórie znenia. */
+  at: Date
+  by: string
+}
+
+/**
+ * Čo `publish()` zapíše do nového znenia z prípravy. `null`, keď v príprave
+ * nikto základ neurčil — vtedy ho zodpovedná osoba určí po zverejnení ako
+ * doteraz (D91).
+ *
+ * Prenáša sa **kópia** z okamihu výberu, bez nového overenia proti
+ * číselníku: položka mohla byť medzitým vyradená, no zodpovedná osoba ju
+ * vybrala, keď v ponuke bola — a to je to, čo má znenie niesť.
+ */
+export function legalBasisFromDraft(draft: DraftLegalBasis | null | undefined): {
+  legalBases: LegalBasisEntry[]
+  legalBasis: LegalBasis
+  legalBasisKey: string
+  legalBasisLabel: string
+  /** Chýba, keď žiadny zo základov odkaz nemá — nie `null` (typ `Version`). */
+  legalBasisReference?: string
+  legalBasisChanges: LegalBasisChange[]
+} | null {
+  const entries = (draft?.entries ?? []).filter(e => isLegalBasis(e?.basis))
+  if (!draft || entries.length === 0) return null
+  const { legalBasisReference, ...fields } = legalBasisFields(entries)
+  return {
+    ...fields,
+    ...(legalBasisReference ? { legalBasisReference } : {}),
+    legalBasisChanges: [{
+      at: draft.at,
+      by: draft.by,
+      from: null,
+      fromReference: null,
+      fromKey: null,
+      to: fields.legalBasis,
+      toReference: legalBasisReference,
+      toKey: fields.legalBasisKey,
+      toLabel: fields.legalBasisLabel,
+      inPreparation: true,
+    }],
+  }
 }
 
 /**

@@ -59,47 +59,13 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 > Kolekcia: `document_chunks` (Model B). Polia v camelCase.
 
-### Vector Search index (rag_vector_index)
-```json
-{
-  "fields": [
-    { "type": "text",   "path": "text", "model": "voyage-4" },
-    { "type": "filter", "path": "accessLevel" },
-    { "type": "filter", "path": "companyCode" },
-    { "type": "filter", "path": "scope" },
-    { "type": "filter", "path": "sectionKey" },
-    { "type": "filter", "path": "isActive" },
-    { "type": "filter", "path": "language" }
-  ]
-}
-```
-
-### Atlas Search index pre fulltext (rag_text_index)
-```json
-{
-  "mappings": {
-    "dynamic": false,
-    "fields": {
-      "text":            { "type": "string", "analyzer": "lucene.standard" },
-      "accessLevel":     { "type": "token" },
-      "companyCode": { "type": "token" },
-      "scope":           { "type": "token" },
-      "sectionKey":      { "type": "token" },
-      "isActive":        { "type": "boolean" },
-      "tags":            { "type": "string" }
-    }
-  }
-}
-```
-
-### Rerank index (rag_rerank_index)
-```json
-{
-  "fields": [
-    { "type": "rerank", "path": "text", "model": "rerank-2" }
-  ]
-}
-```
+Definície oboch indexov (`rag_vector_index` s automatickým embeddingom
+a `rag_text_index`) sú **len na jednom mieste**:
+`app/scripts/lib/searchIndexes.mjs`. Postup zakladania a úpravy na mieste
+je v `docs/ATLAS_SETUP.md`. Dovtedy tu bola kópia, ktorá zastarala
+(krok 0 plánu „znenia v indexe", 2026-09-28): uvádzala `tags`, `type: "text"`
+namiesto `autoEmbed` a index `rag_rerank_index`, ktorý neexistuje —
+`$rerank` stage index nepotrebuje (`docs/ATLAS_SETUP.md`, kap. 4).
 
 ## Príklad volania z frontendu
 

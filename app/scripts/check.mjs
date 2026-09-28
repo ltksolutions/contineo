@@ -150,7 +150,10 @@ for (const d of documents) {
  * neuznáva, takže keby sa znova objavilo — napríklad zo zálohy — človek
  * o prístup ticho príde. Preto sa naň pýtame aj po migrácii.
  */
-const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "platform-admin"])
+// Kópia `ASSIGNABLE_ROLES` (`people.ts`) + `PLATFORM_ROLE` — skript beží bez
+// TypeScript háčika. Nová rola sa dopisuje na obe miesta, inak ju tu nahlási
+// ako neznámu (stalo sa pri `dpo` a `learning-admin`).
+const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "dpo", "learning-admin", "platform-admin"])
 const STARE_ROLE = new Set(["spravca-obsahu"])
 for (const o of persons) {
   for (const r of o.roles ?? []) {
@@ -165,6 +168,36 @@ for (const o of persons) {
       "rola je obyčajný reťazec — preklep nikde nevyhodí chybu, len ticho neplatí",
     )
   }
+}
+
+/*
+ * N. Úsek normy nesie príznak `superseded` a každé znenie má najviac jedno
+ * platné členenie (plán „znenia v indexe", krok 2; `chunkSuperseded.ts`).
+ *
+ * Príznak čítajú filtre hľadania „k dátumu". Úsek bez neho by z takého
+ * hľadania ticho vypadol, dve platné členenia by vrátili ten istý text
+ * dvakrát. Oprava: `npm run chunks:superseded -- --company …`.
+ */
+const normChunks = chunks.filter(c => c.sourceType !== "qa" && c.versionId)
+const withoutFlag = normChunks.filter(c => typeof c.superseded !== "boolean")
+check(
+  withoutFlag.length > 0,
+  `${withoutFlag.length} úsekov normy nemá príznak superseded`,
+  "hľadanie podľa znenia by ich nevidelo — spusti npm run chunks:superseded",
+)
+const liveChunkings = new Map()
+for (const ch of normChunks.filter(c => c.superseded === false)) {
+  const key = `${ch.companyCode}|${ch.versionId}`
+  const z = liveChunkings.get(key) ?? new Set()
+  z.add(ch.chunkingId ?? "(bez chunkingId)")
+  liveChunkings.set(key, z)
+}
+for (const [key, ids] of liveChunkings) {
+  check(
+    ids.size > 1,
+    `znenie ${key.split("|")[1]} má ${ids.size} platné členenia (superseded: false)`,
+    "hľadanie podľa znenia by vrátilo ten istý text dvakrát, zakaždým inak narezaný",
+  )
 }
 
 /*
