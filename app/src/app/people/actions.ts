@@ -14,7 +14,7 @@
 import { redirect } from "next/navigation"
 import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
-import { peopleContext, savePerson, invitePerson, setPersonStatus, setPersonEndedAt, neverSignedIn, loadPersonById } from "@/lib/people"
+import { peopleContext, savePerson, invitePerson, setPersonStatus, setPersonEndedAt, neverSignedIn, loadPersonById, markInvitationSent } from "@/lib/people"
 import { needsInvitation } from "@/lib/personFields"
 import { send, inviteEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
@@ -43,11 +43,14 @@ export async function resendInviteAction(fd: FormData) {
   const person = await loadPersonById(ctx.person.companyCode, id)
   if (!person) redirect("/people")
 
-  const back = `/people/${encodeURIComponent(id)}`
+  // Zo zoznamu sa vracia do zoznamu (aj s hľadaním); inak na kartu osoby.
+  // Len vlastné cesty `/people…` — adresa z formulára nesmie viesť von.
+  const from = fieldText(fd, "back")
+  const back = /^\/people(\?|$)/.test(from) ? from : `/people/${encodeURIComponent(id)}`
   // Prihlásená ani vyradená osoba pozvánku nedostane ani cez priamo odoslaný
   // formulár: tlačidlo sa jej nekreslí, ale kontrola patrí na server.
   if (!needsInvitation(person)) {
-    redirect(`${back}?error=1&msg=${encodeURIComponent(say(language).inviteNotNeeded)}`)
+    redirect(`${back}${back.includes("?") ? "&" : "?"}error=1&msg=${encodeURIComponent(say(language).inviteNotNeeded)}`)
   }
 
   const ok = await sendInviteTo(person, ctx.tenant)
@@ -58,8 +61,8 @@ export async function resendInviteAction(fd: FormData) {
     changes: diff({ invitation: "" }, { invitation: ok ? "sent" : "failed" }),
   })
 
-  revalidatePath(back)
-  redirect(`${back}?msg=${encodeURIComponent(
+  revalidatePath("/people", "layout")
+  redirect(`${back}${back.includes("?") ? "&" : "?"}msg=${encodeURIComponent(
     ok ? say(language).inviteResent(person.email) : say(language).inviteFailed,
   )}${ok ? "" : "&error=1"}`)
 }
@@ -164,7 +167,7 @@ export async function savePersonAction(fd: FormData) {
  */
 async function sendInviteTo(
   person: { email: string; language: string },
-  tenant: Parameters<typeof brandingView>[0],
+  tenant: Parameters<typeof brandingView>[0] & { companyCode: string },
 ): Promise<boolean> {
   try {
     const host = await requestHostname()
@@ -172,6 +175,8 @@ async function sendInviteTo(
       to: person.email,
       ...inviteEmail(`https://${host}/sign-in`, host, normalizeLanguage(person.language), brandingView(tenant)),
     })
+    // Až po odoslaní: z „Nová" sa stane „Pozvaná" (Ján 28. 9. 2026).
+    await markInvitationSent(tenant.companyCode, person.email).catch(e => console.error(`[osoby] zápis odoslania pozvánky ${person.email}:`, e))
     return true
   } catch (e) {
     // Menovite do logu — inak sa nedá zistiť, komu správa nedošla.

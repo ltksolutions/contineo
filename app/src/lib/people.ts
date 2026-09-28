@@ -116,6 +116,8 @@ export interface PersonRow {
   firstLoginAt?: Date
   /** Kedy ju niekto zapísal ako pozvanú. Chýba u osôb z importu (D47). */
   invitedAt?: Date
+  /** Kedy jej naposledy odišla pozvánka. Chýba = „Nová" (`personDisplayStatus`). */
+  invitationSentAt?: Date
   /** Akými kontami sa prihlasuje. Neudeľujú prístup, len ho uľahčujú (D45). */
   accounts: ("microsoft" | "google")[]
   /** Predchádzajúce adresy — aby sa staré potvrdenie dalo spojiť s človekom. */
@@ -153,6 +155,7 @@ function toRow(p: Person): PersonRow {
     lastLoginAt: p.lastLoginAt,
     firstLoginAt: p.firstLoginAt,
     invitedAt: p.invitedAt,
+    invitationSentAt: p.invitationSentAt,
     emailHistory: (p.emailHistory ?? []).map(h => ({ email: h.email, until: h.until })),
     createdBy: p.createdBy,
     deactivatedAt: p.deactivatedAt ?? null,
@@ -680,4 +683,13 @@ export async function neverSignedIn(companyCode: string): Promise<PersonRow[]> {
     .sort({ fullName: 1 })
     .toArray()
   return people.map(toRow)
+}
+
+/**
+ * Zapíše, že osobe odišla pozvánka — až **po** úspešnom odoslaní, inak by
+ * „Pozvaná" tvrdila niečo, čo sa nestalo.
+ */
+export async function markInvitationSent(companyCode: string, email: string, at: Date = new Date()): Promise<void> {
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  await col.updateOne({ companyCode, email: email.trim().toLowerCase() }, { $set: { invitationSentAt: at } })
 }
