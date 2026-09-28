@@ -283,7 +283,7 @@
   - [ ] **Zmazať pôvodné normy a testovacie dokumenty pred ostrou prevádzkou** (Ján, 25. 9.) — celé, vrátane potvrdení, pridelení, kôl a súborov. Samostatný krok: najprv výpis, čo sa na ne odkazuje, potom súhlas a zápis do auditu.
   - [ ] **Zapnúť `RETENTION_MODE=delete`** na Verceli (Production) — až po kontrole výkazu `retention` v odpovedi denného cronu `/api/cron/overdue` (log Vercelu). **Jedna premenná zapína naraz** výmaz dokladov k predpisom (ADR-012) **aj** výmaz a orezanie záznamov Vzdelávania (ADR-021: `persons[].counts` a `learningDetails` vo výkaze). Dnes by nezmazal nič: projekt je mladší ako 3 roky a prvé orezanie podrobností vzdelávania príde najskôr v septembri 2027 (rok po dokončení prvého kurzu).
   - [x] **Rola `dpo`** ✅ 2026-09-24 — DPO je **Ján Letko** (pridelené na jeho pokyn, audit).
-  - [ ] **DPO (Ján) schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`; na vyplnenie ako `C1_C3_ochrana_udajov.docx`, 24. 9.).
+  - [ ] **DPO (Ján) schváli text C1** ✅ C1 schválené 28. 9. 2026 (verzia s Vzdelávaním a pohlavím) — zostáva zodpovedať C2, C3 (`docs/C1_…`–`C3_…`; na vyplnenie ako `C1_C3_ochrana_udajov.docx`, 24. 9.).
   - [x] **Prevádzkovateľ v nastavení organizácie** ✅ 2026-09-24 — právny názov, sídlo, IČO (Nastavenie organizácie → Značka); ukazujú sa na `/privacy`. Vyplniť pre SFZ.
   - [x] **Odkaz na `/privacy` do pozvánky** ✅ 2026-09-28 — veta a odkaz pod poznámkou `inviteEmail`, v HTML aj v texte, sk/cs/en.
   - [ ] **Opraviť `codelists/legalBasis.json` podľa DPO** — skôr, než sa podľa neho začnú vyberať základy.

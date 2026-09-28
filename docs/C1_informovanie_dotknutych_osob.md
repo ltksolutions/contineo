@@ -37,6 +37,12 @@ vyplnia v Nastavení organizácie → Značka → Prevádzkovateľ osobných úd
 **Podmienka pred pilotom (C1):** text schváli DPO a zverejní sa **skôr**, než
 prvý človek v pilote dostane predpis na potvrdenie.
 
+**Schválené:** verziu textu z **28. 9. 2026** (doplnené Vzdelávanie — len pri
+zapnutom module — a pohlavie osoby, ADR-021) **schválil DPO Ján Letko
+28. 9. 2026** a v ten deň bola nasadená. Platné znenie v troch jazykoch je
+v `dictionary().privacy` (`i18n.ts`); text v kap. 2 nižšie je pôvodná verzia
+z 24. 9. a slúži ako história, nie ako zdroj.
+
 ---
 
 ## 2. Text
