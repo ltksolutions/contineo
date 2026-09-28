@@ -45,6 +45,10 @@ zmizne. Pri zverejnení sa už len potvrdí, dá sa ešte zmeniť.
   schvaľovania by potrebovalo miesto, kde koncept vidí aj osoba bez prístupu
   do knižnice — to je samostatná úloha (`docs/TODO.md`).
 
+> **Doplnené ADR-023 (2026-09-28):** právny základ sa dá určiť už v príprave
+> (D139). Zodpovedná osoba z prípravy vidí koncept na stránke dokumentu
+> (D140) a zverejnenie základ prenesie do znenia.
+
 ### D110 — Schvaľovatelia predvyplnení z posledného kola (Q2)
 
 Formulár prípravy predvyplní schvaľovateľov z **posledného kola dokumentu**

@@ -1716,6 +1716,8 @@ interface Dictionary {
     basisWho: string
     basisHistory: (n: number) => string
     basisChangeLine: (by: string, date: string, from: string, to: string) => string
+    /** Základ určený ešte v príprave (ADR-023) — dopĺňa riadok histórie. */
+    basisInPreparation: string
     basisSaved: string
     contactHeading: string
     contactProfile: string
@@ -1805,6 +1807,13 @@ interface Dictionary {
       responsible: string
       responsibleNote: string
       responsibleChosen: (name: string) => string
+      /** Právny základ v príprave (ADR-023, D139). */
+      basisChosen: (label: string) => string
+      basisWaiting: (name: string) => string
+      basisNoResponsible: string
+      basisResponsibleGone: string
+      basisSetHere: string
+      basisChangeHere: string
       responsibleChange: string
       note: string
       submitAndSave: string
@@ -5066,6 +5075,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     basisWho: "Právny základ určuje zodpovedná osoba znenia. Keď ju znenie nemá alebo už nie je aktívna, určí ho správca obsahu.",
     basisHistory: n => (n === 1 ? "1 zmena právneho základu" : n >= 2 && n <= 4 ? `${n} zmeny právneho základu` : `${n} zmien právneho základu`),
     basisChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    basisInPreparation: "určené v príprave",
     basisSaved: "Právny základ bol uložený.",
     contactHeading: "S otázkami k predpisu sa obráťte na",
     contactProfile: "profil v adresári",
@@ -5148,6 +5158,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsible: "Zodpovedná osoba nového znenia",
       responsibleNote: "Ak ju určíš už teraz, pri zverejnení sa len potvrdí a hneď po zverejnení jej príde upozornenie, aby určila právny základ.",
       responsibleChosen: name => `Zodpovedná osoba: ${name}. Určená v príprave.`,
+      basisChosen: label => `Právny základ: ${label}. Určený v príprave, pri zverejnení sa prenesie do znenia.`,
+      basisWaiting: name => `Právny základ zatiaľ nie je určený. ${name} ho môže určiť ešte pred zverejnením na stránke dokumentu — upozornenie má vo zvončeku.`,
+      basisNoResponsible: "Právny základ zatiaľ nie je určený. Kým príprava nemá zodpovednú osobu, môže ho určiť správca obsahu.",
+      basisResponsibleGone: "Právny základ zatiaľ nie je určený a zodpovedná osoba z prípravy už nie je aktívna — môže ho určiť správca obsahu.",
+      basisSetHere: "Určiť právny základ",
+      basisChangeHere: "Zmeniť právny základ",
       responsibleChange: "Zmeniť zodpovednú osobu",
       note: "Poznámka pre schvaľovateľov",
       submitAndSave: "Uložiť a predložiť na schválenie",
@@ -8308,6 +8324,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     basisWho: "Právní základ určuje odpovědná osoba znění. Když ji znění nemá nebo už není aktivní, určí jej správce obsahu.",
     basisHistory: n => (n === 1 ? "1 změna právního základu" : n >= 2 && n <= 4 ? `${n} změny právního základu` : `${n} změn právního základu`),
     basisChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    basisInPreparation: "určeno v přípravě",
     basisSaved: "Právní základ byl uložen.",
     contactHeading: "S dotazy k předpisu se obraťte na",
     contactProfile: "profil v adresáři",
@@ -8390,6 +8407,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsible: "Odpovědná osoba nového znění",
       responsibleNote: "Když ji určíš už teď, při zveřejnění se jen potvrdí a hned po zveřejnění jí přijde upozornění, aby určila právní základ.",
       responsibleChosen: name => `Odpovědná osoba: ${name}. Určena v přípravě.`,
+      basisChosen: label => `Právní základ: ${label}. Určen v přípravě, při zveřejnění se přenese do znění.`,
+      basisWaiting: name => `Právní základ zatím není určen. ${name} jej může určit ještě před zveřejněním na stránce dokumentu — upozornění má ve zvonečku.`,
+      basisNoResponsible: "Právní základ zatím není určen. Dokud příprava nemá odpovědnou osobu, může jej určit správce obsahu.",
+      basisResponsibleGone: "Právní základ zatím není určen a odpovědná osoba z přípravy už není aktivní — může jej určit správce obsahu.",
+      basisSetHere: "Určit právní základ",
+      basisChangeHere: "Změnit právní základ",
       responsibleChange: "Změnit odpovědnou osobu",
       note: "Poznámka pro schvalovatele",
       submitAndSave: "Uložit a předložit ke schválení",
@@ -11542,6 +11565,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     basisWho: "The legal basis is set by the version's responsible person. If there is none or they are no longer active, the content manager sets it.",
     basisHistory: n => (n === 1 ? "1 change of legal basis" : `${n} changes of legal basis`),
     basisChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    basisInPreparation: "set in preparation",
     basisSaved: "The legal basis has been saved.",
     contactHeading: "For questions about this regulation, contact",
     contactProfile: "directory profile",
@@ -11624,6 +11648,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsible: "Responsible person for the new version",
       responsibleNote: "If you choose them now, publication only confirms it, and right after publication they are asked to set the legal basis.",
       responsibleChosen: name => `Responsible person: ${name}. Chosen in preparation.`,
+      basisChosen: label => `Legal basis: ${label}. Set in preparation; it will carry over when the version is published.`,
+      basisWaiting: name => `The legal basis is not set yet. ${name} can set it before publication on the document page — there is a notification waiting.`,
+      basisNoResponsible: "The legal basis is not set yet. While the preparation has no responsible person, the content manager can set it.",
+      basisResponsibleGone: "The legal basis is not set yet and the responsible person from the preparation is no longer active — the content manager can set it.",
+      basisSetHere: "Set the legal basis",
+      basisChangeHere: "Change the legal basis",
       responsibleChange: "Change responsible person",
       note: "Note for approvers",
       submitAndSave: "Save and submit for approval",

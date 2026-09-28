@@ -196,3 +196,49 @@ describe("detail — postup znenia", () => {
     expect(html).toMatch(/name="title"[^>]*value="Pracovný poriadok SFZ"|value="Pracovný poriadok SFZ"[^>]*name="title"/)
   })
 })
+
+describe("detail — právny základ v príprave (ADR-023, D139)", () => {
+  const MAREK = { personId: "p-marek", fullName: "Marek Horák", email: "marek@sfz.sk" }
+
+  it("s aktívnou zodpovednou osobou povie, kto ho určí — a správcovi formulár neponúkne", async () => {
+    state.detail = detail({ draftResponsible: MAREK })
+    const html = await render()
+    expect(html).toContain("Marek Horák ho môže určiť ešte pred zverejnením")
+    expect(html).not.toContain('name="draft" value="1"')
+  })
+
+  it("bez zodpovednej osoby ho smie určiť správca obsahu — mimo formulára kroku", async () => {
+    const html = await render()
+    expect(html).toContain("Kým príprava nemá zodpovednú osobu, môže ho určiť správca obsahu.")
+    expect(html).toContain('name="draft" value="1"')
+    expect(html).toContain('name="back" value="library"')
+    // Formuláre sa nevnárajú: v mieste poľa je otvorený práve jeden — vlastný.
+    const before = html.slice(0, html.indexOf('name="draft" value="1"'))
+    const open = (before.match(/<form[\s>]/g) ?? []).length - (before.match(/<\/form>/g) ?? []).length
+    expect(open).toBe(1)
+  })
+
+  it("určený základ je vidieť v každom kroku pred zverejnením", async () => {
+    state.detail = detail({
+      draftResponsible: MAREK,
+      draftLegalBasis: { entries: [{ basis: "legal_obligation", key: "bozp", label: "BOZP", reference: "§ 7" }], at: new Date(), by: "marek@sfz.sk" },
+    })
+    const html = await render()
+    expect(html).toContain("Právny základ: BOZP. Určený v príprave")
+  })
+
+  it("história znenia povie, že základ bol určený v príprave", async () => {
+    state.detail = detail({
+      draftMarkdown: effective.markdown, draftPdf: effective.pdf,
+      versions: [{
+        ...effective, legalBasis: "legal_obligation", legalBasisLabel: "BOZP",
+        legalBasisChanges: [{
+          at: new Date("2026-09-20T00:00:00Z"), by: "marek@sfz.sk", from: null, fromReference: null, fromKey: null,
+          to: "legal_obligation", toReference: "§ 7", toKey: "bozp", toLabel: "BOZP", inPreparation: true,
+        }],
+      }],
+    })
+    const html = await render({ open: "history" })
+    expect(html).toContain("určené v príprave")
+  })
+})

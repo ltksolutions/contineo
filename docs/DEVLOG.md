@@ -10,6 +10,34 @@
 
 ---
 
+## 2026-09-28 (večer) — právny základ už v príprave (ADR-023)
+
+**Čo sa spravilo.**
+
+- Krok 3 z `NEXT.md`: návrh s piatimi otázkami, Ján odpovedal áno / áno /
+  zostane / áno / áno. **ADR-023** (D139–D142), tri commity na vetve
+  `claude/lucid-curie-9giv6d`.
+- Pole `draftLegalBasis` na koncepte; `publish()` ho prenesie do znenia
+  (`legalBasisFromDraft()`), história nesie `inPreparation`.
+- `/documents/[id]`: karta pripravovaného znenia pre zodpovednú osobu aj pri
+  dokumente, ktorý by inak nevidela; karta pre zverejnené, ešte neúčinné
+  znenie. Knižnica: stav základu v krokoch 1–3, formulár pre náhradníka.
+
+**Nefungovalo / poučenie.**
+
+- **Medzera, ktorú nikto nehlásil:** upozornenie zo zverejnenia posielalo
+  zodpovednú osobu na stránku, ktorá formulár na základ pri znení s budúcou
+  účinnosťou neukázala (`effectiveVersion()`). Opravené v tom istom kroku.
+- Vedľajšie zistenie, **neopravené**: `publish()` vyradí staré znenie hneď,
+  čitateľ tak do účinnosti nového pravdepodobne nevidí žiadne. Zapísané
+  v `docs/TODO.md` na preverenie.
+- `npm ci` v cloudovej session padol na 403 pre `cdn.sheetjs.com` (balík
+  `xlsx`); závislosti sa nainštalovali v kópii mimo repa s `xlsx` z registra.
+- `publish()` nemá test úspešného zverejnenia (chunker, kolá) — prenos
+  základu je preto čistá funkcia testovaná samostatne.
+
+---
+
 ## 2026-09-28 — ochrana údajov podľa organizácie, pozvánky odoslané
 
 **Čo sa spravilo.**
