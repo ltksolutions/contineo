@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-28 v noci** (Vzdelávanie L0–L3 v produkcii, PDF certifikátu, pohlavie osoby; import osôb SFZ)
+Posledná aktualizácia: **2026-09-28 večer** (pozvánky odoslané; ochrana údajov podľa organizácie ADR-022; retencia vzdelávania ADR-021)
 
 ---
 
@@ -23,6 +23,8 @@ vidno v `git branch -a`, nie v tomto súbore.
 ručné a čaká (`docs/TODO.md`, I4). **ADR-019:** import existujúcim dopĺňa
 len prázdne polia; prepis je prepínač „Aktualizovať existujúcich".
 Náhľad importu je tabuľka s rozdielom „dnes → po" a hľadaním.
+**Pozvánky odišli 28. 9.** (146 hromadne + 1); stav osoby je „Nová", kým
+pozvánka neodíde, potom „Pozvaná". Portál sa volá **Intranet SFZ**.
 
 **Rámy z Claude Design sú zapracované všetky** (`docs/design/`, PR #113–#123).
 Postup: Ján navrhne rám, napíše **„stiahni design"**, archív sa stiahne cez
@@ -60,26 +62,32 @@ skúšané na živých dátach. Rozpis zvyšku je v `docs/TODO.md`, sekcia P.
 import CSV (stĺpec `pohlavie`). Na certifikáte „absolvoval / absolvovala",
 nevyplnené = „absolvoval(a)". Zatiaľ ho nemá nikto.
 
+**Ochrana osobných údajov** — text `/privacy` schválil DPO 28. 9. (C1).
+**ADR-021:** vzdelávanie má lehotu dokladov, podrobnosti sa orežú rok po
+dokončení, **vydaný certifikát sa nemaže**. **ADR-022:** krajina sídla,
+sprostredkovatelia z profilu, lehoty a doplnkový text si organizácia
+nastaví na `/dpo` a v Nastaveniach. Otvorená karta po nasadení ponúkne
+„Obnoviť" (inak posiela akcie starej verzii).
+
 ## Čo čaká na rozhodnutie Jána
 
-**Dodatok k ADR-012 pre Vzdelávanie (O24):** ako dlho držať pokusy,
-dokončenia, sledovanie videa a certifikáty a kedy z certifikátu odstrániť
-meno. **Pohlavie** treba ako DPO doplniť do záznamu o spracúvaní (účel:
-štatistiky zloženia a gramatika textov).
+**Lehota uloženia certifikátov** podľa registratúrneho plánu zväzu — DPO
+doplní do záznamu o spracúvaní (C2, D132).
 
 **22 osôb z `@sfzmarketing.sk`** sú v tenante SFZ ako `employee` — nechať,
 alebo typ `external` / vlastný tenant? A či doplniť ľudí mimo Basic/Standard
 licencií (Ján v exporte nebol).
 
-**Ako DPO — `C1_C3_ochrana_udajov.docx`:** text informovania (C1), záznam
-o spracovateľských činnostiach (C2), DPIA pred pilotom (C3), termín
-balančného testu (A3, A11). C1 a A3 sú brány pred pilotom.
+**Ako DPO:** C1 schválené 28. 9.; zostáva záznam o spracovateľských
+činnostiach prepísať do záznamu zväzu (C2, doplnené o Vzdelávanie
+a pohlavie), DPIA pred pilotom (C3), termín balančného testu (A3, A11).
 
 **Mazanie pôvodných noriem a testovacích dokumentov** pred ostrou prevádzkou
 — Ján povie kedy a ktoré; predtým výpis toho, čo sa na ne odkazuje.
 
 **Zapnúť ostré mazanie** — `RETENTION_MODE=delete` po kontrole výkazu
-`retention` v odpovedi cronu.
+`retention` v odpovedi cronu; tá istá premenná zapína aj retenciu
+Vzdelávania (ADR-021).
 
 **Automatický prevod `.docx` → PDF** (Graph, povolenia v Entra ID) a **D93**
 (`docs/D93_plan_vyber_podla_filtra.md`) čakajú ako doteraz.
@@ -95,9 +103,7 @@ balančného testu (A3, A11). C1 a A3 sú brány pred pilotom.
    formulku „v znení účinnom od", kombináciu právnych základov a prenos
    pridelení (`docs/TODO.md`, O15/O16).
 2. **Prejsť `/dpo` naostro:** výkaz, CSV; námietku len na testovacej osobe.
-3. **Odkaz na `/privacy` do pozvánky** (päta `inviteEmail`) — posledná
-   chýbajúca časť C1.
-4. **Právny základ už počas schvaľovania** (ADR-014, D109) — návrh miesta,
+3. **Právny základ už počas schvaľovania** (ADR-014, D109) — návrh miesta,
    kde koncept uvidí zodpovedná osoba bez prístupu do knižnice.
 
 ## Ako sa projekt overuje
@@ -108,8 +114,9 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (28. 9.): **0 errors, 41 warnings,
-1864 testov v 133 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
+Baseline, proti ktorej sa porovnáva (28. 9. večer): **0 errors, 41 warnings,
+1893 testov v 137 súboroch.** Pri veľkej záťaži stroja pomôže
+`npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
 a produkcia aj tak spadla (dočasná mŕtva zóna v `library/page.tsx`). Preto

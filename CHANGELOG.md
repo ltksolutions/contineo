@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Pozvánky a ochrana osobných údajov podľa organizácie (2026-09-28)
+
+**Pozvánka** je univerzálna: „{Právny názov} vás pozýva do {Názov portálu}",
+s logom organizácie a odkazom na Ochranu osobných údajov. Dá sa poslať aj
+priamo zo zoznamu osôb. Osoba po importe má stav **Nová**, **Pozvaná** až
+keď jej pozvánka naozaj odíde. V Nastaveniach je blok **Názov portálu**
+spolu s prevádzkovateľom a náhľadom vety z pozvánky.
+
+Stránka **Ochrana osobných údajov** (odkaz v pätičke) opisuje aj
+Vzdelávanie a pohlavie. Úrad a zákony sa riadia **krajinou sídla**
+prevádzkovateľa, zoznam sprostredkovateľov tým, čo organizácia naozaj
+používa. DPO na `/dpo` nastaví **lehoty uchovávania** (tie isté čísla
+používa mazanie) a môže doplniť vlastný odsek. Vydaný certifikát sa nemaže.
+
+Keď sa počas práce nasadí nová verzia, portál ponúkne **Obnoviť** — stará
+karta by inak ukladala a posielala e-maily podľa starej verzie.
+
 ### Vzdelávanie: kurzy, testy a certifikáty (2026-09-27)
 
 Modul **Vzdelávanie** je pre SFZ zapnutý. Kurz má časti s textom, galériou
