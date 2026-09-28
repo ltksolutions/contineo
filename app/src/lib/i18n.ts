@@ -234,6 +234,9 @@ interface Dictionary {
     how: string
     button: string
     note: string
+    /** Informovanie o spracúvaní (C1) — veta pred odkazom na `/privacy`. */
+    privacy: string
+    privacyLink: string
   }
 
   /**
@@ -3165,6 +3168,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       how: "Otvorte stránku nižšie a vypýtajte si prihlasovací odkaz na svoju pracovnú adresu. Odkaz vám nesmieme poslať vopred — platí len krátko a poštové brány ho spotrebujú skôr, než sa k nemu dostanete.",
       button: "Otvoriť portál",
       note: "Ak sa prihlásiť nedá, ozvite sa personálnemu oddeleniu — adresa musí byť v zozname osôb.",
+      privacy: "Ako sa v portáli spracúvajú vaše osobné údaje, prečo, ako dlho a aké máte práva:",
+      privacyLink: "Ochrana osobných údajov",
     },
 
     dueReminderEmail: {
@@ -6331,6 +6336,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       how: "Otevřete stránku níže a vyžádejte si přihlašovací odkaz na svou pracovní adresu. Odkaz vám nesmíme poslat předem — platí jen krátce a poštovní brány ho spotřebují dřív, než se k němu dostanete.",
       button: "Otevřít portál",
       note: "Pokud se přihlásit nedá, ozvěte se personálnímu oddělení — adresa musí být v seznamu osob.",
+      privacy: "Jak se v portálu zpracovávají vaše osobní údaje, proč, jak dlouho a jaká máte práva:",
+      privacyLink: "Ochrana osobních údajů",
     },
 
     dueReminderEmail: {
@@ -9488,6 +9495,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       how: "Open the page below and request a sign-in link to your work address. We cannot send the link in advance — it is short-lived and mail gateways consume it before you get to it.",
       button: "Open the portal",
       note: "If you cannot sign in, contact HR — your address has to be on the list of people.",
+      privacy: "How the portal processes your personal data, why, for how long and what your rights are:",
+      privacyLink: "Privacy notice",
     },
 
     dueReminderEmail: {

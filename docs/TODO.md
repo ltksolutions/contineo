@@ -285,7 +285,7 @@
   - [x] **Rola `dpo`** ✅ 2026-09-24 — DPO je **Ján Letko** (pridelené na jeho pokyn, audit).
   - [ ] **DPO (Ján) schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`; na vyplnenie ako `C1_C3_ochrana_udajov.docx`, 24. 9.).
   - [x] **Prevádzkovateľ v nastavení organizácie** ✅ 2026-09-24 — právny názov, sídlo, IČO (Nastavenie organizácie → Značka); ukazujú sa na `/privacy`. Vyplniť pre SFZ.
-  - [ ] **Odkaz na `/privacy` do pozvánky** (päta `inviteEmail`).
+  - [x] **Odkaz na `/privacy` do pozvánky** ✅ 2026-09-28 — veta a odkaz pod poznámkou `inviteEmail`, v HTML aj v texte, sk/cs/en.
   - [ ] **Opraviť `codelists/legalBasis.json` podľa DPO** — skôr, než sa podľa neho začnú vyberať základy.
 - [x] **O17 — pseudonymizácia v `evaluations`** ✅ 2026-09-16 — päť podpisových polí nesie `persons.id`, nie e-mail. Migrácia `npm run migrate:eval-personid` prebehla (7 záznamov, 12 polí), invariant v `npm run check` stráži návrat e-mailu. `docs/O17_plan_personid_v_hodnoteniach.md`. `GDPR_DATA_PROTECTION.md` kap. 3 má zásadu „`userId`/`sessionId` pseudonymizovať", ale kolekcia ukladá e-mail pýtajúceho aj hodnotiteľa **doslovne**. Buď sa to pseudonymizuje, alebo sa zásada prepíše — **rozhodnutie, nie implementácia**.
 - [ ] **Poradie nasadenia (rozhodnuté 2026-09-16, Ján):** prvé kolo beží na **Anthropic + MongoDB Atlas** (režim `eu-data`). **On-prem sa rieši až po dodaní hardvéru** — dovtedy je to na webe aj v dokumentácii označené ako pripravované, nie ako voľba pri objednávke. Týka sa to `O7_plan_overenia.md` (on-prem vetva) aj `ADR-002` (rezidencia).

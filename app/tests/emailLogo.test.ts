@@ -50,3 +50,14 @@ describe("logo v e-mailoch", () => {
     expect(mail.html).not.toContain("<img")
   })
 })
+
+describe("pozvánka a informovanie o spracúvaní (C1)", () => {
+  it("nesie odkaz na /privacy v HTML aj v texte, v každom jazyku", () => {
+    for (const lang of ["sk", "cs", "en"] as const) {
+      const mail = inviteEmail(LINK, HOST, lang, BRANDING)
+      expect(mail.html, lang).toContain(`href="https://${HOST}/privacy"`)
+      expect(mail.text, lang).toContain(`https://${HOST}/privacy`)
+    }
+    expect(inviteEmail(LINK, HOST, "sk", BRANDING).html).toContain("Ochrana osobných údajov")
+  })
+})
