@@ -53,18 +53,30 @@ export interface SearchOptions {
    */
   companyCode: string
   /**
-   * Zahrnúť aj archivované verzie (isActive: false).
+   * Znenia, v ktorých sa hľadá — platné k dňu otázky, spočítané
+   * z `documents` (`searchScope()` v `searchVersions.ts`). **Povinné.**
    *
-   * PREDVOLENE NIE. Pôvodne tu bola opačná voľba `onlyActive`, ktorú ale
-   * nikto nenastavoval — takže vyhľadávanie vracalo aj zrušené znenia
-   * noriem. V normatívnej doméne je to najhorší možný tichý defekt:
-   * odpoveď vyzerá správne, ale cituje predpis, ktorý už neplatí.
-   *
-   * Archivované verzie majú zmysel len pri otázke „ako to bolo v roku X“
-   * (pravidlo R3), a tam sa to musí vyžiadať výslovne.
+   * Nahradilo `includeArchived` a filter `isActive` na úseku (plán „znenia
+   * v indexe", krok 4). `isActive` hovorí o úseku, nie o platnosti znenia:
+   * novela zverejnená vopred má aktívne úseky, hoci ešte neplatí, a asistent
+   * ju citoval. Prázdny zoznam znamená „žiadne platné znenie", nie „všetky".
    */
-  includeArchived?: boolean
+  versionIds: string[]
+  /**
+   * Zahrnúť overené odpovede (`sourceType: "qa"`, D11). Nemajú znenie, len
+   * `isActive`, a vznikli nad dnešným textom — preto len pri otázke na
+   * dnešok (`SearchScope.verifiedAnswers`). **Povinné**, aby o tom
+   * rozhodol volajúci vedome.
+   */
+  verifiedAnswers: boolean
 }
+
+/**
+ * Označenie úsekov z overenej odpovede. Zhodné s `QA_SOURCE_TYPE`
+ * v `curation.ts` (stráži test) — odtiaľ sa neimportuje, lebo `curation.ts`
+ * ťahá zápisovú vrstvu knižnice a tento súbor má zostať bez databázy.
+ */
+export const VERIFIED_ANSWER_SOURCE = "qa"
 
 export interface ChunkResult {
   _id: string
@@ -167,12 +179,48 @@ export function tenantFilter(opts: Pick<SearchOptions, "companyCode">): string {
   return requireCompanyCode(opts?.companyCode, "mongoSearch")
 }
 
+/**
+ * Či je v čom hľadať. Bez platného znenia a bez overených odpovedí sa
+ * nehľadá vôbec — prázdne `$in` nie je „bez obmedzenia" a Atlas ho
+ * v operátore `in` odmietne.
+ */
+export function hasSearchScope(opts: Pick<SearchOptions, "versionIds" | "verifiedAnswers">): boolean {
+  return (opts.versionIds?.length ?? 0) > 0 || opts.verifiedAnswers === true
+}
+
+class EmptySearchScopeError extends Error {
+  constructor() {
+    super("mongoSearch: prázdny rozsah hľadania — volajúci mal skontrolovať hasSearchScope()")
+  }
+}
+
+/**
+ * Dve vetvy rozsahu: úseky platných znení v platnom členení a overené
+ * odpovede. Každá je zoznam podmienok `[pole, hodnota]`; `in` je zoznam.
+ */
+function scopeBranches(opts: SearchOptions): Array<Array<[string, unknown]>> {
+  const branches: Array<Array<[string, unknown]>> = []
+  if (opts.versionIds?.length) {
+    // `superseded: false` — členenie nahradené preindexovaním nesie ten istý
+    // text ako platné; bez toho by sa v zdrojoch objavil dvakrát (krok 2).
+    branches.push([["versionId", opts.versionIds], ["superseded", false]])
+  }
+  if (opts.verifiedAnswers) {
+    branches.push([["sourceType", VERIFIED_ANSWER_SOURCE], ["isActive", true]])
+  }
+  if (!branches.length) throw new EmptySearchScopeError()
+  return branches
+}
+
 /** MQL-style filter for $vectorSearch. */
 export function vectorFilter(opts: SearchOptions): Document {
   // Organizácia ide do filtra ako prvá a bez podmienky (D90).
   const filter: Document = { companyCode: tenantFilter(opts) }
   if (opts.accessLevel === "public") filter.accessLevel = "public"
-  if (!opts.includeArchived) filter.isActive = true
+  const branches = scopeBranches(opts).map(b =>
+    Object.fromEntries(b.map(([path, value]) => [path, Array.isArray(value) ? { $in: value } : value])))
+  if (branches.length === 1) Object.assign(filter, branches[0])
+  else filter.$or = branches
   return filter
 }
 
@@ -181,7 +229,10 @@ export function searchFilterClauses(opts: SearchOptions): Document[] {
   // Organizácia ide do filtra ako prvá a bez podmienky (D90).
   const clauses: Document[] = [{ equals: { path: "companyCode", value: tenantFilter(opts) } }]
   if (opts.accessLevel === "public") clauses.push({ equals: { path: "accessLevel", value: "public" } })
-  if (!opts.includeArchived) clauses.push({ equals: { path: "isActive", value: true } })
+  const branches = scopeBranches(opts).map(b =>
+    b.map(([path, value]) => (Array.isArray(value) ? { in: { path, value } } : { equals: { path, value } })))
+  if (branches.length === 1) clauses.push(...branches[0])
+  else clauses.push({ compound: { should: branches.map(filter => ({ compound: { filter } })), minimumShouldMatch: 1 } })
   return clauses
 }
 
@@ -191,6 +242,8 @@ export async function fulltextSearch(
   collection: Collection,
   opts: SearchOptions
 ): Promise<ChunkResult[]> {
+  // Bez platného znenia a bez overených odpovedí niet v čom hľadať.
+  if (!hasSearchScope(opts)) return []
   // POZOR na dve rôzne čísla: `limit` je koľko kandidátov sa vytiahne,
   // `rerankLimit` koľko ich ide do kontextu modelu. Fulltext sa tu dlho
   // orezával na `limit`, takže vracal 20 chunkov, kým hybrid a vector po
@@ -277,6 +330,8 @@ export async function vectorSearch(
   collection: Collection,
   opts: SearchOptions
 ): Promise<ChunkResult[]> {
+  // Bez platného znenia a bez overených odpovedí niet v čom hľadať.
+  if (!hasSearchScope(opts)) return []
   const { query, limit = 10, rerankLimit = 5 } = opts
   const filter = vectorFilter(opts)
 
@@ -307,6 +362,8 @@ export async function hybridSearch(
   collection: Collection,
   opts: SearchOptions
 ): Promise<ChunkResult[]> {
+  // Bez platného znenia a bez overených odpovedí niet v čom hľadať.
+  if (!hasSearchScope(opts)) return []
   const { query, limit = 10, rerankLimit = 5 } = opts
   const filter = vectorFilter(opts)
   const clauses = searchFilterClauses(opts)

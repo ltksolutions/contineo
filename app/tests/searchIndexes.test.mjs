@@ -32,9 +32,18 @@ const LIVE_TEXT = {
   },
 }
 
+/** Polia z MQL filtra `$vectorSearch`, aj vnútri `$or` / `$and`. */
+const vectorPaths = f => Object.entries(f).flatMap(([k, v]) =>
+  k.startsWith("$") ? v.flatMap(vectorPaths) : [k])
+
+/** Polia z klauzúl `$search`, aj vnútri `compound`. */
+const searchPaths = clauses => clauses.flatMap(c => c.compound
+  ? ["filter", "must", "should", "mustNot"].flatMap(k => searchPaths(c.compound[k] ?? []))
+  : [c.equals?.path ?? c.in?.path].filter(Boolean))
+
 describe("definície indexov", () => {
-  it("nesú znenie a príznak nahradeného členenia, sectionKey už nie", () => {
-    for (const p of ["versionId", "superseded"]) {
+  it("nesú znenie, príznak nahradeného členenia a druh zdroja, sectionKey už nie", () => {
+    for (const p of ["versionId", "superseded", "sourceType"]) {
       expect(vectorFilters()).toContain(p)
       expect(TEXT_DEFINITION.mappings.fields[p]).toBeDefined()
     }
@@ -43,11 +52,11 @@ describe("definície indexov", () => {
   })
 
   it("každé pole, podľa ktorého hľadanie filtruje, je v oboch indexoch", () => {
-    const opts = { companyCode: "SFZ", accessLevel: "public", query: "x" }
-    const used = new Set([
-      ...Object.keys(vectorFilter(opts)),
-      ...searchFilterClauses(opts).map(c => c.equals?.path ?? c.in?.path).filter(Boolean),
-    ])
+    // Obe vetvy rozsahu naraz (znenia aj overené odpovede) — vtedy je filter
+    // vnorený v `$or` a `compound.should` a pole sa ľahko prehliadne.
+    const opts = { companyCode: "SFZ", accessLevel: "public", query: "x", versionIds: ["v1"], verifiedAnswers: true }
+    const used = new Set([...vectorPaths(vectorFilter(opts)), ...searchPaths(searchFilterClauses(opts))])
+    expect([...used].sort()).toEqual(["accessLevel", "companyCode", "isActive", "sourceType", "superseded", "versionId"])
     for (const p of used) {
       expect(FILTER_PATHS, p).toContain(p)
       expect(TEXT_DEFINITION.mappings.fields[p], p).toBeDefined()
@@ -56,16 +65,16 @@ describe("definície indexov", () => {
 })
 
 describe("rozdiel živej definície oproti repozitáru", () => {
-  it("vektorový index zo stavu kroku 0: pribudne znenie a príznak, odíde sectionKey", () => {
+  it("vektorový index zo stavu kroku 0: pribudne znenie, príznak a druh zdroja, odíde sectionKey", () => {
     const d = definitionDiff(LIVE_VECTOR, vectorDefinition("voyage-4", "text"))
     expect(d.differs).toBe(true)
-    expect(d.added.sort()).toEqual(["filter:superseded", "filter:versionId"])
+    expect(d.added.sort()).toEqual(["filter:sourceType", "filter:superseded", "filter:versionId"])
     expect(d.removed).toEqual(["filter:sectionKey"])
   })
 
   it("fulltextový index zo stavu kroku 0: to isté", () => {
     const d = definitionDiff(LIVE_TEXT, TEXT_DEFINITION)
-    expect(d.added.sort()).toEqual(["superseded", "versionId"])
+    expect(d.added.sort()).toEqual(["sourceType", "superseded", "versionId"])
     expect(d.removed).toEqual(["sectionKey"])
   })
 
