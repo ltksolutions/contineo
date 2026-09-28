@@ -44,6 +44,7 @@ import { preprocessQuery }    from "@/lib/queryPreprocessor"
 import { getCollection }      from "@/lib/mongodb"
 import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
 import type { SearchOptions } from "@/lib/mongoSearch"
+import { searchScope }        from "@/lib/searchVersions"
 import { generateAnswer }     from "@/lib/llmGenerator"
 import { getTenantProfile }   from "@/lib/tenantProfile"
 import { onboardingContext }  from "@/lib/session"
@@ -171,6 +172,11 @@ export async function POST(req: NextRequest) {
         //    Profil rozhoduje, či rerank rieši databáza (Atlas $rerank stage)
         //    alebo aplikačná vrstva cez adaptér (on-prem).
         phase("searching")
+        // Znenia platné dnes — raz na otázku, zdieľa ich aj rozklad na
+        // podotázky. Otázku k inému dňu rozpozná až krok 6 plánu „znenia
+        // v indexe"; dovtedy je to vždy dnešok.
+        const scope = await searchScope(companyCode)
+        measure("znenia")
         const collection = await getCollection("document_chunks")
         // Anotacia je nutna: bez nej TypeScript rozsiri accessLevel na `string`
         // (widening literal type v menitelnej vlastnosti objektu) a typ prestane sedet.
@@ -179,6 +185,8 @@ export async function POST(req: NextRequest) {
           useStageRerank: providers.rerank.isPipelineStage,
           rerankModel: profile.providers.rerank.model,
           vectorPath: profile.providers.embedding.vectorPath,
+          versionIds: scope.versionIds,
+          verifiedAnswers: scope.verifiedAnswers,
         }
 
         let chunks = await (

@@ -16,6 +16,12 @@
  *   (`chunkSuperseded.ts`, krok 2); filtruje sa `superseded: false`.
  * - **− `sectionKey`** — nemal ho žiadny úsek (krok 0) a hľadanie podľa neho
  *   nikdy nefiltrovalo.
+ *
+ * ## Zmena 2026-09-29, krok 4
+ *
+ * - **+ `sourceType`** — overené odpovede (`"qa"`) nemajú znenie; hľadanie
+ *   ich berie len pri otázke na dnešok, a na to ich musí vedieť odlíšiť.
+ *   Druhov zdrojov bude pribúdať, preto pole, nie príznak.
  */
 
 export const COLLECTION = "document_chunks"
@@ -23,7 +29,7 @@ export const VECTOR_INDEX = process.env.VECTOR_INDEX ?? "rag_vector_index"
 export const TEXT_INDEX = process.env.TEXT_INDEX ?? "rag_text_index"
 
 /** Polia, podľa ktorých sa smie filtrovať — rovnaké v oboch indexoch. */
-export const FILTER_PATHS = ["companyCode", "accessLevel", "scope", "isActive", "language", "versionId", "superseded"]
+export const FILTER_PATHS = ["companyCode", "accessLevel", "scope", "isActive", "language", "versionId", "superseded", "sourceType"]
 
 /**
  * Vektorový index s automatickým embeddingom. `path` ukazuje na **textové**
@@ -52,6 +58,7 @@ export const TEXT_DEFINITION = {
       scope: TOKEN,
       language: TOKEN,
       versionId: TOKEN,
+      sourceType: TOKEN,
       isActive: { type: "boolean" },
       superseded: { type: "boolean" },
     },

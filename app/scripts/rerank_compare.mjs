@@ -65,9 +65,10 @@ if (!process.env.MONGODB_URI) {
 let otazky = []
 
 // ── skutočný kód aplikácie ───────────────────────────────────────────────────
-let hybridSearch
+let hybridSearch, effectiveVersionIdsOf, VERSION_PROJECTION
 try {
   ;({ hybridSearch } = await import(pathToFileURL(resolve(SRC, "lib/mongoSearch.ts")).href))
+  ;({ effectiveVersionIdsOf, VERSION_PROJECTION } = await import(pathToFileURL(resolve(SRC, "lib/searchVersions.ts")).href))
 } catch (e) {
   console.error(`${FAIL} Nedá sa načítať mongoSearch.ts priamo cez Node.`)
   console.error(`   ${e.message.split("\n")[0]}`)
@@ -99,6 +100,9 @@ try {
   await client.connect()
   const db = client.db(process.env.MONGODB_DB ?? "contineo")
   const col = db.collection("document_chunks")
+  // Znenia platné dnes — ten istý rozsah ako v `/api/chat` (krok 4).
+  const versionIds = effectiveVersionIdsOf(
+    await db.collection("documents").find({ companyCode: ORGANIZACIA }, { projection: VERSION_PROJECTION }).toArray(), new Date())
 
   // Rôzne otázky, najnovšie najskôr. Tá istá otázka položená päťkrát by
   // inak výsledok prevážila, hoci o zhode rerankerov povie to isté raz.
@@ -135,7 +139,7 @@ try {
   const detail = []
 
   for (const [n, q] of otazky.entries()) {
-    const base = { query: q.question, accessLevel: ROLA, companyCode: ORGANIZACIA, limit: 20, rerankLimit: TOPK, vectorPath }
+    const base = { query: q.question, accessLevel: ROLA, companyCode: ORGANIZACIA, limit: 20, rerankLimit: TOPK, vectorPath, versionIds, verifiedAnswers: true }
     const poradia = {}
 
     try {

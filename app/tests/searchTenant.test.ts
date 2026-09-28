@@ -11,7 +11,9 @@ import {
 } from "../src/lib/mongoSearch"
 import type { SearchOptions } from "../src/lib/mongoSearch"
 
-const base: SearchOptions = { query: "lehota", accessLevel: "internal", companyCode: "SFZ" }
+const base: SearchOptions = {
+  query: "lehota", accessLevel: "internal", companyCode: "SFZ", versionIds: ["v1"], verifiedAnswers: true,
+}
 
 describe("tenantFilter", () => {
   it("vráti organizáciu", () => {
