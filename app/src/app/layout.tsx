@@ -12,6 +12,7 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import SessionProvider from "@/components/SessionProvider"
 import RouteProgress from "@/components/RouteProgress"
+import VersionNotice from "@/components/VersionNotice"
 import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
 import { platformContext } from "@/lib/admin"
 import { peopleContext } from "@/lib/people"
@@ -200,6 +201,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
           <main style={{ flex: 1 }}>{children}</main>
           <Footer language={language} />
+          <VersionNotice text={dictionary(language).versionNotice.text} reload={dictionary(language).versionNotice.reload} />
         </SessionProvider>
       </body>
     </html>
