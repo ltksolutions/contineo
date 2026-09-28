@@ -369,3 +369,60 @@ export async function setDraftLegalBasis(input: {
   })
   return true
 }
+
+/** Pripravované znenie tak, ako ho vidí jeho zodpovedná osoba (ADR-023). */
+export interface DraftBasisTask {
+  documentId: string
+  /** Dnešný názov dokumentu. */
+  title: string
+  /** Nový názov z prípravy (ADR-015); `null` = bez zmeny. */
+  draftTitle: string | null
+  draftMarkdown: string
+  draftPdf: { name: string; bytes?: number } | null
+  /** Dátum účinnosti zo schválených údajov o znení (ADR-013); môže chýbať. */
+  effectiveFrom: Date | null
+  legalBasis: DraftLegalBasis | null
+}
+
+/**
+ * Úloha zodpovednej osoby pri **pripravovanom znení** (ADR-023, D139) — čo
+ * potrebuje stránka dokumentu, aby jej ukázala koncept a formulár na základ.
+ *
+ * `null`, keď dokument koncept nemá alebo jeho zodpovednou osobou nie je
+ * práve tento človek. **Obchádza pravidlá viditeľnosti dokumentu**
+ * (`canSeeDocument`) — zámerne a len pre ňu: správca obsahu ju vybral
+ * menovite, rovnako ako schvaľovateľov, ktorí koncept vidia tiež
+ * (`canSeeDraftPdf`). Rozhodnutie Jána 2026-09-28. `companyCode` je
+ * v podmienke (D32) — cudzia organizácia sa nedozvie ani to, či koncept je.
+ */
+export async function draftBasisTaskFor(
+  person: { id: string; companyCode: string },
+  documentId: string,
+): Promise<DraftBasisTask | null> {
+  if (!person?.id || !person.companyCode || !documentId) return null
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne(
+    { companyCode: person.companyCode, documentId, "draftResponsible.personId": person.id },
+    { projection: { documentId: 1, title: 1, draftTitle: 1, draftMarkdown: 1, draftPdf: 1, draftMeta: 1, draftLegalBasis: 1 } },
+  ) as {
+    documentId: string
+    title?: string
+    draftTitle?: string | null
+    draftMarkdown?: string
+    draftPdf?: { name: string; bytes?: number } | null
+    draftMeta?: { effectiveFrom?: Date | string | null } | null
+    draftLegalBasis?: DraftLegalBasis | null
+  } | null
+  const markdown = String(doc?.draftMarkdown ?? "").trim()
+  if (!doc || !markdown) return null
+  const from = doc.draftMeta?.effectiveFrom ? new Date(doc.draftMeta.effectiveFrom) : null
+  return {
+    documentId: doc.documentId,
+    title: String(doc.title ?? documentId),
+    draftTitle: typeof doc.draftTitle === "string" && doc.draftTitle.trim() ? doc.draftTitle.trim() : null,
+    draftMarkdown: markdown,
+    draftPdf: doc.draftPdf ? { name: doc.draftPdf.name, bytes: doc.draftPdf.bytes } : null,
+    effectiveFrom: from && !Number.isNaN(from.getTime()) ? from : null,
+    legalBasis: doc.draftLegalBasis?.entries?.length ? doc.draftLegalBasis : null,
+  }
+}

@@ -64,6 +64,11 @@ export type NotificationKind =
   | "versionPublished"
   /** Osoba bola určená za zodpovednú za znenie (D91) — má určiť právny základ. */
   | "responsibleAssigned"
+  /**
+   * Osoba bola určená za zodpovednú už **v príprave** (ADR-023, D139) — môže
+   * určiť právny základ ešte pred zverejnením.
+   */
+  | "draftResponsibleAssigned"
 
 export interface NotificationParams {
   documentId?: string
@@ -103,6 +108,7 @@ export function notificationHref(
     case "versionPublished":
       return documentId ? `/library/${encodeURIComponent(documentId)}` : null
     case "responsibleAssigned":
+    case "draftResponsibleAssigned":
       // Na znenie pre čitateľa, nie do knižnice: zodpovedná osoba nemusí byť
       // správca obsahu, a formulár na právny základ je práve tam.
       return documentId ? `/documents/${encodeURIComponent(documentId)}` : null

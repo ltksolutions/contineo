@@ -335,4 +335,8 @@ describe("canSeeDraftPdf — kto smie vidieť PDF konceptu (ADR-011, D99)", () =
   it("bez kola na aktuálnej podobe nie — ani bývalý schvaľovateľ", () => {
     expect(canSeeDraftPdf({ isContentManager: false, email: "pravnicka@futbalsfz.sk", rounds: [] })).toBe(false)
   })
+  it("zodpovedná osoba z prípravy áno, aj bez kola (ADR-023)", () => {
+    expect(canSeeDraftPdf({ isContentManager: false, email: "garant@futbalsfz.sk", rounds: [], isDraftResponsible: true })).toBe(true)
+    expect(canSeeDraftPdf({ isContentManager: false, email: "garant@futbalsfz.sk", rounds: [], isDraftResponsible: false })).toBe(false)
+  })
 })

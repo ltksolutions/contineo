@@ -5254,6 +5254,14 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .zn-basis > summary { cursor: pointer; font-size: var(--fs-body); font-weight: 600; }
 .zn-basis-ref { display: block; margin-top: 2px; font-weight: 400; font-size: var(--fs-small); color: var(--muted); }
 
+/* Úloha zodpovednej osoby pri pripravovanom a ešte neúčinnom znení (ADR-023).
+   Mobile first: všetko pod sebou, odkaz na PDF sa zalomí pod tlačidlo. */
+.basis-task-body { display: grid; gap: 12px; }
+.zn-basis .basis-task-body { margin-top: 12px; }
+.basis-task-facts { margin: 0; padding-left: 18px; display: grid; gap: 2px; font-size: var(--fs-small); }
+.basis-task-pdf { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; }
+.basis-task-pdf .quiet { font-size: var(--fs-small); overflow-wrap: anywhere; }
+
 /* Karta kontaktu (bod 2). */
 .contact { display: grid; gap: 12px; padding: 16px; margin-top: 24px; }
 .contact-kicker { margin: 0; font-size: var(--fs-small); color: var(--muted); }

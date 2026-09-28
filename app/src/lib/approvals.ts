@@ -72,13 +72,19 @@ export type VersionState = "draft" | "in-review" | "approved" | "published-befor
  * beží presne na tejto podobe konceptu — `rounds` sú kolá na aktuálnej
  * identite (PDF + text). Schvaľovateľ zo staršieho kola nové PDF nevidí:
  * nerozhoduje o ňom, a koncept nie je verejný, kým ho niekto nezverejní.
+ *
+ * A **zodpovedná osoba z prípravy** (ADR-023, D139): určuje právny základ
+ * ešte pred zverejnením, a to sa nedá bez toho, aby videla, o čom rozhoduje.
  */
 export function canSeeDraftPdf(input: {
   isContentManager: boolean
   email: string
   rounds: Pick<ApprovalRound, "approvers">[]
+  /** Je človek zodpovednou osobou určenou v príprave (`draftResponsible`)? */
+  isDraftResponsible?: boolean
 }): boolean {
   if (input.isContentManager) return true
+  if (input.isDraftResponsible) return true
   const me = input.email.trim().toLowerCase()
   return input.rounds.some(r => r.approvers.some(a => a.email.trim().toLowerCase() === me))
 }

@@ -9,7 +9,8 @@
  * môže mať viac základov, aj z oboch kategórií. Fungujú bez JavaScriptu
  * a odkaz na predpis je vidieť ešte pred výberom.
  *
- * Dôvod sa pýta len pri **zmene** už určeného základu.
+ * Dôvod sa pýta len pri **zmene** už určeného základu — a nikdy pri
+ * pripravovanom znení (`draft`, ADR-023): naň sa ešte nikto nepotvrdil.
  */
 
 import { setLegalBasisAction } from "@/app/documents/[documentId]/actions"
@@ -25,9 +26,11 @@ export default function LegalBasisForm({
   options,
   language,
   back,
+  draft = false,
 }: {
   documentId: string
-  versionId: string
+  /** Pri pripravovanom znení (`draft`) sa nevypĺňa. */
+  versionId?: string
   current?: LegalBasis | null
   /** Kľúče základov, ktoré znenie má (ADR-017). */
   currentKeys?: string[]
@@ -35,12 +38,16 @@ export default function LegalBasisForm({
   language: UiLanguage
   /** Kam sa vrátiť po uložení — knižnica alebo znenie pre čitateľa. */
   back: "library" | "document"
+  /** Základ pripravovaného znenia (ADR-023) — uloží sa na koncept. */
+  draft?: boolean
 }) {
   const t = dictionary(language).responsibility
   return (
     <form action={setLegalBasisAction} style={{ display: "grid", gap: 12 }}>
       <input type="hidden" name="documentId" value={documentId} />
-      <input type="hidden" name="versionId" value={versionId} />
+      {draft
+        ? <input type="hidden" name="draft" value="1" />
+        : <input type="hidden" name="versionId" value={versionId ?? ""} />}
       <input type="hidden" name="back" value={back} />
 
       {LEGAL_BASES.map(category => {
@@ -64,7 +71,7 @@ export default function LegalBasisForm({
       })}
       <span className="quiet field-hint">{t.multipleNote} {t.missingOptionNote}</span>
 
-      {current && (
+      {current && !draft && (
         <label className="field">
           <span className="field-label">{t.basisReason}</span>
           <input className="field-input" name="reason" required />

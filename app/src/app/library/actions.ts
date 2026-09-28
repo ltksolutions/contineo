@@ -361,7 +361,19 @@ export async function prepareDraftAction(fd: FormData) {
     }
 
     const responsibleId = fieldText(fd, "responsiblePersonId")
-    if (responsibleId) await saveDraftResponsible(self.companyCode, id, responsibleId, self.email)
+    if (responsibleId && await saveDraftResponsible(self.companyCode, id, responsibleId, self.email)) {
+      // Zodpovednej osobe do zvončeka už v príprave (ADR-023, D139): právny
+      // základ môže určiť ešte pred zverejnením. Len keď sa osoba naozaj
+      // zmenila a nie je to ten, kto práve ukladá.
+      if (responsibleId !== self.personId) {
+        await notify({
+          companyCode: self.companyCode,
+          personId: responsibleId,
+          kind: "draftResponsibleAssigned",
+          params: { documentId: id, documentTitle: await documentTitleFor(self.companyCode, id) },
+        })
+      }
+    }
 
     // Nový názov (ADR-015, D112) — len keď ho formulár nesie (pri zámku nie).
     if (fieldText(fd, "titleEditable") === "1") {
@@ -453,7 +465,12 @@ export async function publishVersionAction(fd: FormData) {
       })
       // Zodpovednej osobe do zvončeka: má určiť právny základ (D91). Ide
       // osobe, nie adrese — a len ak to nie je ten, kto práve zverejnil.
-      if (responsibleId && responsibleId !== self.personId) {
+      // Keď základ určila už v príprave (ADR-023), úloha je hotová a veta
+      // „Určte právny základ" by klamala. Ak sa ale osoba pri zverejnení
+      // zmenila, nová o zverejnenom znení ešte nič nevie — tej ide vždy.
+      const draftResponsibleId = String((before?.draftResponsible as { personId?: string } | null | undefined)?.personId ?? "")
+      const stillToDo = !v.legalBasisCarried || responsibleId !== draftResponsibleId
+      if (responsibleId && responsibleId !== self.personId && stillToDo) {
         await notify({
           companyCode: self.companyCode,
           personId: responsibleId,

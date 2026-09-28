@@ -7,7 +7,8 @@
  *   · `?draft=1` — PDF **konceptu**. Správca obsahu, alebo **menovaný
  *     schvaľovateľ** kola, ktoré beží presne na tomto koncepte (PDF aj text,
  *     `draftIdentity`). Schvaľovateľ z kola na staršej podobe konceptu nové
- *     PDF nevidí — nerozhoduje o ňom.
+ *     PDF nevidí — nerozhoduje o ňom. A zodpovedná osoba určená v príprave
+ *     (ADR-023) — určuje k nemu právny základ.
  *
  * Doteraz originál otváral len správca obsahu (`/api/library/file`), takže
  * schvaľovateľ aj zamestnanec videli len text na vyhľadávanie.
@@ -45,13 +46,17 @@ export async function GET(
   if (url.searchParams.get("draft") === "1") {
     const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne(
       { companyCode: person.companyCode, documentId },
-      { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1, draftTitle: 1 } },
-    ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null; draftTitle?: string | null } | null
+      { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1, draftTitle: 1, draftResponsible: 1 } },
+    ) as {
+      draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null
+      draftTitle?: string | null; draftResponsible?: { personId?: string } | null
+    } | null
     if (!doc?.draftPdf) return new Response(null, { status: 404 })
     const manager = isContentManager(person)
+    const isDraftResponsible = Boolean(person.id) && doc.draftResponsible?.personId === person.id
     const identity = documentDraftIdentity(doc)
-    const rounds = manager ? [] : await roundsForVersion(person.companyCode, documentId, identity)
-    if (!canSeeDraftPdf({ isContentManager: manager, email: person.email, rounds })) {
+    const rounds = manager || isDraftResponsible ? [] : await roundsForVersion(person.companyCode, documentId, identity)
+    if (!canSeeDraftPdf({ isContentManager: manager, email: person.email, rounds, isDraftResponsible })) {
       return new Response(null, { status: 404 })
     }
     file = doc.draftPdf

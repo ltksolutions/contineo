@@ -1682,6 +1682,8 @@ interface Dictionary {
       remindersSent: (count: number) => string
       versionPublished: (title: string, label: string) => string
       responsibleAssigned: (title: string, label: string) => string
+      /** Osoba určená za zodpovednú už v príprave (ADR-023) — má určiť základ pred zverejnením. */
+      draftResponsibleAssigned: (title: string) => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -1720,6 +1722,19 @@ interface Dictionary {
     contactGone: string
     yourTaskHeading: string
     yourTaskNote: string
+    /** Pripravované znenie (ADR-023, D139). */
+    draftTaskHeading: string
+    draftTaskNote: string
+    draftBasisSummary: string
+    draftEffective: (date: string) => string
+    draftNewTitle: (title: string) => string
+    draftText: string
+    draftOpenPdf: string
+    draftBasisSaved: string
+    /** Zverejnené znenie, ktoré ešte nie je účinné (ADR-023). */
+    pendingTaskHeading: (date: string) => string
+    pendingTaskNote: string
+    pendingBasisSummary: (date: string) => string
     missingBasisTag: string
     missingBasisNote: string
     missingOptionNote: string
@@ -5014,6 +5029,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Rozposlané pripomienky: ${count} ${count === 1 ? "správa" : count < 5 ? "správy" : "správ"}.`,
       versionPublished: (title, label) => `Zverejnené znenie „${label}" dokumentu „${title}".`,
       responsibleAssigned: (title, label) => `Ste zodpovedná osoba za znenie „${label}" dokumentu „${title}". Určte právny základ.`,
+      draftResponsibleAssigned: (title) => `Ste zodpovedná osoba za pripravované znenie dokumentu „${title}". Právny základ môžete určiť ešte pred zverejnením.`,
     },
   },
   responsibility: {
@@ -5056,6 +5072,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     contactGone: "Zodpovedná osoba už nie je aktívna. S otázkami sa zatiaľ obráťte na personálne oddelenie.",
     yourTaskHeading: "Ste zodpovedná osoba za toto znenie",
     yourTaskNote: "Určte, na akom právnom základe sa spracúvajú záznamy o oboznámení s týmto znením.",
+    draftTaskHeading: "Pripravované znenie — ste zodpovedná osoba",
+    draftTaskNote: "Znenie ešte nie je zverejnené. Právny základ môžete určiť už teraz a pri zverejnení sa prenesie do znenia. Kým sa nezverejní, dá sa zmeniť bez udania dôvodu.",
+    draftBasisSummary: "Právny základ pripravovaného znenia",
+    draftEffective: (date) => `Účinnosť od ${date}`,
+    draftNewTitle: (title) => `Nový názov: „${title}"`,
+    draftText: "Text pripravovaného znenia",
+    draftOpenPdf: "PDF nového znenia",
+    draftBasisSaved: "Právny základ pripravovaného znenia bol uložený. Pri zverejnení sa prenesie do znenia.",
+    pendingTaskHeading: (date) => `Znenie účinné od ${date} — ste zodpovedná osoba`,
+    pendingTaskNote: "Znenie je zverejnené, ale ešte nie je účinné. Určte právny základ, nech ho znenie má od prvého dňa účinnosti.",
+    pendingBasisSummary: (date) => `Právny základ znenia účinného od ${date}`,
     missingBasisTag: "bez právneho základu",
     missingBasisNote: "Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho však mala určiť ešte pred ostrou prevádzkou.",
     missingOptionNote: "Chýba vhodná položka? Požiadajte správcu organizácie, aby ju doplnil do číselníka právnych základov.",
@@ -8244,6 +8271,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Rozeslané připomínky: ${count} ${count === 1 ? "zpráva" : count < 5 ? "zprávy" : "zpráv"}.`,
       versionPublished: (title, label) => `Zveřejněné znění „${label}" dokumentu „${title}".`,
       responsibleAssigned: (title, label) => `Jste odpovědná osoba za znění „${label}" dokumentu „${title}". Určete právní základ.`,
+      draftResponsibleAssigned: (title) => `Jste odpovědná osoba za připravované znění dokumentu „${title}". Právní základ můžete určit ještě před zveřejněním.`,
     },
   },
   responsibility: {
@@ -8286,6 +8314,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     contactGone: "Odpovědná osoba už není aktivní. S dotazy se zatím obraťte na personální oddělení.",
     yourTaskHeading: "Jste odpovědná osoba za toto znění",
     yourTaskNote: "Určete, na jakém právním základě se zpracovávají záznamy o seznámení s tímto zněním.",
+    draftTaskHeading: "Připravované znění — jste odpovědná osoba",
+    draftTaskNote: "Znění ještě není zveřejněno. Právní základ můžete určit už teď a při zveřejnění se přenese do znění. Dokud se nezveřejní, lze jej změnit bez udání důvodu.",
+    draftBasisSummary: "Právní základ připravovaného znění",
+    draftEffective: (date) => `Účinnost od ${date}`,
+    draftNewTitle: (title) => `Nový název: „${title}"`,
+    draftText: "Text připravovaného znění",
+    draftOpenPdf: "PDF nového znění",
+    draftBasisSaved: "Právní základ připravovaného znění byl uložen. Při zveřejnění se přenese do znění.",
+    pendingTaskHeading: (date) => `Znění účinné od ${date} — jste odpovědná osoba`,
+    pendingTaskNote: "Znění je zveřejněno, ale ještě není účinné. Určete právní základ, ať jej znění má od prvního dne účinnosti.",
+    pendingBasisSummary: (date) => `Právní základ znění účinného od ${date}`,
     missingBasisTag: "bez právního základu",
     missingBasisNote: "Předpis bez právního základu se přidělit dá. Odpovědná osoba by jej však měla určit ještě před ostrým provozem.",
     missingOptionNote: "Chybí vhodná položka? Požádejte správce organizace, aby ji doplnil do číselníku právních základů.",
@@ -11466,6 +11505,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Reminders sent: ${count} ${count === 1 ? "message" : "messages"}.`,
       versionPublished: (title, label) => `Published version “${label}” of “${title}”.`,
       responsibleAssigned: (title, label) => `You are the responsible person for version “${label}” of “${title}”. Please set the legal basis.`,
+      draftResponsibleAssigned: (title) => `You are the responsible person for the version of “${title}” in preparation. You can set the legal basis before it is published.`,
     },
   },
   responsibility: {
@@ -11508,6 +11548,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     contactGone: "The responsible person is no longer active. For now, please contact the HR department with questions.",
     yourTaskHeading: "You are the responsible person for this version",
     yourTaskNote: "Set the legal basis on which records of acknowledgement of this version are processed.",
+    draftTaskHeading: "Version in preparation — you are the responsible person",
+    draftTaskNote: "This version is not published yet. You can set the legal basis now and it will carry over when the version is published. Until then it can be changed without giving a reason.",
+    draftBasisSummary: "Legal basis of the version in preparation",
+    draftEffective: (date) => `Effective from ${date}`,
+    draftNewTitle: (title) => `New title: “${title}”`,
+    draftText: "Text of the version in preparation",
+    draftOpenPdf: "PDF of the new version",
+    draftBasisSaved: "The legal basis of the version in preparation has been saved. It will carry over when the version is published.",
+    pendingTaskHeading: (date) => `Version effective from ${date} — you are the responsible person`,
+    pendingTaskNote: "This version is published but not yet in effect. Set the legal basis so the version has it from its first day in effect.",
+    pendingBasisSummary: (date) => `Legal basis of the version effective from ${date}`,
     missingBasisTag: "no legal basis",
     missingBasisNote: "A regulation without a legal basis can still be assigned. The responsible person should, however, set it before going live.",
     missingOptionNote: "Missing a suitable option? Ask the organisation administrator to add it to the legal bases list.",
