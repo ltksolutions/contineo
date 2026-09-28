@@ -3872,6 +3872,24 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   color: var(--muted);
 }
 
+/* Ku ktorému dňu sa odpovedá (znenia v indexe, krok 6). Dnešok tlmene;
+   iný deň výrazne — minulé právo sa nesmie čítať ako dnešné. Na úzkom
+   displeji sa zalomí pod značku, preto `flex-wrap` na hlavičke. */
+.answer-head { flex-wrap: wrap; }
+
+.answer-time {
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+
+.answer-time--other {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  font-weight: 600;
+}
+
 /* Zdroje. Karta namiesto holého riadku a — keď zdroj nesie adresu originálu —
    je celá karta odkaz. Doteraz sa na zdroj nedalo kliknúť vôbec. */
 .answer-sources { display: grid; gap: 6px; margin-top: 10px; }

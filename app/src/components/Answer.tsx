@@ -11,6 +11,7 @@
 
 import Link from "next/link"
 import type { Citation, AskResult, AnswerPhase } from "@/lib/sseClient"
+import type { QueryTime } from "@/lib/queryTime"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
@@ -29,6 +30,8 @@ export interface AnswerState {
    * znamená, že server zatiaľ nič nepovedal; vtedy sa ukáže len kostra.
    */
   phase?: AnswerPhase
+  /** Ku ktorému dňu sa odpovedá (krok 6) — z `meta`, teda ešte pred textom. */
+  time?: QueryTime
 }
 
 /**
@@ -63,6 +66,14 @@ export default function Answer({
 
   const error = done?.error
 
+  // Ku ktorému dňu sa odpovedá (krok 6). Z `meta` prichádza pred prvým
+  // slovom, preto sa číta zo stavu, a až potom z `done`.
+  const time = state.time ?? done?.time
+  const timeDate = time ? formatDate(new Date(`${time.asOf}T00:00:00Z`), language) : null
+  const timeLabel = time && timeDate
+    ? (time.kind === "asOf" ? t.timeAsOf : time.kind === "compare" ? t.timeCompare : t.timeToday)(timeDate)
+    : null
+
   /*
     Tretí stav (ASK, úloha 1): vyhľadávanie nenašlo nič, čo by otázku krylo.
     Server vtedy model nevolá a pošle prázdny zoznam zdrojov bez textu.
@@ -80,7 +91,9 @@ export default function Answer({
           <span className="answer-kicker">{tAsk.none.kicker}</span>
         </div>
         <p className="answer-none-text">
-          {tAsk.none.text}{" "}
+          {/* K dňu otázky nie je žiadne platné znenie — to je iná správa než
+              „nič sa nenašlo" a iná rada (iný dátum, nie iná otázka). */}
+          {done.noVersions && time?.kind === "asOf" && timeDate ? tAsk.none.noVersion(timeDate) : tAsk.none.text}{" "}
           <Link href={`/library?search=${encodeURIComponent(state.question)}`}>{tAsk.none.link}</Link>
         </p>
       </div>
@@ -103,6 +116,11 @@ export default function Answer({
           <div className="answer-head">
             <span className="answer-mark" aria-hidden="true" />
             <span className="answer-kicker">{t.fromDocuments}</span>
+            {timeLabel && (
+              <span className={time?.kind === "today" ? "answer-time" : "answer-time answer-time--other"}>
+                {timeLabel}
+              </span>
+            )}
           </div>
         )}
 
