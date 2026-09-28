@@ -19,8 +19,8 @@ import { PERSONS_COLLECTION, type Person } from "./persons"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import {
-  canSetLegalBasis, legalBasesChoiceProblem, basesOf, dominantBasis, responsibleChangeProblem,
-  type ResponsiblePerson, type LegalBasis,
+  canSetLegalBasis, legalBasesChoiceProblem, basesOf, legalBasisFields, responsibleChangeProblem,
+  sameBasisKeys, type ResponsiblePerson, type DraftLegalBasis,
 } from "./versionResponsibility"
 import { TENANTS_COLLECTION, type Tenant } from "./tenants"
 import { findLegalBasisOption, type LegalBasisOption } from "./legalBases"
@@ -40,6 +40,8 @@ const MESSAGES: Record<string, string> = {
   "legalBasis.reasonRequired": "Dôvod zmeny právneho základu je povinný — potvrdenia, ktoré medzitým vznikli, si nesú pôvodný.",
   "legalBasis.unknownKey": "Taká položka v číselníku právnych základov nie je, alebo je skrytá či vyradená.",
   "legalBasis.notAllowed": "Právny základ určuje zodpovedná osoba tohto znenia. Správca obsahu ho smie určiť len vtedy, keď znenie zodpovednú osobu nemá alebo už nie je aktívna.",
+  "legalBasis.noDraft": "Dokument nemá pripravované znenie — právny základ sa určuje pri zverejnenom znení.",
+  "legalBasis.draftNotAllowed": "Právny základ pripravovaného znenia určuje jeho zodpovedná osoba. Správca obsahu ho smie určiť len vtedy, keď ju príprava nemá alebo už nie je aktívna.",
   "library.documentNotFound": "Taký dokument tu nie je.",
   "library.versionNotFound": "Také znenie tu nie je.",
 }
@@ -228,17 +230,14 @@ export async function setVersionLegalBasis(input: {
   const chosen = options as LegalBasisOption[]
   const reason = input.reason?.trim()
 
-  /*
-   * Zoznam je presný údaj (D115). Staré polia nesú **rozhodujúci druh**
-   * (D116, zákonná povinnosť má prednosť) a spojené názvy a odkazy — tak ich
-   * námietky, retencia, výkazy aj kópie v potvrdeniach čítajú ďalej správne.
-   */
-  const entries = chosen.map(o => ({ basis: o.basis, key: o.key, label: o.label, reference: o.reference ?? null }))
-  const dominant = dominantBasis(entries) as LegalBasis
-  const joinedLabel = entries.map(e => e.label).join(" + ")
-  const joinedKey = entries.map(e => e.key).join(",")
-  const references = entries.map(e => e.reference).filter((r): r is string => Boolean(r))
-  const joinedReference = references.length ? references.join("; ") : null
+  // Zoznam aj staré polia s rozhodujúcim druhom (D115, D116) — to isté
+  // skladanie ako pri prenose z prípravy (`legalBasisFields()`).
+  const fields = legalBasisFields(chosen.map(o => ({ basis: o.basis, key: o.key, label: o.label, reference: o.reference ?? null })))
+  const entries = fields.legalBases
+  const dominant = fields.legalBasis
+  const joinedLabel = fields.legalBasisLabel
+  const joinedKey = fields.legalBasisKey
+  const joinedReference = fields.legalBasisReference
 
   await col.updateOne(
     { companyCode: input.companyCode, documentId: input.documentId },
@@ -284,4 +283,89 @@ export async function setVersionLegalBasis(input: {
   })
 
   return chosen
+}
+
+/**
+ * Určí alebo zmení právny základ **pripravovaného znenia** (ADR-023, D139).
+ *
+ * Zodpovedná osoba z prípravy (D109) ho určí ešte pred zverejnením, aby
+ * znenie vyšlo aj so základom. Uloží sa na koncept ako `draftLegalBasis`
+ * a `publish()` ho prenesie do znenia (`legalBasisFromDraft()`).
+ *
+ * - **Kto smie** — to isté pravidlo ako pri znení (`canSetLegalBasis()`),
+ *   len s osobou z prípravy: ona, alebo správca obsahu ako náhradník, keď
+ *   ju príprava nemá alebo odišla. Overuje sa tu, proti uloženému konceptu.
+ * - **Dôvod sa nepýta.** Na koncept sa ešte nikto nepotvrdil, takže zmena
+ *   nemení nič, čo by už niekto podpísal. Stopu nesie audit.
+ * - **Nezamyká sa počas kola.** Nie je súčasťou schválenia (ako D109).
+ * - Pri zmene osoby v príprave **zostáva** — nová osoba ho vidí vybraný
+ *   a môže ho zmeniť (rozhodnutie Jána 2026-09-28).
+ *
+ * Vracia `false`, keď je výber rovnaký ako uložený — nič sa nezapíše.
+ */
+export async function setDraftLegalBasis(input: {
+  companyCode: string
+  documentId: string
+  legalBasisKeys: string[]
+  actor: { personId: string; email: string }
+  isContentManager: boolean
+  now?: Date
+}): Promise<boolean> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne(
+    { companyCode: input.companyCode, documentId: input.documentId },
+    { projection: { title: 1, draftMarkdown: 1, draftResponsible: 1, draftLegalBasis: 1 } },
+  ) as {
+    title?: string
+    draftMarkdown?: string
+    draftResponsible?: ResponsiblePerson | null
+    draftLegalBasis?: DraftLegalBasis | null
+  } | null
+  if (!doc) fail("library.documentNotFound")
+  if (!String(doc.draftMarkdown ?? "").trim()) fail("legalBasis.noDraft")
+
+  const responsible = doc.draftResponsible ?? null
+  const responsibleActive = responsible
+    ? Boolean(await responsibleSnapshot(input.companyCode, responsible.personId))
+    : false
+  const allowed = canSetLegalBasis({
+    actorPersonId: input.actor.personId,
+    isContentManager: input.isContentManager,
+    responsible,
+    responsibleActive,
+  })
+  if (!allowed) fail("legalBasis.draftNotAllowed")
+
+  const tenants = await getCollection<Tenant>(TENANTS_COLLECTION)
+  const tenant = await tenants.findOne(
+    { companyCode: input.companyCode },
+    { projection: { legalBases: 1, legalBasesHidden: 1 } },
+  )
+  const keys = [...new Set(input.legalBasisKeys.map(k => k.trim()).filter(Boolean))]
+  const options = keys.map(k => findLegalBasisOption(tenant, k))
+  // Bez dôvodu a bez „žiadna zmena" — rovnaký výber sa len ticho nezapíše.
+  const problem = legalBasesChoiceProblem({ options, currentKeys: [], hasCurrent: false })
+  if (problem) fail(problem)
+
+  const before = doc.draftLegalBasis?.entries ?? []
+  if (before.length && sameBasisKeys(before.map(e => e.key ?? ""), keys)) return false
+
+  const fields = legalBasisFields((options as LegalBasisOption[])
+    .map(o => ({ basis: o.basis, key: o.key, label: o.label, reference: o.reference ?? null })))
+  const now = input.now ?? new Date()
+  const draft: DraftLegalBasis = { entries: fields.legalBases, at: now, by: input.actor.email }
+
+  await col.updateOne(
+    { companyCode: input.companyCode, documentId: input.documentId },
+    { $set: { draftLegalBasis: draft, updatedAt: now, updatedBy: input.actor.email } },
+  )
+
+  const beforeLabel = before.length ? legalBasisFields(before).legalBasisLabel : null
+  await writeAudit({
+    companyCode: input.companyCode, subject: "document", action: "legal-basis", actor: input.actor.email,
+    targetId: input.documentId, targetLabel: String(doc.title ?? input.documentId),
+    changes: { legalBasis: { from: beforeLabel, to: fields.legalBasisLabel } },
+    note: "pripravované znenie (ADR-023)",
+  })
+  return true
 }

@@ -41,6 +41,7 @@ import { documentDraftIdentity, normalizeMeta, isEmptyMeta, suggestMetaFromMarkd
 import { allDepartments } from "./departments"
 import { versionStateFor } from "./approvalsDb"
 import { responsibleSnapshot } from "./versionResponsibilityDb"
+import { legalBasisFromDraft, type DraftLegalBasis } from "./versionResponsibility"
 import { autoVersionLabel } from "./versionLabel"
 
 export const CHUNKS_COLLECTION = "document_chunks"
@@ -699,6 +700,11 @@ export interface PublishResult {
   chunks: number
   archived: number
   alreadyDone: boolean
+  /**
+   * Znenie vyšlo s právnym základom určeným už v príprave (ADR-023). Keď
+   * `false`, zodpovedná osoba ho má určiť po zverejnení — a treba jej to povedať.
+   */
+  legalBasisCarried?: boolean
 }
 
 /**
@@ -840,6 +846,8 @@ export async function publish(
   const versionId = documentDraftIdentity({ draftMarkdown: markdown, draftPdf, draftMeta, draftTitle })
   const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
   const now = new Date()
+  // Právny základ určený v príprave (ADR-023, D139) — kópia z okamihu výberu.
+  const draftBasis = legalBasisFromDraft(doc.draftLegalBasis as DraftLegalBasis | null | undefined)
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
   const existing = (doc.versions as { versionId: string }[] | undefined)?.some(v => v.versionId === versionId)
@@ -950,8 +958,9 @@ export async function publish(
         updatedAt: now,
         updatedBy: actor,
       },
-      // Príprava sa skončila — zodpovedná osoba je odteraz pri znení.
-      $unset: { draftResponsible: "", draftTitle: "" },
+      // Príprava sa skončila — zodpovedná osoba aj právny základ sú odteraz
+      // pri znení.
+      $unset: { draftResponsible: "", draftTitle: "", draftLegalBasis: "" },
       $push: {
         versions: {
           versionId,
@@ -962,8 +971,10 @@ export async function publish(
           contentHash: versionId,
           effectiveFromSource: input.effectiveFromSource?.trim() || undefined,
           changeNote: input.changeNote?.trim() || undefined,
-          // Právny základ sa tu zámerne nezapisuje: určuje ho zodpovedná
-          // osoba, nie ten, kto znenie zverejňuje (D91).
+          // Právny základ nezadáva ten, kto znenie zverejňuje (D91). Zapíše
+          // sa len ten, ktorý v príprave určila zodpovedná osoba (ADR-023),
+          // aj s históriou — kto a kedy ho vtedy vybral.
+          ...(draftBasis ?? {}),
           responsiblePerson: responsible,
           // Údaje o znení (ADR-013) — kópia schválených.
           ...(draftMeta ? {
@@ -995,7 +1006,10 @@ export async function publish(
       (draftTitle && draftTitle !== String(doc.title ?? "") ? ` · nový názov: „${draftTitle}" (pôvodne „${String(doc.title ?? "")}")` : ""),
   })
 
-  return { versionId, label, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false }
+  return {
+    versionId, label, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false,
+    legalBasisCarried: Boolean(draftBasis),
+  }
 }
 
 

@@ -4228,6 +4228,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "legalBasis.noChange": "Právny základ je už takto určený.",
     "legalBasis.reasonRequired": "Dôvod zmeny právneho základu je povinný — potvrdenia, ktoré medzitým vznikli, si nesú pôvodný.",
     "legalBasis.notAllowed": "Právny základ určuje zodpovedná osoba tohto znenia. Správca obsahu ho smie určiť len vtedy, keď znenie zodpovednú osobu nemá alebo už nie je aktívna.",
+    "legalBasis.noDraft": "Dokument nemá pripravované znenie — právny základ sa určuje pri zverejnenom znení.",
+    "legalBasis.draftNotAllowed": "Právny základ pripravovaného znenia určuje jeho zodpovedná osoba. Správca obsahu ho smie určiť len vtedy, keď ju príprava nemá alebo už nie je aktívna.",
     unknown: "Nepodarilo sa to. Skús to znova.",
 
     // schvalovanie znenia (ADR-006)
@@ -7458,6 +7460,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "legalBasis.noChange": "Právní základ je už takto určen.",
     "legalBasis.reasonRequired": "Důvod změny právního základu je povinný — potvrzení, která mezitím vznikla, si nesou původní.",
     "legalBasis.notAllowed": "Právní základ určuje odpovědná osoba tohoto znění. Správce obsahu jej smí určit jen tehdy, když znění odpovědnou osobu nemá nebo už není aktivní.",
+    "legalBasis.noDraft": "Dokument nemá připravované znění — právní základ se určuje u zveřejněného znění.",
+    "legalBasis.draftNotAllowed": "Právní základ připravovaného znění určuje jeho odpovědná osoba. Správce obsahu jej smí určit jen tehdy, když ji příprava nemá nebo už není aktivní.",
     unknown: "Nepodařilo se to. Zkus to znovu.",
 
     // schvalovani zneni (ADR-006)
@@ -10678,6 +10682,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "legalBasis.noChange": "The legal basis is already set this way.",
     "legalBasis.reasonRequired": "A reason for changing the legal basis is required — acknowledgements made in the meantime keep the original one.",
     "legalBasis.notAllowed": "The legal basis is set by the responsible person for this version. The content manager may set it only when the version has no responsible person or they are no longer active.",
+    "legalBasis.noDraft": "The document has no version in preparation — the legal basis is set on a published version.",
+    "legalBasis.draftNotAllowed": "The legal basis of a version in preparation is set by its responsible person. The content manager may set it only when the preparation has none or they are no longer active.",
     unknown: "That did not work. Try again.",
 
     // version approval (ADR-006)

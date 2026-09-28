@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest"
 import {
   canSetLegalBasis, isLegalBasis, legalBasisChoiceProblem, legalBasisProblem, responsibleChangeProblem,
-  tidyReference, MAX_LEGAL_REFERENCE,
+  tidyReference, MAX_LEGAL_REFERENCE, legalBasisFields, sameBasisKeys, legalBasisFromDraft,
 } from "../src/lib/versionResponsibility"
 
 const GARANT = { personId: "p-garant", fullName: "Garant Predpisu", email: "garant@futbalsfz.sk" }
@@ -134,5 +134,65 @@ describe("výber z číselníka (D92)", () => {
       .toBe("legalBasis.reasonRequired")
     expect(legalBasisChoiceProblem({ option: { key: "bozp" }, current: "legal_obligation", currentKey: null, reason: "prechod na číselník" }))
       .toBeNull()
+  })
+})
+
+describe("polia znenia z vybraných základov (ADR-017)", () => {
+  const BOZP = { basis: "legal_obligation" as const, key: "bozp", label: "BOZP", reference: "§ 7 zákona č. 124/2006 Z. z." }
+  const SMERNICA = { basis: "legitimate_interest" as const, key: "interna_smernica", label: "Interná smernica", reference: null }
+
+  it("zákonná povinnosť má prednosť, názvy a kľúče sa spoja v poradí výberu", () => {
+    const f = legalBasisFields([SMERNICA, BOZP])
+    expect(f.legalBasis).toBe("legal_obligation")
+    expect(f.legalBasisKey).toBe("interna_smernica,bozp")
+    expect(f.legalBasisLabel).toBe("Interná smernica + BOZP")
+    expect(f.legalBasisReference).toBe("§ 7 zákona č. 124/2006 Z. z.")
+    expect(f.legalBases).toHaveLength(2)
+  })
+
+  it("bez odkazu je odkaz null, nie prázdny reťazec", () => {
+    expect(legalBasisFields([SMERNICA]).legalBasisReference).toBeNull()
+  })
+
+  it("rovnaký výber v inom poradí je ten istý výber", () => {
+    expect(sameBasisKeys(["bozp", "interna_smernica"], ["interna_smernica", "bozp"])).toBe(true)
+    expect(sameBasisKeys(["bozp"], ["bozp", "interna_smernica"])).toBe(false)
+  })
+})
+
+describe("prenos základu z prípravy do znenia (ADR-023, D139)", () => {
+  const AT = new Date("2026-09-20T08:00:00Z")
+  const BOZP = { basis: "legal_obligation" as const, key: "bozp", label: "BOZP", reference: "§ 7 zákona č. 124/2006 Z. z." }
+  const SMERNICA = { basis: "legitimate_interest" as const, key: "interna_smernica", label: "Interná smernica", reference: null }
+
+  it("bez určenia v príprave sa neprenáša nič — základ sa určí po zverejnení", () => {
+    expect(legalBasisFromDraft(null)).toBeNull()
+    expect(legalBasisFromDraft(undefined)).toBeNull()
+    expect(legalBasisFromDraft({ entries: [], at: AT, by: "g@futbalsfz.sk" })).toBeNull()
+  })
+
+  it("znenie dostane zoznam, rozhodujúci druh a históriu s tým, kto a kedy určil", () => {
+    const v = legalBasisFromDraft({ entries: [SMERNICA, BOZP], at: AT, by: "garant@futbalsfz.sk" })!
+    expect(v.legalBasis).toBe("legal_obligation")
+    expect(v.legalBases).toHaveLength(2)
+    expect(v.legalBasisReference).toBe("§ 7 zákona č. 124/2006 Z. z.")
+    expect(v.legalBasisChanges).toEqual([{
+      at: AT, by: "garant@futbalsfz.sk",
+      from: null, fromReference: null, fromKey: null,
+      to: "legal_obligation", toReference: "§ 7 zákona č. 124/2006 Z. z.",
+      toKey: "interna_smernica,bozp", toLabel: "Interná smernica + BOZP",
+      inPreparation: true,
+    }])
+  })
+
+  it("bez odkazu pole odkazu v znení vôbec nie je — nie null", () => {
+    const v = legalBasisFromDraft({ entries: [SMERNICA], at: AT, by: "g@futbalsfz.sk" })!
+    expect("legalBasisReference" in v).toBe(false)
+    expect(v.legalBasis).toBe("legitimate_interest")
+  })
+
+  it("neznámy druh v uloženom koncepte sa neprenesie", () => {
+    const zly = { basis: "consent", key: "x", label: "X", reference: null } as never
+    expect(legalBasisFromDraft({ entries: [zly], at: AT, by: "g@futbalsfz.sk" })).toBeNull()
   })
 })

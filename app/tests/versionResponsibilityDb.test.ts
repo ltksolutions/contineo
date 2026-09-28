@@ -33,7 +33,7 @@ vi.mock("../src/lib/audit", async importOriginal => {
 })
 
 import {
-  setVersionLegalBasis, setVersionResponsible, ResponsibilityError,
+  setVersionLegalBasis, setVersionResponsible, setDraftLegalBasis, ResponsibilityError,
 } from "../src/lib/versionResponsibilityDb"
 import { DOCUMENTS_COLLECTION } from "../src/lib/documents"
 import { PERSONS_COLLECTION } from "../src/lib/persons"
@@ -305,5 +305,92 @@ describe("zodpovedná osoba v príprave (ADR-014, D109)", () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc())
     await expect(saveDraftResponsible(COMPANY, "sfz:sutazny_poriadok", "p-novy", "s@futbalsfz.sk"))
       .rejects.toMatchObject({ code: "meta.noDraft" })
+  })
+})
+
+describe("právny základ v príprave (ADR-023, D139)", () => {
+  const NOW = new Date("2026-09-28T10:00:00Z")
+  const draftDoc = (extra: Record<string, unknown> = {}) => ({
+    ...doc(), draftMarkdown: "# Čl. 1\ntext", draftResponsible: GARANT, ...extra,
+  })
+  const base = {
+    companyCode: COMPANY, documentId: "sfz:sutazny_poriadok",
+    actor: { personId: "p-garant", email: GARANT.email }, isContentManager: false, now: NOW,
+  }
+  function tenantHas(t: Record<string, unknown> = {}) {
+    collection(TENANTS_COLLECTION).findOne.mockResolvedValue({ companyCode: COMPANY, ...t })
+  }
+
+  it("zodpovedná osoba z prípravy uloží kópiu položiek z číselníka na koncept", async () => {
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(draftDoc())
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    tenantHas()
+
+    expect(await setDraftLegalBasis({ ...base, legalBasisKeys: ["bozp", "interna_smernica"] })).toBe(true)
+
+    const { filter, update: u } = update()
+    expect(filter).toMatchObject({ companyCode: COMPANY, documentId: "sfz:sutazny_poriadok" })
+    const saved = u.$set.draftLegalBasis as { entries: { key: string; basis: string; label: string }[]; at: Date; by: string }
+    expect(saved.at).toBe(NOW)
+    expect(saved.by).toBe(GARANT.email)
+    expect(saved.entries.map(e => e.key)).toEqual(["bozp", "interna_smernica"])
+    expect(saved.entries[0]).toMatchObject({ basis: "legal_obligation", label: "Bezpečnosť a ochrana zdravia pri práci" })
+    // Znenie sa nemení — základ je len na koncepte, kým sa nezverejní.
+    expect(Object.keys(u.$set).some(k => k.startsWith("versions"))).toBe(false)
+    expect(audit.writeAudit).toHaveBeenCalledOnce()
+  })
+
+  it("zmena v príprave nepýta dôvod; rovnaký výber v inom poradí nič nezapíše", async () => {
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(draftDoc({
+      draftLegalBasis: {
+        entries: [{ basis: "legal_obligation", key: "bozp", label: "BOZP", reference: "§ 7" },
+          { basis: "legitimate_interest", key: "interna_smernica", label: "Smernica", reference: null }],
+        at: new Date("2026-09-20"), by: GARANT.email,
+      },
+    }))
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    tenantHas()
+
+    expect(await setDraftLegalBasis({ ...base, legalBasisKeys: ["interna_smernica", "bozp"] })).toBe(false)
+    expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+
+    expect(await setDraftLegalBasis({ ...base, legalBasisKeys: ["bozp"] })).toBe(true)
+    expect(audit.writeAudit).toHaveBeenCalledOnce()
+  })
+
+  it("iný človek ani správca obsahu pri aktívnej osobe z prípravy nezapíšu", async () => {
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(draftDoc())
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    tenantHas()
+    await expect(setDraftLegalBasis({
+      ...base, legalBasisKeys: ["bozp"], actor: { personId: "p-spravca", email: "s@futbalsfz.sk" }, isContentManager: true,
+    })).rejects.toMatchObject({ code: "legalBasis.draftNotAllowed" })
+    await expect(setDraftLegalBasis({
+      ...base, legalBasisKeys: ["bozp"], actor: { personId: "p-iny", email: "i@futbalsfz.sk" },
+    })).rejects.toMatchObject({ code: "legalBasis.draftNotAllowed" })
+    expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+  })
+
+  it("správca obsahu smie, keď príprava zodpovednú osobu nemá", async () => {
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(draftDoc({ draftResponsible: null }))
+    tenantHas()
+    expect(await setDraftLegalBasis({
+      ...base, legalBasisKeys: ["interna_smernica"], actor: { personId: "p-spravca", email: "s@futbalsfz.sk" }, isContentManager: true,
+    })).toBe(true)
+  })
+
+  it("bez konceptu, s neznámou položkou alebo bez výberu neprejde", async () => {
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    tenantHas()
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc())
+    await expect(setDraftLegalBasis({ ...base, legalBasisKeys: ["bozp"] }))
+      .rejects.toMatchObject({ code: "legalBasis.noDraft" })
+
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(draftDoc())
+    await expect(setDraftLegalBasis({ ...base, legalBasisKeys: ["§ 7 zákona"] }))
+      .rejects.toMatchObject({ code: "legalBasis.unknownKey" })
+    await expect(setDraftLegalBasis({ ...base, legalBasisKeys: [] }))
+      .rejects.toMatchObject({ code: "legalBasis.unknownKey" })
+    expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
   })
 })
