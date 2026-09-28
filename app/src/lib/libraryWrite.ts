@@ -928,6 +928,10 @@ export async function publish(
       verziaChunkera: CHUNKER_VERSION,
       embeddedAt: now,
       isActive: true,
+      // Platné členenie tohto znenia (`chunkSuperseded.ts`). Keď ho neskôr
+      // nahradí novšie znenie, príznak zostane `false` — úseky sú stále
+      // jediné narezanie **tohto** znenia pre otázky „čo platilo vtedy".
+      superseded: false,
       effectiveFrom: effectiveFrom,
       effectiveTo: null,
       createdAt: now,
@@ -1250,6 +1254,15 @@ export async function reindex(
   }
 
   const now = new Date()
+  // Preindexovanie nahrádza **členenie** toho istého znenia, nie znenie:
+  // doterajšie úseky sú od tejto chvíle nahradené (`chunkSuperseded.ts`)
+  // a v hľadaní „k dátumu" sa nesmú objaviť vedľa nových s tým istým textom.
+  // Len úseky tohto znenia — keby boli aktívne aj iné (rozpor, ktorý hlási
+  // `npm run check`), nie je to nahradené členenie.
+  await chunkCol.updateMany(
+    { companyCode, documentId, isActive: true, versionId: effective.versionId },
+    { $set: { superseded: true, supersededAt: now } },
+  )
   const archive = await chunkCol.updateMany(
     { companyCode, documentId, isActive: true },
     { $set: { isActive: false, effectiveTo: now } },
@@ -1277,6 +1290,7 @@ export async function reindex(
       verziaChunkera: CHUNKER_VERSION,
       embeddedAt: now,
       isActive: true,
+      superseded: false,
       effectiveFrom: (doc.effectiveFrom as Date | null) ?? null,
       effectiveTo: null,
       createdAt: now,

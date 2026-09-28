@@ -168,6 +168,36 @@ for (const o of persons) {
 }
 
 /*
+ * N. Úsek normy nesie príznak `superseded` a každé znenie má najviac jedno
+ * platné členenie (plán „znenia v indexe", krok 2; `chunkSuperseded.ts`).
+ *
+ * Príznak čítajú filtre hľadania „k dátumu". Úsek bez neho by z takého
+ * hľadania ticho vypadol, dve platné členenia by vrátili ten istý text
+ * dvakrát. Oprava: `npm run chunks:superseded -- --company …`.
+ */
+const normChunks = chunks.filter(c => c.sourceType !== "qa" && c.versionId)
+const withoutFlag = normChunks.filter(c => typeof c.superseded !== "boolean")
+check(
+  withoutFlag.length > 0,
+  `${withoutFlag.length} úsekov normy nemá príznak superseded`,
+  "hľadanie podľa znenia by ich nevidelo — spusti npm run chunks:superseded",
+)
+const liveChunkings = new Map()
+for (const ch of normChunks.filter(c => c.superseded === false)) {
+  const key = `${ch.companyCode}|${ch.versionId}`
+  const z = liveChunkings.get(key) ?? new Set()
+  z.add(ch.chunkingId ?? "(bez chunkingId)")
+  liveChunkings.set(key, z)
+}
+for (const [key, ids] of liveChunkings) {
+  check(
+    ids.size > 1,
+    `znenie ${key.split("|")[1]} má ${ids.size} platné členenia (superseded: false)`,
+    "hľadanie podľa znenia by vrátilo ten istý text dvakrát, zakaždým inak narezaný",
+  )
+}
+
+/*
  * N. Overená odpoveď nesmie byť prístupnejšia než predpis, z ktorého vznikla.
  *
  * Toto je **tvrdá kontrola, nie odporúčanie**. Úroveň sa pri zverejnení
