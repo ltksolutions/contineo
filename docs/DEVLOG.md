@@ -10,6 +10,45 @@
 
 ---
 
+## 2026-09-28 — ochrana údajov podľa organizácie, pozvánky odoslané
+
+**Čo sa spravilo.**
+
+- **ADR-021** (Ján ako DPO): záznamy vzdelávania majú lehotu dokladov,
+  podrobnosti (odpovede, úseky videa) sa orežú rok po dokončení kurzu.
+  Anonymizáciu certifikátu Ján **zamietol** — vydaný certifikát platí
+  a drží sa kvôli archivácii (D132). Retencia v kóde (#157), beží ako výkaz.
+- **Osoby:** stav „Nová" po importe, „Pozvaná" až po odoslaní pozvánky
+  (odvodené z `invitationSentAt`); pozvánka aj zo zoznamu osôb.
+- **Pozvánka:** odkaz na `/privacy`; univerzálny text „{Právny názov} vás
+  pozýva do {Názov portálu}"; v nastaveniach blok „Názov portálu" spojený
+  s prevádzkovateľom. SFZ premenovalo portál na „Intranet SFZ".
+- **`/privacy`:** Vzdelávanie a pohlavie (DPO schválil 28. 9.), odkaz
+  v pätičke; **ADR-022** — krajina sídla (úrad, zákon o archívoch),
+  sprostredkovatelia z profilu adaptérov, lehoty organizácie na `/dpo`
+  (tie isté čísla číta mazacia dávka), doplnkový text DPO, verzia textu
+  podľa organizácie.
+- **Pozvánky odišli:** 146 hromadne 16:41 (+1 kolegovi), bez chyby; do
+  hodiny sa prihlásilo 8 ľudí.
+
+**Nefungovalo / poučenie.**
+
+- **Stará karta = stará verzia.** Kolegovi prišla pozvánka so starým
+  textom hodinu po nasadení nového: karta otvorená pred nasadením posiela
+  akcie verzii, z ktorej sa načítala (Vercel skew protection). Overené
+  v logoch Vercelu podľa `deploymentId`. Pribudla hláška „Je dostupná nová
+  verzia — Obnoviť" (`VersionNotice`, `/api/version`). Hromadné pozvánky
+  už obslúžila nová verzia (dd04697) — tiež overené v logoch.
+- Pri návrhu D131 som počítal so zmazaním celého sledovania videa; až pri
+  kóde vyšlo, že dokončenie časti sa z neho odvodzuje. Orezávajú sa len
+  úseky, `reachedAt` zostáva — ADR doplnené.
+- Pohlavie sa najprv volalo „oslovenie"; Ján ho prepol, lebo poslúži aj
+  štatistikám. Pole nemalo dáta, premenovanie bez migrácie.
+- Pri veľkej záťaži stroja (load ~100) padali tri staré testy na 5 s
+  limite importu stránky — aj bez zmien. `--maxWorkers=3` prejde celé.
+- V odpovediach nehlásiť kroky rituálu, ktoré nič nenašli (Ján: „toto nám
+  treba?").
+
 ## 2026-09-27 (5) — Vzdelávanie L0 až L3 v produkcii; PDF certifikátu; pohlavie osoby
 
 **Čo sa spravilo.** Modul `learning` (ADR-018) prešiel od kostry po

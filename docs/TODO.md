@@ -909,5 +909,7 @@ nie táto sekcia.
 - [ ] Náhľad kurzu pre `learning-admin` bez zápisu; prideľovanie kurzu aj pre `hr`.
 - [ ] Nahrávanie médií bez JavaScriptu (dnes len modálne okno s priebehom).
 - [ ] Certifikát od externého vydavateľa (`issuedBy.kind = "external"`) — typ je hotový, tok nie.
+- [x] **Ochrana údajov podľa organizácie (ADR-022)** ✅ 2026-09-28 — krajina sídla, sprostredkovatelia z profilu, lehoty a doplnkový text na `/dpo`, verzia textu podľa organizácie (PR #165, #166, #168).
+- [x] **Hláška o novej verzii** ✅ 2026-09-28 — stará karta posielala akcie starej verzii (pozvánka so starým textom); `VersionNotice` + `/api/version` (PR #167).
 - [ ] Prvý kurz naostro: dokončiť, stiahnuť PDF, overiť QR na telefóne, skúsiť odvolanie na testovacej osobe.
 - [ ] Po L2: test ako krok trasy (O18) a trasa z kurzov (O19) — dohoda s onboardingom, mení `tracks.ts`, `/documents`, ADR-005
