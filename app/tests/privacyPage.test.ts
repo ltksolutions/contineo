@@ -76,4 +76,16 @@ describe("/privacy", () => {
     expect(html).toContain("6 mesiacov po dokončení kurzu")
     expect(html).toContain("Verzia textu: 5. 10. 2026")
   })
+
+  it("doplnok DPO: v jazyku čitateľa, inak v predvolenom; bez neho sekcia nie je (D137)", async () => {
+    expect(await render()).not.toContain('id="extra"')
+    s.privacy = { extra: { sk: "Prvý odsek.\n\nDruhý <b>odsek</b>." } }
+    const html = await render()
+    expect(html).toContain('id="extra"')
+    expect(html).toContain("Doplnenie prevádzkovateľa")
+    expect(html).toContain("<p style=\"white-space:pre-line\">Prvý odsek.</p>")
+    expect(html).toContain("Druhý &lt;b&gt;odsek&lt;/b&gt;.")
+    s.language = "en"
+    expect(await render()).toContain("Prvý odsek.")
+  })
 })

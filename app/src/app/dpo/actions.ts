@@ -102,3 +102,27 @@ export async function saveRetentionAction(fd: FormData) {
   revalidatePath("/privacy")
   redirect(`/dpo?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#retention`)
 }
+
+/**
+ * Doplnkový text DPO na `/privacy` (ADR-022, D137) — v jazykoch
+ * organizácie. Prázdne pole doplnok v danom jazyku zmaže.
+ */
+export async function saveExtraAction(fd: FormData) {
+  const ctx = await dpoContext()
+  if (ctx.state !== "ready") redirect("/")
+  const t = dictionary(ctx.person.language)
+  const extra: Record<string, string> = {}
+  for (const l of ctx.tenant.languages) extra[l] = field(fd, `extra-${l}`)
+  let message = t.dpo.extra.saved
+  let error = false
+  try {
+    await saveTenant(ctx.person.companyCode, { privacyExtra: extra }, ctx.person.email)
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[dpo] uloženie doplnku zlyhalo:", e)
+    message = errorText(e, ctx.person.language)
+    error = true
+  }
+  revalidatePath("/dpo")
+  revalidatePath("/privacy")
+  redirect(`/dpo?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#privacy-extra`)
+}

@@ -70,6 +70,8 @@ export default async function PrivacyPage() {
   // Verzia textu: neskoršia zo spoločného textu a nastavení organizácie (D138).
   const updated = tenant.privacy?.updatedAt ? new Date(tenant.privacy.updatedAt) : null
   const version = updated && updated > PRIVACY_NOTICE_VERSION ? updated : PRIVACY_NOTICE_VERSION
+  // Doplnok DPO organizácie (D137): jazyk čitateľa, inak predvolený jazyk organizácie.
+  const extra = (tenant.privacy?.extra?.[language] || tenant.privacy?.extra?.[tenant.defaultLanguage] || "").trim()
   const processors = privacyProcessors(profile).map(({ key, region }) =>
     t.processors[key].map(cell => cell.replace("{region}", region ?? "")) as [string, string, string])
 
@@ -85,6 +87,7 @@ export default async function PrivacyPage() {
     ["retention", t.retentionHeading],
     ["recipients", t.recipientsHeading],
     ["rights", t.rightsHeading],
+    ...(extra ? [["extra", t.extraHeading] as [string, string]] : []),
   ]
   const toc = (className: string) => (
     <nav className={className} aria-label={t.tocHeading}>
@@ -161,6 +164,14 @@ export default async function PrivacyPage() {
           <p>{t.objection}</p>
         </div>
         <p>{t.complaint[country]}</p>
+
+        {/* Doplnok prevádzkovateľa (ADR-022, D137) — obyčajný text po odsekoch, nie HTML. */}
+        {extra && (
+          <>
+            <h2 id="extra">{t.extraHeading}</h2>
+            {extra.split(/\n\s*\n/).map((para, i) => <p key={i} style={{ whiteSpace: "pre-line" }}>{para}</p>)}
+          </>
+        )}
 
         <p className="privacy-foot">
           {t.version(formatDate(version, language))}
