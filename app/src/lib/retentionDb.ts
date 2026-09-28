@@ -1,5 +1,7 @@
 /**
  * Retenčná dávka (ADR-012, D101, D102) — výmaz reťaze dôkazov po lehote.
+ * Od ADR-021 aj záznamy vzdelávania (D130) a orezanie ich podrobností
+ * rok po dokončení kurzu (D131). **Certifikátov sa nedotýka** (D132).
  *
  * **Jediná cesta, ktorou doklad zaniká.** Mimo tejto dávky a rozhodnutia
  * o námietke (D105) platí D24 ďalej: záznam sa nemení ani nemaže.
@@ -19,14 +21,20 @@ import { READING_COLLECTION } from "./readingTime"
 import { APPROVALS_COLLECTION } from "./approvals"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type DocumentRecord } from "./documents"
 import { OBJECTIONS_COLLECTION } from "./objections"
+import { ENROLLMENTS_COLLECTION, type Enrollment } from "./enrollments"
+import { PART_COMPLETIONS_COLLECTION, VIDEO_WATCH_COLLECTION, courseProgress } from "./learningProgress"
+import { TEST_ATTEMPTS_COLLECTION } from "./testAttempts"
+import { COURSES_COLLECTION, versionById, type Course } from "./courses"
+import { progressFactsMany } from "./learningProgressDb"
 import {
-  retentionDecision, isStaleActive, RETENTION_LOG_DAYS,
+  retentionDecision, isStaleActive, learningDetailsDue, addMonths, RETENTION_LOG_DAYS, LEARNING_DETAIL_MONTHS,
   type RetentionBasis, type RetentionMode,
 } from "./retention"
 
 export const RETENTION_LOG_COLLECTION = "retention_log"
 
-export type DeletionReason = RetentionBasis | "objection"
+/** `details` = orezanie podrobností vzdelávania po roku (ADR-021, D131). */
+export type DeletionReason = RetentionBasis | "objection" | "details"
 
 export interface DeletionCounts {
   acknowledgements: number
@@ -37,12 +45,26 @@ export interface DeletionCounts {
   responsibleCleared: number
   /** Námietky osoby — osobný údaj, maže sa s ostatnými dokladmi (D105). */
   objections: number
+  /** Vzdelávanie (ADR-021, D130) — certifikáty sa nemažú (D132). */
+  enrollments: number
+  partCompletions: number
+  videoWatch: number
+  testAttempts: number
 }
 
 const ZERO: DeletionCounts = {
   acknowledgements: 0, documentOpens: 0, readingTimes: 0,
   assignments: 0, approvalRounds: 0, responsibleCleared: 0, objections: 0,
+  enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0,
 }
+
+/** Kolekcie vzdelávania osoby, ktoré maže lehota (D130). */
+const LEARNING_COLLECTIONS = [
+  [ENROLLMENTS_COLLECTION, "enrollments"],
+  [PART_COMPLETIONS_COLLECTION, "partCompletions"],
+  [VIDEO_WATCH_COLLECTION, "videoWatch"],
+  [TEST_ATTEMPTS_COLLECTION, "testAttempts"],
+] as const
 
 const total = (c: DeletionCounts) => Object.values(c).reduce((a, b) => a + b, 0)
 
@@ -71,6 +93,19 @@ async function lastEvents(companyCode: string, people: PersonForRetention[]): Pr
   const acks = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
   const opens = await getCollection(DOCUMENT_OPENS_COLLECTION)
   const assignments = await getCollection(ASSIGNMENTS_COLLECTION)
+  const byPersonMax = async (name: string, field: string) =>
+    (await getCollection(name)).aggregate([
+      { $match: { companyCode } },
+      { $group: { _id: "$personId", last: { $max: `$${field}` } } },
+    ]).toArray()
+
+  // Vzdelávanie je tiež udalosť (D130): kto pred rokom robil test, nie je
+  // „bez udalosti 5 rokov".
+  const learning = await Promise.all([
+    byPersonMax(ENROLLMENTS_COLLECTION, "enrolledAt"),
+    byPersonMax(PART_COMPLETIONS_COLLECTION, "at"),
+    byPersonMax(TEST_ATTEMPTS_COLLECTION, "startedAt"),
+  ])
 
   const [byAck, byOpen, byAssignment] = await Promise.all([
     acks.aggregate([
@@ -95,6 +130,7 @@ async function lastEvents(companyCode: string, people: PersonForRetention[]): Pr
   }
   for (const r of byAck) bump(String(r._id), r.last)
   for (const r of byOpen) bump(String(r._id), r.last)
+  for (const rows of learning) for (const r of rows) bump(String(r._id), r.last)
   const byEmail = new Map(byAssignment.map(r => [String(r._id).trim(), r.last as Date]))
   for (const p of people) {
     for (const e of emailsOf(p)) bump(p.id, byEmail.get(e))
@@ -179,6 +215,17 @@ export async function deletePersonEvidence(
     objections: objections.length,
   }
 
+  // Vzdelávanie (D130) len s lehotou — námietka sa týka predpisov
+  // (oprávnený záujem pri znení), nie kurzov. Certifikáty zostávajú (D132).
+  if (reason !== "objection" && !versions) {
+    for (const [name, key] of LEARNING_COLLECTIONS) {
+      const col = await getCollection(name)
+      const filter = { companyCode, personId: person.id }
+      counts[key] = await col.countDocuments(filter)
+      if (!dry && counts[key]) await col.deleteMany(filter)
+    }
+  }
+
   // Znenia, ktorých sa výmaz dotkol — kandidáti na zmazanie kôl (B4a).
   const touched = new Map<string, { documentId: string; versionId: string }>()
   for (const a of acks) {
@@ -254,6 +301,17 @@ async function logDeletion(
   await col.insertOne({ companyCode, personId, reason, counts, at })
 }
 
+export interface LearningDetailsCounts {
+  /** Zápisy dokončených kurzov, ktorým sa podrobnosti orezali. */
+  enrollments: number
+  /** Pokusy, z ktorých zmizli otázky a odpovede. */
+  testAttempts: number
+  /** Sledovania, z ktorých zmizli úseky (dopozerané — ostáva `reachedAt`). */
+  videoWatchTrimmed: number
+  /** Sledovania, ktoré hranicu neprekročili — nič nedokazujú, mažú sa. */
+  videoWatchDeleted: number
+}
+
 export interface RetentionRun {
   companyCode: string
   mode: RetentionMode
@@ -261,6 +319,70 @@ export interface RetentionRun {
   persons: { personId: string; basis: RetentionBasis; counts: DeletionCounts }[]
   /** Aktívne osoby bez udalosti 5 rokov — na kontrolu HR, nič sa nemaže. */
   staleActive: number
+  /** Orezanie podrobností vzdelávania rok po dokončení kurzu (D131). */
+  learningDetails: LearningDetailsCounts
+}
+
+/**
+ * Orezanie podrobností vzdelávania (ADR-021, D131): rok po **dokončení**
+ * kurzu zmiznú z pokusov otázky a odpovede a zo sledovania videa úseky.
+ *
+ * - Dokončenie sa **odvodzuje** (D119) — kurz sa prepočíta z udalostí.
+ * - Sledovanie, ktoré hranicu prekročilo, **zostane** s `reachedAt`: stav
+ *   časti sa z neho odvodzuje a bez neho by kurz zrazu vyzeral nedokončený.
+ *   Sledovanie bez `reachedAt` nič nedokazuje a zmaže sa.
+ * - Zápis dostane `detailsPurgedAt`, aby sa denne neprepočítaval znova.
+ */
+export async function trimLearningDetails(companyCode: string, mode: RetentionMode, now: Date = new Date()): Promise<LearningDetailsCounts> {
+  const counts: LearningDetailsCounts = { enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 }
+  const dry = mode !== "delete"
+  // Dokončiť sa nedá skôr, než sa človek zapísal — starší zápis je kandidát.
+  const cutoff = addMonths(now, -LEARNING_DETAIL_MONTHS)
+  const enrollmentsCol = await getCollection<Enrollment>(ENROLLMENTS_COLLECTION)
+  const candidates = await enrollmentsCol
+    .find({ companyCode, enrolledAt: { $lte: cutoff }, cancelledAt: null, detailsPurgedAt: { $exists: false } })
+    .toArray()
+  if (!candidates.length) return counts
+
+  const courses = new Map<string, Course | null>()
+  const coursesCol = await getCollection<Course>(COURSES_COLLECTION)
+  for (const key of new Set(candidates.map(e => e.courseKey))) courses.set(key, await coursesCol.findOne({ companyCode, key }))
+  const facts = await progressFactsMany(companyCode, candidates.map(e => e.id))
+  const attempts = await getCollection(TEST_ATTEMPTS_COLLECTION)
+  const watches = await getCollection(VIDEO_WATCH_COLLECTION)
+
+  for (const e of candidates) {
+    const course = courses.get(e.courseKey)
+    const version = course ? versionById(course, e.versionId) : null
+    if (!version) continue
+    const progress = courseProgress(version, facts.get(e.id) ?? { completions: [], watches: [], passedTests: [] })
+    if (!learningDetailsDue(progress.completedAt, now)) continue
+
+    const attemptFilter = { companyCode, "context.enrollmentId": e.id, submittedAt: { $ne: null }, detailsPurgedAt: { $exists: false } }
+    const reached = { companyCode, enrollmentId: e.id, reachedAt: { $ne: null }, detailsPurgedAt: { $exists: false } }
+    const notReached = { companyCode, enrollmentId: e.id, reachedAt: null }
+    const c = {
+      testAttempts: await attempts.countDocuments(attemptFilter),
+      videoWatchTrimmed: await watches.countDocuments(reached),
+      videoWatchDeleted: await watches.countDocuments(notReached),
+    }
+    counts.enrollments++
+    counts.testAttempts += c.testAttempts
+    counts.videoWatchTrimmed += c.videoWatchTrimmed
+    counts.videoWatchDeleted += c.videoWatchDeleted
+    if (dry) continue
+
+    if (c.testAttempts) await attempts.updateMany(attemptFilter, { $set: { questions: [], answers: {}, detailsPurgedAt: now } })
+    if (c.videoWatchTrimmed) await watches.updateMany(reached, { $set: { watchedRanges: [], detailsPurgedAt: now } })
+    if (c.videoWatchDeleted) await watches.deleteMany(notReached)
+    await enrollmentsCol.updateOne({ companyCode, id: e.id }, { $set: { detailsPurgedAt: now } })
+    if (c.testAttempts + c.videoWatchTrimmed + c.videoWatchDeleted > 0) {
+      await logDeletion(companyCode, e.personId, "details", {
+        ...ZERO, testAttempts: c.testAttempts, videoWatch: c.videoWatchTrimmed + c.videoWatchDeleted,
+      }, now)
+    }
+  }
+  return counts
 }
 
 /**
@@ -275,7 +397,10 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
     )
     .toArray() as unknown as PersonForRetention[]
 
-  const run: RetentionRun = { companyCode, mode, persons: [], staleActive: 0 }
+  const run: RetentionRun = {
+    companyCode, mode, persons: [], staleActive: 0,
+    learningDetails: { enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 },
+  }
   const last = await lastEvents(companyCode, people)
   for (const p of people) {
     const input = { status: p.status, endedAt: p.endedAt, deactivatedAt: p.deactivatedAt, lastEventAt: last.get(p.id) ?? null }
@@ -287,5 +412,7 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
     const counts = await deletePersonEvidence(p, decision.basis, mode, now)
     if (total(counts) > 0) run.persons.push({ personId: p.id, basis: decision.basis, counts })
   }
+  // Po výmaze osôb — ich zápisy už nie sú, nerátajú sa dvakrát.
+  run.learningDetails = await trimLearningDetails(companyCode, mode, now)
   return run
 }

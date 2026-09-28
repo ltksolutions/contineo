@@ -81,6 +81,11 @@ export interface TestAttempt {
   resetReason?: string
   /** Jedno „Spustiť" = jeden pokus aj pri dvojkliku. */
   idempotencyKey: string
+  /**
+   * Otázky a odpovede boli rok po dokončení kurzu odstránené (ADR-021,
+   * D131); zostal výsledok — body, percentá, prešiel, časy.
+   */
+  detailsPurgedAt?: Date | null
 }
 
 /* ── Náhoda so seedom ──────────────────────────────────────────────────── */

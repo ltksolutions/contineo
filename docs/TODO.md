@@ -902,7 +902,7 @@ nie táto sekcia.
 - [x] **L3** ✅ 2026-09-27 (PR #147, #149) — `certificates.ts`, PDF s QR (`pdf-lib`, písma Noto v `app/assets/fonts`), `/learning/[courseKey]/certificate`, verejné `/verify/[registrationNumber]?h=`, `revoke`. Rate limit na `/verify` **nie** (Ján 27. 9.; hash má 80 bitov).
 - [x] **Pohlavie osoby** `persons.gender` ✅ 2026-09-28 (PR #150, #153) — „absolvoval / absolvovala" na certifikáte, štatistiky zloženia; formulár, pozvanie, import (`pohlavie`, berie aj pán/pani). Nevyplnené = „absolvoval(a)", PDF sa vtedy neukladá.
 - [x] **Dodatok k ADR-012 (O24)** — rozhodnuté ako **ADR-021** ✅ 2026-09-28 (D130–D133): lehota ako doklady, podrobnosti 12 mesiacov po dokončení; **vydaný certifikát sa nemaže ani neanonymizuje** (D132, opravené 28. 9.). C2 a `GDPR_DATA_PROTECTION.md` doplnené.
-- [ ] **ADR-021 v kóde** — retenčná dávka pre kolekcie vzdelávania (certifikáty mimo), orezanie podrobností po roku (ADR-021 kap. 5).
+- [x] **ADR-021 v kóde** ✅ 2026-09-28 — retenčná dávka maže zápisy, dokončenia, sledovanie a pokusy osoby po lehote (certifikáty nie); orezanie podrobností rok po dokončení kurzu. Beží v režime `RETENTION_MODE` (výkaz).
 - [ ] **Lehota uloženia certifikátov** podľa registratúrneho plánu zväzu — doplní DPO do C2 (D132).
 - [x] **Pohlavie do záznamu o spracúvaní** (C2) ✅ 2026-09-28 — D133, oprávnený záujem, voliteľné.
 - [ ] Médiá aj v **odpovediach** (D120 — otázky ich majú, voľby zatiaľ len text).

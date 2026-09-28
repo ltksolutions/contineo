@@ -35,6 +35,8 @@ export interface Enrollment {
   /** Publikum, cez ktoré pridelenie prišlo. */
   audience?: Audience
   cancelledAt?: Date | null
+  /** Podrobnosti zápisu (pokusy, úseky videa) orezané po roku (ADR-021, D131). */
+  detailsPurgedAt?: Date | null
   cancelledBy?: string
   cancellationReason?: string
 }

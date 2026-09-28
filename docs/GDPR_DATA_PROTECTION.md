@@ -145,7 +145,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Fotky osôb** (`person_photos`) | **s osobou** | nemá vlastný dôvod existovať dlhšie než osoba |
 | **Pohlavie** (`persons.gender`) | **s osobou** (D133) | evidenčný údaj; voliteľné; oprávnený záujem (štatistiky zloženia, gramatika textov) |
 | **Vzdelávanie** (`enrollments`, `part_completions`, `video_watch`, `test_attempts`) | **ako potvrdenia** (DPO 2026-09-28, ADR-021, D130) | doklad o školení slúži tomu istému ako doklad o oboznámení |
-| **Odpovede v teste a sledovanie videa** | **12 mesiacov po dokončení kurzu** (D131) | podrobnejšie, než treba na preukázanie; zostáva výsledok a dokončenie časti. Nedokončený kurz sa neorezáva |
+| **Odpovede v teste a sledovanie videa** | **12 mesiacov po dokončení kurzu** (D131) | podrobnejšie, než treba na preukázanie; zostáva výsledok, čas dopozerania videa a dokončenie časti. Nedokončený kurz sa neorezáva |
 | **Certifikáty** (`certificates`) | **nemažú sa ani neanonymizujú** (Ján 2026-09-28, D132); lehota uloženia podľa registratúrneho plánu — **doplní DPO** | vydaný doklad o kvalifikácii platí; archivácia (zákon č. 395/2002 Z. z.). Jediná zmena je odvolanie |
 | **Audit** (`audit`) | 24 mesiacov (DPO 2026-09-24, B6) | dnes sa **nemaže** — TTL nie je zavedený |
 

@@ -7,18 +7,21 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-// ── Náhrada Monga: rovnosť, bodkové cesty, $in, $ne ─────────────────────────
+// ── Náhrada Monga: rovnosť, bodkové cesty, $in, $ne, $exists, $lte; null = chýba ──
 type Row = Record<string, unknown>
 const get = (r: Row, path: string): unknown => path.split(".").reduce<unknown>((o, k) => (o as Row | undefined)?.[k], r)
+const same = (v: unknown, x: unknown) => (x === null ? v === null || v === undefined : v === x)
 function matches(r: Row, f: Row): boolean {
   return Object.entries(f).every(([k, cond]) => {
     const v = get(r, k)
     if (cond && typeof cond === "object" && !(cond instanceof Date)) {
       const c = cond as Row
       if ("$in" in c) return (c.$in as unknown[]).some(x => x === v)
-      if ("$ne" in c) return v !== c.$ne
+      if ("$ne" in c) return !same(v, c.$ne)
+      if ("$exists" in c) return (v !== undefined) === c.$exists
+      if ("$lte" in c) return v instanceof Date && v.getTime() <= (c.$lte as Date).getTime()
     }
-    return v === cond
+    return same(v, cond)
   })
 }
 const db = vi.hoisted(() => ({ data: {} as Record<string, Record<string, unknown>[]> }))
@@ -33,14 +36,20 @@ function collection(name: string) {
       db.data[name] = rows().filter(r => !matches(r, f))
       return { deletedCount: before - db.data[name].length }
     },
-    updateOne: async (f: Row, u: { $unset?: Row }, o?: { arrayFilters?: Row[] }) => {
+    updateOne: async (f: Row, u: { $unset?: Row; $set?: Row }, o?: { arrayFilters?: Row[] }) => {
       const doc = rows().find(r => matches(r, f))
+      if (doc && u.$set) Object.assign(doc, u.$set)
       const vid = o?.arrayFilters?.[0]?.["v.versionId"]
       for (const v of (doc?.versions as Row[] | undefined) ?? []) {
         if (v.versionId !== vid) continue
         for (const k of Object.keys(u.$unset ?? {})) delete v[k.replace("versions.$[v].", "")]
       }
       return { matchedCount: doc ? 1 : 0 }
+    },
+    updateMany: async (f: Row, u: { $set: Row }) => {
+      const hit = rows().filter(r => matches(r, f))
+      for (const r of hit) Object.assign(r, u.$set)
+      return { modifiedCount: hit.length }
     },
     insertOne: async (d: Row) => { rows().push(d); return { acknowledged: true } },
     createIndex: async () => "ok",
@@ -50,9 +59,10 @@ function collection(name: string) {
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async (name: string) => collection(name)) }))
 
 import {
-  retentionDecision, isStaleActive, addYears, retentionMode,
+  retentionDecision, isStaleActive, addYears, retentionMode, addMonths, learningDetailsDue,
 } from "../src/lib/retention"
-import { deletePersonEvidence } from "../src/lib/retentionDb"
+import { deletePersonEvidence, trimLearningDetails } from "../src/lib/retentionDb"
+import { courseProgress, type ProgressFacts } from "../src/lib/learningProgress"
 
 const NOW = new Date("2030-06-01T00:00:00Z")
 const Y = (s: string) => new Date(`${s}T00:00:00Z`)
@@ -148,7 +158,7 @@ beforeEach(seed)
 describe("deletePersonEvidence (D101)", () => {
   it("výkaz spočíta, ale nezmaže nič a nezapíše záznam o výmaze", async () => {
     const c = await deletePersonEvidence(PERSON, "endedAt", "report", NOW)
-    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1, objections: 1 })
+    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1, objections: 1, enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0 })
     expect(db.data.acknowledgements).toHaveLength(5)
     expect(db.data.retention_log).toHaveLength(0)
   })
@@ -202,5 +212,103 @@ describe("deletePersonEvidence (D101)", () => {
   it("po lehote zmizne aj námietka osoby, cudzia zostane (D105)", async () => {
     await deletePersonEvidence(PERSON, "endedAt", "delete", NOW)
     expect(db.data.objections.map(o => o._id)).toEqual(["n2"])
+  })
+})
+
+// ── Vzdelávanie (ADR-021) ────────────────────────────────────────────────────
+
+describe("vzdelávanie po lehote osoby (D130, D132)", () => {
+  beforeEach(() => {
+    db.data.enrollments = [{ companyCode: "SFZ", id: "e1", personId: "p1" }, { companyCode: "SFZ", id: "e2", personId: "p2" }]
+    db.data.part_completions = [{ companyCode: "SFZ", personId: "p1", enrollmentId: "e1" }, { companyCode: "LTK", personId: "p1", enrollmentId: "x" }]
+    db.data.video_watch = [{ companyCode: "SFZ", personId: "p1", enrollmentId: "e1" }]
+    db.data.test_attempts = [{ companyCode: "SFZ", personId: "p1", id: "t1" }, { companyCode: "SFZ", personId: "p2", id: "t2" }]
+    db.data.certificates = [{ companyCode: "SFZ", personId: "p1", holderName: "Ján", registrationNumber: "SFZ-2026-0001" }]
+  })
+
+  it("výkaz spočíta, nezmaže", async () => {
+    const c = await deletePersonEvidence(PERSON, "endedAt", "report", NOW)
+    expect([c.enrollments, c.partCompletions, c.videoWatch, c.testAttempts]).toEqual([1, 1, 1, 1])
+    expect(db.data.enrollments).toHaveLength(2)
+  })
+  it("výmaz: záznamy osoby zmiznú, cudzie a inej organizácie zostanú; certifikát celý zostane", async () => {
+    await deletePersonEvidence(PERSON, "endedAt", "delete", NOW)
+    expect(db.data.enrollments.map(e => e.id)).toEqual(["e2"])
+    expect(db.data.part_completions.map(r => r.companyCode)).toEqual(["LTK"])
+    expect(db.data.video_watch).toHaveLength(0)
+    expect(db.data.test_attempts.map(t => t.id)).toEqual(["t2"])
+    expect(db.data.certificates).toEqual([{ companyCode: "SFZ", personId: "p1", holderName: "Ján", registrationNumber: "SFZ-2026-0001" }])
+  })
+  it("námietka k predpisom sa vzdelávania netýka", async () => {
+    const c = await deletePersonEvidence(PERSON, "objection", "delete", NOW)
+    expect(c.enrollments + c.testAttempts).toBe(0)
+    expect(db.data.enrollments).toHaveLength(2)
+  })
+})
+
+describe("orezanie podrobností rok po dokončení (D131)", () => {
+  const at = (s: string) => new Date(`${s}T10:00:00Z`)
+  const TRIM_NOW = at("2028-01-15")
+  const part = { key: "a", title: "A", required: true, tests: [{ testKey: "t", required: true }],
+    blocks: [{ id: "v", type: "video", source: { kind: "internal", assetId: "x" }, mustWatch: true, durationSec: 100 }] }
+  const enrollment = (id: string, over: Row = {}) => ({ companyCode: "SFZ", id, personId: `p-${id}`, courseKey: "k", versionId: "v1", enrolledAt: at("2026-01-01"), cancelledAt: null, ...over })
+  const done = (id: string, when: string) => {
+    db.data.part_completions.push({ companyCode: "SFZ", enrollmentId: id, partKey: "a", at: at(when) })
+    db.data.video_watch.push({ companyCode: "SFZ", enrollmentId: id, partKey: "a", blockId: "v", watchedRanges: [[0, 100]], durationSec: 100, reachedAt: at(when), updatedAt: at(when) })
+    db.data.test_attempts.push({ companyCode: "SFZ", id: `t-${id}`, context: { enrollmentId: id, partKey: "a" }, testKey: "t", passed: true, resetAt: null,
+      submittedAt: at(when), percent: 90, questions: [{ questionKey: "q" }], answers: { q: { kind: "choice", ids: ["x"] } } })
+  }
+  const factsOf = (id: string): ProgressFacts => ({
+    completions: db.data.part_completions.filter(r => r.enrollmentId === id) as never,
+    watches: db.data.video_watch.filter(r => r.enrollmentId === id) as never,
+    passedTests: db.data.test_attempts.filter(r => (r.context as Row).enrollmentId === id && r.passed).map(r => ({ partKey: "a", testKey: "t", at: r.submittedAt as Date })),
+  })
+
+  beforeEach(() => {
+    db.data.courses = [{ companyCode: "SFZ", key: "k", versions: [{ versionId: "v1", version: 1, state: "published", title: "K", parts: [part], sequential: false }] }]
+    db.data.enrollments = [enrollment("old"), enrollment("recent"), enrollment("open"), enrollment("cancelled", { cancelledAt: at("2026-02-01") })]
+    db.data.part_completions = []
+    db.data.video_watch = []
+    db.data.test_attempts = []
+    done("old", "2026-11-01")      // dokončený 14 mesiacov pred TRIM_NOW
+    done("recent", "2027-06-01")   // dokončený 7 mesiacov pred — ešte nie
+    done("cancelled", "2026-01-15")
+    // Rozpracovaný: video do polovice, bez dokončenia — neorezáva sa nikdy.
+    db.data.video_watch.push({ companyCode: "SFZ", enrollmentId: "open", partKey: "a", blockId: "v", watchedRanges: [[0, 50]], durationSec: 100, reachedAt: null, updatedAt: at("2026-02-01") })
+  })
+
+  it("pravidlo: len dokončený a 12 mesiacov po dokončení", () => {
+    expect(learningDetailsDue(null, TRIM_NOW)).toBe(false)
+    expect(learningDetailsDue(at("2027-01-15"), TRIM_NOW)).toBe(true)
+    expect(learningDetailsDue(at("2027-01-16"), TRIM_NOW)).toBe(false)
+    expect(addMonths(at("2027-03-31"), -1).toISOString().slice(0, 10)).toBe("2027-02-28")
+  })
+
+  it("výkaz spočíta, nič nezmení", async () => {
+    const c = await trimLearningDetails("SFZ", "report", TRIM_NOW)
+    expect(c).toEqual({ enrollments: 1, testAttempts: 1, videoWatchTrimmed: 1, videoWatchDeleted: 0 })
+    expect((db.data.test_attempts[0].questions as unknown[]).length).toBe(1)
+  })
+
+  it("ostro: odpovede a úseky preč, výsledok a dopozeranie zostanú, kurz je stále dokončený", async () => {
+    const before = courseProgress((db.data.courses[0].versions as never[])[0], factsOf("old"))
+    await trimLearningDetails("SFZ", "delete", TRIM_NOW)
+    const t = db.data.test_attempts.find(r => r.id === "t-old")!
+    expect(t).toMatchObject({ questions: [], answers: {}, percent: 90, passed: true, detailsPurgedAt: TRIM_NOW })
+    const w = db.data.video_watch.find(r => r.enrollmentId === "old")!
+    expect(w).toMatchObject({ watchedRanges: [], reachedAt: at("2026-11-01"), detailsPurgedAt: TRIM_NOW })
+    const after = courseProgress((db.data.courses[0].versions as never[])[0], factsOf("old"))
+    expect(after.done).toBe(true)
+    expect(after.completedAt).toEqual(before.completedAt)
+    expect(db.data.enrollments.find(e => e.id === "old")!.detailsPurgedAt).toEqual(TRIM_NOW)
+    expect(db.data.retention_log.at(-1)).toMatchObject({ personId: "p-old", reason: "details" })
+  })
+
+  it("nedávno dokončený, rozpracovaný a zrušený zápis sa neorežú; druhý beh nerobí nič", async () => {
+    await trimLearningDetails("SFZ", "delete", TRIM_NOW)
+    expect(db.data.test_attempts.find(r => r.id === "t-recent")!.detailsPurgedAt).toBeUndefined()
+    expect(db.data.test_attempts.find(r => r.id === "t-cancelled")!.detailsPurgedAt).toBeUndefined()
+    expect(db.data.video_watch.find(r => r.enrollmentId === "open")!.watchedRanges).toEqual([[0, 50]])
+    expect(await trimLearningDetails("SFZ", "delete", TRIM_NOW)).toEqual({ enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 })
   })
 })

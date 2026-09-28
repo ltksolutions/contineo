@@ -98,7 +98,13 @@ export default async function ResultPage({ params, searchParams }: {
               {why && <p id="rs-why" className="quiet">{why}</p>}
             </section>
 
-            {visible ? (
+            {a.detailsPurgedAt ? (
+              // ADR-021, D131: podrobnosti po roku preč, výsledok hore zostáva.
+              <section className="card rs-hidden">
+                <h2 className="mc-h2">{ta.reviewTitle}</h2>
+                <p className="quiet">{ta.detailsPurged}</p>
+              </section>
+            ) : visible ? (
               <section className="card mc-list">
                 <div className="parts-head"><h2>{ta.reviewTitle}</h2>
                   <span className="lpills" style={{ margin: 0 }}>
