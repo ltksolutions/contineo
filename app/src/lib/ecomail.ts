@@ -382,7 +382,11 @@ export function inviteEmail(
 
   const logo = logoTag(branding, host)
 
-  const text = [s.intro(organisation), "", s.how, signInUrl, "", s.note].join("\n")
+  // Informovanie o spracúvaní (C1): pozvánka je prvý kontakt človeka
+  // s portálom, preto odkaz na `/privacy` patrí sem — stránka je verejná,
+  // otvorí sa aj pred prihlásením.
+  const privacyUrl = `https://${host}/privacy`
+  const text = [s.intro(organisation), "", s.how, signInUrl, "", s.note, "", s.privacy, privacyUrl].join("\n")
 
   const html = `<!doctype html>
 <html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
@@ -395,6 +399,7 @@ export function inviteEmail(
       ${escapujHtml(s.button)}
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:10px 0 0">${escapujHtml(s.privacy)} <a href="${privacyUrl}" style="color:${accent}">${escapujHtml(s.privacyLink)}</a></p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
     <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
   </div>
