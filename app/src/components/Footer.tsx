@@ -12,6 +12,7 @@
  * než hádaním.
  */
 
+import Link from "next/link"
 import { ContineoMark, GitHubMark } from "./ContineoMark"
 import { REVISION, VERSION } from "@/lib/appVersion"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
@@ -44,6 +45,14 @@ export default function Footer({ language }: { language?: UiLanguage }) {
             Contineo
           </a>
         </p>
+
+        {/*
+          Informovanie o spracúvaní (C1) má byť dostupné z každej stránky,
+          aj pred prihlásením — pätička je jediné miesto, ktoré to spĺňa.
+          Stránka je jedna, obsah (prevádzkovateľ) je podľa organizácie
+          z domény.
+        */}
+        <Link className="footer-link" href="/privacy">{t.privacy.link}</Link>
 
         <a
           className="footer-link"
