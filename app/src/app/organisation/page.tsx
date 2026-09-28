@@ -195,6 +195,8 @@ export default async function OrganisationPage({
   const d = dictionary(language)
   const t = d.org
   const tp = d.privacy
+  // Náhľad úvodnej vety pozvánky z uložených hodnôt (rovnaké skladanie ako `inviteEmail`).
+  const inviteIntro = d.inviteEmail.intro(tenant.controller?.legalName?.trim() || tenant.branding.displayName, tenant.branding.displayName)
   const pending = (await domainRequests(tenant.companyCode)).filter(
     z => !tenant.hostnames.includes(z.host),
   )
@@ -323,6 +325,41 @@ export default async function OrganisationPage({
                 </div>
               </div>
             </div>
+
+            {/*
+              Prevádzkovateľ (C1, ADR-012) v jednom bloku s názvom portálu
+              (Ján 28. 9. 2026): pozvánka ich skladá do jednej vety
+              „{Právny názov} vás pozýva do {Názov portálu}". Pod poľami náhľad
+              viet z uložených hodnôt — bez JavaScriptu, takže ukazuje, čo platí.
+            */}
+            <h3 className="set-sub">{t.branding.controller}</h3>
+            <p className="quiet field-hint set-sub-note">{t.branding.controllerNote}</p>
+            <label className="field">
+              <span className="field-label">{t.branding.controllerLegalName}</span>
+              <input className="field-input" name="controllerLegalName" defaultValue={tenant.controller?.legalName ?? ""}
+                     placeholder={tenant.branding.displayName} />
+            </label>
+            <div className="set-pair">
+              <label className="field">
+                <span className="field-label">{t.branding.controllerAddress}</span>
+                <input className="field-input" name="controllerAddress" defaultValue={tenant.controller?.address ?? ""} />
+              </label>
+              <label className="field">
+                <span className="field-label">{t.branding.controllerRegistrationNumber}</span>
+                <input className="field-input" name="controllerRegistrationNumber" inputMode="numeric"
+                       defaultValue={tenant.controller?.registrationNumber ?? ""} />
+              </label>
+            </div>
+            <p className="set-preview">
+              {t.branding.invitePreview}{" "}
+              <b>„{inviteIntro}“</b>
+            </p>
+            <p className="set-preview">
+              {t.branding.controllerPreview}{" "}
+              <b>„{tp.controller(tenant.controller?.legalName || tenant.branding.displayName)}“</b>
+              {(tenant.controller?.address || tenant.controller?.registrationNumber) &&
+                ` · ${tp.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}`}
+            </p>
           </div>
         </section>
 
@@ -360,42 +397,6 @@ export default async function OrganisationPage({
               />
               <span className="quiet field-hint">{t.branding.phonePrefixNote}</span>
             </label>
-          </div>
-        </section>
-
-        {/*
-          Prevádzkovateľ (C1, ADR-012) — údaje do informovania dotknutých
-          osôb na `/privacy`. Pod poľami náhľad vety z tej stránky (rám, Q2)
-          z uložených hodnôt — bez JavaScriptu, takže ukazuje, čo platí.
-        */}
-        <section className="set-sec">
-          <div className="set-sec-head">
-            <h2>{t.branding.controller}</h2>
-            <p>{t.branding.controllerNote}</p>
-          </div>
-          <div className="set-sec-body">
-            <label className="field">
-              <span className="field-label">{t.branding.controllerLegalName}</span>
-              <input className="field-input" name="controllerLegalName" defaultValue={tenant.controller?.legalName ?? ""}
-                     placeholder={tenant.branding.displayName} />
-            </label>
-            <div className="set-pair">
-              <label className="field">
-                <span className="field-label">{t.branding.controllerAddress}</span>
-                <input className="field-input" name="controllerAddress" defaultValue={tenant.controller?.address ?? ""} />
-              </label>
-              <label className="field">
-                <span className="field-label">{t.branding.controllerRegistrationNumber}</span>
-                <input className="field-input" name="controllerRegistrationNumber" inputMode="numeric"
-                       defaultValue={tenant.controller?.registrationNumber ?? ""} />
-              </label>
-            </div>
-            <p className="set-preview">
-              {t.branding.controllerPreview}{" "}
-              <b>„{tp.controller(tenant.controller?.legalName || tenant.branding.displayName)}“</b>
-              {(tenant.controller?.address || tenant.controller?.registrationNumber) &&
-                ` · ${tp.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}`}
-            </p>
           </div>
         </section>
 

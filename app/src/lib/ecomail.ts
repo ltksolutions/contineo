@@ -139,6 +139,11 @@ export interface SignInBranding {
   /** **Absolútna** adresa. V e-maile relatívna cesta nemá k čomu byť relatívna. */
   logoUrl?: string
   accentColor?: string
+  /**
+   * Právny názov prevádzkovateľa (`tenant.controller.legalName`) — kto
+   * pozýva. Chýba = názov portálu.
+   */
+  legalName?: string
 }
 
 /**
@@ -378,6 +383,8 @@ export function inviteEmail(
 ): Omit<Message, "to"> {
   const s = dictionary(language).inviteEmail
   const organisation = branding?.displayName ?? "Contineo"
+  // „{Právny názov} vás pozýva do {Názov portálu}" (Ján 28. 9. 2026).
+  const legalName = branding?.legalName?.trim() || organisation
   const accent = branding?.accentColor ?? "#232a35"
 
   const logo = logoTag(branding, host)
@@ -386,14 +393,14 @@ export function inviteEmail(
   // s portálom, preto odkaz na `/privacy` patrí sem — stránka je verejná,
   // otvorí sa aj pred prihlásením.
   const privacyUrl = `https://${host}/privacy`
-  const text = [s.intro(organisation), "", s.how, signInUrl, "", s.note, "", s.privacy, privacyUrl].join("\n")
+  const text = [s.intro(legalName, organisation), "", s.how, signInUrl, "", s.note, "", s.privacy, privacyUrl].join("\n")
 
   const html = `<!doctype html>
 <html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
   <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
     <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
     <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(s.subtitle)}</div>
-    <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(s.intro(organisation))}</p>
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(s.intro(legalName, organisation))}</p>
     <p style="font-size:15px;line-height:1.65;margin:0 0 22px">${escapujHtml(s.how)}</p>
     <a href="${signInUrl}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
       ${escapujHtml(s.button)}

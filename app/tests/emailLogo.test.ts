@@ -61,3 +61,15 @@ describe("pozvánka a informovanie o spracúvaní (C1)", () => {
     expect(inviteEmail(LINK, HOST, "sk", BRANDING).html).toContain("Ochrana osobných údajov")
   })
 })
+
+describe("pozvánka: kto pozýva a kam (Ján 28. 9. 2026)", () => {
+  it("„{Právny názov} vás pozýva do {Názov portálu}“; rovnaké názvy = „do svojho interného portálu“", () => {
+    const a = inviteEmail(LINK, HOST, "sk", { ...BRANDING, displayName: "Intranet SFZ", legalName: "Slovenský futbalový zväz" })
+    expect(a.text).toContain("Slovenský futbalový zväz vás pozýva do Intranet SFZ. Nájdete v ňom dokumenty a úlohy")
+    expect(a.subject).toBe("Pozvánka — Intranet SFZ")
+    const b = inviteEmail(LINK, HOST, "sk", BRANDING)
+    expect(b.text).toContain("Slovenský futbalový zväz vás pozýva do svojho interného portálu.")
+    expect(inviteEmail(LINK, HOST, "en", { ...BRANDING, displayName: "SFZ Intranet", legalName: "Slovak Football Association" }).text)
+      .toContain("Slovak Football Association invites you to SFZ Intranet.")
+  })
+})

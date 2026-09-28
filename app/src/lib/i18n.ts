@@ -230,7 +230,8 @@ interface Dictionary {
   inviteEmail: {
     subject: (organisation: string) => string
     subtitle: string
-    intro: (organisation: string) => string
+    /** Kto pozýva (právny názov) a kam (názov portálu). */
+    intro: (legalName: string, portalName: string) => string
     how: string
     button: string
     note: string
@@ -1212,6 +1213,7 @@ interface Dictionary {
       secAutoProvision: string
       saveBarNote: string
       controllerPreview: string
+      invitePreview: string
       languages: string
       defaultLanguage: string
       defaultLanguageNote: string
@@ -3178,12 +3180,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
 
     inviteEmail: {
-      subject: organisation => `Prístup do interného portálu — ${organisation}`,
+      subject: organisation => `Pozvánka — ${organisation}`,
       subtitle: "Pozvánka",
-      intro: organisation => `Boli ste zaradení do interného portálu organizácie ${organisation}. Nájdete v ňom smernice, ktoré sa vás týkajú, a potvrdíte v ňom, že ste sa s nimi oboznámili.`,
-      how: "Otvorte stránku nižšie a vypýtajte si prihlasovací odkaz na svoju pracovnú adresu. Odkaz vám nesmieme poslať vopred — platí len krátko a poštové brány ho spotrebujú skôr, než sa k nemu dostanete.",
+      intro: (legal, portal) => `${legal === portal ? `${legal} vás pozýva do svojho interného portálu.` : `${legal} vás pozýva do ${portal}.`} Nájdete v ňom dokumenty a úlohy, ktoré sa vás týkajú.`,
+      how: "Prihlasujete sa pracovnou e-mailovou adresou, na ktorú prišla táto pozvánka. Po otvorení portálu sa prihlásite pracovným kontom alebo si necháte poslať prihlasovací odkaz.",
       button: "Otvoriť portál",
-      note: "Ak sa prihlásiť nedá, ozvite sa personálnemu oddeleniu — adresa musí byť v zozname osôb.",
+      note: "Ak sa prihlásiť nedá, ozvite sa personálnemu oddeleniu.",
       privacy: "Ako sa v portáli spracúvajú vaše osobné údaje, prečo, ako dlho a aké máte práva:",
       privacyLink: "Ochrana osobných údajov",
     },
@@ -4459,8 +4461,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       audit: "Audit",
     },
     branding: {
-      name: "Názov",
-      nameNote: "Celý názov. Je v e-mailoch a na prihlasovacej obrazovke.",
+      name: "Názov portálu",
+      nameNote: "Ako sa portál volá — je v hlavičke, v e-mailoch a na prihlasovacej obrazovke (napríklad „Intranet SFZ“).",
       shortName: "Skratka",
       shortNameNote: "Do hornej lišty, kde je vedľa nej ešte menu — „SFZ“ tam povie to isté čo celý názov a nechá miesto na zvyšok.",
       logo: "Logo",
@@ -4480,12 +4482,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Právny názov",
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
-      secIdentity: "Identita",
-      secIdentityNote: "Názov a logo v hlavičke, v e-mailoch a na prihlasovacej obrazovke.",
+      secIdentity: "Názov portálu",
+      secIdentityNote: "Názov a logo v hlavičke, v e-mailoch a na prihlasovacej obrazovke. Pod nimi organizácia, ktorá portál prevádzkuje a spracúva osobné údaje.",
       secContact: "Kontakt",
       secAutoProvision: "Automatické založenie",
       saveBarNote: "Jedno uloženie pre celú stránku.",
       controllerPreview: "Na stránke Ochrana osobných údajov:",
+      invitePreview: "V pozvánke:",
       languages: "Jazyky",
       defaultLanguage: "Predvolený jazyk",
       defaultLanguageNote: "Platí pre človeka, ktorý ešte nie je prihlásený.",
@@ -6368,12 +6371,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
 
     inviteEmail: {
-      subject: organisation => `Přístup do interního portálu — ${organisation}`,
+      subject: organisation => `Pozvánka — ${organisation}`,
       subtitle: "Pozvánka",
-      intro: organisation => `Byli jste zařazeni do interního portálu organizace ${organisation}. Najdete v něm předpisy, které se vás týkají, a potvrdíte v něm, že jste se s nimi seznámili.`,
-      how: "Otevřete stránku níže a vyžádejte si přihlašovací odkaz na svou pracovní adresu. Odkaz vám nesmíme poslat předem — platí jen krátce a poštovní brány ho spotřebují dřív, než se k němu dostanete.",
+      intro: (legal, portal) => `${legal === portal ? `${legal} vás zve do svého interního portálu.` : `${legal} vás zve do ${portal}.`} Najdete v něm dokumenty a úkoly, které se vás týkají.`,
+      how: "Přihlašujete se pracovní e-mailovou adresou, na kterou přišla tato pozvánka. Po otevření portálu se přihlásíte pracovním účtem nebo si necháte poslat přihlašovací odkaz.",
       button: "Otevřít portál",
-      note: "Pokud se přihlásit nedá, ozvěte se personálnímu oddělení — adresa musí být v seznamu osob.",
+      note: "Pokud se přihlásit nedá, ozvěte se personálnímu oddělení.",
       privacy: "Jak se v portálu zpracovávají vaše osobní údaje, proč, jak dlouho a jaká máte práva:",
       privacyLink: "Ochrana osobních údajů",
     },
@@ -7649,8 +7652,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       audit: "Audit",
     },
     branding: {
-      name: "Název",
-      nameNote: "Celý název. Je v e-mailech a na přihlašovací obrazovce.",
+      name: "Název portálu",
+      nameNote: "Jak se portál jmenuje — je v hlavičce, v e-mailech a na přihlašovací obrazovce (například „Intranet SFZ“).",
       shortName: "Zkratka",
       shortNameNote: "Do horní lišty, kde je vedle ní ještě menu — „SFZ“ tam řekne totéž co celý název a nechá místo na zbytek.",
       logo: "Logo",
@@ -7670,12 +7673,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Právní název",
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
-      secIdentity: "Identita",
-      secIdentityNote: "Název a logo v hlavičce, v e-mailech a na přihlašovací obrazovce.",
+      secIdentity: "Název portálu",
+      secIdentityNote: "Název a logo v hlavičce, v e-mailech a na přihlašovací obrazovce. Pod nimi organizace, která portál provozuje a zpracovává osobní údaje.",
       secContact: "Kontakt",
       secAutoProvision: "Automatické založení",
       saveBarNote: "Jedno uložení pro celou stránku.",
       controllerPreview: "Na stránce Ochrana osobních údajů:",
+      invitePreview: "V pozvánce:",
       languages: "Jazyky",
       defaultLanguage: "Výchozí jazyk",
       defaultLanguageNote: "Platí pro člověka, který ještě není přihlášený.",
@@ -9549,12 +9553,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
 
     inviteEmail: {
-      subject: organisation => `Access to the internal portal — ${organisation}`,
+      subject: organisation => `Invitation — ${organisation}`,
       subtitle: "Invitation",
-      intro: organisation => `You have been added to the internal portal of ${organisation}. It holds the documents that apply to you, and it is where you acknowledge that you have read them.`,
-      how: "Open the page below and request a sign-in link to your work address. We cannot send the link in advance — it is short-lived and mail gateways consume it before you get to it.",
+      intro: (legal, portal) => `${legal === portal ? `${legal} invites you to its internal portal.` : `${legal} invites you to ${portal}.`} It holds the documents and tasks that apply to you.`,
+      how: "You sign in with the work email address this invitation was sent to. After opening the portal, sign in with your work account or have a sign-in link sent to you.",
       button: "Open the portal",
-      note: "If you cannot sign in, contact HR — your address has to be on the list of people.",
+      note: "If you cannot sign in, contact HR.",
       privacy: "How the portal processes your personal data, why, for how long and what your rights are:",
       privacyLink: "Privacy notice",
     },
@@ -10829,8 +10833,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       audit: "Audit",
     },
     branding: {
-      name: "Name",
-      nameNote: "The full name. It appears in emails and on the sign-in screen.",
+      name: "Portal name",
+      nameNote: "What the portal is called — in the header, in emails and on the sign-in screen (for example “SFZ Intranet”).",
       shortName: "Short name",
       shortNameNote: "For the top bar, where a menu sits next to it — “SFZ” says the same thing there as the full name and leaves room for the rest.",
       logo: "Logo",
@@ -10850,12 +10854,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Legal name",
       controllerAddress: "Registered address",
       controllerRegistrationNumber: "Company ID",
-      secIdentity: "Identity",
-      secIdentityNote: "Name and logo in the header, in emails and on the sign-in screen.",
+      secIdentity: "Portal name",
+      secIdentityNote: "Name and logo in the header, in emails and on the sign-in screen. Below them, the organisation that runs the portal and processes personal data.",
       secContact: "Contact",
       secAutoProvision: "Automatic sign-up",
       saveBarNote: "One save for the whole page.",
       controllerPreview: "On the Privacy page:",
+      invitePreview: "In the invitation:",
       languages: "Languages",
       defaultLanguage: "Default language",
       defaultLanguageNote: "Applies to anyone who is not signed in yet.",
