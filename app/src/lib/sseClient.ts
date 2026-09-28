@@ -88,7 +88,7 @@ export type SseEvent =
   | { type: "citation"; citation: Citation }
   | { type: "phase"; phase: AnswerPhase }
   /** Ladiace údaje, ktoré boli do 2026-09-16 hlavičkami odpovede. */
-  | { type: "meta"; searchMode?: string; preprocessed?: boolean; chunks?: number; time?: QueryTime }
+  | { type: "meta"; searchMode?: string; preprocessed?: boolean; chunks?: number; time?: QueryTime; comparison?: ComparisonInfo }
   | ({ type: "done" } & Partial<Completion>)
   | { type: "error"; message: string }
 
@@ -173,7 +173,23 @@ export interface AskProgress {
   phase?: AnswerPhase
   /** Deň odpovede — príde v `meta` pred prvým slovom, aby štítok bol hneď. */
   time?: QueryTime
+  /** Porovnanie znení pri otázke „čo sa zmenilo" (krok 7), tiež z `meta`. */
+  comparison?: ComparisonInfo
 }
+
+/**
+ * Čo sa porovnávalo, alebo prečo sa porovnať nedalo (krok 7). Dátumy ako
+ * ISO reťazce — prichádzajú v JSON.
+ */
+export type ComparisonInfo =
+  | {
+      ok: true
+      title: string
+      from: { label: string; effectiveFrom: string | null }
+      to: { label: string; effectiveFrom: string | null }
+      changes: number
+    }
+  | { ok: false; reason: "single-version" | "missing-text" | "identical" | "no-document" }
 
 export interface AskResult extends AskProgress {
   sources: AnswerSource[]
@@ -222,12 +238,13 @@ export async function askQuestion(
   let text = ""
   let phase: AnswerPhase | undefined
   let time: QueryTime | undefined
+  let comparison: ComparisonInfo | undefined
   const citations: Citation[] = []
 
   const done = (extra: Partial<AskResult> = {}): AskResult => ({
     text, citations: citations,
     sources: [], model: "", provider: "", verifiedCitations: false,
-    ttftMs, totalMs: Date.now() - start, time,
+    ttftMs, totalMs: Date.now() - start, time, comparison,
     ...extra,
   })
 
@@ -248,16 +265,17 @@ export async function askQuestion(
     if (u.type === "token") {
       if (ttftMs === null) ttftMs = Date.now() - start
       text += u.token
-      onChange({ text, citations: citations, phase: phase, time })
+      onChange({ text, citations: citations, phase: phase, time, comparison })
     } else if (u.type === "citation") {
       citations.push(u.citation)
       onChange({ text, citations: citations, phase: phase })
     } else if (u.type === "phase") {
       phase = u.phase
-      onChange({ text, citations: citations, phase: phase, time })
+      onChange({ text, citations: citations, phase: phase, time, comparison })
     } else if (u.type === "meta") {
       if (u.time) time = u.time
-      onChange({ text, citations: citations, phase: phase, time })
+      if (u.comparison) comparison = u.comparison
+      onChange({ text, citations: citations, phase: phase, time, comparison })
     } else if (u.type === "error") {
       return done({ error: u.message })
     } else if (u.type === "done") {

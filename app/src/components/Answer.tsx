@@ -10,7 +10,7 @@
  */
 
 import Link from "next/link"
-import type { Citation, AskResult, AnswerPhase } from "@/lib/sseClient"
+import type { Citation, AskResult, AnswerPhase, ComparisonInfo } from "@/lib/sseClient"
 import type { QueryTime } from "@/lib/queryTime"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
@@ -32,6 +32,8 @@ export interface AnswerState {
   phase?: AnswerPhase
   /** Ku ktorému dňu sa odpovedá (krok 6) — z `meta`, teda ešte pred textom. */
   time?: QueryTime
+  /** Porovnanie znení (krok 7) — z `meta`. */
+  comparison?: ComparisonInfo
 }
 
 /**
@@ -70,9 +72,21 @@ export default function Answer({
   // slovom, preto sa číta zo stavu, a až potom z `done`.
   const time = state.time ?? done?.time
   const timeDate = time ? formatDate(new Date(`${time.asOf}T00:00:00Z`), language) : null
-  const timeLabel = time && timeDate
-    ? (time.kind === "asOf" ? t.timeAsOf : time.kind === "compare" ? t.timeCompare : t.timeToday)(timeDate)
-    : null
+  const comparison = state.comparison ?? done?.comparison
+  const dateOf = (iso: string | null) => (iso ? formatDate(new Date(iso), language) : null)
+  const timeLabel = !time || !timeDate
+    ? null
+    : time.kind === "asOf"
+      ? t.timeAsOf(timeDate)
+      : time.kind === "compare"
+        // Porovnanie: ktoré dve znenia, alebo prečo sa porovnať nedalo.
+        ? comparison?.ok
+          ? t.timeCompare(
+              t.compareSide(comparison.from.label, dateOf(comparison.from.effectiveFrom)),
+              t.compareSide(comparison.to.label, dateOf(comparison.to.effectiveFrom)),
+            )
+          : t.timeCompareUnavailable[comparison?.reason ?? "no-document"](timeDate)
+        : t.timeToday(timeDate)
 
   /*
     Tretí stav (ASK, úloha 1): vyhľadávanie nenašlo nič, čo by otázku krylo.

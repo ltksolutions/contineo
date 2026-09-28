@@ -18,7 +18,8 @@ import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
 import { cost, EMPTY_TOKENS } from "./pricing"
 import { dictionary } from "./i18n"
-import { asOfInstruction, calendarDate } from "./versionContext"
+import { asOfInstruction, calendarDate, compareInstruction } from "./versionContext"
+import type { ComparisonBrief } from "./versionContext"
 import type { QueryTime } from "./queryTime"
 import type { TokenCounts } from "./pricing"
 import type { GeneratedCitation, TenantProfile } from "./providers/types"
@@ -50,11 +51,15 @@ export interface GenerateOptions {
   asOf?: Date
   /** Druh otázky a jej deň (krok 6) — ide do `done` a s ním do hodnotení. */
   time?: QueryTime
+  /** Porovnanie dvoch znení (krok 7) — pokyn namiesto „ku dňu". */
+  comparison?: ComparisonBrief
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
 
-export function buildSystemPrompt(role: string, supportsCitations: boolean, asOf: Date = new Date()): string {
+export function buildSystemPrompt(
+  role: string, supportsCitations: boolean, asOf: Date = new Date(), comparison?: ComparisonBrief,
+): string {
   return `Si inteligentný asistent portálu Contineo pre slovenský futbal.
 Odpovedáš VÝLUČNE na základe poskytnutého kontextu.
 Ak odpoveď nie je v kontexte, povedz to úprimne.
@@ -63,7 +68,7 @@ ${role === "internal" ? "Máš prístup aj k interným normám a dokumentom." : 
 ${supportsCitations
   ? "Zdroje sú pripojené ako dokumenty — cituj z nich priamo."
   : "Pri tvrdeniach uveď čísla zdrojov [1], [2]... podľa poradia v kontexte."}
-${asOfInstruction(asOf)}`
+${comparison ? compareInstruction(comparison) : asOfInstruction(asOf)}`
 }
 
 // ── Zostavenie citácií ───────────────────────────────────────────────────────
@@ -149,7 +154,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
             : defaultProfile())
 
         const { generation } = getProviders(profile)
-        const system = buildSystemPrompt(userRole, generation.supportsCitations, opts.asOf)
+        const system = buildSystemPrompt(userRole, generation.supportsCitations, opts.asOf, opts.comparison)
 
         // Overiteľné citácie zbierame zvlášť — pri OpenAI adaptéri
         // zostane pole prázdne a klient sa oprie o `sources`.

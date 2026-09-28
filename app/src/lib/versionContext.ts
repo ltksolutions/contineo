@@ -53,3 +53,34 @@ export function asOfInstruction(asOf: Date): string {
   return `Odpovedáš podľa znení predpisov platných ku dňu ${d}. Tento deň v odpovedi raz uveď (napríklad „Podľa znení platných k ${d} …").
 Pri každom zdroji máš uvedené znenie a jeho účinnosť. Ak má zdroj uvedený koniec účinnosti („do …"), upozorni, že od toho dňa platí iné znenie. Inak účinnosť zdrojov nekomentuj a neodporúčaj overovať novšie znenie — zdroje sú znenia platné k tomuto dňu.`
 }
+
+/** Čo o porovnaní potrebuje pokyn modelu (krok 7). */
+export interface ComparisonBrief {
+  title: string
+  from: ChunkVersion
+  to: ChunkVersion
+  changes: Array<{ ref: string; heading: string; kind: "changed" | "added" | "removed" }>
+  /** Články, ktoré model dostal podrobne (staré aj nové znenie). */
+  detailRefs: string[]
+}
+
+const KIND_WORD = { changed: "zmenený", added: "pridaný", removed: "zrušený" } as const
+
+/**
+ * Pokyn pri otázke „čo sa zmenilo". Prehľad všetkých zmien ide sem, nie ako
+ * zdroj: je to súpis, nie text predpisu, a v zozname zdrojov by sa tváril
+ * ako článok. Podrobne dostane model len vybrané články (najviac 8).
+ */
+export function compareInstruction(c: ComparisonBrief): string {
+  const label = (v: ChunkVersion) => versionContext(v) ?? "znenie bez označenia"
+  const detail = new Set(c.detailRefs)
+  const list = c.changes
+    .map(ch => `- ${ch.ref}${ch.heading ? ` (${ch.heading})` : ""}: ${KIND_WORD[ch.kind]}${detail.has(ch.ref) ? "" : " — len v prehľade"}`)
+    .join("\n")
+  return `Otázka sa pýta, čo sa zmenilo v dokumente „${c.title}". Porovnávaš dve znenia:
+- staršie: ${label(c.from)}
+- novšie: ${label(c.to)}
+Pri každom zdroji je uvedené, ku ktorému zneniu patrí. Povedz, čo sa medzi nimi zmenilo, a pri každej zmene cituj staré aj nové znenie. Neuvádzaj zmeny, ktoré v zdrojoch nie sú. Články označené „len v prehľade" spomeň iba menovite — ich text nemáš.
+Prehľad všetkých zmien (${c.changes.length}):
+${list}`
+}

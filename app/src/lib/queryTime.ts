@@ -25,6 +25,12 @@ export interface QueryTime {
   asOf: string
   /** Kto deň určil — pre ladenie a hodnotenia. */
   source: "rules" | "model" | "default"
+  /**
+   * Pri porovnaní: deň, od ktorého sa porovnáva („čo sa zmenilo od roku
+   * 2020") — `YYYY-MM-DD`. Bez neho sa porovnáva predchádzajúce alebo
+   * budúce znenie s dnešným (krok 7, `comparePair()`).
+   */
+  since?: string
 }
 
 const iso = (d: Date) => d.toISOString().slice(0, 10)
@@ -110,12 +116,17 @@ export function detectQueryTime(query: string, now: Date = new Date()): QueryTim
   const today = calendarDate(now)
   const folded = fold(query)
 
-  if (COMPARE.some(re => re.test(folded))) return { kind: "compare", asOf: iso(today), source: "rules" }
-
   const exact = explicitDate(query)
-  if (exact) return asOfOrToday(exact, today, "rules")
-
   const year = yearReference(folded)
+
+  if (COMPARE.some(re => re.test(folded))) {
+    // „Čo sa zmenilo od roku 2020" — pri roku od jeho začiatku, nie konca:
+    // pýta sa na zmeny počas neho aj po ňom.
+    const since = exact ?? (year ? new Date(Date.UTC(year, 0, 1)) : null)
+    return { kind: "compare", asOf: iso(today), source: "rules", ...(since ? { since: iso(since) } : {}) }
+  }
+
+  if (exact) return asOfOrToday(exact, today, "rules")
   if (year) return asOfOrToday(new Date(Date.UTC(year, 11, 31)), today, "rules")
 
   if (/\b(?:vlani|loni|minuly\s+rok|minuleho\s+roka|minulom\s+roku|last\s+year)\b/.test(folded)) {
@@ -187,7 +198,8 @@ export function sanitizeQueryTime(raw: unknown): QueryTime | undefined {
   const sources: QueryTime["source"][] = ["rules", "model", "default"]
   if (!kinds.includes(r.kind as QueryTimeKind) || !sources.includes(r.source as QueryTime["source"])) return undefined
   if (typeof r.asOf !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.asOf)) return undefined
-  return { kind: r.kind as QueryTimeKind, asOf: r.asOf, source: r.source as QueryTime["source"] }
+  const since = typeof r.since === "string" && /^\d{4}-\d{2}-\d{2}$/.test(r.since) ? r.since : undefined
+  return { kind: r.kind as QueryTimeKind, asOf: r.asOf, source: r.source as QueryTime["source"], ...(since ? { since } : {}) }
 }
 
 /** Pravidlá majú prednosť; model len doplní, čo pravidlá nenašli. */

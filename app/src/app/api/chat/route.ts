@@ -45,6 +45,8 @@ import { getCollection }      from "@/lib/mongodb"
 import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
 import type { SearchOptions } from "@/lib/mongoSearch"
 import { searchScope, attachVersions } from "@/lib/searchVersions"
+import { buildComparison } from "@/lib/comparison"
+import type { ComparisonBrief } from "@/lib/versionContext"
 import { detectQueryTime, resolveQueryTime, searchInstant, withoutTimePhrase } from "@/lib/queryTime"
 import { generateAnswer }     from "@/lib/llmGenerator"
 import { getTenantProfile }   from "@/lib/tenantProfile"
@@ -195,7 +197,8 @@ export async function POST(req: NextRequest) {
           rerankModel: profile.providers.rerank.model,
           vectorPath: profile.providers.embedding.vectorPath,
           versionIds: scope.versionIds,
-          verifiedAnswers: scope.verifiedAnswers,
+          // Overené odpovede nemajú znenie — do porovnania znení nepatria (krok 7).
+          verifiedAnswers: scope.verifiedAnswers && time.kind !== "compare",
         }
 
         let chunks = await (
@@ -250,12 +253,47 @@ export async function POST(req: NextRequest) {
         // lebo prácu už odviedla pipeline vyššie.
         if (!providers.rerank.isPipelineStage) measure("rerank")
 
+        // 6e. Porovnanie znení (krok 7): dokument s najlepším výsledkom, jeho
+        //     dve znenia narezané nanovo a porovnané po článkoch. Keď sa
+        //     porovnať nedá, odpovedá sa podľa dneška a štítok povie prečo.
+        let comparison: ComparisonBrief | undefined
+        let comparisonMeta: Record<string, unknown> | undefined
+        let answerChunks = attachVersions(chunks, scope.versions)
+        if (time.kind === "compare") {
+          const top = chunks.find(c => c.sourceType !== "qa")
+          const cmp = top
+            ? await buildComparison(
+                companyCode, top.documentId, now,
+                time.since ? new Date(`${time.since}T12:00:00Z`) : undefined,
+                chunks.filter(c => c.documentId === top.documentId && c.articleRef).map(c => c.articleRef as string),
+              )
+            : { ok: false as const, reason: "no-document" as const }
+          measure("porovnanie")
+          if (cmp.ok) {
+            answerChunks = cmp.chunks
+            comparison = {
+              title: cmp.title, from: cmp.from, to: cmp.to,
+              changes: cmp.changes.map(c => ({ ref: c.ref, heading: c.heading, kind: c.kind })),
+              detailRefs: [...new Set(cmp.chunks.map(c => c.articleRef as string))],
+            }
+            comparisonMeta = {
+              ok: true, title: cmp.title,
+              from: { label: cmp.from.label, effectiveFrom: cmp.from.effectiveFrom },
+              to: { label: cmp.to.label, effectiveFrom: cmp.to.effectiveFrom },
+              changes: cmp.changes.length,
+            }
+          } else {
+            comparisonMeta = { ok: false, reason: cmp.reason }
+          }
+        }
+
         // Ladiace údaje, ktoré boli do O20 hlavičkami odpovede.
         send({
           type: "meta",
           searchMode: searchMode,
           // Pred generovaním, aby štítok nad odpoveďou bol hneď (krok 6).
           time,
+          comparison: comparisonMeta,
           preprocessed: shouldPreprocess,
           chunks: chunks.length,
         })
@@ -295,7 +333,7 @@ export async function POST(req: NextRequest) {
         // Znenie a účinnosť k úsekom — z toho istého načítania ako filter
         // hľadania, bez ďalšieho dotazu (krok 5).
         const inner = generateAnswer({
-          query, chunks: attachVersions(chunks, scope.versions), userRole, profile, timings, language, asOf: scope.asOf, time,
+          query, chunks: answerChunks, userRole, profile, timings, language, asOf: scope.asOf, time, comparison,
         })
         const reader = inner.getReader()
         for (;;) {

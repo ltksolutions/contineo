@@ -28,7 +28,7 @@ describe("štítok dňa odpovede", () => {
   it.each([
     ["sk", today, "podľa znení platných dnes, 29. 9. 2026"],
     ["sk", past, "podľa znení platných k 1. 1. 2020"],
-    ["sk", compare, "porovnanie znení zatiaľ nevieme"],
+    ["sk", compare, "porovnanie sa nepodarilo — odpoveď podľa znení platných dnes, 29. 9. 2026"],
     ["cs", past, "podle znění platných k 1. 1. 2020"],
     ["en", past, "per versions in force on 1 January 2020"],
     ["en", today, "per versions in force today, 29 September 2026"],
@@ -66,5 +66,30 @@ describe("k dňu nie je platné znenie", () => {
 
   it("keď znenia sú, ale nič sa nenašlo, zostáva pôvodná veta", () => {
     expect(html(none(past, false))).toContain("Skúste otázku inak")
+  })
+})
+
+describe("štítok porovnania (krok 7)", () => {
+  const cmp = (comparison: AnswerState["comparison"], language: "sk" | "cs" | "en" = "sk") =>
+    html({ ...answered(compare), comparison }, language)
+
+  it.each([
+    ["sk", "porovnanie znení: 1.1 (od 8. 9. 2026) → 1.2 (od 10. 9. 2026)"],
+    ["cs", "porovnání znění: 1.1 (od 8. 9. 2026) → 1.2 (od 10. 9. 2026)"],
+    ["en", "comparing versions: 1.1 (from 8 September 2026) → 1.2 (from 10 September 2026)"],
+  ] as const)("ktoré dve znenia (%s)", (language, expected) => {
+    expect(cmp({
+      ok: true, title: "Test", changes: 2,
+      from: { label: "1.1", effectiveFrom: "2026-09-08T00:00:00.000Z" },
+      to: { label: "1.2", effectiveFrom: "2026-09-10T00:00:00.000Z" },
+    }, language)).toContain(expected)
+  })
+
+  it.each([
+    ["single-version", "dokument má jediné znenie"],
+    ["missing-text", "text staršieho znenia chýba"],
+    ["identical", "znenia sa v texte nelíšia"],
+  ] as const)("prečo sa porovnať nedalo: %s", (reason, expected) => {
+    expect(cmp({ ok: false, reason })).toContain(expected)
   })
 })

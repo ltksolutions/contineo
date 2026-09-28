@@ -152,3 +152,15 @@ describe("withoutTimePhrase — dátum nie je obsah otázky", () => {
     expect(classifyByHeuristic(withoutTimePhrase("Kto zvolával konferenciu SFZ k 1. 1. 2020?"))).not.toBe("fulltext")
   })
 })
+
+describe("porovnanie s dátumom (krok 7)", () => {
+  it.each([
+    ["Čo sa zmenilo od roku 2020 v stanovách?", "2020-01-01"],
+    ["Čo sa zmenilo v stanovách od 1. 7. 2024?", "2024-07-01"],
+  ])("%s → since %s", (q, since) => {
+    expect(at(q)).toEqual({ kind: "compare", asOf: "2026-09-29", source: "rules", since })
+  })
+  it("bez dátumu since nie je", () => {
+    expect(at("Čo sa zmenilo v stanovách?")).not.toHaveProperty("since")
+  })
+})

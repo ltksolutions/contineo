@@ -91,10 +91,10 @@ export default function Search({
     try {
       const v = await askQuestion(
         q,
-        p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase, time: p.time })),
+        p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase, time: p.time, comparison: p.comparison })),
         { signal: ctrl.signal, language }
       )
-      setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time })
+      setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time, comparison: v.comparison })
       if (!v.error && v.text) void record(q, v)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.

@@ -672,7 +672,11 @@ interface Dictionary {
      */
     timeToday: (date: string) => string
     timeAsOf: (date: string) => string
-    timeCompare: (date: string) => string
+    /** Porovnanie znení (krok 7): „1.1 (od 8. 9. 2026) → 1.2 (od 10. 9. 2026)". */
+    timeCompare: (from: string, to: string) => string
+    compareSide: (label: string, date: string | null) => string
+    /** Porovnať sa nedalo — prečo, a že odpoveď je podľa dneška. */
+    timeCompareUnavailable: Record<"single-version" | "missing-text" | "identical" | "no-document", (date: string) => string>
     /** Zhoda zdroja v troch stupňoch — relatívne v rámci jednej odpovede. */
     match: Record<"high" | "medium" | "low", string>
     adapter: string
@@ -3680,7 +3684,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       [label && `znenie ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `podľa znení platných dnes, ${d}`,
     timeAsOf: (d) => `podľa znení platných k ${d}`,
-    timeCompare: (d) => `porovnanie znení zatiaľ nevieme — odpoveď je podľa znení platných dnes, ${d}`,
+    timeCompare: (from, to) => `porovnanie znení: ${from} → ${to}`,
+    compareSide: (label, date) => (date ? `${label} (od ${date})` : label),
+    timeCompareUnavailable: {
+      "single-version": (d) => `dokument má jediné znenie, nie je s čím porovnať — odpoveď podľa znení platných dnes, ${d}`,
+      "missing-text": (d) => `text staršieho znenia chýba — odpoveď podľa znení platných dnes, ${d}`,
+      identical: (d) => `znenia sa v texte nelíšia — odpoveď podľa znení platných dnes, ${d}`,
+      "no-document": (d) => `porovnanie sa nepodarilo — odpoveď podľa znení platných dnes, ${d}`,
+    },
     match: { high: "vysoká zhoda", medium: "stredná zhoda", low: "slabá zhoda" },
     adapter: "adaptér",
     firstToken: "prvý token",
@@ -6937,7 +6948,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       [label && `znění ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `podle znění platných dnes, ${d}`,
     timeAsOf: (d) => `podle znění platných k ${d}`,
-    timeCompare: (d) => `porovnání znění zatím neumíme — odpověď je podle znění platných dnes, ${d}`,
+    timeCompare: (from, to) => `porovnání znění: ${from} → ${to}`,
+    compareSide: (label, date) => (date ? `${label} (od ${date})` : label),
+    timeCompareUnavailable: {
+      "single-version": (d) => `dokument má jediné znění, není s čím porovnat — odpověď podle znění platných dnes, ${d}`,
+      "missing-text": (d) => `text staršího znění chybí — odpověď podle znění platných dnes, ${d}`,
+      identical: (d) => `znění se v textu neliší — odpověď podle znění platných dnes, ${d}`,
+      "no-document": (d) => `porovnání se nepodařilo — odpověď podle znění platných dnes, ${d}`,
+    },
     match: { high: "vysoká shoda", medium: "střední shoda", low: "slabá shoda" },
     adapter: "adaptér",
     firstToken: "první token",
@@ -10185,7 +10203,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       [label && `version ${label}`, from && `in force from ${from}${to ? ` until ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `per versions in force today, ${d}`,
     timeAsOf: (d) => `per versions in force on ${d}`,
-    timeCompare: (d) => `comparing versions is not available yet — the answer uses versions in force today, ${d}`,
+    timeCompare: (from, to) => `comparing versions: ${from} → ${to}`,
+    compareSide: (label, date) => (date ? `${label} (from ${date})` : label),
+    timeCompareUnavailable: {
+      "single-version": (d) => `the document has a single version, nothing to compare — the answer uses versions in force today, ${d}`,
+      "missing-text": (d) => `the text of the older version is missing — the answer uses versions in force today, ${d}`,
+      identical: (d) => `the versions do not differ in text — the answer uses versions in force today, ${d}`,
+      "no-document": (d) => `the comparison could not be made — the answer uses versions in force today, ${d}`,
+    },
     match: { high: "strong match", medium: "moderate match", low: "weak match" },
     adapter: "adapter",
     firstToken: "first token",
