@@ -173,7 +173,7 @@ async function sendInviteTo(
     const host = await requestHostname()
     await send({
       to: person.email,
-      ...inviteEmail(`https://${host}/sign-in`, host, normalizeLanguage(person.language), brandingView(tenant)),
+      ...inviteEmail(`https://${host}/sign-in`, host, normalizeLanguage(person.language), { ...brandingView(tenant), legalName: tenant.controller?.legalName }),
     })
     // Až po odoslaní: z „Nová" sa stane „Pozvaná" (Ján 28. 9. 2026).
     await markInvitationSent(tenant.companyCode, person.email).catch(e => console.error(`[osoby] zápis odoslania pozvánky ${person.email}:`, e))
