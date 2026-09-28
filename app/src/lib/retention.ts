@@ -26,6 +26,11 @@ export const RETENTION_YEARS = 3
 export const CAP_YEARS = 5
 /** Aktívna osoba bez udalosti tak dlho sa ukáže HR na kontrolu (D100). */
 export const STALE_ACTIVE_YEARS = 5
+/**
+ * Podrobnosti vzdelávania (odpovede v teste, úseky videa) sa orežú toľko
+ * mesiacov po dokončení kurzu (ADR-021, D131).
+ */
+export const LEARNING_DETAIL_MONTHS = 12
 /** `retention_log` — dlhšie než najdlhšia plánovaná retencia záloh (D102). */
 export const RETENTION_LOG_DAYS = 395
 
@@ -42,7 +47,10 @@ export interface RetentionInput {
   status: PersonStatus
   endedAt?: Date | null
   deactivatedAt?: Date | null
-  /** Posledná udalosť v reťazi: potvrdenie, otvorenie alebo pridelenie osobe. */
+  /**
+   * Posledná udalosť v reťazi: potvrdenie, otvorenie, pridelenie osobe;
+   * od ADR-021 (D130) aj zápis do kurzu, dokončenie časti a pokus v teste.
+   */
   lastEventAt?: Date | null
 }
 
@@ -75,6 +83,26 @@ export function retentionDecision(p: RetentionInput, now: Date): RetentionDecisi
   const r = pick()
   if (!r) return { due: false, basis: null, dueAt: null }
   return { due: r.dueAt.getTime() <= now.getTime(), basis: r.basis, dueAt: r.dueAt }
+}
+
+/** Pripočíta mesiace v UTC; 31. padne na posledný deň mesiaca. */
+export function addMonths(d: Date, months: number): Date {
+  const r = new Date(d.getTime())
+  const day = r.getUTCDate()
+  r.setUTCDate(1)
+  r.setUTCMonth(r.getUTCMonth() + months)
+  const last = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).getUTCDate()
+  r.setUTCDate(Math.min(day, last))
+  return r
+}
+
+/**
+ * Majú sa podrobnosti zápisu orezať? Len pri **dokončenom** kurze
+ * a 12 mesiacov po dokončení (D131). Nedokončený sa neorezáva — stav sa
+ * odvodzuje aj zo sledovania videa a človek by prišiel o rozpozerané.
+ */
+export function learningDetailsDue(completedAt: Date | null, now: Date): boolean {
+  return Boolean(completedAt) && addMonths(completedAt!, LEARNING_DETAIL_MONTHS).getTime() <= now.getTime()
 }
 
 /** Aktívna osoba, ktorá 5 rokov nič nepotvrdila, neotvorila ani nedostala. */

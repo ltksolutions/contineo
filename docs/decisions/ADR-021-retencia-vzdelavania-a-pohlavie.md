@@ -6,7 +6,7 @@
 > (modul `learning`, D119, D122), D24, D27
 > **Dopĺňa:** ADR-012 o kolekcie modulu Vzdelávanie. Toto je „dodatok k ADR-012"
 > z plánu L2 (O24); ADR-012 sa nemení, platí ďalej celé.
-> **Implementácia:** čaká — kap. 5.
+> **Implementácia:** hotová (2026-09-28) — beží v dennej dávke v režime `RETENTION_MODE` (predvolene výkaz).
 
 ---
 
@@ -53,8 +53,14 @@ tomu istému — preukázať, že človek vedel, čo mal. Dve lehoty by znamenal
 - v pokusoch **odpovede** (`answers`) a **losované otázky** (`questions`);
   zostane výsledok — body, percentá, prešiel, začiatok, odovzdanie;
   pokus dostane `detailsPurgedAt`;
-- **sledovanie videa** (`video_watch`) toho zápisu celé; dokončenie časti
-  (`part_completions`) zostáva — to je doklad.
+- zo **sledovania videa** (`video_watch`) sa odstránia pozreté úseky;
+  zostane čas dopozerania (`reachedAt`), ktorý je dôkazom a z ktorého sa
+  odvodzuje stav časti — bez neho by kurz zrazu vyzeral nedokončený
+  (zistené pri implementácii). Sledovanie, ktoré hranicu nedosiahlo, nič
+  nedokazuje a zmaže sa celé; dokončenie časti (`part_completions`)
+  zostáva — to je doklad.
+- zápis dostane `detailsPurgedAt`, aby sa denne neprepočítaval znova;
+  výmaz sa zapíše do `retention_log` s dôvodom `details`.
 
 Dokončenie kurzu sa **odvodzuje** (D119, D27), neukladá. **Nedokončený kurz
 sa neorezáva**: stav sa odvodzuje aj zo sledovania videa a človek by stratil

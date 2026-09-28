@@ -2903,6 +2903,7 @@ interface Dictionary {
       retryNote: string
       toCourse: string
       reviewTitle: string
+      detailsPurged: string
       filterAll: string
       filterWrong: string
       yourAnswer: string
@@ -6086,6 +6087,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       retryNote: "Otázky sa vylosujú znova.",
       toCourse: "Prehľad kurzu",
       reviewTitle: "Prehľad otázok",
+      detailsPurged: "Otázky a odpovede tohto pokusu boli rok po dokončení kurzu odstránené. Výsledok zostáva.",
       filterAll: "Všetky",
       filterWrong: "Nesprávne",
       yourAnswer: "Vaša odpoveď",
@@ -9244,6 +9246,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       retryNote: "Otázky se vylosují znovu.",
       toCourse: "Přehled kurzu",
       reviewTitle: "Přehled otázek",
+      detailsPurged: "Otázky a odpovědi tohoto pokusu byly rok po dokončení kurzu odstraněny. Výsledek zůstává.",
       filterAll: "Všechny",
       filterWrong: "Nesprávné",
       yourAnswer: "Vaše odpověď",
@@ -12388,6 +12391,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       retryNote: "Questions will be drawn again.",
       toCourse: "Course overview",
       reviewTitle: "Question review",
+      detailsPurged: "The questions and answers of this attempt were removed a year after the course was completed. The result remains.",
       filterAll: "All",
       filterWrong: "Incorrect",
       yourAnswer: "Your answer",

@@ -142,4 +142,11 @@ describe("výsledok", () => {
     expect(html).toContain("Nesprávne odpovede: 2.")
     expect(html).toContain('aria-describedby="rs-why"')
   })
+  it("po roku orezaný pokus: výsledok zostane, namiesto otázok veta (ADR-021, D131)", async () => {
+    s.attempt = attempt({ submittedAt: at, closedBy: "user", points: 3, maxPoints: 3, percent: 100, passed: true, questions: [], answers: {}, detailsPurgedAt: at })
+    const html = await result()
+    expect(html).toContain("100 %")
+    expect(html).toContain("boli rok po dokončení kurzu odstránené")
+    expect(html).not.toContain("Nesprávne odpovede")
+  })
 })

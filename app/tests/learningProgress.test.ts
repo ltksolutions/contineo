@@ -120,3 +120,17 @@ describe("completionBlockers", () => {
     expect(completionBlockers(v, "a", facts(), { allowBeforeRequiredTests: false })?.map(b => b.code)).toEqual(["testNotPassed"])
   })
 })
+
+describe("orezané sledovanie videa (ADR-021, D131)", () => {
+  it("bez úsekov, ale s reachedAt a detailsPurgedAt sa ráta ako dopozerané", () => {
+    const p = videoPart("v")
+    const blockId = p.blocks.find(b => b.type === "video")!.id
+    const purged = { partKey: "v", blockId, watchedRanges: [], durationSec: 600, reachedAt: D(3), updatedAt: D(3), detailsPurgedAt: D(20) }
+    const e = evaluatePart(p, facts({ completions: [{ partKey: "v", at: D(4) }], watches: [purged] }))
+    expect(e.done).toBe(true)
+    expect(e.videosMissing).toEqual([])
+    // Bez `reachedAt` orezanie nič nedokazuje.
+    const bad = evaluatePart(p, facts({ completions: [{ partKey: "v", at: D(4) }], watches: [{ ...purged, reachedAt: null }] }))
+    expect(bad.done).toBe(false)
+  })
+})

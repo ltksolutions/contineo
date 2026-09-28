@@ -39,6 +39,11 @@ export interface VideoWatchFact {
   /** Kedy sledovanie prvý raz prekročilo hranicu. Zapíše sa raz, potom sa nemení. */
   reachedAt?: Date | null
   updatedAt: Date
+  /**
+   * Úseky boli rok po dokončení kurzu odstránené (ADR-021, D131). Dôkazom
+   * dopozerania je odvtedy `reachedAt`, nie `watchedRanges`.
+   */
+  detailsPurgedAt?: Date | null
 }
 
 /** Prejdený pokus o test v kontexte časti (L2). */
@@ -133,7 +138,9 @@ export function evaluatePart(part: Part, facts: ProgressFacts): PartEvaluation {
     // Dĺžka z verzie kurzu má prednosť: tú zmrazilo zverejnenie, meranie
     // z prehrávača je len meranie.
     const duration = b.durationSec ?? w?.durationSec
-    if (!w || !isWatched(w.watchedRanges, duration)) videosMissing.push(b.id)
+    // Po orezaní podrobností (D131) úseky chýbajú; dopozeranie dokazuje `reachedAt`.
+    const watched = w && (w.detailsPurgedAt && w.reachedAt ? true : isWatched(w.watchedRanges, duration))
+    if (!w || !watched) videosMissing.push(b.id)
     else proof.push(w.reachedAt ?? w.updatedAt)
   }
   const testsMissing: string[] = []

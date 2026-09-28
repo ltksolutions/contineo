@@ -279,8 +279,10 @@ export async function GET(request: Request) {
     try {
       const run = await runRetention(tenant.companyCode, mode)
       retention.push(run)
-      if (run.persons.length > 0 || run.staleActive > 0) {
-        console.log(`[cron] retencia ${tenant.companyCode} (${mode}): osôb ${run.persons.length}, aktívnych bez udalosti 5 rokov ${run.staleActive}`)
+      if (run.persons.length > 0 || run.staleActive > 0 || run.learningDetails.enrollments > 0) {
+        const d = run.learningDetails
+        console.log(`[cron] retencia ${tenant.companyCode} (${mode}): osôb ${run.persons.length}, aktívnych bez udalosti 5 rokov ${run.staleActive}, ` +
+          `vzdelávanie orezané: zápisov ${d.enrollments}, pokusov ${d.testAttempts}, videí ${d.videoWatchTrimmed}+${d.videoWatchDeleted}`)
       }
     } catch (e) {
       console.error(`[cron] retencia ${tenant.companyCode} zlyhala:`, e)
