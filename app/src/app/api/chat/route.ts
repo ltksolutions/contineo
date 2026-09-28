@@ -44,7 +44,7 @@ import { preprocessQuery }    from "@/lib/queryPreprocessor"
 import { getCollection }      from "@/lib/mongodb"
 import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
 import type { SearchOptions } from "@/lib/mongoSearch"
-import { searchScope }        from "@/lib/searchVersions"
+import { searchScope, attachVersions } from "@/lib/searchVersions"
 import { generateAnswer }     from "@/lib/llmGenerator"
 import { getTenantProfile }   from "@/lib/tenantProfile"
 import { onboardingContext }  from "@/lib/session"
@@ -279,7 +279,11 @@ export async function POST(req: NextRequest) {
 
         // 7. Generovanie odpovede (streaming SSE)
         phase("writing")
-        const inner = generateAnswer({ query, chunks, userRole, profile, timings, language })
+        // Znenie a účinnosť k úsekom — z toho istého načítania ako filter
+        // hľadania, bez ďalšieho dotazu (krok 5).
+        const inner = generateAnswer({
+          query, chunks: attachVersions(chunks, scope.versions), userRole, profile, timings, language, asOf: scope.asOf,
+        })
         const reader = inner.getReader()
         for (;;) {
           const { done, value } = await reader.read()

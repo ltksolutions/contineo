@@ -657,6 +657,11 @@ interface Dictionary {
     /** Štítok pri zdroji, ktorý je overenou odpoveďou, nie článkom normy (D11). */
     verified: string
     verifiedNote: string
+    /**
+     * Znenie zdroja pod odpoveďou (plán „znenia v indexe", krok 5). Dátumy
+     * prichádzajú už naformátované; koniec účinnosti len keď je známy.
+     */
+    sourceVersion: (label: string, from: string | null, to: string | null) => string
     /** Zhoda zdroja v troch stupňoch — relatívne v rámci jednej odpovede. */
     match: Record<"high" | "medium" | "low", string>
     adapter: string
@@ -3659,6 +3664,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interné",
     verified: "overená odpoveď",
     verifiedNote: "znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu",
+    sourceVersion: (label, from, to) =>
+      [label && `znenie ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     match: { high: "vysoká zhoda", medium: "stredná zhoda", low: "slabá zhoda" },
     adapter: "adaptér",
     firstToken: "prvý token",
@@ -6910,6 +6917,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interní",
     verified: "ověřená odpověď",
     verifiedNote: "znění, které někdo ověřil nad předpisem — nikoli samotné znění předpisu",
+    sourceVersion: (label, from, to) =>
+      [label && `znění ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     match: { high: "vysoká shoda", medium: "střední shoda", low: "slabá shoda" },
     adapter: "adaptér",
     firstToken: "první token",
@@ -10152,6 +10161,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "internal",
     verified: "verified answer",
     verifiedNote: "wording someone verified against the document — not the document itself",
+    sourceVersion: (label, from, to) =>
+      [label && `version ${label}`, from && `in force from ${from}${to ? ` until ${to}` : ""}`].filter(Boolean).join(" · "),
     match: { high: "strong match", medium: "moderate match", low: "weak match" },
     adapter: "adapter",
     firstToken: "first token",

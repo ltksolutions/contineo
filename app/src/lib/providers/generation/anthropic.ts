@@ -14,6 +14,7 @@
  *      s históriou je to rozdiel rádovo 2–3× v cene za dotaz.
  */
 
+import { versionContext } from "../../versionContext"
 import type { ChunkResult } from "../../mongoSearch"
 import { ProviderConfigError } from "../types"
 import type {
@@ -35,7 +36,9 @@ function documentBlock(c: ChunkResult, citations: boolean) {
     type: "document",
     source: { type: "text", media_type: "text/plain", data: c.text },
     title: `${title}${ref}`,
-    context: [c.heading, c.articleRef].filter(Boolean).join(" · ") || undefined,
+    // Znenie ide do `context`, nie do textu úseku — citácie ukazujú na
+    // `source.data` a musia zostať doslovným znením predpisu (krok 5).
+    context: [c.heading, c.articleRef, versionContext(c.version)].filter(Boolean).join(" · ") || undefined,
     citations: { enabled: citations },
   }
 }

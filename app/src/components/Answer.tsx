@@ -14,7 +14,7 @@ import type { Citation, AskResult, AnswerPhase } from "@/lib/sseClient"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
-import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { SkeletonText } from "./Skeleton"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
@@ -224,6 +224,20 @@ export default function Answer({
                       článkom normy; bez tejto vety by ju čitateľ čítal ako
                       normu samu. Preto sa hovorí aj to, z čoho vznikla.
                     */}
+                    {/*
+                      Znenie, z ktorého zdroj je (krok 5 „znení v indexe").
+                      Bez neho čitateľ nevie, či cituje platný text, alebo
+                      ten, ktorý o mesiac nahradí novela.
+                    */}
+                    {z.version && (
+                      <span className="quiet answer-source-meta">
+                        {t.sourceVersion(
+                          z.version.label,
+                          z.version.effectiveFrom ? formatDate(new Date(z.version.effectiveFrom), language) : null,
+                          z.version.effectiveTo ? formatDate(new Date(z.version.effectiveTo), language) : null,
+                        )}
+                      </span>
+                    )}
                     {z.sourceType === "qa" && (
                       <span className="quiet answer-source-meta">{t.verifiedNote}</span>
                     )}

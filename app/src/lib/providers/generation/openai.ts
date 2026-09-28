@@ -12,6 +12,7 @@
  *     ale riadi si ho sám a cez API sa neovláda.
  */
 
+import { versionContext } from "../../versionContext"
 import type { ChunkResult } from "../../mongoSearch"
 import { ProviderConfigError } from "../types"
 import type {
@@ -23,12 +24,13 @@ import type {
 } from "../types"
 
 /** Kontext ako číslovaný text — model má citovať [1], [2]… */
-function buildContext(chunks: ChunkResult[]): string {
+export function buildContext(chunks: ChunkResult[]): string {
   return chunks
     .map((c, i) => {
       const src = c.document?.title ?? c.documentId
       const ref = c.articleRef ? ` (${c.articleRef})` : ""
-      return `[${i + 1}] Zdroj: ${src}${ref}\n${c.text}`
+      const version = versionContext(c.version)
+      return `[${i + 1}] Zdroj: ${src}${ref}${version ? ` — ${version}` : ""}\n${c.text}`
     })
     .join("\n\n---\n\n")
 }

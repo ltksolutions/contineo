@@ -78,6 +78,19 @@ export interface SearchOptions {
  */
 export const VERIFIED_ANSWER_SOURCE = "qa"
 
+/**
+ * Znenie, ku ktorému úsek patrí — kópia z `documents` pripojená po hľadaní
+ * (`attachVersions()`, plán „znenia v indexe", krok 5). Na úseku sa neukladá:
+ * dátumy na úsekoch sú nekonzistentné a boli by druhým zdrojom pravdy.
+ */
+export interface ChunkVersion {
+  /** Ľudské označenie znenia: „1.0", „novela 2026". */
+  label: string
+  effectiveFrom: Date | null
+  /** Koniec účinnosti, keď je známy — napr. novela zverejnená vopred. */
+  effectiveTo: Date | null
+}
+
 export interface ChunkResult {
   _id: string
   text: string
@@ -106,6 +119,8 @@ export interface ChunkResult {
   embeddingDim?: number         // kontrola pri zápise aj čítaní
   embeddingProvider?: string    // atlas-auto | tei | infinity
   embeddedAt?: string | Date    // pre plánovanie re-embedu
+  /** Znenie úseku. Chýba pri overenej odpovedi — tá znenie nemá. */
+  version?: ChunkVersion
   // state
   isActive?: boolean
   effectiveFrom?: string
