@@ -13,6 +13,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, normalizeLanguage } from "@/lib/i18n"
 import { dpoContacts, privacyProcessors, PRIVACY_NOTICE_VERSION } from "@/lib/privacy"
 import { defaultProfile, getTenantProfile } from "@/lib/tenantProfile"
+import { retentionSettings } from "@/lib/retention"
 
 export const dynamic = "force-dynamic"
 
@@ -60,6 +61,15 @@ export default async function PrivacyPage() {
   // Úrad a zákony podľa krajiny sídla prevádzkovateľa, nie podľa jazyka (ADR-022).
   const country = tenant.controller?.country ?? "SK"
   const profile = await getTenantProfile(tenant.companyCode).catch(() => defaultProfile(tenant.companyCode))
+  // Lehoty organizácie — tie isté čísla číta mazacia dávka (ADR-022, D136).
+  const r = retentionSettings(tenant.privacy?.retention)
+  const period = (rows: [string, string][]) => rows.map(([a, b]) => [a, b
+    .replace("{evidence}", t.years(r.evidenceYears))
+    .replace("{cap}", t.years(r.capYears))
+    .replace("{months}", t.months(r.learningDetailMonths))] as [string, string])
+  // Verzia textu: neskoršia zo spoločného textu a nastavení organizácie (D138).
+  const updated = tenant.privacy?.updatedAt ? new Date(tenant.privacy.updatedAt) : null
+  const version = updated && updated > PRIVACY_NOTICE_VERSION ? updated : PRIVACY_NOTICE_VERSION
   const processors = privacyProcessors(profile).map(({ key, region }) =>
     t.processors[key].map(cell => cell.replace("{region}", region ?? "")) as [string, string, string])
 
@@ -134,7 +144,7 @@ export default async function PrivacyPage() {
         {learning && <p>{learning.basis(t.archiveLaw[country])}</p>}
 
         <h2 id="retention">{t.retentionHeading}</h2>
-        <Table columns={t.retentionColumns} rows={learning ? [...t.retention, ...learning.retention] : t.retention} />
+        <Table columns={t.retentionColumns} rows={period(learning ? [...t.retention, ...learning.retention] : t.retention)} />
         <p>{t.retentionDelete}{learning && <> {learning.retentionNote}</>}</p>
 
         <h2 id="recipients">{t.recipientsHeading}</h2>
@@ -153,7 +163,7 @@ export default async function PrivacyPage() {
         <p>{t.complaint[country]}</p>
 
         <p className="privacy-foot">
-          {t.version(formatDate(PRIVACY_NOTICE_VERSION, language))}
+          {t.version(formatDate(version, language))}
         </p>
       </div>
     </div>

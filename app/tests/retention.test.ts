@@ -59,7 +59,7 @@ function collection(name: string) {
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async (name: string) => collection(name)) }))
 
 import {
-  retentionDecision, isStaleActive, addYears, retentionMode, addMonths, learningDetailsDue,
+  retentionDecision, isStaleActive, addYears, retentionMode, addMonths, learningDetailsDue, retentionSettings,
 } from "../src/lib/retention"
 import { deletePersonEvidence, trimLearningDetails } from "../src/lib/retentionDb"
 import { courseProgress, type ProgressFacts } from "../src/lib/learningProgress"
@@ -310,5 +310,20 @@ describe("orezanie podrobností rok po dokončení (D131)", () => {
     expect(db.data.test_attempts.find(r => r.id === "t-cancelled")!.detailsPurgedAt).toBeUndefined()
     expect(db.data.video_watch.find(r => r.enrollmentId === "open")!.watchedRanges).toEqual([[0, 50]])
     expect(await trimLearningDetails("SFZ", "delete", TRIM_NOW)).toEqual({ enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 })
+  })
+})
+
+describe("lehoty organizácie (ADR-022, D136)", () => {
+  it("predvolené = rozhodnutia DPO SFZ; strop nie kratší než lehota; rozsahy", () => {
+    expect(retentionSettings(undefined)).toEqual({ evidenceYears: 3, capYears: 5, learningDetailMonths: 12 })
+    expect(retentionSettings({ evidenceYears: 7, capYears: 4 })).toMatchObject({ evidenceYears: 7, capYears: 7 })
+    expect(retentionSettings({ evidenceYears: 99, learningDetailMonths: 0 })).toMatchObject({ evidenceYears: 10, learningDetailMonths: 12 })
+  })
+  it("rozhodnutie a orezanie podľa lehôt organizácie", () => {
+    const p = { status: "inactive" as const, endedAt: Y("2028-06-01") }
+    expect(retentionDecision(p, NOW).due).toBe(false)
+    expect(retentionDecision(p, NOW, { evidenceYears: 2, capYears: 5, learningDetailMonths: 12 }).due).toBe(true)
+    expect(learningDetailsDue(Y("2030-01-01"), NOW, 6)).toBe(false)
+    expect(learningDetailsDue(Y("2029-11-01"), NOW, 6)).toBe(true)
   })
 })

@@ -34,6 +34,51 @@ export const LEARNING_DETAIL_MONTHS = 12
 /** `retention_log` — dlhšie než najdlhšia plánovaná retencia záloh (D102). */
 export const RETENTION_LOG_DAYS = 395
 
+/**
+ * Lehoty, ktoré si nastaví DPO organizácie na `/dpo` (ADR-022, D136).
+ * Predvolené sú rozhodnutia DPO SFZ. Lehoty v indexoch (čas čítania,
+ * pripomienky, audit) sem nepatria — index nevie rozlíšiť organizácie.
+ */
+export interface RetentionSettings {
+  /** Roky od skončenia vzťahu (alebo vyradenia). */
+  evidenceYears: number
+  /** Strop od poslednej udalosti pri vyradenej osobe bez dátumov. */
+  capYears: number
+  /** Mesiace po dokončení kurzu, potom sa orežú podrobnosti (D131). */
+  learningDetailMonths: number
+}
+
+export const DEFAULT_RETENTION: RetentionSettings = {
+  evidenceYears: RETENTION_YEARS,
+  capYears: CAP_YEARS,
+  learningDetailMonths: LEARNING_DETAIL_MONTHS,
+}
+
+/** Rozsahy, ktoré obrazovka pustí — nula by znamenala „zmazať hneď". */
+export const RETENTION_LIMITS = {
+  evidenceYears: [1, 10],
+  capYears: [1, 15],
+  learningDetailMonths: [1, 60],
+} as const
+
+const clampInt = (v: unknown, [min, max]: readonly [number, number], fallback: number) => {
+  const n = Math.round(Number(v))
+  return Number.isFinite(n) && n > 0 ? Math.min(max, Math.max(min, n)) : fallback
+}
+
+/**
+ * Lehoty organizácie. Strop nesmie byť kratší než lehota od skončenia —
+ * inak by osoba bez dátumov prišla o doklady skôr než osoba s nimi.
+ */
+export function retentionSettings(saved?: Partial<RetentionSettings> | null): RetentionSettings {
+  const evidenceYears = clampInt(saved?.evidenceYears, RETENTION_LIMITS.evidenceYears, DEFAULT_RETENTION.evidenceYears)
+  return {
+    evidenceYears,
+    capYears: Math.max(evidenceYears, clampInt(saved?.capYears, RETENTION_LIMITS.capYears, DEFAULT_RETENTION.capYears)),
+    learningDetailMonths: clampInt(saved?.learningDetailMonths, RETENTION_LIMITS.learningDetailMonths, DEFAULT_RETENTION.learningDetailMonths),
+  }
+}
+
 /** Režim dávky (D102). Predvolený je výkaz — mazanie sa zapína vedome. */
 export type RetentionMode = "report" | "delete"
 
@@ -71,13 +116,13 @@ export function addYears(d: Date, years: number): Date {
   return r
 }
 
-export function retentionDecision(p: RetentionInput, now: Date): RetentionDecision {
+export function retentionDecision(p: RetentionInput, now: Date, s: RetentionSettings = DEFAULT_RETENTION): RetentionDecision {
   if (p.status !== "inactive") return { due: false, basis: null, dueAt: null }
 
   const pick = (): { basis: RetentionBasis; dueAt: Date } | null => {
-    if (p.endedAt) return { basis: "endedAt", dueAt: addYears(p.endedAt, RETENTION_YEARS) }
-    if (p.deactivatedAt) return { basis: "deactivatedAt", dueAt: addYears(p.deactivatedAt, RETENTION_YEARS) }
-    if (p.lastEventAt) return { basis: "cap", dueAt: addYears(p.lastEventAt, CAP_YEARS) }
+    if (p.endedAt) return { basis: "endedAt", dueAt: addYears(p.endedAt, s.evidenceYears) }
+    if (p.deactivatedAt) return { basis: "deactivatedAt", dueAt: addYears(p.deactivatedAt, s.evidenceYears) }
+    if (p.lastEventAt) return { basis: "cap", dueAt: addYears(p.lastEventAt, s.capYears) }
     return null
   }
   const r = pick()
@@ -101,8 +146,8 @@ export function addMonths(d: Date, months: number): Date {
  * a 12 mesiacov po dokončení (D131). Nedokončený sa neorezáva — stav sa
  * odvodzuje aj zo sledovania videa a človek by prišiel o rozpozerané.
  */
-export function learningDetailsDue(completedAt: Date | null, now: Date): boolean {
-  return Boolean(completedAt) && addMonths(completedAt!, LEARNING_DETAIL_MONTHS).getTime() <= now.getTime()
+export function learningDetailsDue(completedAt: Date | null, now: Date, months: number = LEARNING_DETAIL_MONTHS): boolean {
+  return Boolean(completedAt) && addMonths(completedAt!, months).getTime() <= now.getTime()
 }
 
 /** Aktívna osoba, ktorá 5 rokov nič nepotvrdila, neotvorila ani nedostala. */

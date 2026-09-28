@@ -26,6 +26,7 @@ import type { Tenant } from "./tenants"
 import { encrypt, encryptionAvailable } from "./secrets"
 import type { OAuthProviderName } from "./oauth"
 import { DEFAULT_CHUNKING, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
+import { retentionSettings, type RetentionSettings } from "./retention"
 import { AppError } from "./appError"
 import { KEY_PATTERN } from "./codelists"
 
@@ -106,6 +107,10 @@ export interface TenantChange {
   chunkingProfiles?: ChunkingProfileDef[]
   /** Modul Vzdelávanie (ADR-018). `undefined` = nemeniť. */
   learning?: boolean
+  /** Lehoty uchovávania organizácie (ADR-022, D136) — len DPO. */
+  privacyRetention?: Partial<RetentionSettings>
+  /** Doplnkový text DPO na `/privacy` (D137). Prázdny reťazec = zmazať. */
+  privacyExtra?: Partial<Record<UiLanguage, string>>
 }
 
 /**
@@ -220,6 +225,13 @@ function toSet(change: TenantChange): Record<string, unknown> {
     }
     set["controller.registrationNumber"] = reg
   }
+  if (change.privacyRetention !== undefined) set["privacy.retention"] = retentionSettings(change.privacyRetention)
+  if (change.privacyExtra !== undefined) {
+    for (const [lang, text] of Object.entries(change.privacyExtra)) {
+      if (!(UI_LANGUAGES as readonly string[]).includes(lang)) continue
+      set[`privacy.extra.${lang}`] = (text ?? "").trim().slice(0, 4000)
+    }
+  }
   if (change.controllerCountry !== undefined) {
     // Len krajiny, pre ktoré máme úrad a zákony v texte; iná by na stránke
     // Ochrana osobných údajov uviedla cudzí úrad.
@@ -302,6 +314,18 @@ export async function saveTenant(
 
   const set = toSet(change)
   set.updatedBy = actor
+
+  // Verzia textu Ochrany osobných údajov (ADR-022, D138): zmena čohokoľvek,
+  // čo sa na `/privacy` ukazuje (prevádzkovateľ, krajina, lehoty, doplnok),
+  // posunie jej dátum — z dátumu sa dá vyčítať, kedy sa zmenilo, čo človek čítal.
+  const current = (path: string): unknown =>
+    path.split(".").reduce<unknown>((x, k) => (x as Record<string, unknown>)?.[k], existing)
+  const privacyChanged = Object.keys(set).some(k =>
+    (k.startsWith("controller.") || k.startsWith("privacy.")) && JSON.stringify(current(k) ?? "") !== JSON.stringify(set[k] ?? ""))
+  if (privacyChanged) {
+    set["privacy.updatedAt"] = new Date()
+    set["privacy.updatedBy"] = actor
+  }
 
   // Bodkové cesty (`branding.displayName`) sa v typoch ovládača vyjadriť
   // nedajú, preto jedno pretypovanie tu a nikde inde.

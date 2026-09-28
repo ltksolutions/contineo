@@ -17,7 +17,7 @@ vi.mock("@/lib/dpo", async importOriginal => ({
   ...(await importOriginal<typeof import("../src/lib/dpo")>()),
   dpoContext: async () => ({
     state: "ready",
-    tenant: { companyCode: "SFZ", name: "SFZ" },
+    tenant: { companyCode: "SFZ", name: "SFZ", privacy: { retention: { evidenceYears: 2 } } },
     person: { id: "p-jan", email: "jan@sfz.sk", companyCode: "SFZ", language: "sk" },
   }),
 }))
@@ -25,7 +25,7 @@ vi.mock("@/lib/dpoDb", () => ({ legalBasisRows: async () => state.rows }))
 vi.mock("@/lib/objectionsDb", () => ({ listObjections: async () => state.objections }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/session", () => ({}))
-vi.mock("../src/app/dpo/actions", () => ({ recordObjectionAction: async () => {}, decideObjectionAction: async () => {} }))
+vi.mock("../src/app/dpo/actions", () => ({ recordObjectionAction: async () => {}, decideObjectionAction: async () => {}, saveRetentionAction: async () => {} }))
 
 const row = (over: Record<string, unknown>) => ({
   documentId: "sfz:a", title: "Predpis A", versionId: "v1", versionLabel: "1.0",
@@ -71,5 +71,14 @@ describe("/dpo", () => {
 
   it("po chybe je zaevidovanie otvorené", async () => {
     expect(await render({ error: "1", msg: "chyba" })).toMatch(/<details class="dpo-record" open="">/)
+  })
+
+  it("lehoty uchovávania organizácie s predvolenými a uloženými hodnotami (ADR-022, D136)", async () => {
+    const html = await render()
+    expect(html).toContain('id="retention"')
+    expect(html).toMatch(/name="evidenceYears"[^>]*value="2"/)
+    expect(html).toMatch(/name="capYears"[^>]*value="5"/)
+    expect(html).toMatch(/name="learningDetailMonths"[^>]*value="12"/)
+    expect(html).toContain("Certifikáty sa nemažú.")
   })
 })

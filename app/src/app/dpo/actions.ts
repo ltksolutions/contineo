@@ -13,6 +13,7 @@ import { dpoContext } from "@/lib/dpo"
 import { recordObjection, decideObjection } from "@/lib/objectionsDb"
 import { dictionary, errorText } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
+import { saveTenant } from "@/lib/tenantAdmin"
 
 async function dpo() {
   const ctx = await dpoContext()
@@ -72,4 +73,32 @@ export async function decideObjectionAction(fd: FormData) {
     error = true
   }
   back(message, error)
+}
+
+/**
+ * Lehoty uchovávania organizácie (ADR-022, D136). Uloží ich DPO; tie isté
+ * čísla číta mazacia dávka aj `/privacy`. Rozsahy stráži `retentionSettings`.
+ */
+export async function saveRetentionAction(fd: FormData) {
+  const ctx = await dpoContext()
+  if (ctx.state !== "ready") redirect("/")
+  const t = dictionary(ctx.person.language)
+  let message = t.dpo.retention.saved
+  let error = false
+  try {
+    await saveTenant(ctx.person.companyCode, {
+      privacyRetention: {
+        evidenceYears: Number(field(fd, "evidenceYears")),
+        capYears: Number(field(fd, "capYears")),
+        learningDetailMonths: Number(field(fd, "learningDetailMonths")),
+      },
+    }, ctx.person.email)
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[dpo] uloženie lehôt zlyhalo:", e)
+    message = errorText(e, ctx.person.language)
+    error = true
+  }
+  revalidatePath("/dpo")
+  revalidatePath("/privacy")
+  redirect(`/dpo?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#retention`)
 }
