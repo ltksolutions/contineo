@@ -23,6 +23,7 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { normalizeLanguage, UI_LANGUAGES } from "./i18n"
 import type { UiLanguage } from "./i18n"
+import type { RetentionSettings } from "./retention"
 import type { Person } from "./persons"
 import type { TenantOAuth } from "./oauth"
 import type { ChunkingProfile, ChunkingProfileDef } from "./chunkingProfile"
@@ -199,6 +200,18 @@ export interface Tenant {
   certificateSigner?: { name: string; role: string }
 
   learningTopics?: { key: string; label: string; retiredAt?: Date | null; createdAt?: Date; createdBy?: string }[]
+
+  /**
+   * Ochrana osobných údajov organizácie (ADR-022): lehoty, ktoré číta
+   * mazacia dávka aj `/privacy` (D136), doplnkový text DPO (D137)
+   * a kedy sa niečo z toho naposledy zmenilo (verzia textu, D138).
+   */
+  privacy?: {
+    retention?: Partial<RetentionSettings>
+    extra?: Partial<Record<UiLanguage, string>>
+    updatedAt?: Date
+    updatedBy?: string
+  }
 
   createdAt?: Date
   updatedAt?: Date

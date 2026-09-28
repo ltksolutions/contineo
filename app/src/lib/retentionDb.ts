@@ -26,8 +26,9 @@ import { PART_COMPLETIONS_COLLECTION, VIDEO_WATCH_COLLECTION, courseProgress } f
 import { TEST_ATTEMPTS_COLLECTION } from "./testAttempts"
 import { COURSES_COLLECTION, versionById, type Course } from "./courses"
 import { progressFactsMany } from "./learningProgressDb"
+import { tenantByCompanyCode } from "./tenants"
 import {
-  retentionDecision, isStaleActive, learningDetailsDue, addMonths, RETENTION_LOG_DAYS, LEARNING_DETAIL_MONTHS,
+  retentionDecision, isStaleActive, learningDetailsDue, addMonths, retentionSettings, RETENTION_LOG_DAYS, LEARNING_DETAIL_MONTHS,
   type RetentionBasis, type RetentionMode,
 } from "./retention"
 
@@ -333,11 +334,13 @@ export interface RetentionRun {
  *   Sledovanie bez `reachedAt` nič nedokazuje a zmaže sa.
  * - Zápis dostane `detailsPurgedAt`, aby sa denne neprepočítaval znova.
  */
-export async function trimLearningDetails(companyCode: string, mode: RetentionMode, now: Date = new Date()): Promise<LearningDetailsCounts> {
+export async function trimLearningDetails(
+  companyCode: string, mode: RetentionMode, now: Date = new Date(), months: number = LEARNING_DETAIL_MONTHS,
+): Promise<LearningDetailsCounts> {
   const counts: LearningDetailsCounts = { enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 }
   const dry = mode !== "delete"
   // Dokončiť sa nedá skôr, než sa človek zapísal — starší zápis je kandidát.
-  const cutoff = addMonths(now, -LEARNING_DETAIL_MONTHS)
+  const cutoff = addMonths(now, -months)
   const enrollmentsCol = await getCollection<Enrollment>(ENROLLMENTS_COLLECTION)
   const candidates = await enrollmentsCol
     .find({ companyCode, enrolledAt: { $lte: cutoff }, cancelledAt: null, detailsPurgedAt: { $exists: false } })
@@ -356,7 +359,7 @@ export async function trimLearningDetails(companyCode: string, mode: RetentionMo
     const version = course ? versionById(course, e.versionId) : null
     if (!version) continue
     const progress = courseProgress(version, facts.get(e.id) ?? { completions: [], watches: [], passedTests: [] })
-    if (!learningDetailsDue(progress.completedAt, now)) continue
+    if (!learningDetailsDue(progress.completedAt, now, months)) continue
 
     const attemptFilter = { companyCode, "context.enrollmentId": e.id, submittedAt: { $ne: null }, detailsPurgedAt: { $exists: false } }
     const reached = { companyCode, enrollmentId: e.id, reachedAt: { $ne: null }, detailsPurgedAt: { $exists: false } }
@@ -397,6 +400,8 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
     )
     .toArray() as unknown as PersonForRetention[]
 
+  // Lehoty organizácie (ADR-022, D136) — tie isté, ktoré ukazuje `/privacy`.
+  const settings = retentionSettings((await tenantByCompanyCode(companyCode))?.privacy?.retention)
   const run: RetentionRun = {
     companyCode, mode, persons: [], staleActive: 0,
     learningDetails: { enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 },
@@ -406,13 +411,13 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
     const input = { status: p.status, endedAt: p.endedAt, deactivatedAt: p.deactivatedAt, lastEventAt: last.get(p.id) ?? null }
 
     if (isStaleActive(input, now)) run.staleActive++
-    const decision = retentionDecision(input, now)
+    const decision = retentionDecision(input, now, settings)
     if (!decision.due || !decision.basis) continue
 
     const counts = await deletePersonEvidence(p, decision.basis, mode, now)
     if (total(counts) > 0) run.persons.push({ personId: p.id, basis: decision.basis, counts })
   }
   // Po výmaze osôb — ich zápisy už nie sú, nerátajú sa dvakrát.
-  run.learningDetails = await trimLearningDetails(companyCode, mode, now)
+  run.learningDetails = await trimLearningDetails(companyCode, mode, now, settings.learningDetailMonths)
   return run
 }

@@ -5,10 +5,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 
-const s = vi.hoisted(() => ({ learning: false, language: "sk", country: undefined as string | undefined, generation: "anthropic" }))
+const s = vi.hoisted(() => ({ learning: false, language: "sk", country: undefined as string | undefined, generation: "anthropic", privacy: undefined as unknown }))
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") } }))
 vi.mock("@/lib/session", () => ({
-  currentTenant: async () => ({ companyCode: "SFZ", defaultLanguage: "sk", branding: { displayName: "SFZ" }, controller: { legalName: "Slovenský futbalový zväz", country: s.country }, modules: { learning: s.learning } }),
+  currentTenant: async () => ({ companyCode: "SFZ", defaultLanguage: "sk", branding: { displayName: "SFZ" }, controller: { legalName: "Slovenský futbalový zväz", country: s.country }, modules: { learning: s.learning }, privacy: s.privacy }),
   currentPerson: async () => ({ language: s.language }),
 }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "SFZ" }) }))
@@ -23,7 +23,7 @@ async function render() {
   const { default: Page } = await import("../src/app/privacy/page")
   return renderToStaticMarkup(await Page())
 }
-beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic" })
+beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic"; s.privacy = undefined })
 
 describe("/privacy", () => {
   it("bez Vzdelávania: pohlavie áno, kurzy nie, nič sa nerozhoduje automatizovane", async () => {
@@ -64,5 +64,16 @@ describe("/privacy", () => {
     const html = await render()
     expect(html).not.toContain(">Anthropic<")
     expect(html).toContain("Voyage AI")
+  })
+
+  it("lehoty a verzia textu z nastavení organizácie (D136, D138)", async () => {
+    expect(await render()).toContain("3 roky od skončenia pracovného pomeru")
+    s.learning = true
+    s.privacy = { retention: { evidenceYears: 2, capYears: 6, learningDetailMonths: 6 }, updatedAt: new Date("2026-10-05T00:00:00Z") }
+    const html = await render()
+    expect(html).toContain("2 roky od skončenia pracovného pomeru")
+    expect(html).toContain("najdlhšie 6 rokov od poslednej udalosti")
+    expect(html).toContain("6 mesiacov po dokončení kurzu")
+    expect(html).toContain("Verzia textu: 5. 10. 2026")
   })
 })

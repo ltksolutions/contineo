@@ -169,6 +169,25 @@ describe("uloženie zmeny", () => {
     expect(updateOne.mock.calls[0][1].$set["controller.registrationNumber"]).toBe("")
   })
 
+  it("lehoty organizácie sa orežú do rozsahov a posunú verziu textu (ADR-022)", async () => {
+    findOne.mockResolvedValue(SFZ)
+    await saveTenant("SFZ", { privacyRetention: { evidenceYears: 0, capYears: 2, learningDetailMonths: 999 } }, "dpo@sfz.sk")
+    const set = updateOne.mock.calls[0][1].$set
+    expect(set["privacy.retention"]).toEqual({ evidenceYears: 3, capYears: 3, learningDetailMonths: 60 })
+    expect(set["privacy.updatedAt"]).toBeInstanceOf(Date)
+    expect(set["privacy.updatedBy"]).toBe("dpo@sfz.sk")
+  })
+
+  it("krajina sídla: len SK/CZ; nezmenená hodnota verziu textu neposunie", async () => {
+    findOne.mockResolvedValue({ ...SFZ, controller: { country: "SK" } })
+    await saveTenant("SFZ", { controllerCountry: "SK", displayName: "X" }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[0][1].$set["privacy.updatedAt"]).toBeUndefined()
+    await saveTenant("SFZ", { controllerCountry: "DE" }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[1][1].$set["controller.country"]).toBe("SK")
+    await saveTenant("SFZ", { controllerCountry: "CZ" }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[2][1].$set["privacy.updatedAt"]).toBeInstanceOf(Date)
+  })
+
   it("neexistujúcu organizáciu nezaloží potichu", async () => {
     findOne.mockResolvedValue(null)
 

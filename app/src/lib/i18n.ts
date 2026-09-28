@@ -284,7 +284,10 @@ interface Dictionary {
     basisDirectory: string
     retentionHeading: string
     retentionColumns: [string, string]
+    /** `{evidence}`, `{cap}`, `{months}` doplní stránka z lehôt organizácie (ADR-022, D136). */
     retention: [string, string][]
+    years: (n: number) => string
+    months: (n: number) => string
     retentionDelete: string
     recipientsHeading: string
     recipients: string
@@ -408,6 +411,21 @@ interface Dictionary {
     colStatus: string
     pendingCount: (n: number) => string
     recordOpen: string
+    /** Lehoty uchovávania organizácie (ADR-022, D136). */
+    retention: {
+      heading: string
+      intro: string
+      evidenceYears: string
+      evidenceYearsNote: string
+      capYears: string
+      capYearsNote: string
+      learningDetailMonths: string
+      learningDetailMonthsNote: string
+      fixed: string
+      warning: string
+      save: string
+      saved: string
+    }
   }
 
   approvalEmail: {
@@ -3249,13 +3267,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       retentionHeading: "Ako dlho",
       retentionColumns: ["Údaj", "Lehota"],
       retention: [
-        ["potvrdenie, pridelenie, otvorenie znenia", "3 roky od skončenia pracovného pomeru alebo vzťahu s organizáciou; ak dátum skončenia nie je známy, od vyradenia zo systému; najdlhšie 5 rokov od poslednej udalosti, ak nie je známy ani jeden dátum"],
+        ["potvrdenie, pridelenie, otvorenie znenia", "{evidence} od skončenia pracovného pomeru alebo vzťahu s organizáciou; ak dátum skončenia nie je známy, od vyradenia zo systému; najdlhšie {cap} od poslednej udalosti, ak nie je známy ani jeden dátum"],
         ["schválenie predpisu a zodpovedná osoba", "kým existuje aspoň jeden doklad o oboznámení s daným znením"],
         ["čas strávený nad znením", "12 mesiacov"],
         ["pripomienky", "90 dní"],
         ["záznam o prístupoch a zmenách (audit)", "24 mesiacov"],
         ["pohlavie", "spolu s ostatnými údajmi vo vašom zázname v zozname osôb"],
       ],
+      years: n => (n === 1 ? "1 rok" : n >= 2 && n <= 4 ? `${n} roky` : `${n} rokov`),
+      months: n => (n === 1 ? "1 mesiac" : n >= 2 && n <= 4 ? `${n} mesiace` : `${n} mesiacov`),
       retentionDelete: "Po uplynutí lehoty sa záznam zmaže celý, neanonymizuje sa.",
       recipientsHeading: "Komu sa údaje dostanú",
       recipients: "Personalistom a správcom obsahu organizácie v rozsahu ich úlohy, kolegom len údaje z adresára. Mimo organizácie sprostredkovateľom, ktorí zabezpečujú prevádzku:",
@@ -3281,7 +3301,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         basis: archiveLaw => `Pri kurzoch platí to isté ako pri predpisoch: zákonná povinnosť pri školeniach, ktoré vyžaduje zákon (napríklad bezpečnosť a ochrana zdravia pri práci), inak oprávnený záujem preukázať, že ľudia boli vyškolení. Certifikát sa uchováva aj na účely archivácie podľa ${archiveLaw}.`,
         retention: [
           ["zápis do kurzu, dokončenie častí, sledovanie videa, pokusy v teste", "rovnako ako potvrdenie predpisu (prvý riadok tabuľky)"],
-          ["vaše odpovede v teste a pozreté úseky videa", "12 mesiacov po dokončení kurzu; výsledok testu a dokončenie zostávajú"],
+          ["vaše odpovede v teste a pozreté úseky videa", "{months} po dokončení kurzu; výsledok testu a dokončenie zostávajú"],
           ["certifikát", "nemaže sa — vydaný certifikát platí a uchováva sa podľa registratúrneho plánu organizácie; môže byť len odvolaný"],
         ],
         retentionNote: "Výnimkou je certifikát — ten sa nemaže.",
@@ -3420,6 +3440,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     objectionTextNote: "Ako prišla — bez vlastného výkladu.",
     recordSubmit: "Zaevidovať",
     noObjections: "Zatiaľ žiadna námietka.",
+    retention: {
+      heading: "Lehoty uchovávania",
+      intro: "Tieto lehoty používa denná mazacia dávka a presne tieto čísla sú aj na stránke Ochrana osobných údajov.",
+      evidenceYears: "Roky od skončenia vzťahu",
+      evidenceYearsNote: "Potvrdenia, pridelenia, otvorenia znenia a záznamy vzdelávania. Keď dátum skončenia nie je známy, plynú od vyradenia.",
+      capYears: "Strop v rokoch od poslednej udalosti",
+      capYearsNote: "Pre vyradenú osobu, pri ktorej nie je známy ani jeden dátum. Nesmie byť kratší než lehota vyššie.",
+      learningDetailMonths: "Mesiace po dokončení kurzu",
+      learningDetailMonthsNote: "Potom sa z testov zmažú odpovede a zo sledovania videa pozreté úseky. Výsledok a dokončenie zostávajú.",
+      fixed: "Pevné pre celú platformu (riadi ich databáza): čas strávený nad znením 12 mesiacov, pripomienky 90 dní, audit 24 mesiacov. Certifikáty sa nemažú.",
+      warning: "Skrátenie lehoty môže pri zapnutom ostrom mazaní zmazať záznamy hneď v najbližšej nočnej dávke.",
+      save: "Uložiť lehoty",
+      saved: "Lehoty uložené.",
+    },
     status: { pending: "čaká na rozhodnutie", upheld: "vyhovené", rejected: "zamietnuté" },
     receivedLine: (date, channel) => `doručená ${date} · ${channel}`,
     recordedLine: (who, date) => `zaevidoval(a) ${who}, ${date}`,
@@ -6450,13 +6484,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       retentionHeading: "Jak dlouho",
       retentionColumns: ["Údaj", "Lhůta"],
       retention: [
-        ["potvrzení, přidělení, otevření znění", "3 roky od skončení pracovního poměru nebo vztahu s organizací; pokud datum skončení není známé, od vyřazení ze systému; nejdéle 5 let od poslední události, pokud není známé ani jedno datum"],
+        ["potvrzení, přidělení, otevření znění", "{evidence} od skončení pracovního poměru nebo vztahu s organizací; pokud datum skončení není známé, od vyřazení ze systému; nejdéle {cap} od poslední události, pokud není známé ani jedno datum"],
         ["schválení předpisu a odpovědná osoba", "dokud existuje alespoň jeden doklad o seznámení s daným zněním"],
         ["čas strávený nad zněním", "12 měsíců"],
         ["připomínky", "90 dní"],
         ["záznam o přístupech a změnách (audit)", "24 měsíců"],
         ["pohlaví", "spolu s ostatními údaji ve vašem záznamu v seznamu osob"],
       ],
+      years: n => (n === 1 ? "1 rok" : n >= 2 && n <= 4 ? `${n} roky` : `${n} let`),
+      months: n => (n === 1 ? "1 měsíc" : n >= 2 && n <= 4 ? `${n} měsíce` : `${n} měsíců`),
       retentionDelete: "Po uplynutí lhůty se záznam smaže celý, neanonymizuje se.",
       recipientsHeading: "Komu se údaje dostanou",
       recipients: "Personalistům a správcům obsahu organizace v rozsahu jejich úlohy, kolegům jen údaje z adresáře. Mimo organizaci zpracovatelům, kteří zajišťují provoz:",
@@ -6482,7 +6518,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         basis: archiveLaw => `U kurzů platí totéž co u předpisů: zákonná povinnost u školení, která vyžaduje zákon (například bezpečnost a ochrana zdraví při práci), jinak oprávněný zájem prokázat, že lidé byli proškoleni. Certifikát se uchovává i pro účely archivace podle ${archiveLaw}.`,
         retention: [
           ["zápis do kurzu, dokončení částí, sledování videa, pokusy v testu", "stejně jako potvrzení předpisu (první řádek tabulky)"],
-          ["vaše odpovědi v testu a zhlédnuté úseky videa", "12 měsíců po dokončení kurzu; výsledek testu a dokončení zůstávají"],
+          ["vaše odpovědi v testu a zhlédnuté úseky videa", "{months} po dokončení kurzu; výsledek testu a dokončení zůstávají"],
           ["certifikát", "nemaže se — vydaný certifikát platí a uchovává se podle registraturního plánu organizace; může být pouze odvolán"],
         ],
         retentionNote: "Výjimkou je certifikát — ten se nemaže.",
@@ -6621,6 +6657,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     objectionTextNote: "Jak přišla — bez vlastního výkladu.",
     recordSubmit: "Zaevidovat",
     noObjections: "Zatím žádná námitka.",
+    retention: {
+      heading: "Lhůty uchovávání",
+      intro: "Tyto lhůty používá denní mazací dávka a přesně tato čísla jsou i na stránce Ochrana osobních údajů.",
+      evidenceYears: "Roky od skončení vztahu",
+      evidenceYearsNote: "Potvrzení, přidělení, otevření znění a záznamy vzdělávání. Když datum skončení není známé, běží od vyřazení.",
+      capYears: "Strop v letech od poslední události",
+      capYearsNote: "Pro vyřazenou osobu, u které není známé ani jedno datum. Nesmí být kratší než lhůta výše.",
+      learningDetailMonths: "Měsíce po dokončení kurzu",
+      learningDetailMonthsNote: "Potom se z testů smažou odpovědi a ze sledování videa zhlédnuté úseky. Výsledek a dokončení zůstávají.",
+      fixed: "Pevné pro celou platformu (řídí je databáze): čas strávený nad zněním 12 měsíců, připomínky 90 dní, audit 24 měsíců. Certifikáty se nemažou.",
+      warning: "Zkrácení lhůty může při zapnutém ostrém mazání smazat záznamy hned v nejbližší noční dávce.",
+      save: "Uložit lhůty",
+      saved: "Lhůty uloženy.",
+    },
     status: { pending: "čeká na rozhodnutí", upheld: "vyhověno", rejected: "zamítnuto" },
     receivedLine: (date, channel) => `doručena ${date} · ${channel}`,
     recordedLine: (who, date) => `zaevidoval(a) ${who}, ${date}`,
@@ -9642,13 +9692,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       retentionHeading: "How long",
       retentionColumns: ["Data", "Period"],
       retention: [
-        ["acknowledgement, assignment, opening of a version", "3 years from the end of employment or of the relationship with the organisation; if the end date is not known, from removal from the system; at most 5 years from the last event if neither date is known"],
+        ["acknowledgement, assignment, opening of a version", "{evidence} from the end of employment or of the relationship with the organisation; if the end date is not known, from removal from the system; at most {cap} from the last event if neither date is known"],
         ["approval of a document and the responsible person", "as long as at least one acknowledgement of that version exists"],
         ["time spent on a version", "12 months"],
         ["reminders", "90 days"],
         ["access and change log (audit)", "24 months"],
         ["gender", "together with the other data in your record in the list of people"],
       ],
+      years: n => (n === 1 ? "1 year" : `${n} years`),
+      months: n => (n === 1 ? "1 month" : `${n} months`),
       retentionDelete: "After the period the record is deleted entirely, not anonymised.",
       recipientsHeading: "Who receives the data",
       recipients: "HR and content managers of the organisation to the extent of their role; colleagues only see directory data. Outside the organisation, the processors that run the service:",
@@ -9674,7 +9726,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         basis: archiveLaw => `Courses follow the same rules as documents: a legal obligation for training required by law (for example health and safety at work), otherwise a legitimate interest in showing that people were trained. The certificate is also kept for archiving under ${archiveLaw}.`,
         retention: [
           ["course enrolment, completed parts, video watching, test attempts", "same as a document acknowledgement (first row of the table)"],
-          ["your answers in a test and the parts of a video you watched", "12 months after completing the course; the test result and completion remain"],
+          ["your answers in a test and the parts of a video you watched", "{months} after completing the course; the test result and completion remain"],
           ["certificate", "not deleted — an issued certificate stays valid and is kept according to the organisation's filing plan; it can only be revoked"],
         ],
         retentionNote: "The exception is the certificate — it is not deleted.",
@@ -9813,6 +9865,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     objectionTextNote: "As received — without your own interpretation.",
     recordSubmit: "Record",
     noObjections: "No objections yet.",
+    retention: {
+      heading: "Retention periods",
+      intro: "The nightly deletion job uses these periods, and exactly these numbers appear on the Data protection page.",
+      evidenceYears: "Years after the relationship ends",
+      evidenceYearsNote: "Acknowledgements, assignments, version openings and learning records. If the end date is unknown, the period runs from removal.",
+      capYears: "Cap in years from the last event",
+      capYearsNote: "For a removed person with neither date known. It cannot be shorter than the period above.",
+      learningDetailMonths: "Months after completing a course",
+      learningDetailMonthsNote: "After that, answers are removed from tests and watched segments from video tracking. The result and completion remain.",
+      fixed: "Fixed for the whole platform (enforced by the database): time spent on a version 12 months, reminders 90 days, audit 24 months. Certificates are never deleted.",
+      warning: "Shortening a period may delete records in the very next nightly run when real deletion is switched on.",
+      save: "Save periods",
+      saved: "Periods saved.",
+    },
     status: { pending: "awaiting decision", upheld: "upheld", rejected: "rejected" },
     receivedLine: (date, channel) => `received ${date} · ${channel}`,
     recordedLine: (who, date) => `recorded by ${who}, ${date}`,
