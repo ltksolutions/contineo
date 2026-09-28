@@ -149,6 +149,17 @@ describe("zverejnené, ešte neúčinné znenie (ADR-023)", () => {
     expect(html).toContain("/api/documents/sfz%3App/pdf?version=v-new")
   })
 
+  it("čitateľ do účinnosti vidí doterajšie znenie a môže ho potvrdiť (D143)", async () => {
+    // Presne stav po `publish()`: staré je neaktívne s koncom = začiatok nového.
+    state.doc = doc([{ ...current, isActive: false, effectiveTo: future.effectiveFrom }, future])
+    const html = await render()
+    expect(html).not.toContain("platnosť sa ešte nezačala")
+    expect(html).toContain("/api/documents/sfz%3App/pdf?version=v-old")
+    expect(html).toContain("formulka")
+    // Zodpovedná osoba novely má úlohu aj tak.
+    expect(html).toContain("Znenie účinné od 1. 12. 2099 — ste zodpovedná osoba")
+  })
+
   it("iný človek formulár k cudziemu zneniu nedostane", async () => {
     state.doc = doc([{ ...current, isActive: false }, { ...future, responsiblePerson: { personId: "p-iny", fullName: "Iná", email: "ina@sfz.sk" } }])
     const html = await render()

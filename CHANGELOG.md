@@ -16,6 +16,10 @@ v príprave". Karta postupu v knižnici ukazuje, či je základ určený.
 Znenie zverejnené s **budúcou účinnosťou** ponúkne zodpovednej osobe
 formulár na základ hneď, nie až v deň účinnosti (ADR-023).
 
+**Novela zverejnená vopred už neskryje platné znenie.** Do dňa účinnosti
+novely ľudia čítajú a potvrdzujú doterajšie znenie; dovtedy stránka
+dokumentu hlásila len „platnosť sa ešte nezačala".
+
 ### Pozvánky a ochrana osobných údajov podľa organizácie (2026-09-28)
 
 **Pozvánka** je univerzálna: „{Právny názov} vás pozýva do {Názov portálu}",

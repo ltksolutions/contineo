@@ -256,7 +256,8 @@ export type EffectiveVersionResult =
  *
  * Pravidlá sú z D6: `isActive` + `effectiveFrom/To`, pri viacerých vyhovujúcich
  * platí tá s najneskorším `effectiveFrom` (lex posterior, R3
- * v `docs/PRECEDENCIA_NORIEM.md`).
+ * v `docs/PRECEDENCIA_NORIEM.md`). Nahradené znenie platí do svojho
+ * `effectiveTo`, aj keď už nie je aktívne (ADR-023, D143).
  *
  * **Verzia bez `effectiveFrom` neplatí.** Nie je to prísnosť pre prísnosť:
  * kurátor jej platnosť ešte neurčil (D25 — obsah z kanála prichádza
@@ -272,7 +273,18 @@ export function effectiveVersion(doc: DocumentRecord, asOf: Date = new Date()): 
   const versions = doc.versions ?? []
   if (versions.length === 0) return { ok: false, reason: "no-versions" }
 
-  const active = versions.filter(v => v.isActive)
+  /*
+   * Kandidáti sú aktívne znenia **a znenia nahradené novším, ktoré majú
+   * koniec platnosti** (ADR-023, D143). `publish()` starému zneniu nastaví
+   * `isActive: false` a `effectiveTo` = začiatok nového. Keď nové platí až
+   * o tri mesiace, staré platí dovtedy — bez tohto by stránka, potvrdenie
+   * aj povinnosti medzitým nemali žiadne znenie. Rovnako to už počíta filter
+   * platnosti v knižnici (`validityCondition()`), ktorý `isActive` nečíta.
+   *
+   * Neaktívne znenie **bez** konca platnosti sa nevyberá: to je obsah z kanála,
+   * ktorému platnosť ešte neurčil človek (D25), nie nahradené znenie.
+   */
+  const active = versions.filter(v => v.isActive || v.effectiveTo instanceof Date)
   if (active.length === 0) return { ok: false, reason: "all-archived" }
 
   const withValidity = active.filter(v => v.effectiveFrom instanceof Date)

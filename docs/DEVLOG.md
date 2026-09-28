@@ -28,9 +28,14 @@
 - **Medzera, ktorú nikto nehlásil:** upozornenie zo zverejnenia posielalo
   zodpovednú osobu na stránku, ktorá formulár na základ pri znení s budúcou
   účinnosťou neukázala (`effectiveVersion()`). Opravené v tom istom kroku.
-- Vedľajšie zistenie, **neopravené**: `publish()` vyradí staré znenie hneď,
-  čitateľ tak do účinnosti nového pravdepodobne nevidí žiadne. Zapísané
-  v `docs/TODO.md` na preverenie.
+- Vedľajšie zistenie `publish()` vyradí staré znenie hneď — potvrdené testom
+  a **opravené v tom istom PR (D143)**. Pôvodne som navrhoval zmenu
+  v `publish()`; pri čítaní kódu vyšlo, že štyri miesta hľadajú „prvé
+  aktívne znenie" ako „posledné zverejnené" a preindexovanie by siahlo na
+  staré. Oprava je preto v `effectiveVersion()` — dáta už správny koniec
+  platnosti mali, len ho výber ignoroval.
+- Ján schválil plán „asistent a znenia v indexe" (TODO, 9 krokov); krok 0
+  (Atlas) čaká na neho.
 - `npm ci` v cloudovej session padol na 403 pre `cdn.sheetjs.com` (balík
   `xlsx`); závislosti sa nainštalovali v kópii mimo repa s `xlsx` z registra.
 - `publish()` nemá test úspešného zverejnenia (chunker, kolá) — prenos

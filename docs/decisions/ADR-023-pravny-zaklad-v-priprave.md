@@ -10,9 +10,9 @@
 > (D115, D116 — viac základov, zákonná povinnosť má prednosť), D91, D92
 > **Mení:** ADR-014, D109 — bod „Právny základ určuje zodpovedná osoba po
 > zverejnení"
-> **Implementácia:** hotová (2026-09-28) — tri commity na vetve
+> **Implementácia:** hotová (2026-09-28) — štyri commity na vetve
 > `claude/lucid-curie-9giv6d` (dáta a prenos, stránka dokumentu, knižnica
-> a dokumentácia).
+> a dokumentácia, platnosť nahradeného znenia D143).
 
 ---
 
@@ -76,6 +76,28 @@ určí; správcovi obsahu ako náhradníkovi ponúkne formulár.
 Zodpovedná osoba (a náhradník podľa toho istého pravidla) dostane formulár
 na základ zverejneného znenia **hneď po zverejnení**, nie až v deň
 účinnosti. Zmena už určeného základu vyžaduje dôvod ako pri platnom znení.
+
+### D143 — Nahradené znenie platí do účinnosti nového
+
+Doplnené 2026-09-28 na pokyn Jána („opravu zverejnenia urob hneď").
+`publish()` starému zneniu nastaví `isActive: false` a koniec platnosti =
+začiatok nového. Kým nové platí až o niekoľko mesiacov, stránka dokumentu
+dovtedy nemala **žiadne** znenie: čitateľ videl len „platnosť sa ešte
+nezačala", nedalo sa potvrdiť a povinnosti zmizli.
+
+Pravidlo výberu platného znenia (`effectiveVersion()`) preto berie aj
+**nahradené znenie s koncom platnosti** a to platí do toho dňa. Rovnako už
+počítal filter platnosti v knižnici. Neaktívne znenie **bez** konca platnosti
+(obsah z kanála, D25) sa nevyberá ako doteraz.
+
+Dôsledky počas obdobia pred účinnosťou novely: čitateľ číta a potvrdzuje
+doterajšie znenie, prideľovanie a trasy pracujú s ním, retencia ho drží ako
+platné. Zmena je len v čítaní — v databáze sa nič nemení a platí aj pre
+znenia zverejnené vopred v minulosti.
+
+**Neopravené:** vyhľadávanie asistenta pracuje s úsekmi, nie so zneniami,
+a pri zverejnení prepne na novelu hneď. Rieši to samostatný plán (znenia
+v indexe, `docs/TODO.md`).
 
 ## 3. Čo sa tým vedome kazí
 
