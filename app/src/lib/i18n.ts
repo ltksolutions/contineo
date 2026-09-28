@@ -565,6 +565,12 @@ interface Dictionary {
     sourceCode: string
   }
 
+  /** Otvorená karta beží na staršej verzii, než je nasadená (`VersionNotice`). */
+  versionNotice: {
+    text: string
+    reload: string
+  }
+
   notFound: {
     heading: string
     intro: string
@@ -3519,6 +3525,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   footer: {
     runsOn: "Systém beží na aplikácii",
     sourceCode: "Zdrojový kód",
+  },
+
+  versionNotice: {
+    text: "Je dostupná nová verzia portálu. Obnovte stránku, aby sa zmeny uložili a e-maily odišli už podľa nej.",
+    reload: "Obnoviť",
   },
 
   notFound: {
@@ -6738,6 +6749,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourceCode: "Zdrojový kód",
   },
 
+  versionNotice: {
+    text: "Je dostupná nová verze portálu. Obnovte stránku, aby se změny uložily a e-maily odešly už podle ní.",
+    reload: "Obnovit",
+  },
+
   notFound: {
     heading: "Stránka nebyla nalezena",
     intro: "Adresa neexistuje nebo už neplatí.",
@@ -9944,6 +9960,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   footer: {
     runsOn: "Running on",
     sourceCode: "Source code",
+  },
+
+  versionNotice: {
+    text: "A new version of the portal is available. Reload the page so that changes and emails use it.",
+    reload: "Reload",
   },
 
   notFound: {

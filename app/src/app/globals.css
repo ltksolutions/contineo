@@ -4754,6 +4754,23 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
  * Nahrádza zásuvku `<details>`: lišta je vždy na obrazovke a palec na ňu
  * dosiahne bez hľadania.
  */
+/*
+ * Nová verzia k dispozícii (`VersionNotice`) — nad spodnou lištou na
+ * telefóne, v rohu na počítači. Obnovenie stránky ju zruší.
+ */
+.version-notice {
+  position: fixed; z-index: 40; left: 16px; right: 16px;
+  bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+  padding: 12px 14px; border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+  box-shadow: 0 8px 28px rgba(20, 28, 42, .18); font-size: var(--fs-body);
+}
+.version-notice > span { flex: 1 1 220px; }
+@media (min-width: 1024px) {
+  .version-notice { left: auto; right: 24px; bottom: 24px; max-width: 460px; }
+}
+
 .app-nav-tabbar {
   position: fixed;
   left: 0;
