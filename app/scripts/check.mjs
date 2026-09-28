@@ -150,7 +150,10 @@ for (const d of documents) {
  * neuznáva, takže keby sa znova objavilo — napríklad zo zálohy — človek
  * o prístup ticho príde. Preto sa naň pýtame aj po migrácii.
  */
-const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "platform-admin"])
+// Kópia `ASSIGNABLE_ROLES` (`people.ts`) + `PLATFORM_ROLE` — skript beží bez
+// TypeScript háčika. Nová rola sa dopisuje na obe miesta, inak ju tu nahlási
+// ako neznámu (stalo sa pri `dpo` a `learning-admin`).
+const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "dpo", "learning-admin", "platform-admin"])
 const STARE_ROLE = new Set(["spravca-obsahu"])
 for (const o of persons) {
   for (const r of o.roles ?? []) {
