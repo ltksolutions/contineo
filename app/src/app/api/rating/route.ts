@@ -15,6 +15,7 @@
  * sa nedalo rozlíšiť, čí je — presne to tu končí.
  */
 
+import { sanitizeQueryTime } from "@/lib/queryTime"
 import { NextRequest, NextResponse } from "next/server"
 import { recordAnswer, saveVerdict, saveReaderFeedback } from "@/lib/ratings"
 import type { NewRating, RatingEdit, ReaderFeedback, Verdict } from "@/lib/ratings"
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
         timings: body.timings,
         tokens: body.tokens,
         cost: body.cost,
+        time: sanitizeQueryTime(body.time),
       },
       who.person.id,
       who.companyCode

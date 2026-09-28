@@ -638,7 +638,11 @@ interface Dictionary {
     noScript: string
     noScriptLink: string
     /** Tretí stav obrazovky (ASK, úloha 1): na otázku sa z dokumentov nedá odpovedať. */
-    none: { kicker: string; text: string; link: string }
+    none: {
+      kicker: string; text: string; link: string
+      /** K dňu otázky nemá organizácia žiadne platné znenie (krok 6). */
+      noVersion: (date: string) => string
+    }
     /** Chyba nad hero kartou (ASK, úloha 2) — vždy s cestou von. */
     error: { unavailable: string; link: string }
   }
@@ -662,6 +666,13 @@ interface Dictionary {
      * prichádzajú už naformátované; koniec účinnosti len keď je známy.
      */
     sourceVersion: (label: string, from: string | null, to: string | null) => string
+    /**
+     * Štítok nad odpoveďou — ku ktorému dňu sa odpovedá (krok 6). Iný deň
+     * než dnešok je výrazný, aby si čitateľ nepomýlil minulé právo s dnešným.
+     */
+    timeToday: (date: string) => string
+    timeAsOf: (date: string) => string
+    timeCompare: (date: string) => string
     /** Zhoda zdroja v troch stupňoch — relatívne v rámci jednej odpovede. */
     match: Record<"high" | "medium" | "low", string>
     adapter: string
@@ -3645,6 +3656,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       kicker: "V dokumentoch organizácie sa k tomu nič nenašlo",
       text: "Skúste otázku inak, alebo hľadajte v knižnici — nie všetko je v predpisoch.",
       link: "Hľadať v knižnici →",
+      noVersion: (d) => `K ${d} nemá organizácia žiadne platné znenie predpisu — skúste iný dátum alebo otázku bez dátumu.`,
     },
     error: {
       unavailable: "Odpoveď sa teraz nedá zložiť. Skúste to o chvíľu — vyhľadávanie v knižnici funguje.",
@@ -3666,6 +3678,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     verifiedNote: "znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu",
     sourceVersion: (label, from, to) =>
       [label && `znenie ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
+    timeToday: (d) => `podľa znení platných dnes, ${d}`,
+    timeAsOf: (d) => `podľa znení platných k ${d}`,
+    timeCompare: (d) => `porovnanie znení zatiaľ nevieme — odpoveď je podľa znení platných dnes, ${d}`,
     match: { high: "vysoká zhoda", medium: "stredná zhoda", low: "slabá zhoda" },
     adapter: "adaptér",
     firstToken: "prvý token",
@@ -6898,6 +6913,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       kicker: "V dokumentech organizace se k tomu nic nenašlo",
       text: "Zkuste otázku jinak, nebo hledejte v knihovně — ne všechno je v předpisech.",
       link: "Hledat v knihovně →",
+      noVersion: (d) => `K ${d} nemá organizace žádné platné znění předpisu — zkuste jiné datum nebo otázku bez data.`,
     },
     error: {
       unavailable: "Odpověď se teď nedá sestavit. Zkuste to za chvíli — vyhledávání v knihovně funguje.",
@@ -6919,6 +6935,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     verifiedNote: "znění, které někdo ověřil nad předpisem — nikoli samotné znění předpisu",
     sourceVersion: (label, from, to) =>
       [label && `znění ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
+    timeToday: (d) => `podle znění platných dnes, ${d}`,
+    timeAsOf: (d) => `podle znění platných k ${d}`,
+    timeCompare: (d) => `porovnání znění zatím neumíme — odpověď je podle znění platných dnes, ${d}`,
     match: { high: "vysoká shoda", medium: "střední shoda", low: "slabá shoda" },
     adapter: "adaptér",
     firstToken: "první token",
@@ -10142,6 +10161,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       kicker: "Nothing on this was found in the organisation's documents",
       text: "Try rephrasing the question, or search the library — not everything is in the regulations.",
       link: "Search the library →",
+      noVersion: (d) => `The organisation has no document version in force on ${d} — try another date or ask without a date.`,
     },
     error: {
       unavailable: "The answer cannot be composed right now. Try again in a moment — the library search works.",
@@ -10163,6 +10183,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     verifiedNote: "wording someone verified against the document — not the document itself",
     sourceVersion: (label, from, to) =>
       [label && `version ${label}`, from && `in force from ${from}${to ? ` until ${to}` : ""}`].filter(Boolean).join(" · "),
+    timeToday: (d) => `per versions in force today, ${d}`,
+    timeAsOf: (d) => `per versions in force on ${d}`,
+    timeCompare: (d) => `comparing versions is not available yet — the answer uses versions in force today, ${d}`,
     match: { high: "strong match", medium: "moderate match", low: "weak match" },
     adapter: "adapter",
     firstToken: "first token",

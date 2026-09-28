@@ -45,6 +45,7 @@ import { getCollection }      from "@/lib/mongodb"
 import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
 import type { SearchOptions } from "@/lib/mongoSearch"
 import { searchScope, attachVersions } from "@/lib/searchVersions"
+import { detectQueryTime, resolveQueryTime, searchInstant, withoutTimePhrase } from "@/lib/queryTime"
 import { generateAnswer }     from "@/lib/llmGenerator"
 import { getTenantProfile }   from "@/lib/tenantProfile"
 import { onboardingContext }  from "@/lib/session"
@@ -155,14 +156,22 @@ export async function POST(req: NextRequest) {
 
         // 4. Klasifikácia dotazu (predvolene heuristika, bez volania modelu)
         phase("reading")
-        const searchMode = await classifyQuery(query, useLLMClassifier, providers.utility)
+        // Bez časového údaja: dátum nie je obsah otázky a klasifikátor by rok
+        // vzal za kód normy a poslal otázku do fulltextu (krok 6).
+        const contentQuery = withoutTimePhrase(query)
+        const searchMode = await classifyQuery(contentQuery, useLLMClassifier, providers.utility)
         measure("klasifikacia")
 
         // 5. [Voliteľne] preprocessing na lacnejšom utility modeli
         const shouldPreprocess = usePreprocessing && searchMode !== "fulltext"
+        const now = new Date()
         const processed = shouldPreprocess
-          ? await preprocessQuery(query, providers.utility)
-          : { rewritten: query, subQueries: [], keywords: [] }
+          ? await preprocessQuery(query, providers.utility, now)
+          : { rewritten: contentQuery, subQueries: [], keywords: [], time: null }
+        // Ku ktorému dňu sa otázka pýta (krok 6). Pravidlá bežia vždy — aj pri
+        // krátkej a fulltextovej otázke, kde prepis modelom nebeží; model
+        // doplní len to, čo pravidlá nenašli.
+        const time = resolveQueryTime(detectQueryTime(query, now), processed.time, now)
 
         measure("preprocessing")
 
@@ -175,7 +184,7 @@ export async function POST(req: NextRequest) {
         // Znenia platné dnes — raz na otázku, zdieľa ich aj rozklad na
         // podotázky. Otázku k inému dňu rozpozná až krok 6 plánu „znenia
         // v indexe"; dovtedy je to vždy dnešok.
-        const scope = await searchScope(companyCode)
+        const scope = await searchScope(companyCode, searchInstant(time, now), now)
         measure("znenia")
         const collection = await getCollection("document_chunks")
         // Anotacia je nutna: bez nej TypeScript rozsiri accessLevel na `string`
@@ -245,6 +254,8 @@ export async function POST(req: NextRequest) {
         send({
           type: "meta",
           searchMode: searchMode,
+          // Pred generovaním, aby štítok nad odpoveďou bol hneď (krok 6).
+          time,
           preprocessed: shouldPreprocess,
           chunks: chunks.length,
         })
@@ -272,7 +283,9 @@ export async function POST(req: NextRequest) {
             a s citáciou; odpoveď bez citácie je iný produkt. Klient si stav
             odvodí z prázdneho zoznamu zdrojov a prázdneho textu.
           */
-          send({ type: "done", sources: [], model: "none" })
+          // `noVersions`: k tomuto dňu organizácia nemá žiadne platné znenie —
+          // iná veta než „nič sa nenašlo" (napr. otázka na rok 1990).
+          send({ type: "done", sources: [], model: "none", time, noVersions: scope.versionIds.length === 0 })
           controller.close()
           return
         }
@@ -282,7 +295,7 @@ export async function POST(req: NextRequest) {
         // Znenie a účinnosť k úsekom — z toho istého načítania ako filter
         // hľadania, bez ďalšieho dotazu (krok 5).
         const inner = generateAnswer({
-          query, chunks: attachVersions(chunks, scope.versions), userRole, profile, timings, language, asOf: scope.asOf,
+          query, chunks: attachVersions(chunks, scope.versions), userRole, profile, timings, language, asOf: scope.asOf, time,
         })
         const reader = inner.getReader()
         for (;;) {

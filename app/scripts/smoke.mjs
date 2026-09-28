@@ -22,7 +22,8 @@ import { MongoClient } from "mongodb"
 // modulov dopĺňa scripts/lib/ts-hook.mjs — preto sa skript spúšťa cez
 // `npm run smoke`, nie holým `node`.
 import { fulltextSearch, vectorSearch, hybridSearch } from "../src/lib/mongoSearch.ts"
-import { effectiveVersionsOf, attachVersions, VERSION_PROJECTION } from "../src/lib/searchVersions.ts"
+import { effectiveVersionsOf, attachVersions, isSameDay, VERSION_PROJECTION } from "../src/lib/searchVersions.ts"
+import { detectQueryTime, searchInstant, withoutTimePhrase } from "../src/lib/queryTime.ts"
 import { classifyQuery } from "../src/lib/queryClassifier.ts"
 import { defaultProfile } from "../src/lib/tenantProfile.ts"
 import { getProviders } from "../src/lib/providers/factory.ts"
@@ -92,8 +93,8 @@ try {
   // Znenia platné dnes — ten istý rozsah ako v `/api/chat` (plán „znenia
   // v indexe", krok 4). Čas výpočtu je vidno, lebo ide pred každú otázku.
   const tv = Date.now()
-  const versions = effectiveVersionsOf(await db.collection("documents").find({ companyCode }, { projection: VERSION_PROJECTION }).toArray(), new Date())
-  const versionIds = Object.keys(versions)
+  const docs = await db.collection("documents").find({ companyCode }, { projection: VERSION_PROJECTION }).toArray()
+  const versionIds = Object.keys(effectiveVersionsOf(docs, new Date()))
   console.log(`${INFO} organizácia ${companyCode} · platných znení ${versionIds.length} (${Date.now() - tv} ms)`)
   const providers = getProviders(profile)
   console.log(`Profil: embedding=${profile.providers.embedding.kind}/${profile.providers.embedding.model}` +
@@ -107,13 +108,19 @@ try {
     console.log("─".repeat(74))
     console.log(`DOTAZ: ${query}`)
 
-    const mod = await classifyQuery(query, false)
+    const mod = await classifyQuery(withoutTimePhrase(query), false)
+    // Deň otázky pravidlami, ako v `/api/chat` (krok 6); prepis modelom smoke nerobí.
+    const now = new Date()
+    const time = detectQueryTime(query, now)
+    const at = searchInstant(time, now)
+    const versions = effectiveVersionsOf(docs, at)
+    console.log(`  čas: ${time.kind} · ${time.asOf} · platných znení ${Object.keys(versions).length}`)
     const opts = {
-      query: query, accessLevel: role, companyCode, limit: 20, rerankLimit: 5,
+      query: withoutTimePhrase(query), accessLevel: role, companyCode, limit: 20, rerankLimit: 5,
       useStageRerank: providers.rerank.isPipelineStage,
       rerankModel: profile.providers.rerank.model,
       vectorPath: profile.providers.embedding.vectorPath,
-      versionIds, verifiedAnswers: true,
+      versionIds: Object.keys(versions), verifiedAnswers: isSameDay(at, now),
     }
 
     let chunks
@@ -178,7 +185,7 @@ try {
     }
 
     if (wantAnswer) {
-      const stream = generateAnswer({ query: query, chunks: attachVersions(chunks.slice(0, 8), versions), userRole: role, profile, asOf: new Date() })
+      const stream = generateAnswer({ query: query, chunks: attachVersions(chunks.slice(0, 8), versions), userRole: role, profile, asOf: at, time })
       const reader = stream.getReader()
       const dec = new TextDecoder()
       let text = "", citations = 0, model = "?", buf = ""

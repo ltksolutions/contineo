@@ -15,6 +15,7 @@
  * preto, že hodnotiteľ nedoklikal.
  */
 
+import type { QueryTime } from "./queryTime"
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
@@ -94,6 +95,8 @@ export interface RatingRecord {
    */
   tokens?: TokenCounts
   cost?: Cost
+  /** Ku ktorému dňu sa odpovedalo (krok 6 „znení v indexe"). Chýba pri starších záznamoch. */
+  time?: QueryTime
 
   // To, čo vie povedať len človek (D9, kapitola 3).
   correct: Verdict
@@ -184,6 +187,12 @@ export interface NewRating {
   timings?: Record<string, number>
   tokens?: TokenCounts
   cost?: Cost
+  /**
+   * Ku ktorému dňu sa odpovedalo (krok 6 „znení v indexe"). Bez neho sa
+   * o rok nedá povedať, či odpoveď hovorila o vtedy platnom práve, alebo
+   * o stave k dátumu, na ktorý sa niekto pýtal.
+   */
+  time?: QueryTime
 }
 
 /** Polia, ktoré smie hodnotiteľ meniť. Nič iné sa cez API prepísať nedá. */

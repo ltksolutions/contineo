@@ -65,7 +65,7 @@ export default function Search({
           model: v.model, provider: v.provider,
           verifiedCitations: v.verifiedCitations,
           ttftMs: v.ttftMs, totalMs: v.totalMs, timings: v.timings,
-          tokens: v.tokens, cost: v.cost,
+          tokens: v.tokens, cost: v.cost, time: v.time,
         }),
       })
       if (!r.ok) return
@@ -91,10 +91,10 @@ export default function Search({
     try {
       const v = await askQuestion(
         q,
-        p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase })),
+        p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase, time: p.time })),
         { signal: ctrl.signal, language }
       )
-      setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined })
+      setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time })
       if (!v.error && v.text) void record(q, v)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.

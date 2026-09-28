@@ -19,6 +19,7 @@ import { getProviders } from "./providers/factory"
 import { cost, EMPTY_TOKENS } from "./pricing"
 import { dictionary } from "./i18n"
 import { asOfInstruction, calendarDate } from "./versionContext"
+import type { QueryTime } from "./queryTime"
 import type { TokenCounts } from "./pricing"
 import type { GeneratedCitation, TenantProfile } from "./providers/types"
 
@@ -47,6 +48,8 @@ export interface GenerateOptions {
    * nadobudne účinnosť novela. Chýbajúci = dnes.
    */
   asOf?: Date
+  /** Druh otázky a jej deň (krok 6) — ide do `done` a s ním do hodnotení. */
+  time?: QueryTime
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
@@ -184,6 +187,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           timings: opts.timings,
           // Deň odpovede (krok 5); štítok nad odpoveďou ho ukáže v kroku 6.
           asOf: calendarDate(opts.asOf ?? new Date()).toISOString().slice(0, 10),
+          time: opts.time,
           // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
           // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
           stopReason: stopReason,
