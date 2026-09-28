@@ -4,8 +4,9 @@
  *     node scripts/atlas_check.mjs
  *
  * Kontroluje pripojenie, kolekcie, oba indexy a ich stav. Index, ktorý sa
- * ešte buduje, vracia na dotazy PRÁZDNE VÝSLEDKY BEZ CHYBY — to je zradné,
- * preto sa stav kontroluje výslovne.
+ * buduje prvý raz, vracia na dotazy PRÁZDNE VÝSLEDKY BEZ CHYBY — to je zradné,
+ * preto sa stav kontroluje výslovne. Index upravovaný na mieste odpovedá
+ * počas stavby starou definíciou; to sa hlási osobitne.
  */
 
 import { MongoClient } from "mongodb"
@@ -73,8 +74,18 @@ try {
       continue
     }
     const state = idx.status ?? "?"
+    // Pri úprave na mieste (`atlas_init.mjs --upravit`) je `status` BUILDING,
+    // ale na každom uzle odpovedá stará definícia (`mainIndex`). Hľadanie
+    // funguje, len nové polia ešte nejdú filtrovať — to nie je výpadok.
+    const staging = state !== "READY" && idx.queryable === true &&
+      (idx.statusDetail ?? []).length > 0 &&
+      idx.statusDetail.every(d => d.queryable === true && d.mainIndex?.status === "READY")
     if (state === "READY") {
       console.log(`${OK} index ${name} · ${state}`)
+    } else if (staging) {
+      console.log(`${WARN} index ${name} · ${state} — stavia sa nová definícia, hľadanie zatiaľ odpovedá starou`)
+      console.log(`    filtre z novej definície ešte nejdú použiť; počkaj na READY`)
+      problems++
     } else {
       console.log(`${WARN} index ${name} · ${state} — ešte sa buduje, dotazy vrátia prázdno`)
       problems++
