@@ -326,6 +326,8 @@ interface Dictionary {
     /** Odkaz pri potvrdení a v pozvánke. */
     linkBefore: string
     link: string
+    /** Doplnok DPO organizácie (ADR-022, D137). */
+    extraHeading: string
   }
 
   versionMeta: {
@@ -423,6 +425,14 @@ interface Dictionary {
       learningDetailMonthsNote: string
       fixed: string
       warning: string
+      save: string
+      saved: string
+    }
+    /** Doplnkový text na stránku Ochrana osobných údajov (ADR-022, D137). */
+    extra: {
+      heading: string
+      intro: string
+      label: (language: string) => string
       save: string
       saved: string
     }
@@ -3330,6 +3340,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: date => `Verzia textu: ${date}`,
       linkBefore: "Čo sa pri potvrdení ukladá a ako dlho: ",
       link: "Ochrana osobných údajov",
+      extraHeading: "Doplnenie prevádzkovateľa",
     },
     versionMeta: {
       heading: "Údaje o znení",
@@ -3459,6 +3470,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       warning: "Skrátenie lehoty môže pri zapnutom ostrom mazaní zmazať záznamy hneď v najbližšej nočnej dávke.",
       save: "Uložiť lehoty",
       saved: "Lehoty uložené.",
+    },
+    extra: {
+      heading: "Doplnenie na stránku Ochrana osobných údajov",
+      intro: "Vlastný odsek, ktorý sa zobrazí pod spoločným textom — napríklad ďalší účel alebo kontakt. Základný text sa tým nemení. Prázdne pole = nič sa nezobrazí.",
+      label: language => `Text — ${language}`,
+      save: "Uložiť doplnenie",
+      saved: "Doplnenie uložené.",
     },
     status: { pending: "čaká na rozhodnutie", upheld: "vyhovené", rejected: "zamietnuté" },
     receivedLine: (date, channel) => `doručená ${date} · ${channel}`,
@@ -6552,6 +6570,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: date => `Verze textu: ${date}`,
       linkBefore: "Co se při potvrzení ukládá a jak dlouho: ",
       link: "Ochrana osobních údajů",
+      extraHeading: "Doplnění správce",
     },
     versionMeta: {
       heading: "Údaje o znění",
@@ -6681,6 +6700,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       warning: "Zkrácení lhůty může při zapnutém ostrém mazání smazat záznamy hned v nejbližší noční dávce.",
       save: "Uložit lhůty",
       saved: "Lhůty uloženy.",
+    },
+    extra: {
+      heading: "Doplnění na stránku Ochrana osobních údajů",
+      intro: "Vlastní odstavec, který se zobrazí pod společným textem — například další účel nebo kontakt. Základní text se tím nemění. Prázdné pole = nic se nezobrazí.",
+      label: language => `Text — ${language}`,
+      save: "Uložit doplnění",
+      saved: "Doplnění uloženo.",
     },
     status: { pending: "čeká na rozhodnutí", upheld: "vyhověno", rejected: "zamítnuto" },
     receivedLine: (date, channel) => `doručena ${date} · ${channel}`,
@@ -9765,6 +9791,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: date => `Text version: ${date}`,
       linkBefore: "What is stored when you acknowledge, and for how long: ",
       link: "Data protection",
+      extraHeading: "Additional information from the controller",
     },
     versionMeta: {
       heading: "Version details",
@@ -9894,6 +9921,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       warning: "Shortening a period may delete records in the very next nightly run when real deletion is switched on.",
       save: "Save periods",
       saved: "Periods saved.",
+    },
+    extra: {
+      heading: "Additional text for the Data protection page",
+      intro: "Your own paragraph shown below the common text — for example another purpose or contact. The common text does not change. An empty field shows nothing.",
+      label: language => `Text — ${language}`,
+      save: "Save additional text",
+      saved: "Additional text saved.",
     },
     status: { pending: "awaiting decision", upheld: "upheld", rejected: "rejected" },
     receivedLine: (date, channel) => `received ${date} · ${channel}`,

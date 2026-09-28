@@ -5,7 +5,7 @@
 > nastaviť pre každú organizáciu zvlášť: všetky štyri navrhnuté časti.
 > **Nadväzuje na:** ADR-012 (retencia, DPO), ADR-021 (retencia vzdelávania),
 > ADR-001 (adaptéry podľa profilu tenanta), C1 (informovanie dotknutých osôb)
-> **Implementácia:** v troch krokoch — kap. 4.
+> **Implementácia:** hotová (2026-09-28) — PR #165 (krajina, sprostredkovatelia), #166 (lehoty, verzia), doplnkový text v nasledujúcom PR.
 
 ---
 

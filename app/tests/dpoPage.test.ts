@@ -17,7 +17,7 @@ vi.mock("@/lib/dpo", async importOriginal => ({
   ...(await importOriginal<typeof import("../src/lib/dpo")>()),
   dpoContext: async () => ({
     state: "ready",
-    tenant: { companyCode: "SFZ", name: "SFZ", privacy: { retention: { evidenceYears: 2 } } },
+    tenant: { companyCode: "SFZ", name: "SFZ", languages: ["sk", "cs"], privacy: { retention: { evidenceYears: 2 }, extra: { sk: "Kamerový systém v sídle." } } },
     person: { id: "p-jan", email: "jan@sfz.sk", companyCode: "SFZ", language: "sk" },
   }),
 }))
@@ -25,7 +25,7 @@ vi.mock("@/lib/dpoDb", () => ({ legalBasisRows: async () => state.rows }))
 vi.mock("@/lib/objectionsDb", () => ({ listObjections: async () => state.objections }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/session", () => ({}))
-vi.mock("../src/app/dpo/actions", () => ({ recordObjectionAction: async () => {}, decideObjectionAction: async () => {}, saveRetentionAction: async () => {} }))
+vi.mock("../src/app/dpo/actions", () => ({ recordObjectionAction: async () => {}, decideObjectionAction: async () => {}, saveRetentionAction: async () => {}, saveExtraAction: async () => {} }))
 
 const row = (over: Record<string, unknown>) => ({
   documentId: "sfz:a", title: "Predpis A", versionId: "v1", versionLabel: "1.0",
@@ -80,5 +80,13 @@ describe("/dpo", () => {
     expect(html).toMatch(/name="capYears"[^>]*value="5"/)
     expect(html).toMatch(/name="learningDetailMonths"[^>]*value="12"/)
     expect(html).toContain("Certifikáty sa nemažú.")
+  })
+
+  it("doplnok na /privacy v jazykoch organizácie (D137)", async () => {
+    const html = await render()
+    expect(html).toContain('id="privacy-extra"')
+    expect(html).toContain('name="extra-sk"')
+    expect(html).toContain('name="extra-cs"')
+    expect(html).toContain("Kamerový systém v sídle.")
   })
 })
