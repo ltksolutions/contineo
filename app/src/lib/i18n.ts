@@ -290,6 +290,22 @@ interface Dictionary {
     processorsColumns: [string, string, string]
     processors: [string, string, string][]
     noSale: string
+    /** Bez modulu Vzdelávanie: nič sa nerozhoduje automatizovane. */
+    automated: string
+    /**
+     * Časti o Vzdelávaní (ADR-018, ADR-021) — len keď má organizácia modul
+     * zapnutý; inak by text sľuboval spracúvanie, ktoré sa nedeje.
+     */
+    learning: {
+      purpose: string
+      data: [string, string][]
+      basis: string
+      retention: [string, string][]
+      retentionNote: string
+      recipients: string
+      automated: string
+      rights: string
+    }
     rightsHeading: string
     rights: string
     objection: string
@@ -3210,6 +3226,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["pripomienky: komu a kedy sa odoslali", "aby vám rovnaká pripomienka neprišla dvakrát"],
         ["otázky, ktoré systému položíte, a jeho odpovede", "aby sa dala preveriť správnosť odpovedí"],
         ["mobilný telefón, pracovisko a fotografia, ak ich vyplníte", "interný adresár; vyplniť ich nemusíte"],
+        ["pohlavie, ak ho vyplní personalista", "štatistika zloženia organizácie (napríklad podiel žien a mužov) a správny tvar textov o vás, napríklad „absolvoval / absolvovala“; z mena sa neodvodzuje a vyplniť ho nemusíte"],
       ],
       hrNote: "Personalista vidí pri každom človeku, či predpis otvoril, či ho potvrdil a koľko času nad ním strávil. Stav „otvoril a nepotvrdil“ je sledovaný stav; personalista vás podľa neho môže upozorniť, že potvrdenie chýba.",
       responsibleNote: "Pri každom predpise je uvedená zodpovedná osoba (meno a e-mail), na ktorú sa môžete obrátiť s otázkou k predpisu.",
@@ -3217,7 +3234,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       basisIntro: "Určuje sa pri každom predpise zvlášť a vidíte ho pri ňom:",
       basisObligation: "plnenie zákonnej povinnosti (čl. 6 ods. 1 písm. c) GDPR) pri predpisoch, ktorých oboznámenie vyžaduje zákon, napríklad bezpečnosť a ochrana zdravia pri práci; pri predpise je uvedený konkrétny zákon;",
       basisInterest: "oprávnený záujem (čl. 6 ods. 1 písm. f) GDPR) pri interných smerniciach — záujmom je preukázať, že s pravidlami boli oboznámení tí, ktorých sa týkajú.",
-      basisDirectory: "Údaje v adresári (mobil, pracovisko, fotografia) sa spracúvajú na základe oprávneného záujmu na vnútornej komunikácii.",
+      basisDirectory: "Údaje v adresári (mobil, pracovisko, fotografia) sa spracúvajú na základe oprávneného záujmu na vnútornej komunikácii. Pohlavie sa spracúva na základe oprávneného záujmu na štatistike zloženia organizácie a na správnych textoch; nie je povinné.",
       retentionHeading: "Ako dlho",
       retentionColumns: ["Údaj", "Lehota"],
       retention: [
@@ -3226,6 +3243,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["čas strávený nad znením", "12 mesiacov"],
         ["pripomienky", "90 dní"],
         ["záznam o prístupoch a zmenách (audit)", "24 mesiacov"],
+        ["pohlavie", "spolu s ostatnými údajmi vo vašom zázname v zozname osôb"],
       ],
       retentionDelete: "Po uplynutí lehoty sa záznam zmaže celý, neanonymizuje sa.",
       recipientsHeading: "Komu sa údaje dostanú",
@@ -3238,7 +3256,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["Voyage AI (cez MongoDB)", "vyhľadávanie v texte predpisov", "podľa zmluvy so sprostredkovateľom"],
         ["Ecomail", "odosielanie e-mailov", "EÚ"],
       ],
-      noSale: "Údaje sa nepredávajú a nepoužívajú sa na reklamu ani na trénovanie modelov umelej inteligencie. O nikom sa nerozhoduje automatizovane.",
+      noSale: "Údaje sa nepredávajú a nepoužívajú sa na reklamu ani na trénovanie modelov umelej inteligencie.",
+      automated: "O nikom sa nerozhoduje automatizovane.",
+      learning: {
+        purpose: "Organizácia v ňom vedie aj kurzy a testy a vydáva certifikáty o ich absolvovaní.",
+        data: [
+          ["zápis do kurzu: kedy a kto vás zapísal", "aby ste mali prístup ku kurzu, ktorý sa vás týka"],
+          ["dokončenie častí kurzu a to, ktoré úseky videa ste pozreli", "doklad, že ste kurz prešli; pri povinnom videu aj to, že ste ho dopozerali"],
+          ["pokusy v teste: otázky, vaše odpovede, body, výsledok a čas", "vyhodnotenie testu"],
+          ["certifikát: meno, pohlavie (kvôli tvaru textu), kurz, číslo, dátumy, vydavateľ, podpisujúci", "doklad o absolvovaní kurzu, ktorý si môžete stiahnuť a ktorý sa dá overiť"],
+        ],
+        basis: "Pri kurzoch platí to isté ako pri predpisoch: zákonná povinnosť pri školeniach, ktoré vyžaduje zákon (napríklad bezpečnosť a ochrana zdravia pri práci), inak oprávnený záujem preukázať, že ľudia boli vyškolení. Certifikát sa uchováva aj na účely archivácie podľa zákona č. 395/2002 Z. z. o archívoch a registratúrach.",
+        retention: [
+          ["zápis do kurzu, dokončenie častí, sledovanie videa, pokusy v teste", "rovnako ako potvrdenie predpisu (prvý riadok tabuľky)"],
+          ["vaše odpovede v teste a pozreté úseky videa", "12 mesiacov po dokončení kurzu; výsledok testu a dokončenie zostávajú"],
+          ["certifikát", "nemaže sa — vydaný certifikát platí a uchováva sa podľa registratúrneho plánu organizácie; môže byť len odvolaný"],
+        ],
+        retentionNote: "Výnimkou je certifikát — ten sa nemaže.",
+        recipients: "Výsledky testov vidí len zodpovedná osoba za test, nie personalista. Certifikát overí ktokoľvek, komu dáte jeho odkaz alebo QR kód; overenie ukáže číslo, kurz, dátum a vydavateľa, nie vaše meno.",
+        automated: "Test vyhodnocuje systém automaticky podľa vopred určených správnych odpovedí. Ak s výsledkom nesúhlasíte, obráťte sa na zodpovednú osobu za test — výsledok preverí a pokus môže zrušiť, aby ste ho mohli zopakovať. O nič iné sa automatizovane nerozhoduje.",
+        rights: "Výmaz vydaného certifikátu nie je možný — uchováva sa na účely archivácie a ako doklad, ktorý môžete potrebovať aj vy.",
+      },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
       objection: "Pri predpisoch s oprávneným záujmom máte právo namietať. Námietku posúdi zodpovedná osoba jednotlivo a doklad sa do jej rozhodnutia nemaže. Výmaz dokladu o oboznámení pred uplynutím lehoty nie je možný, kým je potrebný na preukázanie, uplatnenie alebo obhajobu právnych nárokov.",
@@ -6378,6 +6416,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["připomínky: komu a kdy byly odeslány", "aby vám stejná připomínka nepřišla dvakrát"],
         ["otázky, které systému položíte, a jeho odpovědi", "aby se dala prověřit správnost odpovědí"],
         ["mobilní telefon, pracoviště a fotografie, pokud je vyplníte", "interní adresář; vyplnit je nemusíte"],
+        ["pohlaví, pokud ho vyplní personalista", "statistika složení organizace (například podíl žen a mužů) a správný tvar textů o vás, například „absolvoval / absolvovala“; ze jména se neodvozuje a vyplnit ho nemusíte"],
       ],
       hrNote: "Personalista vidí u každého člověka, zda předpis otevřel, zda ho potvrdil a kolik času nad ním strávil. Stav „otevřel a nepotvrdil“ je sledovaný stav; personalista vás podle něj může upozornit, že potvrzení chybí.",
       responsibleNote: "U každého předpisu je uvedena odpovědná osoba (jméno a e-mail), na kterou se můžete obrátit s dotazem k předpisu.",
@@ -6385,7 +6424,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       basisIntro: "Určuje se u každého předpisu zvlášť a vidíte ho u něj:",
       basisObligation: "plnění právní povinnosti (čl. 6 odst. 1 písm. c) GDPR) u předpisů, jejichž seznámení vyžaduje zákon, například bezpečnost a ochrana zdraví při práci; u předpisu je uveden konkrétní zákon;",
       basisInterest: "oprávněný zájem (čl. 6 odst. 1 písm. f) GDPR) u interních směrnic — zájmem je prokázat, že s pravidly byli seznámeni ti, kterých se týkají.",
-      basisDirectory: "Údaje v adresáři (mobil, pracoviště, fotografie) se zpracovávají na základě oprávněného zájmu na vnitřní komunikaci.",
+      basisDirectory: "Údaje v adresáři (mobil, pracoviště, fotografie) se zpracovávají na základě oprávněného zájmu na vnitřní komunikaci. Pohlaví se zpracovává na základě oprávněného zájmu na statistice složení organizace a na správných textech; není povinné.",
       retentionHeading: "Jak dlouho",
       retentionColumns: ["Údaj", "Lhůta"],
       retention: [
@@ -6394,6 +6433,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["čas strávený nad zněním", "12 měsíců"],
         ["připomínky", "90 dní"],
         ["záznam o přístupech a změnách (audit)", "24 měsíců"],
+        ["pohlaví", "spolu s ostatními údaji ve vašem záznamu v seznamu osob"],
       ],
       retentionDelete: "Po uplynutí lhůty se záznam smaže celý, neanonymizuje se.",
       recipientsHeading: "Komu se údaje dostanou",
@@ -6406,7 +6446,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["Voyage AI (přes MongoDB)", "vyhledávání v textu předpisů", "podle smlouvy se zpracovatelem"],
         ["Ecomail", "odesílání e-mailů", "EU"],
       ],
-      noSale: "Údaje se neprodávají a nepoužívají se k reklamě ani k trénování modelů umělé inteligence. O nikom se nerozhoduje automatizovaně.",
+      noSale: "Údaje se neprodávají a nepoužívají se k reklamě ani k trénování modelů umělé inteligence.",
+      automated: "O nikom se nerozhoduje automatizovaně.",
+      learning: {
+        purpose: "Organizace v něm vede také kurzy a testy a vydává certifikáty o jejich absolvování.",
+        data: [
+          ["zápis do kurzu: kdy a kdo vás zapsal", "abyste měli přístup ke kurzu, který se vás týká"],
+          ["dokončení částí kurzu a to, které úseky videa jste zhlédli", "doklad, že jste kurz prošli; u povinného videa i to, že jste ho dokoukali"],
+          ["pokusy v testu: otázky, vaše odpovědi, body, výsledek a čas", "vyhodnocení testu"],
+          ["certifikát: jméno, pohlaví (kvůli tvaru textu), kurz, číslo, data, vydavatel, podepisující", "doklad o absolvování kurzu, který si můžete stáhnout a který lze ověřit"],
+        ],
+        basis: "U kurzů platí totéž co u předpisů: zákonná povinnost u školení, která vyžaduje zákon (například bezpečnost a ochrana zdraví při práci), jinak oprávněný zájem prokázat, že lidé byli proškoleni. Certifikát se uchovává i pro účely archivace podle zákona č. 395/2002 Z. z. o archivech a registraturách.",
+        retention: [
+          ["zápis do kurzu, dokončení částí, sledování videa, pokusy v testu", "stejně jako potvrzení předpisu (první řádek tabulky)"],
+          ["vaše odpovědi v testu a zhlédnuté úseky videa", "12 měsíců po dokončení kurzu; výsledek testu a dokončení zůstávají"],
+          ["certifikát", "nemaže se — vydaný certifikát platí a uchovává se podle registraturního plánu organizace; může být pouze odvolán"],
+        ],
+        retentionNote: "Výjimkou je certifikát — ten se nemaže.",
+        recipients: "Výsledky testů vidí jen odpovědná osoba za test, ne personalista. Certifikát ověří kdokoli, komu dáte jeho odkaz nebo QR kód; ověření ukáže číslo, kurz, datum a vydavatele, ne vaše jméno.",
+        automated: "Test vyhodnocuje systém automaticky podle předem určených správných odpovědí. Pokud s výsledkem nesouhlasíte, obraťte se na odpovědnou osobu za test — výsledek prověří a pokus může zrušit, abyste ho mohli zopakovat. O ničem jiném se automatizovaně nerozhoduje.",
+        rights: "Výmaz vydaného certifikátu není možný — uchovává se pro účely archivace a jako doklad, který můžete potřebovat i vy.",
+      },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
       objection: "U předpisů s oprávněným zájmem máte právo vznést námitku. Námitku posoudí pověřenec jednotlivě a doklad se do jeho rozhodnutí nemaže. Výmaz dokladu o seznámení před uplynutím lhůty není možný, dokud je potřebný k prokázání, uplatnění nebo obhajobě právních nároků.",
@@ -9537,6 +9597,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["reminders: to whom and when they were sent", "so that you do not get the same reminder twice"],
         ["questions you ask the system and its answers", "so that the accuracy of the answers can be checked"],
         ["mobile phone, workplace and photo, if you fill them in", "internal directory; filling them in is optional"],
+        ["gender, if HR fills it in", "statistics on the make-up of the organisation (for example the share of women and men) and correct wording of texts about you in Slovak and Czech; it is not derived from your name and you do not have to provide it"],
       ],
       hrNote: "HR sees for each person whether they opened a document, whether they acknowledged it and how long they spent on it. “Opened but not acknowledged” is a tracked state; HR may remind you that the acknowledgement is missing.",
       responsibleNote: "Each document names a responsible person (name and e-mail) you can contact with questions about it.",
@@ -9544,7 +9605,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       basisIntro: "It is set for each document separately and shown with it:",
       basisObligation: "compliance with a legal obligation (Art. 6(1)(c) GDPR) for documents the law requires people to read, such as health and safety at work; the specific law is named with the document;",
       basisInterest: "legitimate interest (Art. 6(1)(f) GDPR) for internal policies — the interest is to show that the people concerned were made aware of the rules.",
-      basisDirectory: "Directory data (mobile, workplace, photo) is processed on the basis of the legitimate interest in internal communication.",
+      basisDirectory: "Directory data (mobile, workplace, photo) is processed on the basis of the legitimate interest in internal communication. Gender is processed on the basis of legitimate interest in statistics on the make-up of the organisation and in correct wording; it is optional.",
       retentionHeading: "How long",
       retentionColumns: ["Data", "Period"],
       retention: [
@@ -9553,6 +9614,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["time spent on a version", "12 months"],
         ["reminders", "90 days"],
         ["access and change log (audit)", "24 months"],
+        ["gender", "together with the other data in your record in the list of people"],
       ],
       retentionDelete: "After the period the record is deleted entirely, not anonymised.",
       recipientsHeading: "Who receives the data",
@@ -9565,7 +9627,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["Voyage AI (via MongoDB)", "searching the text of documents", "under the processor agreement"],
         ["Ecomail", "sending e-mails", "EU"],
       ],
-      noSale: "The data is not sold and is not used for advertising or for training artificial intelligence models. No decisions about anyone are automated.",
+      noSale: "The data is not sold and is not used for advertising or for training artificial intelligence models.",
+      automated: "No decisions about anyone are made by automated means.",
+      learning: {
+        purpose: "The organisation also runs courses and tests in it and issues certificates of completion.",
+        data: [
+          ["course enrolment: when and who enrolled you", "so that you have access to the course that applies to you"],
+          ["completed parts of the course and which parts of a video you watched", "proof that you completed the course; for a required video also that you watched it to the end"],
+          ["test attempts: questions, your answers, points, result and time", "evaluating the test"],
+          ["certificate: name, gender (for the wording), course, number, dates, issuer, signatory", "proof of completing the course that you can download and that can be verified"],
+        ],
+        basis: "Courses follow the same rules as documents: a legal obligation for training required by law (for example health and safety at work), otherwise a legitimate interest in showing that people were trained. The certificate is also kept for archiving under Act No. 395/2002 on archives and registries.",
+        retention: [
+          ["course enrolment, completed parts, video watching, test attempts", "same as a document acknowledgement (first row of the table)"],
+          ["your answers in a test and the parts of a video you watched", "12 months after completing the course; the test result and completion remain"],
+          ["certificate", "not deleted — an issued certificate stays valid and is kept according to the organisation's filing plan; it can only be revoked"],
+        ],
+        retentionNote: "The exception is the certificate — it is not deleted.",
+        recipients: "Test results are seen only by the person responsible for the test, not by HR. Anyone you give the certificate link or QR code to can verify it; verification shows the number, course, date and issuer, not your name.",
+        automated: "Tests are scored automatically against answers set in advance. If you disagree with a result, contact the person responsible for the test — they will review it and can cancel the attempt so that you can take it again. No other decisions are made by automated means.",
+        rights: "An issued certificate cannot be erased — it is kept for archiving and as proof you may need yourself.",
+      },
       rightsHeading: "Your rights",
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
       objection: "For documents based on legitimate interest you have the right to object. The data protection officer assesses each objection individually and the evidence is not deleted before the decision. Evidence of having read a document cannot be deleted before the end of the period while it is needed to establish, exercise or defend legal claims.",
