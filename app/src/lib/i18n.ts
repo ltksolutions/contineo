@@ -289,7 +289,11 @@ interface Dictionary {
     recipientsHeading: string
     recipients: string
     processorsColumns: [string, string, string]
-    processors: [string, string, string][]
+    /**
+     * Sprostredkovatelia po kľúčoch — zoznam sa skladá z profilu organizácie
+     * (`privacyProcessors`), nie natvrdo. `{region}` doplní kód (Bedrock).
+     */
+    processors: Record<"atlas" | "vercel" | "anthropic" | "bedrock" | "voyage" | "ecomail", [string, string, string]>
     noSale: string
     /** Bez modulu Vzdelávanie: nič sa nerozhoduje automatizovane. */
     automated: string
@@ -300,7 +304,7 @@ interface Dictionary {
     learning: {
       purpose: string
       data: [string, string][]
-      basis: string
+      basis: (archiveLaw: string) => string
       retention: [string, string][]
       retentionNote: string
       recipients: string
@@ -310,7 +314,10 @@ interface Dictionary {
     rightsHeading: string
     rights: string
     objection: string
-    complaint: string
+    /** Dozorný úrad podľa krajiny prevádzkovateľa (`controller.country`), nie podľa jazyka. */
+    complaint: Record<"SK" | "CZ", string>
+    /** Zákon o archívoch podľa krajiny prevádzkovateľa (certifikát, ADR-021 D132). */
+    archiveLaw: Record<"SK" | "CZ", string>
     requests: string
     version: (date: string) => string
     /** Odkaz pri potvrdení a v pozvánke. */
@@ -1206,6 +1213,8 @@ interface Dictionary {
       controllerLegalName: string
       controllerAddress: string
       controllerRegistrationNumber: string
+      controllerCountry: string
+      countries: Record<"SK" | "CZ", string>
       /** Sekcie formulára (rám ADMIN-prevadzkovatel-a-ciselniky, 24. 9. 2026). */
       secIdentity: string
       secIdentityNote: string
@@ -3251,13 +3260,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       recipientsHeading: "Komu sa údaje dostanú",
       recipients: "Personalistom a správcom obsahu organizácie v rozsahu ich úlohy, kolegom len údaje z adresára. Mimo organizácie sprostredkovateľom, ktorí zabezpečujú prevádzku:",
       processorsColumns: ["Kto", "Na čo", "Kde"],
-      processors: [
-        ["MongoDB Atlas", "databáza a vyhľadávanie", "EÚ (Frankfurt)"],
-        ["Vercel", "beh aplikácie", "EÚ"],
-        ["Anthropic", "tvorba odpovedí na otázky; bez uchovávania a bez trénovania na dátach", "podľa zmluvy so sprostredkovateľom"],
-        ["Voyage AI (cez MongoDB)", "vyhľadávanie v texte predpisov", "podľa zmluvy so sprostredkovateľom"],
-        ["Ecomail", "odosielanie e-mailov", "EÚ"],
-      ],
+      processors: {
+        atlas: ["MongoDB Atlas", "databáza a vyhľadávanie", "EÚ (Frankfurt)"],
+        vercel: ["Vercel", "beh aplikácie", "EÚ"],
+        anthropic: ["Anthropic", "tvorba odpovedí na otázky; bez uchovávania a bez trénovania na dátach", "podľa zmluvy so sprostredkovateľom"],
+        bedrock: ["Amazon Web Services (Bedrock)", "tvorba odpovedí na otázky; bez uchovávania a bez trénovania na dátach", "región {region}"],
+        voyage: ["Voyage AI (cez MongoDB)", "vyhľadávanie v texte predpisov", "podľa zmluvy so sprostredkovateľom"],
+        ecomail: ["Ecomail", "odosielanie e-mailov", "EÚ"],
+      },
       noSale: "Údaje sa nepredávajú a nepoužívajú sa na reklamu ani na trénovanie modelov umelej inteligencie.",
       automated: "O nikom sa nerozhoduje automatizovane.",
       learning: {
@@ -3268,7 +3278,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["pokusy v teste: otázky, vaše odpovede, body, výsledok a čas", "vyhodnotenie testu"],
           ["certifikát: meno, pohlavie (kvôli tvaru textu), kurz, číslo, dátumy, vydavateľ, podpisujúci", "doklad o absolvovaní kurzu, ktorý si môžete stiahnuť a ktorý sa dá overiť"],
         ],
-        basis: "Pri kurzoch platí to isté ako pri predpisoch: zákonná povinnosť pri školeniach, ktoré vyžaduje zákon (napríklad bezpečnosť a ochrana zdravia pri práci), inak oprávnený záujem preukázať, že ľudia boli vyškolení. Certifikát sa uchováva aj na účely archivácie podľa zákona č. 395/2002 Z. z. o archívoch a registratúrach.",
+        basis: archiveLaw => `Pri kurzoch platí to isté ako pri predpisoch: zákonná povinnosť pri školeniach, ktoré vyžaduje zákon (napríklad bezpečnosť a ochrana zdravia pri práci), inak oprávnený záujem preukázať, že ľudia boli vyškolení. Certifikát sa uchováva aj na účely archivácie podľa ${archiveLaw}.`,
         retention: [
           ["zápis do kurzu, dokončenie častí, sledovanie videa, pokusy v teste", "rovnako ako potvrdenie predpisu (prvý riadok tabuľky)"],
           ["vaše odpovede v teste a pozreté úseky videa", "12 mesiacov po dokončení kurzu; výsledok testu a dokončenie zostávajú"],
@@ -3282,7 +3292,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rightsHeading: "Vaše práva",
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
       objection: "Pri predpisoch s oprávneným záujmom máte právo namietať. Námietku posúdi zodpovedná osoba jednotlivo a doklad sa do jej rozhodnutia nemaže. Výmaz dokladu o oboznámení pred uplynutím lehoty nie je možný, kým je potrebný na preukázanie, uplatnenie alebo obhajobu právnych nárokov.",
-      complaint: "Máte právo podať sťažnosť Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
+      complaint: {
+        SK: "Máte právo podať sťažnosť Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
+        CZ: "Máte právo podať sťažnosť Úradu pre ochranu osobných údajov ČR (uoou.gov.cz).",
+      },
+      archiveLaw: {
+        SK: "zákona č. 395/2002 Z. z. o archívoch a registratúrach",
+        CZ: "zákona č. 499/2004 Sb. o archívnictve a spisovej službe",
+      },
       requests: "Žiadosti posielajte zodpovednej osobe (DPO).",
       version: date => `Verzia textu: ${date}`,
       linkBefore: "Čo sa pri potvrdení ukladá a ako dlho: ",
@@ -4482,6 +4499,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Právny názov",
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
+      controllerCountry: "Krajina sídla",
+      countries: { SK: "Slovensko", CZ: "Česko" },
       secIdentity: "Názov portálu",
       secIdentityNote: "Názov a logo v hlavičke, v e-mailoch a na prihlasovacej obrazovke. Pod nimi organizácia, ktorá portál prevádzkuje a spracúva osobné údaje.",
       secContact: "Kontakt",
@@ -6442,13 +6461,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       recipientsHeading: "Komu se údaje dostanou",
       recipients: "Personalistům a správcům obsahu organizace v rozsahu jejich úlohy, kolegům jen údaje z adresáře. Mimo organizaci zpracovatelům, kteří zajišťují provoz:",
       processorsColumns: ["Kdo", "K čemu", "Kde"],
-      processors: [
-        ["MongoDB Atlas", "databáze a vyhledávání", "EU (Frankfurt)"],
-        ["Vercel", "běh aplikace", "EU"],
-        ["Anthropic", "tvorba odpovědí na otázky; bez uchovávání a bez trénování na datech", "podle smlouvy se zpracovatelem"],
-        ["Voyage AI (přes MongoDB)", "vyhledávání v textu předpisů", "podle smlouvy se zpracovatelem"],
-        ["Ecomail", "odesílání e-mailů", "EU"],
-      ],
+      processors: {
+        atlas: ["MongoDB Atlas", "databáze a vyhledávání", "EU (Frankfurt)"],
+        vercel: ["Vercel", "běh aplikace", "EU"],
+        anthropic: ["Anthropic", "tvorba odpovědí na otázky; bez uchovávání a bez trénování na datech", "podle smlouvy se zpracovatelem"],
+        bedrock: ["Amazon Web Services (Bedrock)", "tvorba odpovědí na otázky; bez uchovávání a bez trénování na datech", "region {region}"],
+        voyage: ["Voyage AI (přes MongoDB)", "vyhledávání v textu předpisů", "podle smlouvy se zpracovatelem"],
+        ecomail: ["Ecomail", "odesílání e-mailů", "EU"],
+      },
       noSale: "Údaje se neprodávají a nepoužívají se k reklamě ani k trénování modelů umělé inteligence.",
       automated: "O nikom se nerozhoduje automatizovaně.",
       learning: {
@@ -6459,7 +6479,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["pokusy v testu: otázky, vaše odpovědi, body, výsledek a čas", "vyhodnocení testu"],
           ["certifikát: jméno, pohlaví (kvůli tvaru textu), kurz, číslo, data, vydavatel, podepisující", "doklad o absolvování kurzu, který si můžete stáhnout a který lze ověřit"],
         ],
-        basis: "U kurzů platí totéž co u předpisů: zákonná povinnost u školení, která vyžaduje zákon (například bezpečnost a ochrana zdraví při práci), jinak oprávněný zájem prokázat, že lidé byli proškoleni. Certifikát se uchovává i pro účely archivace podle zákona č. 395/2002 Z. z. o archivech a registraturách.",
+        basis: archiveLaw => `U kurzů platí totéž co u předpisů: zákonná povinnost u školení, která vyžaduje zákon (například bezpečnost a ochrana zdraví při práci), jinak oprávněný zájem prokázat, že lidé byli proškoleni. Certifikát se uchovává i pro účely archivace podle ${archiveLaw}.`,
         retention: [
           ["zápis do kurzu, dokončení částí, sledování videa, pokusy v testu", "stejně jako potvrzení předpisu (první řádek tabulky)"],
           ["vaše odpovědi v testu a zhlédnuté úseky videa", "12 měsíců po dokončení kurzu; výsledek testu a dokončení zůstávají"],
@@ -6473,7 +6493,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rightsHeading: "Vaše práva",
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
       objection: "U předpisů s oprávněným zájmem máte právo vznést námitku. Námitku posoudí pověřenec jednotlivě a doklad se do jeho rozhodnutí nemaže. Výmaz dokladu o seznámení před uplynutím lhůty není možný, dokud je potřebný k prokázání, uplatnění nebo obhajobě právních nároků.",
-      complaint: "Máte právo podat stížnost dozorovému úřadu (na Slovensku Úrad na ochranu osobných údajov SR, dataprotection.gov.sk).",
+      complaint: {
+        SK: "Máte právo podat stížnost dozorovému úřadu — Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
+        CZ: "Máte právo podat stížnost Úřadu pro ochranu osobních údajů (uoou.gov.cz).",
+      },
+      archiveLaw: {
+        SK: "slovenského zákona č. 395/2002 Z. z. o archivech a registraturách",
+        CZ: "zákona č. 499/2004 Sb., o archivnictví a spisové službě",
+      },
       requests: "Žádosti posílejte pověřenci (DPO).",
       version: date => `Verze textu: ${date}`,
       linkBefore: "Co se při potvrzení ukládá a jak dlouho: ",
@@ -7673,6 +7700,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Právní název",
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
+      controllerCountry: "Země sídla",
+      countries: { SK: "Slovensko", CZ: "Česko" },
       secIdentity: "Název portálu",
       secIdentityNote: "Název a logo v hlavičce, v e-mailech a na přihlašovací obrazovce. Pod nimi organizace, která portál provozuje a zpracovává osobní údaje.",
       secContact: "Kontakt",
@@ -9624,13 +9653,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       recipientsHeading: "Who receives the data",
       recipients: "HR and content managers of the organisation to the extent of their role; colleagues only see directory data. Outside the organisation, the processors that run the service:",
       processorsColumns: ["Who", "What for", "Where"],
-      processors: [
-        ["MongoDB Atlas", "database and search", "EU (Frankfurt)"],
-        ["Vercel", "running the application", "EU"],
-        ["Anthropic", "writing answers to questions; no retention and no training on the data", "under the processor agreement"],
-        ["Voyage AI (via MongoDB)", "searching the text of documents", "under the processor agreement"],
-        ["Ecomail", "sending e-mails", "EU"],
-      ],
+      processors: {
+        atlas: ["MongoDB Atlas", "database and search", "EU (Frankfurt)"],
+        vercel: ["Vercel", "running the application", "EU"],
+        anthropic: ["Anthropic", "writing answers to questions; no retention and no training on the data", "under the processor agreement"],
+        bedrock: ["Amazon Web Services (Bedrock)", "writing answers to questions; no retention and no training on the data", "region {region}"],
+        voyage: ["Voyage AI (via MongoDB)", "searching the text of documents", "under the processor agreement"],
+        ecomail: ["Ecomail", "sending e-mails", "EU"],
+      },
       noSale: "The data is not sold and is not used for advertising or for training artificial intelligence models.",
       automated: "No decisions about anyone are made by automated means.",
       learning: {
@@ -9641,7 +9671,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["test attempts: questions, your answers, points, result and time", "evaluating the test"],
           ["certificate: name, gender (for the wording), course, number, dates, issuer, signatory", "proof of completing the course that you can download and that can be verified"],
         ],
-        basis: "Courses follow the same rules as documents: a legal obligation for training required by law (for example health and safety at work), otherwise a legitimate interest in showing that people were trained. The certificate is also kept for archiving under Act No. 395/2002 on archives and registries.",
+        basis: archiveLaw => `Courses follow the same rules as documents: a legal obligation for training required by law (for example health and safety at work), otherwise a legitimate interest in showing that people were trained. The certificate is also kept for archiving under ${archiveLaw}.`,
         retention: [
           ["course enrolment, completed parts, video watching, test attempts", "same as a document acknowledgement (first row of the table)"],
           ["your answers in a test and the parts of a video you watched", "12 months after completing the course; the test result and completion remain"],
@@ -9655,7 +9685,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rightsHeading: "Your rights",
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
       objection: "For documents based on legitimate interest you have the right to object. The data protection officer assesses each objection individually and the evidence is not deleted before the decision. Evidence of having read a document cannot be deleted before the end of the period while it is needed to establish, exercise or defend legal claims.",
-      complaint: "You have the right to lodge a complaint with the supervisory authority (in Slovakia the Office for Personal Data Protection, dataprotection.gov.sk).",
+      complaint: {
+        SK: "You have the right to lodge a complaint with the supervisory authority — the Office for Personal Data Protection of the Slovak Republic (dataprotection.gov.sk).",
+        CZ: "You have the right to lodge a complaint with the supervisory authority — the Office for Personal Data Protection of the Czech Republic (uoou.gov.cz).",
+      },
+      archiveLaw: {
+        SK: "Slovak Act No. 395/2002 on archives and registries",
+        CZ: "Czech Act No. 499/2004 on archiving and records management",
+      },
       requests: "Send requests to the data protection officer (DPO).",
       version: date => `Text version: ${date}`,
       linkBefore: "What is stored when you acknowledge, and for how long: ",
@@ -10854,6 +10891,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Legal name",
       controllerAddress: "Registered address",
       controllerRegistrationNumber: "Company ID",
+      controllerCountry: "Country of registered office",
+      countries: { SK: "Slovakia", CZ: "Czechia" },
       secIdentity: "Portal name",
       secIdentityNote: "Name and logo in the header, in emails and on the sign-in screen. Below them, the organisation that runs the portal and processes personal data.",
       secContact: "Contact",

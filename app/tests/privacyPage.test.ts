@@ -5,21 +5,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 
-const s = vi.hoisted(() => ({ learning: false, language: "sk" }))
+const s = vi.hoisted(() => ({ learning: false, language: "sk", country: undefined as string | undefined, generation: "anthropic" }))
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") } }))
 vi.mock("@/lib/session", () => ({
-  currentTenant: async () => ({ companyCode: "SFZ", defaultLanguage: "sk", branding: { displayName: "SFZ" }, controller: { legalName: "Slovenský futbalový zväz" }, modules: { learning: s.learning } }),
+  currentTenant: async () => ({ companyCode: "SFZ", defaultLanguage: "sk", branding: { displayName: "SFZ" }, controller: { legalName: "Slovenský futbalový zväz", country: s.country }, modules: { learning: s.learning } }),
   currentPerson: async () => ({ language: s.language }),
 }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "SFZ" }) }))
 vi.mock("@/components/TenantHeader", () => ({ tenantStyle: () => ({}) }))
-vi.mock("@/lib/privacy", () => ({ dpoContacts: async () => [], PRIVACY_NOTICE_VERSION: new Date("2026-09-28T00:00:00Z") }))
+vi.mock("@/lib/privacy", async (orig) => ({ ...(await orig<typeof import("../src/lib/privacy")>()), dpoContacts: async () => [], PRIVACY_NOTICE_VERSION: new Date("2026-09-28T00:00:00Z") }))
+vi.mock("@/lib/tenantProfile", () => {
+  const profile = () => ({ providers: { generation: { kind: s.generation, url: "http://vllm" }, embedding: { kind: "atlas-auto" }, rerank: { kind: "atlas-stage" } } })
+  return { getTenantProfile: async () => profile(), defaultProfile: profile }
+})
 
 async function render() {
   const { default: Page } = await import("../src/app/privacy/page")
   return renderToStaticMarkup(await Page())
 }
-beforeEach(() => { s.learning = false; s.language = "sk" })
+beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic" })
 
 describe("/privacy", () => {
   it("bez Vzdelávania: pohlavie áno, kurzy nie, nič sa nerozhoduje automatizovane", async () => {
@@ -44,5 +48,21 @@ describe("/privacy", () => {
     expect(await render()).toContain("Výjimkou je certifikát")
     s.language = "en"
     expect(await render()).toContain("The exception is the certificate")
+  })
+
+  it("krajina sídla CZ: český úrad a zákon o archívnictve aj v slovenskom texte (ADR-022)", async () => {
+    s.country = "CZ"
+    s.learning = true
+    const html = await render()
+    expect(html).toContain("Úradu pre ochranu osobných údajov ČR (uoou.gov.cz)")
+    expect(html).toContain("zákona č. 499/2004 Sb.")
+    expect(html).not.toContain("dataprotection.gov.sk")
+  })
+  it("sprostredkovatelia z profilu: model na vlastnom serveri = bez Anthropicu", async () => {
+    expect(await render()).toContain(">Anthropic<")
+    s.generation = "openai"
+    const html = await render()
+    expect(html).not.toContain(">Anthropic<")
+    expect(html).toContain("Voyage AI")
   })
 })

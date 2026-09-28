@@ -9,6 +9,7 @@
 import { getCollection } from "./mongodb"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { DPO_ROLE } from "./dpo"
+import type { TenantProfile } from "./providers/types"
 
 /**
  * Dátum verzie textu. **Pri každej zmene textu v `i18n.ts` sa posunie** —
@@ -25,4 +26,24 @@ export async function dpoContacts(companyCode: string): Promise<{ fullName: stri
     )
     .toArray()
   return rows.map(p => ({ fullName: p.fullName, email: p.email }))
+}
+
+export type ProcessorKey = "atlas" | "vercel" | "anthropic" | "bedrock" | "voyage" | "ecomail"
+
+/**
+ * Sprostredkovatelia **podľa toho, čo organizácia naozaj používa** (ADR-022)
+ * — z profilu adaptérov (ADR-001), nie natvrdo. Kto má generovanie na
+ * vlastnom serveri (`openai` s `url`), Anthropic v zozname nemá; kto nemá
+ * Atlas embedding ani rerank, nemá Voyage. Databáza, beh a e-maily sú
+ * spoločné pre celé nasadenie.
+ */
+export function privacyProcessors(profile: Pick<TenantProfile, "providers">): { key: ProcessorKey; region?: string }[] {
+  const out: { key: ProcessorKey; region?: string }[] = [{ key: "atlas" }, { key: "vercel" }]
+  const models = [profile.providers.generation, profile.providers.utility].filter(Boolean)
+  if (models.some(m => m!.kind === "anthropic")) out.push({ key: "anthropic" })
+  const bedrock = models.find(m => m!.kind === "bedrock")
+  if (bedrock) out.push({ key: "bedrock", region: bedrock.region })
+  if (profile.providers.embedding.kind === "atlas-auto" || profile.providers.rerank.kind === "atlas-stage") out.push({ key: "voyage" })
+  out.push({ key: "ecomail" })
+  return out
 }
