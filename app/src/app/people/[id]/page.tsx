@@ -16,7 +16,7 @@ import { isHr } from "@/lib/hr"
 import { evidenceForPerson } from "@/lib/evidenceDb"
 import { dutyState, dutyTagClass } from "@/lib/due"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
-import { audiencesInOrg, personTagClass } from "@/lib/persons"
+import { audiencesInOrg, personTagClass, personDisplayStatus } from "@/lib/persons"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, needsInvitation } from "@/lib/personFields"
 import { allDepartments, flattenTree } from "@/lib/departments"
@@ -103,7 +103,7 @@ export default async function PersonDetailPage({
           úloha 1); stav povinností nižšie je iná škála a nezlučuje sa s ním. */}
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 4px" }}>
         <h1 className="page-title" style={{ margin: 0 }}>{displayName(o)}</h1>
-        <span className={personTagClass(o)}>{tl.status[o.status] ?? o.status}</span>
+        <span className={personTagClass(o)}>{tl.status[personDisplayStatus(o)] ?? o.status}</span>
       </div>
       <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 4px", overflowWrap: "anywhere" }}>
         {o.email}
@@ -112,7 +112,7 @@ export default async function PersonDetailPage({
         )}
       </p>
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 20px" }}>
-        {o.status === "invited" ? t.invitedNotSignedIn
+        {o.status === "invited" ? (o.invitationSentAt ? t.invitedNotSignedIn : t.newNotInvited)
           : o.status === "inactive" ? t.excludedNoSignIn
           : t.lastSeen(o.lastLoginAt ? formatDate(o.lastLoginAt, language) : t.never)}
         {o.accounts.length > 0 && ` · ${t.signsInVia(o.accounts.join(", "))}`}
@@ -357,9 +357,10 @@ export default async function PersonDetailPage({
             <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
               {t.inviteNote}
               {o.invitedAt && ` ${t.inviteNoteSince(formatDate(o.invitedAt, language))}`}
+              {o.invitationSentAt && ` ${t.inviteNoteSent(formatDate(o.invitationSentAt, language))}`}
             </p>
 
-            <div><button className="button button--quiet" type="submit">{t.inviteSubmit}</button></div>
+            <div><button className="button button--quiet" type="submit">{o.invitationSentAt ? t.inviteSubmit : t.inviteSubmitFirst}</button></div>
           </form>
         )}
 

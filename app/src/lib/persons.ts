@@ -38,8 +38,24 @@ export const PERSONS_COLLECTION = "persons"
  */
 export type PersonType = "employee" | "external" | "referee" | "official"
 
-/** `invited` = pozvaná, ešte sa neprihlásila. `inactive` = už sem nepatrí. */
+/**
+ * `invited` = zapísaná, ešte sa neprihlásila. `inactive` = už sem nepatrí.
+ * Či jej pozvánka naozaj odišla, hovorí `invitationSentAt` — na obrazovke
+ * je z toho „Nová" alebo „Pozvaná" (`personDisplayStatus`).
+ */
 export type PersonStatus = "invited" | "active" | "inactive"
+
+/**
+ * Stav na obrazovke. **Odvodený, nie uložený** (D27): „Nová" = zapísaná,
+ * pozvánka jej ešte neodišla (napr. po importe); „Pozvaná" až keď e-mail
+ * naozaj odišiel (Ján 28. 9. 2026). V databáze zostáva `invited`.
+ */
+export type PersonDisplayStatus = PersonStatus | "new"
+
+export function personDisplayStatus(person: { status?: PersonStatus | string; invitationSentAt?: Date | null }): PersonDisplayStatus | string {
+  if (person.status === "invited" && !person.invitationSentAt) return "new"
+  return person.status ?? ""
+}
 
 /**
  * Trieda pilulky pre stav osoby (OSOBY.md, úloha 1) — varianty zo ZAKLADU,
@@ -52,8 +68,10 @@ export type PersonStatus = "invited" | "active" | "inactive"
  * Role (`hr`, `admin`, `curator`) zostávajú neutrálne `.tag`: je ich na
  * osobe viac a farebné by stav prebili.
  */
-export function personTagClass(person: { status?: PersonStatus | string }): string {
-  switch (person.status) {
+export function personTagClass(person: { status?: PersonStatus | string; invitationSentAt?: Date | null }): string {
+  switch (personDisplayStatus(person)) {
+    // Nová čaká na pozvánku — to je úloha pre personalistu, preto výstražná farba.
+    case "new": return "tag tag--draft"
     case "active": return "tag tag--published"
     case "invited": return "tag tag--review"
     case "inactive": return "tag tag--archived"
@@ -193,6 +211,13 @@ export interface Person {
 
   /** Pracovná pozícia z adresára. Evidenčný údaj, o prístupe nerozhoduje. */
   jobTitle?: string
+
+  /**
+   * Kedy jej **naposledy odišla pozvánka** e-mailom. Uložené, lebo odoslanie
+   * inú stopu pri osobe nenechá. `invitedAt` je iné: kedy ju zapísali
+   * (import ho má tiež) a počíta sa od neho onboarding (`hrReport.ts`).
+   */
+  invitationSentAt?: Date
 
   /** Pohlavie — štatistiky zloženia a gramatika textov („absolvoval/-a"), `personFields.ts`. */
   gender?: Gender

@@ -1468,6 +1468,8 @@ interface Dictionary {
       back: string
       previously: (list: string) => string
       invitedNotSignedIn: string
+      newNotInvited: string
+      inviteNoteSent: (date: string) => string
       excludedNoSignIn: string
       lastSeen: (when: string) => string
       never: string
@@ -1528,6 +1530,8 @@ interface Dictionary {
       inviteNote: string
       inviteNoteSince: (date: string) => string
       inviteSubmit: string
+      /** Prvá pozvánka — osoba ešte žiadnu nedostala („Nová"). */
+      inviteSubmitFirst: string
       returnNoteBefore: string
       returnNoteHighlight: string
       returnNoteAfter: string
@@ -4659,6 +4663,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       matchesSearch: " vyhovuje hľadaniu",
       capped: " — zobrazených prvých 500, zúž hľadanie",
       status: {
+        new: "nová",
         invited: "pozvaná",
         active: "aktívna",
         inactive: "vyradená",
@@ -4746,6 +4751,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       back: "← Späť na zoznam",
       previously: (list) => `predtým ${list}`,
       invitedNotSignedIn: "pozvaná, ešte sa neprihlásila",
+      newNotInvited: "nová — pozvánka jej ešte neodišla",
+      inviteNoteSent: (date) => `Pozvánka odišla ${date}.`,
       excludedNoSignIn: "vyradená — neprihlási sa",
       lastSeen: (when) => `naposledy ${when}`,
       never: "—",
@@ -4802,6 +4809,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       inviteNote: "Táto osoba sa ešte ani raz neprihlásila. Pozvánka nesie odkaz na portál — prihlási sa ním cez pracovné konto alebo si vyžiada odkaz na e-mail.",
       inviteNoteSince: (date) => `Zapísaná ${date}.`,
       inviteSubmit: "Poslať pozvánku znovu",
+      inviteSubmitFirst: "Poslať pozvánku",
       returnNoteBefore: "Vráti sa ako ",
       returnNoteHighlight: "pozvaná",
       returnNoteAfter: ", nie aktívna — aktívna znamená „už sa prihlásila“ a to sa vrátením nestalo. Prepne ju prvé prihlásenie.",
@@ -7821,6 +7829,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       matchesSearch: " vyhovuje hledání",
       capped: " — zobrazeno prvních 500, zužte hledání",
       status: {
+        new: "nová",
         invited: "pozvaná",
         active: "aktivní",
         inactive: "vyřazená",
@@ -7908,6 +7917,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       back: "← Zpět na seznam",
       previously: (list) => `dříve ${list}`,
       invitedNotSignedIn: "pozvaná, ještě se nepřihlásila",
+      newNotInvited: "nová — pozvánka jí ještě neodešla",
+      inviteNoteSent: (date) => `Pozvánka odešla ${date}.`,
       excludedNoSignIn: "vyřazená — nepřihlásí se",
       lastSeen: (when) => `naposledy ${when}`,
       never: "—",
@@ -7964,6 +7975,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       inviteNote: "Tato osoba se ještě ani jednou nepřihlásila. Pozvánka nese odkaz na portál — přihlásí se jím přes pracovní účet nebo si vyžádá odkaz na e-mail.",
       inviteNoteSince: (date) => `Zapsaná ${date}.`,
       inviteSubmit: "Poslat pozvánku znovu",
+      inviteSubmitFirst: "Poslat pozvánku",
       returnNoteBefore: "Vrátí se jako ",
       returnNoteHighlight: "pozvaná",
       returnNoteAfter: ", ne aktivní — aktivní znamená „už se přihlásila“ a to se vrácením nestalo. Přepne ji první přihlášení.",
@@ -10973,6 +10985,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       matchesSearch: " matching the search",
       capped: " — showing the first 500, narrow the search",
       status: {
+        new: "new",
         invited: "invited",
         active: "active",
         inactive: "excluded",
@@ -11060,6 +11073,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       back: "← Back to the list",
       previously: (list) => `previously ${list}`,
       invitedNotSignedIn: "invited, has not signed in yet",
+      newNotInvited: "new — no invitation has been sent yet",
+      inviteNoteSent: (date) => `Invitation sent ${date}.`,
       excludedNoSignIn: "excluded — cannot sign in",
       lastSeen: (when) => `last seen ${when}`,
       never: "—",
@@ -11116,6 +11131,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       inviteNote: "This person has never signed in. The invitation carries a link to the portal — they sign in with their work account or request a link by email.",
       inviteNoteSince: (date) => `On record since ${date}.`,
       inviteSubmit: "Send the invitation again",
+      inviteSubmitFirst: "Send the invitation",
       returnNoteBefore: "They come back as ",
       returnNoteHighlight: "invited",
       returnNoteAfter: ", not active — active means “has already signed in”, and reinstating did not make that happen. Their first sign-in switches it.",

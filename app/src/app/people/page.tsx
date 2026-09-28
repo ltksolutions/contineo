@@ -10,8 +10,10 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { peopleContext, listPeople } from "@/lib/people"
 import { availableOptions } from "@/lib/codelistsTenant"
-import { displayName, workplaceLabel } from "@/lib/personFields"
-import { personTagClass } from "@/lib/persons"
+import { displayName, needsInvitation, workplaceLabel } from "@/lib/personFields"
+import { personTagClass, personDisplayStatus } from "@/lib/persons"
+import SubmitButton from "@/components/SubmitButton"
+import { resendInviteAction } from "./actions"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
@@ -40,6 +42,9 @@ export default async function PeoplePage({
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).people.list
+  const td = dictionary(language).people.detail
+  // Po odoslaní pozvánky zo zoznamu sa vráti sem, aj s hľadaním.
+  const back = q ? `/people?q=${encodeURIComponent(q)}` : "/people"
 
   return (
     <AppShell language={language}>
@@ -114,7 +119,7 @@ export default async function PeoplePage({
                   {displayName(o)}
                 </Link>
                 {/* Stav farbou, role neutrálne (OSOBY.md, úloha 1). */}
-                <span className={personTagClass(o)}>{t.status[o.status] ?? o.status}</span>
+                <span className={personTagClass(o)}>{t.status[personDisplayStatus(o)] ?? o.status}</span>
                 {o.roles.map(r => (
                   <span key={r} className="tag">{r}</span>
                 ))}
@@ -139,6 +144,16 @@ export default async function PeoplePage({
                 {o.department && ` · ${o.department}`}
                 {o.groups.length > 0 && ` · ${o.groups.join(", ")}`}
               </p>
+
+              {/* Pozvánka priamo zo zoznamu (Ján 28. 9. 2026) — tá istá akcia
+                  a to isté pravidlo ako na karte osoby (`needsInvitation`). */}
+              {needsInvitation(o) && (
+                <form action={resendInviteAction} className="person-invite">
+                  <input type="hidden" name="id" value={o.id} />
+                  <input type="hidden" name="back" value={back} />
+                  <SubmitButton className="button button--quiet">{o.invitationSentAt ? td.inviteSubmit : td.inviteSubmitFirst}</SubmitButton>
+                </form>
+              )}
             </li>
           )
         })}
