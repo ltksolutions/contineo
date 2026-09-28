@@ -11,7 +11,8 @@ import { currentTenant, currentPerson } from "@/lib/session"
 import { brandingView, type Tenant } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, normalizeLanguage } from "@/lib/i18n"
-import { dpoContacts, PRIVACY_NOTICE_VERSION } from "@/lib/privacy"
+import { dpoContacts, privacyProcessors, PRIVACY_NOTICE_VERSION } from "@/lib/privacy"
+import { defaultProfile, getTenantProfile } from "@/lib/tenantProfile"
 
 export const dynamic = "force-dynamic"
 
@@ -56,6 +57,11 @@ export default async function PrivacyPage() {
   // Vzdelávanie len organizácii, ktorá ho má zapnuté (ADR-018, D123) —
   // inak by text sľuboval spracúvanie, ktoré sa nedeje.
   const learning = tenant.modules?.learning ? t.learning : null
+  // Úrad a zákony podľa krajiny sídla prevádzkovateľa, nie podľa jazyka (ADR-022).
+  const country = tenant.controller?.country ?? "SK"
+  const profile = await getTenantProfile(tenant.companyCode).catch(() => defaultProfile(tenant.companyCode))
+  const processors = privacyProcessors(profile).map(({ key, region }) =>
+    t.processors[key].map(cell => cell.replace("{region}", region ?? "")) as [string, string, string])
 
   /*
    * Obsah stránky (rám, bod 1): nadpisy sekcií s kotvami. Od 1024 px bočný
@@ -125,7 +131,7 @@ export default async function PrivacyPage() {
           <li>{t.basisInterest}</li>
         </ul>
         <p>{t.basisDirectory}</p>
-        {learning && <p>{learning.basis}</p>}
+        {learning && <p>{learning.basis(t.archiveLaw[country])}</p>}
 
         <h2 id="retention">{t.retentionHeading}</h2>
         <Table columns={t.retentionColumns} rows={learning ? [...t.retention, ...learning.retention] : t.retention} />
@@ -134,7 +140,7 @@ export default async function PrivacyPage() {
         <h2 id="recipients">{t.recipientsHeading}</h2>
         <p>{t.recipients}</p>
         {learning && <p>{learning.recipients}</p>}
-        <Table columns={t.processorsColumns} rows={t.processors} />
+        <Table columns={t.processorsColumns} rows={processors} />
         <p>{t.noSale} {learning ? learning.automated : t.automated}</p>
 
         <h2 id="rights">{t.rightsHeading}</h2>
@@ -144,7 +150,7 @@ export default async function PrivacyPage() {
           <h3>{t.objectionHeading}</h3>
           <p>{t.objection}</p>
         </div>
-        <p>{t.complaint}</p>
+        <p>{t.complaint[country]}</p>
 
         <p className="privacy-foot">
           {t.version(formatDate(PRIVACY_NOTICE_VERSION, language))}

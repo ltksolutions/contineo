@@ -99,6 +99,8 @@ export interface TenantChange {
   controllerLegalName?: string
   controllerAddress?: string
   controllerRegistrationNumber?: string
+  /** Krajina sídla prevádzkovateľa (ADR-022). */
+  controllerCountry?: string
   chunking?: Partial<ChunkingProfile>
   /** Pomenované profily členenia (D79). */
   chunkingProfiles?: ChunkingProfileDef[]
@@ -217,6 +219,11 @@ function toSet(change: TenantChange): Record<string, unknown> {
       )
     }
     set["controller.registrationNumber"] = reg
+  }
+  if (change.controllerCountry !== undefined) {
+    // Len krajiny, pre ktoré máme úrad a zákony v texte; iná by na stránke
+    // Ochrana osobných údajov uviedla cudzí úrad.
+    set["controller.country"] = change.controllerCountry === "CZ" ? "CZ" : "SK"
   }
   if (change.chunking !== undefined) {
     // Pole sa volá `chunking`, nie `chunkovanie`: po migrácii na anglické

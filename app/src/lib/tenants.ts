@@ -125,6 +125,12 @@ export interface Tenant {
     address?: string
     /** IČO — ako sa píše (medzery zostávajú), overené sú len číslice. */
     registrationNumber?: string
+    /**
+     * Krajina sídla — určuje dozorný úrad a zákony v texte Ochrany osobných
+     * údajov (ADR-022). Nie jazyk: Čech v slovenskej organizácii číta
+     * česky, ale sťažuje sa slovenskému úradu. Chýba = `SK`.
+     */
+    country?: "SK" | "CZ"
   }
 
   /**

@@ -350,6 +350,13 @@ export default async function OrganisationPage({
                        defaultValue={tenant.controller?.registrationNumber ?? ""} />
               </label>
             </div>
+            {/* Krajina určuje dozorný úrad a zákony na stránke Ochrana osobných údajov (ADR-022). */}
+            <label className="field">
+              <span className="field-label">{t.branding.controllerCountry}</span>
+              <select className="field-input" name="controllerCountry" defaultValue={tenant.controller?.country ?? "SK"}>
+                {(["SK", "CZ"] as const).map(c => <option key={c} value={c}>{t.branding.countries[c]}</option>)}
+              </select>
+            </label>
             <p className="set-preview">
               {t.branding.invitePreview}{" "}
               <b>„{inviteIntro}“</b>

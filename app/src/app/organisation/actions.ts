@@ -125,6 +125,7 @@ export async function saveBrandingAction(fd: FormData) {
       controllerLegalName: fieldText(fd, "controllerLegalName"),
       controllerAddress: fieldText(fd, "controllerAddress"),
       controllerRegistrationNumber: fieldText(fd, "controllerRegistrationNumber"),
+      controllerCountry: fieldText(fd, "controllerCountry") || undefined,
       ...(logoUrl ? { logoUrl } : {}),
     }, self.email)
   } catch (e) {
