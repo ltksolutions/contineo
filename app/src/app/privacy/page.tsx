@@ -53,6 +53,9 @@ export default async function PrivacyPage() {
   const t = dictionary(language).privacy
   const branding = brandingView(tenant)
   const dpos = await dpoContacts(tenant.companyCode).catch(() => [])
+  // Vzdelávanie len organizácii, ktorá ho má zapnuté (ADR-018, D123) —
+  // inak by text sľuboval spracúvanie, ktoré sa nedeje.
+  const learning = tenant.modules?.learning ? t.learning : null
 
   /*
    * Obsah stránky (rám, bod 1): nadpisy sekcií s kotvami. Od 1024 px bočný
@@ -108,10 +111,10 @@ export default async function PrivacyPage() {
         </div>
 
         <h2 id="purpose">{t.purposeHeading}</h2>
-        <p>{t.purpose}</p>
+        <p>{t.purpose}{learning && <> {learning.purpose}</>}</p>
 
         <h2 id="data">{t.dataHeading}</h2>
-        <Table columns={t.dataColumns} rows={t.data} />
+        <Table columns={t.dataColumns} rows={learning ? [...t.data, ...learning.data] : t.data} />
         <p>{t.hrNote}</p>
         <p>{t.responsibleNote}</p>
 
@@ -122,18 +125,20 @@ export default async function PrivacyPage() {
           <li>{t.basisInterest}</li>
         </ul>
         <p>{t.basisDirectory}</p>
+        {learning && <p>{learning.basis}</p>}
 
         <h2 id="retention">{t.retentionHeading}</h2>
-        <Table columns={t.retentionColumns} rows={t.retention} />
-        <p>{t.retentionDelete}</p>
+        <Table columns={t.retentionColumns} rows={learning ? [...t.retention, ...learning.retention] : t.retention} />
+        <p>{t.retentionDelete}{learning && <> {learning.retentionNote}</>}</p>
 
         <h2 id="recipients">{t.recipientsHeading}</h2>
         <p>{t.recipients}</p>
+        {learning && <p>{learning.recipients}</p>}
         <Table columns={t.processorsColumns} rows={t.processors} />
-        <p>{t.noSale}</p>
+        <p>{t.noSale} {learning ? learning.automated : t.automated}</p>
 
         <h2 id="rights">{t.rightsHeading}</h2>
-        <p>{t.rights}</p>
+        <p>{t.rights}{learning && <> {learning.rights}</>}</p>
         {/* Právo namietať v rámčeku s nadpisom (bod 4, Ján 24. 9.). */}
         <div className="privacy-objection">
           <h3>{t.objectionHeading}</h3>
