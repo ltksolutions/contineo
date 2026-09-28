@@ -65,10 +65,10 @@ if (!process.env.MONGODB_URI) {
 let otazky = []
 
 // ── skutočný kód aplikácie ───────────────────────────────────────────────────
-let hybridSearch, effectiveVersionIdsOf
+let hybridSearch, effectiveVersionIdsOf, VERSION_PROJECTION
 try {
   ;({ hybridSearch } = await import(pathToFileURL(resolve(SRC, "lib/mongoSearch.ts")).href))
-  ;({ effectiveVersionIdsOf } = await import(pathToFileURL(resolve(SRC, "lib/searchVersions.ts")).href))
+  ;({ effectiveVersionIdsOf, VERSION_PROJECTION } = await import(pathToFileURL(resolve(SRC, "lib/searchVersions.ts")).href))
 } catch (e) {
   console.error(`${FAIL} Nedá sa načítať mongoSearch.ts priamo cez Node.`)
   console.error(`   ${e.message.split("\n")[0]}`)
@@ -102,7 +102,7 @@ try {
   const col = db.collection("document_chunks")
   // Znenia platné dnes — ten istý rozsah ako v `/api/chat` (krok 4).
   const versionIds = effectiveVersionIdsOf(
-    await db.collection("documents").find({ companyCode: ORGANIZACIA }).toArray(), new Date())
+    await db.collection("documents").find({ companyCode: ORGANIZACIA }, { projection: VERSION_PROJECTION }).toArray(), new Date())
 
   // Rôzne otázky, najnovšie najskôr. Tá istá otázka položená päťkrát by
   // inak výsledok prevážila, hoci o zhode rerankerov povie to isté raz.

@@ -38,6 +38,16 @@ export interface SearchScope {
   verifiedAnswers: boolean
 }
 
+/**
+ * Len to, čo potrebuje `effectiveVersion()`. Bez projekcie sa ťahá aj text
+ * dokumentov — pri 13 dokumentoch 1,2 MB a 150–270 ms oproti 2 kB a 30 ms,
+ * a to pred každou otázkou.
+ */
+export const VERSION_PROJECTION = {
+  _id: 0, documentId: 1,
+  "versions.versionId": 1, "versions.isActive": 1, "versions.effectiveFrom": 1, "versions.effectiveTo": 1,
+} as const
+
 const dayKey = (d: Date, timeZone: string) =>
   new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(d)
 
@@ -70,7 +80,7 @@ export async function searchScope(companyCode: string, asOf: Date = new Date(), 
   const docs = await col
     .find(
       { companyCode: code },
-      { projection: { _id: 0, documentId: 1, "versions.versionId": 1, "versions.isActive": 1, "versions.effectiveFrom": 1, "versions.effectiveTo": 1 } },
+      { projection: VERSION_PROJECTION },
     )
     .toArray()
   return {

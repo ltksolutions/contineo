@@ -22,7 +22,7 @@ import { MongoClient } from "mongodb"
 // modulov dopĺňa scripts/lib/ts-hook.mjs — preto sa skript spúšťa cez
 // `npm run smoke`, nie holým `node`.
 import { fulltextSearch, vectorSearch, hybridSearch } from "../src/lib/mongoSearch.ts"
-import { effectiveVersionIdsOf } from "../src/lib/searchVersions.ts"
+import { effectiveVersionIdsOf, VERSION_PROJECTION } from "../src/lib/searchVersions.ts"
 import { classifyQuery } from "../src/lib/queryClassifier.ts"
 import { defaultProfile } from "../src/lib/tenantProfile.ts"
 import { getProviders } from "../src/lib/providers/factory.ts"
@@ -92,7 +92,7 @@ try {
   // Znenia platné dnes — ten istý rozsah ako v `/api/chat` (plán „znenia
   // v indexe", krok 4). Čas výpočtu je vidno, lebo ide pred každú otázku.
   const tv = Date.now()
-  const versionIds = effectiveVersionIdsOf(await db.collection("documents").find({ companyCode }).toArray(), new Date())
+  const versionIds = effectiveVersionIdsOf(await db.collection("documents").find({ companyCode }, { projection: VERSION_PROJECTION }).toArray(), new Date())
   console.log(`${INFO} organizácia ${companyCode} · platných znení ${versionIds.length} (${Date.now() - tv} ms)`)
   const providers = getProviders(profile)
   console.log(`Profil: embedding=${profile.providers.embedding.kind}/${profile.providers.embedding.model}` +
