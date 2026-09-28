@@ -39,6 +39,12 @@ export interface AnswerSource {
    * vtedy sa nekreslí nič.
    */
   match?: "high" | "medium" | "low"
+  /**
+   * Znenie zdroja v čase odpovede — kópia, aby uložená odpoveď aj o rok
+   * povedala, z ktorého znenia bola. Dátumy ako ISO reťazce. Chýba pri
+   * overenej odpovedi a pri odpovediach spred kroku 5 „znení v indexe".
+   */
+  version?: { label: string; effectiveFrom: string | null; effectiveTo: string | null }
 }
 
 export interface Citation {

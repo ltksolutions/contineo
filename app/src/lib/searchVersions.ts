@@ -17,12 +17,11 @@ import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { DocumentRecord } from "./documents"
+import type { ChunkResult, ChunkVersion } from "./mongoSearch"
+import { calendarDate, SEARCH_TIME_ZONE } from "./versionContext"
 
-/**
- * Časové pásmo, v ktorom sa rozhoduje, či je otázka „na dnešok". Všetci
- * tenanti sú dnes v SR a ČR; keď pribudne iný, patrí to do profilu tenanta.
- */
-export const SEARCH_TIME_ZONE = "Europe/Bratislava"
+// Pásmo „dňa otázky" je v čistom module — používa ho aj prompt modelu.
+export { SEARCH_TIME_ZONE }
 
 /** Rozsah hľadania: znenia a či patria do výsledkov aj overené odpovede. */
 export interface SearchScope {
@@ -36,6 +35,12 @@ export interface SearchScope {
    * neplatilo — preto len pri otázke na dnešok.
    */
   verifiedAnswers: boolean
+  /**
+   * Označenie a účinnosť platných znení podľa `versionId` — pre kontext
+   * modelu a zoznam zdrojov (krok 5). Kópia z `documents`, načítaná tým
+   * istým dotazom, žiadny ďalší sa nerobí.
+   */
+  versions: Record<string, ChunkVersion>
 }
 
 /**
@@ -45,28 +50,47 @@ export interface SearchScope {
  */
 export const VERSION_PROJECTION = {
   _id: 0, documentId: 1,
-  "versions.versionId": 1, "versions.isActive": 1, "versions.effectiveFrom": 1, "versions.effectiveTo": 1,
+  "versions.versionId": 1, "versions.label": 1, "versions.isActive": 1,
+  "versions.effectiveFrom": 1, "versions.effectiveTo": 1,
 } as const
-
-const dayKey = (d: Date, timeZone: string) =>
-  new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(d)
 
 /** Či sú dva okamihy v ten istý kalendárny deň v danom pásme. */
 export function isSameDay(a: Date, b: Date, timeZone = SEARCH_TIME_ZONE): boolean {
-  return dayKey(a, timeZone) === dayKey(b, timeZone)
+  return calendarDate(a, timeZone).getTime() === calendarDate(b, timeZone).getTime()
 }
 
 /**
  * Znenia platné k dátumu. Čistá funkcia — dokument bez platného znenia
  * (koncept, budúca účinnosť, zrušený) do hľadania neprispeje ničím.
  */
-export function effectiveVersionIdsOf(docs: DocumentRecord[], asOf: Date): string[] {
-  const ids: string[] = []
+export function effectiveVersionsOf(docs: DocumentRecord[], asOf: Date): Record<string, ChunkVersion> {
+  const versions: Record<string, ChunkVersion> = {}
   for (const doc of docs) {
     const r = effectiveVersion(doc, asOf)
-    if (r.ok && r.version.versionId) ids.push(r.version.versionId)
+    if (!r.ok || !r.version.versionId) continue
+    versions[r.version.versionId] = {
+      label: r.version.label ?? "",
+      effectiveFrom: r.version.effectiveFrom ?? null,
+      effectiveTo: r.version.effectiveTo ?? null,
+    }
   }
-  return ids
+  return versions
+}
+
+/** Len identifikátory platných znení — pre filter hľadania. */
+export function effectiveVersionIdsOf(docs: DocumentRecord[], asOf: Date): string[] {
+  return Object.keys(effectiveVersionsOf(docs, asOf))
+}
+
+/**
+ * Pripojí k úsekom znenie, ku ktorému patria. Úsek bez znenia v mape
+ * (overená odpoveď) zostane bez neho — radšej nič než odhad.
+ */
+export function attachVersions(chunks: ChunkResult[], versions: Record<string, ChunkVersion>): ChunkResult[] {
+  return chunks.map(c => {
+    const v = c.versionId ? versions[c.versionId] : undefined
+    return v ? { ...c, version: v } : c
+  })
 }
 
 /**
@@ -83,9 +107,11 @@ export async function searchScope(companyCode: string, asOf: Date = new Date(), 
       { projection: VERSION_PROJECTION },
     )
     .toArray()
+  const versions = effectiveVersionsOf(docs as DocumentRecord[], asOf)
   return {
     asOf,
-    versionIds: effectiveVersionIdsOf(docs as DocumentRecord[], asOf),
+    versionIds: Object.keys(versions),
     verifiedAnswers: isSameDay(asOf, now),
+    versions,
   }
 }

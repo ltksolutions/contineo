@@ -18,6 +18,7 @@ import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
 import { cost, EMPTY_TOKENS } from "./pricing"
 import { dictionary } from "./i18n"
+import { asOfInstruction, calendarDate } from "./versionContext"
 import type { TokenCounts } from "./pricing"
 import type { GeneratedCitation, TenantProfile } from "./providers/types"
 
@@ -40,11 +41,17 @@ export interface GenerateOptions {
    * v jeho reči; chýbajúci jazyk padá na slovenčinu (`dictionary()`).
    */
   language?: string
+  /**
+   * Deň, ku ktorému sa odpovedá (`SearchScope.asOf`). Model ho má v odpovedi
+   * povedať — bez neho čitateľ nevie, či odpoveď platí aj o mesiac, keď
+   * nadobudne účinnosť novela. Chýbajúci = dnes.
+   */
+  asOf?: Date
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
 
-function buildSystemPrompt(role: string, supportsCitations: boolean): string {
+export function buildSystemPrompt(role: string, supportsCitations: boolean, asOf: Date = new Date()): string {
   return `Si inteligentný asistent portálu Contineo pre slovenský futbal.
 Odpovedáš VÝLUČNE na základe poskytnutého kontextu.
 Ak odpoveď nie je v kontexte, povedz to úprimne.
@@ -52,7 +59,8 @@ Jazyk: slovenčina. Tón: profesionálny, stručný.
 ${role === "internal" ? "Máš prístup aj k interným normám a dokumentom." : ""}
 ${supportsCitations
   ? "Zdroje sú pripojené ako dokumenty — cituj z nich priamo."
-  : "Pri tvrdeniach uveď čísla zdrojov [1], [2]... podľa poradia v kontexte."}`
+  : "Pri tvrdeniach uveď čísla zdrojov [1], [2]... podľa poradia v kontexte."}
+${asOfInstruction(asOf)}`
 }
 
 // ── Zostavenie citácií ───────────────────────────────────────────────────────
@@ -105,6 +113,18 @@ export function buildSources(chunks: ChunkResult[]) {
     // Prenesené na klienta, aby sa dal overiť únik interného obsahu (eval D9).
     accessLevel: c.accessLevel,
     match:       matchLevel(c.score, best),
+    /**
+     * Znenie, z ktorého zdroj je — **kópia**, nie odkaz: ukladá sa s odpoveďou
+     * do hodnotení a o rok musí byť čitateľné, ktoré znenie odpoveď živilo,
+     * aj keď medzitým platí iné. Chýba pri overenej odpovedi.
+     */
+    version:     c.version
+      ? {
+          label: c.version.label,
+          effectiveFrom: c.version.effectiveFrom ? new Date(c.version.effectiveFrom).toISOString() : null,
+          effectiveTo: c.version.effectiveTo ? new Date(c.version.effectiveTo).toISOString() : null,
+        }
+      : undefined,
   }))
 }
 
@@ -126,7 +146,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
             : defaultProfile())
 
         const { generation } = getProviders(profile)
-        const system = buildSystemPrompt(userRole, generation.supportsCitations)
+        const system = buildSystemPrompt(userRole, generation.supportsCitations, opts.asOf)
 
         // Overiteľné citácie zbierame zvlášť — pri OpenAI adaptéri
         // zostane pole prázdne a klient sa oprie o `sources`.
@@ -162,6 +182,8 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           provider: generation.kind,
           verifiedCitations: generation.supportsCitations,
           timings: opts.timings,
+          // Deň odpovede (krok 5); štítok nad odpoveďou ho ukáže v kroku 6.
+          asOf: calendarDate(opts.asOf ?? new Date()).toISOString().slice(0, 10),
           // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
           // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
           stopReason: stopReason,
