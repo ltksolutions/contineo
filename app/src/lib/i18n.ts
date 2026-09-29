@@ -3650,7 +3650,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   versionNotice: {
-    text: "Je dostupná nová verzia portálu. Obnovte stránku, aby sa zmeny uložili a e-maily odišli už podľa nej.",
+    text: "Je dostupná nová verzia portálu. Obnovením stránky prejdete na ňu.",
     reload: "Obnoviť",
   },
 
@@ -6961,7 +6961,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   versionNotice: {
-    text: "Je dostupná nová verze portálu. Obnovte stránku, aby se změny uložily a e-maily odešly už podle ní.",
+    text: "Je dostupná nová verze portálu. Obnovením stránky na ni přejdete.",
     reload: "Obnovit",
   },
 
@@ -10263,7 +10263,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   versionNotice: {
-    text: "A new version of the portal is available. Reload the page so that changes and emails use it.",
+    text: "A new version of the portal is available. Reload the page to switch to it.",
     reload: "Reload",
   },
 
