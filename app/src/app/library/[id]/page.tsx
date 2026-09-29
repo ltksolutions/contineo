@@ -19,7 +19,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
-  publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction,
+  publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction, reindexVersionAction,
   fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction,
 } from "../actions"
@@ -64,8 +64,8 @@ import { legalBasisOptions } from "@/lib/legalBases"
 export const dynamic = "force-dynamic"
 
 /** Ktorý panel pri znení je otvorený (`?open=…`). Bez JavaScriptu — server ho vykreslí otvorený. */
-type Panel = "responsible" | "basis" | "revoke" | "history"
-const PANELS: Panel[] = ["responsible", "basis", "revoke", "history"]
+type Panel = "responsible" | "basis" | "revoke" | "reindex" | "history"
+const PANELS: Panel[] = ["responsible", "basis", "revoke", "reindex", "history"]
 
 export default async function DocumentDetailPage({
   params,
@@ -393,6 +393,7 @@ export default async function DocumentDetailPage({
     responsible: tflow.changeResponsible,
     basis: tflow.changeBasis,
     revoke: t.revokeVersionHeading,
+    reindex: t.reindexVersionHeading,
     history: tflow.history,
   }
   /** Úkony pri znení — tie isté pre kartu platného znenia aj ponuku ⋯ staršieho. */
@@ -402,6 +403,9 @@ export default async function DocumentDetailPage({
     // „Opraviť údaje" zrušené (ADR-016): označenie sa skladá samo, dátum je
     // schválený s údajmi o znení. Ostáva odvolanie potvrdení personalistom.
     ["revoke", canRevoke && (ackByVersion.get(v.versionId) ?? 0) > 0],
+    // Každé znenie, aj staršie: asistent hľadá aj v nich (ADR-024), takže
+    // po oprave chunkera majú dostať nové členenie. Text sa nemení.
+    ["reindex", true],
     ["history", true],
   ] as [Panel, boolean][]).filter(([, show]) => show).map(([panel]) => panel)
   const panelLink = (v: V, panel: Panel) => (
@@ -505,6 +509,15 @@ export default async function DocumentDetailPage({
             <div>
               <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
             </div>
+          </form>
+        )}
+
+        {panel === "reindex" && (
+          <form action={reindexVersionAction} style={{ display: "grid", gap: 10 }}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <input type="hidden" name="versionId" value={v.versionId} />
+            <p className="detail-block-small">{t.reindexVersionNote}</p>
+            <div><button className="button button--quiet" type="submit">{t.reindexVersion}</button></div>
           </form>
         )}
 
@@ -621,7 +634,8 @@ export default async function DocumentDetailPage({
           </span>
         )}
       </div>
-      {note && <p className="quiet">{note}</p>}
+      {/* Veľkosťou ako zvyšok karty — ako `<p>` v karte by mala 16 px a pôsobila ako nadpis. */}
+      {note && <p className="detail-block-small quiet">{note}</p>}
           {/*
         Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa hovorí
         nahlas, nie mlčí — pri zneniach spred D91 je to bežný stav.

@@ -2310,6 +2310,10 @@ interface Dictionary {
       reindexNoteHighlight: string
       reindexNoteAfter: string
       reindex: string
+      /** Preindexovanie jedného znenia z ponuky ⋯ (fáza 2). */
+      reindexVersionHeading: string
+      reindexVersionNote: string
+      reindexVersion: string
       newVersionHeading: string
       newVersionNote: string
       newVersionFile: string
@@ -2457,6 +2461,8 @@ interface Dictionary {
       bulkMovedPartly: (moved: number, total: number, failed: string) => string
       reindexUpToDate: string
       reindexed: (chunks: number, archived: number) => string
+      /** Súhrn „Preindexovať všetky znenia": koľko sa preindexovalo a koľko bolo bez zmeny. */
+      reindexAllResult: (done: number, unchanged: number) => string
       fixed: string
       versionRevoked: (people: number) => string
       /** Koľko publík sa prenieslo a koľko ich znenie už malo. */
@@ -4510,6 +4516,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.documentHasNoText": "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.",
     "library.noChunks": "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
     "library.noPublishedVersion": "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
+    "library.versionHasNoText": "Toto znenie nemá uložený text — nie je čo narezať.",
     "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.",
     "library.reindexWouldLoseArticles": "Preindexovanie by tento dokument pokazilo: dnes má {before} z {beforeTotal} úsekov s rozpoznaným článkom, po narezaní by ich malo {after} z {afterTotal}. Text v databáze má hlavičky v inom tvare, než aký chunker pozná — kým sa to neopraví, staré členenie je lepšie než nové.",
     "library.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
@@ -5635,11 +5642,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       changeNote: "Čo sa zmenilo",
       changeNotePlaceholder: "novela čl. 12 a 18",
       publish: "Publikovať",
-      reindexHeading: "Preindexovať",
-      reindexNoteBefore: "Nareže platné znenie znova podľa aktuálneho profilu členenia. ",
+      reindexHeading: "Preindexovať všetky znenia",
+      reindexNoteBefore: "Nareže všetky znenia — platné, pripravované aj staršie — znova podľa aktuálneho profilu členenia. ",
       reindexNoteHighlight: "Nevytvorí novú verziu",
       reindexNoteAfter: " — text sa nemení, takže potvrdenia zostávajú platné a nikomu nenaskočí povinnosť potvrdzovať znova. Používa sa po vyladení profilu v nastavení organizácie.",
-      reindex: "Preindexovať",
+      reindex: "Preindexovať všetky znenia",
+      reindexVersionHeading: "Preindexovať",
+      reindexVersionNote: "Nareže toto znenie znova podľa aktuálneho profilu členenia. Text sa nemení, potvrdenia zostávajú platné a asistent potom hľadá v novom členení.",
+      reindexVersion: "Preindexovať toto znenie",
       newVersionHeading: "Nové znenie zo súboru",
       newVersionNote: "Nahrá nový súbor ako koncept tohto dokumentu. Publikované znenie sa tým nemení — text si najprv prečítaš a znenie publikuješ až potom. Metadáta zostávajú, mení sa len text a pôvodný súbor.",
       newVersionFile: "Súbor s novým znením",
@@ -5779,6 +5789,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Presunuté ${moved} z ${total}. Neprešli: ${failed}`,
       reindexUpToDate: "Členenie je už aktuálne — nič sa nemenilo.",
+      reindexAllResult: (done, unchanged) => `Preindexované znenia: ${done}, bez zmeny: ${unchanged}. Znenia ani potvrdenia sa nedotklo.`,
       reindexed: (chunks, archived) =>
         `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
         ` ${archived} starých archivovaných. Znenie ani potvrdenia sa nedotklo.`,
@@ -7809,6 +7820,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.documentHasNoText": "Dokument nemá text — nejprve nahraj soubor nebo napiš znění.",
     "library.noChunks": "Z textu nevznikl ani jeden úsek. Zkontroluj, jestli má dokument členění na články nebo nadpisy.",
     "library.noPublishedVersion": "Dokument nemá publikované znění — přeindexovat lze jen to, co už je venku.",
+    "library.versionHasNoText": "Toto znění nemá uložený text — není co rozdělit.",
     "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontroluj profil členění.",
     "library.reindexWouldLoseArticles": "Přeindexování by tento dokument pokazilo: dnes má {before} z {beforeTotal} úseků s rozpoznaným článkem, po nařezání by jich mělo {after} z {afterTotal}. Text v databázi má hlavičky v jiném tvaru, než jaký chunker zná — dokud se to neopraví, staré členění je lepší než nové.",
     "library.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
@@ -8931,11 +8943,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       changeNote: "Co se změnilo",
       changeNotePlaceholder: "novela čl. 12 a 18",
       publish: "Publikovat",
-      reindexHeading: "Přeindexovat",
-      reindexNoteBefore: "Nařeže platné znění znovu podle aktuálního profilu členění. ",
+      reindexHeading: "Přeindexovat všechna znění",
+      reindexNoteBefore: "Nařeže všechna znění — platné, připravované i starší — znovu podle aktuálního profilu členění. ",
       reindexNoteHighlight: "Nevytvoří novou verzi",
       reindexNoteAfter: " — text se nemění, takže potvrzení zůstávají platná a nikomu nenaskočí povinnost potvrzovat znovu. Používá se po vyladění profilu v nastavení organizace.",
-      reindex: "Přeindexovat",
+      reindex: "Přeindexovat všechna znění",
+      reindexVersionHeading: "Přeindexovat",
+      reindexVersionNote: "Nařeže toto znění znovu podle aktuálního profilu členění. Text se nemění, potvrzení zůstávají platná a asistent pak hledá v novém členění.",
+      reindexVersion: "Přeindexovat toto znění",
       newVersionHeading: "Nové znění ze souboru",
       newVersionNote: "Nahraje nový soubor jako koncept tohoto dokumentu. Publikované znění se tím nemění — text si nejprve přečteš a znění publikuješ až potom. Metadata zůstávají, mění se jen text a původní soubor.",
       newVersionFile: "Soubor s novým zněním",
@@ -9075,6 +9090,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Přesunuto ${moved} z ${total}. Neprošly: ${failed}`,
       reindexUpToDate: "Členění je už aktuální — nic se neměnilo.",
+      reindexAllResult: (done, unchanged) => `Přeindexovaná znění: ${done}, beze změny: ${unchanged}. Znění ani potvrzení se to nedotklo.`,
       reindexed: (chunks, archived) =>
         `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
         ` ${archived} starých archivováno. Znění ani potvrzení se nedotklo.`,
@@ -11098,6 +11114,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.documentHasNoText": "The document has no text — upload a file or write the wording first.",
     "library.noChunks": "The text produced no chunks at all. Check whether the document is organised into articles or headings.",
     "library.noPublishedVersion": "The document has no published version — only what is already out can be reindexed.",
+    "library.versionHasNoText": "This version has no stored text — there is nothing to split.",
     "library.noChunksProfile": "The text produced no chunks at all — check the chunking profile.",
     "library.reindexWouldLoseArticles": "Reindexing would damage this document: it currently has {before} of {beforeTotal} chunks with a recognised article, and re-chunking would leave {after} of {afterTotal}. The text in the database uses a heading form the chunker does not know — until that is fixed, the existing chunking is better than the new one.",
     "library.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
@@ -12214,11 +12231,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       changeNote: "What changed",
       changeNotePlaceholder: "amendment to Art. 12 and 18",
       publish: "Publish",
-      reindexHeading: "Reindex",
-      reindexNoteBefore: "Re-chunks the effective version using the current chunking profile. ",
+      reindexHeading: "Reindex all versions",
+      reindexNoteBefore: "Re-chunks every version — current, upcoming and older — using the current chunking profile. ",
       reindexNoteHighlight: "It does not create a new version",
       reindexNoteAfter: " — the text does not change, so acknowledgements stay valid and nobody is asked to acknowledge again. Use it after tuning the profile in the organisation settings.",
-      reindex: "Reindex",
+      reindex: "Reindex all versions",
+      reindexVersionHeading: "Reindex",
+      reindexVersionNote: "Re-chunks this version using the current chunking profile. The text does not change, acknowledgements stay valid and the assistant then searches the new chunks.",
+      reindexVersion: "Reindex this version",
       newVersionHeading: "New version from a file",
       newVersionNote: "Uploads a new file as this document's draft. The published version is not affected — you read the text first and publish it afterwards. Metadata stays; only the text and the original file change.",
       newVersionFile: "File with the new version",
@@ -12358,6 +12378,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Moved ${moved} of ${total}. Failed: ${failed}`,
       reindexUpToDate: "The chunking is already up to date — nothing changed.",
+      reindexAllResult: (done, unchanged) => `Versions reindexed: ${done}, unchanged: ${unchanged}. No version or acknowledgement was touched.`,
       reindexed: (chunks, archived) =>
         `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +
         " Neither the wording nor the acknowledgements were touched.",

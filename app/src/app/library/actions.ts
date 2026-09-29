@@ -19,7 +19,7 @@ import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
-  reindex, fixText, LibraryError, type UploadFiles, type IncomingFile,
+  reindexVersion, reindexAllVersions, fixText, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
 import { textDiff } from "@/lib/textFix"
@@ -1003,33 +1003,27 @@ export async function assignManyAction(fd: FormData) {
   redirect(assignHref(ids))
 }
 
-/** Preindexuje dokument podľa aktuálneho profilu členenia (D57). */
+/**
+ * Preindexuje **všetky znenia** dokumentu podľa aktuálneho profilu členenia
+ * (D57). Od ADR-024 asistent hľadá aj v starších zneniach, takže nové
+ * členenie majú dostať všetky, nielen naposledy zverejnené.
+ */
 export async function reindexDocumentAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
+  const t = say(self.language)
   let message = ""
   let error = false
   try {
-    const v = await reindex(self.companyCode, id, self.email)
-    message = v.alreadyDone
-      ? say(self.language).reindexUpToDate
-      : say(self.language).reindexed(v.chunks, v.archived)
-    // Upozornenie len keď sa naozaj niečo stalo. „Už bolo hotové" nie je
-    // udalosť, je to zistenie — a zvonček plný zistení sa prestane čítať.
-    if (!v.alreadyDone) {
-      await notify({
-        companyCode: self.companyCode,
-        personId: self.personId,
-        kind: "reindexed",
-        params: {
-          documentId: id,
-          documentTitle: await documentTitleFor(self.companyCode, id),
-          count: v.chunks,
-        },
-      })
-    }
+    const r = await reindexAllVersions(self.companyCode, id, self.email)
+    const refused = r.refused.map(x => `${x.label}: ${errorMessage(x.error, self.language)}`)
+    message = r.done.length || refused.length
+      ? [t.reindexAllResult(r.done.length, r.unchanged), ...refused].join(" ")
+      : t.reindexUpToDate
+    error = refused.length > 0
+    await notifyReindexed(self, id, r.done.reduce((n, x) => n + x.chunks, 0))
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
@@ -1037,6 +1031,44 @@ export async function reindexDocumentAction(fd: FormData) {
 
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/** Preindexuje **jedno znenie** — z ponuky ⋯ pri znení. */
+export async function reindexVersionAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  const versionId = fieldText(fd, "versionId")
+  let message = ""
+  let error = false
+  try {
+    const v = await reindexVersion(self.companyCode, id, versionId, self.email)
+    message = v.alreadyDone
+      ? say(self.language).reindexUpToDate
+      : `${v.label}: ${say(self.language).reindexed(v.chunks, v.archived)}`
+    await notifyReindexed(self, id, v.alreadyDone ? 0 : v.chunks)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Upozornenie len keď sa naozaj niečo stalo. „Už bolo hotové" nie je
+ * udalosť, je to zistenie — a zvonček plný zistení sa prestane čítať.
+ */
+async function notifyReindexed(self: { companyCode: string; personId: string }, documentId: string, chunks: number) {
+  if (!chunks) return
+  await notify({
+    companyCode: self.companyCode,
+    personId: self.personId,
+    kind: "reindexed",
+    params: { documentId, documentTitle: await documentTitleFor(self.companyCode, documentId), count: chunks },
+  })
 }
 
 
