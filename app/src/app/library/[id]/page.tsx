@@ -105,8 +105,33 @@ export default async function DocumentDetailPage({
   // Publikované znenie je pri dokumentoch z importu len vo `versions[]` —
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
   // aj keď je text ten istý.
-  const effective = d.versions.find(v => v.isActive && v.effectiveFrom)
-  const olderVersions = d.versions.filter(v => v !== effective)
+  /*
+   * **Dve rôzne „platné" znenia** (ADR-023 D143, ADR-024). Kým sa novela
+   * nezverejnila vopred, boli to to isté znenie; odvtedy nie:
+   *
+   *   - `latest` — naposledy zverejnené (`isActive`). Z neho vychádza postup
+   *     nového znenia a oprava textu (`fixText()` ho tak berie aj na serveri);
+   *   - `current` — platí dnes (`effectiveVersion()`), to isté, čo vidí
+   *     čitateľ, potvrdzuje sa a z čoho odpovedá asistent. Karta ho ukazuje
+   *     ako „Platné znenie".
+   *
+   * Dovtedy karta ukazovala `latest` ako platné — pri novele vopred teda
+   * budúce znenie a dnes platné zaradila medzi staršie s vetou „Ľudia ich
+   * už nevidia" (zistené na `sfz:test_znenia` 29. 9. 2026).
+   */
+  const latest = d.versions.find(v => v.isActive && v.effectiveFrom)
+  const current = d.versions.find(v => v.versionId === d.effectiveVersionId)
+  /**
+   * Zverejnená novela, ktorá ešte neplatí. Bez porovnania s časom: naposledy
+   * zverejnené znenie, ktoré dnes neplatí, je vždy novela vopred — keby už
+   * platilo, `effectiveVersion()` by ho vybral ako platné. Výnimka je
+   * dokument, ktorému platnosť skončila (`effectiveTo` v minulosti, stav
+   * „expirovaný") — to znenie patrí medzi staršie, nie medzi pripravované.
+   */
+  const upcoming = latest && latest !== current && !latest.effectiveTo ? latest : undefined
+  const olderVersions = d.versions.filter(v => v !== current && v !== upcoming)
+  /** Súbory v hlavičke: dnes platné, a kým žiadne neplatí, pripravované. */
+  const shown = current ?? latest
 
   const tc = dictionary(language).library.carryOver
   /*
@@ -115,7 +140,7 @@ export default async function DocumentDetailPage({
    */
   const canAssign = isHr(ctx.person)
   /*
-   * Znenie sa berie z `effectiveVersionId`, **nie z `effective` vyššie**.
+   * Znenie sa berie z `effectiveVersionId`, **nie z `latest` vyššie**.
    * Tamto je „aktívne a s dátumom", toto je „platí dnes" (`effectiveVersion()`)
    * — a presne to isté pravidlo použije serverová akcia. Keby sa tie dve
    * rozišli, ponuka by sa počítala nad jedným znením a zápis by prebehol nad
@@ -169,7 +194,8 @@ export default async function DocumentDetailPage({
    * Koľko ľudí platné znenie potvrdilo. Jeden dotaz navyše na stránku — je to
    * jeden dokument, nie riadok v zozname, kde by to bol dotaz na každý riadok.
    */
-  const progress = await documentProgress(ctx.tenant.companyCode, effective?.versionId)
+  // Potvrdenia znenia, ktoré platí dnes — to ľudia potvrdzujú (D28).
+  const progress = await documentProgress(ctx.tenant.companyCode, current?.versionId)
 
   /*
    * Koľko platných potvrdení má **každé** znenie, nielen platné (D82).
@@ -196,7 +222,7 @@ export default async function DocumentDetailPage({
   const canRevoke = isHr(ctx.person)
   const ts = t.side
   const folderName = d.folderTrail?.length ? d.folderTrail.join(" / ") : ts.unfiled
-  const published = ((d.markdown ?? effective?.markdown) ?? "").trim()
+  const published = ((d.markdown ?? latest?.markdown) ?? "").trim()
 
   /*
    * Schvaľuje sa **koncept**, nie hotové znenie. `versionId` vzniká až vnútri
@@ -223,7 +249,7 @@ export default async function DocumentDetailPage({
    */
   const hasChangesToPublish = Boolean(draft) && (
     draft !== published ||
-    Boolean(d.draftPdf && effective && effective.pdf?.id !== d.draftPdf.id &&
+    Boolean(d.draftPdf && latest && latest.pdf?.id !== d.draftPdf.id &&
       !d.versions.some(v => v.versionId === draftVersionId))
   )
   // Údaje o znení (ADR-013): uložené, návrh z prvej strany a zámok po predložení.
@@ -258,7 +284,7 @@ export default async function DocumentDetailPage({
   // Kolá sa číslujú na identite konceptu — po výmene PDF začína znova od 1.
   const nextRound = draftRounds.length + 1
   // Publiká na prenos pri zverejnení (krok 3) — všetko, čo mali doterajšie znenia.
-  const draftCarryOver = canAssign && flow?.step === 3 && draftVersionId && effective
+  const draftCarryOver = canAssign && flow?.step === 3 && draftVersionId && latest
     ? await carryOverCandidates(ctx.tenant.companyCode, documentId, draftVersionId)
     : []
   const draftEffectiveFrom = d.draftMeta?.effectiveFrom ?? null
@@ -281,7 +307,7 @@ export default async function DocumentDetailPage({
   const tl = dictionary(language).library.list
   const headerStatus = draftState === "in-review"
     ? "in-review"
-    : displayStatus(d.status, effective?.effectiveTo)
+    : displayStatus(d.status, (current ?? latest)?.effectiveTo)
   const statusPill = (value: string) =>
     value === "published" ? tl.statusLabel.published
     : value === "in-review" ? tl.statusLabel.review
@@ -303,8 +329,8 @@ export default async function DocumentDetailPage({
    * nie — a ponúkať v takom stave tlačidlo, ktoré zápis odmietne, je horšie než
    * neponúknuť nič.
    */
-  const effectiveText = ((effective?.markdown ?? d.markdown) ?? "").trim()
-  const draftDiff = effective && hasChangesToPublish ? textDiff(effectiveText, draft) : null
+  const effectiveText = ((latest?.markdown ?? d.markdown) ?? "").trim()
+  const draftDiff = latest && hasChangesToPublish ? textDiff(effectiveText, draft) : null
 
   /*
    * Farby rozdielu. Zelená a červená sú len zosilnenie — znamienko `+`/`−` na
@@ -329,14 +355,14 @@ export default async function DocumentDetailPage({
   type V = (typeof d.versions)[number]
   const panelHref = (v: V, panel: Panel) => {
     const p = new URLSearchParams()
-    if (v !== effective) p.set("version", v.versionId)
-    if (v !== effective && query.older === "all") p.set("older", "all")
-    if (!(openPanel === panel && (v === effective ? !query.version : query.version === v.versionId))) p.set("open", panel)
+    if (v !== current) p.set("version", v.versionId)
+    if (v !== current && query.older === "all") p.set("older", "all")
+    if (!(openPanel === panel && (v === current ? !query.version : query.version === v.versionId))) p.set("open", panel)
     const qs = p.toString()
-    return `${base}${qs ? `?${qs}` : ""}#${v === effective ? "current" : `v-${v.versionId}`}`
+    return `${base}${qs ? `?${qs}` : ""}#${v === current ? "current" : `v-${v.versionId}`}`
   }
   const panelOf = (v: V): Panel | null =>
-    openPanel && (v === effective ? !query.version : query.version === v.versionId) ? openPanel : null
+    openPanel && (v === current ? !query.version : query.version === v.versionId) ? openPanel : null
   const canSetBasis = (v: V) => canSetLegalBasis({
     actorPersonId: ctx.person.id,
     isContentManager: true,
@@ -580,17 +606,78 @@ export default async function DocumentDetailPage({
     )
   }
 
+  /*
+   * Karta znenia — platného aj pripravovaného. Tá istá skladba: kto za
+   * znenie zodpovedá, na akom základe, kto ho schválil. Pri platnom znení,
+   * ktorému už je známy koniec (novela vopred), aj „do …".
+   */
+  const versionCard = (v: V, id: string, heading: string, note?: string) => (
+    <section className="card cur" id={id}>
+      <div className="cur-head">
+        <h2>{heading}</h2>
+        {v.effectiveFrom && (
+          <span className="quiet">
+            {v.effectiveTo ? tflow.older.range(tflow.fromDate(date(v.effectiveFrom)), date(v.effectiveTo)) : tflow.fromDate(date(v.effectiveFrom))}
+          </span>
+        )}
+      </div>
+      {note && <p className="quiet">{note}</p>}
+          {/*
+        Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa hovorí
+        nahlas, nie mlčí — pri zneniach spred D91 je to bežný stav.
+      */}
+      <dl className="facts">
+        <div>
+          <dt>{tr.responsiblePerson}</dt>
+          <dd>
+        {v.responsiblePerson
+          ? <>
+              {v.responsiblePerson.fullName}
+              {!activePersonIds.has(v.responsiblePerson.personId) && (
+                <> <span className="tag tag--draft">{tr.inactiveResponsible}</span></>
+              )}
+            </>
+          : <span className="tag tag--draft">{tr.noResponsible}</span>}
+          </dd>
+        </div>
+        <div>
+          <dt>{tr.legalBasis}</dt>
+          <dd>
+        {v.legalBasis
+          ? <>
+              {`${basisName(v)}${v.legalBasisReference ? ` · ${v.legalBasisReference}` : ""}`}
+              {!v.legalBasisKey && <> <span className="tag tag--draft">{tr.outsideCodelist}</span></>}
+            </>
+          : <span className="tag tag--draft">{tr.basisUnset}</span>}
+          </dd>
+        </div>
+        <div>
+          <dt>{tm.approvedBy}</dt>
+          <dd>{v.approvedBy
+        ? `${v.approvedBy}${v.approvedOn ? ` · ${date(v.approvedOn)}` : ""}`
+        : ts.none}</dd>
+        </div>
+        <div>
+          <dt>{tm.author}</dt>
+          <dd>{v.author || ts.none}</dd>
+        </div>
+      </dl>
+      {versionLinks(v)}
+      {versionPanel(v)}
+    </section>
+  )
+
   /* ── Karta postupu znenia (body 2, 5–9 rámu) ─────────────────────────── */
   const flowHeading = !flow ? "" : flow.step === 4
-    ? tflow.publishedHeading(date(effective?.effectiveFrom))
-    : !effective ? tflow.firstVersion
+    ? tflow.publishedHeading(date(latest?.effectiveFrom))
+    : !latest ? tflow.firstVersion
     : draftEffectiveFrom ? tflow.heading(date(draftEffectiveFrom)) : tflow.headingUndated
   const flowStatus = !flow ? "" : flow.step === 1
     ? (flow.rejected ? tflow.statusRejected(date(flow.rejected.closedAt ?? flow.rejected.submittedAt)) : tflow.statusPreparing)
     : flow.step === 2 && running ? tflow.statusInReview(nameOf(running.submittedBy), date(running.submittedAt))
     : flow.step === 3
       ? `${tflow.statusApproved}${approvedRound?.closedAt ? ` · ${date(approvedRound.closedAt)}` : ""}`
-    : tflow.statusPublished(date(effective?.publishedAt))
+    : tflow.statusPublished(date(latest?.publishedAt))
   const decided = running ? running.approvers.filter(a => a.decision === "approved").length : 0
   const flowSubs = !flow ? [] : [
     flow.step === 1 ? tflow.subPrepare : tflow.subPrepareDone,
@@ -609,7 +696,7 @@ export default async function DocumentDetailPage({
       )}
       <div className="flow-next-row">
         <b>4 {tflow.steps[3]}</b>
-        <span className="quiet">{effective ? tflow.next4 : tflow.next4None}</span>
+        <span className="quiet">{latest ? tflow.next4 : tflow.next4None}</span>
       </div>
     </div>
   )
@@ -801,7 +888,7 @@ export default async function DocumentDetailPage({
       <p className="quiet detail-lead">
         {d.documentId}
         {` · ${folderName}`}
-        {effective?.effectiveFrom && ` · ${t.effectiveFromOn(date(effective.effectiveFrom))}`}
+        {current?.effectiveFrom && ` · ${t.effectiveFromOn(date(current.effectiveFrom))}`}
       </p>
 
       {/*
@@ -810,21 +897,21 @@ export default async function DocumentDetailPage({
         neaktívne a `title` povie prečo — súbory sa vtedy vymieňajú v príprave.
       */}
       <div className="detail-actions">
-        {effective?.pdf && (
-          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(effective.pdf.id)}`} target="_blank" rel="noreferrer">
+        {shown?.pdf && (
+          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(shown.pdf.id)}`} target="_blank" rel="noreferrer">
             {tflow.downloadPdf}
           </a>
         )}
         {/* Upraviteľný zdroj platného znenia (.docx a pod.) — predloha pre ďalšie znenie (ADR-011). */}
-        {effective?.source && (
-          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(effective.source.id)}?download=1`}
-             download={effective.source.name}>
+        {shown?.source && (
+          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(shown.source.id)}?download=1`}
+             download={shown.source.name}>
             {tflow.downloadSource}
           </a>
         )}
         <Link className="button button--quiet" href={`${base}?edit=document`}>{tflow.editDocument}</Link>
         {newVersionBlocked ? (
-          <span className="button is-disabled" aria-disabled="true" title={effective ? tflow.newVersionBusy : tflow.newVersionFirst}>
+          <span className="button is-disabled" aria-disabled="true" title={latest ? tflow.newVersionBusy : tflow.newVersionFirst}>
             {tflow.newVersion}
           </span>
         ) : (
@@ -890,7 +977,7 @@ export default async function DocumentDetailPage({
                 novým znením a schvaľuje sa s ním. Predvyplnený z dokumentu;
                 rovnaký názov = bez zmeny.
               */}
-              {effective && (
+              {latest && (
                 <label className="field">
                   <span className="field-label">{t.title}</span>
                   {!metaIsLocked && <input type="hidden" name="titleEditable" value="1" />}
@@ -1174,64 +1261,17 @@ export default async function DocumentDetailPage({
       </section>
       )}
 
-      {/* ── Platné znenie ako súhrn (bod 3 rámu) ── */}
-      {effective ? (
-        <section className="card cur" id="current">
-          <div className="cur-head">
-            <h2>{tflow.currentHeading}</h2>
-            {effective.effectiveFrom && <span className="quiet">{tflow.fromDate(date(effective.effectiveFrom))}</span>}
-          </div>
-          {/*
-            Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa hovorí
-            nahlas, nie mlčí — pri zneniach spred D91 je to bežný stav.
-          */}
-          <dl className="facts">
-            <div>
-              <dt>{tr.responsiblePerson}</dt>
-              <dd>
-                {effective.responsiblePerson
-                  ? <>
-                      {effective.responsiblePerson.fullName}
-                      {!activePersonIds.has(effective.responsiblePerson.personId) && (
-                        <> <span className="tag tag--draft">{tr.inactiveResponsible}</span></>
-                      )}
-                    </>
-                  : <span className="tag tag--draft">{tr.noResponsible}</span>}
-              </dd>
-            </div>
-            <div>
-              <dt>{tr.legalBasis}</dt>
-              <dd>
-                {effective.legalBasis
-                  ? <>
-                      {`${basisName(effective)}${effective.legalBasisReference ? ` · ${effective.legalBasisReference}` : ""}`}
-                      {!effective.legalBasisKey && <> <span className="tag tag--draft">{tr.outsideCodelist}</span></>}
-                    </>
-                  : <span className="tag tag--draft">{tr.basisUnset}</span>}
-              </dd>
-            </div>
-            <div>
-              <dt>{tm.approvedBy}</dt>
-              <dd>{effective.approvedBy
-                ? `${effective.approvedBy}${effective.approvedOn ? ` · ${date(effective.approvedOn)}` : ""}`
-                : ts.none}</dd>
-            </div>
-            <div>
-              <dt>{tm.author}</dt>
-              <dd>{effective.author || ts.none}</dd>
-            </div>
-          </dl>
-          {versionLinks(effective)}
-          {versionPanel(effective)}
-        </section>
-      ) : d.versions.length === 0 && !flow && (
+      {/* ── Platné znenie ako súhrn (bod 3 rámu) a zverejnená novela, ktorá ešte neplatí ── */}
+      {current && versionCard(current, "current", tflow.currentHeading)}
+      {upcoming && versionCard(upcoming, `v-${upcoming.versionId}`, tflow.upcomingHeading, tflow.upcomingNote(date(upcoming.effectiveFrom)))}
+      {!current && !upcoming && d.versions.length === 0 && !flow && (
         <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
           {t.nothingPublished}
         </p>
       )}
 
       {/* ── Staršie znenia (bod 4 rámu, DETAIL-starsie-znenia) ── */}
-      {(effective || olderVersions.length > 0) && (
+      {(current || upcoming || olderVersions.length > 0) && (
         <section className="card older" id="older">
           <div className="older-head">
             <h2>{tflow.olderHeading}</h2>
@@ -1359,7 +1399,7 @@ export default async function DocumentDetailPage({
               : t.draftEmpty}
         </p>
       </section>
-            {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
+            {latest && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
               <details className="card detail-block">
                 <summary>{t.textFixHeading}</summary>
 
@@ -1465,9 +1505,9 @@ export default async function DocumentDetailPage({
                   Odkaz vidí **len personalista** a mieri na **toto znenie** —
                   správca obsahu do `/hr` nesmie a odkaz na 404 je horší než žiadny.
                 */}
-                {canSeeWho && effective && (
+                {canSeeWho && current && (
                   <p className="detail-card-link">
-                    <Link href={`/hr/overview?view=document&open=${encodeURIComponent(effective.versionId)}`}>
+                    <Link href={`/hr/overview?view=document&open=${encodeURIComponent(current.versionId)}`}>
                       {ts.progressWho}
                     </Link>
                   </p>
