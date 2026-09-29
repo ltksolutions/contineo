@@ -3884,7 +3884,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .answer-time--other {
   padding: 2px 8px;
-  border-radius: 999px;
+  /* Nie pilulka: dlhý štítok („dokument má jediné znenie…") sa na mobile
+     zalomí do troch riadkov a plne zaoblený rámik z neho robil ovál. */
+  border-radius: 6px;
   background: var(--warn-bg);
   color: var(--warn-fg);
   font-weight: 600;
