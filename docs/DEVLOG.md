@@ -31,8 +31,13 @@
   značka"). Oprava odchýlky B z 22. 9. zmenila ikonu, ale tvar poľa nie.
 - Čipy boli v lište medzi poľom a „+ Podmienka", takže pri filtri
   odtlačili podmienku na ďalší riadok. Rám ich má pod lištou.
-- Formuláre s popisom poľa (audit v organizácii, výkaz HR) zostali tak,
-  ako sú. Nie sú to lišty hľadania v zozname a rám ich nekreslí.
+- Audit v organizácii dostal ten istý pás v nasledujúcom PR. Ján ho
+  správne zaradil medzi hľadanie v zozname: aj keď rám audit nekreslí,
+  pravidlo zo ZAKLAD (odchýlka B) platí pre každé hľadanie v zozname.
+  V pôvodnom PR som ho nesprávne nechal bokom.
+- Stránku `/hr/evidence` som nesprávne nazval „výkaz HR". V návrhu je to
+  **Reťaz dôkazov**; výkaz potvrdení je `/hr`. Jej filtre (Osoba + Stav
+  s popismi, `.evidence-filters`) sú podľa `HR.html` a ostávajú.
 
 ---
 

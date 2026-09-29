@@ -20,6 +20,7 @@ import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
 import { brandingView, tenantByCompanyCode } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
+import SearchStrip from "@/components/SearchStrip"
 import { DEFAULT_PHONE_PREFIX } from "@/lib/personFields"
 import { UI_LANGUAGES, formatDate, dictionary } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
@@ -981,19 +982,20 @@ export default async function OrganisationPage({
             a funguje bez jediného riadku JavaScriptu. */}
         <LiveFilter className="audit-filter" action="/organisation" label={t.auditTab.search}>
           <input type="hidden" name="tab" value="audit" />
-          <label className="field">
-            <span className="field-label">{t.auditTab.search}</span>
-            <input
-              className="field-input"
-              name="search"
-              defaultValue={search ?? ""}
-              placeholder={t.auditTab.searchPlaceholder}
-              autoCapitalize="none"
-            />
-          </label>
-          <SubmitButton className="button button--quiet">{t.auditTab.searchSubmit}</SubmitButton>
+          {/* Pás s lupou vnútri (`SearchStrip`, ZAKLAD odchýlka B) — hľadá sa
+              reťazec v zozname záznamov, rovnako ako v knižnici, adresári
+              a osobách. Tlačidlo je len pre čítačku; Enter aj `LiveFilter`
+              odosielajú sami. */}
+          <SearchStrip
+            name="search"
+            defaultValue={search ?? ""}
+            placeholder={t.auditTab.searchPlaceholder}
+            label={t.auditTab.search}
+            submitLabel={t.auditTab.searchSubmit}
+            autoCapitalize="none"
+          />
           {search ? (
-            <Link className="quiet" href="/organisation?tab=audit" style={{ fontSize: "var(--fs-body)" }}>
+            <Link className="audit-filter-clear" href="/organisation?tab=audit">
               {t.auditTab.clearFilter}
             </Link>
           ) : null}

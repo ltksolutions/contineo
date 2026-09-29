@@ -6,6 +6,9 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ### Pole hľadania a filtre podľa návrhu (2026-09-29)
 
+Ten istý pás s lupou má aj hľadanie v **Audite** (Organizácia → Audit);
+popis „Hľadať" nad poľom a viditeľné tlačidlo odpadli.
+
 Pole hľadania v **knižnici, adresári a osobách** má lupu vnútri rámika,
 rovnako ako pole v hlavičke. Doteraz lupa stála pred poľom a v knižnici
 vedľa neho aj tlačidlo „Filtrovať". Filtruje sa počas písania a Enterom.
