@@ -65,7 +65,7 @@ vi.mock("@/lib/libraryRead", async importOriginal => ({
 }))
 vi.mock("@/app/documents/[documentId]/actions", () => stubs(["acknowledgeAction","setLegalBasisAction"]))
 vi.mock("@/lib/session", () => ({}))
-vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction"]))
+vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","reindexVersionAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction"]))
 
 const pdf = (id: string) => ({ id, name: `${id}.pdf`, bytes: 1_300_000, sha256: id, type: "pdf", uploadedAt: new Date(), uploadedBy: "jan@sfz.sk" })
 const effective = {
@@ -381,4 +381,19 @@ it("dokument, ktorému platnosť skončila: posledné znenie je medzi staršími
   const html = await render()
   expect(html).not.toContain("Pripravované znenie")
   expect(html.slice(html.indexOf('id="older"'))).toContain(`id="v-${ended.versionId}"`)
+})
+
+
+describe("detail — preindexovanie znenia (fáza 2)", () => {
+  it("v ponuke ⋯ staršieho znenia je Preindexovať a panel nesie versionId", async () => {
+    const old = { ...effective, versionId: "v-1", label: "znenie účinné od 1. 1. 2024", isActive: false,
+      effectiveFrom: new Date("2024-01-01T00:00:00Z"), effectiveTo: new Date("2026-09-07T00:00:00Z"), pdf: pdf("v1") }
+    state.detail = detail({ versions: [old, effective], draftMarkdown: "", draftPdf: null, draftMeta: null })
+    const menu = await render()
+    expect(menu).toContain("open=reindex")
+    const html = await render({ version: "v-1", open: "reindex" })
+    expect(html).toContain('name="versionId" value="v-1"')
+    expect(html).toContain("Preindexovať toto znenie")
+    expect(html).toContain("Preindexovať všetky znenia")
+  })
 })

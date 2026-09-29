@@ -1161,16 +1161,8 @@ export async function saveMetadata(
 }
 
 /**
- * Preindexuje dokument **bez novej verzie** (D57).
- *
- * Toto je tá operácia, kvôli ktorej sa identita rozdelila. Vyladí sa profil
- * členenia, spustí sa toto — a úseky sa vymenia pri tom istom `versionId`.
- * `versions[]` sa nedotkne, potvrdenia zostávajú platné, nikomu nenaskočí
- * povinnosť potvrdzovať znova.
- *
- * Staré úseky sa **archivujú, nemažú** (D6): do vyhľadávania vstupujú len
- * aktívne, ale otázka „ako to bolo narezané vlani" musí mať odpoveď, keď sa
- * bude hľadať, prečo model kedysi odcitoval niečo iné.
+ * Preindexuje dokument **bez novej verzie** (D57) — naposledy zverejnené
+ * znenie, ako doteraz. Ostatné znenia rieši `reindexVersion()`.
  */
 export async function reindex(
   companyCode: string,
@@ -1178,16 +1170,68 @@ export async function reindex(
   actor: string,
 ): Promise<{ chunks: number; archived: number; alreadyDone: boolean; chunkingId: string }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  const doc = await col.findOne({ documentId, companyCode }, { projection: { "versions.versionId": 1, "versions.isActive": 1 } }) as
+    { versions?: { versionId: string; isActive?: boolean }[] } | null
   if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
-
-  const versions = (doc.versions ?? []) as { versionId: string; isActive?: boolean; markdown?: string }[]
-  const effective = versions.find(v => v.isActive)
-  const markdown = String(effective?.markdown ?? doc.markdown ?? "").trim()
-  if (!markdown || !effective) {
+  const latest = (doc.versions ?? []).find(v => v.isActive)
+  if (!latest) {
     throw new LibraryError(
       "library.noPublishedVersion",
       "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
+    )
+  }
+  return reindexVersion(companyCode, documentId, latest.versionId, actor)
+}
+
+/**
+ * Preindexuje **jedno znenie** — platné, pripravované aj staršie — bez novej
+ * verzie (D57, fáza 2 „znení na karte dokumentu").
+ *
+ * Text sa nemení, len jeho narezanie: `versions[]` sa nedotkne, potvrdenia
+ * zostávajú platné, nikomu nenaskočí povinnosť potvrdzovať znova. Od ADR-024
+ * asistent hľadá aj v starších zneniach (ich platné členenie má
+ * `superseded: false`), takže po oprave chunkera majú dostať nové členenie aj
+ * ony — inak by staré znenie zostalo narezané po starom.
+ *
+ * **Dotýka sa len úsekov tohto znenia.** Doterajšie `reindex()` vyraďovalo
+ * aktívne úseky celého dokumentu a nové označilo ako aktívne; pustené na
+ * staršie znenie by vyrobilo dve aktívne členenia (rozpor v `npm run check`)
+ * a prepísalo `chunkingId` dokumentu. Preto:
+ *
+ *   - hotovo = platné úseky znenia už majú tento `chunkingId` (odvodené z úsekov, D27);
+ *   - `isActive: true` len pri naposledy zverejnenom znení — to isté ako `publish()`;
+ *   - `doc.chunkingId` len pri naposledy zverejnenom — nesie ho záložka Členenie;
+ *   - dátum účinnosti nových úsekov zo znenia, nie z dokumentu.
+ *
+ * Staré úseky sa **archivujú, nemažú** (D6): otázka „ako to bolo narezané
+ * vlani" musí mať odpoveď, keď sa bude hľadať, prečo model kedysi odcitoval
+ * niečo iné.
+ */
+export async function reindexVersion(
+  companyCode: string,
+  documentId: string,
+  versionId: string,
+  actor: string,
+): Promise<{ chunks: number; archived: number; alreadyDone: boolean; chunkingId: string; label: string }> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+
+  const versions = (doc.versions ?? []) as {
+    versionId: string; label?: string; isActive?: boolean; markdown?: string; effectiveFrom?: Date | null
+  }[]
+  const version = versions.find(v => v.versionId === versionId)
+  if (!version) throw new LibraryError("library.versionNotFound", "Také znenie tento dokument nemá.")
+  const isLatest = version.isActive === true
+  const label = String(version.label ?? "")
+
+  // Text **tohto** znenia. `doc.markdown` nesie len najnovšie — staršiemu sa
+  // nepodstrčí (rovnaké pravidlo ako `versionText()` pri porovnaní).
+  const markdown = String(version.markdown ?? (isLatest ? doc.markdown : "") ?? "").trim()
+  if (!markdown) {
+    throw new LibraryError(
+      "library.versionHasNoText",
+      "Toto znenie nemá uložený text — nie je čo narezať.",
     )
   }
 
@@ -1209,8 +1253,12 @@ export async function reindex(
   }
 
   const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
-  if (doc.chunkingId === chunkingId) {
-    return { chunks: chunks.length, archived: 0, alreadyDone: true, chunkingId }
+  const chunkCol = await getCollection(CHUNKS_COLLECTION)
+  // Platné členenie tohto znenia — `superseded: false`, bez ohľadu na `isActive`.
+  const mine = { companyCode, documentId, versionId, superseded: false }
+  const present = await chunkCol.findOne(mine, { projection: { chunkingId: 1 } }) as { chunkingId?: string } | null
+  if (present?.chunkingId === chunkingId) {
+    return { chunks: chunks.length, archived: 0, alreadyDone: true, chunkingId, label }
   }
 
   /*
@@ -1229,13 +1277,11 @@ export async function reindex(
    * Preto sa zápis odmietne, keď rozpoznanie článkov spadne z väčšiny na
    * menšinu. Nie je to prepínač na obídenie — je to tvrdenie, že takto
    * narezaný dokument je horší než ten, čo tam je. Keď sa chunker naučí nový
-   * tvar hlavičiek, poistka prejde sama.
+   * tvar hlavičiek, poistka prejde sama. Počíta sa **len toto znenie** —
+   * iné znenie s iným textom by pomer skreslilo.
    */
-  const chunkCol = await getCollection(CHUNKS_COLLECTION)
-  const before = await chunkCol.countDocuments({ companyCode, documentId, isActive: true })
-  const beforeWithArticle = await chunkCol.countDocuments({
-    companyCode, documentId, isActive: true, articleRef: { $ne: null },
-  })
+  const before = await chunkCol.countDocuments(mine)
+  const beforeWithArticle = await chunkCol.countDocuments({ ...mine, articleRef: { $ne: null } })
   const afterWithArticle = chunks.filter(ch => ch.articleRef).length
   const share = (withArticle: number, total: number) => (total > 0 ? withArticle / total : 0)
   const wouldLose =
@@ -1257,14 +1303,10 @@ export async function reindex(
   // Preindexovanie nahrádza **členenie** toho istého znenia, nie znenie:
   // doterajšie úseky sú od tejto chvíle nahradené (`chunkSuperseded.ts`)
   // a v hľadaní „k dátumu" sa nesmú objaviť vedľa nových s tým istým textom.
-  // Len úseky tohto znenia — keby boli aktívne aj iné (rozpor, ktorý hlási
-  // `npm run check`), nie je to nahradené členenie.
-  await chunkCol.updateMany(
-    { companyCode, documentId, isActive: true, versionId: effective.versionId },
-    { $set: { superseded: true, supersededAt: now } },
-  )
+  await chunkCol.updateMany(mine, { $set: { superseded: true, supersededAt: now } })
+  // Vyradia sa len aktívne úseky **tohto** znenia — pri staršom znení žiadne.
   const archive = await chunkCol.updateMany(
-    { companyCode, documentId, isActive: true },
+    { companyCode, documentId, versionId, isActive: true },
     { $set: { isActive: false, effectiveTo: now } },
   )
 
@@ -1285,13 +1327,14 @@ export async function reindex(
       embeddingProvider: process.env.EMBEDDING_KIND ?? "atlas-auto",
       documentId,
       // Tá istá verzia znenia — mení sa len členenie.
-      versionId: effective.versionId,
+      versionId,
       chunkingId,
       verziaChunkera: CHUNKER_VERSION,
       embeddedAt: now,
-      isActive: true,
+      // Jedno aktívne členenie na dokument — naposledy zverejneného znenia.
+      isActive: isLatest,
       superseded: false,
-      effectiveFrom: (doc.effectiveFrom as Date | null) ?? null,
+      effectiveFrom: version.effectiveFrom ?? null,
       effectiveTo: null,
       createdAt: now,
     })),
@@ -1300,17 +1343,59 @@ export async function reindex(
 
   await col.updateOne(
     { documentId, companyCode },
-    { $set: { chunkingId, updatedAt: now, updatedBy: actor } },
+    { $set: { ...(isLatest ? { chunkingId } : {}), updatedAt: now, updatedBy: actor } },
   )
 
   await writeAudit({
     companyCode, subject: "document", action: "reindexed", actor: actor,
     targetId: documentId, targetLabel: meta.title,
-    note: `${chunks.length} úsekov · ${archive.modifiedCount} archivovaných · ` +
+    note: `${label ? `${label} · ` : ""}${chunks.length} úsekov · ${archive.modifiedCount} archivovaných · ` +
       "znenie ani potvrdenia sa nemenili",
   })
 
-  return { chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false, chunkingId }
+  return { chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false, chunkingId, label }
+}
+
+/**
+ * Preindexuje **všetky znenia** dokumentu, jedno po druhom (sekcia „Správa").
+ * Odmietnutie jedného (poistka článkov, chýbajúci text) nezastaví ostatné —
+ * vráti sa s ním, aby obrazovka povedala, ktoré a prečo.
+ */
+export async function reindexAllVersions(
+  companyCode: string,
+  documentId: string,
+  actor: string,
+): Promise<{
+  done: { label: string; chunks: number; archived: number }[]
+  unchanged: number
+  refused: { label: string; error: unknown }[]
+}> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }, {
+    projection: { "versions.versionId": 1, "versions.label": 1, "versions.effectiveFrom": 1 },
+  }) as { versions?: { versionId: string; label?: string; effectiveFrom?: Date | null }[] } | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  const versions = doc.versions ?? []
+  if (!versions.length) {
+    throw new LibraryError(
+      "library.noPublishedVersion",
+      "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
+    )
+  }
+
+  const out = { done: [] as { label: string; chunks: number; archived: number }[], unchanged: 0, refused: [] as { label: string; error: unknown }[] }
+  const time = (v: { effectiveFrom?: Date | null }) => (v.effectiveFrom ? new Date(v.effectiveFrom).getTime() : 0)
+  for (const v of [...versions].sort((a, b) => time(a) - time(b))) {
+    try {
+      const r = await reindexVersion(companyCode, documentId, v.versionId, actor)
+      if (r.alreadyDone) out.unchanged++
+      else out.done.push({ label: r.label, chunks: r.chunks, archived: r.archived })
+    } catch (error) {
+      if (!(error instanceof LibraryError)) throw error
+      out.refused.push({ label: String(v.label ?? v.versionId), error })
+    }
+  }
+  return out
 }
 
 /**
