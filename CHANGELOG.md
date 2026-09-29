@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Pole hľadania a filtre podľa návrhu (2026-09-29)
+
+Pole hľadania v **knižnici, adresári a osobách** má lupu vnútri rámika,
+rovnako ako pole v hlavičke. Doteraz lupa stála pred poľom a v knižnici
+vedľa neho aj tlačidlo „Filtrovať". Filtruje sa počas písania a Enterom.
+V knižnici je v jednom riadku pole, pod 1024 px „Filtre" s počtom a
+„+ Podmienka"; čipy aktívnych filtrov sú menší riadok pod ním.
+
 ### Staršie znenia ako prehľadný zoznam (2026-09-29)
 
 Na detaile dokumentu v knižnici sú **staršie znenia jedna karta so

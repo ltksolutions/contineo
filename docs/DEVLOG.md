@@ -10,6 +10,32 @@
 
 ---
 
+## 2026-09-29 — pole hľadania a filtre podľa KNIZNICA.html
+
+**Čo sa spravilo.**
+
+- Ján poslal rám 1 z `KNIZNICA.html`: implementácia poľa hľadania a filtrov
+  sa od neho líšila, a nielen v knižnici.
+- Nový `SearchStrip` (pás 36 px, lupa vnútri, tvar ako `.header-search`)
+  v knižnici, adresári a osobách. Tlačidlo „Filtrovať" je už len pre
+  čítačku.
+- Knižnica: lišta je pole · „Filtre N" (pod 1024) · „+ Podmienka" ako
+  prerušovaný čip 28 px. Čipy filtrov sú riadok pod lištou v tvare z rámu
+  (28 px, r6, 12 px).
+
+**Nefungovalo / poučenie.**
+
+- Implementácia mala lupu ako samostatný prvok **pred** poľom
+  s vlastným rámikom a v adresári aj osobách pri nej ostali dva
+  protichodné komentáre („značka, nie lupa" a hneď pod ním „lupa, nie
+  značka"). Oprava odchýlky B z 22. 9. zmenila ikonu, ale tvar poľa nie.
+- Čipy boli v lište medzi poľom a „+ Podmienka", takže pri filtri
+  odtlačili podmienku na ďalší riadok. Rám ich má pod lištou.
+- Formuláre s popisom poľa (audit v organizácii, výkaz HR) zostali tak,
+  ako sú. Nie sú to lišty hľadania v zozname a rám ich nekreslí.
+
+---
+
 ## 2026-09-29 — staršie znenia ako zoznam (DETAIL-starsie-znenia)
 
 **Čo sa spravilo.**

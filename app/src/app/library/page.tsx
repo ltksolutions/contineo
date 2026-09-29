@@ -19,6 +19,7 @@ import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import AckBar from "@/components/AckBar"
 import LiveFilter from "@/components/LiveFilter"
+import SearchStrip from "@/components/SearchStrip"
 import Icon from "@/components/Icon"
 import { moveManyAction, assignManyAction } from "./actions"
 import AppShell from "@/components/AppShell"
@@ -644,9 +645,10 @@ export default async function LibraryPage({
         <div className="library-list" id="results">
 
       {/*
-        Lišta nástrojov zoznamu (vzor, PR 7): pole hľadania, chips aktívnych
-        filtrov a „+ Podmienka" v jednom riadku **v stĺpci zoznamu**, nie cez
-        celú šírku nad mriežkou — filtre vľavo, všetko o zozname pri zozname.
+        Lišta nástrojov zoznamu (KNIZNICA.html `.lib-tools`): pole hľadania,
+        pod 1024 px „Filtre" a „+ Podmienka" v jednom riadku **v stĺpci
+        zoznamu**, nie cez celú šírku nad mriežkou — filtre vľavo, všetko
+        o zozname pri zozname. Čipy aktívnych filtrov sú riadok pod ňou.
 
         Hľadanie zostáva formulárom (`method="get"`), nie odkazom: text sa
         píše a odošle, nie vyberá. Skryté polia nesú zvyšok pohľadu — bez nich
@@ -654,53 +656,20 @@ export default async function LibraryPage({
       */}
       <div className="library-toolbar">
         <LiveFilter className="library-search" action="/library" label={t.search}>
-          {/* Lupa (`ZAKLAD.md`, odchýlka B v znení z 22. 9. 2026): toto pole
-              hľadá reťazec v zozname dokumentov, nepýta sa modelu — lupa je
-              tu vecne správna. Bublina `ask` patrí poľu v hlavičke. Dovtedy
-              tu bola značka; pri 16 px z nej aj tak vyšla lupa, len horšie
-              čitateľná. Nie je interaktívna, prstenec nemá. */}
-          <span className="library-search-mark" aria-hidden="true">
-            <Icon name="search" size={16} />
-          </span>
-          {/* Bez viditeľného labelu (vzor) — meno poľa nesie `aria-label`
-              a placeholder; lišta má byť jeden riadok. */}
-          <input
-            className="field-input library-search-input"
+          {/* Lupa vnútri pásu (`SearchStrip`, ZAKLAD odchýlka B): pole hľadá
+              reťazec v zozname, nepýta sa modelu. Tlačidlo „Filtrovať" je len
+              pre čítačku — Enter robí to isté a `LiveFilter` odosiela sám. */}
+          <SearchStrip
             name="search"
             defaultValue={search ?? ""}
             placeholder={t.searchPlaceholder}
-            aria-label={t.search}
+            label={t.search}
+            submitLabel={t.filter}
           />
           {carried
             .filter(([k]) => k !== "search")
             .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-          <button className="button button--quiet" type="submit">{t.filter}</button>
         </LiveFilter>
-
-      {/*
-        Chips aktívnych filtrov. Sú tu preto, že panel filtrov sa na úzkej
-        obrazovke zabalí nad zoznam a človek by inak nemal ako vidieť, prečo
-        je zoznam krátky — a hlavne ako to zrušiť. Krížik odoberá jeden filter,
-        nie všetky.
-      */}
-      {hasFilter && (
-        <div className="library-chips">
-          {activeChips(filters).map(({ key, value }) => (
-            <Link
-              key={`${key}-${value}`}
-              href={facetHref(key, value)}
-              className="library-chip"
-              aria-label={t.removeFilter(facetLabel[key].label(value))}
-            >
-              <span className="library-chip-key">{facetLabel[key].title}:</span>
-              {facetLabel[key].label(value)}
-              <span className="library-chip-x" aria-hidden="true">×</span>
-            </Link>
-          ))}
-          <Link className="library-chips-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
-        </div>
-      )}
-
         {/*
           Zásuvka filtrov pod 1024 px (NASADENIE, PR 4): ten istý obsah ako
           stĺpec, iný tvar — facety ako pilulky, dole „Zobraziť N dokumentov".
@@ -710,10 +679,11 @@ export default async function LibraryPage({
           panel stĺpec vedľa zoznamu.
         */}
         <details className="filter-sheet">
-          <summary className="button button--quiet filter-sheet-toggle">
+          <summary className="filters-btn filter-sheet-toggle">
+            <Icon name="filters" size={16} />
             {t.filters}
             {activeChips(filters).length > 0 && (
-              <span className="builder-count">{activeChips(filters).length}</span>
+              <span className="filters-btn-count">{activeChips(filters).length}</span>
             )}
           </summary>
           <div className="filter-sheet-body">
@@ -877,6 +847,31 @@ export default async function LibraryPage({
         <p className="quiet builder-hint">{tb.hint}</p>
       </details>
       </div>
+
+      {/*
+        Chips aktívnych filtrov. Sú tu preto, že panel filtrov sa na úzkej
+        obrazovke zabalí nad zoznam a človek by inak nemal ako vidieť, prečo
+        je zoznam krátky — a hlavne ako to zrušiť. Krížik odoberá jeden filter,
+        nie všetky. Vlastný riadok **pod** lištou (KNIZNICA.html): v lište
+        by odtlačili „+ Podmienka" z riadku poľa na ďalší.
+      */}
+      {hasFilter && (
+        <div className="library-chips">
+          {activeChips(filters).map(({ key, value }) => (
+            <Link
+              key={`${key}-${value}`}
+              href={facetHref(key, value)}
+              className="library-chip"
+              aria-label={t.removeFilter(facetLabel[key].label(value))}
+            >
+              <span className="library-chip-key">{facetLabel[key].title}:</span>
+              {facetLabel[key].label(value)}
+              <span className="library-chip-x" aria-hidden="true">×</span>
+            </Link>
+          ))}
+          <Link className="library-chips-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
+        </div>
+      )}
 
 
 
