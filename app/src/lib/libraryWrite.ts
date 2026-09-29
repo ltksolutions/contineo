@@ -21,11 +21,11 @@
  */
 
 import { getCollection } from "./mongodb"
-import { DOCUMENTS_COLLECTION, type VersionFile } from "./documents"
+import { DOCUMENTS_COLLECTION, effectiveVersion, type VersionFile } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
-import { textFixProblem, textDiff, versionFixProblem, type TextFixProblem } from "./textFix"
+import { textFixProblem, textDiff, versionFixProblem, fixableVersions, closestVersion, draftIsFree, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
 import { slugifyKey } from "./slug"
 import type { CodelistExtras } from "./codelists"
@@ -1548,6 +1548,8 @@ const TEXT_FIX_MESSAGE: Record<TextFixProblem, string> = {
   "textFix.noChange": "Text sa od platného znenia nelíši. Nie je čo opravovať.",
   "textFix.reasonRequired":
     "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, čo sa v znení zmenilo a prečo pri tom potvrdenia zostali platné.",
+  "textFix.pastVersion":
+    "Staršie znenie sa neopravuje — je to doklad o tom, čo vtedy platilo (D78). Opraviť sa dá platné znenie a zverejnená novela, ktorá ešte neplatí.",
 }
 
 /**
@@ -1585,7 +1587,16 @@ const TEXT_FIX_MESSAGE: Record<TextFixProblem, string> = {
 export async function fixText(
   companyCode: string,
   documentId: string,
-  input: { expectedFingerprint: string; reason: string; canManageContent: boolean },
+  input: {
+    expectedFingerprint: string
+    reason: string
+    canManageContent: boolean
+    /**
+     * Ktoré znenie sa opravuje — platné dnes alebo zverejnená novela, ktorá
+     * ešte neplatí (D150). Chýbajúce = to, ktorého text je konceptu najbližší.
+     */
+    versionId?: string
+  },
   actor: string,
 ): Promise<{
   versionId: string
@@ -1601,15 +1612,25 @@ export async function fixText(
   if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
   const versions = (doc.versions ?? []) as {
-    versionId: string; label: string; isActive?: boolean; markdown?: string
+    versionId: string; label: string; isActive?: boolean; markdown?: string; effectiveTo?: Date | null
   }[]
-  const effective = versions.find(v => v.isActive)
-  const before = String(effective?.markdown ?? doc.markdown ?? "")
   const after = String(doc.draftMarkdown ?? "").trim()
+  /*
+   * Dovtedy sa opravovalo vždy naposledy zverejnené znenie (`isActive`). Pri
+   * novele zverejnenej vopred je to **budúce** znenie, hoci karta ukazuje
+   * ako platné iné (fáza 3 „znení na karte dokumentu").
+   */
+  const current = effectiveVersion(doc as never)
+  const fixable = fixableVersions(versions, current.ok ? current.version.versionId : undefined)
+  const target = input.versionId
+    ? versions.find(v => v.versionId === input.versionId)
+    : closestVersion(after, fixable)
+  const before = String(target?.markdown ?? (target?.isActive ? doc.markdown : "") ?? "")
 
   const problem = textFixProblem({
     canManageContent: input.canManageContent,
-    hasEffectiveVersion: Boolean(effective),
+    hasEffectiveVersion: Boolean(target),
+    targetIsPast: Boolean(target) && !fixable.includes(target!),
     before,
     after,
     expectedFingerprint: input.expectedFingerprint,
@@ -1617,7 +1638,7 @@ export async function fixText(
   })
   if (problem) throw new LibraryError(problem, TEXT_FIX_MESSAGE[problem])
   // Pravidlo to už zachytilo; toto je pre prekladač, nie druhá kontrola.
-  if (!effective) throw new LibraryError("textFix.noEffectiveVersion", TEXT_FIX_MESSAGE["textFix.noEffectiveVersion"])
+  if (!target) throw new LibraryError("textFix.noEffectiveVersion", TEXT_FIX_MESSAGE["textFix.noEffectiveVersion"])
 
   const contentHash = textFingerprint(after)
   const stat = textDiff(before, after)
@@ -1630,12 +1651,12 @@ export async function fixText(
     updatedBy: actor,
   }
   /*
-   * Dokument nesie kópiu platného textu kvôli čítaniu (`documents.markdown`).
-   * Bez tejto vety by sa rozišla so znením a knižnica by ukazovala starý text.
-   * Píše sa len vtedy, keď dokument na toto znenie naozaj ukazuje — pri starších
-   * importoch môže `versionId` na dokumente chýbať alebo mieriť inam.
+   * Dokument nesie kópiu textu **naposledy zverejneného** znenia
+   * (`documents.markdown`). Píše sa len vtedy, keď sa opravuje práve ono
+   * a dokument naň naozaj ukazuje — pri oprave platného znenia popri novele
+   * vopred by inak kópia dostala text iného znenia.
    */
-  if (String(doc.versionId ?? "") === effective.versionId) set.markdown = after
+  if (target.isActive && String(doc.versionId ?? "") === target.versionId) set.markdown = after
 
   await col.updateOne(
     { documentId, companyCode },
@@ -1654,28 +1675,75 @@ export async function fixText(
         },
       },
     } as never,
-    { arrayFilters: [{ "v.versionId": effective.versionId }] },
+    { arrayFilters: [{ "v.versionId": target.versionId }] },
   )
 
   await writeAudit({
     companyCode, subject: "document", action: "text-fix", actor: actor,
-    targetId: documentId, targetLabel: `${String(doc.title ?? documentId)} — ${effective.label}`,
+    targetId: documentId, targetLabel: `${String(doc.title ?? documentId)} — ${target.label}`,
     note: `${input.reason.trim()} · +${stat.added} / −${stat.removed} riadkov · ` +
       "znenie ani potvrdenia sa nemenia",
   })
 
-  // Až po zápise: `reindex()` číta text zo znenia, takže musí vidieť ten opravený.
-  const r = await reindex(companyCode, documentId, actor)
+  // Až po zápise: preindexovanie číta text zo znenia, takže musí vidieť ten
+  // opravený — a len **toto** znenie (fáza 2).
+  const r = await reindexVersion(companyCode, documentId, target.versionId, actor)
 
   return {
-    versionId: effective.versionId,
-    label: effective.label,
+    versionId: target.versionId,
+    label: target.label,
     contentHash,
     added: stat.added,
     removed: stat.removed,
     chunks: r.chunks,
     archived: r.archived,
   }
+}
+
+/**
+ * Nahrá text znenia do konceptu, aby sa dal opraviť v editore (fáza 3,
+ * „Opraviť text" pri znení). Editor inak začína textom naposledy
+ * zverejneného znenia — pri novele vopred teda budúcim, aj keď sa má
+ * opravovať platné.
+ *
+ * **Nepíše cez rozpracovaný koncept** (`draftIsFree()`): keď sa pripravuje
+ * nové znenie, prepísanie by zmazalo prácu a zmenilo text, na ktorom beží
+ * kolo schvaľovania.
+ */
+export async function loadVersionIntoDraft(
+  companyCode: string,
+  documentId: string,
+  versionId: string,
+  actor: string,
+): Promise<{ label: string }> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  const versions = (doc.versions ?? []) as {
+    versionId: string; label: string; isActive?: boolean; markdown?: string; effectiveTo?: Date | null; pdf?: { id?: string }
+  }[]
+  const target = versions.find(v => v.versionId === versionId)
+  if (!target) throw new LibraryError("library.versionNotFound", "Také znenie tu nie je.")
+
+  const current = effectiveVersion(doc as never)
+  if (!fixableVersions(versions, current.ok ? current.version.versionId : undefined).includes(target)) {
+    throw new LibraryError("textFix.pastVersion", TEXT_FIX_MESSAGE["textFix.pastVersion"])
+  }
+  const draftPdf = (doc.draftPdf as { id?: string } | null | undefined)?.id ?? null
+  if (!draftIsFree(doc.draftMarkdown as string | undefined, versions, draftPdf, versions.map(v => v.pdf?.id ?? "").filter(Boolean))) {
+    throw new LibraryError(
+      "textFix.draftBusy",
+      "Pripravuje sa nové znenie — oprava textu by prepísala rozpracovaný koncept. Najprv ho dokonči alebo zahoď.",
+    )
+  }
+  const text = String(target.markdown ?? (target.isActive ? doc.markdown : "") ?? "").trim()
+  if (!text) throw new LibraryError("library.versionHasNoText", "Toto znenie nemá uložený text — nie je čo narezať.")
+
+  await col.updateOne(
+    { documentId, companyCode },
+    { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor } },
+  )
+  return { label: target.label }
 }
 
 export interface ReindexState {

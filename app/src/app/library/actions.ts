@@ -19,7 +19,7 @@ import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
-  reindexVersion, reindexAllVersions, fixText, LibraryError, type UploadFiles, type IncomingFile,
+  reindexVersion, reindexAllVersions, fixText, loadVersionIntoDraft, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
 import { textDiff } from "@/lib/textFix"
@@ -1178,6 +1178,7 @@ export async function fixTextAction(fd: FormData) {
       expectedFingerprint: fieldText(fd, "expectedFingerprint"),
       reason: fieldText(fd, "reason"),
       canManageContent: self.canManageContent,
+      versionId: fieldText(fd, "versionId") || undefined,
     }, self.email)
 
     message = say(self.language).textFixed(v.added, v.removed, v.chunks)
@@ -1189,6 +1190,27 @@ export async function fixTextAction(fd: FormData) {
   revalidatePath("/library")
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * „Opraviť text" pri znení (fáza 3): nahrá text **tohto** znenia do konceptu
+ * a otvorí editor. Oprava sa potom uloží v Správe ako doteraz.
+ */
+export async function loadTextForFixAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  const versionId = fieldText(fd, "versionId")
+  let message = ""
+  try {
+    await loadVersionIntoDraft(self.companyCode, id, versionId, self.email)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+  }
+  revalidatePath(`/library/${id}`)
+  if (message) redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}&error=1`)
+  redirect(`/library/${encodeURIComponent(id)}/text`)
 }
 
 /**

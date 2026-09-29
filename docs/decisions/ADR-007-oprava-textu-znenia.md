@@ -14,6 +14,7 @@
 > `docs/decisions/ADR-006-schvalovanie-znenia.md` (D73, D74, D75)
 > **Implementácia:** hotová (2026-09-13) — `src/lib/textFix.ts`, `fixText()`
 > v `src/lib/libraryWrite.ts`, `fixTextAction()`, rozdiel a história v detaile dokumentu.
+> **Doplnené:** Dodatok 2 (2026-09-29) — D150, oprava zverejnenej novely, ktorá ešte neplatí.
 
 ---
 
@@ -187,3 +188,39 @@ Nová verzia a nové schvaľovanie zostávajú tam, kam patria: pri zmene textu.
 Preklep v dátume alebo v označení stojí kolo potvrdení pre všetkých, ktorí znenie
 už potvrdili. Je to vedomé: dátum platnosti nie je preklep v čiarke, je to údaj,
 od ktorého sa počíta viazanosť.
+
+---
+
+## Dodatok 2 (2026-09-29) — opravuje sa aj zverejnená novela, ktorá ešte neplatí (D150)
+
+> **Rozhodol:** Ján Letko (2026-09-29) — plán „znenia na karte dokumentu", fáza 3.
+> **Nadväzuje na:** ADR-023 (D143 — nahradené znenie platí do účinnosti nového),
+> ADR-024 (asistent hľadá v zneniach platných k dňu otázky).
+
+### Čo odhalilo
+
+Od D143 môžu naraz existovať **dve** zverejnené znenia, ktoré nie sú minulosť:
+platné dnes a novela zverejnená vopred. `fixText()` opravovalo vždy naposledy
+zverejnené (`isActive`) — pri novele vopred teda **budúce** znenie, hoci karta
+ho po oprave v tej istej chvíli ukazovala ako platné. Oprava preklepu v platnom
+znení tak mohla skončiť v novele (zistené na `sfz:test_znenia`).
+
+### D150 — Opraviť sa smie platné znenie **aj** zverejnená novela, ktorá ešte neplatí
+
+- Novela vopred ešte nie je minulosť — D78 („archivované je doklad o tom, čo
+  platilo vtedy") sa na ňu nevzťahuje. Môže byť už pridelená a potvrdená; oprava
+  ide tou istou cestou ako pri platnom znení: rozdiel pred očami, povinný
+  dôvod, história v `textFixes[]`, potvrdenia zostávajú platné (D28).
+- **Minulé znenie sa neopravuje** — D78 platí; server ho odmietne
+  (`textFix.pastVersion`).
+- **Ktoré znenie sa opravuje, určuje človek**, nie „posledné": „Opraviť text"
+  pri znení nahrá do konceptu jeho text; blok opravy v Správe povie, ktoré
+  znenie opravuje (to, ktorého text je konceptu najbližší), a dá sa prepnúť na
+  druhé. Formulár posiela `versionId`.
+- Nahranie textu **neprepíše rozpracovaný koncept** nového znenia
+  (`textFix.draftBusy`) — inak by sa zmazala práca a zmenil text, na ktorom
+  beží kolo schvaľovania.
+- Po oprave sa preindexuje **len opravené znenie** (`reindexVersion()`);
+  kópia textu na dokumente (`documents.markdown`) sa mení len pri naposledy
+  zverejnenom znení.
+

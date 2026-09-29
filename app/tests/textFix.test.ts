@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { textFixProblem, textDiff } from "../src/lib/textFix"
+import { textFixProblem, textDiff, fixableVersions, closestVersion, draftIsFree } from "../src/lib/textFix"
 import { textFingerprint } from "../src/lib/chunkIdentity"
 
 const ok = {
@@ -116,5 +116,40 @@ describe("textDiff", () => {
     expect(d.coarse).toBe(true)
     expect(d.removed).toBe(500)
     expect(d.added).toBe(500)
+  })
+})
+
+
+describe("ktoré znenie sa smie opraviť (fáza 3, D78, D150)", () => {
+  const old = { versionId: "old", isActive: false, effectiveTo: new Date("2026-07-01"), markdown: "Lehota 15 dní." }
+  const cur = { versionId: "cur", isActive: false, effectiveTo: new Date("2027-01-01"), markdown: "Lehota 30 dní." }
+  const next = { versionId: "next", isActive: true, effectiveTo: null, markdown: "Lehota 30 dní. Poplatok 80 eur." }
+
+  it("minulé znenie je doklad — oprava sa odmietne", () => {
+    expect(textFixProblem({ ...ok, targetIsPast: true })).toBe("textFix.pastVersion")
+  })
+
+  it("platné a novela vopred áno, minulé nie", () => {
+    expect(fixableVersions([old, cur, next], "cur").map(v => v.versionId)).toEqual(["cur", "next"])
+    expect(fixableVersions([old, { ...cur, isActive: true, effectiveTo: null }], "cur").map(v => v.versionId)).toEqual(["cur"])
+    // Dokument po skončení platnosti: naposledy zverejnené má koniec — nie je pripravované.
+    expect(fixableVersions([{ ...cur, isActive: true }], undefined)).toEqual([])
+  })
+
+  it("cieľ je znenie, ktorého text je konceptu najbližší (po riadkoch)", () => {
+    const a = { versionId: "cur", markdown: "Čl. 1\nÚčel.\nČl. 2\nLehota 30 dní.\nČl. 4\nPoplatok 50 eur." }
+    const b = { versionId: "next", markdown: "Čl. 1\nÚčel.\nČl. 2\nLehota 30 dní.\nČl. 4\nPoplatok 80 eur." }
+    // Preklep opravený v platnom znení — od novely sa líši o dva riadky, od platného o jeden.
+    expect(closestVersion("Čl. 1\nÚčel,\nČl. 2\nLehota 30 dní.\nČl. 4\nPoplatok 50 eur.", [a, b])?.versionId).toBe("cur")
+    expect(closestVersion("Čl. 1\nÚčel,\nČl. 2\nLehota 30 dní.\nČl. 4\nPoplatok 80 eur.", [a, b])?.versionId).toBe("next")
+  })
+
+  it("koncept je voľný, len keď sa nepripravuje nové znenie", () => {
+    expect(draftIsFree("", [cur])).toBe(true)
+    expect(draftIsFree("Lehota 30 dní.\n", [old, cur])).toBe(true)
+    expect(draftIsFree("Úplne nový text novely.", [old, cur])).toBe(false)
+    // Nové PDF je nové znenie, aj keď text sedí (ADR-011).
+    expect(draftIsFree("Lehota 30 dní.", [cur], "pdf-nove", ["pdf-cur"])).toBe(false)
+    expect(draftIsFree("Lehota 30 dní.", [cur], "pdf-cur", ["pdf-cur"])).toBe(true)
   })
 })
