@@ -15,6 +15,11 @@ zoznamu, Esc hľadanie zruší. Poradie zoznamu sa nemení a bez JavaScriptu
 zostáva zoznam ako doteraz. Platí v príprave znenia, v paneli schvaľovania
 aj pri zodpovedných osobách testu.
 
+Rovnaký zoznam s hľadaním má aj **Prideliť normy → Komu**: jednotlivé
+osoby sa dajú vybrať priamo, bez písania adries. Pole na adresy ostáva na
+vloženie zoznamu z tabuľky; tá istá osoba vybraná aj napísaná dostane
+pridelenie len raz.
+
 ### Asistent odpovedá podľa znenia platného k dňu otázky (2026-09-29)
 
 Asistent hľadá len v **zneniach platných k dňu otázky**. Novela zverejnená

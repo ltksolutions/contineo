@@ -21,6 +21,8 @@
 
 import { notFound, redirect } from "next/navigation"
 import MultiSelect from "@/components/MultiSelect"
+import PeopleSearch from "@/components/PeopleSearch"
+import { listPeople } from "@/lib/people"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { hrContext, assignableDocuments } from "@/lib/hr"
@@ -68,11 +70,12 @@ export default async function AssignPage({
   }
 
   const q = normalizeQuery<Query>(await searchParams)
-  const [documents, audiences, tree, departmentCounts] = await Promise.all([
+  const [documents, audiences, tree, departmentCounts, people] = await Promise.all([
     assignableDocuments(ctx.person.companyCode),
     audiencesInOrg(ctx.person.companyCode),
     allDepartments(ctx.person.companyCode),
     counts(ctx.person.companyCode),
+    listPeople(ctx.person.companyCode),
   ])
   const treeRows = flattenTree(tree)
   const branding = brandingView(ctx.tenant)
@@ -82,6 +85,15 @@ export default async function AssignPage({
 
   const selectedDocuments = new Set(asArray(q.document))
   const selectedAudiences = new Set(asArray(q.audience))
+  /*
+   * Jednotlivé osoby (KOMPONENT-hladanie-osob, Q3). Hodnota je
+   * `person:<e-mail>` — to isté publikum, aké vznikne z napísanej adresy,
+   * takže server ani pridelenie nič nové nepoznajú. Vyradení sa neponúkajú:
+   * povinnosť by čakala na niekoho, kto v zväze nie je.
+   */
+  const personChoices = people
+    .filter(p => p.status !== "inactive")
+    .map(p => ({ id: `person:${p.email.toLowerCase()}`, fullName: p.fullName, email: p.email, department: p.department }))
 
   /*
    * Súhrn dopadu (HR.md, úloha 3) — až po kroku „Skontrolovať dopad":
@@ -262,6 +274,21 @@ export default async function AssignPage({
                     </div>
                   </>
                 )}
+              </>
+            )}
+
+            {personChoices.length > 0 && (
+              <>
+                <div className="hr-subtitle">{t.people}</div>
+                <PeopleSearch
+                  people={personChoices}
+                  name="audience"
+                  language={language}
+                  multiple
+                  defaultSelected={personChoices.filter(p => selectedAudiences.has(p.id)).map(p => p.id)}
+                  listLabel={t.people}
+                  missing="people"
+                />
               </>
             )}
 

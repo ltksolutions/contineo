@@ -46,8 +46,11 @@ interface Props {
   required?: boolean
   /** Nadpis zoznamu — pre čítačku, aby vedela, čo pole prehľadáva. */
   listLabel: string
-  /** Prečo tu niekto chýba, keď nič nevyhovuje. */
-  missing: "approvers" | "responsible"
+  /**
+   * Prečo tu niekto chýba, keď nič nevyhovuje. Pri schvaľovateľoch aj ten,
+   * kto predkladá; inde (zodpovedná osoba, „Komu" pri prideľovaní) len vyradení.
+   */
+  missing: "approvers" | "responsible" | "people"
 }
 
 export default function PeopleSearch(props: Props) {

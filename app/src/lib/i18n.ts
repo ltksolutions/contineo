@@ -786,6 +786,8 @@ interface Dictionary {
       departments: string
       groups: string
       tracks: string
+      /** Jednotlivé osoby zo zoznamu (KOMPONENT-hladanie-osob, Q3). */
+      people: string
       everyone: string
       everyoneNote: string
       departmentNoteBefore: string
@@ -3811,6 +3813,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departments: "Oddelenia",
       groups: "Skupiny",
       tracks: "Trasy",
+      people: "Osoby",
       everyone: "Všetkým v organizácii",
       everyoneNote: "prebije výber nižšie — inak by to isté znenie viselo v prehľade niekoľkokrát a nikto by nevedel, ktorý riadok niečo znamená",
       departmentNoteBefore: "Pridelenie oddelenia platí ",
@@ -7092,6 +7095,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departments: "Oddělení",
       groups: "Skupiny",
       tracks: "Trasy",
+      people: "Osoby",
       everyone: "Všem v organizaci",
       everyoneNote: "přebije výběr níže — jinak by totéž znění viselo v přehledu několikrát a nikdo by nevěděl, který řádek něco znamená",
       departmentNoteBefore: "Přidělení oddělení platí ",
@@ -10364,6 +10368,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departments: "Departments",
       groups: "Groups",
       tracks: "Tracks",
+      people: "People",
       everyone: "Everyone in the organisation",
       everyoneNote: "overrides the selection below — otherwise the same version would appear in the overview several times and nobody would know which row meant anything",
       departmentNoteBefore: "Assigning to a department also applies ",

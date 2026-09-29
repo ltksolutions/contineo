@@ -115,6 +115,18 @@ describe("publika z vyberu na obrazovke", () => {
     expect(out.every(a => a.kind === "person")).toBe(true)
   })
 
+  it("osoba zo zoznamu je to isté publikum ako napísaná adresa", () => {
+    // „Komu" s hľadaním (KOMPONENT-hladanie-osob, Q3): políčko `person:<e-mail>`
+    // a tá istá adresa v poli nesmú dať dve pridelenia tej istej osobe.
+    expect(audienceFromSelection({
+      selected: ["person:Eva.Mala@SFZ.sk", "person:bez-zavinaca"],
+      addresses: "eva.mala@sfz.sk, jan@sfz.sk",
+    })).toEqual([
+      { kind: "person", value: "eva.mala@sfz.sk" },
+      { kind: "person", value: "jan@sfz.sk" },
+    ])
+  })
+
   it("čo nie je adresa, sa preskočí", () => {
     // Prideliť „niečomu, čo vyzeralo ako adresa" znamená neprideliť nikomu
     // a tváriť sa, že je hotovo.
