@@ -15,6 +15,7 @@ import { dictionary, type UiLanguage } from "@/lib/i18n"
 import type { ApprovalRound, VersionState } from "@/lib/approvals"
 import { submitForApprovalAction, cancelApprovalAction } from "@/app/library/actions"
 import ApprovalRounds from "./ApprovalRounds"
+import PeopleSearch from "./PeopleSearch"
 
 export interface ApproverChoice {
   id: string
@@ -111,21 +112,17 @@ export default function ApprovalPanel({
                   Zaškrtávacie políčka, nie `select multiple`: na telefóne sa
                   viacnásobný výber v rozbaľovacom zozname ovláda zle a bez
                   JavaScriptu ho nemá čo nahradiť. Zoznam je v posuvnom rámiku,
-                  aby pri stovke ľudí neodtlačil tlačidlo mimo obrazovku.
+                  aby pri stovke ľudí neodtlačil tlačidlo mimo obrazovku; od
+                  8 osôb má nad sebou hľadanie (KOMPONENT-hladanie-osob).
                 */
-                <div className="approval-people">
-                  {people.map(p => (
-                    <label key={p.id} className="approval-person">
-                      <input type="checkbox" name="approver" value={p.id} />
-                      <span>
-                        <span className="approval-person-name">{p.fullName}</span>
-                        <span className="quiet approval-person-meta">
-                          {p.department ? `${p.department} · ` : ""}{p.email}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                <PeopleSearch
+                  people={people}
+                  name="approver"
+                  language={language}
+                  multiple
+                  listLabel={t.approvalApprovers}
+                  missing="approvers"
+                />
               )}
             </fieldset>
 

@@ -57,6 +57,7 @@ import type { VersionFile } from "@/lib/documents"
 import { textDiff, type DiffKind } from "@/lib/textFix"
 import { listPeople } from "@/lib/people"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
+import PeopleSearch from "@/components/PeopleSearch"
 import LegalBasisForm from "@/components/LegalBasisForm"
 import { canSetLegalBasis, legalBasisFields } from "@/lib/versionResponsibility"
 import { legalBasisOptions } from "@/lib/legalBases"
@@ -898,19 +899,15 @@ export default async function DocumentDetailPage({
                 {approverChoices.length === 0 ? (
                   <p className="quiet">{t.approvalNoPeople}</p>
                 ) : (
-                  <div className="approval-people">
-                    {approverChoices.map(p => (
-                      <label key={p.id} className="approval-person">
-                        <input type="checkbox" name="approver" value={p.id} defaultChecked={prefilledApprovers.has(p.id)} />
-                        <span>
-                          <span className="approval-person-name">{p.fullName}</span>
-                          <span className="quiet approval-person-meta">
-                            {p.department ? `${p.department} · ` : ""}{p.email}
-                          </span>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+                  <PeopleSearch
+                    people={approverChoices}
+                    name="approver"
+                    language={language}
+                    multiple
+                    defaultSelected={approverChoices.filter(p => prefilledApprovers.has(p.id)).map(p => p.id)}
+                    listLabel={tflow.approvers}
+                    missing="approvers"
+                  />
                 )}
               </fieldset>
 

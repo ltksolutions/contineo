@@ -10,6 +10,45 @@
 
 ---
 
+## 2026-09-29 — hľadanie v zozname osôb (KOMPONENT-hladanie-osob)
+
+**Čo sa spravilo.**
+
+- Podklady z Claude Design (`KOMPONENT-hladanie-osob.md/.html`, rozhodnutia
+  Q1–Q3 z 29. 9.) uložené do `docs/design/`.
+- Nový klientsky obal `PeopleSearch` okolo `.approval-people`; čistá logika
+  (filter, zvýraznenie, klávesy) v `lib/peopleSearch.ts`. Použitý
+  v `ResponsiblePicker` (prepínač aj `multiple`), v príprave znenia
+  (`library/[id]`) a v `ApprovalPanel`. Texty `people.search.*` v sk/cs/en.
+- `/hr/assign` „Komu" (Q3) je zámerne mimo — samostatný krok.
+
+**Nefungovalo / poučenie.**
+
+- **`hidden` na riadku by nič neskryl:** `.approval-person { display: flex }`
+  prebije predvolené pravidlo prehliadača pre `[hidden]`. Treba výslovné
+  `.approval-person[hidden] { display: none }`.
+- **Povinný prepínač v skrytom riadku:** prehliadač nemá kde ukázať „vyber
+  osobu" a formulár mlčky neodíde. `onInvalid` preto hľadanie zruší.
+- Zvýraznenie sa skladá po znakoch, nie `fold()` celého textu — pozície
+  musia sedieť s pôvodným textom aj pri znakoch, ktoré sa zložia na dva.
+- Vybraný riadok sa podfarbuje cez `:has(> input:checked)`, nie triedou
+  `is-on` z rámu — funguje aj bez skriptu.
+- Testy bežia v Node bez DOM: vykreslenie je oddelené do bezstavového
+  `PeopleSearchView` a overuje sa `renderToStaticMarkup`.
+- Stiahnutie podkladov: DesignSync bez autorizácie a Claude Design za
+  prihlásením; súbory sa nakoniec čítali cez prihlásený prehliadač.
+- **Fokus po zrušení hľadania:** „Zrušiť hľadanie" aj × v poli po kliknutí
+  zmiznú a fokus padol na `body`. Našlo sa až pri skúške v prehliadači;
+  fokus sa teraz vracia do poľa.
+- Živá skúška na `sfz.localhost` nevyšla (prihlásenie sa v paneli
+  nedržalo), komponent sa preto skúšal izolovane: zbalený s ozajstným
+  `globals.css` na testovacej stránke mimo repa. Overené písanie, Enter
+  pri troch aj jednom výsledku, ↓, Esc, × na čipoch, odoslanie so skrytým
+  zaškrtnutým, povinný prepínač v skrytých riadkoch, režim bez JS a 390 px.
+  Na stránke knižnice to treba ešte pozrieť na náhľade z Vercelu.
+
+---
+
 ## 2026-09-28 (večer) — právny základ už v príprave (ADR-023)
 
 **Čo sa spravilo.**

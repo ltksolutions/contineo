@@ -1662,6 +1662,28 @@ interface Dictionary {
       noRows: string
       importResult: (created: number, updated: number, unchanged: number, invalid: number, overwrite: boolean) => string
     }
+    /**
+     * Hľadanie v zozname osôb (KOMPONENT-hladanie-osob) — schvaľovatelia
+     * a zodpovedná osoba. Nad rámikom s políčkami, nie namiesto neho.
+     */
+    search: {
+      placeholder: string
+      /** Názov poľa pre čítačku — ktorý zoznam sa prehľadáva. */
+      label: (list: string) => string
+      count: (shown: number, total: number) => string
+      picked: (n: number) => string
+      pickedOne: string
+      none: (query: string) => string
+      noneApprovers: string
+      noneResponsible: string
+      clear: string
+      clearInput: string
+      remove: (name: string) => string
+      keysDown: string
+      keysEnter: string
+      keysEnterOne: (name: string) => string
+      keysEsc: string
+    }
   },
   /**
    * Zvonček: udalosti, ktoré sa stali, keď sa človek nepozeral.
@@ -5041,6 +5063,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Pribudlo ${created}, ${overwrite ? "zmenených" : "doplnených"} ${updated}, bez zmeny ${unchanged}` +
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
+    search: {
+      placeholder: "Hľadať meno, e-mail alebo oddelenie",
+      label: list => `Hľadať v zozname: ${list}`,
+      count: (shown, total) => `${shown} z ${total}`,
+      picked: n => `Vybraní (${n})`,
+      pickedOne: "Vybraná",
+      none: query => `Nikto nevyhovuje „${query}“.`,
+      noneApprovers: "Vyradení sa neponúkajú a seba schváliť nemôžeš.",
+      noneResponsible: "Vyradení sa neponúkajú.",
+      clear: "Zrušiť hľadanie",
+      clearInput: "Vyčistiť",
+      remove: name => `Odobrať ${name}`,
+      keysDown: "do zoznamu",
+      keysEnter: "vyberie jediný výsledok",
+      keysEnterOne: name => `vyberie ${name}`,
+      keysEsc: "vyčistí",
+    },
   },
   report: {
     open: "Nahlásiť nepresnosť",
@@ -8305,6 +8344,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Přibylo ${created}, ${overwrite ? "změněných" : "doplněných"} ${updated}, beze změny ${unchanged}` +
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
+    search: {
+      placeholder: "Hledat jméno, e-mail nebo oddělení",
+      label: list => `Hledat v seznamu: ${list}`,
+      count: (shown, total) => `${shown} z ${total}`,
+      picked: n => `Vybraní (${n})`,
+      pickedOne: "Vybraná",
+      none: query => `Nikdo neodpovídá „${query}“.`,
+      noneApprovers: "Vyřazení se nenabízejí a sám sebe schválit nemůžeš.",
+      noneResponsible: "Vyřazení se nenabízejí.",
+      clear: "Zrušit hledání",
+      clearInput: "Vymazat",
+      remove: name => `Odebrat ${name}`,
+      keysDown: "do seznamu",
+      keysEnter: "vybere jediný výsledek",
+      keysEnterOne: name => `vybere ${name}`,
+      keysEsc: "vymaže",
+    },
   },
   report: {
     open: "Nahlásit nepřesnost",
@@ -11558,6 +11614,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importResult: (created, updated, unchanged, invalid, overwrite) =>
         `Added ${created}, ${overwrite ? "updated" : "topped up"} ${updated}, unchanged ${unchanged}` +
         (invalid ? `, invalid ${invalid}` : "") + ".",
+    },
+    search: {
+      placeholder: "Search name, email or department",
+      label: list => `Search the list: ${list}`,
+      count: (shown, total) => `${shown} of ${total}`,
+      picked: n => `Selected (${n})`,
+      pickedOne: "Selected",
+      none: query => `Nobody matches “${query}”.`,
+      noneApprovers: "Deactivated people are not offered and you cannot approve your own draft.",
+      noneResponsible: "Deactivated people are not offered.",
+      clear: "Clear search",
+      clearInput: "Clear",
+      remove: name => `Remove ${name}`,
+      keysDown: "to the list",
+      keysEnter: "picks the only result",
+      keysEnterOne: name => `picks ${name}`,
+      keysEsc: "clears",
     },
   },
   report: {

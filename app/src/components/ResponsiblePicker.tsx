@@ -6,16 +6,15 @@
  * a fungujú bez JavaScriptu. **Nič nie je predvolené** — ani doterajšia
  * osoba: pri novom znení ju musí niekto vedome zvoliť. Výnimka je `initial`:
  * osoba, ktorú v **tejto** príprave už niekto vedome zvolil (ADR-014).
+ *
+ * Od 8 osôb nad zoznamom pribudne hľadanie (`PeopleSearch`,
+ * KOMPONENT-hladanie-osob) — zoznam prepínačov pod ním ostáva, len filter.
  */
 
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import PeopleSearch, { type PersonChoice } from "./PeopleSearch"
 
-export interface ResponsibleChoice {
-  id: string
-  fullName: string
-  email: string
-  department?: string
-}
+export type ResponsibleChoice = PersonChoice
 
 export default function ResponsiblePicker({
   people,
@@ -54,22 +53,16 @@ export default function ResponsiblePicker({
     <fieldset className="hr-group">
       <legend className="field-label">{legend ?? t.responsiblePerson}</legend>
       <span className="quiet field-hint">{note ?? t.responsibleNote}</span>
-      <div className="approval-people">
-        {choices.map(p => (
-          <label key={p.id} className="approval-person">
-            {multiple
-              ? <input type="checkbox" name="responsiblePersonId" value={p.id} defaultChecked={initialMany?.includes(p.id)} />
-              : <input type="radio" name="responsiblePersonId" value={p.id} required={required}
-                       defaultChecked={p.id === initial} />}
-            <span>
-              <span className="approval-person-name">{p.fullName}</span>
-              <span className="quiet approval-person-meta">
-                {p.department ? `${p.department} · ` : ""}{p.email}
-              </span>
-            </span>
-          </label>
-        ))}
-      </div>
+      <PeopleSearch
+        people={choices}
+        name="responsiblePersonId"
+        language={language}
+        multiple={multiple}
+        defaultSelected={multiple ? initialMany : initial ? [initial] : []}
+        required={!multiple && required}
+        listLabel={legend ?? t.responsiblePerson}
+        missing="responsible"
+      />
     </fieldset>
   )
 }
