@@ -47,6 +47,43 @@ export function visibleIds(people: PersonChoice[], query: string): string[] {
   return people.filter(p => matchesPerson(p, terms)).map(p => p.id)
 }
 
+/**
+ * Položka všeobecného zoznamu s hľadaním (`ListSearch`) — osoba aj norma
+ * (HR-pridelit-normy-hladanie, bod 2). Zo servera ide len údaj, nie funkcia.
+ */
+export interface ListItem {
+  id: string
+  /** Hlavný riadok; hľadá sa v ňom vždy. */
+  name: string
+  /** Riadok pod ním, časti sa spoja „ · ". */
+  meta?: string[]
+  /** Hľadá sa aj v `meta`? Pri osobách áno (e-mail, oddelenie), pri normách nie. */
+  searchMeta?: boolean
+  /** Príznak pre filter „len bez …" a štítok vpravo (norma bez právneho základu). */
+  flagged?: boolean
+}
+
+export function matchesItem(item: ListItem, terms: string[]): boolean {
+  if (terms.length === 0) return true
+  const haystack = fold([item.name, ...(item.searchMeta ? item.meta ?? [] : [])].join(" "))
+  return terms.every(t => haystack.includes(t))
+}
+
+/** Viditeľné položky v pôvodnom poradí; `onlyFlagged` zúži na označené. */
+export function visibleItemIds(items: ListItem[], query: string, onlyFlagged = false): string[] {
+  const terms = queryTerms(query)
+  return items.filter(i => (!onlyFlagged || i.flagged) && matchesItem(i, terms)).map(i => i.id)
+}
+
+export function personItem(p: PersonChoice): ListItem {
+  return {
+    id: p.id,
+    name: p.fullName,
+    meta: [p.department, p.email].filter((x): x is string => Boolean(x)),
+    searchMeta: true,
+  }
+}
+
 export interface Segment {
   text: string
   hit: boolean

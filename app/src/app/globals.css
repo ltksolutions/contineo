@@ -4355,6 +4355,18 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   text-align: right;
 }
 .people-count:empty { display: none; }
+/* Počet je v `<span>` a vedľa neho môže byť filter noriem („len bez právneho
+   základu") — bez filtra ostáva počet vpravo ako doteraz, prázdny sa skryje. */
+.people-count { display: flex; justify-content: flex-end; gap: 10px; }
+.people-count:has(.people-count-filter) { justify-content: space-between; }
+.people-count:not(:has(button)):has(> span:empty) { display: none; }
+.people-count-filter {
+  padding: 0; border: 0; background: none; font: inherit; color: var(--muted);
+  text-decoration: underline; cursor: pointer;
+}
+.people-count-filter:hover { color: var(--ink); }
+.people-chip { max-width: 100%; }
+.people-chip-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .people-empty { padding: 18px 12px; text-align: center; font-size: var(--fs-small); color: var(--muted); line-height: 1.5; }
 .people-empty-clear {
@@ -6773,4 +6785,71 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   body:has(.cert-print) header, body:has(.cert-print) .footer, .no-print { display: none !important; }
   .cert-print-wrap { padding: 0; }
   .cert-print { width: 297mm; height: 210mm; max-width: none; border-width: 1.5px; }
+}
+
+/* ── /hr/assign: Normy | Komu a hľadanie (HR-pridelit-normy-hladanie) ────────
+   Od 1100 px dva stĺpce a šírka 1180 (Q1 — výnimka z HR šírky 680–900:
+   dva zoznamy vedľa seba, nie jeden dlhý formulár). Pod 1100 jeden stĺpec
+   v dnešnom poradí. Bez JavaScriptu to isté rozloženie, len bez hľadania. */
+.assign-page { max-width: 1180px; }
+.assign { display: grid; gap: 20px; }
+.assign-cols { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.assign-panel { display: grid; gap: 12px; align-content: start; }
+.assign-legend {
+  display: flex; align-items: center; gap: 8px; padding: 0 6px;
+  font-size: var(--fs-section); font-weight: 650; letter-spacing: -0.01em;
+}
+.assign-legend .hr-count { font-size: var(--fs-small); }
+/* Číslo kroku 1–4 — orientácia, nie sprievodca (bod 6). */
+.assign-step {
+  display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 700; letter-spacing: 0;
+}
+/* Zoznam noriem v rámiku s posunom — stránka už nie je 14 riadkov dlhá. */
+.assign-doc-list { max-height: 420px; }
+.hr-doc[hidden] { display: none; }
+
+/* Komu: „Všetkým" a podsekcie oddelené čiarou (bod 4). */
+.assign-all {
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+}
+.assign-all:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
+.assign-rest { display: grid; gap: 12px; }
+.assign-sub { display: grid; gap: 6px; min-width: 0; }
+.assign-sub + .assign-sub { padding-top: 12px; border-top: 1px solid var(--line); }
+.assign-sub .hr-subtitle { margin: 0; }
+/* Stlmenie pri „Všetkým" (Q4) — len s JS; hodnoty ostávajú vo formulári. */
+.assign-rest.is-dim { opacity: 0.42; pointer-events: none; }
+
+/* Dôvod | Termín v jednej karte, pod tým súhrn a tlačidlá. */
+.assign-finish { padding: 18px 20px 20px; display: grid; gap: 18px; }
+.assign-finish-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+.assign-finish .field { align-content: start; }
+/* Termín je v tej istej karte ako dôvod — vlastný rámik by bol druhý rámik v karte. */
+.assign-due { border: 0; padding: 0; }
+.assign-due > legend { margin-bottom: 8px; }
+.assign-summary { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+.assign-summary-line {
+  display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0;
+  font-size: var(--fs-small); color: var(--muted);
+}
+.assign-summary-part { display: inline-flex; gap: 10px; }
+.assign-summary-line b { color: var(--ink); font-weight: 600; }
+.assign-summary .assign-impact { margin: 0; }
+/* Dopad pre iný výber, než je teraz vybraný (bod 8, Q3). */
+.assign-impact.is-stale { background: var(--warn-bg); }
+.assign-impact.is-stale .assign-impact-count { color: var(--warn-fg); }
+.assign-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+@media (min-width: 1100px) {
+  .assign-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .assign-finish-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+}
+@media (max-width: 1099px) {
+  .assign-doc-list { max-height: 340px; }
+}
+@media (max-width: 639px) {
+  .assign-doc-list { max-height: 300px; }
+  .assign-finish { padding: 14px; }
+  .assign-actions > .button { width: 100%; min-height: 44px; }
 }

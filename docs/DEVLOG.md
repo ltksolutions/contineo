@@ -10,6 +10,46 @@
 
 ---
 
+## 2026-09-29 — Prideliť normy: dva stĺpce a hľadanie (HR-pridelit-normy-hladanie)
+
+**Čo sa spravilo.**
+
+- Podklady uložené do `docs/design/HR-pridelit-normy-hladanie.*`.
+- `PeopleSearch` je teraz všeobecný `ListSearch` (`kind: "people" |
+  "documents"`). `PeopleSearch` aj `PeopleSearchView` majú to isté rozhranie,
+  pribudol `DocumentSearch`. Texty si komponent berie z i18n podľa druhu,
+  lebo zo servera sa funkcie poslať nedajú.
+- `AssignForm.tsx`: `AssignFinish` (súhrn, zastaraný dopad, „Prideliť N
+  ľuďom") a `AudienceAll` (stlmenie pri „Všetkým"). Výber čítajú z
+  `FormData` celého formulára. Polia patria trom rôznym komponentom a
+  spoločný majú len formulár.
+- Poradie: `assignOrder.ts` (normy podľa `effectiveFrom` zostupne, osoby
+  podľa `surname`, rezervne `splitFullName`). Súhrn: `assignSummary.ts`,
+  test stráži, že rozklad publík je ten istý ako v
+  `audienceFromSelection()`.
+
+**Nefungovalo / poučenie.**
+
+- `MultiSelect` pridáva a odoberá skryté polia bez udalosti, a čip × aj
+  Enter v `ListSearch` menia políčko len cez stav. Súhrn preto počúva aj
+  `MutationObserver` a `ListSearch` po zmene výberu vyšle `change`.
+- Zastaraný dopad sa porovnáva **len podľa publika**. Dopad je počet ľudí
+  a zmena noriem ho nemení. Podpis výberu, pre ktorý sa dopad počítal,
+  skladá server z tej istej adresy ako `impact`.
+- `clientLabels.test` (žiadny prop klientskeho komponentu nevracia string)
+  zachytil dve vnútorné funkcie s podpisom `=> string`. Boli to falošné
+  poplachy, ale obe sa dali napísať jednoduchšie.
+- Kompilátor Reactu odmietol ref v `useCallback`. Formulár sa preto hľadá
+  podľa `id`. React je 18, takže `inert` sa nastavuje cez vlastnosť v efekte.
+- Pri skúške v prehliadači trafil klik podľa súradníc pri emulácii 1440
+  zaškrtávacie políčko osoby a Enter na ňom natívne odoslal formulár.
+  Nebola to chyba poľa hľadania. Skúšať treba s fokusom nastaveným priamo.
+- Overenie: stránka zložená z ozajstných komponentov a `globals.css` mimo
+  repa, 1440 svetlá, 390 tmavá a bez JS. Ozajstnú `/hr/assign` s dátami
+  treba pozrieť na náhľade.
+
+---
+
 ## 2026-09-29 — pole hľadania a filtre podľa KNIZNICA.html
 
 **Čo sa spravilo.**

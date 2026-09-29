@@ -19,6 +19,7 @@ import { DOCUMENTS_COLLECTION, canSeeDocument, effectiveVersion } from "./docume
 import type { DocumentRecord } from "./documents"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
+import { sortDocumentsByEffective } from "./assignOrder"
 
 export const HR_ROLE = "hr"
 
@@ -100,5 +101,6 @@ export async function assignableDocuments(companyCode: string): Promise<Assignab
       legalBasisMissing: !v.version.legalBasis,
     })
   }
-  return out.sort((a, b) => a.title.localeCompare(b.title, "sk"))
+  // Najnovšie účinné znenie hore (HR-pridelit-normy-hladanie, bod 5).
+  return sortDocumentsByEffective(out)
 }
