@@ -1968,17 +1968,18 @@ fieldset { min-width: 0; }
 
 .audit-filter {
   display: flex;
-  gap: 8px;
+  gap: 8px 12px;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   margin: 0 0 14px;
 }
 
-.audit-filter > .field { flex: 1 1 260px; margin: 0; }
+.audit-filter-clear { font-size: var(--fs-small); font-weight: 600; color: var(--accent); }
 
 @media (max-width: 639px) {
   .audit-filter { flex-direction: column; align-items: stretch; }
   .audit-filter > * { width: 100%; }
+  .audit-filter-clear { display: flex; align-items: center; min-height: 44px; }
 }
 
 /* Fotka v avatare (D52). Kruh a rovnaká veľkosť ako iniciály — inak by sa
@@ -5364,7 +5365,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 @media (max-width: 639px) {
   .tree-form > :first-child,
   .detail-block.tree-form > .field,
-  .audit-filter > .field,
+  .audit-filter > .search-strip,
   .approval-decide > button { flex-basis: auto; }
 }
 
