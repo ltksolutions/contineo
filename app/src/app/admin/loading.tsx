@@ -4,7 +4,8 @@
  * Nadpis a zoznam kariet v tom poradí, v akom ich má aj hotová stránka.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonList } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonList } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

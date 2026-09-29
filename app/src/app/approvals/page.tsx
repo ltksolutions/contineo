@@ -24,7 +24,6 @@ import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import FormattedText from "@/components/FormattedText"
 import PdfView from "@/components/PdfView"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
@@ -44,7 +43,7 @@ export default async function ApprovalsPage({
 }: {
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ layout?: string; msg?: string; error?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const ctx = await onboardingContext()
   if (ctx.state === "unknown-host") notFound()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
@@ -75,7 +74,7 @@ export default async function ApprovalsPage({
   const nameOf = (email: string) => people.find(p => p.email.toLowerCase() === email.toLowerCase())?.fullName ?? email
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={person.language}>
+    <AppShell language={person.language}>
       <div className="approval-page" style={tenantStyle(branding)}>
         <Notice message={q.msg} error={q.error === "1"} back="/approvals" />
 

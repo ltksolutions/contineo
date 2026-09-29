@@ -29,7 +29,6 @@ import SmartTagInput from "@/components/SmartTagInput"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
 import Select from "@/components/Select"
 import TestStatusTag from "@/components/TestStatusTag"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { retireTestAction, saveTestAction } from "../actions"
@@ -37,7 +36,7 @@ import { retireTestAction, saveTestAction } from "../actions"
 export const dynamic = "force-dynamic"
 
 export default async function TestEditorPage({ params, searchParams }: { params: Promise<{ testKey: string }>; searchParams: Promise<RawQuery> }) {
-  const q = normalizeQuery<{ layout?: string; msg?: string; error?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const ctx = await learningAdminContext()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
   if (ctx.state !== "ready") notFound()
@@ -67,7 +66,7 @@ export default async function TestEditorPage({ params, searchParams }: { params:
   const showLabel = { never: tt.showNever, after_submit: tt.showAfterSubmit, after_pass: tt.showAfterPass, after_last_attempt: tt.showAfterLast }
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
         <p className="detail-back"><Link className="quiet" href="/learning/tests">{tt.back}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={`/learning/tests/${key}`} />

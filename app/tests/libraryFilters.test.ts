@@ -47,19 +47,17 @@ describe("prepínanie", () => {
   })
 
   it("zrušenie filtrov nechá zobrazenie na pokoji", () => {
-    // Variant navigácie a pohľad si človek nastavoval zvlášť a tlačidlom
-    // „Zrušiť" ich zrušiť nechcel.
-    const f = readFilters({ category: "norma", search: "prestup", layout: "sidebar", view: "cards" })
+    // Pohľad si človek nastavoval zvlášť a tlačidlom „Zrušiť" ho zrušiť nechcel.
+    const f = readFilters({ category: "norma", search: "prestup", view: "cards" })
     const cleared = clearFilters(f)
     expect(isEmpty(cleared)).toBe(true)
-    expect(cleared.layout).toBe("sidebar")
     expect(cleared.view).toBe("cards")
   })
 })
 
 describe("zápis do adresy", () => {
   it("kruh adresa → filtre → adresa drží", () => {
-    const url = "/library?search=prestup&folder=normy&category=norma&category=smernica&tag=poriadok&layout=sidebar"
+    const url = "/library?search=prestup&folder=normy&category=norma&category=smernica&tag=poriadok"
     const params = Object.fromEntries(new URLSearchParams(url.split("?")[1]))
     // `Object.fromEntries` zachová len prvú hodnotu opakovaného kľúča, tak
     // sa zoznam podá tak, ako ho podá Next.
@@ -272,8 +270,6 @@ describe("stránkovanie", () => {
     expect(pageOf(toggle(onPage5, "status", "draft"))).toBe(1)
     expect(pageOf(setValue(onPage5, "search", "prestup"))).toBe(1)
     expect(pageOf(sortBy(onPage5, "title"))).toBe(1)
-    // Variant navigácie filtrom nie je.
-    expect(pageOf(setValue(onPage5, "layout", "sidebar"))).toBe(5)
   })
 })
 

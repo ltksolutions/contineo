@@ -8,7 +8,8 @@
  * celý riadok.
  */
 
-import { Skeleton, SkeletonPanel, SkeletonShell } from "@/components/Skeleton"
+import { Skeleton, SkeletonPanel } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

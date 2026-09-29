@@ -29,7 +29,6 @@ import SubmitButton from "@/components/SubmitButton"
 import KeyFromLabel from "@/components/KeyFromLabel"
 import Select from "@/components/Select"
 import MergeSelectionBar from "@/components/MergeSelectionBar"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
@@ -45,7 +44,7 @@ const STATUSES = ["all", "draft", "published", "archived"] as const
 type Status = (typeof STATUSES)[number]
 
 type Q = {
-  layout?: string; tab?: string; status?: string; new?: string; title?: string; key?: string
+  tab?: string; status?: string; new?: string; title?: string; key?: string
   renameTopic?: string; rename?: string; to?: string; exists?: string; renameKey?: string
   sel?: string | string[]; merge?: string; msg?: string; error?: string
 }
@@ -68,7 +67,7 @@ export default async function LearningManagePage({ searchParams }: { searchParam
     : await TagsTab({ companyCode: ctx.person.companyCode, q, language })
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
         <div className="lp-head">
           <div className="grow"><h1 className="page-title">{t.manageHeading}</h1></div>

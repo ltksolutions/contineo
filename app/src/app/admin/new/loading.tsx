@@ -5,7 +5,8 @@
  * najviditeľnejší — človek už mieri kurzorom tam, kde čaká prvé pole.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonForm } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonForm } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

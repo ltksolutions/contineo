@@ -177,6 +177,22 @@ const PATHS: Record<string, React.ReactNode> = {
   // Filtre — tri čiary od najdlhšej, zužovanie výberu. Geometria je
   // z `KNIZNICA.html` (tlačidlo „Filtre" pod 1024 px).
   filters: <path d="M2.8 4.2h12.4M5.2 9h7.6M7.6 13.8h2.8" />,
+  // Zbaliť / rozbaliť bočný panel — okraj panela a šípka k nemu alebo od neho
+  // (SHELL-bocny-panel). Geometria z rámu, hrúbku dopočíta `iconProps`.
+  fold: (
+    <>
+      <path d="M3 3.4v11.2" />
+      <path d="M14.6 9H7m0 0 3-3m-3 3 3 3" />
+    </>
+  ),
+  unfold: (
+    <>
+      <path d="M3 3.4v11.2" />
+      <path d="M7 9h7.6m0 0-3-3m3 3-3 3" />
+    </>
+  ),
+  // Hamburger v hlavičke na 640–1023 px — vysunie bočný panel.
+  burger: <path d="M3 5h12M3 9h12M3 13h12" />,
   // Viac — tri bodky. Jediná plná kresba v sete: bodka z ťahu by na 18 px
   // bola krúžok a krúžky tu znamenajú schválenie a posúdenie.
   // Vzdelávanie — absolventská čiapka (ADR-018).

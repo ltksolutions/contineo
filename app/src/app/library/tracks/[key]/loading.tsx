@@ -4,7 +4,8 @@
  * Hlavička, karta s popisom trasy a zoznam predpisov v nej.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonCard, SkeletonList } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonCard, SkeletonList } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

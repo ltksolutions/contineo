@@ -15,7 +15,6 @@ import { isAnswered, resumeIndex, type QuestionSnapshot, type TestAttempt } from
 import AppShell from "@/components/AppShell"
 import AttemptBar from "@/components/AttemptBar"
 import FormattedText from "@/components/FormattedText"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { answerAction } from "../../../../../actions"
@@ -29,7 +28,7 @@ export default async function AttemptPage({ params, searchParams }: {
   params: Promise<{ courseKey: string; partKey: string; testKey: string; attemptId: string }>
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ layout?: string; q?: string; review?: string; confirm?: string }>(await searchParams)
+  const q = normalizeQuery<{ q?: string; review?: string; confirm?: string }>(await searchParams)
   const p = await params
   const c = await loadTestContext(p)
   if (c.state === "not-signed-in") redirect("/sign-in")
@@ -44,7 +43,7 @@ export default async function AttemptPage({ params, searchParams }: {
   if (attempt.submittedAt) {
     if (attempt.closedBy !== "timeout") redirect(`${self}/result`)
     return (
-      <AppShell layout={normalizeLayout(q.layout)} language={language}>
+      <AppShell language={language}>
         <div className="at">
           <section className="card at-closed is-warn">
             <span className="at-closed-ico" aria-hidden="true">!</span>
@@ -64,7 +63,7 @@ export default async function AttemptPage({ params, searchParams }: {
   const unanswered = attempt.questions.map((x, i) => (isAnswered(attempt.answers[x.questionKey]) ? 0 : i + 1)).filter(Boolean)
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="at">
         <AttemptBar deadlineAt={attempt.deadlineAt ? attempt.deadlineAt.toISOString() : null} formId="attempt-form" saveUrl={`/api/learning/attempts/${attempt.id}`}
           progress={total ? answered / total : 0}

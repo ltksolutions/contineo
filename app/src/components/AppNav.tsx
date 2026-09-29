@@ -1,59 +1,52 @@
 "use client"
 
 /**
- * AppNav — navigácia aplikačného shellu v troch tvaroch (NASADENIE, PR 2).
+ * AppNav — navigácia aplikačného shellu (SHELL-bocny-panel, 29. 9. 2026).
  *
- * Jedno pole položiek z `navItems()`, tri podoby:
+ * Jedno pole položiek z `navItems()`, dva tvary:
  *
  *  - **pod 640 px** pevná spodná lišta: Prehľad · Opýtať sa · Knižnica ·
  *    Úlohy · Viac. „Úlohy" zlučujú „Na potvrdenie" a „Na schválenie"
  *    (súčet v odznaku), „Viac" vedie na `/more` so zvyškom položiek.
- *    Nahradila `<details>` zásuvku: lišta je vždy na obrazovke a palec na
- *    ňu dosiahne, zásuvku bolo treba najprv nájsť a otvoriť.
- *  - **640–1023 px** vodorovný pás pod hlavičkou. Pás sa **nikdy neroluje
- *    vodorovne** — skrytá položka, ktorú treba najprv nájsť posunutím, je
- *    pre väčšinu ľudí stratená položka. Čo sa nezmestí, spadne do „Viac N"
- *    na konci pásu (`<details>` s ponukou ukotvenou vpravo).
- *  - **≥ 1024 px** ten istý pás, o dva pixely nižší; všetkých desať
- *    položiek sa zmestí a „Viac" sa nekreslí.
+ *    Nemení sa (NASADENIE, PR 2).
+ *  - **od 640 px bočný panel** so skupinami (`navGroups()`): bez nadpisu
+ *    Prehľad a Opýtať sa · Moje úlohy · Organizácia · Správa. Od 1024 px
+ *    rozbalený (236 px) alebo lišta ikon (64 px) podľa cookie `nav`; na
+ *    640–1023 px vždy lišta a rozbalenie **vysunie** panel 260 px nad obsah.
  *
- * Meranie prepadu: skrytý dvojník pásu so všetkými položkami
- * (`.app-nav--measure`) dá šírky a `ResizeObserver` na páse ich pri každej
- * zmene šírky prepočíta. **Bez JavaScriptu** sa vykreslí prvých
- * `STRIP_DEFAULT_VISIBLE` položiek + „Viac" so zvyškom — serverové HTML je
- * presne tento stav a skript ho len spresňuje. Dvojník kreslí v aktívnom
- * reze (650) len položku, ktorá aktívna naozaj je — merať všetky nabold
- * bolo príliš opatrné a „Viac 1" sa ukazovalo aj tam, kde sa pás zmestil.
+ * **Pás `topbar` odišiel** (Q1): počítal so šiestimi položkami, dnes ich je
+ * 10–14, musel byť textový (PR 7) a aj tak prepadal do „Viac N". S ním
+ * odišlo meranie prepadu, `?layout=` a `normalizeLayout()`.
  *
- * **Pás je textový** (vzor, PR 7): s ikonou pri každej položke sa desať
- * položiek do šírky shellu nezmestí a „Na posúdenie" prepadávalo do „Viac"
- * aj na širokom monitore. Ikony zostávajú tam, kde nesú informáciu samy —
- * v spodnej lište a v bočnom paneli (vlastné, rozhodnutie 2026-09-14,
- * `docs/O6_rozhodovaci_harok.md` bod 1; pravidlá v `Icon.tsx`).
- *
- * Variant `sidebar` zostáva: bočný panel od 640 px, pod 640 px aj on
- * ustupuje spodnej lište.
+ * **Bez JavaScriptu** všetko funguje: zbalenie je formulár so serverovou
+ * akciou (`setNavStateAction`), vysunutie je `<details>`. Skript len pridá
+ * okamžité prepnutie bez načítania, zatvorenie Esc a klikom mimo a návrat
+ * fokusu.
  *
  * Zoznam položiek a čisté funkcie sú v `lib/appNav.ts`, nie tu: z modulu
- * s `"use client"` sa funkcia na serveri volať nedá a `/more` aj `/library`
- * ich potrebujú na serveri.
+ * s `"use client"` sa funkcia na serveri volať nedá a `/more` aj
+ * `AppShell` ich potrebujú na serveri.
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type FormEvent, type FocusEvent, type MouseEvent as ReactMouseEvent } from "react"
 import Link from "next/link"
 import Icon from "./Icon"
 import { usePathname } from "next/navigation"
-import { navItems, activeHref, tabbarItems, isTabActive, STRIP_DEFAULT_VISIBLE } from "@/lib/appNav"
-import type { NavLayout, NavFlags, NavCounts, NavItem } from "@/lib/appNav"
+import {
+  navItems, navGroups, activeHref, tabbarItems, isTabActive, NAV_COOKIE, NAV_DRAWER_EVENT,
+} from "@/lib/appNav"
+import type { NavFlags, NavCounts, NavItem, NavState, NavGroupKey } from "@/lib/appNav"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { setNavStateAction } from "@/app/shellActions"
 
 export default function AppNav({
-  layout: layout,
-  flags: flags,
-  counts: counts,
+  navState,
+  flags,
+  counts,
   language,
 }: {
-  layout: NavLayout
+  /** Stav panela z cookie — prečítaný na serveri, aby panel nepreblikol. */
+  navState: NavState
   flags: NavFlags
   counts?: NavCounts
   language?: UiLanguage
@@ -61,100 +54,141 @@ export default function AppNav({
   const t = dictionary(language).nav
   const pathname = usePathname()
   const items = navItems(flags, counts)
-
-  /** Koľko položiek je v páse; zvyšok je v ponuke „Viac". */
-  const [visible, setVisible] = useState(STRIP_DEFAULT_VISIBLE)
-  const strip = useRef<HTMLElement>(null)
-  const measure = useRef<HTMLDivElement>(null)
-  const morePopup = useRef<HTMLDetailsElement>(null)
-
-  // Zmena stránky zatvorí ponuku „Viac" — inak zostane otvorená nad novým
-  // obsahom. Rovnaké pravidlo ako osobné menu v hlavičke.
-  useEffect(() => {
-    if (morePopup.current) morePopup.current.open = false
-  }, [pathname])
-
-  /*
-   * Šírky sa čítajú z dvojníka, nie z pásu samotného: pás má položky, ktoré
-   * práve mení, a meranie počas prekresľovania by sa naháňalo s výsledkom.
-   * Závislosť je odtlačok obsahu — šírka položky sa mení s jazykom aj
-   * s číslom v odznaku, nie len s počtom položiek.
-   */
-  const fingerprint = items.map(o => `${o.key}:${o.count ?? ""}`).join("|") + "|" + (language ?? "") + "|" + pathname
-  useEffect(() => {
-    const bar = strip.current
-    const twin = measure.current
-    if (!bar || !twin) return
-
-    const fit = () => {
-      const style = getComputedStyle(bar)
-      const gap = parseFloat(style.columnGap) || 0
-      const avail = bar.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0)
-      if (avail <= 0) return // pás je skrytý (telefón) — nie je čo merať
-      const nodes = Array.from(twin.children) as HTMLElement[]
-      const toggle = nodes[nodes.length - 1]
-      const widths = nodes.slice(0, -1).map(n => n.offsetWidth)
-
-      const all = widths.reduce((a, w) => a + w, 0) + gap * Math.max(0, widths.length - 1)
-      if (all <= avail) {
-        setVisible(widths.length)
-        return
-      }
-
-      // „Viac" bude potrebné — jeho šírka sa rezervuje vopred, inak by
-      // posledná položka preblikávala medzi pásom a ponukou.
-      const reserve = toggle.offsetWidth + gap
-      let used = 0
-      let n = 0
-      for (const w of widths) {
-        const next = used + (n > 0 ? gap : 0) + w
-        if (next + reserve > avail) break
-        used = next
-        n += 1
-      }
-      setVisible(n)
-    }
-
-    fit()
-    const watcher = new ResizeObserver(fit)
-    watcher.observe(bar)
-    watcher.observe(twin)
-    return () => watcher.disconnect()
-    // `fingerprint` nesie aj cestu: aktívna položka je hrubším rezom širšia.
-  }, [fingerprint, layout])
-
+  const groups = navGroups(items)
   // Jedna aktívna položka — najdlhšia zhodná adresa (`activeHref`).
   const current = activeHref(pathname, items.map(o => o.href))
 
-  const link = (o: NavItem, icon = true) => {
+  const [state, setState] = useState<NavState>(navState)
+  const rail = state === "rail"
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const drawer = useRef<HTMLDetailsElement>(null)
+  /** Kam vrátiť fokus po zavretí vysunutého panela — hamburger alebo „Rozbaliť". */
+  const opener = useRef<HTMLElement | null>(null)
+
+  const closeDrawer = () => { if (drawer.current) drawer.current.open = false }
+
+  /*
+   * Popis v lište ikon. **Jeden, s `position: fixed`**, nie pri každej ikone:
+   * zoznam sa roluje (`overflow-y: auto`) a rolovací obal orezáva aj do
+   * strany — popis vedľa lišty by bol vždy odseknutý. Ukáže sa len vtedy,
+   * keď je text položky skrytý (lišta), pri myši aj pri fokuse z klávesnice.
+   */
+  const [tip, setTip] = useState<{ text: string; top: number; left: number } | null>(null)
+  const showTip = (e: ReactMouseEvent<HTMLElement> | FocusEvent<HTMLElement>, text: string) => {
+    const el = e.currentTarget
+    const label = el.querySelector(".app-panel-label")
+    if (label && getComputedStyle(label).display !== "none") return
+    const r = el.getBoundingClientRect()
+    setTip({ text, top: r.top + r.height / 2, left: r.right + 10 })
+  }
+  const hideTip = () => setTip(null)
+
+  // Zmena stránky zavrie vysunutý panel — inak zostane visieť nad novým
+  // obsahom. Rovnaké pravidlo ako osobné menu v hlavičke.
+  useEffect(() => { if (drawer.current) drawer.current.open = false }, [pathname])
+
+  // Hamburger v hlavičke (iný strom — `layout.tsx`) posiela udalosť.
+  useEffect(() => {
+    const toggle = (e: Event) => {
+      const d = drawer.current
+      if (!d) return
+      opener.current = (e as CustomEvent<HTMLElement | null>).detail ?? null
+      d.open = !d.open
+    }
+    window.addEventListener(NAV_DRAWER_EVENT, toggle)
+    return () => window.removeEventListener(NAV_DRAWER_EVENT, toggle)
+  }, [])
+
+  // Otvorený panel zavrie Esc a klik mimo neho. Hamburger a „Rozbaliť"
+  // sa prepínajú samy — ich klik sa za „mimo" nepočíta.
+  useEffect(() => {
+    if (!drawerOpen) return
+    const d = drawer.current
+    if (!d) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") d.open = false }
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (d.querySelector(".app-drawer")?.contains(target)) return
+      if (d.querySelector("summary")?.contains(target)) return
+      if (opener.current?.contains(target)) return
+      d.open = false
+    }
+    document.addEventListener("keydown", onKey)
+    document.addEventListener("mousedown", onDown)
+    return () => {
+      document.removeEventListener("keydown", onKey)
+      document.removeEventListener("mousedown", onDown)
+    }
+  }, [drawerOpen])
+
+  // Fokus do panela pri otvorení, späť na to, čím sa otvoril, pri zavretí.
+  const onToggle = () => {
+    const d = drawer.current
+    if (!d) return
+    setDrawerOpen(d.open)
+    if (d.open) {
+      if (!opener.current) opener.current = d.querySelector("summary")
+      d.querySelector<HTMLAnchorElement>(".app-drawer a")?.focus()
+    } else {
+      opener.current?.focus()
+      opener.current = null
+    }
+  }
+
+  /*
+   * Zbalenie s JavaScriptom: hneď, bez načítania stránky, a cookie si zapíše
+   * prehliadač sám. Bez skriptu formulár odíde na `setNavStateAction`, ktorá
+   * urobí to isté a vráti človeka na tú istú stránku.
+   */
+  const fold = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const next: NavState = rail ? "wide" : "rail"
+    setState(next)
+    document.cookie = `${NAV_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
+  }
+
+  const groupTitle: Record<NavGroupKey, string> = {
+    tasks: t.groupTasks,
+    organisation: t.groupOrganisation,
+    management: t.groupManagement,
+  }
+
+  const link = (o: NavItem, tipOn: boolean) => {
     const active = o.href === current
+    /*
+     * Nula sa nekreslí vôbec. Štítok s nulou nie je informácia, je to šum —
+     * a človek, ktorý nemá čo potvrdzovať, sa to má dozvedieť tým, že tam
+     * nič nesvieti, nie tým, že si prečíta „0".
+     */
+    const n = typeof o.count === "number" && o.count > 0 ? o.count : 0
     return (
       <Link
         key={o.href}
         href={o.href}
-        className={`app-nav-item${active ? " is-active" : ""}`}
+        className={`app-panel-item${active ? " is-active" : ""}`}
         aria-current={active ? "page" : undefined}
+        // V lište ikon je text skrytý — názov aj počet nesie `aria-label`.
+        // Ikona nie je náhrada popisku.
+        aria-label={n ? `${t[o.key]}, ${t.waiting(n)}` : t[o.key]}
+        onMouseEnter={tipOn ? e => showTip(e, n ? `${t[o.key]} · ${n}` : t[o.key]) : undefined}
+        onMouseLeave={tipOn ? hideTip : undefined}
+        onFocus={tipOn ? e => showTip(e, n ? `${t[o.key]} · ${n}` : t[o.key]) : undefined}
+        onBlur={tipOn ? hideTip : undefined}
       >
-        {/*
-          Ikona je **ozdoba, nie náhrada popisku**: `aria-hidden`, text zostáva.
-          V páse sa nekreslí vôbec (vzor, PR 7) — desať položiek s ikonami sa
-          do shellu nezmestí; v bočnom paneli áno, tam stoja pod sebou.
-        */}
-        {icon && <Icon name={o.key} size={16} />}
-        {t[o.key]}
-        {/*
-          Nula sa nekreslí vôbec. Štítok s nulou nie je informácia, je to šum —
-          a človek, ktorý nemá čo potvrdzovať, sa to má dozvedieť tým, že tam
-          nič nesvieti, nie tým, že si prečíta „0".
-        */}
-        {typeof o.count === "number" && o.count > 0 && (
-          <span className="app-nav-count" aria-label={t.waiting(o.count)}>
-            {o.count}
-          </span>
-        )}
+        <Icon name={o.key} size={17} />
+        <span className="app-panel-label">{t[o.key]}</span>
+        {n > 0 && <span className="app-nav-count" aria-hidden="true">{n}</span>}
       </Link>
     )
   }
+
+  const list = (tipOn: boolean) => groups.map(g => (
+    <div key={g.key ?? "home"} className="app-panel-group">
+      {/* V lište ikon sa nadpis zmení na deliacu čiaru (CSS). */}
+      {g.key && <div className="app-panel-group-title">{groupTitle[g.key]}</div>}
+      {g.items.map(o => link(o, tipOn))}
+    </div>
+  ))
 
   /*
    * Spodná lišta. Ikona „Úloh" je zaškrtávacie políčko z „Na potvrdenie" —
@@ -188,50 +222,47 @@ export default function AppNav({
     </nav>
   )
 
-  if (layout === "sidebar") {
-    // Bočný panel je zvislý — miesto má, prepad nepotrebuje.
-    return (
-      <>
-        <nav className={`app-nav app-nav--${layout}`} aria-label={t.sections}>
-          {items.map(o => link(o))}
-        </nav>
-        {tabbar}
-      </>
-    )
-  }
-
-  const shown = items.slice(0, visible)
-  const overflow = items.slice(visible)
+  const foldLabel = rail ? t.expand : t.collapse
 
   return (
     <>
-      <nav ref={strip} className="app-nav app-nav--topbar" aria-label={t.sections}>
-        {shown.map(o => link(o, false))}
-        <details ref={morePopup} className="app-nav-more" hidden={overflow.length === 0}>
-          <summary className="app-nav-item app-nav-more-toggle">
-            {t.more} {overflow.length}
-          </summary>
-          <div className="app-nav-more-menu">{overflow.map(o => link(o, false))}</div>
-        </details>
-      </nav>
+      <div className={`app-panel ${rail ? "is-rail" : "is-wide"}`}>
+        <nav className="app-panel-scroll" aria-label={t.sections}>{list(true)}</nav>
 
-      {/*
-        Dvojník na meranie. `visibility: hidden` (v CSS), nie `display: none`:
-        meranie potrebuje rozloženie — a takto skrytý nie je v strome
-        prístupnosti ani sa naň nedá dostať klávesnicou, preto `<span>`,
-        nie druhá kópia odkazov.
-      */}
-      <div ref={measure} className="app-nav app-nav--topbar app-nav--measure" aria-hidden="true">
-        {items.map(o => (
-          <span key={o.href} className={`app-nav-item${o.href === current ? " is-active" : ""}`}>
-            {t[o.key]}
-            {typeof o.count === "number" && o.count > 0 && <span className="app-nav-count">{o.count}</span>}
-          </span>
-        ))}
-        <span className="app-nav-item app-nav-more-toggle">
-          {t.more} {items.length}
-        </span>
+        <div className="app-panel-foot">
+          {/* Od 1024 px: zbaliť / rozbaliť. Funguje aj bez skriptu. */}
+          <form action={setNavStateAction} onSubmit={fold} className="app-panel-fold-form">
+            <input type="hidden" name="nav" value={rail ? "wide" : "rail"} />
+            <button type="submit" className="app-panel-fold" aria-label={foldLabel}
+                    onMouseEnter={e => showTip(e, foldLabel)} onMouseLeave={hideTip}
+                    onFocus={e => showTip(e, foldLabel)} onBlur={hideTip}>
+              <Icon name={rail ? "unfold" : "fold"} size={17} />
+              <span className="app-panel-label">{foldLabel}</span>
+            </button>
+          </form>
+
+          {/*
+            640–1023 px: „Rozbaliť" vysunie panel nad obsah (Q3). `<details>`,
+            takže bez skriptu sa otvorí aj zavrie klikom na „Rozbaliť".
+          */}
+          <details ref={drawer} className="app-panel-drawer" onToggle={onToggle}>
+            <summary className="app-panel-fold" aria-label={t.expand}
+                     onMouseEnter={e => showTip(e, t.expand)} onMouseLeave={hideTip}
+                     onFocus={e => showTip(e, t.expand)} onBlur={hideTip}>
+              <Icon name="unfold" size={17} />
+              <span className="app-panel-label" hidden>{t.expand}</span>
+            </summary>
+            <div className="app-drawer-scrim" aria-hidden="true" onClick={closeDrawer} />
+            <nav className="app-drawer" aria-label={t.sections}>
+              <div className="app-panel-scroll">{list(false)}</div>
+            </nav>
+          </details>
+        </div>
       </div>
+
+      {tip && (
+        <span className="app-panel-tip" aria-hidden="true" style={{ top: tip.top, left: tip.left }}>{tip.text}</span>
+      )}
 
       {tabbar}
     </>

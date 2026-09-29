@@ -17,7 +17,6 @@
  */
 
 import type { ReactNode } from "react"
-import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /** Jeden obdĺžnik. Všetko ostatné v tomto súbore je len jeho skladba. */
 export function Skeleton({
@@ -141,65 +140,6 @@ export function SkeletonForm({ fields = 4 }: { fields?: number }) {
   )
 }
 
-/**
- * Obrys `AppShell`-u pre `loading.tsx`.
- *
- * **Prečo vôbec musí existovať:** `AppShell` si vyžiada každá stránka sama,
- * nie je v `layout.tsx` (a to je zámer — viď jeho docstring). `loading.tsx`
- * nahrádza stránku, takže počas čakania zmizne aj pás odkazov. Bez obrysu by
- * obsah poskočil o jeho výšku hore a po načítaní zase dole — a práve skok je
- * to, čo na čakaní najviac vadí.
- *
- * Obe formy navigácie sú v strome naraz, rovnako ako v `AppNav`: pás pre
- * širokú obrazovku a spodná lišta pre telefón. Prepína ich to isté
- * `@media` na 640 px, takže sa geometria nemôže rozísť s hotovou stránkou.
- *
- * Šesť položiek v páse nie je náhoda — presne toľko ich pás ukáže bez
- * JavaScriptu (`STRIP_DEFAULT_VISIBLE`), zvyšok býva v „Viac". Lišta má
- * päť terčov ako skutočná — kto nemá rolu knižnice, uvidí kostru o terč
- * širšiu; opačná chyba by vyzerala ako chýbajúci odkaz.
- */
-export function SkeletonShell({
-  language,
-  children,
-}: {
-  /**
-   * Jazyk vety pre čítačku. `loading.tsx` ho **nemá odkiaľ vziať** — osoba sa
-   * číta z databázy a kostra sa musí vykresliť okamžite — takže zostane
-   * predvolený. Je to jediné slovo na celej kostre; kvôli nemu sa oplatí
-   * čakať menej než nič.
-   */
-  language?: UiLanguage
-  children: ReactNode
-}) {
-  return (
-    <div className="app-shell app-shell--topbar" role="status" aria-live="polite" aria-busy="true">
-      <span className="skeleton-label">{dictionary(language).nav.loading}</span>
-
-      <div className="app-nav app-nav--topbar skeleton-nav" aria-hidden="true">
-        {Array.from({ length: 6 }, (_, i) => (
-          <Skeleton className="skeleton-nav-item" key={i} width={62 + ((i * 17) % 40)} />
-        ))}
-      </div>
-
-      {/* Telefón: na mieste spodnej lišty. Triedy skutočnej lišty držia
-          presne jej geometriu — kliknúť sa na kostru nedá a ani nemá,
-          kostra nie je ovládací prvok. */}
-      <div className="app-nav-tabbar" aria-hidden="true">
-        {Array.from({ length: 5 }, (_, i) => (
-          <div className="app-nav-tab" key={i}>
-            <Skeleton className="skeleton-tab-icon" width={21} />
-            <Skeleton className="skeleton-line" width={34} />
-          </div>
-        ))}
-      </div>
-
-      <div className="app-main" aria-hidden="true">
-        {children}
-      </div>
-    </div>
-  )
-}
 
 /**
  * Pás filtrov a prepínačov nad zoznamom.

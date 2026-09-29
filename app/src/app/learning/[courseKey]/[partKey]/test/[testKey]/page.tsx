@@ -12,7 +12,6 @@ import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
 import FormattedText from "@/components/FormattedText"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { getAttempt } from "@/lib/testAttemptsDb"
@@ -24,7 +23,7 @@ export default async function TestIntroPage({ params, searchParams }: {
   params: Promise<{ courseKey: string; partKey: string; testKey: string }>
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ layout?: string; msg?: string; error?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const c = await loadTestContext(await params)
   if (c.state === "not-signed-in") redirect("/sign-in")
   if (c.state === "back") redirect(c.to)
@@ -44,7 +43,7 @@ export default async function TestIntroPage({ params, searchParams }: {
     : null
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="at">
         <p className="detail-back"><Link className="quiet" href={partHref}>← {ta.backToPart}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={base} />

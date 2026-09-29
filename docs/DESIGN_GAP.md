@@ -96,6 +96,11 @@ Predvolený variant je **topbar** — to máme správne. Bočný panel je druhý
 variant a v ňom navyše pribúda sekcia „Uložené pohľady" a dole karta
 upozornenia; v topbare uložené pohľady patria do ľavého panelu Knižnice.
 
+> **Zmena 29. 9. 2026** (`docs/design/SHELL-bocny-panel.md`, Q1–Q4): predvolený
+> — a jediný — tvar na desktope je od teraz **bočný panel** so skupinami a ikonami.
+> Pás `topbar`, „Viac N" a `?layout=` odišli. Odsek vyššie platil pre šesť
+> položiek z návrhu; pri 10–14 položkách pás prepadal a nemohol mať ikony.
+
 Dve veci na rozhodnutie, nie na slepé prevzatie:
 
 1. **Zoznam položiek.** Návrh má Prehľad · Knižnica · Opýtať sa · Nahrávanie ·

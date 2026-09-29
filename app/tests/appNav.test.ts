@@ -7,7 +7,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { navItems, normalizeLayout, isActive, tabbarItems, moreGroups, isTabActive } from "../src/lib/appNav"
+import { navItems, navGroups, normalizeNavState, isActive, tabbarItems, moreGroups, isTabActive } from "../src/lib/appNav"
+import { sameOriginPath } from "../src/lib/shellBack"
 import { isShellRoute, WITHOUT_SHELL } from "../src/lib/shellRoutes"
 
 describe("položky navigácie", () => {
@@ -53,7 +54,7 @@ describe("modul Vzdelávanie (ADR-018)", () => {
     expect(moreGroups(plain).flatMap(g => g.items.map(o => o.key))).not.toContain("learning")
     const editor = navItems({ learning: true, isContentManager: true })
     expect(tabbarItems(editor).map(o => o.key)).toEqual(["overview", "ask", "library", "tasks", "more"])
-    expect(moreGroups(editor)[0].items.map(o => o.key)).toContain("learning")
+    expect(moreGroups(editor).find(g => g.key === "organisation")!.items.map(o => o.key)).toContain("learning")
   })
 
   it("zodpovedná osoba testu bez roly vidí Testy — rovno na výsledky (D121)", () => {
@@ -95,12 +96,48 @@ describe("počty pri položkách", () => {
   })
 })
 
-describe("variant navigácie", () => {
-  it("predvolený je topbar a neznáma hodnota ho nezhodí", () => {
-    expect(normalizeLayout(undefined)).toBe("topbar")
-    expect(normalizeLayout("nezmysel")).toBe("topbar")
-    expect(normalizeLayout(["sidebar"])).toBe("topbar")
-    expect(normalizeLayout("sidebar")).toBe("sidebar")
+describe("bočný panel (SHELL-bocny-panel)", () => {
+  const ALL = {
+    isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true, isDpo: true,
+    learning: true, isLearningAdmin: true,
+  }
+
+  it("stav z cookie: predvolený rozbalený, neznáma hodnota ho nezhodí (Q4)", () => {
+    expect(normalizeNavState(undefined)).toBe("wide")
+    expect(normalizeNavState("nezmysel")).toBe("wide")
+    expect(normalizeNavState(["rail"])).toBe("wide")
+    expect(normalizeNavState("rail")).toBe("rail")
+  })
+
+  it("skupiny: bez nadpisu · Moje úlohy · Organizácia · Správa (Q2)", () => {
+    const groups = navGroups(navItems(ALL))
+    expect(groups.map(g => g.key)).toEqual([null, "tasks", "organisation", "management"])
+    expect(groups.map(g => g.items.map(o => o.key))).toEqual([
+      ["overview", "ask"],
+      ["toAcknowledge", "toApprove"],
+      ["directory", "library", "learning"],
+      ["assigned", "evidence", "people", "evaluation", "dpo", "learningManage", "learningTests"],
+    ])
+  })
+
+  it("bežná osoba: prázdna Správa sa nevykreslí", () => {
+    const groups = navGroups(navItems({ learning: true }))
+    expect(groups.map(g => g.key)).toEqual([null, "tasks", "organisation"])
+    expect(groups[2].items.map(o => o.key)).toEqual(["directory", "learning"])
+  })
+
+  it("každá položka je práve v jednej skupine; neznámy kľúč padne do Správy", () => {
+    const items = navItems(ALL)
+    expect(navGroups(items).flatMap(g => g.items.map(o => o.key)).sort()).toEqual(items.map(o => o.key).sort())
+    const future = [...items, { href: "/nove", key: "nova" as never }]
+    expect(navGroups(future).at(-1)!.items.map(o => o.href)).toContain("/nove")
+  })
+
+  it("návrat po prepnutí bez JS: len cesta na tom istom hostiteľovi", () => {
+    expect(sameOriginPath("https://intranet.sfz.sk/hr?x=1", "intranet.sfz.sk")).toBe("/hr?x=1")
+    expect(sameOriginPath("https://zly.sk/hr", "intranet.sfz.sk")).toBe("/")
+    expect(sameOriginPath("nezmysel", "intranet.sfz.sk")).toBe("/")
+    expect(sameOriginPath(null, "intranet.sfz.sk")).toBe("/")
   })
 })
 
@@ -194,19 +231,20 @@ describe("spodná lišta (NASADENIE, PR 2)", () => {
 describe("zoznam na /more (NASADENIE, PR 2)", () => {
   const ALL = { isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true }
 
-  it("skupiny: Organizácia (adresár, osoby) a Správa (zvyšok povinností a rolí)", () => {
+  it("skupiny: Moje úlohy (schvaľovanie), Organizácia a Správa — ako v paneli (SHELL Q2)", () => {
     const groups = moreGroups(navItems(ALL))
-    expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
-    expect(groups[0].items.map(o => o.key)).toEqual(["directory", "people"])
-    expect(groups[1].items.map(o => o.key)).toEqual(["toApprove", "assigned", "evidence", "evaluation"])
+    expect(groups.map(g => g.key)).toEqual(["tasks", "organisation", "management"])
+    expect(groups[0].items.map(o => o.key)).toEqual(["toApprove"])
+    expect(groups[1].items.map(o => o.key)).toEqual(["directory", "people"])
+    expect(groups[2].items.map(o => o.key)).toEqual(["assigned", "evidence", "evaluation"])
   })
 
   it("prázdna skupina sa nevracia", () => {
     // Bez roly správy osôb je v Organizácii len adresár; bez oboch by
     // nadpis skupiny visel nad ničím.
     const groups = moreGroups(navItems({}))
-    expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
-    expect(groups[0].items.map(o => o.key)).toEqual(["directory"])
+    expect(groups.map(g => g.key)).toEqual(["tasks", "organisation"])
+    expect(groups[1].items.map(o => o.key)).toEqual(["directory"])
   })
 
   it("lišta a /more spolu pokryjú každú položku navigácie", () => {
@@ -222,9 +260,9 @@ describe("zoznam na /more (NASADENIE, PR 2)", () => {
 
   it("vzdelávanie: kurzy v Organizácii, správa a testy v Správe (ADR-018)", () => {
     const groups = moreGroups(navItems({ ...ALL, learning: true, isLearningAdmin: true }))
-    expect(groups[0].items.map(o => o.key)).toEqual(["directory", "learning", "people"])
-    expect(groups[1].items.map(o => o.key)).toContain("learningManage")
-    expect(groups[1].items.map(o => o.key)).toContain("learningTests")
+    expect(groups[1].items.map(o => o.key)).toEqual(["directory", "learning", "people"])
+    expect(groups[2].items.map(o => o.key)).toContain("learningManage")
+    expect(groups[2].items.map(o => o.key)).toContain("learningTests")
   })
 
   it("knižnica je v lište, na /more sa neopakuje", () => {

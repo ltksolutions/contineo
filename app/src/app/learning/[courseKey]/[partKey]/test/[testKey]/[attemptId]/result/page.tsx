@@ -15,7 +15,6 @@ import { evaluatePart } from "@/lib/learningProgress"
 import { answersVisible, isCorrect, type AnswerValue, type QuestionSnapshot } from "@/lib/testAttempts"
 import AppShell from "@/components/AppShell"
 import FormattedText from "@/components/FormattedText"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 
@@ -27,7 +26,7 @@ export default async function ResultPage({ params, searchParams }: {
   params: Promise<{ courseKey: string; partKey: string; testKey: string; attemptId: string }>
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ layout?: string; only?: string }>(await searchParams)
+  const q = normalizeQuery<{ only?: string }>(await searchParams)
   const p = await params
   const c = await loadTestContext(p)
   if (c.state === "not-signed-in") redirect("/sign-in")
@@ -58,7 +57,7 @@ export default async function ResultPage({ params, searchParams }: {
   const shown = a.questions.map((x, i) => ({ x, i, ok: results[i] })).filter(r => q.only !== "wrong" || !r.ok)
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="at rs">
         <p className="detail-back"><Link className="quiet" href={c.partHref}>← {ta.backToPart}</Link></p>
         <div className="rs-cols">

@@ -26,7 +26,6 @@ import AppShell from "@/components/AppShell"
 import FormattedText from "@/components/FormattedText"
 import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { enrolAction } from "../actions"
@@ -37,7 +36,7 @@ export default async function CoursePage({ params, searchParams }: {
   params: Promise<{ courseKey: string }>
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ layout?: string; msg?: string; error?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const ctx = await learningContext()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
   if (ctx.state !== "ready") notFound()
@@ -131,7 +130,7 @@ export default async function CoursePage({ params, searchParams }: {
   )
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="cp" style={tenantStyle(brandingView(ctx.tenant))}>
         <p className="detail-back"><Link className="quiet" href="/learning">← {t.heading}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={base} />

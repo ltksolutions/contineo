@@ -38,7 +38,6 @@ import SubmitButton from "@/components/SubmitButton"
 import KeyFromLabel from "@/components/KeyFromLabel"
 import SmartTagInput from "@/components/SmartTagInput"
 import CourseMediaUpload from "@/components/CourseMediaUpload"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { createTestAction, previewImportAction, questionStatusAction, resetAttemptsAction, runImportAction, saveQuestionAction } from "./actions"
@@ -46,7 +45,7 @@ import { createTestAction, previewImportAction, questionStatusAction, resetAttem
 export const dynamic = "force-dynamic"
 
 type Q = {
-  layout?: string; tab?: string; status?: string; new?: string; type?: string; q?: string; import?: string
+  tab?: string; status?: string; new?: string; type?: string; q?: string; import?: string
   tag?: string | string[]; qtype?: string; qstatus?: string; msg?: string; error?: string; test?: string; reset?: string
 }
 type Tt = ReturnType<typeof dictionary>["learning"]["tests"]
@@ -66,7 +65,7 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
     : await QuestionsTab({ companyCode: ctx.person.companyCode, actor: ctx.person.email, bank, q, tt, language })
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
         <div className="lp-head">
           <div className="grow"><h1 className="page-title">{dictionary(language).learning.testsHeading}</h1></div>
@@ -422,7 +421,7 @@ async function ResultsPage(q: Q) {
   const resetting = q.reset ? rows.find(r => r.a.personId === q.reset) : null
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
         <div className="lp-head"><div className="grow"><h1 className="page-title">{d.testsHeading}</h1></div></div>
         <Notice message={q.msg} error={q.error === "1"} back={self} />

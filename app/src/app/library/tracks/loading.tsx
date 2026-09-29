@@ -6,7 +6,8 @@
  * z panela by mala o medzery medzi kartami menej.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonToolbar, SkeletonList } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonToolbar, SkeletonList } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

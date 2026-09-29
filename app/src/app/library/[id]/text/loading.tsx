@@ -5,7 +5,8 @@
  * číta. Kostra je dlhá zámerne: krátka by vyzerala ako krátky predpis.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonText } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonText } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

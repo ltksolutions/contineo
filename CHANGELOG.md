@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Bočný panel namiesto pásu navigácie (2026-09-29)
+
+Na počítači je navigácia **bočný panel vľavo** s ikonami a skupinami
+**Moje úlohy · Organizácia · Správa**. Panel sa dá **zbaliť na lištu
+ikon**. Voľbu si pamätá prehliadač a stránka sa pri načítaní zobrazí
+rovno správne. V lište ikon povie názov položky popis pri prejdení myšou
+alebo pri fokuse. Na tablete (640–1023 px) je vždy lišta ikon a celý
+panel vysunie hamburger v hlavičke alebo „Rozbaliť" dole. Zavrie ho Esc
+alebo klik mimo. Vodorovný pás pod hlavičkou s „Viac N" odišiel. Na
+telefóne ostáva spodná lišta. „Na schválenie" je teraz aj na „Viac" pod
+„Moje úlohy". Bez JavaScriptu všetko funguje ďalej.
+
 ### Prideliť normy: dva stĺpce a hľadanie (2026-09-29)
 
 **Prideliť normy** má na širokej obrazovke **normy a publikum vedľa seba**

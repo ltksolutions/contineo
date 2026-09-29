@@ -16,19 +16,13 @@ import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import AppShell from "@/components/AppShell"
 import Icon from "@/components/Icon"
-import { navItems, moreGroups, normalizeLayout } from "@/lib/appNav"
+import { navItems, moreGroups } from "@/lib/appNav"
 import { shellNavData } from "@/lib/navData"
-import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-export default async function MorePage({
-  searchParams,
-}: {
-  searchParams: Promise<RawQuery>
-}) {
-  const q = normalizeQuery<{ layout?: string }>(await searchParams)
+export default async function MorePage() {
   const ctx = await onboardingContext()
 
   // Rovnaká brána ako na ostatných prihlásených obrazovkách (D29).
@@ -44,7 +38,7 @@ export default async function MorePage({
   const groups = moreGroups(navItems(flags, counts))
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={person.language}>
+    <AppShell language={person.language}>
       {/* Užšie než shell: je to zoznam odkazov, nie tabuľka. */}
       <div style={{ maxWidth: 560 }}>
         <h1 className="page-title" style={{ margin: "0 0 14px" }}>
@@ -54,7 +48,9 @@ export default async function MorePage({
         {groups.map(group => (
           <section key={group.key} className="more-group">
             <h2 className="more-group-title">
-              {group.key === "organisation" ? t.groupOrganisation : t.groupManagement}
+              {group.key === "tasks" ? t.groupTasks
+                : group.key === "organisation" ? t.groupOrganisation
+                : t.groupManagement}
             </h2>
             <div className="more-list">
               {group.items.map(o => (

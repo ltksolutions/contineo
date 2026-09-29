@@ -13,23 +13,12 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { acknowledgementDuties } from "@/lib/pending"
 import AppShell from "@/components/AppShell"
-import { normalizeLayout } from "@/lib/appNav"
-import type { RawQuery } from "@/lib/urlParams"
-import { normalizeQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { dueState } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
 
-export default async function DocumentsPage({
-  searchParams,
-}: {
-  // Variant navigácie je zatiaľ len z adresy (`?layout=sidebar`), rovnako
-  // ako v knižnici. Uložiť ho na osobu je zmena schémy a samostatné
-  // rozhodnutie.
-  searchParams: Promise<RawQuery>
-}) {
-  const q = normalizeQuery<{ layout?: string }>(await searchParams)
+export default async function DocumentsPage() {
   const ctx = await onboardingContext()
 
   // Neznámy hostiteľ sa správa ako zakázaný (D29) — a to `notFound()`, nie
@@ -91,7 +80,7 @@ export default async function DocumentsPage({
   const total = tracks.reduce((a, tr) => a + tr.totalCount, 0)
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={person.language}>
+    <AppShell language={person.language}>
     {/* Šírka 760 px zostáva: je to text na čítanie, nie tabuľka. Shell dáva
         odsadenie a navigáciu, obmedzenie riadka je vec obsahu. */}
     <div className="duty-page" style={tenantStyle(branding)}>
