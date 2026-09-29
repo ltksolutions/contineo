@@ -18,6 +18,8 @@ const state = vi.hoisted(() => ({
   detail: null as Record<string, unknown> | null,
   rounds: new Map<string, unknown[]>(),
   carryOver: [] as unknown[],
+  hr: true,
+  acks: [] as { versionId: string }[],
 }))
 
 vi.mock("next/navigation", () => ({
@@ -32,7 +34,7 @@ vi.mock("@/lib/library", () => ({
     person: { id: "p-jan", email: "jan@sfz.sk", companyCode: "SFZ", language: "sk", roles: ["hr", "content"] },
   }),
 }))
-vi.mock("@/lib/hr", () => ({ isHr: () => true }))
+vi.mock("@/lib/hr", () => ({ isHr: () => state.hr }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/codelistsTenant", () => ({ tenantExtras: () => ({}) }))
 vi.mock("@/lib/legalBases", () => ({ legalBasisOptions: () => [] }))
@@ -46,7 +48,7 @@ vi.mock("@/lib/people", () => ({
   ],
 }))
 vi.mock("@/lib/libraryProgress", () => ({ documentProgress: async () => ({ percent: null, acknowledged: 0, assigned: 0 }) }))
-vi.mock("@/lib/acknowledgements", () => ({ validAcknowledgements: async () => [] }))
+vi.mock("@/lib/acknowledgements", () => ({ validAcknowledgements: async () => state.acks }))
 vi.mock("@/lib/assignments", async importOriginal => ({
   ...(await importOriginal<typeof import("../src/lib/assignments")>()),
   carryOverCandidates: async () => state.carryOver,
@@ -111,6 +113,8 @@ beforeEach(() => {
   state.detail = detail()
   state.rounds = new Map()
   state.carryOver = []
+  state.hr = true
+  state.acks = []
 })
 
 describe("detail — postup znenia", () => {
@@ -240,5 +244,89 @@ describe("detail — právny základ v príprave (ADR-023, D139)", () => {
     })
     const html = await render({ open: "history" })
     expect(html).toContain("určené v príprave")
+  })
+})
+
+describe("detail — staršie znenia (DETAIL-starsie-znenia)", () => {
+  /** Staršie znenie `n` (1 = najnovšie zo starších), od najnovšieho. */
+  const older = (n: number, over: Record<string, unknown> = {}) => ({
+    versionId: `v-${n}`, label: `úplné znenie ${n}`, isActive: false,
+    effectiveFrom: new Date(Date.UTC(2026 - n, 0, 1)), effectiveTo: new Date(Date.UTC(2027 - n, 0, 1)),
+    publishedAt: new Date(Date.UTC(2025 - n, 11, 20)), pdf: pdf(`old-${n}`),
+    ...over,
+  })
+  const withOlder = (count: number) => {
+    state.detail = detail({
+      draftMarkdown: effective.markdown, draftPdf: effective.pdf,
+      versions: [effective, ...Array.from({ length: count }, (_, i) => older(i + 1))],
+    })
+  }
+  /** Riadok znenia — od kotvy `id="v-<versionId>"` po jeho `</li>`. */
+  const row = (html: string, id: string) => {
+    const at = html.indexOf(`id="v-${id}"`)
+    return at < 0 ? "" : html.slice(at, html.indexOf("</li>", at))
+  }
+
+  it("riadok má PDF a ponuku ⋯; karta platného znenia ostáva s odkazmi", async () => {
+    withOlder(1)
+    const html = await render()
+    const r = row(html, "v-1")
+    expect(r).toContain('class="o-pdf"')
+    expect(r).toContain("/api/library/file/old-1")
+    expect(r).toMatch(/<details class="more"><summary aria-label="Ďalšie úkony"/)
+    expect(r).toContain("Zmeniť zodpovednú osobu")
+    expect(r).toContain("História")
+    expect(r).toContain("1. 1. 2025 – 1. 1. 2026")
+    expect(r).toContain("zverejnené 20. 12. 2024")
+    expect(r).toContain("chýba")
+    expect(r).toContain("základ neurčený")
+    // Autor z riadku odchádza.
+    expect(r).not.toContain("Autor")
+    // Platné znenie sa nemení: PDF a úkony ako odkazy v `cur-links`.
+    expect(html).toMatch(/<div class="cur-links"><a href="\/api\/library\/file\/old"/)
+  })
+
+  it("odvolanie potvrdení len pre personalistu a len pri znení s potvrdeniami", async () => {
+    withOlder(2)
+    state.acks = [{ versionId: "v-1" }, { versionId: "v-1" }]
+    let html = await render()
+    expect(row(html, "v-1")).toContain("Odvolať potvrdenia tohto znenia")
+    expect(row(html, "v-1")).toMatch(/<div class="o-acks">2<small>potvrdili/)
+    expect(row(html, "v-2")).not.toContain("Odvolať potvrdenia")
+    expect(row(html, "v-2")).toMatch(/<div class="o-acks">—<small>/)
+
+    state.hr = false
+    html = await render()
+    expect(row(html, "v-1")).not.toContain("Odvolať potvrdenia")
+  })
+
+  it("viac ako 3 znenia: tri najnovšie, zvyšok za ?older=all", async () => {
+    withOlder(5)
+    let html = await render()
+    expect((html.match(/class="older-row/g) ?? []).length).toBe(3)
+    expect(row(html, "v-4")).toBe("")
+    expect(html).toContain('href="/library/sfz%3App?older=all#older">Zobraziť všetky (5)</a>')
+
+    html = await render({ older: "all" })
+    expect((html.match(/class="older-row/g) ?? []).length).toBe(5)
+    expect(html).not.toContain("Zobraziť všetky")
+  })
+
+  it("panel pod riadkom na celú šírku, so Zavrieť; skryté znenie zoznam rozbalí", async () => {
+    withOlder(5)
+    const html = await render({ version: "v-5", open: "history" })
+    expect((html.match(/class="older-row/g) ?? []).length).toBe(5)
+    const r = row(html, "v-5")
+    expect(html).toContain('class="older-row is-open" id="v-v-5"')
+    expect(r).toContain('class="older-panel"')
+    expect(r).toContain('href="/library/sfz%3App#v-v-5">Zavrieť</a>')
+    // Obsah panelu je dnešný `versionPanel` — história znenia.
+    expect(r).toContain('class="cur-panel"')
+    expect(row(html, "v-4")).not.toContain("older-panel")
+  })
+
+  it("bez starších znení prázdny stav v tej istej karte", async () => {
+    const html = await render()
+    expect(html).toMatch(/<section class="card older" id="older"><div class="older-head"><h2>Staršie znenia<\/h2><\/div><p class="older-empty">Žiadne\./)
   })
 })

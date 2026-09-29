@@ -5614,13 +5614,97 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 .cur-links a[aria-current="true"] { font-weight: 650; color: var(--ink); }
 .cur-panel { display: grid; gap: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-.older { list-style: none; margin: 0 0 18px; padding: 0; display: grid; }
+/* ── Staršie znenia: karta so zoznamom (DETAIL-starsie-znenia) ─────────────
+   Jeden riadok na znenie: platnosť · označenie · zodpovedná osoba ·
+   potvrdili · PDF a ⋯. Karta nemá `overflow: hidden` — ponuka ⋯ pri
+   poslednom riadku by sa inak orezala. */
+.older { padding: 0; margin: 0 0 18px; }
+.older-head { display: flex; align-items: baseline; gap: 8px; padding: 14px 20px 10px; }
+.older-head h2 { font-size: 15px; margin: 0; }
+.older-count { font-size: var(--fs-micro); color: var(--muted); font-variant-numeric: tabular-nums; }
+.older-note { font-size: var(--fs-micro); color: var(--muted); margin-left: auto; }
+.older-empty { margin: 0; padding: 14px 20px 18px; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line); }
+.older-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .older-row {
-  display: flex; gap: 4px 12px; flex-wrap: wrap; align-items: baseline;
-  padding: 10px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-small);
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1.4fr) minmax(0, 1fr) 92px auto;
+  gap: 16px;
+  align-items: start;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
 }
-.older-row > strong { font-size: var(--fs-body); }
-.older-panel { flex: 1 1 100%; display: grid; gap: 10px; }
+.older-row:last-child { border-bottom: 0; border-radius: 0 0 var(--radius) var(--radius); }
+.older-row:hover, .older-row.is-open { background: var(--bg); }
+.o-dates { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.35; }
+.o-dates small, .o-who small, .o-acks small { display: block; font-weight: 400; color: var(--muted); font-size: 12.5px; }
+.o-label { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.o-change { font-size: 12.5px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.o-who { font-size: 13.5px; line-height: 1.35; overflow-wrap: anywhere; }
+.o-who small { margin-top: 2px; }
+.o-who-inline { display: none; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.o-acks-inline { display: none; }
+.o-acks { font-size: 13.5px; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.35; }
+.o-acks small { font-size: var(--fs-micro); }
+.o-actions { display: flex; gap: 4px; align-items: center; justify-content: flex-end; }
+.o-pdf {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--surface);
+  font-size: var(--fs-small); font-weight: 600; color: var(--ink); text-decoration: none;
+}
+.o-pdf:hover { background: var(--surface-2); }
+
+/* Ponuka ⋯ — `<details>`, funguje bez JavaScriptu. */
+.more { position: relative; }
+.more > summary {
+  list-style: none; display: grid; place-items: center; width: 32px; height: 32px;
+  border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 13px; letter-spacing: 1px;
+}
+.more > summary::-webkit-details-marker { display: none; }
+.more > summary:hover, .more[open] > summary { background: var(--surface-2); color: var(--ink); }
+.more-menu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; min-width: 230px;
+  display: grid; padding: 5px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(20, 28, 42, 0.14);
+}
+.more-menu a {
+  display: flex; align-items: center; min-height: 36px; padding: 0 10px; border-radius: 7px;
+  font-size: 13.5px; color: var(--ink); text-decoration: none;
+}
+.more-menu a:hover, .more-menu a[aria-current="true"] { background: var(--surface-2); }
+.more-menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 2px; }
+
+/* Otvorený panel pod riadkom na celú šírku. */
+.older-panel {
+  grid-column: 1 / -1; display: grid; gap: 10px; padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+}
+.older-panel-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 14px; }
+.older-panel-head .quiet { font-size: var(--fs-small); }
+.older-panel-head a { margin-left: auto; font-size: var(--fs-small); color: var(--muted); }
+.older-panel > .cur-panel { padding-top: 0; border-top: 0; }
+.older-more { display: flex; justify-content: center; padding: 10px; border-top: 1px solid var(--line); }
+.older-more a { font-size: 13.5px; font-weight: 600; color: var(--accent); }
+
+/* Pod 1024: stĺpec Zodpovedná osoba zmizne, meno a základ idú pod označenie. */
+@media (max-width: 1023px) {
+  .older-row { grid-template-columns: 150px minmax(0, 1fr) 80px auto; }
+  .o-who { display: none; }
+  .o-who-inline { display: block; }
+}
+/* Pod 640: riadok v stĺpci, PDF a ⋯ vpravo hore, ciele 44 px. */
+@media (max-width: 639px) {
+  .older-head { padding: 12px 14px 8px; }
+  .older-note { display: none; }
+  .older-empty { padding: 12px 14px 16px; }
+  .older-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 12px 14px; }
+  .o-acks { display: none; }
+  .o-acks-inline { display: inline; }
+  .o-dates, .o-main { grid-column: 1 / 2; }
+  .o-actions { grid-column: 2 / 3; grid-row: 1 / 3; align-self: start; }
+  .o-pdf { min-height: 44px; min-width: 44px; justify-content: center; }
+  .more > summary { width: 44px; height: 44px; }
+  .more-menu a { min-height: 44px; }
+}
 .detail-card-title a { font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink); font-weight: 600; float: right; }
 /* Krokovník mimo karty (nahratie, nové znenie) — vlastný rámik. */
 :not(.flow) > .flow-steps {

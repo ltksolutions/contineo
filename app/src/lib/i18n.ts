@@ -1902,6 +1902,26 @@ interface Dictionary {
       history: string
       olderHeading: string
       olderNone: string
+      /**
+       * Staršie znenia ako zoznam (DETAIL-starsie-znenia). Pilulky sú krátke
+       * tvary tých istých stavov ako v karte platného znenia — v riadku nie je
+       * miesto na vetu.
+       */
+      older: {
+        count: (n: number) => string
+        note: string
+        range: (from: string, to: string) => string
+        published: (date: string) => string
+        acks: string
+        noAcks: string
+        ackCount: (n: number) => string
+        more: string
+        showAll: (n: number) => string
+        close: string
+        responsibleMissing: string
+        responsibleInactive: string
+        basisMissing: string
+      }
       manage: string
       uploadNext: string
       approvalHistory: string
@@ -5283,6 +5303,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       history: "História",
       olderHeading: "Staršie znenia",
       olderNone: "Žiadne. Po zverejnení nového znenia sa sem presunie platné.",
+      older: {
+        count: n => String(n),
+        note: "Ľudia ich už nevidia; potvrdenia ostávajú ako doklad.",
+        range: (from, to) => `${from} – ${to}`,
+        published: date => `zverejnené ${date}`,
+        acks: "potvrdili",
+        noAcks: "bez potvrdení",
+        ackCount: n => `${n} ${n === 1 ? "potvrdenie" : n >= 2 && n <= 4 ? "potvrdenia" : "potvrdení"}`,
+        more: "Ďalšie úkony",
+        showAll: n => `Zobraziť všetky (${n})`,
+        close: "Zavrieť",
+        responsibleMissing: "chýba",
+        responsibleInactive: "vyradená",
+        basisMissing: "základ neurčený",
+      },
       manage: "Správa",
       uploadNext: "Potom na detaile skontroluješ text, vyberieš schvaľovateľov a zodpovednú osobu a predložíš.",
       approvalHistory: "História schvaľovania",
@@ -8563,6 +8598,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       history: "Historie",
       olderHeading: "Starší znění",
       olderNone: "Žádná. Po zveřejnění nového znění se sem přesune platné.",
+      older: {
+        count: n => String(n),
+        note: "Lidé je už nevidí; potvrzení zůstávají jako doklad.",
+        range: (from, to) => `${from} – ${to}`,
+        published: date => `zveřejněno ${date}`,
+        acks: "potvrdili",
+        noAcks: "bez potvrzení",
+        ackCount: n => `${n} potvrzení`,
+        more: "Další úkony",
+        showAll: n => `Zobrazit všechna (${n})`,
+        close: "Zavřít",
+        responsibleMissing: "chybí",
+        responsibleInactive: "vyřazená",
+        basisMissing: "základ neurčen",
+      },
       manage: "Správa",
       uploadNext: "Potom na detailu zkontroluješ text, vybereš schvalovatele a odpovědnou osobu a předložíš.",
       approvalHistory: "Historie schvalování",
@@ -11835,6 +11885,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       history: "History",
       olderHeading: "Older versions",
       olderNone: "None. When a new version is published, the current one moves here.",
+      older: {
+        count: n => String(n),
+        note: "People no longer see them; acknowledgements remain as evidence.",
+        range: (from, to) => `${from} – ${to}`,
+        published: date => `published ${date}`,
+        acks: "acknowledged",
+        noAcks: "no acknowledgements",
+        ackCount: n => `${n} ${n === 1 ? "acknowledgement" : "acknowledgements"}`,
+        more: "More actions",
+        showAll: n => `Show all (${n})`,
+        close: "Close",
+        responsibleMissing: "missing",
+        responsibleInactive: "deactivated",
+        basisMissing: "basis not set",
+      },
       manage: "Administration",
       uploadNext: "Then, on the detail page, you check the text, choose approvers and the responsible person, and submit.",
       approvalHistory: "Approval history",
