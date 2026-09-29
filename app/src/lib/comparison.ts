@@ -67,14 +67,32 @@ export async function buildComparison(
 ): Promise<Comparison> {
   const code = requireCompanyCode(companyCode, "buildComparison")
   const docs = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
-  const doc = await docs.findOne({ companyCode: code, documentId }) as DocumentRecord | null
+  const query = { companyCode: code, documentId }
+  // Najprv bez textov: pri dokumente s jediným znením by sa inak kvôli
+  // odpovedi „nie je s čím porovnať" ťahali stovky kB textu (na intranete
+  // 594 ms pri Smernici o pracovných cestách).
+  const doc = await docs.findOne(query, {
+    projection: { markdown: 0, "versions.markdown": 0, "versions.textFixes": 0 },
+  }) as DocumentRecord | null
   if (!doc) return { ok: false, reason: "no-document" }
 
   const pair = comparePair(doc, now, since)
   if (!pair.ok) return pair
 
-  const before = versionText(doc, pair.from)
-  const after = versionText(doc, pair.to)
+  // Texty až teraz, keď je čo porovnať.
+  const texts = await docs.findOne(query, {
+    projection: { _id: 0, markdown: 1, "versions.versionId": 1, "versions.markdown": 1 },
+  }) as Pick<DocumentRecord, "markdown" | "versions"> | null
+  const withText: DocumentRecord = {
+    ...doc,
+    markdown: texts?.markdown,
+    versions: (doc.versions ?? []).map(v => ({
+      ...v, markdown: texts?.versions?.find(t => t.versionId === v.versionId)?.markdown,
+    })),
+  }
+  const textOf = (v: Version) => versionText(withText, withText.versions!.find(x => x.versionId === v.versionId) ?? v)
+  const before = textOf(pair.from)
+  const after = textOf(pair.to)
   if (!before || !after) return { ok: false, reason: "missing-text" }
 
   const tenants = await getCollection(TENANTS_COLLECTION)
