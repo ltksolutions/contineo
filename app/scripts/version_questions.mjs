@@ -40,7 +40,8 @@ const QUESTIONS = [
   { q: "Aký je poplatok za odvolanie podľa skúšobného poriadku?", kind: "today", from: "2026-07-01", text: "50 eur" },
   { q: "Aká bola lehota na odvolanie podľa skúšobného poriadku k 1. 3. 2025?", kind: "asOf", from: "2024-01-01", text: "15 dní" },
   { q: "Aký bude poplatok za odvolanie podľa skúšobného poriadku k 1. 1. 2027?", kind: "asOf", from: "2027-01-01", text: "80 eur" },
-  { q: "Čo sa zmení v skúšobnom poriadku?", kind: "compare", pair: ["2026-07-01", "2027-01-01"], changes: ["čl. 4 changed"] },
+  // Čl. 7: v novele opravená interpunkcia (oprava textu 29. 9. 2026, D150) — porovnanie ju vidí ako zmenu.
+  { q: "Čo sa zmení v skúšobnom poriadku?", kind: "compare", pair: ["2026-07-01", "2027-01-01"], changes: ["čl. 4 changed", "čl. 7 changed"] },
   { q: "Čo sa zmenilo v skúšobnom poriadku od roku 2024?", kind: "compare", pair: ["2024-01-01", "2026-07-01"],
     changes: ["čl. 2 changed", "čl. 7 added", "čl. 5 removed"] },
 ]
