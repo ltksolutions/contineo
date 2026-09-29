@@ -209,7 +209,7 @@ export default async function TenantDetailPage({
   const t = d.admin.detail
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={tenant.branding.displayName}>
     <div style={{ maxWidth: 760 }}>
       <p style={{ margin: "0 0 12px" }}>
         <Link href="/admin" className="quiet" style={{ fontSize: "var(--fs-body)" }}>

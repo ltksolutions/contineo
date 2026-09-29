@@ -78,7 +78,7 @@ export default async function TrackDetailPage({
     .map(d => ({ value: d.documentId, label: d.title }))
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={track.title} trail={{ "/library/tracks": t.heading }}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={message ?? error} error={Boolean(error)} back={here} />
 

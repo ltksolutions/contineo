@@ -71,7 +71,11 @@ export default async function NotifyPage({
   )
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell
+      language={ctx.person.language}
+      title={t.heading}
+      trail={{ [`/hr/${id}`]: assignment.subject.documentTitle }}
+    >
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href={`/hr/${encodeURIComponent(id)}`} style={{ fontSize: "var(--fs-body)" }}>

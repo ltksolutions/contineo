@@ -43,7 +43,7 @@ export default async function CurationPage({
   const pending = await pendingCurations(ctx.person.companyCode)
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={t.publishHeading}>
     <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
       <div style={{ marginBottom: 20 }}>
         <h1 className="page-title" style={{ margin: "0 0 8px" }}>

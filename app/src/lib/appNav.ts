@@ -12,34 +12,11 @@
  * v module s `"use client"`. Tu žiadna direktíva nie je zámerne — súbor je
  * obojaký a nič v ňom nesiaha na `window` ani na React.
  *
- * Od 29. 9. 2026 má desktop jediný tvar — bočný panel (SHELL-bocny-panel,
- * Q1). Pás `topbar`, `?layout=` a `normalizeLayout()` odišli.
+ * Od 29. 9. 2026 nemá desktop stále menu vôbec (SHELL-rozcestnik, Q1):
+ * sekcie sú dlaždice na Prehľade (`sectionGroups()`), na podstránke je pod
+ * hlavičkou cesta (`breadcrumbs()`) a plachta všetkých sekcií. Pás
+ * `topbar`, bočný panel, `?layout=` ani `normalizeLayout()` už nie sú.
  */
-
-/**
- * Stav bočného panela na desktope: rozbalený (236 px) alebo lišta ikon
- * (64 px). Voľba **zariadenia, nie osoby** — drží ju cookie `nav` (Q4).
- */
-export type NavState = "wide" | "rail"
-
-/** Meno cookie so stavom panela. */
-export const NAV_COOKIE = "nav"
-
-/**
- * Udalosť, ktorou hamburger v hlavičke vysunie bočný panel (640–1023 px).
- * Hlavička je v `layout.tsx`, panel v `AppShell` — iný strom, preto udalosť
- * na `window`, nie spoločný stav. `detail` je prvok, na ktorý sa po zavretí
- * vráti fokus.
- */
-export const NAV_DRAWER_EVENT = "contineo:nav-drawer"
-
-/**
- * Stav z cookie. Čokoľvek iné než `rail` je `wide` — predvolený je rozbalený
- * panel a neznáma hodnota (ručne upravené cookie) nemá zhodiť stránku.
- */
-export function normalizeNavState(value: unknown): NavState {
-  return value === "rail" ? "rail" : "wide"
-}
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
 export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "learning" | "learningManage" | "learningTests"
@@ -245,87 +222,190 @@ export function isTabActive(pathname: string, tab: TabItem): boolean {
   return tab.activeFor.some(href => isActive(pathname, href))
 }
 
-/* ── Skupiny bočného panela (SHELL-bocny-panel) ─────────────────────────── */
 
-export type NavGroupKey = "tasks" | "organisation" | "management"
+/* ── Rozcestník: dlaždice sekcií (SHELL-rozcestnik) ─────────────────────── */
+
+export type SectionGroupKey = "organisation" | "management"
 
 /**
- * Skupiny panela. Prvá je bez nadpisu — domov a otázka nie sú „sekcia",
- * sú to vstupy do celého portálu. „Na schválenie" patrí k povinnostiam
- * človeka, nie k správe (Q2): schvaľovatelia sú menovaní ľudia (D69).
+ * Hlavné položky — nie sú dlaždice. Prehľad je stránka s dlaždicami sama,
+ * Opýtať sa je pole v hlavičke a povinnosti človeka sú KPI nad dlaždicami.
+ * V plachte všetkých sekcií tvoria prvý stĺpec „Hlavné".
  */
-const NAV_GROUPS: { key: NavGroupKey | null; keys: NavKey[] }[] = [
-  { key: null, keys: ["overview", "ask"] },
-  { key: "tasks", keys: ["toAcknowledge", "toApprove"] },
+export const MAIN_KEYS: NavKey[] = ["overview", "ask", "toAcknowledge", "toApprove"]
+
+/**
+ * Skupiny dlaždíc. Rovnaké na Prehľade, na `/more` aj v plachte — tá istá
+ * sekcia nemá byť raz v „Organizácii" a inde v „Správe" (Q4). Osoby sú
+ * v Správe: je to správa ľudí, nie adresár kolegov (ten je D87 pre
+ * každého).
+ */
+const SECTION_GROUPS: { key: SectionGroupKey; keys: NavKey[] }[] = [
   { key: "organisation", keys: ["directory", "library", "learning"] },
   { key: "management", keys: ["assigned", "evidence", "people", "evaluation", "dpo", "learningManage", "learningTests"] },
 ]
 
-export interface NavGroup {
-  /** `null` = skupina bez nadpisu (Prehľad, Opýtať sa). */
-  key: NavGroupKey | null
+export interface SectionGroup {
+  key: SectionGroupKey
   items: NavItem[]
 }
 
 /**
- * `navItems()` v skupinách panela. Prázdna skupina sa nevracia — nadpis bez
- * položiek je šum. Kľúč, na ktorý sa pri delení zabudne, padne do „Správy":
- * odkaz v nesprávnej skupine je nepohodlie, stratený odkaz je výpadok sekcie
- * (ten istý dôvod ako pri `/more`).
+ * `navItems()` ako dlaždice v skupinách. Roly rozhodol už `navItems()` —
+ * tu sa len delí. Prázdna skupina sa nevracia: bežná osoba nemá vidieť
+ * nadpis „Správa" nad ničím. Kľúč, na ktorý sa pri delení zabudne, padne
+ * do „Správy": dlaždica v nesprávnej skupine je nepohodlie, stratená
+ * dlaždica je sekcia, na ktorú sa už nedá dostať.
  */
-export function navGroups(items: NavItem[]): NavGroup[] {
-  const groups = NAV_GROUPS.map(g => ({
-    key: g.key,
-    items: g.keys.map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined),
-  }))
-  const covered = new Set(NAV_GROUPS.flatMap(g => g.keys))
+export function sectionGroups(items: NavItem[]): SectionGroup[] {
+  const pick = (keys: NavKey[]) =>
+    keys.map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined)
+  const groups = SECTION_GROUPS.map(g => ({ key: g.key, items: pick(g.keys) }))
+  const covered = new Set<NavKey>([...MAIN_KEYS, ...SECTION_GROUPS.flatMap(g => g.keys)])
   groups.find(g => g.key === "management")!.items.push(...items.filter(o => !covered.has(o.key)))
   return groups.filter(g => g.items.length > 0)
 }
 
-export type MoreGroupKey = "tasks" | "organisation" | "management"
-
-/**
- * Skupiny na `/more`. Osobné veci (príručka, moje potvrdenia, odhlásenie)
- * tu zámerne nie sú — bývajú pod avatarom v hlavičke, ktorá na telefóne
- * zostáva, a dve položky s tým istým cieľom sú horšie než jedna
- * (ten istý dôvod ako v `Header.tsx`).
- */
-const MORE_GROUPS: Record<MoreGroupKey, NavKey[]> = {
-  // „Na schválenie" je povinnosť človeka, nie správa — rovnako ako v paneli
-  // (SHELL-bocny-panel, Q2). „Na potvrdenie" je v lište pod „Úlohami".
-  tasks: ["toApprove"],
-  // Vzdelávanie je pre každého, nie správa — patrí k adresáru.
-  organisation: ["directory", "learning", "people"],
-  management: ["assigned", "evidence", "evaluation", "dpo", "learningManage", "learningTests"],
+/** Skupina sekcie — pre cestu (Prehľad › Skupina › Sekcia). */
+function groupOf(key: NavKey): SectionGroupKey | null {
+  if (MAIN_KEYS.includes(key)) return null
+  return SECTION_GROUPS.find(g => g.keys.includes(key))?.key ?? "management"
 }
+
+export type MoreGroupKey = "tasks" | SectionGroupKey
 
 export interface MoreGroup {
   key: MoreGroupKey
   items: NavItem[]
 }
 
-/** Zvyšok `navItems()` pre `/more`, v skupinách. Prázdna skupina sa nevracia. */
+/**
+ * `/more` na telefóne — tie isté dlaždice ako Prehľad (Q4), bez sekcií,
+ * ktoré už sú na spodnej lište. Nad nimi „Moje úlohy" so schvaľovaním:
+ * lišta ho nesie len v súčte „Úloh", ktoré vedú na potvrdenia, a bez tohto
+ * riadku by sa naň z telefónu nedalo dostať. Schvaľovatelia sú menovaní
+ * ľudia (D69), nie rola — preto k úlohám, nie k správe.
+ *
+ * Osobné veci (príručka, moje potvrdenia, odhlásenie) tu zámerne nie sú —
+ * bývajú pod avatarom v hlavičke, ktorá na telefóne zostáva, a dve položky
+ * s tým istým cieľom sú horšie než jedna (ten istý dôvod ako v `Header.tsx`).
+ */
 export function moreGroups(items: NavItem[]): MoreGroup[] {
-  // „Na schválenie" je v lište len cez „Úlohy", na /more zostáva (inak by sa
-  // naň z telefónu nedalo dostať). Vzdelávanie na lište sa tu neopakuje.
   const onBar = new Set(tabbarKeys(items))
-  const pick = (keys: NavKey[]) =>
-    keys.filter(k => !onBar.has(k)).map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined)
-
-  const groups: MoreGroup[] = [
-    { key: "tasks", items: pick(MORE_GROUPS.tasks) },
-    { key: "organisation", items: pick(MORE_GROUPS.organisation) },
-    { key: "management", items: pick(MORE_GROUPS.management) },
+  const rest = items.filter(o => !onBar.has(o.key))
+  const tasks = rest.filter(o => o.key === "toApprove")
+  return [
+    ...(tasks.length > 0 ? [{ key: "tasks" as const, items: tasks }] : []),
+    ...sectionGroups(rest),
   ]
+}
+
+/* ── Cesta pod hlavičkou (SHELL-rozcestnik, bod 4) ──────────────────────── */
+
+/**
+ * Kde sekcia býva — **bez ohľadu na rolu**. Cesta sa skladá z adresy, nie
+ * z toho, čo človek smie: kto na stránku prišiel, tomu ju stránka pustila
+ * a jej sekcia je jej sekcia. Testy majú pre zodpovednú osobu inú adresu
+ * v `navItems()` (`?tab=results`), cesta ukazuje koreň sekcie.
+ */
+const SECTION_HREF: Record<NavKey, string> = {
+  overview: "/",
+  ask: "/ask",
+  toAcknowledge: "/documents",
+  toApprove: "/approvals",
+  directory: "/directory",
+  library: "/library",
+  learning: "/learning",
+  assigned: "/hr",
+  evidence: "/hr/evidence",
+  people: "/people",
+  evaluation: "/evaluation",
+  dpo: "/dpo",
+  learningManage: "/learning/manage",
+  learningTests: "/learning/tests",
+}
+
+/**
+ * Hlavička požiadavky, v ktorej `proxy.ts` podáva adresu stránky
+ * `AppShell`-u. Serverový komponent ju od Nextu inak nedostane a cesta sa
+ * z nej skladá.
+ */
+export const PATHNAME_HEADER = "x-contineo-pathname"
+
+export interface Crumb {
+  label: string
+  /** `null` = aktuálna stránka — nie je odkaz (`aria-current="page"`). */
+  href: string | null
+}
+
+export interface CrumbNames {
+  overview: string
+  groups: Record<SectionGroupKey, string>
+  sections: Record<NavKey, string>
+  /**
+   * Názvy ďalších krokov podľa cesty (`/hr/assign` → „Prideliť normu",
+   * `/library/abc` → názov normy). Dodáva ich stránka — vie, ako sa volá
+   * ona aj jej rodič; z adresy sa to vyčítať nedá.
+   */
+  pages?: Record<string, string>
+}
+
+/** Cesta s dekódovanými úsekmi. Chybné kódovanie úseku ho nechá tak. */
+function decodePath(path: string): string {
+  return path.split("/").map(segment => {
+    try {
+      return decodeURIComponent(segment)
+    } catch {
+      return segment
+    }
+  }).join("/")
+}
+
+/**
+ * Cesta od Prehľadu k aktuálnej stránke: Prehľad › Skupina › Sekcia › … ›
+ * Aktuálna. Z adresy, nie z histórie prehliadača — rovnaká aj po otvorení
+ * odkazu z e-mailu.
+ *
+ * - Na Prehľade (`/`) je prázdna — pás sa nekreslí.
+ * - Skupina vedie na svoje dlaždice na Prehľade (`/#management`).
+ * - Hlavné položky (Opýtať sa, Na potvrdenie…) skupinu nemajú.
+ * - Medzikrok, ktorému stránka nedala názov, sa vynechá: `/learning/x/y/test`
+ *   nie je stránka, len úsek adresy, a krok bez názvu by bol holý kľúč.
+ * - Neznáma cesta mimo sekcií: Prehľad › aktuálna.
+ * - Posledný krok je aktuálny, len keď je to naozaj táto adresa. Keď názov
+ *   aktuálnej stránky chýba, ostanú všetky kroky odkazmi — tvrdiť o rodičovi,
+ *   že je aktuálny, by bola nepravda.
+ */
+export function breadcrumbs(pathname: string, names: CrumbNames): Crumb[] {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname
+  if (path === "/" || path === "") return []
 
   /*
-   * Poistka na budúce položky: kľúč, na ktorý sa pri delení zabudne, padne
-   * do „Správy". Odkaz v nesprávnej skupine je nepohodlie; odkaz, ktorý sa
-   * z telefónu stratí úplne, je výpadok sekcie.
+   * Kľúče názvov sa porovnávajú **dekódované**: stránka pozná parameter už
+   * dekódovaný (`sfz:stanovy`), adresa ho môže niesť aj kódovaný
+   * (`sfz%3Astanovy`) — podľa toho, kto odkaz poskladal.
    */
-  const covered = new Set<NavKey>([...inTabbar(items), ...Object.values(MORE_GROUPS).flat()])
-  groups.find(g => g.key === "management")!.items.push(...items.filter(o => !covered.has(o.key)))
+  const pages = new Map(Object.entries(names.pages ?? {}).map(([k, v]) => [decodePath(k), v]))
+  const crumbs: { label: string; href: string }[] = [{ label: names.overview, href: "/" }]
 
-  return groups.filter(g => g.items.length > 0)
+  const sectionHref = activeHref(path, Object.values(SECTION_HREF).filter(h => h !== "/"))
+  let start = ""
+  if (sectionHref) {
+    const key = (Object.keys(SECTION_HREF) as NavKey[]).find(k => SECTION_HREF[k] === sectionHref)!
+    const group = groupOf(key)
+    if (group) crumbs.push({ label: names.groups[group], href: `/#${group}` })
+    crumbs.push({ label: names.sections[key], href: sectionHref })
+    start = sectionHref
+  }
+
+  const rest = path.slice(start.length).split("/").filter(Boolean)
+  let prefix = start
+  for (const segment of rest) {
+    prefix = `${prefix}/${segment}`
+    const label = pages.get(decodePath(prefix))
+    if (label) crumbs.push({ label, href: prefix })
+  }
+
+  return crumbs.map(c => ({ label: c.label, href: c.href === path ? null : c.href }))
 }
+

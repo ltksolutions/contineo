@@ -90,7 +90,7 @@ export default async function HrReportPage({
   }
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
       <Notice message={q.msg} error={q.error === "1"} back={link({})} />
 

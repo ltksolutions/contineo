@@ -27,7 +27,7 @@ export default async function TenantAdminPage() {
   const t = dictionary(language).admin.list
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 900 }}>
       <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>

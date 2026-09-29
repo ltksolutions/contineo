@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prehľad ako rozcestník, bez stáleho menu (2026-09-29)
+
+Na počítači ani na tablete už **nie je stále menu** — ani pás, ani bočný
+panel z predchádzajúcej zmeny. Obsah má celú šírku. Všetky sekcie sú
+**dlaždice na Prehľade** v skupinách **Organizácia** a **Správa**, každá
+s jednou vetou, čo v nej je, a s počtom, keď niečo čaká. Pod nimi je
+„Pre vás" s úlohami a novinkami v dvoch rovnako vysokých kartách.
+
+Na každej inej stránke je pod hlavičkou **cesta** (Prehľad › Správa ›
+Pridelené normy › Prideliť normy). Každý krok okrem posledného je odkaz,
+skupina vedie na svoje dlaždice na Prehľade. Na začiatku cesty je ikona
+**9 bodiek**, ktorá otvorí plachtu so všetkými sekciami a počtami. Zavrie
+ju Esc, klik mimo alebo výber. Na telefóne ostáva spodná lišta a „Viac"
+ukazuje tie isté dlaždice ako Prehľad. Bez JavaScriptu všetko funguje ďalej.
+
 ### Bočný panel namiesto pásu navigácie (2026-09-29)
 
 Na počítači je navigácia **bočný panel vľavo** s ikonami a skupinami

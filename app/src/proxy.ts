@@ -27,6 +27,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 import { legacyRoute } from "@/lib/legacyRoutes"
+import { PATHNAME_HEADER } from "@/lib/appNav"
 import { isHostCheckExempt, isPublicPath } from "@/lib/publicRoutes"
 import { resolveTenant } from "@/lib/tenants"
 
@@ -70,7 +71,13 @@ export async function proxy(req: NextRequest) {
   if (isPublicPath(pathname)) return NextResponse.next()
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  if (token) return NextResponse.next()
+  if (token) {
+    // Adresa pre cestu pod hlavičkou (`AppShell` → `breadcrumbs()`).
+    // Nastavuje sa vždy nanovo — hodnotu, ktorú poslal klient, prepíše.
+    const headers = new Headers(req.headers)
+    headers.set(PATHNAME_HEADER, pathname)
+    return NextResponse.next({ request: { headers } })
+  }
 
   // API vracia 401, nie presmerovanie. Presmerovanie na HTML stránku by
   // klient dostal ako odpoveď na dotaz a pokúsil by sa ju čítať ako SSE.

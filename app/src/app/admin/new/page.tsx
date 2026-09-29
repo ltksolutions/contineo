@@ -37,7 +37,7 @@ export default async function NewTenantPage({
   const usedCodes = (await tenantOverviews()).map(o => o.companyCode)
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 620 }}>
       <p style={{ margin: "0 0 12px" }}>
         <Link href="/admin" className="quiet" style={{ fontSize: "var(--fs-body)" }}>

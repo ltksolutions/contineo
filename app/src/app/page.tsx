@@ -22,6 +22,9 @@ import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
+import SectionTiles from "@/components/SectionTiles"
+import { navItems, sectionGroups } from "@/lib/appNav"
+import { shellNavData } from "@/lib/navData"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { pendingForPerson } from "@/lib/pending"
@@ -72,12 +75,20 @@ export default async function OverviewPage({
   const language = person.language
   const t = dictionary(language).overview
 
-  const [pending, approvals, news, expiring] = await Promise.all([
+  const [pending, approvals, news, expiring, nav] = await Promise.all([
     pendingForPerson(person),
     roundsWaitingFor(person.companyCode, person.email),
     libraryNews(person.companyCode),
     expiringVersions(person.companyCode),
+    // Tie isté roly a počty ako shell — `cache()`, takže bez dotazov navyše.
+    shellNavData(),
   ])
+  /*
+    Dlaždice sekcií (SHELL-rozcestnik): od 640 px nie je stále menu, sekcie
+    sú tu. Kto akú dlaždicu vidí, rozhodol `navItems()` — rovnako ako lišta
+    a plachta, takže sa nemôžu rozísť.
+  */
+  const sections = sectionGroups(navItems(nav.flags, nav.counts))
 
   /*
     Názvy dokumentov pre kolá až po ich načítaní: bez nich by v paneli stál
@@ -134,7 +145,6 @@ export default async function OverviewPage({
   const newsShown = news.slice(0, 6)
   const expiringShown = expiring.slice(0, 4)
   const newsTotal = news.length + expiring.length
-  const newsHidden = newsTotal > newsShown.length + expiringShown.length
 
   return (
     <AppShell language={language}>
@@ -186,93 +196,111 @@ export default async function OverviewPage({
           ))}
         </div>
 
-        <div className="overview-panels">
-          <section className="card panel">
-            <div className="panel-head">
-              <span>{t.attention}</span>
-              {attentionTotal > 0 && <span className="panel-head-count">{attentionTotal}</span>}
-              {attentionHidden && (
-                <Link className="panel-head-link" href="/documents">{t.showAll(attentionTotal)}</Link>
-              )}
-            </div>
-            {/*
-              Prázdno až vtedy, keď je prázdny celý panel — dovtedy sa veta
-              „nič nečaká" kreslila aj nad riadkom schválenia. Dva riadky
-              (PREHLAD, úloha 1): čo tu nie je a čo z toho vyplýva.
-            */}
-            {pending.items.length === 0 && approvals.length === 0 && (
-              <div className="panel-empty">
-                <span className="panel-empty-title">{t.empty.attentionTitle}</span>
-                <span className="panel-empty-text">{t.empty.attentionText}</span>
-              </div>
-            )}
-            {dutiesShown.map(i => (
-              <div key={`${i.source}-${i.id}`} className="panel-row">
-                <div className="panel-main">
-                  <Link className="panel-name" href={i.href}>{i.title}</Link>
-                  {i.detail && <div className="quiet panel-meta">{i.detail}</div>}
-                </div>
-                {i.due && (
-                  <span className={`due-chip due-chip--${dueState(i.due, now)}`}>
-                    {t.by(formatDate(i.due, language))}
-                  </span>
-                )}
-                <Link className="panel-action" href={i.href}>{t.open}</Link>
-              </div>
-            ))}
-            {approvalsShown.map(r => (
-              <div key={`${r.documentId}-${r.round}`} className="panel-row">
-                <div className="panel-main">
-                  <Link className="panel-name" href="/approvals">{approvalTitles.get(r.documentId) ?? r.documentId}</Link>
-                  <div className="quiet panel-meta">{t.submittedBy(r.submittedBy)}</div>
-                </div>
-                <Link className="panel-action" href="/approvals">{t.decide}</Link>
-              </div>
-            ))}
-          </section>
+        {/* Rozcestník: pod KPI sekcie, pod nimi „Pre vás". Nadpisy skupín
+            nesú kotvu pre krok skupiny v ceste (`/#management`). */}
+        <SectionTiles groups={sections} language={language} />
 
-          <section className="card panel">
-            <div className="panel-head">
-              <span>{t.news}</span>
-              {newsTotal > 0 && <span className="panel-head-count">{newsTotal}</span>}
-              {newsHidden && <Link className="panel-head-link" href="/library">{t.wholeLibrary}</Link>}
-            </div>
-            {news.length === 0 && expiring.length === 0 && (
-              <div className="panel-empty">
-                <span className="panel-empty-title">{t.empty.newsTitle(NEW_DAYS)}</span>
-                <span className="panel-empty-text">{t.empty.newsText}</span>
+        <section className="section-group" aria-labelledby="for-you">
+          <h2 className="section-group-title" id="for-you">{t.forYou}</h2>
+          <div className="overview-panels">
+            <section className="card panel">
+              <div className="panel-head">
+                <span>{t.attention}</span>
+                {attentionTotal > 0 && <span className="panel-head-count">{attentionTotal}</span>}
               </div>
-            )}
-            {newsShown.map(n => (
-              <div key={`${n.documentId}-${n.versionLabel}`} className="panel-row">
-                <div className="panel-main">
-                  <Link className="panel-name" href={`/documents/${encodeURIComponent(n.documentId)}`}>
-                    {n.title}
-                  </Link>
-                  <div className="quiet panel-meta">
-                    {n.versionLabel} · {formatDate(n.publishedAt, language)}
+              {/*
+                Prázdno až vtedy, keď je prázdny celý panel — dovtedy sa veta
+                „nič nečaká" kreslila aj nad riadkom schválenia. Dva riadky
+                (PREHLAD, úloha 1): čo tu nie je a čo z toho vyplýva.
+              */}
+              {pending.items.length === 0 && approvals.length === 0 && (
+                <div className="panel-empty">
+                  <span className="panel-empty-title">{t.empty.attentionTitle}</span>
+                  <span className="panel-empty-text">{t.empty.attentionText}</span>
+                </div>
+              )}
+              {dutiesShown.map(i => (
+                <div key={`${i.source}-${i.id}`} className="panel-row">
+                  <div className="panel-main">
+                    <Link className="panel-name" href={i.href}>{i.title}</Link>
+                    {i.detail && <div className="quiet panel-meta">{i.detail}</div>}
+                  </div>
+                  {i.due && (
+                    <span className={`due-chip due-chip--${dueState(i.due, now)}`}>
+                      {t.by(formatDate(i.due, language))}
+                    </span>
+                  )}
+                  <Link className="panel-action" href={i.href}>{t.open}</Link>
+                </div>
+              ))}
+              {approvalsShown.map(r => (
+                <div key={`${r.documentId}-${r.round}`} className="panel-row">
+                  <div className="panel-main">
+                    <Link className="panel-name" href="/approvals">{approvalTitles.get(r.documentId) ?? r.documentId}</Link>
+                    <div className="quiet panel-meta">{t.submittedBy(r.submittedBy)}</div>
+                  </div>
+                  <Link className="panel-action" href="/approvals">{t.decide}</Link>
+                </div>
+              ))}
+              {/*
+                Odkaz na celý zoznam v pätičke (SHELL-rozcestnik, 4a) — oba
+                panely ho majú na tom istom mieste dole, rovnako vysoké karty
+                tak lícujú. Počet v ňom len keď panel niečo skrýva (úloha 3).
+              */}
+              <div className="panel-foot">
+                <Link href="/documents">{attentionHidden ? t.showAll(attentionTotal) : t.allTasks}</Link>
+              </div>
+            </section>
+
+            <section className="card panel">
+              <div className="panel-head">
+                <span>{t.news}</span>
+                {newsTotal > 0 && <span className="panel-head-count">{newsTotal}</span>}
+              </div>
+              {news.length === 0 && expiring.length === 0 && (
+                <div className="panel-empty">
+                  <span className="panel-empty-title">{t.empty.newsTitle(NEW_DAYS)}</span>
+                  <span className="panel-empty-text">{t.empty.newsText}</span>
+                </div>
+              )}
+              {newsShown.map(n => (
+                <div key={`${n.documentId}-${n.versionLabel}`} className="panel-row">
+                  <div className="panel-main">
+                    <Link className="panel-name" href={`/documents/${encodeURIComponent(n.documentId)}`}>
+                      {n.title}
+                    </Link>
+                    <div className="quiet panel-meta">
+                      {n.versionLabel} · {formatDate(n.publishedAt, language)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {/*
-              Expirujúce znenia sú v tom istom paneli, nie vo vlastnom: je to
-              tá istá otázka („čo sa v knižnici deje"), len z druhej strany.
-              Vlastný panel pre dva riadky by bol prázdny priestor.
-            */}
-            {expiringShown.map(e => (
-              <div key={`exp-${e.documentId}-${e.versionLabel}`} className="panel-row">
-                <div className="panel-main">
-                  <Link className="panel-name" href={`/documents/${encodeURIComponent(e.documentId)}`}>
-                    {e.title}
-                  </Link>
-                  <div className="quiet panel-meta">{t.until(formatDate(e.effectiveTo, language))}</div>
+              ))}
+              {/*
+                Expirujúce znenia sú v tom istom paneli, nie vo vlastnom: je to
+                tá istá otázka („čo sa v knižnici deje"), len z druhej strany.
+                Vlastný panel pre dva riadky by bol prázdny priestor.
+              */}
+              {expiringShown.map(e => (
+                <div key={`exp-${e.documentId}-${e.versionLabel}`} className="panel-row">
+                  <div className="panel-main">
+                    <Link className="panel-name" href={`/documents/${encodeURIComponent(e.documentId)}`}>
+                      {e.title}
+                    </Link>
+                    <div className="quiet panel-meta">{t.until(formatDate(e.effectiveTo, language))}</div>
+                  </div>
+                  <span className="due-chip due-chip--soon">{t.expiringChip}</span>
                 </div>
-                <span className="due-chip due-chip--soon">{t.expiringChip}</span>
-              </div>
-            ))}
-          </section>
-        </div>
+              ))}
+              {/* Knižnica je obrazovka správy obsahu — ostatným by odkaz
+                  skončil na 404. */}
+              {nav.flags.isContentManager && (
+                <div className="panel-foot">
+                  <Link href="/library">{t.wholeLibrary}</Link>
+                </div>
+              )}
+            </section>
+          </div>
+        </section>
       </div>
     </AppShell>
   )

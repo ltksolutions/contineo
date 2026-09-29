@@ -16,7 +16,6 @@ import { ContineoMark } from "./ContineoMark"
 import Icon, { iconProps } from "./Icon"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
-import { NAV_DRAWER_EVENT } from "@/lib/appNav"
 
 /**
  * Voľba témy má **tri** stavy, nie dva.
@@ -256,27 +255,6 @@ export default function Header({
       }}
     >
       <div className="wrap--shell header-row">
-        {/*
-          Hamburger na 640–1023 px (SHELL-bocny-panel, Q3): vysunie bočný
-          panel. Panel je v `AppShell`, hlavička v `layout.tsx` — preto
-          udalosť, nie spoločný stav. Viditeľný len tam, kde panel je (CSS
-          `body:has(.app-panel)`). Bez skriptu je to odkaz na `/more`,
-          kde je celá navigácia v zozname.
-        */}
-        {email && (
-          <a
-            href="/more"
-            className="header-burger"
-            aria-label={t.nav.menu}
-            onClick={e => {
-              if (!document.querySelector(".app-panel-drawer")) return
-              e.preventDefault()
-              window.dispatchEvent(new CustomEvent(NAV_DRAWER_EVENT, { detail: e.currentTarget }))
-            }}
-          >
-            <Icon name="burger" size={18} />
-          </a>
-        )}
         {/*
           Hlavička patrí organizácii, nie dodávateľovi. Človek, ktorý tu
           potvrdzuje smernicu svojho zväzu, nemá nad ňou vidieť cudziu značku

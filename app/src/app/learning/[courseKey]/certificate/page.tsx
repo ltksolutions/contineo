@@ -79,7 +79,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ co
   }
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={t.kicker} trail={{ [base]: version?.title ?? course.title }}>
       <div className="at rs">
         <p className="detail-back"><Link className="quiet" href={base}>← {version?.title ?? course.title}</Link></p>
         {body}

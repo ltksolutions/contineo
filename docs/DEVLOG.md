@@ -10,6 +10,66 @@
 
 ---
 
+## 2026-09-29 — Prehľad ako rozcestník, bez stáleho menu (SHELL-rozcestnik)
+
+**Rozhodnutie (Ján, 29. 9. 2026, Q1–Q5 v `docs/design/SHELL-rozcestnik.md`).**
+Bočný panel z rána sa **ruší** a nekombinuje sa: od 640 px nie je stále menu
+vôbec. Panel bral obsahu šírku a pôsobil ako administrácia/ERP; dve
+navigácie by boli dvojnásobná údržba (Q1). Sekcie sú **dlaždice na
+Prehľade** so skupinami Organizácia · Správa a jednou vetou, čo v sekcii je
+(bežná osoba nevie, čo je „Reťaz dôkazov"). Na podstránkach stačí zvonček
+so súčtom (Q2), hlavička ostáva bez menu (Q3), rýchle prepnutie je ikona
+9 bodiek na začiatku **pásu cesty** s plachtou všetkých sekcií (Q5). `/more`
+na telefóne má tie isté dlaždice (Q4). Cena, ktorú návrh priznáva: prepnutie
+sekcie sú dva kliky a počty po sekciách na podstránke nevidno.
+
+**Čo sa spravilo.**
+
+- `lib/appNav.ts`: `sectionGroups()` (dlaždice), `breadcrumbs()` (cesta),
+  `moreGroups()` = „Moje úlohy" + tie isté skupiny bez sekcií na lište.
+  Z panela odišli `navGroups()`, `NavState`, cookie `nav`, udalosť hamburgera,
+  `app/shellActions.ts` aj `lib/shellBack.ts`.
+- `Breadcrumbs.tsx` (server, bez JS), `SectionsSheet.tsx` (`<details>`,
+  s JS Esc, klik mimo, výber, zmena stránky, fokus), `SectionTiles.tsx`.
+  `AppNav` je už len spodná lišta. `Header.tsx` je presne ako pred
+  panelom. Ikona `grid` (3 × 3 plné bodky).
+- Cesta sa skladá z **adresy**: serverový komponent ju od Nextu nedostane,
+  podáva ju `proxy.ts` v hlavičke požiadavky `x-contineo-pathname` (nastavuje
+  ju vždy nanovo, klientovu prepíše). Názvy hlbších krokov dodáva stránka —
+  `AppShell` dostal `title` a `trail`; doplnené na každej hlbšej stránke, testy
+  Vzdelávania berú kurz, časť a test z `loadTestContext()`.
+- Prehľad: hero → KPI → dlaždice → „Pre vás" (panely 2 × `minmax(0,1fr)`,
+  rovnaká výška, odkaz na celý zoznam v pätičke). „Celá knižnica" sa kreslí
+  len správcovi obsahu — `/library` je obrazovka správy a ostatným by
+  skončila na 404 (dovtedy ju dostal každý, keď panel niečo skrýval).
+
+**Odchýlky od návrhu.**
+
+- Popisy „Na posúdenie" a „Ochrana údajov" v `T` z `.html` nesedeli s tým,
+  čo tie sekcie sú: posúdenie je fronta **odpovedí**, ktoré niekto označil
+  ako nesprávne (nie nové znenia), ochrana údajov je výkaz právnych základov
+  a námietky (nie žiadosti dotknutých osôb). Vety sú podľa obrazoviek.
+- Na 834 px sú dlaždice **3 v rade**, nie 2: `minmax(250px, 1fr)` z návrhu
+  na 800 px obsahu dá tri. Rám ich kreslí rovnako, dvojku tvrdí len text.
+- Hero s poľom otázky na Prehľade ostáva (PREHLAD.md); rám ho nekreslí.
+- i18n kľúče sú ploché (`groupMain`, `allSections`, `desc.*`) ako zvyšok
+  `nav`, nie `nav.group.main`.
+
+**Nefungovalo / poučenie.**
+
+- Závoj plachty je v kontexte pásu (`z-index: -1`) a pozadie pásu sa kreslí
+  úplne dospodu — pás bol zatienený spolu s obsahom. Pozadie pri otvorení
+  nesie `::before` s `z-index: 0`; prvý pokus so `-2` ho dal **pod** závoj.
+- `/more` nemá rodiča s `gap` ako `.overview`, skupiny dlaždíc sa lepili.
+- Overenie: stránka zložená z ozajstných `Header`, `Breadcrumbs`,
+  `SectionsSheet`, `SectionTiles` a `AppNav` s ozajstným `globals.css` mimo
+  repa (Prehľad je náhrada so skutočnými triedami, dáta nie sú z databázy).
+  1440 / 834 / 390, Prehľad, `/hr`, `/hr/assign`, `/more`, detail s dlhým
+  názvom, plachta otvorená, personalista aj bežná osoba, svetlá aj tmavá,
+  bez JS. Ozajstnú aplikáciu s prihlásením som nevidel.
+
+---
+
 ## 2026-09-29 — bočný panel namiesto pásu (SHELL-bocny-panel)
 
 **Rozhodnutie (Ján, 29. 9. 2026, Q1–Q4 v `docs/design/SHELL-bocny-panel.md`).**

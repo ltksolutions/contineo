@@ -52,7 +52,7 @@ export default async function MyAcknowledgementsPage() {
   })
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={t.heading}>
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
         <h1 className="page-title">{t.heading}</h1>
         <p className="quiet page-lead" style={{ maxWidth: 620 }}>{t.intro}</p>

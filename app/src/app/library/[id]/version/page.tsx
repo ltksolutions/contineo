@@ -56,7 +56,7 @@ export default async function NewVersionPage({
   const base = `/library/${encodeURIComponent(documentId)}`
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={tflow.versionPageTitle} trail={{ [base]: d.title }}>
     <div style={{ maxWidth: 880, ...tenantStyle(brandingView(ctx.tenant)) }}>
       <Notice message={message} error={error === "1"} back={`${base}/version`} />
       <p className="detail-back">

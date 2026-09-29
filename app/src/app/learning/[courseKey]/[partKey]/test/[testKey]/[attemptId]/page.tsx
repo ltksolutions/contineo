@@ -43,7 +43,7 @@ export default async function AttemptPage({ params, searchParams }: {
   if (attempt.submittedAt) {
     if (attempt.closedBy !== "timeout") redirect(`${self}/result`)
     return (
-      <AppShell language={language}>
+      <AppShell language={language} title={`${ta.factAttempt} ${attempt.attemptNumber}`} trail={c.trail}>
         <div className="at">
           <section className="card at-closed is-warn">
             <span className="at-closed-ico" aria-hidden="true">!</span>
@@ -63,7 +63,7 @@ export default async function AttemptPage({ params, searchParams }: {
   const unanswered = attempt.questions.map((x, i) => (isAnswered(attempt.answers[x.questionKey]) ? 0 : i + 1)).filter(Boolean)
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={`${ta.factAttempt} ${attempt.attemptNumber}`} trail={c.trail}>
       <div className="at">
         <AttemptBar deadlineAt={attempt.deadlineAt ? attempt.deadlineAt.toISOString() : null} formId="attempt-form" saveUrl={`/api/learning/attempts/${attempt.id}`}
           progress={total ? answered / total : 0}

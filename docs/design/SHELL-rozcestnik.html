@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>SHELL — Prehľad ako rozcestník, bez menu</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.08);--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b42318;--radius:12px;--fs-title:26px;--control-h-sm:36px;--shadow:0 16px 40px rgba(20,28,42,.18)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:var(--accent-strong)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:90ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:90ch;line-height:1.55}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.frame-label{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);margin:0 0 6px}
+.frames-small{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+/* hlavička */
+.hdr{display:flex;align-items:center;gap:12px;height:56px;padding:0 20px 0 16px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.home{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);border-radius:8px;padding:4px 6px 4px 2px}
+.home:hover{background:var(--surface-2)}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;flex:0 0 auto}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.sep{width:1px;height:22px;background:var(--line);flex:none}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px 0 8px;border-radius:8px;color:var(--ink);font-size:14px;font-weight:550;text-decoration:none;white-space:nowrap}
+.back:hover{background:var(--surface-2);color:var(--ink)}
+.back svg{color:var(--muted)}
+.ask{flex:1;max-width:480px;display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;min-width:0;white-space:nowrap;overflow:hidden}
+.ask > span:not(.kbd){overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ask .kbd{margin-left:auto;font-size:11px;padding:1px 6px;border-radius:5px;border:1px solid var(--line)}
+.sp{flex:1}
+.bell{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:8px;color:var(--ink);flex:none}
+.bell b{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+.icon-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:8px;color:var(--ink);text-decoration:none;flex:none;margin-left:-8px}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.body{flex:1;min-height:0;overflow:auto}
+.main{margin:0 auto;padding:28px 32px 40px}
+/* Prehľad */
+.hello{font-size:28px;letter-spacing:-.02em;line-height:1.2;margin:0 0 4px}
+.lead{font-size:15px;color:var(--muted);margin:0 0 20px}
+.kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 34px}
+.kpi a{display:grid;gap:2px;padding:14px 16px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.kpi a:hover{border-color:rgba(20,28,42,.28)}
+.kpi b{font-size:26px;line-height:1.1;font-weight:650;font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--muted)}
+.kpi .z b{color:var(--muted);font-weight:600}
+.kpi .bad b{color:var(--bad-fg)}
+.grp-h{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+.grp-h h2{font-size:17px;letter-spacing:-.01em;margin:0}
+.grp-h span{font-size:12.5px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:0 0 28px}
+.tile{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 14px;align-items:start;padding:16px 16px 16px 16px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink);transition:border-color .12s,box-shadow .12s,transform .12s}
+.tile:hover{color:var(--ink);border-color:rgba(20,28,42,.26);box-shadow:0 6px 18px rgba(20,28,42,.08);transform:translateY(-1px)}
+.tile .ic{grid-row:span 2;display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:var(--surface-2);color:var(--accent)}
+.tile b{font-size:15px;font-weight:620;line-height:1.35;padding-top:1px}
+.tile small{font-size:13px;color:var(--muted);line-height:1.45;text-wrap:pretty}
+.tile .cnt{position:absolute;top:14px;right:14px;font-size:11px;font-weight:650;padding:1px 7px;border-radius:20px;background:var(--bad-fg);color:#fff;font-variant-numeric:tabular-nums}
+.panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
+.panels .card{display:flex;flex-direction:column}
+.card-foot{margin-top:auto;padding:10px 16px;border-top:1px solid var(--line);font-size:12.5px;font-weight:600}
+.card-foot a{text-decoration:none}
+.path{flex:none;background:var(--surface);border-bottom:1px solid var(--line)}
+.path{position:relative;z-index:7}
+.path-in{position:relative;margin:0 auto;padding:0 32px 0 26px;min-height:40px;display:flex;align-items:center;gap:8px}
+.dots{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--ink);cursor:pointer;flex:none}
+.dots:hover,.dots[aria-expanded="true"]{background:var(--surface-2)}
+.vsep{width:1px;height:18px;background:var(--line);flex:none}
+.path ol{list-style:none;margin:0;padding:0;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:13px}
+.scrim{position:absolute;inset:0;background:rgba(17,21,28,.18);z-index:6}
+.sheet-m{position:absolute;top:calc(100% + 6px);left:26px;width:760px;max-width:calc(100% - 52px);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 18px 14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 22px}
+.sheet-m h3{font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;padding:0 10px}
+.sheet-m .col{display:grid;gap:1px;align-content:start}
+.sheet-m a{display:flex;align-items:center;gap:11px;min-height:36px;padding:0 10px;border-radius:8px;color:var(--ink);font-size:14px;text-decoration:none}
+.sheet-m a:hover{background:var(--surface-2);color:var(--ink)}
+.sheet-m a svg{color:var(--muted);flex:none}
+.sheet-m a.is-on{background:var(--accent-soft);font-weight:650}
+.sheet-m a.is-on svg{color:var(--accent)}
+.sheet-m .c{margin-left:auto;font-size:11px;font-weight:650;padding:1px 6px;border-radius:20px;background:var(--bad-fg);color:#fff}
+.sheet-m .foot{grid-column:1/-1;border-top:1px solid var(--line);margin-top:10px;padding:10px 10px 0;font-size:12.5px;color:var(--muted);display:flex;gap:16px}
+.sheet-m .foot kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.n834 .sheet-m{grid-template-columns:repeat(2,minmax(0,1fr))}
+.n390 .sheet-m{left:8px;max-width:none;width:calc(100% - 16px);grid-template-columns:1fr;padding:12px 8px;max-height:560px;overflow:auto}
+.n390 .sheet-m a{min-height:44px}
+.n390 .sheet-m .foot{display:none}
+.path li{display:flex;align-items:center;gap:4px;color:var(--muted)}
+.path li+li::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-top:1.5px solid currentColor;transform:rotate(45deg);margin:0 6px 0 2px;opacity:.55}
+.path a{color:var(--muted);text-decoration:none;padding:3px 4px;border-radius:5px}
+.path a:hover{color:var(--ink);background:var(--surface-2)}
+.path [aria-current]{color:var(--ink);font-weight:600;padding:3px 4px}
+.n834 .path-in{padding:0 24px 0 18px}
+.n834 .sheet-m{left:18px}
+.n390 .path-in{padding:4px 10px 4px 4px;align-items:flex-start}
+.n390 .dots{width:40px;height:40px}
+.n390 .vsep{margin-top:11px}
+.n390 .path ol{padding:5px 0;font-size:12.5px}
+.n390 .path a{padding:6px 4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.card-h{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650}
+.card-h span{font-size:12px;color:var(--muted);font-weight:500}
+.r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
+.card-h + .r,.rows .r:first-child{border-top:0}
+.r b{font-weight:600;font-size:14px;line-height:1.35}
+.r .m{font-size:12.5px;color:var(--muted)}
+.chip{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--warn-bg);color:var(--warn-fg);white-space:nowrap}
+/* podstránka */
+.crumb{font-size:12.5px;color:var(--muted);margin:0 0 4px}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:15px;color:var(--muted);margin:0;max-width:70ch}
+.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px}
+.button{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:10px;background:var(--accent);color:#fff;font-size:14.5px;font-weight:600;text-decoration:none;white-space:nowrap}
+.button:hover{color:#fff;background:var(--accent-strong)}
+.bar{display:flex;align-items:center;gap:10px;min-width:200px}
+.bar i{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:block}
+.bar i s{display:block;height:100%;background:var(--accent);text-decoration:none}
+.bar span{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--muted);min-width:36px;text-align:right}
+.field{display:grid;gap:6px;margin:0 0 16px}
+.field label{font-size:13px;font-weight:600}
+.field div{min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:8px 12px;font-size:14px;color:var(--muted)}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);height:58px;background:var(--surface);border-top:1px solid var(--line);flex:none}
+.tabbar a{position:relative;display:grid;place-items:center;align-content:center;gap:2px;font-size:10.5px;color:var(--muted);text-decoration:none}
+.tabbar a.is-on{color:var(--accent);font-weight:650}
+.tabbar a.is-on::before{content:"";position:absolute;top:0;left:22%;right:22%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+.tabbar b{position:absolute;top:5px;left:calc(50% + 5px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+/* úzke */
+.n834 .main{padding:24px}
+.n834 .kpi{grid-template-columns:repeat(2,minmax(0,1fr))}
+.n834 .panels{grid-template-columns:1fr}
+.n390 .main{padding:16px 14px 24px}
+.n390 .kpi{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:26px}
+.n390 .tiles{grid-template-columns:1fr;gap:8px}
+.n390 .tile{padding:12px 14px;gap:0 12px}
+.n390 .tile .ic{width:36px;height:36px;border-radius:9px}
+.n390 .hello{font-size:22px}
+.n390 .page-title{font-size:22px}
+.n390 .panels{grid-template-columns:1fr}
+.n390 .bar{min-width:0}
+.n390 .r{grid-template-columns:1fr}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
+table.spec tr:last-child td{border-bottom:0}
+.q{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#e0e7ff;color:#3730a3;vertical-align:1px}
+</style>
+</head>
+<body><div class="sheet">
+<h1 class="doc">SHELL — Prehľad ako rozcestník, žiadne menu</h1>
+<p class="doc">Alternatíva k <code>SHELL-bocny-panel</code>. Na desktope aj tablete <b>nie je stále menu</b> — ani pás, ani panel, ani nič v hlavičke. Obsah má celú šírku. Všetky sekcie sú <b>dlaždice na Prehľade</b> (ikona, názov, jedna veta, počet), zoskupené ako dnes v <code>/more</code>. Na každej inej stránke je <b>pod hlavičkou celá cesta od Prehľadu</b>, každý krok je odkaz. Pod 640 px ostáva spodná lišta.</p>
+<p class="doc">Rámy sú živé — kliknite na dlaždicu, na „Prideliť normu" a potom na ľubovoľný krok cesty. Popis a otvorené otázky v <code>SHELL-rozcestnik.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — Prehľad · personalista a správca obsahu</p>
+  <p class="sec-w">Hore to, čo odo mňa niekto čaká (existujúce KPI), pod tým sekcie. Prvý pohľad ukáže všetky sekcie bez rolovania. Panely pozornosti a noviniek idú pod dlaždice — rovnako široké, v tej istej mriežke a s rovnakou medzerou ako dlaždice (každý = 2 dlaždice), rovnako vysoké.</p>
+  <div class="frame" style="width:1440px;height:900px" data-frame="1440"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — podstránka a hlbšia stránka</p>
+  <p class="sec-w">Cesta sa skladá z URL, nie z histórie prehliadača — rovnaká aj po otvorení odkazu z e-mailu. Skupina („Správa") vedie na Prehľad k svojim dlaždiciam. Posledný krok je aktuálna stránka, nie je odkaz.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">1440 — /hr (Pridelené normy)</p><div class="frame" style="width:1440px;height:560px" data-frame="1440s"></div></div>
+    <div><p class="frame-label">1440 — /hr/assign</p><div class="frame" style="width:1440px;height:420px" data-frame="1440d"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Plachta celého menu — ikona 9 bodiek v páse cesty</p>
+  <p class="sec-w">Prvý prvok pásu pod hlavičkou. Otvorí plachtu so všetkými sekciami v stĺpcoch podľa skupín, aktuálna je zvýraznená. Prepnutie sekcie = dva kliky bez návratu na Prehľad. Esc, klik mimo alebo výber zavrie; fokus ide do plachty a späť na ikonu. Hlavička ostáva bez menu.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">1440 — /hr, plachta otvorená</p><div class="frame" style="width:1440px;height:560px" data-frame="1440m"></div></div>
+    <div><p class="frame-label">834 — /hr, plachta</p><div class="frame" style="width:834px;height:620px" data-frame="834m"></div></div>
+    <div><p class="frame-label">390 — /hr, plachta</p><div class="frame" style="width:390px;height:780px" data-frame="390m"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 — ako desktop</p>
+  <p class="sec-w">Bez lišty ikon, bez hamburgera, bez „Viac N". Dlaždice 2 v rade, obsah stránky má celých 834 px.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">834 — Prehľad</p><div class="frame" style="width:834px;height:900px" data-frame="834"></div></div>
+    <div><p class="frame-label">834 — /hr</p><div class="frame" style="width:834px;height:560px" data-frame="834s"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 — spodná lišta ostáva</p>
+  <p class="sec-w">Tabbar sa nemení. Cesta je aj tu pod hlavičkou, pri dlhej sa zalomí; odkazy majú výšku 30 px v páse 44 px. Na telefóne sú dlaždice v jednom stĺpci — <code>/more</code> ich môže zdieľať (otázka Q4).</p>
+  <div class="frames-small">
+    <div><p class="frame-label">390 — Prehľad</p><div class="frame" style="width:390px;height:780px" data-frame="390"></div></div>
+    <div><p class="frame-label">390 — /hr</p><div class="frame" style="width:390px;height:780px" data-frame="390s"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Bežná osoba — bez rolí</p>
+  <p class="sec-w">Iba skupina „Organizácia". Skupina „Správa" sa nevykreslí.</p>
+  <div class="frame" style="width:1440px;height:640px" data-frame="basic"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Správanie</p>
+  <table class="spec">
+    <tr><th>Čo</th><th>Ako</th></tr>
+    <tr><td>Stále menu</td><td>Žiadne na ≥ 640 px. <code>AppNav</code> topbar aj sidebar sa rušia. Pod 640 px <code>tabbarItems()</code> bez zmeny.</td></tr>
+    <tr><td>Hlavička</td><td>Bez navigácie: logo + organizácia (odkaz na <code>/</code>, ako dnes), Opýtajte sa… ⌘K, zvonček, avatar.</td></tr>
+    <tr><td>Cesta</td><td>Pás 40 px pod hlavičkou na každej stránke okrem Prehľadu: <b>Prehľad › Skupina › Sekcia › … › Aktuálna</b>. Všetky kroky okrem posledného sú odkazy; skupina → <code>/#sprava</code>. Skladá sa z pathname cez <code>breadcrumbs(pathname, names)</code> v <code>lib/appNav.ts</code>; detail nesie vlastný názov (napr. názov normy). <code>&lt;nav aria-label="Cesta"&gt;&lt;ol&gt;</code>, posledný <code>aria-current="page"</code>. Funguje bez JS.</td></tr>
+    <tr><td>Dlaždice</td><td>Zo <code>navItems()</code> (roly D32/D67/D87 platia), skupiny ako <code>MORE_GROUPS</code>: <b>Organizácia</b> (Adresár, Knižnica, Vzdelávanie) · <b>Správa</b> (Pridelené normy, Reťaz dôkazov, Osoby, Na posúdenie, Ochrana údajov, Správa kurzov, Testy). Prehľad a Opýtať sa nie sú dlaždice (sú to hlavička a pole otázky). Moje úlohy = KPI hore.</td></tr>
+    <tr><td>Dlaždica</td><td>Ikona 20 px v štvorci 42 px, názov 15/620, jedna veta 13 px <code>--muted</code>, odznak pri nenulovom počte (Na posúdenie, Ochrana údajov). Mriežka <code>auto-fill minmax(250px,1fr)</code> → 1440: 4 v rade, 834: 2, 390: 1.</td></tr>
+    <tr><td>Počty</td><td>Zvonček nesie súčet úloh ako dnes. Na Prehľade KPI (Na potvrdenie, Na schválenie). Na podstránkach sa počty neukazujú — to je cena riešenia (<span class="q">Q2</span>).</td></tr>
+    <tr><td>Panely</td><td>„Čaká na vás" a „Nové v knižnici" v mriežke <code>repeat(2, minmax(0,1fr))</code>, gap 12 — hrany lícujú s dlaždicami nad nimi; rovnaká výška, odkaz na celý zoznam v pätičke. 834 a 390: pod sebou.</td></tr>
+    <tr><td>Plachta menu</td><td>Ikona 9 bodiek (32 px, na 390 40 px) na začiatku pásu cesty, na každej stránke okrem Prehľadu. <code>&lt;button aria-expanded aria-controls&gt;</code>, <code>aria-label</code> „Všetky sekcie". Plachta 760 px pod ikonou: stĺpce <b>Hlavné</b> (Prehľad, Opýtať sa, Na potvrdenie, Na schválenie) · <b>Organizácia</b> · <b>Správa</b>; počty ako odznaky, aktuálna sekcia <code>--accent-soft</code>. 834: 2 stĺpce, 390: 1 stĺpec, položky 44 px. Závoj 18 %. Esc / klik mimo / výber / zmena pathname zavrie. Bez JS <code>&lt;details&gt;</code>. Položky zo <code>sectionGroups()</code> + <code>navItems()</code> — nič nové. <span class="q">Q5</span></td></tr>
+    <tr><td>Prepnutie sekcie</td><td>Dva kliky: 9 bodiek → sekcia (alebo Prehľad v ceste → dlaždica).</td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const IC={
+overview:'<rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/>',
+ask:'<path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/>',
+toAcknowledge:'<rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/>',
+directory:'<circle cx="9" cy="6.2" r="2.9"/><path d="M3.4 15.4a5.6 5.6 0 0 1 11.2 0"/>',
+library:'<path d="M3.4 3.2h2.8v11.6H3.4zM7.6 3.2h2.8v11.6H7.6z"/><path d="m11.9 4.1 2.6.7-2.8 10.2-2.1-.6"/>',
+assigned:'<path d="M6.6 3.4H4.8a1.4 1.4 0 0 0-1.4 1.4v9.6a1.4 1.4 0 0 0 1.4 1.4h8.4a1.4 1.4 0 0 0 1.4-1.4V4.8a1.4 1.4 0 0 0-1.4-1.4h-1.8"/><rect x="6.6" y="1.9" width="4.8" height="2.9" rx="1"/><path d="M6.4 9.4h5.2M6.4 12.1h3.4"/>',
+evidence:'<path d="M7.5 10.5a3 3 0 0 1 0-4.2l1.8-1.8a3 3 0 0 1 4.2 4.2l-.9.9"/><path d="M10.5 7.5a3 3 0 0 1 0 4.2l-1.8 1.8a3 3 0 0 1-4.2-4.2l.9-.9"/>',
+people:'<circle cx="7" cy="6.4" r="2.6"/><path d="M2.2 15a4.8 4.8 0 0 1 9.6 0"/><path d="M12.4 4.2a2.6 2.6 0 0 1 0 5M13.4 10.8a4.8 4.8 0 0 1 2.4 4.2"/>',
+evaluation:'<circle cx="9" cy="9" r="6.4"/><path d="m6.3 9.1 1.9 1.9 3.5-3.9"/>',
+dpo:'<path d="M9 1.9 3.4 4v4.6c0 3.4 2.4 6.2 5.6 7.5 3.2-1.3 5.6-4.1 5.6-7.5V4z"/><path d="M9 6.2v3.6M9 12.1v.1"/>',
+learning:'<path d="M1.6 7 9 3.4 16.4 7 9 10.6z"/><path d="M4.6 8.5v3.6c1.2 1.3 2.7 2 4.4 2s3.2-.7 4.4-2V8.5"/><path d="M16.4 7v4.2"/>',
+learningManage:'<path d="M3 3.2h5.2c.5 0 .8.3.8.8v11a1.6 1.6 0 0 0-1.6-1.6H3z"/><path d="M15 3.2H9.8c-.5 0-.8.3-.8.8v11a1.6 1.6 0 0 1 1.6-1.6H15z"/>',
+learningTests:'<path d="m2.6 4.6 1.4 1.4 2.4-2.6"/><path d="m2.6 11.4 1.4 1.4 2.4-2.6"/><path d="M9 5h6.4M9 11.8h6.4"/>',
+notifications:'<path d="M9 2.4v1.1"/><path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z"/><path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0"/>',
+more:'<circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="14.6" cy="9" r="1.5" fill="currentColor" stroke="none"/>',
+back:'<path d="M11 3.8 5.8 9l5.2 5.2"/>'
+};
+const svg=(k,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="${(1.5*18/s).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
+const T={
+directory:["Adresár","Kontakty, oddelenia a kto za čo zodpovedá"],
+library:["Knižnica","Platné normy a ich znenia"],
+learning:["Vzdelávanie","Moje kurzy, testy a certifikáty"],
+assigned:["Pridelené normy","Kto čo potvrdil, pridelenie normy"],
+evidence:["Reťaz dôkazov","Záznamy o potvrdeniach pre audit"],
+people:["Osoby","Zamestnanci, pracovné vzťahy, roly"],
+evaluation:["Na posúdenie","Nové znenia čakajúce na posúdenie",2],
+dpo:["Ochrana údajov","Žiadosti dotknutých osôb a záznamy",1],
+learningManage:["Správa kurzov","Kurzy, časti a pridelenie"],
+learningTests:["Testy","Banka otázok a výsledky pokusov"]};
+const FULL=[["Organizácia",["directory","library","learning"]],["Správa",["assigned","evidence","people","evaluation","dpo","learningManage","learningTests"]]];
+const BASIC=[["Organizácia",["directory","library","learning"]]];
+const PARENT={assigned:["home","Prehľad"],assign:["assigned","Pridelené normy"]};
+
+const MGMT=FULL[1][1];
+function trail(page){
+  if(page==="home") return [];
+  const grp=MGMT.includes(page)||page==="assign"?["Správa","sprava"]:["Organizácia","organizacia"];
+  const t=[["Prehľad","home"],[grp[0],"home",grp[1]]];
+  if(page==="assign") t.push(["Pridelené normy","assigned"],["Prideliť normu"]);
+  else t.push([T[page][0]]);
+  return t;
+}
+const MAIN=[["overview","Prehľad","home"],["ask","Opýtať sa"],["toAcknowledge","Na potvrdenie",null,3],["toApprove","Na schválenie",null,1]];
+IC.toApprove='<circle cx="9" cy="9" r="6.4"/><path d="M6 9.1 8.1 11.2 12 7.1"/>';
+IC.grid='<circle cx="4" cy="4" r="1.5"/><circle cx="9" cy="4" r="1.5"/><circle cx="14" cy="4" r="1.5"/><circle cx="4" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><circle cx="4" cy="14" r="1.5"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="14" r="1.5"/>';
+function sheetHtml(page,groups){
+  const cur=page==="assign"?"assigned":page;
+  const it=(k,l,go,c)=>`<a href="#" data-go="${go||k}"${k===cur?' class="is-on" aria-current="page"':""}>${svg(k)}<span>${l}</span>${c?`<span class="c">${c}</span>`:""}</a>`;
+  return `<div class="sheet-m" id="all-sections" role="dialog" aria-label="Všetky sekcie"><div class="col"><h3>Hlavné</h3>${MAIN.map(([k,l,go,c])=>it(k,l,go||"home",c)).join("")}</div>${groups.map(([g,keys])=>`<div class="col"><h3>${g}</h3>${keys.map(k=>it(k,T[k][0],k,T[k][2])).join("")}</div>`).join("")}<div class="foot"><span><kbd>Esc</kbd> zavrie</span><span>Všetky sekcie s popisom sú na <a href="#" data-go="home" style="display:inline;min-height:0;padding:0;font-size:inherit;text-decoration:underline;color:var(--muted)">Prehľade</a></span></div></div>`;
+}
+function path(page,open,groups){
+  const t=trail(page); if(!t.length) return "";
+  return `<nav class="path" aria-label="Cesta"><div class="path-in" style="max-width:1180px"><button type="button" class="dots" data-sheet aria-label="Všetky sekcie" aria-expanded="${!!open}" aria-controls="all-sections">${svg("grid",18).replace('fill="none" stroke="currentColor"','fill="currentColor" stroke="none"')}</button><span class="vsep"></span><ol>${t.map(([l,go,anc],i)=>`<li>${i===t.length-1?`<span aria-current="page">${l}</span>`:`<a href="#" data-go="${go}"${anc?` data-anchor="${anc}"`:""}>${l}</a>`}</li>`).join("")}</ol>${open?sheetHtml(page,groups):""}</div></nav>`;
+}
+function hdr(page,mode){
+  const n=mode==="390";
+  if(n) return `<div class="hdr" style="padding:0 12px;gap:8px"><a href="#" class="home" data-go="home"><span class="logo">SFZ</span></a><span class="ask" style="max-width:none">${svg("ask",15)}<span>Opýtajte sa…</span></span><span class="bell">${svg("notifications",18)}<b>4</b></span><span class="av">JL</span></div>`;
+  return `<div class="hdr"><a href="#" class="home" data-go="home" aria-label="Prehľad"><span class="logo">SFZ</span><span class="org">Intranet SFZ</span></a><span class="sp" style="flex:0 0 40px"></span><span class="ask">${svg("ask",15)}<span>Opýtajte sa svojich dokumentov…</span>${mode==="834"?"":'<span class="kbd">⌘K</span>'}</span><span class="sp"></span><span class="bell">${svg("notifications",18)}<b>4</b></span><span class="av">JL</span></div>`;
+}
+function home(groups,basic){
+  const kpi=[["Na potvrdenie",3,"bad"],["Na schválenie",1,""],["Nové znenia (7 dní)",2,""],["Končí platnosť",0,"z"]];
+  return `<div class="main" style="max-width:1180px"><h1 class="hello">Dobrý deň, Ján</h1><p class="lead">Traja ľudia od vás niečo čakajú.</p>
+<div class="kpi">${kpi.map(([l,v,c])=>`<a href="#" class="${c}"><b>${v}</b><span>${l}</span></a>`).join("")}</div>
+${groups.map(([g,keys])=>`<div class="grp-h" id-anchor="${g==="Správa"?"sprava":"organizacia"}"><h2>${g}</h2></div><div class="tiles">${keys.map(k=>{const [t,d,c]=T[k];return `<a href="#" class="tile" data-go="${k}"><span class="ic">${svg(k,20)}</span><b>${t}</b><small>${d}</small>${c?`<span class="cnt">${c}</span>`:""}</a>`}).join("")}</div>`).join("")}
+<div class="grp-h"><h2>Pre vás</h2></div>
+<div class="panels"><div class="card"><div class="card-h">Čaká na vás <span>4</span></div>${[["Pracovný poriadok SFZ","potvrdiť · pridelené 22. 9.","do 30. 9."],["Smernica o ochrane osobných údajov","potvrdiť · pridelené 22. 9.","do 6. 10."],["Finančná smernica SFZ — znenie 2026/3","schváliť · kolo 1 z 2","do 2. 10."]].map(([t,m,c])=>`<div class="r"><div><b>${t}</b><div class="m">${m}</div></div><span class="chip">${c}</span></div>`).join("")}<div class="card-foot"><a href="#">Všetky úlohy →</a></div></div>
+<div class="card"><div class="card-h">Nové v knižnici <span>7 dní</span></div>${[["Registračný a prestupový poriadok SFZ","nové znenie · 27. 9."],["Disciplinárny poriadok SFZ","nové znenie · 24. 9."],["Etický kódex SFZ","končí platnosť · 15. 10."]].map(([t,m])=>`<div class="r"><div><b>${t}</b><div class="m">${m}</div></div></div>`).join("")}<div class="card-foot"><a href="#">Celá knižnica →</a></div></div></div></div>`;
+}
+function assigned(){
+  return `<div class="main" style="max-width:1180px"><div class="head-row"><div><h1 class="page-title">Pridelené normy</h1><p class="page-lead">Kto čo potvrdil — po prideleniach, najnovšie hore.</p></div><a href="#" class="button" data-go="assign">Prideliť normu</a></div>
+<div class="card rows">${[["Registračný a prestupový poriadok SFZ","28 ľudí · termín 14 dní · pridelené 29. 9. 2026",21],["Pracovný poriadok SFZ","Zamestnanci SFZ · 142 ľudí · do 31. 10. 2026",68],["Disciplinárny poriadok SFZ","Rozhodcovia 2026 · 72 ľudí · bez termínu",93],["Finančná smernica SFZ","Ekonomické oddelenie · 8 ľudí · do 30. 9. 2026",50]].map(([t,m,p])=>`<div class="r"><div><b>${t}</b><div class="m">${m}</div></div><div class="bar"><i><s style="width:${p}%;${p<50?"background:var(--warn-fg)":""}"></s></i><span>${p} %</span></div></div>`).join("")}</div></div>`;
+}
+function assign(){
+  return `<div class="main" style="max-width:1180px"><h1 class="page-title">Prideliť normu</h1><p class="page-lead" style="margin-bottom:18px">Vyberte normy a komu ich pridelíte. Obrazovka podľa <code>HR-pridelit-normy-hladanie</code>.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="field"><label>Normy</label><div>Hľadať normu…</div></div><div class="field"><label>Komu</label><div>Hľadať oddelenie alebo osobu…</div></div></div></div>`;
+}
+function generic(k){const [t,d]=T[k];return `<div class="main" style="max-width:1180px"><h1 class="page-title">${t}</h1><p class="page-lead">${d}</p></div>`}
+
+function Frame(host,{page,mode,groups=FULL,sheet}){
+  const S={page,sheet:!!sheet};
+  function render(){
+    host.className="frame"+(mode==="834"?" n834":mode==="390"?" n390":"");
+    const p=S.page;
+    const body=p==="home"?home(groups):p==="assigned"?assigned():p==="assign"?assign():generic(p);
+    const tab=mode==="390"?`<nav class="tabbar">${[["overview","Prehľad"],["ask","Opýtať sa"],["learning","Vzdelávanie"],["toAcknowledge","Úlohy",4],["more","Viac"]].map(([k,l,c])=>`<a href="#"${(p==="home"&&k==="overview")||(p!=="home"&&k==="more")?' class="is-on"':""}${k==="overview"?' data-go="home"':""}>${svg(k,21)}${c?`<b>${c}</b>`:""}${l}</a>`).join("")}</nav>`:"";
+    host.innerHTML=hdr(p,mode)+path(p,S.sheet,groups)+(S.sheet&&p!=="home"?'<div class="scrim" data-scrim></div>':"")+`<div class="body">${body}</div>`+tab;
+    host.querySelectorAll("[data-sheet]").forEach(b=>b.onclick=()=>{S.sheet=!S.sheet;render()});
+    host.querySelectorAll("[data-scrim]").forEach(b=>b.onclick=()=>{S.sheet=false;render()});
+    host.querySelectorAll("[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();const anc=a.dataset.anchor;S.page=a.dataset.go;S.sheet=false;render();const b=host.querySelector(".body");const t=anc&&b.querySelector(`[id-anchor="${anc}"]`);b.scrollTop=t?t.offsetTop-b.offsetTop-16:0});
+  }
+  render();
+}
+const $=s=>document.querySelector(`[data-frame="${s}"]`);
+Frame($("1440"),{page:"home"});
+Frame($("1440s"),{page:"assigned"});
+Frame($("1440d"),{page:"assign"});
+Frame($("834"),{page:"home",mode:"834"});
+Frame($("834s"),{page:"assigned",mode:"834"});
+Frame($("390"),{page:"home",mode:"390"});
+Frame($("390s"),{page:"assigned",mode:"390"});
+Frame($("1440m"),{page:"assigned",sheet:true});
+Frame($("834m"),{page:"assigned",mode:"834",sheet:true});
+Frame($("390m"),{page:"assigned",mode:"390",sheet:true});
+Frame($("basic"),{page:"home",groups:BASIC});
+</script>
+</body></html>

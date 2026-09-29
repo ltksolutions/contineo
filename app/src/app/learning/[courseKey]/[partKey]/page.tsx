@@ -71,7 +71,7 @@ export default async function PartPage({ params, searchParams }: {
   const nextOff = !nextPart || (version.sequential && current.part.required && current.state !== "done")
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={current.part.title} trail={{ [base]: version.title }}>
       <div className="pp" style={tenantStyle(brandingView(ctx.tenant))}>
         <Notice message={q.msg} error={q.error === "1"} back={self} />
         <nav className="pnav">

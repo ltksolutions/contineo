@@ -40,7 +40,7 @@ export default async function TracksPage({
   const tracks = await allTracks(ctx.tenant.companyCode)
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={message ?? error} error={Boolean(error)} back="/library/tracks" />
 

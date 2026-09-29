@@ -100,6 +100,13 @@ upozornenia; v topbare uložené pohľady patria do ľavého panelu Knižnice.
 > — a jediný — tvar na desktope je od teraz **bočný panel** so skupinami a ikonami.
 > Pás `topbar`, „Viac N" a `?layout=` odišli. Odsek vyššie platil pre šesť
 > položiek z návrhu; pri 10–14 položkách pás prepadal a nemohol mať ikony.
+>
+> **Zmena v ten istý deň** (`docs/design/SHELL-rozcestnik.md`, Q1–Q5): ani bočný
+> panel. Od 640 px nie je stále menu — Prehľad je rozcestník s dlaždicami
+> sekcií, na podstránkach je pod hlavičkou cesta s plachtou všetkých sekcií
+> (ikona 9 bodiek). Panel bral obsahu šírku a pôsobil ako administrácia.
+> Uložené pohľady v bočnom paneli teda nebudú; ostávajú v ľavom paneli
+> Knižnice.
 
 Dve veci na rozhodnutie, nie na slepé prevzatie:
 

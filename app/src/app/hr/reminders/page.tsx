@@ -51,7 +51,7 @@ export default async function RemindersPage({
   const people = byPersonReminder(await overdue(ctx.person.companyCode, days))
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={notice ? t.noticeHeading : t.heading}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={q.msg} error={q.error === "1"} back="/hr/reminders" />
 

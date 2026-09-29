@@ -745,7 +745,7 @@ export default async function DocumentDetailPage({
   const newVersionBlocked = hasChangesToPublish
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={d.title}>
     <div className="detail-page" style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back={base} />
 
