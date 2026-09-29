@@ -164,7 +164,7 @@ export function matchesAudience(
  */
 export function audienceFromSelection(selection: {
   all?: boolean
-  /** Hodnoty zaškrtávacích políčok v tvare `group:rozhodcovia`, `track:zaklad`. */
+  /** Hodnoty zaškrtávacích políčok v tvare `group:rozhodcovia`, `track:zaklad`, `person:eva@sfz.sk`. */
   selected?: string[]
   /** Ručne napísané adresy, oddelené čiarkou, bodkočiarkou alebo riadkom. */
   addresses?: string
@@ -188,7 +188,10 @@ export function audienceFromSelection(selection: {
     if (separator === -1) continue
     const kind = raw.slice(0, separator)
     const value = raw.slice(separator + 1).trim().toLowerCase()
-    if ((kind !== "group" && kind !== "track" && kind !== "department") || !value) continue
+    if ((kind !== "group" && kind !== "track" && kind !== "department" && kind !== "person") || !value) continue
+    // Osoba zo zoznamu (`person:<e-mail>`) je to isté ako napísaná adresa —
+    // a platí pre ňu to isté pravidlo so zavináčom.
+    if (kind === "person" && !value.includes("@")) continue
     push(kind, value)
   }
 

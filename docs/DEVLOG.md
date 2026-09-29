@@ -46,6 +46,11 @@
   pri troch aj jednom výsledku, ↓, Esc, × na čipoch, odoslanie so skrytým
   zaškrtnutým, povinný prepínač v skrytých riadkoch, režim bez JS a 390 px.
   Na stránke knižnice to treba ešte pozrieť na náhľade z Vercelu.
+- **„Komu" v `/hr/assign` (Q3)** ako druhý PR nad prvým: políčka
+  `audience=person:<e-mail>`. Je to to isté publikum, aké vzniká z napísanej
+  adresy, takže na serveri stačilo prijať `person:` v `audienceFromSelection()`.
+  Schéma, pridelenie ani súhrn dopadu sa nemenili a návrat s chybou vráti výber
+  cez tú istú adresu. Pole na adresy ostalo na vloženie zoznamu z tabuľky.
 
 ---
 
