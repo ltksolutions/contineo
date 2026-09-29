@@ -49,6 +49,54 @@
 
 ---
 
+## 2026-09-29 — asistent odpovedá podľa znenia platného k dňu otázky (ADR-024)
+
+**Čo sa spravilo.**
+
+- Celý plán „Asistent: znenia v indexe" (9 krokov) za jeden deň, PR #170–#176,
+  rozhodnutia v **ADR-024** (D144–D149).
+- **Atlas (kroky 0–3):** zmazaných 1 392 osirelých úsekov (70 % textu v indexe;
+  záloha v `app/data/backup/`), príznak `superseded` na úsekoch, do indexov
+  `versionId`, `superseded`, neskôr `sourceType`, `sectionKey` von. Indexy sa
+  menili **na mieste** (`atlas_init.mjs --upravit`) — trikrát bez výpadku.
+- **Hľadanie (4):** úseky podľa znení platných k dňu, počítaných z `documents`
+  cez `effectiveVersion()`, nie podľa `isActive`; overené odpovede len pre
+  dnešok. Výsledky pri otázke na dnešok zhodné so stavom pred zmenou.
+- **Model a zdroje (5):** znenie a účinnosť pri úseku, deň odpovede v pokyne,
+  znenie pri zdroji aj v hodnoteniach.
+- **Deň otázky (6):** pravidlá pri každej otázke, model ako záloha, štítok nad
+  odpoveďou. **Porovnanie (7):** dvojica znení, po článkoch, najviac 8
+  podrobne.
+- **Skúška (8):** `sfz:test_znenia` s tromi zneniami — koncepty skriptom
+  (`npm run seed:versions`), predložil a zverejnil Ján, schválila Michaela
+  Žikavská. `npm run versions:questions`: 6 z 6.
+
+**Nefungovalo / poučenie.**
+
+- **Skúška na živých dátach našla, čo testy nie.** Rok v otázke prepol
+  hľadanie do fulltextu (heuristika berie rok za kód normy) — dátum sa teraz
+  z otázky vyberá. Automatické označenie znenia (ADR-016) už nesie dátum,
+  takže štítok ukazoval „znenie znenie účinné od … · účinné od …". Model
+  písal o minulej zmene v budúcom čase. Prvý pokyn pridával nevyžiadanú
+  „Poznámku k účinnosti". Všetko opravené, ale až po behu naostro.
+- **`publish()` má schvaľovaciu bránu** — v pláne kroku 8 som tvrdil opak.
+  Chyba plánu, nie kódu; Ján volil cestu cez kartu. Druhá prekážka až na
+  karte: **sám seba schváliť nemožno**, schvaľovateľ dostane upozornenie —
+  rozhodnutie o kolegovi patrilo Jánovi.
+- `sfz:test_onboarding` sa k asistentovi nedostane: celý text v jednom
+  riadku → chunker ho uloží ako preambulu a preambuly hľadanie vynecháva.
+- Automatický režim zablokoval úpravu indexu v kroku 4; spustil ju Ján.
+- `atlas_check.mjs` hlásil počas úpravy na mieste „dotazy vrátia prázdno",
+  hoci stará definícia odpovedala — opravené (`queryable`, `mainIndex`).
+- Porovnanie pri dokumente s jediným znením ťahalo celé texty (594 ms) —
+  texty sa načítajú až keď je čo porovnať (27–52 ms).
+- Kontrola `npm run check` hlásila Jánove roly `dpo` a `learning-admin` ako
+  neznáme — zoznam v kontrole zaostal za `ASSIGNABLE_ROLES`.
+- Prepis otázky modelom trvá až 3,7 s — nesúvisí s plánom, zaťažuje čas po
+  prvý token (D9).
+
+---
+
 ## 2026-09-28 (večer) — právny základ už v príprave (ADR-023)
 
 **Čo sa spravilo.**

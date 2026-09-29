@@ -28,3 +28,17 @@ export function autoVersionLabel(
   while (taken.has(`${base} (${n})`)) n += 1
   return `${base} (${n})`
 }
+
+/**
+ * Či je označenie to automatické z dátumu účinnosti (v ktoromkoľvek jazyku,
+ * aj s poradím „(2)"). Také označenie už dátum nesie — kto ho zobrazuje
+ * vedľa účinnosti, nesmie ho opakovať („znenie znenie účinné od 1. 7. 2026
+ * · účinné od 1. 7. 2026", zistené na intranete pri kroku 8 „znení v indexe").
+ */
+export function isAutoVersionLabel(label: string | null | undefined, effectiveFrom: Date | string | null | undefined): boolean {
+  if (!label || !effectiveFrom) return false
+  const d = effectiveFrom instanceof Date ? effectiveFrom : new Date(effectiveFrom)
+  if (Number.isNaN(d.getTime())) return false
+  const bare = label.trim().replace(/\s+\(\d+\)$/, "")
+  return (["sk", "cs", "en"] as const).some(l => dictionary(l).library.flow.autoLabel(formatDate(d, l)) === bare)
+}

@@ -93,3 +93,11 @@ describe("štítok porovnania (krok 7)", () => {
     expect(cmp({ ok: false, reason })).toContain(expected)
   })
 })
+
+it("porovnanie s automatickým označením: len dátumy", () => {
+  expect(html({ ...answered(compare), comparison: {
+    ok: true, title: "Test", changes: 1,
+    from: { label: "znenie účinné od 1. 7. 2026", effectiveFrom: "2026-07-01T00:00:00.000Z" },
+    to: { label: "znenie účinné od 1. 1. 2027", effectiveFrom: "2027-01-01T00:00:00.000Z" },
+  } })).toContain("porovnanie znení: od 1. 7. 2026 → od 1. 1. 2027")
+})

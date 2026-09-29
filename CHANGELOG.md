@@ -15,6 +15,26 @@ zoznamu, Esc hľadanie zruší. Poradie zoznamu sa nemení a bez JavaScriptu
 zostáva zoznam ako doteraz. Platí v príprave znenia, v paneli schvaľovania
 aj pri zodpovedných osobách testu.
 
+### Asistent odpovedá podľa znenia platného k dňu otázky (2026-09-29)
+
+Asistent hľadá len v **zneniach platných k dňu otázky**. Novela zverejnená
+vopred sa do odpovedí dostane až dňom účinnosti; nahradené znenie platí do
+účinnosti nového. Nad odpoveďou je štítok, ku ktorému dňu odpovedá — pri inom
+dni než dnes výrazne, aby sa minulé právo nečítalo ako dnešné.
+
+**Otázky k dátumu:** „Aká bola lehota k 1. 3. 2025?", „v roku 2019",
+„vlani", aj „k 1. 1. 2027" (podľa novely zverejnenej vopred). Pri roku bez
+dňa sa odpovedá podľa stavu k 31. 12. Keď k dňu nie je platné žiadne znenie,
+asistent to povie.
+
+**Porovnanie znení:** „Čo sa zmenilo v stanovách?", „čo sa zmení",
+„od roku 2020". Asistent porovná dve znenia dokumentu po článkoch a cituje
+staré aj nové znenie; štítok povie, ktoré dve znenia porovnal, alebo prečo sa
+porovnať nedalo (napr. dokument má jediné znenie).
+
+Pri každom zdroji je **znenie a jeho účinnosť**; ukladá sa aj do hodnotení.
+Overené odpovede sa použijú len pri otázke na dnešok (ADR-024).
+
 ### Právny základ už v príprave znenia (2026-09-28)
 
 Zodpovedná osoba nového znenia môže určiť **právny základ ešte pred

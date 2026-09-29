@@ -3707,7 +3707,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     timeToday: (d) => `podľa znení platných dnes, ${d}`,
     timeAsOf: (d) => `podľa znení platných k ${d}`,
     timeCompare: (from, to) => `porovnanie znení: ${from} → ${to}`,
-    compareSide: (label, date) => (date ? `${label} (od ${date})` : label),
+    compareSide: (label, date) => (label ? (date ? `${label} (od ${date})` : label) : date ? `od ${date}` : ""),
     timeCompareUnavailable: {
       "single-version": (d) => `dokument má jediné znenie, nie je s čím porovnať — odpoveď podľa znení platných dnes, ${d}`,
       "missing-text": (d) => `text staršieho znenia chýba — odpoveď podľa znení platných dnes, ${d}`,
@@ -6988,7 +6988,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     timeToday: (d) => `podle znění platných dnes, ${d}`,
     timeAsOf: (d) => `podle znění platných k ${d}`,
     timeCompare: (from, to) => `porovnání znění: ${from} → ${to}`,
-    compareSide: (label, date) => (date ? `${label} (od ${date})` : label),
+    compareSide: (label, date) => (label ? (date ? `${label} (od ${date})` : label) : date ? `od ${date}` : ""),
     timeCompareUnavailable: {
       "single-version": (d) => `dokument má jediné znění, není s čím porovnat — odpověď podle znění platných dnes, ${d}`,
       "missing-text": (d) => `text staršího znění chybí — odpověď podle znění platných dnes, ${d}`,
@@ -10260,7 +10260,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     timeToday: (d) => `per versions in force today, ${d}`,
     timeAsOf: (d) => `per versions in force on ${d}`,
     timeCompare: (from, to) => `comparing versions: ${from} → ${to}`,
-    compareSide: (label, date) => (date ? `${label} (from ${date})` : label),
+    compareSide: (label, date) => (label ? (date ? `${label} (from ${date})` : label) : date ? `from ${date}` : ""),
     timeCompareUnavailable: {
       "single-version": (d) => `the document has a single version, nothing to compare — the answer uses versions in force today, ${d}`,
       "missing-text": (d) => `the text of the older version is missing — the answer uses versions in force today, ${d}`,

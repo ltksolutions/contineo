@@ -9,6 +9,7 @@
 
 import { formatDate } from "./i18n"
 import type { ChunkVersion } from "./mongoSearch"
+import { isAutoVersionLabel } from "./versionLabel"
 
 /**
  * Časové pásmo, v ktorom sa určuje „deň otázky". Všetci tenanti sú dnes
@@ -41,6 +42,8 @@ export function versionContext(v: ChunkVersion | undefined): string | undefined 
   const from = date(v.effectiveFrom)
   const to = date(v.effectiveTo)
   const validity = from ? `účinné od ${from}${to ? ` do ${to}` : ""}` : to ? `účinné do ${to}` : ""
+  // Automatické označenie („znenie účinné od …") dátum už nesie — neopakovať ho.
+  if (isAutoVersionLabel(v.label, v.effectiveFrom)) return validity ? `znenie ${validity}` : undefined
   return [v.label ? `znenie ${v.label}` : "", validity].filter(Boolean).join(" · ") || undefined
 }
 
@@ -48,10 +51,13 @@ export function versionContext(v: ChunkVersion | undefined): string | undefined 
  * Pokyn do systémového promptu: ku ktorému dňu model odpovedá a čo robiť so
  * znením, ktoré má známy koniec účinnosti.
  */
-export function asOfInstruction(asOf: Date): string {
+export function asOfInstruction(asOf: Date, now: Date = new Date()): string {
   const d = formatDate(calendarDate(asOf), "sk")
+  // Dnešok zvlášť: pri otázke do minulosti model písal o zmene, ktorá už
+  // nastala, v budúcom čase („od 1. 7. 2026 bude platiť…", krok 8).
+  const today = formatDate(calendarDate(now), "sk")
   return `Odpovedáš podľa znení predpisov platných ku dňu ${d}. Tento deň v odpovedi raz uveď (napríklad „Podľa znení platných k ${d} …").
-Pri každom zdroji máš uvedené znenie a jeho účinnosť. Ak má zdroj uvedený koniec účinnosti („do …"), upozorni, že od toho dňa platí iné znenie. Inak účinnosť zdrojov nekomentuj a neodporúčaj overovať novšie znenie — zdroje sú znenia platné k tomuto dňu.`
+Pri každom zdroji máš uvedené znenie a jeho účinnosť. Ak má zdroj uvedený koniec účinnosti („do …"), upozorni, že od toho dňa platí iné znenie. Dnes je ${today}: o dni pred dneškom hovor v minulom čase, o dnešku a neskoršom v prítomnom alebo budúcom. Inak účinnosť zdrojov nekomentuj a neodporúčaj overovať novšie znenie — zdroje sú znenia platné k tomuto dňu.`
 }
 
 /** Čo o porovnaní potrebuje pokyn modelu (krok 7). */
