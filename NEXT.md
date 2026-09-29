@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-28 večer** (pozvánky odoslané; ochrana údajov podľa organizácie ADR-022; retencia vzdelávania ADR-021)
+Posledná aktualizácia: **2026-09-29** (asistent a znenia v indexe ADR-024; právny základ v príprave ADR-023)
 
 ---
 
@@ -47,9 +47,21 @@ Design).
 **ADR-012 (retencia a DPO)** beží v režime `report`; DPO je Ján. **ADR-013**
 (údaje o znení) je súčasťou schválenia.
 
-**Naostro neoverené:** celý postup nového znenia cez kartu (predloženie,
-zverejnenie s novým názvom, prenos pridelení), uloženie kombinácie
-právnych základov, `/dpo` s námietkou, vyradená osoba.
+**ADR-023:** právny základ určuje zodpovedná osoba už v príprave;
+nahradené znenie platí do účinnosti nového (D143).
+
+**Naostro overené 29. 9.:** predloženie → schválenie (Michaela Žikavská)
+→ zverejnenie cez kartu, trikrát na `sfz:test_znenia`, vrátane novely
+s budúcou účinnosťou. **Naostro neoverené:** zverejnenie s novým názvom,
+prenos pridelení, kombinácia právnych základov, určenie základu v príprave
+(ADR-023), `/dpo` s námietkou, vyradená osoba.
+
+**Asistent odpovedá podľa znenia platného k dňu otázky (ADR-024, PR
+#170–#176).** Hľadá v zneniach platných k dňu (z `documents`, nie podľa
+`isActive` úseku), rozpozná otázku „k dátumu" aj „čo sa zmenilo" (porovná
+dve znenia po článkoch), nad odpoveďou je štítok dňa, pri zdroji znenie.
+Overuje sa `npm run versions:questions` na skúšobnom `sfz:test_znenia`
+(6 z 6). Ostré normy majú zatiaľ po jednom znení.
 
 **Vzdelávanie (modul `learning`, ADR-018) je L0–L3 v produkcii** (PR
 #130–#153): kurzy s verziami a videom, banka otázok a testy, výsledky pre
@@ -83,7 +95,12 @@ licencií (Ján v exporte nebol).
 a pohlavie), DPIA pred pilotom (C3), termín balančného testu (A3, A11).
 
 **Mazanie pôvodných noriem a testovacích dokumentov** pred ostrou prevádzkou
-— Ján povie kedy a ktoré; predtým výpis toho, čo sa na ne odkazuje.
+— Ján povie kedy a ktoré; predtým výpis toho, čo sa na ne odkazuje. Pribudol
+`sfz:test_znenia` (skúšobné otázky asistenta ho potrebujú, kým nie je
+ostrá norma s viacerými zneniami).
+
+**Atlas → AI Models → Usage:** či úpravy search indexov 29. 9. prepočítali
+vektory (skóre pred a po sú zhodné — nasvedčuje, že nie).
 
 **Zapnúť ostré mazanie** — `RETENTION_MODE=delete` po kontrole výkazu
 `retention` v odpovedi cronu; tá istá premenná zapína aj retenciu
@@ -99,12 +116,14 @@ Vzdelávania (ADR-021).
    doplniť **pohlavie** (stĺpec `pohlavie`).
 0. **Prvý kurz naostro:** Ján zverejní kurz, prejde ho sám s testom
    a stiahne certifikát aj PDF — overiť `/verify` z QR na telefóne.
-1. **Prvé ostré nové znenie cez kartu** — pri ňom overiť nový názov,
-   formulku „v znení účinnom od", kombináciu právnych základov a prenos
-   pridelení (`docs/TODO.md`, O15/O16).
+1. **Prvé ostré nové znenie cez kartu** — samotné kolo je overené; pri ňom
+   overiť nový názov, formulku „v znení účinnom od", kombináciu právnych
+   základov, základ určený v príprave (ADR-023) a prenos pridelení
+   (`docs/TODO.md`, O15/O16). Potom asistenta: `npm run versions:questions`
+   má zmysel doplniť o otázky na tú normu.
 2. **Prejsť `/dpo` naostro:** výkaz, CSV; námietku len na testovacej osobe.
-3. **Právny základ už počas schvaľovania** (ADR-014, D109) — návrh miesta,
-   kde koncept uvidí zodpovedná osoba bez prístupu do knižnice.
+3. **Čas po prvý token:** prepis otázky modelom trvá až 3,7 s (D9: p95
+   pod 2 s) — zmerať na hodnoteniach a rozhodnúť, či ho skracovať.
 
 ## Ako sa projekt overuje
 
@@ -114,8 +133,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (28. 9. večer): **0 errors, 41 warnings,
-1893 testov v 137 súboroch.** Pri veľkej záťaži stroja pomôže
+Baseline, proti ktorej sa porovnáva (29. 9.): **0 errors, 41 warnings,
+2059 testov v 146 súboroch.** Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
