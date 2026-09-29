@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>DETAIL — staršie znenia</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#1d4ed8;--accent-strong:#1e40af;--on-accent:#fff;--accent-soft:rgba(29,78,216,.10);--ok-bg:#ecfdf5;--ok-fg:#047857;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--fs-title:26px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px;--control-h:40px}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55;color:var(--ink)}
+a{color:var(--ink);text-decoration:none} a:hover{color:var(--accent)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:86ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:700;flex:0 0 auto}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.ask{flex:1;display:flex;align-items:center;min-height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;min-width:0;white-space:nowrap;overflow:hidden}
+.av{width:30px;height:30px;border-radius:50%;background:var(--surface-2);flex:0 0 auto}
+.body{padding:20px 24px 36px}
+.back{font-size:13px;color:var(--muted);text-decoration:underline}
+.tags{display:flex;gap:6px;margin:12px 0 8px}
+.tag{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;min-height:22px;padding:0 9px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap}
+.tag--ok{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg);border-color:transparent}
+.title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 4px}
+.sub{font-size:14px;color:var(--muted);margin:0 0 14px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.button{display:inline-flex;align-items:center;justify-content:center;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;min-height:var(--control-h);padding:0 16px;font-size:15px;font-weight:600}
+.button--primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.cur{padding:18px 20px}
+.cur h2{font-size:18px;margin:0 0 12px;display:flex;gap:8px;align-items:baseline}
+.cur h2 span{font-size:15px;font-weight:400;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.facts dt{font-size:12px;color:var(--muted)} .facts dd{margin:0;font-size:14px}
+.cur-links{display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;font-size:14px}
+.side{padding:16px 18px;font-size:13.5px}
+.side h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+/* ── NOVÉ: staršie znenia ── */
+.older{margin-top:20px}
+.older-head{display:flex;align-items:baseline;gap:8px;padding:14px 20px 10px}
+.older-head h2{font-size:15px;margin:0}
+.older-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.older-note{font-size:12px;color:var(--muted);margin-left:auto}
+.older-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.older-row{display:grid;grid-template-columns:168px minmax(0,1.4fr) minmax(0,1fr) 92px auto;gap:16px;align-items:start;padding:12px 20px;border-bottom:1px solid var(--line)}
+.older-row:last-child{border-bottom:0}
+.older-row:hover{background:var(--bg)}
+.older-row.is-open{background:var(--bg)}
+.o-dates{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.35}
+.o-dates small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.o-label{font-size:14px;line-height:1.35}
+.o-change{font-size:12.5px;color:var(--muted);margin-top:2px}
+.o-who{font-size:13.5px;line-height:1.35}
+.o-who small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.o-acks{font-size:13.5px;font-variant-numeric:tabular-nums;text-align:right;line-height:1.35}
+.o-acks small{display:block;color:var(--muted);font-size:12px}
+.o-actions{display:flex;gap:4px;align-items:center;justify-content:flex-end}
+.o-pdf{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--line);font-size:13px;font-weight:600;background:var(--surface)}
+.more{position:relative}
+.more>summary{list-style:none;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;letter-spacing:1px}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary:hover,.more[open]>summary{background:var(--surface-2);color:var(--ink)}
+.more-menu{position:absolute;right:0;top:36px;z-index:5;min-width:230px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(20,28,42,.14);padding:5px;display:grid}
+.more-menu a{display:flex;align-items:center;min-height:36px;padding:0 10px;border-radius:7px;font-size:13.5px}
+.more-menu a:hover{background:var(--surface-2);color:var(--ink)}
+.more-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+.older-panel{grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px}
+.older-panel h4{margin:0;font-size:14px;display:flex;gap:10px;align-items:baseline}
+.older-panel h4 a{margin-left:auto;font-size:13px;font-weight:400;color:var(--muted)}
+.older-more{display:flex;justify-content:center;padding:10px;border-top:1px solid var(--line)}
+.older-more a{font-size:13.5px;font-weight:600;color:var(--accent)}
+.field-input{font:inherit;font-size:15px;background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%}
+.pp{display:grid;gap:2px;border:1px solid var(--line);border-radius:8px;padding:6px;max-height:150px;overflow:hidden}
+.pp label{display:flex;gap:10px;padding:6px;font-size:14px;align-items:center}
+.pp small{color:var(--muted);font-size:12.5px}
+.older-empty{padding:14px 20px 18px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--line)}
+/* 834 a 390 */
+.w834 .grid{grid-template-columns:1fr}
+.w834 .older-row{grid-template-columns:150px minmax(0,1fr) 80px auto}
+.cmp .w834 .older-row{grid-template-columns:128px minmax(0,1fr) auto}
+.cmp .w834 .o-acks{display:none}
+.w834 .o-who{display:none}
+.w834 .o-who-inline{display:block}
+.o-who-inline{display:none;font-size:12.5px;color:var(--muted);margin-top:4px}
+.w390 .body{padding:14px 14px 28px}
+.w390 .hdr{padding:0 14px}
+.w390 .grid{grid-template-columns:1fr}
+.w390 .facts{grid-template-columns:1fr 1fr}
+.w390 .title{font-size:22px}
+.w390 .older-head{padding:12px 14px 8px}
+.w390 .older-note{display:none}
+.w390 .older-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:12px 14px}
+.w390 .o-who,.w390 .o-acks{display:none}
+.w390 .o-who-inline{display:block}
+.w390 .o-main{grid-column:1/2}
+.w390 .o-dates{grid-column:1/2}
+.w390 .o-actions{grid-column:2/3;grid-row:1/3;align-self:start}
+.w390 .o-pdf,.w390 .more>summary{min-height:44px;width:auto;min-width:44px}
+.w390 .more>summary{width:44px;height:44px}
+.w390 .more-menu a{min-height:44px}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:1440px}
+.cmp .older{padding:0}
+.cmp p{font-size:13px;color:var(--muted);margin:0 0 8px}
+.old-now{padding:14px 20px;font-size:14px}
+.old-now .r{padding:10px 0;border-bottom:1px solid var(--line)}
+.old-now .l{display:flex;gap:16px;font-size:13.5px;padding:8px 0;border-bottom:1px solid var(--line)}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">DETAIL — staršie znenia</h1>
+<p class="doc">Sekcia „Staršie znenia" na <code>/library/[id]</code> (bod 4 rámu <code>KNIZNICA-postup-znenia</code>). Namiesto nadpisov s opakovaným riadkom štyroch odkazov je to jedna karta so zoznamom: jeden riadok = jedno znenie, platnosť, označenie a zmena, zodpovedná osoba, počet potvrdení, <b>PDF</b> a ponuka <b>⋯</b> pre zriedkavé úkony.</p>
+<p class="doc">Zdroj: <code>library/[id]/page.tsx</code> r. 1201–1228 (<code>.older</code>, <code>versionLinks</code>, <code>versionPanel</code>). Popis v <code>DETAIL-starsie-znenia.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <div class="cmp">
+    <div><p>Dnes: každý riadok opakuje 4 odkazy, chýba čo sa zmenilo a kto zodpovedal</p><div class="card old-now">
+      <div class="r"><b>platné od 1. 7. 2026</b> <span style="color:var(--muted)">do 1. 1. 2027</span><br /><span style="color:var(--muted);font-size:13px">Autor: Contineo — skúšobný dokument</span></div>
+      <div class="l"><span>PDF</span><span>Zmeniť zodpovednú osobu</span><span>Zmeniť právny základ</span><span>História</span></div>
+      <div class="r"><b>platné od 1. 1. 2024</b> <span style="color:var(--muted)">do 1. 7. 2026</span><br /><span style="color:var(--muted);font-size:13px">Autor: Contineo — skúšobný dokument</span></div>
+      <div class="l"><span>PDF</span><span>Zmeniť zodpovednú osobu</span><span>Zmeniť právny základ</span><span>História</span></div>
+    </div></div>
+    <div><p>Návrh: jeden riadok na znenie, akcie v ⋯</p><div class="w834" data-older="cmp"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — detail dokumentu, 4 staršie znenia (3 zobrazené), ⋯ otvorená</p>
+  <div class="frame" style="width:1440px"><div class="hdr"><span class="logo">SFZ</span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av"></span></div>
+  <div class="body" data-page="1440"></div></div>
+</div>
+
+<div class="sec" style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+  <div><p class="sec-h">834 — zodpovedná osoba pod označením, panel „Zmeniť zodpovednú osobu" otvorený</p>
+  <div class="frame w834" style="width:834px"><div class="hdr"><span class="logo">SFZ</span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="body" data-page="834"></div></div></div>
+  <div><p class="sec-h">390</p>
+  <div class="frame w390" style="width:390px"><div class="hdr"><span class="logo">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="body" data-page="390"></div></div></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Stav — žiadne staršie znenie</p>
+  <div style="max-width:900px" class="card older"><div class="older-head"><h2>Staršie znenia</h2></div><div class="older-empty">Žiadne. Po zverejnení nového znenia sa sem presunie platné.</div></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Pravidlá</p>
+  <table class="spec">
+    <tr><th>Stĺpec / prvok</th><th>Obsah</th><th>Zdroj</th></tr>
+    <tr><td>Platnosť</td><td>„1. 7. 2026 – 1. 1. 2027", pod tým „zverejnené 24. 6. 2026". Poradie od najnovšieho.</td><td><code>effectiveFrom</code>, <code>effectiveTo</code>, <code>publishedAt</code></td></tr>
+    <tr><td>Znenie</td><td>Označenie (ADR-016) + poznámka o zmene, ak je. Autor sa presúva do Histórie — pri všetkých zneniach je rovnaký a riadok nerozlišuje.</td><td><code>label</code>, <code>changeNote</code></td></tr>
+    <tr><td>Zodpovedná osoba</td><td>Meno; pod ním právny základ. Chýbajúce sa hovorí nahlas pilulkou („neurčený", „vyradená") ako v platnom znení.</td><td><code>responsiblePerson</code>, <code>legalBasis</code></td></tr>
+    <tr><td>Potvrdili</td><td>Počet potvrdení tohto znenia. „—" ak 0.</td><td><code>ackByVersion</code> (už na stránke)</td></tr>
+    <tr><td>PDF</td><td>Jediná viditeľná akcia — to, čo sa pri starom znení robí najčastejšie.</td><td><code>v.pdf</code></td></tr>
+    <tr><td>⋯</td><td><code>&lt;details&gt;</code> ponuka (bez JS): Zmeniť zodpovednú osobu · Zmeniť právny základ (len ak <code>canSetBasis</code>) · Odvolať potvrdenia (len HR a potvrdenia &gt; 0) · História. Položky sú dnešné odkazy <code>panelHref(v, panel)</code>.</td><td><code>versionLinks</code></td></tr>
+    <tr><td>Panel</td><td>Otvorí sa pod riadkom na celú šírku (riadok dostane pozadie), s „Zavrieť" = odkaz bez <code>panel</code>. Obsah = dnešný <code>versionPanel</code>.</td><td><code>versionPanel</code></td></tr>
+    <tr><td>Viac ako 3</td><td>Zobrazia sa 3 najnovšie + „Zobraziť všetky (n)" = odkaz <code>?older=all</code>. Otvorený panel na staršom znení zoznam rozbalí sám.</td><td>nové: parameter adresy</td></tr>
+    <tr><td>834</td><td>Stĺpec Zodpovedná osoba zmizne, meno a základ idú pod označenie.</td><td></td></tr>
+    <tr><td>390</td><td>Riadok = platnosť, označenie, zmena, zodpovedná osoba · počet potvrdení; PDF a ⋯ vpravo hore, 44 px.</td><td></td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const V=[
+ {id:"v3",from:"1. 7. 2026",to:"1. 1. 2027",pub:"24. 6. 2026",label:"úplné znenie od 1. 7. 2026",change:"novela čl. 12 a 18 — lehota na odvolanie",resp:"Ján Letko",basis:"Oboznámenie pri nástupe",acks:38},
+ {id:"v2",from:"1. 1. 2025",to:"1. 7. 2026",pub:"18. 12. 2024",label:"úplné znenie od 1. 1. 2025",change:"zosúladenie so stanovami",resp:"Marek Horák",respGone:true,basis:"Oboznámenie pri nástupe",acks:112},
+ {id:"v1",from:"1. 1. 2024",to:"1. 1. 2025",pub:"20. 12. 2023",label:"úplné znenie od 1. 1. 2024",change:"",resp:null,basis:null,acks:0},
+ {id:"v0",from:"1. 9. 2023",to:"1. 1. 2024",pub:"30. 8. 2023",label:"prvé znenie",change:"",resp:null,basis:null,acks:0},
+];
+const who=v=>v.resp?`${v.resp}${v.respGone?' <span class="tag tag--draft">vyradená</span>':''}`:'<span class="tag tag--draft">chýba</span>';
+const basis=v=>v.basis?v.basis:'<span class="tag tag--draft">základ neurčený</span>';
+function menu(open,acks){return `<details class="more"${open?" open":""}><summary aria-label="Ďalšie úkony">•••</summary><div class="more-menu">
+  <a href="#">Zmeniť zodpovednú osobu</a><a href="#">Zmeniť právny základ</a>${acks?'<a href="#">Odvolať potvrdenia</a>':''}<hr /><a href="#">História</a></div></details>`}
+function row(v,{openMenu,panel}={}){
+  return `<li class="older-row${panel?" is-open":""}">
+   <div class="o-dates">${v.from} – ${v.to}<small>zverejnené ${v.pub}</small></div>
+   <div class="o-main"><div class="o-label">${v.label}</div>${v.change?`<div class="o-change">${v.change}</div>`:""}
+     <div class="o-who-inline">${who(v)} · ${basis(v)}<span class="o-acks-inline"> · ${v.acks?v.acks+" potvrdení":"bez potvrdení"}</span></div></div>
+   <div class="o-who">${who(v)}<small>${basis(v)}</small></div>
+   <div class="o-acks">${v.acks||"—"}<small>potvrdili</small></div>
+   <div class="o-actions"><a class="o-pdf" href="#">PDF</a>${menu(openMenu,v.acks)}</div>
+   ${panel?`<div class="older-panel"><h4>Zmeniť zodpovednú osobu <span style="font-weight:400;color:var(--muted);font-size:13px">${v.label}</span><a href="#">Zavrieť</a></h4>
+     <div class="pp"><label><input type="radio" name="r" />Agáta Galková <small>IT</small></label><label><input type="radio" name="r" checked />Alžbeta Majláthová <small>Legislatíva</small></label><label><input type="radio" name="r" />Andrea Hlboká</label></div>
+     <input class="field-input" placeholder="Dôvod zmeny — napríklad: pôvodná zodpovedná osoba odišla zo zväzu" />
+     <div><span class="button" style="min-height:36px;font-size:14px">Uložiť zodpovednú osobu</span></div></div>`:""}
+  </li>`}
+function older({limit=3,openMenu,panel,note=true}={}){
+  const shown=V.slice(0,limit);
+  return `<section class="card older"><div class="older-head"><h2>Staršie znenia</h2><span class="older-count">${V.length}</span>${note?'<span class="older-note">Ľudia ich už nevidia; potvrdenia ostávajú ako doklad.</span>':''}</div>
+   <ul class="older-list">${shown.map(v=>row(v,{openMenu:openMenu===v.id,panel:panel===v.id})).join("")}</ul>
+   ${V.length>limit?`<div class="older-more"><a href="#">Zobraziť všetky (${V.length})</a></div>`:""}</section>`}
+function page(key,opts){
+  const el=document.querySelector(`[data-page="${key}"]`);
+  el.innerHTML=`<a class="back" href="#">← Späť do knižnice</a>
+  <div class="tags"><span class="tag tag--ok">Platný</span><span class="tag">norma</span></div>
+  <h1 class="title">Skúšobný poriadok (znenia v indexe)</h1>
+  <p class="sub">sfz:test_znenia · Nezaradené · platné od 1. 1. 2027</p>
+  <div class="btns"><span class="button">Stiahnuť PDF</span><span class="button">Stiahnuť zdrojový súbor</span><span class="button">Upraviť dokument</span><span class="button button--primary">Nové znenie</span></div>
+  <div class="grid"><div>
+    <section class="card cur"><h2>Platné znenie <span>od 1. 1. 2027</span></h2>
+      <dl class="facts"><div><dt>Zodpovedná osoba</dt><dd>Ján Letko</dd></div><div><dt>Právny základ</dt><dd><span class="tag tag--draft">neurčený</span></dd></div><div><dt>Schválil</dt><dd>—</dd></div><div><dt>Autor</dt><dd>Contineo — skúšobný dokument</dd></div></dl>
+      <div class="cur-links"><a href="#">PDF</a><a href="#">Zmeniť zodpovednú osobu</a><a href="#">Zmeniť právny základ</a><a href="#">História</a></div></section>
+    ${older(opts)}
+  </div>${key==="390"?"":`<aside style="display:grid;gap:14px"><section class="card side"><h3>Potvrdenia</h3><span style="color:var(--muted)">Toto znenie zatiaľ nie je nikomu pridelené.</span></section><section class="card side"><h3>Metadáta</h3><span style="color:var(--muted)">Druh norma · Značky test · …</span></section></aside>`}</div>`;
+}
+document.querySelector('[data-older="cmp"]').innerHTML=older({limit:2,note:false}).replace('class="card older"','class="card older" style="margin:0"');
+page("1440",{openMenu:"v3"});
+page("834",{panel:"v2"});
+page("390",{});
+</script>
+</body></html>

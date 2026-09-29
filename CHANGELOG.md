@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Staršie znenia ako prehľadný zoznam (2026-09-29)
+
+Na detaile dokumentu v knižnici sú **staršie znenia jedna karta so
+zoznamom**, jeden riadok na znenie: platnosť a dátum zverejnenia,
+označenie a poznámka o zmene, zodpovedná osoba s právnym základom
+(chýbajúce povie pilulka) a **koľko ľudí znenie potvrdilo**. Viditeľné je
+len PDF, zriedkavé úkony (zmena osoby či základu, odvolanie potvrdení,
+história) sú v ponuke ⋯. Otvorený úkon sa ukáže pod riadkom so
+„Zavrieť". Pri viac ako troch zneniach sú vidieť tri najnovšie a
+„Zobraziť všetky". Funguje bez JavaScriptu; karta platného znenia sa
+nemení.
+
 ### Hľadanie v zozname osôb (2026-09-29)
 
 Výber **schvaľovateľov** a **zodpovednej osoby** má od 8 osôb nad zoznamom

@@ -10,6 +10,34 @@
 
 ---
 
+## 2026-09-29 — staršie znenia ako zoznam (DETAIL-starsie-znenia)
+
+**Čo sa spravilo.**
+
+- Podklady z Claude Design uložené do `docs/design/DETAIL-starsie-znenia.*`.
+- `library/[id]`: staršie znenia sú karta `.older` so zoznamom. PDF je vidieť
+  priamo, ostatné úkony sú v ⋯ (`<details>`). Panel sa otvára pod riadkom
+  a zoznam ukazuje tri znenia, zvyšok je za `?older=all`. Úkony pri znení
+  (`versionPanels`) sa teraz skladajú na jednom mieste pre kartu platného
+  znenia aj pre ⋯, takže sa pravidlo „odvolanie len HR s potvrdeniami“
+  nemôže rozísť.
+- Q1 a Q2 z rámu ostávajú otvorené: zmena zodpovednej osoby zostáva v ⋯
+  a `effectiveTo` sa zobrazuje ako doteraz.
+
+**Nefungovalo / poučenie.**
+
+- Pilulky v karte platného znenia sú celé vety („Znenie nemá určenú
+  zodpovednú osobu."); do riadku sa nezmestia. Podmienky a `.tag--draft` sú
+  rovnaké, texty sú krátke tvary z rámu (`older.responsibleMissing`…).
+- `?older=all` sa drží aj v odkazoch úkonov a vo „Zavrieť", inak by sa po
+  otvorení panelu na štvrtom znení zoznam znova zbalil.
+- Karta nesmie mať `overflow: hidden`, ponuka ⋯ pri poslednom riadku by sa
+  orezala. Zaoblenie spodku preto nesie posledný riadok.
+- Vzhľad sa overoval na stránke vykreslenej mockmi z `libraryDetailFlow`
+  (mimo repa) na 1440/834/390. Živé dáta treba pozrieť na náhľade.
+
+---
+
 ## 2026-09-29 — hľadanie v zozname osôb (KOMPONENT-hladanie-osob)
 
 **Čo sa spravilo.**

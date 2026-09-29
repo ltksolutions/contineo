@@ -14,7 +14,6 @@ import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { libraryDetail, statusTagClass, displayStatus, versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
 import VersionMetaFields from "@/components/VersionMetaFields"
-import VersionMetaLine from "@/components/VersionMetaLine"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
@@ -42,7 +41,7 @@ import ApprovalPanel from "@/components/ApprovalPanel"
 import { isHr } from "@/lib/hr"
 import { validAcknowledgements } from "@/lib/acknowledgements"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
-import type { CSSProperties } from "react"
+import { Fragment, type CSSProperties } from "react"
 import { textFingerprint } from "@/lib/chunkIdentity"
 import { documentDraftIdentity, metaLocked } from "@/lib/versionMeta"
 import { versionFlow, lastPreparationRound, previousApproverIds, rejectedBy } from "@/lib/versionFlow"
@@ -82,7 +81,7 @@ export default async function DocumentDetailPage({
   }
 
   const { id } = await params
-  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string }>(await searchParams)
   const { msg: message, error } = query
   const openPanel = PANELS.includes(query.open as Panel) ? (query.open as Panel) : null
   const editDocument = query.edit === "document"
@@ -331,6 +330,7 @@ export default async function DocumentDetailPage({
   const panelHref = (v: V, panel: Panel) => {
     const p = new URLSearchParams()
     if (v !== effective) p.set("version", v.versionId)
+    if (v !== effective && query.older === "all") p.set("older", "all")
     if (!(openPanel === panel && (v === effective ? !query.version : query.version === v.versionId))) p.set("open", panel)
     const qs = p.toString()
     return `${base}${qs ? `?${qs}` : ""}#${v === effective ? "current" : `v-${v.versionId}`}`
@@ -363,23 +363,58 @@ export default async function DocumentDetailPage({
     : !draftResponsibleActive ? tflow.basisResponsibleGone
     : tflow.basisWaiting(d.draftResponsible.fullName)
 
+  const panelLabel: Record<Panel, string> = {
+    responsible: tflow.changeResponsible,
+    basis: tflow.changeBasis,
+    revoke: t.revokeVersionHeading,
+    history: tflow.history,
+  }
+  /** Úkony pri znení — tie isté pre kartu platného znenia aj ponuku ⋯ staršieho. */
+  const versionPanels = (v: V): Panel[] => ([
+    ["responsible", true],
+    ["basis", canSetBasis(v)],
+    // „Opraviť údaje" zrušené (ADR-016): označenie sa skladá samo, dátum je
+    // schválený s údajmi o znení. Ostáva odvolanie potvrdení personalistom.
+    ["revoke", canRevoke && (ackByVersion.get(v.versionId) ?? 0) > 0],
+    ["history", true],
+  ] as [Panel, boolean][]).filter(([, show]) => show).map(([panel]) => panel)
+  const panelLink = (v: V, panel: Panel) => (
+    <Link key={panel} href={panelHref(v, panel)} aria-current={panelOf(v) === panel ? "true" : undefined}>
+      {panelLabel[panel]}
+    </Link>
+  )
+
   const versionLinks = (v: V) => (
     <div className="cur-links">
       {v.pdf && <FileLink file={v.pdf} label="PDF" />}
-      {([
-        ["responsible", tflow.changeResponsible, true],
-        ["basis", tflow.changeBasis, canSetBasis(v)],
-        // „Opraviť údaje" zrušené (ADR-016): označenie sa skladá samo, dátum je
-        // schválený s údajmi o znení. Ostáva odvolanie potvrdení personalistom.
-        ["revoke", t.revokeVersionHeading, canRevoke && (ackByVersion.get(v.versionId) ?? 0) > 0],
-        ["history", tflow.history, true],
-      ] as [Panel, string, boolean][]).filter(([, , show]) => show).map(([panel, label]) => (
-        <Link key={panel} href={panelHref(v, panel)} aria-current={panelOf(v) === panel ? "true" : undefined}>
-          {label}
-        </Link>
-      ))}
+      {versionPanels(v).map(panel => panelLink(v, panel))}
     </div>
   )
+
+  /*
+   * Staršie znenia (DETAIL-starsie-znenia). Viditeľné je len PDF — to sa pri
+   * starom znení robí najčastejšie; zriedkavé úkony sú v ⋯ ako `<details>`,
+   * takže ponuka funguje bez JavaScriptu. Zoznam ukáže tri najnovšie, zvyšok
+   * za odkazom `?older=all` — a rozbalí sa sám, keď je panel otvorený na
+   * znení, ktoré by inak bolo skryté (prišiel sem odkaz alebo presmerovanie
+   * po uložení a človek má vidieť, čo robí).
+   */
+  const OLDER_SHOWN = 3
+  const olderAll = query.older === "all"
+    || olderVersions.slice(OLDER_SHOWN).some(v => v.versionId === query.version)
+  const olderShown = olderAll ? olderVersions : olderVersions.slice(0, OLDER_SHOWN)
+  const olderClose = (v: V) => `${base}${query.older === "all" ? "?older=all" : ""}#v-${v.versionId}`
+  const olderWho = (v: V) => (v.responsiblePerson
+    ? <>
+        {v.responsiblePerson.fullName}
+        {!activePersonIds.has(v.responsiblePerson.personId) && (
+          <> <span className="tag tag--draft">{tflow.older.responsibleInactive}</span></>
+        )}
+      </>
+    : <span className="tag tag--draft">{tflow.older.responsibleMissing}</span>)
+  const olderBasis = (v: V) => (v.legalBasis
+    ? basisName(v)
+    : <span className="tag tag--draft">{tflow.older.basisMissing}</span>)
 
   const versionPanel = (v: V) => {
     const panel = panelOf(v)
@@ -1195,32 +1230,80 @@ export default async function DocumentDetailPage({
         </p>
       )}
 
-      {/* ── Staršie znenia (bod 4 rámu) ── */}
+      {/* ── Staršie znenia (bod 4 rámu, DETAIL-starsie-znenia) ── */}
       {(effective || olderVersions.length > 0) && (
-        <>
-          <h2 className="detail-card-title">{tflow.olderHeading}</h2>
+        <section className="card older" id="older">
+          <div className="older-head">
+            <h2>{tflow.olderHeading}</h2>
+            {olderVersions.length > 0 && (
+              <>
+                <span className="older-count">{tflow.older.count(olderVersions.length)}</span>
+                <span className="older-note">{tflow.older.note}</span>
+              </>
+            )}
+          </div>
           {olderVersions.length === 0 ? (
-            <p className="quiet detail-empty" style={{ margin: "0 0 18px" }}>{tflow.olderNone}</p>
+            <p className="older-empty">{tflow.olderNone}</p>
           ) : (
-            <ul className="older">
-              {olderVersions.map(v => (
-                <li key={v.versionId} className="older-row" id={`v-${v.versionId}`}>
-                  <strong>
-                    {v.effectiveFrom ? t.effectiveFromOn(date(v.effectiveFrom)) : t.noEffectiveDate}
-                  </strong>
-                  <span className="quiet">
-                    {v.effectiveTo && ` ${t.effectiveTo(date(v.effectiveTo))}`}
-                  </span>
-                  <div className="older-panel">
-                    <VersionMetaLine author={v.author} approvedBy={v.approvedBy} approvedOn={v.approvedOn} language={language} />
-                    {versionLinks(v)}
-                    {versionPanel(v)}
-                  </div>
-                </li>
-              ))}
+            <ul className="older-list">
+              {olderShown.map(v => {
+                const panel = panelOf(v)
+                const acks = ackByVersion.get(v.versionId) ?? 0
+                const from = v.effectiveFrom ? date(v.effectiveFrom) : t.noEffectiveDate
+                return (
+                  <li key={v.versionId} className={`older-row${panel ? " is-open" : ""}`} id={`v-${v.versionId}`}>
+                    <div className="o-dates">
+                      {v.effectiveTo ? tflow.older.range(from, date(v.effectiveTo)) : from}
+                      {v.publishedAt && <small>{tflow.older.published(date(v.publishedAt))}</small>}
+                    </div>
+                    <div className="o-main">
+                      <div className="o-label">{v.label}</div>
+                      {v.changeNote && <div className="o-change">{v.changeNote}</div>}
+                      {/* Pod 1024 px tu, namiesto vlastného stĺpca. */}
+                      <div className="o-who-inline">
+                        {olderWho(v)} · {olderBasis(v)}
+                        <span className="o-acks-inline"> · {acks ? tflow.older.ackCount(acks) : tflow.older.noAcks}</span>
+                      </div>
+                    </div>
+                    <div className="o-who">{olderWho(v)}<small>{olderBasis(v)}</small></div>
+                    <div className="o-acks">{acks || "—"}<small>{tflow.older.acks}</small></div>
+                    <div className="o-actions">
+                      {v.pdf && <FileLink file={v.pdf} label="PDF" className="o-pdf" />}
+                      <details className="more">
+                        <summary aria-label={tflow.older.more} title={tflow.older.more}>
+                          <span aria-hidden="true">•••</span>
+                        </summary>
+                        <div className="more-menu">
+                          {versionPanels(v).map(p => (
+                            <Fragment key={p}>
+                              {p === "history" && <hr />}
+                              {panelLink(v, p)}
+                            </Fragment>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                    {panel && (
+                      <div className="older-panel">
+                        <div className="older-panel-head">
+                          <strong>{panelLabel[panel]}</strong>
+                          <span className="quiet">{v.label}</span>
+                          <Link href={olderClose(v)}>{tflow.older.close}</Link>
+                        </div>
+                        {versionPanel(v)}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           )}
-        </>
+          {!olderAll && olderVersions.length > OLDER_SHOWN && (
+            <div className="older-more">
+              <Link href={`${base}?older=all#older`}>{tflow.older.showAll(olderVersions.length)}</Link>
+            </div>
+          )}
+        </section>
       )}
 
       {/*
@@ -1425,10 +1508,10 @@ export default async function DocumentDetailPage({
 
 
 /** Odkaz na súbor v úložisku — PDF sa otvára, zdroj sa sťahuje. */
-function FileLink({ file, download = false, label }: { file: VersionFile; download?: boolean; label?: string }) {
+function FileLink({ file, download = false, label, className }: { file: VersionFile; download?: boolean; label?: string; className?: string }) {
   const href = `/api/library/file/${encodeURIComponent(file.id)}${download ? "?download=1" : ""}`
   return (
-    <a href={href} target={download ? undefined : "_blank"} rel="noreferrer" download={download ? file.name : undefined}>
+    <a className={className} href={href} target={download ? undefined : "_blank"} rel="noreferrer" download={download ? file.name : undefined}>
       {label ?? file.name}
     </a>
   )
