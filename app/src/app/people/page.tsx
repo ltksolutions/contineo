@@ -17,7 +17,7 @@ import { resendInviteAction } from "./actions"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
-import Icon from "@/components/Icon"
+import SearchStrip from "@/components/SearchStrip"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
@@ -66,22 +66,17 @@ export default async function PeoplePage({
 
       {/* Serverový formulár — hľadanie je v adrese, takže sa dá poslať odkazom
           a vrátiť sa naň z histórie prehliadača. */}
-      <LiveFilter className="field" action="/people" label={t.searchPlaceholder}>
-        {/* Značka Continea, nie lupa (ZAKLAD, odchýlka B) — pole kladie
-            otázku obsahu, nefiltruje tabuľku. */}
-        <span className="search-field">
-          {/* Lupa, nie značka (`ZAKLAD.md`, odchýlka B): hľadá sa reťazec
-              v zozname, nepýta sa model. */}
-          <span className="search-field-mark" aria-hidden="true"><Icon name="search" size={16} /></span>
-          <input
-            className="field-input"
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder={t.searchPlaceholder}
-            autoCapitalize="none"
-            autoCorrect="off"
-          />
-        </span>
+      <LiveFilter className="list-search" action="/people" label={t.searchPlaceholder}>
+        {/* Lupa vnútri pásu (`SearchStrip`, ZAKLAD odchýlka B): hľadá sa
+            reťazec v zozname, nepýta sa model. Odosiela Enter aj `LiveFilter`. */}
+        <SearchStrip
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder={t.searchPlaceholder}
+          label={t.searchPlaceholder}
+          autoCapitalize="none"
+          autoCorrect="off"
+        />
       </LiveFilter>
 
       {/* Počet len keď je čo počítať — prázdny stav hovorí za seba. */}

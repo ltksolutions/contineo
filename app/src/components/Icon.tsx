@@ -174,6 +174,9 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="m12 12 3.6 3.6" />
     </>
   ),
+  // Filtre — tri čiary od najdlhšej, zužovanie výberu. Geometria je
+  // z `KNIZNICA.html` (tlačidlo „Filtre" pod 1024 px).
+  filters: <path d="M2.8 4.2h12.4M5.2 9h7.6M7.6 13.8h2.8" />,
   // Viac — tri bodky. Jediná plná kresba v sete: bodka z ťahu by na 18 px
   // bola krúžok a krúžky tu znamenajú schválenie a posúdenie.
   // Vzdelávanie — absolventská čiapka (ADR-018).

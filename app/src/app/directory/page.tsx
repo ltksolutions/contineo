@@ -17,7 +17,7 @@ import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
-import Icon from "@/components/Icon"
+import SearchStrip from "@/components/SearchStrip"
 import AppShell from "@/components/AppShell"
 import { listDirectory } from "@/lib/directory"
 import { availableOptions } from "@/lib/codelistsTenant"
@@ -58,22 +58,17 @@ export default async function DirectoryPage({
       <p className="quiet page-lead" style={{ maxWidth: 620 }}>{t.intro}</p>
 
       {/* Hľadanie je v adrese — dá sa poslať odkazom a vrátiť sa naň z histórie. */}
-      <LiveFilter className="field" action="/directory" label={t.searchPlaceholder}>
-        {/* Značka Continea, nie lupa (ZAKLAD, odchýlka B) — pole kladie
-            otázku obsahu, nefiltruje tabuľku. */}
-        <span className="search-field">
-          {/* Lupa, nie značka (`ZAKLAD.md`, odchýlka B): hľadá sa reťazec
-              v zozname, nepýta sa model. */}
-          <span className="search-field-mark" aria-hidden="true"><Icon name="search" size={16} /></span>
-          <input
-            className="field-input"
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder={t.searchPlaceholder}
-            autoCapitalize="none"
-            autoCorrect="off"
-          />
-        </span>
+      <LiveFilter className="list-search" action="/directory" label={t.searchPlaceholder}>
+        {/* Lupa vnútri pásu (`SearchStrip`, ZAKLAD odchýlka B): hľadá sa
+            reťazec v zozname, nepýta sa model. Odosiela Enter aj `LiveFilter`. */}
+        <SearchStrip
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder={t.searchPlaceholder}
+          label={t.searchPlaceholder}
+          autoCapitalize="none"
+          autoCorrect="off"
+        />
       </LiveFilter>
 
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>

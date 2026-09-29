@@ -3148,22 +3148,28 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 /*
- * Zavretý summary je chip: prerušovaný rámik a `--muted` podľa vzoru
- * (`docs/design/README.md`). Otvorený rámik stratí — panel ho už má —
- * a od riadkov ho oddíľi linka.
+ * Zavretý summary je chip „+ Podmienka" (KNIZNICA.html `.chip-add`): 28 px,
+ * prerušovaný rámik, 12 px/600, `--muted`. Otvorený rámik stratí — panel
+ * ho už má — a od riadkov ho oddelí linka.
  */
 .builder-summary {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: var(--control-h-sm);
+  gap: 6px;
+  min-height: 28px;
   padding: 0 10px;
   border: 1px dashed var(--line);
-  border-radius: 7px;
+  border-radius: 6px;
   color: var(--muted);
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
+  list-style: none;
   cursor: pointer;
+}
+.builder-summary::-webkit-details-marker { display: none; }
+@media (max-width: 639px) {
+  .builder:not([open]) > .builder-summary { min-height: 44px; }
 }
 
 .builder-summary:hover { color: var(--accent); border-color: var(--accent); }
@@ -3490,44 +3496,81 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.library-search {
-  flex: 1 1 280px;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.library-search-mark {
-  flex: 0 0 auto;
-  display: inline-flex;
-  color: var(--muted);
-}
-
-/* 36 px a r9 — rovnaká výška ako pole v hlavičke: dve polia na jednej
-   obrazovke v dvoch výškach vyzerajú ako nedorobok (KNIZNICA.md). */
-.library-search-input {
-  flex: 1 1 160px;
-  min-width: 140px;
-  height: var(--control-h-sm);
-  border-radius: 9px;
-}
+/* Formulár hľadania v lište — pás si berie zvyšok riadku. */
+.library-search { flex: 1 1 280px; min-width: 0; display: flex; }
 
 /*
- * Pole hľadania so značkou mimo knižnice (ZAKLAD, odchýlka B): každé pole,
- * do ktorého sa píše otázka alebo hľadaný výraz, nesie značku Continea
- * 16 px v `--muted` vľavo — nikdy lupu. Nie je to hľadanie v tabuľke,
- * je to otázka položená obsahu.
+ * Pás hľadania v zozname (`SearchStrip`, KNIZNICA.html `.library-search`):
+ * lupa **vnútri** rámika, 36 px, r9 — ten istý tvar ako pole v hlavičke
+ * (`.header-search`), aby dve polia na jednej obrazovke nevyzerali ako dva
+ * rôzne prvky. Písmo `--fs-control` ako v hlavičke: pod 16 px by iOS pri
+ * kliknutí do poľa stránku priblížil.
  */
-.search-field { display: flex; align-items: center; gap: 9px; }
-.search-field-mark { flex: 0 0 auto; display: inline-flex; color: var(--muted); }
+.search-strip { position: relative; flex: 1 1 280px; min-width: 0; display: flex; align-items: center; }
+.search-strip-icon {
+  position: absolute;
+  left: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+.search-strip-input {
+  width: 100%;
+  height: var(--control-h-sm);
+  padding: 0 12px 0 37px;
+  font: inherit;
+  font-size: var(--fs-control);
+  line-height: 1.2;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  outline: none;
+}
+.search-strip-input::placeholder { color: var(--muted); }
+.search-strip-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+/* Mimo lišty (adresár, osoby) stojí formulár s pásom sám nad zoznamom. */
+.list-search { display: flex; margin: 0 0 12px; }
+@media (max-width: 639px) {
+  .search-strip-input { height: 44px; }
+}
 
-/* Chips žijú v lište — vlastný spodný odstup tam nemajú. */
-.library-toolbar .library-chips { margin-bottom: 0; }
+/* „Filtre N" pod 1024 px (KNIZNICA.html `.filters-btn`). */
+.filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--control-h-sm);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.filters-btn-count {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 11px;
+}
+@media (max-width: 639px) {
+  .filters-btn { min-height: 44px; }
+}
 
 /*
  * Zásuvka filtrov pod 1024 px (NASADENIE, PR 4). `<details>`: tlačidlo
@@ -3676,19 +3719,21 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
+/* Čip aktívneho filtra (KNIZNICA.html): 28 px, r6, `--accent-soft`,
+   12 px. Riadok pod poľom hľadania, nie v ňom. */
 .library-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 10px;
-  border-radius: 8px;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 5px 0 9px;
+  border-radius: 6px;
   background: var(--accent-soft);
-  color: var(--ink);
-  font-size: 13.5px;
+  color: var(--accent-strong);
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -3696,9 +3741,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .library-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .library-chip-key { color: var(--muted); }
-.library-chip-x { font-size: 15px; line-height: 1; color: var(--muted); }
+.library-chip-x { width: 16px; font-size: 15px; line-height: 1; text-align: center; color: var(--muted); }
+@media (max-width: 639px) {
+  .library-chip { min-height: 36px; }
+}
 
-.library-chips-clear { font-size: 13px; color: var(--accent); }
+.library-chips-clear { font-size: 12px; font-weight: 600; color: var(--accent); }
 
 /* ── strom s čiarami hierarchie (D60) ────────────────────────────────────
    Čiary sa kreslia z odsadenia, ktoré nesie premenná `--level`. Bez nich
