@@ -31,7 +31,6 @@ import PdfView from "@/components/PdfView"
 import ReadingTimer from "@/components/ReadingTimer"
 import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
-import { normalizeLayout } from "@/lib/appNav"
 import { acknowledgeAction } from "./actions"
 import { responsibleContact, draftBasisTaskFor, type DraftBasisTask } from "@/lib/versionResponsibilityDb"
 import { canSetLegalBasis, legalBasisFields } from "@/lib/versionResponsibility"
@@ -88,7 +87,7 @@ export default async function DocumentPage({
     // Dokument, ktorý osoba inak nevidí: len úloha ku konceptu, nič na čítanie
     // ani na potvrdenie.
     return (
-      <AppShell layout={normalizeLayout(text(q.layout))} language={person.language}>
+      <AppShell language={person.language}>
         <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
           <Notice message={message} error={failed} back={`/documents/${encodeURIComponent(documentId)}`} />
           <p style={{ margin: "0 0 16px" }}>
@@ -181,7 +180,7 @@ export default async function DocumentPage({
   const basisOptions = basisOptionsFor(canSetBasis || pending.length > 0)
 
   return (
-    <AppShell layout={normalizeLayout(text(q.layout))} language={person.language}>
+    <AppShell language={person.language}>
     {/* 760 px zostáva — je to znenie normy na čítanie. Shell dáva navigáciu
         a odsadenie, dĺžku riadka určuje obsah. */}
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>

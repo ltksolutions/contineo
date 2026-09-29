@@ -6,7 +6,8 @@
  * zvyšku obrazovky.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonCard, SkeletonText } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonCard, SkeletonText } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

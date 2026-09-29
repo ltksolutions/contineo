@@ -542,8 +542,15 @@ interface Dictionary {
     /** Piata položka lišty aj prepad pásu „Viac N" — vedie na `/more`. */
     more: string
     /** Nadpisy skupín na `/more`. */
+    /** „Moje úlohy" — skupina v bočnom paneli aj na `/more` (SHELL-bocny-panel, Q2). */
+    groupTasks: string
     groupOrganisation: string
     groupManagement: string
+    /** Tlačidlo dole v bočnom paneli (SHELL-bocny-panel, Q4). */
+    collapse: string
+    expand: string
+    /** Hamburger v hlavičke na 640–1023 px — vysunie bočný panel. */
+    menu: string
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
     toAcknowledge: string
@@ -3644,6 +3651,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     more: "Viac",
     groupOrganisation: "Organizácia",
     groupManagement: "Správa",
+    groupTasks: "Moje úlohy",
+    collapse: "Zbaliť panel",
+    expand: "Rozbaliť panel",
+    menu: "Menu",
     waiting: n => (n === 1 ? "čaká 1" : n <= 4 ? `čakajú ${n}` : `čaká ${n}`),
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
@@ -6975,6 +6986,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     more: "Více",
     groupOrganisation: "Organizace",
     groupManagement: "Správa",
+    groupTasks: "Moje úkoly",
+    collapse: "Sbalit panel",
+    expand: "Rozbalit panel",
+    menu: "Menu",
     waiting: n => (n === 1 ? "čeká 1" : n <= 4 ? `čekají ${n}` : `čeká ${n}`),
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
@@ -10297,6 +10312,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     more: "More",
     groupOrganisation: "Organisation",
     groupManagement: "Management",
+    groupTasks: "My tasks",
+    collapse: "Collapse panel",
+    expand: "Expand panel",
+    menu: "Menu",
     waiting: n => `${n} waiting`,
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",

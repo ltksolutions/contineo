@@ -22,7 +22,6 @@ import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { pendingForPerson } from "@/lib/pending"
@@ -50,7 +49,7 @@ export default async function OverviewPage({
 }: {
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ layout?: string; q?: string }>(await searchParams)
+  const q = normalizeQuery<{ q?: string }>(await searchParams)
 
   /*
     Otázka na domovskej adrese patrí obrazovke odpovede, nie sem.
@@ -138,7 +137,7 @@ export default async function OverviewPage({
   const newsHidden = newsTotal > newsShown.length + expiringShown.length
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="overview" style={tenantStyle(branding)}>
         {/*
           Hero. Otázka odchádza na obrazovku odpovedí — Prehľad je vstup do

@@ -17,7 +17,6 @@ import { legalBasisRows } from "@/lib/dpoDb"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { listObjections } from "@/lib/objectionsDb"
@@ -29,7 +28,7 @@ import { retentionSettings, RETENTION_LIMITS } from "@/lib/retention"
 export const dynamic = "force-dynamic"
 
 export default async function DpoPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
-  const q = normalizeQuery<{ layout?: string; msg?: string; error?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const ctx = await dpoContext()
   if (ctx.state === "unknown-host") notFound()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
@@ -63,7 +62,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
   const tt = t.retention
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="dpo" style={tenantStyle(branding)}>
         <h1 className="page-title">{t.heading}</h1>
         <p className="quiet page-lead" style={{ margin: "0 0 20px", maxWidth: 640 }}>{t.intro}</p>

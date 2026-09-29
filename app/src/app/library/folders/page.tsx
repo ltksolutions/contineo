@@ -23,7 +23,6 @@ import TreeWithOrder from "@/components/TreeWithOrder"
 import Select from "@/components/Select"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
-import { normalizeLayout } from "@/lib/appNav"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary } from "@/lib/i18n"
@@ -42,7 +41,7 @@ export default async function FoldersPage({
     notFound()
   }
 
-  const q = normalizeQuery<{ msg?: string; error?: string; layout?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const branding = brandingView(ctx.tenant)
   const uiLanguage = ctx.person.language
   const t = dictionary(uiLanguage).library.list
@@ -56,7 +55,7 @@ export default async function FoldersPage({
   const carried: [string, string][] = [["return", "folders"]]
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage}>
+    <AppShell language={uiLanguage}>
       <div style={{ maxWidth: 640, ...tenantStyle(branding) }}>
         <Notice message={q.msg} error={q.error === "1"} back="/library/folders" />
 

@@ -93,10 +93,10 @@ export interface ActiveFilters {
   /** Oddelenia, ktoré dokumenty spravujú — identifikátory zo stromu (D49). */
   ownerDepartment: string[]
   /**
-   * Nie filtre, ale nesú sa spolu s nimi — inak by prvý klik na facet
-   * prepol navigáciu späť na predvolený variant a pohľad na predvolený.
+   * Nie filter, ale nesie sa spolu s nimi — inak by prvý klik na facet
+   * prepol pohľad na predvolený. (Variant navigácie `?layout=` sa niesol
+   * rovnako; odišiel s pásom 29. 9. 2026, SHELL-bocny-panel.)
    */
-  layout?: string
   view?: View
   /** Triedenie a strana. Tiež v adrese, aby sa dal poslať aj zoradený pohľad. */
   sort?: SortKey
@@ -230,7 +230,6 @@ export function readFilters(q: RawQuery): ActiveFilters {
     accessLevel: list(q.accessLevel),
     language: list(q.language),
     ownerDepartment: list(q.ownerDepartment),
-    layout: one(q.layout),
     // Automatický pohľad sa nedrží ako hodnota — `undefined` znamená „podľa
     // šírky" a do adresy sa nezapíše. Inak by ho niesol každý odkaz.
     view: normalizeView(q.view) === "auto" ? undefined : normalizeView(q.view),
@@ -323,12 +322,10 @@ export function replace(filters: ActiveFilters, key: MultiKey, values: string[])
 
 export function setValue(
   filters: ActiveFilters,
-  key: "search" | "folder" | "layout",
+  key: "search" | "folder",
   value: string | undefined,
 ): ActiveFilters {
-  const next = { ...filters, [key]: value?.trim() ? value.trim() : undefined }
-  // Variant navigácie nie je filter, ten stranu nemení.
-  return key === "layout" ? next : firstPage(next)
+  return firstPage({ ...filters, [key]: value?.trim() ? value.trim() : undefined })
 }
 
 /**
@@ -370,8 +367,8 @@ export function withPage(filters: ActiveFilters, page: number): ActiveFilters {
 }
 
 /**
- * Zruší filtre, **nie zobrazenie**. Variant navigácie a pohľad človek
- * nastavoval zvlášť a tlačidlom „Zrušiť" ich zrušiť nechcel.
+ * Zruší filtre, **nie zobrazenie**. Pohľad a triedenie človek nastavoval
+ * zvlášť a tlačidlom „Zrušiť" ich zrušiť nechcel.
  */
 /**
  * Zruší filtre. **Výber zostáva** — sú to dve rôzne veci a človek, ktorý
@@ -381,7 +378,7 @@ export function withPage(filters: ActiveFilters, page: number): ActiveFilters {
 export function clearFilters(filters: ActiveFilters): ActiveFilters {
   return {
     ...EMPTY,
-    layout: filters.layout, view: filters.view, sort: filters.sort, dir: filters.dir,
+    view: filters.view, sort: filters.sort, dir: filters.dir,
     picked: filters.picked,
   }
 }
@@ -443,7 +440,6 @@ export function carryFields(filters: ActiveFilters): [string, string][] {
   for (const key of MULTI_KEYS) {
     for (const v of filters[key]) out.push([key, v])
   }
-  if (filters.layout) out.push(["layout", filters.layout])
   if (filters.view) out.push(["view", filters.view])
   // Predvolené triedenie sa do adresy nepíše — inak by odkaz na nefiltrovaný
   // zoznam vyzeral zakaždým inak podľa toho, odkiaľ vznikol.

@@ -25,7 +25,6 @@ import { moveManyAction, assignManyAction } from "./actions"
 import AppShell from "@/components/AppShell"
 import WaitingForApproval from "@/components/WaitingForApproval"
 import { openRounds, documentTitles } from "@/lib/approvalsDb"
-import { normalizeLayout } from "@/lib/appNav"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
@@ -74,7 +73,6 @@ export default async function LibraryPage({
   const q = normalizeQuery<{
     msg?: string; error?: string; search?: string; status?: string
     folder?: string; category?: string; language?: string; accessLevel?: string; tag?: string
-    layout?: string
     add?: string; value?: string; join?: string
   }>(await searchParams)
   const { msg: message, error } = q
@@ -127,7 +125,7 @@ export default async function LibraryPage({
 
   // Filtre sa nesú ďalej v každom odkaze aj v každom formulári — inak by sa
   // človek po založení priečinka ocitol späť na nefiltrovanom zozname.
-  // Variant navigácie a pohľad sa nesú spolu s nimi z toho istého dôvodu.
+  // Pohľad sa nesie spolu s nimi z toho istého dôvodu.
   const carried = carryFields(filters)
   const hasFilter = !isEmpty(filters)
 
@@ -523,15 +521,11 @@ export default async function LibraryPage({
      * `.obal` s max. 900 px tu skončil zámerne: knižnica je zoznam s filtrami
      * a na 900 px sa vedľa seba nezmestí panel filtrov a zoznam. Ostatné
      * stránky ho majú ďalej — shell je opt-in a presúvajú sa po jednej.
-     *
-     * Variant navigácie je zatiaľ len z adresy (`?layout=sidebar`). Uložiť ho
-     * na osobu alebo organizáciu znamená zmenu schémy, a tá je samostatné
-     * rozhodnutie s vlastnou migráciou.
      */
     // `wide`: knižnica je jediná obrazovka s bočným panelom **aj**
     // deväťstĺpcovou tabuľkou — do 1240 px sa nezmestí (namerané:
     // pri 1440 px okna má stĺpec zoznamu 938 px, tabuľka potrebuje ~1060).
-    <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage} wide>
+    <AppShell language={uiLanguage} wide>
     <div style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back="/library" />
 
@@ -652,7 +646,7 @@ export default async function LibraryPage({
 
         Hľadanie zostáva formulárom (`method="get"`), nie odkazom: text sa
         píše a odošle, nie vyberá. Skryté polia nesú zvyšok pohľadu — bez nich
-        by odoslanie hľadania zrušilo facety, priečinok aj variant navigácie.
+        by odoslanie hľadania zrušilo facety, priečinok aj pohľad.
       */}
       <div className="library-toolbar">
         <LiveFilter className="library-search" action="/library" label={t.search}>

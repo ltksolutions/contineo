@@ -24,19 +24,17 @@
  */
 
 import type { ReactNode } from "react"
+import { cookies } from "next/headers"
 import AppNav from "./AppNav"
-import type { NavLayout } from "@/lib/appNav"
+import { NAV_COOKIE, normalizeNavState } from "@/lib/appNav"
 import { shellNavData } from "@/lib/navData"
 import type { UiLanguage } from "@/lib/i18n"
 
 export default async function AppShell({
-  layout: layout = "topbar",
   language,
   wide = false,
   children,
 }: {
-  /** Variant navigácie. Zatiaľ z adresy (`?layout=sidebar`), nie z profilu. */
-  layout?: NavLayout
   language?: UiLanguage
   /**
    * Širší strop obsahu (`--shell-maxw-wide`) namiesto predvolených 1240 px.
@@ -54,10 +52,16 @@ export default async function AppShell({
   children: ReactNode
 }) {
   const { flags, counts } = await shellNavData()
+  /*
+   * Stav bočného panela (rozbalený / lišta ikon) z cookie — čítaný tu, na
+   * serveri, aby sa panel vykreslil hneď v správnej šírke a pri načítaní
+   * nepreblikol (SHELL-bocny-panel, Q4).
+   */
+  const navState = normalizeNavState((await cookies()).get(NAV_COOKIE)?.value)
 
   return (
-    <div className={`app-shell app-shell--${layout}`}>
-      <AppNav layout={layout} flags={flags} counts={counts} language={language} />
+    <div className="app-shell">
+      <AppNav navState={navState} flags={flags} counts={counts} language={language} />
       {/* `div`, nie `main`: `layout.tsx` už jeden `main` má a druhý vnútri
           neho by bol neplatné HTML — a pre čítačku obrazovky dva „hlavné
           obsahy" znamenajú, že ani jeden nie je ten hlavný. */}

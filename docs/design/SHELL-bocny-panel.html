@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>SHELL — ľavý bočný panel s ikonami</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b42318;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-small:13px;--fs-micro:12px;--control-h-sm:36px;--shadow:0 16px 40px rgba(20,28,42,.18)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:var(--accent-strong)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:90ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:90ch;line-height:1.55}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative}
+.frame-label{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);margin:0 0 6px}
+.frames-small{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px 0 16px;background:var(--surface);border-bottom:1px solid var(--line);position:relative;z-index:3}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;flex:0 0 auto}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.ask{flex:1;max-width:560px;display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;min-width:0;white-space:nowrap;overflow:hidden}
+.ask > span:not(.kbd){overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ask .kbd{margin-left:auto;font-size:11px;padding:1px 6px;border-radius:5px;border:1px solid var(--line)}
+.hdr-sp{flex:1}
+.bell{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:8px;color:var(--ink)}
+.bell b{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+.burger{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;border:0;background:transparent;color:var(--ink);cursor:pointer;flex:none}
+.burger:hover{background:var(--surface-2)}
+/* shell */
+.shell{display:flex;align-items:stretch;position:relative}
+.side{flex:0 0 auto;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;transition:width .18s ease;position:relative;z-index:2}
+.side-scroll{flex:1;min-height:0;overflow-y:auto;display:grid;gap:2px;align-content:start;padding:12px 10px}
+.side.is-wide{width:236px}
+.side.is-rail{width:64px}
+.side.is-rail .side-scroll{padding:12px 8px}
+.grp{font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:14px 10px 4px;white-space:nowrap}
+.side.is-rail .grp{padding:10px 0 6px;font-size:0;height:0;margin:6px 6px 8px;border-top:1px solid var(--line)}
+.it{position:relative;display:flex;align-items:center;gap:11px;min-height:38px;padding:0 10px;border-radius:8px;color:var(--muted);font-size:14px;font-weight:500;text-decoration:none;white-space:nowrap}
+.it:hover{background:var(--surface-2);color:var(--ink)}
+.it svg{flex:none}
+.it .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.it .cnt{font-size:11px;font-weight:650;padding:1px 6px;border-radius:20px;background:var(--bad-fg);color:#fff;font-variant-numeric:tabular-nums}
+.it.is-on{background:var(--accent-soft);color:var(--accent-strong);font-weight:650}
+.it.is-on::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
+.side.is-rail .it{justify-content:center;padding:0;min-height:44px}
+.side.is-rail .it.is-on::before{left:-8px}
+.side.is-rail .it .lbl{display:none}
+.side.is-rail .it .cnt{position:absolute;top:4px;right:4px;min-width:16px;height:16px;padding:0 4px;font-size:10px;display:grid;place-items:center}
+.tip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--accent-strong);color:#fff;font-size:12.5px;font-weight:550;padding:4px 9px;border-radius:6px;white-space:nowrap;pointer-events:none;box-shadow:var(--shadow);z-index:9}
+.tip::before{content:"";position:absolute;left:-4px;top:50%;transform:translateY(-50%) rotate(45deg);width:8px;height:8px;background:inherit}
+.side-foot{border-top:1px solid var(--line);padding:8px 10px}
+.side.is-rail .side-foot{padding:8px}
+.fold{display:flex;align-items:center;gap:11px;width:100%;min-height:38px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.fold:hover{background:var(--surface-2);color:var(--ink)}
+.side.is-rail .fold{justify-content:center;padding:0}
+.side.is-rail .fold span{display:none}
+.side.drawer{position:absolute;left:0;top:0;bottom:0;width:260px;box-shadow:var(--shadow);z-index:6}
+.scrim{position:absolute;inset:0;background:rgba(17,21,28,.28);z-index:5}
+.main{flex:1;min-width:0;overflow:hidden;padding:24px 32px 40px}
+/* obsah — ukážka stránky */
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:15px;color:var(--muted);margin:0 0 18px;max-width:70ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.rows{display:grid}
+.r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:14px 18px;border-top:1px solid var(--line);align-items:center}
+.r:first-child{border-top:0}
+.r b{font-weight:600;font-size:14.5px}
+.r .m{font-size:12.5px;color:var(--muted)}
+.bar{display:flex;align-items:center;gap:10px;min-width:220px}
+.bar i{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:block}
+.bar i s{display:block;height:100%;background:var(--accent);text-decoration:none}
+.bar span{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--muted);min-width:36px;text-align:right}
+.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 16px}
+.button{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:10px;background:var(--accent);color:#fff;font-size:14.5px;font-weight:600;text-decoration:none;white-space:nowrap}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);height:58px;background:var(--surface);border-top:1px solid var(--line)}
+.tabbar a{position:relative;display:grid;place-items:center;align-content:center;gap:2px;font-size:10.5px;color:var(--muted);text-decoration:none}
+.tabbar a.is-on{color:var(--accent);font-weight:650}
+.tabbar a.is-on::before{content:"";position:absolute;top:0;left:22%;right:22%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+.tabbar b{position:absolute;top:5px;left:calc(50% + 5px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
+table.spec tr:last-child td{border-bottom:0}
+.q{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#e0e7ff;color:#3730a3;vertical-align:1px}
+</style>
+</head>
+<body><div class="sheet">
+<h1 class="doc">SHELL — ľavý bočný panel s ikonami namiesto pásu</h1>
+<p class="doc">Dnes je na desktope vodorovný textový pás pod hlavičkou (<code>AppNav</code> <code>topbar</code>, PR 7). Pri personalistovi alebo správcovi je v ňom 10–14 položiek, na 834 časť padá do „Viac N" a položky nemajú skupiny — „Na potvrdenie" stojí vedľa „Reťaze dôkazov". Návrh: <b>bočný panel od 640 px</b>, rozbalený s ikonou + textom v troch skupinách, zbaliteľný na <b>lištu ikon 64 px</b>; na 640–1023 lišta ikon a panel sa <b>vysúva</b> nad obsah. Pod 640 px spodná lišta bez zmeny.</p>
+<p class="doc">Stavia na existujúcom variante <code>sidebar</code> v <code>AppNav.tsx</code> a ikonách z <code>Icon.tsx</code> (O6 bod 1) — nič nové sa nekreslí. Položky a podmienky rolí z <code>navItems()</code> sa nemenia. Rámy sú živé: „Zbaliť panel", prejdenie myšou po ikonách, hamburger na 834. Popis v <code>SHELL-bocny-panel.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — rozbalený panel · personalista a správca obsahu · aktívne „Pridelené normy"</p>
+  <p class="sec-w">Tlačidlo „Zbaliť panel" dole prepne na lištu ikon (vpravo). Voľba sa pamätá v cookie — server vykreslí správny stav hneď, bez preblikávania.</p>
+  <div class="frame" style="width:1440px" data-frame="1440"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — zbalený na lištu ikon · popis pri prejdení myšou</p>
+  <div class="frame" style="width:1440px" data-frame="1440r"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 a 390</p>
+  <p class="sec-w">834: lišta ikon vždy; hamburger v hlavičke (alebo „Rozbaliť" dole) vysunie panel nad obsah so závojom — Esc, klik mimo alebo výber položky ho zavrie. 390: spodná lišta ako dnes (referencia, nemení sa).</p>
+  <div class="frames-small">
+    <div><p class="frame-label">834 — lišta ikon</p><div class="frame" style="width:834px;height:640px" data-frame="834"></div></div>
+    <div><p class="frame-label">834 — vysunutý panel</p><div class="frame" style="width:834px;height:640px" data-frame="834o"></div></div>
+    <div><p class="frame-label">390 — bez zmeny</p><div class="frame" style="width:390px;height:640px;display:flex;flex-direction:column" data-frame="390"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Bežná osoba — bez rolí</p>
+  <p class="sec-w">Šesť položiek, skupina „Správa" sa nevykreslí. Prázdna skupina = žiadny nadpis.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">1440 — rozbalený</p><div class="frame" style="width:700px;height:560px" data-frame="basic"></div></div>
+    <div><p class="frame-label">1440 — lišta</p><div class="frame" style="width:520px;height:560px" data-frame="basicr"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Správanie</p>
+  <table class="spec">
+    <tr><th>Čo</th><th>Ako</th></tr>
+    <tr><td>Rozhodnuté 29. 9.</td><td><b>Q1 ✓</b> panel je predvolený, pás <code>topbar</code> sa ruší (aj <code>?layout=</code>, meranie prepadu, „Viac N"). <b>Q3 ✓</b> 640–1023 lišta ikon + vysúvanie.</td></tr>
+    <tr><td>Kde</td><td>≥ 1024 px: panel 236 px (rozbalený, predvolene) alebo 64 px (lišta). 640–1023: lišta 64 px, rozbalenie = vysunutie 260 px nad obsah. &lt; 640: spodná lišta (<code>tabbarItems()</code>), bez zmeny.</td></tr>
+    <tr><td>Skupiny</td><td>bez nadpisu: Prehľad, Opýtať sa · <b>Moje úlohy</b>: Na potvrdenie, Na schválenie · <b>Organizácia</b>: Adresár, Knižnica, Vzdelávanie · <b>Správa</b>: Pridelené normy, Reťaz dôkazov, Osoby, Na posúdenie, Ochrana údajov, Správa kurzov, Testy. <code>/more</code> sa zjednotí: nová skupina „Moje úlohy" (Na schválenie). <span class="q">Q2 ✓</span></td></tr>
+    <tr><td>Položka</td><td>38 px (v lište 44 px), ikona 17 px z <code>Icon.tsx</code>, text 14 px. Aktívna: <code>--accent-soft</code>, 650, zvislá čiarka 3 px pri okraji. Aktívna = najdlhšia zhodná cesta (<code>activeHref</code>), ako dnes.</td></tr>
+    <tr><td>Počty</td><td>Červený odznak pri „Na potvrdenie" a „Na schválenie", nula sa nekreslí (ako dnes). V lište odznak v rohu ikony.</td></tr>
+    <tr><td>Lišta ikon</td><td>Nadpisy skupín sa zmenia na deliacu čiaru. Popis pri <code>:hover</code> a <code>:focus-visible</code> vpravo od ikony; <code>aria-label</code> na odkaze s názvom aj počtom — ikona nie je náhrada popisku.</td></tr>
+    <tr><td>Zbaliť / rozbaliť</td><td>Tlačidlo dole v paneli. Stav v cookie <code>nav=rail|wide</code> — voľba zariadenia, nie osoby; bez schémy. <span class="q">Q4 ✓</span> Bez JS: <code>&lt;form&gt;</code> so serverovou akciou, ktorá cookie nastaví a vráti na tú istú stránku.</td></tr>
+    <tr><td>Vysunutie (834)</td><td>Hamburger v hlavičke vľavo od loga + „Rozbaliť" dole. Panel nad obsahom, závoj 28 %, Esc / klik mimo / zmena stránky zavrie (rovnaké pravidlo ako „Viac" dnes). Fokus sa presunie do panelu a po zavretí späť na hamburger. Bez JS: <code>&lt;details&gt;</code>.</td></tr>
+    <tr><td>Posun</td><td>Panel je <code>position: sticky</code> pod hlavičkou, výška <code>100dvh − 56</code>; keď sa položky nezmestia, roluje sa panel sám, nie stránka. Zbaliť ostáva dole vždy viditeľné.</td></tr>
+    <tr><td>Obsah</td><td>Šírky stránok (680–1180) sa nemenia, len ich stred sa posunie o šírku panelu. Na 1440 s rozbaleným panelom ostáva obsahu 1204 px.</td></tr>
+    <tr><td>Hlavička</td><td>Bez zmeny (logo, organizácia, Opýtajte sa… ⌘K, zvonček, avatar). Na 834 pribudne hamburger.</td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const IC={
+overview:'<rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/>',
+ask:'<path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/>',
+toAcknowledge:'<rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/>',
+toApprove:'<circle cx="9" cy="9" r="6.4"/><path d="M6 9.1 8.1 11.2 12 7.1"/>',
+directory:'<circle cx="9" cy="6.2" r="2.9"/><path d="M3.4 15.4a5.6 5.6 0 0 1 11.2 0"/>',
+library:'<path d="M3.4 3.2h2.8v11.6H3.4zM7.6 3.2h2.8v11.6H7.6z"/><path d="m11.9 4.1 2.6.7-2.8 10.2-2.1-.6"/>',
+assigned:'<path d="M6.6 3.4H4.8a1.4 1.4 0 0 0-1.4 1.4v9.6a1.4 1.4 0 0 0 1.4 1.4h8.4a1.4 1.4 0 0 0 1.4-1.4V4.8a1.4 1.4 0 0 0-1.4-1.4h-1.8"/><rect x="6.6" y="1.9" width="4.8" height="2.9" rx="1"/><path d="M6.4 9.4h5.2M6.4 12.1h3.4"/>',
+evidence:'<path d="M7.5 10.5a3 3 0 0 1 0-4.2l1.8-1.8a3 3 0 0 1 4.2 4.2l-.9.9"/><path d="M10.5 7.5a3 3 0 0 1 0 4.2l-1.8 1.8a3 3 0 0 1-4.2-4.2l.9-.9"/>',
+people:'<circle cx="7" cy="6.4" r="2.6"/><path d="M2.2 15a4.8 4.8 0 0 1 9.6 0"/><path d="M12.4 4.2a2.6 2.6 0 0 1 0 5M13.4 10.8a4.8 4.8 0 0 1 2.4 4.2"/>',
+evaluation:'<circle cx="9" cy="9" r="6.4"/><path d="m6.3 9.1 1.9 1.9 3.5-3.9"/>',
+dpo:'<path d="M9 1.9 3.4 4v4.6c0 3.4 2.4 6.2 5.6 7.5 3.2-1.3 5.6-4.1 5.6-7.5V4z"/><path d="M9 6.2v3.6M9 12.1v.1"/>',
+learning:'<path d="M1.6 7 9 3.4 16.4 7 9 10.6z"/><path d="M4.6 8.5v3.6c1.2 1.3 2.7 2 4.4 2s3.2-.7 4.4-2V8.5"/><path d="M16.4 7v4.2"/>',
+learningManage:'<path d="M3 3.2h5.2c.5 0 .8.3.8.8v11a1.6 1.6 0 0 0-1.6-1.6H3z"/><path d="M15 3.2H9.8c-.5 0-.8.3-.8.8v11a1.6 1.6 0 0 1 1.6-1.6H15z"/>',
+learningTests:'<path d="m2.6 4.6 1.4 1.4 2.4-2.6"/><path d="m2.6 11.4 1.4 1.4 2.4-2.6"/><path d="M9 5h6.4M9 11.8h6.4"/>',
+notifications:'<path d="M9 2.4v1.1"/><path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z"/><path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0"/>',
+more:'<circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="14.6" cy="9" r="1.5" fill="currentColor" stroke="none"/>',
+fold:'<path d="M3 3.4v11.2"/><path d="M14.6 9H7m0 0 3-3m-3 3 3 3"/>',
+unfold:'<path d="M3 3.4v11.2"/><path d="M7 9h7.6m0 0-3-3m3 3-3 3"/>',
+burger:'<path d="M3 5h12M3 9h12M3 13h12"/>'
+};
+const svg=(k,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="${(1.5*18/s).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
+const L={overview:"Prehľad",ask:"Opýtať sa",toAcknowledge:"Na potvrdenie",toApprove:"Na schválenie",directory:"Adresár",library:"Knižnica",learning:"Vzdelávanie",assigned:"Pridelené normy",evidence:"Reťaz dôkazov",people:"Osoby",evaluation:"Na posúdenie",dpo:"Ochrana údajov",learningManage:"Správa kurzov",learningTests:"Testy"};
+const FULL=[[null,["overview","ask"]],["Moje úlohy",["toAcknowledge","toApprove"]],["Organizácia",["directory","library","learning"]],["Správa",["assigned","evidence","people","evaluation","dpo","learningManage","learningTests"]]];
+const BASIC=[[null,["overview","ask"]],["Moje úlohy",["toAcknowledge","toApprove"]],["Organizácia",["directory","learning"]]];
+const COUNTS={toAcknowledge:3,toApprove:1};
+
+function sideHtml({groups,active,rail,drawer,tip}){
+  const cls=rail?"is-rail":"is-wide";
+  let h="";
+  groups.forEach(([g,keys])=>{
+    if(g) h+=`<div class="grp">${g}</div>`;
+    keys.forEach(k=>{const c=COUNTS[k];h+=`<a href="#" class="it${k===active?" is-on":""}" data-k="${k}" aria-label="${L[k]}${c?", čaká "+c:""}"${k===active?' aria-current="page"':""}>${svg(k)}<span class="lbl">${L[k]}</span>${c?`<span class="cnt">${c}</span>`:""}${rail&&tip===k?`<span class="tip">${L[k]}${c?" · "+c:""}</span>`:""}</a>`});
+  });
+  const foot=`<div class="side-foot"><button type="button" class="fold" data-fold>${svg(rail?"unfold":"fold")}<span>${rail?"Rozbaliť panel":"Zbaliť panel"}</span></button></div>`;
+  return `<nav class="side ${cls}${drawer?" drawer":""}" aria-label="Sekcie"><div class="side-scroll">${h}</div>${foot}</nav>`;
+}
+function hdr({narrow,burger}){
+  return `<div class="hdr">${burger?`<button class="burger" type="button" data-burger aria-label="Menu" aria-expanded="false">${svg("burger",18)}</button>`:""}<span class="logo">SFZ</span><span class="org">${narrow?"SFZ":"Intranet SFZ"}</span>${narrow?"":'<span class="hdr-sp" style="flex:0 0 40px"></span>'}<span class="ask">${svg("ask",15)}<span>Opýtajte sa svojich dokumentov…</span>${narrow?"":'<span class="kbd">⌘K</span>'}</span><span class="hdr-sp"></span><span class="bell">${svg("notifications",18)}<b>3</b></span><span class="av">JL</span></div>`;
+}
+const PAGE_HR=`<div style="max-width:900px"><div class="head-row"><div><h1 class="page-title">Pridelené normy</h1><p class="page-lead" style="margin:0">Kto čo potvrdil — po prideleniach, najnovšie hore.</p></div><a href="#" class="button">Prideliť normu</a></div>
+<div class="card rows">${[["Registračný a prestupový poriadok SFZ","28 ľudí · termín 14 dní · pridelené 29. 9. 2026",21],["Pracovný poriadok SFZ","Zamestnanci SFZ · 142 ľudí · do 31. 10. 2026",68],["Disciplinárny poriadok SFZ","Rozhodcovia 2026 · 72 ľudí · bez termínu",93],["Finančná smernica SFZ","Ekonomické oddelenie · 8 ľudí · do 30. 9. 2026",50]].map(([t,m,p])=>`<div class="r"><div><b>${t}</b><div class="m">${m}</div></div><div class="bar"><i><s style="width:${p}%;${p<50?"background:var(--warn-fg)":""}"></s></i><span>${p} %</span></div></div>`).join("")}</div></div>`;
+const PAGE_BASIC=`<h1 class="page-title">Na potvrdenie</h1><p class="page-lead">3 normy čakajú na vaše potvrdenie.</p><div class="card rows">${["Pracovný poriadok SFZ","Smernica o ochrane osobných údajov","Etický kódex SFZ"].map(t=>`<div class="r"><div><b>${t}</b><div class="m">pridelené 22. 9. 2026</div></div></div>`).join("")}</div>`;
+
+function Shell(host,{groups,active,rail,page,h,narrow,drawerOpen,tip:tip0,lockRail}){
+  const S={rail,open:!!drawerOpen,tip:tip0||null};
+  function render(){
+    const railMode=lockRail?true:S.rail;
+    host.innerHTML=hdr({narrow,burger:!!lockRail})+`<div class="shell" style="height:${h}px">${sideHtml({groups,active,rail:railMode,tip:S.tip})}${S.open?`<div class="scrim" data-scrim></div>${sideHtml({groups,active,rail:false,drawer:true})}`:""}<main class="main"${narrow?' style="padding:20px 24px"':""}>${page}</main></div>`;
+    host.querySelectorAll("[data-fold]").forEach(b=>b.onclick=()=>{if(lockRail){S.open=!S.open}else S.rail=!S.rail;render()});
+    host.querySelectorAll("[data-burger]").forEach(b=>b.onclick=()=>{S.open=!S.open;render()});
+    host.querySelectorAll("[data-scrim]").forEach(b=>b.onclick=()=>{S.open=false;render()});
+    host.querySelectorAll(".side.is-rail .it").forEach(a=>{a.onmouseenter=()=>{S.tip=a.dataset.k;render()};a.onmouseleave=()=>{S.tip=null;render()}});
+    host.querySelectorAll(".drawer .it").forEach(a=>a.onclick=e=>{e.preventDefault();S.open=false;render()});
+  }
+  render();
+}
+const $=s=>document.querySelector(`[data-frame="${s}"]`);
+Shell($("1440"),{groups:FULL,active:"assigned",rail:false,page:PAGE_HR,h:760});
+Shell($("1440r"),{groups:FULL,active:"assigned",rail:true,page:PAGE_HR,h:760,tip:"evidence"});
+Shell($("834"),{groups:FULL,active:"assigned",page:PAGE_HR,h:584,narrow:true,lockRail:true});
+Shell($("834o"),{groups:FULL,active:"assigned",page:PAGE_HR,h:584,narrow:true,lockRail:true,drawerOpen:true});
+Shell($("basic"),{groups:BASIC,active:"toAcknowledge",rail:false,page:PAGE_BASIC,h:504,narrow:true});
+Shell($("basicr"),{groups:BASIC,active:"toAcknowledge",rail:true,page:PAGE_BASIC,h:504,narrow:true,tip:"toApprove"});
+$("390").innerHTML=hdr({narrow:true}).replace('<span class="ask">','<span class="ask" style="max-width:none">')+`<div style="flex:1;padding:14px;overflow:hidden">${PAGE_BASIC}</div><nav class="tabbar">${[["overview","Prehľad"],["ask","Opýtať sa"],["learning","Vzdelávanie"],["toAcknowledge","Úlohy",4],["more","Viac"]].map(([k,l,c])=>`<a href="#"${k==="toAcknowledge"?' class="is-on"':""}>${svg(k,21)}${c?`<b>${c}</b>`:""}${l}</a>`).join("")}</nav>`;
+</script>
+</body></html>

@@ -20,7 +20,6 @@ import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
 import LiveFilter from "@/components/LiveFilter"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { evidenceRows } from "@/lib/evidenceDb"
@@ -36,7 +35,7 @@ export default async function EvidencePage({
 }: {
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ layout?: string; person?: string; state?: string }>(await searchParams)
+  const q = normalizeQuery<{ person?: string; state?: string }>(await searchParams)
   const ctx = await hrContext()
   if (ctx.state === "unknown-host") notFound()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
@@ -70,7 +69,7 @@ export default async function EvidencePage({
   if (wantedState) csv.set("state", wantedState)
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
         <div className="page-head">
           <h1 className="page-title" style={{ margin: 0 }}>{t.heading}</h1>

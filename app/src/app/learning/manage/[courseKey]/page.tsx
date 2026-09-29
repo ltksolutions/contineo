@@ -44,7 +44,6 @@ import { courseRoster, type RosterRow, type RosterState } from "@/lib/learningSt
 import { listTests } from "@/lib/testsDb"
 import { certificatesForCourse } from "@/lib/certificatesDb"
 import { questionCount, type Test } from "@/lib/tests"
-import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
@@ -55,7 +54,7 @@ import {
 export const dynamic = "force-dynamic"
 
 type Q = {
-  layout?: string; tab?: string; part?: string; add?: string; src?: string; editBlock?: string; msg?: string; error?: string
+  tab?: string; part?: string; add?: string; src?: string; editBlock?: string; msg?: string; error?: string
   filter?: string; assign?: string; preview?: string; all?: string; audience?: string | string[]; revoke?: string
 }
 type Edit = ReturnType<typeof dictionary>["learning"]["edit"]
@@ -90,7 +89,7 @@ export default async function ManageCoursePage({ params, searchParams }: {
   const usage = tab === "settings" ? await smartTagUsage(ctx.person.companyCode) : []
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
         <p className="detail-back"><Link className="quiet" href="/learning/manage">← {t.manageHeading}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={`${base}${part ? `?tab=parts&part=${part.key}` : ""}`} />

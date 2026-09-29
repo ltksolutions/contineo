@@ -11,9 +11,35 @@
  * Pravidlo, ktoré z toho platí: čo potrebuje server aj klient, nesmie bývať
  * v module s `"use client"`. Tu žiadna direktíva nie je zámerne — súbor je
  * obojaký a nič v ňom nesiaha na `window` ani na React.
+ *
+ * Od 29. 9. 2026 má desktop jediný tvar — bočný panel (SHELL-bocny-panel,
+ * Q1). Pás `topbar`, `?layout=` a `normalizeLayout()` odišli.
  */
 
-export type NavLayout = "sidebar" | "topbar"
+/**
+ * Stav bočného panela na desktope: rozbalený (236 px) alebo lišta ikon
+ * (64 px). Voľba **zariadenia, nie osoby** — drží ju cookie `nav` (Q4).
+ */
+export type NavState = "wide" | "rail"
+
+/** Meno cookie so stavom panela. */
+export const NAV_COOKIE = "nav"
+
+/**
+ * Udalosť, ktorou hamburger v hlavičke vysunie bočný panel (640–1023 px).
+ * Hlavička je v `layout.tsx`, panel v `AppShell` — iný strom, preto udalosť
+ * na `window`, nie spoločný stav. `detail` je prvok, na ktorý sa po zavretí
+ * vráti fokus.
+ */
+export const NAV_DRAWER_EVENT = "contineo:nav-drawer"
+
+/**
+ * Stav z cookie. Čokoľvek iné než `rail` je `wide` — predvolený je rozbalený
+ * panel a neznáma hodnota (ručne upravené cookie) nemá zhodiť stránku.
+ */
+export function normalizeNavState(value: unknown): NavState {
+  return value === "rail" ? "rail" : "wide"
+}
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
 export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "learning" | "learningManage" | "learningTests"
@@ -110,14 +136,6 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
    * miešať.
    */
   return items.map(o => (counts[o.key] === undefined ? o : { ...o, count: counts[o.key] }))
-}
-
-/**
- * Variant z adresy. Čokoľvek iné než `sidebar` je `topbar` — predvolený je
- * podľa návrhu a neznáma hodnota v adrese nemá zhodiť stránku.
- */
-export function normalizeLayout(value: unknown): NavLayout {
-  return value === "sidebar" ? "sidebar" : "topbar"
 }
 
 /**
@@ -227,7 +245,45 @@ export function isTabActive(pathname: string, tab: TabItem): boolean {
   return tab.activeFor.some(href => isActive(pathname, href))
 }
 
-export type MoreGroupKey = "organisation" | "management"
+/* ── Skupiny bočného panela (SHELL-bocny-panel) ─────────────────────────── */
+
+export type NavGroupKey = "tasks" | "organisation" | "management"
+
+/**
+ * Skupiny panela. Prvá je bez nadpisu — domov a otázka nie sú „sekcia",
+ * sú to vstupy do celého portálu. „Na schválenie" patrí k povinnostiam
+ * človeka, nie k správe (Q2): schvaľovatelia sú menovaní ľudia (D69).
+ */
+const NAV_GROUPS: { key: NavGroupKey | null; keys: NavKey[] }[] = [
+  { key: null, keys: ["overview", "ask"] },
+  { key: "tasks", keys: ["toAcknowledge", "toApprove"] },
+  { key: "organisation", keys: ["directory", "library", "learning"] },
+  { key: "management", keys: ["assigned", "evidence", "people", "evaluation", "dpo", "learningManage", "learningTests"] },
+]
+
+export interface NavGroup {
+  /** `null` = skupina bez nadpisu (Prehľad, Opýtať sa). */
+  key: NavGroupKey | null
+  items: NavItem[]
+}
+
+/**
+ * `navItems()` v skupinách panela. Prázdna skupina sa nevracia — nadpis bez
+ * položiek je šum. Kľúč, na ktorý sa pri delení zabudne, padne do „Správy":
+ * odkaz v nesprávnej skupine je nepohodlie, stratený odkaz je výpadok sekcie
+ * (ten istý dôvod ako pri `/more`).
+ */
+export function navGroups(items: NavItem[]): NavGroup[] {
+  const groups = NAV_GROUPS.map(g => ({
+    key: g.key,
+    items: g.keys.map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined),
+  }))
+  const covered = new Set(NAV_GROUPS.flatMap(g => g.keys))
+  groups.find(g => g.key === "management")!.items.push(...items.filter(o => !covered.has(o.key)))
+  return groups.filter(g => g.items.length > 0)
+}
+
+export type MoreGroupKey = "tasks" | "organisation" | "management"
 
 /**
  * Skupiny na `/more`. Osobné veci (príručka, moje potvrdenia, odhlásenie)
@@ -236,9 +292,12 @@ export type MoreGroupKey = "organisation" | "management"
  * (ten istý dôvod ako v `Header.tsx`).
  */
 const MORE_GROUPS: Record<MoreGroupKey, NavKey[]> = {
+  // „Na schválenie" je povinnosť človeka, nie správa — rovnako ako v paneli
+  // (SHELL-bocny-panel, Q2). „Na potvrdenie" je v lište pod „Úlohami".
+  tasks: ["toApprove"],
   // Vzdelávanie je pre každého, nie správa — patrí k adresáru.
   organisation: ["directory", "learning", "people"],
-  management: ["toApprove", "assigned", "evidence", "evaluation", "dpo", "learningManage", "learningTests"],
+  management: ["assigned", "evidence", "evaluation", "dpo", "learningManage", "learningTests"],
 }
 
 export interface MoreGroup {
@@ -255,6 +314,7 @@ export function moreGroups(items: NavItem[]): MoreGroup[] {
     keys.filter(k => !onBar.has(k)).map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined)
 
   const groups: MoreGroup[] = [
+    { key: "tasks", items: pick(MORE_GROUPS.tasks) },
     { key: "organisation", items: pick(MORE_GROUPS.organisation) },
     { key: "management", items: pick(MORE_GROUPS.management) },
   ]
@@ -264,11 +324,8 @@ export function moreGroups(items: NavItem[]): MoreGroup[] {
    * do „Správy". Odkaz v nesprávnej skupine je nepohodlie; odkaz, ktorý sa
    * z telefónu stratí úplne, je výpadok sekcie.
    */
-  const covered = new Set<NavKey>([...inTabbar(items), ...MORE_GROUPS.organisation, ...MORE_GROUPS.management])
-  groups[1].items.push(...items.filter(o => !covered.has(o.key)))
+  const covered = new Set<NavKey>([...inTabbar(items), ...Object.values(MORE_GROUPS).flat()])
+  groups.find(g => g.key === "management")!.items.push(...items.filter(o => !covered.has(o.key)))
 
   return groups.filter(g => g.items.length > 0)
 }
-
-/** Bez JavaScriptu ukáže pás prvých 6 položiek + „Viac" — meranie ich spresní. */
-export const STRIP_DEFAULT_VISIBLE = 6

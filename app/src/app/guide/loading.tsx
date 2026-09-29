@@ -4,7 +4,8 @@
  * Samy text, žiadny zoznam — kostra je preto odseková.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonText } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonText } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

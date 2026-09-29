@@ -12,7 +12,8 @@
  * zmenšiť bez toho, aby sa zmenšilo aj tam.
  */
 
-import { Skeleton, SkeletonShell } from "@/components/Skeleton"
+import { Skeleton } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

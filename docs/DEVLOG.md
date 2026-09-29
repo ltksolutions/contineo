@@ -10,6 +10,57 @@
 
 ---
 
+## 2026-09-29 — bočný panel namiesto pásu (SHELL-bocny-panel)
+
+**Rozhodnutie (Ján, 29. 9. 2026, Q1–Q4 v `docs/design/SHELL-bocny-panel.md`).**
+Na desktope je jediný tvar navigácie — **bočný panel**; pás `topbar` sa ruší,
+nie ponecháva ako druhý variant. README (návrh) aj `DESIGN_GAP.md` hovorili
+„oba, default `topbar`" — to platilo pre šesť položiek, dnes ich je 10–14,
+pás musel byť textový (PR 7) a aj tak prepadal do „Viac N". „Na schválenie"
+patrí do „Moje úlohy" (aj na `/more`). Na 640–1023 px lišta ikon +
+vysúvanie. Zbalenie je voľba zariadenia v cookie `nav=rail|wide` — TODO
+„uložiť variant navigácie na osobu" sa zatvára ako zbytočné.
+
+**Čo sa spravilo.**
+
+- `lib/appNav.ts`: `navGroups()`, `NavState`/`normalizeNavState()`,
+  `NAV_COOKIE`, `NAV_DRAWER_EVENT`; `/more` má skupinu „Moje úlohy".
+  Odišli `NavLayout`, `normalizeLayout()`, `STRIP_DEFAULT_VISIBLE` a
+  `?layout=` z 20 stránok aj z `libraryFilters`.
+- `AppNav.tsx`: panel so skupinami, zbalenie formulárom so serverovou akciou
+  (`app/shellActions.ts`, návrat podľa `Referer` len na ten istý hostiteľ —
+  `lib/shellBack.ts`), s JS okamžite a cookie zapíše prehliadač. Vysúvanie je
+  `<details>`, s JS Esc, klik mimo, zmena stránky a návrat fokusu.
+- `AppShell` číta cookie na serveri. `SkeletonShell` sa presťahoval do
+  vlastného súboru a kreslí obrys panela v tej istej šírke.
+- `Header.tsx`: hamburger na 640–1023 px — udalosť na `window` (hlavička je
+  v `layout.tsx`, panel v `AppShell`), bez JS odkaz na `/more`.
+- Ikony `fold`, `unfold`, `burger` z rámu v `Icon.tsx`.
+
+**Nefungovalo / poučenie.**
+
+- **Popis v lište ikon bol orezaný.** Zoznam panela má `overflow-y: auto`
+  a to núti aj `overflow-x` — všetko, čo z panela vytŕča, je odseknuté.
+  Popis je preto jeden, `position: fixed`, a umiestni ho skript pri
+  prejdení myšou aj fokuse.
+- `SkeletonShell` v `Skeleton.tsx` s `next/headers` zhodil build: ten modul
+  načítava aj klientsky `Answer.tsx`. Kostra shellu má vlastný súbor.
+- Hlavička má 56 px **+ 1 px linky** — sticky panel s číslom 56 z rámu bol
+  o pixel vyšší než okno. Je 57.
+- Na 834 px s cookie `wide` mal panel 236 px: `.app-panel.is-wide` má vyššiu
+  špecifickosť než `.app-panel` v `@media`.
+- Hlavička nad panelom ide cez celú šírku (logo pri ľavom okraji ako v ráme),
+  centrovaná na 1240 px by logo od panela odsunula.
+- **Otvorené:** knižnica má na 1440 px s rozbaleným panelom o 236 px menej
+  (obsah 1204 px). Deväťstĺpcová tabuľka potrebuje ~1060 px vedľa panela
+  filtrov 250 px — pravdepodobne sa nezmestí a zroluje sa vo
+  `.doc-table-wrap`; so zbaleným panelom áno. Treba pozrieť na náhľade.
+- Overenie: stránka zložená z ozajstných `Header` a `AppNav` s ozajstným
+  `globals.css` mimo repa (router Nextu a serverová akcia nahradené),
+  1440 rozbalený aj lišta, 834 lišta aj vysunutý, 390, svetlá aj tmavá, bez JS.
+
+---
+
 ## 2026-09-29 — Prideliť normy: dva stĺpce a hľadanie (HR-pridelit-normy-hladanie)
 
 **Čo sa spravilo.**

@@ -18,14 +18,11 @@ import { versionById } from "@/lib/courses"
 import AppShell from "@/components/AppShell"
 import CertificateCard from "@/components/CertificateCard"
 import CopyLink from "@/components/CopyLink"
-import { normalizeLayout } from "@/lib/appNav"
-import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-export default async function CertificatePage({ params, searchParams }: { params: Promise<{ courseKey: string }>; searchParams: Promise<RawQuery> }) {
-  const q = normalizeQuery<{ layout?: string }>(await searchParams)
+export default async function CertificatePage({ params }: { params: Promise<{ courseKey: string }> }) {
   const ctx = await learningContext()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
   if (ctx.state !== "ready") notFound()
@@ -82,7 +79,7 @@ export default async function CertificatePage({ params, searchParams }: { params
   }
 
   return (
-    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+    <AppShell language={language}>
       <div className="at rs">
         <p className="detail-back"><Link className="quiet" href={base}>← {version?.title ?? course.title}</Link></p>
         {body}

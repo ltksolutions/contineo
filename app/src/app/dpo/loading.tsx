@@ -2,7 +2,8 @@
  * Kostra: ochrana údajov (DPO) — dlaždice s počtami, výkaz a námietky.
  */
 
-import { SkeletonShell, SkeletonHeading, SkeletonCard, SkeletonList } from "@/components/Skeleton"
+import { SkeletonHeading, SkeletonCard, SkeletonList } from "@/components/Skeleton"
+import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (

@@ -25,7 +25,7 @@ const cert = (over: Partial<Certificate> = {}): Certificate => ({
 })
 async function render() {
   const { default: Page } = await import("../src/app/learning/[courseKey]/certificate/page")
-  return renderToStaticMarkup(await Page({ params: Promise.resolve({ courseKey: "bozp" }), searchParams: Promise.resolve({}) }))
+  return renderToStaticMarkup(await Page({ params: Promise.resolve({ courseKey: "bozp" }) }))
 }
 beforeEach(() => { s.cert = cert() })
 
