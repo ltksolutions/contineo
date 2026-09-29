@@ -330,3 +330,55 @@ describe("detail — staršie znenia (DETAIL-starsie-znenia)", () => {
     expect(html).toMatch(/<section class="card older" id="older"><div class="older-head"><h2>Staršie znenia<\/h2><\/div><p class="older-empty">Žiadne\./)
   })
 })
+
+describe("detail — platné a pripravované znenie (novela vopred)", () => {
+  // Dnes platí `mid`; `next` je zverejnené s budúcou účinnosťou (isActive),
+  // `old` je minulé. Presne stav `sfz:test_znenia` 29. 9. 2026.
+  const old = { ...effective, versionId: "v-1", label: "znenie účinné od 1. 1. 2024", isActive: false,
+    effectiveFrom: new Date("2024-01-01T00:00:00Z"), effectiveTo: new Date("2026-07-01T00:00:00Z"), pdf: pdf("v1") }
+  const mid = { ...effective, versionId: "v-2", label: "znenie účinné od 1. 7. 2026", isActive: false,
+    effectiveFrom: new Date("2026-07-01T00:00:00Z"), effectiveTo: new Date("2099-01-01T00:00:00Z"), pdf: pdf("v2") }
+  const next = { ...effective, versionId: "v-3", label: "znenie účinné od 1. 1. 2099", isActive: true,
+    effectiveFrom: new Date("2099-01-01T00:00:00Z"), effectiveTo: null, pdf: pdf("v3") }
+
+  beforeEach(() => {
+    state.detail = detail({
+      versions: [old, mid, next], effectiveVersionId: "v-2",
+      draftMarkdown: "", draftPdf: null, draftMeta: null, markdown: next.markdown,
+    })
+  })
+
+  it("platné je dnes platné znenie, nie naposledy zverejnené", async () => {
+    const html = await render()
+    const cur = html.slice(html.indexOf('id="current"'))
+    expect(cur).toContain("Platné znenie")
+    expect(cur).toContain("od 1. 7. 2026 – 1. 1. 2099")
+    // Hlavička hovorí o dnes platnom znení a súbory sú jeho.
+    expect(html).toContain("platné od 1. 7. 2026")
+    expect(html).toContain("/api/library/file/v2")
+  })
+
+  it("novela vopred má vlastnú kartu, nie je medzi staršími", async () => {
+    const html = await render()
+    expect(html).toContain('id="v-v-3"')
+    expect(html).toContain("Pripravované znenie")
+    expect(html).toContain("Zverejnené, platiť začne 1. 1. 2099")
+    const older = html.slice(html.indexOf('id="older"'))
+    expect(older).toContain('id="v-v-1"')
+    expect(older).not.toContain('id="v-v-2"')
+    expect(older).not.toContain('id="v-v-3"')
+  })
+
+  it("panel pri pripravovanom znení ide cez ?version=", async () => {
+    const html = await render({ version: "v-3", open: "history" })
+    expect(html).toMatch(/id="v-v-3"[\s\S]*História/)
+  })
+})
+
+it("dokument, ktorému platnosť skončila: posledné znenie je medzi staršími, nie pripravované", async () => {
+  const ended = { ...effective, effectiveTo: new Date("2026-01-01T00:00:00Z") }
+  state.detail = detail({ versions: [ended], effectiveVersionId: undefined, draftMarkdown: "", draftPdf: null, draftMeta: null })
+  const html = await render()
+  expect(html).not.toContain("Pripravované znenie")
+  expect(html.slice(html.indexOf('id="older"'))).toContain(`id="v-${ended.versionId}"`)
+})

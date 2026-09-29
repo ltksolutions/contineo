@@ -1895,6 +1895,9 @@ interface Dictionary {
       downloadSource: string
       editDocument: string
       currentHeading: string
+      /** Zverejnená novela, ktorá ešte neplatí (ADR-023 D143) — karta vedľa platného znenia. */
+      upcomingHeading: string
+      upcomingNote: (date: string) => string
       fromDate: (date: string) => string
       changeResponsible: string
       changeBasis: string
@@ -5296,6 +5299,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       downloadSource: "Stiahnuť zdrojový súbor",
       editDocument: "Upraviť dokument",
       currentHeading: "Platné znenie",
+      upcomingHeading: "Pripravované znenie",
+      upcomingNote: d => `Zverejnené, platiť začne ${d}. Dovtedy ľudia čítajú a potvrdzujú platné znenie vyššie.`,
       fromDate: d => `od ${d}`,
       changeResponsible: "Zmeniť zodpovednú osobu",
       changeBasis: "Zmeniť právny základ",
@@ -8591,6 +8596,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       downloadSource: "Stáhnout zdrojový soubor",
       editDocument: "Upravit dokument",
       currentHeading: "Platné znění",
+      upcomingHeading: "Připravované znění",
+      upcomingNote: d => `Zveřejněné, platit začne ${d}. Do té doby lidé čtou a potvrzují platné znění výše.`,
       fromDate: d => `od ${d}`,
       changeResponsible: "Změnit odpovědnou osobu",
       changeBasis: "Změnit právní základ",
@@ -11878,6 +11885,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       downloadSource: "Download source file",
       editDocument: "Edit document",
       currentHeading: "Current version",
+      upcomingHeading: "Upcoming version",
+      upcomingNote: d => `Published; it comes into force on ${d}. Until then people read and confirm the current version above.`,
       fromDate: d => `from ${d}`,
       changeResponsible: "Change responsible person",
       changeBasis: "Change legal basis",
