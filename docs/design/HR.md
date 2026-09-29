@@ -32,7 +32,7 @@ Toto je prvá vec, ktorú treba pochopiť, lebo názvy si sú podobné:
 | `/hr` | zoznam pridelení, tri čísla (potvrdené / upozornení / chýbajú), odkazy na akcie, šírka 860 |
 | `/hr/[id]` | zoznam osôb, príznak „už nie je v oddelení“ (D50), šírka 720 |
 | `/hr/overview` | súhrny s prepínačom pohľadu, CSV export, odvolanie potvrdenia s povinným dôvodom, šírka 900 |
-| `/hr/assign` | výber dokumentov, publikum (oddelenia / skupiny / trasy) ako `.tag--choice`, povinný dôvod, termín dátumom alebo počtom dní, šírka 680 |
+| `/hr/assign` | výber dokumentov, publikum (oddelenia / skupiny / trasy) ako `.tag--choice`, povinný dôvod, termín dátumom alebo počtom dní, šírka 680 — **od 29. 9. 2026 výnimka: 1180, dva stĺpce od 1100 px** (`HR-pridelit-normy-hladanie.md`, Q1) |
 | `/hr/reminders` | prepínač režimu, náhľad pred odoslaním, posiela sa len tým, kto nepotvrdil, šírka 760 |
 | `/hr/evidence` | filtre osoba + stav, `.widget` rozbaľovacie riadky, CSV export, šírka 900 |
 
@@ -204,7 +204,7 @@ povedať.
 
 | Šírka | Čo sa mení |
 | --- | --- |
-| **1440** | Obsahové šírky podľa obrazovky (680–900 px) zostávajú — sú to výkazy a formuláre, nie tabuľky cez celú obrazovku |
+| **1440** | Obsahové šírky podľa obrazovky (680–900 px) zostávajú — sú to výkazy a formuláre, nie tabuľky cez celú obrazovku. **Jediná výnimka je `/hr/assign`** (1180, Normy \| Komu vedľa seba — rozhodnutie Jána 29. 9. 2026, `HR-pridelit-normy-hladanie.md` Q1) |
 | **390** | Karty; tlačidlá na celú šírku 44 px; `.admin-data` tri čísla pod sebou; v `/hr/assign` pilulky publika sa zalomia |
 
 ---

@@ -48,6 +48,15 @@ Na 1440 je dnes dve tretiny obrazovky prázdne a 14 noriem odscrolluje z dohľad
 - **Q3** Tlačidlo „Prideliť {n} ľuďom" po kontrole dopadu (a späť „Prideliť", keď sa výber zmení) — áno?
 - **Q4** Pri „Všetkým" stlmiť zvyšok Komu — áno, alebo nechať ako dnes?
 
+## Rozhodnutia 29. 9. 2026 (Ján)
+
+Implementované v PR #187 (zlúčené 2026-09-29), všetky štyri návrhy ostávajú.
+
+- **Q1 ✅** Výnimka pre `/hr/assign`: dva stĺpce od 1100 px, šírka 1180. Ostatné HR obrazovky držia 680–900 px (zapísané v `HR.md`). Dôvod: jediná HR obrazovka s dvoma dlhými zoznamami, ktoré treba mať naraz na očiach.
+- **Q2 ✅** Filter „len bez právneho základu" ostáva spolu so štítkom v riadku. Zmizne sám, keď bez základu nebude žiadna norma.
+- **Q3 ✅** „Prideliť {n} ľuďom" po kontrole dopadu; pri zmene publika späť „Prideliť" a jantárový dopad.
+- **Q4 ✅** Pri „Všetkým" sa zvyšok Komu stlmí; výber sa nemaže.
+
 ## Prompt pre Claude Code
 
 ```

@@ -47,6 +47,9 @@
 - Overenie: stránka zložená z ozajstných komponentov a `globals.css` mimo
   repa, 1440 svetlá, 390 tmavá a bez JS. Ozajstnú `/hr/assign` s dátami
   treba pozrieť na náhľade.
+- Zlúčené ako PR #187. Ján 29. 9. potvrdil všetky štyri otázky Q1–Q4
+  („1, 1, 1, 1"): výnimka šírky pre `/hr/assign` je zapísaná v `HR.md`,
+  filter, tlačidlo s počtom a stlmenie ostávajú.
 
 ---
 
