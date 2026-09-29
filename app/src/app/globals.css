@@ -4225,10 +4225,118 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .approval-person:hover { background: var(--surface-2); }
 /* Cieľ na dotyk má mať aspoň 44 px — políčko samotné je menšie, preto sa
    klikacou plochou stáva celý riadok. */
-.approval-person > input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
+.approval-person > input { margin-top: 3px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
 .approval-person > span { display: grid; gap: 1px; min-width: 0; }
 .approval-person-name { font-size: 14.5px; }
 .approval-person-meta { font-size: 12.5px; overflow-wrap: anywhere; }
+/* Riadok odfiltrovaný hľadaním. `display: flex` vyššie by atribút `hidden`
+   prebil — prehliadač ho skrýva len pravidlom s najnižšou váhou. */
+.approval-person[hidden] { display: none; }
+/* Vybraný riadok podľa políčka, nie podľa triedy: funguje aj bez skriptu. */
+.approval-person:has(> input:checked) { background: var(--accent-soft); }
+.approval-person mark { background: var(--warn-bg); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+/* ── hľadanie v zozname osôb (KOMPONENT-hladanie-osob) ────────────────────
+   Nad rámikom `.approval-people`: vybraní, pole, počet. Rámik, poradie
+   a políčka ostávajú; bez JavaScriptu sa nič z tohto nevykreslí. */
+.people-picked { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.people-picked-label { font-size: var(--fs-micro); color: var(--muted); margin-right: 2px; }
+.people-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 3px 0 10px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 12.5px;
+  font-weight: 550;
+}
+/* Čip bez × (povinná zodpovedná osoba) nemá vpravo prázdne miesto. */
+.people-chip:not(:has(button)) { padding-right: 10px; }
+.people-chip > button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.people-chip > button:hover { background: var(--surface-2); color: var(--ink); }
+
+.people-search { position: relative; }
+.people-search > svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+.people-search > .field-input { padding-left: 36px; padding-right: 40px; }
+/* Vlastné × namiesto systémového — to má v každom prehliadači inú veľkosť. */
+.people-search > .field-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.people-search-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.people-search-clear:hover { background: var(--surface-2); }
+.people-count {
+  font-size: var(--fs-micro);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.people-count:empty { display: none; }
+
+.people-empty { padding: 18px 12px; text-align: center; font-size: var(--fs-small); color: var(--muted); line-height: 1.5; }
+.people-empty-clear {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.people-empty-clear:hover { color: var(--accent-strong); }
+
+.people-keys { font-size: 11px; color: var(--muted); }
+.people-keys kbd {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+
+/* Telefón: pole 44 px a písmo 16 px (menšie iOS pri fokuse priblíži),
+   čip 36 px na palec. Nápoveda klávesnice na dotykovej obrazovke nemá čo
+   robiť. */
+@media (max-width: 639px) {
+  .people-search > .field-input { min-height: 44px; font-size: 16px; }
+  .people-chip { min-height: 36px; }
+  .people-chip > button { width: 32px; height: 32px; }
+  .people-keys { display: none; }
+}
 
 /* Dve rozhodnutia vedľa seba, na telefóne pod sebou. „Schváliť" je prvé
    a plné — nie preto, že by bolo správnejšie, ale preto, že je to častejší

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>KOMPONENT — hľadanie v zozname osôb</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;color:var(--ink)}
+a{color:var(--accent);} a:hover{color:var(--accent-strong)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:84ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:84ch;line-height:1.55}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;flex:0 0 auto}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.ask{flex:1;display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;min-width:0;white-space:nowrap;overflow:hidden}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+.body{padding:16px 16px 32px}
+.wrap{max-width:1240px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.flow-section-title{font-size:12px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.stack{display:grid;gap:22px}
+.hr-group{border:1px solid var(--line);border-radius:8px;padding:12px 16px 16px;margin:0;display:grid;gap:8px;min-width:0}
+.field-label{font-size:var(--fs-label);font-weight:600;padding:0 6px}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.field-input{font:inherit;font-size:var(--fs-control);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:var(--control-h);line-height:1.2;padding:8px 12px;width:100%}
+/* ── nové: hľadanie v zozname osôb ── */
+.people-search{position:relative}
+.people-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.people-search .field-input{padding-left:36px;padding-right:40px}
+.people-search .field-input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.people-search-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;background:transparent;border-radius:7px;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.people-search-clear:hover{background:var(--surface-2)}
+.people-picked{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.people-picked-label{font-size:var(--fs-micro);color:var(--muted);margin-right:2px}
+.people-chip{display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 3px 0 10px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12.5px;font-weight:550}
+.people-chip button{display:grid;place-items:center;width:22px;height:22px;border:0;background:transparent;border-radius:5px;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;padding:0}
+.people-chip button:hover{background:rgba(20,28,42,.08);color:var(--ink)}
+.people-count{font-size:var(--fs-micro);color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.approval-people{display:grid;gap:2px;max-height:260px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--surface)}
+.approval-person{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-radius:6px;cursor:pointer}
+.approval-person:hover{background:var(--surface-2)}
+.approval-person.is-on{background:var(--accent-soft)}
+.approval-person > input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--accent)}
+.approval-person > span{display:grid;gap:1px;min-width:0}
+.approval-person-name{font-size:14.5px}
+.approval-person-meta{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.approval-person mark{background:var(--warn-bg);color:inherit;border-radius:2px;padding:0 1px}
+.people-empty{padding:18px 12px;text-align:center;font-size:var(--fs-small);color:var(--muted);line-height:1.5}
+.people-empty b{color:var(--ink);font-weight:600}
+.people-kbd{font-size:11px;color:var(--muted)}
+.people-kbd kbd{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;padding:1px 5px;border-radius:4px;background:var(--surface-2)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.frame-label{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);margin:0 0 6px}
+.frames-small{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.spec tr:last-child td{border-bottom:0}
+.states{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;max-width:1440px}
+.state{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.state h4{margin:0 0 10px;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-weight:500}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">KOMPONENT — hľadanie v zozname osôb</h1>
+<p class="doc">Schvaľovatelia a zodpovedná osoba v príprave znenia (<code>/library/[id]</code>, krok 1). Nad zoznamom pribudne pole hľadania, ktoré zoznam filtruje počas písania, a riadok vybraných osôb, ktorý ostáva viditeľný aj keď filter vybraného skryje. Zoznam ostáva zoznam políčok — nie rozbaľovací výber. Všetky rámy sú živé: dá sa písať, zaškrtávať, odoberať.</p>
+<p class="doc">Zdroj: <code>ResponsiblePicker.tsx</code>, <code>ApprovalPanel.tsx</code>, <code>library/[id]/page.tsx</code> r. 895–923, <code>.approval-people</code> v globals.css r. 4206. Hľadanie bez diakritiky ako <code>MultiSelect.tsx</code>. Popis v <code>KOMPONENT-hladanie-osob.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — píše „gal", 2 vybraní, zodpovedná osoba určená</p>
+  <div class="frame" style="width:1440px"><div class="hdr"><span class="logo">SFZ</span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av">JL</span></div>
+    <div class="body"><div class="wrap" style="max-width:1100px"><div class="card stack" data-frame="1440"></div></div></div></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 a 390 — bez písania / nič nevyhovuje</p>
+  <div class="frames-small">
+    <div><p class="frame-label">834</p><div class="frame" style="width:834px"><div class="hdr"><span class="logo">SFZ</span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa…</span><span class="av">JL</span></div>
+      <div class="body"><div class="card stack" data-frame="834"></div></div></div></div>
+    <div><p class="frame-label">390</p><div class="frame" style="width:390px"><div class="hdr" style="padding:0 14px"><span class="logo">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av">JL</span></div>
+      <div class="body" style="padding:12px"><div class="card stack" style="padding:14px" data-frame="390"></div></div></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Stavy</p>
+  <div class="states">
+    <div class="state"><h4>menej ako 8 ľudí — bez poľa hľadania</h4><div data-state="few"></div></div>
+    <div class="state"><h4>Enter pri jednom výsledku — vyberie a vyčistí pole</h4><div data-state="one"></div></div>
+    <div class="state"><h4>bez JavaScriptu — dnešný zoznam, nič navyše</h4><div data-state="nojs"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Správanie</p>
+  <table class="spec">
+    <tr><th>Čo</th><th>Ako</th></tr>
+    <tr><td>Kde sa hľadá</td><td>Meno, e-mail, oddelenie. Bez diakritiky a veľkosti písmen („alz" nájde Alžbetu). Viac slov = všetky musia sedieť („it gal").</td></tr>
+    <tr><td>Kedy sa zobrazí pole</td><td>Od 8 osôb v zozname (pravidlo z <code>KOMPONENT-vyber-oddelenia</code>). Pod 8 zoznam ostáva ako dnes.</td></tr>
+    <tr><td>Skryté riadky</td><td>Len <code>hidden</code>, z formulára sa neodstraňujú — zaškrtnutý, ale odfiltrovaný schvaľovateľ sa odošle.</td></tr>
+    <tr><td>Vybraní</td><td>Riadok čipov nad poľom, v poradí zoznamu. × odznačí. Pri zodpovednej osobe (prepínač) jeden čip; × zruší voľbu (v príprave nepovinná).</td></tr>
+    <tr><td>Počet</td><td>„3 z 142" vpravo pod poľom, len keď je niečo napísané. <code>aria-live="polite"</code>.</td></tr>
+    <tr><td>Nič nevyhovuje</td><td>V rámiku: „Nikto nevyhovuje „xyz". Vyradení sa neponúkajú, seba schváliť nemôžeš." + odkaz „Zrušiť hľadanie".</td></tr>
+    <tr><td>Enter</td><td>Nikdy neodošle formulár (dnes by Enter v poli spustil „Predložiť na schválenie"). Pri práve jednom výsledku ho vyberie a pole vyčistí — dá sa hneď písať ďalšie meno.</td></tr>
+    <tr><td>↓ / Esc</td><td>↓ presunie fokus na prvé viditeľné políčko, ďalej ide Tab/šípky natívne. Esc vyčistí pole.</td></tr>
+    <tr><td>Poradie</td><td>Nemení sa (abecedne). Vybraní sa hore nepresúvajú — riadok by pod kurzorom uskočil.</td></tr>
+    <tr><td>Rozmery</td><td>Pole 40 px (formulár), pod 640 px 44 px. Vstup 16 px na mobile (iOS nezoomuje). Čip 28 px, × 22 px — pod 640 px čip 36 px.</td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const PEOPLE=[
+ ["agata","Agáta Galková","IT","agata.galkova@futbalsfz.sk"],
+ ["alexander","Alexander Vencel","","alexander.vencel@futbalsfz.sk"],
+ ["alzbeta","Alžbeta Majláthová","Legislatíva","alzbeta.majlathova@futbalsfz.sk"],
+ ["andrea","Andrea Hlboká","","andrea.hlboka@futbalsfz.sk"],
+ ["boris","Boris Galík","Súťaže","boris.galik@futbalsfz.sk"],
+ ["dana","Dana Kováčová","Ekonomika","dana.kovacova@futbalsfz.sk"],
+ ["erik","Erik Švec","Rozhodcovia","erik.svec@futbalsfz.sk"],
+ ["ivana","Ivana Galbavá","Personálne","ivana.galbava@futbalsfz.sk"],
+ ["jozef","Jozef Kliment","Generálny sekretariát","jozef.kliment@futbalsfz.sk"],
+ ["katarina","Katarína Dobrá","Marketing","katarina.dobra@futbalsfz.sk"],
+ ["marek","Marek Horák","Legislatíva","marek.horak@futbalsfz.sk"],
+ ["michal","Michal Šimko","IT","michal.simko@futbalsfz.sk"],
+ ["peter","Peter Ondrejka","Mládež","peter.ondrejka@futbalsfz.sk"],
+ ["zuzana","Zuzana Rybárová","Ženský futbal","zuzana.rybarova@futbalsfz.sk"],
+].map(([id,name,dept,email])=>({id,name,dept,email}));
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function hl(text,terms){
+  if(!terms.length) return esc(text);
+  const n=norm(text); const marks=new Array(text.length).fill(false);
+  terms.forEach(t=>{let i=n.indexOf(t);while(i>-1){for(let k=i;k<i+t.length;k++)marks[k]=true;i=n.indexOf(t,i+t.length)}});
+  let out="",open=false;
+  for(let i=0;i<text.length;i++){if(marks[i]&&!open){out+="<mark>";open=true}if(!marks[i]&&open){out+="</mark>";open=false}out+=esc(text[i])}
+  return out+(open?"</mark>":"");
+}
+const SEARCH_ICON='<svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M12.2 12.2 16 16"/></svg>';
+let uid=0;
+function Picker(host,{multiple,legend,hint,people=PEOPLE,q="",selected=[],nojs=false,emptyNote,mobile=false}){
+  const st={q,sel:new Set(selected)}; const name="p"+(uid++);
+  const searchable=!nojs&&people.length>=8;
+  function render(keepFocus){
+    const terms=norm(st.q).split(/\s+/).filter(Boolean);
+    const vis=people.filter(p=>terms.every(t=>norm(p.name+" "+p.email+" "+p.dept).includes(t)));
+    const picked=people.filter(p=>st.sel.has(p.id));
+    const h=mobile?44:40;
+    host.innerHTML=`<fieldset class="hr-group"><legend class="field-label">${legend}</legend>
+      <span class="field-hint">${hint}</span>
+      ${searchable&&picked.length?`<div class="people-picked"><span class="people-picked-label">${multiple?`Vybraní (${picked.length})`:"Vybraná"}</span>${picked.map(p=>`<span class="people-chip" style="${mobile?"min-height:36px":""}">${esc(p.name)}<button type="button" data-rm="${p.id}" aria-label="Odobrať ${esc(p.name)}">×</button></span>`).join("")}</div>`:""}
+      ${searchable?`<div class="people-search">${SEARCH_ICON}<input class="field-input" type="search" style="min-height:${h}px;${mobile?"font-size:16px":""}" placeholder="Hľadať meno, e-mail alebo oddelenie" value="${esc(st.q)}" aria-label="Hľadať v zozname: ${legend}" />${st.q?`<button type="button" class="people-search-clear" aria-label="Vyčistiť">×</button>`:""}</div>
+        ${st.q?`<div class="people-count" aria-live="polite">${vis.length} z ${people.length}</div>`:""}`:""}
+      <div class="approval-people">
+        ${vis.length?people.map(p=>{const on=st.sel.has(p.id);const hidden=!vis.includes(p);return `<label class="approval-person${on?" is-on":""}"${hidden?" hidden":""}><input type="${multiple?"checkbox":"radio"}" name="${name}" value="${p.id}"${on?" checked":""} /><span><span class="approval-person-name">${hl(p.name,terms)}</span><span class="approval-person-meta">${p.dept?hl(p.dept,terms)+" · ":""}${hl(p.email,terms)}</span></span></label>`}).join("")
+        :`<div class="people-empty">Nikto nevyhovuje <b>„${esc(st.q)}"</b>.<br>${emptyNote}<br><a href="#" data-clear>Zrušiť hľadanie</a></div>`}
+      </div>
+      ${searchable&&!mobile&&st.q?`<span class="people-kbd"><kbd>↓</kbd> do zoznamu · <kbd>Enter</kbd> ${vis.length===1?"vyberie "+esc(vis[0].name):"vyberie jediný výsledok"} · <kbd>Esc</kbd> vyčistí</span>`:""}
+    </fieldset>`;
+    const inp=host.querySelector("input[type=search]");
+    if(inp){
+      inp.oninput=e=>{st.q=e.target.value;render(true)};
+      inp.onkeydown=e=>{
+        if(e.key==="Enter"){e.preventDefault();if(vis.length===1){toggle(vis[0].id,true);st.q="";render(true)}}
+        if(e.key==="Escape"){st.q="";render(true)}
+        if(e.key==="ArrowDown"){e.preventDefault();host.querySelector(".approval-person:not([hidden]) input")?.focus()}
+      };
+      if(keepFocus){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}
+    }
+    host.querySelectorAll(".approval-person input").forEach(i=>i.onchange=()=>{toggle(i.value,i.checked);render(false)});
+    host.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{st.sel.delete(b.dataset.rm);render(false)});
+    host.querySelector(".people-search-clear")?.addEventListener("click",()=>{st.q="";render(true)});
+    host.querySelector("[data-clear]")?.addEventListener("click",e=>{e.preventDefault();st.q="";render(true)});
+  }
+  function toggle(id,on){if(multiple){on?st.sel.add(id):st.sel.delete(id)}else{st.sel.clear();if(on)st.sel.add(id)}}
+  render(false);
+}
+const APPR={multiple:true,legend:"Schvaľovatelia",hint:"Predvyplnené z posledného kola, dá sa zmeniť. Seba schváliť nemôžeš.",emptyNote:"Vyradení sa neponúkajú a seba schváliť nemôžeš."};
+const RESP={multiple:false,legend:"Zodpovedná osoba",hint:"Ak ju určíš už teraz, pri zverejnení sa len potvrdí a hneď po zverejnení jej príde upozornenie, aby určila právny základ.",emptyNote:"Vyradení sa neponúkajú."};
+function frame(key,a,r,mobile){
+  const el=document.querySelector(`[data-frame="${key}"]`);
+  el.innerHTML=`<h3 class="flow-section-title" style="margin:0">Schválenie a zodpovednosť</h3><div data-a></div><div data-r></div>`;
+  Picker(el.querySelector("[data-a]"),{...APPR,...a,mobile});
+  Picker(el.querySelector("[data-r]"),{...RESP,...r,mobile});
+}
+frame("1440",{q:"gal",selected:["agata","marek"]},{selected:["marek"]});
+frame("834",{selected:["agata","marek"]},{});
+frame("390",{q:"xyz",selected:["agata"]},{q:"hor"},true);
+Picker(document.querySelector('[data-state="few"]'),{...APPR,people:PEOPLE.slice(0,5),selected:["alzbeta"]});
+Picker(document.querySelector('[data-state="one"]'),{...APPR,q:"simko",selected:["agata"]});
+Picker(document.querySelector('[data-state="nojs"]'),{...APPR,nojs:true,people:PEOPLE.slice(0,6)});
+</script>
+</body></html>

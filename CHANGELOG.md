@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Hľadanie v zozname osôb (2026-09-29)
+
+Výber **schvaľovateľov** a **zodpovednej osoby** má od 8 osôb nad zoznamom
+pole hľadania. Hľadá sa v mene, e-maile a oddelení, bez diakritiky; viac
+slov musí sedieť všetko („it gal"). Vybraní sú vidieť ako čipy nad poľom,
+aj keď ich riadok filter skryje, a × ich odoberie. **Enter formulár nikdy
+neodošle** — pri jedinom výsledku osobu vyberie a pole vyčistí; ↓ skočí do
+zoznamu, Esc hľadanie zruší. Poradie zoznamu sa nemení a bez JavaScriptu
+zostáva zoznam ako doteraz. Platí v príprave znenia, v paneli schvaľovania
+aj pri zodpovedných osobách testu.
+
 ### Asistent odpovedá podľa znenia platného k dňu otázky (2026-09-29)
 
 Asistent hľadá len v **zneniach platných k dňu otázky**. Novela zverejnená
