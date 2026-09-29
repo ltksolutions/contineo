@@ -2358,6 +2358,13 @@ interface Dictionary {
        * opravujú údaje *o* znení, toto samotný text.
        */
       textFixHeading: string
+      /** Ktoré znenie sa opravuje (fáza 3) a odkaz na porovnanie s druhým opraviteľným. */
+      textFixTarget: (label: string) => string
+      textFixOther: (label: string) => string
+      /** Panel „Opraviť text" pri znení. */
+      textFixPanel: string
+      textFixPanelNote: string
+      textFixLoad: string
       textFixIntro: string
       textFixDiffHeading: string
       textFixDiffStat: (added: number, removed: number) => string
@@ -3643,7 +3650,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   versionNotice: {
-    text: "Je dostupná nová verzia portálu. Obnovte stránku, aby sa zmeny uložili a e-maily odišli už podľa nej.",
+    text: "Je dostupná nová verzia portálu. Obnovením stránky prejdete na ňu.",
     reload: "Obnoviť",
   },
 
@@ -4522,6 +4529,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
     "textFix.notContentManager": "Text znenia opravuje správca obsahu.",
     "textFix.noEffectiveVersion": "Dokument nemá platné znenie. Opraviť sa dá len to, čo je vonku — archivované znenie je doklad o tom, čo platilo vtedy.",
+    "textFix.pastVersion": "Staršie znenie sa neopravuje — je to doklad o tom, čo vtedy platilo. Opraviť sa dá platné znenie a zverejnená novela, ktorá ešte neplatí.",
+    "textFix.draftBusy": "Pripravuje sa nové znenie — oprava textu by prepísala rozpracovaný koncept. Najprv ho dokonči alebo zahoď.",
     "textFix.emptyText": "Koncept nemá text. Oprava, po ktorej nezostane nič, nie je oprava.",
     "textFix.draftChanged": "Koncept sa medzitým zmenil. Pozri si rozdiel znova — uložiť sa má to, čo si videl.",
     "textFix.noChange": "Text sa od platného znenia nelíši. Nie je čo opravovať.",
@@ -5686,6 +5695,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixSubmit: "Opraviť",
 
       textFixHeading: "Alebo: oprava textu bez novej verzie",
+      textFixTarget: label => `Opravuje sa: ${label}`,
+      textFixOther: label => `Porovnať so: ${label}`,
+      textFixPanel: "Opraviť text",
+      textFixPanelNote: "Nahrá text tohto znenia do editora. Oprava je bez novej verzie — len preklep, čiarka či diakritika; potvrdenia zostávajú platné. Keď sa mení význam, treba nové znenie. Uložíš ju potom v Správe, s rozdielom a dôvodom.",
+      textFixLoad: "Načítať text do editora",
       textFixIntro:
         "Preklep, čiarka, diakritika — niečo, čo nemení význam. Znenie zostane to isté, potvrdenia zostanú platné " +
         "a do vyhľadávania sa pošle opravený text pri tom istom znení. Ak sa mení význam, toto nie je tá cesta: publikuj nové znenie.",
@@ -6947,7 +6961,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   versionNotice: {
-    text: "Je dostupná nová verze portálu. Obnovte stránku, aby se změny uložily a e-maily odešly už podle ní.",
+    text: "Je dostupná nová verze portálu. Obnovením stránky na ni přejdete.",
     reload: "Obnovit",
   },
 
@@ -7826,6 +7840,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
     "textFix.notContentManager": "Text znění opravuje správce obsahu.",
     "textFix.noEffectiveVersion": "Dokument nemá platné znění. Opravit se dá jen to, co je venku — archivované znění je doklad o tom, co platilo tehdy.",
+    "textFix.pastVersion": "Starší znění se neopravuje — je to doklad o tom, co tehdy platilo. Opravit lze platné znění a zveřejněnou novelu, která ještě neplatí.",
+    "textFix.draftBusy": "Připravuje se nové znění — oprava textu by přepsala rozpracovaný koncept. Nejprve ho dokonči nebo zahoď.",
     "textFix.emptyText": "Koncept nemá text. Oprava, po které nezůstane nic, není oprava.",
     "textFix.draftChanged": "Koncept se mezitím změnil. Podívej se na rozdíl znovu — uložit se má to, co jsi viděl.",
     "textFix.noChange": "Text se od platného znění neliší. Není co opravovat.",
@@ -8987,6 +9003,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixSubmit: "Opravit",
 
       textFixHeading: "Nebo: oprava textu bez nové verze",
+      textFixTarget: label => `Opravuje se: ${label}`,
+      textFixOther: label => `Porovnat se: ${label}`,
+      textFixPanel: "Opravit text",
+      textFixPanelNote: "Nahraje text tohoto znění do editoru. Oprava je bez nové verze — jen překlep, čárka či diakritika; potvrzení zůstávají platná. Když se mění význam, je třeba nové znění. Uložíš ji pak ve Správě, s rozdílem a důvodem.",
+      textFixLoad: "Načíst text do editoru",
       textFixIntro:
         "Překlep, čárka, diakritika — něco, co nemění význam. Znění zůstane stejné, potvrzení zůstanou platná " +
         "a do vyhledávání se pošle opravený text u téhož znění. Pokud se mění význam, tohle není ta cesta: publikuj nové znění.",
@@ -10242,7 +10263,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   versionNotice: {
-    text: "A new version of the portal is available. Reload the page so that changes and emails use it.",
+    text: "A new version of the portal is available. Reload the page to switch to it.",
     reload: "Reload",
   },
 
@@ -11120,6 +11141,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
     "textFix.notContentManager": "Correcting the text of a version is the content manager's job.",
     "textFix.noEffectiveVersion": "The document has no effective version. Only what is out there can be corrected — an archived version is the record of what applied at the time.",
+    "textFix.pastVersion": "An older version is not corrected — it is the record of what applied at the time. The current version and a published amendment not yet in force can be corrected.",
+    "textFix.draftBusy": "A new version is being prepared — correcting the text would overwrite the draft in progress. Finish or discard it first.",
     "textFix.emptyText": "The draft has no text. A correction that leaves nothing behind is not a correction.",
     "textFix.draftChanged": "The draft changed in the meantime. Look at the difference again — what you saw is what should be saved.",
     "textFix.noChange": "The text does not differ from the effective version. There is nothing to correct.",
@@ -12275,6 +12298,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixSubmit: "Correct",
 
       textFixHeading: "Or: correct the text without a new version",
+      textFixTarget: label => `Correcting: ${label}`,
+      textFixOther: label => `Compare with: ${label}`,
+      textFixPanel: "Correct the text",
+      textFixPanelNote: "Loads this version's text into the editor. A correction creates no new version — only a typo, comma or diacritics; acknowledgements stay valid. If the meaning changes, a new version is needed. You then save it under Management, with the diff and a reason.",
+      textFixLoad: "Load the text into the editor",
       textFixIntro:
         "A typo, a comma, an accent — something that does not change the meaning. The version stays the same, " +
         "acknowledgements stay valid, and the corrected text goes into search under that same version. " +

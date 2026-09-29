@@ -38,6 +38,7 @@ export type TextFixProblem =
   | "textFix.draftChanged"
   | "textFix.noChange"
   | "textFix.reasonRequired"
+  | "textFix.pastVersion"
 
 /**
  * Smie sa tento text opraviť?
@@ -48,6 +49,8 @@ export type TextFixProblem =
 export function textFixProblem(input: {
   canManageContent: boolean
   hasEffectiveVersion: boolean
+  /** Cieľ opravy je minulé znenie — to sa neopravuje (D78). */
+  targetIsPast?: boolean
   before: string
   after: string
   /** Odtlačok textu, ktorého rozdiel mal človek pred očami. */
@@ -60,6 +63,7 @@ export function textFixProblem(input: {
    * vtedy; prepísať ho by neznamenalo opraviť chybu, ale zmeniť minulosť.
    */
   if (!input.hasEffectiveVersion) return "textFix.noEffectiveVersion"
+  if (input.targetIsPast) return "textFix.pastVersion"
   if (!input.after?.trim()) return "textFix.emptyText"
   /*
    * Ukladá sa **ten text, ktorého rozdiel bol vidieť**. Keby medzitým do
@@ -260,4 +264,63 @@ export function versionFixProblem(input: {
   const touchesStatement = input.changesLabel || input.changesEffectiveFrom
   if (touchesStatement && input.acknowledgements > 0) return "versionFix.locked"
   return null
+}
+
+
+/** To, čo pravidlá opravy potrebujú vedieť o znení. */
+export interface FixableVersion {
+  versionId: string
+  isActive?: boolean
+  effectiveTo?: Date | string | null
+  markdown?: string
+}
+
+/**
+ * Ktoré znenia sa smú opraviť (D78, D150): **platné dnes** a **zverejnené
+ * s budúcou účinnosťou** (novela vopred). Minulé nie — je to doklad o tom, čo
+ * platilo vtedy.
+ *
+ * Pripravované je to isté pravidlo ako na karte dokumentu: naposledy
+ * zverejnené, ktoré dnes neplatí a nemá koniec účinnosti.
+ */
+export function fixableVersions<V extends FixableVersion>(versions: V[], currentVersionId: string | undefined): V[] {
+  const current = versions.find(v => v.versionId === currentVersionId)
+  const latest = versions.find(v => v.isActive)
+  const upcoming = latest && latest !== current && !latest.effectiveTo ? latest : undefined
+  return [current, upcoming].filter((v): v is V => Boolean(v))
+}
+
+/**
+ * Ktoré znenie koncept opravuje: to, ktorého text je mu najbližší (najmenej
+ * zmenených riadkov). Po „Opraviť text" pri znení je to vždy ono — koncept
+ * vznikol z jeho textu. Nič sa neukladá (D27); cieľ sa dá na obrazovke zmeniť.
+ */
+export function closestVersion<V extends FixableVersion>(draft: string, candidates: V[]): V | undefined {
+  let best: V | undefined
+  let bestScore = Infinity
+  for (const v of candidates) {
+    const d = textDiff(String(v.markdown ?? ""), draft)
+    const score = d.added + d.removed
+    if (score < bestScore) { best = v; bestScore = score }
+  }
+  return best
+}
+
+/**
+ * Je koncept voľný na opravu textu? Áno, keď je prázdny alebo sa zhoduje
+ * s textom niektorého zverejneného znenia a nemá vlastné PDF — teda keď sa
+ * nepripravuje nové znenie. Inak by „Opraviť text" prepísal rozpracovaný
+ * koncept (a s ním aj to, na čom beží kolo schvaľovania).
+ */
+export function draftIsFree(
+  draft: string | undefined,
+  versions: FixableVersion[],
+  draftPdfId?: string | null,
+  versionPdfIds: string[] = [],
+): boolean {
+  if (draftPdfId && !versionPdfIds.includes(draftPdfId)) return false
+  const text = String(draft ?? "").trim()
+  if (!text) return true
+  const n = normalizeMarkdown(text)
+  return versions.some(v => normalizeMarkdown(String(v.markdown ?? "")) === n)
 }

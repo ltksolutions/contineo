@@ -19,7 +19,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
-  publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction, reindexVersionAction,
+  publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction, reindexVersionAction, loadTextForFixAction,
   fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction,
 } from "../actions"
@@ -53,7 +53,7 @@ import { initials } from "@/lib/initials"
 import { autoVersionLabel } from "@/lib/versionLabel"
 import { assignHref } from "@/lib/libraryBulk"
 import type { VersionFile } from "@/lib/documents"
-import { textDiff, type DiffKind } from "@/lib/textFix"
+import { textDiff, fixableVersions, closestVersion, draftIsFree, type DiffKind } from "@/lib/textFix"
 import { listPeople } from "@/lib/people"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
 import PeopleSearch from "@/components/PeopleSearch"
@@ -64,8 +64,8 @@ import { legalBasisOptions } from "@/lib/legalBases"
 export const dynamic = "force-dynamic"
 
 /** Ktorý panel pri znení je otvorený (`?open=…`). Bez JavaScriptu — server ho vykreslí otvorený. */
-type Panel = "responsible" | "basis" | "revoke" | "reindex" | "history"
-const PANELS: Panel[] = ["responsible", "basis", "revoke", "reindex", "history"]
+type Panel = "responsible" | "basis" | "revoke" | "fixText" | "reindex" | "history"
+const PANELS: Panel[] = ["responsible", "basis", "revoke", "fixText", "reindex", "history"]
 
 export default async function DocumentDetailPage({
   params,
@@ -81,7 +81,7 @@ export default async function DocumentDetailPage({
   }
 
   const { id } = await params
-  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string }>(await searchParams)
   const { msg: message, error } = query
   const openPanel = PANELS.includes(query.open as Panel) ? (query.open as Panel) : null
   const editDocument = query.edit === "document"
@@ -132,6 +132,8 @@ export default async function DocumentDetailPage({
   const olderVersions = d.versions.filter(v => v !== current && v !== upcoming)
   /** Súbory v hlavičke: dnes platné, a kým žiadne neplatí, pripravované. */
   const shown = current ?? latest
+  /** Znenia, ktorých text sa smie opraviť — platné a pripravované (D78, D150). */
+  const fixable = fixableVersions(d.versions, d.effectiveVersionId)
 
   const tc = dictionary(language).library.carryOver
   /*
@@ -248,7 +250,9 @@ export default async function DocumentDetailPage({
    * nové PDF je nové znenie, aj keď sa z neho vytiahol rovnaký text.
    */
   const hasChangesToPublish = Boolean(draft) && (
-    draft !== published ||
+    // Koncept zhodný s textom niektorého zverejneného znenia nie je príprava
+    // nového — to je stav hneď po „Opraviť text" pri znení (fáza 3).
+    (draft !== published && !draftIsFree(draft, [...d.versions, { versionId: "", markdown: published }])) ||
     Boolean(d.draftPdf && latest && latest.pdf?.id !== d.draftPdf.id &&
       !d.versions.some(v => v.versionId === draftVersionId))
   )
@@ -329,8 +333,18 @@ export default async function DocumentDetailPage({
    * nie — a ponúkať v takom stave tlačidlo, ktoré zápis odmietne, je horšie než
    * neponúknuť nič.
    */
-  const effectiveText = ((latest?.markdown ?? d.markdown) ?? "").trim()
-  const draftDiff = latest && hasChangesToPublish ? textDiff(effectiveText, draft) : null
+  /*
+   * **Ktoré znenie sa opravuje** (fáza 3, D150). Opraviť sa dá platné
+   * a zverejnená novela, ktorá ešte neplatí; cieľ je to, ktorého text je
+   * konceptu najbližší — po „Opraviť text" pri znení vždy ono. `?fixTarget=`
+   * ho prepne na druhé. Dovtedy to bolo vždy naposledy zverejnené — pri
+   * novele vopred teda budúce, aj keď sa opravovalo platné.
+   */
+  const fixTarget = fixable.find(v => v.versionId === query.fixTarget)
+    ?? (draft ? closestVersion(draft, fixable) : undefined)
+  const fixOther = fixable.find(v => v !== fixTarget)
+  const effectiveText = ((fixTarget?.markdown ?? (fixTarget === latest ? d.markdown : "")) ?? "").trim()
+  const draftDiff = fixTarget && hasChangesToPublish ? textDiff(effectiveText, draft) : null
 
   /*
    * Farby rozdielu. Zelená a červená sú len zosilnenie — znamienko `+`/`−` na
@@ -393,6 +407,7 @@ export default async function DocumentDetailPage({
     responsible: tflow.changeResponsible,
     basis: tflow.changeBasis,
     revoke: t.revokeVersionHeading,
+    fixText: t.textFixPanel,
     reindex: t.reindexVersionHeading,
     history: tflow.history,
   }
@@ -405,6 +420,8 @@ export default async function DocumentDetailPage({
     ["revoke", canRevoke && (ackByVersion.get(v.versionId) ?? 0) > 0],
     // Každé znenie, aj staršie: asistent hľadá aj v nich (ADR-024), takže
     // po oprave chunkera majú dostať nové členenie. Text sa nemení.
+    // Len platné a pripravované znenie (D78, D150) — staršie je doklad.
+    ["fixText", fixable.includes(v)],
     ["reindex", true],
     ["history", true],
   ] as [Panel, boolean][]).filter(([, show]) => show).map(([panel]) => panel)
@@ -509,6 +526,15 @@ export default async function DocumentDetailPage({
             <div>
               <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
             </div>
+          </form>
+        )}
+
+        {panel === "fixText" && fixable.includes(v) && (
+          <form action={loadTextForFixAction} style={{ display: "grid", gap: 10 }}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <input type="hidden" name="versionId" value={v.versionId} />
+            <p className="detail-block-small">{t.textFixPanelNote}</p>
+            <div><button className="button button--quiet" type="submit">{t.textFixLoad}</button></div>
           </form>
         )}
 
@@ -1413,12 +1439,18 @@ export default async function DocumentDetailPage({
               : t.draftEmpty}
         </p>
       </section>
-            {latest && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
-              <details className="card detail-block">
+            {fixTarget && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
+              <details className="card detail-block" id="fix" open={Boolean(query.fixTarget)}>
                 <summary>{t.textFixHeading}</summary>
 
                 <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
                   <p className="detail-block-note">{t.textFixIntro}</p>
+                  <p className="detail-block-small">
+                    <strong>{t.textFixTarget(fixTarget.label)}</strong>
+                    {fixOther && (
+                      <> · <Link href={`${base}?fixTarget=${encodeURIComponent(fixOther.versionId)}#fix`}>{t.textFixOther(fixOther.label)}</Link></>
+                    )}
+                  </p>
 
                   <div>
                     <h4 className="field-label" style={{ margin: "0 0 6px" }}>
@@ -1464,6 +1496,7 @@ export default async function DocumentDetailPage({
                       rozdiel si človek pozrel.
                     */}
                     <input type="hidden" name="expectedFingerprint" value={draftTextFingerprint ?? ""} />
+                    <input type="hidden" name="versionId" value={fixTarget.versionId} />
 
                     <label className="field">
                       <span className="field-label">{t.textFixReason}</span>

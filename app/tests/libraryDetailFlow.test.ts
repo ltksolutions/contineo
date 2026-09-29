@@ -65,7 +65,7 @@ vi.mock("@/lib/libraryRead", async importOriginal => ({
 }))
 vi.mock("@/app/documents/[documentId]/actions", () => stubs(["acknowledgeAction","setLegalBasisAction"]))
 vi.mock("@/lib/session", () => ({}))
-vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","reindexVersionAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction"]))
+vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","reindexVersionAction","loadTextForFixAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction"]))
 
 const pdf = (id: string) => ({ id, name: `${id}.pdf`, bytes: 1_300_000, sha256: id, type: "pdf", uploadedAt: new Date(), uploadedBy: "jan@sfz.sk" })
 const effective = {
@@ -395,5 +395,50 @@ describe("detail — preindexovanie znenia (fáza 2)", () => {
     expect(html).toContain('name="versionId" value="v-1"')
     expect(html).toContain("Preindexovať toto znenie")
     expect(html).toContain("Preindexovať všetky znenia")
+  })
+})
+
+
+describe("detail — oprava textu platného alebo pripravovaného znenia (fáza 3)", () => {
+  const old = { ...effective, versionId: "v-1", label: "znenie účinné od 1. 1. 2024", isActive: false,
+    effectiveFrom: new Date("2024-01-01T00:00:00Z"), effectiveTo: new Date("2026-07-01T00:00:00Z"), pdf: pdf("v1"),
+    markdown: "# Čl. 1\nlehota 15 dní\n# Čl. 4\npoplatok 50 eur" }
+  const mid = { ...effective, versionId: "v-2", label: "znenie účinné od 1. 7. 2026", isActive: false,
+    effectiveFrom: new Date("2026-07-01T00:00:00Z"), effectiveTo: new Date("2099-01-01T00:00:00Z"), pdf: pdf("v2"),
+    markdown: "# Čl. 1\nlehota 30 dní\n# Čl. 4\npoplatok 50 eur" }
+  const next = { ...effective, versionId: "v-3", label: "znenie účinné od 1. 1. 2099", isActive: true,
+    effectiveFrom: new Date("2099-01-01T00:00:00Z"), effectiveTo: null, pdf: pdf("v3"),
+    markdown: "# Čl. 1\nlehota 30 dní\n# Čl. 4\npoplatok 80 eur" }
+  const base = (draftMarkdown: string) => detail({
+    versions: [old, mid, next], effectiveVersionId: "v-2",
+    draftMarkdown, draftPdf: null, draftMeta: null, markdown: next.markdown,
+  })
+
+  it("„Opraviť text“ pri platnom a pripravovanom znení, pri staršom nie", async () => {
+    state.detail = base("")
+    const menu = await render()
+    expect(menu).toContain("open=fixText#current")
+    expect(menu).toContain("version=v-3&amp;open=fixText")
+    expect(menu).not.toContain("version=v-1&amp;open=fixText")
+    const panel = await render({ version: "v-3", open: "fixText" })
+    expect(panel).toContain("Načítať text do editora")
+    expect(await render({ version: "v-1", open: "fixText" })).not.toContain("Načítať text do editora")
+  })
+
+  it("koncept zhodný s platným znením nie je príprava nového znenia", async () => {
+    state.detail = base(mid.markdown)
+    const html = await render()
+    expect(html).not.toContain("Opravuje sa:")
+    expect(html).not.toContain('aria-disabled="true"')
+  })
+
+  it("oprava platného znenia: cieľ je platné znenie a dá sa prepnúť na novelu", async () => {
+    state.detail = base("# Čl. 1\nlehota 30 dní,\n# Čl. 4\npoplatok 50 eur")
+    const html = await render()
+    expect(html).toContain("Opravuje sa: znenie účinné od 1. 7. 2026")
+    expect(html).toContain("fixTarget=v-3")
+    expect(html).toMatch(/name="versionId" value="v-2"/)
+    const other = await render({ fixTarget: "v-3" })
+    expect(other).toContain("Opravuje sa: znenie účinné od 1. 1. 2099")
   })
 })
