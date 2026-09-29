@@ -811,6 +811,32 @@ interface Dictionary {
       checkImpact: string
       impactPeople: (n: number) => string
       impactNote: string
+      /** Hľadanie v normách (HR-pridelit-normy-hladanie, bod 2). */
+      docSearch: string
+      docNone: (query: string) => string
+      /** Filter „len bez právneho základu" (Q2) a návrat späť. */
+      onlyMissingBasis: (n: number) => string
+      showAll: string
+      picked: (n: number) => string
+      /**
+       * Súhrn výberu nad tlačidlami (bod 7) — **nie je to dopad**, len počet
+       * vybraných položiek. Funkcie vracajú slovo v správnom tvare, číslo
+       * pripíše komponent.
+       */
+      summary: {
+        documents: (n: number) => string
+        departments: (n: number) => string
+        groups: (n: number) => string
+        tracks: (n: number) => string
+        people: (n: number) => string
+        everyone: string
+        everyoneRest: string
+        noAudience: string
+      }
+      /** Zastaraný dopad (bod 8, Q3): výber sa po kontrole zmenil. */
+      impactStale: string
+      impactStaleNote: (n: number) => string
+      submitN: (n: number) => string
     }
     actions: {
       noAudience: string
@@ -3874,6 +3900,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : n === 1 ? "Povinnosť vznikne 1 človeku"
         : `Povinnosť vznikne ${n} ľuďom`,
       impactNote: "Kto do oddelenia pribudne neskôr, dostane ju odo dňa príchodu (D50).",
+      docSearch: "Hľadať normu",
+      docNone: q => `Nič nevyhovuje „${q}“. Prideliť sa dá len platné znenie.`,
+      onlyMissingBasis: n => `len bez právneho základu (${n})`,
+      showAll: "zobraziť všetky",
+      picked: n => `Vybrané (${n})`,
+      summary: {
+        documents: n => (n === 1 ? "norma" : n >= 2 && n <= 4 ? "normy" : "noriem"),
+        departments: n => (n === 1 ? "oddelenie" : n >= 2 && n <= 4 ? "oddelenia" : "oddelení"),
+        groups: n => (n === 1 ? "skupina" : n >= 2 && n <= 4 ? "skupiny" : "skupín"),
+        tracks: n => (n === 1 ? "trasa" : n >= 2 && n <= 4 ? "trasy" : "trás"),
+        people: n => (n === 1 ? "osoba" : n >= 2 && n <= 4 ? "osoby" : "osôb"),
+        everyone: "všetkým",
+        everyoneRest: "v organizácii",
+        noAudience: "publikum zatiaľ nevybrané",
+      },
+      impactStale: "Výber sa zmenil — skontroluj dopad znova",
+      impactStaleNote: n => (n === 1
+        ? "Pre predošlý výber by povinnosť vznikla 1 človeku."
+        : `Pre predošlý výber by povinnosť vznikla ${n} ľuďom.`),
+      submitN: n => (n === 1 ? "Prideliť 1 človeku" : `Prideliť ${n} ľuďom`),
     },
     actions: {
       noAudience: "Nevybral si, komu sa prideľuje.",
@@ -7185,6 +7231,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : n === 1 ? "Povinnost vznikne 1 člověku"
         : `Povinnost vznikne ${n} lidem`,
       impactNote: "Kdo do oddělení přibude později, dostane ji ode dne příchodu (D50).",
+      docSearch: "Hledat předpis",
+      docNone: q => `Nic neodpovídá „${q}“. Přidělit lze jen platné znění.`,
+      onlyMissingBasis: n => `jen bez právního základu (${n})`,
+      showAll: "zobrazit všechny",
+      picked: n => `Vybrané (${n})`,
+      summary: {
+        documents: n => (n === 1 ? "předpis" : n >= 2 && n <= 4 ? "předpisy" : "předpisů"),
+        departments: () => "oddělení",
+        groups: n => (n === 1 ? "skupina" : n >= 2 && n <= 4 ? "skupiny" : "skupin"),
+        tracks: n => (n === 1 ? "trasa" : n >= 2 && n <= 4 ? "trasy" : "tras"),
+        people: n => (n === 1 ? "osoba" : n >= 2 && n <= 4 ? "osoby" : "osob"),
+        everyone: "všem",
+        everyoneRest: "v organizaci",
+        noAudience: "publikum zatím nevybráno",
+      },
+      impactStale: "Výběr se změnil — zkontroluj dopad znovu",
+      impactStaleNote: n => (n === 1
+        ? "Pro předchozí výběr by povinnost vznikla 1 člověku."
+        : `Pro předchozí výběr by povinnost vznikla ${n} lidem.`),
+      submitN: n => (n === 1 ? "Přidělit 1 člověku" : `Přidělit ${n} lidem`),
     },
     actions: {
       noAudience: "Nevybral jsi, komu se přiděluje.",
@@ -10487,6 +10553,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : n === 1 ? "1 person will get the obligation"
         : `${n} people will get the obligation`,
       impactNote: "Whoever joins the department later gets it from the day they arrive (D50).",
+      docSearch: "Search documents",
+      docNone: q => `Nothing matches “${q}”. Only a current version can be assigned.`,
+      onlyMissingBasis: n => `only without legal basis (${n})`,
+      showAll: "show all",
+      picked: n => `Selected (${n})`,
+      summary: {
+        documents: n => (n === 1 ? "document" : "documents"),
+        departments: n => (n === 1 ? "department" : "departments"),
+        groups: n => (n === 1 ? "group" : "groups"),
+        tracks: n => (n === 1 ? "track" : "tracks"),
+        people: n => (n === 1 ? "person" : "people"),
+        everyone: "everyone",
+        everyoneRest: "in the organisation",
+        noAudience: "no recipients selected yet",
+      },
+      impactStale: "The selection changed — check the impact again",
+      impactStaleNote: n => (n === 1
+        ? "For the previous selection, 1 person would have got the obligation."
+        : `For the previous selection, ${n} people would have got the obligation.`),
+      submitN: n => (n === 1 ? "Assign to 1 person" : `Assign to ${n} people`),
     },
     actions: {
       noAudience: "You did not choose who to assign to.",

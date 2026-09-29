@@ -2,13 +2,15 @@
 
 /**
  * PeopleSearch — zoznam osôb s políčkami a hľadaním nad ním
- * (KOMPONENT-hladanie-osob, 29. 9. 2026).
+ * (KOMPONENT-hladanie-osob, 29. 9. 2026). Od HR-pridelit-normy-hladanie
+ * je to všeobecný `ListSearch` — ten istý obal nesie aj zoznam noriem
+ * (`DocumentSearch`); `PeopleSearch` je jeho tvar pre osoby.
  *
  * Obal okolo posuvného rámika `.approval-people`, nie `MultiSelect`:
  * komentár v `ResponsiblePicker.tsx` platí ďalej — políčka a prepínače sa na
  * telefóne ovládajú lepšie než rozbaľovací zoznam a fungujú bez JavaScriptu.
- * Pri desiatkach ľudí sa však meno v rámiku 260 px hľadá rolovaním, preto nad
- * ním pribudne riadok vybraných, pole hľadania a počet.
+ * Pri desiatkach položiek sa však hľadá rolovaním, preto nad rámikom
+ * pribudne riadok vybraných, pole hľadania a počet.
  *
  * Čo sa zámerne **nemení**:
  *  • **Bez JS nič navyše.** Pole a čipy sa vykreslia až po načítaní skriptu
@@ -18,29 +20,36 @@
  *    z DOM vyhodil, hľadanie by potichu zmenilo, komu príde žiadosť.
  *  • **Poradie zoznamu.** Vybraní sa hore nepresúvajú — riadok by uskočil
  *    spod kurzora práve vo chvíli, keď naň človek klikol.
+ *
+ * Texty si komponent berie z `i18n` podľa druhu (`kind`): zo serverového
+ * komponentu sa funkcie (`count(n)`, `none(q)`) poslať nedajú.
  */
 
-import { useRef, useState, useSyncExternalStore, type KeyboardEvent, type Ref } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type Ref } from "react"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import {
-  canSearch, highlight, queryTerms, searchKeyAction, visibleIds,
-  type PersonChoice,
+  canSearch, highlight, personItem, queryTerms, searchKeyAction, visibleItemIds,
+  type ListItem, type PersonChoice,
 } from "@/lib/peopleSearch"
 
-export type { PersonChoice } from "@/lib/peopleSearch"
+export type { PersonChoice, ListItem } from "@/lib/peopleSearch"
 
 const noop = () => () => {}
 
-interface Props {
-  people: PersonChoice[]
-  /** Meno poľa vo formulári — `approver`, `responsiblePersonId`. */
+type Missing = "approvers" | "responsible" | "people"
+
+interface ListProps {
+  /** Druh zoznamu — určuje texty a tvar riadku. */
+  kind: "people" | "documents"
+  items: ListItem[]
+  /** Meno poľa vo formulári — `approver`, `responsiblePersonId`, `document`. */
   name: string
   language: UiLanguage
   /** Zaškrtávacie políčka (1..n) namiesto prepínačov. */
   multiple?: boolean
   defaultSelected?: string[]
   /**
-   * Prepínač je povinný. Vtedy čip vybranej osoby nemá × — voľba sa dá
+   * Prepínač je povinný. Vtedy čip vybranej položky nemá × — voľba sa dá
    * zmeniť, zrušiť nie (zmena zodpovednej osoby po zverejnení).
    */
   required?: boolean
@@ -50,15 +59,32 @@ interface Props {
    * Prečo tu niekto chýba, keď nič nevyhovuje. Pri schvaľovateľoch aj ten,
    * kto predkladá; inde (zodpovedná osoba, „Komu" pri prideľovaní) len vyradení.
    */
-  missing: "approvers" | "responsible" | "people"
+  missing?: Missing
+  /** Trieda rámika navyše — výška zoznamu noriem je iná ako pri osobách. */
+  listClassName?: string
 }
 
-export default function PeopleSearch(props: Props) {
-  const { people, multiple = false, defaultSelected = [] } = props
+interface ViewState {
+  interactive: boolean
+  query: string
+  selected: string[]
+  onlyFlagged?: boolean
+  listRef?: Ref<HTMLDivElement>
+  fieldRef?: Ref<HTMLInputElement>
+  onQuery?: (q: string) => void
+  onClear?: () => void
+  onPick?: (id: string, on: boolean) => void
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void
+  onFlagged?: (on: boolean) => void
+}
+
+export function ListSearch(props: ListProps) {
+  const { items, multiple = false, defaultSelected = [] } = props
   // Na serveri a pri hydratácii `false`, potom `true` — bez skriptu by pole
   // bolo mŕtve a klamalo by, že filtruje.
   const ready = useSyncExternalStore(noop, () => true, () => false)
   const [query, setQuery] = useState("")
+  const [onlyFlagged, setOnlyFlagged] = useState(false)
   const [selected, setSelected] = useState<string[]>(() =>
     multiple ? defaultSelected : defaultSelected.slice(0, 1))
   const list = useRef<HTMLDivElement>(null)
@@ -69,12 +95,21 @@ export default function PeopleSearch(props: Props) {
     setSelected(s => (on ? (s.includes(id) ? s : [...s, id]) : s.filter(x => x !== id)))
   }
 
+  // Výber zmenený čipom × alebo Enterom prehliadač neohlási (políčko sa mení
+  // len cez stav). Formulár okolo to však vedieť musí — súhrn na `/hr/assign`
+  // (`AssignFinish`) počúva `change` na formulári. Pri prvom vykreslení nie.
+  const announced = useRef(false)
+  useEffect(() => {
+    if (!announced.current) { announced.current = true; return }
+    list.current?.dispatchEvent(new Event("change", { bubbles: true }))
+  }, [selected])
+
   // Tlačidlo, ktoré hľadanie ruší, po kliknutí zmizne — bez návratu do poľa
   // by fokus spadol na začiatok stránky a klávesnica by sa stratila.
   const clear = () => { setQuery(""); field.current?.focus() }
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    const action = searchKeyAction(e.key, query, visibleIds(people, query))
+    const action = searchKeyAction(e.key, query, visibleItemIds(items, query, onlyFlagged))
     if (action.kind === "none") return
     e.preventDefault()
     if (action.kind === "enter") {
@@ -82,22 +117,24 @@ export default function PeopleSearch(props: Props) {
     } else if (action.kind === "clear") {
       setQuery("")
     } else {
-      list.current?.querySelector<HTMLInputElement>(".approval-person:not([hidden]) input")?.focus()
+      list.current?.querySelector<HTMLInputElement>("label:not([hidden]) input")?.focus()
     }
   }
 
   return (
-    <PeopleSearchView
+    <ListSearchView
       {...props}
       interactive={ready}
       query={query}
       selected={selected}
+      onlyFlagged={onlyFlagged}
       listRef={list}
       fieldRef={field}
       onQuery={setQuery}
       onClear={clear}
       onPick={pick}
       onKeyDown={onKeyDown}
+      onFlagged={setOnlyFlagged}
     />
   )
 }
@@ -106,41 +143,48 @@ export default function PeopleSearch(props: Props) {
  * Vykreslenie bez stavu — oddelené, aby sa dalo overiť na serveri
  * (`renderToStaticMarkup`) bez prehliadača.
  */
-export function PeopleSearchView({
-  people, name, language, multiple = false, required = false, listLabel, missing,
-  interactive, query, selected, listRef, fieldRef, onQuery, onClear, onPick, onKeyDown,
-}: Props & {
-  interactive: boolean
-  query: string
-  selected: string[]
-  listRef?: Ref<HTMLDivElement>
-  fieldRef?: Ref<HTMLInputElement>
-  onQuery?: (q: string) => void
-  onClear?: () => void
-  onPick?: (id: string, on: boolean) => void
-  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void
-}) {
-  const t = dictionary(language).people.search
-  const searchable = interactive && canSearch(people.length)
+export function ListSearchView({
+  kind, items, name, language, multiple = false, required = false, listLabel, missing = "people", listClassName,
+  interactive, query, selected, onlyFlagged = false,
+  listRef, fieldRef, onQuery, onClear, onPick, onKeyDown, onFlagged,
+}: ListProps & ViewState) {
+  const dict = dictionary(language)
+  const t = dict.people.search
+  const ta = dict.hr.assign
+  const docs = kind === "documents"
+  const searchable = interactive && canSearch(items.length)
   const q = searchable ? query : ""
+  const flagOn = searchable && onlyFlagged
+  const flaggedCount = docs ? items.filter(i => i.flagged).length : 0
   const terms = queryTerms(q)
-  const shown = new Set(visibleIds(people, q))
+  const shown = new Set(visibleItemIds(items, q, flagOn))
   // Čipy v poradí zoznamu, nie v poradí klikania — rovnako ako riadky.
-  const picked = people.filter(p => selected.includes(p.id))
-  const onlyOne = shown.size === 1 ? people.find(p => shown.has(p.id)) : undefined
+  const picked = items.filter(i => selected.includes(i.id))
+  const onlyOne = shown.size === 1 ? items.find(i => shown.has(i.id)) : undefined
   const mark = (text: string) =>
     highlight(text, terms).map((s, i) => (s.hit ? <mark key={i}>{s.text}</mark> : s.text))
+
+  const input = (i: ListItem, on: boolean) => multiple
+    ? <input type="checkbox" name={name} value={i.id} checked={on}
+             onChange={e => onPick?.(i.id, e.target.checked)} />
+    : <input type="radio" name={name} value={i.id} required={required} checked={on}
+             onChange={e => onPick?.(i.id, e.target.checked)}
+             // Povinný prepínač v skrytých riadkoch: prehliadač nemá kde
+             // ukázať „vyber osobu" a formulár by mlčky neodišiel.
+             onInvalid={() => onQuery?.("")} />
 
   return (
     <>
       {searchable && picked.length > 0 && (
         <div className="people-picked">
-          <span className="people-picked-label">{multiple ? t.picked(picked.length) : t.pickedOne}</span>
-          {picked.map(p => (
-            <span key={p.id} className="people-chip">
-              {p.fullName}
+          <span className="people-picked-label">
+            {docs ? ta.picked(picked.length) : multiple ? t.picked(picked.length) : t.pickedOne}
+          </span>
+          {picked.map(i => (
+            <span key={i.id} className="people-chip">
+              <span className="people-chip-name">{i.name}</span>
               {(multiple || !required) && (
-                <button type="button" aria-label={t.remove(p.fullName)} onClick={() => onPick?.(p.id, false)}>×</button>
+                <button type="button" aria-label={t.remove(i.name)} onClick={() => onPick?.(i.id, false)}>×</button>
               )}
             </span>
           ))}
@@ -160,7 +204,7 @@ export function PeopleSearchView({
               className="field-input"
               type="search"
               value={query}
-              placeholder={t.placeholder}
+              placeholder={docs ? ta.docSearch : t.placeholder}
               aria-label={t.label(listLabel)}
               autoComplete="off"
               enterKeyHint="search"
@@ -172,49 +216,82 @@ export function PeopleSearchView({
                       onClick={onClear}>×</button>
             )}
           </div>
+          {/*
+            Počet vľavo, pri normách vpravo filter „len bez právneho základu"
+            (Q2 — upozornenie D91, nie brána; len klientsky, riadky `hidden`).
+          */}
           <div className="people-count" aria-live="polite">
-            {q ? t.count(shown.size, people.length) : ""}
+            <span>{q || flagOn ? t.count(shown.size, items.length) : ""}</span>
+            {docs && flaggedCount > 0 && (
+              <button type="button" className="people-count-filter" onClick={() => onFlagged?.(!flagOn)}>
+                {flagOn ? ta.showAll : ta.onlyMissingBasis(flaggedCount)}
+              </button>
+            )}
           </div>
         </>
       )}
 
-      <div className="approval-people" ref={listRef}>
-        {people.map(p => {
-          const on = selected.includes(p.id)
-          return (
-            <label key={p.id} className="approval-person" hidden={!shown.has(p.id)}>
-              {multiple
-                ? <input type="checkbox" name={name} value={p.id} checked={on}
-                         onChange={e => onPick?.(p.id, e.target.checked)} />
-                : <input type="radio" name={name} value={p.id} required={required} checked={on}
-                         onChange={e => onPick?.(p.id, e.target.checked)}
-                         // Povinný prepínač v skrytých riadkoch: prehliadač nemá kde
-                         // ukázať „vyber osobu" a formulár by mlčky neodišiel.
-                         onInvalid={() => onQuery?.("")} />}
+      <div className={`approval-people${listClassName ? ` ${listClassName}` : ""}`} ref={listRef}>
+        {items.map(i => {
+          const on = selected.includes(i.id)
+          const hidden = !shown.has(i.id)
+          // Norma: riadok `.hr-doc` ako doteraz — názov, štítok vpravo, znenie pod ním.
+          return docs ? (
+            <label key={i.id} className="hr-doc" hidden={hidden}>
+              {input(i, on)}
+              <span className="hr-doc-title">{mark(i.name)}</span>
+              {i.flagged && <span className="tag tag--draft hr-doc-tag">{dict.responsibility.missingBasisTag}</span>}
+              {i.meta?.length ? <span className="quiet hr-doc-meta">{i.meta.join(" · ")}</span> : null}
+            </label>
+          ) : (
+            <label key={i.id} className="approval-person" hidden={hidden}>
+              {input(i, on)}
               <span>
-                <span className="approval-person-name">{mark(p.fullName)}</span>
+                <span className="approval-person-name">{mark(i.name)}</span>
                 <span className="quiet approval-person-meta">
-                  {p.department ? <>{mark(p.department)} · </> : ""}{mark(p.email)}
+                  {(i.meta ?? []).map((m, k) => <span key={k}>{k > 0 && " · "}{mark(m)}</span>)}
                 </span>
               </span>
             </label>
           )
         })}
-        {q && shown.size === 0 && (
+        {(q || flagOn) && shown.size === 0 && (
           <div className="people-empty">
-            {t.none(q)}<br />
-            {missing === "approvers" ? t.noneApprovers : t.noneResponsible}<br />
-            <button type="button" className="people-empty-clear" onClick={onClear}>{t.clear}</button>
+            {docs ? ta.docNone(q) : <>{t.none(q)}<br />{missing === "approvers" ? t.noneApprovers : t.noneResponsible}</>}
+            <br />
+            <button type="button" className="people-empty-clear" onClick={() => { onFlagged?.(false); onClear?.() }}>
+              {t.clear}
+            </button>
           </div>
         )}
       </div>
 
       {searchable && q && (
         <span className="people-keys" aria-hidden="true">
-          <kbd>↓</kbd> {t.keysDown} · <kbd>Enter</kbd> {onlyOne ? t.keysEnterOne(onlyOne.fullName) : t.keysEnter}
+          <kbd>↓</kbd> {t.keysDown} · <kbd>Enter</kbd> {onlyOne ? t.keysEnterOne(onlyOne.name) : t.keysEnter}
           {" · "}<kbd>Esc</kbd> {t.keysEsc}
         </span>
       )}
     </>
   )
+}
+
+interface PeopleProps extends Omit<ListProps, "kind" | "items" | "missing"> {
+  people: PersonChoice[]
+  missing: Missing
+}
+
+/** Zoznam osôb (schvaľovatelia, zodpovedná osoba, „Komu"). */
+export default function PeopleSearch({ people, ...rest }: PeopleProps) {
+  return <ListSearch kind="people" items={people.map(personItem)} {...rest} />
+}
+
+/** Vykreslenie zoznamu osôb bez stavu — na testy. */
+export function PeopleSearchView({ people, ...rest }: PeopleProps & ViewState) {
+  return <ListSearchView kind="people" items={people.map(personItem)} {...rest} />
+}
+
+/** Zoznam noriem na `/hr/assign` (HR-pridelit-normy-hladanie, bod 2). */
+export function DocumentSearch(props: Omit<ListProps, "kind" | "multiple" | "required" | "missing">) {
+  return <ListSearch kind="documents" multiple {...props} />
 }

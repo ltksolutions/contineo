@@ -21,7 +21,10 @@
 
 import { notFound, redirect } from "next/navigation"
 import MultiSelect from "@/components/MultiSelect"
-import PeopleSearch from "@/components/PeopleSearch"
+import PeopleSearch, { DocumentSearch } from "@/components/PeopleSearch"
+import { AssignFinish, AudienceAll } from "@/components/AssignForm"
+import { sortPeopleBySurname } from "@/lib/assignOrder"
+import { audienceSignature } from "@/lib/assignSummary"
 import { listPeople } from "@/lib/people"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
@@ -91,8 +94,7 @@ export default async function AssignPage({
    * takže server ani pridelenie nič nové nepoznajú. Vyradení sa neponúkajú:
    * povinnosť by čakala na niekoho, kto v zväze nie je.
    */
-  const personChoices = people
-    .filter(p => p.status !== "inactive")
+  const personChoices = sortPeopleBySurname(people.filter(p => p.status !== "inactive"))
     .map(p => ({ id: `person:${p.email.toLowerCase()}`, fullName: p.fullName, email: p.email, department: p.department }))
 
   /*
@@ -123,9 +125,37 @@ export default async function AssignPage({
     }
   }
 
+  /*
+   * Normy pre `DocumentSearch` — poradie už prišlo zo servera (najnovšie
+   * účinné znenie hore, `assignableDocuments()`). Riadok nesie znenie a príznak
+   * chýbajúceho právneho základu (D91 — upozornenie, nie brána).
+   */
+  const documentItems = documents.map(d => ({
+    id: d.documentId,
+    name: d.title,
+    meta: [t.versionLine(d.versionLabel ?? "", formatDate(d.effectiveFrom, language))],
+    flagged: d.legalBasisMissing,
+  }))
+  /*
+   * Podpis výberu publika, pre ktorý sa dopad počítal (bod 8). Prehliadač ho
+   * porovná so živým výberom; keď sa líšia, dopad je zastaraný. Počíta sa z tej
+   * istej adresy ako `impact`, nie z formulára — to je výber, ktorý sa kontroloval.
+   */
+  const previewSignature = impact
+    ? audienceSignature({ all: q.all === "1", audience: [...selectedAudiences], addresses: q.addresses ?? "" })
+    : null
+  const impactView = impact
+    ? {
+        people: impact.people,
+        breakdown: impact.perAudience.map(p => `${audienceName(p.audience)} (${p.count})`).join(", "),
+      }
+    : null
+
   return (
     <AppShell language={ctx.person.language}>
-    <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
+    {/* 1180 namiesto 680 (Q1): dva stĺpce od 1100 px. Pod tým jeden stĺpec
+        v dnešnom poradí — na telefóne sa nič nemení. */}
+    <div className="assign-page" style={tenantStyle(branding)}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
@@ -150,9 +180,13 @@ export default async function AssignPage({
           <div className="empty-text">{t.emptyText}</div>
         </div>
       ) : (
-        <form action={assignAction} style={{ display: "grid", gap: 22 }}>
-          <fieldset className="card hr-group">
-            <legend className="field-label">
+        <form id="assign-form" action={assignAction} className="assign">
+          {/* Normy | Komu vedľa seba (HR-pridelit-normy-hladanie, bod 1).
+              Čísla krokov sú len orientácia, nie sprievodca (bod 6). */}
+          <div className="assign-cols">
+          <fieldset className="card hr-group assign-panel">
+            <legend className="assign-legend">
+              <span className="assign-step" aria-hidden="true">1</span>
               {t.whichDocuments} <span className="quiet hr-count">{t.documentsCount(documents.length)}</span>
             </legend>
             {/* Upozornenie, nie brána (D91): pridelenie bez právneho základu
@@ -160,40 +194,27 @@ export default async function AssignPage({
             {documents.some(d => d.legalBasisMissing) && (
               <p className="hr-warn"><span aria-hidden="true">⚠</span> {tr.missingBasisNote}</p>
             )}
-            {/* Riadok: políčko · názov · štítok vpravo, pod tým znenie (bod 2). */}
-            <ul className="hr-choices">
-              {documents.map(d => (
-                <li key={d.documentId}>
-                  <label className="hr-doc">
-                    <input
-                      type="checkbox"
-                      name="document"
-                      value={d.documentId}
-                      defaultChecked={selectedDocuments.has(d.documentId)}
-                    />
-                    <span className="hr-doc-title">{d.title}</span>
-                    {d.legalBasisMissing && <span className="tag tag--draft hr-doc-tag">{tr.missingBasisTag}</span>}
-                    <span className="quiet hr-doc-meta">
-                      {t.versionLine(d.versionLabel ?? "", formatDate(d.effectiveFrom, language))}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
+            {/* Ten istý obal ako osoby (bod 2): od 8 noriem hľadanie, čipy,
+                Enter nikdy neodošle formulár. Hodnoty `document` sa nemenia. */}
+            <DocumentSearch
+              items={documentItems}
+              name="document"
+              language={language}
+              defaultSelected={documents.filter(d => selectedDocuments.has(d.documentId)).map(d => d.documentId)}
+              listLabel={t.whichDocuments}
+              listClassName="assign-doc-list"
+            />
           </fieldset>
 
-          <fieldset className="card hr-group">
-            <legend className="field-label">{t.to}</legend>
+          <fieldset className="card hr-group assign-panel">
+            <legend className="assign-legend">
+              <span className="assign-step" aria-hidden="true">2</span>
+              {t.to}
+            </legend>
 
-            <label className="hr-choice" style={{ marginBottom: 10 }}>
-              <input type="checkbox" name="all" value="1" defaultChecked={q.all === "1"} />
-              <span>
-                <strong>{t.everyone}</strong>
-                <span className="quiet field-hint">
-                  {" "}{t.everyoneNote}
-                </span>
-              </span>
-            </label>
+            {/* „Všetkým" prebije výber nižšie — s JS sa zvyšok stlmí (Q4),
+                hodnoty ostávajú. Podsekcie oddelené čiarou (bod 4). */}
+            <AudienceAll label={t.everyone} note={t.everyoneNote} defaultChecked={q.all === "1"}>
 
             {/*
               Oddelenia ako výber s hľadaním a stromom (rám
@@ -203,7 +224,7 @@ export default async function AssignPage({
               políčka. Počet ľudí vrátane podriadených (`withDescendants`).
             */}
             {treeRows.length > 0 && (
-              <>
+              <div className="assign-sub">
                 <div className="hr-subtitle">{t.departments}</div>
                 <MultiSelect
                   name="audience"
@@ -220,21 +241,23 @@ export default async function AssignPage({
                       count: (departmentCounts.get(o.value) ?? { withDescendants: 0 }).withDescendants,
                     }))}
                 />
-              </>
+              </div>
             )}
 
             {audiences.groups.length === 0 && audiences.tracks.length === 0 ? (
-              <p className="quiet field-hint" style={{ margin: "10px 0 0" }}>
-                {t.noGroupsOrTracks}
-                <code> npm run person</code>.
-              </p>
+              <div className="assign-sub">
+                <p className="quiet field-hint" style={{ margin: "10px 0 0" }}>
+                  {t.noGroupsOrTracks}
+                  <code> npm run person</code>.
+                </p>
+              </div>
             ) : (
               <>
                 {/* Rovnaké štítky ako pri úprave osoby — tá istá vec má
                     vyzerať rovnako. Tu ich ale nesie zaškrtávacie políčko,
                     lebo tento formulár funguje aj bez JavaScriptu. */}
                 {audiences.groups.length > 0 && (
-                  <>
+                  <div className="assign-sub">
                     <div className="hr-subtitle">{t.groups}</div>
                     <div className="tags-list">
                       {audiences.groups.map(s => (
@@ -251,11 +274,11 @@ export default async function AssignPage({
                         </label>
                       ))}
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {audiences.tracks.length > 0 && (
-                  <>
+                  <div className="assign-sub">
                     <div className="hr-subtitle">{t.tracks}</div>
                     <div className="tags-list">
                       {audiences.tracks.map(t => (
@@ -272,13 +295,14 @@ export default async function AssignPage({
                         </label>
                       ))}
                     </div>
-                  </>
+                  </div>
                 )}
               </>
             )}
 
+            {/* Osoby podľa priezviska (bod 5), ako adresár. */}
             {personChoices.length > 0 && (
-              <>
+              <div className="assign-sub">
                 <div className="hr-subtitle">{t.people}</div>
                 <PeopleSearch
                   people={personChoices}
@@ -289,9 +313,10 @@ export default async function AssignPage({
                   listLabel={t.people}
                   missing="people"
                 />
-              </>
+              </div>
             )}
 
+            <div className="assign-sub">
             <label className="field" style={{ marginTop: 14 }}>
               <span className="field-label">{t.addresses}</span>
               <textarea
@@ -307,15 +332,24 @@ export default async function AssignPage({
                 {t.addressesNote}
               </span>
             </label>
+            </div>
+            </AudienceAll>
           </fieldset>
+          </div>
 
+          {/* Dôvod | Termín v jednej karte, pod tým súhrn a tlačidlá (bod 1). */}
+          <section className="card assign-finish">
+          <div className="assign-finish-grid">
           <label className="field">
-            <span className="field-label">{t.reason}</span>
+            <span className="assign-legend">
+              <span className="assign-step" aria-hidden="true">3</span>
+              {t.reason}
+            </span>
             <textarea
               name="reason"
               defaultValue={q.reason ?? ""}
               required
-              rows={3}
+              rows={4}
               className="field-input"
               placeholder={t.reasonPlaceholder}
             />
@@ -333,12 +367,11 @@ export default async function AssignPage({
             formulár beží bez JavaScriptu, takže sa skrývať nedajú — a kto sa
             prepne z dátumu na dni a späť, o svoj dátum nepríde.
           */}
-          <fieldset className="hr-group">
-            {/* `hr-group`, nie vlastný tvar: na tej istej stránke je nad tým
-                rovnaký rámik okolo výberu publika. Druhý vzhľad pre druhý
-                fieldset v jednom formulári je presne to, čo robí obrazovku
-                nejednotnou. */}
-            <legend className="field-label">{t.due}</legend>
+          <fieldset className="hr-group assign-due">
+            <legend className="assign-legend">
+              <span className="assign-step" aria-hidden="true">4</span>
+              {t.due}
+            </legend>
 
             {/*
               Tri voľby, pole vedľa svojej (rám HR, bod 4). Tie isté mená
@@ -368,29 +401,21 @@ export default async function AssignPage({
 
             <span className="quiet field-hint">{t.dueNote}</span>
           </fieldset>
-
-          <div>
-            {impact && (
-              <div className="assign-impact" role="status">
-                <div className="assign-impact-count">{t.impactPeople(impact.people)}</div>
-                <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
-                  {impact.perAudience.map(p => `${audienceName(p.audience)} (${p.count})`).join(", ")}
-                  {". "}
-                  {t.impactNote}
-                </div>
-              </div>
-            )}
-
-            {/* Dve tlačidlá, jeden formulár: „Skontrolovať dopad" je serverová
-                akcia, ktorá nič nezapíše — vráti výber v adrese a súhrn hore.
-                Funguje bez skriptu rovnako ako návrat s chybou. */}
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button className="button" type="submit">{t.submit}</button>
-              <button className="button button--quiet" type="submit" formAction={previewAssignAction}>
-                {t.checkImpact}
-              </button>
-            </div>
           </div>
+
+          {/*
+            Súhrn výberu, dopad a tlačidlá (body 7 a 8). Dopad počíta len server
+            po „Skontrolovať dopad" (Ján, 22. 9. 2026) — súhrn nad ním je počet
+            vybraných položiek, nie počet ľudí.
+          */}
+          <AssignFinish
+            formId="assign-form"
+            language={language}
+            impact={impactView}
+            previewSignature={previewSignature}
+            previewAction={previewAssignAction}
+          />
+          </section>
         </form>
       )}
     </div>

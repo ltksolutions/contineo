@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prideliť normy: dva stĺpce a hľadanie (2026-09-29)
+
+**Prideliť normy** má na širokej obrazovke **normy a publikum vedľa seba**
+a pod nimi jednu kartu s dôvodom, termínom a tlačidlami. Kroky sú
+očíslované 1–4. **Normy sa dajú hľadať** rovnako ako osoby: od 8 noriem
+je nad zoznamom pole a vybrané normy sú ako čipy. Enter formulár nikdy
+neodošle. Odkaz „len bez právneho základu" zúži zoznam na normy bez
+určeného právneho základu. Normy sú zoradené od najnovšie účinného
+znenia, osoby podľa priezviska.
+
+Nad tlačidlami je **súhrn výberu** („2 normy · 2 oddelenia · 1 trasa ·
+1 osoba"). Počet ľudí sa naďalej ukáže až po „Skontrolovať dopad". Potom
+tlačidlo povie „Prideliť 28 ľuďom". Keď sa publikum po kontrole zmení,
+dopad zjantárovie a vyzve na novú kontrolu. Pri „Všetkým v organizácii"
+sa výber pod ním stlmí, jeho hodnoty sa však nemažú. Bez JavaScriptu
+formulár funguje ako doteraz.
+
 ### Pole hľadania a filtre podľa návrhu (2026-09-29)
 
 Ten istý pás s lupou má aj hľadanie v **Audite** (Organizácia → Audit);

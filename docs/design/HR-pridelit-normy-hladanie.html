@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>HR — Prideliť normy: hľadanie nad zoznamami, dva stĺpce</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px;--shadow:0 10px 28px rgba(20,28,42,.12)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:var(--accent-strong)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:88ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:88ch;line-height:1.55}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;flex:0 0 auto}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.ask{flex:1;display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;min-width:0;white-space:nowrap;overflow:hidden}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+.body{padding:24px 28px 40px}
+.frame-label{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);margin:0 0 6px}
+.frames-small{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.quiet{color:var(--muted)}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:0 0 20px;max-width:70ch}
+.page-lead b{color:var(--ink)}
+.back{font-size:14px;color:var(--muted);display:inline-block;margin:0 0 14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted);line-height:1.5}
+.field-input{font:inherit;font-size:var(--fs-control);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:var(--control-h);line-height:1.3;padding:8px 12px;width:100%}
+textarea.field-input{resize:vertical}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--control-h);padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font:inherit;font-size:15px;font-weight:600;cursor:pointer;white-space:nowrap}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.assign{display:grid;gap:20px}
+.assign-cols{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+.assign-cols.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+.panel{padding:18px 20px 20px;display:grid;gap:12px;min-width:0;align-content:start}
+.panel-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.panel-head h2{font-size:var(--fs-section);margin:0;letter-spacing:-.01em}
+.panel-head .n{font-size:var(--fs-small);color:var(--muted)}
+.panel-head .step{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;align-self:center}
+.sub{display:grid;gap:6px;min-width:0}
+.sub + .sub{padding-top:12px;border-top:1px solid var(--line)}
+.sub-title{font-size:11.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.sub-title span{letter-spacing:0;text-transform:none;font-weight:500}
+.is-dim{opacity:.42;pointer-events:none}
+.hr-warn{display:flex;gap:8px;margin:0;padding:8px 12px;border-radius:8px;background:var(--warn-bg);color:var(--warn-fg);font-size:var(--fs-small);line-height:1.45}
+.ls-search{position:relative}
+.ls-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.ls-search .field-input{padding-left:36px;padding-right:40px}
+.ls-search .field-input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.ls-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;background:transparent;border-radius:7px;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.ls-meta{display:flex;justify-content:space-between;gap:10px;font-size:var(--fs-micro);color:var(--muted);font-variant-numeric:tabular-nums}
+.ls-meta a{color:var(--muted)}
+.picked{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.picked-label{font-size:var(--fs-micro);color:var(--muted);margin-right:2px}
+.chip{display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 3px 0 10px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12.5px;font-weight:550;max-width:100%}
+.chip > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{display:grid;place-items:center;width:22px;height:22px;border:0;background:transparent;border-radius:5px;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;padding:0;flex:none}
+.list{display:grid;gap:2px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--surface);align-content:start}
+.row{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-radius:6px;cursor:pointer}
+.row[hidden]{display:none}
+.row:hover{background:var(--surface-2)}
+.row.is-on{background:var(--accent-soft)}
+.row > input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--accent)}
+.row-main{display:grid;gap:1px;min-width:0;flex:1}
+.row-name{font-size:14.5px;line-height:1.35}
+.row-meta{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.row mark,.dsel mark{background:var(--warn-bg);color:inherit;border-radius:2px;padding:0 1px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;flex:none}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg)}
+.empty-in{padding:18px 12px;text-align:center;font-size:var(--fs-small);color:var(--muted);line-height:1.5}
+.empty-in b{color:var(--ink);font-weight:600}
+.kbd{font-size:11px;color:var(--muted)}
+.kbd kbd{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;padding:1px 5px;border-radius:4px;background:var(--surface-2)}
+.all{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.all.is-on{background:var(--accent-soft);border-color:var(--accent)}
+.all input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.all b{font-size:14.5px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;cursor:pointer}
+.pill input{position:absolute;opacity:0;pointer-events:none}
+.pill .mk{color:var(--accent);font-weight:700}
+.pill.is-on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.pill.is-on .mk{color:var(--on-accent)}
+.pill small{font-size:12px;opacity:.7}
+.dsel{position:relative;display:grid;gap:5px;min-width:0}
+.dsel-control{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-height:44px;padding:5px 7px;background:var(--bg);border:1px solid var(--line);border-radius:10px;cursor:text}
+.dsel-control.is-focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.dsel-chip{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 2px 0 10px;border-radius:7px;background:var(--surface-2);font-size:14px;white-space:nowrap}
+.dsel-chip small{color:var(--muted);font-size:11.5px}
+.dsel-chip button{display:grid;place-items:center;width:26px;height:26px;border:0;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:0}
+.dsel-input{flex:1 1 90px;min-width:80px;border:0;background:transparent;font:inherit;font-size:15px;padding:4px 2px;outline:0;color:var(--ink)}
+.dsel-counter{font-size:12px;color:var(--muted);padding:0 4px}
+.dsel-list{position:absolute;left:0;right:0;top:50px;z-index:5;max-height:280px;overflow-y:auto;padding:5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.dsel-opt{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 10px;border-radius:8px;font-size:14.5px;cursor:pointer}
+.dsel-opt:hover{background:var(--surface-2)}
+.dsel-mark{width:14px;flex:none;color:var(--accent);font-weight:700}
+.dsel-name{flex:1;min-width:0}
+.dsel-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.finish{padding:18px 20px 20px;display:grid;gap:18px}
+.finish-grid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+.finish-grid.two{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.field{display:grid;gap:6px;min-width:0;align-content:start}
+.hr-due{display:grid;gap:6px}
+.hr-due-opt{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 6px 4px 12px;border:1px solid var(--line);border-radius:8px;font-size:14.5px;cursor:pointer;flex-wrap:wrap}
+.hr-due-opt.is-on{background:var(--accent-soft);border-color:var(--accent)}
+.hr-due-opt input[type=radio]{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.hr-due-opt > span{flex:1;min-width:120px}
+.hr-due-opt .field-input{width:150px;min-height:34px;padding:4px 10px;font-size:14px}
+.summary{display:grid;gap:12px;padding-top:16px;border-top:1px solid var(--line)}
+.summary-line{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:var(--fs-small);color:var(--muted)}
+.summary-line b{color:var(--ink);font-weight:600}
+.assign-impact{display:grid;gap:4px;padding:12px 14px;border-radius:var(--radius);background:var(--accent-soft)}
+.assign-impact-count{font-size:var(--fs-lead);font-weight:650}
+.assign-impact.stale{background:var(--warn-bg)}
+.assign-impact.stale .assign-impact-count{color:var(--warn-fg)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.m .button{width:100%;min-height:44px}
+.m .field-input,.m .dsel-input{font-size:16px}
+.m .ls-search .field-input{min-height:44px}
+.m .chip{min-height:36px}
+.m .chip button{width:30px;height:30px}
+.m .panel,.m .finish{padding:14px}
+.m .page-title{font-size:22px}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
+table.spec tr:last-child td{border-bottom:0}
+.states{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px;max-width:1440px}
+.state{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.state h4{margin:0 0 10px;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-weight:500}
+.q{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#e0e7ff;color:#3730a3;vertical-align:1px}
+</style>
+</head>
+<body><div class="sheet">
+<h1 class="doc">HR — Prideliť normy (<code>/hr/assign</code>): hľadanie nad zoznamami, dva stĺpce</h1>
+<p class="doc">Dnes je stránka jeden stĺpec 680 px: 14 noriem ako dlhý zoznam, pod ním „Komu" s piatimi podsekciami, pod tým dôvod, termín a tlačidlá — na 1440 dve tretiny obrazovky prázdne a výber noriem odscrolluje z dohľadu, kým sa vyberá publikum. Návrh: <b>Normy | Komu vedľa seba</b>, oba zoznamy s hľadaním a riadkom vybraných, pod nimi jedna karta <b>Dôvod · Termín · Súhrn</b>. Polia, mená a hodnoty formulára sa nemenia; bez JS funguje ako dnes.</p>
+<p class="doc">Zdroj: <code>app/hr/assign/page.tsx</code>, <code>PeopleSearch</code>, <code>MultiSelect</code>, <code>.hr-group</code>, <code>.hr-doc</code>, <code>.hr-due</code>, <code>.assign-impact</code>. Rámy sú živé — dá sa písať, zaškrtávať, odoberať. Popis v <code>HR-pridelit-normy-hladanie.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — dva stĺpce · 2 normy, 2 oddelenia, trasa, 1 osoba · po „Skontrolovať dopad"</p>
+  <div class="frame" style="width:1440px"><div class="hdr"><span class="logo">SFZ</span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av">JL</span></div>
+    <div class="body"><div style="max-width:1180px" data-frame="1440"></div></div></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 a 390 — jeden stĺpec</p>
+  <p class="sec-w">834: hľadá sa norma „poriadok", výber ostáva v čipoch. 390: píše sa meno osoby, tlačidlá na celú šírku.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">834</p><div class="frame" style="width:834px"><div class="hdr"><span class="logo">SFZ</span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa…</span><span class="av">JL</span></div>
+      <div class="body" style="padding:20px"><div data-frame="834"></div></div></div></div>
+    <div><p class="frame-label">390</p><div class="frame m" style="width:390px"><div class="hdr" style="padding:0 14px"><span class="logo">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av">JL</span></div>
+      <div class="body" style="padding:14px"><div data-frame="390"></div></div></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Stavy</p>
+  <div class="states">
+    <div class="state"><h4>„Všetkým v organizácii" — zvyšok Komu stlmený</h4><div data-state="all"></div></div>
+    <div class="state"><h4>norma nevyhovuje hľadaniu</h4><div data-state="none"></div></div>
+    <div class="state"><h4>výber sa zmenil po kontrole dopadu</h4><div data-state="stale"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Správanie</p>
+  <table class="spec">
+    <tr><th>Čo</th><th>Ako</th></tr>
+    <tr><td>Rozloženie</td><td>Od 1100 px dva stĺpce <code>minmax(0,1fr) minmax(0,1fr)</code>, šírka obsahu 1180 (namiesto 680). Pod tým karta Dôvod | Termín a súhrn s tlačidlami na celú šírku. Pod 1100 jeden stĺpec v poradí Normy → Komu → Dôvod/Termín. <span class="q">Q1</span></td></tr>
+    <tr><td>Normy — hľadanie</td><td>Ten istý obal ako <code>PeopleSearch</code> (KOMPONENT-hladanie-osob): pole od 8 noriem, filtruje názov, bez diakritiky, viac slov = AND. Počet „4 z 14", riadok „Vybrané (n)" s čipmi — vidno aj odfiltrované. Enter pri jednom výsledku vyberie, formulár nikdy neodošle.</td></tr>
+    <tr><td>Poradie</td><td><b>Normy</b> podľa platnosti — najnovšie účinné znenie hore (<code>effectiveFrom</code> zostupne). <b>Osoby</b> podľa priezviska vzostupne (slovenské radenie, č/š/ž po c/s/z), pri zhode podľa mena. Filter ani výber poradie nemení.</td></tr>
+    <tr><td>Normy — riadok</td><td>Názov + štítok vpravo, pod ním „znenie účinné od …". Zoznam v rámiku s posunom (max 420 px na 1440, 340 na 834, 300 na 390) — stránka už nie je 14 riadkov dlhá.</td></tr>
+    <tr><td>„len bez právneho základu"</td><td>Odkaz pod poľom zúži zoznam na normy so štítkom (D91 — upozornenie, nie brána). Jantárové upozornenie nad zoznamom ostáva. <span class="q">Q2</span></td></tr>
+    <tr><td>Komu</td><td>Poradie ako dnes: Všetkým → Oddelenia (<code>MultiSelect</code>) → Skupiny/Trasy (pilulky, je ich málo) → Osoby (<code>PeopleSearch</code>) → Jednotlivé adresy. Podsekcie oddelené čiarou.</td></tr>
+    <tr><td>Všetkým</td><td>Keď je zaškrtnuté, podsekcie pod ním sa s JS stlmia (výber v nich ostáva, server ho ignoruje — „prebije výber nižšie"). Bez JS ako dnes. <span class="q">Q4</span></td></tr>
+    <tr><td>Súhrn</td><td>Nad tlačidlami „2 normy · 2 oddelenia · 1 trasa · 1 osoba" — počíta prehliadač z výberu, nie je to dopad. Dopad („Povinnosť vznikne N ľuďom") ostáva až po „Skontrolovať dopad" (rozhodnutie Jána 22. 9.). Keď sa výber po kontrole zmení, box zjantárovie: „Výber sa zmenil — skontroluj dopad znova."</td></tr>
+    <tr><td>Tlačidlá</td><td>„Prideliť" + „Skontrolovať dopad", ako dnes. Po kontrole „Prideliť 28 ľuďom". <span class="q">Q3</span> Na 390 na celú šírku, 44 px.</td></tr>
+    <tr><td>Bez JS</td><td>Pole hľadania, čipy, súhrn aj stlmenie sa nevykreslia; zostanú dnešné políčka v dvoch stĺpcoch.</td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const DOCS=[
+ ["dp","Disciplinárny poriadok SFZ","1. 7. 2023",1],["fs","Finančná smernica SFZ","7. 9. 2026",0],["onp","Organizačný a návštevný poriadok","1. 7. 2014",1],
+ ["pkrs","Poriadok komory pre riešenie sporov","7. 12. 2021",1],["pp","Pracovný poriadok SFZ","7. 9. 2026",0],["rpp","Registračný a prestupový poriadok SFZ","1. 6. 2026",1],
+ ["rev","Revízny poriadok","1. 1. 2026",0],["rpk","Rokovací poriadok Konferencie SFZ","4. 6. 2016",1],["ss","Skúšobná smernica (testovacie prostredie)","10. 9. 2026",1],
+ ["sp","Skúšobný poriadok (znenia v indexe)","1. 7. 2026",1],["st","Stanovy SFZ","12. 6. 2025",0],["sup","Súťažný poriadok futbalu","1. 7. 2026",0],
+ ["oou","Smernica o ochrane osobných údajov","25. 5. 2026",0],["ek","Etický kódex SFZ","1. 1. 2024",0],
+].map(([id,name,from,nb])=>{const[d,m,y]=from.split(". ").map(Number);return {id,name,meta:"znenie účinné od "+from,nb:!!nb,hay:name,t:y*1e4+m*100+d}}).sort((a,b)=>b.t-a.t);
+const DEPTS=[["gs","Úsek prezidenta a GS",62,0],["it","Oddelenie IT",6,1],["lpo","Legislatívno právne oddelenie",5,1],["hr","Oddelenie ľudských zdrojov",4,1],["eko","Ekonomické oddelenie",8,1],
+ ["sut","Úsek súťaží",21,0],["roz","Oddelenie rozhodcov",9,1],["mld","Oddelenie mládeže",7,1],["kom","Komunikácia a marketing",11,0],["zf","Ženský futbal",4,0]].map(([id,name,n,lvl])=>({id,name,n,lvl}));
+const TRACKS=[["test-2026",1],["rozhodcovia-2026",14],["nastup-2026",3]];
+const PEOPLE=[["darina","Darina Škodlerová","Ekonomické oddelenie","darina.skodlerova@futbalsfz.sk"],["david","David Brünn","Oddelenie IT","david.brunn@futbalsfz.sk"],["dominik","Dominik Tóth","Úsek súťaží","dominik.toth@futbalsfz.sk"],["eduard","Eduard Vilcinsky","","eduard.vilcinsky@futbalsfz.sk"],["emma","Emma Čačaná","Komunikácia a marketing","emma.cacana@futbalsfz.sk"],["agata","Agáta Galková","Oddelenie IT","agata.galkova@futbalsfz.sk"],["boris","Boris Galík","Úsek súťaží","boris.galik@futbalsfz.sk"],["ivana","Ivana Galbavá","Oddelenie ľudských zdrojov","ivana.galbava@futbalsfz.sk"],["jozef","Jozef Kliment","Úsek prezidenta a GS","jozef.kliment@futbalsfz.sk"],["marek","Marek Horák","Legislatívno právne oddelenie","marek.horak@futbalsfz.sk"],["peter","Peter Ondrejka","Oddelenie mládeže","peter.ondrejka@futbalsfz.sk"],["zuzana","Zuzana Rybárová","Ženský futbal","zuzana.rybarova@futbalsfz.sk"]]
+ .map(([id,name,dept,email])=>({id,name,meta:(dept?dept+" · ":"")+email,hay:name+" "+dept+" "+email}));
+const sur=n=>n.split(" ").slice(-1)[0];
+PEOPLE.sort((a,b)=>sur(a.name).localeCompare(sur(b.name),"sk")||a.name.localeCompare(b.name,"sk"));
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function hl(text,terms){if(!terms.length)return esc(text);const n=norm(text),m=new Array(text.length).fill(false);terms.forEach(t=>{let i=n.indexOf(t);while(i>-1){for(let k=i;k<i+t.length;k++)m[k]=true;i=n.indexOf(t,i+t.length)}});let o="",op=false;for(let i=0;i<text.length;i++){if(m[i]&&!op){o+="<mark>";op=true}if(!m[i]&&op){o+="</mark>";op=false}o+=esc(text[i])}return o+(op?"</mark>":"")}
+const ICON='<svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M12.2 12.2 16 16"/></svg>';
+const plural=(n,a,b,c)=>n===1?a:(n>=2&&n<=4?b:c);
+
+function Assign(host,cfg){
+  const S={docQ:cfg.docQ||"",docSel:new Set(cfg.docSel||[]),onlyNb:false,all:!!cfg.all,dep:new Set(cfg.dep||[]),depQ:"",depOpen:false,tr:new Set(cfg.tr||[]),pQ:cfg.pQ||"",pSel:new Set(cfg.pSel||[]),due:cfg.due||"days",checked:!!cfg.checked,stale:!!cfg.stale,sections:cfg.sections||"all"};
+  const mobile=cfg.w<640, two=cfg.w>=1100, listH=two?420:(mobile?300:340);
+  let focusSel=null;
+  const change=()=>{if(S.checked)S.stale=true};
+  const setQ=(k,v)=>{if(k==="d")S.docQ=v;else if(k==="p")S.pQ=v;else S.depQ=v};
+
+  function searchList({key,items,sel,q,placeholder,label,emptyNote,extra}){
+    const terms=norm(q).split(/\s+/).filter(Boolean);
+    let vis=items.filter(p=>terms.every(t=>norm(p.hay).includes(t)));
+    if(extra&&extra.on) vis=vis.filter(p=>p.nb);
+    const picked=items.filter(p=>sel.has(p.id));
+    const showCount=q||(extra&&extra.on);
+    return `${picked.length?`<div class="picked"><span class="picked-label">Vybrané (${picked.length})</span>${picked.map(p=>`<span class="chip"><span>${esc(p.name)}</span><button type="button" data-rm="${key}:${p.id}" aria-label="Odobrať ${esc(p.name)}">×</button></span>`).join("")}</div>`:""}
+      <div class="ls-search">${ICON}<input class="field-input" type="search" data-q="${key}" placeholder="${placeholder}" value="${esc(q)}" aria-label="${label}" />${q?`<button type="button" class="ls-clear" data-clr="${key}" aria-label="Vyčistiť">×</button>`:""}</div>
+      ${(showCount||extra)?`<div class="ls-meta"><span aria-live="polite">${showCount?`${vis.length} z ${items.length}`:""}</span>${extra?extra.link:""}</div>`:""}
+      <div class="list" style="max-height:${listH}px">${vis.length?items.map(p=>{const on=sel.has(p.id),hid=!vis.includes(p);return `<label class="row${on?" is-on":""}"${hid?" hidden":""}><input type="checkbox" data-t="${key}" value="${p.id}"${on?" checked":""} /><span class="row-main"><span class="row-name">${hl(p.name,terms)}</span><span class="row-meta">${key==="p"?hl(p.meta,terms):esc(p.meta)}</span></span>${p.nb?`<span class="tag tag--draft">bez právneho základu</span>`:""}</label>`}).join("")
+        :`<div class="empty-in">Nič nevyhovuje <b>„${esc(q)}"</b>.<br>${emptyNote}<br><a href="#" data-clr="${key}">Zrušiť hľadanie</a></div>`}</div>
+      ${!mobile&&q?`<span class="kbd"><kbd>↓</kbd> do zoznamu · <kbd>Enter</kbd> ${vis.length===1?"vyberie „"+esc(vis[0].name)+"“":"vyberie jediný výsledok"} · <kbd>Esc</kbd> vyčistí</span>`:""}`;
+  }
+  function docsPanel(){
+    const nb=DOCS.filter(d=>d.nb).length;
+    return `<section class="card panel"><div class="panel-head"><span class="step">1</span><h2>Ktoré normy</h2><span class="n">14 platných znení</span></div>
+      <p class="hr-warn"><span aria-hidden="true">⚠</span><span>Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho mala určiť ešte pred ostrou prevádzkou.</span></p>
+      ${searchList({key:"d",items:DOCS,sel:S.docSel,q:S.docQ,placeholder:"Hľadať normu",label:"Hľadať normu",emptyNote:"Prideliť sa dá len platné znenie.",extra:{on:S.onlyNb,link:`<a href="#" data-nb>${S.onlyNb?"zobraziť všetky":"len bez právneho základu ("+nb+")"}</a>`}})}
+    </section>`;
+  }
+  function deptSel(){
+    const terms=norm(S.depQ).split(/\s+/).filter(Boolean);
+    const vis=DEPTS.filter(d=>terms.every(t=>norm(d.name).includes(t)));
+    const chips=DEPTS.filter(d=>S.dep.has(d.id));
+    return `<div class="dsel"><div class="dsel-control${S.depOpen?" is-focus":""}" data-dopen>${chips.map(d=>`<span class="dsel-chip">${esc(d.name)} <small>${d.n}</small><button type="button" data-rm="dep:${d.id}" aria-label="Odobrať">×</button></span>`).join("")}<input class="dsel-input" data-q="dep" placeholder="${chips.length?"":"Hľadať oddelenie…"}" value="${esc(S.depQ)}" />${chips.length?`<span class="dsel-counter">${chips.length}/${DEPTS.length}</span>`:""}</div>
+      ${S.depOpen?`<div class="dsel-list">${vis.length?vis.map(d=>`<div class="dsel-opt" data-dep="${d.id}" style="padding-left:${10+(terms.length?0:d.lvl*18)}px"><span class="dsel-mark">${S.dep.has(d.id)?"✓":""}</span><span class="dsel-name">${hl(d.name,terms)}</span><span class="dsel-count">${d.n}</span></div>`).join(""):`<div class="empty-in">Žiadne oddelenie nevyhovuje.</div>`}</div>`:""}
+      <span class="field-hint">Počet ľudí vrátane podriadených oddelení. Kto príde neskôr, dostane povinnosť odo dňa príchodu.</span></div>`;
+  }
+  function audPanel(){
+    return `<section class="card panel"><div class="panel-head"><span class="step">2</span><h2>Komu</h2></div>
+      <label class="all${S.all?" is-on":""}"><input type="checkbox" data-all${S.all?" checked":""} /><span><b>Všetkým v organizácii</b><br><span class="field-hint">prebije výber nižšie — inak by to isté znenie viselo v prehľade niekoľkokrát.</span></span></label>
+      <div class="${S.all?"is-dim":""}" style="display:grid;gap:12px">
+        <div class="sub"><div class="sub-title">Oddelenia</div>${deptSel()}</div>
+        <div class="sub"><div class="sub-title">Trasy</div><div class="pills">${TRACKS.map(([t,n])=>{const on=S.tr.has(t);return `<label class="pill${on?" is-on":""}"><input type="checkbox" data-tr="${t}"${on?" checked":""} /><span class="mk">${on?"✓":"+"}</span>${t} <small>${n}</small></label>`}).join("")}</div></div>
+        <div class="sub"><div class="sub-title">Osoby <span>148 aktívnych</span></div>${searchList({key:"p",items:PEOPLE,sel:S.pSel,q:S.pQ,placeholder:"Hľadať meno, e-mail alebo oddelenie",label:"Hľadať osobu",emptyNote:"Vyradení sa neponúkajú."})}</div>
+        <div class="sub"><label class="field"><span class="sub-title">Jednotlivé adresy</span><textarea class="field-input" rows="2" placeholder="jan.novak@example.sk, eva.mala@example.sk"></textarea><span class="field-hint">Nepovinné. Oddeľ čiarkou alebo novým riadkom.</span></label></div>
+      </div>
+    </section>`;
+  }
+  function finish(){
+    const nd=S.docSel.size, dep=S.dep.size, tr=S.tr.size, p=S.pSel.size;
+    const parts=[`<span><b>${nd}</b> ${plural(nd,"norma","normy","noriem")}</span>`];
+    if(S.all) parts.push("<span><b>všetkým</b> v organizácii</span>"); else {if(dep)parts.push(`<span><b>${dep}</b> ${plural(dep,"oddelenie","oddelenia","oddelení")}</span>`);if(tr)parts.push(`<span><b>${tr}</b> ${plural(tr,"trasa","trasy","trás")}</span>`);if(p)parts.push(`<span><b>${p}</b> ${plural(p,"osoba","osoby","osôb")}</span>`);if(!dep&&!tr&&!p)parts.push("<span>publikum zatiaľ nevybrané</span>")}
+    const due=[["none","bez termínu",""],["date","do dátumu",`<input class="field-input" type="text" value="31. 10. 2026" aria-label="Dátum" />`],["days","do počtu dní od vzniku povinnosti",`<input class="field-input" type="text" value="14" aria-label="dní" style="width:80px" /><span class="quiet" style="font-size:13px;flex:0 0 auto;min-width:0">dní</span>`]];
+    const impactTxt=S.all?"Všetci v organizácii (142)":[...DEPTS.filter(d=>S.dep.has(d.id)).map(d=>`${d.name} (${d.n})`),...[...S.tr].map(t=>`${t} (${TRACKS.find(x=>x[0]===t)[1]})`),...PEOPLE.filter(x=>S.pSel.has(x.id)).map(x=>x.name+" (1)")].join(", ");
+    return `<section class="card finish"><div class="finish-grid${two?" two":""}">
+      <label class="field"><span class="panel-head"><span class="step">3</span><h2>Dôvod</h2></span><textarea class="field-input" rows="${two?5:3}" placeholder="napr. novela čl. 12 — mení sa lehota na podanie odvolania">${cfg.reason||""}</textarea><span class="field-hint">Povinný a spoločný pre celý výber. O rok je to jediné miesto, kde je napísané, prečo sa normy potvrdzovali znova — príde aj v e-maile ľuďom.</span></label>
+      <div class="field"><span class="panel-head"><span class="step">4</span><h2>Termín potvrdenia</h2></span><div class="hr-due">${due.map(([v,l,inp])=>`<label class="hr-due-opt${S.due===v?" is-on":""}"><input type="radio" data-due="${v}"${S.due===v?" checked":""} /><span>${l}</span>${inp}</label>`).join("")}</div><span class="field-hint">Nepovinný. Dátum platí pre všetkých rovnako; počet dní beží každému odo dňa, keď mu povinnosť vznikla. Bez termínu sa pripomienky neposielajú automaticky.</span></div>
+    </div>
+    <div class="summary"><div class="summary-line">${parts.join("<span>·</span>")}</div>
+      ${S.checked?`<div class="assign-impact${S.stale?" stale":""}" role="status">${S.stale?`<div class="assign-impact-count">Výber sa zmenil — skontroluj dopad znova</div><div class="quiet" style="font-size:var(--fs-small)">Pre predošlý výber by povinnosť vznikla ${cfg.impact} ľuďom.</div>`:`<div class="assign-impact-count">Povinnosť vznikne ${cfg.impact} ľuďom</div><div class="quiet" style="font-size:var(--fs-small)">${esc(impactTxt)}. Kto do oddelenia pribudne neskôr, dostane ju odo dňa príchodu.</div>`}</div>`:""}
+      <div class="acts"><button class="button" type="button">${S.checked&&!S.stale?`Prideliť ${cfg.impact} ľuďom`:"Prideliť"}</button><button class="button button--quiet" type="button" data-check>Skontrolovať dopad</button></div>
+    </div></section>`;
+  }
+  function render(){
+    const s=S.sections;
+    host.innerHTML = s==="all"
+      ? `<a class="back" href="#">← Späť na prehľad</a><h1 class="page-title">Prideliť normy</h1><p class="page-lead">Prideľuje sa <b>konkrétne znenie</b>, nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.</p><div class="assign"><div class="assign-cols${two?" two":""}">${docsPanel()}${audPanel()}</div>${finish()}</div>`
+      : s==="docs"?docsPanel():s==="aud"?audPanel():finish();
+    bind();
+  }
+  function bind(){
+    host.querySelectorAll("[data-q]").forEach(inp=>{
+      const k=inp.dataset.q;
+      inp.oninput=e=>{setQ(k,e.target.value);if(k==="dep")S.depOpen=true;focusSel=`[data-q="${k}"]`;render()};
+      if(k==="dep"){
+        inp.onfocus=()=>{if(!S.depOpen){S.depOpen=true;focusSel='[data-q="dep"]';render()}};
+        inp.onblur=()=>setTimeout(()=>{if(S.depOpen&&document.activeElement!==host.querySelector('[data-q="dep"]')){S.depOpen=false;render()}},150);
+      }
+      inp.onkeydown=e=>{
+        const set=k==="d"?S.docSel:k==="p"?S.pSel:S.dep;
+        if(e.key==="Enter"){e.preventDefault();const vis=[...host.querySelectorAll(k==="dep"?".dsel-opt":`.row:not([hidden]) input[data-t="${k}"]`)];if(vis.length===1){set.add(k==="dep"?vis[0].dataset.dep:vis[0].value);change();setQ(k,"");focusSel=`[data-q="${k}"]`;render()}}
+        if(e.key==="Escape"){setQ(k,"");if(k==="dep")S.depOpen=false;focusSel=`[data-q="${k}"]`;render()}
+        if(e.key==="ArrowDown"&&k!=="dep"){e.preventDefault();host.querySelector(`.row:not([hidden]) input[data-t="${k}"]`)?.focus()}
+      };
+    });
+    host.querySelectorAll("[data-t]").forEach(i=>i.onchange=()=>{const set=i.dataset.t==="d"?S.docSel:S.pSel;i.checked?set.add(i.value):set.delete(i.value);change();render()});
+    host.querySelectorAll("[data-rm]").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=e=>{e.stopPropagation();const[k,id]=b.dataset.rm.split(":");({d:S.docSel,p:S.pSel,dep:S.dep})[k].delete(id);change();render()}});
+    host.querySelectorAll("[data-clr]").forEach(b=>b.onclick=e=>{e.preventDefault();setQ(b.dataset.clr,"");focusSel=`[data-q="${b.dataset.clr}"]`;render()});
+    host.querySelectorAll("[data-nb]").forEach(a=>a.onclick=e=>{e.preventDefault();S.onlyNb=!S.onlyNb;render()});
+    host.querySelectorAll("[data-dep]").forEach(o=>o.onmousedown=e=>{e.preventDefault();const id=o.dataset.dep;S.dep.has(id)?S.dep.delete(id):S.dep.add(id);change();focusSel='[data-q="dep"]';render()});
+    const dc=host.querySelector("[data-dopen]"); if(dc) dc.onclick=()=>host.querySelector('[data-q="dep"]').focus();
+    host.querySelectorAll("[data-tr]").forEach(i=>i.onchange=()=>{i.checked?S.tr.add(i.dataset.tr):S.tr.delete(i.dataset.tr);change();render()});
+    host.querySelectorAll("[data-all]").forEach(i=>i.onchange=()=>{S.all=i.checked;change();render()});
+    host.querySelectorAll("[data-due]").forEach(i=>i.onchange=()=>{S.due=i.dataset.due;render()});
+    host.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>{S.checked=true;S.stale=false;render()});
+    if(focusSel){const el=host.querySelector(focusSel);if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length)}catch(_){}}focusSel=null}
+  }
+  render();
+}
+const $=s=>document.querySelector(s);
+Assign($('[data-frame="1440"]'),{w:1440,docSel:["rpp","dp"],dep:["lpo","roz"],tr:["rozhodcovia-2026"],pSel:["jozef"],checked:true,impact:28,reason:"Novela čl. 12 — mení sa lehota na podanie odvolania z 15 na 7 dní."});
+Assign($('[data-frame="834"]'),{w:834,docQ:"poriadok",docSel:["pp"],dep:["gs"]});
+Assign($('[data-frame="390"]'),{w:390,docSel:["fs","oou"],pQ:"gal",pSel:["ivana"]});
+Assign($('[data-state="all"]'),{w:380,sections:"aud",all:true,dep:["it"]});
+Assign($('[data-state="none"]'),{w:380,sections:"docs",docQ:"smernica o hazarde"});
+Assign($('[data-state="stale"]'),{w:380,sections:"finish",docSel:["rpp","dp","st"],dep:["lpo","roz"],checked:true,stale:true,impact:28});
+</script>
+</body></html>
