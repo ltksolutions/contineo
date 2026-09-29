@@ -55,7 +55,7 @@ export default async function FoldersPage({
   const carried: [string, string][] = [["return", "folders"]]
 
   return (
-    <AppShell language={uiLanguage}>
+    <AppShell language={uiLanguage} title={tf.manage}>
       <div style={{ maxWidth: 640, ...tenantStyle(branding) }}>
         <Notice message={q.msg} error={q.error === "1"} back="/library/folders" />
 

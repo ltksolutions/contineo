@@ -83,7 +83,11 @@ export default async function EditorPage({
   const fileUrl = shown ? `/api/library/file/${encodeURIComponent(shown.id)}` : null
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell
+      language={ctx.person.language}
+      title={dictionary(language).library.flow.elsewhereText}
+      trail={{ [`/library/${documentId}`]: d.title }}
+    >
     <div style={{ maxWidth: 1200, ...tenantStyle(branding) }}>
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
 

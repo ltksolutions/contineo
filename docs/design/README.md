@@ -85,12 +85,15 @@ metadát). V produkcii tam patrí existujúci `components/Select.tsx`.
 **Navigácia — DVA VARIANTY (implementovať oba, prepínač na úrovni organizácie
 alebo osoby; default `topbar`)**
 
-> ⚠️ **Prekonané 29. 9. 2026** (`SHELL-bocny-panel.md`, Q1–Q4, rozhodnutie
-> Jána): na desktope je **jediný tvar — bočný panel** so skupinami
-> (Moje úlohy · Organizácia · Správa), rozbalený 236 px / lišta ikon 64 px,
-> stav v cookie `nav`. Pás `topbar` sa **ruší**, aj s `?layout=`. Dôvod: tento
-> návrh počítal so 6 položkami, dnes ich je 10–14. Pod 640 px spodná lišta
-> bez zmeny. Text nižšie ostáva ako história.
+> ⚠️ **Prekonané 29. 9. 2026** (`SHELL-rozcestnik.md`, Q1–Q5, rozhodnutie
+> Jána): od 640 px **nie je stále menu vôbec** — ani pás `topbar`, ani bočný
+> panel. Sekcie sú **dlaždice na Prehľade** (skupiny Organizácia · Správa,
+> s vetou, čo v sekcii je), na každej inej stránke je pod hlavičkou **cesta**
+> Prehľad › Skupina › Sekcia › … a na jej začiatku ikona 9 bodiek s plachtou
+> všetkých sekcií. Pod 640 px spodná lišta bez zmeny, `/more` má tie isté
+> dlaždice. Bočný panel (`SHELL-bocny-panel.md`) bol v produkcii pár hodín
+> a ruší sa tiež — aj s cookie `nav` a `?layout=`. Text nižšie ostáva ako
+> história.
 
 *A) `sidebar` — bočný panel*
 - `flex: 0 0 212px`, `padding: 12px 8px`, `background: var(--surface)`,

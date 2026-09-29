@@ -66,7 +66,7 @@ export default async function TestEditorPage({ params, searchParams }: { params:
   const showLabel = { never: tt.showNever, after_submit: tt.showAfterSubmit, after_pass: tt.showAfterPass, after_last_attempt: tt.showAfterLast }
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={test.title}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
         <p className="detail-back"><Link className="quiet" href="/learning/tests">{tt.back}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={`/learning/tests/${key}`} />

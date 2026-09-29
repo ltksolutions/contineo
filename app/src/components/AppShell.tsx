@@ -24,15 +24,24 @@
  */
 
 import type { ReactNode } from "react"
-import { cookies } from "next/headers"
+import { headers } from "next/headers"
 import AppNav from "./AppNav"
-import { NAV_COOKIE, normalizeNavState } from "@/lib/appNav"
+import Breadcrumbs from "./Breadcrumbs"
+import SectionsSheet, { type SheetColumn } from "./SectionsSheet"
+import { MAIN_KEYS, PATHNAME_HEADER, breadcrumbs, navItems, sectionGroups, type NavKey } from "@/lib/appNav"
 import { shellNavData } from "@/lib/navData"
-import type { UiLanguage } from "@/lib/i18n"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
+
+const ALL_KEYS: NavKey[] = [
+  "overview", "ask", "toAcknowledge", "toApprove", "directory", "library", "learning",
+  "assigned", "evidence", "people", "evaluation", "dpo", "learningManage", "learningTests",
+]
 
 export default async function AppShell({
   language,
   wide = false,
+  title,
+  trail,
   children,
 }: {
   language?: UiLanguage
@@ -49,23 +58,73 @@ export default async function AppShell({
    * oprava (rozhodnutie Jána 2026-09-22).
    */
   wide?: boolean
+  /**
+   * Názov tejto stránky — posledný krok cesty. Netreba ho na koreni sekcie
+   * (`/hr`, `/library`), tam je názvom sekcia; treba ho na všetkom
+   * hlbšom (`/hr/assign`, detail normy) a na stránkach mimo sekcií
+   * (`/notifications`).
+   */
+  title?: string
+  /**
+   * Názvy rodičovských krokov podľa adresy, keď ich z adresy nevyčítať —
+   * napr. `{ "/library/abc": "Pracovný poriadok" }` na `/library/abc/text`.
+   */
+  trail?: Record<string, string>
   children: ReactNode
 }) {
   const { flags, counts } = await shellNavData()
+  const t = dictionary(language).nav
+  const items = navItems(flags, counts)
+
   /*
-   * Stav bočného panela (rozbalený / lišta ikon) z cookie — čítaný tu, na
-   * serveri, aby sa panel vykreslil hneď v správnej šírke a pri načítaní
-   * nepreblikol (SHELL-bocny-panel, Q4).
+   * Cesta sa skladá z adresy. Serverový komponent ju od Nextu nedostane,
+   * preto ju podáva `proxy.ts` v hlavičke požiadavky. Keď chýba (stránka,
+   * pred ktorou proxy nebežal), pás sa nekreslí — radšej bez cesty než
+   * s nepravdivou.
    */
-  const navState = normalizeNavState((await cookies()).get(NAV_COOKIE)?.value)
+  const pathname = ((await headers()).get(PATHNAME_HEADER) ?? "/").replace(/(.)\/+$/, "$1")
+  const crumbs = breadcrumbs(pathname, {
+    overview: t.overview,
+    groups: { organisation: t.groupOrganisation, management: t.groupManagement },
+    sections: Object.fromEntries(ALL_KEYS.map(k => [k, t[k]])) as Record<NavKey, string>,
+    pages: { ...trail, ...(title ? { [pathname]: title } : {}) },
+  })
+
+  /*
+   * Stĺpce plachty: Hlavné (tie, čo nie sú dlaždice) a skupiny dlaždíc.
+   * Z toho istého `navItems()` ako všetko ostatné — nič nové, nič navyše.
+   */
+  const item = (o: (typeof items)[number]) => ({
+    href: o.href,
+    key: o.key,
+    label: t[o.key],
+    count: o.count,
+    countLabel: typeof o.count === "number" && o.count > 0 ? t.waiting(o.count) : undefined,
+  })
+  const groupTitle = { organisation: t.groupOrganisation, management: t.groupManagement }
+  const columns: SheetColumn[] = [
+    { key: "main", title: t.groupMain, items: items.filter(o => MAIN_KEYS.includes(o.key)).map(item) },
+    ...sectionGroups(items).map(g => ({ key: g.key, title: groupTitle[g.key], items: g.items.map(item) })),
+  ]
 
   return (
     <div className="app-shell">
-      <AppNav navState={navState} flags={flags} counts={counts} language={language} />
+      <Breadcrumbs
+        crumbs={crumbs}
+        label={t.breadcrumb}
+        wide={wide}
+        sheet={
+          <SectionsSheet
+            columns={columns}
+            labels={{ allSections: t.allSections, escCloses: t.escCloses, sheetHint: t.sheetHint }}
+          />
+        }
+      />
       {/* `div`, nie `main`: `layout.tsx` už jeden `main` má a druhý vnútri
           neho by bol neplatné HTML — a pre čítačku obrazovky dva „hlavné
           obsahy" znamenajú, že ani jeden nie je ten hlavný. */}
       <div className={wide ? "app-main app-main--wide" : "app-main"}>{children}</div>
+      <AppNav flags={flags} counts={counts} language={language} />
     </div>
   )
 }

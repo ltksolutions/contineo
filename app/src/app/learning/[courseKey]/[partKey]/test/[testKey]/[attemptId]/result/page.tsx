@@ -57,7 +57,7 @@ export default async function ResultPage({ params, searchParams }: {
   const shown = a.questions.map((x, i) => ({ x, i, ok: results[i] })).filter(r => q.only !== "wrong" || !r.ok)
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={ta.result} trail={c.trail}>
       <div className="at rs">
         <p className="detail-back"><Link className="quiet" href={c.partHref}>← {ta.backToPart}</Link></p>
         <div className="rs-cols">

@@ -42,7 +42,7 @@ export default async function InviteAllPage({
   const people = await neverSignedIn(ctx.person.companyCode)
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <Notice message={q.msg} error={q.error === "1"} back="/people/invite" />
 

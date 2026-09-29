@@ -1,5 +1,9 @@
 # SHELL — ľavý bočný panel s ikonami
 
+> ⛔ **ZRUŠENÉ 29. 9. 2026** — nahradil ho `SHELL-rozcestnik.md` (Q1: rozcestník
+> nahrádza bočný panel úplne). Panel bol nasadený v PR #188 a odstránený
+> v nasledujúcom. Dokument ostáva ako história rozhodnutia; `.html` rovnako.
+
 Referencia: `SHELL-bocny-panel.html`. Základ: `ZAKLAD.md`, `docs/design/README.md` (Navigácia — dva varianty), `DESIGN_GAP.md`.
 Zdroj: `components/AppNav.tsx` (variant `sidebar` už existuje), `lib/appNav.ts` (`navItems`, `activeHref`, `tabbarItems`, `MORE_GROUPS`), `components/Icon.tsx`, `components/AppShell.tsx`, `Header.tsx`.
 

@@ -1,21 +1,21 @@
 /**
  * /more — zvyšok navigácie na telefóne (NASADENIE, PR 2).
  *
- * Spodná lišta má štyri sekcie a „Viac"; sem padá zvyšok `navItems()`
- * v skupinách so sadzbou na palec (riadky 52 px). Na širokej obrazovke
- * stránka existuje tiež — adresa je adresa a otočením tabletu sa nemá
- * rozbiť — len sa na ňu z pásu nechodí: pás má prepad „Viac N" v sebe.
+ * Spodná lišta má štyri sekcie a „Viac"; sem padá zvyšok `navItems()`.
+ * Od 29. 9. 2026 sú to **tie isté dlaždice ako na Prehľade**
+ * (`SectionTiles`, SHELL-rozcestnik Q4) v jednom stĺpci — rovnaké poradie,
+ * názvy aj popisy. Na širokej obrazovke stránka existuje tiež — adresa je
+ * adresa a otočením tabletu sa nemá rozbiť.
  *
  * Osobné veci (príručka, moje potvrdenia, odhlásenie) tu nie sú — bývajú
  * pod avatarom v hlavičke, ktorá na telefóne zostáva, a dve položky s tým
  * istým cieľom sú horšie než jedna.
  */
 
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import AppShell from "@/components/AppShell"
-import Icon from "@/components/Icon"
+import SectionTiles from "@/components/SectionTiles"
 import { navItems, moreGroups } from "@/lib/appNav"
 import { shellNavData } from "@/lib/navData"
 import { dictionary } from "@/lib/i18n"
@@ -38,43 +38,13 @@ export default async function MorePage() {
   const groups = moreGroups(navItems(flags, counts))
 
   return (
-    <AppShell language={person.language}>
-      {/* Užšie než shell: je to zoznam odkazov, nie tabuľka. */}
+    <AppShell language={person.language} title={t.more}>
+      {/* Užšie než shell: je to zoznam na palec, nie tabuľka. */}
       <div style={{ maxWidth: 560 }}>
         <h1 className="page-title" style={{ margin: "0 0 14px" }}>
           {t.more}
         </h1>
-
-        {groups.map(group => (
-          <section key={group.key} className="more-group">
-            <h2 className="more-group-title">
-              {group.key === "tasks" ? t.groupTasks
-                : group.key === "organisation" ? t.groupOrganisation
-                : t.groupManagement}
-            </h2>
-            <div className="more-list">
-              {group.items.map(o => (
-                <Link key={o.href} href={o.href} className="more-row">
-                  <Icon name={o.key} size={18} />
-                  <span className="more-row-label">{t[o.key]}</span>
-                  {typeof o.count === "number" && o.count > 0 && (
-                    <span className="app-nav-count" aria-label={t.waiting(o.count)}>
-                      {o.count}
-                    </span>
-                  )}
-                  {/* Šípka je ozdoba — smer „dovnútra" hovorí riadok sám.
-                      Ten istý chevron ako `select.field-input` a `<details>`
-                      v evidencii, otočený doprava v CSS (SPRAVA, úloha 4.1). */}
-                  <svg className="more-row-chevron" width="14" height="14" viewBox="0 0 12 12"
-                       fill="none" stroke="currentColor" strokeWidth="1.6"
-                       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M2.5 4.5L6 8l3.5-3.5" />
-                  </svg>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ))}
+        <SectionTiles groups={groups} language={person.language} single />
       </div>
     </AppShell>
   )

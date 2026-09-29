@@ -36,7 +36,7 @@ export default async function GuidePage() {
   const branding = brandingView(ctx.tenant)
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={t.heading}>
       {/*
         Užší stĺpec než ostatné obrazovky. Návod je súvislý text a riadok cez
         celú šírku sa na veľkom monitore zle číta — oko stráca začiatok

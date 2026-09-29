@@ -3,7 +3,8 @@
  *
  * Prvá obrazovka po prihlásení — a zároveň tá, na ktorú sa chodí najčastejšie.
  * Tvar ide presne po stránke: uvítacia karta s poľom na otázku, pás štyroch
- * dlaždíc a pod ním dva panely. Štyri dlaždice nie sú odhad, toľko ich je
+ * dlaždíc, dlaždice sekcií a pod nimi dva panely. Pás cesty Prehľad nemá
+ * (`path={false}`). Štyri dlaždice nie sú odhad, toľko ich je
  * v `tiles`; keby ich kostra mala tri, mriežka `.kpi` by po načítaní preskupila
  * celý riadok.
  */
@@ -13,7 +14,7 @@ import { SkeletonShell } from "@/components/SkeletonShell"
 
 export default function Loading() {
   return (
-    <SkeletonShell>
+    <SkeletonShell path={false}>
       <div className="overview">
         <div className="card overview-hero">
           <Skeleton className="skeleton-title" />
@@ -33,6 +34,17 @@ export default function Loading() {
             <div className="card kpi-tile" key={i}>
               <Skeleton className="skeleton-line" width={72} height={10} />
               <Skeleton className="skeleton-line" width={44} height={18} />
+            </div>
+          ))}
+        </div>
+
+        {/* Dlaždice sekcií — jedna skupina; koľko ich kto má, kostra nevie. */}
+        <div className="section-tiles">
+          {[0, 1, 2].map(i => (
+            <div className="section-tile" key={i}>
+              <Skeleton className="section-tile-icon" />
+              <Skeleton className="skeleton-line" width={96} />
+              <Skeleton className="skeleton-line" width={170} height={10} />
             </div>
           ))}
         </div>

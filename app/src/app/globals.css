@@ -1056,9 +1056,10 @@ html[data-theme="dark"] select.field-input {
  * sama. Preto tu nie je nič, čo by platilo globálne — všetko visí na
  * `.app-shell`.
  *
- * Pod 640 px nesie navigáciu spodná lišta (`.app-nav-tabbar`), od 640 px
- * bočný panel vľavo od obsahu (SHELL-bocny-panel, 29. 9. 2026). Pás pod
- * hlavičkou (`topbar`) odišiel.
+ * Od 640 px stále menu nie je (SHELL-rozcestnik, 29. 9. 2026): pod
+ * hlavičkou je pás cesty s plachtou všetkých sekcií, sekcie samotné sú
+ * dlaždice na Prehľade. Pod 640 px nesie navigáciu spodná lišta
+ * (`.app-nav-tabbar`). Pás `topbar` aj bočný panel odišli.
  */
 .app-shell {
   display: flex;
@@ -1066,241 +1067,233 @@ html[data-theme="dark"] select.field-input {
   align-items: stretch;
   min-height: 100%;
 }
-@media (min-width: 640px) {
-  .app-shell { flex-direction: row; }
+
+/*
+ * Pás cesty (SHELL-rozcestnik, bod 4) — 40 px pod hlavičkou, cez celú
+ * šírku; riadok v ňom lícuje s obsahom (ten istý strop a odsadenie ako
+ * `.app-main`). Nie `sticky`: cesta je orientácia pri príchode, nie
+ * ovládací prvok, ktorý treba mať stále na očiach — a hlavička nad ňou
+ * už `sticky` je.
+ */
+.app-path {
+  position: relative;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+/*
+ * Otvorená plachta: pás nad závojom, aby tlačidlo aj cesta ostali
+ * klikateľné a nezatienené. Závoj je v páse (`z-index: -1` v jeho
+ * kontexte), takže vlastné pozadie pásu — to sa kreslí úplne dospodu —
+ * by zatienil. Pozadie preto pri otvorení nesie `::before` nad závojom;
+ * riadok pásu je v strome za ním, kreslí sa teda nad ním.
+ */
+.app-path:has(.sections[open]) { z-index: 31; }
+.app-path:has(.sections[open])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--surface);
+}
+
+.app-path-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: var(--shell-maxw);
+  min-height: 40px;
+  margin: 0 auto;
+  padding: 0 var(--pad-main) 0 calc(var(--pad-main) - 6px);
+}
+.app-path-row--wide { max-width: var(--shell-maxw-wide); }
+
+.app-path-sep {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+}
+
+.app-path-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.app-path-list li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--muted);
+}
+/* Oddeľovač — šípka 6 px z dvoch hrán, nie znak: znak „›" má v každom
+   písme inú výšku a na 12.5 px sedí mimo osi textu. */
+.app-path-list li + li::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin: 0 6px 0 2px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.55;
+}
+.app-path-list a {
+  padding: 3px 4px;
+  border-radius: 5px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.app-path-list a:hover { background: var(--surface-2); color: var(--ink); }
+.app-path-list a:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+.app-path-list [aria-current] {
+  padding: 3px 4px;
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Telefón: dlhá cesta sa zalomí, odkazy majú terč ~30 px v páse 44 px. */
+@media (max-width: 639px) {
+  .app-path-row { align-items: flex-start; min-height: 44px; padding: 2px 10px 2px 4px; }
+  .app-path-sep { margin-top: 13px; }
+  .app-path-list { padding: 6px 0; font-size: 12.5px; }
+  .app-path-list a { padding: 6px 4px; }
 }
 
 /*
- * Bočný panel (SHELL-bocny-panel). Rozbalený 236 px, lišta ikon 64 px;
- * na 640–1023 px vždy lišta a rozbalenie ho vysunie (`.app-drawer`).
- *
- * `sticky` pod hlavičkou s výškou okna: keď sa položky nezmestia, roluje sa
- * panel sám, nie stránka, a „Zbaliť" ostáva dole vždy na očiach. Hlavička
- * má pevných 56 px (`.header-row`) + 1 px spodnej linky — kým bola výška
- * premenlivá, sticky sa nedal trafiť (starý komentár pri páse); dnes sa
- * zalamuje až pod 640 px, kde panel nie je. S 56 px (číslo z rámu) bol
- * panel o pixel vyšší než okno a stránka sa o ten pixel posúvala.
+ * Plachta všetkých sekcií (`SectionsSheet`, Q5). `<details>` — bez skriptu
+ * ju otvorí aj zavrie tlačidlo. Plachta 760 px pod tlačidlom, závoj 18 %.
  */
-.app-panel {
-  display: none;
-  flex: 0 0 auto;
-  flex-direction: column;
-  position: sticky;
-  top: 57px;
-  height: calc(100dvh - 57px);
-  background: var(--surface);
-  border-right: 1px solid var(--line);
-  z-index: 5;
-}
-@media (min-width: 640px) {
-  .app-panel { display: flex; }
-}
-.app-panel.is-wide { width: 236px; }
-.app-panel.is-rail { width: 64px; }
-
-.app-panel-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+.sections { flex: none; }
+.sections-button {
   display: grid;
-  gap: 2px;
-  align-content: start;
-  padding: 12px 10px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
 }
-.app-panel-group { display: grid; gap: 2px; }
-.app-panel-group-title {
-  padding: 14px 10px 4px;
+.sections-button::-webkit-details-marker { display: none; }
+.sections-button:hover,
+.sections[open] > .sections-button { background: var(--surface-2); }
+.sections-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+
+.sections-scrim { display: none; }
+.sections[open] > .sections-scrim {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(17, 21, 28, 0.18);
+}
+
+.sections-sheet { display: none; }
+.sections[open] > .sections-sheet {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 22px;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: calc(var(--pad-main) - 6px);
+  width: 760px;
+  max-width: calc(100% - 2 * var(--pad-main));
+  max-height: calc(100dvh - 120px);
+  overflow: auto;
+  padding: 18px 18px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.sections-col { display: grid; gap: 1px; align-content: start; }
+.sections-col-title {
+  margin: 0 0 6px;
+  padding: 0 10px;
   font-size: 10.5px;
   font-weight: 650;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--muted);
-  white-space: nowrap;
 }
 
-.app-panel-item {
-  position: relative;
+.sections-item {
   display: flex;
   align-items: center;
   gap: 11px;
-  min-height: 38px;
+  min-height: 36px;
   padding: 0 10px;
   border-radius: 8px;
+  color: var(--ink);
   font-size: 14px;
-  font-weight: 500;
-  color: var(--muted);
-  white-space: nowrap;
+  text-decoration: none;
 }
-.app-panel-item > svg { flex: 0 0 auto; }
-.app-panel-item:hover { background: var(--surface-2); color: var(--ink); }
-.app-panel-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.app-panel-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-/* Aktívna: dlaždica, rez 650 a zvislá čiarka pri okraji panela. */
-.app-panel-item.is-active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 650; }
-.app-panel-item.is-active::before {
-  content: "";
-  position: absolute;
-  left: -10px;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--accent);
-}
-/* Odznak počtu v paneli — červený ako v návrhu, nula sa nekreslí vôbec. */
-.app-panel .app-nav-count {
-  margin-left: 0;
+.sections-item > svg { flex: none; color: var(--muted); }
+.sections-item:hover { background: var(--surface-2); color: var(--ink); }
+.sections-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sections-item.is-active { background: var(--accent-soft); font-weight: 650; }
+.sections-item.is-active > svg { color: var(--accent); }
+.sections-item-label { flex: 1; min-width: 0; }
+.sections-item-count {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 20px;
   background: var(--bad-fg);
   color: var(--on-accent);
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Popis v lište ikon — pri prejdení myšou aj pri fokuse z klávesnice.
-   `fixed`, lebo zoznam panela roluje a orezal by ho (`AppNav.tsx`). */
-.app-panel-tip {
-  position: fixed;
-  transform: translateY(-50%);
-  z-index: 40;
-  padding: 4px 9px;
-  border-radius: 6px;
-  background: var(--accent-strong);
-  color: var(--on-accent);
+.sections-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+  padding: 10px 10px 0;
+  border-top: 1px solid var(--line);
   font-size: 12.5px;
-  font-weight: 550;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: var(--shadow);
-}
-
-.app-panel-tip::before {
-  content: "";
-  position: absolute;
-  left: -4px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  background: inherit;
-  transform: translateY(-50%) rotate(45deg);
-}
-
-.app-panel-foot { border-top: 1px solid var(--line); padding: 8px 10px; }
-.app-panel-fold-form { margin: 0; }
-.app-panel-fold {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  width: 100%;
-  min-height: 38px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
   color: var(--muted);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  white-space: nowrap;
-  cursor: pointer;
-  list-style: none;
 }
-.app-panel-fold::-webkit-details-marker { display: none; }
-.app-panel-fold:hover { background: var(--surface-2); color: var(--ink); }
-.app-panel-fold:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-
-/*
- * Lišta ikon. Pravidlá platia pre `.is-rail` od 1024 px a pre každý panel
- * na 640–1023 px (tam je lišta vždy, Q3). Mieria cez `>` len na vlastný
- * zoznam a pätu — vysunutý panel (`.app-drawer`) je v päte a má zostať
- * rozbalený.
- */
-.app-panel.is-rail > .app-panel-scroll { padding: 12px 8px; }
-.app-panel.is-rail > .app-panel-scroll .app-panel-group-title {
-  height: 0; margin: 6px 6px 8px; padding: 0; overflow: hidden; font-size: 0; border-top: 1px solid var(--line);
+.sections-foot a { color: var(--muted); text-decoration: underline; }
+.sections-foot a:hover { color: var(--ink); }
+.sections-foot kbd {
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
 }
-.app-panel.is-rail > .app-panel-scroll .app-panel-item { justify-content: center; padding: 0; min-height: 44px; }
-.app-panel.is-rail > .app-panel-scroll .app-panel-item.is-active::before { left: -8px; }
-.app-panel.is-rail > .app-panel-scroll .app-panel-label,
-.app-panel.is-rail > .app-panel-foot .app-panel-label { display: none; }
-.app-panel.is-rail > .app-panel-scroll .app-nav-count {
-  position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px;
-}
-.app-panel.is-rail > .app-panel-foot { padding: 8px; }
-.app-panel.is-rail > .app-panel-foot .app-panel-fold { justify-content: center; padding: 0; min-height: 44px; }
-
-/* „Rozbaliť" na 640–1023 px je `<details>` — od 1024 px ho nahrádza formulár. */
-.app-panel-drawer { display: none; }
 
 @media (min-width: 640px) and (max-width: 1023px) {
-  /* Aj pri cookie `wide` — na tejto šírke je lišta vždy (Q3). Trieda stavu
-     má vyššiu špecifickosť než samotné `.app-panel`, preto obe. */
-  .app-panel.is-wide, .app-panel.is-rail { width: 64px; }
-  .app-panel-fold-form { display: none; }
-  .app-panel-drawer { display: block; }
-  .app-panel > .app-panel-scroll { padding: 12px 8px; }
-  .app-panel > .app-panel-scroll .app-panel-group-title {
-    height: 0; margin: 6px 6px 8px; padding: 0; overflow: hidden; font-size: 0; border-top: 1px solid var(--line);
+  .sections[open] > .sections-sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+  .sections-button { width: 40px; height: 40px; }
+  .sections[open] > .sections-sheet {
+    grid-template-columns: minmax(0, 1fr);
+    left: 8px;
+    width: auto;
+    right: 8px;
+    max-width: none;
+    /* Nad spodnou lištou, nie pod ňou. */
+    max-height: calc(100dvh - 180px);
+    padding: 12px 8px;
   }
-  .app-panel > .app-panel-scroll .app-panel-item { justify-content: center; padding: 0; min-height: 44px; }
-  .app-panel > .app-panel-scroll .app-panel-item.is-active::before { left: -8px; }
-  .app-panel > .app-panel-scroll .app-panel-label { display: none; }
-  .app-panel > .app-panel-scroll .app-nav-count {
-    position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px;
-  }
-  .app-panel > .app-panel-foot { padding: 8px; }
-  .app-panel-drawer > summary { justify-content: center; padding: 0; min-height: 44px; }
-}
-
-/*
- * Vysunutý panel (640–1023 px): 260 px nad obsahom, závoj 28 %. Pod
- * hlavičkou — hamburger v nej musí ostať klikateľný, aby panel zavrel.
- */
-.app-drawer-scrim { display: none; }
-.app-drawer { display: none; }
-.app-panel-drawer[open] > .app-drawer-scrim {
-  display: block;
-  position: fixed;
-  inset: 57px 0 0 0;
-  z-index: 30;
-  background: rgba(17, 21, 28, 0.28);
-}
-.app-panel-drawer[open] > .app-drawer {
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  left: 0;
-  top: 57px;
-  bottom: 0;
-  z-index: 31;
-  width: 260px;
-  background: var(--surface);
-  border-right: 1px solid var(--line);
-  box-shadow: var(--shadow);
-}
-
-/*
- * Hlavička nad bočným panelom ide cez celú šírku s logom pri ľavom okraji
- * (rám SHELL-bocny-panel) — centrovaná na 1240 px by logo odsunula od
- * panela, pod ktorým patrí. Obsah stránky ostáva centrovaný ako doteraz.
- */
-@media (min-width: 640px) {
-  body:has(.app-panel) .header-row.wrap--shell { max-width: none; padding-left: 16px; padding-right: 20px; }
-}
-
-/* Hamburger v hlavičke — len na 640–1023 px a len tam, kde je panel. */
-.header-burger { display: none; }
-@media (min-width: 640px) and (max-width: 1023px) {
-  body:has(.app-panel-drawer) .header-burger {
-    display: grid;
-    place-items: center;
-    flex: none;
-    width: 36px;
-    height: 36px;
-    margin-left: -6px;
-    border-radius: 8px;
-    color: var(--ink);
-  }
-  body:has(.app-panel-drawer) .header-burger:hover { background: var(--surface-2); }
-  .header-burger:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .sections-item { min-height: 44px; }
+  .sections-foot { display: none; }
 }
 
 /*
@@ -4836,15 +4829,126 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* Panely pod sebou až do 1024 px (PREHLAD, rámy): na tablete sú dva panely
    po 400 px užšie než ich obsah. Od 1024 px vedľa seba, pozornosť širšia. */
+/*
+ * Panely „Pre vás" pod dlaždicami (SHELL-rozcestnik, 4a). Dve rovnaké
+ * polovice s medzerou 12 px ako dlaždice nad nimi — hrany lícujú, každý
+ * panel je široký ako dve dlaždice. Rovnako vysoké (`stretch`) a odkaz na
+ * celý zoznam v pätičke, takže pätičky sedia v jednej línii. Pod 1024 px
+ * pod sebou. Pomer 1.2 : 1 odišiel — pri dlaždiciach nad panelmi by hrana
+ * medzi nimi nesedela so žiadnou hranou nad ňou.
+ */
 .overview-panels {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 
 @media (min-width: 1024px) {
-  .overview-panels { grid-template-columns: 1.2fr 1fr; }
+  .overview-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.overview-panels > .panel { display: flex; flex-direction: column; }
+
+.panel-foot {
+  margin-top: auto;
+  padding: 10px 13px;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+}
+.panel-foot a { text-decoration: none; }
+
+/* ── Rozcestník: dlaždice sekcií (`SectionTiles`, SHELL-rozcestnik) ───────
+   Od 640 px nie je stále menu — sekcie sú tu. Mriežka `auto-fill` s 250 px:
+   1440 → 4 v rade, 834 → 2, telefón 1, bez jediného media query. */
+
+/* Na Prehľade dáva medzeru medzi skupinami `gap` z `.overview`; na `/more`
+   žiadny taký rodič nie je. */
+:not(.overview) > .section-group + .section-group { margin-top: 22px; }
+
+.section-group-title {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  /* Kotva z cesty (`/#management`) — nadpis nemá skončiť pod hlavičkou. */
+  scroll-margin-top: 72px;
+}
+
+.section-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+.section-tiles--single { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+
+.section-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 2px 14px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+.section-tile:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgba(20, 28, 42, 0.08);
+  transform: translateY(-1px);
+}
+.section-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .section-tile, .section-tile:hover { transition: none; transform: none; }
+}
+
+.section-tile-icon {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  color: var(--accent);
+}
+.section-tile-name {
+  padding-top: 1px;
+  /* Miesto pre odznak vpravo hore — dlhý názov pod ním nemá prebehnúť. */
+  padding-right: 28px;
+  font-size: 15px;
+  font-weight: 620;
+  line-height: 1.35;
+}
+.section-tile-desc {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.section-tile-count {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--bad-fg);
+  color: var(--on-accent);
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 639px) {
+  .section-tiles { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .section-tile { padding: 12px 14px; gap: 0 12px; }
+  .section-tile-icon { width: 36px; height: 36px; border-radius: 9px; }
 }
 
 /* Odsadenie si kreslí hlavička a riadok, nie karta: inak by deliaca linka
@@ -4861,15 +4965,14 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   font-weight: 650;
 }
 
-/* Počet a cesta k celému zoznamu (PREHLAD, úloha 3). Odkaz je len vtedy,
-   keď panel niečo skrýva — „zobraziť všetko" nad zoznamom, ktorý je celý
-   vidieť, je klamstvo o tom, že niečo skrývame. */
+/* Počet v hlavičke panela. Cesta k celému zoznamu je v pätičke
+   (`.panel-foot`, SHELL-rozcestnik 4a); počet v nej len keď panel niečo
+   skrýva (PREHLAD, úloha 3). */
 .panel-head-count {
   font-size: var(--fs-micro);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-.panel-head-link { margin-left: auto; font-size: var(--fs-micro); font-weight: 600; }
 
 /* Prázdny panel (PREHLAD, úloha 1) — dva riadky: čo tu nie je a čo z toho
    vyplýva. Nie `.empty` zo ZAKLADU: ten je pre celú obrazovku a vnútri
@@ -5077,8 +5180,8 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 /*
- * Ktorý tvar je vidieť. Pod 640 px nesie navigáciu spodná lišta a bočný
- * panel sa skryje (`.app-panel`); od 640 px naopak.
+ * Spodná lišta len pod 640 px. Od 640 px stále menu nie je — sekcie sú
+ * dlaždice na Prehľade a plachta v páse cesty (SHELL-rozcestnik).
  */
 @media (max-width: 639px) {
   /* Obsah nesmie skončiť pod pevnou lištou. */
@@ -5089,49 +5192,6 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   .app-nav-tabbar { display: none; }
 }
 
-
-/*
- * /more — zvyšok navigácie na telefóne. Riadky 52 px z návrhu; nadpisy
- * skupín sú tiché ako `.lf-title` v paneli filtrov.
- */
-.more-group { margin: 0 0 18px; }
-
-.more-group-title {
-  margin: 0 0 6px;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.more-list {
-  display: grid;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.more-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 52px;
-  padding: 0 14px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink);
-}
-
-.more-row + .more-row { border-top: 1px solid var(--line); }
-.more-row:hover { background: var(--surface-2); }
-.more-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.more-row > svg { flex: none; color: var(--muted); }
-.more-row-label { flex: 1 1 auto; min-width: 0; }
-/* Chevron je ikona, nie znak (SPRAVA, úloha 4.1): kreslí sa `currentColor`,
-   tak v tmavej téme zosvetlie sám. Otočený doprava — do riadku sa vchádza. */
-.more-row-chevron { flex: none; color: var(--muted); transform: rotate(-90deg); }
 
 /* ── Upozornenia (SPRAVA, úloha 3.1) ─────────────────────────────────────
    Neprečítaná položka nesie ten istý znak ako označený riadok tabuľky
@@ -5355,13 +5415,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   white-space: nowrap;
   border: 0;
 }
-
-/* Obrys bočného panela počas čakania. `AppShell` je v stránke, nie
-   v `layout.tsx`, takže počas čakania zmizne aj panel — bez obrysu v tej
-   istej šírke by obsah poskočil do strany. Šírku berie z tých istých tried
-   (`.app-panel.is-wide/.is-rail`); pod 640 px ho skryje `.app-panel`. */
-.skeleton-panel .app-panel-item:hover { background: transparent; }
-.skeleton-panel .skeleton-tab-icon { height: 17px; }
 
 /* Terč v kostre spodnej lišty — štvorec na mieste 21 px ikony. */
 .skeleton-tab-icon { height: 21px; border-radius: 6px; }

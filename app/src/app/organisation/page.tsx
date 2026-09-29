@@ -246,7 +246,7 @@ export default async function OrganisationPage({
     : []
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <Notice
         message={message}

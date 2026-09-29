@@ -152,7 +152,7 @@ export default async function AssignPage({
     : null
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     {/* 1180 namiesto 680 (Q1): dva stĺpce od 1100 px. Pod tým jeden stĺpec
         v dnešnom poradí — na telefóne sa nič nemení. */}
     <div className="assign-page" style={tenantStyle(branding)}>

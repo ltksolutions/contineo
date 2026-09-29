@@ -89,7 +89,7 @@ export default async function ManageCoursePage({ params, searchParams }: {
   const usage = tab === "settings" ? await smartTagUsage(ctx.person.companyCode) : []
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={shown.title}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
         <p className="detail-back"><Link className="quiet" href="/learning/manage">← {t.manageHeading}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={`${base}${part ? `?tab=parts&part=${part.key}` : ""}`} />

@@ -55,7 +55,7 @@ export default async function NewPersonPage({
   const td = d.detail
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 560, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>

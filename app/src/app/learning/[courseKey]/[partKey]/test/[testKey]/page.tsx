@@ -43,7 +43,7 @@ export default async function TestIntroPage({ params, searchParams }: {
     : null
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} trail={c.trail}>
       <div className="at">
         <p className="detail-back"><Link className="quiet" href={partHref}>← {ta.backToPart}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={base} />

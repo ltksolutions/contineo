@@ -92,7 +92,7 @@ export default async function PersonDetailPage({
     : []
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={displayName(o)}>
     <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>

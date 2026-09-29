@@ -78,7 +78,7 @@ export default async function NewDocumentPage({
     .sort()
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>

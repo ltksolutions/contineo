@@ -69,7 +69,7 @@ export default async function NotificationsPage({
   const unread = rows.filter(r => !r.readAt).length
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={t.title}>
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
         {message && <Notice message={message} back="/notifications" />}
 

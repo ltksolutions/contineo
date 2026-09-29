@@ -541,16 +541,22 @@ interface Dictionary {
     tasks: string
     /** Piata položka lišty aj prepad pásu „Viac N" — vedie na `/more`. */
     more: string
-    /** Nadpisy skupín na `/more`. */
-    /** „Moje úlohy" — skupina v bočnom paneli aj na `/more` (SHELL-bocny-panel, Q2). */
+    /** „Moje úlohy" — skupina na `/more` so schvaľovaním (D69). */
     groupTasks: string
+    /** Skupiny dlaždíc na Prehľade, na `/more` a stĺpce plachty (SHELL-rozcestnik). */
     groupOrganisation: string
     groupManagement: string
-    /** Tlačidlo dole v bočnom paneli (SHELL-bocny-panel, Q4). */
-    collapse: string
-    expand: string
-    /** Hamburger v hlavičke na 640–1023 px — vysunie bočný panel. */
-    menu: string
+    /** Prvý stĺpec plachty: Prehľad, Opýtať sa, Na potvrdenie, Na schválenie. */
+    groupMain: string
+    /** `aria-label` pásu cesty pod hlavičkou. */
+    breadcrumb: string
+    /** Tlačidlo 9 bodiek a nadpis plachty. */
+    allSections: string
+    /** Pätička plachty — Esc a odkaz na Prehľad s popismi. */
+    escCloses: string
+    sheetHint: string
+    /** Jedna veta pod názvom dlaždice — čo v sekcii je. */
+    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "learningManage" | "learningTests", string>
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
     toAcknowledge: string
@@ -946,9 +952,12 @@ interface Dictionary {
       newsTitle: (days: number) => string
       newsText: string
     }
-    /** Hlavička panela — cesta k celému zoznamu, len keď panel niečo skrýva (úloha 3). */
+    /** Pätička panela — cesta k celému zoznamu (SHELL-rozcestnik, 4a). */
     showAll: (n: number) => string
+    allTasks: string
     wholeLibrary: string
+    /** Nadpis nad panelmi, pod dlaždicami sekcií. */
+    forYou: string
     by: (date: string) => string
     until: (date: string) => string
     expiringChip: string
@@ -3652,9 +3661,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     groupOrganisation: "Organizácia",
     groupManagement: "Správa",
     groupTasks: "Moje úlohy",
-    collapse: "Zbaliť panel",
-    expand: "Rozbaliť panel",
-    menu: "Menu",
+    groupMain: "Hlavné",
+    breadcrumb: "Cesta",
+    allSections: "Všetky sekcie",
+    escCloses: "zavrie",
+    sheetHint: "Všetky sekcie s popisom sú na Prehľade",
+    desc: {
+      toAcknowledge: "Normy, ktoré máte prečítať a potvrdiť",
+      toApprove: "Znenia, o ktorých máte rozhodnúť",
+      directory: "Kontakty, oddelenia a kto za čo zodpovedá",
+      library: "Platné normy a ich znenia",
+      learning: "Moje kurzy, testy a certifikáty",
+      assigned: "Kto čo potvrdil, pridelenie normy",
+      evidence: "Záznamy o potvrdeniach pre audit",
+      people: "Zamestnanci, pracovné vzťahy, roly",
+      evaluation: "Odpovede, pri ktorých niekto povedal, že nesedia",
+      dpo: "Právne základy predpisov a námietky",
+      learningManage: "Kurzy, časti a pridelenie",
+      learningTests: "Banka otázok a výsledky pokusov",
+    },
     waiting: n => (n === 1 ? "čaká 1" : n <= 4 ? `čakajú ${n}` : `čaká ${n}`),
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
@@ -4030,6 +4055,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     showAll: n => `Zobraziť všetkých ${n} →`,
     wholeLibrary: "Celá knižnica →",
+    allTasks: "Všetky úlohy →",
+    forYou: "Pre vás",
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -6987,9 +7014,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     groupOrganisation: "Organizace",
     groupManagement: "Správa",
     groupTasks: "Moje úkoly",
-    collapse: "Sbalit panel",
-    expand: "Rozbalit panel",
-    menu: "Menu",
+    groupMain: "Hlavní",
+    breadcrumb: "Cesta",
+    allSections: "Všechny sekce",
+    escCloses: "zavře",
+    sheetHint: "Všechny sekce s popisem jsou na Přehledu",
+    desc: {
+      toAcknowledge: "Normy, které máte přečíst a potvrdit",
+      toApprove: "Znění, o kterých máte rozhodnout",
+      directory: "Kontakty, oddělení a kdo za co odpovídá",
+      library: "Platné normy a jejich znění",
+      learning: "Moje kurzy, testy a certifikáty",
+      assigned: "Kdo co potvrdil, přidělení normy",
+      evidence: "Záznamy o potvrzeních pro audit",
+      people: "Zaměstnanci, pracovní vztahy, role",
+      evaluation: "Odpovědi, u kterých někdo řekl, že nesedí",
+      dpo: "Právní základy předpisů a námitky",
+      learningManage: "Kurzy, části a přidělení",
+      learningTests: "Banka otázek a výsledky pokusů",
+    },
     waiting: n => (n === 1 ? "čeká 1" : n <= 4 ? `čekají ${n}` : `čeká ${n}`),
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
@@ -7365,6 +7408,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     showAll: n => `Zobrazit všech ${n} →`,
     wholeLibrary: "Celá knihovna →",
+    allTasks: "Všechny úkoly →",
+    forYou: "Pro vás",
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -10313,9 +10358,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     groupOrganisation: "Organisation",
     groupManagement: "Management",
     groupTasks: "My tasks",
-    collapse: "Collapse panel",
-    expand: "Expand panel",
-    menu: "Menu",
+    groupMain: "Main",
+    breadcrumb: "Breadcrumb",
+    allSections: "All sections",
+    escCloses: "closes",
+    sheetHint: "All sections with descriptions are on the Overview",
+    desc: {
+      toAcknowledge: "Regulations you are to read and acknowledge",
+      toApprove: "Versions you are to decide on",
+      directory: "Contacts, departments and who is responsible for what",
+      library: "Regulations in force and their versions",
+      learning: "My courses, tests and certificates",
+      assigned: "Who acknowledged what, assigning regulations",
+      evidence: "Acknowledgement records for audit",
+      people: "Employees, employment relationships, roles",
+      evaluation: "Answers someone said were wrong",
+      dpo: "Legal bases of regulations and objections",
+      learningManage: "Courses, parts and assignment",
+      learningTests: "Question bank and attempt results",
+    },
     waiting: n => `${n} waiting`,
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
@@ -10690,6 +10751,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     showAll: n => `Show all ${n} →`,
     wholeLibrary: "Whole library →",
+    allTasks: "All tasks →",
+    forYou: "For you",
     by: date => `by ${date}`,
     until: date => `valid until ${date}`,
     expiringChip: "expiring",

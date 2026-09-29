@@ -50,7 +50,7 @@ export default async function AssignmentDetailPage({
   const now = new Date()
 
   return (
-    <AppShell language={ctx.person.language}>
+    <AppShell language={ctx.person.language} title={assignment.subject.documentTitle}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>

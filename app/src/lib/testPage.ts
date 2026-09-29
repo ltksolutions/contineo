@@ -31,6 +31,8 @@ export type TestContext =
       row: PartTestRow
       base: string
       partHref: string
+      /** Názvy krokov cesty nad testom — kurz, časť, test (SHELL-rozcestnik). */
+      trail: Record<string, string>
     }
 
 export async function loadTestContext(p: { courseKey: string; partKey: string; testKey: string }): Promise<TestContext> {
@@ -54,5 +56,10 @@ export async function loadTestContext(p: { courseKey: string; partKey: string; t
   return {
     state: "ready", companyCode, personId: ctx.person.id, language: ctx.person.language, courseKey: course.key, partKey: part.key, part,
     enrollment, row, base: `${partHref}/test/${testKey}`, partHref,
+    trail: {
+      [`/learning/${course.key}`]: version.title,
+      [partHref]: part.title,
+      [`${partHref}/test/${testKey}`]: row.test.title ?? testKey,
+    },
   }
 }

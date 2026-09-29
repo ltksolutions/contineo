@@ -87,7 +87,7 @@ export default async function DocumentPage({
     // Dokument, ktorý osoba inak nevidí: len úloha ku konceptu, nič na čítanie
     // ani na potvrdenie.
     return (
-      <AppShell language={person.language}>
+      <AppShell language={person.language} title={draftTask!.title}>
         <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
           <Notice message={message} error={failed} back={`/documents/${encodeURIComponent(documentId)}`} />
           <p style={{ margin: "0 0 16px" }}>
@@ -180,7 +180,7 @@ export default async function DocumentPage({
   const basisOptions = basisOptionsFor(canSetBasis || pending.length > 0)
 
   return (
-    <AppShell language={person.language}>
+    <AppShell language={person.language} title={doc.title}>
     {/* 760 px zostáva — je to znenie normy na čítanie. Shell dáva navigáciu
         a odsadenie, dĺžku riadka určuje obsah. */}
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
