@@ -16,6 +16,7 @@ import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
+import { isAutoVersionLabel } from "@/lib/versionLabel"
 import { SkeletonText } from "./Skeleton"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
@@ -74,6 +75,9 @@ export default function Answer({
   const timeDate = time ? formatDate(new Date(`${time.asOf}T00:00:00Z`), language) : null
   const comparison = state.comparison ?? done?.comparison
   const dateOf = (iso: string | null) => (iso ? formatDate(new Date(iso), language) : null)
+  // Automatické označenie znenia už nesie dátum účinnosti a je v jazyku
+  // dokumentu — vedľa účinnosti v jazyku prostredia sa neukazuje.
+  const ownLabel = (label: string, iso: string | null) => (isAutoVersionLabel(label, iso) ? "" : label)
   const timeLabel = !time || !timeDate
     ? null
     : time.kind === "asOf"
@@ -82,8 +86,8 @@ export default function Answer({
         // Porovnanie: ktoré dve znenia, alebo prečo sa porovnať nedalo.
         ? comparison?.ok
           ? t.timeCompare(
-              t.compareSide(comparison.from.label, dateOf(comparison.from.effectiveFrom)),
-              t.compareSide(comparison.to.label, dateOf(comparison.to.effectiveFrom)),
+              t.compareSide(ownLabel(comparison.from.label, comparison.from.effectiveFrom), dateOf(comparison.from.effectiveFrom)),
+              t.compareSide(ownLabel(comparison.to.label, comparison.to.effectiveFrom), dateOf(comparison.to.effectiveFrom)),
             )
           : t.timeCompareUnavailable[comparison?.reason ?? "no-document"](timeDate)
         : t.timeToday(timeDate)
@@ -264,7 +268,7 @@ export default function Answer({
                     {z.version && (
                       <span className="quiet answer-source-meta">
                         {t.sourceVersion(
-                          z.version.label,
+                          ownLabel(z.version.label, z.version.effectiveFrom),
                           z.version.effectiveFrom ? formatDate(new Date(z.version.effectiveFrom), language) : null,
                           z.version.effectiveTo ? formatDate(new Date(z.version.effectiveTo), language) : null,
                         )}

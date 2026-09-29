@@ -116,3 +116,34 @@ describe("zdroje pod odpoveďou", () => {
     expect(html.match(/znenie 1\.0/g)).toHaveLength(1)
   })
 })
+
+describe("automatické označenie znenia sa neopakuje (ADR-016)", () => {
+  const auto: ChunkVersion = { label: "znenie účinné od 1. 7. 2026", effectiveFrom: d("2026-07-01"), effectiveTo: d("2027-01-01") }
+  it("model: bez „znenie znenie“ a bez dvojitého dátumu", () => {
+    expect(versionContext(auto)).toBe("znenie účinné od 1. 7. 2026 do 1. 1. 2027")
+  })
+  it("aj s poradím (2) a v inom jazyku dokumentu", async () => {
+    const { isAutoVersionLabel } = await import("../src/lib/versionLabel")
+    expect(isAutoVersionLabel("znenie účinné od 1. 7. 2026 (2)", d("2026-07-01"))).toBe(true)
+    expect(isAutoVersionLabel("znění účinné od 1. 7. 2026", "2026-07-01T00:00:00.000Z")).toBe(true)
+    expect(isAutoVersionLabel("1.0", d("2026-07-01"))).toBe(false)
+    expect(isAutoVersionLabel("znenie účinné od 1. 7. 2026", d("2026-07-02"))).toBe(false)
+  })
+  it("zdroj pod odpoveďou ukáže len účinnosť, v jazyku prostredia", () => {
+    const s: AnswerState = {
+      question: "q", text: "t", citations: [], running: false,
+      done: { text: "t", citations: [], model: "m", provider: "a", verifiedCitations: true, ttftMs: null, totalMs: 0,
+        sources: [{ index: 1, title: "Poriadok", version: { label: "znenie účinné od 1. 7. 2026", effectiveFrom: "2026-07-01T00:00:00.000Z", effectiveTo: null } }] },
+    }
+    const sk = renderToStaticMarkup(createElement(Answer, { state: s, language: "sk" }))
+    expect(sk).toContain(">účinné od 1. 7. 2026<")
+    expect(sk).not.toContain("znenie znenie")
+    expect(renderToStaticMarkup(createElement(Answer, { state: s, language: "en" }))).toContain(">in force from 1 July 2026<")
+  })
+})
+
+it("pokyn nesie aj dnešok — minulosť v minulom čase", () => {
+  const p = asOfInstruction(new Date("2025-03-01T12:00:00Z"), new Date("2026-09-29T10:00:00Z"))
+  expect(p).toContain("ku dňu 1. 3. 2025")
+  expect(p).toContain("Dnes je 29. 9. 2026")
+})
