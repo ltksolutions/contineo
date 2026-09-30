@@ -168,24 +168,18 @@ export default async function DocumentPage({
           */}
           {/*
             **Potvrdzuje sa PDF** (ADR-011, D94) — predpis tak, ako vyšiel,
-            s prílohami a formulármi. Text pod ním je odvodenina na
-            vyhľadávanie; znenia spred ADR-011 PDF nemajú a zostáva im text.
+            s prílohami a formulármi. Text na vyhľadávanie sa tu neukazuje ani
+            zbalený (rozhodnutie Jána 30. 9. 2026): je to odvodenina a vedľa
+            PDF by vyzeral ako druhé znenie toho istého. Znenia spred ADR-011
+            PDF nemajú a zostáva im text.
           */}
           {version.version.pdf ? (
-            <>
-              <PdfView
-                href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(version.version.versionId)}`}
-                name={version.version.pdf.name}
-                bytes={version.version.pdf.bytes}
-                labels={{ open: t.openPdf, ...dictionary(person.language).common.pdf }}
-              />
-              <details className="document-search-text">
-                <summary>{t.searchText}</summary>
-                <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
-                  <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
-                </article>
-              </details>
-            </>
+            <PdfView
+              href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(version.version.versionId)}`}
+              name={version.version.pdf.name}
+              bytes={version.version.pdf.bytes}
+              labels={{ open: t.openPdf, ...dictionary(person.language).common.pdf }}
+            />
           ) : (
             <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
               <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
