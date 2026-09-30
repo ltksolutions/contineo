@@ -72,7 +72,13 @@ export default function Search({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: q, answer: v.text,
-          sources: v.sources, citations: v.citations,
+          sources: v.sources,
+          // Bez `at` — poloha značky je len pre tento beh (ASK-odpoved-dva-
+          // stlpce, Q1). Do záznamu nepatrí: nová vec v schéme by prišla
+          // z tela požiadavky, nie z rozhodnutia.
+          citations: v.citations.map(c => ({
+            chunkIndex: c.chunkIndex, citedText: c.citedText, documentTitle: c.documentTitle, articleRef: c.articleRef,
+          })),
           model: v.model, provider: v.provider,
           verifiedCitations: v.verifiedCitations,
           ttftMs: v.ttftMs, totalMs: v.totalMs, timings: v.timings,
