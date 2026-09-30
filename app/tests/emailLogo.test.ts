@@ -9,7 +9,7 @@
  */
 import { describe, it, expect } from "vitest"
 import {
-  approvalEmail, assignmentEmail, dueReminderEmail, inviteEmail, reminderEmail, signInEmail,
+  approvalEmail, assignmentEmail, dpoReportEmail, dueReminderEmail, inviteEmail, reminderEmail, signInEmail,
 } from "../src/lib/ecomail"
 
 const HOST = "intranet.futbalsfz.sk"
@@ -45,9 +45,10 @@ describe("logo v e-mailoch", () => {
     expect(mail.html).toContain('src="https://cdn.inde.sk/logo.png"')
   })
 
-  it("bez loga sa obrázok nevykreslí vôbec", () => {
+  it("bez loga organizácie sa jej obrázok nevykreslí — ostane len ikona Contineo v pätičke", () => {
     const mail = signInEmail(LINK, HOST, "sk", { displayName: "Contineo" })
-    expect(mail.html).not.toContain("<img")
+    expect(mail.html.match(/<img /g)).toHaveLength(1)
+    expect(mail.html).not.toContain("/api/brand/")
   })
 })
 
@@ -71,5 +72,22 @@ describe("pozvánka: kto pozýva a kam (Ján 28. 9. 2026)", () => {
     expect(b.text).toContain("Slovenský futbalový zväz vás pozýva do svojho interného portálu.")
     expect(inviteEmail(LINK, HOST, "en", { ...BRANDING, displayName: "SFZ Intranet", legalName: "Slovak Football Association" }).text)
       .toContain("Slovak Football Association invites you to SFZ Intranet.")
+  })
+})
+
+describe("pätička e-mailov (Ján 30. 9. 2026)", () => {
+  const all = () => ({
+    ...emails(),
+    dpo: dpoReportEmail(LINK, HOST, "2026 Q3", { total: 1, legalObligation: 1, legitimateInterest: 0, withProblems: 0 }, "sk", BRANDING),
+  })
+
+  it("každý e-mail končí značkou Contineo.app s ikonou a odkazom na contineo.app — nie LTK Solutions", () => {
+    for (const [name, mail] of Object.entries(all())) {
+      expect(mail.html, name).not.toContain("LTK")
+      expect(mail.html, name).toContain('href="https://contineo.app"')
+      expect(mail.html, name).toContain(">Contineo.app</a>")
+      // PNG z tej istej domény, absolútne — SVG poštoví klienti nezobrazia.
+      expect(mail.html, name).toContain(`src="https://${HOST}/apple-icon.png"`)
+    }
   })
 })

@@ -13,12 +13,19 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { acknowledgementDuties } from "@/lib/pending"
 import AppShell from "@/components/AppShell"
+import Notice from "@/components/Notice"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { dueState } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
 
-export default async function DocumentsPage() {
+export default async function DocumentsPage({
+  searchParams,
+}: {
+  // Hlásenie po potvrdení dokumentu — akcia sem presmeruje (30. 9. 2026).
+  searchParams?: Promise<RawQuery>
+}) {
   const ctx = await onboardingContext()
 
   // Neznámy hostiteľ sa správa ako zakázaný (D29) — a to `notFound()`, nie
@@ -52,6 +59,7 @@ export default async function DocumentsPage() {
 
   const person = ctx.person
   const branding = brandingView(ctx.tenant)
+  const query = normalizeQuery<{ msg?: string; error?: string }>(searchParams ? await searchParams : {})
 
   const t = dictionary(person.language).onboarding
   // „do 12. 9. 2026" je ten istý kľúč ako na Prehľade — nie nový.
@@ -84,6 +92,7 @@ export default async function DocumentsPage() {
     {/* Šírka 760 px zostáva: je to text na čítanie, nie tabuľka. Shell dáva
         odsadenie a navigáciu, obmedzenie riadka je vec obsahu. */}
     <div className="duty-page" style={tenantStyle(branding)}>
+      <Notice message={query.msg} error={query.error === "1"} back="/documents" />
       <h1 className="page-title">{t.listHeading}</h1>
       <p className="quiet page-lead">{t.listIntro}</p>
 
