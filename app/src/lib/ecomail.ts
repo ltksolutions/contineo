@@ -146,6 +146,27 @@ export interface SignInBranding {
   legalName?: string
 }
 
+/** Stránka produktu v pätičke každého e-mailu. */
+export const PRODUCT_URL = "https://contineo.app"
+
+/**
+ * Pätička každého e-mailu: doména organizácie · značka **Contineo.app**
+ * s ikonou a odkazom na stránku produktu (rozhodnutie Jána 30. 9. 2026 —
+ * dovtedy tam bolo „LTK Solutions", meno prevádzkovateľa, nie produktu).
+ *
+ * Ikona je PNG z tej istej domény (`/apple-icon.png`, proxy ju púšťa bez
+ * prihlásenia). SVG by Gmail ani Outlook nezobrazili. Obrázky sú v poštových
+ * klientoch často blokované — `alt` je prázdny, text „Contineo.app" nesie
+ * značku aj bez obrázka.
+ */
+export function footerHtml(host: string): string {
+  const icon = `https://${escapujHtml(host)}/apple-icon.png`
+  return `<div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · ` +
+    `<a href="${PRODUCT_URL}" style="color:#5c6675;text-decoration:none">` +
+    `<img src="${icon}" width="14" height="14" alt="" style="vertical-align:-2px;border-radius:3px;margin-right:4px;border:0">` +
+    `Contineo.app</a></div>`
+}
+
 /**
  * Obrázok loga do hlavičky e-mailu — **vždy s absolútnou adresou**.
  *
@@ -208,7 +229,7 @@ export function signInEmail(
       ${s.fallbackNote}<br>${link}
     </p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${host} · LTK Solutions</div>
+    ${footerHtml(host)}
   </div>
 </body></html>`
 
@@ -277,7 +298,7 @@ export function assignmentEmail(
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+    ${footerHtml(host)}
   </div>
 </body></html>`
 
@@ -352,7 +373,7 @@ export function reminderEmail(
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+    ${footerHtml(host)}
   </div>
 </body></html>`
 
@@ -408,7 +429,7 @@ export function inviteEmail(
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:10px 0 0">${escapujHtml(s.privacy)} <a href="${privacyUrl}" style="color:${accent}">${escapujHtml(s.privacyLink)}</a></p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+    ${footerHtml(host)}
   </div>
 </body></html>`
 
@@ -473,7 +494,7 @@ export function approvalEmail(
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+    ${footerHtml(host)}
   </div>
 </body></html>`
 
@@ -520,7 +541,7 @@ export function dpoReportEmail(
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+    ${footerHtml(host)}
   </div>
 </body></html>`
 
@@ -578,7 +599,7 @@ export function dueReminderEmail(
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+    ${footerHtml(host)}
   </div>
 </body></html>`
 

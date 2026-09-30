@@ -101,10 +101,16 @@ export async function acknowledgeAction(fd: FormData) {
     back(documentId, t.error[result.reason] ?? t.error["write-failed"], true)
   }
 
-  // Stav sa nikde neukladá, odvodzuje sa (D27) — po prekreslení stránky
-  // vráti `hasAcknowledged()` už `true` a namiesto tlačidla bude štítok.
+  // Stav sa nikde neukladá, odvodzuje sa (D27) — zoznam aj karta ho po
+  // prekreslení odvodia znova.
   revalidatePath(`/documents/${documentId}`)
-  back(documentId, t.confirmed)
+  revalidatePath("/documents")
+  /*
+    Po potvrdení späť na „Na potvrdenie" (rozhodnutie Jána 30. 9. 2026):
+    úloha je hotová, ďalšia čaká v zozname, nie na karte, ktorú človek práve
+    dočítal. Chyby a „už potvrdené" ostávajú na karte — týkajú sa jej.
+  */
+  redirect(`/documents?${new URLSearchParams({ msg: t.confirmed }).toString()}`)
 }
 
 /**
