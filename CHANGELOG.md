@@ -57,6 +57,20 @@ nad nadpisom odkaz „← Späť na …". Na rodiča vedie cesta pod hlavičkou,
 ktorá navyše ukazuje, kde ste. Tlačidlá po dokončení („Späť na časť" pri
 výsledku testu, „Späť na kurz" pri certifikáte) zostávajú.
 
+### Znenia na karte dokumentu, preindexovanie a oprava textu (2026-09-29)
+
+Karta dokumentu v knižnici ukazuje ako **platné znenie** to, ktoré platí dnes.
+Zverejnená novela, ktorá ešte neplatí, má vlastnú kartu **Pripravované
+znenie**; medzi staršími sú len minulé znenia. Dovtedy karta pri novele
+vopred ukazovala budúce znenie ako platné.
+
+**Preindexovať** sa dá každé znenie z ponuky ⋯, v Správe všetky naraz —
+asistent hľadá aj v starších zneniach. **Opraviť text** (preklep, čiarka) sa
+dá pri platnom znení aj pri zverejnenej novele; staršie znenie je doklad
+a neopravuje sa (D150).
+
+Hlásenie o novej verzii portálu: „Obnovením stránky prejdete na ňu.“
+
 ### Prehľad ako rozcestník, bez stáleho menu (2026-09-29)
 
 Na počítači ani na tablete už **nie je stále menu** — ani pás, ani bočný

@@ -250,6 +250,44 @@ jeho prvý odkaz nesie rovnováhu riadku a čítanie kurzu po častiach.
 
 ---
 
+## 2026-09-29 — znenia na karte dokumentu, preindexovanie a oprava textu (D150)
+
+**Čo sa spravilo.** Tri fázy na Jánovu otázku „pri starších zneniach nemáme
+možnosť preindexovať“ (PR #183–#186).
+
+- **Fáza 1 — karta ukazuje znenia podľa platnosti.** „Platné znenie“ = platné
+  dnes (`effectiveVersion()`), nová karta **Pripravované znenie** pre novelu
+  vopred, staršie len minulé. Rozdelené na `current` (zobrazenie) a `latest`
+  (postup nového znenia).
+- **Fáza 2 — `reindexVersion()`.** Preindexuje jedno znenie a dotkne sa len jeho
+  úsekov; aktívne členenie ostáva jedno (naposledy zverejnené). V ponuke ⋯ pri
+  každom znení „Preindexovať“, v Správe „Preindexovať všetky znenia“.
+- **Fáza 3 — oprava textu platného aj pripravovaného znenia (D150, dodatok
+  k ADR-007).** „Opraviť text“ pri znení nahrá jeho text do editora, blok opravy
+  povie, ktoré znenie opravuje; minulé sa neopravuje (D78).
+- Hlásenie o novej verzii portálu je všeobecné (Ján): „Obnovením stránky
+  prejdete na ňu.“
+- Naostro na `sfz:test_znenia`: karta, oba spôsoby preindexovania (bez zápisu),
+  oprava interpunkcie v čl. 7 novely — dotkla sa len novely.
+
+**Nefungovalo / poučenie.**
+
+- **Chyba, ktorú nikto nehlásil:** karta aj `reindex()` a `fixText()` brali
+  „platné“ ako naposledy zverejnené (`isActive`). Pri novele vopred karta
+  ukazovala budúce znenie ako platné a dnes platné medzi staršími s vetou
+  „Ľudia ich už nevidia“; preindexovanie a oprava by išli do budúceho znenia.
+  Vzniklo to D143 (nahradené platí ďalej) — stránka pre čitateľa bola
+  opravená, karta nie.
+- `Date.now()` v render funkcii zhodila ESLint (čistota React) — nebolo ho
+  treba: naposledy zverejnené, ktoré dnes neplatí a nemá koniec, je vždy novela.
+- Editor je Toast UI (ProseMirror), nie `<textarea>` — naostro sa text menil
+  kurzorom a klávesnicou.
+- **V dôvode opravy som obrátil poradie** („bodkočiarka namiesto čiarky“ namiesto
+  „čiarka namiesto bodkočiarky“). Je v `textFixes[]` aj v audite a nemení sa (D24).
+- Bodka za „vyhovie“ z plánu v novele už bola — skúška prešla na čl. 7.
+
+---
+
 ## 2026-09-29 — Prehľad ako rozcestník, bez stáleho menu (SHELL-rozcestnik)
 
 **Rozhodnutie (Ján, 29. 9. 2026, Q1–Q5 v `docs/design/SHELL-rozcestnik.md`).**
