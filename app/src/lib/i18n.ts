@@ -840,6 +840,23 @@ interface Dictionary {
       noLongerInDepartment: string
       note: string
     }
+    /** Potvrdenie odvolania pridelenia (`/hr/[id]/revoke`). */
+    revokeAssignment: {
+      heading: string
+      lead: string
+      whatHappensHeading: string
+      /** Ľudia, ktorým úloha zmizne. */
+      tasksDisappear: (n: number) => string
+      nobodyLoses: string
+      acknowledgementsStay: (n: number) => string
+      recordStays: string
+      reassign: string
+      reasonLabel: string
+      reasonHint: string
+      confirm: string
+      cancel: string
+      alreadyRevoked: string
+    }
     notify: {
       back: string
       heading: string
@@ -932,7 +949,8 @@ interface Dictionary {
       /** „Pridelené: 3 (2 normy × 2 publiká)." Tvary čísloviek patria sem. */
       assigned: (count: number, documents: number, audiences: number) => string
       assignedWithExisting: (count: number, documents: number, audiences: number, already: number) => string
-      revoked: string
+      /** Čo presne sa odvolalo — norma a publikum. */
+      revoked: (what: string) => string
       alreadyRevoked: string
       nobodyToNotify: string
       tooManyRecipients: (recipients: number, max: number) => string
@@ -4019,6 +4037,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noLongerInDepartment: "už nie je v oddelení",
       note: "Zoznam sa počíta pri zobrazení. Kto z oddelenia odišiel bez potvrdenia, zostáva tu označený — inak by ticho zmizol a nikto by sa nedozvedel, že sa to nedoriešilo; e-mail sa mu ale neposiela. Kto odišiel z celej organizácie, tu nie je — jeho potvrdenie (alebo jeho chýbanie) však zostáva v záznamoch.",
     },
+    revokeAssignment: {
+      heading: "Odvolať pridelenie",
+      lead: "Skontrolujte, ktoré pridelenie odvolávate. Odvolá sa až tlačidlom dole.",
+      whatHappensHeading: "Čo sa stane po odvolaní",
+      tasksDisappear: (n) => n === 1 ? "1 človeku, ktorý ešte nepotvrdil, zmizne úloha z „Na potvrdenie“ a nepríde mu pripomienka." : `${n} ľuďom, ktorí ešte nepotvrdili, zmizne úloha z „Na potvrdenie“ a nepríde im pripomienka.`,
+      nobodyLoses: "Úlohu z tohto pridelenia už nikto nemá — všetci potvrdili.",
+      acknowledgementsStay: (n) => `Potvrdenia, ktoré už vznikli (${n}), zostávajú platné. Odvolanie ich nemaže.`,
+      recordStays: "Záznam o pridelení sa nemaže: v audite zostane pridelenie aj jeho odvolanie. Odvolanie sa nedá vrátiť späť.",
+      reassign: "Ak ho budete chcieť znova, pridelíte normu nanovo — vznikne nové pridelenie s dnešným dátumom.",
+      reasonLabel: "Dôvod odvolania",
+      reasonHint: "Nepovinný. Zapíše sa do auditu, aby bolo o rok jasné, prečo sa pridelenie zrušilo.",
+      confirm: "Odvolať pridelenie",
+      cancel: "Späť bez odvolania",
+      alreadyRevoked: "Toto pridelenie už neplatí.",
+    },
     notify: {
       back: "← Späť na detail",
       heading: "Dať vedieť e-mailom",
@@ -4108,7 +4141,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).` +
         ` ${already} už ${already === 1 ? "pridelené bolo" : already < 5 ? "pridelené boli" : "pridelených bolo"}` +
         " — nič sa nezdvojilo.",
-      revoked: "Pridelenie odvolané. Záznam o ňom zostáva.",
+      revoked: (what) => `Odvolané: ${what}. Záznam o pridelení zostáva.`,
       alreadyRevoked: "Toto pridelenie už neplatí.",
       nobodyToNotify: "Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal.",
       tooManyRecipients: (recipients, max) =>
@@ -7435,6 +7468,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noLongerInDepartment: "už není v oddělení",
       note: "Seznam se počítá při zobrazení. Kdo z oddělení odešel bez potvrzení, zůstává tu označený — jinak by tiše zmizel a nikdo by se nedozvěděl, že se to nedořešilo; e-mail se mu ale neposílá. Kdo odešel z celé organizace, tu není — jeho potvrzení (nebo jeho chybění) však zůstává v záznamech.",
     },
+    revokeAssignment: {
+      heading: "Odvolat přidělení",
+      lead: "Zkontrolujte, které přidělení odvoláváte. Odvolá se až tlačítkem dole.",
+      whatHappensHeading: "Co se stane po odvolání",
+      tasksDisappear: (n) => n === 1 ? "1 člověku, který ještě nepotvrdil, zmizí úkol z „K potvrzení“ a nepřijde mu připomínka." : `${n} lidem, kteří ještě nepotvrdili, zmizí úkol z „K potvrzení“ a nepřijde jim připomínka.`,
+      nobodyLoses: "Úkol z tohoto přidělení už nikdo nemá — všichni potvrdili.",
+      acknowledgementsStay: (n) => `Potvrzení, která už vznikla (${n}), zůstávají platná. Odvolání je nemaže.`,
+      recordStays: "Záznam o přidělení se nemaže: v auditu zůstane přidělení i jeho odvolání. Odvolání nelze vrátit zpět.",
+      reassign: "Pokud ho budete chtít znovu, přidělíte normu nově — vznikne nové přidělení s dnešním datem.",
+      reasonLabel: "Důvod odvolání",
+      reasonHint: "Nepovinný. Zapíše se do auditu, aby bylo za rok jasné, proč se přidělení zrušilo.",
+      confirm: "Odvolat přidělení",
+      cancel: "Zpět bez odvolání",
+      alreadyRevoked: "Toto přidělení už neplatí.",
+    },
     notify: {
       back: "← Zpět na detail",
       heading: "Dát vědět e-mailem",
@@ -7524,7 +7572,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).` +
         ` ${already} už ${already === 1 ? "přidělené bylo" : already < 5 ? "přidělená byla" : "přidělených bylo"}` +
         " — nic se nezdvojilo.",
-      revoked: "Přidělení odvoláno. Záznam o něm zůstává.",
+      revoked: (what) => `Odvoláno: ${what}. Záznam o přidělení zůstává.`,
       alreadyRevoked: "Toto přidělení už neplatí.",
       nobodyToNotify: "Není komu poslat — potvrdili už všichni, kdo v oddělení zůstal.",
       tooManyRecipients: (recipients, max) =>
@@ -10842,6 +10890,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noLongerInDepartment: "no longer in the department",
       note: "The list is computed when the page is opened. Anyone who left the department without acknowledging stays here, marked — otherwise they would quietly disappear and nobody would learn it was left unresolved; they are not e-mailed, though. Anyone who left the organisation altogether is not here — but their acknowledgement (or the lack of it) stays in the records.",
     },
+    revokeAssignment: {
+      heading: "Revoke assignment",
+      lead: "Check which assignment you are revoking. Nothing happens until you press the button below.",
+      whatHappensHeading: "What happens when you revoke it",
+      tasksDisappear: (n) => n === 1 ? "1 person who has not acknowledged yet will no longer see the task under “To acknowledge” and will get no reminder." : `${n} people who have not acknowledged yet will no longer see the task under “To acknowledge” and will get no reminder.`,
+      nobodyLoses: "Nobody has a task from this assignment any more — everyone has acknowledged.",
+      acknowledgementsStay: (n) => `Acknowledgements already given (${n}) stay valid. Revoking does not delete them.`,
+      recordStays: "The record is not deleted: the audit keeps both the assignment and its revocation. Revoking cannot be undone.",
+      reassign: "If you need it again, assign the regulation anew — a new assignment with today's date is created.",
+      reasonLabel: "Reason for revoking",
+      reasonHint: "Optional. It goes into the audit so that a year from now it is clear why the assignment was cancelled.",
+      confirm: "Revoke assignment",
+      cancel: "Back without revoking",
+      alreadyRevoked: "This assignment is no longer in force.",
+    },
     notify: {
       back: "← Back to the detail",
       heading: "Notify by e-mail",
@@ -10930,7 +10993,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Assigned: ${count} (${documents} ${documents === 1 ? "document" : "documents"}` +
         ` × ${audiences} ${audiences === 1 ? "audience" : "audiences"}).` +
         ` ${already} had already been assigned — nothing was duplicated.`,
-      revoked: "Assignment revoked. The record of it stays.",
+      revoked: (what) => `Revoked: ${what}. The record of the assignment stays.`,
       alreadyRevoked: "This assignment is no longer in force.",
       nobodyToNotify: "There is nobody to send to — everyone still in the department has acknowledged.",
       tooManyRecipients: (recipients, max) =>

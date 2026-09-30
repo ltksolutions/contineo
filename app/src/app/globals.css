@@ -7520,3 +7520,20 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .learning-off-actions { flex-direction: column; align-self: stretch; }
   .learning-off-actions .button { flex-basis: auto; justify-content: center; min-height: 48px; }
 }
+
+/* ── Potvrdenie odvolania pridelenia (`/hr/[id]/revoke`, 30. 9. 2026) ─────── */
+.revoke-effects {
+  margin: 0 0 22px;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  font-size: var(--fs-body);
+  line-height: 1.55;
+}
+.revoke-form { display: grid; gap: 8px; }
+.revoke-form textarea { width: 100%; }
+.revoke-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+@media (max-width: 639px) {
+  .revoke-actions { flex-direction: column; }
+  .revoke-actions > .button { flex-basis: auto; justify-content: center; min-height: 44px; }
+}
