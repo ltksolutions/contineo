@@ -17,7 +17,7 @@ import { hrContext, assignableDocuments, isHr } from "@/lib/hr"
 import { revoke as revokeAcknowledgement } from "@/lib/acknowledgements"
 import {
   assign, revoke, loadAssignment, notAcknowledged, recordNotification,
-  audienceFromSelection,
+  audienceFromSelection, audienceLabel,
 } from "@/lib/assignments"
 import { allDepartments } from "@/lib/departments"
 import { send, assignmentEmail, reminderEmail } from "@/lib/ecomail"
@@ -180,27 +180,43 @@ export async function assignAction(fd: FormData) {
   }
 
   const t = dictionary(actor.language).hr.actions
-  const message = already === 0
-    ? t.assigned(assigned, selected.length, audiences.length)
-    : t.assignedWithExisting(assigned, selected.length, audiences.length, already)
+  // Jedno pridelenie povie čo a komu — „1 (1 norma × 1 adresát)" nič nehovorí.
+  const message = already === 0 && assigned === 1 && selected.length === 1 && audiences.length === 1
+    ? t.assignedOne(`${selected[0].title} — ${audienceLabel(audiences[0])}`)
+    : already === 0
+      ? t.assigned(assigned, selected.length, audiences.length)
+      : t.assignedWithExisting(assigned, selected.length, audiences.length, already)
 
   revalidatePath("/hr")
   redirect("/hr?msg=" + encodeURIComponent(message))
 }
 
+/**
+ * Odvolanie pridelenia — **len z potvrdzovacej stránky** `/hr/[id]/revoke`.
+ *
+ * Do 30. 9. 2026 bolo tlačidlo priamo v zozname a odvolávalo jedným
+ * kliknutím. Odvolaná karta zo zoznamu zmizla, ďalšie sa posunuli nahor
+ * a druhé kliknutie na to isté miesto odvolalo **iné** pridelenie (naostro
+ * dvakrát za sebou). Úkon, ktorý sa nedá vrátiť, má pred sebou stránku,
+ * ktorá povie, čo presne sa stane.
+ */
 export async function revokeAction(fd: FormData) {
   const actor = await hr()
   if (!actor) redirect("/hr")
 
   const id = fieldText(fd, "id")
+  const t = dictionary(actor.language).hr.actions
+  const assignment = await loadAssignment(actor.companyCode, id)
   // Odvolanie **nemaže potvrdenia**, ktoré medzitým vznikli — človek ten
   // dokument naozaj prečítal a záznam o tom je jeho.
-  const changed = await revoke(actor.companyCode, id, actor.email)
+  const changed = await revoke(actor.companyCode, id, actor.email, fieldText(fd, "reason"))
 
   revalidatePath("/hr")
   redirect("/hr?msg=" + encodeURIComponent(
-    changed ? dictionary(actor.language).hr.actions.revoked : dictionary(actor.language).hr.actions.alreadyRevoked
-  ))
+    changed && assignment
+      ? t.revoked(`${assignment.subject.documentTitle} — ${audienceLabel(assignment.audience)}`)
+      : t.alreadyRevoked
+  ) + (changed ? "" : "&error=1"))
 }
 
 /**

@@ -18,7 +18,6 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import AckBar from "@/components/AckBar"
-import { revokeAction } from "./actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 
@@ -146,12 +145,12 @@ export default async function HrOverviewPage({
                       {t.notifyByEmail}
                     </Link>
                   )}
-                  <form action={revokeAction}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <button className="button button--quiet" type="submit">
-                      {t.revoke}
-                    </button>
-                  </form>
+                  {/* Odkaz na potvrdenie, nie tlačidlo, ktoré hneď odvolá: po
+                      odvolaní sa karty posunú a druhé kliknutie trafilo iné
+                      pridelenie (30. 9. 2026). */}
+                  <Link className="button button--quiet" href={`/hr/${encodeURIComponent(p.id)}/revoke`}>
+                    {t.revoke}
+                  </Link>
                 </div>
               </li>
             )

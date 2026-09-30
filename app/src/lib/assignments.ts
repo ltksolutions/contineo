@@ -218,7 +218,7 @@ export function audienceLabel(a: Audience): string {
     // radšej priznať, že názov nepoznáme, než ukázať identifikátor ako názov.
     case "department": return `oddelenie „${a.label ?? "(neznámy)"}" a jeho podriadené`
     case "person": return a.value ?? "(osoba nezadaná)"
-    default: return "(neznáme publikum)"
+    default: return "(neznámy adresát)"
   }
 }
 
@@ -513,7 +513,7 @@ export async function carryOverCandidates(
   return carryOverFrom(rows, versionId)
 }
 
-export async function revoke(companyCode: string, id: string, actor: string): Promise<boolean> {
+export async function revoke(companyCode: string, id: string, actor: string, reason?: string): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   // `companyCode` je v podmienke, nie v kontrole nad ňou: identifikátor sa dá
@@ -527,6 +527,9 @@ export async function revoke(companyCode: string, id: string, actor: string): Pr
     await writeAudit({
       companyCode, subject: "assignment", action: "revoked", actor: actor, targetId: id,
       targetLabel: `${previous.subject.documentTitle} (${previous.subject.versionLabel}) — ${audienceLabel(previous.audience)}`,
+      // Dôvod je nepovinný, ale keď ho personalista napíše, patrí k úkonu —
+      // o rok je to jediné miesto, kde sa dá zistiť, prečo pridelenie zmizlo.
+      ...(reason?.trim() ? { note: reason.trim() } : {}),
     })
   }
   return r.modifiedCount > 0

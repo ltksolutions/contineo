@@ -840,6 +840,23 @@ interface Dictionary {
       noLongerInDepartment: string
       note: string
     }
+    /** Potvrdenie odvolania pridelenia (`/hr/[id]/revoke`). */
+    revokeAssignment: {
+      heading: string
+      lead: string
+      whatHappensHeading: string
+      /** Ľudia, ktorým úloha zmizne. */
+      tasksDisappear: (n: number) => string
+      nobodyLoses: string
+      acknowledgementsStay: (n: number) => string
+      recordStays: string
+      reassign: string
+      reasonLabel: string
+      reasonHint: string
+      confirm: string
+      cancel: string
+      alreadyRevoked: string
+    }
     notify: {
       back: string
       heading: string
@@ -929,10 +946,13 @@ interface Dictionary {
       noAudience: string
       noDocument: string
       saveFailed: string
-      /** „Pridelené: 3 (2 normy × 2 publiká)." Tvary čísloviek patria sem. */
+      /** „Pridelené: 4 (2 normy × 2 adresáti)." Tvary čísloviek patria sem. */
+      /** Jedno pridelenie — povie čo a komu, nie počty. */
+      assignedOne: (what: string) => string
       assigned: (count: number, documents: number, audiences: number) => string
       assignedWithExisting: (count: number, documents: number, audiences: number, already: number) => string
-      revoked: string
+      /** Čo presne sa odvolalo — norma a publikum. */
+      revoked: (what: string) => string
       alreadyRevoked: string
       nobodyToNotify: string
       tooManyRecipients: (recipients: number, max: number) => string
@@ -4019,6 +4039,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noLongerInDepartment: "už nie je v oddelení",
       note: "Zoznam sa počíta pri zobrazení. Kto z oddelenia odišiel bez potvrdenia, zostáva tu označený — inak by ticho zmizol a nikto by sa nedozvedel, že sa to nedoriešilo; e-mail sa mu ale neposiela. Kto odišiel z celej organizácie, tu nie je — jeho potvrdenie (alebo jeho chýbanie) však zostáva v záznamoch.",
     },
+    revokeAssignment: {
+      heading: "Odvolať pridelenie",
+      lead: "Skontrolujte, ktoré pridelenie odvolávate. Odvolá sa až tlačidlom dole.",
+      whatHappensHeading: "Čo sa stane po odvolaní",
+      tasksDisappear: (n) => n === 1 ? "1 človeku, ktorý ešte nepotvrdil, zmizne úloha z „Na potvrdenie“ a nepríde mu pripomienka." : `${n} ľuďom, ktorí ešte nepotvrdili, zmizne úloha z „Na potvrdenie“ a nepríde im pripomienka.`,
+      nobodyLoses: "Úlohu z tohto pridelenia už nikto nemá — všetci potvrdili.",
+      acknowledgementsStay: (n) => `Potvrdenia, ktoré už vznikli (${n}), zostávajú platné. Odvolanie ich nemaže.`,
+      recordStays: "Záznam o pridelení sa nemaže: v audite zostane pridelenie aj jeho odvolanie. Odvolanie sa nedá vrátiť späť.",
+      reassign: "Ak ho budete chcieť znova, pridelíte normu nanovo — vznikne nové pridelenie s dnešným dátumom.",
+      reasonLabel: "Dôvod odvolania",
+      reasonHint: "Nepovinný. Zapíše sa do auditu, aby bolo o rok jasné, prečo sa pridelenie zrušilo.",
+      confirm: "Odvolať pridelenie",
+      cancel: "Späť bez odvolania",
+      alreadyRevoked: "Toto pridelenie už neplatí.",
+    },
     notify: {
       back: "← Späť na detail",
       heading: "Dať vedieť e-mailom",
@@ -4088,7 +4123,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         people: n => (n === 1 ? "osoba" : n >= 2 && n <= 4 ? "osoby" : "osôb"),
         everyone: "všetkým",
         everyoneRest: "v organizácii",
-        noAudience: "publikum zatiaľ nevybrané",
+        noAudience: "adresát zatiaľ nevybraný",
       },
       impactStale: "Výber sa zmenil — skontroluj dopad znova",
       impactStaleNote: n => (n === 1
@@ -4100,19 +4135,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noAudience: "Nevybral si, komu sa prideľuje.",
       noDocument: "Nevybral si žiadny dokument s platným znením.",
       saveFailed: "Pridelenie sa nepodarilo uložiť. Skús to znova.",
+      assignedOne: (what) => `Pridelené: ${what}.`,
       assigned: (count, documents, audiences) =>
         `Pridelené: ${count} (${documents} ${documents === 1 ? "norma" : documents < 5 ? "normy" : "noriem"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).`,
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátov"}).`,
       assignedWithExisting: (count, documents, audiences, already) =>
         `Pridelené: ${count} (${documents} ${documents === 1 ? "norma" : documents < 5 ? "normy" : "noriem"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).` +
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátov"}).` +
         ` ${already} už ${already === 1 ? "pridelené bolo" : already < 5 ? "pridelené boli" : "pridelených bolo"}` +
         " — nič sa nezdvojilo.",
-      revoked: "Pridelenie odvolané. Záznam o ňom zostáva.",
+      revoked: (what) => `Odvolané: ${what}. Záznam o pridelení zostáva.`,
       alreadyRevoked: "Toto pridelenie už neplatí.",
       nobodyToNotify: "Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal.",
       tooManyRecipients: (recipients, max) =>
-        `Príjemcov je ${recipients}, naraz sa dá poslať najviac ${max}. Rozdeľ pridelenie na menšie publiká.`,
+        `Príjemcov je ${recipients}, naraz sa dá poslať najviac ${max}. Rozdeľ pridelenie na menšie skupiny adresátov.`,
       sent: (n) => `Odoslané ${n} ľuďom, ktorí ešte nepotvrdili.`,
       sentWithFailures: (n, failed) => `Odoslané ${n}. Nedoručiteľné: ${failed}`,
     },
@@ -5526,7 +5562,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labelSuggestion: d => `úplné znenie od ${d}`,
       labelSuggested: "Návrh z dátumu účinnosti. Označenie je doslova vo formulke potvrdenia.",
       effectiveFromSourceSuggested: "Predvyplnené zo schválených údajov o znení.",
-      carryOver: n => `Prideliť nové znenie tým istým publikám (${n})`,
+      carryOver: n => `Prideliť nové znenie tým istým adresátom (${n})`,
       carryOverNote: "Odškrtni, ak chceš prideliť inak — potom to urobíš v kroku 4 alebo v Pridelených normách.",
       publishFrom: d => `Zverejniť od ${d}`,
       publishAndAssign: "Zverejniť a prideliť",
@@ -5590,10 +5626,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     carryOver: {
       heading: "Prideliť aj nové znenie",
       intro: (label) => `Znenie „${label}" nemá zatiaľ pridelené nikoho. Predošlé znenia pridelené boli — potvrdenie sa viaže na konkrétne znenie, takže novelu treba prideliť znova.`,
-      audiences: "Publiká z predošlých znení",
+      audiences: "Adresáti z predošlých znení",
       previously: (label, reason) => `${label} · pôvodný dôvod: ${reason}`,
       reason: "Dôvod pridelenia",
-      reasonNote: "Povinný. Napíš, prečo sa má norma potvrdiť znova — pôvodný dôvod pri každom publiku je len nápoveda a pri novele spravidla neplatí.",
+      reasonNote: "Povinný. Napíš, prečo sa má norma potvrdiť znova — pôvodný dôvod pri každom adresátovi je len nápoveda a pri novele spravidla neplatí.",
       due: "Termín potvrdenia",
       dueNone: "bez termínu",
       dueDate: "do dátumu",
@@ -7435,6 +7471,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noLongerInDepartment: "už není v oddělení",
       note: "Seznam se počítá při zobrazení. Kdo z oddělení odešel bez potvrzení, zůstává tu označený — jinak by tiše zmizel a nikdo by se nedozvěděl, že se to nedořešilo; e-mail se mu ale neposílá. Kdo odešel z celé organizace, tu není — jeho potvrzení (nebo jeho chybění) však zůstává v záznamech.",
     },
+    revokeAssignment: {
+      heading: "Odvolat přidělení",
+      lead: "Zkontrolujte, které přidělení odvoláváte. Odvolá se až tlačítkem dole.",
+      whatHappensHeading: "Co se stane po odvolání",
+      tasksDisappear: (n) => n === 1 ? "1 člověku, který ještě nepotvrdil, zmizí úkol z „K potvrzení“ a nepřijde mu připomínka." : `${n} lidem, kteří ještě nepotvrdili, zmizí úkol z „K potvrzení“ a nepřijde jim připomínka.`,
+      nobodyLoses: "Úkol z tohoto přidělení už nikdo nemá — všichni potvrdili.",
+      acknowledgementsStay: (n) => `Potvrzení, která už vznikla (${n}), zůstávají platná. Odvolání je nemaže.`,
+      recordStays: "Záznam o přidělení se nemaže: v auditu zůstane přidělení i jeho odvolání. Odvolání nelze vrátit zpět.",
+      reassign: "Pokud ho budete chtít znovu, přidělíte normu nově — vznikne nové přidělení s dnešním datem.",
+      reasonLabel: "Důvod odvolání",
+      reasonHint: "Nepovinný. Zapíše se do auditu, aby bylo za rok jasné, proč se přidělení zrušilo.",
+      confirm: "Odvolat přidělení",
+      cancel: "Zpět bez odvolání",
+      alreadyRevoked: "Toto přidělení už neplatí.",
+    },
     notify: {
       back: "← Zpět na detail",
       heading: "Dát vědět e-mailem",
@@ -7504,7 +7555,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         people: n => (n === 1 ? "osoba" : n >= 2 && n <= 4 ? "osoby" : "osob"),
         everyone: "všem",
         everyoneRest: "v organizaci",
-        noAudience: "publikum zatím nevybráno",
+        noAudience: "adresát zatím nevybrán",
       },
       impactStale: "Výběr se změnil — zkontroluj dopad znovu",
       impactStaleNote: n => (n === 1
@@ -7516,19 +7567,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noAudience: "Nevybral jsi, komu se přiděluje.",
       noDocument: "Nevybral jsi žádný dokument s platným zněním.",
       saveFailed: "Přidělení se nepodařilo uložit. Zkus to znovu.",
+      assignedOne: (what) => `Přiděleno: ${what}.`,
       assigned: (count, documents, audiences) =>
         `Přiděleno: ${count} (${documents} ${documents === 1 ? "předpis" : documents < 5 ? "předpisy" : "předpisů"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).`,
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátů"}).`,
       assignedWithExisting: (count, documents, audiences, already) =>
         `Přiděleno: ${count} (${documents} ${documents === 1 ? "předpis" : documents < 5 ? "předpisy" : "předpisů"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).` +
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátů"}).` +
         ` ${already} už ${already === 1 ? "přidělené bylo" : already < 5 ? "přidělená byla" : "přidělených bylo"}` +
         " — nic se nezdvojilo.",
-      revoked: "Přidělení odvoláno. Záznam o něm zůstává.",
+      revoked: (what) => `Odvoláno: ${what}. Záznam o přidělení zůstává.`,
       alreadyRevoked: "Toto přidělení už neplatí.",
       nobodyToNotify: "Není komu poslat — potvrdili už všichni, kdo v oddělení zůstal.",
       tooManyRecipients: (recipients, max) =>
-        `Příjemců je ${recipients}, najednou lze poslat nejvýše ${max}. Rozděl přidělení na menší publika.`,
+        `Příjemců je ${recipients}, najednou lze poslat nejvýše ${max}. Rozděl přidělení na menší skupiny adresátů.`,
       sent: (n) => `Odesláno ${n} lidem, kteří ještě nepotvrdili.`,
       sentWithFailures: (n, failed) => `Odesláno ${n}. Nedoručitelné: ${failed}`,
     },
@@ -8940,7 +8992,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labelSuggestion: d => `úplné znění od ${d}`,
       labelSuggested: "Návrh z data účinnosti. Označení je doslova ve formulce potvrzení.",
       effectiveFromSourceSuggested: "Předvyplněno ze schválených údajů o znění.",
-      carryOver: n => `Přidělit nové znění stejným publikům (${n})`,
+      carryOver: n => `Přidělit nové znění stejným adresátům (${n})`,
       carryOverNote: "Odškrtni, pokud chceš přidělit jinak — pak to uděláš v kroku 4 nebo v Přidělených předpisech.",
       publishFrom: d => `Zveřejnit od ${d}`,
       publishAndAssign: "Zveřejnit a přidělit",
@@ -9004,10 +9056,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     carryOver: {
       heading: "Přidělit i nové znění",
       intro: (label) => `Znění „${label}" zatím nemá přiděleného nikoho. Předchozí znění přidělená byla — potvrzení se váže na konkrétní znění, takže novelu je třeba přidělit znovu.`,
-      audiences: "Publika z předchozích znění",
+      audiences: "Adresáti z předchozích znění",
       previously: (label, reason) => `${label} · původní důvod: ${reason}`,
       reason: "Důvod přidělení",
-      reasonNote: "Povinný. Napiš, proč se má norma potvrdit znovu — původní důvod u každého publika je jen nápověda a u novely zpravidla neplatí.",
+      reasonNote: "Povinný. Napiš, proč se má norma potvrdit znovu — původní důvod u každého adresáta je jen nápověda a u novely zpravidla neplatí.",
       due: "Termín potvrzení",
       dueNone: "bez termínu",
       dueDate: "do data",
@@ -10842,6 +10894,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noLongerInDepartment: "no longer in the department",
       note: "The list is computed when the page is opened. Anyone who left the department without acknowledging stays here, marked — otherwise they would quietly disappear and nobody would learn it was left unresolved; they are not e-mailed, though. Anyone who left the organisation altogether is not here — but their acknowledgement (or the lack of it) stays in the records.",
     },
+    revokeAssignment: {
+      heading: "Revoke assignment",
+      lead: "Check which assignment you are revoking. Nothing happens until you press the button below.",
+      whatHappensHeading: "What happens when you revoke it",
+      tasksDisappear: (n) => n === 1 ? "1 person who has not acknowledged yet will no longer see the task under “To acknowledge” and will get no reminder." : `${n} people who have not acknowledged yet will no longer see the task under “To acknowledge” and will get no reminder.`,
+      nobodyLoses: "Nobody has a task from this assignment any more — everyone has acknowledged.",
+      acknowledgementsStay: (n) => `Acknowledgements already given (${n}) stay valid. Revoking does not delete them.`,
+      recordStays: "The record is not deleted: the audit keeps both the assignment and its revocation. Revoking cannot be undone.",
+      reassign: "If you need it again, assign the regulation anew — a new assignment with today's date is created.",
+      reasonLabel: "Reason for revoking",
+      reasonHint: "Optional. It goes into the audit so that a year from now it is clear why the assignment was cancelled.",
+      confirm: "Revoke assignment",
+      cancel: "Back without revoking",
+      alreadyRevoked: "This assignment is no longer in force.",
+    },
     notify: {
       back: "← Back to the detail",
       heading: "Notify by e-mail",
@@ -10923,18 +10990,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noAudience: "You did not choose who to assign to.",
       noDocument: "You did not choose any document with an effective version.",
       saveFailed: "The assignment could not be saved. Please try again.",
+      assignedOne: (what) => `Assigned: ${what}.`,
       assigned: (count, documents, audiences) =>
         `Assigned: ${count} (${documents} ${documents === 1 ? "document" : "documents"}` +
-        ` × ${audiences} ${audiences === 1 ? "audience" : "audiences"}).`,
+        ` × ${audiences} ${audiences === 1 ? "recipient" : "recipients"}).`,
       assignedWithExisting: (count, documents, audiences, already) =>
         `Assigned: ${count} (${documents} ${documents === 1 ? "document" : "documents"}` +
-        ` × ${audiences} ${audiences === 1 ? "audience" : "audiences"}).` +
+        ` × ${audiences} ${audiences === 1 ? "recipient" : "recipients"}).` +
         ` ${already} had already been assigned — nothing was duplicated.`,
-      revoked: "Assignment revoked. The record of it stays.",
+      revoked: (what) => `Revoked: ${what}. The record of the assignment stays.`,
       alreadyRevoked: "This assignment is no longer in force.",
       nobodyToNotify: "There is nobody to send to — everyone still in the department has acknowledged.",
       tooManyRecipients: (recipients, max) =>
-        `There are ${recipients} recipients; at most ${max} can be sent at once. Split the assignment into smaller audiences.`,
+        `There are ${recipients} recipients; at most ${max} can be sent at once. Split the assignment into smaller groups of recipients.`,
       sent: (n) => `Sent to ${n} people who have not acknowledged yet.`,
       sentWithFailures: (n, failed) => `Sent ${n}. Undeliverable: ${failed}`,
     },
@@ -12346,7 +12414,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labelSuggestion: d => `consolidated version from ${d}`,
       labelSuggested: "Suggested from the effective date. The label appears verbatim in the acknowledgement statement.",
       effectiveFromSourceSuggested: "Prefilled from the approved version details.",
-      carryOver: n => `Assign the new version to the same audiences (${n})`,
+      carryOver: n => `Assign the new version to the same recipients (${n})`,
       carryOverNote: "Untick to assign differently — you can then do it in step 4 or in Assigned documents.",
       publishFrom: d => `Publish from ${d}`,
       publishAndAssign: "Publish and assign",
@@ -12410,10 +12478,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     carryOver: {
       heading: "Assign the new version too",
       intro: (label) => `Version “${label}” has nobody assigned yet. Earlier versions did — an acknowledgement is tied to one specific version, so an amendment has to be assigned again.`,
-      audiences: "Audiences from earlier versions",
+      audiences: "Recipients from earlier versions",
       previously: (label, reason) => `${label} · original reason: ${reason}`,
       reason: "Reason for assigning",
-      reasonNote: "Required. Say why the document has to be acknowledged again — the original reason shown by each audience is only a hint and rarely holds for an amendment.",
+      reasonNote: "Required. Say why the document has to be acknowledged again — the original reason shown by each recipient is only a hint and rarely holds for an amendment.",
       due: "Acknowledgement deadline",
       dueNone: "no deadline",
       dueDate: "by date",
