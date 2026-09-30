@@ -27,7 +27,6 @@ import { sortPeopleBySurname } from "@/lib/assignOrder"
 import { audienceSignature } from "@/lib/assignSummary"
 import { listPeople } from "@/lib/people"
 import { treeOptions } from "@/lib/treeOptions"
-import Link from "next/link"
 import { hrContext, assignableDocuments } from "@/lib/hr"
 import { audienceFromSelection, audienceImpact, type Audience } from "@/lib/assignments"
 import { audiencesInOrg } from "@/lib/persons"
@@ -156,9 +155,6 @@ export default async function AssignPage({
     {/* 1180 namiesto 680 (Q1): dva stĺpce od 1100 px. Pod tým jeden stĺpec
         v dnešnom poradí — na telefóne sa nič nemení. */}
     <div className="assign-page" style={tenantStyle(branding)}>
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
 
       <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>

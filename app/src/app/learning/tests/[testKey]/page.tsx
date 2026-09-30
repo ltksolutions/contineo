@@ -68,7 +68,6 @@ export default async function TestEditorPage({ params, searchParams }: { params:
   return (
     <AppShell language={language} title={test.title}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
-        <p className="detail-back"><Link className="quiet" href="/learning/tests">{tt.back}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={`/learning/tests/${key}`} />
         <header className="ch">
           <h1 className="page-title">{test.title}</h1>

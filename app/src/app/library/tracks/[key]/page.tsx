@@ -8,7 +8,6 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { trackByKey } from "@/lib/tracks"
 import { libraryList } from "@/lib/libraryRead"
@@ -82,9 +81,6 @@ export default async function TrackDetailPage({
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={message ?? error} error={Boolean(error)} back={here} />
 
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/library/tracks" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>

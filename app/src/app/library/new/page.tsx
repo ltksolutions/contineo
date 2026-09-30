@@ -9,7 +9,6 @@
 
 import { notFound, redirect } from "next/navigation"
 import { treeOptions } from "@/lib/treeOptions"
-import Link from "next/link"
 import Notice from "@/components/Notice"
 import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
 import UploadFiles from "@/components/UploadFiles"
@@ -80,10 +79,6 @@ export default async function NewDocumentPage({
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
-
       <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>
         {t.intro}

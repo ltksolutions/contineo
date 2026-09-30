@@ -94,10 +94,6 @@ export default async function PersonDetailPage({
   return (
     <AppShell language={ctx.person.language} title={displayName(o)}>
     <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
-
       {/* V nadpise meno **s titulmi** (D84) — je to zobrazenie, nie záznam.
           Vedľa neho stav osoby tou istou pilulkou ako v zozname (OSOBY.md,
           úloha 1); stav povinností nižšie je iná škála a nezlučuje sa s ním. */}

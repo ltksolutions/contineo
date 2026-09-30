@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Bez odkazov „← Späť" nad nadpisom (2026-09-30)
+
+Hlbšie stránky (detail normy, pridelenie, osoba, kurz, test…) už nemajú
+nad nadpisom odkaz „← Späť na …". Na rodiča vedie cesta pod hlavičkou,
+ktorá navyše ukazuje, kde ste. Tlačidlá po dokončení („Späť na časť" pri
+výsledku testu, „Späť na kurz" pri certifikáte) zostávajú.
+
 ### Prehľad ako rozcestník, bez stáleho menu (2026-09-29)
 
 Na počítači ani na tablete už **nie je stále menu** — ani pás, ani bočný

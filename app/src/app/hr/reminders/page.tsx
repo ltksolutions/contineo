@@ -55,9 +55,6 @@ export default async function RemindersPage({
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={q.msg} error={q.error === "1"} back="/hr/reminders" />
 
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
 
       <h1 className="page-title">
         {notice ? t.noticeHeading : t.heading}

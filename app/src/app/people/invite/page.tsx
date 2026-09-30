@@ -11,7 +11,6 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
 import { peopleContext, neverSignedIn } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -46,9 +45,6 @@ export default async function InviteAllPage({
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <Notice message={q.msg} error={q.error === "1"} back="/people/invite" />
 
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
 
       <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 24px", maxWidth: 620 }}>{t.intro}</p>

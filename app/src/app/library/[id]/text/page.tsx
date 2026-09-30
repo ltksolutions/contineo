@@ -12,7 +12,6 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { libraryDetail } from "@/lib/libraryRead"
 import { getCollection } from "@/lib/mongodb"
@@ -91,11 +90,6 @@ export default async function EditorPage({
     <div style={{ maxWidth: 1200, ...tenantStyle(branding) }}>
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
 
-      <p style={{ margin: "0 0 10px" }}>
-        <Link className="quiet" href={`/library/${encodeURIComponent(documentId)}`} style={{ fontSize: "var(--fs-body)" }}>
-          {t.back}
-        </Link>
-      </p>
 
       <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>
       <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 16px" }}>

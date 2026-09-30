@@ -12,7 +12,6 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { pendingCurations } from "@/lib/curation"
 import { brandingView } from "@/lib/tenants"
@@ -59,9 +58,6 @@ export default async function CurationPage({
 
       <Notice message={message} error={error === "1"} back="/library/curation" />
 
-      <p style={{ margin: "0 0 22px" }}>
-        <Link className="button button--quiet" href="/library">← {dictionary(language).nav.library}</Link>
-      </p>
 
       {/* `.empty` zo ZAKLADU (SPRAVA, úloha 2.1). Bez akcie: správca si
           prácu nevie nájsť sám — pár mu pripraví hodnotiteľ. */}

@@ -7,7 +7,6 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -31,10 +30,6 @@ export default async function ImportPage() {
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
-
       <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 20px", maxWidth: 600 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introMiddle}

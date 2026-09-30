@@ -52,10 +52,6 @@ export default async function AssignmentDetailPage({
   return (
     <AppShell language={ctx.person.language} title={assignment.subject.documentTitle}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
-      </p>
-
       <h1 className="page-title">
         {assignment.subject.documentTitle}
       </h1>

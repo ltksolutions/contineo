@@ -4,7 +4,6 @@
  * pri pauze alebo vyčerpaných pokusoch vypnuté tlačidlo s vetou.
  */
 
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { loadTestContext } from "@/lib/testPage"
 import { resumeIndex } from "@/lib/testAttempts"
@@ -28,7 +27,7 @@ export default async function TestIntroPage({ params, searchParams }: {
   if (c.state === "not-signed-in") redirect("/sign-in")
   if (c.state === "back") redirect(c.to)
   if (c.state !== "ready") notFound()
-  const { row, base, partHref, language } = c
+  const { row, base, language } = c
   const ta = dictionary(language).learning.attempt
   const av = row.availability
   if (av.open) {
@@ -45,7 +44,6 @@ export default async function TestIntroPage({ params, searchParams }: {
   return (
     <AppShell language={language} trail={c.trail}>
       <div className="at">
-        <p className="detail-back"><Link className="quiet" href={partHref}>← {ta.backToPart}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={base} />
         <section className="card at-intro">
           <h1 className="page-title">{row.test?.title ?? row.testKey}</h1>

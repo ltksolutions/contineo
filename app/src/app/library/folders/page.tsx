@@ -44,7 +44,6 @@ export default async function FoldersPage({
   const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const branding = brandingView(ctx.tenant)
   const uiLanguage = ctx.person.language
-  const t = dictionary(uiLanguage).library.list
   const tf = dictionary(uiLanguage).library.folders
 
   const folders = await allFolders(ctx.tenant.companyCode)
@@ -61,9 +60,6 @@ export default async function FoldersPage({
 
         <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
           <h1 className="page-title" style={{ margin: 0 }}>{tf.manage}</h1>
-          <Link className="quiet" href="/library" style={{ marginLeft: "auto" }}>
-            ← {t.heading}
-          </Link>
         </div>
 
         {/*
