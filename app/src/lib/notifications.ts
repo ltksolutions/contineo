@@ -106,12 +106,12 @@ export function notificationHref(
     case "reindexed":
     case "rewritten":
     case "versionPublished":
-      return documentId ? `/library/${encodeURIComponent(documentId)}` : null
+    // Úloha zodpovednej osoby je na karte dokumentu v správe (D151). Kto nie je
+    // správca obsahu, uvidí tam len svoju úlohu; do 30. 9. 2026 viedol odkaz
+    // na čitateľskú kartu, kde formulár mýlil pri potvrdzovaní.
     case "responsibleAssigned":
     case "draftResponsibleAssigned":
-      // Na znenie pre čitateľa, nie do knižnice: zodpovedná osoba nemusí byť
-      // správca obsahu, a formulár na právny základ je práve tam.
-      return documentId ? `/documents/${encodeURIComponent(documentId)}` : null
+      return documentId ? `/library/${encodeURIComponent(documentId)}` : null
     case "remindersSent":
       return "/hr/reminders"
     default:

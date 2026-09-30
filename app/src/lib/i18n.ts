@@ -1884,6 +1884,9 @@ interface Dictionary {
     pendingTaskHeading: (date: string) => string
     pendingTaskNote: string
     pendingBasisSummary: (date: string) => string
+    /** Karta dokumentu v správe pre zodpovednú osobu bez roly správcu obsahu. */
+    basisPageLead: string
+    basisPageRead: string
     missingBasisTag: string
     missingBasisNote: string
     missingOptionNote: string
@@ -5406,6 +5409,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     pendingTaskHeading: (date) => `Znenie účinné od ${date} — ste zodpovedná osoba`,
     pendingTaskNote: "Znenie je zverejnené, ale ešte nie je účinné. Určte právny základ, nech ho znenie má od prvého dňa účinnosti.",
     pendingBasisSummary: (date) => `Právny základ znenia účinného od ${date}`,
+    basisPageLead: "Ste zodpovedná osoba za znenie tohto predpisu. Tu určíte právny základ, na ktorom sa spracúvajú záznamy o oboznámení.",
+    basisPageRead: "Otvoriť predpis na čítanie",
     missingBasisTag: "bez právneho základu",
     missingBasisNote: "Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho však mala určiť ešte pred ostrou prevádzkou.",
     missingOptionNote: "Chýba vhodná položka? Požiadajte správcu organizácie, aby ju doplnil do číselníka právnych základov.",
@@ -8814,6 +8819,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     pendingTaskHeading: (date) => `Znění účinné od ${date} — jste odpovědná osoba`,
     pendingTaskNote: "Znění je zveřejněno, ale ještě není účinné. Určete právní základ, ať jej znění má od prvního dne účinnosti.",
     pendingBasisSummary: (date) => `Právní základ znění účinného od ${date}`,
+    basisPageLead: "Jste odpovědná osoba za znění tohoto předpisu. Zde určíte právní základ, na kterém se zpracovávají záznamy o seznámení.",
+    basisPageRead: "Otevřít předpis ke čtení",
     missingBasisTag: "bez právního základu",
     missingBasisNote: "Předpis bez právního základu se přidělit dá. Odpovědná osoba by jej však měla určit ještě před ostrým provozem.",
     missingOptionNote: "Chybí vhodná položka? Požádejte správce organizace, aby ji doplnil do číselníku právních základů.",
@@ -12214,6 +12221,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     pendingTaskHeading: (date) => `Version effective from ${date} — you are the responsible person`,
     pendingTaskNote: "This version is published but not yet in effect. Set the legal basis so the version has it from its first day in effect.",
     pendingBasisSummary: (date) => `Legal basis of the version effective from ${date}`,
+    basisPageLead: "You are the responsible person for this regulation. Set here the legal basis on which records of acknowledgement are processed.",
+    basisPageRead: "Open the regulation for reading",
     missingBasisTag: "no legal basis",
     missingBasisNote: "A regulation without a legal basis can still be assigned. The responsible person should, however, set it before going live.",
     missingOptionNote: "Missing a suitable option? Ask the organisation administrator to add it to the legal bases list.",
