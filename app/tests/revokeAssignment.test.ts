@@ -137,3 +137,24 @@ describe("zoznam pridelení", () => {
     expect(src).toContain("/revoke`")
   })
 })
+
+describe("slovo „publikum“ na obrazovke (30. 9. 2026)", () => {
+  it("hlásenia a popisy prideľovania ho už nepoužívajú v žiadnom jazyku", async () => {
+    const { dictionary } = await import("../src/lib/i18n")
+    for (const lang of ["sk", "cs", "en"] as const) {
+      const hr = dictionary(lang).hr
+      const texts = [
+        hr.actions.assigned(4, 2, 2), hr.actions.assignedWithExisting(4, 2, 2, 1),
+        hr.actions.tooManyRecipients(300, 200), hr.actions.assignedOne("X — Y"),
+      ]
+      for (const text of texts) expect(text, `${lang}: ${text}`).not.toMatch(/publik|publík|audience/i)
+    }
+  })
+
+  it("jedno pridelenie povie čo a komu", async () => {
+    const { dictionary } = await import("../src/lib/i18n")
+    expect(dictionary("sk").hr.actions.assignedOne("Skúšobný poriadok — oddelenie „Oddelenie IT\""))
+      .toBe("Pridelené: Skúšobný poriadok — oddelenie „Oddelenie IT\".")
+    expect(dictionary("sk").hr.actions.assigned(4, 2, 2)).toBe("Pridelené: 4 (2 normy × 2 adresáti).")
+  })
+})

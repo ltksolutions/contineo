@@ -776,7 +776,7 @@ async function carryOverTo(input: {
   )
   const chosen = candidates.filter(c => picked.has(audienceRef(c.audience)))
   if (chosen.length === 0) {
-    throw new AppError("assignment.noAudience", "Nevybral si žiadne publikum.")
+    throw new AppError("assignment.noAudience", "Nevybral si žiadneho adresáta.")
   }
 
   let created = 0

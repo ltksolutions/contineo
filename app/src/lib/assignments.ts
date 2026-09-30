@@ -218,7 +218,7 @@ export function audienceLabel(a: Audience): string {
     // radšej priznať, že názov nepoznáme, než ukázať identifikátor ako názov.
     case "department": return `oddelenie „${a.label ?? "(neznámy)"}" a jeho podriadené`
     case "person": return a.value ?? "(osoba nezadaná)"
-    default: return "(neznáme publikum)"
+    default: return "(neznámy adresát)"
   }
 }
 

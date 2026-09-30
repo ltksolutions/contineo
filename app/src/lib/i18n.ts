@@ -946,7 +946,9 @@ interface Dictionary {
       noAudience: string
       noDocument: string
       saveFailed: string
-      /** „Pridelené: 3 (2 normy × 2 publiká)." Tvary čísloviek patria sem. */
+      /** „Pridelené: 4 (2 normy × 2 adresáti)." Tvary čísloviek patria sem. */
+      /** Jedno pridelenie — povie čo a komu, nie počty. */
+      assignedOne: (what: string) => string
       assigned: (count: number, documents: number, audiences: number) => string
       assignedWithExisting: (count: number, documents: number, audiences: number, already: number) => string
       /** Čo presne sa odvolalo — norma a publikum. */
@@ -4121,7 +4123,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         people: n => (n === 1 ? "osoba" : n >= 2 && n <= 4 ? "osoby" : "osôb"),
         everyone: "všetkým",
         everyoneRest: "v organizácii",
-        noAudience: "publikum zatiaľ nevybrané",
+        noAudience: "adresát zatiaľ nevybraný",
       },
       impactStale: "Výber sa zmenil — skontroluj dopad znova",
       impactStaleNote: n => (n === 1
@@ -4133,19 +4135,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noAudience: "Nevybral si, komu sa prideľuje.",
       noDocument: "Nevybral si žiadny dokument s platným znením.",
       saveFailed: "Pridelenie sa nepodarilo uložiť. Skús to znova.",
+      assignedOne: (what) => `Pridelené: ${what}.`,
       assigned: (count, documents, audiences) =>
         `Pridelené: ${count} (${documents} ${documents === 1 ? "norma" : documents < 5 ? "normy" : "noriem"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).`,
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátov"}).`,
       assignedWithExisting: (count, documents, audiences, already) =>
         `Pridelené: ${count} (${documents} ${documents === 1 ? "norma" : documents < 5 ? "normy" : "noriem"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).` +
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátov"}).` +
         ` ${already} už ${already === 1 ? "pridelené bolo" : already < 5 ? "pridelené boli" : "pridelených bolo"}` +
         " — nič sa nezdvojilo.",
       revoked: (what) => `Odvolané: ${what}. Záznam o pridelení zostáva.`,
       alreadyRevoked: "Toto pridelenie už neplatí.",
       nobodyToNotify: "Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal.",
       tooManyRecipients: (recipients, max) =>
-        `Príjemcov je ${recipients}, naraz sa dá poslať najviac ${max}. Rozdeľ pridelenie na menšie publiká.`,
+        `Príjemcov je ${recipients}, naraz sa dá poslať najviac ${max}. Rozdeľ pridelenie na menšie skupiny adresátov.`,
       sent: (n) => `Odoslané ${n} ľuďom, ktorí ešte nepotvrdili.`,
       sentWithFailures: (n, failed) => `Odoslané ${n}. Nedoručiteľné: ${failed}`,
     },
@@ -5559,7 +5562,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labelSuggestion: d => `úplné znenie od ${d}`,
       labelSuggested: "Návrh z dátumu účinnosti. Označenie je doslova vo formulke potvrdenia.",
       effectiveFromSourceSuggested: "Predvyplnené zo schválených údajov o znení.",
-      carryOver: n => `Prideliť nové znenie tým istým publikám (${n})`,
+      carryOver: n => `Prideliť nové znenie tým istým adresátom (${n})`,
       carryOverNote: "Odškrtni, ak chceš prideliť inak — potom to urobíš v kroku 4 alebo v Pridelených normách.",
       publishFrom: d => `Zverejniť od ${d}`,
       publishAndAssign: "Zverejniť a prideliť",
@@ -5623,10 +5626,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     carryOver: {
       heading: "Prideliť aj nové znenie",
       intro: (label) => `Znenie „${label}" nemá zatiaľ pridelené nikoho. Predošlé znenia pridelené boli — potvrdenie sa viaže na konkrétne znenie, takže novelu treba prideliť znova.`,
-      audiences: "Publiká z predošlých znení",
+      audiences: "Adresáti z predošlých znení",
       previously: (label, reason) => `${label} · pôvodný dôvod: ${reason}`,
       reason: "Dôvod pridelenia",
-      reasonNote: "Povinný. Napíš, prečo sa má norma potvrdiť znova — pôvodný dôvod pri každom publiku je len nápoveda a pri novele spravidla neplatí.",
+      reasonNote: "Povinný. Napíš, prečo sa má norma potvrdiť znova — pôvodný dôvod pri každom adresátovi je len nápoveda a pri novele spravidla neplatí.",
       due: "Termín potvrdenia",
       dueNone: "bez termínu",
       dueDate: "do dátumu",
@@ -7552,7 +7555,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         people: n => (n === 1 ? "osoba" : n >= 2 && n <= 4 ? "osoby" : "osob"),
         everyone: "všem",
         everyoneRest: "v organizaci",
-        noAudience: "publikum zatím nevybráno",
+        noAudience: "adresát zatím nevybrán",
       },
       impactStale: "Výběr se změnil — zkontroluj dopad znovu",
       impactStaleNote: n => (n === 1
@@ -7564,19 +7567,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noAudience: "Nevybral jsi, komu se přiděluje.",
       noDocument: "Nevybral jsi žádný dokument s platným zněním.",
       saveFailed: "Přidělení se nepodařilo uložit. Zkus to znovu.",
+      assignedOne: (what) => `Přiděleno: ${what}.`,
       assigned: (count, documents, audiences) =>
         `Přiděleno: ${count} (${documents} ${documents === 1 ? "předpis" : documents < 5 ? "předpisy" : "předpisů"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).`,
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátů"}).`,
       assignedWithExisting: (count, documents, audiences, already) =>
         `Přiděleno: ${count} (${documents} ${documents === 1 ? "předpis" : documents < 5 ? "předpisy" : "předpisů"}` +
-        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).` +
+        ` × ${audiences} ${audiences === 1 ? "adresát" : audiences < 5 ? "adresáti" : "adresátů"}).` +
         ` ${already} už ${already === 1 ? "přidělené bylo" : already < 5 ? "přidělená byla" : "přidělených bylo"}` +
         " — nic se nezdvojilo.",
       revoked: (what) => `Odvoláno: ${what}. Záznam o přidělení zůstává.`,
       alreadyRevoked: "Toto přidělení už neplatí.",
       nobodyToNotify: "Není komu poslat — potvrdili už všichni, kdo v oddělení zůstal.",
       tooManyRecipients: (recipients, max) =>
-        `Příjemců je ${recipients}, najednou lze poslat nejvýše ${max}. Rozděl přidělení na menší publika.`,
+        `Příjemců je ${recipients}, najednou lze poslat nejvýše ${max}. Rozděl přidělení na menší skupiny adresátů.`,
       sent: (n) => `Odesláno ${n} lidem, kteří ještě nepotvrdili.`,
       sentWithFailures: (n, failed) => `Odesláno ${n}. Nedoručitelné: ${failed}`,
     },
@@ -8988,7 +8992,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labelSuggestion: d => `úplné znění od ${d}`,
       labelSuggested: "Návrh z data účinnosti. Označení je doslova ve formulce potvrzení.",
       effectiveFromSourceSuggested: "Předvyplněno ze schválených údajů o znění.",
-      carryOver: n => `Přidělit nové znění stejným publikům (${n})`,
+      carryOver: n => `Přidělit nové znění stejným adresátům (${n})`,
       carryOverNote: "Odškrtni, pokud chceš přidělit jinak — pak to uděláš v kroku 4 nebo v Přidělených předpisech.",
       publishFrom: d => `Zveřejnit od ${d}`,
       publishAndAssign: "Zveřejnit a přidělit",
@@ -9052,10 +9056,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     carryOver: {
       heading: "Přidělit i nové znění",
       intro: (label) => `Znění „${label}" zatím nemá přiděleného nikoho. Předchozí znění přidělená byla — potvrzení se váže na konkrétní znění, takže novelu je třeba přidělit znovu.`,
-      audiences: "Publika z předchozích znění",
+      audiences: "Adresáti z předchozích znění",
       previously: (label, reason) => `${label} · původní důvod: ${reason}`,
       reason: "Důvod přidělení",
-      reasonNote: "Povinný. Napiš, proč se má norma potvrdit znovu — původní důvod u každého publika je jen nápověda a u novely zpravidla neplatí.",
+      reasonNote: "Povinný. Napiš, proč se má norma potvrdit znovu — původní důvod u každého adresáta je jen nápověda a u novely zpravidla neplatí.",
       due: "Termín potvrzení",
       dueNone: "bez termínu",
       dueDate: "do data",
@@ -10986,18 +10990,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noAudience: "You did not choose who to assign to.",
       noDocument: "You did not choose any document with an effective version.",
       saveFailed: "The assignment could not be saved. Please try again.",
+      assignedOne: (what) => `Assigned: ${what}.`,
       assigned: (count, documents, audiences) =>
         `Assigned: ${count} (${documents} ${documents === 1 ? "document" : "documents"}` +
-        ` × ${audiences} ${audiences === 1 ? "audience" : "audiences"}).`,
+        ` × ${audiences} ${audiences === 1 ? "recipient" : "recipients"}).`,
       assignedWithExisting: (count, documents, audiences, already) =>
         `Assigned: ${count} (${documents} ${documents === 1 ? "document" : "documents"}` +
-        ` × ${audiences} ${audiences === 1 ? "audience" : "audiences"}).` +
+        ` × ${audiences} ${audiences === 1 ? "recipient" : "recipients"}).` +
         ` ${already} had already been assigned — nothing was duplicated.`,
       revoked: (what) => `Revoked: ${what}. The record of the assignment stays.`,
       alreadyRevoked: "This assignment is no longer in force.",
       nobodyToNotify: "There is nobody to send to — everyone still in the department has acknowledged.",
       tooManyRecipients: (recipients, max) =>
-        `There are ${recipients} recipients; at most ${max} can be sent at once. Split the assignment into smaller audiences.`,
+        `There are ${recipients} recipients; at most ${max} can be sent at once. Split the assignment into smaller groups of recipients.`,
       sent: (n) => `Sent to ${n} people who have not acknowledged yet.`,
       sentWithFailures: (n, failed) => `Sent ${n}. Undeliverable: ${failed}`,
     },
@@ -12409,7 +12414,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labelSuggestion: d => `consolidated version from ${d}`,
       labelSuggested: "Suggested from the effective date. The label appears verbatim in the acknowledgement statement.",
       effectiveFromSourceSuggested: "Prefilled from the approved version details.",
-      carryOver: n => `Assign the new version to the same audiences (${n})`,
+      carryOver: n => `Assign the new version to the same recipients (${n})`,
       carryOverNote: "Untick to assign differently — you can then do it in step 4 or in Assigned documents.",
       publishFrom: d => `Publish from ${d}`,
       publishAndAssign: "Publish and assign",
@@ -12473,10 +12478,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     carryOver: {
       heading: "Assign the new version too",
       intro: (label) => `Version “${label}” has nobody assigned yet. Earlier versions did — an acknowledgement is tied to one specific version, so an amendment has to be assigned again.`,
-      audiences: "Audiences from earlier versions",
+      audiences: "Recipients from earlier versions",
       previously: (label, reason) => `${label} · original reason: ${reason}`,
       reason: "Reason for assigning",
-      reasonNote: "Required. Say why the document has to be acknowledged again — the original reason shown by each audience is only a hint and rarely holds for an amendment.",
+      reasonNote: "Required. Say why the document has to be acknowledged again — the original reason shown by each recipient is only a hint and rarely holds for an amendment.",
       due: "Acknowledgement deadline",
       dueNone: "no deadline",
       dueDate: "by date",

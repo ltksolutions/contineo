@@ -180,9 +180,12 @@ export async function assignAction(fd: FormData) {
   }
 
   const t = dictionary(actor.language).hr.actions
-  const message = already === 0
-    ? t.assigned(assigned, selected.length, audiences.length)
-    : t.assignedWithExisting(assigned, selected.length, audiences.length, already)
+  // Jedno pridelenie povie čo a komu — „1 (1 norma × 1 adresát)" nič nehovorí.
+  const message = already === 0 && assigned === 1 && selected.length === 1 && audiences.length === 1
+    ? t.assignedOne(`${selected[0].title} — ${audienceLabel(audiences[0])}`)
+    : already === 0
+      ? t.assigned(assigned, selected.length, audiences.length)
+      : t.assignedWithExisting(assigned, selected.length, audiences.length, already)
 
   revalidatePath("/hr")
   redirect("/hr?msg=" + encodeURIComponent(message))
