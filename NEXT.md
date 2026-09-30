@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-29** (asistent a znenia v indexe ADR-024; právny základ v príprave ADR-023)
+Posledná aktualizácia: **2026-09-30** (menu v hlavičke a otázka z hlavičky; história otázok; znenia na karte dokumentu D150)
 
 ---
 
@@ -16,7 +16,8 @@ Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
 a `docs/DEVLOG.md`. **Od 27. 9. pracujú v repe dve sessions naraz** —
 každá vo vlastnom `git worktree` (ADR-020); rozrobené vetvy druhej session
-vidno v `git branch -a`, nie v tomto súbore.
+vidno v `git branch -a`, nie v tomto súbore. Zvyšok z 29. 9.: worktree
+`.claude/worktrees/worktree-parallel-design-2a590b` (odpojený) — odstrániť, keď ho Ján pustí.
 
 **Osoby SFZ sú v systéme (27. 9.):** 153 osôb z licenčného zoznamu M365
 (150 nových + 3 doplnené), bez technických kont. Zaradenie do oddelení je
@@ -63,6 +64,17 @@ dve znenia po článkoch), nad odpoveďou je štítok dňa, pri zdroji znenie.
 Overuje sa `npm run versions:questions` na skúšobnom `sfz:test_znenia`
 (6 z 6). Ostré normy majú zatiaľ po jednom znení.
 
+**Karta dokumentu (PR #183–#186):** platné znenie = platí dnes, novela vopred
+ako „Pripravované znenie“; preindexovanie každého znenia; oprava textu platného
+aj pripravovaného znenia (**D150**, dodatok k ADR-007), minulé nie.
+
+**Nové rozhranie (29.–30. 9., PR #188–#194):** menu 9 bodiek v hlavičke,
+Prehľad ako rozcestník, spodná lišta rovnaká pre každého; **Knižnica pre
+každého** (platné dokumenty organizácie, čitateľský detail). **Otázka sa kladie
+v hlavičke**, odpoveď s citáciami vedľa seba (≥ 1180 px). **História otázok**
+(`/ask/history`, skrytie, vymazanie, lehota `answersMonths`) je nasadená —
+súhlas DPO sa získava dodatočne (`docs/TODO.md`, 🔴).
+
 **Vzdelávanie (modul `learning`, ADR-018) je L0–L3 v produkcii** (PR
 #130–#153): kurzy s verziami a videom, banka otázok a testy, výsledky pre
 zodpovedné osoby, certifikát s overením `/verify/…?h=`, tlačou a PDF s QR.
@@ -82,6 +94,9 @@ nastaví na `/dpo` a v Nastaveniach. Otvorená karta po nasadení ponúkne
 „Obnoviť" (inak posiela akcie starej verzii).
 
 ## Čo čaká na rozhodnutie Jána
+
+**🔴 Ako DPO: súhlas s účelom „história otázok“** (H1) — nasadené 30. 9.
+pred súhlasom, na pokyn Jána; záznam o spracúvaní a `/privacy` sú doplnené.
 
 **Lehota uloženia certifikátov** podľa registratúrneho plánu zväzu — DPO
 doplní do záznamu o spracúvaní (C2, D132).
@@ -133,8 +148,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (29. 9.): **0 errors, 41 warnings,
-2059 testov v 146 súboroch.** Pri veľkej záťaži stroja pomôže
+Baseline, proti ktorej sa porovnáva (30. 9.): **0 errors, 41 warnings,
+2169 testov v 156 súboroch.** Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
