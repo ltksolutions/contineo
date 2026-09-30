@@ -14,12 +14,14 @@
  * otázku" otvorí jej plachtu.
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type SyntheticEvent } from "react"
 import Link from "next/link"
 import { askQuestion } from "@/lib/sseClient"
 import type { AskResult } from "@/lib/sseClient"
-import Answer from "./Answer"
+import { AnswerBody, AnswerAside, answerHasCitations } from "./Answer"
 import type { AnswerState } from "./Answer"
+import CitationSheet from "./CitationSheet"
+import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import Rating from "./Rating"
 import { HEADER_ASK_ID } from "./HeaderAsk"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
@@ -70,7 +72,13 @@ export default function Search({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: q, answer: v.text,
-          sources: v.sources, citations: v.citations,
+          sources: v.sources,
+          // Bez `at` — poloha značky je len pre tento beh (ASK-odpoved-dva-
+          // stlpce, Q1). Do záznamu nepatrí: nová vec v schéme by prišla
+          // z tela požiadavky, nie z rozhodnutia.
+          citations: v.citations.map(c => ({
+            chunkIndex: c.chunkIndex, citedText: c.citedText, documentTitle: c.documentTitle, articleRef: c.articleRef,
+          })),
           model: v.model, provider: v.provider,
           verifiedCitations: v.verifiedCitations,
           ttftMs: v.ttftMs, totalMs: v.totalMs, timings: v.timings,
@@ -134,8 +142,61 @@ export default function Search({
 
   const time = askedAt?.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })
 
+  /*
+   * Prepojenie značiek `[n]` v texte s citáciami (ASK-odpoved-dva-stlpce).
+   * Delegované udalosti na obale — `FormattedText` a `AnswerAside` ostávajú
+   * bez stavu. Prejdenie myšou alebo fokus zvýrazní citáciu aj vetu; klik
+   * zvýraznenie pripne. Pod 1180 px klik posunie na citáciu pod odpoveďou,
+   * pod 640 px otvorí spodnú plachtu.
+   */
+  const layout = useRef<HTMLDivElement>(null)
+  const [hover, setHover] = useState<number | null>(null)
+  const [pinned, setPinned] = useState<number | null>(null)
+  const [sheet, setSheet] = useState<number | null>(null)
+  const active = hover ?? pinned
+  const unique = mergeCitations(state.citations)
+  const split = answerHasCitations(state)
+
+  useEffect(() => {
+    const root = layout.current
+    if (!root) return
+    root.querySelectorAll("[data-cite].is-active").forEach(el => el.classList.remove("is-active"))
+    if (active === null) return
+    root.querySelectorAll<HTMLElement>("[data-cite]").forEach(el => {
+      if ((el.dataset.cite ?? "").split(" ").includes(String(active))) el.classList.add("is-active")
+    })
+  })
+
+  const citeOf = (target: EventTarget | null): number | null => {
+    const el = (target as HTMLElement | null)?.closest?.<HTMLElement>(".cite, .answer-citation")
+    const n = Number(el?.dataset.cite)
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+  const onOver = (e: SyntheticEvent) => setHover(citeOf(e.target))
+  const onOut = () => setHover(null)
+  const onClick = (e: ReactMouseEvent) => {
+    const marker = (e.target as HTMLElement).closest?.(".cite")
+    const n = citeOf(e.target)
+    if (n === null) return
+    setPinned(p => (p === n && !marker ? null : n))
+    if (!marker) return
+    if (window.matchMedia("(max-width: 639px)").matches) setSheet(n)
+    else if (!window.matchMedia("(min-width: 1180px)").matches) {
+      document.getElementById(`citation-${n}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }
+
   return (
-    <div style={{ display: "grid", gap: 18 }}>
+    <div
+      ref={layout}
+      className={split ? "ask-layout is-split" : "ask-layout"}
+      onMouseOver={onOver}
+      onMouseOut={onOut}
+      onFocus={onOver}
+      onBlur={onOut}
+      onClick={onClick}
+    >
+      <div className="ask-main">
       {/* Nadpis = otázka. „Upraviť otázku" je popis poľa v hlavičke: klik
           ho zameria a tým otvorí plachtu s touto otázkou. */}
       <div className="ask-asked">
@@ -173,9 +234,29 @@ export default function Search({
         </div>
       )}
 
-      <Answer state={state} organisation={organisation} language={language} />
+      <AnswerBody state={state} organisation={organisation} language={language} />
+      </div>
 
-      <Rating recordId={recordId} canEvaluate={canEvaluate} language={language} />
+      {/* Vpravo od karty (≥ 1180 px), inak pod ňou — poradie určuje CSS mriežka. */}
+      <aside className="ask-aside">
+        <AnswerAside state={state} canEvaluate={canEvaluate} language={language} />
+      </aside>
+
+      <div className="ask-rating">
+        <Rating recordId={recordId} canEvaluate={canEvaluate} language={language} />
+      </div>
+
+      {sheet !== null && unique[sheet - 1] && (
+        <CitationSheet
+          n={sheet}
+          total={unique.length}
+          text={cleanCitation(unique[sheet - 1].citedText)}
+          meta={[unique[sheet - 1].documentTitle, unique[sheet - 1].articleRef].filter(Boolean).join(" · ")}
+          language={language}
+          onMove={n => { setSheet(n); setPinned(n) }}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   )
 }

@@ -28,6 +28,8 @@ export interface AnswerSource {
    * vedieť, že číta, čo niekto overil, nie čo je v norme napísané.
    */
   sourceType?: string
+  /** Dokument úseku. Chýba pri odpovediach spred 30. 9. 2026 a pri overenej odpovedi. */
+  documentId?: string
   title: string
   slug?: string
   url?: string
@@ -53,6 +55,13 @@ export interface Citation {
   citedText: string
   documentTitle?: string
   articleRef?: string | null
+  /**
+   * Dĺžka textu odpovede v okamihu, keď citácia prišla (ASK-odpoved-dva-
+   * stlpce, Q1). Značka `[n]` sa podľa nej vloží na najbližší koniec vety.
+   * **Len na klientovi počas behu** — server ju neposiela a uložená odpoveď
+   * ju nemá; vtedy sa značky nekreslia, citácie áno.
+   */
+  at?: number
 }
 
 /** Zhrnutie, ktoré príde v poslednej udalosti. */
@@ -267,7 +276,7 @@ export async function askQuestion(
       text += u.token
       onChange({ text, citations: citations, phase: phase, time, comparison })
     } else if (u.type === "citation") {
-      citations.push(u.citation)
+      citations.push({ ...u.citation, at: text.length })
       onChange({ text, citations: citations, phase: phase })
     } else if (u.type === "phase") {
       phase = u.phase
@@ -283,7 +292,15 @@ export async function askQuestion(
         sources: u.sources ?? [],
         // Adaptéry bez Citations API vracajú prázdne pole; vtedy sa
         // opierame o citácie nazbierané počas streamu (žiadne) a o zdroje.
-        citations: u.citations?.length ? u.citations : citations,
+        // Poloha (`at`) je len v citáciách zo streamu — k tým z `done` sa
+        // doplní podľa poradia, ak ich je rovnako. Inak by značky zmizli
+        // v okamihu, keď odpoveď dobehne.
+        citations: u.citations?.length
+          ? u.citations.map((c, i) => ({
+              ...c,
+              at: c.at ?? (u.citations!.length === citations.length ? citations[i]?.at : undefined),
+            }))
+          : citations,
         model: u.model ?? "",
         provider: u.provider ?? "",
         verifiedCitations: u.verifiedCitations ?? false,

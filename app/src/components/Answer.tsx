@@ -55,7 +55,12 @@ function Line({ label: label, value: value }: { label: string; value: string }) 
   )
 }
 
-export default function Answer({
+/**
+ * Karta odpovede (ASK-odpoved-dva-stlpce): hlavička, text so značkami `[n]`
+ * a upozornenie na useknutú odpoveď. Citácie, zdroje a technické údaje sú
+ * v `AnswerAside` — vpravo od karty (≥ 1180 px) alebo pod ňou.
+ */
+export function AnswerBody({
   state: state,
   organisation,
   language,
@@ -122,12 +127,7 @@ export default function Answer({
   }
   const truncated = done?.stopReason === "max_tokens"
 
-  // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
-  // Pri dlhej odpovedi ich vznikne aj devätnásť, z toho polovica rovnakých.
-  const unique = mergeCitations(citations)
-
   return (
-    <div style={{ display: "grid", gap: 16 }}>
       <div className="card">
         {/* Hlavička hovorí to, čo sa inak dá len tušiť: odpoveď je zostavená
             z dokumentov organizácie, nie z toho, čo model vie odinakiaľ.
@@ -157,7 +157,9 @@ export default function Answer({
               keď ju server nepošle, zostane len kostra.
             */}
             {text ? (
-              <FormattedText text={text} />
+              // Značky `[n]` na koncoch viet — len pri citáciách s polohou
+              // zo streamu (Q1); uložená odpoveď ich nemá.
+              <FormattedText text={text} citations={citations} />
             ) : running ? (
               <div role="status" aria-live="polite">
                 {phase && (
@@ -194,46 +196,100 @@ export default function Answer({
           </div>
         )}
       </div>
+  )
+}
 
-      {/* Citácie — doslovné úryvky, o ktoré sa odpoveď opiera. */}
-      {unique.length > 0 && (
-        <div>
-          <h3 style={{ fontSize: "var(--fs-small)", textTransform: "uppercase", letterSpacing: "0.05em",
-                       color: "var(--muted)", marginBottom: 10 }}>
+
+/** Či má odpoveď bočný stĺpec citácií: beží, alebo má aspoň jednu citáciu. */
+export function answerHasCitations(state: AnswerState): boolean {
+  if (state.done?.error && !state.text) return false
+  if (state.done && !state.text && state.done.sources.length === 0) return false
+  return state.running || mergeCitations(state.citations).length > 0
+}
+
+/**
+ * Doslovné citácie, zdroje v kontexte a technické údaje
+ * (ASK-odpoved-dva-stlpce). Na ≥ 1180 px vpravo od karty (`sticky`), inak
+ * pod ňou. Citácia nesie `id="citation-n"` a `data-cite` — značky v texte
+ * na ňu ukazujú a `Search` ich prepája.
+ */
+export function AnswerAside({
+  state,
+  canEvaluate,
+  language,
+}: {
+  state: AnswerState
+  /** Technické údaje len rolám s hodnotením (Q2). */
+  canEvaluate?: boolean
+  language?: UiLanguage
+}) {
+  const t = dictionary(language).answer
+  const { citations, done, running } = state
+  if (!state.text && !running && !done) return null
+  const error = done?.error
+  if (error && !state.text) return null
+  if (done && !error && !state.text && done.sources.length === 0) return null
+  const ownLabel = (label: string, iso: string | null) => (isAutoVersionLabel(label, iso) ? "" : label)
+
+  // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
+  // Pri dlhej odpovedi ich vznikne aj devätnásť, z toho polovica rovnakých.
+  const unique = mergeCitations(citations)
+  // Citácia ↔ zdroj cez `chunkIndex` (poradie úseku v kontexte, od 0) a index
+  // zdroja (od 1). Keď sa nezhodujú, znenie a odkaz pri citácii nie sú.
+  const sourceOf = (c: Citation) => done?.sources.find(z => z.index === c.chunkIndex + 1)
+
+  return (
+    <div className="answer-aside">
+      {(unique.length > 0 || running) && (
+        <section className="answer-aside-section" aria-labelledby="citations-title">
+          <h2 className="answer-aside-title" id="citations-title">
             {t.citations(unique.length)}
             {unique.length < citations.length && (
-              <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
-                {" "}— {citations.length} {t.citationsNote}
-              </span>
+              <span className="answer-aside-note"> · {t.citationsFrom(citations.length)}</span>
             )}
-          </h3>
-          <div style={{ display: "grid", gap: 8 }}>
-            {unique.map((c, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--line)",
-                  borderLeft: "3px solid var(--teal-700)",
-                  borderRadius: 10,
-                  padding: "11px 14px",
-                }}
-              >
-                <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.6 }}>„{cleanCitation(c.citedText)}“</div>
-                <div className="quiet" style={{ fontSize: "var(--fs-micro)", marginTop: 6 }}>
-                  {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || t.sourceMissing}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+          </h2>
+          <ol className="answer-citations">
+            {unique.map((c, i) => {
+              const n = i + 1
+              const source = sourceOf(c)
+              const version = source?.version
+              return (
+                <li key={n} id={`citation-${n}`} className="answer-citation" data-cite={n} tabIndex={-1}>
+                  <span className="answer-citation-n" aria-hidden="true">{n}</span>
+                  <div className="answer-citation-body">
+                    <q className="answer-citation-text">{cleanCitation(c.citedText)}</q>
+                    <div className="answer-citation-meta">
+                      {[
+                        c.documentTitle,
+                        c.articleRef,
+                        version && t.sourceVersion(
+                          ownLabel(version.label, version.effectiveFrom),
+                          version.effectiveFrom ? formatDate(new Date(version.effectiveFrom), language) : null,
+                          null,
+                        ),
+                      ].filter(Boolean).join(" · ") || t.sourceMissing}
+                    </div>
+                    {/* Do knižnice, teda na znenie v aplikácii — nie na `url`,
+                        to je originál mimo nej (`sourceUrl`). */}
+                    {source?.documentId && (
+                      <Link className="answer-citation-open" href={`/documents/${encodeURIComponent(source.documentId)}`}>
+                        {t.openInLibrary}
+                      </Link>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+          {/* Počas písania — citácie pribúdajú s udalosťami `citation`. */}
+          {running && <div className="answer-citations-pending">{t.citationsPending}</div>}
+        </section>
       )}
 
       {/* Zdroje — čo sa dostalo do kontextu, aj keď z toho model necitoval. */}
       {done && done.sources.length > 0 && (
-        <details>
-          <summary style={{ cursor: "pointer", fontSize: "var(--fs-small)", textTransform: "uppercase",
-                            letterSpacing: "0.05em", color: "var(--muted)", fontWeight: 700 }}>
+        <details className="answer-aside-section">
+          <summary className="answer-aside-title">
             {t.sources(done.sources.length)}
           </summary>
           <div className="answer-sources">
@@ -325,13 +381,16 @@ export default function Answer({
       )}
 
       {/* Technická pätička — bez nej sa nedá porovnávať medzi konfiguráciami. */}
-      {done && !error && (
+      {/*
+        Len rolám s hodnotením (Q2) — tí istí, ktorí vidia celý hodnotiaci
+        panel. Ostatným model, tokeny a cena nič nepovedia. Zbalené: pri
+        čítaní odpovede nie sú potrebné.
+      */}
+      {done && !error && canEvaluate && (
+        <details className="answer-aside-section">
+          <summary className="answer-aside-title">{t.technical}</summary>
         <div
-          className="quiet"
-          style={{
-            display: "flex", flexWrap: "wrap", gap: 16,
-            fontSize: "var(--fs-micro)", paddingTop: 4,
-          }}
+          className="quiet answer-technical"
         >
           {done.model && <Line label="model" value={done.model} />}
           {done.provider && <Line label={t.adapter} value={done.provider} />}
@@ -387,7 +446,31 @@ export default function Answer({
             {done.verifiedCitations ? t.citationsVerified : t.citationsUnverified}
           </span>
         </div>
+        </details>
       )}
+    </div>
+  )
+}
+
+/**
+ * Karta a pod ňou citácie a zdroje, v jednom stĺpci — tam, kde nie je
+ * rozloženie `/ask` (uložená odpoveď, testy vykreslenia).
+ */
+export default function Answer({
+  state,
+  organisation,
+  canEvaluate,
+  language,
+}: {
+  state: AnswerState
+  organisation?: string
+  canEvaluate?: boolean
+  language?: UiLanguage
+}) {
+  return (
+    <div style={{ display: "grid", gap: 16 }}>
+      <AnswerBody state={state} organisation={organisation} language={language} />
+      <AnswerAside state={state} canEvaluate={canEvaluate} language={language} />
     </div>
   )
 }

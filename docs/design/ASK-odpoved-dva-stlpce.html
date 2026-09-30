@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ASK — odpoveď v dvoch stĺpcoch</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2311151c'/%3E%3Ccircle cx='16' cy='13.5' r='8' fill='none' stroke='%23fff' stroke-width='3.2'/%3E%3Ccircle cx='12.5' cy='13.5' r='1.9' fill='%23fff'/%3E%3Ccircle cx='19.5' cy='13.5' r='1.9' fill='%23fff'/%3E%3Cpath d='M11.5 20.2 L16 26.5 L19 19.7 Z' fill='%23fff'/%3E%3C/svg%3E" />
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--accent-soft:rgba(35,42,53,.08);--teal-700:#0f766e;--teal-soft:rgba(15,118,110,.09);--warn-bg:#fffbeb;--warn-fg:#b45309;--ok-bg:#ecfdf3;--ok-fg:#15803d;--bad-fg:#b42318;--radius:12px;--shadow:0 18px 48px rgba(20,28,42,.2)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:var(--accent-strong)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:92ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:92ch;line-height:1.55}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.frame-label{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);margin:0 0 6px}
+.frames-small{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.hdr{display:flex;align-items:center;gap:12px;height:56px;padding:0 20px 0 16px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.home{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;flex:none}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;font-size:12px;font-weight:700}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.q-field{flex:1;min-width:0;max-width:600px;margin-left:28px;display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:20px;background:var(--bg);border:1px solid var(--line);font-size:14px;color:var(--ink)}
+.q-field .mk{color:var(--accent);display:grid;flex:none}
+.q-field span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp{flex:1}
+.bell{position:relative;display:grid;place-items:center;width:34px;height:34px;color:var(--ink);flex:none}
+.bell b{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:none}
+.path{flex:none;background:var(--surface);border-bottom:1px solid var(--line)}
+.path-in{margin:0 auto;padding:0 32px 0 26px;min-height:40px;display:flex;align-items:center;gap:8px;max-width:1240px}
+.dots{display:grid;place-items:center;width:32px;height:32px;color:var(--ink)}
+.vsep{width:1px;height:18px;background:var(--line)}
+.path ol{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:4px;font-size:13px}
+.path li{display:flex;align-items:center;gap:4px;color:var(--muted)}
+.path li+li::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-top:1.5px solid currentColor;transform:rotate(45deg);margin:0 6px 0 2px;opacity:.55}
+.path [aria-current]{color:var(--ink);font-weight:600}
+.body{flex:1;min-height:0;overflow:auto;position:relative}
+.main{margin:0 auto;padding:28px 32px 40px;max-width:1240px}
+/* dva stĺpce */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start}
+.cols.one{grid-template-columns:minmax(0,760px)}
+.aside{position:sticky;top:0;display:grid;gap:12px;max-height:calc(100% - 0px)}
+.asked{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:start;margin:0 0 18px}
+.asked h1{font-size:24px;line-height:1.3;letter-spacing:-.015em;margin:0;font-weight:640;text-wrap:pretty}
+.asked .meta{font-size:13px;color:var(--muted)}
+.btn-q{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;font-weight:550;cursor:pointer;white-space:nowrap}
+.btn-q:hover{background:var(--surface-2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.ans{padding:18px 22px 20px}
+.ans-k{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:12.5px;font-weight:650;color:var(--muted);margin:0 0 12px}
+.ans-k .mk{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--accent);color:#fff}
+.ans-k .time{font-weight:550;padding:1px 8px;border-radius:20px;background:var(--surface-2)}
+.ans p{font-size:15.5px;line-height:1.7;margin:0 0 12px;max-width:72ch;text-wrap:pretty}
+.ans p:last-child{margin-bottom:0}
+.cite{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;margin:0 1px 0 3px;border-radius:6px;background:var(--teal-soft);color:var(--teal-700);font-size:11px;font-weight:700;vertical-align:2px;border:0;cursor:pointer;font-family:inherit;line-height:1}
+.cite:hover,.cite.on{background:var(--teal-700);color:#fff}
+.hl{background:linear-gradient(transparent 62%,rgba(15,118,110,.16) 62%)}
+.caret::after{content:"";display:inline-block;width:2px;height:1.05em;background:var(--ink);margin-left:2px;vertical-align:-2px;animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.phase{font-size:14px;color:var(--muted);margin:0 0 6px}
+.skel{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2),#f4f5f7,var(--surface-2));background-size:200% 100%;animation:sh 1.4s linear infinite;margin:10px 0 0}
+@keyframes sh{to{background-position:-200% 0}}
+.rate{display:flex;align-items:center;gap:8px;margin:16px 0 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.a-h{display:flex;align-items:baseline;gap:8px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0}
+.a-h span{font-weight:500;text-transform:none;letter-spacing:0}
+.cits{display:grid;gap:8px}
+.cit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.cit:hover{border-color:rgba(20,28,42,.26)}
+.cit.on{border-color:var(--teal-700);box-shadow:0 0 0 3px var(--teal-soft)}
+.cit .n{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--teal-soft);color:var(--teal-700);font-size:11.5px;font-weight:700;grid-row:span 3}
+.cit.on .n{background:var(--teal-700);color:#fff}
+.cit q{font-size:14px;line-height:1.55;quotes:"„" "“";text-wrap:pretty}
+.cit small{font-size:12px;color:var(--muted);line-height:1.45}
+.cit .go{font-size:12px;font-weight:600;text-decoration:none;justify-self:start}
+.cit.new{animation:inn .35s ease-out}
+@keyframes inn{from{opacity:0;transform:translateY(4px)}}
+.cit-skel{height:74px;border-radius:10px;border:1px dashed var(--line)}
+details.more{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+details.more summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;font-size:13px;font-weight:600}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translateY(-2px)}
+details.more[open] summary::after{transform:rotate(-135deg)}
+details.more summary span{color:var(--muted);font-weight:500}
+.srcs{display:grid;border-top:1px solid var(--line)}
+.src{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:1px 10px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px;text-decoration:none;color:var(--ink)}
+.src:first-child{border-top:0}
+.src i{font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+.src b{font-weight:600;line-height:1.4}
+.src small{grid-column:2;color:var(--muted);font-size:12px}
+.tag{font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;white-space:nowrap;align-self:start}
+.tech{display:flex;flex-wrap:wrap;gap:4px 14px;padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.tech b{color:var(--ink);font-weight:600}
+/* 834 / 390 */
+.n834 .main{padding:24px}
+.n834 .cols,.n390 .cols{grid-template-columns:minmax(0,1fr)}
+.n834 .aside,.n390 .aside{position:static}
+.n390 .hdr{padding:0 10px;gap:8px}
+.n390 .q-field{margin-left:0;height:38px;font-size:13.5px}
+.n390 .main{padding:16px 14px 24px}
+.n390 .asked{grid-template-columns:1fr}
+.n390 .asked h1{font-size:19px}
+.n390 .ans{padding:14px 16px}
+.n390 .ans p{font-size:16px;line-height:1.65}
+.n390 .cite{min-width:24px;height:24px;font-size:12px}
+.n390 .path-in{padding:4px 10px 4px 4px}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);height:58px;background:var(--surface);border-top:1px solid var(--line);flex:none}
+.tabbar a{position:relative;display:grid;place-items:center;align-content:center;gap:2px;font-size:10.5px;color:var(--muted);text-decoration:none}
+.tabbar a.is-on{color:var(--accent);font-weight:650}
+.bs-scrim{position:absolute;inset:0;background:rgba(17,21,28,.28);z-index:10}
+.bs{position:absolute;left:0;right:0;bottom:0;z-index:11;background:var(--surface);border-radius:18px 18px 0 0;box-shadow:var(--shadow);padding:8px 16px 18px}
+.bs .grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.bs .row{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.bs .row b{font-size:14px;flex:1}
+.bs .x{display:grid;place-items:center;width:44px;height:44px;border:0;background:transparent;border-radius:10px;margin-right:-10px;cursor:pointer;color:var(--ink)}
+.bs q{display:block;font-size:15.5px;line-height:1.6;quotes:"„" "“";margin:0 0 10px}
+.bs small{display:block;font-size:12.5px;color:var(--muted);margin:0 0 14px}
+.bs .nav{display:flex;gap:8px}
+.bs .nav .btn-q{min-height:44px;flex:1;justify-content:center}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
+table.spec tr:last-child td{border-bottom:0}
+.q{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#e0e7ff;color:#3730a3;vertical-align:1px}
+</style>
+</head>
+<body><div class="sheet">
+<h1 class="doc">ASK — odpoveď v dvoch stĺpcoch</h1>
+<p class="doc">Nadväzuje na <code>ASK-otazka-z-hlavicky</code> (pole v hlavičke, plachta, <code>/ask?q=</code> s behom). Mení sa len <b>stránka odpovede</b>. Od 1180 px sú dva stĺpce: <b>vľavo odpoveď</b> (šírka na čítanie, max. 72 znakov na riadok), <b>vpravo doslovné citácie</b>, pod nimi zbalené „Zdroje v kontexte" a „Technické údaje". Pravý stĺpec pri rolovaní ostáva na mieste. Značka <code>[1]</code> v texte a citácia vpravo sú prepojené: prejdením myšou alebo klikom sa zvýraznia obe.</p>
+<p class="doc">Rámy sú živé: v ráme „beží" citácie pribúdajú počas písania; v ostatných prejdite myšou po <code>[n]</code> alebo po citácii. Popis v <code>ASK-odpoved-dva-stlpce.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — beží, potom odpoveď s citáciami</p>
+  <p class="sec-w">Kým nepríde prvé slovo: fáza a kostra vľavo, vpravo prázdne miesto „Citácie pribudnú počas písania". Citácia sa v pravom stĺpci objaví v okamihu, keď ju server pošle, a na tom mieste v texte vznikne značka.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">1440 — beží (simulácia, spustí sa znova po kliknutí)</p><div class="frame" style="width:1440px;height:640px" data-frame="run"></div></div>
+    <div><p class="frame-label">1440 — hotová odpoveď, citácia 2 zvýraznená</p><div class="frame" style="width:1440px;height:760px" data-frame="done"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — bez doslovných citácií</p>
+  <p class="sec-w">Adaptér bez Citations API (<code>openai</code>, <code>supportsCitations = false</code>) nevracia žiadne citácie. Pravý stĺpec by bol prázdny, preto ostáva jeden stĺpec a zdroje sú pod odpoveďou ako dnes.</p>
+  <div class="frame" style="width:1440px;height:560px" data-frame="nocit"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 a 390 — jeden stĺpec</p>
+  <p class="sec-w">834: citácie pod odpoveďou, značky ostávajú; klik na <code>[n]</code> posunie stránku na citáciu a zvýrazní ju. 390: ťuknutie na <code>[n]</code> (24 px, v riadku) otvorí spodnú plachtu s citáciou, dá sa listovať „‹ Predchádzajúca / Ďalšia ›". Zoznam citácií je aj pod odpoveďou.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">834 — odpoveď</p><div class="frame" style="width:834px;height:900px" data-frame="t"></div></div>
+    <div><p class="frame-label">390 — ťuknutie na [2]</p><div class="frame" style="width:390px;height:780px" data-frame="m"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Správanie</p>
+  <table class="spec">
+    <tr><th>Čo</th><th>Ako</th></tr>
+    <tr><td>Kedy dva stĺpce</td><td>Šírka ≥ 1180 px <b>a</b> aspoň jedna citácia (alebo beh pri <code>supportsCitations</code>). Mriežka <code>minmax(0,1fr) 400px</code>, gap 28, <code>max-width</code> 1240. Inak jeden stĺpec max. 760 (dnešný stav).</td></tr>
+    <tr><td>Ľavý stĺpec</td><td>Otázka (nadpis), čas, „Upraviť otázku" · karta odpovede (hlavička „Odpoveď z dokumentov SFZ" + štítok dňa / porovnania, text, varovanie o useknutí) · „Sedí odpoveď?".</td></tr>
+    <tr><td>Pravý stĺpec</td><td><code>position: sticky</code>, vlastné rolovanie, keď je dlhší ako okno. Poradie: <b>Doslovné citácie (n)</b> s poznámkou „z m odkazov" pri zlúčení (<code>mergeCitations</code>) · <b>Zdroje v kontexte (n)</b> zbalené, s miestom v dokumente, zhodou, znením, štítkami „overená odpoveď" / „interné" · <b>Technické údaje</b> zbalené (model, adaptér, prvý token, spolu, tokeny, cena, fázy, overené citácie). Dnes je technická pätička vždy otvorená pod odpoveďou. Technické údaje vidia len roly s hodnotením (Q2 ✅).</td></tr>
+    <tr><td>Citácia</td><td>Číslo 22 px (<code>--teal-700</code> na <code>--teal-soft</code>), doslovný úryvok <code>cleanCitation(citedText)</code> v „…" 14/1.55, pod ním <code>documentTitle · articleRef</code> a znenie, ak ho nesie zodpovedajúci zdroj. „Otvoriť v knižnici" iba vtedy, keď zdroj má <code>url</code>. Zvislý pás vľavo (<code>borderLeft teal</code>) sa ruší, nahrádza ho číslo.</td></tr>
+    <tr><td>Značka v texte</td><td><code>[n]</code> za vetou, ku ktorej citácia patrí. Poloha = dĺžka textu v okamihu, keď prišla udalosť <code>citation</code> (<code>sseClient</code> si ju zapíše ako <code>at</code>), posunutá na koniec vety. Zlúčené citácie majú spoločné číslo. Uložená odpoveď značky nemá (Q1 ✅).</td></tr>
+    <tr><td>Prepojenie</td><td>Hover alebo fokus na <code>[n]</code> → citácia vpravo zvýraznená (obrys teal + 3 px svetlý lem) a posunutá do pohľadu v rámci stĺpca; veta v texte podčiarknutá svetlým pásom. Hover na citáciu → zvýraznia sa jej značky. Klik je rovnaký ako hover, ostane zvýraznené do ďalšieho kliku. <code>[n]</code> je <code>&lt;button aria-describedby&gt;</code>.</td></tr>
+    <tr><td>Počas behu</td><td>Vpravo najprv prerušovaný rám „Citácie pribudnú počas písania", potom citácie po jednej (krátke zjavenie 350 ms). Zdroje a technické údaje až po <code>done</code>.</td></tr>
+    <tr><td>Nič sa nenašlo / chyba</td><td>Jeden stĺpec podľa <code>ASK-otazka-z-hlavicky</code>.</td></tr>
+    <tr><td>&lt; 1180</td><td>Jeden stĺpec: citácie, zdroje, technické údaje pod odpoveďou. 834: klik na <code>[n]</code> posunie na citáciu. &lt; 640: ťuknutie otvorí spodnú plachtu (citácia, dokument, listovanie, 44 px ciele), zoznam ostáva aj pod odpoveďou.</td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const MARK=s=>`<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"/><circle cx="17.5" cy="20" r="3.4" fill="currentColor"/><circle cx="30.5" cy="20" r="3.4" fill="currentColor"/><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"/></svg>`;
+const I={bell:'<path d="M9 2.4v1.1"/><path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z"/><path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0"/>',
+edit:'<path d="M11.8 3.2 14.8 6.2 6.5 14.5H3.5v-3z"/>',x:'<path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/>',
+grid:'<g fill="currentColor" stroke="none"><circle cx="4" cy="4" r="1.5"/><circle cx="9" cy="4" r="1.5"/><circle cx="14" cy="4" r="1.5"/><circle cx="4" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><circle cx="4" cy="14" r="1.5"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="14" r="1.5"/></g>',
+overview:'<rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/>',
+ask:'<path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/>',
+learning:'<path d="M1.6 7 9 3.4 16.4 7 9 10.6z"/><path d="M4.6 8.5v3.6c1.2 1.3 2.7 2 4.4 2s3.2-.7 4.4-2V8.5"/>',
+tasks:'<rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/>',
+more:'<circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="14.6" cy="9" r="1.5" fill="currentColor" stroke="none"/>'};
+const svg=(k,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="${(1.5*18/s).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+const Q="Za akých podmienok môže prestúpiť maloletý hráč bez súhlasu materského klubu?";
+// vety odpovede; c = číslo citácie za vetou
+const S=[
+ ["Maloletý hráč môže prestúpiť bez súhlasu materského klubu, ak sa jeho zákonní zástupcovia preukázateľne presťahovali do miesta vzdialeného viac ako 50 km od sídla klubu.",1],
+ ["Žiadosť sa podáva cez ISSF v registračnom období, mimo neho iba ako výnimka so súhlasom matričnej komisie.",1],
+ ["P"],
+ ["K žiadosti treba priložiť potvrdenie o pobyte zákonných zástupcov a ich písomný súhlas s prestupom.",2],
+ ["Materský klub má nárok na odstupné podľa tabuľky výchovného, ak hráč v klube pôsobil aspoň 12 mesiacov.",3],
+ ["Odstupné sa neplatí, ak klub hráča v poslednej sezóne neprihlásil do súťaže.",3]];
+const C=[
+ {q:"(4) Bez súhlasu materského klubu možno prestup maloletého hráča povoliť, ak sa jeho zákonní zástupcovia preukázateľne presťahovali do miesta vzdialeného viac ako 50 km od sídla materského klubu.",d:"Registračný a prestupový poriadok SFZ",a:"čl. 18 ods. 4",v:"znenie účinné od 1. 7. 2026",u:1},
+ {q:"K žiadosti podľa čl. 18 ods. 4 sa prikladá potvrdenie o trvalom alebo prechodnom pobyte zákonných zástupcov a písomný súhlas zákonného zástupcu s prestupom.",d:"Registračný a prestupový poriadok SFZ",a:"príloha 3 bod 2",v:"znenie účinné od 1. 7. 2026",u:1},
+ {q:"(1) Materský klub má nárok na odstupné podľa tabuľky výchovného, ak hráč v ňom pôsobil najmenej 12 mesiacov. (3) Nárok nevzniká, ak klub hráča v poslednom súťažnom ročníku neprihlásil do súťaže.",d:"Smernica o odstupnom a výchovnom",a:"čl. 6 ods. 1 a 3",v:"znenie 2026/1",u:0}];
+const SRC=[["Registračný a prestupový poriadok SFZ","čl. 18 · Prestup maloletého · vysoká zhoda","znenie účinné od 1. 7. 2026"],["Registračný a prestupový poriadok SFZ","príloha 3 · vysoká zhoda","znenie účinné od 1. 7. 2026"],["Smernica o odstupnom a výchovnom","čl. 6 · stredná zhoda","znenie 2026/1"],["Ako podať žiadosť o prestup cez ISSF","overená odpoveď · stredná zhoda",null,"qa"],["Registračný a prestupový poriadok SFZ","čl. 17 · nízka zhoda","znenie účinné od 1. 7. 2026"],["Metodický pokyn matričnej komisie 2/2026","čl. 3 · nízka zhoda",null,"int"]];
+
+function hdr(mode){
+  const n=mode==="390";
+  return `<div class="hdr"><a href="#" class="home"><span class="logo">SFZ</span>${n?"":'<span class="org">Slovenský futbalový zväz</span>'}</a><div class="q-field"><span class="mk">${MARK(18)}</span><span>${Q}</span></div>${n?"":'<span class="sp"></span>'}<span class="bell">${svg("bell",18)}<b>4</b></span><span class="av">JL</span></div><nav class="path"><div class="path-in"><span class="dots">${svg("grid",18)}</span><span class="vsep"></span><ol><li>Prehľad</li><li><span aria-current="page">Opýtať sa</span></li></ol></div></nav>`;
+}
+function textHtml(st){
+  // st.n = počet viet napísaných, st.part = rozpísaná veta (počet znakov)
+  let out="<p>",i=0;
+  for(const [s,c] of S){
+    if(s==="P"){ if(i<st.n) out+="</p><p>"; i++; continue; }
+    if(i<st.n){ out+=`<span data-s="${c}">${s}</span>${c?`<button class="cite" data-c="${c}" aria-describedby="cit-${c}">${c}</button>`:""} `; }
+    else if(i===st.n&&st.part){ out+=`<span class="caret">${s.slice(0,st.part)}</span>`; }
+    i++;
+  }
+  return out+"</p>";
+}
+function citsHtml(st,mode){
+  const shown=st.cits;
+  const head=`<p class="a-h">Doslovné citácie (${shown.length})${st.done?"<span>— z 5 odkazov</span>":""}</p>`;
+  if(!shown.length) return head+`<div class="cit-skel" style="display:grid;place-items:center;font-size:12.5px;color:var(--muted)">Citácie pribudnú počas písania</div>`;
+  return head+`<div class="cits">${shown.map(k=>{const c=C[k-1];return `<div class="cit${st.hi===k?" on":""}${st.fresh===k?" new":""}" data-cc="${k}" id="cit-${k}"><span class="n">${k}</span><q>${c.q}</q><small>${c.d} · ${c.a} · ${c.v}</small>${c.u?'<a href="#" class="go">Otvoriť v knižnici →</a>':""}</div>`}).join("")}</div>`;
+}
+function srcHtml(){
+  return `<details class="more"><summary>Zdroje v kontexte <span>${SRC.length}</span></summary><div class="srcs">${SRC.map(([t,m,v,k],i)=>`<a href="#" class="src"><i>${i+1}.</i><b>${t}</b>${k==="qa"?'<span class="tag" style="background:var(--ok-bg);color:var(--ok-fg)">overená odpoveď</span>':k==="int"?'<span class="tag" style="background:var(--warn-bg);color:var(--warn-fg)">interné</span>':"<span></span>"}<small>${m}${v?" · "+v:""}</small></a>`).join("")}</div></details>
+<details class="more"><summary>Technické údaje</summary><div class="tech"><span>model <b>claude-sonnet-5</b></span><span>adaptér <b>anthropic</b></span><span>prvý token <b>1,4 s</b></span><span>celkom <b>6,2 s</b></span><span>tokeny <b>8 412 → 196</b></span><span>≈ 0,03 € </span><span style="color:var(--ok-fg)">citácie overené modelom</span></div></details>`;
+}
+function page(st,mode){
+  const two=mode!=="834"&&mode!=="390"&&st.citable;
+  const head=`<div class="asked"><h1>${Q}</h1><button type="button" class="btn-q">${svg("edit",14)}Upraviť otázku</button><div class="meta">Opýtali ste sa o 10:42</div></div>`;
+  const started=st.n>0||st.part>0;
+  const card=`<div class="card ans"><div class="ans-k"><span class="mk">${MARK(15)}</span>Odpoveď z dokumentov SFZ<span class="time">k dnešku · 30. 9. 2026</span></div>${started?textHtml(st):`<div role="status"><p class="phase">${st.phase||"Hľadám v predpisoch…"}</p><div class="skel" style="width:94%"></div><div class="skel" style="width:88%"></div><div class="skel" style="width:62%"></div></div>`}</div>`;
+  const rate=st.done?`<div class="rate">Sedí odpoveď? <button class="btn-q" type="button">Sedí</button><button class="btn-q" type="button">Nesedí</button></div>`:"";
+  const aside=(st.citable?citsHtml(st,mode):"")+(st.done?srcHtml():"");
+  if(!st.citable) return `<div class="main"><div class="cols one"><div>${head}${card.replace(/<button class="cite"[^>]*>\d<\/button>/g,"")}${rate}<div style="display:grid;gap:10px;margin-top:18px">${aside}</div></div></div></div>`;
+  return `<div class="main"><div class="cols">${two?`<div>${head}${card}${rate}</div><aside class="aside">${aside}</aside>`:`<div>${head}${card}<div style="display:grid;gap:12px;margin-top:18px">${aside}</div>${rate}</div>`}</div></div>`;
+}
+function tabbar(){return `<nav class="tabbar">${[["overview","Prehľad"],["ask","Opýtať sa"],["learning","Vzdelávanie"],["tasks","Úlohy"],["more","Viac"]].map(([k,l])=>`<a href="#"${k==="ask"?' class="is-on"':""}>${svg(k,21)}${l}</a>`).join("")}</nav>`}
+function sheet(st){
+  const k=st.bs,c=C[k-1];
+  return `<div class="bs-scrim" data-bsx></div><div class="bs" role="dialog" aria-label="Citácia ${k}"><div class="grab"></div><div class="row"><span class="cite on" style="cursor:default">${k}</span><b>Citácia ${k} z ${C.length}</b><button class="x" data-bsx aria-label="Zavrieť">${svg("x",20)}</button></div><q>${c.q}</q><small>${c.d} · ${c.a} · ${c.v}</small><div class="nav"><button class="btn-q" data-bsn="-1"${k===1?" disabled":""}>‹ Predchádzajúca</button><button class="btn-q" data-bsn="1"${k===C.length?" disabled":""}>Ďalšia ›</button></div></div>`;
+}
+function Frame(host,init,mode){
+  const st=Object.assign({n:99,part:0,cits:[1,2,3],done:true,citable:true,hi:null,pin:null,bs:null,fresh:null},init);
+  let tm=[];
+  function hl(k){
+    host.querySelectorAll(".cite[data-c]").forEach(b=>b.classList.toggle("on",+b.dataset.c===k));
+    host.querySelectorAll("[data-s]").forEach(s=>s.classList.toggle("hl",+s.dataset.s===k));
+    host.querySelectorAll(".cit").forEach(c=>c.classList.toggle("on",+c.dataset.cc===k));
+    const a=host.querySelector(".aside"),el=k&&host.querySelector(`.cit[data-cc="${k}"]`);
+    if(a&&el){const b=host.querySelector(".body");const top=el.getBoundingClientRect().top-b.getBoundingClientRect().top;if(top<0||top>b.clientHeight-80)b.scrollTop+=top-20;}
+  }
+  function render(){
+    host.className="frame"+(mode==="834"?" n834":mode==="390"?" n390":"");
+    host.innerHTML=hdr(mode)+`<div class="body">${page(st,mode)}</div>`+(mode==="390"?tabbar():"")+(st.bs?sheet(st):"");
+    const k=st.pin??st.hi; if(k) hl(k);
+    host.querySelectorAll(".cite[data-c]").forEach(b=>{const k=+b.dataset.c;
+      b.onmouseenter=()=>{if(st.pin==null)hl(k)};b.onmouseleave=()=>{if(st.pin==null)hl(null)};
+      b.onclick=()=>{if(mode==="390"){st.bs=k;render();return}
+        if(mode==="834"){const el=host.querySelector(`.cit[data-cc="${k}"]`);const bd=host.querySelector(".body");bd.scrollTop+=el.getBoundingClientRect().top-bd.getBoundingClientRect().top-20;st.pin=k;hl(k);return}
+        st.pin=st.pin===k?null:k;hl(st.pin)}});
+    host.querySelectorAll(".cit").forEach(c=>{const k=+c.dataset.cc;
+      c.onmouseenter=()=>{if(st.pin==null)hl(k)};c.onmouseleave=()=>{if(st.pin==null)hl(null)};
+      c.onclick=e=>{if(e.target.closest("a"))return e.preventDefault();st.pin=st.pin===k?null:k;hl(st.pin)}});
+    host.querySelectorAll("[data-bsx]").forEach(b=>b.onclick=()=>{st.bs=null;render()});
+    host.querySelectorAll("[data-bsn]").forEach(b=>b.onclick=()=>{st.bs+= +b.dataset.bsn;render()});
+    host.querySelectorAll("a[href='#']").forEach(a=>a.addEventListener("click",e=>e.preventDefault()));
+  }
+  function play(){
+    tm.forEach(clearTimeout);tm=[];
+    Object.assign(st,{n:0,part:0,cits:[],done:false,pin:null,hi:null,phase:"Hľadám v predpisoch…"});render();
+    let t=900;tm.push(setTimeout(()=>{st.phase="Zoraďujem nájdené…";render()},500));
+    let sent=0;
+    S.forEach(([s,c],i)=>{
+      if(s==="P"){t+=100;tm.push(setTimeout(()=>{st.n=i+1;st.part=0;render()},t));return}
+      for(let p=8;p<s.length;p+=14){const pp=p;t+=70;tm.push(setTimeout(()=>{st.n=i;st.part=pp;st.fresh=null;render()},t))}
+      t+=80;tm.push(setTimeout(()=>{st.n=i+1;st.part=0;if(c&&!st.cits.includes(c)){st.cits=[...st.cits,c];st.fresh=c}else st.fresh=null;render()},t));
+    });
+    tm.push(setTimeout(()=>{st.done=true;st.fresh=null;render()},t+500));
+  }
+  render();
+  if(init.play) play();
+  return {play};
+}
+const $=s=>document.querySelector(`[data-frame="${s}"]`);
+(function(){const h=$("run");const f=Frame(h,{play:true});const btn=()=>{if(!h.querySelector(".replay")){const r=document.createElement("button");r.textContent="Spustiť znova";r.className="btn-q replay";r.style.cssText="position:absolute;right:14px;bottom:14px;z-index:30;box-shadow:0 4px 12px rgba(0,0,0,.12)";r.onclick=f.play;h.appendChild(r)}};new MutationObserver(btn).observe(h,{childList:true});btn()})();
+Frame($("done"),{pin:2});
+Frame($("nocit"),{citable:false,cits:[]});
+Frame($("t"),{},"834");
+Frame($("m"),{bs:2},"390");
+</script>
+</body></html>

@@ -685,7 +685,18 @@ interface Dictionary {
     incompleteHeading: string
     incompleteNote: string
     citations: (shown: number) => string
-    citationsNote: string
+    /** Za počtom zlúčených citácií: z koľkých odkazov vznikli. */
+    citationsFrom: (total: number) => string
+    /** Pravý stĺpec počas behu (ASK-odpoved-dva-stlpce). */
+    citationsPending: string
+    /** Zbalené technické údaje — len rolám s hodnotením (Q2). */
+    technical: string
+    openInLibrary: string
+    /** Spodná plachta citácie na telefóne. */
+    citationOf: (n: number, total: number) => string
+    prev: string
+    next: string
+    close: string
     sourceMissing: string
     sources: (n: number) => string
     internal: string
@@ -3810,7 +3821,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     incompleteHeading: "Odpoveď je neúplná.",
     incompleteNote: "Model dosiahol limit dĺžky a zastavil sa uprostred — chýba jej záver. Skúste sa opýtať na užšiu časť problému.",
     citations: (shown) => `Doslovné citácie (${shown})`,
-    citationsNote: "uvedených, zhodné zlúčené",
+    citationsFrom: total => `z ${total} odkazov`,
+    citationsPending: "Citácie pribudnú počas písania",
+    technical: "Technické údaje",
+    openInLibrary: "Otvoriť v knižnici",
+    citationOf: (n, total) => `Citácia ${n} z ${total}`,
+    prev: "Predošlá",
+    next: "Ďalšia",
+    close: "Zavrieť",
     sourceMissing: "zdroj neuvedený",
     sources: (n) => `Prehľadané zdroje (${n})`,
     internal: "interné",
@@ -7160,7 +7178,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     incompleteHeading: "Odpověď je neúplná.",
     incompleteNote: "Model dosáhl limitu délky a zastavil se uprostřed — chybí jí závěr. Zkuste se zeptat na užší část problému.",
     citations: (shown) => `Doslovné citace (${shown})`,
-    citationsNote: "uvedených, shodné sloučené",
+    citationsFrom: total => `z ${total} odkazů`,
+    citationsPending: "Citace přibudou během psaní",
+    technical: "Technické údaje",
+    openInLibrary: "Otevřít v knihovně",
+    citationOf: (n, total) => `Citace ${n} z ${total}`,
+    prev: "Předchozí",
+    next: "Další",
+    close: "Zavřít",
     sourceMissing: "zdroj neuveden",
     sources: (n) => `Prohledané zdroje (${n})`,
     internal: "interní",
@@ -10501,7 +10526,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     incompleteHeading: "The answer is incomplete.",
     incompleteNote: "The model hit its length limit and stopped mid-sentence — the conclusion is missing. Try asking about a narrower part of the problem.",
     citations: (shown) => `Verbatim citations (${shown})`,
-    citationsNote: "given, identical ones merged",
+    citationsFrom: total => `from ${total} references`,
+    citationsPending: "Citations appear while the answer is written",
+    technical: "Technical details",
+    openInLibrary: "Open in library",
+    citationOf: (n, total) => `Citation ${n} of ${total}`,
+    prev: "Previous",
+    next: "Next",
+    close: "Close",
     sourceMissing: "source not given",
     sources: (n) => `Sources searched (${n})`,
     internal: "internal",

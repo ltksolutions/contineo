@@ -267,12 +267,26 @@ export function cleanCitation(text: string): string {
  * môže byť odcitovaný v rôznych rozsahoch a to sú rôzne citácie.
  */
 export function mergeCitations<T extends { citedText: string }>(citations: T[]): T[] {
+  return groupCitations(citations).unique
+}
+
+/**
+ * `mergeCitations()` aj s tým, **ktorá pôvodná citácia skončila v ktorej
+ * zlúčenej** — značka `[n]` v texte (ASK-odpoved-dva-stlpce) nesie číslo
+ * zlúčenej citácie, nie poradie udalosti. `numberOf[i]` je číslo (od 1)
+ * pre `citations[i]`, 0 pre citáciu bez textu.
+ */
+export function groupCitations<T extends { citedText: string }>(citations: T[]): { unique: T[]; numberOf: number[] } {
   const key = (t: string) => cleanCitation(t).replace(/\s+/g, " ").toLowerCase()
 
   const remaining: { k: string; c: T }[] = []
+  const numberOf: number[] = []
   for (const c of citations) {
     const k = key(c.citedText)
-    if (!k) continue
+    if (!k) {
+      numberOf.push(0)
+      continue
+    }
 
     // Model tú istú pasáž niekedy odcituje kratšie a inde dlhšie — vtedy je
     // to jedno miesto, nie dve. Ponechá sa dlhšie znenie, lebo obsahuje aj
@@ -280,11 +294,109 @@ export function mergeCitations<T extends { citedText: string }>(citations: T[]):
     const overlap = remaining.findIndex(z => z.k.startsWith(k) || k.startsWith(z.k))
     if (overlap === -1) {
       remaining.push({ k, c })
-    } else if (k.length > remaining[overlap].k.length) {
-      // Dlhšie znenie nahradí kratšie, ale na PÔVODNOM mieste — poradie
-      // citácií má zodpovedať poradiu tvrdení v odpovedi.
-      remaining[overlap] = { k, c }
+      numberOf.push(remaining.length)
+    } else {
+      if (k.length > remaining[overlap].k.length) {
+        // Dlhšie znenie nahradí kratšie, ale na PÔVODNOM mieste — poradie
+        // citácií má zodpovedať poradiu tvrdení v odpovedi.
+        remaining[overlap] = { k, c }
+      }
+      numberOf.push(overlap + 1)
     }
   }
-  return remaining.map(z => z.c)
+  return { unique: remaining.map(z => z.c), numberOf }
+}
+
+/* ── Značky citácií v texte (ASK-odpoved-dva-stlpce, Q1) ───────────────── */
+
+/**
+ * Zarážky vložené do textu pred rozkladom na bloky: začiatok citovanej vety
+ * a značka na jej konci. Znaky zo súkromnej oblasti Unicode — v texte modelu
+ * sa neobjavia a `toBlocks()` ich nechá tak, ako sú; `FormattedText` z nich
+ * vykreslí `<button class="cite">` a zvýraznenie vety.
+ */
+export const CITE_START = "\uE002"
+export const CITE_MARK = "\uE000"
+export const CITE_CLOSE = "\uE001"
+export const CITE_TOKEN = /\uE002([\d,]+)\uE001|\uE000([\d,]+)\uE001/g
+
+/**
+ * Koniec vety: `.`, `!` alebo `?` (za nimi smú byť úvodzovky, zátvorka
+ * a `**`), potom medzera a veľké písmeno, úvodzovka, zátvorka — alebo koniec
+ * riadku či textu. Veľké písmeno za medzerou je podmienka kvôli skratkám:
+ * „čl. 18 ods. 2", „napr. v" koniec vety nie sú, a v predpisoch sú všade.
+ */
+const SENTENCE_END = /[.!?]["“”»)*]*(?=[ \t]+["„“(]?[\p{Lu}]|[ \t]*(?:\n|$))/gu
+
+function sentenceEnds(text: string): number[] {
+  const out: number[] = []
+  for (const m of text.matchAll(SENTENCE_END)) out.push(m.index! + m[0].length)
+  // Koniec riadku bez bodky (položka zoznamu, nadpis) je tiež koniec.
+  for (const m of text.matchAll(/\n/g)) out.push(m.index!)
+  return [...new Set(out)].sort((a, b) => a - b)
+}
+
+/**
+ * Kam patrí značka citácie, ktorá prišla pri dĺžke textu `at`.
+ *
+ * Citácia prichádza zo streamu tesne pri vete, o ktorú sa opiera — raz
+ * pred jej textom, raz hneď za ním. Keď text pred `at` končí vetou, patrí
+ * značka tam; inak na najbližší koniec vety za `at`. Keď veta ešte nie je
+ * dopísaná, stojí značka na konci textu.
+ */
+export function citationEnd(text: string, at: number): number {
+  const pos = Math.max(0, Math.min(at, text.length))
+  const ends = sentenceEnds(text)
+  let back = pos
+  while (back > 0 && /[ \t]/.test(text[back - 1])) back--
+  if (ends.includes(back) && back > 0) return back
+  return ends.find(e => e >= pos && e > 0) ?? text.length
+}
+
+/**
+ * Začiatok vety, ktorá končí na `end` — za predošlým koncom vety alebo
+ * riadku. Preskočí odrážku, číslo položky, `#` nadpisu a `**` na začiatku
+ * riadku, aby zarážka nerozbila rozklad na bloky.
+ */
+export function sentenceStart(text: string, end: number): number {
+  const ends = sentenceEnds(text).filter(e => e < end)
+  let start = ends.length ? ends[ends.length - 1] : 0
+  if (text[start] === "\n") start++
+  while (start < end && /[ \t]/.test(text[start])) start++
+  const lineStart = start === 0 || text[start - 1] === "\n"
+  if (lineStart) {
+    const prefix = /^(?:#{1,4}\s+|[-*•]\s+|\d+[.)]\s+|\(\d+[a-z]?\)\s)?(?:\*\*)?/.exec(text.slice(start, end))
+    if (prefix) start += prefix[0].length
+  }
+  return Math.min(start, end)
+}
+
+/**
+ * Vloží do textu zarážky citácií — začiatok vety a značku s číslami na jej
+ * konci. Citácie bez `at` (uložená odpoveď) značku nedostanú. Viac citácií
+ * pri tej istej vete má jednu skupinu značiek.
+ */
+export function markCitations<T extends { citedText: string; at?: number }>(text: string, citations: T[]): string {
+  const { numberOf } = groupCitations(citations)
+  const byEnd = new Map<number, Set<number>>()
+  citations.forEach((c, i) => {
+    if (typeof c.at !== "number" || !numberOf[i]) return
+    const end = citationEnd(text, c.at)
+    if (!byEnd.has(end)) byEnd.set(end, new Set())
+    byEnd.get(end)!.add(numberOf[i])
+  })
+  if (byEnd.size === 0) return text
+
+  const inserts: { pos: number; token: string }[] = []
+  for (const [end, set] of byEnd) {
+    const nums = [...set].sort((a, b) => a - b).join(",")
+    inserts.push({ pos: sentenceStart(text, end), token: `${CITE_START}${nums}${CITE_CLOSE}` })
+    inserts.push({ pos: end, token: `${CITE_MARK}${nums}${CITE_CLOSE}` })
+  }
+  // Odzadu, aby vložené zarážky neposunuli pozície tých pred nimi. Pri
+  // rovnakej pozícii ide značka konca pred začiatok ďalšej vety.
+  inserts.sort((a, b) => b.pos - a.pos || (a.token.startsWith(CITE_START) ? -1 : 1))
+  let out = text
+  for (const { pos, token } of inserts) out = out.slice(0, pos) + token + out.slice(pos)
+  return out
 }
