@@ -29,7 +29,7 @@ export function pageTitle(pathname: string | null | undefined, organisation: str
     overview: t.nav.overview,
     groups: { organisation: t.nav.groupOrganisation, management: t.nav.groupManagement },
     sections: Object.fromEntries(SECTION_KEYS.map(k => [k, t.nav[k]])) as Record<NavKey, string>,
-    pages: { "/more": t.nav.more },
+    pages: { "/more": t.nav.menu },
   })
   // Z cesty stačí posledný krok; skupina (Organizácia, Správa) nie je stránka.
   const page = path === "/" ? t.nav.overview : crumbs.length > 1 ? crumbs[crumbs.length - 1].label : null

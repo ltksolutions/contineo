@@ -15,6 +15,8 @@ import { signOut } from "next-auth/react"
 import { ContineoMark } from "./ContineoMark"
 import Icon, { iconProps } from "./Icon"
 import HeaderAsk from "./HeaderAsk"
+import SectionsSheet, { type MenuLabels } from "./SectionsSheet"
+import type { SheetColumn } from "@/lib/appNav"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -110,6 +112,7 @@ export default function Header({
   isPeopleAdmin: isPeopleAdmin,
   notifications: notifications,
   language,
+  menu,
 }: {
   branding?: TenantBrandingView
   email?: string
@@ -125,6 +128,12 @@ export default function Header({
   notifications?: number
   /** Jazyk prostredia prihlásenej osoby; bez nej slovenčina. */
   language?: UiLanguage
+  /**
+   * Celé menu pre plachtu 9 bodiek (SHELL-menu-v-hlavicke). Skladá ho
+   * `layout.tsx` zo `shellNavData()` — tie isté roly a počty ako lišta.
+   * Chýba u neprihláseného a pri výpadku; tlačidlo sa potom nekreslí.
+   */
+  menu?: { columns: SheetColumn[]; labels: MenuLabels }
 }) {
   const t = dictionary(language)
   const [choice, setChoice] = useState<ThemeChoice>("system")
@@ -237,7 +246,19 @@ export default function Header({
         zIndex: 10,
       }}
     >
+      {/*
+        „Preskočiť na obsah" — úplne prvý prvok, na ktorý sa dostane Tab
+        (SHELL-menu-v-hlavicke, Q2). Pre oko skrytý, kým nemá fokus.
+      */}
+      <a className="skip-link" href="#content">{t.nav.skipToContent}</a>
       <div className="wrap--shell header-row">
+        {/*
+          Plachta celého menu — vľavo pred logom na každej stránke, aj na
+          Prehľade (Q1 A, 30. 9. 2026). Mení SHELL-rozcestnik Q3 („do
+          hlavičky žiadne menu"): stále menu tu nie je, len jedno tlačidlo.
+          Pod 640 px ho nahrádza „Menu" v spodnej lište.
+        */}
+        {email && menu && <SectionsSheet columns={menu.columns} labels={menu.labels} />}
         {/*
           Hlavička patrí organizácii, nie dodávateľovi. Človek, ktorý tu
           potvrdzuje smernicu svojho zväzu, nemá nad ňou vidieť cudziu značku

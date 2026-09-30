@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Menu v hlavičke, Knižnica a Vzdelávanie pre každého (2026-09-30)
+
+Tlačidlo **9 bodiek** je v hlavičke vľavo pred logom na každej stránke,
+aj na Prehľade, a otvorí celé menu. Na telefóne je spodná lišta u každého
+rovnaká: **Prehľad · Knižnica · Vzdelávanie · Úlohy · Menu**. „Menu"
+otvorí celé menu zospodu, odznak na ňom sčíta, čo čaká v ostatných
+sekciách. **Knižnicu** má každý: kto nie je správca obsahu, vidí v nej
+platné dokumenty svojej organizácie s hľadaním v názve. Keď organizácia
+nemá zapnuté **Vzdelávanie**, stránka to povie a ponúkne úlohy, namiesto
+chyby. Pribudol odkaz „Preskočiť na obsah" pre klávesnicu.
+
 ### História otázok (2026-09-30)
 
 V plachte otázky sú **nedávne otázky** a pri písaní tie z vašich, ktoré

@@ -10,6 +10,8 @@ import { notFound, redirect } from "next/navigation"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
+import { onboardingContext } from "@/lib/session"
+import LibraryReader from "@/components/LibraryReader"
 import { libraryList, libraryFacets, statusTagClass, displayStatus } from "@/lib/libraryRead"
 import { allFolders, flattenTree, counts } from "@/lib/folders"
 import { allDepartments, flattenTree as flattenDepartments } from "@/lib/departments"
@@ -61,6 +63,24 @@ export default async function LibraryPage({
   const ctx = await libraryContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
+    /*
+     * Bez roly správy obsahu: Knižnica na čítanie (SHELL-menu-v-hlavicke) —
+     * platné dokumenty organizácie. Len pre osobu z tejto organizácie;
+     * kto v nej nie je, dostane 404 ako doteraz (D29).
+     */
+    if (ctx.state === "forbidden") {
+      const who = await onboardingContext()
+      if (who.state === "ready") {
+        const raw = (await searchParams).search
+        return (
+          <LibraryReader
+            companyCode={who.tenant.companyCode}
+            language={who.person.language}
+            search={typeof raw === "string" ? raw : ""}
+          />
+        )
+      }
+    }
     notFound()
   }
 

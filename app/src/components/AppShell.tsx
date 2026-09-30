@@ -27,8 +27,7 @@ import type { ReactNode } from "react"
 import { headers } from "next/headers"
 import AppNav from "./AppNav"
 import Breadcrumbs from "./Breadcrumbs"
-import SectionsSheet, { type SheetColumn } from "./SectionsSheet"
-import { MAIN_KEYS, PATHNAME_HEADER, breadcrumbs, navItems, sectionGroups, type NavKey } from "@/lib/appNav"
+import { PATHNAME_HEADER, breadcrumbs, menuColumns, navItems, type NavKey } from "@/lib/appNav"
 import { shellNavData } from "@/lib/navData"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -91,40 +90,23 @@ export default async function AppShell({
   })
 
   /*
-   * Stĺpce plachty: Hlavné (tie, čo nie sú dlaždice) a skupiny dlaždíc.
-   * Z toho istého `navItems()` ako všetko ostatné — nič nové, nič navyše.
+   * Celé menu pre spodnú plachtu na telefóne („Menu" v lište). Plachta
+   * v hlavičke má ten istý obsah — skladá ho `layout.tsx` tou istou funkciou.
    */
-  const item = (o: (typeof items)[number]) => ({
-    href: o.href,
-    key: o.key,
-    label: t[o.key],
-    count: o.count,
-    countLabel: typeof o.count === "number" && o.count > 0 ? t.waiting(o.count) : undefined,
-  })
-  const groupTitle = { organisation: t.groupOrganisation, management: t.groupManagement }
-  const columns: SheetColumn[] = [
-    { key: "main", title: t.groupMain, items: items.filter(o => MAIN_KEYS.includes(o.key)).map(item) },
-    ...sectionGroups(items).map(g => ({ key: g.key, title: groupTitle[g.key], items: g.items.map(item) })),
-  ]
+  const columns = menuColumns(items, t)
+  const labels = {
+    allSections: t.allSections, escCloses: t.escCloses, sheetHint: t.sheetHint,
+    close: dictionary(language).ask.sheet.close,
+  }
 
   return (
     <div className="app-shell">
-      <Breadcrumbs
-        crumbs={crumbs}
-        label={t.breadcrumb}
-        wide={wide}
-        sheet={
-          <SectionsSheet
-            columns={columns}
-            labels={{ allSections: t.allSections, escCloses: t.escCloses, sheetHint: t.sheetHint }}
-          />
-        }
-      />
+      <Breadcrumbs crumbs={crumbs} label={t.breadcrumb} wide={wide} />
       {/* `div`, nie `main`: `layout.tsx` už jeden `main` má a druhý vnútri
           neho by bol neplatné HTML — a pre čítačku obrazovky dva „hlavné
           obsahy" znamenajú, že ani jeden nie je ten hlavný. */}
       <div className={wide ? "app-main app-main--wide" : "app-main"}>{children}</div>
-      <AppNav flags={flags} counts={counts} language={language} />
+      <AppNav flags={flags} counts={counts} language={language} columns={columns} labels={labels} />
     </div>
   )
 }

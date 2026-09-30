@@ -20,7 +20,14 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/components/SubmitButton", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
+const s2 = vi.hoisted(() => ({
+  who: { state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" } } as Record<string, unknown>,
+  orgAdmin: false,
+}))
+vi.mock("@/lib/session", () => ({ onboardingContext: async () => s2.who }))
+vi.mock("@/lib/people", () => ({ peopleContext: async () => ({ state: s2.orgAdmin ? "ready" : "forbidden" }) }))
 vi.mock("@/lib/learning", () => ({
+  OPERATOR_CONTACT: "office@ltk.solutions",
   learningContext: async () => ({ state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" }, isAdmin: false }),
 }))
 vi.mock("@/lib/coursesDb", () => ({ listCourses: async () => db.courses }))

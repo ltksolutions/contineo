@@ -84,7 +84,14 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // správa prístupov. Podmieniť ho rolou by znamenalo mať adresár, do
     // ktorého sa nepozrie ten, kto v tej organizácii pracuje.
     { href: "/directory", key: "directory" },
-    ...(flags.isContentManager ? [{ href: "/library", key: "library" as const }] : []),
+    /*
+     * Knižnica pre **každého** (SHELL-menu-v-hlavicke, 30. 9. 2026). Kto nemá
+     * rolu správy obsahu, vidí v nej platné dokumenty svojej organizácie
+     * a číta ich v čitateľskom detaile — presne tie, ktoré smie otvoriť aj
+     * dnes (`canSeeDocument()`, D90). Správa obsahu vidí `/library` ako
+     * doteraz.
+     */
+    { href: "/library", key: "library" },
     ...(flags.isHr ? [{ href: "/hr", key: "assigned" as const }] : []),
     // Reťaz dôkazov je údaj o **ľuďoch**, nie o dokumentoch — vidí ju
     // personalista, nie správca obsahu (D67).
@@ -96,10 +103,13 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // Ochrana údajov (ADR-012, D104) — výkaz právnych základov a námietky.
     // Len pre rolu `dpo`: námietka je osobný údaj o konkrétnom človeku.
     ...(flags.isDpo ? [{ href: "/dpo", key: "dpo" as const }] : []),
-    // Vzdelávanie (ADR-018, D123) — len pri zapnutom module. Moje kurzy pre
-    // každého, správa a testy pre lektora. Rola bez zapnutého modulu nič
-    // neotvára: routy by aj tak odpovedali 404.
-    ...(flags.learning ? [{ href: "/learning", key: "learning" as const }] : []),
+    /*
+     * Vzdelávanie (ADR-018, D123) — **pre každého** (SHELL-menu-v-hlavicke,
+     * Q5): položka je na tom istom mieste u všetkých, aj keď organizácia
+     * modul nemá. `/learning` vtedy povie, že modul nie je zapnutý — nie 404.
+     * Správa kurzov a testy ostávajú len pri zapnutom module a pre lektora.
+     */
+    { href: "/learning", key: "learning" },
     ...(flags.learning && flags.isLearningAdmin ? [{ href: "/learning/manage", key: "learningManage" as const }] : []),
     // Testy: lektor celú obrazovku, zodpovedná osoba testu len svoje výsledky.
     ...(flags.learning && (flags.isLearningAdmin || flags.isTestResponsible)
@@ -147,7 +157,7 @@ export function activeHref(pathname: string, hrefs: string[]): string | null {
  * `navItems()` zostáva jediným miestom, kde sa rozhoduje, **čo** človek
  * vidí; lišta z hotového poľa len vyberá a skladá.
  */
-export type TabKey = NavKey | "tasks" | "more"
+export type TabKey = NavKey | "tasks" | "menu"
 
 export interface TabItem {
   href: string
@@ -157,22 +167,33 @@ export interface TabItem {
   activeFor: string[]
 }
 
-/** Poradie lišty z návrhu: Prehľad · Opýtať sa · Knižnica · Úlohy · Viac. */
-const TABBAR_KEYS: NavKey[] = ["overview", "ask", "library"]
-
 /**
- * Tretia pozícia lišty. Kto má Knižnicu, má ju tam; kto nie a má zapnuté
- * Vzdelávanie, dostane tam Vzdelávanie (rám LEARNING, Q1 ✅ 27. 9.).
- * U správcu obsahu je Vzdelávanie pod „Viac" — lišta sa nepredlžuje.
+ * Lišta na telefóne: **Prehľad · Knižnica · Vzdelávanie · Úlohy · Menu** —
+ * u každého rovnaká (SHELL-menu-v-hlavicke, Q5, 30. 9. 2026). „Opýtať sa"
+ * z nej odišlo: otázka je v hlavičke. Dovtedy dostal Vzdelávanie na tretiu
+ * pozíciu len ten, kto nemal Knižnicu (rám LEARNING, Q1 27. 9.), a tá istá
+ * pozícia palca viedla u dvoch ľudí inam.
  */
+const TABBAR_KEYS: NavKey[] = ["overview", "library", "learning"]
+
 function tabbarKeys(items: NavItem[]): NavKey[] {
-  const has = (k: NavKey) => items.some(o => o.key === k)
-  return has("library") || !has("learning") ? TABBAR_KEYS : ["overview", "ask", "learning"]
+  return TABBAR_KEYS.filter(k => items.some(o => o.key === k))
 }
 
-/** Čo lišta pokrýva sama — zvyšok patrí na `/more`. */
+/** Čo lišta pokrýva sama — zvyšok je v menu. */
 function inTabbar(items: NavItem[]): NavKey[] {
   return [...tabbarKeys(items), "toAcknowledge", "toApprove"]
+}
+
+/**
+ * Odznak na „Menu": súčet počtov sekcií, ktoré v lište nie sú (Na
+ * posúdenie, Ochrana údajov…). Úlohy majú vlastný odznak. `undefined`, keď
+ * sa nič nepočítalo — nula a „nezistené" nie je to isté.
+ */
+export function menuCount(items: NavItem[]): number | undefined {
+  const bar = new Set(inTabbar(items))
+  const counted = items.filter(o => !bar.has(o.key) && typeof o.count === "number")
+  return counted.length ? counted.reduce((sum, o) => sum + (o.count ?? 0), 0) : undefined
 }
 
 /**
@@ -209,11 +230,13 @@ export function tabbarItems(items: NavItem[]): TabItem[] {
   }
 
   tabs.push({
+    // Bez skriptu odkaz na `/more`; so skriptom otvorí spodnú plachtu (`AppNav`).
     href: "/more",
-    key: "more",
-    // Svieti aj na sekciách, ktoré pod „Viac" bývajú — človek má na lište
-    // vidieť, kade sa tam dostal. Schvaľovanie svieti na „Úlohách", nie tu.
-    activeFor: ["/more", ...items.filter(o => !inTabbar(items).includes(o.key)).map(o => o.href)],
+    key: "menu",
+    count: menuCount(items),
+    // Svieti aj na sekciách, ktoré sú v menu — človek má na lište vidieť,
+    // kade sa tam dostal. Schvaľovanie svieti na „Úlohách", nie tu.
+    activeFor: ["/more", ...items.filter(o => !inTabbar(items).includes(o.key)).map(o => o.href.split("?")[0])],
   })
   return tabs
 }
@@ -272,7 +295,7 @@ function groupOf(key: NavKey): SectionGroupKey | null {
   return SECTION_GROUPS.find(g => g.keys.includes(key))?.key ?? "management"
 }
 
-export type MoreGroupKey = "tasks" | SectionGroupKey
+export type MoreGroupKey = "main" | SectionGroupKey
 
 export interface MoreGroup {
   key: MoreGroupKey
@@ -280,24 +303,59 @@ export interface MoreGroup {
 }
 
 /**
- * `/more` na telefóne — tie isté dlaždice ako Prehľad (Q4), bez sekcií,
- * ktoré už sú na spodnej lište. Nad nimi „Moje úlohy" so schvaľovaním:
- * lišta ho nesie len v súčte „Úloh", ktoré vedú na potvrdenia, a bez tohto
- * riadku by sa naň z telefónu nedalo dostať. Schvaľovatelia sú menovaní
- * ľudia (D69), nie rola — preto k úlohám, nie k správe.
- *
- * Osobné veci (príručka, moje potvrdenia, odhlásenie) tu zámerne nie sú —
- * bývajú pod avatarom v hlavičke, ktorá na telefóne zostáva, a dve položky
- * s tým istým cieľom sú horšie než jedna (ten istý dôvod ako v `Header.tsx`).
+ * Celé menu v skupinách — plachta 9 bodiek v hlavičke, spodná plachta
+ * „Menu" na telefóne aj `/more` (SHELL-menu-v-hlavicke, Q4: všade ten istý
+ * obsah). Hlavné (Prehľad, Opýtať sa, Na potvrdenie, Na schválenie), potom
+ * skupiny dlaždíc. Prázdna skupina sa nevracia.
  */
-export function moreGroups(items: NavItem[]): MoreGroup[] {
-  const onBar = new Set(tabbarKeys(items))
-  const rest = items.filter(o => !onBar.has(o.key))
-  const tasks = rest.filter(o => o.key === "toApprove")
+export function menuGroups(items: NavItem[]): MoreGroup[] {
+  const main = MAIN_KEYS.map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined)
   return [
-    ...(tasks.length > 0 ? [{ key: "tasks" as const, items: tasks }] : []),
-    ...sectionGroups(rest),
+    ...(main.length ? [{ key: "main" as const, items: main }] : []),
+    ...sectionGroups(items),
   ]
+}
+
+/** `/more` — to isté ako menu (Q4). Názov ostáva kvôli volajúcim. */
+export const moreGroups = menuGroups
+
+/** Položka menu hotová pre klienta — funkcia sa na klienta poslať nedá. */
+export interface SheetItem {
+  href: string
+  key: NavKey
+  label: string
+  count?: number
+  /** „čakajú 3" — pre čítačku, holé číslo nič nehovorí. */
+  countLabel?: string
+}
+
+export interface SheetColumn {
+  key: string
+  title: string
+  items: SheetItem[]
+}
+
+/**
+ * Stĺpce menu s textami — pre plachtu v hlavičke (`layout.tsx`) aj spodnú
+ * plachtu na telefóne (`AppShell`). Z `menuGroups()`, teda z toho istého
+ * `navItems()` ako lišta a dlaždice.
+ */
+export function menuColumns(
+  items: NavItem[],
+  t: { groupMain: string; groupOrganisation: string; groupManagement: string; waiting: (n: number) => string } & Record<NavKey, string>,
+): SheetColumn[] {
+  const title: Record<MoreGroupKey, string> = { main: t.groupMain, organisation: t.groupOrganisation, management: t.groupManagement }
+  return menuGroups(items).map(g => ({
+    key: g.key,
+    title: title[g.key],
+    items: g.items.map(o => ({
+      href: o.href,
+      key: o.key,
+      label: t[o.key],
+      count: o.count,
+      countLabel: typeof o.count === "number" && o.count > 0 ? t.waiting(o.count) : undefined,
+    })),
+  }))
 }
 
 /* ── Cesta pod hlavičkou (SHELL-rozcestnik, bod 4) ──────────────────────── */

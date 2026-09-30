@@ -75,12 +75,18 @@ export default async function DocumentDetailPage({
   searchParams: Promise<RawQuery>
 }) {
   const ctx = await libraryContext()
+  const { id } = await params
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
+    /*
+     * Bez roly správy obsahu: na čitateľský detail. Ten dokument načíta
+     * pre osobu (`loadDocumentFor`) a na cudzí či neexistujúci odpovie 404
+     * (SHELL-menu-v-hlavicke — Knižnica pre každého).
+     */
+    if (ctx.state === "forbidden") redirect(`/documents/${encodeURIComponent(decodeURIComponent(id))}`)
     notFound()
   }
 
-  const { id } = await params
   const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string }>(await searchParams)
   const { msg: message, error } = query
   const openPanel = PANELS.includes(query.open as Panel) ? (query.open as Panel) : null

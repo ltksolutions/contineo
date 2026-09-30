@@ -18,8 +18,10 @@ import { platformContext } from "@/lib/admin"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { headers } from "next/headers"
-import { PATHNAME_HEADER } from "@/lib/appNav"
 import { pageTitle } from "@/lib/pageTitle"
+import { shellNavData } from "@/lib/navData"
+import { PATHNAME_HEADER, menuColumns, navItems, type SheetColumn } from "@/lib/appNav"
+import type { MenuLabels } from "@/components/SectionsSheet"
 import { tenantStyle } from "@/components/TenantHeader"
 import { normalizeLanguage, dictionary, type UiLanguage } from "@/lib/i18n"
 import { unreadCount } from "@/lib/notifications"
@@ -178,6 +180,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // pre odkazy, ktoré hlavička už nevykresľuje.
   let isAdmin = false
   let isPeopleAdmin = false
+  /*
+   * Menu pre plachtu 9 bodiek v hlavičke (SHELL-menu-v-hlavicke). Roly
+   * a počty zo `shellNavData()` — `cache()`, takže `AppShell` ich v tej istej
+   * požiadavke dostane bez dotazov navyše. Pri výpadku tlačidlo nebude.
+   */
+  let menu: { columns: SheetColumn[]; labels: MenuLabels } | undefined
   if (email) {
     try {
       isAdmin = (await platformContext()).state === "ready"
@@ -188,6 +196,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       isPeopleAdmin = (await peopleContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správy osôb sa nepodarilo overiť:", e)
+    }
+    try {
+      const { flags, counts } = await shellNavData()
+      const tn = dictionary(language).nav
+      menu = {
+        columns: menuColumns(navItems(flags, counts), tn),
+        labels: { allSections: tn.allSections, escCloses: tn.escCloses, sheetHint: tn.sheetHint, close: dictionary(language).ask.sheet.close },
+      }
+    } catch (e) {
+      console.error("[layout] menu sa nepodarilo zostaviť:", e)
     }
   }
 
@@ -209,8 +227,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             isPeopleAdmin={isPeopleAdmin}
             notifications={unread}
             language={language}
+            menu={menu}
           />
-          <main style={{ flex: 1 }}>{children}</main>
+          {/* Cieľ „Preskočiť na obsah" (hlavička). `tabIndex` −1, aby naň fokus
+              po skoku naozaj prešiel. */}
+          <main id="content" tabIndex={-1} style={{ flex: 1 }}>{children}</main>
           <Footer language={language} />
           <VersionNotice text={dictionary(language).versionNotice.text} reload={dictionary(language).versionNotice.reload} />
         </SessionProvider>

@@ -1,15 +1,15 @@
 /**
- * /more — zvyšok navigácie na telefóne (NASADENIE, PR 2).
+ * /more — celé menu (SHELL-menu-v-hlavicke, Q4).
  *
- * Spodná lišta má štyri sekcie a „Viac"; sem padá zvyšok `navItems()`.
- * Od 29. 9. 2026 sú to **tie isté dlaždice ako na Prehľade**
- * (`SectionTiles`, SHELL-rozcestnik Q4) v jednom stĺpci — rovnaké poradie,
- * názvy aj popisy. Na širokej obrazovke stránka existuje tiež — adresa je
- * adresa a otočením tabletu sa nemá rozbiť.
+ * Ten istý obsah ako plachta 9 bodiek v hlavičke a spodná plachta „Menu"
+ * na telefóne: Hlavné · Organizácia · Správa (`menuGroups()`), ako dlaždice
+ * (`SectionTiles`) v jednom stĺpci. So skriptom sa sem z lišty nechodí —
+ * „Menu" otvorí plachtu; bez skriptu je to cieľ jeho odkazu a adresa
+ * funguje aj priamo.
  *
  * Osobné veci (príručka, moje potvrdenia, odhlásenie) tu nie sú — bývajú
- * pod avatarom v hlavičke, ktorá na telefóne zostáva, a dve položky s tým
- * istým cieľom sú horšie než jedna.
+ * pod avatarom v hlavičke, a dve položky s tým istým cieľom sú horšie než
+ * jedna.
  */
 
 import { notFound, redirect } from "next/navigation"
@@ -38,11 +38,11 @@ export default async function MorePage() {
   const groups = moreGroups(navItems(flags, counts))
 
   return (
-    <AppShell language={person.language} title={t.more}>
+    <AppShell language={person.language} title={t.menu}>
       {/* Užšie než shell: je to zoznam na palec, nie tabuľka. */}
       <div style={{ maxWidth: 560 }}>
         <h1 className="page-title" style={{ margin: "0 0 14px" }}>
-          {t.more}
+          {t.menu}
         </h1>
         <SectionTiles groups={groups} language={person.language} single />
       </div>

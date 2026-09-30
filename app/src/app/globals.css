@@ -1087,22 +1087,6 @@ html[data-theme="dark"] select.field-input {
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
-/*
- * Otvorená plachta: pás nad závojom, aby tlačidlo aj cesta ostali
- * klikateľné a nezatienené. Závoj je v páse (`z-index: -1` v jeho
- * kontexte), takže vlastné pozadie pásu — to sa kreslí úplne dospodu —
- * by zatienil. Pozadie preto pri otvorení nesie `::before` nad závojom;
- * riadok pásu je v strome za ním, kreslí sa teda nad ním.
- */
-.app-path:has(.sections[open]) { z-index: 31; }
-.app-path:has(.sections[open])::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: var(--surface);
-}
-
 .app-path-row {
   position: relative;
   display: flex;
@@ -1111,16 +1095,9 @@ html[data-theme="dark"] select.field-input {
   max-width: var(--shell-maxw);
   min-height: 40px;
   margin: 0 auto;
-  padding: 0 var(--pad-main) 0 calc(var(--pad-main) - 6px);
+  padding: 0 var(--pad-main);
 }
 .app-path-row--wide { max-width: var(--shell-maxw-wide); }
-
-.app-path-sep {
-  flex: none;
-  width: 1px;
-  height: 18px;
-  background: var(--line);
-}
 
 .app-path-list {
   display: flex;
@@ -1170,23 +1147,30 @@ html[data-theme="dark"] select.field-input {
 
 /* Telefón: dlhá cesta sa zalomí, odkazy majú terč ~30 px v páse 44 px. */
 @media (max-width: 639px) {
-  .app-path-row { align-items: flex-start; min-height: 44px; padding: 2px 10px 2px 4px; }
-  .app-path-sep { margin-top: 13px; }
+  .app-path-row { align-items: flex-start; min-height: 44px; padding: 2px 10px; }
   .app-path-list { padding: 6px 0; font-size: 12.5px; }
   .app-path-list a { padding: 6px 4px; }
 }
 
 /*
- * Plachta všetkých sekcií (`SectionsSheet`, Q5). `<details>` — bez skriptu
- * ju otvorí aj zavrie tlačidlo. Plachta 760 px pod tlačidlom, závoj 18 %.
+ * Plachta všetkých sekcií (`SectionsSheet`). Od 30. 9. 2026 tlačidlo
+ * v hlavičke vľavo pred logom (SHELL-menu-v-hlavicke, Q1 A), 40 × 40,
+ * r10; plachta 760 px pod hlavičkou vľavo, závoj od spodku hlavičky —
+ * hlavička ostáva nezatienená. `<details>`: bez skriptu ju otvorí aj
+ * zavrie tlačidlo. Pod 640 px tlačidlo v hlavičke nie je, menu otvára
+ * „Menu" v lište (`.bottom-menu`).
  */
 .sections { flex: none; }
+.header-menu { display: none; margin-right: -12px; }
+@media (min-width: 640px) {
+  .header-menu { display: block; }
+}
 .sections-button {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   color: var(--ink);
   cursor: pointer;
   list-style: none;
@@ -1200,8 +1184,8 @@ html[data-theme="dark"] select.field-input {
 .sections[open] > .sections-scrim {
   display: block;
   position: fixed;
-  inset: 0;
-  z-index: -1;
+  inset: 57px 0 0 0;
+  z-index: 0;
   background: rgba(17, 21, 28, 0.18);
 }
 
@@ -1210,12 +1194,13 @@ html[data-theme="dark"] select.field-input {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px 22px;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: calc(var(--pad-main) - 6px);
+  position: fixed;
+  top: 60px;
+  left: 10px;
+  z-index: 1;
   width: 760px;
-  max-width: calc(100% - 2 * var(--pad-main));
-  max-height: calc(100dvh - 120px);
+  max-width: calc(100vw - 20px);
+  max-height: calc(100dvh - 80px);
   overflow: auto;
   padding: 18px 18px 14px;
   background: var(--surface);
@@ -1287,21 +1272,94 @@ html[data-theme="dark"] select.field-input {
 @media (min-width: 640px) and (max-width: 1023px) {
   .sections[open] > .sections-sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 639px) {
-  .sections-button { width: 40px; height: 40px; }
-  .sections[open] > .sections-sheet {
-    grid-template-columns: minmax(0, 1fr);
-    left: 8px;
-    width: auto;
-    right: 8px;
-    max-width: none;
-    /* Nad spodnou lištou, nie pod ňou. */
-    max-height: calc(100dvh - 180px);
-    padding: 12px 8px;
-  }
-  .sections-item { min-height: 44px; }
-  .sections-foot { display: none; }
+/* 834: názov organizácie ustúpi poľu otázky — logo a tlačidlo menu ostávajú. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .header-row:has(.header-menu) .header-name { display: none; }
 }
+
+/*
+ * „Menu" na telefóne — spodná plachta nad lištou (SHELL-menu-v-hlavicke,
+ * bod 5). Lišta ostáva viditeľná, závoj 28 % medzi hlavičkou a lištou.
+ * Jeden stĺpec, položky 48 px, × 44, úchyt na potiahnutie nadol.
+ */
+.bottom-menu-scrim {
+  position: fixed;
+  top: 57px;
+  left: 0;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom));
+  z-index: 26;
+  background: rgba(17, 21, 28, 0.28);
+}
+.bottom-menu {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom));
+  z-index: 27;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 57px - 56px - 24px - env(safe-area-inset-bottom));
+  border-radius: 18px 18px 0 0;
+  background: var(--surface);
+  box-shadow: 0 -12px 40px rgba(20, 28, 42, 0.2);
+  transition: transform 0.15s;
+}
+.bottom-menu-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 14px 6px 4px 18px;
+  touch-action: none;
+}
+.bottom-menu-grip {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: 2px;
+  background: var(--line);
+}
+.bottom-menu-head b { flex: 1; font-size: 16px; font-weight: 650; }
+.bottom-menu-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.bottom-menu-list {
+  display: grid;
+  gap: 10px;
+  overflow: auto;
+  padding: 4px 8px 12px;
+}
+.bottom-menu-list .sections-item { min-height: 48px; font-size: 15px; }
+.bottom-menu-list .sections-foot { display: none; }
+
+/* „Preskočiť na obsah" — mimo obrazovky, kým nemá fokus. */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 60;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+#content:focus { outline: none; }
 
 /*
  * Obsah v shelli.
@@ -7420,4 +7478,44 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .assign-doc-list { max-height: 300px; }
   .assign-finish { padding: 14px; }
   .assign-actions > .button { width: 100%; min-height: 44px; }
+}
+
+/* ── Knižnica na čítanie (`LibraryReader`, SHELL-menu-v-hlavicke) ────────── */
+.library-reader { max-width: 820px; display: grid; gap: 14px; }
+.library-reader .page-title, .library-reader .page-lead { margin: 0; }
+.library-reader-search { display: flex; gap: 8px; }
+.library-reader-search .field-input { flex: 1 1 auto; min-width: 0; }
+.library-reader-list { margin: 0; padding: 0; list-style: none; overflow: hidden; }
+.library-reader-list li + li { border-top: 1px solid var(--line); }
+.library-reader-row { display: grid; gap: 2px; padding: 12px 16px; color: var(--ink); text-decoration: none; }
+.library-reader-row:hover { background: var(--surface-2); color: var(--ink); }
+.library-reader-title { font-size: 14.5px; font-weight: 600; line-height: 1.4; }
+.library-reader-meta { font-size: 12.5px; }
+
+/* ── Vzdelávanie vypnuté (`/learning`, SHELL-menu-v-hlavicke Q5) ─────────── */
+.learning-off {
+  max-width: 620px;
+  margin: 24px auto 0;
+  padding: 32px 28px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.learning-off .page-title, .learning-off .page-lead { margin: 0; }
+.learning-off-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--accent);
+}
+.learning-off-admin { margin: 4px 0 0; font-size: 13.5px; }
+.learning-off-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+@media (max-width: 639px) {
+  .learning-off { margin-top: 8px; padding: 24px 16px; }
+  .learning-off-actions { flex-direction: column; align-self: stretch; }
+  .learning-off-actions .button { flex-basis: auto; justify-content: center; min-height: 48px; }
 }

@@ -25,8 +25,8 @@ describe("názov v záložke", () => {
     expect(pageTitle("/notifications", "Intranet SFZ", t)).toBe("Intranet SFZ")
   })
 
-  it("Viac má vlastný názov", () => {
-    expect(pageTitle("/more", "Intranet SFZ", t)).toBe(`${t.nav.more} · Intranet SFZ`)
+  it("Menu má vlastný názov", () => {
+    expect(pageTitle("/more", "Intranet SFZ", t)).toBe(`${t.nav.menu} · Intranet SFZ`)
   })
 
   it("v záložke nikdy nie je testovacie rozhranie", () => {

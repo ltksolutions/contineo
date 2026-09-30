@@ -25,7 +25,14 @@ vi.mock("../src/app/learning/manage/actions", () => Object.fromEntries(["addTopi
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentsForPerson: async () => [] }))
 vi.mock("@/lib/learningProgressDb", () => ({ progressFactsMany: async () => new Map() }))
 vi.mock("../src/app/learning/actions", () => ({ enrolAction: async () => {} }))
+const s2 = vi.hoisted(() => ({
+  who: { state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" } } as Record<string, unknown>,
+  orgAdmin: false,
+}))
+vi.mock("@/lib/session", () => ({ onboardingContext: async () => s2.who }))
+vi.mock("@/lib/people", () => ({ peopleContext: async () => ({ state: s2.orgAdmin ? "ready" : "forbidden" }) }))
 vi.mock("@/lib/learning", () => ({
+  OPERATOR_CONTACT: "office@ltk.solutions",
   learningContext: async () => s.ctx,
   learningAdminContext: async () => s.ctx,
 }))
@@ -51,10 +58,22 @@ describe("/learning*", () => {
     expect(await render("/learning/tests")).toContain("Zatiaľ tu nie je žiadny test.")
   })
 
-  it("vypnutý modul alebo bez roly je 404, neprihlásený ide na prihlásenie", async () => {
+  it("vypnutý modul: /learning vysvetlí, správca organizácie vidí kontakt (SHELL-menu-v-hlavicke, Q5)", async () => {
+    s.ctx = { state: "disabled" }
+    s2.orgAdmin = false
+    const html = await render("/learning")
+    expect(html).toContain("Vzdelávanie nie je pre vašu organizáciu zapnuté")
+    expect(html).toContain("href=\"/documents\"")
+    expect(html).not.toContain("office@ltk.solutions")
+    s2.orgAdmin = true
+    expect(await render("/learning")).toContain("office@ltk.solutions")
+    s2.orgAdmin = false
+  })
+
+  it("vypnutý modul na správe a testoch, bez roly je 404, neprihlásený ide na prihlásenie", async () => {
     for (const path of Object.keys(pages) as (keyof typeof pages)[]) {
       s.ctx = { state: "disabled" }
-      await expect(render(path)).rejects.toThrow("notFound")
+      if (path !== "/learning") await expect(render(path)).rejects.toThrow("notFound")
       s.ctx = { state: "forbidden" }
       await expect(render(path)).rejects.toThrow("notFound")
       s.ctx = { state: "not-signed-in" }

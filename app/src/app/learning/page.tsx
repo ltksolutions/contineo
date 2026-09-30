@@ -10,7 +10,9 @@
 
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { learningContext } from "@/lib/learning"
+import { learningContext, OPERATOR_CONTACT } from "@/lib/learning"
+import { onboardingContext } from "@/lib/session"
+import { peopleContext } from "@/lib/people"
 import { listCourses } from "@/lib/coursesDb"
 import { enrollmentsForPerson } from "@/lib/enrollmentsDb"
 import { progressFactsMany } from "@/lib/learningProgressDb"
@@ -37,6 +39,7 @@ export default async function LearningPage({ searchParams }: { searchParams: Pro
   const q = normalizeQuery<{ topic?: string; tag?: string | string[]; page?: string; msg?: string; error?: string }>(await searchParams)
   const ctx = await learningContext()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
+  if (ctx.state === "disabled") return learningOff()
   if (ctx.state !== "ready") notFound()
 
   const language = ctx.person.language
@@ -233,5 +236,41 @@ function MobileFilters({ facets, filter, language }: { facets: Facets; filter: L
         </details>
       )}
     </div>
+  )
+}
+
+/**
+ * Organizácia nemá modul zapnutý (SHELL-menu-v-hlavicke, Q5). Vzdelávanie
+ * je v lište aj v menu u každého, preto tu nie je 404 ani presmerovanie,
+ * ale vysvetlenie a cesta ďalej. Správca organizácie navyše vidí, komu
+ * napísať — modul zapína prevádzkovateľ, nie organizácia sama.
+ */
+async function learningOff() {
+  const ctx = await onboardingContext()
+  if (ctx.state === "not-signed-in") redirect("/sign-in")
+  if (ctx.state !== "ready") notFound()
+  const language = ctx.person.language
+  const t = dictionary(language).learning.off
+  const isOrgAdmin = (await peopleContext()).state === "ready"
+  return (
+    <AppShell language={language}>
+      <section className="card learning-off" style={tenantStyle(brandingView(ctx.tenant))}>
+        <span className="learning-off-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3"
+               strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1.6 7 9 3.4 16.4 7 9 10.6z" />
+            <path d="M4.6 8.5v3.6c1.2 1.3 2.7 2 4.4 2s3.2-.7 4.4-2V8.5" />
+            <path d="M16.4 7v4.2" />
+          </svg>
+        </span>
+        <h1 className="page-title">{t.title}</h1>
+        <p className="quiet page-lead">{t.lead}</p>
+        {isOrgAdmin && <p className="learning-off-admin">{t.admin(OPERATOR_CONTACT)}</p>}
+        <div className="learning-off-actions">
+          <Link className="button" href="/documents">{t.tasks}</Link>
+          <Link className="button button--quiet" href="/">{t.back}</Link>
+        </div>
+      </section>
+    </AppShell>
   )
 }

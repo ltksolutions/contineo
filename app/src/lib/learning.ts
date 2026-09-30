@@ -8,9 +8,10 @@
  *   správa kurzov, banka otázok, testy. Rola zodpovedá práci (D46, D53),
  *   preto nie `content-admin` — kto spravuje predpisy, nemusí robiť kurzy.
  *
- * Vypnutý modul vracia `disabled` a stránka odpovie `notFound()` (D123).
- * Prezradiť „modul existuje, ale nemáš ho" by bolo to isté ako odkaz do
- * sekcie, do ktorej človek nesmie (`appNav.ts`).
+ * Vypnutý modul vracia `disabled` a podstránky odpovedia `notFound()` (D123).
+ * **Výnimka je `/learning`** (SHELL-menu-v-hlavicke, Q5, 30. 9. 2026):
+ * Vzdelávanie je v lište aj v menu u každého, takže úvodná stránka povie,
+ * že modul organizácia nemá zapnutý — namiesto 404 na odkaze z menu.
  */
 
 import { currentTenant, currentPerson } from "./session"
@@ -18,6 +19,13 @@ import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 
 export const LEARNING_ROLE = "learning-admin"
+
+/**
+ * Komu napísať, keď organizácia chce modul zapnúť — veta pre správcu
+ * organizácie na `/learning` pri vypnutom module (SHELL-menu-v-hlavicke,
+ * Q5). Adresu určil Ján Letko 30. 9. 2026.
+ */
+export const OPERATOR_CONTACT = "office@ltk.solutions"
 
 export function learningEnabled(tenant: Pick<Tenant, "modules"> | null): boolean {
   return tenant?.modules?.learning === true
