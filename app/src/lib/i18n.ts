@@ -118,9 +118,8 @@ interface Dictionary {
 
   /** Texty potvrdzovacích obrazoviek. */
   onboarding: {
-    /** ADR-011: PDF znenia a text na vyhľadávanie pod ním. */
+    /** ADR-011: PDF znenia. */
     openPdf: string
-    searchText: string
     listHeading: string
     listIntro: string
     /** Prázdny stav (`.empty`, DOCUMENTS úloha 4) — bez akcie: človek tu nemá čo urobiť. */
@@ -3365,7 +3364,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   onboarding: {
     openPdf: "Otvoriť PDF",
-    searchText: "Text dokumentu (slúži na vyhľadávanie)",
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
     emptyTitle: "Nemáte nič na potvrdenie",
@@ -6782,7 +6780,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   onboarding: {
     openPdf: "Otevřít PDF",
-    searchText: "Text dokumentu (slouží k vyhledávání)",
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
     emptyTitle: "Nemáte nic k potvrzení",
@@ -10196,7 +10193,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   onboarding: {
     openPdf: "Open PDF",
-    searchText: "Document text (used for search)",
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
     emptyTitle: "Nothing to acknowledge",

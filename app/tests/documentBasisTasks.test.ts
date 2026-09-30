@@ -178,6 +178,9 @@ describe("zverejnené, ešte neúčinné znenie (ADR-023)", () => {
     expect(html).not.toContain("platnosť sa ešte nezačala")
     expect(html).toContain("/api/documents/sfz%3App/pdf?version=v-old")
     expect(html).toContain("formulka")
+    // Potvrdzuje sa PDF — text na vyhľadávanie sa pri ňom neukazuje ani zbalený.
+    expect(html).not.toContain("starý text")
+    expect(html).not.toContain("document-search-text")
     // Aj zodpovedná osoba novely tu len číta a potvrdzuje.
     expect(html).not.toContain("ste zodpovedná osoba")
     expect(html).not.toContain('name="versionId"')
