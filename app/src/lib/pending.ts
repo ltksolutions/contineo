@@ -218,16 +218,21 @@ export async function acknowledgementDuties(person: Person): Promise<Acknowledge
           continue
         }
 
+        // Čas a termín z máp vyššie, nie z tohto jedného pridelenia: kto do
+        // oddelenia prišiel neskôr, dostal úlohu dňom príchodu (D50), a pri
+        // dvoch prideleniach tej istej verzie platí skorší čas aj skorší
+        // termín. `a.assignedAt` by nováčikovi ukázal úlohu spred roka.
+        const assignedAt = assigned.get(a.subject.versionId) ?? a.assignedAt
         items.set(a.subject.documentId, {
           source: "acknowledgement",
           id: a.subject.documentId,
           title: doc.title,
           href: `/documents/${encodeURIComponent(a.subject.documentId)}`,
           detail: t.version(a.subject.versionLabel),
-          sortAt: a.assignedAt,
-          assignedAt: a.assignedAt,
-          isNew: isNewFor(person, a.assignedAt),
-          due: dueForPerson(a, person),
+          sortAt: assignedAt,
+          assignedAt,
+          isNew: isNewFor(person, assignedAt),
+          due: dueOf.get(a.subject.versionId) ?? null,
         })
       }
     }
