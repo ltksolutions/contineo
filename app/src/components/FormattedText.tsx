@@ -16,8 +16,9 @@
  * komponentu (detail dokumentu), aj z klientskeho (`Answer.tsx`).
  */
 
+import type { ReactNode } from "react"
 import Link from "next/link"
-import { toBlocks, type Segment } from "@/lib/formatText"
+import { toBlocks, markCitations, CITE_TOKEN, type Segment } from "@/lib/formatText"
 
 /**
  * Riadok rozložený na bežné, tučné a odkazujúce úseky.
@@ -26,6 +27,10 @@ import { toBlocks, type Segment } from "@/lib/formatText"
  * adresu neprepustí, takže `<Link>` je bezpečný.
  */
 export function Segments({ segments: segments }: { segments: Segment[] }) {
+  // Zarážky citácií (`markCitations`) — len v odpovedi s citáciami zo streamu.
+  if (segments.some(u => u.text.includes("\uE000") || u.text.includes("\uE002"))) {
+    return <CitedSegments segments={segments} />
+  }
   return (
     <>
       {segments.map((u, i) =>
@@ -40,15 +45,68 @@ export function Segments({ segments: segments }: { segments: Segment[] }) {
 }
 
 /**
- * Celý text ako bloky.
- *
- * Úrovne nadpisov sa líšia len jemne — aj odpoveď, aj znenie predpisu má mať
- * jeden hlas, nie hierarchiu ako dokumentácia. Pri norme je to navyše
- * podstatné: „PRVÁ ČASŤ“ a „Článok 3“ sú dve rôzne úrovne členenia, ale
- * čitateľ ich rozoznáva podľa slov, nie podľa veľkosti písma.
+ * Úseky so značkami citácií (ASK-odpoved-dva-stlpce). Text citovanej vety
+ * je v `span.cite-sentence`, značka na jej konci je `<button class="cite">`
+ * s číslom citácie. Obe nesú `data-cite` — prepojenie s citáciou vpravo
+ * (zvýraznenie, pripnutie) robí `Answer` delegovanými udalosťami, tento
+ * komponent ostáva bez stavu.
  */
-export default function FormattedText({ text }: { text: string }) {
-  const blocks = toBlocks(text)
+function CitedSegments({ segments }: { segments: Segment[] }) {
+  const out: ReactNode[] = []
+  let open: string | null = null
+  let key = 0
+  const wrap = (node: ReactNode) =>
+    open ? <span key={key++} className="cite-sentence" data-cite={open.replace(/,/g, " ")}>{node}</span> : node
+
+  for (const u of segments) {
+    let last = 0
+    const pieces: { text: string }[] = []
+    for (const m of u.text.matchAll(CITE_TOKEN)) {
+      if (m.index! > last) pieces.push({ text: u.text.slice(last, m.index) })
+      pieces.push({ text: m[0] })
+      last = m.index! + m[0].length
+    }
+    if (last < u.text.length) pieces.push({ text: u.text.slice(last) })
+
+    for (const { text } of pieces) {
+      const token = /^\uE002([\d,]+)\uE001$|^\uE000([\d,]+)\uE001$/.exec(text)
+      if (token?.[1]) {
+        open = token[1]
+        continue
+      }
+      if (token?.[2]) {
+        for (const n of token[2].split(",")) {
+          out.push(
+            <button key={key++} type="button" className="cite" data-cite={n} aria-describedby={`citation-${n}`}>
+              {n}
+            </button>,
+          )
+        }
+        open = null
+        continue
+      }
+      const node =
+        u.druh === "tucne" ? <strong key={key++}>{text}</strong>
+          : u.druh === "odkaz" ? <Link key={key++} href={u.href}>{text}</Link>
+          : <span key={key++}>{text}</span>
+      out.push(wrap(node))
+    }
+  }
+  return <>{out}</>
+}
+
+export default function FormattedText({
+  text,
+  citations,
+}: {
+  text: string
+  /**
+   * Citácie odpovede s polohou `at` zo streamu — vložia sa ako značky `[n]`
+   * na konce viet. Bez nich (alebo bez `at`) text ostáva, ako je.
+   */
+  citations?: { citedText: string; at?: number }[]
+}) {
+  const blocks = toBlocks(citations?.length ? markCitations(text, citations) : text)
   return (
     <>
       {blocks.map((b, i) =>

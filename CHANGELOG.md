@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Odpoveď a citácie vedľa seba (2026-09-30)
+
+Na širokej obrazovke je **odpoveď vľavo a doslovné citácie vpravo**,
+stále na očiach pri čítaní. Za vetou v odpovedi je číslo citácie, o ktorú
+sa opiera. Prejdenie myšou alebo fokus zvýrazní citáciu aj vetu, klik
+zvýraznenie pripne. Citácia ukazuje úryvok, dokument, článok a znenie
+a vedie do knižnice. Zdroje a technické údaje sú zbalené pod citáciami,
+technické údaje vidia len hodnotitelia. Na tablete sú citácie pod odpoveďou
+a číslo na ne posunie, na telefóne číslo otvorí citáciu zospodu.
+
 ### Otázka z hlavičky a odpoveď hneď (2026-09-30)
 
 Otázka sa kladie na jednom mieste: v **poli v hlavičke** so značkou

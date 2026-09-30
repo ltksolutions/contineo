@@ -4215,6 +4215,167 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 .ask-error a { color: inherit; font-weight: 600; }
 
+/* ── odpoveď v dvoch stĺpcoch (ASK-odpoved-dva-stlpce) ────────────────────
+   Vľavo otázka, karta odpovede a hodnotenie, vpravo citácie, zdroje
+   a technické údaje. Dva stĺpce len od 1180 px a len keď sú citácie (alebo
+   beh, počas ktorého pribúdajú) — `.is-split`. Inak jeden stĺpec 760 px
+   a všetko pod sebou. Poradie pod sebou: otázka a odpoveď, citácie,
+   hodnotenie — hodnotí sa, až keď je dôkaz prečítaný. */
+.ask-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "main" "aside" "rating";
+  gap: 18px;
+}
+.ask-main { grid-area: main; display: grid; gap: 18px; align-content: start; }
+.ask-aside { grid-area: aside; min-width: 0; }
+.ask-rating { grid-area: rating; }
+.ask-aside:empty, .ask-rating:empty { display: none; }
+
+@media (min-width: 1180px) {
+  .ask-page:has(.ask-layout.is-split) { max-width: 1240px; }
+  .ask-layout.is-split {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    grid-template-areas: "main aside" "rating aside";
+    grid-template-rows: auto 1fr;
+    column-gap: 28px;
+  }
+  /* Citácie ostávajú pri čítaní na očiach — pod hlavičkou a pásom cesty,
+     s vlastným rolovaním, keď sú dlhšie než okno. */
+  .ask-layout.is-split .ask-aside {
+    position: sticky;
+    top: 112px;
+    align-self: start;
+    max-height: calc(100dvh - 128px);
+    overflow: auto;
+  }
+}
+
+.answer-aside { display: grid; gap: 18px; }
+.answer-aside-section { min-width: 0; }
+.answer-aside-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+summary.answer-aside-title { margin: 0; cursor: pointer; }
+details[open] > summary.answer-aside-title { margin-bottom: 10px; }
+.answer-aside-note { font-weight: 500; text-transform: none; letter-spacing: 0; }
+
+.answer-citations { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.answer-citation {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  scroll-margin: 120px 0 80px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.answer-citation:focus { outline: none; }
+.answer-citation.is-active {
+  border-color: var(--teal-700);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.answer-citation-n {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.answer-citation-body { display: grid; gap: 4px; min-width: 0; }
+.answer-citation-text { font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.answer-citation-meta { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.answer-citation-open { justify-self: start; font-size: 12.5px; font-weight: 600; }
+.answer-citations-pending {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.answer-technical { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: var(--fs-micro); }
+
+/* Značka `[n]` v texte odpovede — tlačidlo, na ktoré sa dá dostať Tabom. */
+.cite {
+  display: inline-grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  margin: 0 1px 0 3px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: 2px;
+  cursor: pointer;
+}
+.cite:hover, .cite.is-active { background: var(--teal-700); color: var(--surface); }
+.cite:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Veta, o ktorú sa citácia opiera — spodný pás, nie celé pozadie: text
+   ostáva čitateľný a zvýraznenie nevyzerá ako výber myšou. */
+.cite-sentence.is-active {
+  background: linear-gradient(transparent 62%, var(--accent-soft) 62%);
+  box-shadow: 0 2px 0 -1px var(--teal-100);
+}
+
+/* Spodná plachta citácie (telefón). */
+.citation-sheet-scrim { position: fixed; inset: 0; z-index: 49; background: rgba(17, 21, 28, 0.22); }
+.citation-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: grid;
+  gap: 10px;
+  max-height: 70dvh;
+  overflow: auto;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  border-radius: 18px 18px 0 0;
+  background: var(--surface);
+  box-shadow: 0 -12px 40px rgba(20, 28, 42, 0.2);
+}
+.citation-sheet:focus { outline: none; }
+.citation-sheet-head { display: flex; align-items: center; gap: 10px; }
+.citation-sheet-head b { flex: 1; font-size: 14px; }
+.citation-sheet-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px -8px -8px 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.citation-sheet-text { font-size: 15.5px; line-height: 1.6; }
+.citation-sheet-nav { display: flex; gap: 8px; }
+.citation-sheet-nav .button { flex: 1; min-height: 44px; justify-content: center; }
+
+@media (max-width: 639px) {
+  .cite { min-width: 24px; height: 24px; }
+}
+
 /* Hlavička karty odpovede. Značka a jedna veta, ktorá hovorí to podstatné:
    toto nie je odpoveď z internetu, ale z dokumentov organizácie. */
 .answer-head {

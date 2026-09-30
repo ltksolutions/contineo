@@ -10,6 +10,51 @@
 
 ---
 
+## 2026-09-30 — odpoveď v dvoch stĺpcoch (ASK-odpoved-dva-stlpce)
+
+**Rozhodnutia (Ján, 30. 9. 2026, Q1–Q2 v `docs/design/ASK-odpoved-dva-stlpce.md`).**
+Poloha značky `[n]` sa berie z okamihu, keď citácia prišla: `sseClient`
+zapíše `at = text.length` a značka ide na najbližší koniec vety — bez zmeny
+servera a schémy (Q1). Technické údaje sú zbalené a len pre roly
+s hodnotením (Q2).
+
+**Čo sa spravilo.**
+
+- `sseClient`: `at` pri udalosti `citation`; k citáciám z `done` sa doplní
+  podľa poradia (server posiela ten istý zoznam — `llmGenerator.ts`).
+- `formatText`: `groupCitations()` (zlúčenie aj s číslom pre každú pôvodnú
+  citáciu), `citationEnd()`, `sentenceStart()`, `markCitations()` — zarážky
+  zo súkromnej oblasti Unicode vložené pred rozkladom na bloky.
+  `FormattedText` z nich kreslí `<button class="cite">` a `span.cite-sentence`.
+- `Answer.tsx` rozdelený na `AnswerBody` (karta) a `AnswerAside` (doslovné
+  citácie, zdroje v kontexte, technické údaje). Citácia: číslo, úryvok,
+  dokument · článok · znenie, „Otvoriť v knižnici", ak zdroj má adresu
+  (citácia ↔ zdroj cez `chunkIndex + 1`). Pás vľavo odišiel.
+  `default export` ostáva ako jeden stĺpec (testy, uložená odpoveď).
+- `Search`: mriežka `.ask-layout` — ≥ 1180 px a citácie (alebo beh) → dva
+  stĺpce 1fr / 400, pravý `sticky`; inak otázka a odpoveď, citácie,
+  hodnotenie pod sebou. Prepojenie značka ↔ citácia delegovanými udalosťami
+  (prejdenie, fokus, klik pripne); 640–1179 klik posunie na citáciu,
+  < 640 `CitationSheet` zospodu s listovaním.
+
+**Nefungovalo / poučenie.**
+
+- **Skratky.** Prvý tvar konca vety („bodka a medzera") by značku postavil
+  za „čl." v „čl. 18 ods. 2" — v predpisoch v každej druhej vete. Koniec
+  vety je preto bodka, medzera **a veľké písmeno** (alebo koniec riadku).
+- Citácia prichádza raz pred textom vety, raz za ním. Keď text pred `at`
+  končí vetou (aj s medzerou za bodkou), patrí značka k nej, nie k ďalšej.
+- `CitationSheet` mal `onClose` v závislostiach efektu — pri každom
+  prekreslení `Search` (prejdenie myšou) sa efekt spustil znova a fokus
+  skočil späť na značku. `onClose` je v `ref`.
+- Overenie: stránka z ozajstných komponentov a `globals.css`, `/api/chat`
+  nahradený prúdom udalostí s citáciami medzi vetami. 1200/1440 (dva stĺpce,
+  pripnutie), beh s pribúdajúcimi citáciami, adaptér bez citácií (jeden
+  stĺpec), 834 (posun na citáciu), 390 (spodná plachta, Esc), tmavá téma,
+  fokus z klávesnice. Ozajstný model som nespúšťal.
+
+---
+
 ## 2026-09-30 — otázka z hlavičky, `/ask` s behom (ASK-otazka-z-hlavicky)
 
 **Rozhodnutia (Ján, 30. 9. 2026, Q1–Q4 v `docs/design/ASK-otazka-z-hlavicky.md`).**
