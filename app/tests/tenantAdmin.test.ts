@@ -173,7 +173,7 @@ describe("uloženie zmeny", () => {
     findOne.mockResolvedValue(SFZ)
     await saveTenant("SFZ", { privacyRetention: { evidenceYears: 0, capYears: 2, learningDetailMonths: 999 } }, "dpo@sfz.sk")
     const set = updateOne.mock.calls[0][1].$set
-    expect(set["privacy.retention"]).toEqual({ evidenceYears: 3, capYears: 3, learningDetailMonths: 60 })
+    expect(set["privacy.retention"]).toEqual({ evidenceYears: 3, capYears: 3, learningDetailMonths: 60, answersMonths: 12 })
     expect(set["privacy.updatedAt"]).toBeInstanceOf(Date)
     expect(set["privacy.updatedBy"]).toBe("dpo@sfz.sk")
   })

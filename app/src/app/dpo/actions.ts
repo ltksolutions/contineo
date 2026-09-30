@@ -91,6 +91,7 @@ export async function saveRetentionAction(fd: FormData) {
         evidenceYears: Number(field(fd, "evidenceYears")),
         capYears: Number(field(fd, "capYears")),
         learningDetailMonths: Number(field(fd, "learningDetailMonths")),
+        answersMonths: Number(field(fd, "answersMonths")),
       },
     }, ctx.person.email)
   } catch (e) {

@@ -88,6 +88,15 @@ export default function Search({
       if (!r.ok) return
       const { id } = await r.json()
       setRecordId(id)
+      /*
+       * Adresa `/ask?q=` → `/ask/a/{id}` (ASK-historia-otazok, H4): obnovenie
+       * stránky tak beh nespúšťa znova (a neplatí zaň druhýkrát) a odkaz sa
+       * dá poslať — otvorí uloženú odpoveď. Len keď je človek stále tu:
+       * odpoveď, ktorá dobehla, keď už odišiel, mu adresu meniť nemá.
+       */
+      if (typeof id === "string" && window.location.pathname === "/ask") {
+        window.history.replaceState(null, "", `/ask/a/${encodeURIComponent(id)}`)
+      }
     } catch {
       // Nezapísané hodnotenie nesmie zhodiť zobrazenie odpovede —
       // hodnotiteľ ju stále vidí, len ju nevie posúdiť.

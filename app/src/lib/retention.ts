@@ -31,6 +31,12 @@ export const STALE_ACTIVE_YEARS = 5
  * mesiacov po dokončení kurzu (ADR-021, D131).
  */
 export const LEARNING_DETAIL_MONTHS = 12
+/**
+ * Otázky a odpovede (`evaluations`) — história otázok aj meranie kvality
+ * (ASK-historia-otazok, H2). Predvolene 12 mesiacov, organizácia si ich
+ * nastaví v Ochrane údajov.
+ */
+export const ANSWERS_MONTHS = 12
 /** `retention_log` — dlhšie než najdlhšia plánovaná retencia záloh (D102). */
 export const RETENTION_LOG_DAYS = 395
 
@@ -46,12 +52,15 @@ export interface RetentionSettings {
   capYears: number
   /** Mesiace po dokončení kurzu, potom sa orežú podrobnosti (D131). */
   learningDetailMonths: number
+  /** Mesiace od otázky, potom sa záznam o otázke a odpovedi zmaže (H2). */
+  answersMonths: number
 }
 
 export const DEFAULT_RETENTION: RetentionSettings = {
   evidenceYears: RETENTION_YEARS,
   capYears: CAP_YEARS,
   learningDetailMonths: LEARNING_DETAIL_MONTHS,
+  answersMonths: ANSWERS_MONTHS,
 }
 
 /** Rozsahy, ktoré obrazovka pustí — nula by znamenala „zmazať hneď". */
@@ -59,6 +68,7 @@ export const RETENTION_LIMITS = {
   evidenceYears: [1, 10],
   capYears: [1, 15],
   learningDetailMonths: [1, 60],
+  answersMonths: [1, 60],
 } as const
 
 const clampInt = (v: unknown, [min, max]: readonly [number, number], fallback: number) => {
@@ -76,6 +86,7 @@ export function retentionSettings(saved?: Partial<RetentionSettings> | null): Re
     evidenceYears,
     capYears: Math.max(evidenceYears, clampInt(saved?.capYears, RETENTION_LIMITS.capYears, DEFAULT_RETENTION.capYears)),
     learningDetailMonths: clampInt(saved?.learningDetailMonths, RETENTION_LIMITS.learningDetailMonths, DEFAULT_RETENTION.learningDetailMonths),
+    answersMonths: clampInt(saved?.answersMonths, RETENTION_LIMITS.answersMonths, DEFAULT_RETENTION.answersMonths),
   }
 }
 

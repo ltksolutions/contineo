@@ -57,12 +57,12 @@ Spoločné pre všetky štyri činnosti:
 
 | Položka | Obsah |
 |---|---|
-| Účel | odpovedať na otázky k obsahu predpisov a preveriť správnosť odpovedí; vnútorná komunikácia |
+| Účel | odpovedať na otázky k obsahu predpisov a preveriť správnosť odpovedí; **história otázok** — osoba nájde svoje staršie otázky a odpovede (ASK-historia-otazok, H1; **schváliť s DPO pred nasadením**); vnútorná komunikácia |
 | Právny základ | čl. 6 ods. 1 písm. f) |
 | Dotknuté osoby | všetci prihlásení používatelia |
-| Kategórie údajov | otázka a odpoveď doslovne, pseudonymný identifikátor osoby, hodnotenie odpovede; mobil, pracovisko a fotografia, ak ich osoba vyplní |
+| Kategórie údajov | otázka a odpoveď doslovne, pseudonymný identifikátor osoby (kto sa pýtal — `askedBy`), hodnotenie odpovede, príznak skrytia z vlastnej histórie; mobil, pracovisko a fotografia, ak ich osoba vyplní |
 | Príjemcovia | hodnotitelia odpovedí; kolegovia vo zväze (len adresár) |
-| Lehota výmazu | otázky a odpovede 12 mesiacov (**návrh — ešte nezavedené**); adresár počas vzťahu so zväzom |
+| Lehota výmazu | otázky a odpovede **12 mesiacov, nastaviteľné** v Ochrane údajov (`privacy.retention.answersMonths`, H2) — maže denná dávka; záznamy, z ktorých vznikla overená odpoveď v indexe, sa nemažú, len sa im odoberie väzba na osobu; skrytie z histórie nie je výmaz; adresár počas vzťahu so zväzom |
 
 ### Činnosť 4 — Vzdelávanie: kurzy, testy a certifikáty (ADR-018, ADR-021)
 

@@ -173,6 +173,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
               ["evidenceYears", tt.evidenceYears, tt.evidenceYearsNote],
               ["capYears", tt.capYears, tt.capYearsNote],
               ["learningDetailMonths", tt.learningDetailMonths, tt.learningDetailMonthsNote],
+              ["answersMonths", tt.answersMonths, tt.answersMonthsNote],
             ] as const).map(([name, label, note]) => (
               <label key={name} className="field">
                 <span className="field-label">{label}</span>

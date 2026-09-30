@@ -27,15 +27,16 @@ import { TEST_ATTEMPTS_COLLECTION } from "./testAttempts"
 import { COURSES_COLLECTION, versionById, type Course } from "./courses"
 import { progressFactsMany } from "./learningProgressDb"
 import { tenantByCompanyCode } from "./tenants"
+import { RATINGS_COLLECTION } from "./ratings"
 import {
-  retentionDecision, isStaleActive, learningDetailsDue, addMonths, retentionSettings, RETENTION_LOG_DAYS, LEARNING_DETAIL_MONTHS,
+  retentionDecision, isStaleActive, learningDetailsDue, addMonths, retentionSettings, RETENTION_LOG_DAYS, LEARNING_DETAIL_MONTHS, ANSWERS_MONTHS,
   type RetentionBasis, type RetentionMode,
 } from "./retention"
 
 export const RETENTION_LOG_COLLECTION = "retention_log"
 
 /** `details` = orezanie podrobností vzdelávania po roku (ADR-021, D131). */
-export type DeletionReason = RetentionBasis | "objection" | "details"
+export type DeletionReason = RetentionBasis | "objection" | "details" | "answers"
 
 export interface DeletionCounts {
   acknowledgements: number
@@ -51,12 +52,14 @@ export interface DeletionCounts {
   partCompletions: number
   videoWatch: number
   testAttempts: number
+  /** Otázky a odpovede (`evaluations`) po lehote — nie osoby, ale organizácie (H2). */
+  answers: number
 }
 
 const ZERO: DeletionCounts = {
   acknowledgements: 0, documentOpens: 0, readingTimes: 0,
   assignments: 0, approvalRounds: 0, responsibleCleared: 0, objections: 0,
-  enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0,
+  enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0, answers: 0,
 }
 
 /** Kolekcie vzdelávania osoby, ktoré maže lehota (D130). */
@@ -288,7 +291,8 @@ let logIndexReady: Promise<unknown> | null = null
  */
 async function logDeletion(
   companyCode: string,
-  personId: string,
+  /** `null` pri výmaze, ktorý nie je o jednej osobe — otázky po lehote. */
+  personId: string | null,
   reason: DeletionReason,
   counts: DeletionCounts,
   at: Date,
@@ -322,6 +326,51 @@ export interface RetentionRun {
   staleActive: number
   /** Orezanie podrobností vzdelávania rok po dokončení kurzu (D131). */
   learningDetails: LearningDetailsCounts
+  /** Otázky a odpovede po lehote (ASK-historia-otazok, H2). */
+  answers: AnswersCounts
+}
+
+export interface AnswersCounts {
+  /** Zmazané záznamy o otázke a odpovedi. */
+  deleted: number
+  /** Kurované záznamy, ktorým sa po lehote odobrala väzba na osobu. */
+  detached: number
+}
+
+/**
+ * Otázky a odpovede po lehote (H2) — `evaluations` staršie než
+ * `answersMonths` sa zmažú celé. **Okrem kurovaných** (`curation`): z nich
+ * vznikla overená odpoveď v indexe a podľa nich sa archivuje, keď sa norma
+ * zmení — to je obsah knižnice, nie história osoby. Tým sa po lehote len
+ * odoberie väzba na osobu: kto sa pýtal a kto hlásil chybu. Podpisy
+ * hodnotiteľa a správcu obsahu (`evaluatedBy`, `curation.*By`) ostávajú —
+ * je to ich pracovný záznam.
+ */
+export async function purgeAnswers(
+  companyCode: string, mode: RetentionMode, now: Date = new Date(), months: number = ANSWERS_MONTHS,
+): Promise<AnswersCounts> {
+  const col = await getCollection(RATINGS_COLLECTION)
+  const cutoff = addMonths(now, -months)
+  const old = { companyCode, createdAt: { $lt: cutoff } }
+  const plain = { ...old, curation: { $exists: false } }
+  const curated = {
+    ...old,
+    curation: { $exists: true },
+    $or: [{ askedBy: { $exists: true } }, { reviewer: { $exists: true } }, { readerNoteBy: { $exists: true } }],
+  }
+  const counts: AnswersCounts = {
+    deleted: await col.countDocuments(plain),
+    detached: await col.countDocuments(curated),
+  }
+  if (mode !== "delete") return counts
+  if (counts.deleted) await col.deleteMany(plain)
+  if (counts.detached) {
+    await col.updateMany(curated, { $unset: { askedBy: "", reviewer: "", readerNoteBy: "" } })
+  }
+  if (counts.deleted + counts.detached > 0) {
+    await logDeletion(companyCode, null, "answers", { ...ZERO, answers: counts.deleted + counts.detached }, now)
+  }
+  return counts
 }
 
 /**
@@ -405,6 +454,7 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
   const run: RetentionRun = {
     companyCode, mode, persons: [], staleActive: 0,
     learningDetails: { enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 },
+    answers: { deleted: 0, detached: 0 },
   }
   const last = await lastEvents(companyCode, people)
   for (const p of people) {
@@ -419,5 +469,6 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
   }
   // Po výmaze osôb — ich zápisy už nie sú, nerátajú sa dvakrát.
   run.learningDetails = await trimLearningDetails(companyCode, mode, now, settings.learningDetailMonths)
+  run.answers = await purgeAnswers(companyCode, mode, now, settings.answersMonths)
   return run
 }

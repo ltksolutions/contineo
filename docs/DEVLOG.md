@@ -10,6 +10,61 @@
 
 ---
 
+## 2026-09-30 — história otázok (ASK-historia-otazok)
+
+**Rozhodnutia (Ján, 30. 9. 2026, H1–H4 v `docs/design/ASK-historia-otazok.md`,
+a dve doplnené počas práce).**
+
+- **H1** zdroj histórie je `evaluations`, nová kolekcia nie je. **Rozpor
+  s repozitárom:** návrh počítal s `reviewer` ako „kto sa pýtal", ale
+  `saveVerdict()` doň pri posudku zapíše hodnotiteľa (a `evaluation.ts`
+  pritom tvrdí opak). Ján rozhodol: **nové pole `askedBy`** zapisované
+  v `recordAnswer()`; staršie záznamy bez neho podľa `reviewer`, len kým
+  neboli posúdené. Posúdené staršie záznamy sa v histórii neukážu — autor
+  sa spätne nedá zistiť.
+- **H2** `evaluations` idú do retencie, `answersMonths` (predvolene 12,
+  1–60) v nastavení organizácie. **Doplnené:** kurované záznamy
+  (`curation`) sa nemažú — je z nich overená odpoveď v indexe a podľa nich
+  sa archivuje; po lehote im zmizne len väzba na osobu (`askedBy`,
+  `reviewer`, `readerNoteBy`). Skrytie z histórie nie je výmaz.
+- **H3** uložená odpoveď — kto sa pýtal a rola s hodnotením, inak 404.
+- **H4** po `done` `replaceState` na `/ask/a/{id}`.
+- **Pred nasadením schváliť s DPO** — zapísané v TODO; PR sa dovtedy
+  nezlučuje.
+
+**Čo sa spravilo.**
+
+- `lib/askHistory.ts` (+ `askHistoryMatch.ts`): zoznam po stranách,
+  hľadanie slov bez diakritiky (AND, v aplikácii — regex v Mongu
+  diakritiku neignoruje), posledných 5 rôznych otázok, skrytie / vrátenie
+  jednej aj všetkých (s rovnakým `hiddenAt`, aby „Vrátiť" vrátilo práve
+  tie), `answerForViewer()`. Indexy `{companyCode, askedBy|reviewer,
+  createdAt}`.
+- `GET /api/ask/history`, `POST …/{id}/hide|unhide` pre plachtu; stránka
+  `/ask/history` má serverové akcie — × aj „Vymazať celú históriu" (s
+  potvrdením v adrese) fungujú bez JS. Oznam „Vrátiť" zmizne po 5 s.
+- Plachta: „Nedávne otázky" / „Z vašich otázok", ↑/↓ + Enter otvorí
+  uloženú odpoveď, × s „Vrátiť", odkaz „Celá história".
+- `/ask/a/{id}`: rozloženie ako živá odpoveď, bez značiek, pás s dátumom
+  a novým znením (`lib/savedAnswer.ts` — porovnanie začiatku účinnosti
+  zdroja s dnes platným znením cez `effectiveVersion()`), „Opýtať sa znova".
+- Retencia: `purgeAnswers()` v `runRetention`, `retention_log` s dôvodom
+  `answers` (bez osoby). DPO nastaví lehotu v Ochrane údajov; `/privacy`
+  má riadok o otázkach, `PRIVACY_NOTICE_VERSION` 30. 9.
+- `docs/C2_…` činnosť 3: účel, kategórie, lehota.
+
+**Počas práce opravené v kroku 2 (PR #192).**
+
+- „Otvoriť v knižnici" viedol na `url` zdroja — to je originál mimo
+  aplikácie. Zdroj nesie `documentId` a odkaz ide na `/documents/{id}`.
+- Klient posielal pri uložení odpovede aj polohu `at` a API ju uložilo.
+  Odrezáva sa — uložená odpoveď ju podľa Q1 nemá.
+
+**Overenie.** Pozri PR — vykreslenie `/ask/history` a `/ask/a/{id}` so
+zamockovanou databázou, plachta s históriou cez podstrčené API.
+
+---
+
 ## 2026-09-30 — odpoveď v dvoch stĺpcoch (ASK-odpoved-dva-stlpce)
 
 **Rozhodnutia (Ján, 30. 9. 2026, Q1–Q2 v `docs/design/ASK-odpoved-dva-stlpce.md`).**

@@ -284,7 +284,7 @@ interface Dictionary {
     basisDirectory: string
     retentionHeading: string
     retentionColumns: [string, string]
-    /** `{evidence}`, `{cap}`, `{months}` doplní stránka z lehôt organizácie (ADR-022, D136). */
+    /** `{evidence}`, `{cap}`, `{months}`, `{answers}` doplní stránka z lehôt organizácie (ADR-022, D136). */
     retention: [string, string][]
     years: (n: number) => string
     months: (n: number) => string
@@ -423,6 +423,8 @@ interface Dictionary {
       capYearsNote: string
       learningDetailMonths: string
       learningDetailMonthsNote: string
+      answersMonths: string
+      answersMonthsNote: string
       fixed: string
       warning: string
       save: string
@@ -657,8 +659,40 @@ interface Dictionary {
       hint: string
       /** Vložená plachta na `/ask` sa nezatvára — bez „Esc zavrie". */
       hintInline: string
+      /** Pri zozname vlastných otázok — so šípkami. */
+      hintHistory: string
       insert: string
       close: string
+    }
+    /** História otázok (ASK-historia-otazok) — plachta, `/ask/history`. */
+    history: {
+      recent: string
+      matching: string
+      all: string
+      title: string
+      lead: string
+      filter: string
+      filterSubmit: string
+      remove: string
+      removed: string
+      removedAll: string
+      undo: string
+      clearAll: string
+      clearConfirm: string
+      clearCancel: string
+      retention: (months: number) => string
+      loadOlder: string
+      empty: string
+      emptyFilter: string
+      status: { citations: (n: number) => string; none: string; fits: string; doesNotFit: string }
+      today: string
+      yesterday: string
+    }
+    /** Uložená odpoveď `/ask/a/{id}`. */
+    saved: {
+      banner: (date: string) => string
+      newVersion: (document: string, label: string, date: string) => string
+      askAgain: string
     }
     /** `/ask` bez otázky. */
     heading: string
@@ -3434,7 +3468,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["potvrdenie: čas, znenie predpisu, doslovný text potvrdenia, IP adresa, údaj o prehliadači", "doklad o oboznámení s predpisom"],
         ["čas strávený nad znením", "informatívny údaj pre personalistu, nie doklad; nič sa podľa neho nevyhodnocuje"],
         ["pripomienky: komu a kedy sa odoslali", "aby vám rovnaká pripomienka neprišla dvakrát"],
-        ["otázky, ktoré systému položíte, a jeho odpovede", "aby sa dala preveriť správnosť odpovedí"],
+        ["otázky, ktoré systému položíte, a jeho odpovede", "aby sa dala preveriť správnosť odpovedí a aby ste v histórii našli svoje staršie otázky"],
         ["mobilný telefón, pracovisko a fotografia, ak ich vyplníte", "interný adresár; vyplniť ich nemusíte"],
         ["pohlavie, ak ho vyplní personalista", "štatistika zloženia organizácie (napríklad podiel žien a mužov) a správny tvar textov o vás, napríklad „absolvoval / absolvovala“; z mena sa neodvodzuje a vyplniť ho nemusíte"],
       ],
@@ -3451,6 +3485,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["potvrdenie, pridelenie, otvorenie znenia", "{evidence} od skončenia pracovného pomeru alebo vzťahu s organizáciou; ak dátum skončenia nie je známy, od vyradenia zo systému; najdlhšie {cap} od poslednej udalosti, ak nie je známy ani jeden dátum"],
         ["schválenie predpisu a zodpovedná osoba", "kým existuje aspoň jeden doklad o oboznámení s daným znením"],
         ["čas strávený nad znením", "12 mesiacov"],
+        ["otázky, ktoré systému položíte, a jeho odpovede", "{answers}; odstránenie z histórie ich skryje len vo vašom zozname"],
         ["pripomienky", "90 dní"],
         ["záznam o prístupoch a zmenách (audit)", "24 mesiacov"],
         ["pohlavie", "spolu s ostatnými údajmi vo vašom zázname v zozname osôb"],
@@ -3631,6 +3666,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       capYearsNote: "Pre vyradenú osobu, pri ktorej nie je známy ani jeden dátum. Nesmie byť kratší než lehota vyššie.",
       learningDetailMonths: "Mesiace po dokončení kurzu",
       learningDetailMonthsNote: "Potom sa z testov zmažú odpovede a zo sledovania videa pozreté úseky. Výsledok a dokončenie zostávajú.",
+      answersMonths: "Mesiace pre otázky a odpovede",
+      answersMonthsNote: "Potom sa otázky, odpovede a ich hodnotenie zmažú. Záznamy, z ktorých vznikla overená odpoveď, ostanú bez mena toho, kto sa pýtal.",
       fixed: "Pevné pre celú platformu (riadi ich databáza): čas strávený nad znením 12 mesiacov, pripomienky 90 dní, audit 24 mesiacov. Certifikáty sa nemažú.",
       warning: "Skrátenie lehoty môže pri zapnutom ostrom mazaní zmazať záznamy hneď v najbližšej nočnej dávke.",
       save: "Uložiť lehoty",
@@ -3790,11 +3827,45 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznáma chyba",
     noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
     noScriptLink: "prejsť na dokumenty",
+    history: {
+      recent: "Nedávne otázky",
+      matching: "Z vašich otázok",
+      all: "Celá história",
+      title: "Moje otázky",
+      lead: "Otázky, ktoré ste položili, s odpoveďami tak, ako vtedy prišli.",
+      filter: "Hľadať v mojich otázkach",
+      filterSubmit: "Hľadať",
+      remove: "Odstrániť z histórie",
+      removed: "Otázka odstránená z histórie",
+      removedAll: "História vymazaná",
+      undo: "Vrátiť",
+      clearAll: "Vymazať celú históriu",
+      clearConfirm: "Vymazať celú históriu otázok? Otázky zmiznú z vášho zoznamu.",
+      clearCancel: "Nechať",
+      retention: months => `Otázky a odpovede sa uchovávajú ${months} mesiacov a potom sa zmažú. Odstránenie z histórie ich skryje len vo vašom zozname — na kontrolu kvality odpovedí ostávajú do konca lehoty.`,
+      loadOlder: "Načítať staršie",
+      empty: "Zatiaľ ste sa nič nepýtali. Otázku položte v poli hore.",
+      emptyFilter: "Žiadna vaša otázka tomu nezodpovedá.",
+      status: {
+        citations: n => (n === 1 ? "1 citácia" : n <= 4 ? `${n} citácie` : `${n} citácií`),
+        none: "nič sa nenašlo",
+        fits: "sedí",
+        doesNotFit: "nesedí",
+      },
+      today: "Dnes",
+      yesterday: "Včera",
+    },
+    saved: {
+      banner: date => `Odpoveď z ${date}. Predpisy sa odvtedy mohli zmeniť.`,
+      newVersion: (document, label, date) => `${document} má odvtedy nové znenie (${label}, účinné od ${date}).`,
+      askAgain: "Opýtať sa znova",
+    },
     sheet: {
       infoLead: org => `Odpoveď sa skladá len z dokumentov organizácie ${org}.`,
       infoRest: "Pri každom tvrdení je odkaz na zdroj. Ak to v dokumentoch nie je, systém to povie a nič si nevymyslí.",
       hint: "Enter odošle · Shift+Enter nový riadok · Esc zavrie",
       hintInline: "Enter odošle · Shift+Enter nový riadok",
+      hintHistory: "↑↓ vybrať · Enter otvorí · Esc zavrie",
       insert: "vložiť",
       close: "Zavrieť",
     },
@@ -6791,7 +6862,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["potvrzení: čas, znění předpisu, doslovný text potvrzení, IP adresa, údaj o prohlížeči", "doklad o seznámení s předpisem"],
         ["čas strávený nad zněním", "informativní údaj pro personalistu, ne doklad; nic se podle něj nevyhodnocuje"],
         ["připomínky: komu a kdy byly odeslány", "aby vám stejná připomínka nepřišla dvakrát"],
-        ["otázky, které systému položíte, a jeho odpovědi", "aby se dala prověřit správnost odpovědí"],
+        ["otázky, které systému položíte, a jeho odpovědi", "aby se dala prověřit správnost odpovědí a abyste v historii našli své starší otázky"],
         ["mobilní telefon, pracoviště a fotografie, pokud je vyplníte", "interní adresář; vyplnit je nemusíte"],
         ["pohlaví, pokud ho vyplní personalista", "statistika složení organizace (například podíl žen a mužů) a správný tvar textů o vás, například „absolvoval / absolvovala“; ze jména se neodvozuje a vyplnit ho nemusíte"],
       ],
@@ -6808,6 +6879,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["potvrzení, přidělení, otevření znění", "{evidence} od skončení pracovního poměru nebo vztahu s organizací; pokud datum skončení není známé, od vyřazení ze systému; nejdéle {cap} od poslední události, pokud není známé ani jedno datum"],
         ["schválení předpisu a odpovědná osoba", "dokud existuje alespoň jeden doklad o seznámení s daným zněním"],
         ["čas strávený nad zněním", "12 měsíců"],
+        ["otázky, které systému položíte, a jeho odpovědi", "{answers}; odstranění z historie je skryje jen ve vašem seznamu"],
         ["připomínky", "90 dní"],
         ["záznam o přístupech a změnách (audit)", "24 měsíců"],
         ["pohlaví", "spolu s ostatními údaji ve vašem záznamu v seznamu osob"],
@@ -6988,6 +7060,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       capYearsNote: "Pro vyřazenou osobu, u které není známé ani jedno datum. Nesmí být kratší než lhůta výše.",
       learningDetailMonths: "Měsíce po dokončení kurzu",
       learningDetailMonthsNote: "Potom se z testů smažou odpovědi a ze sledování videa zhlédnuté úseky. Výsledek a dokončení zůstávají.",
+      answersMonths: "Měsíce pro otázky a odpovědi",
+      answersMonthsNote: "Potom se otázky, odpovědi a jejich hodnocení smažou. Záznamy, ze kterých vznikla ověřená odpověď, zůstanou bez jména toho, kdo se ptal.",
       fixed: "Pevné pro celou platformu (řídí je databáze): čas strávený nad zněním 12 měsíců, připomínky 90 dní, audit 24 měsíců. Certifikáty se nemažou.",
       warning: "Zkrácení lhůty může při zapnutém ostrém mazání smazat záznamy hned v nejbližší noční dávce.",
       save: "Uložit lhůty",
@@ -7147,11 +7221,45 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznámá chyba",
     noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
     noScriptLink: "přejít na dokumenty",
+    history: {
+      recent: "Nedávné otázky",
+      matching: "Z vašich otázek",
+      all: "Celá historie",
+      title: "Moje otázky",
+      lead: "Otázky, které jste položili, s odpověďmi tak, jak tehdy přišly.",
+      filter: "Hledat v mých otázkách",
+      filterSubmit: "Hledat",
+      remove: "Odstranit z historie",
+      removed: "Otázka odstraněna z historie",
+      removedAll: "Historie vymazána",
+      undo: "Vrátit",
+      clearAll: "Vymazat celou historii",
+      clearConfirm: "Vymazat celou historii otázek? Otázky zmizí z vašeho seznamu.",
+      clearCancel: "Nechat",
+      retention: months => `Otázky a odpovědi se uchovávají ${months} měsíců a pak se smažou. Odstranění z historie je skryje jen ve vašem seznamu — pro kontrolu kvality odpovědí zůstávají do konce lhůty.`,
+      loadOlder: "Načíst starší",
+      empty: "Zatím jste se na nic neptali. Otázku položte v poli nahoře.",
+      emptyFilter: "Žádná vaše otázka tomu neodpovídá.",
+      status: {
+        citations: n => (n === 1 ? "1 citace" : n <= 4 ? `${n} citace` : `${n} citací`),
+        none: "nic se nenašlo",
+        fits: "sedí",
+        doesNotFit: "nesedí",
+      },
+      today: "Dnes",
+      yesterday: "Včera",
+    },
+    saved: {
+      banner: date => `Odpověď z ${date}. Předpisy se od té doby mohly změnit.`,
+      newVersion: (document, label, date) => `${document} má od té doby nové znění (${label}, účinné od ${date}).`,
+      askAgain: "Zeptat se znovu",
+    },
     sheet: {
       infoLead: org => `Odpověď se skládá jen z dokumentů organizace ${org}.`,
       infoRest: "U každého tvrzení je odkaz na zdroj. Pokud to v dokumentech není, systém to řekne a nic si nevymyslí.",
       hint: "Enter odešle · Shift+Enter nový řádek · Esc zavře",
       hintInline: "Enter odešle · Shift+Enter nový řádek",
+      hintHistory: "↑↓ vybrat · Enter otevře · Esc zavře",
       insert: "vložit",
       close: "Zavřít",
     },
@@ -10139,7 +10247,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["acknowledgement: time, version, the exact wording of the statement, IP address, browser information", "evidence that you read the document"],
         ["time spent on a version", "informative only, not evidence; nothing is assessed on its basis"],
         ["reminders: to whom and when they were sent", "so that you do not get the same reminder twice"],
-        ["questions you ask the system and its answers", "so that the accuracy of the answers can be checked"],
+        ["questions you ask the system and its answers", "so that the accuracy of the answers can be checked and so that you can find your earlier questions in your history"],
         ["mobile phone, workplace and photo, if you fill them in", "internal directory; filling them in is optional"],
         ["gender, if HR fills it in", "statistics on the make-up of the organisation (for example the share of women and men) and correct wording of texts about you in Slovak and Czech; it is not derived from your name and you do not have to provide it"],
       ],
@@ -10156,6 +10264,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ["acknowledgement, assignment, opening of a version", "{evidence} from the end of employment or of the relationship with the organisation; if the end date is not known, from removal from the system; at most {cap} from the last event if neither date is known"],
         ["approval of a document and the responsible person", "as long as at least one acknowledgement of that version exists"],
         ["time spent on a version", "12 months"],
+        ["questions you ask the system and its answers", "{answers}; removing them from your history only hides them in your list"],
         ["reminders", "90 days"],
         ["access and change log (audit)", "24 months"],
         ["gender", "together with the other data in your record in the list of people"],
@@ -10336,6 +10445,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       capYearsNote: "For a removed person with neither date known. It cannot be shorter than the period above.",
       learningDetailMonths: "Months after completing a course",
       learningDetailMonthsNote: "After that, answers are removed from tests and watched segments from video tracking. The result and completion remain.",
+      answersMonths: "Months for questions and answers",
+      answersMonthsNote: "Then questions, answers and their ratings are deleted. Records that became a verified answer stay, without the name of the person who asked.",
       fixed: "Fixed for the whole platform (enforced by the database): time spent on a version 12 months, reminders 90 days, audit 24 months. Certificates are never deleted.",
       warning: "Shortening a period may delete records in the very next nightly run when real deletion is switched on.",
       save: "Save periods",
@@ -10495,11 +10606,45 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Unknown error",
     noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
     noScriptLink: "go to documents",
+    history: {
+      recent: "Recent questions",
+      matching: "From your questions",
+      all: "Full history",
+      title: "My questions",
+      lead: "Questions you asked, with the answers as they came at the time.",
+      filter: "Search my questions",
+      filterSubmit: "Search",
+      remove: "Remove from history",
+      removed: "Question removed from history",
+      removedAll: "History cleared",
+      undo: "Undo",
+      clearAll: "Clear the whole history",
+      clearConfirm: "Clear your whole question history? The questions disappear from your list.",
+      clearCancel: "Keep",
+      retention: months => `Questions and answers are kept for ${months} months and then deleted. Removing them from your history only hides them in your list — they stay for checking answer quality until the period ends.`,
+      loadOlder: "Load older",
+      empty: "You have not asked anything yet. Ask a question in the field at the top.",
+      emptyFilter: "None of your questions matches.",
+      status: {
+        citations: n => (n === 1 ? "1 citation" : `${n} citations`),
+        none: "nothing found",
+        fits: "correct",
+        doesNotFit: "not correct",
+      },
+      today: "Today",
+      yesterday: "Yesterday",
+    },
+    saved: {
+      banner: date => `Answer from ${date}. The rules may have changed since then.`,
+      newVersion: (document, label, date) => `${document} has a new version since then (${label}, in force from ${date}).`,
+      askAgain: "Ask again",
+    },
     sheet: {
       infoLead: org => `The answer is built only from ${org} documents.`,
       infoRest: "Every statement links to its source. If it is not in the documents, the system says so and makes nothing up.",
       hint: "Enter sends · Shift+Enter new line · Esc closes",
       hintInline: "Enter sends · Shift+Enter new line",
+      hintHistory: "↑↓ select · Enter opens · Esc closes",
       insert: "insert",
       close: "Close",
     },

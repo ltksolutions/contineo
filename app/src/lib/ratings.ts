@@ -169,6 +169,25 @@ export interface RatingRecord {
    * by sa raz rozšli.
    */
   reviewer?: string
+  /**
+   * **Kto sa pýtal** — `persons.id` (ASK-historia-otazok, 30. 9. 2026).
+   *
+   * Vlastné pole, lebo `reviewer` na to nestačí: `saveVerdict()` doň pri
+   * posudku zapíše hodnotiteľa, takže po posúdení by otázka zmizla
+   * z histórie toho, kto sa pýtal, a objavila sa hodnotiteľovi. Staršie
+   * záznamy ho nemajú — história ich berie podľa `reviewer`, ale len kým
+   * neboli posúdené (`evaluatedAt` chýba), teda kým `reviewer` ešte je ten,
+   * kto sa pýtal (`askHistory.ts`).
+   */
+  askedBy?: string
+  /**
+   * Skryté z vlastnej histórie otázok (× alebo „Vymazať celú históriu").
+   * Záznam pre hodnotenie kvality ostáva do konca lehoty (H2) — skrytie
+   * nie je výmaz. Chýba = viditeľné, migrácia netreba.
+   */
+  hiddenForAsker?: boolean
+  /** Kedy sa skrylo — „Vrátiť" po „Vymazať celú históriu" vracia práve tie. */
+  hiddenAt?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -231,7 +250,8 @@ export async function recordAnswer(
     correct: null,
     hallucination: null,
     // Chýbajúce pole = nikto prihlásený. Prázdny reťazec by bol tretí stav.
-    ...(personId ? { reviewer: personId } : {}),
+    // `askedBy` sa už nemení; `reviewer` prepíše posudok (viď `askedBy`).
+    ...(personId ? { reviewer: personId, askedBy: personId } : {}),
     createdAt: now,
     updatedAt: now,
   }

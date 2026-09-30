@@ -13,6 +13,7 @@ const get = (r: Row, path: string): unknown => path.split(".").reduce<unknown>((
 const same = (v: unknown, x: unknown) => (x === null ? v === null || v === undefined : v === x)
 function matches(r: Row, f: Row): boolean {
   return Object.entries(f).every(([k, cond]) => {
+    if (k === "$or") return (cond as Row[]).some(sub => matches(r, sub))
     const v = get(r, k)
     if (cond && typeof cond === "object" && !(cond instanceof Date)) {
       const c = cond as Row
@@ -20,6 +21,7 @@ function matches(r: Row, f: Row): boolean {
       if ("$ne" in c) return !same(v, c.$ne)
       if ("$exists" in c) return (v !== undefined) === c.$exists
       if ("$lte" in c) return v instanceof Date && v.getTime() <= (c.$lte as Date).getTime()
+      if ("$lt" in c) return v instanceof Date && v.getTime() < (c.$lt as Date).getTime()
     }
     return same(v, cond)
   })
@@ -46,9 +48,12 @@ function collection(name: string) {
       }
       return { matchedCount: doc ? 1 : 0 }
     },
-    updateMany: async (f: Row, u: { $set: Row }) => {
+    updateMany: async (f: Row, u: { $set?: Row; $unset?: Row }) => {
       const hit = rows().filter(r => matches(r, f))
-      for (const r of hit) Object.assign(r, u.$set)
+      for (const r of hit) {
+        if (u.$set) Object.assign(r, u.$set)
+        for (const k of Object.keys(u.$unset ?? {})) delete r[k]
+      }
       return { modifiedCount: hit.length }
     },
     insertOne: async (d: Row) => { rows().push(d); return { acknowledged: true } },
@@ -61,7 +66,7 @@ vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async (name: string)
 import {
   retentionDecision, isStaleActive, addYears, retentionMode, addMonths, learningDetailsDue, retentionSettings,
 } from "../src/lib/retention"
-import { deletePersonEvidence, trimLearningDetails } from "../src/lib/retentionDb"
+import { deletePersonEvidence, trimLearningDetails, purgeAnswers } from "../src/lib/retentionDb"
 import { courseProgress, type ProgressFacts } from "../src/lib/learningProgress"
 
 const NOW = new Date("2030-06-01T00:00:00Z")
@@ -158,7 +163,7 @@ beforeEach(seed)
 describe("deletePersonEvidence (D101)", () => {
   it("výkaz spočíta, ale nezmaže nič a nezapíše záznam o výmaze", async () => {
     const c = await deletePersonEvidence(PERSON, "endedAt", "report", NOW)
-    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1, objections: 1, enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0 })
+    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1, objections: 1, enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0, answers: 0 })
     expect(db.data.acknowledgements).toHaveLength(5)
     expect(db.data.retention_log).toHaveLength(0)
   })
@@ -315,15 +320,49 @@ describe("orezanie podrobností rok po dokončení (D131)", () => {
 
 describe("lehoty organizácie (ADR-022, D136)", () => {
   it("predvolené = rozhodnutia DPO SFZ; strop nie kratší než lehota; rozsahy", () => {
-    expect(retentionSettings(undefined)).toEqual({ evidenceYears: 3, capYears: 5, learningDetailMonths: 12 })
+    expect(retentionSettings(undefined)).toEqual({ evidenceYears: 3, capYears: 5, learningDetailMonths: 12, answersMonths: 12 })
+    // Otázky a odpovede (ASK-historia-otazok, H2): 1–60 mesiacov.
+    expect(retentionSettings({ answersMonths: 99 }).answersMonths).toBe(60)
+    expect(retentionSettings({ answersMonths: 0 }).answersMonths).toBe(12)
     expect(retentionSettings({ evidenceYears: 7, capYears: 4 })).toMatchObject({ evidenceYears: 7, capYears: 7 })
     expect(retentionSettings({ evidenceYears: 99, learningDetailMonths: 0 })).toMatchObject({ evidenceYears: 10, learningDetailMonths: 12 })
   })
   it("rozhodnutie a orezanie podľa lehôt organizácie", () => {
     const p = { status: "inactive" as const, endedAt: Y("2028-06-01") }
     expect(retentionDecision(p, NOW).due).toBe(false)
-    expect(retentionDecision(p, NOW, { evidenceYears: 2, capYears: 5, learningDetailMonths: 12 }).due).toBe(true)
+    expect(retentionDecision(p, NOW, { evidenceYears: 2, capYears: 5, learningDetailMonths: 12, answersMonths: 12 }).due).toBe(true)
     expect(learningDetailsDue(Y("2030-01-01"), NOW, 6)).toBe(false)
     expect(learningDetailsDue(Y("2029-11-01"), NOW, 6)).toBe(true)
+  })
+})
+
+describe("otázky a odpovede po lehote (ASK-historia-otazok, H2)", () => {
+  const seedAnswers = () => {
+    db.data.evaluations = [
+      { _id: "e1", companyCode: "SFZ", askedBy: "p1", reviewer: "p1", createdAt: Y("2029-01-01"), question: "stará" },
+      { _id: "e2", companyCode: "SFZ", askedBy: "p1", createdAt: Y("2030-06-01"), question: "nová" },
+      { _id: "e3", companyCode: "SFZ", askedBy: "p1", reviewer: "ev", readerNoteBy: "p1", createdAt: Y("2029-01-01"), question: "kurovaná", curation: { state: "published" } },
+      { _id: "e4", companyCode: "INY", askedBy: "p9", createdAt: Y("2029-01-01"), question: "cudzia" },
+    ]
+    db.data.retention_log = []
+  }
+
+  it("výkaz spočíta, nezmaže nič", async () => {
+    seedAnswers()
+    expect(await purgeAnswers("SFZ", "report", NOW, 12)).toEqual({ deleted: 1, detached: 1 })
+    expect(db.data.evaluations).toHaveLength(4)
+  })
+
+  it("výmaz: staré zmizne, kurované stratí väzbu na osobu, cudzia organizácia ostane", async () => {
+    seedAnswers()
+    await purgeAnswers("SFZ", "delete", NOW, 12)
+    expect(db.data.evaluations.map(e => e._id).sort()).toEqual(["e2", "e3", "e4"])
+    const curated = db.data.evaluations.find(e => e._id === "e3")!
+    expect(curated.askedBy).toBeUndefined()
+    expect(curated.reviewer).toBeUndefined()
+    expect(curated.readerNoteBy).toBeUndefined()
+    expect(curated.curation).toEqual({ state: "published" })
+    expect(db.data.retention_log).toHaveLength(1)
+    expect(db.data.retention_log[0]).toMatchObject({ companyCode: "SFZ", personId: null, reason: "answers" })
   })
 })
