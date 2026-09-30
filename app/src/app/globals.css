@@ -1190,16 +1190,25 @@ html[data-theme="dark"] select.field-input {
 }
 
 .sections-sheet { display: none; }
+/*
+ * Menu visí **pod tlačidlom**, nie pri okraji okna. Do 30. 9. 2026 bolo
+ * `position: fixed; left: 10px` — hlavička je však vycentrovaná na
+ * `--shell-maxw`, takže na širokom monitore sa menu otváralo stovky pixelov
+ * vľavo od tlačidla (nahlásené z 1920 px). Kotví sa k `.header-row`
+ * (`position: relative`), 10 px od jej okraja; na úzkom okne sa zmestí
+ * do šírky riadka.
+ */
 .sections[open] > .sections-sheet {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px 22px;
-  position: fixed;
-  top: 60px;
-  left: 10px;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  margin: 0 10px;
   z-index: 1;
   width: 760px;
-  max-width: calc(100vw - 20px);
+  max-width: calc(100% - 20px);
   max-height: calc(100dvh - 80px);
   overflow: auto;
   padding: 18px 18px 14px;
