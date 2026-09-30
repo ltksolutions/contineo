@@ -30,12 +30,13 @@ const client = new MongoClient(process.env.MONGODB_URI, { serverSelectionTimeout
 /** Percentá tak, aby 0 z 0 nebolo NaN. */
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0)
 
-/** p95 z poľa čísel. Pri málo hodnotách je to orientačné, nie záväzné. */
-function p95(values) {
+/** Kvantil z poľa čísel (0,5 = medián). Pri málo hodnotách je orientačný, nie záväzný. */
+function quantile(values, q) {
   const h = values.filter(x => typeof x === "number").sort((a, b) => a - b)
   if (!h.length) return null
-  return h[Math.min(h.length - 1, Math.ceil(h.length * 0.95) - 1)]
+  return h[Math.min(h.length - 1, Math.ceil(h.length * q) - 1)]
 }
+const p95 = values => quantile(values, 0.95)
 
 try {
   await client.connect()
@@ -70,8 +71,8 @@ try {
     console.log("poznámka:    ", z.note ?? "—")
     console.log("nahlásené:   ", z.readerNote ? z.readerNote.slice(0, 80) + "…" : "—")
     console.log("hodnotiteľ:  ", meno(z.reviewer), "· model:", z.model)
-    console.log("TTFT:        ", z.ttftMs, "ms · celkovo:", z.celkovoMs, "ms")
-    console.log("fázy:        ", JSON.stringify(z.casy ?? {}))
+    console.log("TTFT:        ", z.ttftMs, "ms · celkovo:", z.totalMs, "ms")
+    console.log("fázy:        ", JSON.stringify(z.timings ?? {}))
     console.log()
   }
 
@@ -103,7 +104,8 @@ try {
 
   const ttft = p95(records.map(z => z.ttftMs))
   if (ttft !== null) {
-    console.log(`${ttft < 2000 ? OK : BAD} latencia p95 (TTFT)   ${(ttft / 1000).toFixed(1)} s  (prah < 2 s)`)
+    const median = quantile(records.map(z => z.ttftMs), 0.5)
+    console.log(`${ttft < 2000 ? OK : BAD} latencia p95 (TTFT)   ${(ttft / 1000).toFixed(1)} s  (prah < 2 s; medián ${(median / 1000).toFixed(1)} s)`)
   }
 
   // Tvrdá brána: interný obsah medzi zdrojmi verejnej odpovede.
@@ -114,18 +116,21 @@ try {
   console.log(`${WARN} odpovede bez citácie  ${withoutCitations.length}  (${pct(withoutCitations.length, records.length)} %)`)
   console.log()
 
-  // Rozpad času — kvôli otvorenému bodu E6.
+  // Rozpad času — kvôli otvorenému bodu E6. Pole sa po migrácii volá
+  // `timings`; čítanie starého `casy` vypisovalo rozpad vždy prázdny.
   const phases = {}
   for (const z of records) {
-    for (const [k, v] of Object.entries(z.casy ?? {})) {
+    for (const [k, v] of Object.entries(z.timings ?? {})) {
       ;(phases[k] ??= []).push(v)
     }
   }
   if (Object.keys(phases).length) {
-    console.log("── priemerné trvanie fáz ──────────────────────────────")
+    // Medián a p95, nie priemer: jeden studený štart by priemer posunul
+    // a prah D9 je aj tak na p95.
+    console.log("── trvanie fáz (medián / p95) ─────────────────────────")
     for (const [k, v] of Object.entries(phases)) {
-      const average = Math.round(v.reduce((a, b) => a + b, 0) / v.length)
-      console.log(`  ${k.padEnd(24)} ${String(average).padStart(6)} ms`)
+      const n = `n=${v.length}`
+      console.log(`  ${k.padEnd(24)} ${String(quantile(v, 0.5)).padStart(6)} ms  ${String(p95(v)).padStart(6)} ms  ${n}`)
     }
     console.log()
   }
