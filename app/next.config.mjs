@@ -87,6 +87,21 @@ const nextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
       },
+      /*
+       * PDF znenia sa vkladá do **vlastnej** stránky (`<object>` v `PdfView`,
+       * ADR-011) — na karte dokumentu aj pri schvaľovaní. Chrome uplatní
+       * `frame-ancestors` aj na `<object>`, takže `'none'` vyššie zakázalo
+       * náhľad každému a ostal len záložný odkaz (nájdené naostro 30. 9. 2026).
+       * Cudzia stránka ho vložiť nesmie ani teraz. Neskoršie pravidlo prepíše
+       * rovnaký kľúč z prvého — tak to Next robí.
+       */
+      {
+        source: "/api/documents/:documentId/pdf",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
     ]
   },
   env: {
