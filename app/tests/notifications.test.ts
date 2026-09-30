@@ -31,9 +31,9 @@ describe("kam vedie upozornenie", () => {
     expect(notificationHref("versionPublished", { documentId: "   " })).toBeNull()
   })
 
-  it("zodpovednej osobe vedu na znenie pre citatela, nie do kniznice — aj z pripravy (ADR-023)", () => {
+  it("zodpovednej osobe vedu na kartu v sprave, nie na citatelsku kartu — aj z pripravy (D151)", () => {
     for (const kind of ["responsibleAssigned", "draftResponsibleAssigned"] as const) {
-      expect(notificationHref(kind, { documentId: "sfz:stanovy" }), kind).toBe("/documents/sfz%3Astanovy")
+      expect(notificationHref(kind, { documentId: "sfz:stanovy" }), kind).toBe("/library/sfz%3Astanovy")
     }
   })
 

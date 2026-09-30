@@ -10,6 +10,8 @@
 > (D115, D116 — viac základov, zákonná povinnosť má prednosť), D91, D92
 > **Mení:** ADR-014, D109 — bod „Právny základ určuje zodpovedná osoba po
 > zverejnení"
+> **Doplnené:** Dodatok 1 (2026-09-30) — D151, úloha odchádza z čitateľskej
+> karty na kartu dokumentu v správe; mení D140.
 > **Implementácia:** hotová (2026-09-28) — štyri commity na vetve
 > `claude/lucid-curie-9giv6d` (dáta a prenos, stránka dokumentu, knižnica
 > a dokumentácia, platnosť nahradeného znenia D143).
@@ -52,6 +54,8 @@ zodpovednú osobu na stránku, kde formulár na základ nebol.
   zverejnení.
 
 ### D140 — Miesto: stránka dokumentu pre čitateľa
+
+> **Nahradené D151 (Dodatok 1):** úloha je na karte dokumentu v správe.
 
 Zodpovedná osoba z prípravy vidí na `/documents/[id]` kartu pripravovaného
 znenia: účinnosť, nový názov, PDF, text a formulár na základ. **Stránka ju
@@ -121,3 +125,46 @@ v indexe, `docs/TODO.md`).
   história znenia; texty sk/cs/en.
 - Testy: pravidlá, zápis, vykreslenie stránky dokumentu v siedmich stavoch
   a karty v knižnici.
+
+---
+
+## Dodatok 1 (2026-09-30) — úloha je na karte dokumentu v správe, nie na čitateľskej (D151)
+
+> **Rozhodol:** Ján Letko (2026-09-30) — pri teste potvrdzovania naostro.
+> **Mení:** D140.
+
+### Čo odhalilo
+
+Pri potvrdzovaní `sfz:test_znenia` videl Ján na čitateľskej karte medzi
+znením a tlačidlom „Potvrdzujem" dva formuláre na právny základ (platné
+znenie a novela od 1. 1. 2027). Čitateľská karta slúži na čítanie
+a potvrdenie; úloha zodpovednej osoby tam mýli — „to tam nepatrí".
+
+### D151 — Úloha zodpovednej osoby je na karte dokumentu v správe
+
+- Karty úloh (platné znenie, novela vopred, pripravované znenie) sú na
+  `/library/[id]`. Čitateľská karta `/documents/[id]` formulár na právny
+  základ **nemá pre nikoho**, ani pre správcu obsahu.
+- **Zodpovedná osoba bez roly správcu obsahu smie na kartu v správe**, ale
+  vidí **len svoje karty úlohy** a odkaz na čítanie predpisu. Nič z práce
+  správcu obsahu. Kto úlohu nemá, ide na čitateľskú kartu ako doteraz.
+  Zvolené pred „dať jej rolu správcu obsahu" (smela by všetko) a pred
+  samostatnou stránkou úlohy (druhé miesto s tým istým formulárom).
+- Úloha patrí **človeku, nie roli**: karty sa ukazujú len menovitej
+  zodpovednej osobe (`versionBasisTasks()`). Správca obsahu ako náhradník
+  má ďalej panel „Právny základ" pri znení a formulár v karte postupu.
+  Správca, ktorý je sám zodpovednou osobou, vidí kartu úlohy hore, kým
+  základ neurčí.
+- Upozornenia `responsibleAssigned` a `draftResponsibleAssigned` vedú na
+  `/library/[id]`.
+- Kto smie zapisovať, sa nemení: rozhoduje `setVersionLegalBasis()`
+  a `setDraftLegalBasis()` proti uloženému zneniu.
+
+### Implementácia
+
+`versionBasisTasks()` (`versionResponsibility.ts`), karty
+`src/components/BasisTasks.tsx`, obmedzený pohľad `responsibleBasisPage()`
+v `library/[id]/page.tsx`, `notificationHref()`; testy
+`documentBasisTasks.test.ts`, `versionResponsibility.test.ts`,
+`notifications.test.ts`.
+

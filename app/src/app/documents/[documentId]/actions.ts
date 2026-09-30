@@ -110,10 +110,11 @@ export async function acknowledgeAction(fd: FormData) {
 /**
  * Určenie alebo zmena právneho základu znenia (D91, O15).
  *
- * Akcia je pri **zneni pre čitateľa**, nie v knižnici: zodpovedná osoba
- * (napríklad z legislatívy alebo súťažného oddelenia) nemusí byť správca
- * obsahu a do knižnice nesmie. Tú istú akciu používa aj detail v knižnici
- * pre náhradníka — `back=library` vráti správcu tam, odkiaľ prišiel.
+ * Formulár je od 30. 9. 2026 len na karte dokumentu v správe (D151) —
+ * u správcu obsahu aj u zodpovednej osoby, ktorá tam vidí len svoju úlohu.
+ * Akcia zostáva tu a overuje prihlásenie cez `onboardingContext()`, nie cez
+ * `libraryContext()`: zodpovedná osoba nemusí byť správca obsahu.
+ * `back=document` zostal pre formulár otvorený na starej verzii stránky.
  *
  * Kto smie, sa **neoveruje tu**, ale v `setVersionLegalBasis()` proti
  * uloženému zneniu. Z formulára prichádza len dokument, znenie a rozhodnutie.

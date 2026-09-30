@@ -11,7 +11,6 @@
  */
 
 import Link from "next/link"
-import { basesOf } from "@/lib/versionResponsibility"
 import VersionMetaLine from "@/components/VersionMetaLine"
 import { initials } from "@/lib/initials"
 import { notFound, redirect } from "next/navigation"
@@ -22,7 +21,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
-import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
+import { dictionary, formatDate } from "@/lib/i18n"
 import { acknowledgementDuties } from "@/lib/pending"
 import { dueState } from "@/lib/due"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
@@ -32,13 +31,7 @@ import ReadingTimer from "@/components/ReadingTimer"
 import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
 import { acknowledgeAction } from "./actions"
-import { responsibleContact, draftBasisTaskFor, type DraftBasisTask } from "@/lib/versionResponsibilityDb"
-import { canSetLegalBasis, legalBasisFields } from "@/lib/versionResponsibility"
-import type { Version } from "@/lib/documents"
-import type { ReactNode } from "react"
-import { isContentManager } from "@/lib/library"
-import LegalBasisForm from "@/components/LegalBasisForm"
-import { legalBasisOptions } from "@/lib/legalBases"
+import { responsibleContact } from "@/lib/versionResponsibilityDb"
 
 export const dynamic = "force-dynamic"
 
@@ -66,37 +59,15 @@ export default async function DocumentPage({
   const documentId = decodeURIComponent((await params).documentId)
   const doc = await loadDocumentFor(person, documentId)
   /*
-    Pripravované znenie pre jeho zodpovednú osobu (ADR-023, D139) — aj pri
-    dokumente, ktorý by inak nevidela alebo ktorý ešte nemá zverejnené znenie.
-    `draftBasisTaskFor()` vráti úlohu len jej; ostatným sa dokument naďalej
-    tvári ako neexistujúci (D32).
+    Úloha zodpovednej osoby (určiť právny základ, ADR-023) sem nepatrí — je na
+    karte dokumentu v správe (D151). Tu sa predpis len číta a potvrdzuje.
   */
-  const draftTask = await draftBasisTaskFor(person, documentId)
-  if (!doc && !draftTask) notFound()
+  if (!doc) notFound()
 
   const q = await searchParams
   const text = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
   const message = text(q.msg)
   const failed = text(q.error) === "1"
-  const basisOptionsFor = (show: boolean) => (show ? legalBasisOptions(ctx.tenant) : [])
-  const draftCard = draftTask
-    ? <DraftBasisCard task={draftTask} options={basisOptionsFor(true)} language={person.language} />
-    : null
-
-  if (!doc) {
-    // Dokument, ktorý osoba inak nevidí: len úloha ku konceptu, nič na čítanie
-    // ani na potvrdenie.
-    return (
-      <AppShell language={person.language} title={draftTask!.title}>
-        <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
-          <Notice message={message} error={failed} back={`/documents/${encodeURIComponent(documentId)}`} />
-          <h1 className="page-title">{draftTask!.title}</h1>
-          {draftCard}
-        </div>
-      </AppShell>
-    )
-  }
-
   const version = effectiveVersion(doc)
 
   /*
@@ -143,38 +114,9 @@ export default async function DocumentPage({
   */
   const responsible = version.ok ? version.version.responsiblePerson : undefined
   const contact = await responsibleContact(person.companyCode, responsible)
-  /*
-    Formulár na právny základ vidí len ten, kto ho smie určiť — to isté
-    pravidlo ako v `setVersionLegalBasis()`. Bežný čitateľ ho nevidí vôbec.
-  */
-  const canSetBasis = version.ok && canSetLegalBasis({
-    actorPersonId: person.id,
-    isContentManager: isContentManager(person) && person.companyCode === ctx.tenant.companyCode,
-    responsible,
-    responsibleActive: Boolean(contact?.active),
-  })
-
   const basisName = (v: { legalBasis?: string; legalBasisLabel?: string }) =>
     v.legalBasisLabel ?? (v.legalBasis ? tr.basisLabel[v.legalBasis] : "")
 
-  /*
-    Zverejnené znenie, ktoré **ešte nie je účinné** (ADR-023). Upozornenie
-    zo zverejnenia posiela zodpovednú osobu sem, no `effectiveVersion()` ho
-    do účinnosti nevráti — formulár na základ by sa jej dovtedy neukázal.
-    Pravidlo „kto smie" je to isté ako pri platnom znení.
-  */
-  const pending: Version[] = []
-  for (const v of doc.versions ?? []) {
-    if (!v.isActive || !(v.effectiveFrom instanceof Date) || v.effectiveFrom.getTime() <= now.getTime()) continue
-    const c = await responsibleContact(person.companyCode, v.responsiblePerson)
-    if (canSetLegalBasis({
-      actorPersonId: person.id,
-      isContentManager: isContentManager(person) && person.companyCode === ctx.tenant.companyCode,
-      responsible: v.responsiblePerson,
-      responsibleActive: Boolean(c?.active),
-    })) pending.push(v)
-  }
-  const basisOptions = basisOptionsFor(canSetBasis || pending.length > 0)
 
   return (
     <AppShell language={person.language} title={doc.title}>
@@ -211,84 +153,9 @@ export default async function DocumentPage({
                            approvedOn={version.version.approvedOn} language={person.language} />
         </div>
       ) : (
-        // Spodný okraj pre kartu úlohy pod ním (ADR-023); inak za ním nič nie je.
-        <p className="card" style={{ padding: 16, margin: "16px 0 24px" }}>
+        <p className="card" style={{ padding: 16, margin: "16px 0" }}>
           {t.blockedReason[version.reason] ?? version.reason}
         </p>
-      )}
-
-      {/* Znenie zverejnené s budúcou účinnosťou a pripravované znenie (ADR-023). */}
-      {pending.map(v => {
-        const from = formatDate(v.effectiveFrom!, person.language)
-        return (
-          <BasisTask
-            key={v.versionId}
-            done={Boolean(v.legalBasis)}
-            heading={tr.pendingTaskHeading(from)}
-            note={tr.pendingTaskNote}
-            summary={tr.pendingBasisSummary(from)}
-            chosen={v.legalBasis ? basisName(v) : ""}
-            reference={v.legalBasisReference ?? null}
-          >
-            {v.pdf && (
-              <DraftPdfLink href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(v.versionId)}`}
-                            name={v.pdf.name} bytes={v.pdf.bytes} label={t.openPdf} />
-            )}
-            <LegalBasisForm
-              documentId={doc.documentId}
-              versionId={v.versionId}
-              current={v.legalBasis}
-              currentKeys={basesOf(v).map(e => e.key ?? "").filter(Boolean)}
-              options={basisOptions}
-              language={person.language}
-              back="document"
-            />
-          </BasisTask>
-        )
-      })}
-      {draftCard}
-
-      {/*
-        Úloha pre zodpovednú osobu: určiť právny základ. Hore, nie pod textom —
-        je to dôvod, pre ktorý sem prišla (odkaz zo zvončeka). Keď je základ
-        určený, zbalí sa do `<details>`: zmena je výnimočná.
-      */}
-      {version.ok && canSetBasis && (
-        version.version.legalBasis ? (
-          <details className="card zn-basis" style={{ padding: 16, margin: "0 0 24px" }}>
-            {/* Bod 6: súhrn v bežnej veľkosti, odkaz na zákon na vlastnom riadku. */}
-            <summary>
-              {tr.legalBasis}: {basisName(version.version)}
-              {version.version.legalBasisReference && (
-                <span className="zn-basis-ref">{version.version.legalBasisReference}</span>
-              )}
-            </summary>
-            <div style={{ marginTop: 12 }}>
-              <LegalBasisForm
-                documentId={doc.documentId}
-                versionId={version.version.versionId}
-                current={version.version.legalBasis}
-                currentKeys={basesOf(version.version).map(e => e.key ?? "").filter(Boolean)}
-                options={basisOptions}
-                language={person.language}
-                back="document"
-              />
-            </div>
-          </details>
-        ) : (
-          // Bod 4: úloha zodpovednej osoby s okrajom akcentu, ako ďalší krok v prehľade.
-          <section className="card duty-card is-next" style={{ margin: "0 0 24px" }}>
-            <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 6px" }}>{tr.yourTaskHeading}</h2>
-            <p className="quiet" style={{ margin: "0 0 12px" }}>{tr.yourTaskNote}</p>
-            <LegalBasisForm
-              documentId={doc.documentId}
-              versionId={version.version.versionId}
-              options={basisOptions}
-              language={person.language}
-              back="document"
-            />
-          </section>
-        )
       )}
 
       {version.ok && (
@@ -421,109 +288,5 @@ export default async function DocumentPage({
       )}
     </div>
     </AppShell>
-  )
-}
-
-/**
- * Karta úlohy zodpovednej osoby (ADR-023). Kým základ nie je určený, je to
- * výrazná úloha s okrajom akcentu; potom sa zbalí do `<details>` so súhrnom —
- * rovnako ako karta pri platnom znení vyššie, zmena je výnimočná.
- */
-function BasisTask({
-  done, heading, note, summary, chosen, reference, children,
-}: {
-  done: boolean
-  heading: string
-  note: string
-  summary: string
-  chosen: string
-  reference: string | null
-  children: ReactNode
-}) {
-  if (done) {
-    return (
-      <details className="card zn-basis" style={{ padding: 16, margin: "0 0 24px" }}>
-        <summary>
-          {summary}: {chosen}
-          {reference && <span className="zn-basis-ref">{reference}</span>}
-        </summary>
-        <div className="basis-task-body">
-          <p className="quiet" style={{ margin: 0 }}>{note}</p>
-          {children}
-        </div>
-      </details>
-    )
-  }
-  return (
-    <section className="card duty-card is-next" style={{ margin: "0 0 24px" }}>
-      <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 6px" }}>{heading}</h2>
-      <div className="basis-task-body">
-        <p className="quiet" style={{ margin: 0 }}>{note}</p>
-        {children}
-      </div>
-    </section>
-  )
-}
-
-/**
- * Odkaz na PDF znenia, ku ktorému sa určuje základ. Nie vložené PDF: pod
- * kartou môže byť platné znenie s vlastným PDF a dva prehliadače nad sebou
- * by sa zamenili. Na telefóne je aj tak len odkaz (`PdfView`).
- */
-function DraftPdfLink({ href, name, bytes, label }: { href: string; name: string; bytes?: number; label: string }) {
-  const size = !bytes ? "" : bytes >= 1024 * 1024 ? ` · ${(bytes / 1024 / 1024).toFixed(1)} MB` : ` · ${Math.ceil(bytes / 1024)} kB`
-  return (
-    <p className="basis-task-pdf">
-      <a className="button button--quiet" href={href} target="_blank" rel="noreferrer">{label}</a>
-      <span className="quiet">{name}{size}</span>
-    </p>
-  )
-}
-
-/** Pripravované znenie pre jeho zodpovednú osobu (ADR-023, D139). */
-function DraftBasisCard({
-  task, options, language,
-}: {
-  task: DraftBasisTask
-  options: ReturnType<typeof legalBasisOptions>
-  language: UiLanguage
-}) {
-  const t = dictionary(language)
-  const tr = t.responsibility
-  const chosen = task.legalBasis ? legalBasisFields(task.legalBasis.entries) : null
-  return (
-    <BasisTask
-      done={Boolean(chosen)}
-      heading={tr.draftTaskHeading}
-      note={tr.draftTaskNote}
-      summary={tr.draftBasisSummary}
-      chosen={chosen?.legalBasisLabel ?? ""}
-      reference={chosen?.legalBasisReference ?? null}
-    >
-      {(task.effectiveFrom || task.draftTitle) && (
-        <ul className="basis-task-facts">
-          {task.effectiveFrom && <li>{tr.draftEffective(formatDate(task.effectiveFrom, language))}</li>}
-          {task.draftTitle && <li>{tr.draftNewTitle(task.draftTitle)}</li>}
-        </ul>
-      )}
-      {task.draftPdf && (
-        <DraftPdfLink href={`/api/documents/${encodeURIComponent(task.documentId)}/pdf?draft=1`}
-                      name={task.draftPdf.name} bytes={task.draftPdf.bytes} label={tr.draftOpenPdf} />
-      )}
-      <details className="document-search-text">
-        <summary>{tr.draftText}</summary>
-        <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
-          <FormattedText text={task.draftMarkdown} />
-        </article>
-      </details>
-      <LegalBasisForm
-        documentId={task.documentId}
-        draft
-        currentKeys={(task.legalBasis?.entries ?? []).map(e => e.key ?? "").filter(Boolean)}
-        options={options}
-        language={language}
-        back="document"
-      />
-    </BasisTask>
   )
 }

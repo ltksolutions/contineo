@@ -34,7 +34,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-020](ADR-020-jedna-session-jeden-worktree.md) | Každá súbežná session pracuje vo vlastnom `git worktree` | ✅ prijaté |
 | [ADR-021](ADR-021-retencia-vzdelavania-a-pohlavie.md) | Retencia vzdelávania (lehota ako doklady, podrobnosti po roku; vydaný certifikát sa nemaže) a pohlavie osoby | ✅ prijaté |
 | [ADR-022](ADR-022-ochrana-udajov-podla-organizacie.md) | Ochrana osobných údajov podľa organizácie: krajina, sprostredkovatelia, lehoty, doplnkový text | ✅ prijaté |
-| [ADR-023](ADR-023-pravny-zaklad-v-priprave.md) | Právny základ už v príprave znenia; zodpovedná osoba vidí koncept na stránke dokumentu; nahradené znenie platí do účinnosti nového | ✅ prijaté |
+| [ADR-023](ADR-023-pravny-zaklad-v-priprave.md) | Právny základ už v príprave znenia; nahradené znenie platí do účinnosti nového; úloha zodpovednej osoby na karte v správe (D151) | ✅ prijaté |
 | [ADR-024](ADR-024-znenia-v-indexe.md) | Asistent odpovedá podľa znenia platného k dňu otázky; deň otázky, štítok nad odpoveďou, porovnanie dvoch znení po článkoch | ✅ prijaté |
 
 ## Čo sem nepatrí
