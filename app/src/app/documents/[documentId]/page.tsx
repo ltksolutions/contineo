@@ -247,7 +247,8 @@ export default async function DocumentPage({
               {buildStatement(
                 doc.title,
                 version.version.effectiveFrom!,
-                person.language
+                person.language,
+                person.gender,
               )}
             </p>
 

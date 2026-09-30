@@ -229,10 +229,12 @@ export function nextCycle(acknowledgements: number): number {
 export function buildStatement(
   title: string,
   effectiveFrom: Date,
-  language: UiLanguage = "sk"
+  language: UiLanguage = "sk",
+  /** `persons.gender` — tvar slovies vo formulke (D152). Nevyplnené = „oboznámil(a)". */
+  gender?: string | null,
 ): string {
   // Bez označenia znenia (ADR-016): znenie určuje dátum účinnosti.
-  return dictionary(language).statement(title, formatDate(effectiveFrom, language))
+  return dictionary(language).statement(title, formatDate(effectiveFrom, language), gender ?? undefined)
 }
 
 /** SHA-256 znenia — na rýchle porovnanie, nie ako náhrada textu. */
@@ -252,6 +254,8 @@ export interface Acknowledger {
   language?: string
   /** Oddelenie v čase potvrdenia. Zapíše sa ako odtlačok (D50). */
   departmentId?: string | null
+  /** Pohlavie z `persons.gender` — rod slovies vo formulke (D152). */
+  gender?: string | null
 }
 
 export type AcknowledgeResult =
@@ -286,7 +290,7 @@ export async function acknowledge(
   const v = effective.version
   const effectiveFrom = v.effectiveFrom as Date
   const language = normalizeLanguage(actor.language)
-  const statement = buildStatement(doc.title, effectiveFrom, language)
+  const statement = buildStatement(doc.title, effectiveFrom, language, actor.gender)
   const now = new Date()
 
   // Názvy oddelení sa čítajú **teraz**, aby sa uložili tak, ako vtedy zneli.

@@ -71,6 +71,7 @@ export async function POST(request: Request) {
       companyCode: person.companyCode,
       language: person.language,
       departmentId: person.departmentId ?? null,
+      gender: person.gender ?? null,
     },
     documentId,
     {

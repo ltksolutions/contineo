@@ -90,8 +90,12 @@ interface Dictionary {
    * Musí obsahovať názov **aj** dátum účinnosti — bez nich sa o rok nedá
    * povedať, čo presne bolo potvrdené. Označenie znenia v nej od ADR-016 nie je.
    */
-  /** Formulka potvrdenia — znenie určuje dátum účinnosti, nie označenie (ADR-016). */
-  statement(title: string, effectiveFrom: string): string
+  /**
+   * Formulka potvrdenia — znenie určuje dátum účinnosti, nie označenie (ADR-016).
+   * Rod podľa `persons.gender` (D152): „oboznámil / oboznámila", nevyplnené
+   * „oboznámil(a)" — rovnaké pravidlo ako „absolvoval(a)" na certifikáte.
+   */
+  statement(title: string, effectiveFrom: string, gender?: string): string
 
   /** Spoločné texty prierezových komponentov (ZAKLAD). */
   common: {
@@ -3364,6 +3368,13 @@ interface Dictionary {
  */
 const completedVerb = (s?: string) => (s === "male" ? "absolvoval" : s === "female" ? "absolvovala" : "absolvoval(a)")
 
+/**
+ * Minulý čas slovesa v prvej osobe podľa rodu (D152): „oboznámil" /
+ * „oboznámila", nevyplnené „oboznámil(a)". Pre formulku potvrdenia; slovenčina
+ * aj čeština tvoria ženský tvar pridaním „-a".
+ */
+const byGender = (verb: string, g?: string) => (g === "male" ? verb : g === "female" ? `${verb}a` : `${verb}(a)`)
+
 const daysSk = (n: number) => (n === 1 ? "1 deň" : n >= 2 && n <= 4 ? `${n} dni` : `${n} dní`)
 const daysCs = (n: number) => (n === 1 ? "1 den" : n >= 2 && n <= 4 ? `${n} dny` : `${n} dní`)
 const daysEn = (n: number) => (n === 1 ? "1 day" : `${n} days`)
@@ -3443,9 +3454,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
             ? `${n} dokumenty zatiaľ nie sú dostupné.`
             : `${n} dokumentov zatiaľ nie je dostupných.`,
     },
-    statement: (title, effectiveFrom) =>
-      `Potvrdzujem, že som sa oboznámil s dokumentom „${title}" v znení účinnom od ${effectiveFrom}, ` +
-      `porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.`,
+    statement: (title, effectiveFrom, gender) =>
+      `Potvrdzujem, že som sa ${byGender("oboznámil", gender)} s dokumentom „${title}" v znení účinnom od ${effectiveFrom}, ` +
+      `${byGender("porozumel", gender)} som jeho obsahu a zaväzujem sa ho dodržiavať.`,
     email: {
       subject: org => `Prihlásenie — ${org}`,
       heading: org => `Prihlásenie — ${org}`,
@@ -6875,9 +6886,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
             ? `${n} dokumenty zatím nejsou dostupné.`
             : `${n} dokumentů zatím není dostupných.`,
     },
-    statement: (title, effectiveFrom) =>
-      `Potvrzuji, že jsem se seznámil s dokumentem „${title}" ve znění účinném od ${effectiveFrom}, ` +
-      `porozuměl jsem jeho obsahu a zavazuji se jej dodržovat.`,
+    statement: (title, effectiveFrom, gender) =>
+      `Potvrzuji, že jsem se ${byGender("seznámil", gender)} s dokumentem „${title}" ve znění účinném od ${effectiveFrom}, ` +
+      `${byGender("porozuměl", gender)} jsem jeho obsahu a zavazuji se jej dodržovat.`,
     email: {
       subject: org => `Přihlášení — ${org}`,
       heading: org => `Přihlášení — ${org}`,
