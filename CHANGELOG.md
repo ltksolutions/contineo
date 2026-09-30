@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### História otázok (2026-09-30)
+
+V plachte otázky sú **nedávne otázky** a pri písaní tie z vašich, ktoré
+obsahujú napísané slová (bez ohľadu na diakritiku). Šípkami sa dá vybrať
+a Enterom otvoriť. Otvorí sa **uložená odpoveď** tak, ako vtedy prišla,
+s dátumom a upozornením, keď má predpis odvtedy nové znenie. „Opýtať sa
+znova" spustí nový beh. Stránka **Moje otázky** ukazuje celú históriu po
+dňoch, s hľadaním a načítaním starších. Otázku sa dá z histórie odstrániť
+alebo vymazať celú históriu, s možnosťou vrátiť. Po dobehnutí odpovede sa
+adresa zmení na uloženú odpoveď, takže obnovenie stránky nespustí beh znova
+a odkaz sa dá poslať. Otázky a odpovede sa po 12 mesiacoch (nastaviteľné
+v Ochrane údajov) zmažú.
+
 ### Odpoveď a citácie vedľa seba (2026-09-30)
 
 Na širokej obrazovke je **odpoveď vľavo a doslovné citácie vpravo**,

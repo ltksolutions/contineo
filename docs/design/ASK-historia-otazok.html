@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ASK — história otázok</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2311151c'/%3E%3Ccircle cx='16' cy='13.5' r='8' fill='none' stroke='%23fff' stroke-width='3.2'/%3E%3Ccircle cx='12.5' cy='13.5' r='1.9' fill='%23fff'/%3E%3Ccircle cx='19.5' cy='13.5' r='1.9' fill='%23fff'/%3E%3Cpath d='M11.5 20.2 L16 26.5 L19 19.7 Z' fill='%23fff'/%3E%3C/svg%3E" />
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--teal-700:#0f766e;--teal-soft:rgba(15,118,110,.09);--warn-bg:#fffbeb;--warn-fg:#b45309;--ok-bg:#ecfdf3;--ok-fg:#15803d;--bad-fg:#b42318;--radius:12px;--shadow:0 18px 48px rgba(20,28,42,.2)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:var(--accent-strong)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:92ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:92ch;line-height:1.55}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.frame-label{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);margin:0 0 6px}
+.frames-small{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.hdr{position:relative;z-index:8;display:flex;align-items:center;gap:12px;height:56px;padding:0 20px 0 16px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.home{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;flex:none}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;font-size:12px;font-weight:700}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.q-wrap{position:relative;flex:1;min-width:0;max-width:600px;margin-left:28px}
+.q-field{display:flex;align-items:center;gap:10px;height:40px;width:100%;padding:0 8px 0 12px;border-radius:20px;background:var(--bg);border:1px solid var(--line);font:inherit;font-size:14px;color:var(--muted);text-align:left;cursor:text;min-width:0}
+.q-field .mk{color:var(--accent);display:grid;flex:none}
+.q-field .ph{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-field kbd{font-family:inherit;font-size:11px;padding:1px 7px;border-radius:6px;border:1px solid var(--line);background:var(--surface)}
+.sp{flex:1}
+.bell{position:relative;display:grid;place-items:center;width:34px;height:34px;color:var(--ink);flex:none}
+.bell b{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:none}
+.scrim{position:absolute;inset:0;background:rgba(17,21,28,.22);z-index:7}
+.qs{position:absolute;top:-8px;left:-8px;width:calc(100% + 96px);min-width:680px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);z-index:9;overflow:hidden}
+.qs-top{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:14px 16px 8px 18px}
+.qs-top .mk{color:var(--accent);padding-top:3px}
+.qs textarea{width:100%;border:0;outline:0;resize:none;font:inherit;font-size:17px;line-height:1.5;color:var(--ink);background:transparent;min-height:52px;padding:0}
+.qs-bar{display:flex;align-items:center;gap:12px;padding:4px 12px 12px 18px}
+.qs-bar .hint{font-size:12px;color:var(--muted);flex:1}
+.qs-bar kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 18px;border-radius:20px;border:0;background:var(--accent);color:#fff;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn[disabled]{background:var(--surface-2);color:var(--muted)}
+.btn-q{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;font-weight:550;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn-q:hover{background:var(--surface-2);color:var(--ink)}
+.qs-info{border-top:1px solid var(--line);padding:12px 18px 4px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.qs-info b{color:var(--ink);font-weight:600}
+.grp{padding:6px 8px 10px}
+.grp-h{display:flex;align-items:center;gap:8px;margin:6px 10px 4px}
+.grp-h h3{font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0;flex:1}
+.grp-h a{font-size:12.5px;font-weight:600;text-decoration:none}
+.it{display:flex;align-items:center;gap:12px;min-height:40px;padding:0 4px 0 10px;border-radius:9px;color:var(--ink);font-size:14px;cursor:pointer}
+.it:hover{background:var(--surface-2)}
+.it svg{color:var(--muted);flex:none}
+.it span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it time{font-size:12px;color:var(--muted);white-space:nowrap}
+.it .del{display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer;opacity:0}
+.it:hover .del,.it .del:focus{opacity:1}
+.it .del:hover{background:var(--surface);color:var(--ink)}
+.divider{height:1px;background:var(--line);margin:0 18px}
+.path{flex:none;background:var(--surface);border-bottom:1px solid var(--line)}
+.path-in{margin:0 auto;padding:0 32px 0 26px;min-height:40px;display:flex;align-items:center;gap:8px;max-width:1240px}
+.dots{display:grid;place-items:center;width:32px;height:32px;color:var(--ink)}
+.vsep{width:1px;height:18px;background:var(--line)}
+.path ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:13px}
+.path li{display:flex;align-items:center;gap:4px;color:var(--muted)}
+.path li+li::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-top:1.5px solid currentColor;transform:rotate(45deg);margin:0 6px 0 2px;opacity:.55}
+.path a{color:var(--muted);text-decoration:none}
+.path [aria-current]{color:var(--ink);font-weight:600}
+.body{flex:1;min-height:0;overflow:auto;position:relative}
+.main{margin:0 auto;padding:28px 32px 40px;max-width:1240px}
+.page-h{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px}
+.page-h h1{font-size:26px;letter-spacing:-.02em;line-height:1.2;margin:0 0 4px}
+.page-h p{font-size:14.5px;color:var(--muted);margin:0;max-width:66ch}
+.filter{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:14px;color:var(--muted);min-width:300px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.day{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+.day:first-child{margin-top:0}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 16px;align-items:center;padding:12px 8px 12px 16px;border-top:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.row:first-child{border-top:0}
+.row:hover{background:#fafbfc;color:var(--ink)}
+.row b{font-size:14.5px;font-weight:600;line-height:1.4;text-wrap:pretty}
+.row .m{grid-column:1;font-size:12.5px;color:var(--muted)}
+.row time{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;grid-row:1}
+.row .del{grid-row:1/span 2;grid-column:3;display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+.row .del:hover{background:var(--surface-2);color:var(--ink)}
+.tag{font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);margin:14px 0 0;max-width:80ch}
+.foot-act{display:flex;gap:10px;align-items:center;margin:18px 0 0;flex-wrap:wrap}
+.danger{color:var(--bad-fg)}
+/* uložená odpoveď */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start}
+.asked{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:start;margin:0 0 14px}
+.asked h1{font-size:24px;line-height:1.3;letter-spacing:-.015em;margin:0;font-weight:640;text-wrap:pretty}
+.asked .meta{font-size:13px;color:var(--muted)}
+.stale{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-radius:10px;background:var(--warn-bg);border:1px solid rgba(180,83,9,.22);color:#7a3e07;font-size:13.5px;margin:0 0 14px}
+.stale span{flex:1;min-width:220px}
+.ans{padding:18px 22px 20px}
+.ans-k{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:12.5px;font-weight:650;color:var(--muted);margin:0 0 12px}
+.ans-k .mk{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--accent);color:#fff}
+.ans-k .time{font-weight:550;padding:1px 8px;border-radius:20px;background:var(--surface-2)}
+.ans p{font-size:15.5px;line-height:1.7;margin:0 0 12px;max-width:72ch}
+.ans p:last-child{margin:0}
+.a-h{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.cit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);margin:0 0 8px}
+.cit .n{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--teal-soft);color:var(--teal-700);font-size:11.5px;font-weight:700;grid-row:span 2}
+.cit q{font-size:14px;line-height:1.55;quotes:"„" "“"}
+.cit small{font-size:12px;color:var(--muted)}
+/* 834/390 */
+.n834 .main{padding:24px}
+.n834 .q-wrap{margin-left:16px}
+.n834 .qs{min-width:0;width:calc(100% + 60px)}
+.n834 .cols,.n390 .cols{grid-template-columns:minmax(0,1fr)}
+.n390 .hdr{padding:0 10px;gap:8px}
+.n390 .q-wrap{margin-left:0}
+.n390 .q-field{height:38px;font-size:13.5px}
+.n390 .q-field kbd{display:none}
+.n390 .main{padding:16px 14px 24px}
+.n390 .page-h h1{font-size:22px}
+.n390 .filter{min-width:0;width:100%}
+.n390 .row{grid-template-columns:minmax(0,1fr) auto;padding:12px 4px 12px 14px}
+.n390 .row time{grid-row:auto;grid-column:1}
+.n390 .row .del{grid-column:2;width:44px;height:44px}
+.n390 .path-in{padding:4px 10px 4px 4px}
+.full{position:absolute;inset:0;z-index:20;background:var(--surface);display:flex;flex-direction:column}
+.full-h{display:flex;align-items:center;gap:8px;height:56px;padding:0 6px;border-bottom:1px solid var(--line);flex:none}
+.full-h button{display:grid;place-items:center;width:44px;height:44px;border:0;background:transparent;border-radius:10px;color:var(--ink)}
+.full-h b{font-size:16px}
+.full .scroll{flex:1;overflow:auto}
+.full textarea{width:100%;border:0;outline:0;resize:none;font:inherit;font-size:17px;line-height:1.5;min-height:90px;padding:0;background:transparent}
+.full .it{min-height:48px}
+.full .it .del{opacity:1;width:44px;height:44px}
+.full-foot{flex:none;padding:10px 12px;border-top:1px solid var(--line)}
+.full-foot .btn{width:100%;justify-content:center;min-height:48px;border-radius:24px}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);height:58px;background:var(--surface);border-top:1px solid var(--line);flex:none}
+.tabbar a{display:grid;place-items:center;align-content:center;gap:2px;font-size:10.5px;color:var(--muted);text-decoration:none}
+.tabbar a.is-on{color:var(--accent);font-weight:650}
+.toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px;padding:10px 12px 10px 16px;border-radius:12px;background:var(--accent-strong);color:#fff;font-size:13.5px;box-shadow:var(--shadow);white-space:nowrap}
+.toast button{border:0;background:transparent;color:#fff;font:inherit;font-weight:650;text-decoration:underline;cursor:pointer;padding:4px}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
+table.spec tr:last-child td{border-bottom:0}
+.q{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#e0e7ff;color:#3730a3;vertical-align:1px}
+</style>
+</head>
+<body><div class="sheet">
+<h1 class="doc">ASK — história otázok</h1>
+<p class="doc">Nadväzuje na <code>ASK-otazka-z-hlavicky</code> a <code>ASK-odpoved-dva-stlpce</code>. Každý vidí <b>len svoje otázky</b>. História je na dvoch miestach: <b>posledných 5 v plachte otázky</b> (nad vzormi, ako vo vyhľadávači) a <b>celá na <code>/ask/history</code></b>, po dňoch, s filtrom. Staršia otázka otvorí <b>uloženú odpoveď</b> (<code>/ask/a/{id}</code>), nespúšťa beh znova. Nad odpoveďou je jej dátum a tlačidlo „Opýtať sa znova".</p>
+<p class="doc">Rámy sú živé: kliknite do poľa, zmažte otázku ×, otvorte históriu. Popis a otázky v <code>ASK-historia-otazok.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — plachta otázky s históriou</p>
+  <p class="sec-w">Prázdne pole: „Nedávne otázky" (5, najnovšie hore, čas vpravo, × pri prejdení myšou) a pod nimi vzory. Kto ešte nemá históriu, vidí len vzory (dnešný stav). Pri písaní sa nedávne otázky <b>filtrujú podľa textu</b> (bez diakritiky); vzory sa skryjú. Klik na nedávnu otázku otvorí jej uloženú odpoveď.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">1440 — prázdne pole</p><div class="frame" style="width:1440px;height:600px" data-frame="open"></div></div>
+    <div><p class="frame-label">1440 — píše „prestup"</p><div class="frame" style="width:1440px;height:420px" data-frame="typing"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — /ask/history</p>
+  <p class="sec-w">Cesta Prehľad › Opýtať sa › Moje otázky. Riadok = otázka, čas, stav (počet citácií, „nič sa nenašlo", „vaše hodnotenie: sedí/nesedí"). × skryje otázku z histórie s možnosťou vrátiť 5 s. Dole „Vymazať celú históriu" (potvrdenie) a veta o tom, ako dlho sa otázky držia.</p>
+  <div class="frame" style="width:1440px;height:860px" data-frame="hist"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — uložená odpoveď z histórie</p>
+  <p class="sec-w">Rovnaké rozloženie ako živá odpoveď (dva stĺpce, ak sú citácie). Značky <code>[n]</code> v texte chýbajú (uložená odpoveď polohu nenesie — Q1 v <code>ASK-odpoved-dva-stlpce</code>). Žltý pás: odpoveď je zo dňa X, predpisy sa odvtedy mohli zmeniť → „Opýtať sa znova" (<code>/ask?q=</code>, nový beh). Ak sa niektorý citovaný dokument odvtedy zmenil, pás to povie priamo.</p>
+  <div class="frame" style="width:1440px;height:640px" data-frame="saved"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 a 390</p>
+  <p class="sec-w">834 ako desktop. 390: v celoobrazovkovej plachte sú nedávne otázky 48 px s × stále viditeľným (44 px). <code>/ask/history</code> v jednom stĺpci, čas pod otázkou.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">834 — plachta</p><div class="frame" style="width:834px;height:600px" data-frame="t-open"></div></div>
+    <div><p class="frame-label">390 — plachta</p><div class="frame" style="width:390px;height:760px" data-frame="m-open"></div></div>
+    <div><p class="frame-label">390 — /ask/history</p><div class="frame" style="width:390px;height:760px" data-frame="m-hist"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Správanie</p>
+  <table class="spec">
+    <tr><th>Čo</th><th>Ako</th></tr>
+    <tr><td>Zdroj údajov</td><td>Kolekcia <code>evaluations</code> (<code>recordAnswer</code>) už ukladá každú odpoveď s otázkou, textom, citáciami, zdrojmi, <code>time</code> a osobou (<code>reviewer</code> = kto sa pýtal). História = <code>{companyCode, reviewer: personId, hiddenForAsker ≠ true}</code>, zoradené podľa <code>createdAt</code>. Nová kolekcia netreba. (H1 ✅)</td></tr>
+    <tr><td>Plachta</td><td>Pri prázdnom poli „Nedávne otázky" (5) nad „Napríklad". Pri písaní filtrované nedávne (max. 5, zhoda slov bez diakritiky, AND), vzory skryté. Klávesnica: ↑/↓ po položkách, Enter otvorí vybranú, inak odošle text. „Celá história" → <code>/ask/history</code>. × = skryť (bez potvrdenia, s „Vrátiť").</td></tr>
+    <tr><td>/ask/history</td><td>Po dňoch (Dnes, Včera, dátum), 30 na stranu, „Načítať staršie". Filter nad zoznamom (rovnaká zhoda). Riadok → <code>/ask/a/{id}</code>. Stav z uloženého záznamu: počet unikátnych citácií, prázdne zdroje = „nič sa nenašlo", <code>correct</code> ak hodnotil. „Vymazať celú históriu" → potvrdzovacie okno → všetky záznamy osoby <code>hiddenForAsker: true</code>. (H2 ✅)</td></tr>
+    <tr><td>/ask/a/{id}</td><td>Len vlastník (<code>reviewer === personId</code>) alebo rola s prístupom k hodnoteniu; inak 404. Karta ako živá odpoveď, bez značiek, citácie vpravo. Pás: „Odpoveď z {dátum}. Predpisy sa odvtedy mohli zmeniť." + „Opýtať sa znova". Ak niektorý zdroj má dnes iné platné znenie ako <code>source.version</code>: „{Dokument} má odvtedy nové znenie." (H3 ✅)</td></tr>
+    <tr><td>Pole v hlavičke</td><td>Na <code>/ask/a/{id}</code> nesie uloženú otázku. Po úprave a odoslaní ide nový beh.</td></tr>
+    <tr><td>Nové otázky</td><td><code>recordAnswer</code> vracia <code>id</code>; po <code>done</code> klient nahradí adresu <code>/ask?q=…</code> za <code>/ask/a/{id}</code> (<code>history.replaceState</code>), aby obnovenie stránky nespúšťalo beh znova a odkaz sa dal poslať. (H4 ✅)</td></tr>
+    <tr><td>Bez prihlásenia</td><td>História sa nekreslí (<code>reviewer</code> chýba).</td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const MARK=s=>`<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"/><circle cx="17.5" cy="20" r="3.4" fill="currentColor"/><circle cx="30.5" cy="20" r="3.4" fill="currentColor"/><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"/></svg>`;
+const I={bell:'<path d="M9 2.4v1.1"/><path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z"/><path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0"/>',
+info:'<circle cx="9" cy="9" r="6.6"/><path d="M9 8.2v4M9 5.7v.1"/>',arrow:'<path d="M4 9h10m0 0-3.6-3.6M14 9l-3.6 3.6"/>',x:'<path d="M5 5l8 8M13 5l-8 8"/>',
+clock:'<circle cx="9" cy="9" r="6.6"/><path d="M9 5.4V9l2.4 1.6"/>',ask:'<path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/>',
+search:'<circle cx="8" cy="8" r="5"/><path d="m12 12 3.4 3.4"/>',redo:'<path d="M14.5 5.5v3.5H11"/><path d="M14.2 8.8A5.8 5.8 0 1 0 13 12.6"/>',
+grid:'<g fill="currentColor" stroke="none"><circle cx="4" cy="4" r="1.5"/><circle cx="9" cy="4" r="1.5"/><circle cx="14" cy="4" r="1.5"/><circle cx="4" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><circle cx="4" cy="14" r="1.5"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="14" r="1.5"/></g>',
+overview:'<rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/>',
+learning:'<path d="M1.6 7 9 3.4 16.4 7 9 10.6z"/><path d="M4.6 8.5v3.6c1.2 1.3 2.7 2 4.4 2s3.2-.7 4.4-2V8.5"/>',tasks:'<rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/>',
+more:'<circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="14.6" cy="9" r="1.5" fill="currentColor" stroke="none"/>'};
+const svg=(k,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="${(1.5*18/s).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+const EX=["Aká je lehota na podanie námietky?","Koľko žltých kariet znamená zastavenie činnosti?","Kedy sa platí odstupné za hráča?"];
+const H=[
+ {id:1,q:"Za akých podmienok môže prestúpiť maloletý hráč bez súhlasu materského klubu?",d:"Dnes",t:"10:42",c:3,r:"ok"},
+ {id:2,q:"Kto schvaľuje výnimku z prestupového obdobia?",d:"Dnes",t:"09:15",c:1},
+ {id:3,q:"Aký je dress code na valnom zhromaždení?",d:"Včera",t:"16:03",none:true},
+ {id:4,q:"Musí klub hlásiť zmenu trénera matrike?",d:"Včera",t:"11:20",c:2,r:"bad"},
+ {id:5,q:"Lehota na odvolanie proti rozhodnutiu disciplinárnej komisie",d:"Včera",t:"08:47",c:2},
+ {id:6,q:"Kedy sa platí odstupné za hráča po skončení zmluvy?",d:"24. 9. 2026",t:"14:10",c:3},
+ {id:7,q:"Prestup hráča U19 v zimnom období — potrebné doklady",d:"24. 9. 2026",t:"13:55",c:2},
+ {id:8,q:"Koľko rozhodcov musí byť na zápase 3. ligy?",d:"22. 9. 2026",t:"10:02",c:1}];
+const fold=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const match=(q,t)=>fold(t).split(/\s+/).filter(Boolean).every(w=>fold(q).includes(w));
+const INFO=`<b>Odpoveď sa skladá len z dokumentov Slovenského futbalového zväzu.</b> Pri každom tvrdení je odkaz na zdroj.`;
+
+function recentHtml(S,full){
+  const list=S.text?S.hist.filter(h=>match(h.q,S.text)).slice(0,5):S.hist.slice(0,5);
+  if(!list.length) return "";
+  return `<div class="grp"><div class="grp-h"><h3>${S.text?"Z vašich otázok":"Nedávne otázky"}</h3><a href="#" data-go="hist">Celá história</a></div>${list.map(h=>`<div class="it" data-open-saved="${h.id}">${svg("clock",15)}<span>${h.q}</span><time>${h.d==="Dnes"?h.t:h.d}</time><button class="del" data-del="${h.id}" aria-label="Odstrániť z histórie">${svg("x",14)}</button></div>`).join("")}</div>`;
+}
+function exHtml(S){ if(S.text) return ""; return `<div class="grp"><div class="grp-h"><h3>Napríklad</h3></div>${EX.map(e=>`<div class="it" data-ex="${e}">${svg("ask",15)}<span>${e}</span></div>`).join("")}</div>`; }
+function sheetInner(S,full){
+  const rec=recentHtml(S,full);
+  return `<div class="qs-top"><span class="mk">${MARK(20)}</span><textarea rows="2" placeholder="Opýtajte sa svojich dokumentov…" data-ta>${S.text}</textarea></div>${full?"":`<div class="qs-bar"><span class="hint"><kbd>Enter</kbd> odošle · <kbd>↑</kbd><kbd>↓</kbd> vyberie z histórie · <kbd>Esc</kbd> zavrie</span><button class="btn"${S.text?"":" disabled"}>Opýtať sa ${svg("arrow",15)}</button></div>`}<div class="qs-info">${svg("info",15)}<span>${INFO}</span></div>${rec?'<div class="divider"></div>'+rec:""}${exHtml(S)}`;
+}
+function hdr(S,mode){
+  const n=mode==="390";
+  const txt=S.page==="saved"?H[0].q:"";
+  return `<div class="hdr"><a href="#" class="home" data-go="home"><span class="logo">SFZ</span>${n?"":'<span class="org">Slovenský futbalový zväz</span>'}</a><div class="q-wrap"><button class="q-field" data-open><span class="mk">${MARK(18)}</span><span class="ph"${txt?' style="color:var(--ink)"':""}>${txt||(n?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…")}</span><kbd>⌘K</kbd></button>${S.open&&!n?`<div class="qs" role="dialog">${sheetInner(S)}</div>`:""}</div>${n?"":'<span class="sp"></span>'}<span class="bell">${svg("bell",18)}<b>4</b></span><span class="av">JL</span></div>`;
+}
+function path(S){
+  if(S.page==="home") return "";
+  const t=S.page==="hist"?[["Prehľad","home"],["Opýtať sa","home"],["Moje otázky"]]:[["Prehľad","home"],["Opýtať sa","home"],["Moje otázky","hist"],["24. 9. 2026 14:10"]];
+  return `<nav class="path"><div class="path-in"><span class="dots">${svg("grid",18)}</span><span class="vsep"></span><ol>${t.map(([l,g],i)=>`<li>${i===t.length-1?`<span aria-current="page">${l}</span>`:`<a href="#" data-go="${g}">${l}</a>`}</li>`).join("")}</ol></div></nav>`;
+}
+function status(h){
+  const a=h.none?`<span>nič sa nenašlo</span>`:`<span>${h.c} ${h.c===1?"citácia":"citácie"}</span>`;
+  const r=h.r==="ok"?' · <span style="color:var(--ok-fg)">hodnotili ste: sedí</span>':h.r==="bad"?' · <span style="color:var(--bad-fg)">hodnotili ste: nesedí</span>':"";
+  return a+r;
+}
+function histPage(S,mode){
+  const list=S.filter?S.hist.filter(h=>match(h.q,S.filter)):S.hist;
+  const days=[...new Set(list.map(h=>h.d))];
+  return `<div class="main" style="max-width:900px"><div class="page-h"><div><h1>Moje otázky</h1><p>Otázky vidíte len vy. Kliknutím otvoríte odpoveď tak, ako vtedy prišla.</p></div><label class="filter">${svg("search",15)}<input data-filter value="${S.filter||""}" placeholder="Hľadať v mojich otázkach" style="border:0;outline:0;font:inherit;flex:1;min-width:0;background:transparent;color:var(--ink)"></label></div>
+${days.length?days.map(d=>`<p class="day">${d}</p><div class="card">${list.filter(h=>h.d===d).map(h=>`<a href="#" class="row" data-open-saved="${h.id}"><b>${h.q}</b><time>${h.t}</time><button class="del" data-del="${h.id}" aria-label="Odstrániť z histórie">${svg("x",15)}</button><span class="m">${status(h)}</span></a>`).join("")}</div>`).join(""):`<div class="card" style="padding:20px;color:var(--muted);font-size:14px">Žiadna otázka nezodpovedá „${S.filter}".</div>`}
+<div class="foot-act"><button class="btn-q">Načítať staršie</button><span class="sp"></span><button class="btn-q danger">Vymazať celú históriu</button></div>
+<p class="note">Otázky a odpovede sa uchovávajú 12 mesiacov kvôli kontrole kvality odpovedí. Vymazanie ich skryje z vašej histórie; na hodnotenie kvality ostávajú bez zmeny do konca tejto lehoty.</p></div>`;
+}
+function savedPage(S,mode){
+  const two=mode!=="834"&&mode!=="390";
+  const left=`<div class="asked"><h1>${H[5].q}</h1><div></div><div class="meta">Opýtali ste sa 24. 9. 2026 o 14:10</div></div>
+<div class="stale">${svg("clock",16)}<span><b>Odpoveď z 24. 9. 2026.</b> Smernica o odstupnom a výchovnom má odvtedy nové znenie (2026/2, účinné od 28. 9.).</span><a href="#" class="btn-q" style="background:var(--surface)">${svg("redo",14)}Opýtať sa znova</a></div>
+<div class="card ans"><div class="ans-k"><span class="mk">${MARK(15)}</span>Odpoveď z dokumentov SFZ<span class="time">k 24. 9. 2026</span></div><p>Odstupné sa po skončení zmluvy platí, ak nový klub hráča zaregistruje do 30 dní od jej skončenia a hráč v materskom klube pôsobil aspoň 12 mesiacov.</p><p>Výška sa určuje podľa tabuľky výchovného v prílohe smernice; pri hráčovi nad 23 rokov nárok nevzniká.</p></div>`;
+  const right=`<p class="a-h">Doslovné citácie (3)</p>${[["(2) Nárok na odstupné vzniká, ak nový klub hráča zaregistruje do 30 dní od skončenia zmluvy.","Smernica o odstupnom a výchovnom · čl. 6 ods. 2 · znenie 2026/1"],["(1) … ak hráč v ňom pôsobil najmenej 12 mesiacov.","Smernica o odstupnom a výchovnom · čl. 6 ods. 1 · znenie 2026/1"],["Nárok nevzniká pri hráčovi, ktorý dovŕšil 23 rokov.","Smernica o odstupnom a výchovnom · čl. 7 · znenie 2026/1"]].map(([q,m],i)=>`<div class="cit"><span class="n">${i+1}</span><q>${q}</q><small>${m}</small></div>`).join("")}`;
+  return `<div class="main"><div class="cols">${two?`<div>${left}</div><aside>${right}</aside>`:`<div>${left}<div style="margin-top:18px">${right}</div></div>`}</div></div>`;
+}
+function home(){return `<div class="main"><h1 style="font-size:28px;letter-spacing:-.02em;margin:0 0 4px;line-height:1.2">Dobrý deň, Ján</h1><p style="font-size:15px;color:var(--muted);margin:0">Traja ľudia od vás niečo čakajú.</p></div>`}
+function tabbar(S){return `<nav class="tabbar">${[["overview","Prehľad"],["ask","Opýtať sa"],["learning","Vzdelávanie"],["tasks","Úlohy"],["more","Viac"]].map(([k,l])=>`<a href="#"${(k==="ask"&&S.page!=="home")||(k==="overview"&&S.page==="home")?' class="is-on"':""}>${svg(k,21)}${l}</a>`).join("")}</nav>`}
+function full(S){return `<div class="full"><div class="full-h"><button data-close aria-label="Zavrieť">${svg("x",20)}</button><b>Opýtať sa</b></div><div class="scroll">${sheetInner(S,true)}</div><div class="full-foot"><button class="btn"${S.text?"":" disabled"}>Opýtať sa ${svg("arrow",15)}</button></div></div>`}
+
+function Frame(host,init,mode){
+  const S=Object.assign({page:"home",open:false,text:"",filter:"",hist:H.slice(),toast:null},init);
+  let tt;
+  function render(){
+    host.className="frame"+(mode==="834"?" n834":mode==="390"?" n390":"");
+    const body=S.page==="hist"?histPage(S,mode):S.page==="saved"?savedPage(S,mode):home();
+    host.innerHTML=hdr(S,mode)+path(S)+(S.open&&mode!=="390"?'<div class="scrim" data-close></div>':"")+`<div class="body">${body}</div>`+(mode==="390"?tabbar(S):"")+(S.open&&mode==="390"?full(S):"")+(S.toast?`<div class="toast">Otázka odstránená z histórie <button data-undo>Vrátiť</button></div>`:"");
+    const ta=host.querySelector("[data-ta]");
+    if(ta){ta.oninput=()=>{S.text=ta.value;render();const t=host.querySelector("[data-ta]");t.focus();t.setSelectionRange(t.value.length,t.value.length)};ta.onkeydown=e=>{if(e.key==="Escape"){S.open=false;render()}}}
+    const fi=host.querySelector("[data-filter]");
+    if(fi){fi.oninput=()=>{S.filter=fi.value;render();const f=host.querySelector("[data-filter]");f.focus();f.setSelectionRange(f.value.length,f.value.length)}}
+    host.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{S.open=true;render();host.querySelector("[data-ta]")?.focus()});
+    host.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{S.open=false;render()});
+    host.querySelectorAll("[data-go]").forEach(a=>a.onclick=e=>{e.preventDefault();e.stopPropagation();S.page=a.dataset.go;S.open=false;S.text="";render()});
+    host.querySelectorAll("[data-open-saved]").forEach(a=>a.onclick=e=>{e.preventDefault();if(e.target.closest("[data-del]"))return;S.page="saved";S.open=false;S.text="";render();host.querySelector(".body").scrollTop=0});
+    host.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{S.text=b.dataset.ex;render();host.querySelector("[data-ta]")?.focus()});
+    host.querySelectorAll("[data-del]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const id=+b.dataset.del;const i=S.hist.findIndex(h=>h.id===id);S.toast={h:S.hist[i],i};S.hist.splice(i,1);render();clearTimeout(tt);tt=setTimeout(()=>{S.toast=null;render()},5000)});
+    host.querySelectorAll("[data-undo]").forEach(b=>b.onclick=()=>{S.hist.splice(S.toast.i,0,S.toast.h);S.toast=null;clearTimeout(tt);render()});
+  }
+  render();
+}
+const $=s=>document.querySelector(`[data-frame="${s}"]`);
+Frame($("open"),{open:true});
+Frame($("typing"),{open:true,text:"prestup"});
+Frame($("hist"),{page:"hist"});
+Frame($("saved"),{page:"saved"});
+Frame($("t-open"),{open:true},"834");
+Frame($("m-open"),{open:true},"390");
+Frame($("m-hist"),{page:"hist"},"390");
+</script>
+</body></html>

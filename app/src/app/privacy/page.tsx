@@ -66,7 +66,8 @@ export default async function PrivacyPage() {
   const period = (rows: [string, string][]) => rows.map(([a, b]) => [a, b
     .replace("{evidence}", t.years(r.evidenceYears))
     .replace("{cap}", t.years(r.capYears))
-    .replace("{months}", t.months(r.learningDetailMonths))] as [string, string])
+    .replace("{months}", t.months(r.learningDetailMonths))
+    .replace("{answers}", t.months(r.answersMonths))] as [string, string])
   // Verzia textu: neskoršia zo spoločného textu a nastavení organizácie (D138).
   const updated = tenant.privacy?.updatedAt ? new Date(tenant.privacy.updatedAt) : null
   const version = updated && updated > PRIVACY_NOTICE_VERSION ? updated : PRIVACY_NOTICE_VERSION

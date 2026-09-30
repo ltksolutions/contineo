@@ -22,6 +22,7 @@
  */
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Icon from "./Icon"
 import { ContineoMark } from "./ContineoMark"
@@ -35,6 +36,13 @@ const COUNTER_FROM = 800
 const MAX_HEIGHT = 6 * 17 * 1.5
 /** `useSyncExternalStore` bez odberu — len rozlíšenie server / prehliadač. */
 const noop = () => () => {}
+
+/** Riadok vlastnej otázky z `/api/ask/history`. */
+interface Mine {
+  id: string
+  question: string
+  createdAt: string
+}
 
 export default function AskSheet({
   mode,
@@ -60,6 +68,58 @@ export default function AskSheet({
   const router = useRouter()
   const [value, setValue] = useState(initial)
   const field = useRef<HTMLTextAreaElement>(null)
+
+  /*
+   * Vlastné otázky (ASK-historia-otazok): pri prázdnom poli posledné, pri
+   * písaní tie, ktoré obsahujú napísané slová. Nájsť starú odpoveď je
+   * rýchlejšie a lacnejšie než nový beh modelu. Bez skriptu sa nenačítajú —
+   * história je na `/ask/history`.
+   */
+  const [mine, setMine] = useState<Mine[]>([])
+  const [active, setActive] = useState(-1)
+  const [removed, setRemoved] = useState<Mine | null>(null)
+  useEffect(() => {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => {
+      fetch(`/api/ask/history?limit=5&q=${encodeURIComponent(value.trim())}`, { signal: ctrl.signal })
+        .then(r => (r.ok ? r.json() : { items: [] }))
+        .then((d: { items: Mine[] }) => { setMine(d.items ?? []); setActive(-1) })
+        // Bez histórie plachta funguje ďalej — je to pomôcka, nie podmienka.
+        .catch(() => {})
+    }, value.trim() ? 150 : 0)
+    return () => { clearTimeout(timer); ctrl.abort() }
+  }, [value])
+
+  // „Vrátiť" po × ostáva päť sekúnd.
+  useEffect(() => {
+    if (!removed) return
+    const timer = setTimeout(() => setRemoved(null), 5000)
+    return () => clearTimeout(timer)
+  }, [removed])
+
+  const hide = (item: Mine) => {
+    setMine(list => list.filter(o => o.id !== item.id))
+    setRemoved(item)
+    void fetch(`/api/ask/history/${encodeURIComponent(item.id)}/hide`, { method: "POST" }).catch(() => {})
+  }
+  const undo = () => {
+    if (!removed) return
+    const item = removed
+    setRemoved(null)
+    setMine(list => [item, ...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+    void fetch(`/api/ask/history/${encodeURIComponent(item.id)}/unhide`, { method: "POST" }).catch(() => {})
+  }
+  const openMine = (item: Mine) => {
+    onClose?.(value, true)
+    router.push(`/ask/a/${encodeURIComponent(item.id)}`)
+  }
+  const when = (iso: string) => {
+    const d = new Date(iso)
+    const today = new Date().toDateString() === d.toDateString()
+    return today
+      ? d.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })
+      : d.toLocaleDateString(language, { day: "numeric", month: "numeric" })
+  }
 
   // Výška poľa podľa obsahu, najviac šesť riadkov.
   const fit = () => {
@@ -149,11 +209,18 @@ export default function AskSheet({
             aria-label={t.nav.searchLabel}
             onChange={e => { setValue(e.target.value); fit() }}
             onKeyDown={e => {
+              // ↑/↓ prechádza vlastné otázky, Enter otvorí vybranú.
+              if ((e.key === "ArrowDown" || e.key === "ArrowUp") && mine.length > 0) {
+                e.preventDefault()
+                setActive(i => (e.key === "ArrowDown" ? Math.min(mine.length - 1, i + 1) : Math.max(-1, i - 1)))
+                return
+              }
               // Enter odošle, Shift+Enter robí nový riadok — otázky bývajú
               // jednoriadkové a klikať na tlačidlo by bolo otravné.
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault()
-                submit()
+                if (active >= 0 && mine[active]) openMine(mine[active])
+                else submit()
               }
               if (e.key === "Escape" && mode === "overlay") {
                 e.preventDefault()
@@ -164,7 +231,9 @@ export default function AskSheet({
         </div>
 
         <div className="ask-sheet-bar">
-          <span className="ask-sheet-hint">{mode === "overlay" ? ta.sheet.hint : ta.sheet.hintInline}</span>
+          <span className="ask-sheet-hint">
+            {mine.length > 0 ? ta.sheet.hintHistory : mode === "overlay" ? ta.sheet.hint : ta.sheet.hintInline}
+          </span>
           {value.length >= COUNTER_FROM && (
             <span className="ask-sheet-count">{value.length}/{QUESTION_MAX}</span>
           )}
@@ -178,6 +247,42 @@ export default function AskSheet({
           </svg>
           <span><b>{ta.sheet.infoLead(organisation)}</b> {ta.sheet.infoRest}</span>
         </p>
+
+        {(mine.length > 0 || removed) && (
+          <div className="ask-sheet-examples ask-sheet-mine">
+            <h3>
+              {empty ? ta.history.recent : ta.history.matching}
+              <Link href="/ask/history" onClick={() => onClose?.(value, true)}>{ta.history.all}</Link>
+            </h3>
+            {removed && (
+              <div className="ask-sheet-removed" role="status">
+                {ta.history.removed}
+                <button type="button" className="ask-sheet-undo" onClick={undo}>{ta.history.undo}</button>
+              </div>
+            )}
+            <ul role="listbox" aria-label={empty ? ta.history.recent : ta.history.matching}>
+              {mine.map((item, i) => (
+                <li key={item.id} role="option" aria-selected={i === active} className={i === active ? "is-active" : undefined}>
+                  <Link href={`/ask/a/${encodeURIComponent(item.id)}`} className="ask-sheet-mine-open" onClick={() => onClose?.(value, true)}>
+                    <svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
+                         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="9" cy="9" r="6.6" /><path d="M9 5.4V9l2.4 1.6" />
+                    </svg>
+                    <span>{item.question}</span>
+                    <time dateTime={item.createdAt}>{when(item.createdAt)}</time>
+                  </Link>
+                  <button type="button" className="ask-sheet-mine-hide" aria-label={ta.history.remove} title={ta.history.remove}
+                          onClick={() => hide(item)}>
+                    <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.7"
+                         strokeLinecap="round" aria-hidden="true">
+                      <path d="M5 5l8 8M13 5l-8 8" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {empty && (
           <div className="ask-sheet-examples">

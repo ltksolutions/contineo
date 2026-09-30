@@ -4075,7 +4075,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   text-transform: uppercase;
   color: var(--muted);
 }
-.ask-sheet-examples button {
+.ask-sheet-examples > button {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -4091,13 +4091,78 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   text-align: left;
   cursor: pointer;
 }
-.ask-sheet-examples button:hover { background: var(--surface-2); }
-.ask-sheet-examples button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.ask-sheet-examples button > svg { flex: none; color: var(--muted); }
-.ask-sheet-examples button > span { flex: 1; min-width: 0; }
-.ask-sheet-examples button > i { font-style: normal; font-size: 12px; color: var(--muted); opacity: 0; }
-.ask-sheet-examples button:hover > i,
-.ask-sheet-examples button:focus-visible > i { opacity: 1; }
+.ask-sheet-examples > button:hover { background: var(--surface-2); }
+.ask-sheet-examples > button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ask-sheet-examples > button > svg { flex: none; color: var(--muted); }
+.ask-sheet-examples > button > span { flex: 1; min-width: 0; }
+.ask-sheet-examples > button > i { font-style: normal; font-size: 12px; color: var(--muted); opacity: 0; }
+.ask-sheet-examples > button:hover > i,
+.ask-sheet-examples > button:focus-visible > i { opacity: 1; }
+
+/* Vlastné otázky v plachte (ASK-historia-otazok) — nad vzormi. Riadok
+   vedie na uloženú odpoveď; × ju skryje z histórie. */
+.ask-sheet-mine h3 { display: flex; align-items: baseline; gap: 12px; }
+.ask-sheet-mine h3 a {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.ask-sheet-mine ul { margin: 0; padding: 0; list-style: none; }
+.ask-sheet-mine li { display: flex; align-items: center; border-radius: 9px; }
+.ask-sheet-mine li:hover, .ask-sheet-mine li.is-active { background: var(--surface-2); }
+.ask-sheet-mine-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 4px 0 10px;
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+}
+.ask-sheet-mine-open:hover { color: var(--ink); }
+.ask-sheet-mine-open > svg { flex: none; color: var(--muted); }
+.ask-sheet-mine-open > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ask-sheet-mine-open > time { flex: none; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ask-sheet-mine-hide {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-right: 4px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+.ask-sheet-mine li:hover .ask-sheet-mine-hide,
+.ask-sheet-mine li.is-active .ask-sheet-mine-hide,
+.ask-sheet-mine-hide:focus-visible { opacity: 1; }
+.ask-sheet-mine-hide:hover { background: var(--surface); color: var(--ink); }
+.ask-sheet-removed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ask-sheet-undo {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .ask-sheet--overlay { min-width: 0; width: calc(100% + 60px); }
@@ -4145,7 +4210,10 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .ask-sheet--overlay .ask-sheet-field { min-height: 110px; }
   .ask-sheet--overlay .ask-sheet-bar-button { display: none; }
   .ask-sheet--overlay .ask-sheet-hint { display: none; }
-  .ask-sheet-examples button { min-height: 48px; }
+  .ask-sheet-examples > button { min-height: 48px; }
+  .ask-sheet-mine-open { min-height: 48px; }
+  /* Dotyk nemá prejdenie myšou — × je stále vidieť, 44 px. */
+  .ask-sheet-mine-hide { opacity: 1; width: 44px; height: 44px; margin-right: 0; }
   .ask-sheet--overlay .ask-sheet-foot {
     display: flex;
     flex: none;
@@ -4214,6 +4282,115 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   line-height: 1.5;
 }
 .ask-error a { color: inherit; font-weight: 600; }
+
+/* ── história otázok (ASK-historia-otazok) ──────────────────────────────── */
+.ask-history { max-width: 900px; display: grid; gap: 16px; }
+.ask-history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ask-history-head .page-lead { margin: 0; }
+.ask-history-filter { display: flex; gap: 8px; }
+.ask-history-filter .field-input { flex: 1 1 auto; min-width: 0; }
+.ask-history-confirm { display: grid; gap: 12px; padding: 16px; }
+.ask-history-confirm p { margin: 0; }
+.ask-history-empty { margin: 0; }
+.ask-history-day { display: grid; gap: 8px; }
+.ask-history-day-title {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ask-history-day-title::first-letter { text-transform: uppercase; }
+.ask-history-list { margin: 0; padding: 0; list-style: none; overflow: hidden; }
+.ask-history-row { display: flex; align-items: center; gap: 8px; padding-right: 8px; }
+.ask-history-row + .ask-history-row { border-top: 1px solid var(--line); }
+.ask-history-open {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.ask-history-open:hover { background: var(--surface-2); color: var(--ink); }
+.ask-history-question { font-size: 14.5px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.ask-history-meta { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ask-history-row form { margin: 0; }
+.ask-history-hide {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.ask-history-hide:hover { background: var(--surface-2); color: var(--ink); }
+.ask-history-more { justify-self: start; }
+.ask-history-retention { margin: 8px 0 0; font-size: 12.5px; max-width: 70ch; }
+
+/* Oznam s „Vrátiť" — dole v strede, nad spodnou lištou. */
+.ask-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  z-index: 45;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 10px 12px 10px 16px;
+  border-radius: 12px;
+  background: var(--accent-strong);
+  color: var(--on-accent);
+  font-size: 13.5px;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.ask-toast button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Pás nad uloženou odpoveďou: dátum, nové znenie, „Opýtať sa znova". */
+.saved-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 10px 12px 10px 14px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.saved-banner-text { flex: 1 1 280px; display: grid; gap: 2px; min-width: 0; }
+.saved-banner-again { min-height: 36px; }
+
+@media (max-width: 639px) {
+  .ask-history-hide { width: 44px; height: 44px; }
+  .ask-toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
+}
 
 /* ── odpoveď v dvoch stĺpcoch (ASK-odpoved-dva-stlpce) ────────────────────
    Vľavo otázka, karta odpovede a hodnotenie, vpravo citácie, zdroje
