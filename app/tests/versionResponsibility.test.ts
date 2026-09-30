@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest"
 import {
   canSetLegalBasis, isLegalBasis, legalBasisChoiceProblem, legalBasisProblem, responsibleChangeProblem,
-  tidyReference, MAX_LEGAL_REFERENCE, legalBasisFields, sameBasisKeys, legalBasisFromDraft,
+  tidyReference, MAX_LEGAL_REFERENCE, legalBasisFields, sameBasisKeys, legalBasisFromDraft, versionBasisTasks,
 } from "../src/lib/versionResponsibility"
 
 const GARANT = { personId: "p-garant", fullName: "Garant Predpisu", email: "garant@futbalsfz.sk" }
@@ -194,5 +194,35 @@ describe("prenos základu z prípravy do znenia (ADR-023, D139)", () => {
   it("neznámy druh v uloženom koncepte sa neprenesie", () => {
     const zly = { basis: "consent", key: "x", label: "X", reference: null } as never
     expect(legalBasisFromDraft({ entries: [zly], at: AT, by: "g@futbalsfz.sk" })).toBeNull()
+  })
+})
+
+describe("úlohy zodpovednej osoby na karte v správe (D151)", () => {
+  const now = new Date("2026-09-30T12:00:00Z")
+  const other = { personId: "p-iny", fullName: "Iný", email: "iny@futbalsfz.sk" }
+  const v = (versionId: string, from: string, over: Record<string, unknown> = {}) => ({
+    versionId, isActive: false, effectiveFrom: new Date(from), responsiblePerson: GARANT, ...over,
+  })
+
+  it("platné znenie a novela vopred, v tomto poradí", () => {
+    const versions = [v("v1", "2024-01-01"), v("v2", "2026-07-01"), v("v3", "2027-01-01", { isActive: true })]
+    const tasks = versionBasisTasks("p-garant", versions, "v2", now)
+    expect(tasks.map(t => [t.version.versionId, t.upcoming])).toEqual([["v2", false], ["v3", true]])
+  })
+
+  it("úloha patrí človeku, nie roli — cudzie znenia sa nevrátia", () => {
+    const versions = [v("v2", "2026-07-01", { responsiblePerson: other }), v("v3", "2027-01-01", { isActive: true })]
+    expect(versionBasisTasks("p-garant", versions, "v2", now).map(t => t.version.versionId)).toEqual(["v3"])
+    expect(versionBasisTasks("p-iny", versions, "v2", now).map(t => t.version.versionId)).toEqual(["v2"])
+  })
+
+  it("znenie bez zodpovednej osoby nie je nikoho úloha", () => {
+    expect(versionBasisTasks("p-garant", [v("v2", "2026-07-01", { responsiblePerson: null })], "v2", now)).toEqual([])
+    expect(versionBasisTasks("", [v("v2", "2026-07-01", { responsiblePerson: { ...GARANT, personId: "" } })], "v2", now)).toEqual([])
+  })
+
+  it("staršie ani nezverejnené znenie úlohou nie je", () => {
+    const versions = [v("v1", "2024-01-01"), v("v4", "2028-01-01", { isActive: false })]
+    expect(versionBasisTasks("p-garant", versions, null, now)).toEqual([])
   })
 })

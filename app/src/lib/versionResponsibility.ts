@@ -327,6 +327,41 @@ export function canSetLegalBasis(input: {
   return input.isContentManager
 }
 
+/** Znenie, pri ktorom má zodpovedná osoba úlohu určiť právny základ (ADR-023). */
+export interface VersionBasisTask<V> {
+  version: V
+  /** Zverejnené vopred — ešte neplatí (novela s budúcou účinnosťou). */
+  upcoming: boolean
+}
+
+/**
+ * Znenia, pri ktorých je **táto osoba menovite** zodpovedná — dnes platné
+ * a zverejnené vopred, v tomto poradí.
+ *
+ * Náhradník (správca obsahu pri znení bez zodpovednej osoby) sem nepatrí:
+ * úloha je adresovaná človeku, nie roli. Správca má na karte znenia panel
+ * „Právny základ" ako doteraz. Zodpovedná osoba sa sem dostane aj bez roly
+ * správcu obsahu — preto je toto pravidlo čisté a stojí samo, stránka podľa
+ * neho rozhoduje aj o tom, či ju na kartu pustí (dodatok k ADR-023, D151).
+ */
+export function versionBasisTasks<V extends {
+  versionId: string
+  isActive?: boolean
+  effectiveFrom?: Date | null
+  responsiblePerson?: ResponsiblePerson | null
+}>(personId: string, versions: V[], currentVersionId: string | null, now: Date = new Date()): VersionBasisTask<V>[] {
+  const mine = (v: V) => Boolean(personId) && v.responsiblePerson?.personId === personId
+  const out: VersionBasisTask<V>[] = []
+  const current = versions.find(v => v.versionId === currentVersionId)
+  if (current && mine(current)) out.push({ version: current, upcoming: false })
+  for (const v of versions) {
+    if (v === current || !v.isActive || !(v.effectiveFrom instanceof Date)) continue
+    if (v.effectiveFrom.getTime() <= now.getTime()) continue
+    if (mine(v)) out.push({ version: v, upcoming: true })
+  }
+  return out
+}
+
 /**
  * Dá sa zodpovedná osoba takto zmeniť?
  *

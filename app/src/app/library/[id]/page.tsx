@@ -58,8 +58,12 @@ import { listPeople } from "@/lib/people"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
 import PeopleSearch from "@/components/PeopleSearch"
 import LegalBasisForm from "@/components/LegalBasisForm"
-import { canSetLegalBasis, legalBasisFields } from "@/lib/versionResponsibility"
+import { canSetLegalBasis, legalBasisFields, versionBasisTasks } from "@/lib/versionResponsibility"
 import { legalBasisOptions } from "@/lib/legalBases"
+import { VersionBasisCard, DraftBasisCard } from "@/components/BasisTasks"
+import { onboardingContext } from "@/lib/session"
+import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
+import { draftBasisTaskFor } from "@/lib/versionResponsibilityDb"
 
 export const dynamic = "force-dynamic"
 
@@ -83,7 +87,12 @@ export default async function DocumentDetailPage({
      * pre osobu (`loadDocumentFor`) a na cudzí či neexistujúci odpovie 404
      * (SHELL-menu-v-hlavicke — Knižnica pre každého).
      */
-    if (ctx.state === "forbidden") redirect(`/documents/${encodeURIComponent(decodeURIComponent(id))}`)
+    if (ctx.state === "forbidden") {
+      // Zodpovedná osoba bez roly správcu obsahu: len jej úloha (D151).
+      const page = await responsibleBasisPage(decodeURIComponent(id), await searchParams)
+      if (page) return page
+      redirect(`/documents/${encodeURIComponent(decodeURIComponent(id))}`)
+    }
     notFound()
   }
 
@@ -931,6 +940,18 @@ export default async function DocumentDetailPage({
       </p>
 
       {/*
+        Úloha správcu, ktorý je **sám** zodpovednou osobou znenia a základ ešte
+        neurčil (ADR-023, D151). Hore, lebo sem ho posiela zvonček. Určený
+        základ sa mení v paneli „Právny základ" pri znení, nie tu.
+      */}
+      {versionBasisTasks(ctx.person.id, d.versions, d.effectiveVersionId ?? null)
+        .filter(task => !task.version.legalBasis)
+        .map(task => (
+          <VersionBasisCard key={task.version.versionId} documentId={d.documentId} version={task.version}
+                            upcoming={task.upcoming} options={basisOptions} language={language} />
+        ))}
+
+      {/*
         Akcie v hlavičke (bod 1 rámu). „Nové znenie" je hlavné tlačidlo, nie
         formulár schovaný v správe. Kým sa jedno znenie pripravuje, je
         neaktívne a `title` povie prečo — súbory sa vtedy vymieňajú v príprave.
@@ -1684,5 +1705,55 @@ function CarryOverFields({
       </fieldset>
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{tc.noEmailNote}</p>
     </>
+  )
+}
+
+/**
+ * Karta dokumentu pre **zodpovednú osobu bez roly správcu obsahu** (D151).
+ *
+ * Úloha určiť právny základ bola do 30. 9. 2026 na čitateľskej karte, lebo
+ * sem nesmela. Teraz sem smie — ale vidí len svoje karty úlohy, nič z práce
+ * správcu obsahu. Kto smie zapisovať, rozhodujú aj tak `setVersionLegalBasis()`
+ * a `setDraftLegalBasis()` proti uloženému zneniu; táto stránka len neukáže
+ * nič, čo by odmietli.
+ *
+ * `null`, keď osoba pri dokumente žiadnu úlohu nemá — volajúci ju potom pošle
+ * na čitateľskú kartu ako doteraz.
+ */
+async function responsibleBasisPage(documentId: string, raw: RawQuery) {
+  const ctx = await onboardingContext()
+  if (ctx.state !== "ready") return null
+  const person = ctx.person
+  const [doc, draftTask] = await Promise.all([
+    loadDocumentFor(person, documentId),
+    draftBasisTaskFor(person, documentId),
+  ])
+  const effective = doc ? effectiveVersion(doc) : null
+  const tasks = doc
+    ? versionBasisTasks(person.id, doc.versions ?? [], effective?.ok ? effective.version.versionId : null)
+    : []
+  if (tasks.length === 0 && !draftTask) return null
+
+  const query = normalizeQuery<{ msg?: string; error?: string }>(raw)
+  const language = person.language
+  const tr = dictionary(language).responsibility
+  const options = legalBasisOptions(ctx.tenant)
+  const title = doc?.title ?? draftTask!.title
+  return (
+    <AppShell language={language} title={title}>
+      <div style={{ maxWidth: 760, ...tenantStyle(brandingView(ctx.tenant)) }}>
+        <Notice message={query.msg} error={query.error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
+        <h1 className="page-title">{title}</h1>
+        <p className="quiet detail-lead">
+          {tr.basisPageLead}
+          {doc && <> · <Link href={`/documents/${encodeURIComponent(documentId)}`}>{tr.basisPageRead}</Link></>}
+        </p>
+        {tasks.map(task => (
+          <VersionBasisCard key={task.version.versionId} documentId={documentId} version={task.version}
+                            upcoming={task.upcoming} options={options} language={language} />
+        ))}
+        {draftTask && <DraftBasisCard task={draftTask} options={options} language={language} />}
+      </div>
+    </AppShell>
   )
 }

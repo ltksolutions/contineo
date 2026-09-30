@@ -1,6 +1,10 @@
 /**
- * documentBasisTasks.test.ts — stránka dokumentu pre zodpovednú osobu
- * pripravovaného a ešte neúčinného znenia (ADR-023, D139), bez databázy.
+ * documentBasisTasks.test.ts — úloha zodpovednej osoby pri pripravovanom
+ * a ešte neúčinnom znení (ADR-023, D139), bez databázy.
+ *
+ * Od 30. 9. 2026 (D151) je úloha na karte dokumentu v správe; zodpovedná
+ * osoba bez roly správcu obsahu tam vidí len ju. Čitateľská karta slúži na
+ * čítanie a potvrdenie a formulár na právny základ nemá nikto.
  *
  * Stráži to, čo `tsc` ani lint nevidia: že stránka v týchto stavoch **vôbec
  * vykreslí** a ponúkne formulár tomu, komu má — chyba pri vykresľovaní je
@@ -37,7 +41,13 @@ vi.mock("@/lib/documentOpens", () => ({ recordOpen: async () => {} }))
 vi.mock("@/lib/assignments", () => ({ assignedAtByVersion: async () => new Map() }))
 vi.mock("@/lib/pending", () => ({ acknowledgementDuties: async () => ({ fromTracks: [], outsideTracks: [] }) }))
 vi.mock("@/lib/acknowledgements", () => ({ buildStatement: () => "formulka", hasAcknowledged: async () => false }))
-vi.mock("@/lib/library", () => ({ isContentManager: () => state.contentManager }))
+vi.mock("@/lib/library", async importOriginal => ({
+  ...(await importOriginal<typeof import("../src/lib/library")>()),
+  isContentManager: () => state.contentManager,
+  // Zodpovedná osoba bez roly správcu obsahu — karta v správe ju pustí len k úlohe.
+  libraryContext: async () => ({ state: "forbidden" }),
+}))
+vi.mock("../src/app/library/actions", () => ({}))
 vi.mock("@/lib/legalBases", () => ({
   legalBasisOptions: () => [
     { key: "bozp", basis: "legal_obligation", label: "BOZP", reference: "§ 7 zákona č. 124/2006 Z. z." },
@@ -79,7 +89,15 @@ function draftTask(over: Record<string, unknown> = {}) {
   }
 }
 
+/** Karta dokumentu v správe — tam je úloha (D151). */
 async function render(query: Record<string, string> = {}) {
+  const { default: Page } = await import("../src/app/library/[id]/page")
+  const el = await Page({ params: Promise.resolve({ id: "sfz%3App" }), searchParams: Promise.resolve(query) })
+  return renderToStaticMarkup(el)
+}
+
+/** Čitateľská karta — čítanie a potvrdenie. */
+async function renderReader(query: Record<string, string> = {}) {
   const { default: Page } = await import("../src/app/documents/[documentId]/page")
   const el = await Page({ params: Promise.resolve({ documentId: "sfz%3App" }), searchParams: Promise.resolve(query) })
   return renderToStaticMarkup(el)
@@ -101,8 +119,10 @@ describe("pripravované znenie (ADR-023, D139)", () => {
     expect(html).toContain("Účinnosť od 1. 10. 2026")
     // Pri koncepte sa dôvod nepýta — nikto sa naň ešte nepotvrdil.
     expect(html).not.toContain('name="reason"')
-    // Platné znenie pod úlohou zostáva na čítanie a potvrdenie.
-    expect(html).toContain("formulka")
+    expect(html).toContain('name="back" value="library"')
+    // Na čítanie a potvrdenie je čitateľská karta, sem len odkaz.
+    expect(html).not.toContain("formulka")
+    expect(html).toContain('href="/documents/sfz%3App"')
   })
 
   it("dokument, ktorý by inak nevidela, ukáže len úlohu — nič na potvrdenie", async () => {
@@ -115,9 +135,8 @@ describe("pripravované znenie (ADR-023, D139)", () => {
     expect(html).not.toContain("formulka")
   })
 
-  it("kto nie je zodpovedná osoba ani dokument nevidí, dostane „nenájdené“", async () => {
-    state.doc = null
-    await expect(render()).rejects.toThrow("notFound")
+  it("kto nemá úlohu, ide na čitateľskú kartu ako doteraz", async () => {
+    await expect(render()).rejects.toThrow("redirect /documents/sfz%3App")
   })
 
   it("určený základ sa zbalí so súhrnom a výber zostane zaškrtnutý", async () => {
@@ -147,24 +166,35 @@ describe("zverejnené, ešte neúčinné znenie (ADR-023)", () => {
     expect(html).toContain("Znenie účinné od 1. 12. 2099 — ste zodpovedná osoba")
     expect(html).toContain('name="versionId" value="v-new"')
     expect(html).toContain("/api/documents/sfz%3App/pdf?version=v-new")
+    expect(html).toContain('name="back" value="library"')
+    // Platné znenie má inú zodpovednú osobu — to nie je jej úloha.
+    expect(html).not.toContain('name="versionId" value="v-old"')
   })
 
-  it("čitateľ do účinnosti vidí doterajšie znenie a môže ho potvrdiť (D143)", async () => {
+  it("čitateľ do účinnosti vidí doterajšie znenie a môže ho potvrdiť — bez formulára na základ (D143, D151)", async () => {
     // Presne stav po `publish()`: staré je neaktívne s koncom = začiatok nového.
     state.doc = doc([{ ...current, isActive: false, effectiveTo: future.effectiveFrom }, future])
-    const html = await render()
+    const html = await renderReader()
     expect(html).not.toContain("platnosť sa ešte nezačala")
     expect(html).toContain("/api/documents/sfz%3App/pdf?version=v-old")
     expect(html).toContain("formulka")
-    // Zodpovedná osoba novely má úlohu aj tak.
-    expect(html).toContain("Znenie účinné od 1. 12. 2099 — ste zodpovedná osoba")
+    // Aj zodpovedná osoba novely tu len číta a potvrdzuje.
+    expect(html).not.toContain("ste zodpovedná osoba")
+    expect(html).not.toContain('name="versionId"')
   })
 
-  it("iný človek formulár k cudziemu zneniu nedostane", async () => {
+  it("ani správca obsahu nemá na čitateľskej karte formulár (D151)", async () => {
+    state.contentManager = true
+    state.doc = doc([{ ...current, responsiblePerson: undefined, legalBasis: undefined, legalBasisLabel: undefined }])
+    const html = await renderReader()
+    expect(html).toContain("formulka")
+    expect(html).not.toContain('name="versionId"')
+    expect(html).not.toContain('name="draft"')
+  })
+
+  it("iný človek formulár k cudziemu zneniu nedostane — ide na čitateľskú kartu", async () => {
     state.doc = doc([{ ...current, isActive: false }, { ...future, responsiblePerson: { personId: "p-iny", fullName: "Iná", email: "ina@sfz.sk" } }])
-    const html = await render()
-    expect(html).not.toContain("ste zodpovedná osoba")
-    expect(html).not.toContain('name="versionId" value="v-new"')
+    await expect(render()).rejects.toThrow("redirect /documents/sfz%3App")
   })
 
   it("s určeným základom je karta zbalená a zmena pýta dôvod", async () => {
