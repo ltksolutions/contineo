@@ -177,7 +177,7 @@ export default async function DocumentPage({
                 href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(version.version.versionId)}`}
                 name={version.version.pdf.name}
                 bytes={version.version.pdf.bytes}
-                labels={{ open: t.openPdf }}
+                labels={{ open: t.openPdf, ...dictionary(person.language).common.pdf }}
               />
               <details className="document-search-text">
                 <summary>{t.searchText}</summary>

@@ -104,6 +104,16 @@ interface Dictionary {
       /** Akcia pri nasadenom filtri. */
       clearFilters: string
     }
+    /**
+     * PDF znenia vykreslené po stranách (`PdfView`, ADR-011). `page` je vzor
+     * so `{page}` a `{pages}`, nie funkcia — ide zo serverovej stránky do
+     * klientskeho komponentu a funkcia sa cez túto hranicu poslať nedá.
+     */
+    pdf: {
+      loading: string
+      failed: string
+      page: string
+    }
   }
 
   /** Texty potvrdzovacích obrazoviek. */
@@ -3346,6 +3356,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       filtered: "Filtru nič nevyhovuje",
       none: "Zatiaľ tu nič nie je",
       clearFilters: "Zrušiť filtre",
+    },
+    pdf: {
+      loading: "Načítavam PDF…",
+      failed: "PDF sa nepodarilo zobraziť priamo na stránke. Otvor ho odkazom vyššie.",
+      page: "Strana {page} z {pages}",
     },
   },
   onboarding: {
@@ -6759,6 +6774,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       none: "Zatím tu nic není",
       clearFilters: "Zrušit filtry",
     },
+    pdf: {
+      loading: "Načítám PDF…",
+      failed: "PDF se nepodařilo zobrazit přímo na stránce. Otevři ho odkazem výše.",
+      page: "Strana {page} z {pages}",
+    },
   },
   onboarding: {
     openPdf: "Otevřít PDF",
@@ -10167,6 +10187,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       filtered: "Nothing matches the filter",
       none: "Nothing here yet",
       clearFilters: "Clear filters",
+    },
+    pdf: {
+      loading: "Loading PDF…",
+      failed: "The PDF could not be shown on the page. Open it with the link above.",
+      page: "Page {page} of {pages}",
     },
   },
   onboarding: {

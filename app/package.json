@@ -4,7 +4,9 @@
   "private": true,
   "description": "Contineo — inteligentný RAG helpdesk a CMS platforma",
   "scripts": {
+    "predev": "node scripts/copy_pdfjs_assets.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/copy_pdfjs_assets.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
