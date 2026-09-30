@@ -29,7 +29,7 @@ export default function SectionTiles({
 }) {
   const t = dictionary(language).nav
   const title: Record<MoreGroupKey, string> = {
-    tasks: t.groupTasks,
+    main: t.groupMain,
     organisation: t.groupOrganisation,
     management: t.groupManagement,
   }

@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { navItems, sectionGroups, breadcrumbs, isActive, tabbarItems, moreGroups, isTabActive } from "../src/lib/appNav"
+import { navItems, sectionGroups, breadcrumbs, isActive, tabbarItems, moreGroups, menuGroups, menuColumns, isTabActive } from "../src/lib/appNav"
 import type { CrumbNames, NavKey } from "../src/lib/appNav"
 import { isShellRoute, WITHOUT_SHELL } from "../src/lib/shellRoutes"
 
@@ -16,8 +16,11 @@ describe("položky navigácie", () => {
     // `/approvals` je tu z toho istého dôvodu ako `/documents`: schvaľovateľ
     // je menovaný človek (D69), nie držiteľ roly, takže sa to podľa roly
     // podmieniť nedá. `/directory` je zoznam kolegov, nie správa prístupov (D87).
+    // Knižnica a Vzdelávanie sú od 30. 9. 2026 u každého (SHELL-menu-
+    // v-hlavicke, Q5) — Knižnica s platnými dokumentmi organizácie (D90),
+    // Vzdelávanie pri vypnutom module s vysvetlením, nie 404.
     expect(navItems({}).map(o => o.href))
-      .toEqual(["/", "/ask", "/documents", "/approvals", "/directory"])
+      .toEqual(["/", "/ask", "/documents", "/approvals", "/directory", "/library", "/learning"])
   })
 
   it("rola pridá práve svoju sekciu", () => {
@@ -32,7 +35,7 @@ describe("položky navigácie", () => {
     // viac, než ten človek potrebuje vedieť.
     const hrefs = navItems({ isHr: true }).map(o => o.href)
     expect(hrefs).not.toContain("/people")
-    expect(hrefs).not.toContain("/library")
+    expect(hrefs).not.toContain("/evaluation")
   })
 
   it("správcovské odkazy tu nie sú — zostávajú pod avatarom", () => {
@@ -43,18 +46,15 @@ describe("položky navigácie", () => {
 })
 
 describe("modul Vzdelávanie (ADR-018)", () => {
-  it("vypnutý modul nepridá nič, ani lektorovi", () => {
+  it("vypnutý modul: len Vzdelávanie (s vysvetlením), správa ani testy nie, ani lektorovi", () => {
     const hrefs = navItems({ isLearningAdmin: true }).map(o => o.href)
-    expect(hrefs.some(h => h.startsWith("/learning"))).toBe(false)
+    expect(hrefs.filter(h => h.startsWith("/learning"))).toEqual(["/learning"])
   })
 
-  it("lišta: bežná osoba má Vzdelávanie na 3. pozícii, správca obsahu pod Viac (LEARNING Q1)", () => {
-    const plain = navItems({ learning: true })
-    expect(tabbarItems(plain).map(o => o.key)).toEqual(["overview", "ask", "learning", "tasks", "more"])
-    expect(moreGroups(plain).flatMap(g => g.items.map(o => o.key))).not.toContain("learning")
-    const editor = navItems({ learning: true, isContentManager: true })
-    expect(tabbarItems(editor).map(o => o.key)).toEqual(["overview", "ask", "library", "tasks", "more"])
-    expect(moreGroups(editor).find(g => g.key === "organisation")!.items.map(o => o.key)).toContain("learning")
+  it("lišta je u každého rovnaká — mení LEARNING Q1 z 27. 9. (SHELL-menu-v-hlavicke, Q5)", () => {
+    for (const flags of [{}, { learning: true }, { learning: true, isContentManager: true }]) {
+      expect(tabbarItems(navItems(flags)).map(o => o.key)).toEqual(["overview", "library", "learning", "tasks", "menu"])
+    }
   })
 
   it("zodpovedná osoba testu bez roly vidí Testy — rovno na výsledky (D121)", () => {
@@ -90,9 +90,9 @@ describe("počty pri položkách", () => {
   })
 
   it("počet pre sekciu, do ktorej človek nesmie, sa nikde neobjaví", () => {
-    // Inak by číslo prezradilo veľkosť knižnice tomu, kto ju nemá vidieť —
+    // Inak by číslo prezradilo veľkosť fronty tomu, kto ju nemá vidieť —
     // ten istý dôvod, pre ktorý sa neukazuje ani samotný odkaz.
-    expect(navItems({}, { library: 148 }).some(o => o.key === "library")).toBe(false)
+    expect(navItems({}, { evaluation: 12 }).some(o => o.key === "evaluation")).toBe(false)
   })
 })
 
@@ -114,7 +114,7 @@ describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
   it("bežná osoba: prázdna Správa sa nevykreslí", () => {
     const groups = sectionGroups(navItems({ learning: true }))
     expect(groups.map(g => g.key)).toEqual(["organisation"])
-    expect(groups[0].items.map(o => o.key)).toEqual(["directory", "learning"])
+    expect(groups[0].items.map(o => o.key)).toEqual(["directory", "library", "learning"])
   })
 
   it("každá sekcia je práve v jednej skupine; neznámy kľúč padne do Správy", () => {
@@ -266,19 +266,12 @@ describe("hranica shellu", () => {
   })
 })
 
-describe("spodná lišta (NASADENIE, PR 2)", () => {
-  const ALL = { isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true }
+describe("spodná lišta (SHELL-menu-v-hlavicke)", () => {
+  const ALL = { isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true, isDpo: true }
 
-  it("poradie z návrhu: Prehľad · Opýtať sa · Knižnica · Úlohy · Viac", () => {
+  it("Prehľad · Knižnica · Vzdelávanie · Úlohy · Menu — bez „Opýtať sa\"", () => {
     expect(tabbarItems(navItems(ALL)).map(o => o.key))
-      .toEqual(["overview", "ask", "library", "tasks", "more"])
-  })
-
-  it("bez roly správy obsahu má lišta štyri položky, nie náhradnú piatu", () => {
-    // Dopĺňať do počtu inou sekciou by znamenalo, že tá istá pozícia palca
-    // vedie u dvoch ľudí inam.
-    expect(tabbarItems(navItems({})).map(o => o.key))
-      .toEqual(["overview", "ask", "tasks", "more"])
+      .toEqual(["overview", "library", "learning", "tasks", "menu"])
   })
 
   it("Úlohy zlučujú počty a svietia na oboch cestách", () => {
@@ -296,56 +289,51 @@ describe("spodná lišta (NASADENIE, PR 2)", () => {
     expect(tabbarItems(navItems({}, { toApprove: 0 })).find(o => o.key === "tasks")?.count).toBe(0)
   })
 
-  it("Viac svieti na sekciách pod ním, na schvaľovaní nie", () => {
-    const more = tabbarItems(navItems(ALL)).find(o => o.key === "more")
-    expect(isTabActive("/more", more!)).toBe(true)
-    expect(isTabActive("/hr/evidence", more!)).toBe(true)
-    expect(isTabActive("/approvals", more!)).toBe(false)
+  it("odznak na Menu = súčet počtov sekcií mimo lišty", () => {
+    const menu = tabbarItems(navItems(ALL, { toAcknowledge: 3, evaluation: 2, dpo: 1 })).find(o => o.key === "menu")
+    expect(menu?.count).toBe(3)
+    expect(tabbarItems(navItems(ALL)).find(o => o.key === "menu")?.count).toBe(undefined)
+  })
+
+  it("Menu svieti na sekciách v menu, na schvaľovaní ani na Knižnici nie", () => {
+    const menu = tabbarItems(navItems(ALL)).find(o => o.key === "menu")
+    expect(isTabActive("/more", menu!)).toBe(true)
+    expect(isTabActive("/hr/evidence", menu!)).toBe(true)
+    expect(isTabActive("/ask", menu!)).toBe(true)
+    expect(isTabActive("/approvals", menu!)).toBe(false)
+    expect(isTabActive("/library", menu!)).toBe(false)
   })
 })
 
-describe("zoznam na /more (NASADENIE, PR 2)", () => {
+describe("celé menu — plachta aj /more (SHELL-menu-v-hlavicke, Q4)", () => {
   const ALL = { isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true }
 
-  it("skupiny: Moje úlohy (schvaľovanie), potom tie isté ako dlaždice na Prehľade (Q4)", () => {
-    const groups = moreGroups(navItems(ALL))
-    expect(groups.map(g => g.key)).toEqual(["tasks", "organisation", "management"])
-    expect(groups[0].items.map(o => o.key)).toEqual(["toApprove"])
-    expect(groups[1].items.map(o => o.key)).toEqual(["directory"])
-    expect(groups[2].items.map(o => o.key)).toEqual(["assigned", "evidence", "people", "evaluation"])
+  it("Hlavné, Organizácia, Správa", () => {
+    const groups = menuGroups(navItems(ALL))
+    expect(groups.map(g => g.key)).toEqual(["main", "organisation", "management"])
+    expect(groups[0].items.map(o => o.key)).toEqual(["overview", "ask", "toAcknowledge", "toApprove"])
   })
 
-  it("prázdna skupina sa nevracia", () => {
-    // Bez rolí je v Organizácii len adresár a Správa nie je vôbec — jej
-    // nadpis by visel nad ničím.
-    const groups = moreGroups(navItems({}))
-    expect(groups.map(g => g.key)).toEqual(["tasks", "organisation"])
-    expect(groups[1].items.map(o => o.key)).toEqual(["directory"])
+  it("bez rolí: Hlavné a Organizácia, Správa nie", () => {
+    expect(menuGroups(navItems({})).map(g => g.key)).toEqual(["main", "organisation"])
   })
 
-  it("lišta a /more spolu pokryjú každú položku navigácie", () => {
-    // Stratený odkaz je výpadok sekcie: čo nie je v lište, musí byť na /more.
-    const items = navItems(ALL)
-    const bar = tabbarItems(items)
-    const covered = new Set([
-      ...bar.flatMap(o => o.activeFor),
-      ...moreGroups(items).flatMap(g => g.items.map(o => o.href)),
-    ])
-    for (const o of items) expect(covered.has(o.href)).toBe(true)
+  it("menu pokryje každú položku navigácie práve raz", () => {
+    const items = navItems({ ...ALL, isDpo: true, learning: true, isLearningAdmin: true })
+    const keys = menuGroups(items).flatMap(g => g.items.map(o => o.key))
+    expect(keys.sort()).toEqual(items.map(o => o.key).sort())
   })
 
-  it("vzdelávanie: kurzy v Organizácii, správa a testy v Správe (ADR-018)", () => {
-    const groups = moreGroups(navItems({ ...ALL, learning: true, isLearningAdmin: true }))
-    expect(groups[1].items.map(o => o.key)).toEqual(["directory", "learning"])
-    expect(groups[2].items.map(o => o.key)).toContain("learningManage")
-    expect(groups[2].items.map(o => o.key)).toContain("learningTests")
+  it("/more je to isté ako menu", () => {
+    expect(moreGroups).toBe(menuGroups)
   })
 
-  it("knižnica je v lište, na /more sa neopakuje", () => {
-    const hrefs = moreGroups(navItems(ALL)).flatMap(g => g.items.map(o => o.href))
-    expect(hrefs).not.toContain("/library")
-    expect(hrefs).not.toContain("/")
-    expect(hrefs).not.toContain("/ask")
+  it("stĺpce nesú texty a popis počtu pre čítačku", () => {
+    const t = new Proxy({ groupMain: "Hlavné", groupOrganisation: "Organizácia", groupManagement: "Správa", waiting: (n: number) => `čaká ${n}` } as Record<string, unknown>,
+      { get: (o, k) => (k in o ? o[k as string] : `[${String(k)}]`) }) as unknown as Parameters<typeof menuColumns>[1]
+    const cols = menuColumns(navItems({}, { toAcknowledge: 2 }), t)
+    expect(cols[0]).toMatchObject({ key: "main", title: "Hlavné" })
+    expect(cols[0].items.find(i => i.key === "toAcknowledge")).toMatchObject({ label: "[toAcknowledge]", count: 2, countLabel: "čaká 2" })
   })
 })
 

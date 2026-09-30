@@ -543,8 +543,6 @@ interface Dictionary {
     tasks: string
     /** Piata položka lišty aj prepad pásu „Viac N" — vedie na `/more`. */
     more: string
-    /** „Moje úlohy" — skupina na `/more` so schvaľovaním (D69). */
-    groupTasks: string
     /** Skupiny dlaždíc na Prehľade, na `/more` a stĺpce plachty (SHELL-rozcestnik). */
     groupOrganisation: string
     groupManagement: string
@@ -552,6 +550,10 @@ interface Dictionary {
     groupMain: string
     /** `aria-label` pásu cesty pod hlavičkou. */
     breadcrumb: string
+    /** Posledná položka lišty a tlačidlo plachty menu (SHELL-menu-v-hlavicke). */
+    menu: string
+    /** Prvý fokusovateľný prvok stránky — odkaz na obsah. */
+    skipToContent: string
     /** Tlačidlo 9 bodiek a nadpis plachty. */
     allSections: string
     /** Pätička plachty — Esc a odkaz na Prehľad s popismi. */
@@ -1908,6 +1910,15 @@ interface Dictionary {
     addButton: string
   }
   library: {
+    /** Knižnica pre osobu bez roly správy obsahu — platné dokumenty (SHELL-menu-v-hlavicke). */
+    emptyForYou: string
+    reader: {
+      lead: string
+      search: string
+      searchSubmit: string
+      emptyFilter: string
+      validFrom: (date: string) => string
+    }
     /**
      * Postup znenia v štyroch krokoch (rám KNIZNICA-postup-znenia, ADR-014).
      * Karta na detaile, ktorá nahradila „Čo treba teraz" a zbalené nástroje.
@@ -2653,6 +2664,14 @@ interface Dictionary {
   }
   /** Modul Vzdelávanie (ADR-018). L0: len nadpisy a prázdne stavy. */
   learning: {
+    /** Modul organizácia nemá zapnutý (SHELL-menu-v-hlavicke, Q5) — nie 404. */
+    off: {
+      title: string
+      lead: string
+      admin: (contact: string) => string
+      tasks: string
+      back: string
+    }
     heading: string
     intro: string
     empty: string
@@ -3716,9 +3735,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     more: "Viac",
     groupOrganisation: "Organizácia",
     groupManagement: "Správa",
-    groupTasks: "Moje úlohy",
     groupMain: "Hlavné",
     breadcrumb: "Cesta",
+    menu: "Menu",
+    skipToContent: "Preskočiť na obsah",
     allSections: "Všetky sekcie",
     escCloses: "zavrie",
     sheetHint: "Všetky sekcie s popisom sú na Prehľade",
@@ -5411,6 +5431,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     usedIn: n => (n === 1 ? "1 znenie" : n >= 2 && n <= 4 ? `${n} znenia` : `${n} znení`),
   },
   library: {
+    emptyForYou: "Zatiaľ tu pre vás nie sú žiadne dokumenty.",
+    reader: {
+      lead: "Platné predpisy a smernice vašej organizácie.",
+      search: "Hľadať v názve dokumentu",
+      searchSubmit: "Hľadať",
+      emptyFilter: "Žiadny dokument tomu nezodpovedá.",
+      validFrom: date => `platí od ${date}`,
+    },
     flow: {
       heading: d => `Nové znenie od ${d}`,
       headingUndated: "Nové znenie",
@@ -6055,6 +6083,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   learning: {
+    off: {
+      title: "Vzdelávanie nie je pre vašu organizáciu zapnuté",
+      lead: "Kurzy, testy a certifikáty tu uvidíte, keď ho organizácia zapne. Povinné normy na potvrdenie nájdete v Úlohách.",
+      admin: contact => `Modul zapína prevádzkovateľ Contineo. Napíšte na ${contact}.`,
+      tasks: "Otvoriť úlohy",
+      back: "Späť na Prehľad",
+    },
     heading: "Vzdelávanie",
     intro: "Kurzy, ktoré máš pridelené, a otvorené kurzy, na ktoré sa môžeš zapísať.",
     empty: "Zatiaľ tu nemáte žiadny kurz",
@@ -7110,9 +7145,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     more: "Více",
     groupOrganisation: "Organizace",
     groupManagement: "Správa",
-    groupTasks: "Moje úkoly",
     groupMain: "Hlavní",
     breadcrumb: "Cesta",
+    menu: "Menu",
+    skipToContent: "Přeskočit na obsah",
     allSections: "Všechny sekce",
     escCloses: "zavře",
     sheetHint: "Všechny sekce s popisem jsou na Přehledu",
@@ -8803,6 +8839,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     usedIn: n => (n === 1 ? "1 znění" : `${n} znění`),
   },
   library: {
+    emptyForYou: "Zatím tu pro vás nejsou žádné dokumenty.",
+    reader: {
+      lead: "Platné předpisy a směrnice vaší organizace.",
+      search: "Hledat v názvu dokumentu",
+      searchSubmit: "Hledat",
+      emptyFilter: "Žádný dokument tomu neodpovídá.",
+      validFrom: date => `platí od ${date}`,
+    },
     flow: {
       heading: d => `Nové znění od ${d}`,
       headingUndated: "Nové znění",
@@ -9446,6 +9490,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   learning: {
+    off: {
+      title: "Vzdělávání není pro vaši organizaci zapnuté",
+      lead: "Kurzy, testy a certifikáty tu uvidíte, až ho organizace zapne. Povinné normy k potvrzení najdete v Úkolech.",
+      admin: contact => `Modul zapíná provozovatel Contineo. Napište na ${contact}.`,
+      tasks: "Otevřít úkoly",
+      back: "Zpět na Přehled",
+    },
     heading: "Vzdělávání",
     intro: "Kurzy, které máš přidělené, a otevřené kurzy, do kterých se můžeš zapsat.",
     empty: "Zatím tu nemáte žádný kurz",
@@ -10495,9 +10546,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     more: "More",
     groupOrganisation: "Organisation",
     groupManagement: "Management",
-    groupTasks: "My tasks",
     groupMain: "Main",
     breadcrumb: "Breadcrumb",
+    menu: "Menu",
+    skipToContent: "Skip to content",
     allSections: "All sections",
     escCloses: "closes",
     sheetHint: "All sections with descriptions are on the Overview",
@@ -12187,6 +12239,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     usedIn: n => (n === 1 ? "1 version" : `${n} versions`),
   },
   library: {
+    emptyForYou: "There are no documents for you here yet.",
+    reader: {
+      lead: "Rules and policies of your organisation that are in force.",
+      search: "Search document titles",
+      searchSubmit: "Search",
+      emptyFilter: "No document matches.",
+      validFrom: date => `in force from ${date}`,
+    },
     flow: {
       heading: d => `New version from ${d}`,
       headingUndated: "New version",
@@ -12824,6 +12884,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   learning: {
+    off: {
+      title: "Learning is not enabled for your organisation",
+      lead: "You will see courses, tests and certificates here once your organisation enables it. Mandatory rules to acknowledge are in Tasks.",
+      admin: contact => `The module is enabled by the Contineo operator. Write to ${contact}.`,
+      tasks: "Open tasks",
+      back: "Back to Overview",
+    },
     heading: "Learning",
     intro: "Courses assigned to you and open courses you can enrol in.",
     empty: "You have no courses yet",

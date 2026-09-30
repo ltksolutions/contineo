@@ -399,3 +399,35 @@ export async function loadDocumentFor(
   if (!doc) return null
   return canSeeDocument(person, doc) ? doc : null
 }
+
+export interface ReadableDocument {
+  documentId: string
+  title: string
+  /** Platné znenie dnes — označenie a začiatok účinnosti. */
+  versionLabel: string
+  effectiveFrom: Date
+}
+
+/**
+ * Knižnica pre osobu bez roly správy obsahu (SHELL-menu-v-hlavicke,
+ * rozhodnutie Jána 30. 9. 2026): **všetky dokumenty organizácie, ktoré
+ * majú dnes platné znenie** — presne tie, ktoré smie otvoriť v čitateľskom
+ * detaile (`canSeeDocument()`, D90: v organizácii smie každý čítať každý jej
+ * dokument; `accessLevel` o prístupe nerozhoduje). Koncepty, znenia bez
+ * účinnosti a archív sa neukazujú — to je práca správy obsahu.
+ */
+export async function readableDocuments(companyCode: string, now: Date = new Date()): Promise<ReadableDocument[]> {
+  const code = requireCompanyCode(companyCode, "readableDocuments")
+  const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
+  const docs = await col
+    .find({ companyCode: code }, { projection: { documentId: 1, title: 1, companyCode: 1, accessLevel: 1, versions: 1 } })
+    .toArray()
+  const out: ReadableDocument[] = []
+  for (const d of docs) {
+    if (!canSeeDocument({ companyCode: code }, d)) continue
+    const v = effectiveVersion(d, now)
+    if (!v.ok || !v.version.effectiveFrom) continue
+    out.push({ documentId: d.documentId, title: d.title, versionLabel: v.version.label, effectiveFrom: v.version.effectiveFrom })
+  }
+  return out.sort((a, b) => a.title.localeCompare(b.title, "sk"))
+}

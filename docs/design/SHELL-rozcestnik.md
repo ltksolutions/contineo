@@ -28,8 +28,8 @@ Obsah má celú šírku na každej šírke obrazovky. Menu nerastie so sekciami 
 
 - **Q1 ✅** Rozcestník **nahrádza** bočný panel úplne, nekombinuje sa. Ruší sa `topbar` aj `sidebar`, „Viac N", meranie prepadu, `?layout=`, `normalizeLayout()`. Dôvod: dve navigácie = dvojnásobná údržba; panel berie šírku a pôsobí ako administrácia.
 - **Q2 ✅** Na podstránkach **stačí zvonček** so súčtom. Počty po sekciách sú na Prehľade (KPI, odznaky na dlaždiciach). Ďalší ukazovateľ by musel byť v hlavičke — tá ostáva bez navigácie.
-- **Q3 ✅** Do **hlavičky** žiadne menu. Rýchle prepnutie áno, ale ako ikona 9 bodiek v **páse cesty** (Q5).
-- **Q5 ✅** Plachta celého menu z ikony 9 bodiek v páse cesty — požiadavka používateľa 29. 9. 2026. Prepnutie sekcie = 2 kliky bez návratu na Prehľad.
+- **Q3 ✅** *(Zmenené 30. 9. 2026 — `SHELL-menu-v-hlavicke.md`, Q1 A: tlačidlo 9 bodiek je v hlavičke vľavo pred logom, stále menu v nej ďalej nie je.)* Do **hlavičky** žiadne menu. Rýchle prepnutie áno, ale ako ikona 9 bodiek v **páse cesty** (Q5).
+- **Q5 ✅** *(Zmenené 30. 9. 2026 — ikona odišla z pásu cesty do hlavičky, `SHELL-menu-v-hlavicke.md`.)* Plachta celého menu z ikony 9 bodiek v páse cesty — požiadavka používateľa 29. 9. 2026. Prepnutie sekcie = 2 kliky bez návratu na Prehľad.
 - **Q4 ✅** `/more` na telefóne používa **ten istý komponent** `SectionTiles` ako Prehľad (jeden stĺpec). Rovnaké poradie, názvy a popisy všade.
 
 Odsúhlasil používateľ 29. 9. 2026 — Code zapíše do `docs/DEVLOG.md`, poznámku do README (Navigácia) a `DESIGN_GAP.md`; `SHELL-bocny-panel.*` označí ako zrušený. TODO „uložiť variant navigácie na osobu" sa zatvára.

@@ -10,6 +10,57 @@
 
 ---
 
+## 2026-09-30 — menu v hlavičke, lišta pre každého rovnaká (SHELL-menu-v-hlavicke)
+
+**Rozhodnutia (Ján, 30. 9. 2026, Q1–Q5 v `docs/design/SHELL-menu-v-hlavicke.md`).**
+Tlačidlo 9 bodiek je **v hlavičke vľavo pred logom** na každej stránke,
+aj na Prehľade (Q1 A) — mení **SHELL-rozcestnik Q3/Q5** (ikona bola v páse
+cesty, na Prehľade teda chýbala). Pred ním je „Preskočiť na obsah" (Q2).
+Lišta na telefóne je **Prehľad · Knižnica · Vzdelávanie · Úlohy · Menu**
+u každého (Q3–Q5) — mení **rám LEARNING Q1 z 27. 9.** (Vzdelávanie na 3.
+mieste len bez Knižnice). „Opýtať sa" z lišty odišlo, otázka je v hlavičke.
+
+**Dve otázky počas práce (Ján, 30. 9.).**
+
+- **Knižnica pre každého — rozpor s predpokladom návrhu.** Návrh počítal
+  s tým, že „nie každý uvidí všetky dokumenty" podľa `accessLevel`. V kóde
+  platí D90 (`canSeeDocument()`): v organizácii smie každý čítať každý jej
+  dokument, `accessLevel` rozhoduje len o verejnom webe. Rozhodnutie: bežná
+  osoba vidí **platné dokumenty organizácie** (`readableDocuments()` —
+  platné znenie dnes, bez konceptov a archívu) a riadok vedie na čitateľský
+  detail `/documents/{id}`. Správca obsahu má `/library` ako doteraz;
+  `/library/{id}` bez roly presmeruje na `/documents/{id}` (tam 404 pre
+  cudzí dokument).
+- **Kontakt prevádzkovateľa** pri vypnutom Vzdelávaní: `office@ltk.solutions`
+  (`OPERATOR_CONTACT` v `lib/learning.ts`).
+
+**Čo sa spravilo.**
+
+- `lib/appNav.ts`: Knižnica a Vzdelávanie v `navItems()` pre každého;
+  nové `tabbarKeys()`/`inTabbar()`, `menuCount()` (odznak „Menu" = súčet
+  sekcií mimo lišty), `menuGroups()` = celé menu (Hlavné · Organizácia ·
+  Správa) pre plachtu aj `/more` (Q4), `menuColumns()` s textami.
+- `SectionsSheet`: `MenuPanel` (spoločný obsah), plachta v hlavičke
+  (`<details>`, 40 × 40, pod hlavičkou vľavo, závoj od spodku hlavičky),
+  `BottomMenu` — spodná plachta nad lištou (úchyt, ×, závoj medzi
+  hlavičkou a lištou, potiahnutie nadol, Esc, výber, zmena stránky).
+- Menu pre hlavičku skladá `layout.tsx` zo `shellNavData()` (`cache()`, bez
+  dotazov navyše); `<main id="content">` je cieľ preskočenia.
+- „Menu" v lište: bez JS odkaz na `/more`, so skriptom tlačidlo
+  s `aria-expanded`. Pás cesty je len cesta.
+- `/learning` pri vypnutom module: úvodná obrazovka namiesto 404; správca
+  organizácie (rola správy osôb) vidí aj kontakt. Podstránky modulu ďalej 404.
+- 834: názov organizácie v hlavičke ustúpi poľu otázky.
+
+**Overenie.** tsc, eslint (baseline), vitest, build; stránka z ozajstných
+`Header`, `SectionsSheet`, `Breadcrumbs`, `AppNav` a `globals.css` — plachta
+na Prehľade aj podstránke (1200, 834), poradie Tab (preskočenie → menu →
+logo → pole), lišta a spodná plachta (390, Esc), bez JS (`<details>`,
+„Menu" → `/more`); `/learning` vypnuté a čitateľská Knižnica vykreslené
+so zamockovanými dátami, svetlá aj tmavá.
+
+---
+
 ## 2026-09-30 — história otázok (ASK-historia-otazok)
 
 **Rozhodnutia (Ján, 30. 9. 2026, H1–H4 v `docs/design/ASK-historia-otazok.md`,
