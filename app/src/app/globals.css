@@ -366,13 +366,20 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 
-/* ── globálne pole v hlavičke ──────────────────────────────────────────────
-   `flex: 1 1 240px` s `min-width: 160px` na širokej obrazovke vyplní stred
-   lišty; pod 640 px si pole šírku nepýta vôbec (blok nižšie) — riadok je
-   pevných 56 px a lámať sa nemá čo. */
-.header-search {
+/* ── globálne pole v hlavičke (ASK-otazka-z-hlavicky) ─────────────────────
+   Jediné miesto, kde sa otázka kladie — ako vo vyhľadávači: 40 px, oblé
+   (r20), najviac 600 px, vľavo značka Continea. Klik, fokus alebo `⌘K` ho
+   rozšíri do plachty (`.ask-sheet--overlay`), ktorá sa ukotví k obalu.
+   Pod 640 px si pole šírku nepýta vôbec (blok nižšie) — riadok je pevných
+   56 px a lámať sa nemá čo. */
+.header-search-wrap {
+  position: relative;
   flex: 1 1 240px;
   min-width: 160px;
+  max-width: 600px;
+}
+
+.header-search {
   position: relative;
   display: flex;
   align-items: center;
@@ -380,32 +387,31 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .header-search-icon {
   position: absolute;
-  left: 10px;
+  left: 12px;
   display: grid;
   place-items: center;
-  color: var(--muted);
+  color: var(--accent);
   pointer-events: none;
 }
 
 .header-search-input {
   width: 100%;
-  /* 36 px a r9 z návrhu (NASADENIE, PR 3), rovnaké na každej šírke — pole
-     v hlavičke je tichšie než polia formulárov (`--control-h`). Písmo
-     zostáva `--fs-control`: pod 16 px by iOS pri kliknutí do poľa stránku
-     priblížil, a to nezávisí od výšky poľa. */
-  height: var(--control-h-sm);
-  padding: 0 11px 0 34px;
+  height: 40px;
+  padding: 0 12px 0 39px;
   font: inherit;
+  /* 16 px na telefóne (iOS inak pri kliknutí priblíži stránku), 14 od 640. */
   font-size: var(--fs-control);
   line-height: 1.2;
   color: var(--ink);
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 20px;
   outline: none;
+  text-overflow: ellipsis;
 }
 
 .header-search-input::placeholder { color: var(--muted); }
+.header-search-input:hover { background: var(--surface); }
 
 /* Prstenec je vnútri poľa (`box-shadow`), nie `outline` — pole je v lište
    natesno a prstenec mimo by prekryl susedné prvky. */
@@ -450,7 +456,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * je najmenej.
  */
 @media (max-width: 639px) {
-  .header-search {
+  .header-search-wrap {
     /* Bez vlastného základu — inak si vypýta šírku, ktorú v riadku nemá,
        a riadok sa zlomí. To bola príčina pôvodného problému, nie to, že
        pole v riadku vôbec je. */
@@ -502,16 +508,16 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 /* Nápoveda `⌘K` v poli. Pod 640 px sa skrýva — dotyk skratku nemá. */
 .header-search-kbd {
   position: absolute;
-  right: 9px;
+  right: 10px;
   display: none;
   padding: 2px 6px;
   font: inherit;
   font-size: 11px;
   font-weight: 550;
   color: var(--muted);
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   pointer-events: none;
 }
 
@@ -522,7 +528,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .header-row .header-badge { display: inline-flex; }
   .header-search-kbd { display: inline-flex; }
   /* Miesto pre nápovedu, aby ju dlhý text nepodliezol. */
-  .header-search-input { padding-right: 52px; }
+  .header-search-input { padding-right: 60px; font-size: 14px; }
+  .header-search-wrap { margin-left: 12px; }
 }
 
 /*
@@ -3953,23 +3960,251 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .tree--lines .tree-item { cursor: default; }
 }
 
-/* ── opýtať sa: hero, karta odpovede a zdroje ────────────────────────────
-   Prvá obrazovka po prihlásení. Pole na otázku doteraz „plávalo" priamo na
-   pozadí stránky a nič nehovorilo, že práve toto je hlavná vec, ktorú tu
-   človek robí. Hero je karta okolo neho — nie nový prvok, len rám. */
-.ask-hero {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 18px;
-  max-width: 860px;
+/* ── plachta otázky (`AskSheet`, ASK-otazka-z-hlavicky) ─────────────────────
+   Pole v hlavičke sa rozšíri **na mieste** (nie modál v strede): o 8 px
+   vyššie a vľavo, o 96 px širšie než pole, aspoň 680. Závoj 22 % je pod
+   hlavičkou (`.ask-scrim`, z-index 9 < 10 hlavičky), takže hlavička
+   zatienená nie je. Pod 640 px celá obrazovka. */
+.ask-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: rgba(17, 21, 28, 0.22);
 }
 
-.ask-form { display: grid; gap: 10px; }
+.ask-sheet {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+}
 
-/* Chyba nad hero kartou (ASK, úloha 2). Inline hláška, nie `.notice`:
-   `.notice` je modálne okno s pozadím a pole s otázkou pod ním musí
-   zostať vidieť a použiteľné. Červená = chyba; jantárová je upozornenie. */
+.ask-sheet--overlay {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  z-index: 11;
+  width: calc(100% + 96px);
+  min-width: 680px;
+  box-shadow: 0 18px 48px rgba(20, 28, 42, 0.2);
+}
+
+.ask-sheet-head, .ask-sheet-foot { display: none; }
+.ask-sheet-scroll { display: flex; flex-direction: column; min-height: 0; }
+
+.ask-sheet-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px 8px 18px;
+}
+.ask-sheet-mark { display: grid; padding-top: 4px; color: var(--accent); }
+
+.ask-sheet-field {
+  width: 100%;
+  min-height: 78px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.ask-sheet-field::placeholder { color: var(--muted); }
+/* Prstenec fokusu nie: plachta sama je znak, že sa píše sem — a rámček
+   okolo poľa vnútri rámčeka plachty by bol rám v ráme. */
+.ask-sheet-field:focus-visible { outline: none; }
+
+.ask-sheet-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px 12px 18px;
+}
+.ask-sheet-hint { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
+.ask-sheet-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.ask-sheet-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ask-sheet-submit:hover { background: var(--accent-strong); }
+.ask-sheet-submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ask-sheet-submit:disabled { background: var(--surface-2); color: var(--muted); cursor: default; }
+
+.ask-sheet-info {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+  padding: 14px 18px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.ask-sheet-info svg { margin-top: 2px; }
+.ask-sheet-info b { color: var(--ink); font-weight: 600; }
+
+.ask-sheet-examples { padding: 0 8px 12px; }
+.ask-sheet-examples h3 {
+  margin: 0 10px 4px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ask-sheet-examples button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.ask-sheet-examples button:hover { background: var(--surface-2); }
+.ask-sheet-examples button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ask-sheet-examples button > svg { flex: none; color: var(--muted); }
+.ask-sheet-examples button > span { flex: 1; min-width: 0; }
+.ask-sheet-examples button > i { font-style: normal; font-size: 12px; color: var(--muted); opacity: 0; }
+.ask-sheet-examples button:hover > i,
+.ask-sheet-examples button:focus-visible > i { opacity: 1; }
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .ask-sheet--overlay { min-width: 0; width: calc(100% + 60px); }
+}
+
+/*
+ * Telefón: plachta z hlavičky je celá obrazovka — „×" a nadpis hore, pole,
+ * veta a vzory v strede (rolujú), „Opýtať sa" dole na celú šírku, nad
+ * klávesnicou (`100dvh` sa s klávesnicou zmenší).
+ */
+@media (max-width: 639px) {
+  .ask-sheet--overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    width: auto;
+    min-width: 0;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .ask-sheet--overlay .ask-sheet-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    height: 56px;
+    padding: 0 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .ask-sheet--overlay .ask-sheet-head b { font-size: 16px; }
+  .ask-sheet-close {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .ask-sheet--overlay .ask-sheet-scroll { flex: 1; overflow: auto; }
+  .ask-sheet--overlay .ask-sheet-field { min-height: 110px; }
+  .ask-sheet--overlay .ask-sheet-bar-button { display: none; }
+  .ask-sheet--overlay .ask-sheet-hint { display: none; }
+  .ask-sheet-examples button { min-height: 48px; }
+  .ask-sheet--overlay .ask-sheet-foot {
+    display: flex;
+    flex: none;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+  }
+  .ask-sheet-foot .ask-sheet-submit { flex: 1; min-height: 48px; border-radius: 24px; }
+  /* Plachta je v hlavičke (`z-index` 10) a spodná lišta (25) by jej
+     zakryla tlačidlo dole. Kým je plachta otvorená, lišta tu nemá čo robiť. */
+  body:has(.ask-sheet--overlay) .app-nav-tabbar { display: none; }
+  .ask-sheet--inline .ask-sheet-bar { flex-wrap: wrap; }
+  .ask-sheet--inline .ask-sheet-bar-button { flex: 1 1 100%; display: flex; }
+  .ask-sheet--inline .ask-sheet-submit { flex: 1; min-height: 48px; border-radius: 24px; }
+}
+
+/* ── opýtať sa: obrazovka odpovede (ASK-otazka-z-hlavicky) ───────────────
+   `/ask` je obrazovka odpovede: nadpis je otázka, pod ňou odpoveď. Pole na
+   otázku je v hlavičke (`HeaderAsk`), tu už nie je. Stĺpec 760 px — je to
+   text na čítanie, nie tabuľka. */
+.ask-page { max-width: 760px; }
+
+.ask-asked { display: grid; gap: 6px; }
+.ask-asked-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 640;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.ask-asked-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  font-size: 13px;
+}
+/* „Upraviť otázku" je `<label>` poľa v hlavičke — vyzerá ako odkaz. */
+.ask-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.ask-edit:hover { color: var(--accent-strong); text-decoration: underline; }
+.ask-empty-lead { margin: 0 0 18px; max-width: 64ch; }
+
+@media (max-width: 639px) {
+  .ask-asked-title { font-size: 19px; }
+  .ask-edit { min-height: 44px; }
+}
+
+/* Chyba nad kartou odpovede (ASK, úloha 2). Inline hláška, nie `.notice`:
+   `.notice` je modálne okno s pozadím a otázka nad ním musí zostať
+   vidieť. Červená = chyba; jantárová je upozornenie. */
 .ask-error {
   padding: 12px 14px;
   border-radius: var(--radius);
@@ -3979,58 +4214,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   line-height: 1.5;
 }
 .ask-error a { color: inherit; font-weight: 600; }
-
-.ask-field {
-  width: 100%;
-  resize: vertical;
-  background: var(--bg);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px 14px;
-  /* 16 px, nie menej: pod 16 px iOS Safari pri fokuse priblíži celú stránku
-     a tlačidlo „Opýtať sa" skončí mimo obrazovky. */
-  font-size: 16px;
-  line-height: 1.6;
-  font-family: inherit;
-}
-
-.ask-field:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  border-color: var(--accent);
-}
-
-.ask-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-
-.ask-counter {
-  font-size: 12.5px;
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
-}
-
-.ask-examples-wrap { margin-top: 18px; }
-.ask-examples-label { font-size: 12.5px; margin-bottom: 8px; }
-.ask-examples { display: flex; flex-wrap: wrap; gap: 8px; }
-
-/* Príklad je pilulka, nie štítok. Štítok je stav (`publikované`), toto je
-   ponuka na kliknutie — a ten rozdiel musí byť vidieť skôr, než sa naň
-   ukáže myšou. Doteraz to bol `.tag` s dvomi inline štýlmi. */
-.ask-example {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.ask-example:hover { border-color: var(--accent); background: var(--accent-soft); }
-.ask-example:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* Hlavička karty odpovede. Značka a jedna veta, ktorá hovorí to podstatné:
    toto nie je odpoveď z internetu, ale z dokumentov organizácie. */
@@ -4123,12 +4306,10 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   .answer-source { min-height: 44px; align-items: center; }
 }
 
-/* Rámy (ASK): na telefóne odpoveď 16 px / 1.65 a bez príkladov otázok —
-   tri dlhé vety zaberú viac miesta než samotné pole, rovnako ako návrhy
-   na Prehľade. Tablet 834 sa od 1440 líši len šírkou obsahu. */
+/* Rámy (ASK): na telefóne odpoveď 16 px / 1.65. Tablet 834 sa od 1440
+   líši len šírkou obsahu. */
 @media (max-width: 639px) {
   .answer { font-size: 16px; line-height: 1.65; }
-  .ask-examples-wrap { display: none; }
 }
 
 /* ── nastavenie organizácie: ukážka farby a slot na logo ─────────────────
@@ -4688,7 +4869,8 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 /* ── Prehľad (docs/design/README.md, časť 2) ─────────────────────────────────
-   Tri pásy pod sebou: hero s otázkou, KPI dlaždice, dva panely.
+   Pod sebou: oslovenie, KPI dlaždice, dlaždice sekcií a panely „Pre vás“.
+   Pole otázky je len v hlavičke (ASK-otazka-z-hlavicky, Q3).
 
    Žiadne media queries. `auto-fit` s `minmax()` zabalí dlaždice aj panely sám,
    takže na telefóne je jeden stĺpec bez toho, aby o tom stylesheet vedel —
@@ -4700,73 +4882,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   gap: var(--gap);
 }
 
-.overview-hello {
-  margin: 0 0 3px;
-  font-size: 19px;
-  letter-spacing: -0.02em;
-}
-
-.overview-lede {
-  margin: 0 0 12px;
-  font-size: 13px;
-  text-wrap: pretty;
-}
-
-/*
- * Pole a tlačidlo v jednom riadku, na úzkom pod sebou.
- *
- * `flex: 1 1 220px`, nie 320 px z návrhu: pole si nesmie pýtať šírku, ktorú
- * na telefóne nedostane. Presne táto chyba (`flex: 1 1 240px; min-width: 160px`)
- * zalomila vyhľadávanie v hlavičke na 320 px — základ je želanie, nie nárok,
- * a `min-width: 0` je to, čo dovolí zmenšiť sa pod šírku obsahu.
- */
-.overview-ask {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.overview-ask-input {
-  flex: 1 1 220px;
-  min-width: 0;
-  border-radius: 9px;
-}
-
-.overview-ask .button { border-radius: 9px; }
-
-/* Návrh otázky je pilulka, nie štítok: štítok je stav („publikované"),
-   toto je ponuka, na ktorú sa dá kliknúť. */
-.overview-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.overview-suggestion {
-  /* Návrhy sú terčom na dotyk, nie ozdoba — preto majú výšku pilulky
-     z tej istej stupnice ako ostatné ovládacie prvky, nie 12 px text. */
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 4px 12px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  font-size: var(--fs-small);
-  line-height: 1.3;
-  color: var(--muted);
-}
-
-.overview-suggestion:hover { border-color: var(--accent); color: var(--accent); }
-
-/* Pod 640 px sa návrhy otázok neukazujú (PREHLAD, rámy): tri dlhé vety
-   zaberú na telefóne viac miesta než samotné pole. Kto sa chce spýtať,
-   klikne do poľa; návrhy sú pomôcka pre toho, kto nevie, čo systém vie —
-   a to sa zisťuje na väčšej obrazovke. */
-@media (max-width: 639px) {
-  .overview-suggestions { display: none; }
-}
+.overview-hello { margin: 0; }
 
 /* ── Prehľad: KPI pás ───────────────────────────────────────────────────────
    Každá dlaždica je odkaz na predfiltrovaný zoznam — číslo bez cesty k nemu

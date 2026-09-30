@@ -2,7 +2,7 @@
  * Kostra prehľadu (`/`).
  *
  * Prvá obrazovka po prihlásení — a zároveň tá, na ktorú sa chodí najčastejšie.
- * Tvar ide presne po stránke: uvítacia karta s poľom na otázku, pás štyroch
+ * Tvar ide presne po stránke: oslovenie, pás štyroch
  * dlaždíc, dlaždice sekcií a pod nimi dva panely. Pás cesty Prehľad nemá
  * (`path={false}`). Štyri dlaždice nie sú odhad, toľko ich je
  * v `tiles`; keby ich kostra mala tri, mriežka `.kpi` by po načítaní preskupila
@@ -16,18 +16,7 @@ export default function Loading() {
   return (
     <SkeletonShell path={false}>
       <div className="overview">
-        <div className="card overview-hero">
-          <Skeleton className="skeleton-title" />
-          <Skeleton className="skeleton-sub" />
-          <div className="overview-ask" style={{ marginTop: 16 }}>
-            <Skeleton height={40} />
-          </div>
-          <div className="overview-suggestions" style={{ marginTop: 12 }}>
-            {[112, 148, 96].map(w => (
-              <Skeleton key={w} height={28} width={w} />
-            ))}
-          </div>
-        </div>
+        <Skeleton className="skeleton-title" />
 
         <div className="kpi">
           {[0, 1, 2, 3].map(i => (

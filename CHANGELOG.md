@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Otázka z hlavičky a odpoveď hneď (2026-09-30)
+
+Otázka sa kladie na jednom mieste: v **poli v hlavičke** so značkou
+Continea. Po kliknutí alebo ⌘K sa pole rozšíri do plachty s miestom na
+dlhšiu otázku, vetou o tom, ako systém odpovedá, a vzormi otázok. Na
+telefóne sa otvorí na celú obrazovku. Po odoslaní sa na stránke **Opýtať
+sa** odpoveď začne skladať hneď, bez ďalšieho klikania. Otázka je nadpis
+stránky a dá sa upraviť. Z tejto stránky odišli „Nevybavené žiadosti"
+a úvod testovacieho rozhrania, z Prehľadu pole na otázku. Aplikácia má
+**ikonu v záložke** a záložka nesie názov stránky a organizácie
+(„Knižnica · Intranet SFZ").
+
 ### Bez odkazov „← Späť" nad nadpisom (2026-09-30)
 
 Hlbšie stránky (detail normy, pridelenie, osoba, kurz, test…) už nemajú

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ASK — jedno pole v hlavičke, plachta otázky, /ask s behom</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2311151c'/%3E%3Ccircle cx='16' cy='13.5' r='8' fill='none' stroke='%23fff' stroke-width='3.2'/%3E%3Ccircle cx='12.5' cy='13.5' r='1.9' fill='%23fff'/%3E%3Ccircle cx='19.5' cy='13.5' r='1.9' fill='%23fff'/%3E%3Cpath d='M11.5 20.2 L16 26.5 L19 19.7 Z' fill='%23fff'/%3E%3C/svg%3E" />
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.08);--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b42318;--ok-fg:#15803d;--radius:12px;--shadow:0 18px 48px rgba(20,28,42,.2)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:var(--accent-strong)}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:92ch}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:92ch;line-height:1.55}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.frame-label{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);margin:0 0 6px}
+.frames-small{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+/* hlavička */
+.hdr{position:relative;z-index:8;display:flex;align-items:center;gap:12px;height:56px;padding:0 20px 0 16px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.home{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);border-radius:8px;padding:4px 6px 4px 2px;flex:none}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700}
+.org{font-size:14px;font-weight:650;white-space:nowrap}
+.q-wrap{position:relative;flex:1;min-width:0;max-width:600px;margin-left:28px}
+.q-field{min-width:0}
+.q-field{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 12px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:14px;cursor:text;width:100%;text-align:left;font-family:inherit}
+.q-field:hover{border-color:rgba(20,28,42,.26);background:var(--surface)}
+.q-field .mk{color:var(--accent);flex:none;display:grid}
+.q-field .ph{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-field .ph.has{color:var(--ink)}
+.q-field kbd{font-family:inherit;font-size:11px;padding:1px 7px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.sp{flex:1}
+.bell{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:8px;color:var(--ink);flex:none}
+.bell b{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+/* plachta otázky — pole sa rozšíri na miesto */
+.scrim{position:absolute;inset:0;background:rgba(17,21,28,.22);z-index:7}
+.qs{position:absolute;top:-8px;left:-8px;width:calc(100% + 96px);min-width:680px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);z-index:9;overflow:hidden}
+.qs-top{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:14px 16px 8px 18px;align-items:start}
+.qs-top .mk{color:var(--accent);padding-top:3px}
+.qs textarea{width:100%;border:0;outline:0;resize:none;font:inherit;font-size:17px;line-height:1.5;color:var(--ink);background:transparent;min-height:78px;padding:0}
+.qs textarea::placeholder{color:var(--muted)}
+.qs-bar{display:flex;align-items:center;gap:12px;padding:6px 12px 12px 18px}
+.qs-bar .hint{font-size:12px;color:var(--muted);flex:1}
+.qs-bar .hint kbd{font-family:inherit;font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.qs-bar .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 18px;border-radius:20px;border:0;background:var(--accent);color:#fff;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--accent-strong)}
+.btn[disabled]{background:var(--surface-2);color:var(--muted);cursor:default}
+.btn-q{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;font-weight:550;cursor:pointer}
+.btn-q:hover{background:var(--surface-2)}
+.qs-info{border-top:1px solid var(--line);padding:14px 18px 6px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.qs-info svg{color:var(--muted);margin-top:2px}
+.qs-info b{color:var(--ink);font-weight:600}
+.qs-ex{padding:8px 8px 12px}
+.qs-ex h3{font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:6px 10px 4px}
+.qs-ex button{display:flex;align-items:center;gap:12px;width:100%;min-height:40px;padding:0 10px;border:0;border-radius:9px;background:transparent;font:inherit;font-size:14px;color:var(--ink);text-align:left;cursor:pointer}
+.qs-ex button:hover{background:var(--surface-2)}
+.qs-ex button svg{color:var(--muted);flex:none}
+.qs-ex button span{flex:1}
+.qs-ex button i{font-style:normal;font-size:12px;color:var(--muted);opacity:0}
+.qs-ex button:hover i{opacity:1}
+/* pás cesty */
+.path{flex:none;background:var(--surface);border-bottom:1px solid var(--line)}
+.path-in{margin:0 auto;padding:0 32px 0 26px;min-height:40px;display:flex;align-items:center;gap:8px;max-width:1180px}
+.dots{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:var(--ink)}
+.vsep{width:1px;height:18px;background:var(--line)}
+.path ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:13px}
+.path li{display:flex;align-items:center;gap:4px;color:var(--muted)}
+.path li+li::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-top:1.5px solid currentColor;transform:rotate(45deg);margin:0 6px 0 2px;opacity:.55}
+.path a{color:var(--muted);text-decoration:none;padding:3px 4px}
+.path [aria-current]{color:var(--ink);font-weight:600;padding:3px 4px}
+.body{flex:1;min-height:0;overflow:auto}
+.main{margin:0 auto;padding:28px 32px 40px;max-width:1180px}
+/* /ask */
+.ask-col{max-width:760px}
+.asked{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:start;margin:0 0 18px}
+.asked h1{font-size:24px;line-height:1.3;letter-spacing:-.015em;margin:0;font-weight:640;text-wrap:pretty}
+.asked .meta{grid-column:1;font-size:13px;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.ans{padding:18px 22px 20px}
+.ans-k{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:650;color:var(--muted);margin:0 0 12px}
+.ans-k .mk{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--accent);color:#fff}
+.ans p{font-size:15.5px;line-height:1.7;margin:0 0 12px;max-width:70ch;text-wrap:pretty}
+.ans p:last-child{margin-bottom:0}
+.ans sup{font-size:11px;font-weight:650;color:var(--accent);padding:0 2px}
+.phases{display:grid;gap:8px;margin:2px 0 0}
+.ph-row{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.ph-row.done{color:var(--muted)}
+.ph-row.on{color:var(--ink);font-weight:550}
+.ph-row .dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;flex:none}
+.ph-row.done .dot{border-color:var(--ok-fg);background:var(--ok-fg);color:#fff}
+.ph-row.on .dot{border-color:var(--accent);border-top-color:transparent;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.skel{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2),#f4f5f7,var(--surface-2));background-size:200% 100%;animation:sh 1.4s linear infinite;margin:10px 0 0}
+@keyframes sh{to{background-position:-200% 0}}
+.src-h{font-size:13px;font-weight:650;margin:22px 0 8px}
+.srcs{display:grid;gap:8px}
+.src{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.src:hover{border-color:rgba(20,28,42,.26);color:var(--ink)}
+.src .n{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;background:var(--surface-2);font-size:12px;font-weight:650;grid-row:span 2}
+.src b{font-size:14px;font-weight:600;line-height:1.35;text-wrap:pretty}
+.src small{font-size:12.5px;color:var(--muted);grid-column:2}
+.src svg{grid-row:span 2;color:var(--muted)}
+.rate{display:flex;align-items:center;gap:8px;margin:18px 0 0;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.none{border-style:dashed}
+.none b{display:block;font-size:15.5px;margin:0 0 4px}
+.none p{font-size:14px;color:var(--muted);margin:0 0 12px}
+.err{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;background:#fef3f2;border:1px solid rgba(180,35,24,.25);color:#7a271a;font-size:14px;margin:0 0 16px}
+.empty-ask{max-width:760px}
+.empty-ask h1{font-size:26px;letter-spacing:-.02em;margin:0 0 6px}
+.empty-ask .lead{font-size:15px;color:var(--muted);margin:0 0 18px;max-width:64ch}
+.inline-q{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+/* tabbar */
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);height:58px;background:var(--surface);border-top:1px solid var(--line);flex:none}
+.tabbar a{position:relative;display:grid;place-items:center;align-content:center;gap:2px;font-size:10.5px;color:var(--muted);text-decoration:none}
+.tabbar a.is-on{color:var(--accent);font-weight:650}
+.tabbar a.is-on::before{content:"";position:absolute;top:0;left:22%;right:22%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+.tabbar b{position:absolute;top:5px;left:calc(50% + 5px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:#fff;font-size:10px;display:grid;place-items:center}
+/* úzke */
+.n834 .main{padding:24px}
+.n834 .q-wrap{margin-left:16px}
+.n834 .qs{min-width:0;width:calc(100% + 60px)}
+.n390 .hdr{padding:0 10px;gap:8px}
+.n390 .q-wrap{margin-left:0}
+.n390 .q-field{height:38px;font-size:13.5px}
+.n390 .q-field kbd{display:none}
+.n390 .main{padding:16px 14px 24px}
+.n390 .asked h1{font-size:19px}
+.n390 .asked{grid-template-columns:1fr}
+.n390 .ans{padding:14px 16px}
+.n390 .ans p{font-size:16px;line-height:1.65}
+.n390 .src{min-height:44px}
+.n390 .path-in{padding:4px 10px 4px 4px}
+.full{position:absolute;inset:0;z-index:20;background:var(--surface);display:flex;flex-direction:column}
+.full-h{display:flex;align-items:center;gap:8px;height:56px;padding:0 6px;border-bottom:1px solid var(--line);flex:none}
+.full-h button{display:grid;place-items:center;width:44px;height:44px;border:0;background:transparent;border-radius:10px;color:var(--ink);cursor:pointer}
+.full-h b{font-size:16px}
+.full .qs-top{padding:14px 16px 6px}
+.full textarea{font-size:17px;min-height:110px}
+.full .scroll{flex:1;overflow:auto}
+.full .qs-ex button{min-height:48px}
+.full-foot{flex:none;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.full-foot .btn{flex:1;justify-content:center;min-height:48px;border-radius:24px}
+table.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
+table.spec tr:last-child td{border-bottom:0}
+.q{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#e0e7ff;color:#3730a3;vertical-align:1px}
+.fav{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.tab{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:9px 9px 0 0;background:var(--surface);border:1px solid var(--line);border-bottom:0;font-size:12.5px;min-width:260px}
+</style>
+</head>
+<body><div class="sheet">
+<h1 class="doc">ASK — jedno pole v hlavičke, plachta otázky, <code>/ask</code> s behom</h1>
+<p class="doc">Otázka sa kladie na <b>jednom mieste</b>: v poli v hlavičke, ako vo vyhľadávači Google. Pole má značku Continea. Po kliknutí (alebo <code>⌘K</code>) sa pole na mieste <b>zväčší do plachty</b>: viacriadkové pole na dlhšiu otázku, jedna veta o tom, ako systém odpovedá, a vzory otázok. Po odoslaní ide <code>GET /ask?q=…</code> a <b>odpoveď sa začne skladať hneď</b>, bez ďalšieho klikania. Na <code>/ask</code> už nie sú bloky „Nevybavené žiadosti" ani „Vyskúšajte, ako systém odpovedá".</p>
+<p class="doc">Rámy sú živé: kliknite do poľa, vyberte vzor alebo napíšte otázku a odošlite. Popis v <code>ASK-otazka-z-hlavicky.md</code>. Hlavička a pás cesty podľa <code>SHELL-rozcestnik</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — pole v hlavičke v pokoji a otvorená plachta</p>
+  <p class="sec-w">Pole je široké až 600 px, s oblými rohmi a značkou Continea namiesto bubliny. Plachta sa otvorí na mieste poľa, nie v strede obrazovky, a je o niečo širšia ako pole. Závoj 22 %; Esc alebo klik mimo ju zavrie a text v poli ostane.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">1440 — Prehľad, pole v pokoji</p><div class="frame" style="width:1440px;height:250px" data-frame="rest"></div></div>
+    <div><p class="frame-label">1440 — plachta otvorená (prázdna)</p><div class="frame" style="width:1440px;height:560px" data-frame="open"></div></div>
+    <div><p class="frame-label">1440 — dlhá otázka</p><div class="frame" style="width:1440px;height:420px" data-frame="long"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — /ask po odoslaní</p>
+  <p class="sec-w">Otázka je nadpis stránky, pod ňou „Upraviť otázku" (otvorí plachtu s touto otázkou). Odpoveď hneď beží: fázy z <code>ask.phases</code>, potom text s odkazmi na zdroje <code>[1]</code> a zdroje pod ním. Keď sa v dokumentoch nič nenájde, kreslí sa prerušovaná karta (ASK úloha 1). Pri chybe je hláška nad kartou a otázka ostáva.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">1440 — beží (Hľadám v predpisoch…)</p><div class="frame" style="width:1440px;height:470px" data-frame="run"></div></div>
+    <div><p class="frame-label">1440 — odpoveď</p><div class="frame" style="width:1440px;height:820px" data-frame="done"></div></div>
+    <div><p class="frame-label">1440 — nič sa nenašlo</p><div class="frame" style="width:1440px;height:400px" data-frame="none"></div></div>
+    <div><p class="frame-label">1440 — /ask bez ?q= (napríklad z odkazu v tabbare)</p><div class="frame" style="width:1440px;height:620px" data-frame="empty"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 a 390</p>
+  <p class="sec-w">834: rovnako ako desktop, plachta má šírku poľa + 60 px. 390: po ťuknutí do poľa sa otvorí <b>celá obrazovka</b> so zavieracím tlačidlom, poľom (kurzor v ňom, klávesnica hore), vetou a vzormi; „Opýtať sa" je dole vo výške 48 px, nad klávesnicou.</p>
+  <div class="frames-small">
+    <div><p class="frame-label">834 — plachta</p><div class="frame" style="width:834px;height:600px" data-frame="t-open"></div></div>
+    <div><p class="frame-label">390 — celá obrazovka</p><div class="frame" style="width:390px;height:760px" data-frame="m-open"></div></div>
+    <div><p class="frame-label">390 — odpoveď</p><div class="frame" style="width:390px;height:760px" data-frame="m-done"></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Favicon — Contineo na každej doméne</p>
+  <p class="sec-w">Dnes je v <code>app/src/app/</code> len <code>layout.tsx</code>: chýbajú <code>icon.svg</code>, <code>favicon.ico</code> a <code>apple-icon.png</code>. <code>proxy.ts</code> ich pritom vynecháva z presmerovania, takže ich očakáva. <code>web/</code> ich má (TODO 22. 9.), aplikácia nie. Oprava: skopírovať tie isté tri súbory z <code>web/app/</code>. Rovnaká ikona platí pre <code>intranet.futbalsfz.sk</code> aj <code>app.contineo.app</code>.</p>
+  <div class="fav">
+    <div class="tab"><svg width="16" height="16" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#11151c"/><circle cx="16" cy="13.5" r="8" fill="none" stroke="#fff" stroke-width="3.2"/><circle cx="12.5" cy="13.5" r="1.9" fill="#fff"/><circle cx="19.5" cy="13.5" r="1.9" fill="#fff"/><path d="M11.5 20.2 L16 26.5 L19 19.7 Z" fill="#fff"/></svg><span>Opýtať sa · Intranet SFZ</span></div>
+    <div class="tab"><svg width="16" height="16" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#11151c"/><circle cx="16" cy="13.5" r="8" fill="none" stroke="#fff" stroke-width="3.2"/><circle cx="12.5" cy="13.5" r="1.9" fill="#fff"/><circle cx="19.5" cy="13.5" r="1.9" fill="#fff"/><path d="M11.5 20.2 L16 26.5 L19 19.7 Z" fill="#fff"/></svg><span>Prehľad · Contineo</span></div>
+    <svg width="48" height="48" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#11151c"/><circle cx="16" cy="13.5" r="8" fill="none" stroke="#fff" stroke-width="3.2"/><circle cx="12.5" cy="13.5" r="1.9" fill="#fff"/><circle cx="19.5" cy="13.5" r="1.9" fill="#fff"/><path d="M11.5 20.2 L16 26.5 L19 19.7 Z" fill="#fff"/></svg>
+    <span style="font-size:12.5px;color:var(--muted)">16 px v záložke · 48 px (<code>favicon.ico</code> 16/32/48) · <code>web/app/icon.svg</code>, nič nové sa nekreslí</span>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Správanie</p>
+  <table class="spec">
+    <tr><th>Čo</th><th>Ako</th></tr>
+    <tr><td>Pole v hlavičke</td><td>Jediné miesto na otázku. Výška 40, radius 20, max. 600 px, vľavo <code>ContineoMark</code> 18 px (<code>--accent</code>), placeholder <code>nav.searchPlaceholder</code>, vpravo <code>⌘K</code> / <code>Ctrl K</code>. Na <code>/ask</code> je v poli položená otázka. <span class="q">Q1</span></td></tr>
+    <tr><td>Plachta</td><td>Klik, fokus alebo <code>⌘K</code> otvorí plachtu na mieste poľa (top −8, left −8, šírka poľa + 96, min. 680). Obsah: <code>&lt;textarea name="q" maxlength="1000"&gt;</code> 17 px, rastie do 6 riadkov → lišta (Enter odošle · Shift+Enter nový riadok · počítadlo od 800 znakov · „Opýtať sa") → veta <code>ask.sheet.info</code> → vzory <code>ask.examples</code> (klik vloží otázku do poľa, neodošle). Vzory sa skryjú, keď pole nie je prázdne. Esc / klik mimo zavrie, text ostane. <code>role="dialog"</code>, fokus do poľa a späť.</td></tr>
+    <tr><td>Bez JS</td><td>Plachta sa neotvorí; pole je obyčajný <code>&lt;form method="get" action="/ask"&gt;</code> s <code>&lt;input name="q"&gt;</code> ako dnes.</td></tr>
+    <tr><td>/ask?q=</td><td><b>Beh sa spustí hneď po načítaní</b> (<code>Search</code> dostane <code>autoRun</code>, spustí <code>send(preset)</code> raz v efekte). Nadpis = otázka, „Upraviť otázku" otvorí plachtu s ňou. Odpoveď, fázy, zdroje, hodnotenie ako dnes (<code>Answer.tsx</code>, <code>Rating.tsx</code>). Nová otázka z hlavičky = nová adresa = nový beh.</td></tr>
+    <tr><td>/ask bez q</td><td>Nadpis „Opýtať sa", veta <code>ask.sheet.info</code> a tá istá plachta vložená do stránky (otvorená, bez závoja). Tabbar „Opýtať sa" na telefóne vedie sem.</td></tr>
+    <tr><td>Odstraňuje sa</td><td>Na <code>/ask</code>: <code>PendingWidget</code> („Nevybavené žiadosti"), nadpis a úvod <code>home.heading</code> / <code>home.intro</code> („Vyskúšajte, ako systém odpovedá"), <code>.ask-hero</code> s vlastným poľom a príkladmi. <span class="q">Q2</span></td></tr>
+    <tr><td>390</td><td>Ťuknutie do poľa otvorí celú obrazovku (<code>position: fixed</code>, <code>100dvh</code>): hlavička „×" · „Opýtať sa", pole, veta, vzory 48 px, dole „Opýtať sa" 48 px nad klávesnicou.</td></tr>
+    <tr><td>Favicon</td><td>Skopírovať <code>web/app/icon.svg</code>, <code>favicon.ico</code>, <code>apple-icon.png</code> do <code>app/src/app/</code>. Next ich pripojí sám; <code>proxy.ts</code> ich už prepúšťa.</td></tr>
+  </table>
+</div>
+</div>
+
+<script>
+const MARK=s=>`<svg width="${s}" height="${s}" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"/><circle cx="17.5" cy="20" r="3.4" fill="currentColor"/><circle cx="30.5" cy="20" r="3.4" fill="currentColor"/><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"/></svg>`;
+const I={
+bell:'<path d="M9 2.4v1.1"/><path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z"/><path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0"/>',
+info:'<circle cx="9" cy="9" r="6.6"/><path d="M9 8.2v4M9 5.7v.1"/>',
+arrow:'<path d="M4 9h10m0 0-3.6-3.6M14 9l-3.6 3.6"/>',
+up:'<path d="M9 14V4m0 0L5 8m4-4 4 4"/>',
+x:'<path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/>',
+ext:'<path d="M7 3.5H4a1 1 0 0 0-1 1V14a1 1 0 0 0 1 1h9.5a1 1 0 0 0 1-1v-3"/><path d="M10.5 3H15v4.5M15 3 8.5 9.5"/>',
+edit:'<path d="M11.8 3.2 14.8 6.2 6.5 14.5H3.5v-3z"/>',
+ask:'<path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/>',
+overview:'<rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/>',
+learning:'<path d="M1.6 7 9 3.4 16.4 7 9 10.6z"/><path d="M4.6 8.5v3.6c1.2 1.3 2.7 2 4.4 2s3.2-.7 4.4-2V8.5"/><path d="M16.4 7v4.2"/>',
+tasks:'<rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/>',
+more:'<circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="14.6" cy="9" r="1.5" fill="currentColor" stroke="none"/>',
+grid:'<g fill="currentColor" stroke="none"><circle cx="4" cy="4" r="1.5"/><circle cx="9" cy="4" r="1.5"/><circle cx="14" cy="4" r="1.5"/><circle cx="4" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><circle cx="4" cy="14" r="1.5"/><circle cx="9" cy="14" r="1.5"/><circle cx="14" cy="14" r="1.5"/></g>'
+};
+const svg=(k,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="${(1.5*18/s).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+const EX=["Aká je lehota na podanie námietky?","Za akých podmienok môže prestúpiť maloletý hráč?","Kedy sa platí odstupné za hráča?","Koľko žltých kariet znamená zastavenie činnosti?"];
+const LONG="Hráč U17 má platnú registráciu v klube A, ale od januára býva s rodičmi v inom kraji a chce hrať za klub B. Klub A nesúhlasí. Za akých podmienok môže prestúpiť bez súhlasu materského klubu a aké doklady treba priložiť?";
+const INFO=`<b>Odpoveď sa skladá len z dokumentov Slovenského futbalového zväzu.</b> Pri každom tvrdení je odkaz na zdroj. Ak to v dokumentoch nie je, systém to povie a nič si nevymyslí.`;
+const PH=["Čítam otázku…","Hľadám v predpisoch…","Zoraďujem nájdené…","Skladám odpoveď…"];
+
+function sheetInner(S,{inline,full}){
+  const n=S.text.length;
+  const top=`<div class="qs-top"><span class="mk">${MARK(20)}</span><textarea name="q" rows="3" maxlength="1000" placeholder="Opýtajte sa svojich dokumentov…" data-ta>${S.text}</textarea></div>`;
+  const bar=full?"":`<div class="qs-bar"><span class="hint"><kbd>Enter</kbd> odošle · <kbd>Shift</kbd>+<kbd>Enter</kbd> nový riadok${inline?"":" · <kbd>Esc</kbd> zavrie"}</span>${n>=800?`<span class="cnt">${n}/1000</span>`:""}<button type="button" class="btn" data-send${n?"":" disabled"}>Opýtať sa ${svg("arrow",15)}</button></div>`;
+  const info=`<div class="qs-info">${svg("info",15)}<span>${INFO}</span></div>`;
+  const ex=n?"":`<div class="qs-ex"><h3>Napríklad</h3>${EX.map(e=>`<button type="button" data-ex="${e}">${svg("ask",15)}<span>${e}</span><i>vložiť</i></button>`).join("")}</div>`;
+  return top+bar+info+ex;
+}
+function header(S,mode){
+  const n=mode==="390";
+  const txt=S.page==="ask"&&S.asked?S.asked:"";
+  const field=`<div class="q-wrap"><button type="button" class="q-field" data-open aria-haspopup="dialog"><span class="mk">${MARK(18)}</span><span class="ph${txt?" has":""}">${txt||(n?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…")}</span><kbd>⌘K</kbd></button>${S.open&&!n?`<div class="qs" role="dialog" aria-label="Opýtať sa">${sheetInner(S,{})}</div>`:""}</div>`;
+  return `<div class="hdr"><a href="#" class="home" data-home><span class="logo">SFZ</span>${n?"":'<span class="org">Slovenský futbalový zväz</span>'}</a>${field}${n?"":'<span class="sp"></span>'}<span class="bell">${svg("bell",18)}<b>4</b></span><span class="av">JL</span></div>`;
+}
+function path(S){
+  if(S.page!=="ask") return "";
+  return `<nav class="path"><div class="path-in"><span class="dots">${svg("grid",18)}</span><span class="vsep"></span><ol><li><a href="#" data-home>Prehľad</a></li><li><span aria-current="page">Opýtať sa</span></li></ol></div></nav>`;
+}
+function home(){
+  return `<div class="main"><h1 style="font-size:28px;letter-spacing:-.02em;margin:0 0 4px;line-height:1.2">Dobrý deň, Ján</h1><p style="font-size:15px;color:var(--muted);margin:0">Traja ľudia od vás niečo čakajú.</p></div>`;
+}
+function answer(S){
+  const q=S.asked;
+  const head=`<div class="asked"><h1>${q}</h1><button type="button" class="btn-q" data-edit style="gap:6px">${svg("edit",14)}&nbsp;Upraviť otázku</button><div class="meta">Opýtali ste sa o 10:42</div></div>`;
+  if(S.state==="none") return `<div class="main"><div class="ask-col">${head}<div class="card ans none"><b>V dokumentoch organizácie sa k tomu nič nenašlo</b><p>Skúste otázku inak, alebo hľadajte v knižnici — nie všetko je v predpisoch.</p><a href="#" class="btn-q" style="text-decoration:none">Hľadať „${q.slice(0,28)}…" v knižnici</a></div></div></div>`;
+  if(S.state==="run"){
+    const i=S.phase??1;
+    return `<div class="main"><div class="ask-col">${head}<div class="card ans"><div class="ans-k"><span class="mk">${MARK(15)}</span>Odpoveď z dokumentov SFZ</div><div class="phases">${PH.map((p,j)=>`<div class="ph-row ${j<i?"done":j===i?"on":""}"><span class="dot">${j<i?'<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#fff" stroke-width="1.8"><path d="M2 5.2 4 7.2 8 3"/></svg>':""}</span>${p}</div>`).join("")}</div><div class="skel" style="width:92%"></div><div class="skel" style="width:78%"></div></div></div></div>`;
+  }
+  return `<div class="main"><div class="ask-col">${head}<div class="card ans"><div class="ans-k"><span class="mk">${MARK(15)}</span>Odpoveď z dokumentov SFZ</div>
+<p>Maloletý hráč môže prestúpiť bez súhlasu materského klubu, ak sa jeho zákonní zástupcovia preukázateľne presťahovali do miesta vzdialeného viac ako 50 km od sídla klubu<sup>[1]</sup>. Žiadosť sa podáva cez ISSF v registračnom období alebo mimo neho ako výnimka<sup>[1]</sup>.</p>
+<p>K žiadosti treba priložiť potvrdenie o trvalom alebo prechodnom pobyte zákonných zástupcov a súhlas zákonného zástupcu s prestupom<sup>[2]</sup>. Materský klub má nárok na odstupné podľa tabuľky výchovného, ak hráč v klube pôsobil aspoň 12 mesiacov<sup>[3]</sup>.</p></div>
+<p class="src-h">Zdroje</p><div class="srcs">${[["Registračný a prestupový poriadok SFZ","čl. 18 ods. 2 · znenie účinné od 1. 7. 2026"],["Registračný a prestupový poriadok SFZ","príloha 3 — Doklady k prestupu maloletého"],["Smernica o odstupnom a výchovnom","čl. 6 · znenie 2026/1"]].map(([t,m],i)=>`<a href="#" class="src"><span class="n">${i+1}</span><b>${t}</b>${svg("ext",15)}<small>${m}</small></a>`).join("")}</div>
+<div class="rate">Sedí odpoveď? <button class="btn-q" type="button">Sedí</button><button class="btn-q" type="button">Nesedí</button></div></div></div>`;
+}
+function emptyAsk(S){
+  return `<div class="main"><div class="empty-ask"><h1>Opýtať sa</h1><p class="lead">Napíšte otázku vlastnými slovami, tak ako by ste sa pýtali kolegu.</p><div class="inline-q">${sheetInner(S,{inline:true})}</div></div></div>`;
+}
+function tabbar(S){
+  return `<nav class="tabbar">${[["overview","Prehľad"],["ask","Opýtať sa"],["learning","Vzdelávanie"],["tasks","Úlohy",4],["more","Viac"]].map(([k,l,c])=>`<a href="#"${(S.page==="ask"&&k==="ask")||(S.page==="home"&&k==="overview")?' class="is-on"':""}>${svg(k,21)}${c?`<b>${c}</b>`:""}${l}</a>`).join("")}</nav>`;
+}
+function full(S){
+  const n=S.text.length;
+  return `<div class="full" role="dialog" aria-label="Opýtať sa"><div class="full-h"><button type="button" data-close aria-label="Zavrieť">${svg("x",20)}</button><b>Opýtať sa</b></div><div class="scroll">${sheetInner(S,{full:true})}</div><div class="full-foot"><button type="button" class="btn" data-send${n?"":" disabled"}>Opýtať sa ${svg("arrow",15)}</button></div></div>`;
+}
+
+function Frame(host,init,mode){
+  const S=Object.assign({page:"home",open:false,text:"",asked:"",state:"done",phase:1},init);
+  let timers=[];
+  function run(){
+    timers.forEach(clearTimeout);timers=[];
+    S.page="ask";S.state="run";S.phase=0;S.open=false;render();
+    [1,2,3].forEach(i=>timers.push(setTimeout(()=>{S.phase=i;render()},700*i)));
+    timers.push(setTimeout(()=>{S.state=/námietk|zzz/i.test(S.asked)?"none":"done";render()},2900));
+  }
+  function render(){
+    host.className="frame"+(mode==="834"?" n834":mode==="390"?" n390":"");
+    const body=S.page==="home"?home():S.asked?answer(S):emptyAsk(S);
+    host.innerHTML=header(S,mode)+path(S)+(S.open&&mode!=="390"?'<div class="scrim" data-close></div>':"")+`<div class="body">${body}</div>`+(mode==="390"?tabbar(S):"")+(S.open&&mode==="390"?full(S):"");
+    const ta=host.querySelector("[data-ta]");
+    if(ta){ta.oninput=()=>{const had=!!S.text;S.text=ta.value;if(had!==!!S.text){render();const t=host.querySelector("[data-ta]");t.focus();t.setSelectionRange(t.value.length,t.value.length)}else{const c=host.querySelector(".cnt");const b=host.querySelector("[data-send]");if(b)b.disabled=!S.text}};
+      ta.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();if(S.text.trim()){S.asked=S.text.trim();run()}}if(e.key==="Escape"){S.open=false;render()}};
+      ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,6*26)+"px";}
+    host.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{S.open=true;if(S.page==="ask"&&S.asked)S.text=S.asked;render();const t=host.querySelector("[data-ta]");if(t&&S.focus!==false)t.focus()});
+    host.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{S.open=true;S.text=S.asked;render();host.querySelector("[data-ta]")?.focus()});
+    host.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{S.open=false;render()});
+    host.querySelectorAll("[data-home]").forEach(b=>b.onclick=e=>{e.preventDefault();timers.forEach(clearTimeout);S.page="home";S.open=false;S.text="";S.asked="";render()});
+    host.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{S.text=b.dataset.ex;render();const t=host.querySelector("[data-ta]");t.focus();t.setSelectionRange(t.value.length,t.value.length)});
+    host.querySelectorAll("[data-send]").forEach(b=>b.onclick=()=>{if(S.text.trim()){S.asked=S.text.trim();run()}});
+  }
+  render();
+}
+const $=s=>document.querySelector(`[data-frame="${s}"]`);
+const Q="Za akých podmienok môže prestúpiť maloletý hráč bez súhlasu materského klubu?";
+Frame($("rest"),{});
+Frame($("open"),{open:true});
+Frame($("long"),{open:true,text:LONG});
+Frame($("run"),{page:"ask",asked:Q,state:"run",phase:1});
+Frame($("done"),{page:"ask",asked:Q,state:"done"});
+Frame($("none"),{page:"ask",asked:"Aký je dress code na valnom zhromaždení?",state:"none"});
+Frame($("empty"),{page:"ask"});
+Frame($("t-open"),{open:true},"834");
+Frame($("m-open"),{open:true},"390");
+Frame($("m-done"),{page:"ask",asked:Q,state:"done"},"390");
+</script>
+</body></html>

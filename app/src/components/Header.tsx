@@ -10,10 +10,11 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { ContineoMark } from "./ContineoMark"
 import Icon, { iconProps } from "./Icon"
+import HeaderAsk from "./HeaderAsk"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -136,8 +137,10 @@ export default function Header({
   const [kbdHint, setKbdHint] = useState("⌘K")
   const [personalOpen, setPersonalOpen] = useState(false)
   const personalWrap = useRef<HTMLDivElement>(null)
-  const search = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  /** Otázka položená na `/ask` — pole v hlavičke ju nesie. Inde prázdne. */
+  const askedHere = pathname === "/ask" ? (searchParams.get("q") ?? "") : ""
 
   const shade = avatarShade(email ?? "")
 
@@ -217,26 +220,6 @@ export default function Header({
     media.addEventListener("change", apply)
     return () => media.removeEventListener("change", apply)
   }, [choice])
-
-  /*
-   * `⌘K` / `Ctrl+K` postaví kurzor do globálneho poľa.
-   *
-   * Je to **zrýchlenie, nie cesta**: pole je bežný formulár a bez skriptu sa
-   * do neho dá kliknúť aj dostať tabulátorom. Preto sa skratka pridáva tu
-   * a nie je nikde napísané, že bez nej sa hľadať nedá — v placeholderi je
-   * uvedená len ako nápoveda pre toho, kto klávesnicu používa.
-   */
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "k" || !(e.metaKey || e.ctrlKey)) return
-      if (!search.current) return
-      e.preventDefault()
-      search.current.focus()
-      search.current.select()
-    }
-    document.addEventListener("keydown", onKey)
-    return () => document.removeEventListener("keydown", onKey)
-  }, [])
 
   function toggle() {
     const next = NEXT_THEME[choice]
@@ -325,48 +308,20 @@ export default function Header({
         </Link>
 
         {/*
-          Globálne pole je **otázka, nie filter zoznamu.**
-
-          Preto míri na obrazovku „Opýtať sa" (`/`) a nie na `?search=`
-          v knižnici: „Do kedy treba nahlásiť prestup?" nie je názov dokumentu
-          a fulltext nad názvami na ňu odpovedať nevie. Odovzdáva sa cez `?q=`,
-          ktoré si domovská stránka prečíta a predvyplní ním pole odpovede.
-
-          Je to obyčajný `<form method="get">`, takže **funguje bez
-          JavaScriptu** — odošle sa Enterom aj tlačidlom. `⌘K` je len
-          zrýchlenie navrch.
+          Globálne pole je **otázka, nie filter zoznamu** a jediné miesto,
+          kde sa otázka kladie (ASK-otazka-z-hlavicky). Míri na `/ask?q=`,
+          kde sa beh spustí hneď. Bez skriptu obyčajný `GET` formulár, so
+          skriptom plachta na mieste poľa — `HeaderAsk`. Na `/ask` nesie
+          položenú otázku; `key` ho pri novej otázke založí nanovo.
         */}
         {email && (
-          <form className="header-search" method="get" action="/ask" role="search">
-            <span className="header-search-icon" aria-hidden="true">
-              {/*
-                Bublina `ask`, nie lupa a nie značka (`ZAKLAD.md`, odchýlka B).
-                Toto pole ide na model, takže lupa by sľubovala filter zoznamu.
-                Značka tu stála do 22. 9. 2026 — lenže pri 16 px z nej vyjde
-                krúžok s rúčkou, teda presne tá lupa, ktorej sme sa vyhýbali.
-                Tá istá bublina je pri „Opýtať sa" v navigácii; jeden tvar pre
-                jednu vec.
-              */}
-              <Icon name="ask" size={16} />
-            </span>
-            <input
-              ref={search}
-              type="search"
-              name="q"
-              className="header-search-input"
-              placeholder={t.nav.searchPlaceholder}
-              aria-label={t.nav.searchLabel}
-              autoComplete="off"
-            />
-            {/* Bez skriptu musí byť čím odoslať. Vidieť ho netreba — Enter
-                v poli robí to isté a tlačidlo by v 32 px lište len tlačilo. */}
-            <button type="submit" className="header-search-submit">
-              {t.nav.searchSubmit}
-            </button>
-            {/* Nápoveda skratky. Ozdoba pre oko s klávesnicou — čítačke ju
-                netreba čítať a pod 640 px sa skrýva, dotyk skratky nemá. */}
-            <kbd className="header-search-kbd" aria-hidden="true">{kbdHint}</kbd>
-          </form>
+          <HeaderAsk
+            key={askedHere}
+            initial={askedHere}
+            organisation={branding?.displayName ?? "Contineo"}
+            kbdHint={kbdHint}
+            language={language}
+          />
         )}
 
         {/* Menu je pre prihlásených. Neprihlásený vidí značku a prepínač

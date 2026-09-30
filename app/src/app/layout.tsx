@@ -17,6 +17,9 @@ import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
 import { platformContext } from "@/lib/admin"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
+import { headers } from "next/headers"
+import { PATHNAME_HEADER } from "@/lib/appNav"
+import { pageTitle } from "@/lib/pageTitle"
 import { tenantStyle } from "@/components/TenantHeader"
 import { normalizeLanguage, dictionary, type UiLanguage } from "@/lib/i18n"
 import { unreadCount } from "@/lib/notifications"
@@ -59,21 +62,29 @@ export const viewport: Viewport = {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = dictionary(undefined)
+  let organisation: string | undefined
   try {
-    if (!(await currentTenant())) {
+    const tenant = await currentTenant()
+    if (!tenant) {
       return {
-        title: dictionary(undefined).notFound.heading,
+        title: t.notFound.heading,
         robots: { index: false, follow: false },
       }
     }
+    organisation = brandingView(tenant).displayName
   } catch {
     // ticho — vysvetlenie je nižšie v `RootLayout`, kde sa to aj zaloguje
   }
-  // Metadáta sa skladajú skôr, než je jasné, kto sa pozerá — jazyk osoby tu
-  // ešte nepoznáme, takže sa berie predvolený.
-  const t = dictionary(undefined)
+  /*
+   * „{stránka} · {organizácia}" (ASK-otazka-z-hlavicky, Q4) — adresa prichádza
+   * z `proxy.ts` rovnako ako pre cestu pod hlavičkou. Metadáta sa skladajú
+   * skôr, než je jasné, kto sa pozerá — jazyk osoby tu ešte nepoznáme, takže
+   * sa berie predvolený.
+   */
+  const pathname = (await headers()).get(PATHNAME_HEADER)
   return {
-    title: t.home.metaTitle,
+    title: organisation ? pageTitle(pathname, organisation, t) : t.home.metaTitle,
     description: t.home.metaDescription,
     robots: { index: false, follow: false },
   }
