@@ -6008,12 +6008,12 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 
 
-/* ── PDF znenia (ADR-011, `PdfView`) ─────────────────────────────────────────
-   Mobile first: na telefóne len odkaz — vložené PDF sa tam zobrazí prvou
-   stranou alebo vôbec a vyzeralo by to, že dokument má jednu stranu. Od 640 px
-   je PDF vložené na výšku okna. */
-.pdf-view { display: grid; gap: 10px; }
-.pdf-view-frame { display: none; }
+/* ── PDF znenia (ADR-011, `PdfView`, `PdfPages`) ─────────────────────────────
+   Všetky strany pod sebou na šírku stĺpca — na telefóne aj na počítači
+   rovnako (rozhodnutie 30. 9. 2026). Žiadny vnútorný posuvník: na telefóne
+   by sa bil s posúvaním celej stránky. Strana drží miesto cez `aspect-ratio`
+   (nastavuje komponent podľa rozmeru strany), kým sa nevykreslí. */
+.pdf-view { display: grid; gap: 10px; min-width: 0; }
 .pdf-view-link {
   display: flex;
   flex-wrap: wrap;
@@ -6022,21 +6022,22 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   margin: 0;
   font-size: var(--fs-small);
 }
-
-@media (min-width: 640px) {
-  .pdf-view-frame {
-    display: block;
-    width: 100%;
-    height: 80vh;
-    min-height: 480px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--surface-2);
-  }
+.pdf-pages { display: grid; gap: 12px; min-width: 0; }
+.pdf-pages-status { margin: 0; font-size: var(--fs-small); }
+.pdf-page {
+  width: 100%;
+  /* Okraj tieňom, nie `border`: rámik by ubral 2 px z šírky, plátno by sa
+     zmenšovalo o zlomok a písmo by bolo mäkšie. */
+  border-radius: 4px;
+  overflow: hidden;
+  /* Papier je biely aj v tmavom režime — tak vyzerá originál. */
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line), 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+.pdf-page-canvas { display: block; width: 100%; height: 100%; }
 
-/* PDF na telefóne ako dlaždica (ZNENIE-kontakt-a-privacy, bod 5). Od 640 px
-   sa skryje a ostáva vložené PDF s tlačidlom a riadkom. */
+/* Odkaz na PDF na telefóne ako dlaždica (ZNENIE-kontakt-a-privacy, bod 5).
+   Od 640 px sa skryje a ostáva tlačidlo s riadkom. */
 .pdf-tile {
   display: flex; align-items: center; gap: 12px; min-height: 56px;
   padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;

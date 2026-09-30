@@ -1,14 +1,22 @@
 /**
- * PDF vložené do stránky — to, čo sa schvaľuje a potvrdzuje (ADR-011, D94).
+ * PDF znenia priamo na stránke — to, čo sa schvaľuje a potvrdzuje (ADR-011, D94).
  *
- * `<object>`, nie vlastný prehliadač: PDF vykreslí prehliadač sám, verne,
- * aj s prílohami a formulármi, a nič netreba doťahovať. Rovnaký prvok už
- * používa editor textu vedľa Markdownu.
+ * **Všetky strany pod sebou, na telefóne aj na počítači** (rozhodnutie Jána
+ * 30. 9. 2026). Zamestnanec potvrdzuje, že sa s textom oboznámil, takže ho
+ * musí vedieť prečítať celý tam, kde potvrdzuje — aj na telefóne.
  *
- * **Mobile first:** na telefóne je len odkaz. Vložené PDF sa tam zobrazí
- * prvou stranou alebo vôbec (iOS Safari) a človek by si myslel, že dokument
- * má jednu stranu. Od 640 px je PDF vložené a odkaz zostáva pre celú obrazovku.
+ * Dovtedy tu bol `<object type="application/pdf">` od 640 px a na telefóne
+ * len odkaz. Vložené PDF iOS Safari zobrazí len prvou stranou (alebo vôbec)
+ * a človek by si myslel, že dokument má jednu stranu; Chrome na Androide ho
+ * nezobrazí vôbec. Strany preto kreslí pdf.js do plátien (`PdfPages`) —
+ * rovnako v každom prehliadači.
+ *
+ * Odkaz „Otvoriť PDF" zostáva **vždy** a nad stranami: na celú obrazovku,
+ * na stiahnutie, a bez JavaScriptu alebo pri chybe pdf.js je jediná cesta
+ * k textu. Pod 640 px ako dlaždica na palec, od 640 px ako tlačidlo.
  */
+
+import PdfPages, { type PdfPagesLabels } from "./PdfPages"
 
 export default function PdfView({
   href,
@@ -19,17 +27,13 @@ export default function PdfView({
   href: string
   name: string
   bytes: number
-  labels: { open: string }
+  labels: { open: string } & PdfPagesLabels
 }) {
   const size = bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} kB`
   return (
     <div className="pdf-view">
-      <object className="pdf-view-frame" data={href} type="application/pdf" aria-label={name}>
-        {/* Prehliadač bez vstavaného PDF zobrazí toto. */}
-        <a href={href} target="_blank" rel="noreferrer">{labels.open}</a>
-      </object>
       {/* Pod 640 px dlaždica na palec (ZNENIE-kontakt-a-privacy, bod 5);
-          od 640 px tlačidlo a riadok pod vloženým PDF ako doteraz. */}
+          od 640 px tlačidlo a riadok s názvom súboru. */}
       <a className="pdf-tile" href={href} target="_blank" rel="noreferrer">
         <span className="pdf-tile-ico" aria-hidden="true">PDF</span>
         <span className="pdf-tile-main">
@@ -42,6 +46,7 @@ export default function PdfView({
         <a className="button button--quiet" href={href} target="_blank" rel="noreferrer">{labels.open}</a>
         <span className="quiet">{name} · {size}</span>
       </p>
+      <PdfPages href={href} labels={{ loading: labels.loading, failed: labels.failed, page: labels.page }} />
     </div>
   )
 }

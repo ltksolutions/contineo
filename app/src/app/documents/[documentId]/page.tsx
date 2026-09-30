@@ -310,7 +310,7 @@ export default async function DocumentPage({
                 href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(version.version.versionId)}`}
                 name={version.version.pdf.name}
                 bytes={version.version.pdf.bytes}
-                labels={{ open: t.openPdf }}
+                labels={{ open: t.openPdf, ...dictionary(person.language).common.pdf }}
               />
               <details className="document-search-text">
                 <summary>{t.searchText}</summary>
@@ -468,7 +468,7 @@ function BasisTask({
 /**
  * Odkaz na PDF znenia, ku ktorému sa určuje základ. Nie vložené PDF: pod
  * kartou môže byť platné znenie s vlastným PDF a dva prehliadače nad sebou
- * by sa zamenili. Na telefóne je aj tak len odkaz (`PdfView`).
+ * by sa zamenili.
  */
 function DraftPdfLink({ href, name, bytes, label }: { href: string; name: string; bytes?: number; label: string }) {
   const size = !bytes ? "" : bytes >= 1024 * 1024 ? ` · ${(bytes / 1024 / 1024).toFixed(1)} MB` : ` · ${Math.ceil(bytes / 1024)} kB`

@@ -11,6 +11,10 @@
 # cesty (`.next/dev/types`) než build — v gite len blokoval `git pull`.
 **/next-env.d.ts
 
+# Pomocné súbory pdf.js — kopíruje ich `scripts/copy_pdfjs_assets.mjs`
+# pred `dev` aj `build` z `node_modules`.
+app/public/pdfjs/
+
 # logs
 *.log
 npm-debug.log*

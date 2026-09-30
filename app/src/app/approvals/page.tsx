@@ -141,7 +141,7 @@ export default async function ApprovalsPage({
                   <section className="ap-sec">
                     <h3 className="ap-sec-h">{t.whatYouApprove}<span>{t.whatYouApproveNote}</span></h3>
                     {pdf && (
-                      <PdfView href={pdf.href} name={pdf.file.name} bytes={pdf.file.bytes} labels={{ open: t.openPdf }} />
+                      <PdfView href={pdf.href} name={pdf.file.name} bytes={pdf.file.bytes} labels={{ open: t.openPdf, ...dictionary(person.language).common.pdf }} />
                     )}
                     {pdf && "text" in shown ? (
                       <details className="approval-search-text">
