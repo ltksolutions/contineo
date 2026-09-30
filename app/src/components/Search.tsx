@@ -1,38 +1,46 @@
 "use client"
 
 /**
- * Vyhľadávacie okno.
+ * Beh otázky na `/ask` (ASK-otazka-z-hlavicky).
  *
  * Jedna otázka, jedna odpoveď — zámerne bez konverzačnej histórie. Systémový
  * prompt je stavaný na jednorazové dotazy („odpovedáš výlučne z kontextu");
  * konverzačný režim by zhoršil to, čo je na tomto systéme podstatné —
  * schopnosť povedať „v dokumentoch to nie je".
+ *
+ * **Otázka prichádza adresou** (`/ask?q=`) z poľa v hlavičke a beh sa
+ * spustí hneď po pripojení (`autoRun`) — po odoslaní netreba nič robiť,
+ * len čítať. Vlastné pole tu už nie je: pýta sa v hlavičke, „Upraviť
+ * otázku" otvorí jej plachtu.
  */
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { askQuestion } from "@/lib/sseClient"
 import type { AskResult } from "@/lib/sseClient"
 import Answer from "./Answer"
 import type { AnswerState } from "./Answer"
 import Rating from "./Rating"
+import { HEADER_ASK_ID } from "./HeaderAsk"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 const EMPTY: AnswerState = {
   question: "", text: "", citations: [], done: null, running: false,
 }
 
-/** Návrhy na začiatok — aby prvá obrazovka nebola prázdna. */
 export default function Search({
   preset: preset,
   canEvaluate: canEvaluate,
+  organisation,
   language,
 }: {
   /**
-   * Predvyplnené znenie otázky — otázka položená z hľadania v hlavičke.
-   * Číta sa len pri pripojení komponentu; `/ask` preto mení jeho `key`.
+   * Otázka z adresy — položená v hlavičke. Číta sa len pri pripojení
+   * komponentu; `/ask` preto mení jeho `key`.
    */
-  preset?: string
+  preset: string
+  /** Skratka organizácie do hlavičky odpovede („Odpoveď z dokumentov SFZ"). */
+  organisation?: string
   /**
    * Má prihlásený človek rolu `evaluator`? Rozhoduje o tom, či pod odpoveďou
    * uvidí celý hodnotiaci panel, alebo len „sedí / nesedí". Ide zo servera.
@@ -40,10 +48,11 @@ export default function Search({
   canEvaluate?: boolean
   /** Jazyk prostredia. Bez neho slovenčina. */
   language?: UiLanguage
-} = {}) {
+}) {
   const t = dictionary(language).ask
-  const [question, setQuestion] = useState(preset ?? "")
   const [state, setState] = useState<AnswerState>(EMPTY)
+  /** Kedy sa beh spustil — „Opýtali ste sa o 10:42". Len v prehliadači. */
+  const [askedAt, setAskedAt] = useState<Date | null>(null)
   const [recordId, setRecordId] = useState<string | null>(null)
   const abort = useRef<AbortController | null>(null)
 
@@ -86,6 +95,7 @@ export default function Search({
     abort.current = ctrl
 
     setState({ question: q, text: "", citations: [], done: null, running: true, phase: undefined })
+    setAskedAt(new Date())
     setRecordId(null)
 
     try {
@@ -110,10 +120,51 @@ export default function Search({
     }
   }
 
+  /*
+   * Beh sa spustí hneď po pripojení — raz. `ref`, lebo v StrictMode sa efekt
+   * spustí dvakrát a dve rovnaké otázky za sebou by boli dva zápisy
+   * a dvojnásobná cena.
+   */
+  const started = useRef(false)
+  useEffect(() => {
+    if (started.current) return
+    started.current = true
+    void send(preset)
+  })
+
+  const time = askedAt?.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })
+
   return (
-    <div style={{ display: "grid", gap: 22 }}>
-      {/* Chyba NAD hero kartou, nie namiesto nej (ASK, úloha 2): pole
-          s otázkou musí zostať, aby sa dala skúsiť znova — a vždy s cestou
+    <div style={{ display: "grid", gap: 18 }}>
+      {/* Nadpis = otázka. „Upraviť otázku" je popis poľa v hlavičke: klik
+          ho zameria a tým otvorí plachtu s touto otázkou. */}
+      <div className="ask-asked">
+        <h1 className="ask-asked-title">{preset}</h1>
+        <div className="ask-asked-meta">
+          <label htmlFor={HEADER_ASK_ID} className="ask-edit">
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
+                 strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11.8 3.2l3 3L6.6 14.4H3.6v-3z" />
+            </svg>
+            {t.edit}
+          </label>
+          {time && <span className="quiet">{t.askedAt(time)}</span>}
+        </div>
+      </div>
+
+      {/*
+        Jediné miesto v systéme, ktoré bez JavaScriptu naozaj nefunguje —
+        a je to zámer, nie opomenutie: odpoveď prichádza po častiach, ako ju
+        model píše (SSE), a to sa serverovým formulárom nahradiť nedá.
+        Namiesto odpovede, ktorá mlčí, preto povieme prečo a kam ísť.
+      */}
+      <noscript>
+        <p className="noscript-notice">
+          {t.noScript} <Link href="/documents">{t.noScriptLink}</Link>
+        </p>
+      </noscript>
+
+      {/* Chyba nad kartou, nie namiesto nej (ASK, úloha 2) — a vždy s cestou
           von (knižnica funguje aj keď model nie), nie len s oznámením. */}
       {state.done?.error && !state.running && (
         <div className="ask-error" role="alert">
@@ -121,85 +172,8 @@ export default function Search({
           <Link href="/library">{t.error.link}</Link>
         </div>
       )}
-      {/* Pole na otázku je jediná vec, ktorú tu od človeka chceme — preto
-          má vlastnú kartu. Odpoveď a hodnotenie zostávajú mimo nej: sú to
-          následky, nie súčasť zadávania. */}
-      <div className="ask-hero">
-        {/*
-          Jediné miesto v systéme, ktoré bez JavaScriptu naozaj nefunguje —
-          a je to zámer, nie opomenutie: odpoveď prichádza po častiach, ako ju
-          model píše (SSE), a to sa serverovým formulárom nahradiť nedá.
-          Namiesto poľa, ktoré mlčí, preto povieme prečo a kam ísť. Dokumenty
-          sa čítajú a potvrdzujú bez skriptu, takže tam sa dá pokračovať.
-        */}
-        <noscript>
-          <p className="noscript-notice">
-            {t.noScript} <Link href="/documents">{t.noScriptLink}</Link>
-          </p>
-        </noscript>
 
-        <form
-          className="ask-form"
-          onSubmit={e => { e.preventDefault(); send(question) }}
-        >
-          <textarea
-            className="ask-field"
-            value={question}
-            onChange={e => setQuestion(e.target.value)}
-            onKeyDown={e => {
-              // Enter odosiela, Shift+Enter robí nový riadok. Otázky bývajú
-              // jednoriadkové, takže by bolo otravné klikať na tlačidlo.
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                send(question)
-              }
-            }}
-            placeholder={t.placeholder}
-            rows={3}
-            maxLength={1000}
-          />
-          <div className="ask-actions">
-            <button type="submit" className="button" disabled={!question.trim() || state.running}>
-              {state.running ? t.searching : t.submit}
-            </button>
-            {state.running && (
-              <button
-                type="button"
-                className="button button--quiet"
-                onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false, phase: undefined })) }}
-              >
-                {t.stop}
-              </button>
-            )}
-            <span className="quiet ask-counter">
-              {question.length}/1000
-            </span>
-          </div>
-        </form>
-
-        {/* Príklady zmiznú, len čo je čo ukazovať. */}
-        {!state.text && !state.running && !state.done && (
-          <div className="ask-examples-wrap">
-            <div className="quiet ask-examples-label">
-              {t.examplesLabel}
-            </div>
-            <div className="ask-examples">
-              {t.examples.map(p => (
-                <button
-                  key={p}
-                  type="button"
-                  className="ask-example"
-                  onClick={() => { setQuestion(p); send(p) }}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <Answer state={state} language={language} />
+      <Answer state={state} organisation={organisation} language={language} />
 
       <Rating recordId={recordId} canEvaluate={canEvaluate} language={language} />
     </div>

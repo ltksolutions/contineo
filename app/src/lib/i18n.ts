@@ -601,10 +601,12 @@ interface Dictionary {
   }
 
   home: {
+    /**
+     * Názov záložky, keď nie je známa ani stránka, ani organizácia. Inak
+     * „{stránka} · {organizácia}" (ASK-otazka-z-hlavicky, Q4).
+     */
     metaTitle: string
     metaDescription: string
-    heading: string
-    intro: string
   }
 
   /** Prihlasovacia obrazovka. Jazyk určuje organizácia — človek ešte nie je známy. */
@@ -630,10 +632,7 @@ interface Dictionary {
 
   /** Voľné otázky — vyhľadávanie aj odpoveď. */
   ask: {
-    placeholder: string
     submit: string
-    stop: string
-    searching: string
     /**
      * Čo sa práve deje, kým odpoveď ešte nezačala.
      *
@@ -642,14 +641,33 @@ interface Dictionary {
      * sa v cloude neozýva vôbec: rerank tam robí agregačná pipeline.
      */
     phases: Record<"reading" | "searching" | "ranking" | "writing", string>
-    askAgain: string
-    askThis: string
     examplesLabel: string
     examples: string[]
     unknownError: string
     /** Bez JavaScriptu odpovedanie nefunguje — SSE sa formulárom nenahradí. */
     noScript: string
     noScriptLink: string
+    /**
+     * Plachta otázky z poľa v hlavičke a na `/ask` bez otázky
+     * (ASK-otazka-z-hlavicky). Prvá veta vysvetlenia je tučná, preto dve časti.
+     */
+    sheet: {
+      infoLead: (organisation: string) => string
+      infoRest: string
+      hint: string
+      /** Vložená plachta na `/ask` sa nezatvára — bez „Esc zavrie". */
+      hintInline: string
+      insert: string
+      close: string
+    }
+    /** `/ask` bez otázky. */
+    heading: string
+    emptyLead: string
+    /** `/ask` s otázkou: pod nadpisom (otázkou). */
+    edit: string
+    askedAt: (time: string) => string
+    /** Hlavička karty odpovede so skratkou organizácie. */
+    answerKicker: (organisation: string) => string
     /** Tretí stav obrazovky (ASK, úloha 1): na otázku sa z dokumentov nedá odpovedať. */
     none: {
       kicker: string; text: string; link: string
@@ -934,10 +952,6 @@ interface Dictionary {
   /** Prehľad (`docs/design/README.md`, časť 2). */
   overview: {
     hello: (name: string) => string
-    lede: string
-    askPlaceholder: string
-    ask: string
-    suggestions: string[]
     tiles: Record<string, string>
     soonNote: (n: number) => string
     mine: string
@@ -2041,12 +2055,6 @@ interface Dictionary {
        * tlačil akcie v hlavičke na tablete do druhého riadka.
        */
       heading: string
-      /**
-       * Názov karty prehliadača je naopak **dlhší**: karta nie je hlavička
-       * stránky a pri viacerých otvorených záložkách je samotné „Knižnica"
-       * málo na rozoznanie.
-       */
-      metaTitle: string
       upload: string
       introBefore: string
       introHighlight: string
@@ -3723,10 +3731,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   home: {
-    metaTitle: "Contineo — testovacie rozhranie",
+    metaTitle: "Contineo",
     metaDescription: "Overovanie kvality odpovedí nad normami a smernicami.",
-    heading: "Vyskúšajte, ako systém odpovedá",
-    intro: "Odpoveď sa skladá výlučne z nahraných dokumentov. Ak informácia v nich nie je, systém to má povedať — a to je rovnako dôležité ako správna odpoveď.",
   },
 
   signIn: {
@@ -3756,19 +3762,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   ask: {
-    placeholder: "Opýtajte sa na čokoľvek z noriem…",
     submit: "Opýtať sa",
-    stop: "Zastaviť",
-    searching: "Hľadám…",
     phases: {
       reading: "Čítam otázku…",
       searching: "Hľadám v predpisoch…",
       ranking: "Zoraďujem nájdené…",
       writing: "Skladám odpoveď…",
     },
-    askAgain: "Spýtať sa znova",
-    askThis: "Položiť túto otázku",
-    examplesLabel: "Alebo skúste:",
+    examplesLabel: "Napríklad",
     examples: [
       "Aká je lehota na podanie námietky?",
       "Za akých podmienok môže prestúpiť maloletý hráč?",
@@ -3778,6 +3779,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznáma chyba",
     noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
     noScriptLink: "prejsť na dokumenty",
+    sheet: {
+      infoLead: org => `Odpoveď sa skladá len z dokumentov organizácie ${org}.`,
+      infoRest: "Pri každom tvrdení je odkaz na zdroj. Ak to v dokumentoch nie je, systém to povie a nič si nevymyslí.",
+      hint: "Enter odošle · Shift+Enter nový riadok · Esc zavrie",
+      hintInline: "Enter odošle · Shift+Enter nový riadok",
+      insert: "vložiť",
+      close: "Zavrieť",
+    },
+    heading: "Opýtať sa",
+    emptyLead: "Napíšte otázku vlastnými slovami, tak ako by ste sa pýtali kolegu.",
+    edit: "Upraviť otázku",
+    askedAt: time => `Opýtali ste sa o ${time}`,
+    answerKicker: org => `Odpoveď z dokumentov ${org}`,
     none: {
       kicker: "V dokumentoch organizácie sa k tomu nič nenašlo",
       text: "Skúste otázku inak, alebo hľadajte v knižnici — nie všetko je v predpisoch.",
@@ -4027,14 +4041,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   overview: {
     hello: name => `Dobrý deň, ${name}`,
-    lede: "Opýtajte sa \u2014 odpoveď príde z predpisov vašej organizácie, s citáciou.",
-    askPlaceholder: "Napr. Do kedy treba nahlásiť prestup hráča?",
-    ask: "Opýtať sa",
-    suggestions: [
-      "Aká je lehota na podanie námietky?",
-      "Za akých podmienok môže prestúpiť maloletý hráč?",
-      "Koľko žltých kariet znamená zastavenie činnosti?",
-    ],
     tiles: {
       toAcknowledge: "Na potvrdenie",
       toApprove: "Čaká na schválenie",
@@ -5474,7 +5480,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     list: {
       heading: "Knižnica",
-      metaTitle: "Knižnica dokumentov — Contineo",
       upload: "Nahrať dokument",
       introBefore: "Nahratý súbor sa prevedie na text, ktorý si ",
       introHighlight: "prečítaš a opravíš",
@@ -7076,10 +7081,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   home: {
-    metaTitle: "Contineo — testovací rozhraní",
+    metaTitle: "Contineo",
     metaDescription: "Ověřování kvality odpovědí nad předpisy a směrnicemi.",
-    heading: "Vyzkoušejte, jak systém odpovídá",
-    intro: "Odpověď se skládá výhradně z nahraných dokumentů. Pokud v nich informace není, systém to má říct — a to je stejně důležité jako správná odpověď.",
   },
 
   signIn: {
@@ -7109,19 +7112,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   ask: {
-    placeholder: "Zeptejte se na cokoli z předpisů…",
     submit: "Zeptat se",
-    stop: "Zastavit",
-    searching: "Hledám…",
     phases: {
       reading: "Čtu otázku…",
       searching: "Hledám v předpisech…",
       ranking: "Řadím nalezené…",
       writing: "Skládám odpověď…",
     },
-    askAgain: "Zeptat se znovu",
-    askThis: "Položit tuto otázku",
-    examplesLabel: "Nebo zkuste:",
+    examplesLabel: "Například",
     examples: [
       "Jaká je lhůta pro podání námitky?",
       "Za jakých podmínek může přestoupit nezletilý hráč?",
@@ -7131,6 +7129,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznámá chyba",
     noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
     noScriptLink: "přejít na dokumenty",
+    sheet: {
+      infoLead: org => `Odpověď se skládá jen z dokumentů organizace ${org}.`,
+      infoRest: "U každého tvrzení je odkaz na zdroj. Pokud to v dokumentech není, systém to řekne a nic si nevymyslí.",
+      hint: "Enter odešle · Shift+Enter nový řádek · Esc zavře",
+      hintInline: "Enter odešle · Shift+Enter nový řádek",
+      insert: "vložit",
+      close: "Zavřít",
+    },
+    heading: "Zeptat se",
+    emptyLead: "Napište otázku vlastními slovy, tak jak byste se ptali kolegy.",
+    edit: "Upravit otázku",
+    askedAt: time => `Zeptali jste se v ${time}`,
+    answerKicker: org => `Odpověď z dokumentů ${org}`,
     none: {
       kicker: "V dokumentech organizace se k tomu nic nenašlo",
       text: "Zkuste otázku jinak, nebo hledejte v knihovně — ne všechno je v předpisech.",
@@ -7380,14 +7391,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   overview: {
     hello: name => `Dobrý den, ${name}`,
-    lede: "Zeptejte se \u2014 odpověď přijde z předpisů vaší organizace, s citací.",
-    askPlaceholder: "Např. Do kdy je třeba nahlásit přestup hráče?",
-    ask: "Zeptat se",
-    suggestions: [
-      "Jaká je lhůta na podání námitky?",
-      "Za jakých podmínek může přestoupit nezletilý hráč?",
-      "Kolik žlutých karet znamená zastavení činnosti?",
-    ],
     tiles: {
       toAcknowledge: "K potvrzení",
       toApprove: "Čeká na schválení",
@@ -8825,7 +8828,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     list: {
       heading: "Knihovna",
-      metaTitle: "Knihovna dokumentů — Contineo",
       upload: "Nahrát dokument",
       introBefore: "Nahraný soubor se převede na text, který si ",
       introHighlight: "přečteš a opravíš",
@@ -10420,10 +10422,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   home: {
-    metaTitle: "Contineo — test interface",
+    metaTitle: "Contineo",
     metaDescription: "Checking the quality of answers over regulations and directives.",
-    heading: "See how the system answers",
-    intro: "Every answer is built solely from the uploaded documents. If the information is not in them, the system should say so — that matters just as much as a correct answer.",
   },
 
   signIn: {
@@ -10453,19 +10453,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   ask: {
-    placeholder: "Ask anything about the documents…",
     submit: "Ask",
-    stop: "Stop",
-    searching: "Searching…",
     phases: {
       reading: "Reading the question…",
       searching: "Searching the rules…",
       ranking: "Ranking what was found…",
       writing: "Composing the answer…",
     },
-    askAgain: "Ask again",
-    askThis: "Ask this question",
-    examplesLabel: "Or try:",
+    examplesLabel: "For example",
     examples: [
       "What is the deadline for filing an objection?",
       "Under what conditions may a minor player transfer?",
@@ -10475,6 +10470,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Unknown error",
     noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
     noScriptLink: "go to documents",
+    sheet: {
+      infoLead: org => `The answer is built only from ${org} documents.`,
+      infoRest: "Every statement links to its source. If it is not in the documents, the system says so and makes nothing up.",
+      hint: "Enter sends · Shift+Enter new line · Esc closes",
+      hintInline: "Enter sends · Shift+Enter new line",
+      insert: "insert",
+      close: "Close",
+    },
+    heading: "Ask",
+    emptyLead: "Write your question in your own words, the way you would ask a colleague.",
+    edit: "Edit question",
+    askedAt: time => `Asked at ${time}`,
+    answerKicker: org => `Answer from ${org} documents`,
     none: {
       kicker: "Nothing on this was found in the organisation's documents",
       text: "Try rephrasing the question, or search the library — not everything is in the regulations.",
@@ -10723,14 +10731,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   overview: {
     hello: name => `Hello, ${name}`,
-    lede: "Ask \u2014 the answer comes from your organisation's rules, with a citation.",
-    askPlaceholder: "E.g. What is the deadline for reporting a transfer?",
-    ask: "Ask",
-    suggestions: [
-      "What is the deadline for filing an objection?",
-      "When can a minor player transfer?",
-      "How many yellow cards mean a suspension?",
-    ],
     tiles: {
       toAcknowledge: "To acknowledge",
       toApprove: "Waiting for approval",
@@ -12168,7 +12168,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     list: {
       heading: "Library",
-      metaTitle: "Document library — Contineo",
       upload: "Upload a document",
       introBefore: "An uploaded file is converted into text that you ",
       introHighlight: "read and correct",

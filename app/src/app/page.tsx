@@ -149,32 +149,9 @@ export default async function OverviewPage({
   return (
     <AppShell language={language}>
       <div className="overview" style={tenantStyle(branding)}>
-        {/*
-          Hero. Otázka odchádza na obrazovku odpovedí — Prehľad je vstup do
-          hľadania, nie miesto, kde sa odpovedá. Obyčajný `GET`, teda funguje
-          bez JavaScriptu, rovnako ako pole v hlavičke.
-        */}
-        <section className="card overview-hero">
-          <h1 className="overview-hello">{t.hello(person.fullName)}</h1>
-          <p className="quiet overview-lede">{t.lede}</p>
-          <form className="overview-ask" method="get" action="/ask">
-            <input
-              className="field-input overview-ask-input"
-              type="search"
-              name="q"
-              placeholder={t.askPlaceholder}
-              aria-label={t.askPlaceholder}
-            />
-            <button className="button" type="submit">{t.ask}</button>
-          </form>
-          <div className="overview-suggestions">
-            {t.suggestions.map(s => (
-              <Link key={s} className="overview-suggestion" href={`/ask?q=${encodeURIComponent(s)}`}>
-                {s}
-              </Link>
-            ))}
-          </div>
-        </section>
+        {/* Oslovenie. Pole otázky tu už nie je (ASK-otazka-z-hlavicky, Q3):
+            otázka sa kladie v hlavičke — jedno pole, jedno miesto. */}
+        <h1 className="page-title overview-hello">{t.hello(person.fullName)}</h1>
 
         {/* KPI pás. Každá dlaždica je odkaz na predfiltrovaný zoznam — číslo
             bez cesty k nemu je ozdoba. */}

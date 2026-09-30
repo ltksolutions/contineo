@@ -47,17 +47,11 @@ import MultiSelect from "@/components/MultiSelect"
 export const dynamic = "force-dynamic"
 
 /*
- * Vlastný názov karty prehliadača. Dovtedy niesli všetky stránky jeden názov
- * z `layout.tsx` a podľa záložky sa nedalo rozoznať, ktorá je ktorá.
- *
- * Nadpis na obrazovke je krátky („Knižnica", rámy 1–8), tu je dlhý: karta
- * nie je hlavička stránky a pri viacerých otvorených záložkách je samotné
- * „Knižnica" málo.
- *
- * Jazyk osoby tu ešte nepoznáme — metadáta sa skladajú skôr, než je jasné,
- * kto sa pozerá — preto predvolený slovník, rovnako ako v `layout.tsx`.
+ * Názov karty prehliadača skladá `layout.tsx` pre každú stránku rovnako —
+ * „Knižnica · {organizácia}" (`lib/pageTitle.ts`, ASK-otazka-z-hlavicky Q4).
+ * Vlastný „Knižnica dokumentov — Contineo" tu bol, kým mali ostatné stránky
+ * jeden spoločný názov.
  */
-export const metadata = { title: dictionary(undefined).library.list.metaTitle }
 
 export default async function LibraryPage({
   searchParams,

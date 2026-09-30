@@ -57,9 +57,12 @@ function Line({ label: label, value: value }: { label: string; value: string }) 
 
 export default function Answer({
   state: state,
+  organisation,
   language,
 }: {
   state: AnswerState
+  /** Skratka organizácie — „Odpoveď z dokumentov SFZ". Bez nej všeobecná veta. */
+  organisation?: string
   language?: UiLanguage
 }) {
   const t = dictionary(language).answer
@@ -133,7 +136,7 @@ export default function Answer({
         {!error && (
           <div className="answer-head">
             <span className="answer-mark" aria-hidden="true" />
-            <span className="answer-kicker">{t.fromDocuments}</span>
+            <span className="answer-kicker">{organisation ? tAsk.answerKicker(organisation) : t.fromDocuments}</span>
             {timeLabel && (
               <span className={time?.kind === "today" ? "answer-time" : "answer-time answer-time--other"}>
                 {timeLabel}

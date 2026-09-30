@@ -268,6 +268,13 @@ Platné pravidlo:
 `ContineoMark` sa **nepoužíva ako ikona v poli** — tam ho pri 16 px
 nemožno odlíšiť od lupy. Značku neprekresľuj.
 
+> **Zmenené 30. 9. 2026** (`ASK-otazka-z-hlavicky.md`, Q1): v poli v hlavičke
+> je **značka Continea v 18 px** (`--accent`), nie bublina `ask`. Značka bola
+> 22. 9. prekreslená práve kvôli bodu 2 (chvostík zvisle, hrubší kruh)
+> a pole je teraz oblé (r20, 40 px), takže nepripomína filter zoznamu. Riadok
+> „hlavička — otázka pre model" v tabuľke vyššie tým neplatí; polia v zozname
+> ostávajú s lupou.
+
 Mimo polí je značka logo, nie ikona, a platí:
 
 | Miesto | Veľkosť |

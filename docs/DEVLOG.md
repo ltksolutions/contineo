@@ -10,6 +10,70 @@
 
 ---
 
+## 2026-09-30 — otázka z hlavičky, `/ask` s behom (ASK-otazka-z-hlavicky)
+
+**Rozhodnutia (Ján, 30. 9. 2026, Q1–Q4 v `docs/design/ASK-otazka-z-hlavicky.md`).**
+Pole v hlavičke je **jediné miesto na otázku** — hero pole na `/ask` aj na
+Prehľade robili to isté na troch miestach (Q3). V poli je **značka Continea
+18 px** namiesto bubliny `ask` (Q1) — mení `ZAKLAD.md`, odchýlku B; poznámka
+je tam. Z `/ask` odišli „Nevybavené žiadosti" (`PendingWidget`, D36 platilo
+pre `/ask` ako úvodnú stranu) a úvod testovacieho rozhrania (Q2). V záložke
+je „{stránka} · {organizácia}" namiesto „Contineo — testovacie rozhranie" (Q4).
+
+**Čo sa spravilo.**
+
+- `HeaderAsk.tsx`: pole 40 px / r20 / max. 600. Klik, fokus alebo `⌘K`
+  otvorí na mieste plachtu `AskSheet.tsx` (textarea do 6 riadkov, Enter /
+  Shift+Enter / Esc, počítadlo od 800, veta o odpovedaní, vzory, ktoré
+  otázku vložia, neodošlú). Závoj je v `body` pod hlavičkou (z-index 9 < 10),
+  hlavička ostáva nezatienená. Pod 640 px celá obrazovka s tlačidlom dole.
+  Bez JS ostáva obyčajný `GET` formulár.
+- `/ask?q=`: `Search` spustí beh pri pripojení (raz — `ref` proti dvojitému
+  efektu v StrictMode). Nadpis je otázka, pod ňou „Upraviť otázku" a čas.
+  „Upraviť otázku" je **`<label>` poľa v hlavičke**: klik pole zameria, fokus
+  otvorí plachtu s otázkou — bez spoločného stavu medzi `layout.tsx`
+  a stránkou. `/ask` bez `q`: nadpis, veta a plachta vložená do stránky; je
+  to `GET` formulár, takže odošle aj bez JS.
+- Hlavička odpovede „Odpoveď z dokumentov {skratka}".
+- Favicon: `icon.svg`, `favicon.ico`, `apple-icon.png` z `web/app/` do
+  `app/src/app/` — v aplikácii dovtedy neboli vôbec, hoci ich `proxy.ts`
+  z presmerovania vynechával.
+- Záložka: `lib/pageTitle.ts` — posledný krok cesty (sekcia) + názov
+  organizácie, adresa z tej istej hlavičky ako cesta pod hlavičkou. Vlastný
+  názov knižnice („Knižnica dokumentov — Contineo") odišiel.
+- Preč: `PendingWidget.tsx`, `home.heading/intro`, `ask.placeholder/stop/
+  searching/askAgain/askThis`, `overview.lede/askPlaceholder/ask/suggestions`
+  a CSS `.ask-hero`, `.ask-field`, `.overview-ask`… **`pending.*` ostáva** —
+  číta ho `lib/pending.ts`.
+
+**Odchýlky od návrhu.**
+
+- Veta v plachte: „Odpoveď sa skladá len z dokumentov **organizácie
+  {názov}**." Návrh má genitív („zväzu"), ten sa z názvu organizácie
+  poskladať nedá.
+- Nadpis `/ask` bez otázky je „Opýtať sa", ale sekcia v ceste aj v záložke sa
+  volá tak ako v navigácii („Voľné otázky").
+- Prehľad nemá pod oslovením vetu „Traja ľudia od vás niečo čakajú" z rámu —
+  taký súhrn dnes neexistuje; oslovenie ostáva samo nad KPI.
+
+**Nefungovalo / poučenie.**
+
+- Plachta na telefóne je `fixed` v hlavičke, ktorá je `sticky` so
+  `z-index: 10` — spodná lišta (25) jej prekryla tlačidlo. Kým je plachta
+  otvorená, lišta sa skryje (`body:has(.ask-sheet--overlay)`).
+- Globálny prstenec fokusu (`:where(…textarea…):focus-visible`) kreslil rám
+  okolo poľa vnútri plachty.
+- Vypnuté tlačidlo pri prázdnom poli by bez JS zablokovalo vloženú plachtu
+  na `/ask` — vypína sa až po načítaní skriptu.
+- Overenie: stránka zložená z ozajstných `Header`, `HeaderAsk`, `AskSheet`,
+  `Search`, `Answer`, `AppNav` a `globals.css` mimo repa; `/api/chat`
+  nahradený prúdom udalostí v tom istom formáte (SSE), takže beh išiel cez
+  ozajstný `sseClient`. 1440 / 834 / 390, svetlá aj tmavá, bez JS. Ozajstnú
+  aplikáciu s modelom som nespúšťal — beh zapisuje hodnotenie do produkčnej
+  databázy.
+
+---
+
 ## 2026-09-30 — odkazy „← Späť" odišli, nesie ich cesta
 
 **Rozhodnutie (Ján, 30. 9. 2026).** Po rozcestníku mali hlbšie stránky dve
