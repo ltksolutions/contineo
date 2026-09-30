@@ -358,6 +358,15 @@ formulácie nemení staré záznamy. Formálne posúdenie právnikom SFZ sa tým
 navrhne úpravu, zmení sa znenie pre **nové** potvrdenia a staré zostávajú platné v pôvodnom
 tvare. Presne na to je `statementText` doslovný.
 
+**✅ D152 — rod vo formulke (Ján Letko, 2026-09-30):** slovesá formulky sa riadia pohlavím
+osoby (`persons.gender`): *„oboznámil … porozumel"* / *„oboznámila … porozumela"*,
+nevyplnené *„oboznámil(a) … porozumel(a)"* — to isté pravidlo ako „absolvoval(a)" na
+certifikáte (27. 9.). Čeština rovnako, angličtina rod nemá. Z mena sa nehádá. Zistené pri teste
+potvrdzovania: formulka bola pre každého v mužskom rode a keďže sa ukladá doslovne, nesprávny
+tvar by v zázname ženy ostal navždy. **Staré záznamy sa nemenia** (D24); nové potvrdenia nesú
+tvar podľa rodu v čase potvrdenia. Implementácia: `statement(…, gender)` v `i18n.ts`,
+`buildStatement(…, gender)`, `Acknowledger.gender`; test `statementGender.test.ts`.
+
 ### D29 — Rozlíšenie tenanta podľa hostiteľa 🟡
 
 **Otázka:** `intranet.futbalsfz.sk` — samostatné nasadenie, alebo doména nad jedným?

@@ -70,6 +70,7 @@ export async function acknowledgeAction(fd: FormData) {
         companyCode: person.companyCode,
         language: person.language,
         departmentId: person.departmentId ?? null,
+        gender: person.gender ?? null,
       },
       documentId,
       {
