@@ -28,6 +28,8 @@ export interface AnswerSource {
    * vedieť, že číta, čo niekto overil, nie čo je v norme napísané.
    */
   sourceType?: string
+  /** Dokument úseku. Chýba pri odpovediach spred 30. 9. 2026 a pri overenej odpovedi. */
+  documentId?: string
   title: string
   slug?: string
   url?: string

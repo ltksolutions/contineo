@@ -28,8 +28,10 @@ s hodnotením (Q2).
   `FormattedText` z nich kreslí `<button class="cite">` a `span.cite-sentence`.
 - `Answer.tsx` rozdelený na `AnswerBody` (karta) a `AnswerAside` (doslovné
   citácie, zdroje v kontexte, technické údaje). Citácia: číslo, úryvok,
-  dokument · článok · znenie, „Otvoriť v knižnici", ak zdroj má adresu
-  (citácia ↔ zdroj cez `chunkIndex + 1`). Pás vľavo odišiel.
+  dokument · článok · znenie, „Otvoriť v knižnici" na `/documents/{id}`
+  (citácia ↔ zdroj cez `chunkIndex + 1`). Zdroj preto nesie `documentId`
+  (`buildSources`) — dovtedy mal len `slug` (stratový) a `url`, čo je
+  originál mimo aplikácie; prvý pokus viedol odkaz práve tam. Pás vľavo odišiel.
   `default export` ostáva ako jeden stĺpec (testy, uložená odpoveď).
 - `Search`: mriežka `.ask-layout` — ≥ 1180 px a citácie (alebo beh) → dva
   stĺpce 1fr / 400, pravý `sticky`; inak otázka a odpoveď, citácie,

@@ -111,6 +111,12 @@ export function buildSources(chunks: ChunkResult[]) {
      * práve videl; pri zverejnení sa aj tak načíta z databázy nanovo.
      */
     chunkId:     c._id,
+    /**
+     * Dokument, z ktorého úsek je — na odkaz „Otvoriť v knižnici" pri citácii
+     * a na porovnanie so znením, ktoré platí dnes (uložená odpoveď).
+     * `slug` to nie je: vzniká z `documentId` stratovo (`:` → `-`).
+     */
+    documentId:  c.documentId,
     /** `"qa"` = overená odpoveď, nie článok normy. Viď `ChunkResult`. */
     sourceType:  c.sourceType,
     title:       c.document?.title ?? "Neznámy zdroj",

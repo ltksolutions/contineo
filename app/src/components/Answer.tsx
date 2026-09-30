@@ -269,10 +269,12 @@ export function AnswerAside({
                         ),
                       ].filter(Boolean).join(" · ") || t.sourceMissing}
                     </div>
-                    {source?.url && (
-                      <a className="answer-citation-open" href={source.url} target="_blank" rel="noopener noreferrer">
+                    {/* Do knižnice, teda na znenie v aplikácii — nie na `url`,
+                        to je originál mimo nej (`sourceUrl`). */}
+                    {source?.documentId && (
+                      <Link className="answer-citation-open" href={`/documents/${encodeURIComponent(source.documentId)}`}>
                         {t.openInLibrary}
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </li>
