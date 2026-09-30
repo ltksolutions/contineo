@@ -10,7 +10,6 @@
 import { notFound, redirect } from "next/navigation"
 import { auditRecords } from "@/lib/audit"
 import AuditList from "@/components/AuditList"
-import Link from "next/link"
 import { platformContext, tenantOverviews, trackCount } from "@/lib/admin"
 import Fact from "@/components/Fact"
 import { allTenants } from "@/lib/tenantAdmin"
@@ -211,12 +210,6 @@ export default async function TenantDetailPage({
   return (
     <AppShell language={ctx.person.language} title={tenant.branding.displayName}>
     <div style={{ maxWidth: 760 }}>
-      <p style={{ margin: "0 0 12px" }}>
-        <Link href="/admin" className="quiet" style={{ fontSize: "var(--fs-body)" }}>
-          {t.back}
-        </Link>
-      </p>
-
       <h1 className="page-title" style={{ margin: "0 0 4px" }}>
         {tenant.branding.displayName}
       </h1>

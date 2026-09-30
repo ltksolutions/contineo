@@ -132,7 +132,6 @@ export default async function CoursePage({ params, searchParams }: {
   return (
     <AppShell language={language} title={version.title}>
       <div className="cp" style={tenantStyle(brandingView(ctx.tenant))}>
-        <p className="detail-back"><Link className="quiet" href="/learning">← {t.heading}</Link></p>
         <Notice message={q.msg} error={q.error === "1"} back={base} />
         <header className="ch">
           <span className="ch-topic">{course.topicLabel}</span>

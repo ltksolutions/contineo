@@ -7,7 +7,6 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
 import { platformContext, tenantOverviews } from "@/lib/admin"
 import CompanyCodeField from "@/components/CompanyCodeField"
 import { createTenantAction } from "../actions"
@@ -39,12 +38,6 @@ export default async function NewTenantPage({
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 620 }}>
-      <p style={{ margin: "0 0 12px" }}>
-        <Link href="/admin" className="quiet" style={{ fontSize: "var(--fs-body)" }}>
-          {t.back}
-        </Link>
-      </p>
-
       <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>
         {t.introBefore}<code>contineo.app</code>{t.introMiddle}<code>CNAME</code>{t.introAfter}

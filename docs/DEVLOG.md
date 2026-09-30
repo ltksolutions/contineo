@@ -10,6 +10,29 @@
 
 ---
 
+## 2026-09-30 — odkazy „← Späť" odišli, nesie ich cesta
+
+**Rozhodnutie (Ján, 30. 9. 2026).** Po rozcestníku mali hlbšie stránky dve
+cesty k rodičovi: pás cesty pod hlavičkou a vlastný odkaz „← Späť na …"
+nad nadpisom. Odkaz sa ruší — cesta vedie na to isté miesto a navyše
+ukazuje, kde človek je.
+
+**Čo sa spravilo.** Odstránené z 24 stránok: knižnica (detail a úprava
+normy, text, nové znenie, nová norma, trasa, priečinky, kurácia), Na
+potvrdenie (detail), personalistika (pridelenie, jeho upozornenie,
+Prideliť normy, pripomienky), osoby (detail, nová, import, pozvánka),
+správa tenantov (nový, detail) a Vzdelávanie (kurz, certifikát, test,
+výsledok, správa kurzu, test v správe). S nimi odišli importy `Link`,
+ktoré tam iné použitie nemali, a trieda `.detail-back`.
+
+**Čo zostalo zámerne.** Tlačidlá, ktoré sú **akciou po dokončení**, nie
+orientáciou: „Späť na časť" vo výsledku testu, „Späť na kurz" pri
+certifikáte a v jeho tlačovej verzii. A stránkovanie častí kurzu
+(`.pnav` — „← Späť na kurz · Časť 2 z 5 · Ďalšia časť →"): je to pager,
+jeho prvý odkaz nesie rovnováhu riadku a čítanie kurzu po častiach.
+
+---
+
 ## 2026-09-29 — Prehľad ako rozcestník, bez stáleho menu (SHELL-rozcestnik)
 
 **Rozhodnutie (Ján, 29. 9. 2026, Q1–Q5 v `docs/design/SHELL-rozcestnik.md`).**

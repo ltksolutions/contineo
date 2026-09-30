@@ -90,9 +90,6 @@ export default async function DocumentPage({
       <AppShell language={person.language} title={draftTask!.title}>
         <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
           <Notice message={message} error={failed} back={`/documents/${encodeURIComponent(documentId)}`} />
-          <p style={{ margin: "0 0 16px" }}>
-            <Link className="quiet" href="/documents" style={{ fontSize: "var(--fs-body)" }}>← {t.back}</Link>
-          </p>
           <h1 className="page-title">{draftTask!.title}</h1>
           {draftCard}
         </div>
@@ -190,9 +187,6 @@ export default async function DocumentPage({
         back={`/documents/${encodeURIComponent(documentId)}`}
       />
 
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/documents" style={{ fontSize: "var(--fs-body)" }}>← {t.back}</Link>
-      </p>
 
       <h1 className="page-title">{doc.title}</h1>
 

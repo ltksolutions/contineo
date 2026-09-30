@@ -757,9 +757,6 @@ export default async function DocumentDetailPage({
       */}
       {editDocument ? (
         <>
-          <p className="detail-back">
-            <Link className="quiet" href={base}>{tflow.versionPageBack}</Link>
-          </p>
           <p className="quiet detail-lead" style={{ margin: 0 }}>{d.title}</p>
           <h1 className="page-title">{tflow.editDocument}</h1>
           <div className="detail-grid">
@@ -904,10 +901,6 @@ export default async function DocumentDetailPage({
         </>
       ) : (
       <>
-      <p className="detail-back">
-        <Link className="quiet" href="/library">{t.back}</Link>
-      </p>
-
       {/*
         Stav dokumentu farebne, tou istou funkciou ako v zozname (DETAIL,
         úloha 2). Bežiace kolo nad konceptom je „na schválenie" (MASTER).

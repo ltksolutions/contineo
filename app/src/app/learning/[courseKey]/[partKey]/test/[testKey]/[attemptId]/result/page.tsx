@@ -59,7 +59,6 @@ export default async function ResultPage({ params, searchParams }: {
   return (
     <AppShell language={language} title={ta.result} trail={c.trail}>
       <div className="at rs">
-        <p className="detail-back"><Link className="quiet" href={c.partHref}>← {ta.backToPart}</Link></p>
         <div className="rs-cols">
           <div className="rs-main">
             <section className="card rs-card">
