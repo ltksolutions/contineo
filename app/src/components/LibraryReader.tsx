@@ -47,9 +47,9 @@ export default async function LibraryReader({
         )}
 
         {all.length === 0 ? (
-          <p className="empty">{t.emptyForYou}</p>
+          <div className="empty"><div className="empty-title">{t.emptyForYou}</div></div>
         ) : docs.length === 0 ? (
-          <p className="quiet">{t.reader.emptyFilter}</p>
+          <div className="empty"><div className="empty-title">{t.reader.emptyFilter}</div></div>
         ) : (
           <ul className="card library-reader-list">
             {docs.map(doc => (

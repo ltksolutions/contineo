@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prázdne zoznamy sa dajú prečítať (2026-10-01)
+
+Keď je zoznam prázdny, vysvetlenie je v bielej karte s plným okrajom
+a väčším písmom — doteraz takmer splývalo s pozadím. Platí na všetkých
+obrazovkách, vrátane histórie otázok, hodnotenia odpovedí a Knižnice.
+
 ### Námietka po prihlásení a záložka GDPR v nastaveniach (2026-10-01)
 
 Na stránke **Ochrana osobných údajov** je kontakt GDPR organizácie

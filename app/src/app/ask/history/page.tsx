@@ -118,7 +118,10 @@ export default async function AskHistoryPage({ searchParams }: { searchParams: P
         </form>
 
         {items.length === 0 && (
-          <p className="quiet ask-history-empty">{query ? t.emptyFilter : t.empty}</p>
+          <div className="empty">
+            <div className="empty-title">{query ? t.emptyFilter : t.empty}</div>
+            <div className="empty-text">{query ? t.emptyFilterText : t.emptyText}</div>
+          </div>
         )}
 
         {days.map(day => (
