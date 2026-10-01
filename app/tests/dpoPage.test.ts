@@ -75,20 +75,10 @@ describe("/dpo", () => {
     expect(await render({ error: "1", msg: "chyba" })).toMatch(/<details class="dpo-record" open="">/)
   })
 
-  it("lehoty uchovávania organizácie s predvolenými a uloženými hodnotami (ADR-022, D136)", async () => {
+  it("lehoty a doplnok tu už nie sú — odkaz na záložku GDPR v nastaveniach (D154)", async () => {
     const html = await render()
-    expect(html).toContain('id="retention"')
-    expect(html).toMatch(/name="evidenceYears"[^>]*value="2"/)
-    expect(html).toMatch(/name="capYears"[^>]*value="5"/)
-    expect(html).toMatch(/name="learningDetailMonths"[^>]*value="12"/)
-    expect(html).toContain("Certifikáty sa nemažú.")
-  })
-
-  it("doplnok na /privacy v jazykoch organizácie (D137)", async () => {
-    const html = await render()
-    expect(html).toContain('id="privacy-extra"')
-    expect(html).toContain('name="extra-sk"')
-    expect(html).toContain('name="extra-cs"')
-    expect(html).toContain("Kamerový systém v sídle.")
+    expect(html).not.toContain('id="retention"')
+    expect(html).not.toContain('name="extra-sk"')
+    expect(html).toContain('href="/organisation?tab=gdpr"')
   })
 })
