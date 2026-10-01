@@ -60,6 +60,16 @@ describe("generateAnswer — čas po prvý token", () => {
     expect(done.timings.preprocessing).toBe(5)
   })
 
+  it("`done` nesie `tokens` a `cost` — tie čítajú klient aj hodnotenie", async () => {
+    const out = await events(generateAnswer({ query: "x", chunks: [], userRole: "internal", profile }))
+    const done = out.find(e => e.type === "done") as Record<string, unknown>
+    expect(done.tokens).toMatchObject({ input: 10 })
+    expect(done).toHaveProperty("cost")
+    // Slovenské kľúče do 1. 10. 2026 nikto nečítal.
+    expect(done).not.toHaveProperty("tokeny")
+    expect(done).not.toHaveProperty("naklad")
+  })
+
   it("bez `timings` nič nepadá", async () => {
     const out = await events(generateAnswer({ query: "x", chunks: [], userRole: "internal", profile }))
     expect(out.some(e => e.type === "done")).toBe(true)

@@ -118,6 +118,16 @@ try {
     console.log(`${ttft < 2000 ? OK : BAD} latencia p95 (TTFT)   ${(ttft / 1000).toFixed(1)} s  (prah < 2 s; medián ${(median / 1000).toFixed(1)} s)`)
   }
 
+  // Veľkosť vstupu hlavného modelu — od nej závisí jeho čas po prvý token.
+  // Tokeny sa ukladajú až od 1. 10. 2026 (dovtedy išli pod kľúčom, ktorý
+  // nikto nečítal), staršie záznamy ich nemajú.
+  const withTokens = records.filter(z => z.tokens?.input)
+  if (withTokens.length) {
+    const input = withTokens.map(z => z.tokens.input)
+    const cached = withTokens.filter(z => z.tokens.cacheRead > 0).length
+    console.log(`${WARN} vstup modelu          medián ${quantile(input, 0.5)} tokenov, p95 ${p95(input)}  (z cache čítalo ${cached} z ${withTokens.length})`)
+  }
+
   // Tvrdá brána: interný obsah medzi zdrojmi verejnej odpovede.
   const leaks = records.filter(isInternalLeak)
   console.log(`${leaks.length === 0 ? OK : BAD} únik interného obsahu ${leaks.length}  (prah 0 — tvrdá brána, len verejné odpovede)`)

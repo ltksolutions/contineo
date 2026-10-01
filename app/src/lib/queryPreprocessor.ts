@@ -83,6 +83,15 @@ export function parsePreprocessed(raw: string, fallbackQuery: string, now: Date 
 
 const SHORT_QUERY_WORDS = 4  // krátke dotazy nepredspracovávame
 
+/**
+ * Strop na prepis. Platí sa zaň priamo v čase po prvý token, takže
+ * pomalý prepis sa nečaká — ide sa s pôvodnou otázkou a dátum zachytia
+ * pravidlá (`detectQueryTime`). Bolo 5 s. 1,5 s by bolo príliš: na 23
+ * prepisoch (15.–29. 9. 2026) trvalo 9 dlhšie, takže by sa zahodil pri
+ * ~40 % otázok. Pri 2,5 s je to jeden z 23 a odreže sa chvost až do 5 s.
+ */
+export const PREPROCESS_TIMEOUT_MS = 2500
+
 /** Bezpečný výsledok, keď sa preprocessing nepodarí — pôvodný dotaz bez zmeny. */
 const passthrough = (query: string): PreprocessedQuery =>
   ({ rewritten: query, subQueries: [], keywords: [], time: null })
@@ -105,7 +114,7 @@ export async function preprocessQuery(
   try {
     const raw = await provider.complete(
       PREPROCESS_PROMPT.replace("{query}", query).replace("{today}", calendarDate(now).toISOString().slice(0, 10)),
-      { maxTokens: 256, timeoutMs: 5000 }
+      { maxTokens: 256, timeoutMs: PREPROCESS_TIMEOUT_MS }
     )
     return parsePreprocessed(raw, query, now)
   } catch {
