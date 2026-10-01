@@ -10,6 +10,33 @@
 
 ---
 
+## 2026-10-01 — výkaz DPO s hľadaním (DPO-vykaz-hladanie)
+
+**Zadanie:** 13 riadkov výkazu pod sebou, 11 s rovnakým nedostatkom a tou
+istou zodpovednou osobou. DPO hľadal predpis očami a každej osobe písal
+zvlášť. Rozhodnuté Q1–Q5: dlaždice preč, počty pri filtroch, predvolene
+podľa osoby, CSV vždy celé, `mailto:` so zoznamom do 25 predpisov.
+
+**Čisté funkcie v `lib/dpo.ts`** (`parseDpoQuery`, `filterLegalBasisRows`,
+`dpoFacets`, `groupByPerson`, `personMailto`, `dpoHref`, `highlight`),
+stránka ich len skladá. Počty sa rátajú ako facety knižnice — každá
+skupina bez vlastného filtra, inak by pri „S nedostatkom" stálo pri
+„V poriadku" nula a nedalo by sa vedieť, čo prepnutie prinesie.
+
+**Čo nebolo zrejmé:**
+
+- `highlight` z `lib/peopleSearch.ts` sa na serveri použiť nedá: `fold`
+  berie z `MultiSelect.tsx`, ktorý má `"use client"`, a funkcia z klientskeho
+  modulu je v serverovom komponente len odkaz, nie funkcia. `lib/dpo.ts`
+  má preto vlastnú, rovnakú.
+- Spoločné CSS skrýva `.view-switch` pod 640 px (v knižnici prepína
+  tabuľku, ktorá sa na telefón nezmestí). Na `/dpo` prepína len skupiny
+  kariet, takže tu ostáva — rám 390 ho má.
+- `.button--sm` z návrhu v kóde nie je; malé tlačidlo je `.dpo-button-sm`
+  (32 px, na telefóne 44).
+
+---
+
 ## 2026-09-30 – 10-01 — test potvrdzovania naostro (PR #196–#208)
 
 **Zadanie (Ján):** otestovať potvrdzovanie pri pridelení osobe, oddeleniu
