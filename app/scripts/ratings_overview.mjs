@@ -1,8 +1,11 @@
 /**
  * ratings_overview.mjs — stav hodnotení odpovedí.
  *
- *     node --env-file=.env.local scripts/ratings_overview.mjs
- *     node --env-file=.env.local scripts/ratings_overview.mjs --posledny
+ *     node --env-file=.env.local --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/ratings_overview.mjs
+ *     node --env-file=.env.local --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/ratings_overview.mjs --posledny
+ *
+ * Prepínač len umlčí varovanie Node pri importe `src/lib/accessLevel.ts`;
+ * skript beží aj bez neho.
  *
  * Skript nič nemení — iba číta kolekciu `evaluations`.
  *
@@ -14,8 +17,15 @@
  *   **Únik interného obsahu je tvrdá brána.** Ráta sa zo zdrojov, ktoré
  *   systém použil pri odpovedi, takže sadu nikdy nepotreboval. Jediný
  *   výskyt znamená neúspech bez ohľadu na ostatné čísla.
+ *
+ *   **Únik je verejná odpoveď s interným zdrojom** (`isInternalLeak()`).
+ *   Do 2026-10-01 sa rátal každý interný zdroj, aj v odpovedi prihlásenému
+ *   zamestnancovi, ktorý interné vidieť smie — 28.–29. 9. tak brána hlásila
+ *   štyri „úniky", ktoré žiadnym neboli. Interný zdroj v internej odpovedi
+ *   sa teraz len ukazuje (▲), bránu nezhadzuje.
  */
 import { MongoClient } from "mongodb"
+import { isInternalLeak, isInternalSourceForInternal } from "../src/lib/accessLevel.ts"
 
 const OK = "\x1b[32m✔\x1b[0m", BAD = "\x1b[31m✘\x1b[0m", WARN = "\x1b[33m▲\x1b[0m"
 const last = process.argv.includes("--posledny")
@@ -109,8 +119,10 @@ try {
   }
 
   // Tvrdá brána: interný obsah medzi zdrojmi verejnej odpovede.
-  const leaks = records.filter(z => z.sources?.some(s => s.accessLevel === "internal"))
-  console.log(`${leaks.length === 0 ? OK : BAD} únik interného obsahu ${leaks.length}  (prah 0 — tvrdá brána)`)
+  const leaks = records.filter(isInternalLeak)
+  console.log(`${leaks.length === 0 ? OK : BAD} únik interného obsahu ${leaks.length}  (prah 0 — tvrdá brána, len verejné odpovede)`)
+  const internalForInternal = records.filter(isInternalSourceForInternal)
+  console.log(`${WARN} interné zdroje v interných odpovediach ${internalForInternal.length}  (v poriadku, len pre prehľad)`)
 
   const withoutCitations = records.filter(z => !z.citations?.length)
   console.log(`${WARN} odpovede bez citácie  ${withoutCitations.length}  (${pct(withoutCitations.length, records.length)} %)`)
@@ -131,6 +143,18 @@ try {
     for (const [k, v] of Object.entries(phases)) {
       const n = `n=${v.length}`
       console.log(`  ${k.padEnd(24)} ${String(quantile(v, 0.5)).padStart(6)} ms  ${String(p95(v)).padStart(6)} ms  ${n}`)
+    }
+    console.log()
+  }
+
+  // Únik sa vypisuje celý: pri tvrdej bráne treba hneď vedieť, ktorá odpoveď
+  // a komu — nie len číslo.
+  if (leaks.length) {
+    console.log("── únik interného obsahu ──────────────────────────────")
+    for (const z of leaks) {
+      const titles = [...new Set(z.sources.filter(s => s.accessLevel === "internal").map(s => s.title))]
+      console.log(`  ${z.createdAt?.toISOString?.() ?? "—"} · ${meno(z.askedBy ?? z.reviewer)} · „${String(z.question).slice(0, 70)}"`)
+      console.log(`    → ${titles.join(", ")}`)
     }
     console.log()
   }
