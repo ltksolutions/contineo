@@ -12,7 +12,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { currentPerson, currentTenant } from "@/lib/session"
 import { submitOwnObjection } from "@/lib/objectionsDb"
-import { sendObjectionEmails } from "@/lib/objectionNotice"
+import { announceObjection } from "@/lib/objectionNotice"
 import { dictionary, errorText } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 
@@ -26,8 +26,8 @@ export async function submitObjectionAction(fd: FormData) {
   let error = false
   try {
     const objection = await submitOwnObjection(person, text)
-    // E-maily až po zápise; ich zlyhanie námietku nezruší (loguje sa).
-    await sendObjectionEmails(tenant, objection, person)
+    // Zvonček a e-maily až po zápise; ich zlyhanie námietku nezruší (loguje sa).
+    await announceObjection(tenant, objection, person)
   } catch (e) {
     if (!(e instanceof AppError)) console.error("[privacy] podanie námietky zlyhalo:", e)
     message = errorText(e, person.language)

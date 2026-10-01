@@ -68,22 +68,26 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
         <p className="quiet page-lead" style={{ margin: "0 0 20px", maxWidth: 640 }}>{t.intro}</p>
         <Notice message={q.msg} error={q.error === "1"} back="/dpo" />
 
-        {/* Počty ako dlaždice (rám, bod 1) — `summarize()`, ako v e-maile. */}
-        {rows.length > 0 && (
-          <div className="dpo-tiles">
-            {([
-              [t.tileTotal, totals.total, ""],
-              [t.tileProblems, totals.withProblems, totals.withProblems > 0 ? " is-warn" : ""],
-              [t.tileObligation, totals.legalObligation, ""],
-              [t.tileInterest, totals.legitimateInterest, ""],
-            ] as [string, number, string][]).map(([label, value, mod]) => (
-              <div key={label} className="card dpo-tile">
-                <span className="dpo-tile-l">{label}</span>
-                <span className={`dpo-tile-v${mod}`}>{value}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Počty ako dlaždice (rám, bod 1) — `summarize()`, ako v e-maile.
+            Piata sú námietky čakajúce na rozhodnutie (D153) — odkaz na zoznam
+            nižšie; ukazuje sa aj bez predpisov, námietka od nich nezávisí. */}
+        <div className="dpo-tiles">
+          {rows.length > 0 && ([
+            [t.tileTotal, totals.total, ""],
+            [t.tileProblems, totals.withProblems, totals.withProblems > 0 ? " is-warn" : ""],
+            [t.tileObligation, totals.legalObligation, ""],
+            [t.tileInterest, totals.legitimateInterest, ""],
+          ] as [string, number, string][]).map(([label, value, mod]) => (
+            <div key={label} className="card dpo-tile">
+              <span className="dpo-tile-l">{label}</span>
+              <span className={`dpo-tile-v${mod}`}>{value}</span>
+            </div>
+          ))}
+          <a href="#objections" className="card dpo-tile dpo-tile--link">
+            <span className="dpo-tile-l">{t.tileObjections}</span>
+            <span className={`dpo-tile-v${pending > 0 ? " is-warn" : ""}`}>{pending}</span>
+          </a>
+        </div>
 
         <section style={{ display: "grid", gap: 12 }}>
           <div className="page-head">

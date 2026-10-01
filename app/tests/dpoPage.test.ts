@@ -65,6 +65,8 @@ describe("/dpo", () => {
   it("čakajúca námietka: počet pri nadpise, voľby ako dlaždice, zaevidovanie zbalené", async () => {
     const html = await render()
     expect(html).toContain("1 čaká na rozhodnutie")
+    // Piata dlaždica (D153): čakajúce námietky, varovná farba, odkaz na zoznam.
+    expect(html).toContain('<a href="#objections" class="card dpo-tile dpo-tile--link"><span class="dpo-tile-l">Námietky na rozhodnutie</span><span class="dpo-tile-v is-warn">1</span>')
     expect(html).toContain("dpo-choice--danger")
     expect(html).toMatch(/<details class="dpo-record">/)
   })

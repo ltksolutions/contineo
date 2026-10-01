@@ -8,9 +8,19 @@ import { describe, it, expect, vi } from "vitest"
 
 // `tenants.ts` ťahá Reactovú `cache`, ktorá mimo servera nie je; tu ho netreba.
 vi.mock("../src/lib/tenants", () => ({ brandingView: () => ({}) }))
-vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
+const m = vi.hoisted(() => ({ notifyPeople: vi.fn(async () => {}), sent: [] as string[] }))
+vi.mock("../src/lib/mongodb", () => ({
+  getCollection: vi.fn(async () => ({
+    find: () => ({ toArray: async () => [{ id: "p-dpo", email: "jan.letko@futbalsfz.sk", language: "sk" }] }),
+  })),
+}))
 vi.mock("../src/lib/dpo", () => ({ DPO_ROLE: "dpo" }))
-import { objectionRecipients } from "../src/lib/objectionNotice"
+vi.mock("../src/lib/notifications", () => ({ notifyPeople: m.notifyPeople }))
+vi.mock("../src/lib/ecomail", async orig => ({
+  ...(await orig<typeof import("../src/lib/ecomail")>()),
+  send: async (msg: { to: string }) => { m.sent.push(msg.to) },
+}))
+import { objectionRecipients, announceObjection } from "../src/lib/objectionNotice"
 import { objectionNoticeEmail, objectionReceiptEmail } from "../src/lib/ecomail"
 
 describe("príjemcovia upozornenia", () => {
@@ -55,5 +65,15 @@ describe("e-maily", () => {
   it("česky aj anglicky", () => {
     expect(objectionReceiptEmail("h", "1. 10. 2026", "x", null, "cs").subject).toContain("Potvrzení námitky")
     expect(objectionNoticeEmail("l", "h", "Jan", "1 Oct 2026", "en").subject).toContain("New objection")
+  })
+})
+
+describe("announceObjection", () => {
+  it("zvonček všetkým s rolou DPO (aj keď podal sám), e-maily DPO, kontaktu a podávajúcemu", async () => {
+    const tenant = { companyCode: "SFZ", hostnames: ["intranet.futbalsfz.sk"], defaultLanguage: "sk", privacy: { contact: { email: "gdpr@futbalsfz.sk" } } }
+    const objection = { personName: "Ján Letko", receivedAt: new Date("2026-10-01T15:48:00Z"), text: "Namietam." }
+    await announceObjection(tenant as never, objection as never, { email: "jan.letko@futbalsfz.sk", language: "sk" })
+    expect(m.notifyPeople).toHaveBeenCalledWith({ companyCode: "SFZ", personIds: ["p-dpo"], kind: "objectionSubmitted" })
+    expect(m.sent).toEqual(["jan.letko@futbalsfz.sk", "gdpr@futbalsfz.sk", "jan.letko@futbalsfz.sk"])
   })
 })
