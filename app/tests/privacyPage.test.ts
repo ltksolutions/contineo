@@ -25,6 +25,20 @@ async function render() {
 }
 beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic"; s.privacy = undefined })
 
+describe("/privacy — kontakt GDPR (D153)", () => {
+  it("vyplnený kontakt: meno a adresa v karte aj v rámčeku námietky, nie osoby s rolou DPO", async () => {
+    s.privacy = { contact: { name: "Ján Letko", email: "gdpr@futbalsfz.sk" } }
+    const html = await render()
+    expect(html).toContain("Ján Letko · <a href=\"mailto:gdpr@futbalsfz.sk\">gdpr@futbalsfz.sk</a>")
+    expect(html).toContain("Námietku pošlite e-mailom na <a href=\"mailto:gdpr@futbalsfz.sk\">")
+  })
+  it("bez kontaktu a bez DPO: veta o personálnom oddelení, bez vety o e-maile", async () => {
+    const html = await render()
+    expect(html).toContain("Kontakt na zodpovednú osobu vám poskytne personálne oddelenie.")
+    expect(html).not.toContain("Námietku pošlite e-mailom")
+  })
+})
+
 describe("/privacy", () => {
   it("bez Vzdelávania: pohlavie áno, kurzy nie, nič sa nerozhoduje automatizovane", async () => {
     const html = await render()

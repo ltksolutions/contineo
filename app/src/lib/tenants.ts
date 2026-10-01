@@ -209,6 +209,13 @@ export interface Tenant {
   privacy?: {
     retention?: Partial<RetentionSettings>
     extra?: Partial<Record<UiLanguage, string>>
+    /**
+     * Kontakt pre ochranu osobných údajov (D153): komu sa človek ozve
+     * e-mailom, napr. „Ján Letko, gdpr@futbalsfz.sk". Spoločná schránka,
+     * nie osobná adresa DPO — tá sa mení s človekom, schránka zostáva.
+     * Chýba = `/privacy` ukáže osoby s rolou `dpo` ako doteraz.
+     */
+    contact?: { name?: string; email?: string }
     updatedAt?: Date
     updatedBy?: string
   }

@@ -11,6 +11,7 @@
 > **Mení:** D24 — dôkazné záznamy sa **po uplynutí lehoty mažú**. Nemenia sa
 > ďalej a nemažú sa inak než touto dávkou alebo rozhodnutím o námietke.
 > **Implementácia:** hotová (2026-09-24) — PR #102 až #106; mazanie beží v režime `report`, kým ho Ján nezapne.
+> **Doplnené:** Dodatok 1 (2026-10-01) — D153, kontakt GDPR organizácie a námietka po prihlásení.
 
 ---
 
@@ -185,3 +186,36 @@ Po krokoch, každý samostatný PR:
 3. Rola `dpo`, stránka `/dpo` s výkazom právnych základov a štvrťročný e-mail (D104).
 4. Námietky (D105).
 5. Informovanie zamestnancov v rozhraní (C1).
+
+---
+
+## Dodatok 1 (2026-10-01) — kontakt GDPR a námietka po prihlásení (D153)
+
+> **Zadal a odsúhlasil:** Ján Letko (2026-10-01), ako DPO SFZ.
+
+### D153 — Kam sa človek obráti a ako podá námietku
+
+**Kontakt GDPR v nastaveniach organizácie.** Organizácia má v časti GDPR
+meno a e-mailovú adresu (`tenant.privacy.contact`), pre SFZ *Ján Letko,
+gdpr@futbalsfz.sk*. Stránka Ochrana osobných údajov ukazuje tento kontakt
+a v rámčeku „Právo namietať" vetu, kam námietku poslať e-mailom. Spoločná
+schránka, nie osobná adresa DPO: tá sa mení s človekom, schránka zostáva.
+Kým kontakt nie je vyplnený, stránka ukazuje osoby s rolou `dpo` ako
+doteraz. Zmena kontaktu posúva verziu textu (D138).
+
+**Námietka sa podáva dvoma cestami:**
+
+1. **Prihlásená osoba priamo na `/privacy`** (kanál „v aplikácii"). Totožnosť
+   overilo prihlásenie, adresa sa nepíše. Kým o námietke nie je rozhodnuté,
+   osoba ďalšiu nepodá — vidí, že jej námietka sa posudzuje. Osoba dostane
+   potvrdzovací e-mail s dátumom podania; všetci s rolou `dpo` a kontaktná
+   adresa GDPR dostanú upozornenie s menom a odkazom na `/dpo`, **bez
+   znenia námietky** (to je osobný údaj a zostáva v aplikácii).
+2. **E-mailom alebo listom na kontakt GDPR** — DPO ju zaeviduje na `/dpo`
+   ako doteraz (D105).
+
+Rozhodovanie a výmaz sa nemenia (D105).
+
+**Implementácia:** PR 1 — kontakt v nastaveniach a na `/privacy`
+(2026-10-01). PR 2 — námietka po prihlásení, upozornenie DPO a potvrdzovací
+e-mail.

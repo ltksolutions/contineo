@@ -111,6 +111,9 @@ export interface TenantChange {
   privacyRetention?: Partial<RetentionSettings>
   /** Doplnkový text DPO na `/privacy` (D137). Prázdny reťazec = zmazať. */
   privacyExtra?: Partial<Record<UiLanguage, string>>
+  /** Kontakt pre ochranu osobných údajov (D153). Prázdne pole sa zapíše prázdne. */
+  privacyContactName?: string
+  privacyContactEmail?: string
 }
 
 /**
@@ -226,6 +229,20 @@ function toSet(change: TenantChange): Record<string, unknown> {
     set["controller.registrationNumber"] = reg
   }
   if (change.privacyRetention !== undefined) set["privacy.retention"] = retentionSettings(change.privacyRetention)
+  // Kontakt GDPR (D153). Adresa sa overuje len tvarom — preklep by poslal
+  // námietky do prázdna a na `/privacy` by stál nefunkčný odkaz.
+  if (change.privacyContactName !== undefined) set["privacy.contact.name"] = change.privacyContactName.trim().replace(/\s+/g, " ")
+  if (change.privacyContactEmail !== undefined) {
+    const email = change.privacyContactEmail.trim().toLowerCase()
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new TenantValidationError(
+        "tenant.privacyContactEmailShape",
+        `Adresa „${email}" nemá tvar e-mailovej adresy.`,
+        { value: email },
+      )
+    }
+    set["privacy.contact.email"] = email
+  }
   if (change.privacyExtra !== undefined) {
     for (const [lang, text] of Object.entries(change.privacyExtra)) {
       if (!(UI_LANGUAGES as readonly string[]).includes(lang)) continue

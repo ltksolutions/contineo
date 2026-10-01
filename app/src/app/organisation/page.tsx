@@ -371,6 +371,29 @@ export default async function OrganisationPage({
           </div>
         </section>
 
+        {/* Kontakt GDPR (D153) — komu sa človek ozve e-mailom; na `/privacy`. */}
+        <section className="set-sec" id="gdpr">
+          <div className="set-sec-head">
+            <h2>{t.branding.secGdpr}</h2>
+            <p>{t.branding.secGdprNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <div className="set-pair">
+              <label className="field">
+                <span className="field-label">{t.branding.gdprName}</span>
+                <input className="field-input" name="privacyContactName" autoComplete="off"
+                       defaultValue={tenant.privacy?.contact?.name ?? ""} />
+              </label>
+              <label className="field">
+                <span className="field-label">{t.branding.gdprEmail}</span>
+                <input className="field-input" name="privacyContactEmail" type="email" autoComplete="off"
+                       defaultValue={tenant.privacy?.contact?.email ?? ""} />
+                <span className="quiet field-hint">{t.branding.gdprEmailNote}</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
         <section className="set-sec">
           <div className="set-sec-head">
             <h2>{t.branding.color}</h2>

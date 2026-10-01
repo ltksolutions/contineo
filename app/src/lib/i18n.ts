@@ -330,6 +330,8 @@ interface Dictionary {
     rightsHeading: string
     rights: string
     objection: string
+    /** Kam poslať námietku e-mailom (D153) — pred odkazom na adresu kontaktu GDPR. */
+    objectionEmail: string
     /** Dozorný úrad podľa krajiny prevádzkovateľa (`controller.country`), nie podľa jazyka. */
     complaint: Record<"SK" | "CZ", string>
     /** Zákon o archívoch podľa krajiny prevádzkovateľa (certifikát, ADR-021 D132). */
@@ -1413,6 +1415,12 @@ interface Dictionary {
       secIdentity: string
       secIdentityNote: string
       secContact: string
+      /** Kontakt pre ochranu osobných údajov (D153). */
+      secGdpr: string
+      secGdprNote: string
+      gdprName: string
+      gdprEmail: string
+      gdprEmailNote: string
       secAutoProvision: string
       saveBarNote: string
       controllerPreview: string
@@ -3596,6 +3604,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rightsHeading: "Vaše práva",
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
       objection: "Pri predpisoch s oprávneným záujmom máte právo namietať. Námietku posúdi zodpovedná osoba jednotlivo a doklad sa do jej rozhodnutia nemaže. Výmaz dokladu o oboznámení pred uplynutím lehoty nie je možný, kým je potrebný na preukázanie, uplatnenie alebo obhajobu právnych nárokov.",
+      objectionEmail: "Námietku pošlite e-mailom na",
       complaint: {
         SK: "Máte právo podať sťažnosť Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
         CZ: "Máte právo podať sťažnosť Úradu pre ochranu osobných údajov ČR (uoou.gov.cz).",
@@ -4697,6 +4706,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.nameRequiredShort": "Meno je povinné.",
     "tenant.phonePrefixShape": "Predvoľba „{value}“ nemá správny tvar — očakáva sa napríklad +421.",
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správny tvar — očakáva sa 6 až 12 číslic.",
+    "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailovej adresy.",
     "person.givenNameRequired": "Meno je povinné.",
     "person.surnameRequired": "Priezvisko je povinné.",
     "person.unknownWorkplace": "Pracovisko „{value}“ v číselníku organizácie nie je. Doplňte ho v Organizácia → Číselníky.",
@@ -4957,6 +4967,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secIdentity: "Názov portálu",
       secIdentityNote: "Názov a logo v hlavičke, v e-mailoch a na prihlasovacej obrazovke. Pod nimi organizácia, ktorá portál prevádzkuje a spracúva osobné údaje.",
       secContact: "Kontakt",
+      secGdpr: "GDPR",
+      secGdprNote: "Kontakt pre ochranu osobných údajov na stránke Ochrana osobných údajov. Sem ľudia pošlú námietku alebo žiadosť e-mailom. Prázdne = ukážu sa osoby s rolou DPO.",
+      gdprName: "Meno a priezvisko",
+      gdprEmail: "E-mailová adresa",
+      gdprEmailNote: "Spoločná schránka (napr. gdpr@…), nie osobná adresa — zostane, aj keď sa DPO zmení.",
       secAutoProvision: "Automatické založenie",
       saveBarNote: "Jedno uloženie pre celú stránku.",
       controllerPreview: "Na stránke Ochrana osobných údajov:",
@@ -7031,6 +7046,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rightsHeading: "Vaše práva",
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
       objection: "U předpisů s oprávněným zájmem máte právo vznést námitku. Námitku posoudí pověřenec jednotlivě a doklad se do jeho rozhodnutí nemaže. Výmaz dokladu o seznámení před uplynutím lhůty není možný, dokud je potřebný k prokázání, uplatnění nebo obhajobě právních nároků.",
+      objectionEmail: "Námitku pošlete e-mailem na",
       complaint: {
         SK: "Máte právo podat stížnost dozorovému úřadu — Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
         CZ: "Máte právo podat stížnost Úřadu pro ochranu osobních údajů (uoou.gov.cz).",
@@ -8132,6 +8148,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.nameRequiredShort": "Jméno je povinné.",
     "tenant.phonePrefixShape": "Předvolba „{value}“ nemá správný tvar — očekává se například +420.",
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správný tvar — očekává se 6 až 12 číslic.",
+    "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailové adresy.",
     "person.givenNameRequired": "Jméno je povinné.",
     "person.surnameRequired": "Příjmení je povinné.",
     "person.unknownWorkplace": "Pracoviště „{value}“ v číselníku organizace není. Doplňte ho v Organizace → Číselníky.",
@@ -8392,6 +8409,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secIdentity: "Název portálu",
       secIdentityNote: "Název a logo v hlavičce, v e-mailech a na přihlašovací obrazovce. Pod nimi organizace, která portál provozuje a zpracovává osobní údaje.",
       secContact: "Kontakt",
+      secGdpr: "GDPR",
+      secGdprNote: "Kontakt pro ochranu osobních údajů na stránce Ochrana osobních údajů. Sem lidé pošlou námitku nebo žádost e-mailem. Prázdné = zobrazí se osoby s rolí DPO.",
+      gdprName: "Jméno a příjmení",
+      gdprEmail: "E-mailová adresa",
+      gdprEmailNote: "Společná schránka (např. gdpr@…), ne osobní adresa — zůstane, i když se DPO změní.",
       secAutoProvision: "Automatické založení",
       saveBarNote: "Jedno uložení pro celou stránku.",
       controllerPreview: "Na stránce Ochrana osobních údajů:",
@@ -10457,6 +10479,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rightsHeading: "Your rights",
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
       objection: "For documents based on legitimate interest you have the right to object. The data protection officer assesses each objection individually and the evidence is not deleted before the decision. Evidence of having read a document cannot be deleted before the end of the period while it is needed to establish, exercise or defend legal claims.",
+      objectionEmail: "Send your objection by e-mail to",
       complaint: {
         SK: "You have the right to lodge a complaint with the supervisory authority — the Office for Personal Data Protection of the Slovak Republic (dataprotection.gov.sk).",
         CZ: "You have the right to lodge a complaint with the supervisory authority — the Office for Personal Data Protection of the Czech Republic (uoou.gov.cz).",
@@ -11557,6 +11580,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.nameRequiredShort": "The name is required.",
     "tenant.phonePrefixShape": "The dialling code “{value}” has the wrong shape — something like +421 is expected.",
     "tenant.registrationNumberShape": "The company ID “{value}” has the wrong shape — 6 to 12 digits are expected.",
+    "tenant.privacyContactEmailShape": "“{value}” is not an e-mail address.",
     "person.givenNameRequired": "The first name is required.",
     "person.surnameRequired": "The surname is required.",
     "person.unknownWorkplace": "The workplace “{value}” is not in the organisation's code list. Add it under Organisation → Code lists.",
@@ -11817,6 +11841,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secIdentity: "Portal name",
       secIdentityNote: "Name and logo in the header, in emails and on the sign-in screen. Below them, the organisation that runs the portal and processes personal data.",
       secContact: "Contact",
+      secGdpr: "GDPR",
+      secGdprNote: "Data protection contact shown on the Privacy page. People send objections and requests here by e-mail. Empty = people with the DPO role are shown.",
+      gdprName: "Full name",
+      gdprEmail: "E-mail address",
+      gdprEmailNote: "A shared mailbox (e.g. gdpr@…), not a personal address — it stays when the DPO changes.",
       secAutoProvision: "Automatic sign-up",
       saveBarNote: "One save for the whole page.",
       controllerPreview: "On the Privacy page:",
