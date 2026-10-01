@@ -231,6 +231,9 @@ export async function POST(req: NextRequest) {
           }
           // Zachováme max 8 chunkov pre kontext
           chunks = chunks.slice(0, 8)
+          // Bez vlastného kľúča sa čas podotázok strácal v TTFT a nebolo
+          // vidieť, že bežia až po hlavnom hľadaní, nie súbežne s ním.
+          measure("podotazky")
         }
 
         // 6c. Rerank v aplikačnej vrstve (on-prem). V cloude je to no-op —

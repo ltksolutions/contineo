@@ -168,6 +168,11 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
         let stopReason = ""
         const tokens: TokenCounts = { ...EMPTY_TOKENS }
 
+        // Čas hlavného modelu po prvý token — merané na serveri, bez siete.
+        // Bez neho zostávala z TTFT asi tretina nevysvetlená (D9).
+        const started = Date.now()
+        let firstToken = true
+
         for await (const ev of generation.stream({
           system,
           query,
@@ -175,6 +180,10 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           maxTokens: profile.providers.generation.maxTokens,
         })) {
           if (ev.type === "text") {
+            if (firstToken && opts.timings) {
+              opts.timings["model po prvy token"] = Date.now() - started
+              firstToken = false
+            }
             encode({ type: "token", token: ev.text })
           } else if (ev.type === "koniec") {
             stopReason = ev.dovod
