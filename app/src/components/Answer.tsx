@@ -200,13 +200,6 @@ export function AnswerBody({
 }
 
 
-/** Či má odpoveď bočný stĺpec citácií: beží, alebo má aspoň jednu citáciu. */
-export function answerHasCitations(state: AnswerState): boolean {
-  if (state.done?.error && !state.text) return false
-  if (state.done && !state.text && state.done.sources.length === 0) return false
-  return state.running || mergeCitations(state.citations).length > 0
-}
-
 /**
  * Doslovné citácie, zdroje v kontexte a technické údaje
  * (ASK-odpoved-dva-stlpce). Na ≥ 1180 px vpravo od karty (`sticky`), inak
