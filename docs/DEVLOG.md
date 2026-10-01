@@ -58,6 +58,24 @@ pás z výkazu DPO s hľadaním (PR #218, druhá session).
 
 ---
 
+## 2026-10-01 — čitateľný prázdny stav (ZAKLAD-prazdny-stav-citatelnost)
+
+`.empty` mal prerušovaný okraj `--line` priamo na sivom `--bg` a bez
+pozadia — rámik nebolo vidieť a popis v 13 px vyzeral ako poznámka.
+Teraz biela karta s plným okrajom, titulok 16 px, popis 14 px. Jedna
+trieda, ~30 obrazoviek naraz.
+
+Q1: história otázok a hodnotenie odpovedí mali vlastný prázdny stav
+(holá veta, resp. karta s dvomi odsekmi) — prevedené na `.empty`.
+História dostala druhú vetu (`emptyText`, `emptyFilterText`, sk/cs/en);
+doterajšia veta sa rozdelila na titulok a popis. Knižnica pre bežnú osobu
+mala `<p className="empty">` bez titulku — teraz titulok.
+
+Q2: na `/dpo` ani v `learning/manage/[courseKey]` `.empty` nestojí v `.card`,
+takže nové `.card .empty` (bez rámu v ráme) sa ich netýka.
+
+---
+
 ## 2026-10-01 — výkaz DPO s hľadaním (DPO-vykaz-hladanie)
 
 **Zadanie:** 13 riadkov výkazu pod sebou, 11 s rovnakým nedostatkom a tou

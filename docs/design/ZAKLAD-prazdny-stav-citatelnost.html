@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZAKLAD — prázdny stav, čitateľnosť</title>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.18);--accent:#1d4ed8;--on-accent:#fff;--radius:12px}
+.dark{--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--line-strong:rgba(255,255,255,.18);--accent:#eef1f5;--on-accent:#11151c}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--ink)}a:hover{color:var(--accent)}
+.sheet{padding:28px 32px 48px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 24px;max-width:84ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#eceef1;padding:1px 5px;border-radius:4px}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);margin:0 0 10px}
+.ann{font-size:12.5px;color:#5c6675;max-width:96ch;margin:0 0 30px;line-height:1.55}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin:0 4px 0 6px;vertical-align:1px}
+.row2{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.hdr{background:var(--surface);border-bottom:1px solid var(--line);height:56px;display:flex;align-items:center;gap:10px;padding:0 16px}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--surface-2)}
+.org{font-size:15px;font-weight:650}
+.ask{flex:1;max-width:600px;margin:0 auto;height:36px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;align-items:center;padding:0 14px}
+.av{width:32px;height:32px;border-radius:50%;background:#c9ced6}
+.path{background:var(--surface);border-bottom:1px solid var(--line);min-height:40px;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:13px;color:var(--muted)}
+.path b{color:var(--ink)}
+.main{max-width:1240px;margin:0 auto;padding:20px 24px 40px}
+.title{font-size:26px;letter-spacing:-.02em;margin:0 0 4px}
+.lead{font-size:15px;color:var(--muted);margin:0 0 18px;max-width:620px}
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin:0 0 18px;font-size:15px}
+.tabs span{padding:8px 2px 10px;color:var(--muted)}
+.tabs .on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--accent)}
+.button{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:10px;background:var(--accent);color:var(--on-accent);font-size:14px;font-weight:600;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border:1px solid var(--line-strong)}
+
+/* DNES — globals.css:816 */
+.old{display:grid;justify-items:center;gap:4px;padding:32px 20px;border:1px dashed var(--line);border-radius:var(--radius);text-align:center}
+.old .t{font-size:15px;font-weight:600}
+.old .x{font-size:13px;color:var(--muted);line-height:1.55;max-width:46ch}
+
+/* NÁVRH */
+.empty{display:grid;justify-items:center;gap:6px;padding:36px 24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);text-align:center}
+.empty-title{font-size:16px;font-weight:600;color:var(--ink)}
+.empty-text{font-size:14px;color:var(--muted);line-height:1.55;max-width:52ch;text-wrap:pretty}
+.empty-action{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.empty--compact{padding:18px 16px;gap:3px}
+.empty--compact .empty-title{font-size:15px}
+.cardbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.cardbox h2{font-size:16px;margin:0 0 10px}
+.cardbox .empty{border:0;padding:20px 12px;background:transparent}
+.w390 .main{padding:14px 14px 28px}
+.w390 .title{font-size:22px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ZAKLAD — prázdny stav, čitateľnosť</h1>
+<p class="doc">Snímky <code>uploads/Snímka obrazovky 2026-10-01 o 20.07.56 / 20.08.10 / 20.08.24.png</code> (<code>/approvals</code>, <code>/learning</code>, <code>/learning/tests</code>). Rám <code>.empty</code> má prerušovaný okraj <code>--line</code> (12 % čiernej) priamo na sivom <code>--bg</code> — okraj takmer nevidieť, rámik splynie s plochou a text v ňom pôsobí ako popisok, nie ako odkaz. Oprava je v jednej triede, takže platí naraz na všetkých ~30 obrazovkách. Zadanie: <code>ZAKLAD-prazdny-stav-citatelnost.md</code>.</p>
+
+<p class="cap">Dnes — 1440 /learning</p>
+<div class="frame" style="width:1440px"><div class="hdr"><span class="logo"></span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av"></span></div><div class="path">Prehľad › Organizácia › <b>Vzdelávanie</b></div>
+<div class="main"><h1 class="title">Vzdelávanie</h1><p class="lead">Kurzy, ktoré máš pridelené, a otvorené kurzy, na ktoré sa môžeš zapísať.</p>
+<div class="old"><div class="t">Zatiaľ tu nemáte žiadny kurz</div><div class="x">Keď vám organizácia pridelí kurz alebo otvorí kurz na zápis, uvidíte ho tu. Nič netreba robiť.</div></div></div></div>
+<p class="ann">Prerušovaný okraj 12 % na <code>#f5f6f8</code>, popis 13 px.</p>
+
+<p class="cap">Návrh — 1440 /learning</p>
+<div class="frame" style="width:1440px"><div class="hdr"><span class="logo"></span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av"></span></div><div class="path">Prehľad › Organizácia › <b>Vzdelávanie</b></div>
+<div class="main"><h1 class="title">Vzdelávanie</h1><p class="lead">Kurzy, ktoré máš pridelené, a otvorené kurzy, na ktoré sa môžeš zapísať.</p>
+<div class="empty"><div class="empty-title">Zatiaľ tu nemáte žiadny kurz</div><div class="empty-text">Keď vám organizácia pridelí kurz alebo otvorí kurz na zápis, uvidíte ho tu. Nič netreba robiť.</div></div></div></div>
+<p class="ann"><span class="num">1</span><b>Biele pozadie</b> <code>var(--surface)</code> — rámik je karta ako každá iná na stránke, odlíši sa od sivej plochy bez ďalšej farby. <span class="num">2</span><b>Plný okraj</b> <code>1px solid var(--line)</code> namiesto prerušovaného — rovnaký ako <code>.card</code>. Prerušovaný okraj znamená „sem niečo pustite" (zóna nahrávania), tu nič nepúšťame. <span class="num">3</span><b>Text o stupeň väčší</b>: nadpis <code>--fs-lead</code> 15 → 16 px a <code>color: var(--ink)</code> výslovne, popis <code>--fs-small</code> 13 → <code>--fs-body</code> 14 px, šírka 46 → 52 ch. <code>--muted</code> na bielej = 5,9 : 1 (na <code>--bg</code> bolo 5,4 : 1). Ikona ani ilustrácia nepribúda (ZAKLAD, úloha 1).</p>
+
+<p class="cap">Návrh — 1440 /learning/tests (s akciou) · /approvals</p>
+<div class="row2">
+<div class="frame" style="width:700px"><div class="main"><h1 class="title">Testy</h1><div class="tabs"><span class="on">Testy</span><span>Banka otázok</span></div>
+<div class="empty"><div class="empty-title">Zatiaľ tu nie je žiadny test.</div><div class="empty-text">Test je recept: sekcie vyberajú otázky z banky podľa smart:tagov.</div><div class="empty-action"><a href="#" class="button">Nový test</a></div></div></div></div>
+<div class="frame" style="width:700px"><div class="main"><h1 class="title">Na schválenie</h1><p class="lead">Znenia, ktoré niekto predložil a čaká na tvoje rozhodnutie.</p>
+<div class="empty"><div class="empty-title">Nič nečaká na vaše rozhodnutie</div><div class="empty-text">Keď vás niekto určí schvaľovateľom znenia, objaví sa tu celý text aj s tým, kto ho predložil.</div></div></div></div>
+</div>
+<p class="ann">Tlačidlo v <code>.empty-action</code> sa nemení. Na <code>/learning/tests</code> je dnes akcia len v hlavičke stránky — tu len ukážka, ako vyzerá rámik s akciou (napr. <code>/library</code>, <code>/people</code>); <b>nepridávať</b>, ak ju obrazovka nemá.</p>
+
+<p class="cap">Návrh — kompaktný (/learning „len dokončené") · vnútri karty</p>
+<div class="row2">
+<div class="frame" style="width:700px"><div class="main"><div class="empty empty--compact"><div class="empty-title">Nič nečaká</div><div class="empty-text">Všetky pridelené kurzy máte dokončené.</div></div></div></div>
+<div class="frame" style="width:700px"><div class="main"><div class="cardbox"><h2>Námietky</h2><div class="empty"><div class="empty-text">Žiadne námietky na rozhodnutie.</div></div></div></div></div>
+</div>
+<p class="ann"><span class="num">4</span><b><code>.card .empty</code> bez pozadia a bez okraja</b> — vnútri karty (napr. <code>/dpo</code> námietky, <code>/learning/manage/[kurz]</code>) by biela karta v bielej karte bol rám v ráme. Rovnaký dôvod, prečo <code>.panel-empty</code> na Prehľade nie je <code>.empty</code>.</p>
+
+<p class="cap">Návrh — 390 · tmavá téma 390</p>
+<div class="row2">
+<div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px"><span class="logo"></span><span class="org">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div><div class="main"><h1 class="title">Vzdelávanie</h1><p class="lead">Kurzy, ktoré máš pridelené, a otvorené kurzy, na ktoré sa môžeš zapísať.</p><div class="empty"><div class="empty-title">Zatiaľ tu nemáte žiadny kurz</div><div class="empty-text">Keď vám organizácia pridelí kurz alebo otvorí kurz na zápis, uvidíte ho tu. Nič netreba robiť.</div></div></div></div>
+<div class="frame w390 dark" style="width:390px"><div class="hdr" style="padding:0 10px"><span class="logo"></span><span class="org">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div><div class="main"><h1 class="title">Vzdelávanie</h1><p class="lead">Kurzy, ktoré máš pridelené, a otvorené kurzy, na ktoré sa môžeš zapísať.</p><div class="empty"><div class="empty-title">Zatiaľ tu nemáte žiadny kurz</div><div class="empty-text">Keď vám organizácia pridelí kurz alebo otvorí kurz na zápis, uvidíte ho tu. Nič netreba robiť.</div></div></div></div>
+</div>
+<p class="ann">Tmavá téma: <code>--surface #161b22</code> na <code>--bg #0d1016</code> — tie isté tokeny, nová farba nevzniká. 834 sa správa ako 1440 (rámik na plnú šírku obsahu), nekreslí sa.</p>
+</div></body></html>

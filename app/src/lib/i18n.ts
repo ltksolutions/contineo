@@ -753,7 +753,10 @@ interface Dictionary {
       retention: (months: number) => string
       loadOlder: string
       empty: string
+      /** Druhá veta prázdneho stavu (ZAKLAD-prazdny-stav-citatelnost). */
+      emptyText: string
       emptyFilter: string
+      emptyFilterText: string
       status: { citations: (n: number) => string; none: string; fits: string; doesNotFit: string }
       today: string
       yesterday: string
@@ -4028,8 +4031,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       clearCancel: "Nechať",
       retention: months => `Otázky a odpovede sa uchovávajú ${months} mesiacov a potom sa zmažú. Odstránenie z histórie ich skryje len vo vašom zozname — na kontrolu kvality odpovedí ostávajú do konca lehoty.`,
       loadOlder: "Načítať staršie",
-      empty: "Zatiaľ ste sa nič nepýtali. Otázku položte v poli hore.",
+      empty: "Zatiaľ ste sa nič nepýtali.",
+      emptyText: "Otázku položte v poli hore. Vaše otázky a odpovede sa potom ukážu tu.",
       emptyFilter: "Žiadna vaša otázka tomu nezodpovedá.",
+      emptyFilterText: "Skúste iné slovo alebo hľadanie zrušte.",
       status: {
         citations: n => (n === 1 ? "1 citácia" : n <= 4 ? `${n} citácie` : `${n} citácií`),
         none: "nič sa nenašlo",
@@ -7527,8 +7532,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       clearCancel: "Nechat",
       retention: months => `Otázky a odpovědi se uchovávají ${months} měsíců a pak se smažou. Odstranění z historie je skryje jen ve vašem seznamu — pro kontrolu kvality odpovědí zůstávají do konce lhůty.`,
       loadOlder: "Načíst starší",
-      empty: "Zatím jste se na nic neptali. Otázku položte v poli nahoře.",
+      empty: "Zatím jste se na nic neptali.",
+      emptyText: "Otázku položte v poli nahoře. Vaše otázky a odpovědi se pak ukážou tady.",
       emptyFilter: "Žádná vaše otázka tomu neodpovídá.",
+      emptyFilterText: "Zkuste jiné slovo nebo hledání zrušte.",
       status: {
         citations: n => (n === 1 ? "1 citace" : n <= 4 ? `${n} citace` : `${n} citací`),
         none: "nic se nenašlo",
@@ -11017,8 +11024,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       clearCancel: "Keep",
       retention: months => `Questions and answers are kept for ${months} months and then deleted. Removing them from your history only hides them in your list — they stay for checking answer quality until the period ends.`,
       loadOlder: "Load older",
-      empty: "You have not asked anything yet. Ask a question in the field at the top.",
+      empty: "You have not asked anything yet.",
+      emptyText: "Ask a question in the field at the top. Your questions and answers will then show up here.",
       emptyFilter: "None of your questions matches.",
+      emptyFilterText: "Try another word or clear the search.",
       status: {
         citations: n => (n === 1 ? "1 citation" : `${n} citations`),
         none: "nothing found",

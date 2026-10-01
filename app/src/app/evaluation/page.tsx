@@ -72,9 +72,9 @@ export default async function EvaluationPage({
       <Notice message={message} error={error === "1"} back="/evaluation" />
 
       {queue.length === 0 && (
-        <div className="card">
-          <p style={{ margin: "0 0 6px", fontSize: "var(--fs-lead)" }}>{t.empty}</p>
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.emptyNote}</p>
+        <div className="empty">
+          <div className="empty-title">{t.empty}</div>
+          <div className="empty-text">{t.emptyNote}</div>
         </div>
       )}
 
