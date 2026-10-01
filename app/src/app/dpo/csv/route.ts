@@ -6,8 +6,7 @@
 
 import { dpoContext } from "@/lib/dpo"
 import { legalBasisRows } from "@/lib/dpoDb"
-import { toCsv } from "@/lib/csv"
-import { dictionary } from "@/lib/i18n"
+import { legalBasisCsv } from "@/lib/dpoCsv"
 
 export const dynamic = "force-dynamic"
 
@@ -17,21 +16,8 @@ export async function GET() {
   if (ctx.state !== "ready") {
     return new Response(null, { status: ctx.state === "not-signed-in" ? 401 : 404 })
   }
-  const t = dictionary(ctx.person.language).dpo
   const rows = await legalBasisRows(ctx.person.companyCode)
-  const csv = toCsv(rows, [
-    { label: "documentId", value: r => r.documentId },
-    { label: "title", value: r => r.title },
-    { label: "versionId", value: r => r.versionId },
-    { label: "versionLabel", value: r => r.versionLabel },
-    { label: "effectiveFrom", value: r => (r.effectiveFrom ? r.effectiveFrom.toISOString().slice(0, 10) : "") },
-    { label: "legalBasis", value: r => r.legalBasis ?? "" },
-    { label: "basisLabel", value: r => r.basisLabel ?? "" },
-    { label: "reference", value: r => r.reference ?? "" },
-    { label: "responsibleName", value: r => r.responsible?.fullName ?? "" },
-    { label: "responsibleEmail", value: r => r.responsible?.email ?? "" },
-    { label: "problems", value: r => r.problems.map(p => t.problems[p]).join("; ") },
-  ])
+  const csv = legalBasisCsv(rows, ctx.person.language)
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
