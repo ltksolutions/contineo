@@ -893,6 +893,12 @@ neposielajú — rozposlanie zostáva samostatným krokom.
 Bod „tlačidlo **Nová verzia** na detaile" z `DESIGN_GAP.md` rieši **O3**,
 nie táto sekcia.
 
+### Čas po prvý token (2026-10-01) — D9: p95 < 2 s
+
+- [x] **Fáza 1 — meranie** ✅ 2026-10-01 (PR #205) — v `timings` pribudli `podotazky` a `model po prvy token` (server); `ratings_overview.mjs` čítal rozpad zo starého poľa `casy` a vypisoval ho vždy prázdny, teraz ukazuje medián a p95 každej fázy. Východisko na 26 hodnoteniach (15.–29. 9.): TTFT medián 5,2 s, p95 9,7 s. Prvé dve otázky po nasadení: hlavný model po prvý token 2,8–4,7 s je najväčšia položka, prepis otázky ~1,3 s, hľadanie 0,6 s (4,1 s pri studenom štarte).
+- [ ] **Pár dní zbierať hodnotenia s novými časmi, potom spustiť `ratings_overview.mjs`** (`node --env-file=.env.local scripts/ratings_overview.mjs`) — z dvoch otázok sa nerozhoduje; podľa mediánu a p95 fáz sa vyberie, čo vo fáze 3 skracovať (model, prepis, hľadanie).
+- [ ] **Fáza 2 — rýchle zisky bez straty kvality** (plán 2026-10-01).
+
 ### Spätná väzba Jána z preklikania (2026-09-18)
 
 - [x] **`/organisation?tab=codelists` padal na 500** ✅ — chýbali popisky číselníka `workplace` v i18n (pribudol s D85); doplnené SK/CS/EN + `tests/codelistLabels.test.ts`.

@@ -309,15 +309,23 @@ export async function acknowledge(
   /*
    * Poradie pokusu sa **číta pred zápisom**, nie odvodzuje z ničoho. Pri prvom
    * potvrdení vyjde 1. Dve súbežné kliknutia vypočítajú to isté číslo a druhé
-   * odmietne unikátny index — presne tak, ako to bolo doteraz.
+   * odmietne unikátny index.
+   *
+   * **Platné potvrdenie sa nepotvrdzuje druhýkrát.** Unikátny index chráni len
+   * pred súbežnými kliknutiami: od zavedenia odvolania je ďalší pokus „počet
+   * potvrdení + 1", takže stránka otvorená na druhom zariadení ešte pred prvým
+   * potvrdením zapísala cyklus 2 a hlásila „Potvrdené" (naostro 1. 10. 2026,
+   * telefón a počítač o 9 s). Nový cyklus vzniká **len po odvolaní**.
    */
   const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
-  const previous = await col.countDocuments({
-    companyCode: actor.companyCode,
-    personId: actor.personId,
-    versionId: v.versionId,
-    type: "acknowledgement",
-  })
+  const pair = { companyCode: actor.companyCode, personId: actor.personId, versionId: v.versionId }
+  const [previous, revocations] = await Promise.all([
+    col.countDocuments({ ...pair, type: "acknowledgement" }),
+    col.countDocuments({ ...pair, type: "revocation" }),
+  ])
+  if (isAcknowledged({ acknowledgements: previous, revocations })) {
+    return { ok: false, reason: "already-acknowledged" }
+  }
 
   const record: Acknowledgement = {
     type: "acknowledgement",

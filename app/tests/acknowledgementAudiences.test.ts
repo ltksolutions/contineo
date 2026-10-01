@@ -361,3 +361,29 @@ describe("všetky tri cesty naraz", () => {
     expect(data[ACKNOWLEDGEMENTS_COLLECTION]).toHaveLength(1)
   })
 })
+
+describe("dvojité potvrdenie (naostro 1. 10. 2026)", () => {
+  it("druhé potvrdenie z iného zariadenia sa odmietne — záznam zostane jeden", async () => {
+    await give({ kind: "person", value: eva.email })
+    expect((await confirm(eva)).ok).toBe(true)
+
+    // Stránka otvorená na druhom zariadení ešte pred prvým potvrdením.
+    const second = await confirm(eva)
+    expect(second).toEqual({ ok: false, reason: "already-acknowledged" })
+    expect(data[ACKNOWLEDGEMENTS_COLLECTION].filter(a => a.personId === "eva")).toHaveLength(1)
+  })
+
+  it("po odvolaní sa dá potvrdiť znova — ako nový cyklus", async () => {
+    await give({ kind: "person", value: eva.email })
+    await confirm(eva)
+    const first = data[ACKNOWLEDGEMENTS_COLLECTION][0]
+    data[ACKNOWLEDGEMENTS_COLLECTION].push({ ...first, _id: "rev-1", type: "revocation" })
+    expect(await onScreen(eva)).toEqual([SUBJECT.documentId])
+
+    expect((await confirm(eva)).ok).toBe(true)
+    const cycles = data[ACKNOWLEDGEMENTS_COLLECTION]
+      .filter(a => a.personId === "eva" && a.type === "acknowledgement").map(a => a.cycle)
+    expect(cycles).toEqual([1, 2])
+    expect(await onScreen(eva)).toEqual([])
+  })
+})
