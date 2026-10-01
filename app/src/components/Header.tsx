@@ -334,15 +334,26 @@ export default function Header({
           kde sa beh spustí hneď. Bez skriptu obyčajný `GET` formulár, so
           skriptom plachta na mieste poľa — `HeaderAsk`. Na `/ask` nesie
           položenú otázku; `key` ho pri novej otázke založí nanovo.
+
+          **Pole je v strede** medzi značkou a zvončekom (SHELL-hlavicka-sirka,
+          Q1 B, 1. 10. 2026) — mení polohu zo SHELL-menu-v-hlavicke, kde bolo
+          vľavo pri značke. Dve prázdne medzery, nie `margin-left: auto` na
+          zvončeku: bez nich sa riadok poskladal zľava a zvonček s avatarom
+          končili stovky pixelov pred pravým okrajom cesty a obsahu (pole má
+          strop 600 px). Vzor `.page-head-spacer`.
         */}
         {email && (
-          <HeaderAsk
-            key={askedHere}
-            initial={askedHere}
-            organisation={branding?.displayName ?? "Contineo"}
-            kbdHint={kbdHint}
-            language={language}
-          />
+          <>
+            <span className="header-spacer" aria-hidden="true" />
+            <HeaderAsk
+              key={askedHere}
+              initial={askedHere}
+              organisation={branding?.displayName ?? "Contineo"}
+              kbdHint={kbdHint}
+              language={language}
+            />
+            <span className="header-spacer" aria-hidden="true" />
+          </>
         )}
 
         {/* Menu je pre prihlásených. Neprihlásený vidí značku a prepínač

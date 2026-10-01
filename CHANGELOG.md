@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Hlavička na celú šírku obsahu (2026-10-01)
+
+Pole otázky je v strede hlavičky, zvonček a avatar končia na pravom okraji
+cesty a obsahu — doteraz zostávali stovky pixelov pred ním. Ikona menu
+lícuje s nadpisom stránky. Na telefóne bez zmeny.
+
 ### Potvrdzovanie dokumentov — overené naostro a opravy (2026-09-30 – 10-01)
 
 **PDF znenia sa zobrazuje po stranách priamo na stránke**, na počítači aj
