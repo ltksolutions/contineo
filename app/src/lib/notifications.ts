@@ -69,6 +69,8 @@ export type NotificationKind =
    * určiť právny základ ešte pred zverejnením.
    */
   | "draftResponsibleAssigned"
+  /** Prihlásená osoba podala námietku (ADR-012, D153) — všetkým s rolou DPO. */
+  | "objectionSubmitted"
 
 export interface NotificationParams {
   documentId?: string
@@ -114,6 +116,8 @@ export function notificationHref(
       return documentId ? `/library/${encodeURIComponent(documentId)}` : null
     case "remindersSent":
       return "/hr/reminders"
+    case "objectionSubmitted":
+      return "/dpo#objections"
     default:
       // Neznámy druh nemá odkaz. Radšej nikam, než na obrazovku, ktorá
       // s udalosťou nesúvisí.

@@ -444,6 +444,8 @@ interface Dictionary {
     tileProblems: string
     tileObligation: string
     tileInterest: string
+    /** Námietky čakajúce na rozhodnutie (D153). */
+    tileObjections: string
     groupProblems: (n: number) => string
     groupOk: (n: number) => string
     colDocument: string
@@ -1896,6 +1898,8 @@ interface Dictionary {
       responsibleAssigned: (title: string, label: string) => string
       /** Osoba určená za zodpovednú už v príprave (ADR-023) — má určiť základ pred zverejnením. */
       draftResponsibleAssigned: (title: string) => string
+      /** Prihlásená osoba podala námietku (D153) — ide všetkým s rolou DPO. */
+      objectionSubmitted: () => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -3816,6 +3820,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tileProblems: "S nedostatkom",
     tileObligation: "Zákonná povinnosť",
     tileInterest: "Oprávnený záujem",
+    tileObjections: "Námietky na rozhodnutie",
     groupProblems: n => `S nedostatkom · ${n}`,
     groupOk: n => `V poriadku · ${n}`,
     colDocument: "Predpis",
@@ -5477,6 +5482,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       versionPublished: (title, label) => `Zverejnené znenie „${label}" dokumentu „${title}".`,
       responsibleAssigned: (title, label) => `Ste zodpovedná osoba za znenie „${label}" dokumentu „${title}". Určte právny základ.`,
       draftResponsibleAssigned: (title) => `Ste zodpovedná osoba za pripravované znenie dokumentu „${title}". Právny základ môžete určiť ešte pred zverejnením.`,
+      objectionSubmitted: () => "Nová námietka (čl. 21) čaká na vaše rozhodnutie.",
     },
   },
   responsibility: {
@@ -7278,6 +7284,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tileProblems: "S nedostatkem",
     tileObligation: "Zákonná povinnost",
     tileInterest: "Oprávněný zájem",
+    tileObjections: "Námitky k rozhodnutí",
     groupProblems: n => `S nedostatkem · ${n}`,
     groupOk: n => `V pořádku · ${n}`,
     colDocument: "Předpis",
@@ -8937,6 +8944,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       versionPublished: (title, label) => `Zveřejněné znění „${label}" dokumentu „${title}".`,
       responsibleAssigned: (title, label) => `Jste odpovědná osoba za znění „${label}" dokumentu „${title}". Určete právní základ.`,
       draftResponsibleAssigned: (title) => `Jste odpovědná osoba za připravované znění dokumentu „${title}". Právní základ můžete určit ještě před zveřejněním.`,
+      objectionSubmitted: () => "Nová námitka (čl. 21) čeká na vaše rozhodnutí.",
     },
   },
   responsibility: {
@@ -10731,6 +10739,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tileProblems: "With issues",
     tileObligation: "Legal obligation",
     tileInterest: "Legitimate interest",
+    tileObjections: "Objections to decide",
     groupProblems: n => `With issues · ${n}`,
     groupOk: n => `In order · ${n}`,
     colDocument: "Document",
@@ -12389,6 +12398,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       versionPublished: (title, label) => `Published version “${label}” of “${title}”.`,
       responsibleAssigned: (title, label) => `You are the responsible person for version “${label}” of “${title}”. Please set the legal basis.`,
       draftResponsibleAssigned: (title) => `You are the responsible person for the version of “${title}” in preparation. You can set the legal basis before it is published.`,
+      objectionSubmitted: () => "A new objection (Art. 21) is waiting for your decision.",
     },
   },
   responsibility: {

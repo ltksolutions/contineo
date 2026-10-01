@@ -37,6 +37,10 @@ describe("kam vedie upozornenie", () => {
     }
   })
 
+  it("namietka (D153) vedie na zoznam namietok na /dpo", () => {
+    expect(notificationHref("objectionSubmitted", {})).toBe("/dpo#objections")
+  })
+
   it("rozposlane pripomienky vedu na ich obrazovku, nie na dokument", () => {
     expect(notificationHref("remindersSent", {})).toBe("/hr/reminders")
   })
