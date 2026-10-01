@@ -22,14 +22,17 @@ function Pending() {
 export default function TabLink({
   href,
   active,
+  className = "tab",
   children,
 }: {
   href: string
   active: boolean
+  /** Položka zvislého zoznamu častí (`org-nav-item`, ZAKLAD-zalozky) namiesto záložky. */
+  className?: string
   children: ReactNode
 }) {
   return (
-    <Link href={href} className={`tab${active ? " is-active" : ""}`} aria-current={active ? "page" : undefined}>
+    <Link href={href} className={`${className}${active ? " is-active" : ""}`} aria-current={active ? "page" : undefined}>
       {children}
       <Pending />
     </Link>

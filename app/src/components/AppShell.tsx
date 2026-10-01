@@ -41,6 +41,7 @@ export default async function AppShell({
   wide = false,
   title,
   trail,
+  leaf,
   children,
 }: {
   language?: UiLanguage
@@ -69,6 +70,12 @@ export default async function AppShell({
    * napr. `{ "/library/abc": "Pracovný poriadok" }` na `/library/abc/text`.
    */
   trail?: Record<string, string>
+  /**
+   * Krok za stránkou, ktorý v adrese nie je cestou, ale parametrom — časť
+   * nastavenia organizácie (`?tab=signin`, ZAKLAD-zalozky Q2). Stránka sa
+   * vtedy stane odkazom a posledný krok nesie názov časti.
+   */
+  leaf?: string
   children: ReactNode
 }) {
   const { flags, counts } = await shellNavData()
@@ -88,6 +95,10 @@ export default async function AppShell({
     sections: Object.fromEntries(ALL_KEYS.map(k => [k, t[k]])) as Record<NavKey, string>,
     pages: { ...trail, ...(title ? { [pathname]: title } : {}) },
   })
+  if (leaf && crumbs.length > 0) {
+    crumbs[crumbs.length - 1] = { ...crumbs[crumbs.length - 1], href: pathname }
+    crumbs.push({ label: leaf, href: null })
+  }
 
   /*
    * Celé menu pre spodnú plachtu na telefóne („Menu" v lište). Plachta
