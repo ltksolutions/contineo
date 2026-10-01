@@ -212,6 +212,12 @@ pred hodnotením**: automatické metriky (latencia, únik interného obsahu,
 odpovede bez citácie) sa dajú spočítať aj z odpovedí, ktoré nikto neposúdil.
 Vypisuje ich `scripts/ratings_overview.mjs`.
 
+Záznam nesie aj **úroveň prístupu toho, kto sa pýtal** (`askerAccessLevel`,
+z relácie cez `accessLevelFor()` — tú istú funkciu, podľa ktorej `/api/chat`
+filtruje vyhľadávanie). Únik interného obsahu je len **verejná** odpoveď
+s interným zdrojom; interný zdroj v odpovedi prihlásenému zamestnancovi je
+v poriadku a metrika ho iba ukazuje (`lib/accessLevel.ts`).
+
 Ukladá sa aj **cena aj tokeny**. Cena je historický fakt — čo to stálo v deň
 otázky — a spätne sa nedopočíta, lebo cenníky sa menia. Tokeny sú nemenné a
 dovolia prepočet podľa nových sadzieb. Preto ide do záznamu aj označenie

@@ -22,6 +22,7 @@ import type { NewRating, RatingEdit, ReaderFeedback, Verdict } from "@/lib/ratin
 import { isEvaluator } from "@/lib/evaluation"
 import { onboardingContext } from "@/lib/session"
 import { sameOrigin } from "@/lib/sameOrigin"
+import { accessLevelFor } from "@/lib/accessLevel"
 
 /**
  * Kto je na druhej strane — **osoba organizácie domény, alebo odmietnutie**
@@ -45,7 +46,12 @@ async function caller() {
   if (ctx.state !== "ready") {
     return { error: NextResponse.json({ error: "not-in-tenant" }, { status: 403 }) } as const
   }
-  return { person: ctx.person, companyCode: ctx.tenant.companyCode } as const
+  return {
+    person: ctx.person,
+    companyCode: ctx.tenant.companyCode,
+    // Tá istá funkcia, podľa ktorej `/api/chat` filtroval vyhľadávanie.
+    accessLevel: accessLevelFor(ctx),
+  } as const
 }
 
 /** Posudok smie byť len 0, 1 alebo null — nič iné sa do DB nedostane. */
@@ -100,7 +106,8 @@ export async function POST(req: NextRequest) {
         time: sanitizeQueryTime(body.time),
       },
       who.person.id,
-      who.companyCode
+      who.companyCode,
+      who.accessLevel,
     )
     return NextResponse.json({ id })
   } catch (e) {

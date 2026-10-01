@@ -55,13 +55,18 @@ describe("ratings — organizácia v podmienke", () => {
   it("bez organizácie sa nezapíše nič", async () => {
     await expect(saveVerdict(ID, { correct: 1 }, "p1", "")).rejects.toThrow(MissingTenantError)
     await expect(saveReaderFeedback(ID, { verdict: 1 }, "p1", undefined as never)).rejects.toThrow(MissingTenantError)
-    await expect(recordAnswer({ question: "q", answer: "a" } as never, "p1", "")).rejects.toThrow(MissingTenantError)
+    await expect(recordAnswer({ question: "q", answer: "a" } as never, "p1", "", "internal")).rejects.toThrow(MissingTenantError)
     expect(calls).toHaveLength(0)
   })
 
   it("recordAnswer zapíše organizáciu vždy", async () => {
-    await recordAnswer({ question: "q", answer: "a" } as never, "p1", "SFZ")
+    await recordAnswer({ question: "q", answer: "a" } as never, "p1", "SFZ", "internal")
     expect(calls[0].filter).toMatchObject({ companyCode: "SFZ" })
+  })
+
+  it("recordAnswer zapíše úroveň prístupu z parametra, nie z tela", async () => {
+    await recordAnswer({ question: "q", answer: "a", askerAccessLevel: "internal" } as never, "p1", "SFZ", "public")
+    expect(calls[0].filter).toMatchObject({ askerAccessLevel: "public" })
   })
 })
 

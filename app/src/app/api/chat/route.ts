@@ -55,6 +55,7 @@ import { getProviders }       from "@/lib/providers/factory"
 import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "@/lib/embeddingGuard"
 import { dictionary } from "@/lib/i18n"
 import { sameOrigin } from "@/lib/sameOrigin"
+import { accessLevelFor } from "@/lib/accessLevel"
 
 // ── Typy ────────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,9 @@ export async function POST(req: NextRequest) {
   // Verejný režim (widget pre neprihlásených) zatiaľ neexistuje — proxy
   // `/api/chat` bez prihlásenia ani nepustí. Keď vznikne, bude mať vlastnú
   // cestu s tou istou organizáciou, nie vetvu podľa toho, či prišiel token.
-  const userRole = "internal" as const
+  // Úroveň skladá `accessLevelFor()` — tá istá, ktorú `/api/rating` zapíše
+  // do záznamu, aby metrika úniku merala to, podľa čoho sa filtrovalo.
+  const userRole = accessLevelFor(ctx)
   const accessLevel: SearchOptions["accessLevel"] = userRole
 
   // 2. Parsovanie a validácia

@@ -181,6 +181,19 @@ export interface RatingRecord {
    */
   askedBy?: string
   /**
+   * **Na akej úrovni prístupu sa odpovedalo** — úroveň toho, kto sa pýtal
+   * (`accessLevelFor()`), 2026-10-01.
+   *
+   * Bez nej metrika úniku nevedela odlíšiť verejného používateľa, ktorý
+   * dostal interný zdroj (únik), od prihláseného zamestnanca, ktorý interné
+   * vidieť smie (28.–29. 9. 2026: štyri „úniky", všetky od zamestnancov SFZ).
+   *
+   * **Kópia, nie odkaz:** rola osoby sa môže zmeniť a o rok treba vedieť,
+   * s akou úrovňou sa vtedy hľadalo. Zapisuje sa z relácie, nikdy z tela
+   * požiadavky (D32). Starším záznamom chýba — viď `answerAccessLevel()`.
+   */
+  askerAccessLevel?: AccessLevel
+  /**
    * Skryté z vlastnej histórie otázok (× alebo „Vymazať celú históriu").
    * Záznam pre hodnotenie kvality ostáva do konca lehoty (H2) — skrytie
    * nie je výmaz. Chýba = viditeľné, migrácia netreba.
@@ -235,7 +248,9 @@ export const RATINGS_COLLECTION = "evaluations"
 export async function recordAnswer(
   z: NewRating,
   personId: string | null,
-  companyCode: string
+  companyCode: string,
+  /** Úroveň prístupu pýtajúceho — z relácie (`accessLevelFor()`), nie z požiadavky. */
+  askerAccessLevel: AccessLevel,
 ): Promise<string> {
   // Povinná (D90). Kým bola nepovinná, vznikali záznamy bez organizácie, ktoré
   // nepatrili do žiadnej fronty — a teda ich nikto nikdy neposúdil.
@@ -247,6 +262,7 @@ export async function recordAnswer(
     ...z,
     // Organizácia aj osoba idú z prihlásenia, nie z tela požiadavky (D32).
     companyCode: code,
+    askerAccessLevel,
     correct: null,
     hallucination: null,
     // Chýbajúce pole = nikto prihlásený. Prázdny reťazec by bol tretí stav.
