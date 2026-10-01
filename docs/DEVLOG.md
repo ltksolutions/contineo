@@ -58,6 +58,32 @@ pás z výkazu DPO s hľadaním (PR #218, druhá session).
 
 ---
 
+## 2026-10-01 — záložky a nastavenie organizácie (ZAKLAD-zalozky)
+
+**Záložky:** aktívna mala to isté pozadie ako ostatné a 2 px čiaru, ktorá
+sa cez `margin-bottom: -3px` prekrývala s okrajom lišty. Teraz podklad
+`--accent-soft` a pruh `box-shadow: inset` (neposúva text), lišta s novým
+tokenom `--line-strong`. Platí pre všetky `.tabs` naraz.
+
+**`/organisation`:** osem záložiek sa nezmestilo ani na 1440 (stĺpec
+720 px), na telefóne bolo vidieť dve a pol. Teraz zoznam častí v štyroch
+skupinách — od 1024 px vľavo, pod tým rozcestník a časť ako samostatná
+obrazovka s odkazom späť. Server vie, či prišiel `?tab`, takže to prepína
+CSS (`org-set--index`), bez JavaScriptu.
+
+**Čo bolo treba navyše:**
+
+- `TabLink` dostal voliteľnú triedu, aby položky zoznamu mali stav
+  načítavania ako záložky; pruh je pri nich zvislý vľavo a stlmí sa
+  `.org-body`.
+- Názov časti v ceste (Q2): cesta sa skladá z adresy a `?tab` v nej nie je.
+  `AppShell` dostal `leaf` — krok za stránkou. Bez `?tab` sa nepridáva:
+  na telefóne je to rozcestník, nie časť.
+- Test GDPR záložky čakal pri DPO bez roly správcu odkaz na `?tab=gdpr`;
+  pri jedinej časti sa navigácia podľa návrhu nekreslí vôbec.
+
+---
+
 ## 2026-10-01 — čitateľný prázdny stav (ZAKLAD-prazdny-stav-citatelnost)
 
 `.empty` mal prerušovaný okraj `--line` priamo na sivom `--bg` a bez

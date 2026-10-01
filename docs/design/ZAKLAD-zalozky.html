@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZAKLAD — záložky a nastavenie organizácie</title>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.18);--accent:#1d4ed8;--accent-soft:rgba(29,78,216,.11);--on-accent:#fff;--radius:12px}
+.dark{--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--line-strong:rgba(255,255,255,.18);--accent:#8fb0ff;--accent-soft:rgba(143,176,255,.14);--on-accent:#11151c}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+.sheet{padding:28px 32px 48px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+h2.sec{font-size:17px;margin:34px 0 12px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 24px;max-width:88ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#eceef1;padding:1px 5px;border-radius:4px}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);margin:0 0 10px}
+.ann{font-size:12.5px;color:#5c6675;max-width:100ch;margin:0 0 30px;line-height:1.55}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin:0 4px 0 6px;vertical-align:1px}
+.q{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:#b45309;border-radius:5px;padding:0 5px;margin-left:6px;vertical-align:2px}
+.row2{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.hdr{background:var(--surface);border-bottom:1px solid var(--line);height:56px;display:flex;align-items:center;gap:10px;padding:0 16px}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--surface-2)}
+.org{font-size:15px;font-weight:650}
+.ask{flex:1;max-width:600px;margin:0 auto;height:36px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:#c9ced6;flex:none}
+.path{background:var(--surface);border-bottom:1px solid var(--line);min-height:40px;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:13px;color:var(--muted)}
+.path b{color:var(--ink)}
+.main{max-width:1240px;margin:0 auto;padding:20px 24px 40px}
+.title{font-size:26px;letter-spacing:-.02em;margin:0 0 4px}
+.lead{font-size:15px;color:var(--muted);margin:0 0 18px;max-width:620px}
+.head{display:flex;align-items:center;gap:12px;margin:0 0 14px}.head .title{flex:1;margin:0}
+.button{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:10px;background:var(--accent);color:var(--on-accent);font-size:14px;font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.empty{display:grid;justify-items:center;gap:6px;padding:36px 24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);text-align:center}
+.empty-title{font-size:16px;font-weight:600}.empty-text{font-size:14px;color:var(--muted);max-width:52ch}
+.ph{height:14px;border-radius:5px;background:var(--surface-2)}
+
+/* DNES — globals.css:1670 */
+.otabs{display:flex;gap:4px;margin:0 0 20px;padding-bottom:2px;border-bottom:1px solid var(--line);overflow:hidden}
+.otab{flex:none;padding:10px 14px;font-size:14.5px;font-weight:500;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-3px}
+.otab.on{font-weight:700;color:var(--ink);border-bottom-color:var(--accent)}
+
+/* NÁVRH */
+.tabs{display:flex;gap:2px;margin:0 0 20px;border-bottom:1px solid var(--line-strong);overflow-x:auto;scrollbar-width:none}
+.tab{flex:none;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;border-radius:10px 10px 0 0;box-shadow:inset 0 -3px 0 transparent}
+.tab:hover{color:var(--ink);background:var(--surface-2)}
+.tab.on{color:var(--ink);font-weight:700;background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--accent)}
+.tab .c{margin-left:7px;font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* nastavenie organizácie */
+.oset{display:grid;grid-template-columns:220px minmax(0,720px);gap:28px;align-items:start}
+.onav{position:sticky;top:16px;display:grid;gap:14px}
+.ogrp{display:grid;gap:2px}
+.ogrp-k{font-size:11.5px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:0 12px 4px}
+.oitem{display:flex;align-items:center;min-height:38px;padding:0 12px;border-radius:9px;font-size:14.5px;font-weight:550;color:var(--ink)}
+.oitem:hover{background:var(--surface-2)}
+.oitem.on{background:var(--accent-soft);font-weight:700;box-shadow:inset 3px 0 0 var(--accent)}
+.olist{display:grid;gap:18px}
+.olist .ogrp-k{padding:0 4px 6px}
+.olist .card a{display:flex;align-items:center;min-height:52px;padding:0 16px;font-size:16px;font-weight:550;border-top:1px solid var(--line)}
+.olist .card a:first-child{border-top:0}
+.olist .card a::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg)}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:14.5px;font-weight:600;color:var(--muted)}
+.back::before{content:"";width:8px;height:8px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg)}
+.secc{padding:18px;display:grid;gap:14px}
+.secc h2{margin:0;font-size:18px}
+.fld{display:grid;gap:6px}.fld span{font-size:13px;font-weight:600}.fld i{height:40px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface)}
+.w390 .main{padding:14px 14px 28px}.w390 .title{font-size:22px}
+.w390 .tab{padding:0 14px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ZAKLAD — záložky a nastavenie organizácie</h1>
+<p class="doc">Snímka <code>uploads/Snímka obrazovky 2026-10-01 o 20.40.38.png</code> (<code>/learning/tests</code>). <code>.tab</code> (<code>globals.css:1670</code>): neaktívna aj aktívna záložka majú rovnaké pozadie, rozdiel je len hrúbka písma a 2 px čiara, ktorá sa navyše prekrýva s 1 px okrajom lišty. Trieda <code>.tabs</code> je na štyroch obrazovkách: <code>/learning/tests</code> (2×), <code>/learning/manage</code>, <code>/learning/manage/[courseKey]</code>, <code>/organisation</code> — opraví sa naraz. Prepínač pohľadu <code>.view-switch</code> (<code>/library</code>, <code>/dpo</code>, <code>/hr/reminders</code>) je iný komponent a zvýraznený je dobre — nemení sa. Zadanie: <code>ZAKLAD-zalozky.md</code>.</p>
+
+<h2 class="sec">1 · Záložky — všetky obrazovky</h2>
+<p class="cap">Dnes — 1440 /learning/tests</p>
+<div class="frame" style="width:1100px"><div class="main"><div class="head"><h1 class="title">Testy</h1><a class="button">Nový test</a></div><nav class="otabs"><a class="otab on">Testy</a><a class="otab">Banka otázok</a></nav><div class="empty"><div class="empty-title">Zatiaľ tu nie je žiadny test.</div><div class="empty-text">Test je recept: sekcie vyberajú otázky z banky podľa smart:tagov.</div></div></div></div>
+<p class="cap" style="margin-top:22px">Návrh — 1440 /learning/tests</p>
+<div class="frame" style="width:1100px"><div class="main"><div class="head"><h1 class="title">Testy</h1><a class="button">Nový test</a></div><nav class="tabs"><a class="tab on">Testy</a><a class="tab">Banka otázok</a></nav><div class="empty"><div class="empty-title">Zatiaľ tu nie je žiadny test.</div><div class="empty-text">Test je recept: sekcie vyberajú otázky z banky podľa smart:tagov.</div></div></div></div>
+<p class="ann"><span class="num">1</span><b>Aktívna záložka má podklad</b> <code>var(--accent-soft)</code> + čiaru 3 px <code>var(--accent)</code> cez <code>box-shadow: inset</code> (nie <code>border</code> — neposúva text a neprekrýva sa s okrajom lišty, preč je <code>margin-bottom: -3px</code>). Tenant farba nesie zvýraznenie, sivá nie. <span class="num">2</span><b>Neaktívne o stupeň silnejšie</b>: 15 px / 600 namiesto 14,5 / 500; <code>--muted</code> ostáva (5,4 : 1). Hover: <code>--ink</code> + <code>--surface-2</code>. <span class="num">3</span><b>Výška 44 px</b> všade — dotykový cieľ bez výnimky pod 640. Okraj lišty <code>--line-strong</code>, aby bolo vidieť, kde lišta končí. Pruh načítania <code>.tab-pending</code> ostáva, len <code>bottom: 0</code>, <code>height: 3px</code>.</p>
+
+<p class="cap">Návrh — 390 /learning/manage · tmavá téma 390</p>
+<div class="row2">
+<div class="frame w390" style="width:390px"><div class="main"><h1 class="title">Správa kurzov</h1><nav class="tabs"><a class="tab on">Kurzy</a><a class="tab">Témy</a><a class="tab">smart:tagy</a></nav><div class="card" style="padding:16px;display:grid;gap:10px"><div class="ph" style="width:70%"></div><div class="ph" style="width:45%"></div></div></div></div>
+<div class="frame w390 dark" style="width:390px"><div class="main"><h1 class="title">Správa kurzov</h1><nav class="tabs"><a class="tab on">Kurzy</a><a class="tab">Témy</a><a class="tab">smart:tagy</a></nav><div class="card" style="padding:16px;display:grid;gap:10px"><div class="ph" style="width:70%"></div><div class="ph" style="width:45%"></div></div></div></div>
+</div>
+<p class="ann">Dve až tri záložky sa zmestia aj na 390. Posun do strán ostáva len ako poistka (komentár v <code>globals.css</code>). Tmavá téma: <code>--accent-soft</code> je v tmavom bloku už definovaný.</p>
+
+<h2 class="sec">2 · /organisation — osem záložiek</h2>
+<p class="doc">Osem záložiek (Vzhľad a jazyky · Oddelenia · Domény · Prihlasovanie · Číselníky · Členenie · Audit · GDPR) sa nezmestí ani na 1440 do stĺpca 720 px, na 390 je vidieť dve a pol a zvyšok sa musí uhádnuť posunom. Nie je to lišta záložiek, ale <b>zoznam častí nastavenia</b> — tak ho aj nakreslime.</p>
+
+<p class="cap">Návrh — 1440 /organisation?tab=signin</p>
+<div class="frame" style="width:1440px"><div class="hdr"><span class="logo"></span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av"></span></div><div class="path">Prehľad › Správa › <b>Nastavenie organizácie</b></div>
+<div class="main"><h1 class="title">Nastavenie organizácie</h1><p class="lead">Nastavenia platia pre celú organizáciu <b style="color:var(--ink)">SFZ</b>.</p>
+<div class="oset"><nav class="onav" id="nav1440"></nav><div class="card secc"><h2>Prihlasovanie</h2><div class="fld"><span>Spôsob prihlásenia</span><i></i></div><div class="fld"><span>Povolené domény</span><i></i></div><div class="fld"><span>Doba platnosti relácie</span><i></i></div></div></div></div></div>
+<p class="ann"><span class="num">4</span><b>Od 1024 px zvislý zoznam vľavo</b> (220 px, <code>position: sticky</code>), obsah 720 px vpravo ako dnes. Aktívna položka: <code>--accent-soft</code> + ľavý pruh 3 px <code>--accent</code> (rovnaký jazyk ako označený riadok tabuľky, ZAKLAD úloha 4). Stále odkazy <code>?tab=</code> a <code>TabLink</code> s pruhom načítania — nič nevyžaduje JavaScript. <span class="num">5</span><b>Skupiny</b> <span class="q">Q1</span> — štyri nadpisy, aby sa osem položiek dalo prečítať naraz. <code>layout.tsx</code> sa nemení; mení sa len <code>maxWidth: 720</code> v <code>organisation/page.tsx</code> na mriežku 220 + 720.</p>
+
+<p class="cap">Návrh — 390 /organisation (bez ?tab) · 390 /organisation?tab=signin · 834 ?tab=signin</p>
+<div class="row2">
+<div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px"><span class="logo"></span><span class="org">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div><div class="main"><h1 class="title">Nastavenie organizácie</h1><p class="lead">Nastavenia platia pre celú organizáciu <b style="color:var(--ink)">SFZ</b>.</p><div class="olist" id="list390"></div></div></div>
+<div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px"><span class="logo"></span><span class="org">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div><div class="main"><a class="back">Nastavenie organizácie</a><div class="card secc" style="margin-top:6px"><h2>Prihlasovanie</h2><div class="fld"><span>Spôsob prihlásenia</span><i></i></div><div class="fld"><span>Povolené domény</span><i></i></div><div class="fld"><span>Doba platnosti relácie</span><i></i></div></div></div></div>
+<div class="frame" style="width:834px"><div class="hdr"><span class="logo"></span><span class="org">Intranet SFZ</span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av"></span></div><div class="path">Prehľad › Správa › Nastavenie organizácie › <b>Prihlasovanie</b></div><div class="main"><a class="back">Nastavenie organizácie</a><div class="card secc" style="margin-top:6px;max-width:720px"><h2>Prihlasovanie</h2><div class="fld"><span>Spôsob prihlásenia</span><i></i></div><div class="fld"><span>Povolené domény</span><i></i></div><div class="fld"><span>Doba platnosti relácie</span><i></i></div></div></div></div>
+</div>
+<p class="ann"><span class="num">6</span><b>Pod 1024 px zoznam → časť</b> (ako nastavenia v telefóne). <code>/organisation</code> bez <code>?tab</code> ukáže zoznam častí v skupinách, riadok 52 px; klik otvorí <code>?tab=…</code>, nad časťou je „‹ Nastavenie organizácie" (odkaz na <code>/organisation</code>, 44 px) a záložky ani zoznam tam nie sú. Od 1024 px <code>/organisation</code> bez <code>?tab</code> ukáže prvú časť ako dnes. Server vie, či <code>?tab</code> prišiel — obal dostane triedu <code>org-set--index</code> a CSS rozhodne, čo je pod 1024 vidieť. Bez JavaScriptu. <span class="num">7</span><b>Cesta</b> pod 1024 nesie aj názov časti <span class="q">Q2</span>. <span class="num">8</span><b>DPO bez roly správcu</b> vidí len GDPR (ADR-022, D154) — zoznam s jednou položkou sa nekreslí, rovno sa otvorí GDPR bez odkazu späť.</p>
+</div>
+<script>
+const groups=[["Organizácia",["Vzhľad a jazyky","Oddelenia","Číselníky"]],["Prístup",["Domény","Prihlasovanie"]],["Dokumenty",["Členenie"]],["Dohľad",["Audit","GDPR"]]];
+document.getElementById("nav1440").innerHTML=groups.map(([k,it])=>`<div class="ogrp"><div class="ogrp-k">${k}</div>${it.map(i=>`<a class="oitem${i==="Prihlasovanie"?" on":""}">${i}</a>`).join("")}</div>`).join("");
+document.getElementById("list390").innerHTML=groups.map(([k,it])=>`<div><div class="ogrp-k">${k}</div><div class="card">${it.map(i=>`<a>${i}</a>`).join("")}</div></div>`).join("");
+</script>
+</body></html>

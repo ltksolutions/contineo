@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Záložky a nastavenie organizácie (2026-10-01)
+
+Zapnutú záložku je vidieť na prvý pohľad — má podklad a výrazný pruh.
+**Nastavenie organizácie** má namiesto ôsmich záložiek zoznam častí
+v skupinách Organizácia, Prístup, Dokumenty a Dohľad: na počítači vľavo,
+na telefóne ako rozcestník, z ktorého sa otvorí jedna časť s odkazom
+späť. Cesta hore nesie názov otvorenej časti.
+
 ### Prázdne zoznamy sa dajú prečítať (2026-10-01)
 
 Keď je zoznam prázdny, vysvetlenie je v bielej karte s plným okrajom

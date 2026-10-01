@@ -53,7 +53,18 @@ import {
   addLegalBasisAction, retireLegalBasisAction, toggleStandardLegalBasisAction,
 } from "./actions"
 
-const TAB_KEYS = ["branding", "departments", "domains", "signin", "codelists", "chunking", "audit"]
+/*
+ * Časti nastavenia v skupinách (ZAKLAD-zalozky, 1. 10. 2026, Q1). Poradie
+ * kľúčov je poradie v skupinách (Q3) — prvá časť je zároveň predvolená,
+ * takže zoznam a to, čo sa otvorí bez `?tab`, sa nemôžu rozísť.
+ */
+const TAB_GROUPS = [
+  { key: "org", tabs: ["branding", "departments", "codelists"] },
+  { key: "access", tabs: ["domains", "signin"] },
+  { key: "documents", tabs: ["chunking"] },
+  { key: "oversight", tabs: ["audit", "gdpr"] },
+] as const
+const TAB_KEYS: string[] = TAB_GROUPS.flatMap(g => g.tabs)
 
 export const dynamic = "force-dynamic"
 
@@ -182,8 +193,11 @@ export default async function OrganisationPage({
   // preloží. Zmizne, keď prestane chodiť.
   const key = tabValue(tab)
   // DPO bez roly správcu osôb vidí len záložku GDPR (D154).
-  const tabKeys = ctx.canAdmin ? [...TAB_KEYS, "gdpr"] : ["gdpr"]
-  const now = tabKeys.includes(key ?? "") ? key! : tabKeys[0]
+  const tabKeys = ctx.canAdmin ? TAB_KEYS : ["gdpr"]
+  const chosen = tabKeys.includes(key ?? "")
+  const now = chosen ? key! : tabKeys[0]
+  // Jedna časť (DPO, D154): bez zoznamu a bez odkazu späť — nie je kam.
+  const single = tabKeys.length === 1
   /*
     Organizácia **priamo z databázy**, nie z `ctx.tenant`.
 
@@ -251,30 +265,54 @@ export default async function OrganisationPage({
     ? await auditRecords(tenant.companyCode, { search: search, limit: 200 })
     : []
 
+  /*
+   * Nastavenie ako zoznam častí, nie osem záložiek (ZAKLAD-zalozky, 1. 10.
+   * 2026). Od 1024 px zvislý zoznam vľavo v skupinách; pod 1024 px je
+   * `/organisation` bez `?tab` len zoznam častí a časť je samostatná
+   * obrazovka s odkazom späť. Server vie, či `?tab` prišiel
+   * (`org-set--index`), takže to prepína CSS — bez JavaScriptu.
+   */
+  const index = !single && !chosen
+  const groupLabel = t.groups as Record<string, string>
+
   return (
-    <AppShell language={ctx.person.language} title={t.heading}>
-    <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language} title={t.heading} leaf={chosen || single ? t.tabs[now] : undefined}>
+    <div className={`org-set${index ? " org-set--index" : ""}`} style={tenantStyle(branding)}>
       <Notice
         message={message}
         error={error === "1"}
         back={`/organisation?tab=${now}`}
       />
 
-      <h1 className="page-title">{t.heading}</h1>
-      <p className="quiet page-lead" style={{ margin: "0 0 22px", maxWidth: 620 }}>
-        {t.introBefore}<strong>{tenant.companyCode}</strong>{t.introAfter}
-      </p>
+      <div className="org-head">
+        <h1 className="page-title">{t.heading}</h1>
+        <p className="quiet page-lead" style={{ margin: "0 0 22px", maxWidth: 620 }}>
+          {t.introBefore}<strong>{tenant.companyCode}</strong>{t.introAfter}
+        </p>
+      </div>
 
-      {/* Záložky, nie jeden dlhý stĺpec. Blokov je päť a na telefóne to
-          znamenalo, že sa k prihlasovaniu človek dostal až po dvoch
-          obrazovkách posúvania cez veci, ktoré nehľadal. */}
-      <nav className="tabs" aria-label={t.tabsLabel}>
-        {tabKeys.map(k => (
-          <TabLink key={k} href={`/organisation?tab=${k}`} active={k === now}>
-            {t.tabs[k] ?? k}
-          </TabLink>
-        ))}
-      </nav>
+      <div className={single ? "org-grid org-grid--single" : "org-grid"}>
+      {!single && (
+        <nav className="org-nav" aria-label={t.tabsLabel}>
+          {TAB_GROUPS.map(g => (
+            <div key={g.key} className="org-nav-group">
+              <h2 className="org-nav-title">{groupLabel[g.key]}</h2>
+              <div className="org-nav-list">
+                {g.tabs.map(k => (
+                  <TabLink key={k} className="org-nav-item" href={`/organisation?tab=${k}`} active={k === now}>
+                    {t.tabs[k] ?? k}
+                  </TabLink>
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+      )}
+
+      <div className="org-body">
+      {!single && (
+        <Link className="org-back" href="/organisation">{t.back}</Link>
+      )}
 
       {/*
         Vzhľad a jazyky v sekciách (rám ADMIN-prevadzkovatel-a-ciselniky):
@@ -1110,6 +1148,8 @@ export default async function OrganisationPage({
         </form>
       </div>
       )}
+      </div>
+      </div>
     </div>
     </AppShell>
   )

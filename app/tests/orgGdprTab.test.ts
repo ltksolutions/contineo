@@ -20,8 +20,12 @@ const tenant = vi.hoisted(() => ({
 }))
 
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") }, redirect: () => { throw new Error("redirect") } }))
-vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
+// Krok cesty za stránkou (`leaf`, ZAKLAD-zalozky Q2) sa vypíše, nech ho test vidí.
+vi.mock("@/components/AppShell", () => ({
+  default: ({ children, leaf }: { children: unknown; leaf?: string }) => [leaf ? `[leaf:${leaf}]` : null, children],
+}))
 vi.mock("@/lib/session", () => ({}))
+vi.mock("@/components/SubmitButton", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/lib/mongodb", () => ({ getCollection: vi.fn() }))
 vi.mock("@/lib/orgSettings", () => ({
   orgPageContext: async () => ({
@@ -58,9 +62,9 @@ vi.mock("../src/app/dpo/actions", () => ({
   saveGdprContactAction: async () => {}, saveRetentionAction: async () => {}, saveExtraAction: async () => {},
 }))
 
-async function render(tab = "gdpr") {
+async function render(tab: string | null = "gdpr") {
   const { default: Page } = await import("../src/app/organisation/page")
-  return renderToStaticMarkup(await Page({ searchParams: Promise.resolve({ tab }) }))
+  return renderToStaticMarkup(await Page({ searchParams: Promise.resolve(tab ? { tab } : {}) }))
 }
 
 beforeEach(() => { s.canAdmin = true; s.canEditGdpr = true })
@@ -88,9 +92,38 @@ describe("záložka GDPR", () => {
   it("DPO bez roly správcu: len záložka GDPR, aj keď adresa chce inú", async () => {
     s.canAdmin = false
     const html = await render("branding")
-    expect(html).toContain('href="/organisation?tab=gdpr"')
+    // Jedna časť: bez zoznamu častí aj bez odkazu späť (ZAKLAD-zalozky, D154).
+    expect(html).not.toContain("org-nav")
+    expect(html).not.toContain("org-back")
     expect(html).not.toContain('href="/organisation?tab=branding"')
     expect(html).toContain('name="privacyContactEmail"')
     expect(html).not.toContain('name="displayName"')
+    expect(html).toContain("[leaf:GDPR]")
+  })
+})
+
+describe("zoznam častí (ZAKLAD-zalozky)", () => {
+  it("skupiny a poradie častí podľa skupín (Q1, Q3)", async () => {
+    const html = await render("signin")
+    const groups = [...html.matchAll(/<h2 class="org-nav-title">([^<]+)</g)].map(m => m[1])
+    expect(groups).toEqual(["Organizácia", "Prístup", "Dokumenty", "Dohľad"])
+    const tabs = [...html.matchAll(/href="\/organisation\?tab=([a-z]+)"/g)].map(m => m[1])
+    expect(tabs).toEqual(["branding", "departments", "codelists", "domains", "signin", "chunking", "audit", "gdpr"])
+    expect(html).toMatch(/class="org-nav-item is-active"[^>]*href="\/organisation\?tab=signin"/)
+  })
+
+  it("s ?tab: časť, odkaz späť a názov časti v ceste (Q2)", async () => {
+    const html = await render("signin")
+    expect(html).toContain('<div class="org-set"')
+    expect(html).toContain('<a class="org-back" href="/organisation">Nastavenie organizácie</a>')
+    expect(html).toContain("[leaf:Prihlasovanie]")
+  })
+
+  it("bez ?tab: zoznam (org-set--index), prvá časť pre široké okno, cesta bez časti", async () => {
+    const html = await render(null)
+    expect(html).toContain('<div class="org-set org-set--index"')
+    expect(html).toMatch(/class="org-nav-item is-active"[^>]*href="\/organisation\?tab=branding"/)
+    expect(html).toContain('name="displayName"')
+    expect(html).not.toContain("[leaf:")
   })
 })

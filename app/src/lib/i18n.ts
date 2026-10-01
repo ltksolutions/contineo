@@ -1443,6 +1443,10 @@ interface Dictionary {
     introAfter: string
     tabsLabel: string
     tabs: Record<string, string>
+    /** Skupiny častí v zozname (ZAKLAD-zalozky, Q1). */
+    groups: Record<"org" | "access" | "documents" | "oversight", string>
+    /** Odkaz z časti späť na zoznam častí pod 1024 px. */
+    back: string
     /** Záložka GDPR (D154) — upravuje len DPO. */
     gdpr: { readOnly: string; saveContact: string; contactSaved: string }
     branding: {
@@ -5043,6 +5047,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     introBefore: "Nastavenie, ktoré si spravujete sami. Kód organizácie (",
     introAfter: ") a vypnutie portálu tu zámerne nie sú — s tým sa ozvite nám.",
     tabsLabel: "Časti nastavenia",
+    groups: { org: "Organizácia", access: "Prístup", documents: "Dokumenty", oversight: "Dohľad" },
+    back: "Nastavenie organizácie",
     tabs: {
       branding: "Vzhľad a jazyky",
       departments: "Oddelenia",
@@ -8544,6 +8550,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     introBefore: "Nastavení, které si spravujete sami. Kód organizace (",
     introAfter: ") a vypnutí portálu tu záměrně nejsou — s tím se ozvěte nám.",
     tabsLabel: "Části nastavení",
+    groups: { org: "Organizace", access: "Přístup", documents: "Dokumenty", oversight: "Dohled" },
+    back: "Nastavení organizace",
     tabs: {
       branding: "Vzhled a jazyky",
       departments: "Oddělení",
@@ -12035,6 +12043,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     introBefore: "The settings you manage yourselves. The organisation code (",
     introAfter: ") and switching the portal off are deliberately not here — for those, get in touch with us.",
     tabsLabel: "Settings sections",
+    groups: { org: "Organisation", access: "Access", documents: "Documents", oversight: "Oversight" },
+    back: "Organisation settings",
     tabs: {
       branding: "Appearance and languages",
       departments: "Departments",
