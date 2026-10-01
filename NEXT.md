@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-30** (menu v hlavičke a otázka z hlavičky; história otázok; znenia na karte dokumentu D150)
+Posledná aktualizácia: **2026-10-01** (potvrdzovanie overené naostro, PR #196–#208; D151, D152)
 
 ---
 
@@ -16,8 +16,22 @@ Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
 a `docs/DEVLOG.md`. **Od 27. 9. pracujú v repe dve sessions naraz** —
 každá vo vlastnom `git worktree` (ADR-020); rozrobené vetvy druhej session
-vidno v `git branch -a`, nie v tomto súbore. Zvyšok z 29. 9.: worktree
+vidno v `git branch -a`, nie v tomto súbore (1. 10.: `perf/ttft-faza-2`
+v `.worktrees/ttft-faza-2`). Zvyšok z 29. 9.: worktree
 `.claude/worktrees/worktree-parallel-design-2a590b` (odpojený) — odstrániť, keď ho Ján pustí.
+
+**Potvrdzovanie je overené naostro (30. 9. – 1. 10., PR #196–#208)** na
+`sfz:test_znenia`: pridelenie osobe, oddeleniu, trase aj krok trasy dajú
+jednu úlohu a jedno potvrdenie ich splní; e-mail s výzvou, potvrdenie
+z počítača aj z iPhonu, záznam s odtlačkom PDF a kópiou oddelenia, výkaz HR.
+Cestou opravené: D50 mimo trás, náhľad PDF (strany cez pdf.js aj na
+telefóne, bez textu na vyhľadávanie), odvolanie pridelenia cez potvrdzovaciu
+stránku, „adresát" namiesto „publikum", pätička e-mailov **Contineo.app**,
+po potvrdení späť na „Na potvrdenie", menu 9 bodiek pod tlačidlom a **druhé
+potvrdenie z iného zariadenia sa odmieta**. **D151** (dodatok ADR-023):
+úloha „určiť právny základ" je na karte v správe, zodpovedná osoba bez roly
+správcu tam vidí len ju. **D152:** formulka podľa rodu (`persons.gender`,
+nevyplnené „oboznámil(a)"). Zvyšky v `docs/TODO.md`, „Test potvrdzovania naostro".
 
 **Osoby SFZ sú v systéme (27. 9.):** 153 osôb z licenčného zoznamu M365
 (150 nových + 3 doplnené), bez technických kont. Zaradenie do oddelení je
@@ -53,8 +67,9 @@ nahradené znenie platí do účinnosti nového (D143).
 
 **Naostro overené 29. 9.:** predloženie → schválenie (Michaela Žikavská)
 → zverejnenie cez kartu, trikrát na `sfz:test_znenia`, vrátane novely
-s budúcou účinnosťou. **Naostro neoverené:** zverejnenie s novým názvom,
-prenos pridelení, kombinácia právnych základov, určenie základu v príprave
+s budúcou účinnosťou. Formulka „v znení účinnom od" a kombinácia právnych
+základov v zázname potvrdenia overené 1. 10. **Naostro neoverené:**
+zverejnenie s novým názvom, prenos pridelení, určenie základu v príprave
 (ADR-023), `/dpo` s námietkou, vyradená osoba.
 
 **Asistent odpovedá podľa znenia platného k dňu otázky (ADR-024, PR
@@ -114,6 +129,9 @@ a pohlavie), DPIA pred pilotom (C3), termín balančného testu (A3, A11).
 `sfz:test_znenia` (skúšobné otázky asistenta ho potrebujú, kým nie je
 ostrá norma s viacerými zneniami).
 
+**Staré pridelenia Oddeleniu IT** — Revízny poriadok (10. 9., Branislav
+nepotvrdil) a Skúšobná smernica (8. 9.): odvolať, alebo nechať?
+
 **Atlas → AI Models → Usage:** či úpravy search indexov 29. 9. prepočítali
 vektory (skóre pred a po sú zhodné — nasvedčuje, že nie).
 
@@ -127,18 +145,20 @@ Vzdelávania (ADR-021).
 ## Najbližšie kroky
 
 0. **Zaradiť 153 osôb do oddelení** v `/organisation` — bez toho sa im
-   normy podľa oddelenia nepridelia (D49). Pri tom istom importe sa dá
-   doplniť **pohlavie** (stĺpec `pohlavie`).
+   normy podľa oddelenia nepridelia (D49). Pri tom istom importe doplniť
+   **pohlavie** (stĺpec `pohlavie`) — vyplnené má 3 zo 154, ostatní
+   potvrdzujú „oboznámil(a)" (D152).
 0. **Prvý kurz naostro:** Ján zverejní kurz, prejde ho sám s testom
    a stiahne certifikát aj PDF — overiť `/verify` z QR na telefóne.
 1. **Prvé ostré nové znenie cez kartu** — samotné kolo je overené; pri ňom
-   overiť nový názov, formulku „v znení účinnom od", kombináciu právnych
-   základov, základ určený v príprave (ADR-023) a prenos pridelení
+   overiť nový názov, základ určený v príprave (ADR-023, od D151 na karte
+   v správe) a prenos pridelení
    (`docs/TODO.md`, O15/O16). Potom asistenta: `npm run versions:questions`
    má zmysel doplniť o otázky na tú normu.
 2. **Prejsť `/dpo` naostro:** výkaz, CSV; námietku len na testovacej osobe.
-3. **Čas po prvý token:** prepis otázky modelom trvá až 3,7 s (D9: p95
-   pod 2 s) — zmerať na hodnoteniach a rozhodnúť, či ho skracovať.
+3. **Čas po prvý token:** fáza 1 (meranie, PR #205) je hotová — pár dní
+   zbierať hodnotenia a podľa `ratings_overview.mjs` vybrať, čo skracovať
+   (D9: p95 pod 2 s); fáza 2 beží vo vetve `perf/ttft-faza-2`.
 
 ## Ako sa projekt overuje
 
@@ -148,8 +168,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (30. 9.): **0 errors, 41 warnings,
-2169 testov v 156 súboroch.** Pri veľkej záťaži stroja pomôže
+Baseline, proti ktorej sa porovnáva (1. 10.): **0 errors, 41 warnings,
+2233 testov v 166 súboroch.** Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri

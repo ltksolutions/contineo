@@ -10,6 +10,63 @@
 
 ---
 
+## 2026-09-30 – 10-01 — test potvrdzovania naostro (PR #196–#208)
+
+**Zadanie (Ján):** otestovať potvrdzovanie pri pridelení osobe, oddeleniu
+a cez trasu — automaticky aj naostro. Naostro na `sfz:test_znenia`, cieľom
+Ján; Oddelenie IT znamenalo aj Agátu Galkovú a Branislava Rozboru (ten
+pribudol do oddelenia v ten istý deň o 15:03, preto náhľad hlásil 3, nie 2).
+
+**Automatický test najprv.** `acknowledgementAudiences.test.ts` púšťa
+skutočný kód reťaze (pridelenie → `acknowledgementDuties` → `acknowledge`
+→ `duties`) nad pamäťovou kolekciou, ktorá **vyhodnocuje podmienky dotazu**.
+Doterajšie testy si susedov podvrhovali, takže dotaz `assignmentsForPerson`
+a `matchesAudience()` sa spolu nikdy neskúšali. Test hneď našiel chybu:
+pri prideleniach mimo trás sa D50 neuplatnilo (nováčik mal dátum spred
+príchodu) a termín bral posledné pridelenie, nie skoršie (#196).
+
+**Naostro sa ukázalo, čo testy nevidia** — a takmer každý krok niečo:
+
+- **Náhľad PDF bol prázdny všetkým** — `frame-ancestors 'none'` z hlavičiek
+  N4 platí aj pre `<object>` (#197). Potom Ján na telefóne: PDF sa tam
+  zámerne nevkladalo → pdf.js po stranách (#199, robil to paralelný agent
+  vo worktree; konflikt s #198 som riešil zlúčením `main`). Text na
+  vyhľadávanie pri potvrdzovaní odišiel (#200) — potvrdzuje sa PDF.
+- **Formulár na právny základ na čitateľskej karte** (ADR-023 D140) Jána
+  mýlil → **D151**, presun na kartu v správe. Prekážka: Michaela Žikavská je
+  zodpovedná osoba, nie správkyňa obsahu → obmedzený pohľad len s jej
+  úlohou (#198). Zvonček vedie tam.
+- **„Odvolať pridelenie" jedným kliknutím** — po odvolaní sa karty posunú
+  a druhé kliknutie na to isté miesto odvolalo iné pridelenie. Stalo sa
+  dvakrát (17:26 a 17:30) — najprv som to považoval za dvojité odoslanie,
+  audit ukázal dve rôzne pridelenia, každé z inej karty. Potvrdzovacia stránka s popisom
+  dôsledkov a dôvodom do auditu (#201). Pri tom „publikum" → „adresát":
+  slovo z kódu sa dostalo do hlásení.
+- **Formulka v mužskom rode pre každého** — chytené pred Agátiným
+  potvrdením, ktoré by sa uložilo navždy (D28) → **D152** (#203). Agáta
+  potom potvrdila s „oboznámila".
+- **Dvojité potvrdenie** — Agáta z iPhonu a o 9 s z Macu, dva záznamy.
+  Unikátny index chráni len súbežné kliknutia; od odvolania (12. 9.) je
+  ďalší cyklus „počet + 1". `acknowledge()` teraz odmietne, kým platí
+  potvrdenie (#208). V databáze je to jediná duplicita.
+- Drobnosti: pätička e-mailov Contineo.app, presmerovanie po potvrdení
+  (#202), menu 9 bodiek na 1920 px pri okraji okna (#204, z TeamViewera
+  u Branislava).
+
+**Čo nevyšlo.** Vercel po zlúčení #204 nevytvoril produkčné nasadenie —
+pomohol prázdny commit. Pri odvolávaní som pred klikom overil identitu
+formulára (skrytý `id`), nie len poradie tlačidiel — v zozname, ktorý sa
+po úkone prekreslí, je poradie nespoľahlivé. Ján omylom potvrdil najprv
+Pracovný poriadok namiesto skúšobného — ukázalo to aspoň, že ostrá norma
+sa potvrdzuje správne (odtlačok PDF sedí).
+
+**Nabudúce.** Overovať zápisy cez skutočný kód (`acknowledgementDuties`,
+`duties` s `ts-hook`, len čítanie) — dáva presne to, čo obrazovka, a vidno
+pôvod každej povinnosti. Pred testom naostro preveriť, koho sa publikum
+naozaj týka (náhľad dopadu), a ktoré zápisy sú nezmazateľné.
+
+---
+
 ## 2026-09-30 — menu v hlavičke, lišta pre každého rovnaká (SHELL-menu-v-hlavicke)
 
 **Rozhodnutia (Ján, 30. 9. 2026, Q1–Q5 v `docs/design/SHELL-menu-v-hlavicke.md`).**
