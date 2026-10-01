@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SHELL — šírka hlavičky</title>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--on-accent:#fff;--bad-fg:#b91c1c;--warn-fg:#b45309;--radius:12px}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:var(--ink)}
+a{color:var(--ink)}a:hover{color:var(--accent)}
+.sheet{padding:28px 32px 48px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 24px;max-width:84ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;margin:0 0 10px}
+.ann{font-size:12.5px;color:#5c6675;max-width:96ch;margin:0 0 30px;line-height:1.55}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin:0 4px 0 6px;vertical-align:1px}
+.hdrbar{background:var(--surface);border-bottom:1px solid var(--line)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+.row{display:flex;align-items:center;gap:10px;height:56px}
+.dots{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;color:var(--muted);flex:0 0 auto}
+.dots.fix{margin-left:-9px}
+.brand{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:650;white-space:nowrap;margin-right:14px}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:700}
+.search{display:flex;align-items:center;gap:9px;flex:1 1 240px;min-width:160px;max-width:600px;height:36px;padding:0 12px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:14px}
+.kbd{margin-left:auto;font-size:11px;padding:2px 6px;border-radius:5px;background:var(--surface);border:1px solid var(--line)}
+.spacer{flex:1 1 0;min-width:0}
+.spacer.show{background:repeating-linear-gradient(45deg,rgba(29,78,216,.12) 0 6px,transparent 6px 12px);align-self:stretch;margin:10px 0;border-radius:6px}
+.bell{position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted);flex:0 0 auto}
+.bell b{position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)}
+.av{width:32px;height:32px;border-radius:50%;background:#c9ced6;flex:0 0 auto}
+.path{background:var(--surface);border-bottom:1px solid var(--line)}
+.path .wrap{display:flex;gap:8px;align-items:center;min-height:40px;font-size:13px;color:var(--muted)}
+.path b{color:var(--ink);font-weight:600}
+.main{max-width:1240px;margin:0 auto;padding:16px 16px 28px}
+.title{font-size:26px;letter-spacing:-.02em;margin:0 0 4px}
+.lead{font-size:15px;color:var(--muted);margin:0 0 16px;max-width:620px}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;max-width:1180px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 15px;display:grid;gap:2px}
+.tile span{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.tile strong{font-size:27px;font-weight:640;line-height:1.1}
+.edge{position:absolute;top:0;bottom:0;width:0;border-left:1.5px dashed #1d4ed8;pointer-events:none}
+.edge.bad{border-color:#b91c1c}
+.w834 .tiles{grid-template-columns:repeat(3,1fr)}
+.w834 .brand{margin-right:6px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">SHELL — šírka hlavičky</h1>
+<p class="doc">Snímka <code>uploads/Snímka obrazovky 2026-10-01 o 18.22.47.png</code> (<code>/dpo</code>): cesta a obsah idú po pravý okraj stropu 1240 px, hlavička končí avatarom zhruba o 400 px skôr. Príčina v <code>globals.css</code>: <code>.header-search-wrap</code> má <code>max-width: 600px</code> a v <code>.header-row</code> za ním nie je nič, čo by zvonček a avatar odtlačilo doprava — riadok sa poskladá zľava a vpravo ostane prázdno. Platí na každej stránke, nielen na <code>/dpo</code>. Zadanie: <code>SHELL-hlavicka-sirka.md</code>.</p>
+
+<p class="cap">Dnes — 1440 (strop 1240)</p>
+<div class="frame" style="width:1440px" id="before"></div>
+<p class="ann">Červená čiara = kde končí hlavička. Modrá = pravý okraj cesty a obsahu.</p>
+
+<p class="cap">Návrh — 1440</p>
+<div class="frame" style="width:1440px" id="after"></div>
+<p class="ann"><span class="num">1</span><b>Pole v strede</b> (Q1 B, rozhodnuté 1. 10. 2026) — dve prázdne <code>&lt;span className="header-spacer"&gt;</code> s <code>flex: 1 1 0</code> pred poľom a za ním (vzor <code>.page-head-spacer</code>), šrafované. Zvonček a avatar lícujú s pravým okrajom obsahu, pole drží 600 px. <span class="num">2</span><b>Ikona menu lícuje s ľavým okrajom</b> — tlačidlo má 36 px a glyf 18 px, takže je dnes o 9 px vpravo od cesty a nadpisu. <code>margin-left: -9px</code> na tlačidle; plocha kliku sa nemení.</p>
+
+<p class="cap">Návrh — 834</p>
+<div class="frame w834" style="width:834px" id="after834"></div>
+<p class="ann">Medzi 640 a 1023 px má pole ešte voľné miesto do 600 px, medzery po stranách sú úzke. Pod 640 px si pole šírku nepýta (existujúci blok) — medzera dostane 0 a nič sa nemení.</p>
+</div>
+<script>
+const dots='<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><circle cx="4" cy="4" r="1.6"/><circle cx="9" cy="4" r="1.6"/><circle cx="14" cy="4" r="1.6"/><circle cx="4" cy="9" r="1.6"/><circle cx="9" cy="9" r="1.6"/><circle cx="14" cy="9" r="1.6"/><circle cx="4" cy="14" r="1.6"/><circle cx="9" cy="14" r="1.6"/><circle cx="14" cy="14" r="1.6"/></svg>';
+const bell='<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"/><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"/></svg>';
+const ask='<svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4.5h12v8H8l-3 2.5v-2.5H3z"/></svg>';
+const tiles=[["Platné predpisy",14],["S nedostatkom",9],["Zákonná povinnosť",3],["Oprávnený záujem",4],["Námietky na rozhodnutie",0]];
+function page(fix,w){
+  return `<div class="hdrbar"><div class="wrap"><div class="row"><span class="dots${fix?" fix":""}">${dots}</span><span class="brand"><span class="logo">SFZ</span>Intranet SFZ</span>${fix?'<span class="spacer show"></span>':""}<div class="search">${ask}<span>Opýtajte sa svojich dokumentov…</span>${w>700?'<span class="kbd">⌘K</span>':""}</div>${fix?'<span class="spacer show"></span>':""}<span class="bell">${bell}<b>4</b></span><span class="av"></span></div></div></div>
+<div class="path"><div class="wrap"><span>Prehľad</span><span>›</span><span>Správa</span><span>›</span><b>Ochrana údajov</b></div></div>
+<div class="main"><h1 class="title">Ochrana údajov</h1><p class="lead">Právne základy platných predpisov. Určuje ich zodpovedná osoba za predpis, vy ich kontrolujete.</p><div class="tiles">${tiles.slice(0,w>1000?5:3).map(([l,v])=>`<div class="tile"><span>${l}</span><strong${l==="S nedostatkom"?' style="color:var(--warn-fg)"':""}>${v}</strong></div>`).join("")}</div></div>`;
+}
+const edge=(el,cls)=>{const f=document.getElementById(el);const w=f.clientWidth;const inner=Math.min(1240,w);const L=(w-inner)/2+16,R=(w+inner)/2-16;f.insertAdjacentHTML("beforeend",`<i class="edge" style="left:${L}px"></i><i class="edge" style="left:${R}px"></i>`);return f};
+document.getElementById("before").innerHTML=page(0,1440);
+document.getElementById("after").innerHTML=page(1,1440);
+document.getElementById("after834").innerHTML=page(1,834);
+["before","after","after834"].forEach(id=>edge(id));
+const b=document.getElementById("before"),av=b.querySelector(".av");
+b.insertAdjacentHTML("beforeend",`<i class="edge bad" style="left:${av.offsetLeft+av.offsetWidth}px;bottom:auto;height:56px"></i>`);
+</script>
+</body></html>

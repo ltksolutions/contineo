@@ -10,6 +10,26 @@
 
 ---
 
+## 2026-10-01 — hlavička na šírku obsahu (SHELL-hlavicka-sirka)
+
+**Zadanie:** avatar v hlavičke končil stovky pixelov pred pravým okrajom
+cesty a obsahu. Pole otázky má strop 600 px a v riadku za ním nebolo nič,
+čo by zvonček a avatar odtlačilo doprava. Rozhodnuté Q1 B: pole do stredu,
+dve prázdne medzery okolo neho.
+
+**Návrh nestačil doslova.** S `flex: 1 1 0` na medzerách a `flex: 1 1 240px`
+na poli si voľné miesto rozdelili tretinou a pole na 1440 skončilo na
+428 px namiesto 600. Pole preto od 640 px dostalo `flex-grow: 999` —
+najprv dorastie do stropu, medzery berú zvyšok. Pod 640 px sa medzery
+nekreslia vôbec: aj s nulovou šírkou by každá pridala `gap` do riadka,
+ktorý je na telefóne najtesnejší.
+
+**Ikona menu:** návrh rátal s tlačidlom 36 px (posun −9 px), v kóde má
+40 px, takže posun je −11 px. Zmerané: glyf aj nadpis začínajú na
+rovnakom pixeli (1440 aj 834).
+
+---
+
 ## 2026-09-30 – 10-01 — test potvrdzovania naostro (PR #196–#208)
 
 **Zadanie (Ján):** otestovať potvrdzovanie pri pridelení osobe, oddeleniu
