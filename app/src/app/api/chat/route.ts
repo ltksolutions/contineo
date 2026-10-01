@@ -43,6 +43,7 @@ import { classifyQuery }      from "@/lib/queryClassifier"
 import { preprocessQuery }    from "@/lib/queryPreprocessor"
 import { getCollection }      from "@/lib/mongodb"
 import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
+import { searchWithSubQueries } from "@/lib/subQuerySearch"
 import type { SearchOptions } from "@/lib/mongoSearch"
 import { searchScope, attachVersions } from "@/lib/searchVersions"
 import { buildComparison } from "@/lib/comparison"
@@ -204,40 +205,22 @@ export async function POST(req: NextRequest) {
           verifiedAnswers: scope.verifiedAnswers && time.kind !== "compare",
         }
 
-        let chunks = await (
-          searchMode === "fulltext" ? fulltextSearch(collection, searchOpts) :
-          searchMode === "vector"   ? vectorSearch  (collection, searchOpts) :
-                                      hybridSearch  (collection, searchOpts)
+        // 6b. Podotázky z prepisu (najviac 3) bežia súbežne s hlavným
+        //     hľadaním, nie po ňom (čas po prvý token, fáza 2).
+        let chunks = await searchWithSubQueries(
+          () =>
+            searchMode === "fulltext" ? fulltextSearch(collection, searchOpts) :
+            searchMode === "vector"   ? vectorSearch  (collection, searchOpts) :
+                                        hybridSearch  (collection, searchOpts),
+          processed.subQueries,
+          sq => hybridSearch(collection, { ...searchOpts, query: sq, rerankLimit: 3 }),
         )
 
         // Pozor na pomenovanie: pri `atlas-stage` je $rerank stupňom agregačnej
         // pipeline, takže sa počíta TU, nie v kroku 6c. Kľúč to musí povedať,
-        // inak z čísel vyjde, že rerank je zadarmo.
+        // inak z čísel vyjde, že rerank je zadarmo. Podotázky sú v tom istom
+        // čase — bežia súbežne, samostatný kľúč by už nič nepovedal.
         measure(providers.rerank.isPipelineStage ? "vyhladavanie a rerank" : "vyhladavanie")
-
-        // 6b. Ak máme sub-queries, pridáme ďalšie výsledky (max 3 sub-queries)
-        if (processed.subQueries.length > 0) {
-          const subResults = await Promise.all(
-            processed.subQueries.slice(0, 3).map(sq =>
-              hybridSearch(collection, { ...searchOpts, query: sq, rerankLimit: 3 })
-            )
-          )
-          // Zlúčenie – deduplikácia podľa _id
-          const seen = new Set(chunks.map(c => String(c._id)))
-          for (const results of subResults) {
-            for (const chunk of results) {
-              if (!seen.has(String(chunk._id))) {
-                seen.add(String(chunk._id))
-                chunks.push(chunk)
-              }
-            }
-          }
-          // Zachováme max 8 chunkov pre kontext
-          chunks = chunks.slice(0, 8)
-          // Bez vlastného kľúča sa čas podotázok strácal v TTFT a nebolo
-          // vidieť, že bežia až po hlavnom hľadaní, nie súbežne s ním.
-          measure("podotazky")
-        }
 
         // 6c. Rerank v aplikačnej vrstve (on-prem). V cloude je to no-op —
         //     $rerank už zoradil výsledky v pipeline. Preto sa fáza `ranking`

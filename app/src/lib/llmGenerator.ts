@@ -211,12 +211,15 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
           // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
           stopReason: stopReason,
-          tokeny: tokens,
+          // Kľúče `tokens` a `cost` číta klient aj hodnotenie. Do 1. 10. 2026
+          // tu boli slovenské `tokeny` a `naklad`, ktoré nikto nečítal —
+          // hodnotenia preto nemali ani tokeny, ani cenu.
+          tokens,
           // Cena sa počíta TU a ukladá spolu s tokenmi. Je to historický
           // údaj: čo to stálo v deň, keď sa otázka položila. Spätne sa
           // nedopočíta, lebo cenníky sa menia — preto ide do záznamu aj
           // označenie použitého cenníka.
-          naklad: cost(generation.model, tokens),
+          cost: cost(generation.model, tokens),
         })
       } catch (err) {
         /*
