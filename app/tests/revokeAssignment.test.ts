@@ -11,6 +11,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 
 const state = vi.hoisted(() => ({
   assignment: null as Record<string, unknown> | null,
+  doc: null as Record<string, unknown> | null,
   members: [] as unknown[],
   unacknowledged: [] as unknown[],
   revoked: true,
@@ -34,6 +35,10 @@ vi.mock("@/lib/hr", () => ({
     tenant: { companyCode: "SFZ", name: "SFZ" },
     person: { id: "p-hr", email: "hr@sfz.sk", companyCode: "SFZ", language: "sk", roles: ["hr"] },
   }),
+}))
+vi.mock("@/lib/documents", async importOriginal => ({
+  ...(await importOriginal<typeof import("../src/lib/documents")>()),
+  loadDocument: async () => state.doc,
 }))
 vi.mock("@/lib/assignments", async importOriginal => ({
   ...(await importOriginal<typeof import("../src/lib/assignments")>()),
@@ -72,8 +77,13 @@ async function submit(fields: Record<string, string>): Promise<string> {
   throw new Error("akcia nepresmerovala")
 }
 
+const version = (versionId: string, label: string, from: string, over: Record<string, unknown> = {}) => ({
+  versionId, label, effectiveFrom: new Date(from), effectiveTo: null, isActive: true, ...over,
+})
+
 beforeEach(() => {
   state.assignment = assignment()
+  state.doc = { companyCode: "SFZ", documentId: "sfz:test", title: "Skúšobný poriadok", versions: [version("v1", "1.0", "2026-07-01")] }
   state.members = [person("jan"), person("agata"), person("branislav")]
   state.unacknowledged = [person("agata"), person("branislav"), person("byvaly", true)]
   state.revoked = true
@@ -98,6 +108,17 @@ describe("stránka potvrdenia", () => {
     state.unacknowledged = []
     const html = await renderPage()
     expect(html).toContain("Úlohu z tohto pridelenia už nikto nemá")
+  })
+
+  it("pridelenie nahradeného znenia nepovie „zmizne úloha“ — povie, že znenie už neplatí", async () => {
+    state.doc = {
+      companyCode: "SFZ", documentId: "sfz:test", title: "Skúšobný poriadok",
+      versions: [version("v1", "1.0", "2026-07-01", { isActive: false }), version("v2", "1.2", "2026-09-10")],
+    }
+    const html = await renderPage()
+    expect(html).toContain("Pridelené znenie 1.0 už neplatí — nahradilo ho 1.2")
+    expect(html).toContain("2 ľudia visia ako nepotvrdení")
+    expect(html).not.toContain("zmizne úloha")
   })
 
   it("odvolané pridelenie už formulár neponúkne", async () => {

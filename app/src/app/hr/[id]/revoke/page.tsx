@@ -16,6 +16,7 @@ import { loadAssignment, notAcknowledged, audienceMembers, audienceLabel } from 
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
+import { loadDocument, effectiveVersion } from "@/lib/documents"
 import { revokeAction } from "../../actions"
 import AppShell from "@/components/AppShell"
 
@@ -51,6 +52,18 @@ export default async function RevokeAssignmentPage({
       ])
   const acknowledged = Math.max(0, members.length - unacknowledged.length)
 
+  /*
+    Pridelenie staršieho znenia (1. 10. 2026, Skúšobná smernica 1.0 pri
+    platnom 1.2). Také znenie sa potvrdiť nedá, `pending.ts` ho ráta medzi
+    zablokované — „zmizne úloha" by teda nebola pravda. Výkaz HR ho však
+    ukazuje ako nepotvrdené navždy, a práve to odvolanie rieši.
+  */
+  const doc = assignment.revokedAt ? null : await loadDocument(code, assignment.subject.documentId)
+  const effective = doc ? effectiveVersion(doc) : null
+  const superseded = effective?.ok && effective.version.versionId !== assignment.subject.versionId
+    ? effective.version.label
+    : null
+
   return (
     <AppShell language={language} title={t.heading} trail={{ [`/hr/${id}`]: assignment.subject.documentTitle }}>
     <div style={{ maxWidth: 720, ...tenantStyle(brandingView(ctx.tenant)) }}>
@@ -75,7 +88,11 @@ export default async function RevokeAssignmentPage({
         <>
           <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.whatHappensHeading}</h2>
           <ul className="revoke-effects">
-            <li>{unacknowledged.length > 0 ? t.tasksDisappear(unacknowledged.length) : t.nobodyLoses}</li>
+            <li>
+              {superseded
+                ? t.versionSuperseded(assignment.subject.versionLabel, superseded, unacknowledged.length)
+                : unacknowledged.length > 0 ? t.tasksDisappear(unacknowledged.length) : t.nobodyLoses}
+            </li>
             <li>{t.acknowledgementsStay(acknowledged)}</li>
             <li>{t.recordStays}</li>
             <li>{t.reassign}</li>
