@@ -217,5 +217,8 @@ doteraz. Zmena kontaktu posúva verziu textu (D138).
 Rozhodovanie a výmaz sa nemenia (D105).
 
 **Implementácia:** PR 1 — kontakt v nastaveniach a na `/privacy`
-(2026-10-01). PR 2 — námietka po prihlásení, upozornenie DPO a potvrdzovací
-e-mail.
+(2026-10-01, PR #212). PR 2 — námietka po prihlásení (`submitOwnObjection`,
+kanál `app`), upozornenie DPO a potvrdzovací e-mail (`objectionNotice.ts`),
+2026-10-01. Dve takmer súčasné podania tej istej osoby (dvojklik) môžu
+prejsť obe — jedinečný index na čakajúcu námietku chýba. Prijaté: námietka
+je zriedkavá a duplicitu DPO zamietne.

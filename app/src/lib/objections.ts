@@ -16,9 +16,18 @@ export const OBJECTIONS_COLLECTION = "objections"
 
 export type ObjectionStatus = "pending" | "upheld" | "rejected"
 
-/** Ako námietka prišla — kvôli preukázaniu lehoty na vybavenie (čl. 12 ods. 3). */
-export const OBJECTION_CHANNELS = ["email", "letter", "in-person", "other"] as const
+/**
+ * Ako námietka prišla — kvôli preukázaniu lehoty na vybavenie (čl. 12 ods. 3).
+ * `app` = podala ju prihlásená osoba sama na `/privacy` (D153).
+ */
+export const OBJECTION_CHANNELS = ["email", "letter", "in-person", "other", "app"] as const
 export type ObjectionChannel = (typeof OBJECTION_CHANNELS)[number]
+
+/** Kanály, ktoré DPO vyberá pri ručnom zápise — `app` vzniká len podaním v aplikácii. */
+export const MANUAL_OBJECTION_CHANNELS = OBJECTION_CHANNELS.filter(c => c !== "app")
+
+/** Najdlhšie znenie námietky podanej v aplikácii. */
+export const OBJECTION_TEXT_MAX = 4000
 
 export interface Objection {
   id: string

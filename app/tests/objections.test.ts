@@ -50,7 +50,7 @@ vi.mock("../src/lib/audit", async importOriginal => ({
 }))
 
 import { checkNewObjection, checkDecision, objectionScope } from "../src/lib/objections"
-import { recordObjection, decideObjection } from "../src/lib/objectionsDb"
+import { recordObjection, decideObjection, submitOwnObjection, pendingObjectionOf } from "../src/lib/objectionsDb"
 
 const NOW = new Date("2026-09-24T10:00:00Z")
 
@@ -119,6 +119,30 @@ describe("zápis a rozhodnutie", () => {
     await decideObjection("SFZ", o.id, "rejected", "a", "dpo@sfz.sk", NOW)
     await expect(decideObjection("SFZ", o.id, "upheld", "b", "dpo@sfz.sk", NOW))
       .rejects.toMatchObject({ code: "objection.notPending" })
+    expect(db.data.acknowledgements).toHaveLength(3)
+  })
+})
+
+describe("námietka v aplikácii (D153)", () => {
+  const me = { id: "p1", companyCode: "SFZ", email: "jan@sfz.sk" }
+
+  it("zapíše sa na vlastnú osobu, kanál „v aplikácii“, dátum teraz, zapísal ju človek sám", async () => {
+    const o = await submitOwnObjection(me, "Namietam.", NOW)
+    expect(o).toMatchObject({ personId: "p1", channel: "app", receivedAt: NOW, recordedBy: "jan@sfz.sk", status: "pending" })
+    expect((await pendingObjectionOf("SFZ", "p1"))?.id).toBe(o.id)
+  })
+
+  it("kým sa predošlá posudzuje, druhá neprejde; po rozhodnutí áno", async () => {
+    const first = await submitOwnObjection(me, "Prvá.", NOW)
+    await expect(submitOwnObjection(me, "Druhá.", NOW)).rejects.toMatchObject({ code: "objection.alreadyPending" })
+    expect(db.data.objections).toHaveLength(1)
+    await decideObjection("SFZ", first.id, "rejected", "Zamietnuté.", "dpo@sfz.sk")
+    await submitOwnObjection(me, "Druhá.", NOW)
+    expect(db.data.objections).toHaveLength(2)
+  })
+
+  it("prázdna neprejde; nič sa nemaže", async () => {
+    await expect(submitOwnObjection(me, "  ", NOW)).rejects.toMatchObject({ code: "objection.emptyText" })
     expect(db.data.acknowledgements).toHaveLength(3)
   })
 })

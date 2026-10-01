@@ -605,3 +605,75 @@ export function dueReminderEmail(
 
   return { subject: tone === "over" ? s.subjectOver(organisation) : s.subjectSoon(organisation), text, html }
 }
+
+/** Spoločná obálka e-mailov k námietke (D153) — rovnaká ako pri výkaze DPO. */
+function objectionHtml(
+  language: UiLanguage,
+  host: string,
+  branding: SignInBranding | undefined,
+  subtitle: string,
+  body: string,
+): string {
+  const organisation = branding?.displayName ?? "Contineo"
+  const logo = logoTag(branding, host)
+  return `<!doctype html>
+<html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
+    <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(subtitle)}</div>
+    ${body}
+    <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
+    ${footerHtml(host)}
+  </div>
+</body></html>`
+}
+
+/**
+ * Upozornenie DPO, že prihlásená osoba podala námietku (D153). **Bez znenia
+ * námietky** — to je osobný údaj a zostáva v aplikácii; e-mail nesie meno,
+ * dátum a odkaz na `/dpo`.
+ */
+export function objectionNoticeEmail(
+  link: string,
+  host: string,
+  personName: string,
+  receivedAt: string,
+  language: UiLanguage = "sk",
+  branding?: SignInBranding,
+): Omit<Message, "to"> {
+  const s = dictionary(language).objectionEmail
+  const organisation = branding?.displayName ?? "Contineo"
+  const accent = branding?.accentColor ?? "#232a35"
+  const text = [s.noticeIntro(personName, receivedAt), "", link, "", s.noticeNote].join("\n")
+  const html = objectionHtml(language, host, branding, s.noticeSubtitle, `
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 20px">${escapujHtml(s.noticeIntro(personName, receivedAt))}</p>
+    <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
+      ${escapujHtml(s.noticeButton)}
+    </a>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.noticeNote)}</p>`)
+  return { subject: s.noticeSubject(organisation), text, html }
+}
+
+/**
+ * Potvrdenie osobe, že jej námietka prišla (D153) — doklad, že ju podala
+ * a kedy. Znenie sa posiela späť len jej samej, do jej schránky.
+ */
+export function objectionReceiptEmail(
+  host: string,
+  receivedAt: string,
+  objectionText: string,
+  contactEmail: string | null,
+  language: UiLanguage = "sk",
+  branding?: SignInBranding,
+): Omit<Message, "to"> {
+  const s = dictionary(language).objectionEmail
+  const organisation = branding?.displayName ?? "Contineo"
+  const accent = branding?.accentColor ?? "#232a35"
+  const note = contactEmail ? s.receiptContact(contactEmail) : s.receiptNote
+  const text = [s.receiptIntro(receivedAt), "", objectionText, "", note].join("\n")
+  const html = objectionHtml(language, host, branding, s.receiptSubtitle, `
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(s.receiptIntro(receivedAt))}</p>
+    <div style="border-left:3px solid ${accent};padding:2px 0 2px 14px;margin:0 0 20px;font-size:15px;line-height:1.6;white-space:pre-wrap">${escapujHtml(objectionText)}</div>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:0">${escapujHtml(note)}</p>`)
+  return { subject: s.receiptSubject(organisation), text, html }
+}

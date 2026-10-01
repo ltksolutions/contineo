@@ -5,12 +5,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 
-const s = vi.hoisted(() => ({ learning: false, language: "sk", country: undefined as string | undefined, generation: "anthropic", privacy: undefined as unknown }))
+const s = vi.hoisted(() => ({ learning: false, language: "sk", country: undefined as string | undefined, generation: "anthropic", privacy: undefined as unknown, person: null as null | Record<string, unknown>, pending: null as null | Record<string, unknown> }))
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") } }))
 vi.mock("@/lib/session", () => ({
   currentTenant: async () => ({ companyCode: "SFZ", defaultLanguage: "sk", branding: { displayName: "SFZ" }, controller: { legalName: "Slovenský futbalový zväz", country: s.country }, modules: { learning: s.learning }, privacy: s.privacy }),
-  currentPerson: async () => ({ language: s.language }),
+  currentPerson: async () => ({ language: s.language, ...(s.person ?? {}) }),
 }))
+vi.mock("@/lib/objectionsDb", () => ({ pendingObjectionOf: async () => s.pending }))
+vi.mock("../src/app/privacy/actions", () => ({ submitObjectionAction: async () => {} }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "SFZ" }) }))
 vi.mock("@/components/TenantHeader", () => ({ tenantStyle: () => ({}) }))
 vi.mock("@/lib/privacy", async (orig) => ({ ...(await orig<typeof import("../src/lib/privacy")>()), dpoContacts: async () => [], PRIVACY_NOTICE_VERSION: new Date("2026-09-28T00:00:00Z") }))
@@ -23,7 +25,7 @@ async function render() {
   const { default: Page } = await import("../src/app/privacy/page")
   return renderToStaticMarkup(await Page())
 }
-beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic"; s.privacy = undefined })
+beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic"; s.privacy = undefined; s.person = null; s.pending = null })
 
 describe("/privacy — kontakt GDPR (D153)", () => {
   it("vyplnený kontakt: meno a adresa v karte aj v rámčeku námietky, nie osoby s rolou DPO", async () => {
@@ -36,6 +38,32 @@ describe("/privacy — kontakt GDPR (D153)", () => {
     const html = await render()
     expect(html).toContain("Kontakt na zodpovednú osobu vám poskytne personálne oddelenie.")
     expect(html).not.toContain("Námietku pošlite e-mailom")
+  })
+})
+
+describe("/privacy — námietka po prihlásení (D153)", () => {
+  it("neprihlásený: odkaz na prihlásenie, formulár nie", async () => {
+    const html = await render()
+    expect(html).toContain("Po prihlásení ju môžete podať aj priamo tu.")
+    expect(html).not.toContain("Podať námietku")
+  })
+  it("prihlásený bez čakajúcej námietky: formulár", async () => {
+    s.person = { id: "p1", companyCode: "SFZ" }
+    const html = await render()
+    expect(html).toContain("Podať námietku")
+    expect(html).toContain('name="text"')
+    expect(html).not.toContain("Po prihlásení")
+  })
+  it("prihlásený s čakajúcou námietkou: veta s dátumom, formulár nie", async () => {
+    s.person = { id: "p1", companyCode: "SFZ" }
+    s.pending = { receivedAt: new Date("2026-10-01T08:00:00Z") }
+    const html = await render()
+    expect(html).toContain("Vašu námietku z 1. 10. 2026 zodpovedná osoba posudzuje.")
+    expect(html).not.toContain("Podať námietku")
+  })
+  it("osoba inej organizácie formulár nedostane", async () => {
+    s.person = { id: "p9", companyCode: "INA" }
+    expect(await render()).not.toContain("Podať námietku")
   })
 })
 

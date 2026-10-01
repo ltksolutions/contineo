@@ -332,6 +332,14 @@ interface Dictionary {
     objection: string
     /** Kam poslať námietku e-mailom (D153) — pred odkazom na adresu kontaktu GDPR. */
     objectionEmail: string
+    /** Námietka po prihlásení (D153). */
+    objectionFormLabel: string
+    objectionFormHint: string
+    objectionSubmit: string
+    objectionSent: string
+    objectionPending: (date: string) => string
+    objectionSignIn: string
+    objectionSignInLink: string
     /** Dozorný úrad podľa krajiny prevádzkovateľa (`controller.country`), nie podľa jazyka. */
     complaint: Record<"SK" | "CZ", string>
     /** Zákon o archívoch podľa krajiny prevádzkovateľa (certifikát, ADR-021 D132). */
@@ -363,6 +371,20 @@ interface Dictionary {
     uploadHeading: string
     uploadNote: string
     fromMeta: (date: string) => string
+  }
+
+  /** E-maily k námietke podanej v aplikácii (D153). */
+  objectionEmail: {
+    noticeSubject: (organisation: string) => string
+    noticeSubtitle: string
+    noticeIntro: (person: string, date: string) => string
+    noticeButton: string
+    noticeNote: string
+    receiptSubject: (organisation: string) => string
+    receiptSubtitle: string
+    receiptIntro: (date: string) => string
+    receiptNote: string
+    receiptContact: (email: string) => string
   }
 
   dpoEmail: {
@@ -398,7 +420,7 @@ interface Dictionary {
     personEmailNote: string
     receivedAt: string
     channel: string
-    channels: Record<"email" | "letter" | "in-person" | "other", string>
+    channels: Record<"email" | "letter" | "in-person" | "other" | "app", string>
     objectionText: string
     objectionTextNote: string
     recordSubmit: string
@@ -3605,6 +3627,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
       objection: "Pri predpisoch s oprávneným záujmom máte právo namietať. Námietku posúdi zodpovedná osoba jednotlivo a doklad sa do jej rozhodnutia nemaže. Výmaz dokladu o oboznámení pred uplynutím lehoty nie je možný, kým je potrebný na preukázanie, uplatnenie alebo obhajobu právnych nárokov.",
       objectionEmail: "Námietku pošlite e-mailom na",
+      objectionFormLabel: "Vaša námietka",
+      objectionFormHint: "Napíšte, proti čomu namietate a prečo. Námietku posúdi zodpovedná osoba; potvrdenie vám príde e-mailom.",
+      objectionSubmit: "Podať námietku",
+      objectionSent: "Námietka je podaná. Potvrdenie sme vám poslali e-mailom.",
+      objectionPending: date => `Vašu námietku z ${date} zodpovedná osoba posudzuje. Ďalšiu môžete podať, keď o nej rozhodne.`,
+      objectionSignIn: "Po prihlásení ju môžete podať aj priamo tu.",
+      objectionSignInLink: "Prihlásiť sa",
       complaint: {
         SK: "Máte právo podať sťažnosť Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
         CZ: "Máte právo podať sťažnosť Úradu pre ochranu osobných údajov ČR (uoou.gov.cz).",
@@ -3637,6 +3666,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploadHeading: "Údaje o znení",
       uploadNote: "Nepovinné už tu — ak ich nevyplníš, predvyplnia sa z prvej strany dokumentu a potvrdíš ich na detaile.",
       fromMeta: date => `Dátum účinnosti ${date} — zo schválených údajov o znení.`,
+    },
+    objectionEmail: {
+      noticeSubject: org => `Nová námietka \u2014 ${org}`,
+      noticeSubtitle: "Námietka (čl. 21 GDPR)",
+      noticeIntro: (person, date) => `${person} podal(a) ${date} v aplikácii námietku proti spracúvaniu osobných údajov.`,
+      noticeButton: "Otvoriť námietky",
+      noticeNote: "Znenie námietky je po prihlásení na stránke DPO, v e-maile nie je. Do rozhodnutia sa nič nemaže.",
+      receiptSubject: org => `Potvrdenie námietky \u2014 ${org}`,
+      receiptSubtitle: "Potvrdenie",
+      receiptIntro: date => `Vašu námietku proti spracúvaniu osobných údajov sme prijali ${date}. Takto znie:`,
+      receiptNote: "Námietku posúdi zodpovedná osoba (DPO). Do jej rozhodnutia sa vaše doklady nemažú.",
+      receiptContact: email => `Námietku posúdi zodpovedná osoba (DPO). Do jej rozhodnutia sa vaše doklady nemažú. Otázky posielajte na ${email}.`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právnych základov ${quarter} \u2014 ${org}`,
@@ -3729,7 +3770,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     personEmailNote: "Aj predošlá adresa — námietka často príde z adresy, ktorú človek používal vo zväze.",
     receivedAt: "Doručená",
     channel: "Ako prišla",
-    channels: { email: "e-mailom", letter: "listom", "in-person": "osobne", other: "inak" },
+    channels: { email: "e-mailom", letter: "listom", "in-person": "osobne", other: "inak", app: "v aplikácii" },
     objectionText: "Znenie námietky",
     objectionTextNote: "Ako prišla — bez vlastného výkladu.",
     recordSubmit: "Zaevidovať",
@@ -4689,6 +4730,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── osoby ──────────────────────────────────────────────────────────────
     "person.notFound": "Taká osoba tu nie je.",
     "objection.emptyText": "Chýba znenie námietky.",
+    "objection.alreadyPending": "Vaša predošlá námietka sa ešte posudzuje.",
     "objection.badDate": "Dátum doručenia nie je platný dátum.",
     "objection.futureDate": "Dátum doručenia nemôže byť v budúcnosti.",
     "objection.badDecision": "Vyber, či námietke vyhovieť alebo ju zamietnuť.",
@@ -7047,6 +7089,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
       objection: "U předpisů s oprávněným zájmem máte právo vznést námitku. Námitku posoudí pověřenec jednotlivě a doklad se do jeho rozhodnutí nemaže. Výmaz dokladu o seznámení před uplynutím lhůty není možný, dokud je potřebný k prokázání, uplatnění nebo obhajobě právních nároků.",
       objectionEmail: "Námitku pošlete e-mailem na",
+      objectionFormLabel: "Vaše námitka",
+      objectionFormHint: "Napište, proti čemu namítáte a proč. Námitku posoudí pověřenec; potvrzení vám přijde e-mailem.",
+      objectionSubmit: "Podat námitku",
+      objectionSent: "Námitka je podána. Potvrzení jsme vám poslali e-mailem.",
+      objectionPending: date => `Vaši námitku z ${date} pověřenec posuzuje. Další můžete podat, až o ní rozhodne.`,
+      objectionSignIn: "Po přihlášení ji můžete podat i přímo zde.",
+      objectionSignInLink: "Přihlásit se",
       complaint: {
         SK: "Máte právo podat stížnost dozorovému úřadu — Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
         CZ: "Máte právo podat stížnost Úřadu pro ochranu osobních údajů (uoou.gov.cz).",
@@ -7079,6 +7128,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploadHeading: "Údaje o znění",
       uploadNote: "Nepovinné už zde — pokud je nevyplníš, předvyplní se z první strany dokumentu a potvrdíš je na detailu.",
       fromMeta: date => `Datum účinnosti ${date} — ze schválených údajů o znění.`,
+    },
+    objectionEmail: {
+      noticeSubject: org => `Nová námitka \u2014 ${org}`,
+      noticeSubtitle: "Námitka (čl. 21 GDPR)",
+      noticeIntro: (person, date) => `${person} podal(a) ${date} v aplikaci námitku proti zpracování osobních údajů.`,
+      noticeButton: "Otevřít námitky",
+      noticeNote: "Znění námitky je po přihlášení na stránce DPO, v e-mailu není. Do rozhodnutí se nic nemaže.",
+      receiptSubject: org => `Potvrzení námitky \u2014 ${org}`,
+      receiptSubtitle: "Potvrzení",
+      receiptIntro: date => `Vaši námitku proti zpracování osobních údajů jsme přijali ${date}. Zní takto:`,
+      receiptNote: "Námitku posoudí pověřenec (DPO). Do jeho rozhodnutí se vaše doklady nemažou.",
+      receiptContact: email => `Námitku posoudí pověřenec (DPO). Do jeho rozhodnutí se vaše doklady nemažou. Dotazy posílejte na ${email}.`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právních základů ${quarter} \u2014 ${org}`,
@@ -7171,7 +7232,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     personEmailNote: "I předchozí adresa — námitka často přijde z adresy, kterou člověk používal ve svazu.",
     receivedAt: "Doručena",
     channel: "Jak přišla",
-    channels: { email: "e-mailem", letter: "dopisem", "in-person": "osobně", other: "jinak" },
+    channels: { email: "e-mailem", letter: "dopisem", "in-person": "osobně", other: "jinak", app: "v aplikaci" },
     objectionText: "Znění námitky",
     objectionTextNote: "Jak přišla — bez vlastního výkladu.",
     recordSubmit: "Zaevidovat",
@@ -8131,6 +8192,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── osoby ──────────────────────────────────────────────────────────────
     "person.notFound": "Taková osoba tu není.",
     "objection.emptyText": "Chybí znění námitky.",
+    "objection.alreadyPending": "Vaše předchozí námitka se ještě posuzuje.",
     "objection.badDate": "Datum doručení není platné datum.",
     "objection.futureDate": "Datum doručení nemůže být v budoucnosti.",
     "objection.badDecision": "Vyber, zda námitce vyhovět, nebo ji zamítnout.",
@@ -10480,6 +10542,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
       objection: "For documents based on legitimate interest you have the right to object. The data protection officer assesses each objection individually and the evidence is not deleted before the decision. Evidence of having read a document cannot be deleted before the end of the period while it is needed to establish, exercise or defend legal claims.",
       objectionEmail: "Send your objection by e-mail to",
+      objectionFormLabel: "Your objection",
+      objectionFormHint: "Write what you object to and why. The data protection officer will assess it; you will get a confirmation by e-mail.",
+      objectionSubmit: "Submit objection",
+      objectionSent: "Your objection has been submitted. We have sent you a confirmation by e-mail.",
+      objectionPending: date => `Your objection of ${date} is being assessed by the data protection officer. You can submit another once it is decided.`,
+      objectionSignIn: "After signing in you can also submit it right here.",
+      objectionSignInLink: "Sign in",
       complaint: {
         SK: "You have the right to lodge a complaint with the supervisory authority — the Office for Personal Data Protection of the Slovak Republic (dataprotection.gov.sk).",
         CZ: "You have the right to lodge a complaint with the supervisory authority — the Office for Personal Data Protection of the Czech Republic (uoou.gov.cz).",
@@ -10512,6 +10581,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploadHeading: "Version details",
       uploadNote: "Optional here — if left empty, they are prefilled from the first page of the document and you confirm them on the detail page.",
       fromMeta: date => `Effective date ${date} — from the approved version details.`,
+    },
+    objectionEmail: {
+      noticeSubject: org => `New objection \u2014 ${org}`,
+      noticeSubtitle: "Objection (Art. 21 GDPR)",
+      noticeIntro: (person, date) => `${person} submitted an objection to the processing of personal data in the app on ${date}.`,
+      noticeButton: "Open objections",
+      noticeNote: "The wording of the objection is on the DPO page after signing in, not in this e-mail. Nothing is deleted until a decision is made.",
+      receiptSubject: org => `Objection received \u2014 ${org}`,
+      receiptSubtitle: "Confirmation",
+      receiptIntro: date => `We received your objection to the processing of personal data on ${date}. It reads:`,
+      receiptNote: "The data protection officer (DPO) will assess it. Your records are not deleted until a decision is made.",
+      receiptContact: email => `The data protection officer (DPO) will assess it. Your records are not deleted until a decision is made. Send questions to ${email}.`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Legal basis report ${quarter} \u2014 ${org}`,
@@ -10604,7 +10685,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     personEmailNote: "A previous address works too — objections often come from the address the person used while in the association.",
     receivedAt: "Received",
     channel: "Received by",
-    channels: { email: "e-mail", letter: "letter", "in-person": "in person", other: "other" },
+    channels: { email: "e-mail", letter: "letter", "in-person": "in person", other: "other", app: "in the app" },
     objectionText: "Wording of the objection",
     objectionTextNote: "As received — without your own interpretation.",
     recordSubmit: "Record",
@@ -11563,6 +11644,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── people ─────────────────────────────────────────────────────────────
     "person.notFound": "There is no such person here.",
     "objection.emptyText": "The wording of the objection is missing.",
+    "objection.alreadyPending": "Your previous objection is still being assessed.",
     "objection.badDate": "The date received is not a valid date.",
     "objection.futureDate": "The date received cannot be in the future.",
     "objection.badDecision": "Choose whether to uphold or reject the objection.",

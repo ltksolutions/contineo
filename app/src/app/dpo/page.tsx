@@ -20,7 +20,7 @@ import AppShell from "@/components/AppShell"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { listObjections } from "@/lib/objectionsDb"
-import { OBJECTION_CHANNELS } from "@/lib/objections"
+import { MANUAL_OBJECTION_CHANNELS } from "@/lib/objections"
 import Notice from "@/components/Notice"
 import { recordObjectionAction, decideObjectionAction, saveRetentionAction, saveExtraAction } from "./actions"
 import { retentionSettings, RETENTION_LIMITS } from "@/lib/retention"
@@ -292,7 +292,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
               <label className="field">
                 <span className="field-label">{t.channel}</span>
                 <select className="field-input" name="channel" defaultValue="email">
-                  {OBJECTION_CHANNELS.map(c => <option key={c} value={c}>{t.channels[c]}</option>)}
+                  {MANUAL_OBJECTION_CHANNELS.map(c => <option key={c} value={c}>{t.channels[c]}</option>)}
                 </select>
               </label>
             </div>

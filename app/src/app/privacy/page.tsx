@@ -14,6 +14,11 @@ import { dictionary, formatDate, normalizeLanguage } from "@/lib/i18n"
 import { dpoContacts, privacyProcessors, PRIVACY_NOTICE_VERSION } from "@/lib/privacy"
 import { defaultProfile, getTenantProfile } from "@/lib/tenantProfile"
 import { retentionSettings } from "@/lib/retention"
+import { pendingObjectionOf } from "@/lib/objectionsDb"
+import { OBJECTION_TEXT_MAX } from "@/lib/objections"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import Notice from "@/components/Notice"
+import { submitObjectionAction } from "./actions"
 
 export const dynamic = "force-dynamic"
 
@@ -40,7 +45,8 @@ function Table({ columns, rows }: { columns: string[]; rows: string[][] }) {
   )
 }
 
-export default async function PrivacyPage() {
+export default async function PrivacyPage({ searchParams }: { searchParams?: Promise<RawQuery> } = {}) {
+  const q = normalizeQuery<{ msg?: string; error?: string }>(searchParams ? await searchParams : {})
   let tenant: Tenant | null = null
   try {
     tenant = await currentTenant()
@@ -61,6 +67,12 @@ export default async function PrivacyPage() {
     : null
   const dpos = contact ?? await dpoContacts(tenant.companyCode).catch(() => [])
   const objectionAddress = dpos[0]?.email
+  // Námietka po prihlásení (D153): len osoba tejto organizácie; kým sa
+  // predošlá posudzuje, namiesto formulára veta s jej dátumom.
+  const signedIn = Boolean(person?.id && person.companyCode === tenant.companyCode)
+  const pending = signedIn && person
+    ? await pendingObjectionOf(tenant.companyCode, person.id).catch(() => null)
+    : null
   // Vzdelávanie len organizácii, ktorá ho má zapnuté (ADR-018, D123) —
   // inak by text sľuboval spracúvanie, ktoré sa nedeje.
   const learning = tenant.modules?.learning ? t.learning : null
@@ -108,6 +120,7 @@ export default async function PrivacyPage() {
       {toc("privacy-toc")}
       <div className="privacy-main">
         <h1 className="page-title">{t.title}</h1>
+        <Notice message={q.msg} error={q.error === "1"} back="/privacy#rights" />
         <p className="quiet page-lead">{t.lead}</p>
         {toc("privacy-chips")}
 
@@ -171,6 +184,18 @@ export default async function PrivacyPage() {
           <p>{t.objection}</p>
           {objectionAddress && (
             <p>{t.objectionEmail} <a href={`mailto:${objectionAddress}`}>{objectionAddress}</a>.</p>
+          )}
+          {!signedIn && <p>{t.objectionSignIn} <a href="/sign-in">{t.objectionSignInLink}</a></p>}
+          {signedIn && pending && <p><strong>{t.objectionPending(formatDate(pending.receivedAt, language))}</strong></p>}
+          {signedIn && !pending && (
+            <form action={submitObjectionAction} className="privacy-objection-form">
+              <label className="field">
+                <span className="field-label">{t.objectionFormLabel}</span>
+                <textarea className="field-input" name="text" rows={4} required maxLength={OBJECTION_TEXT_MAX} />
+                <span className="quiet field-hint">{t.objectionFormHint}</span>
+              </label>
+              <button className="button" type="submit">{t.objectionSubmit}</button>
+            </form>
           )}
         </div>
         <p>{t.complaint[country]}</p>

@@ -8,7 +8,7 @@ import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import { writeAudit } from "./audit"
 import { deletePersonEvidence } from "./retentionDb"
 import {
-  OBJECTIONS_COLLECTION, ObjectionError, checkNewObjection, checkDecision, objectionScope,
+  OBJECTIONS_COLLECTION, OBJECTION_TEXT_MAX, ObjectionError, checkNewObjection, checkDecision, objectionScope,
   type Objection, type NewObjection,
 } from "./objections"
 
@@ -53,6 +53,31 @@ export async function recordObjection(
     actor, targetId: person.id, targetLabel: person.fullName,
   })
   return objection
+}
+
+/** Námietka osoby, o ktorej ešte nie je rozhodnuté — najviac jedna (D153). */
+export async function pendingObjectionOf(companyCode: string, personId: string): Promise<Objection | null> {
+  return (await getCollection<Objection>(OBJECTIONS_COLLECTION))
+    .findOne({ companyCode, personId, status: "pending" }) as Promise<Objection | null>
+}
+
+/**
+ * Námietka podaná prihlásenou osobou na `/privacy` (D153). Totožnosť overilo
+ * prihlásenie, preto sa adresa nepíše a dátum doručenia je teraz. Kým
+ * o predošlej nie je rozhodnuté, ďalšia sa nepodá — človek vidí, že sa
+ * posudzuje, a DPO nedostane dve upozornenia na to isté.
+ */
+export async function submitOwnObjection(
+  person: Pick<Person, "id" | "companyCode" | "email">,
+  text: string,
+  now: Date = new Date(),
+): Promise<Objection> {
+  if (await pendingObjectionOf(person.companyCode, person.id)) {
+    throw new ObjectionError("objection.alreadyPending", "Vaša predošlá námietka sa ešte posudzuje.")
+  }
+  return recordObjection(person.companyCode, person.email, {
+    receivedAt: now, channel: "app", text: text.slice(0, OBJECTION_TEXT_MAX),
+  }, person.email, now)
 }
 
 /**
