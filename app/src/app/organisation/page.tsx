@@ -14,7 +14,9 @@ import TabLink from "@/components/TabLink"
 import SubmitButton from "@/components/SubmitButton"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
-import { orgContext } from "@/lib/orgSettings"
+import { orgPageContext } from "@/lib/orgSettings"
+import { retentionSettings, RETENTION_LIMITS } from "@/lib/retention"
+import { saveGdprContactAction, saveRetentionAction, saveExtraAction } from "@/app/dpo/actions"
 import { domainRequests, domainInstruction } from "@/lib/customerDomains"
 import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
 import { brandingView, tenantByCompanyCode } from "@/lib/tenants"
@@ -166,7 +168,7 @@ export default async function OrganisationPage({
 }: {
   searchParams: Promise<RawQuery>
 }) {
-  const ctx = await orgContext()
+  const ctx = await orgPageContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
@@ -179,7 +181,9 @@ export default async function OrganisationPage({
   // aj v záložkách prehliadača — presmerovať by ich rozbilo, tak sa len
   // preloží. Zmizne, keď prestane chodiť.
   const key = tabValue(tab)
-  const now = TAB_KEYS.includes(key ?? "") ? key! : "branding"
+  // DPO bez roly správcu osôb vidí len záložku GDPR (D154).
+  const tabKeys = ctx.canAdmin ? [...TAB_KEYS, "gdpr"] : ["gdpr"]
+  const now = tabKeys.includes(key ?? "") ? key! : tabKeys[0]
   /*
     Organizácia **priamo z databázy**, nie z `ctx.tenant`.
 
@@ -198,9 +202,11 @@ export default async function OrganisationPage({
   const tp = d.privacy
   // Náhľad úvodnej vety pozvánky z uložených hodnôt (rovnaké skladanie ako `inviteEmail`).
   const inviteIntro = d.inviteEmail.intro(tenant.controller?.legalName?.trim() || tenant.branding.displayName, tenant.branding.displayName)
-  const pending = (await domainRequests(tenant.companyCode)).filter(
-    z => !tenant.hostnames.includes(z.host),
-  )
+  const pending = ctx.canAdmin
+    ? (await domainRequests(tenant.companyCode)).filter(z => !tenant.hostnames.includes(z.host))
+    : []
+  const retention = retentionSettings(tenant.privacy?.retention)
+  const tt = d.dpo.retention
 
   // Strom sa načítava len pre svoju záložku. Na ostatných by to bol dotaz
   // navyše za nič.
@@ -263,7 +269,7 @@ export default async function OrganisationPage({
           znamenalo, že sa k prihlasovaniu človek dostal až po dvoch
           obrazovkách posúvania cez veci, ktoré nehľadal. */}
       <nav className="tabs" aria-label={t.tabsLabel}>
-        {TAB_KEYS.map(k => (
+        {tabKeys.map(k => (
           <TabLink key={k} href={`/organisation?tab=${k}`} active={k === now}>
             {t.tabs[k] ?? k}
           </TabLink>
@@ -368,29 +374,6 @@ export default async function OrganisationPage({
               {(tenant.controller?.address || tenant.controller?.registrationNumber) &&
                 ` · ${tp.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}`}
             </p>
-          </div>
-        </section>
-
-        {/* Kontakt GDPR (D153) — komu sa človek ozve e-mailom; na `/privacy`. */}
-        <section className="set-sec" id="gdpr">
-          <div className="set-sec-head">
-            <h2>{t.branding.secGdpr}</h2>
-            <p>{t.branding.secGdprNote}</p>
-          </div>
-          <div className="set-sec-body">
-            <div className="set-pair">
-              <label className="field">
-                <span className="field-label">{t.branding.gdprName}</span>
-                <input className="field-input" name="privacyContactName" autoComplete="off"
-                       defaultValue={tenant.privacy?.contact?.name ?? ""} />
-              </label>
-              <label className="field">
-                <span className="field-label">{t.branding.gdprEmail}</span>
-                <input className="field-input" name="privacyContactEmail" type="email" autoComplete="off"
-                       defaultValue={tenant.privacy?.contact?.email ?? ""} />
-                <span className="quiet field-hint">{t.branding.gdprEmailNote}</span>
-              </label>
-            </div>
           </div>
         </section>
 
@@ -1029,6 +1012,102 @@ export default async function OrganisationPage({
         {records.length >= 200 && (
           <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 14 }}>{t.auditTab.capped}</p>
         )}
+      </div>
+      )}
+
+      {/*
+        GDPR (D154): kontakt, lehoty uchovávania a doplnok na stránku Ochrana
+        osobných údajov. Upravuje len DPO (D136, D137) — správca osôb bez roly
+        DPO vidí to isté na čítanie (`fieldset disabled`, bez tlačidiel).
+        Akcie sú v `dpo/actions.ts` a strážia ich `dpoContext()`.
+      */}
+      {now === "gdpr" && (
+      <div style={{ display: "grid", gap: 16 }}>
+        {!ctx.canEditGdpr && <p className="quiet" style={{ margin: 0 }}>{t.gdpr.readOnly}</p>}
+
+        <form action={saveGdprContactAction} className="card set-form">
+          <fieldset disabled={!ctx.canEditGdpr} className="set-fieldset">
+            <section className="set-sec" id="contact">
+              <div className="set-sec-head">
+                <h2>{t.branding.secGdpr}</h2>
+                <p>{t.branding.secGdprNote}</p>
+              </div>
+              <div className="set-sec-body">
+                <div className="set-pair">
+                  <label className="field">
+                    <span className="field-label">{t.branding.gdprName}</span>
+                    <input className="field-input" name="privacyContactName" autoComplete="off"
+                           defaultValue={tenant.privacy?.contact?.name ?? ""} />
+                  </label>
+                  <label className="field">
+                    <span className="field-label">{t.branding.gdprEmail}</span>
+                    <input className="field-input" name="privacyContactEmail" type="email" autoComplete="off"
+                           defaultValue={tenant.privacy?.contact?.email ?? ""} />
+                    <span className="quiet field-hint">{t.branding.gdprEmailNote}</span>
+                  </label>
+                </div>
+                {ctx.canEditGdpr && <div><button className="button" type="submit">{t.gdpr.saveContact}</button></div>}
+              </div>
+            </section>
+          </fieldset>
+        </form>
+
+        {/* Lehoty (D136) — tie isté čísla číta mazacia dávka aj `/privacy`. */}
+        <form action={saveRetentionAction} className="card set-form">
+          <fieldset disabled={!ctx.canEditGdpr} className="set-fieldset">
+            <section className="set-sec" id="retention">
+              <div className="set-sec-head">
+                <h2>{tt.heading}</h2>
+                <p>{tt.intro}</p>
+              </div>
+              <div className="set-sec-body">
+                {([
+                  ["evidenceYears", tt.evidenceYears, tt.evidenceYearsNote],
+                  ["capYears", tt.capYears, tt.capYearsNote],
+                  ["learningDetailMonths", tt.learningDetailMonths, tt.learningDetailMonthsNote],
+                  ["answersMonths", tt.answersMonths, tt.answersMonthsNote],
+                ] as const).map(([name, label, note]) => (
+                  <label key={name} className="field">
+                    <span className="field-label">{label}</span>
+                    <input className="field-input" type="number" name={name} required inputMode="numeric"
+                           min={RETENTION_LIMITS[name][0]} max={RETENTION_LIMITS[name][1]} defaultValue={retention[name]}
+                           style={{ maxWidth: 140 }} />
+                    <span className="quiet field-hint">{note}</span>
+                  </label>
+                ))}
+                <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tt.fixed}</p>
+                {ctx.canEditGdpr && (
+                  <>
+                    <div className="lnote lnote--bad"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{tt.warning}</span></div>
+                    <div><button className="button" type="submit">{tt.save}</button></div>
+                  </>
+                )}
+              </div>
+            </section>
+          </fieldset>
+        </form>
+
+        {/* Doplnok na /privacy (D137) — v jazykoch organizácie. */}
+        <form action={saveExtraAction} className="card set-form">
+          <fieldset disabled={!ctx.canEditGdpr} className="set-fieldset">
+            <section className="set-sec" id="privacy-extra">
+              <div className="set-sec-head">
+                <h2>{d.dpo.extra.heading}</h2>
+                <p>{d.dpo.extra.intro}</p>
+              </div>
+              <div className="set-sec-body">
+                {tenant.languages.map(l => (
+                  <label key={l} className="field">
+                    <span className="field-label">{d.dpo.extra.label(d.people.languages[l] ?? l)}</span>
+                    <textarea className="field-input" name={`extra-${l}`} rows={5} maxLength={4000}
+                              defaultValue={tenant.privacy?.extra?.[l] ?? ""} />
+                  </label>
+                ))}
+                {ctx.canEditGdpr && <div><button className="button" type="submit">{d.dpo.extra.save}</button></div>}
+              </div>
+            </section>
+          </fieldset>
+        </form>
       </div>
       )}
     </div>

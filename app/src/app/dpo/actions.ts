@@ -76,6 +76,41 @@ export async function decideObjectionAction(fd: FormData) {
 }
 
 /**
+ * Späť na záložku GDPR v nastaveniach organizácie (D154) — tam lehoty,
+ * doplnok aj kontakt od 1. 10. 2026 bývajú. Na `/dpo` zostal výkaz
+ * a námietky.
+ */
+function backToGdpr(message: string, error: boolean, anchor: string): never {
+  revalidatePath("/organisation")
+  revalidatePath("/dpo")
+  revalidatePath("/privacy")
+  redirect(`/organisation?tab=gdpr&msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#${anchor}`)
+}
+
+/**
+ * Kontakt pre ochranu osobných údajov (D153) — meno a spoločná schránka na
+ * `/privacy`. Od D154 ho nastavuje DPO, nie správca osôb.
+ */
+export async function saveGdprContactAction(fd: FormData) {
+  const ctx = await dpoContext()
+  if (ctx.state !== "ready") redirect("/")
+  const t = dictionary(ctx.person.language)
+  let message = t.org.gdpr.contactSaved
+  let error = false
+  try {
+    await saveTenant(ctx.person.companyCode, {
+      privacyContactName: field(fd, "privacyContactName"),
+      privacyContactEmail: field(fd, "privacyContactEmail"),
+    }, ctx.person.email)
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[dpo] uloženie kontaktu GDPR zlyhalo:", e)
+    message = errorText(e, ctx.person.language)
+    error = true
+  }
+  backToGdpr(message, error, "contact")
+}
+
+/**
  * Lehoty uchovávania organizácie (ADR-022, D136). Uloží ich DPO; tie isté
  * čísla číta mazacia dávka aj `/privacy`. Rozsahy stráži `retentionSettings`.
  */
@@ -99,9 +134,7 @@ export async function saveRetentionAction(fd: FormData) {
     message = errorText(e, ctx.person.language)
     error = true
   }
-  revalidatePath("/dpo")
-  revalidatePath("/privacy")
-  redirect(`/dpo?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#retention`)
+  backToGdpr(message, error, "retention")
 }
 
 /**
@@ -123,7 +156,5 @@ export async function saveExtraAction(fd: FormData) {
     message = errorText(e, ctx.person.language)
     error = true
   }
-  revalidatePath("/dpo")
-  revalidatePath("/privacy")
-  redirect(`/dpo?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#privacy-extra`)
+  backToGdpr(message, error, "privacy-extra")
 }

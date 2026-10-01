@@ -6,6 +6,7 @@
 > **Nadväzuje na:** ADR-012 (retencia, DPO), ADR-021 (retencia vzdelávania),
 > ADR-001 (adaptéry podľa profilu tenanta), C1 (informovanie dotknutých osôb)
 > **Implementácia:** hotová (2026-09-28) — PR #165 (krajina, sprostredkovatelia), #166 (lehoty, verzia), doplnkový text v nasledujúcom PR.
+> **Doplnené:** Dodatok 1 (2026-10-01) — D154, lehoty, doplnok a kontakt GDPR v nastaveniach organizácie, záložka GDPR.
 
 ---
 
@@ -84,3 +85,24 @@ sa zmenilo to, čo človek čítal.
 2. D136, D138 — lehoty organizácie na `/dpo`, mazacia dávka a text ich
    čítajú; verzia textu podľa organizácie.
 3. D137 — doplnkový text na `/dpo` a jeho zobrazenie na `/privacy`.
+
+---
+
+## Dodatok 1 (2026-10-01) — záložka GDPR v nastaveniach organizácie (D154)
+
+> **Rozhodol:** Ján Letko (2026-10-01): lehoty a doplnok patria do
+> Nastavení organizácie, do bloku GDPR; upravuje ich **len DPO**.
+
+### D154 — Kde sa nastavenia ochrany údajov upravujú
+
+Lehoty uchovávania (D136), doplnok na `/privacy` (D137) a kontakt GDPR
+(D153, ADR-012) sú v **Nastaveniach organizácie, záložka GDPR**
+(`/organisation?tab=gdpr`). Mení sa **miesto, nie to, kto rozhoduje**:
+
+- **Upravuje len DPO** (rola `dpo`). Akcie strážia `dpoContext()`.
+- **Správca osôb** (`people-admin`) záložku vidí len na čítanie.
+- **DPO bez roly správcu osôb** otvorí v nastaveniach len túto záložku
+  (`orgPageContext()`); ostatné záložky a ich akcie ostávajú len správcovi.
+- Kontakt GDPR sa presunul z časti Vzhľad, takže ho od teraz nastavuje DPO,
+  nie správca osôb.
+- `/dpo` ostáva prehľad DPO (dlaždice, výkaz, námietky) s odkazom na záložku.

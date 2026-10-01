@@ -401,6 +401,9 @@ interface Dictionary {
 
   dpo: {
     heading: string
+    /** Odkaz na záložku GDPR v nastaveniach (D154). */
+    settingsMoved: string
+    settingsLink: string
     intro: string
     reportHeading: string
     csv: string
@@ -1411,6 +1414,8 @@ interface Dictionary {
     introAfter: string
     tabsLabel: string
     tabs: Record<string, string>
+    /** Záložka GDPR (D154) — upravuje len DPO. */
+    gdpr: { readOnly: string; saveContact: string; contactSaved: string }
     branding: {
       name: string
       nameNote: string
@@ -3814,6 +3819,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     decidedLine: (who, date) => `rozhodol(a) ${who}, ${date}`,
     deletedLine: (acks, unknown) => `zmazaných potvrdení: ${acks}` + (unknown ? ` · ${unknown} potvrdení bez zapísaného právneho základu zostalo — posúďte ich ručne` : ""),
     objectionRecorded: "Námietka zaevidovaná.",
+    settingsMoved: "Lehoty uchovávania, doplnok na stránku Ochrana osobných údajov a kontakt GDPR sú v nastaveniach organizácie.",
+    settingsLink: "Otvoriť záložku GDPR",
     objectionUpheld: "Námietke vyhovené, doklady pri oprávnenom záujme sú zmazané.",
     objectionRejected: "Námietka zamietnutá.",
     tileTotal: "Platné predpisy",
@@ -4986,6 +4993,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       chunking: "Členenie",
       audit: "Audit",
+      gdpr: "GDPR",
+    },
+    gdpr: {
+      readOnly: "Tieto nastavenia upravuje zodpovedná osoba (DPO). Vidíte ich len na čítanie.",
+      saveContact: "Uložiť kontakt",
+      contactSaved: "Kontakt GDPR je uložený.",
     },
     branding: {
       name: "Názov portálu",
@@ -7278,6 +7291,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     decidedLine: (who, date) => `rozhodl(a) ${who}, ${date}`,
     deletedLine: (acks, unknown) => `smazaných potvrzení: ${acks}` + (unknown ? ` · ${unknown} potvrzení bez zapsaného právního základu zůstalo — posuďte je ručně` : ""),
     objectionRecorded: "Námitka zaevidována.",
+    settingsMoved: "Lhůty uchovávání, doplněk na stránku Ochrana osobních údajů a kontakt GDPR jsou v nastavení organizace.",
+    settingsLink: "Otevřít záložku GDPR",
     objectionUpheld: "Námitce vyhověno, doklady u oprávněného zájmu jsou smazány.",
     objectionRejected: "Námitka zamítnuta.",
     tileTotal: "Platné předpisy",
@@ -8450,6 +8465,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       chunking: "Členění",
       audit: "Audit",
+      gdpr: "GDPR",
+    },
+    gdpr: {
+      readOnly: "Tato nastavení upravuje pověřenec (DPO). Vidíte je jen pro čtení.",
+      saveContact: "Uložit kontakt",
+      contactSaved: "Kontakt GDPR je uložen.",
     },
     branding: {
       name: "Název portálu",
@@ -10733,6 +10754,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     decidedLine: (who, date) => `decided by ${who}, ${date}`,
     deletedLine: (acks, unknown) => `acknowledgements deleted: ${acks}` + (unknown ? ` · ${unknown} acknowledgements without a recorded legal basis remain — review them manually` : ""),
     objectionRecorded: "Objection recorded.",
+    settingsMoved: "Retention periods, the Privacy page addition and the GDPR contact are in the organisation settings.",
+    settingsLink: "Open the GDPR tab",
     objectionUpheld: "Objection upheld; evidence based on legitimate interest has been deleted.",
     objectionRejected: "Objection rejected.",
     tileTotal: "Current documents",
@@ -11904,6 +11927,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Code lists",
       chunking: "Chunking",
       audit: "Audit",
+      gdpr: "GDPR",
+    },
+    gdpr: {
+      readOnly: "These settings are managed by the data protection officer (DPO). You can only view them.",
+      saveContact: "Save contact",
+      contactSaved: "The GDPR contact has been saved.",
     },
     branding: {
       name: "Portal name",

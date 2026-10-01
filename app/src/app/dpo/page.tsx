@@ -22,8 +22,7 @@ import { dictionary, formatDate } from "@/lib/i18n"
 import { listObjections } from "@/lib/objectionsDb"
 import { MANUAL_OBJECTION_CHANNELS } from "@/lib/objections"
 import Notice from "@/components/Notice"
-import { recordObjectionAction, decideObjectionAction, saveRetentionAction, saveExtraAction } from "./actions"
-import { retentionSettings, RETENTION_LIMITS } from "@/lib/retention"
+import { recordObjectionAction, decideObjectionAction } from "./actions"
 
 export const dynamic = "force-dynamic"
 
@@ -58,8 +57,6 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
     ? <><span>{r.responsible.fullName}</span> <a className="quiet dpo-mail" href={`mailto:${r.responsible.email}`}>{r.responsible.email}</a></>
     : t.none
   const todayIso = new Date().toISOString().slice(0, 10)
-  const retention = retentionSettings(ctx.tenant.privacy?.retention)
-  const tt = t.retention
 
   return (
     <AppShell language={language}>
@@ -166,48 +163,14 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
         </section>
 
         {/*
-          Lehoty uchovávania organizácie (ADR-022, D136) — tie isté čísla
-          číta mazacia dávka aj stránka Ochrana osobných údajov.
+          Lehoty uchovávania, doplnok na /privacy a kontakt GDPR sú od 1. 10.
+          2026 v nastaveniach organizácie, záložka GDPR (D154). Upravuje ich
+          ďalej len DPO.
         */}
-        <section id="retention" style={{ display: "grid", gap: 12, marginTop: 32 }}>
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{tt.heading}</h2>
-          <p className="quiet" style={{ margin: 0, maxWidth: 640, fontSize: "var(--fs-body)" }}>{tt.intro}</p>
-          <form action={saveRetentionAction} className="card" style={{ padding: 20, display: "grid", gap: 14 }}>
-            {([
-              ["evidenceYears", tt.evidenceYears, tt.evidenceYearsNote],
-              ["capYears", tt.capYears, tt.capYearsNote],
-              ["learningDetailMonths", tt.learningDetailMonths, tt.learningDetailMonthsNote],
-              ["answersMonths", tt.answersMonths, tt.answersMonthsNote],
-            ] as const).map(([name, label, note]) => (
-              <label key={name} className="field">
-                <span className="field-label">{label}</span>
-                <input className="field-input" type="number" name={name} required inputMode="numeric"
-                       min={RETENTION_LIMITS[name][0]} max={RETENTION_LIMITS[name][1]} defaultValue={retention[name]}
-                       style={{ maxWidth: 140 }} />
-                <span className="quiet field-hint">{note}</span>
-              </label>
-            ))}
-            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tt.fixed}</p>
-            <div className="lnote lnote--bad"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{tt.warning}</span></div>
-            <div><button className="button" type="submit">{tt.save}</button></div>
-          </form>
-        </section>
-
-        {/* Doplnok na /privacy (ADR-022, D137) — v jazykoch organizácie. */}
-        <section id="privacy-extra" style={{ display: "grid", gap: 12, marginTop: 32 }}>
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.extra.heading}</h2>
-          <p className="quiet" style={{ margin: 0, maxWidth: 640, fontSize: "var(--fs-body)" }}>{t.extra.intro}</p>
-          <form action={saveExtraAction} className="card" style={{ padding: 20, display: "grid", gap: 14 }}>
-            {ctx.tenant.languages.map(l => (
-              <label key={l} className="field">
-                <span className="field-label">{t.extra.label(dictionary(language).people.languages[l] ?? l)}</span>
-                <textarea className="field-input" name={`extra-${l}`} rows={5} maxLength={4000}
-                          defaultValue={ctx.tenant.privacy?.extra?.[l] ?? ""} />
-              </label>
-            ))}
-            <div><button className="button" type="submit">{t.extra.save}</button></div>
-          </form>
-        </section>
+        <p className="card" style={{ padding: "14px 16px", margin: "32px 0 0", fontSize: "var(--fs-body)" }}>
+          {t.settingsMoved}{" "}
+          <a href="/organisation?tab=gdpr">{t.settingsLink}</a>
+        </p>
 
         {/*
           Námietky (ADR-012, D105). Zápis a rozhodnutie sú dva formuláre:

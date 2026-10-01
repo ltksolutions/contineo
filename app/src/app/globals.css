@@ -6679,6 +6679,8 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* ── Nastavenie organizácie (rám ADMIN-prevadzkovatel-a-ciselniky) ─────────
    Sekcie s nadpisom a vysvetlením vľavo od 1024 px, jedno Uložiť v lište. */
 .set-form { padding: 0; }
+/* Záložka GDPR (D154): `fieldset disabled` robí formulár len na čítanie bez vlastného rámu. */
+.set-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .set-sec { display: grid; gap: 12px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
 .set-sec-head h2 { font-size: var(--fs-section); margin: 0 0 3px; }
 .set-sec-head p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.55; max-width: 60ch; }
