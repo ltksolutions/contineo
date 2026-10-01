@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-01** (potvrdzovanie overené naostro, PR #196–#208; D151, D152)
+Posledná aktualizácia: **2026-10-01 večer** (čas po prvý token, `/dpo` naostro, námietka po prihlásení a záložka GDPR, PR #205–#216; D153, D154)
 
 ---
 
@@ -16,8 +16,7 @@ Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
 a `docs/DEVLOG.md`. **Od 27. 9. pracujú v repe dve sessions naraz** —
 každá vo vlastnom `git worktree` (ADR-020); rozrobené vetvy druhej session
-vidno v `git branch -a`, nie v tomto súbore (1. 10.: `perf/ttft-faza-2`
-v `.worktrees/ttft-faza-2`). Zvyšok z 29. 9.: worktree
+vidno v `git branch -a`, nie v tomto súbore. Zvyšok z 29. 9.: worktree
 `.claude/worktrees/worktree-parallel-design-2a590b` (odpojený) — odstrániť, keď ho Ján pustí.
 
 **Potvrdzovanie je overené naostro (30. 9. – 1. 10., PR #196–#208)** na
@@ -70,7 +69,17 @@ nahradené znenie platí do účinnosti nového (D143).
 s budúcou účinnosťou. Formulka „v znení účinnom od" a kombinácia právnych
 základov v zázname potvrdenia overené 1. 10. **Naostro neoverené:**
 zverejnenie s novým názvom, prenos pridelení, určenie základu v príprave
-(ADR-023), `/dpo` s námietkou, vyradená osoba.
+(ADR-023), vyradená osoba.
+
+**`/dpo` je overené naostro (1. 10.):** výkaz, CSV (so stĺpcom
+`categories`, PR #214), námietka podaná v aplikácii a zamietnutá — nič sa
+nezmazalo. **D153** (ADR-012, Dodatok 1): kontakt GDPR organizácie
+(*Ján Letko, gdpr@futbalsfz.sk*) na `/privacy`; námietku podá prihlásená
+osoba priamo tam, DPO dostane e-mail aj zvonček, osoba potvrdenie.
+**D154** (ADR-022, Dodatok 1): kontakt, lehoty a doplnok sú v Nastaveniach
+organizácie, **záložka GDPR**; upravuje len DPO, správca osôb ju vidí na
+čítanie. Výkaz DPO s hľadaním a filtrami (PR #218) nahradil dlaždice pásom
+čakajúcej námietky.
 
 **Asistent odpovedá podľa znenia platného k dňu otázky (ADR-024, PR
 #170–#176).** Hľadá v zneniach platných k dňu (z `documents`, nie podľa
@@ -105,7 +114,7 @@ nevyplnené = „absolvoval(a)". Zatiaľ ho nemá nikto.
 **ADR-021:** vzdelávanie má lehotu dokladov, podrobnosti sa orežú rok po
 dokončení, **vydaný certifikát sa nemaže**. **ADR-022:** krajina sídla,
 sprostredkovatelia z profilu, lehoty a doplnkový text si organizácia
-nastaví na `/dpo` a v Nastaveniach. Otvorená karta po nasadení ponúkne
+nastaví v Nastaveniach, záložka GDPR (D154). Otvorená karta po nasadení ponúkne
 „Obnoviť" (inak posiela akcie starej verzii).
 
 ## Čo čaká na rozhodnutie Jána
@@ -132,6 +141,10 @@ ostrá norma s viacerými zneniami).
 **Staré pridelenia Oddeleniu IT** — Revízny poriadok (10. 9., Branislav
 nepotvrdil) a Skúšobná smernica (8. 9.): odvolať, alebo nechať?
 
+**9 zo 14 platných predpisov nemá právny základ** (výkaz `/dpo`,
+1. 10.) — doplní zodpovedná osoba (pri ôsmich je to Ján, pri Smernici
+o pracovných cestách Michaela Žikavská).
+
 **Atlas → AI Models → Usage:** či úpravy search indexov 29. 9. prepočítali
 vektory (skóre pred a po sú zhodné — nasvedčuje, že nie).
 
@@ -155,10 +168,13 @@ Vzdelávania (ADR-021).
    v správe) a prenos pridelení
    (`docs/TODO.md`, O15/O16). Potom asistenta: `npm run versions:questions`
    má zmysel doplniť o otázky na tú normu.
-2. **Prejsť `/dpo` naostro:** výkaz, CSV; námietku len na testovacej osobe.
-3. **Čas po prvý token:** fáza 1 (meranie, PR #205) je hotová — pár dní
-   zbierať hodnotenia a podľa `ratings_overview.mjs` vybrať, čo skracovať
-   (D9: p95 pod 2 s); fáza 2 beží vo vetve `perf/ttft-faza-2`.
+2. **Čas po prvý token, fáza 3:** fázy 1 a 2 sú nasadené (PR #205, #209;
+   hodnotenia už majú časy fáz aj tokeny). Pár dní zbierať hodnotenia,
+   potom `node --env-file=.env.local scripts/ratings_overview.mjs`
+   a rozhodnúť o hlavnom modeli — ten (2,8–6,2 s po prvý token) je
+   najväčšia položka, prah D9 je p95 pod 2 s.
+3. **Zvyšok `/dpo` naostro:** zvonček pri ďalšej námietke, záložka GDPR
+   očami správcu osôb bez roly DPO, dátum skončenia na karte osoby.
 
 ## Ako sa projekt overuje
 
@@ -168,8 +184,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (1. 10.): **0 errors, 41 warnings,
-2233 testov v 166 súboroch.** Pri veľkej záťaži stroja pomôže
+Baseline, proti ktorej sa porovnáva (1. 10. večer): **0 errors, 41 warnings,
+2283 testov v 170 súboroch.** Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri

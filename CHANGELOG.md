@@ -4,6 +4,25 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Námietka po prihlásení a záložka GDPR v nastaveniach (2026-10-01)
+
+Na stránke **Ochrana osobných údajov** je kontakt GDPR organizácie
+(pre SFZ *Ján Letko, gdpr@futbalsfz.sk*) a prihlásený človek tam môže
+**podať námietku** priamo. Dostane potvrdenie e-mailom; zodpovedná osoba
+(DPO) dostane e-mail a upozornenie v zvončeku a rozhodne o námietke na
+stránke Ochrana údajov. Kým sa námietka posudzuje, ďalšia sa nepodáva.
+Kontakt, **lehoty uchovávania** a **doplnok** na stránku Ochrana osobných
+údajov sú v **Nastaveniach organizácie, záložka GDPR** — upravuje ich len
+DPO, správca osôb ich vidí na čítanie. Export CSV výkazu DPO má stĺpec so
+všetkými druhmi právneho základu.
+
+### Asistent: rýchlejšie hľadanie a meranie času (2026-10-01)
+
+Doplnkové hľadania k otázke bežia súbežne s hlavným, nie po ňom, a pomalý
+prepis otázky sa čaká najviac 2,5 s. Hodnotenia odpovedí ukladajú rozpad
+času po fázach, počet tokenov aj cenu. **Opravené:** otvorenie uloženej
+odpovede z histórie otázok hlásilo chybu servera.
+
 ### Ochrana údajov: hľadanie, filtre a e-mail zodpovednej osobe (2026-10-01)
 
 Na stránke **Ochrana údajov** sa dá hľadať predpis podľa názvu, právneho

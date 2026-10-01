@@ -10,6 +10,54 @@
 
 ---
 
+## 2026-10-01 — čas po prvý token, `/dpo` naostro, námietka po prihlásení (PR #205–#216)
+
+**Čas po prvý token (D9).** Na 26 hodnoteniach mal TTFT medián 5,2 s
+a p95 9,7 s; zmerané fázy vysvetlili len polovicu. Fáza 1 (PR #205)
+doplnila meranie podotázok a hlavného modelu. `ratings_overview.mjs`
+čítal rozpad zo starého poľa `casy` a vypisoval ho vždy prázdny. Fáza 2
+(PR #209): podotázky súbežne s hlavným hľadaním a strop prepisu otázky
+2,5 s. Pôvodne navrhnutých 1,5 s by podľa nameraných časov zahodilo
+prepis pri ~40 % otázok — rozhodlo sa podľa čísel, nie podľa plánu.
+**Nález:** udalosť `done` posielala `tokeny` a `naklad`, klient čítal
+`tokens` a `cost`, takže žiadne hodnotenie nemalo tokeny ani cenu.
+Výsledok: najväčšia položka je hlavný model (2,8–6,2 s po prvý token pri
+vstupe ~8–9 tis. tokenov), nie prepis; fáza 3 sa rozhodne podľa
+hodnotení.
+
+**Uložená odpoveď `/ask/a/[id]` padala v produkcii** od 30. 9. (PR #206):
+serverová stránka volala `answerHasCitations()` z `"use client"` modulu.
+Prešli tsc, eslint, testy aj build. Pribudol `clientBoundary.test.ts`,
+ktorý túto triedu chýb hľadá staticky (len `src/app/` — v `lib/` by
+hlásil planý poplach, `peopleSearch.ts` je čisto klientsky).
+
+**`/dpo` naostro.** Výkaz a CSV sedeli počtom riadkov, ale nie počtom
+pri oprávnenom záujme (2 verzus 4): kombinácia „BOZP + interná smernica"
+má hlavný druh zákonnú povinnosť a CSV ostatné zamlčalo — PR #214 pridal
+stĺpec `categories`. Námietku Ján podal za seba a zamietol; testovaciu
+osobu (môj návrh) odmietol ako zbytočnú — zamietnutie nič nemaže a výmaz
+pokrývajú testy. Mal pravdu.
+
+**D153 a D154 vznikli za pochodu z Jánovej spätnej väzby:** námietka len
+od prihlásenej osoby alebo e-mailom na `gdpr@futbalsfz.sk` (kontakt
+v nastaveniach), potom piata dlaždica a zvonček, potom presun lehôt
+a doplnku do záložky GDPR. Pri presune bolo podstatné, že lehoty podľa
+D136 nastavuje DPO, nie správca osôb — záložka je preto pre DPO na úpravu
+a pre správcu len na čítanie. Dlaždicu námietok o hodinu neskôr nahradil
+pás z výkazu DPO s hľadaním (PR #218, druhá session).
+
+**Čo nevyšlo:**
+
+- Prvé úpravy opravy #206 skončili v hlavnej pracovnej kópii namiesto
+  vo worktree: `cd` do worktree platil len v jednom príkaze a ďalší
+  `python3` bežal v `app/` hlavnej kópie. Presunuté pred commitom, `main`
+  čistý. Odvtedy cesty do worktree absolútne v každom príkaze.
+- Tri e-maily pri prvej námietke prekvapili: DPO je zároveň podávajúci
+  a kontakt `gdpr@` je iná adresa, takže upozornenie dostal dvakrát.
+  Podľa návrhu; ponechané.
+
+---
+
 ## 2026-10-01 — výkaz DPO s hľadaním (DPO-vykaz-hladanie)
 
 **Zadanie:** 13 riadkov výkazu pod sebou, 11 s rovnakým nedostatkom a tou
