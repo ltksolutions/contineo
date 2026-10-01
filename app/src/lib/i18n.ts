@@ -852,6 +852,8 @@ interface Dictionary {
       /** Ľudia, ktorým úloha zmizne. */
       tasksDisappear: (n: number) => string
       nobodyLoses: string
+      /** Pridelené znenie už neplatí — úlohu nikto nevidí, vo výkaze visí nesplniteľná. */
+      versionSuperseded: (assigned: string, current: string, n: number) => string
       acknowledgementsStay: (n: number) => string
       recordStays: string
       reassign: string
@@ -4056,6 +4058,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       whatHappensHeading: "Čo sa stane po odvolaní",
       tasksDisappear: (n) => n === 1 ? "1 človeku, ktorý ešte nepotvrdil, zmizne úloha z „Na potvrdenie“ a nepríde mu pripomienka." : `${n} ľuďom, ktorí ešte nepotvrdili, zmizne úloha z „Na potvrdenie“ a nepríde im pripomienka.`,
       nobodyLoses: "Úlohu z tohto pridelenia už nikto nemá — všetci potvrdili.",
+      versionSuperseded: (assigned, current, n) =>
+        `Pridelené znenie ${assigned} už neplatí — nahradilo ho ${current}. Potvrdiť sa nedá, preto ho nikto nemá v „Na potvrdenie“; ` +
+        (n > 0 ? `vo výkaze HR však ${n === 1 ? "1 človek visí ako nepotvrdený" : `${n} ľudia visia ako nepotvrdení`}. Odvolanie túto nesplniteľnú povinnosť odstráni.` : "nikto ho nemá ani vo výkaze HR."),
       acknowledgementsStay: (n) => `Potvrdenia, ktoré už vznikli (${n}), zostávajú platné. Odvolanie ich nemaže.`,
       recordStays: "Záznam o pridelení sa nemaže: v audite zostane pridelenie aj jeho odvolanie. Odvolanie sa nedá vrátiť späť.",
       reassign: "Ak ho budete chcieť znova, pridelíte normu nanovo — vznikne nové pridelenie s dnešným dátumom.",
@@ -7488,6 +7493,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       whatHappensHeading: "Co se stane po odvolání",
       tasksDisappear: (n) => n === 1 ? "1 člověku, který ještě nepotvrdil, zmizí úkol z „K potvrzení“ a nepřijde mu připomínka." : `${n} lidem, kteří ještě nepotvrdili, zmizí úkol z „K potvrzení“ a nepřijde jim připomínka.`,
       nobodyLoses: "Úkol z tohoto přidělení už nikdo nemá — všichni potvrdili.",
+      versionSuperseded: (assigned, current, n) =>
+        `Přidělené znění ${assigned} už neplatí — nahradilo ho ${current}. Potvrdit nelze, proto ho nikdo nemá v „K potvrzení“; ` +
+        (n > 0 ? `ve výkazu HR však ${n === 1 ? "1 člověk visí jako nepotvrzený" : `${n} lidé visí jako nepotvrzení`}. Odvolání tuto nesplnitelnou povinnost odstraní.` : "nikdo ho nemá ani ve výkazu HR."),
       acknowledgementsStay: (n) => `Potvrzení, která už vznikla (${n}), zůstávají platná. Odvolání je nemaže.`,
       recordStays: "Záznam o přidělení se nemaže: v auditu zůstane přidělení i jeho odvolání. Odvolání nelze vrátit zpět.",
       reassign: "Pokud ho budete chtít znovu, přidělíte normu nově — vznikne nové přidělení s dnešním datem.",
@@ -10911,6 +10919,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       whatHappensHeading: "What happens when you revoke it",
       tasksDisappear: (n) => n === 1 ? "1 person who has not acknowledged yet will no longer see the task under “To acknowledge” and will get no reminder." : `${n} people who have not acknowledged yet will no longer see the task under “To acknowledge” and will get no reminder.`,
       nobodyLoses: "Nobody has a task from this assignment any more — everyone has acknowledged.",
+      versionSuperseded: (assigned, current, n) =>
+        `The assigned version ${assigned} is no longer in force — ${current} replaced it. It cannot be acknowledged, so nobody sees it under “To acknowledge”; ` +
+        (n > 0 ? `the HR report still shows ${n === 1 ? "1 person" : `${n} people`} as not acknowledged. Revoking removes this duty that cannot be met.` : "nobody has it in the HR report either."),
       acknowledgementsStay: (n) => `Acknowledgements already given (${n}) stay valid. Revoking does not delete them.`,
       recordStays: "The record is not deleted: the audit keeps both the assignment and its revocation. Revoking cannot be undone.",
       reassign: "If you need it again, assign the regulation anew — a new assignment with today's date is created.",
