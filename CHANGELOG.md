@@ -4,6 +4,38 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Potvrdzovanie dokumentov — overené naostro a opravy (2026-09-30 – 10-01)
+
+**PDF znenia sa zobrazuje po stranách priamo na stránke**, na počítači aj
+na telefóne; „Otvoriť PDF" ostáva. Pri potvrdzovaní sa už neukazuje text
+na vyhľadávanie — potvrdzuje sa PDF. Po stlačení **„Potvrdzujem"** sa
+človek vráti na **„Na potvrdenie"** s poďakovaním. **Formulka** je v rode
+osoby („oboznámil / oboznámila", bez vyplneného pohlavia
+„oboznámil(a)"). To isté znenie sa **nedá potvrdiť druhýkrát** — ani
+z druhého zariadenia, kde bola stránka otvorená skôr.
+
+**Zodpovedná osoba** určuje právny základ na karte dokumentu v správe,
+nie na stránke, kde sa dokument číta a potvrdzuje; kto nie je správca
+obsahu, vidí tam len svoju úlohu. Upozornenie ju posiela tam.
+
+**Pridelené normy:** „Odvolať pridelenie" otvorí stránku, ktorá povie,
+ktoré pridelenie sa odvoláva, komu zmizne úloha, že potvrdenia ostávajú
+a že sa to nedá vrátiť; dôvod sa zapíše do auditu. Hlásenia hovoria
+„adresát" namiesto „publikum" a jedno pridelenie povie čo a komu. Kto
+príde do oddelenia neskôr, má pri pridelení oddeleniu dátum a termín od
+svojho príchodu aj mimo trás.
+
+**E-maily** majú v pätičke „Contineo.app" s ikonou a odkazom na
+contineo.app. **Menu 9 bodiek** sa na širokom monitore otvára pod
+tlačidlom, nie pri okraji okna.
+
+### Opravy z druhej session (2026-10-01)
+
+Uložená odpoveď (`/ask/a/…`) pri obnovení a otvorení z histórie padala
+na chybe servera (#206). Hodnotenie „únik interného obsahu" počíta len
+verejné odpovede s interným zdrojom (#207). Meranie času po prvý token
+rozpisuje podotázky a model (#205).
+
 ### Menu v hlavičke, Knižnica a Vzdelávanie pre každého (2026-09-30)
 
 Tlačidlo **9 bodiek** je v hlavičke vľavo pred logom na každej stránke,
