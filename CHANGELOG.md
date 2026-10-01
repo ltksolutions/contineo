@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Ochrana údajov: hľadanie, filtre a e-mail zodpovednej osobe (2026-10-01)
+
+Na stránke **Ochrana údajov** sa dá hľadať predpis podľa názvu, právneho
+základu, zákona aj mena zodpovednej osoby a filtrovať podľa stavu,
+základu a osoby; pri každom filtri je počet. Výkaz je predvolene
+zoskupený **podľa zodpovednej osoby** a pri každej je tlačidlo
+**„Napísať e-mail"** so zoznamom predpisov, ktoré treba doplniť. Čakajúca
+námietka je pás nad výkazom s tlačidlom „Rozhodnúť", rozhodnuté námietky
+sú zbalené. CSV ostáva celý výkaz.
+
 ### Hlavička na celú šírku obsahu (2026-10-01)
 
 Pole otázky je v strede hlavičky, zvonček a avatar končia na pravom okraji

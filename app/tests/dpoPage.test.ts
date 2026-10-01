@@ -1,7 +1,8 @@
 /**
- * dpoPage.test.ts — /dpo vykreslené bez databázy (rám DPO-ochrana-udajov):
- * dlaždice zo `summarize()`, skupiny, čakajúca námietka s voľbami ako
- * dlaždicami a zbalené zaevidovanie, ktoré sa po chybe otvorí.
+ * dpoPage.test.ts — /dpo vykreslené bez databázy (rámy DPO-ochrana-udajov
+ * a DPO-vykaz-hladanie): hľadanie, filtre s počtami, zoskupenie podľa osoby
+ * a stavu, `mailto:` do 25 a nad 25, pás čakajúcej námietky, prázdny stav,
+ * zbalené zaevidovanie, ktoré sa po chybe otvorí.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
@@ -17,7 +18,7 @@ vi.mock("@/lib/dpo", async importOriginal => ({
   ...(await importOriginal<typeof import("../src/lib/dpo")>()),
   dpoContext: async () => ({
     state: "ready",
-    tenant: { companyCode: "SFZ", name: "SFZ", languages: ["sk", "cs"], privacy: { retention: { evidenceYears: 2 }, extra: { sk: "Kamerový systém v sídle." } } },
+    tenant: { companyCode: "SFZ", name: "SFZ", hostnames: ["sfz.localhost", "intranet.sfz.sk"], languages: ["sk", "cs"], privacy: { retention: { evidenceYears: 2 }, extra: { sk: "Kamerový systém v sídle." } } },
     person: { id: "p-jan", email: "jan@sfz.sk", companyCode: "SFZ", language: "sk" },
   }),
 }))
@@ -50,25 +51,96 @@ beforeEach(() => {
   }]
 })
 
+const html = (s: string) => s.replace(/&amp;/g, "&")
+
 describe("/dpo", () => {
-  it("dlaždice, skupiny a zodpovedná osoba ako odkaz", async () => {
-    const html = await render()
-    expect(html).toContain("Platné predpisy")
-    expect(html).toContain("S nedostatkom · 1")
-    expect(html).toContain("V poriadku · 1")
-    expect(html).toContain('href="mailto:jan@sfz.sk"')
-    expect(html).toContain("Zodpovedná osoba")
-    // Predpis s oboma druhmi sa ráta v oboch dlaždiciach (ADR-017).
-    expect(html.match(/dpo-tile-v">1</g)?.length).toBeGreaterThanOrEqual(2)
+  it("bez dlaždíc; počty pri filtroch, predvolene zoskupené podľa osoby", async () => {
+    const page = await render()
+    expect(page).not.toContain("dpo-tile")
+    expect(page).toContain("2 platných predpisov, z toho 1 s nedostatkom.")
+    // Filtre: stav, základ (predpis s oboma druhmi v oboch, ADR-017), osoba.
+    expect(page).toMatch(/S nedostatkom<\/span><span class="facet-count is-warn">1</)
+    expect(page).toMatch(/Zákonná povinnosť<\/span><span class="facet-count">1</)
+    expect(page).toMatch(/Oprávnený záujem<\/span><span class="facet-count">1</)
+    expect(page).toMatch(/Ján Letko<\/span><span class="facet-count">2</)
+    // Podľa osoby: hlavička skupiny, bez stĺpca Zodpovedná osoba v tabuľke.
+    expect(page).toMatch(/class="view-switch-item is-on"[^>]*href="\/dpo"[^>]*>Podľa osoby/)
+    expect(page).toContain("jan@sfz.sk · 2 predpisy, 1 s nedostatkom")
+    expect(page).not.toContain("<th>Zodpovedná osoba</th>")
+    // Karty pod 1024 px drží „Zodpovedná osoba", nie „Garant".
+    expect(page).toContain("<dt>Zodpovedná osoba</dt>")
   })
 
-  it("čakajúca námietka: počet pri nadpise, voľby ako dlaždice, zaevidovanie zbalené", async () => {
-    const html = await render()
-    expect(html).toContain("1 čaká na rozhodnutie")
-    // Piata dlaždica (D153): čakajúce námietky, varovná farba, odkaz na zoznam.
-    expect(html).toContain('<a href="#objections" class="card dpo-tile dpo-tile--link"><span class="dpo-tile-l">Námietky na rozhodnutie</span><span class="dpo-tile-v is-warn">1</span>')
-    expect(html).toContain("dpo-choice--danger")
-    expect(html).toMatch(/<details class="dpo-record">/)
+  it("podľa stavu: dnešné skupiny a stĺpec Zodpovedná osoba", async () => {
+    const page = await render({ group: "state" })
+    expect(page).toContain("S nedostatkom · 1")
+    expect(page).toContain("V poriadku · 1")
+    expect(page).toContain("<th>Zodpovedná osoba</th>")
+    expect(page).toContain('href="mailto:jan@sfz.sk"')
+  })
+
+  it("hľadanie: zhoda v <mark>, čip, filter ostáva v skrytom poli", async () => {
+    state.rows = [...state.rows, row({ documentId: "sfz:c", title: "Prestupový <poriadok>" })]
+    const page = await render({ q: "prestup", state: "problems" })
+    expect(page).toContain("<mark>Prestup</mark>ový &lt;poriadok&gt;")
+    expect(page).not.toContain("Predpis A</a>")
+    expect(page).toContain("1 z 3 predpisov")
+    expect(page).toContain('<input type="hidden" name="state" value="problems"/>')
+    expect(page).toContain('<span class="library-chip-key">hľadanie</span>prestup')
+    expect(html(page)).toMatch(/class="library-chip"[^>]*href="\/dpo\?state=problems"/)
+    expect(html(page)).toContain('class="library-chips-clear" href="/dpo"')
+  })
+
+  it("filter základu: druhý klik ho zruší, ostatné sa nesú", async () => {
+    const page = html(await render({ basis: "legalObligation", group: "state" }))
+    expect(page).toContain("Predpis B")
+    expect(page).not.toContain(">Predpis A<")
+    expect(page).toMatch(/class="facet is-on"[^>]*href="\/dpo\?group=state"><span class="facet-box facet-box--radio" aria-hidden="true"><\/span><span class="facet-name">Zákonná povinnosť/)
+  })
+
+  it("e-mail osobe: zoznam do 25, nad 25 počet a odkaz na jej výkaz", async () => {
+    const few = html(await render())
+    expect(few).toContain("Napísať e-mail · 1")
+    expect(decodeURIComponent(few.match(/href="(mailto:[^"]+)"/)![1])).toContain("- Predpis A")
+
+    state.rows = Array.from({ length: 26 }, (_, i) => row({ documentId: `sfz:${i}`, title: `Predpis ${i}` }))
+    const many = html(await render())
+    expect(many).toContain("Napísať e-mail · 26")
+    const body = decodeURIComponent(many.match(/href="(mailto:[^"]+)"/)![1])
+    expect(body).toContain("pri 26 predpisoch")
+    expect(body).toContain("https://intranet.sfz.sk/dpo?person=jan%40sfz.sk")
+    expect(body).not.toContain("- Predpis 0")
+  })
+
+  it("prázdny stav hľadania odkazuje na knižnicu a ruší hľadanie", async () => {
+    const page = await render({ q: "kódex" })
+    expect(page).toContain("Hľadaniu nič nevyhovuje")
+    expect(page).toContain('href="/library"')
+    expect(page).toContain('href="/dpo">Zrušiť hľadanie')
+  })
+
+  it("bez predpisov ostáva pôvodná veta, bez filtrov", async () => {
+    state.rows = []
+    const page = await render()
+    expect(page).toContain("Organizácia zatiaľ nemá platný predpis.")
+    expect(page).not.toContain("dpo-facets")
+  })
+
+  it("čakajúca námietka: pás nad výkazom, voľby ako dlaždice, zaevidovanie zbalené v hlavičke", async () => {
+    const page = await render()
+    expect(page).toContain("1 námietka čaká na rozhodnutie")
+    expect(page).toContain("Martin Novák · doručená 22. 9. 2026")
+    expect(page).toContain('<a class="button dpo-button-sm" href="#objections">Rozhodnúť</a>')
+    expect(page).toContain("1 čaká na rozhodnutie")
+    expect(page).toContain("dpo-choice--danger")
+    expect(page).toMatch(/<details class="dpo-record">/)
+  })
+
+  it("bez čakajúcej námietky pás nie je; rozhodnuté sú zbalené", async () => {
+    state.objections = [{ ...(state.objections[0] as object), status: "rejected", decidedBy: "Ján", decidedAt: new Date("2026-09-25T00:00:00Z") }]
+    const page = await render()
+    expect(page).not.toContain("dpo-alert")
+    expect(page).toContain('<details class="dpo-decided"><summary>Rozhodnuté námietky (1) · zobraziť</summary>')
   })
 
   it("po chybe je zaevidovanie otvorené", async () => {
@@ -76,9 +148,9 @@ describe("/dpo", () => {
   })
 
   it("lehoty a doplnok tu už nie sú — odkaz na záložku GDPR v nastaveniach (D154)", async () => {
-    const html = await render()
-    expect(html).not.toContain('id="retention"')
-    expect(html).not.toContain('name="extra-sk"')
-    expect(html).toContain('href="/organisation?tab=gdpr"')
+    const page = await render()
+    expect(page).not.toContain('id="retention"')
+    expect(page).not.toContain('name="extra-sk"')
+    expect(page).toContain('href="/organisation?tab=gdpr"')
   })
 })

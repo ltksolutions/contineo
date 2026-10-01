@@ -442,13 +442,39 @@ interface Dictionary {
     objectionRecorded: string
     objectionUpheld: string
     objectionRejected: string
-    /** Rám DPO-ochrana-udajov (24. 9. 2026). */
-    tileTotal: string
-    tileProblems: string
-    tileObligation: string
-    tileInterest: string
-    /** Námietky čakajúce na rozhodnutie (D153). */
-    tileObjections: string
+    /** Výkaz s hľadaním a filtrami (DPO-vykaz-hladanie, 1. 10. 2026). */
+    searchPlaceholder: string
+    searchSubmit: string
+    filterState: string
+    filterBasis: string
+    filterPerson: string
+    filterAll: string
+    stateProblems: string
+    stateOk: string
+    basisObligation: string
+    basisInterest: string
+    basisNone: string
+    chipSearch: string
+    removeFilter: (label: string) => string
+    shownOf: (shown: number, total: number) => string
+    groupBy: string
+    groupState: string
+    groupPerson: string
+    noPerson: string
+    writeEmail: (n: number) => string
+    mailSubject: string
+    mailBody: (list: string) => string
+    mailBodyLink: (n: number, url: string) => string
+    groupPersonMeta: (total: number, bad: number) => string
+    pendingBanner: (n: number) => string
+    pendingBannerMeta: (name: string, date: string) => string
+    pendingDecide: string
+    noMatch: string
+    noMatchText: string
+    noMatchLibrary: string
+    clearSearch: string
+    clearAll: string
+    decidedToggle: (n: number) => string
     groupProblems: (n: number) => string
     groupOk: (n: number) => string
     colDocument: string
@@ -3823,11 +3849,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     settingsLink: "Otvoriť záložku GDPR",
     objectionUpheld: "Námietke vyhovené, doklady pri oprávnenom záujme sú zmazané.",
     objectionRejected: "Námietka zamietnutá.",
-    tileTotal: "Platné predpisy",
-    tileProblems: "S nedostatkom",
-    tileObligation: "Zákonná povinnosť",
-    tileInterest: "Oprávnený záujem",
-    tileObjections: "Námietky na rozhodnutie",
+    searchPlaceholder: "Hľadať predpis — názov, základ, zákon, osoba",
+    searchSubmit: "Hľadať",
+    filterState: "Stav",
+    filterBasis: "Právny základ",
+    filterPerson: "Zodpovedná osoba",
+    filterAll: "Všetky",
+    stateProblems: "S nedostatkom",
+    stateOk: "V poriadku",
+    basisObligation: "Zákonná povinnosť",
+    basisInterest: "Oprávnený záujem",
+    basisNone: "Bez základu",
+    chipSearch: "hľadanie",
+    removeFilter: label => `Zrušiť filter ${label}`,
+    shownOf: (shown, total) => `${shown} z ${total} predpisov`,
+    groupBy: "Zoskupiť",
+    groupState: "Podľa stavu",
+    groupPerson: "Podľa osoby",
+    noPerson: "Bez zodpovednej osoby",
+    writeEmail: n => `Napísať e-mail · ${n}`,
+    mailSubject: "Právny základ predpisov — chýbajúce údaje",
+    mailBody: list => `Dobrý deň,\n\npri týchto predpisoch, za ktoré zodpovedáte, chýba alebo nesedí právny základ:\n\n${list}\n\nDoplňte ho, prosím, na karte dokumentu v správe knižnice.\n\nĎakujem`,
+    mailBodyLink: (n, url) => `Dobrý deň,\n\npri ${n} predpisoch, za ktoré zodpovedáte, chýba alebo nesedí právny základ. Zoznam: ${url}\n\nDoplňte ho, prosím, na karte dokumentu v správe knižnice.\n\nĎakujem`,
+    groupPersonMeta: (total, bad) => `${total} ${total === 1 ? "predpis" : total >= 2 && total <= 4 ? "predpisy" : "predpisov"}, ${bad} s nedostatkom`,
+    pendingBanner: n => n === 1 ? "1 námietka čaká na rozhodnutie" : n <= 4 ? `${n} námietky čakajú na rozhodnutie` : `${n} námietok čaká na rozhodnutie`,
+    pendingBannerMeta: (name, date) => `${name} · doručená ${date} · do rozhodnutia sa nič nemaže`,
+    pendingDecide: "Rozhodnúť",
+    noMatch: "Hľadaniu nič nevyhovuje",
+    noMatchText: "Výkaz obsahuje len platné znenia. Archívne a pripravované nájdete v",
+    noMatchLibrary: "knižnici",
+    clearSearch: "Zrušiť hľadanie",
+    clearAll: "Zrušiť všetko",
+    decidedToggle: n => `Rozhodnuté námietky (${n}) · zobraziť`,
     groupProblems: n => `S nedostatkom · ${n}`,
     groupOk: n => `V poriadku · ${n}`,
     colDocument: "Predpis",
@@ -7295,11 +7348,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     settingsLink: "Otevřít záložku GDPR",
     objectionUpheld: "Námitce vyhověno, doklady u oprávněného zájmu jsou smazány.",
     objectionRejected: "Námitka zamítnuta.",
-    tileTotal: "Platné předpisy",
-    tileProblems: "S nedostatkem",
-    tileObligation: "Zákonná povinnost",
-    tileInterest: "Oprávněný zájem",
-    tileObjections: "Námitky k rozhodnutí",
+    searchPlaceholder: "Hledat předpis — název, základ, zákon, osoba",
+    searchSubmit: "Hledat",
+    filterState: "Stav",
+    filterBasis: "Právní základ",
+    filterPerson: "Odpovědná osoba",
+    filterAll: "Všechny",
+    stateProblems: "S nedostatkem",
+    stateOk: "V pořádku",
+    basisObligation: "Zákonná povinnost",
+    basisInterest: "Oprávněný zájem",
+    basisNone: "Bez základu",
+    chipSearch: "hledání",
+    removeFilter: label => `Zrušit filtr ${label}`,
+    shownOf: (shown, total) => `${shown} z ${total} předpisů`,
+    groupBy: "Seskupit",
+    groupState: "Podle stavu",
+    groupPerson: "Podle osoby",
+    noPerson: "Bez odpovědné osoby",
+    writeEmail: n => `Napsat e-mail · ${n}`,
+    mailSubject: "Právní základ předpisů — chybějící údaje",
+    mailBody: list => `Dobrý den,\n\nu těchto předpisů, za které odpovídáte, chybí nebo nesedí právní základ:\n\n${list}\n\nDoplňte ho, prosím, na kartě dokumentu ve správě knihovny.\n\nDěkuji`,
+    mailBodyLink: (n, url) => `Dobrý den,\n\nu ${n} předpisů, za které odpovídáte, chybí nebo nesedí právní základ. Seznam: ${url}\n\nDoplňte ho, prosím, na kartě dokumentu ve správě knihovny.\n\nDěkuji`,
+    groupPersonMeta: (total, bad) => `${total} ${total === 1 ? "předpis" : total >= 2 && total <= 4 ? "předpisy" : "předpisů"}, ${bad} s nedostatkem`,
+    pendingBanner: n => n === 1 ? "1 námitka čeká na rozhodnutí" : n <= 4 ? `${n} námitky čekají na rozhodnutí` : `${n} námitek čeká na rozhodnutí`,
+    pendingBannerMeta: (name, date) => `${name} · doručena ${date} · do rozhodnutí se nic nemaže`,
+    pendingDecide: "Rozhodnout",
+    noMatch: "Hledání nic neodpovídá",
+    noMatchText: "Výkaz obsahuje jen platná znění. Archivní a připravovaná najdete v",
+    noMatchLibrary: "knihovně",
+    clearSearch: "Zrušit hledání",
+    clearAll: "Zrušit vše",
+    decidedToggle: n => `Rozhodnuté námitky (${n}) · zobrazit`,
     groupProblems: n => `S nedostatkem · ${n}`,
     groupOk: n => `V pořádku · ${n}`,
     colDocument: "Předpis",
@@ -10758,11 +10838,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     settingsLink: "Open the GDPR tab",
     objectionUpheld: "Objection upheld; evidence based on legitimate interest has been deleted.",
     objectionRejected: "Objection rejected.",
-    tileTotal: "Current documents",
-    tileProblems: "With issues",
-    tileObligation: "Legal obligation",
-    tileInterest: "Legitimate interest",
-    tileObjections: "Objections to decide",
+    searchPlaceholder: "Search documents — title, basis, law, person",
+    searchSubmit: "Search",
+    filterState: "Status",
+    filterBasis: "Legal basis",
+    filterPerson: "Responsible person",
+    filterAll: "All",
+    stateProblems: "With issues",
+    stateOk: "In order",
+    basisObligation: "Legal obligation",
+    basisInterest: "Legitimate interest",
+    basisNone: "No basis",
+    chipSearch: "search",
+    removeFilter: label => `Remove filter ${label}`,
+    shownOf: (shown, total) => `${shown} of ${total} documents`,
+    groupBy: "Group",
+    groupState: "By status",
+    groupPerson: "By person",
+    noPerson: "No responsible person",
+    writeEmail: n => `Write an email · ${n}`,
+    mailSubject: "Legal basis of documents — missing details",
+    mailBody: list => `Hello,\n\nthe legal basis is missing or incorrect for these documents you are responsible for:\n\n${list}\n\nPlease complete it on the document card in library management.\n\nThank you`,
+    mailBodyLink: (n, url) => `Hello,\n\nthe legal basis is missing or incorrect for ${n} documents you are responsible for. List: ${url}\n\nPlease complete it on the document card in library management.\n\nThank you`,
+    groupPersonMeta: (total, bad) => `${total} ${total === 1 ? "document" : "documents"}, ${bad} with issues`,
+    pendingBanner: n => n === 1 ? "1 objection awaits a decision" : `${n} objections await a decision`,
+    pendingBannerMeta: (name, date) => `${name} · received ${date} · nothing is deleted until decided`,
+    pendingDecide: "Decide",
+    noMatch: "Nothing matches your search",
+    noMatchText: "The report only contains current versions. Archived and upcoming ones are in the",
+    noMatchLibrary: "library",
+    clearSearch: "Clear search",
+    clearAll: "Clear all",
+    decidedToggle: n => `Decided objections (${n}) · show`,
     groupProblems: n => `With issues · ${n}`,
     groupOk: n => `In order · ${n}`,
     colDocument: "Document",

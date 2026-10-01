@@ -177,6 +177,13 @@ const PATHS: Record<string, React.ReactNode> = {
   // Filtre — tri čiary od najdlhšej, zužovanie výberu. Geometria je
   // z `KNIZNICA.html` (tlačidlo „Filtre" pod 1024 px).
   filters: <path d="M2.8 4.2h12.4M5.2 9h7.6M7.6 13.8h2.8" />,
+  // Obálka — „Napísať e-mail" pri zodpovednej osobe na /dpo (DPO-vykaz-hladanie).
+  mail: (
+    <>
+      <rect x="2.5" y="4" width="13" height="10" rx="1.5" />
+      <path d="m3 5 6 5 6-5" />
+    </>
+  ),
   // Všetky sekcie — 9 bodiek 3 × 3 (SHELL-rozcestnik, plachta). Plné ako
   // „Viac" a z toho istého dôvodu: bodka z ťahu by na 18 px bola krúžok.
   grid: (
