@@ -72,8 +72,9 @@ zverejnenie s novým názvom, prenos pridelení, určenie základu v príprave
 (ADR-023), vyradená osoba.
 
 **`/dpo` je overené naostro (1. 10.):** výkaz, CSV (so stĺpcom
-`categories`, PR #214), námietka podaná v aplikácii a zamietnutá — nič sa
-nezmazalo. **D153** (ADR-012, Dodatok 1): kontakt GDPR organizácie
+`categories`, PR #214), dve námietky podané v aplikácii a zamietnuté — nič
+sa nezmazalo; zvonček, e-maily a záložka GDPR len na čítanie pre správcu
+osôb bez roly DPO. **D153** (ADR-012, Dodatok 1): kontakt GDPR organizácie
 (*Ján Letko, gdpr@futbalsfz.sk*) na `/privacy`; námietku podá prihlásená
 osoba priamo tam, DPO dostane e-mail aj zvonček, osoba potvrdenie.
 **D154** (ADR-022, Dodatok 1): kontakt, lehoty a doplnok sú v Nastaveniach
@@ -173,8 +174,8 @@ Vzdelávania (ADR-021).
    potom `node --env-file=.env.local scripts/ratings_overview.mjs`
    a rozhodnúť o hlavnom modeli — ten (2,8–6,2 s po prvý token) je
    najväčšia položka, prah D9 je p95 pod 2 s.
-3. **Zvyšok `/dpo` naostro:** zvonček pri ďalšej námietke, záložka GDPR
-   očami správcu osôb bez roly DPO, dátum skončenia na karte osoby.
+3. **Dátum skončenia na karte osoby** — overiť pri prvom skutočnom odchode
+   (zadáva sa pri vyradení; zvyšok `/dpo` je overený, `docs/TODO.md`).
 
 ## Ako sa projekt overuje
 
@@ -185,7 +186,7 @@ cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
 Baseline, proti ktorej sa porovnáva (1. 10. večer): **0 errors, 41 warnings,
-2283 testov v 170 súboroch.** Pri veľkej záťaži stroja pomôže
+2286 testov v 170 súboroch.** Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri

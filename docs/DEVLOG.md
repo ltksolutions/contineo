@@ -56,6 +56,15 @@ pás z výkazu DPO s hľadaním (PR #218, druhá session).
   a kontakt `gdpr@` je iná adresa, takže upozornenie dostal dvakrát.
   Podľa návrhu; ponechané.
 
+**Večer — zvyšok naostro.** Druhá námietka overila zvonček, e-maily
+a potvrdenie. Záložku GDPR očami správcu osôb bez roly DPO Ján vyskúšal tak,
+že si rolu DPO dočasne odobral (ako správca osôb si ju vie vrátiť sám).
+Opačný variant — DPO bez správcu — sa naostro neskúšal: správcu osôb by si
+cez aplikáciu nevrátil. Upozornenie DPO prišlo aj na jeho osobnú adresu,
+hoci rolu už nemal — audit ukázal, že ju odobral minútu **po** podaní.
+Dátum skončenia čaká na prvý skutočný odchod: vyradiť niekoho kvôli testu by
+spustilo lehotu jeho dokladov.
+
 ---
 
 ## 2026-10-01 — záložky a nastavenie organizácie (ZAKLAD-zalozky)
