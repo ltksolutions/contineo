@@ -301,6 +301,17 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   position: relative;
 }
 
+/* Medzery pred poľom otázky a za ním (SHELL-hlavicka-sirka, Q1 B): pole
+   v strede, zvonček a avatar na pravom okraji obsahu. Voľné miesto dostanú
+   až to, čo pole nechá — pole najprv dorastie do svojich 600 px
+   (`flex-grow` pri `.header-search-wrap` od 640 px). Pod 640 px sa
+   nekreslia vôbec: aj s nulovou šírkou by každá pridala `gap` do riadka,
+   ktorý je na telefóne najtesnejší. */
+.header-spacer { flex: 1 1 0; min-width: 0; }
+@media (max-width: 639px) {
+  .header-spacer { display: none; }
+}
+
 /* Logo tenanta — 28 px, r8, rovnaké na všetkých šírkach. */
 .header-logo { display: block; border-radius: 8px; }
 
@@ -529,7 +540,10 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .header-search-kbd { display: inline-flex; }
   /* Miesto pre nápovedu, aby ju dlhý text nepodliezol. */
   .header-search-input { padding-right: 60px; font-size: 14px; }
-  .header-search-wrap { margin-left: 12px; }
+  /* Pole rastie prvé, medzery okolo neho až po jeho strop
+     (SHELL-hlavicka-sirka). Pri rovnakom `flex-grow` by si voľné miesto
+     rozdelili tretinou a pole by na 1440 skončilo na ~430 px. */
+  .header-search-wrap { margin-left: 12px; flex-grow: 999; }
 }
 
 /*
@@ -1162,8 +1176,11 @@ html[data-theme="dark"] select.field-input {
  */
 .sections { flex: none; }
 .header-menu { display: none; margin-right: -12px; }
+/* Glyf 9 bodiek (18 px) lícuje s ľavým okrajom cesty a nadpisu
+   (SHELL-hlavicka-sirka) — tlačidlo má 40 px, glyf je teda o 11 px vpravo.
+   Posúva sa celé tlačidlo, plocha kliku ostáva. */
 @media (min-width: 640px) {
-  .header-menu { display: block; }
+  .header-menu { display: block; margin-left: -11px; }
 }
 .sections-button {
   display: grid;
