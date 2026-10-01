@@ -178,6 +178,24 @@ describe("uloženie zmeny", () => {
     expect(set["privacy.updatedBy"]).toBe("dpo@sfz.sk")
   })
 
+  it("kontakt GDPR (D153): uloží meno a adresu malými písmenami, posunie verziu textu", async () => {
+    findOne.mockResolvedValue(SFZ)
+    await saveTenant("SFZ", { privacyContactName: " Ján  Letko ", privacyContactEmail: " GDPR@futbalsfz.sk " }, "kto@ltk.solutions")
+    const set = updateOne.mock.calls[0][1].$set
+    expect(set["privacy.contact.name"]).toBe("Ján Letko")
+    expect(set["privacy.contact.email"]).toBe("gdpr@futbalsfz.sk")
+    expect(set["privacy.updatedAt"]).toBeInstanceOf(Date)
+  })
+
+  it("kontakt GDPR: adresa bez tvaru e-mailu neprejde, prázdna sa zapíše prázdna", async () => {
+    findOne.mockResolvedValue(SFZ)
+    await expect(saveTenant("SFZ", { privacyContactEmail: "gdpr futbalsfz.sk" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.privacyContactEmailShape" })
+    expect(updateOne).not.toHaveBeenCalled()
+    await saveTenant("SFZ", { privacyContactEmail: "" }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[0][1].$set["privacy.contact.email"]).toBe("")
+  })
+
   it("krajina sídla: len SK/CZ; nezmenená hodnota verziu textu neposunie", async () => {
     findOne.mockResolvedValue({ ...SFZ, controller: { country: "SK" } })
     await saveTenant("SFZ", { controllerCountry: "SK", displayName: "X" }, "kto@ltk.solutions")

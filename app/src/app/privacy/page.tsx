@@ -54,7 +54,13 @@ export default async function PrivacyPage() {
   const language = normalizeLanguage(person?.language ?? tenant.defaultLanguage)
   const t = dictionary(language).privacy
   const branding = brandingView(tenant)
-  const dpos = await dpoContacts(tenant.companyCode).catch(() => [])
+  // Kontakt GDPR z nastavení organizácie (D153) má prednosť; bez neho osoby
+  // s rolou `dpo` ako doteraz.
+  const contact = tenant.privacy?.contact?.email
+    ? [{ fullName: tenant.privacy.contact.name ?? "", email: tenant.privacy.contact.email }]
+    : null
+  const dpos = contact ?? await dpoContacts(tenant.companyCode).catch(() => [])
+  const objectionAddress = dpos[0]?.email
   // Vzdelávanie len organizácii, ktorá ho má zapnuté (ADR-018, D123) —
   // inak by text sľuboval spracúvanie, ktoré sa nedeje.
   const learning = tenant.modules?.learning ? t.learning : null
@@ -121,7 +127,7 @@ export default async function PrivacyPage() {
             {dpos.length > 0
               ? dpos.map(d => (
                   <p key={d.email}>
-                    {d.fullName} · <a href={`mailto:${d.email}`}>{d.email}</a>
+                    {d.fullName && <>{d.fullName} · </>}<a href={`mailto:${d.email}`}>{d.email}</a>
                   </p>
                 ))
               : <p>{t.dpoMissing}</p>}
@@ -163,6 +169,9 @@ export default async function PrivacyPage() {
         <div className="privacy-objection">
           <h3>{t.objectionHeading}</h3>
           <p>{t.objection}</p>
+          {objectionAddress && (
+            <p>{t.objectionEmail} <a href={`mailto:${objectionAddress}`}>{objectionAddress}</a>.</p>
+          )}
         </div>
         <p>{t.complaint[country]}</p>
 
