@@ -25,7 +25,9 @@
  * `/kniznica` a skončilo ako `/library/trasy`.
  */
 const PREFIXES: [string, string][] = [
-  ["/kniznica/trasy", "/library/tracks"],
+  // Trasy prešli z knižnice do Pridelených dokumentov (2. 10. 2026).
+  ["/kniznica/trasy", "/hr/tracks"],
+  ["/library/tracks", "/hr/tracks"],
   ["/kniznica/nova", "/library/new"],
   ["/kniznica", "/library"],
   ["/dokumenty", "/documents"],

@@ -8,7 +8,7 @@
 import { notFound, redirect } from "next/navigation"
 import KeyFromLabel from "@/components/KeyFromLabel"
 import Link from "next/link"
-import { libraryContext } from "@/lib/library"
+import { trackManagerContext } from "@/lib/hr"
 import { allTracks } from "@/lib/tracks"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -25,7 +25,7 @@ export default async function TracksPage({
 }: {
   searchParams: Promise<RawQuery>
 }) {
-  const ctx = await libraryContext()
+  const ctx = await trackManagerContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
@@ -42,7 +42,7 @@ export default async function TracksPage({
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
-      <Notice message={message ?? error} error={Boolean(error)} back="/library/tracks" />
+      <Notice message={message ?? error} error={Boolean(error)} back="/hr/tracks" />
 
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>
@@ -66,7 +66,7 @@ export default async function TracksPage({
         {tracks.map(tr => (
           <li key={tr.key} className="card" style={{ padding: "16px 18px" }}>
             <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-              <Link href={`/library/tracks/${encodeURIComponent(tr.key)}`} style={{ fontSize: "var(--fs-section)", fontWeight: 600, flex: "1 1 240px" }}>
+              <Link href={`/hr/tracks/${encodeURIComponent(tr.key)}`} style={{ fontSize: "var(--fs-section)", fontWeight: 600, flex: "1 1 240px" }}>
                 {tr.title}
               </Link>
               {/* Stav cez variant zo ZAKLADU, nie inline farbu (SPRAVA, úloha 1.2). */}

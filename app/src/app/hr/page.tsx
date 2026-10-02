@@ -61,6 +61,10 @@ export default async function HrOverviewPage({
         <Link className="button button--quiet" href="/hr/reminders">
           {dictionary(language).hr.reminders.heading}
         </Link>
+        {/* Trasy patria sem (Ján 2. 10. 2026): určujú, čo má nový človek potvrdiť. */}
+        <Link className="button button--quiet" href="/hr/tracks">
+          {dictionary(language).library.tracks.heading}
+        </Link>
       </p>
 
       {overview.length === 0 ? (
