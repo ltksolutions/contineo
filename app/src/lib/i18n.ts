@@ -2424,6 +2424,8 @@ interface Dictionary {
       disable: string
       stepCount: (n: number) => string
       detailHeading: (title: string) => string
+      /** Rozbalí názov a popis na úpravu — hore pri názve trasy (2. 10. 2026). */
+      edit: string
       rename: string
       steps: string
       noSteps: string
@@ -6005,6 +6007,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disable: "Vypnúť",
       stepCount: n => (n === 1 ? "1 krok" : n >= 2 && n <= 4 ? `${n} kroky` : `${n} krokov`),
       detailHeading: title => `Trasa ${title}`,
+      edit: "Upraviť názov",
       rename: "Uložiť názov",
       steps: "Kroky",
       noSteps: "Trasa zatiaľ nemá kroky. Prázdnu trasu zapnúť nejde — ľuďom by tvrdila „hotovo“.",
@@ -9535,6 +9538,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disable: "Vypnout",
       stepCount: n => (n === 1 ? "1 krok" : n >= 2 && n <= 4 ? `${n} kroky` : `${n} kroků`),
       detailHeading: title => `Trasa ${title}`,
+      edit: "Upravit název",
       rename: "Uložit název",
       steps: "Kroky",
       noSteps: "Trasa zatím nemá kroky. Prázdnou trasu zapnout nelze — lidem by tvrdila „hotovo“.",
@@ -13052,6 +13056,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disable: "Switch off",
       stepCount: n => (n === 1 ? "1 step" : `${n} steps`),
       detailHeading: title => `Track ${title}`,
+      edit: "Edit title",
       rename: "Save title",
       steps: "Steps",
       noSteps: "The track has no steps yet. An empty track cannot be switched on — it would tell people they are done.",
