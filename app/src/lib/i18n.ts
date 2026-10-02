@@ -2148,6 +2148,25 @@ interface Dictionary {
         basisMissing: string
       }
       manage: string
+      /** Archivácia predpisu (ADR-025, D156). */
+      archive: {
+        heading: string
+        intro: string
+        until: string
+        untilHint: string
+        reason: string
+        reasonHint: string
+        submit: string
+        blocked: string
+        done: (date: string, revoked: number) => string
+        scheduled: (date: string) => string
+        bannerInEffect: (date: string) => string
+        bannerScheduled: (date: string) => string
+        bannerMeta: (who: string, at: string) => string
+        restore: string
+        restoreHint: string
+        restored: string
+      }
       uploadNext: string
       approvalHistory: string
       versionPageTitle: string
@@ -2348,6 +2367,8 @@ interface Dictionary {
         draft: string
         review: string
         expired: string
+        /** Archivovaný predpis (ADR-025). */
+        archived: string
       }
       /** Tretia hodnota facetu Stav (ADR-006) — dokument s bežiacim kolom. */
       /** Štvrtá hodnota filtra stavu — odvodená z platnosti znenia (D27). */
@@ -4805,6 +4826,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.notFound": "Taká osoba tu nie je.",
     "objection.emptyText": "Chýba znenie námietky.",
     "objection.alreadyPending": "Vaša predošlá námietka sa ešte posudzuje.",
+    "archive.no-current": "Predpis nemá platné znenie, ktoré by sa dalo archivovať.",
+    "archive.already-archived": "Predpis je už archivovaný.",
+    "archive.upcoming": "Predpis má zverejnenú novelu, ktorá ešte neplatí. Archivovať sa dá, až keď začne platiť.",
+    "archive.draft": "Pripravuje sa nové znenie. Najprv ho dokonči alebo zahoď.",
+    "archive.round-open": "Beží kolo schvaľovania. Najprv ho ukonči.",
+    "archive.date-before-start": "Dátum musí byť neskôr než začiatok platnosti znenia.",
+    "archive.no-reason": "Chýba dôvod archivácie.",
+    "archive.not-archived": "Predpis nie je archivovaný.",
+    "archive.bad-date": "Dátum nie je platný.",
     "objection.badDate": "Dátum doručenia nie je platný dátum.",
     "objection.futureDate": "Dátum doručenia nemôže byť v budúcnosti.",
     "objection.badDecision": "Vyber, či námietke vyhovieť alebo ju zamietnuť.",
@@ -4992,6 +5022,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "imported": "importované",
       "reset": "resetované",
       "archived": "archivované",
+      "validity-restored": "obnovená platnosť",
       "retired": "vyradené z ponuky",
       "course-version": "nová verzia kurzu",
     },
@@ -5757,6 +5788,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         basisMissing: "základ neurčený",
       },
       manage: "Správa",
+      archive: {
+        heading: "Archivovať predpis",
+        intro: "Predpis prestane platiť dňom, ktorý zvolíte. Asistent z neho prestane odpovedať, nedá sa prideliť a nepotvrdené pridelenia sa odvolajú. Text, PDF a potvrdenia ostanú.",
+        until: "Neplatí od",
+        untilHint: "Môže byť aj v budúcnosti — dovtedy predpis platí normálne.",
+        reason: "Dôvod",
+        reasonHint: "Napríklad: zrušený uznesením VV SFZ č. … zo dňa …",
+        submit: "Archivovať",
+        blocked: "Archivovať sa teraz nedá:",
+        done: (date, revoked) => `Predpis je archivovaný od ${date}.${revoked ? ` Odvolané pridelenia: ${revoked}.` : ""}`,
+        scheduled: date => `Predpis sa archivuje ${date}. Dovtedy platí.`,
+        bannerInEffect: date => `Archivovaný — neplatí od ${date}`,
+        bannerScheduled: date => `Archivuje sa — platí ešte do ${date}`,
+        bannerMeta: (who, at) => `Archivoval(a) ${who}, ${at}`,
+        restore: "Obnoviť platnosť",
+        restoreHint: "Pri omyle. Odvolané pridelenia sa neobnovia — prideliť sa dá znova.",
+        restored: "Platnosť predpisu je obnovená.",
+      },
       uploadNext: "Potom na detaile skontroluješ text, vyberieš schvaľovateľov a zodpovednú osobu a predložíš.",
       approvalHistory: "História schvaľovania",
       versionPageTitle: "Nové znenie",
@@ -5908,6 +5957,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         draft: "Návrh",
         review: "Na schválenie",
         expired: "Expirovaný",
+        archived: "Archivovaný",
       },
       filter: "Filtrovať",
       clearFilters: "zrušiť filtre",
@@ -8308,6 +8358,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.notFound": "Taková osoba tu není.",
     "objection.emptyText": "Chybí znění námitky.",
     "objection.alreadyPending": "Vaše předchozí námitka se ještě posuzuje.",
+    "archive.no-current": "Předpis nemá platné znění, které by šlo archivovat.",
+    "archive.already-archived": "Předpis je už archivován.",
+    "archive.upcoming": "Předpis má zveřejněnou novelu, která ještě neplatí. Archivovat jde, až začne platit.",
+    "archive.draft": "Připravuje se nové znění. Nejprve ho dokonči nebo zahoď.",
+    "archive.round-open": "Běží kolo schvalování. Nejprve ho ukonči.",
+    "archive.date-before-start": "Datum musí být později než začátek platnosti znění.",
+    "archive.no-reason": "Chybí důvod archivace.",
+    "archive.not-archived": "Předpis není archivován.",
+    "archive.bad-date": "Datum není platné.",
     "objection.badDate": "Datum doručení není platné datum.",
     "objection.futureDate": "Datum doručení nemůže být v budoucnosti.",
     "objection.badDecision": "Vyber, zda námitce vyhovět, nebo ji zamítnout.",
@@ -8495,6 +8554,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "imported": "importováno",
       "reset": "resetováno",
       "archived": "archivováno",
+      "validity-restored": "obnovena platnost",
       "retired": "vyřazeno z nabídky",
       "course-version": "nová verze kurzu",
     },
@@ -9258,6 +9318,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         basisMissing: "základ neurčen",
       },
       manage: "Správa",
+      archive: {
+        heading: "Archivovat předpis",
+        intro: "Předpis přestane platit dnem, který zvolíte. Asistent z něj přestane odpovídat, nepůjde přidělit a nepotvrzená přidělení se odvolají. Text, PDF a potvrzení zůstanou.",
+        until: "Neplatí od",
+        untilHint: "Může být i v budoucnosti — do té doby předpis platí normálně.",
+        reason: "Důvod",
+        reasonHint: "Například: zrušen usnesením VV č. … ze dne …",
+        submit: "Archivovat",
+        blocked: "Archivovat teď nejde:",
+        done: (date, revoked) => `Předpis je archivován od ${date}.${revoked ? ` Odvolaná přidělení: ${revoked}.` : ""}`,
+        scheduled: date => `Předpis se archivuje ${date}. Do té doby platí.`,
+        bannerInEffect: date => `Archivován — neplatí od ${date}`,
+        bannerScheduled: date => `Archivuje se — platí ještě do ${date}`,
+        bannerMeta: (who, at) => `Archivoval(a) ${who}, ${at}`,
+        restore: "Obnovit platnost",
+        restoreHint: "Při omylu. Odvolaná přidělení se neobnoví — přidělit jde znovu.",
+        restored: "Platnost předpisu je obnovena.",
+      },
       uploadNext: "Potom na detailu zkontroluješ text, vybereš schvalovatele a odpovědnou osobu a předložíš.",
       approvalHistory: "Historie schvalování",
       versionPageTitle: "Nové znění",
@@ -9408,6 +9486,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         draft: "Návrh",
         review: "Ke schválení",
         expired: "Expirovaný",
+        archived: "Archivován",
       },
       filter: "Filtrovat",
       clearFilters: "zrušit filtry",
@@ -11801,6 +11880,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.notFound": "There is no such person here.",
     "objection.emptyText": "The wording of the objection is missing.",
     "objection.alreadyPending": "Your previous objection is still being assessed.",
+    "archive.no-current": "The document has no valid version that could be archived.",
+    "archive.already-archived": "The document is already archived.",
+    "archive.upcoming": "The document has a published amendment that is not yet in force. It can be archived once it applies.",
+    "archive.draft": "A new version is being prepared. Finish or discard it first.",
+    "archive.round-open": "An approval round is in progress. Finish it first.",
+    "archive.date-before-start": "The date must be later than the start of the version's validity.",
+    "archive.no-reason": "The reason for archiving is missing.",
+    "archive.not-archived": "The document is not archived.",
+    "archive.bad-date": "The date is not valid.",
     "objection.badDate": "The date received is not a valid date.",
     "objection.futureDate": "The date received cannot be in the future.",
     "objection.badDecision": "Choose whether to uphold or reject the objection.",
@@ -11988,6 +12076,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "imported": "imported",
       "reset": "reset",
       "archived": "archived",
+      "validity-restored": "validity restored",
       "retired": "retired",
       "course-version": "new course version",
     },
@@ -12751,6 +12840,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         basisMissing: "basis not set",
       },
       manage: "Administration",
+      archive: {
+        heading: "Archive document",
+        intro: "The document stops applying on the date you choose. The assistant stops answering from it, it cannot be assigned and unconfirmed assignments are revoked. The text, PDF and confirmations remain.",
+        until: "Not valid from",
+        untilHint: "It can be in the future — until then the document applies as usual.",
+        reason: "Reason",
+        reasonHint: "For example: repealed by Executive Committee resolution no. … of …",
+        submit: "Archive",
+        blocked: "It cannot be archived now:",
+        done: (date, revoked) => `The document is archived from ${date}.${revoked ? ` Revoked assignments: ${revoked}.` : ""}`,
+        scheduled: date => `The document will be archived on ${date}. It applies until then.`,
+        bannerInEffect: date => `Archived — not valid from ${date}`,
+        bannerScheduled: date => `Being archived — valid until ${date}`,
+        bannerMeta: (who, at) => `Archived by ${who}, ${at}`,
+        restore: "Restore validity",
+        restoreHint: "If it was a mistake. Revoked assignments are not restored — you can assign it again.",
+        restored: "The document's validity has been restored.",
+      },
       uploadNext: "Then, on the detail page, you check the text, choose approvers and the responsible person, and submit.",
       approvalHistory: "Approval history",
       versionPageTitle: "New version",
@@ -12900,6 +13007,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         draft: "Draft",
         review: "In review",
         expired: "Expired",
+        archived: "Archived",
       },
       filter: "Filter",
       clearFilters: "clear filters",

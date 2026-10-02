@@ -2972,6 +2972,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .detail-lead { margin: 0 0 18px; font-size: var(--fs-body); }
 .detail-section-title { font-size: var(--fs-section); margin: 0 0 10px; }
 .detail-block { padding: 18px; display: grid; gap: 12px; margin: 0 0 18px; }
+/* Archivovaný predpis (ADR-025): pás nad zneniami. Varovná farba len keď už platí. */
+.archive-banner { border-left: 3px solid var(--warn-fg); }
+.archive-banner.is-archived { background: var(--warn-bg); }
 /* V nástrojoch rozostupy drží mriežka, nie okraj bloku. */
 .detail-tools-body > .detail-block { margin: 0; }
 /* Formulár priečinka je riadok, nie mriežka (`.tree-form`). */

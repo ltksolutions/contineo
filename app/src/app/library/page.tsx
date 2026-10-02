@@ -248,11 +248,14 @@ export default async function LibraryPage({
     value === "published" ? t.statusLabel.published
     : value === "in-review" ? t.statusLabel.review
     : value === "expired" ? t.statusLabel.expired
+    : value === "archived" ? t.statusLabel.archived
     : t.statusLabel.draft
 
   /** Pilulka riadku: farba aj názov z toho istého odvodeného stavu. */
-  const statusTag = (row: { status: string; effectiveTo?: Date | string | null }) => {
-    const stav = displayStatus(row.status, row.effectiveTo)
+  const statusTag = (row: { status: string; effectiveTo?: Date | string | null; archived?: boolean }) => {
+    // Archivovaný predpis (ADR-025) má vlastnú pilulku — „Expirovaný" by
+    // nepovedal, že ho niekto zámerne ukončil.
+    const stav = row.archived ? "archived" : displayStatus(row.status, row.effectiveTo)
     return <span className={statusTagClass(stav)}>{statusLabel(stav)}</span>
   }
 

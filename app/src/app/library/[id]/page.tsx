@@ -16,12 +16,13 @@ import { libraryDetail, statusTagClass, displayStatus, versionMetaSuggestions, t
 import VersionMetaFields from "@/components/VersionMetaFields"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
+import { formatDate, dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { AppError } from "@/lib/appError"
 import Notice from "@/components/Notice"
 import {
   publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction, reindexVersionAction, loadTextForFixAction,
   fixTextAction, revokeVersionAction, cancelApprovalAction,
-  carryOverAssignmentsAction, setResponsibleAction,
+  carryOverAssignmentsAction, setResponsibleAction, archiveDocumentAction, restoreDocumentAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
 // Strom oddelení a strom priečinkov majú rovnaké pomenovanie funkcií —
@@ -63,6 +64,7 @@ import { legalBasisOptions } from "@/lib/legalBases"
 import { VersionBasisCard, DraftBasisCard } from "@/components/BasisTasks"
 import { onboardingContext } from "@/lib/session"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
+import { archiveState, type ArchiveEntry } from "@/lib/documentArchiveState"
 import { draftBasisTaskFor } from "@/lib/versionResponsibilityDb"
 
 export const dynamic = "force-dynamic"
@@ -296,6 +298,18 @@ export default async function DocumentDetailPage({
     carryOverCount: carryOver.length,
   })
   const running = draftRounds.find(r => r.outcome === null) ?? null
+  /*
+    Archivácia (ADR-025, D156). Stav sa odvodzuje zo záznamu pri poslednom
+    zverejnenom znení; prečo sa archivovať nedá, povie karta vopred — server
+    to aj tak overí znova (`archiveProblem()`).
+  */
+  const archive = archiveState(d as unknown as Parameters<typeof archiveState>[0])
+  const archiveBlocked: string | null = archive.archived ? null
+    : !current ? "no-current"
+    : upcoming ? "upcoming"
+    : hasChangesToPublish ? "draft"
+    : running ? "round-open"
+    : null
   const approvedRound = [...draftRounds].reverse().find(r => r.outcome === "approved") ?? null
   // Meno namiesto adresy tam, kde kolo nesie len adresu predkladateľa.
   const nameOf = (email: string) => people.find(p => p.email.toLowerCase() === email.toLowerCase())?.fullName ?? email
@@ -1321,6 +1335,24 @@ export default async function DocumentDetailPage({
       </section>
       )}
 
+      {/* Archivovaný predpis (ADR-025) — pás nad zneniami, s kým, kedy a prečo. */}
+      {archive.archived && (
+        <section className={`card detail-block archive-banner${archive.inEffect ? " is-archived" : ""}`} id="archive">
+          <h2 className="detail-block-title">
+            {archive.inEffect
+              ? tflow.archive.bannerInEffect(date(archive.entry.effectiveTo))
+              : tflow.archive.bannerScheduled(date(new Date(archive.entry.effectiveTo.getTime() - 86_400_000)))}
+          </h2>
+          <p className="detail-block-note" style={{ margin: 0 }}>{(archive.entry as ArchiveEntry).reason}</p>
+          <p className="detail-block-small" style={{ margin: 0 }}>{tflow.archive.bannerMeta(nameOf(archive.entry.by), date(archive.entry.at))}</p>
+          <form action={restoreDocumentAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <button className="button button--quiet" type="submit">{tflow.archive.restore}</button>
+            <span className="quiet field-hint">{tflow.archive.restoreHint}</span>
+          </form>
+        </section>
+      )}
+
       {/* ── Platné znenie ako súhrn (bod 3 rámu) a zverejnená novela, ktorá ešte neplatí ── */}
       {current && versionCard(current, "current", tflow.currentHeading)}
       {upcoming && versionCard(upcoming, `v-${upcoming.versionId}`, tflow.upcomingHeading, tflow.upcomingNote(date(upcoming.effectiveFrom)))}
@@ -1415,6 +1447,33 @@ export default async function DocumentDetailPage({
       <details className="detail-tools">
         <summary>{tflow.manage}</summary>
         <div className="detail-tools-body">
+      {/* Archivácia predpisu (ADR-025, D156) — dátum môže byť aj v budúcnosti. */}
+      {!archive.archived && d.versions.length > 0 && (
+        <section className="card detail-block" id="archive-form">
+          <h2 className="detail-block-title">{tflow.archive.heading}</h2>
+          <p className="detail-block-note" style={{ margin: 0 }}>{tflow.archive.intro}</p>
+          {archiveBlocked ? (
+            <p className="detail-block-small" style={{ margin: 0 }}>
+              {tflow.archive.blocked} {errorText(new AppError(`archive.${archiveBlocked}`, archiveBlocked), language)}
+            </p>
+          ) : (
+            <form action={archiveDocumentAction} style={{ display: "grid", gap: 12 }}>
+              <input type="hidden" name="documentId" value={d.documentId} />
+              <label className="field">
+                <span className="field-label">{tflow.archive.until}</span>
+                <input className="field-input" type="date" name="until" required style={{ maxWidth: 200 }}
+                       defaultValue={new Date().toISOString().slice(0, 10)} />
+                <span className="quiet field-hint">{tflow.archive.untilHint}</span>
+              </label>
+              <label className="field">
+                <span className="field-label">{tflow.archive.reason}</span>
+                <textarea className="field-input" name="reason" rows={2} required maxLength={500} placeholder={tflow.archive.reasonHint} />
+              </label>
+              <div><button className="button button--danger" type="submit">{tflow.archive.submit}</button></div>
+            </form>
+          )}
+        </section>
+      )}
       <section className="card detail-block">
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
           <h2 className="detail-block-title">{t.text}</h2>

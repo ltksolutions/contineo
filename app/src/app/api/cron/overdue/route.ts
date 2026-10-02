@@ -35,6 +35,7 @@ import { runRetention, type RetentionRun } from "@/lib/retentionDb"
 import { retentionMode } from "@/lib/retention"
 import { sendQuarterlyDpoReports } from "@/lib/dpoDb"
 import { isQuarterStart } from "@/lib/dpo"
+import { settleArchivedDocuments } from "@/lib/documentArchive"
 
 export const dynamic = "force-dynamic"
 /** Prehľad naprieč tenantmi trvá; predvolených 10 s by nestačilo. */
@@ -72,6 +73,20 @@ export async function GET(request: Request) {
    * pred sebou tri povinnosti, potrebuje jedno miesto.
    */
   const dueReport: { companyCode: string; sent: number; skipped: number; failed: number }[] = []
+
+  /*
+   * Archivácie, ktorým dnes nastal deň účinnosti (ADR-025, D156): odvolať
+   * pridelenia **pred** pripomienkami — inak by ešte dnes prišla pripomienka
+   * k predpisu, ktorý už neplatí.
+   */
+  const archiveReport: { companyCode: string; revoked: number }[] = []
+  for (const tenant of tenants) {
+    try {
+      archiveReport.push({ companyCode: tenant.companyCode, revoked: await settleArchivedDocuments(tenant.companyCode) })
+    } catch (e) {
+      console.error(`[cron] archivácia pre ${tenant.companyCode} zlyhala:`, e)
+    }
+  }
 
   for (const tenant of tenants) {
     let sent = 0, skipped = 0, failed = 0
@@ -304,5 +319,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged, retention, dpoReports })
+  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged, retention, dpoReports, archived: archiveReport })
 }
