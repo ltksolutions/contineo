@@ -77,6 +77,9 @@ describe("/dpo", () => {
     expect(page).toContain("V poriadku · 1")
     expect(page).toContain("<th>Zodpovedná osoba</th>")
     expect(page).toContain('href="mailto:jan@sfz.sk"')
+    // Predpis vedie na kartu v správe (D151), nie na potvrdzovanie.
+    expect(page).toContain('class="dpo-doc" href="/library/sfz%3Aa"')
+    expect(page).not.toContain('href="/documents/')
   })
 
   it("hľadanie: zhoda v <mark>, čip, filter ostáva v skrytom poli", async () => {
