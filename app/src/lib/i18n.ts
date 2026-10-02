@@ -225,7 +225,10 @@ interface Dictionary {
     subject: (organisation: string) => string
     subtitle: string
     intro: (count: number) => string
-    itemLine: (versionLabel: string, days: number) => string
+    /** Druhý riadok položky — „znenie účinné od …" alebo označenie (bez dátumu). */
+    itemLine: (version: string, days: number) => string
+    /** „znenie účinné od {dátum}" (2. 10. 2026). */
+    effectiveLine: (date: string) => string
     button: string
     note: string
     /**
@@ -3595,6 +3598,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ? `${count} dokumenty stále čakajú na vaše potvrdenie.`
           : `${count} dokumentov stále čaká na vaše potvrdenie.`,
       itemLine: (label, days) => `${label}, čaká ${daysSk(days)}`,
+      effectiveLine: date => `znenie účinné od ${date}`,
       button: "Otvoriť zoznam",
       note: "Potvrdenie sa viaže na konkrétne znenie a zaberie pár minút. Ak si myslíte, že sa vás dokument netýka, ozvite sa personálnemu oddeleniu.",
       noticeSubject: organisation => `Na potvrdenie: dokumenty — ${organisation}`,
@@ -7149,6 +7153,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ? `${count} dokumenty stále čekají na vaše potvrzení.`
           : `${count} dokumentů stále čeká na vaše potvrzení.`,
       itemLine: (label, days) => `${label}, čeká ${daysCs(days)}`,
+      effectiveLine: date => `znění účinné od ${date}`,
       noticeSubject: organisation => `K potvrzení: dokumenty — ${organisation}`,
       noticeSubtitle: "K potvrzení",
       noticeIntro: count => count === 1
@@ -10696,6 +10701,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ? "One document is still waiting for your acknowledgement."
         : `${count} documents are still waiting for your acknowledgement.`,
       itemLine: (label, days) => `${label}, waiting ${daysEn(days)}`,
+      effectiveLine: date => `version effective from ${date}`,
       noticeSubject: organisation => `To acknowledge: documents — ${organisation}`,
       noticeSubtitle: "To acknowledge",
       noticeIntro: count => count === 1

@@ -91,3 +91,27 @@ describe("pätička e-mailov (Ján 30. 9. 2026)", () => {
     }
   })
 })
+
+describe("e-mail so zoznamom dokumentov: znenie účinné od (Ján 2. 10. 2026)", () => {
+  const ITEM = { title: "Pracovný poriadok SFZ", versionLabel: "Pracovný poriadok SFZ 20260907", days: 0, effectiveFrom: "7. 9. 2026" }
+
+  it("oznámenie aj pripomienka ukážu dátum účinnosti, nie označenie s opakovaným názvom", () => {
+    for (const mode of ["notice", "reminder"] as const) {
+      const mail = reminderEmail(LINK, HOST, [ITEM], "sk", BRANDING, mode)
+      expect(mail.text, mode).toContain("znenie účinné od 7. 9. 2026")
+      expect(mail.text, mode).not.toContain("SFZ 20260907")
+      expect(mail.html, mode).toContain("znenie účinné od 7. 9. 2026")
+    }
+  })
+
+  it("termínová pripomienka tiež", () => {
+    const mail = dueReminderEmail(LINK, HOST, [{ ...ITEM, due: "20. 10. 2026", daysLeft: 3 }], "soon", "sk", BRANDING)
+    expect(mail.text).toContain("znenie účinné od 7. 9. 2026")
+    expect(mail.text).not.toContain("SFZ 20260907")
+  })
+
+  it("položka bez dátumu (prehľad vedúcemu) ostáva, ako bola", () => {
+    const mail = reminderEmail(LINK, HOST, [{ title: "Eva Nová", versionLabel: "eva@sfz.sk", days: 12 }], "sk", BRANDING)
+    expect(mail.text).toContain("eva@sfz.sk, čaká 12 dní")
+  })
+})

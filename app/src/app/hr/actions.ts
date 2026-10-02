@@ -403,6 +403,7 @@ export async function sendRemindersAction(fd: FormData) {
             person.items.map(o => ({
               title: o.duty.documentTitle,
               versionLabel: o.duty.versionLabel,
+              effectiveFrom: o.duty.effectiveFrom ? formatDate(o.duty.effectiveFrom, normalizeLanguage(ctx.person.language)) : undefined,
               days: o.days,
             })),
             // Jazyk sa berie z povinnosti, nie z prihláseného personalistu —

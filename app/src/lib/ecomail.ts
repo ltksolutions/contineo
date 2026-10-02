@@ -319,7 +319,12 @@ export function assignmentEmail(
 export function reminderEmail(
   link: string,
   host: string,
-  items: { title: string; versionLabel: string; days: number }[],
+  /**
+   * `effectiveFrom` (už sformátovaný dátum) ukáže „znenie účinné od …"
+   * namiesto označenia (2. 10. 2026). Bez neho ostáva `versionLabel` — cron
+   * touto šablónou posiela aj prehľad vedúcim, kde položka nie je dokument.
+   */
+  items: { title: string; versionLabel: string; days: number; effectiveFrom?: string }[],
   language: UiLanguage = "sk",
   branding?: SignInBranding,
   /**
@@ -337,12 +342,14 @@ export function reminderEmail(
 
   const logo = logoTag(branding, host)
 
-  const itemText = (i: { versionLabel: string; days: number }) =>
-    notice ? s.noticeItemLine(i.versionLabel) : s.itemLine(i.versionLabel, i.days)
+  const version = (i: { versionLabel: string; effectiveFrom?: string }) =>
+    i.effectiveFrom ? s.effectiveLine(i.effectiveFrom) : i.versionLabel
+  const itemText = (i: { versionLabel: string; days: number; effectiveFrom?: string }) =>
+    notice ? s.noticeItemLine(version(i)) : s.itemLine(version(i), i.days)
   const introText = notice ? s.noticeIntro(items.length) : s.intro(items.length)
   const subtitleText = notice ? s.noticeSubtitle : s.subtitle
 
-  const line = (i: { title: string; versionLabel: string; days: number }) =>
+  const line = (i: { title: string; versionLabel: string; days: number; effectiveFrom?: string }) =>
     `${i.title} — ${itemText(i)}`
 
   const text = [
@@ -560,7 +567,8 @@ export function dpoReportEmail(
 export function dueReminderEmail(
   link: string,
   host: string,
-  items: { title: string; versionLabel: string; due: string; daysLeft: number }[],
+  /** `effectiveFrom` (sformátovaný) → „znenie účinné od …" namiesto označenia (2. 10. 2026). */
+  items: { title: string; versionLabel: string; due: string; daysLeft: number; effectiveFrom?: string }[],
   tone: "soon" | "over",
   language: UiLanguage = "sk",
   branding?: SignInBranding,
@@ -571,13 +579,15 @@ export function dueReminderEmail(
 
   const logo = logoTag(branding, host)
 
+  const version = (i: { versionLabel: string; effectiveFrom?: string }) =>
+    i.effectiveFrom ? dictionary(language).reminderEmail.effectiveLine(i.effectiveFrom) : i.versionLabel
   const line = (i: { title: string; versionLabel: string; due: string; daysLeft: number }) =>
     tone === "over" ? s.overLine(i.due, Math.abs(i.daysLeft)) : s.soonLine(i.due, i.daysLeft)
 
   const text = [
     tone === "over" ? s.introOver : s.introSoon,
     "",
-    ...items.map(i => `${i.title} (${i.versionLabel})\n  ${line(i)}`),
+    ...items.map(i => `${i.title} (${version(i)})\n  ${line(i)}`),
     "",
     link,
     "",
@@ -592,7 +602,7 @@ export function dueReminderEmail(
     <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(tone === "over" ? s.introOver : s.introSoon)}</p>
     ${items.map(i => `<div style="border-left:3px solid ${accent};padding:2px 0 2px 14px;margin:0 0 14px">
       <div style="font-size:16.5px;font-weight:700;line-height:1.4">${escapujHtml(i.title)}</div>
-      <div style="font-size:13.5px;color:#5c6675;margin-top:3px">${escapujHtml(`${i.versionLabel} · ${line(i)}`)}</div>
+      <div style="font-size:13.5px;color:#5c6675;margin-top:3px">${escapujHtml(`${version(i)} · ${line(i)}`)}</div>
     </div>`).join("")}
     <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600;margin-top:8px">
       ${escapujHtml(s.button)}
