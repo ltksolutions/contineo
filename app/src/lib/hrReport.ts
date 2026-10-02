@@ -44,6 +44,11 @@ export interface Duty {
   documentTitle: string
   versionId: string
   versionLabel: string
+  /**
+   * Začiatok účinnosti znenia — do e-mailov ako „znenie účinné od …"
+   * (2. 10. 2026); označenie znenia z importu býva len zopakovaný názov.
+   */
+  effectiveFrom?: Date | null
   /** Zoradené, aby sa výkaz nemenil medzi dvomi spusteniami. */
   sources: DutySource[]
   /** Názvy trás, z ktorých povinnosť plynie. Prázdne pri čistom pridelení. */
@@ -149,7 +154,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
 
   const add = (
     person: PersonRow,
-    subject: { documentId: string; documentTitle: string; versionId: string; versionLabel: string },
+    subject: { documentId: string; documentTitle: string; versionId: string; versionLabel: string; effectiveFrom?: Date | null },
     source: DutySource,
     since: Date | null,
     due: Date | null,
@@ -176,6 +181,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
       documentTitle: subject.documentTitle,
       versionId: subject.versionId,
       versionLabel: subject.versionLabel,
+      effectiveFrom: subject.effectiveFrom ? new Date(subject.effectiveFrom) : null,
       sources: [source],
       trackTitles: trackTitle ? [trackTitle] : [],
       since,
@@ -223,6 +229,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
           documentTitle: doc.title,
           versionId: effective.version.versionId,
           versionLabel: effective.version.label,
+          effectiveFrom: effective.version.effectiveFrom ?? null,
         }, "track", accessSince(person), null, track.title)
       }
     }

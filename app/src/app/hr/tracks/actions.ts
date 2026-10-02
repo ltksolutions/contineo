@@ -26,7 +26,7 @@ import { send, reminderEmail } from "@/lib/ecomail"
 import { writeAudit } from "@/lib/audit"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
-import { normalizeLanguage } from "@/lib/i18n"
+import { normalizeLanguage, formatDate } from "@/lib/i18n"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await trackManagerContext()
@@ -254,7 +254,10 @@ export async function sendTrackNotificationAction(fd: FormData) {
           to: r.person.email,
           ...reminderEmail(
             link, host,
-            r.open.map(d => ({ title: d.documentTitle, versionLabel: d.versionLabel, days: 0 })),
+            r.open.map(d => ({
+              title: d.documentTitle, versionLabel: d.versionLabel, days: 0,
+              effectiveFrom: d.effectiveFrom ? formatDate(d.effectiveFrom, normalizeLanguage(r.person.language)) : undefined,
+            })),
             normalizeLanguage(r.person.language), branding, "notice",
           ),
         })

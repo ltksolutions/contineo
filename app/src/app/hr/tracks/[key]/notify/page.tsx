@@ -13,7 +13,7 @@ import { reminderEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { requestHostname } from "@/lib/session"
-import { normalizeLanguage, dictionary } from "@/lib/i18n"
+import { normalizeLanguage, dictionary, formatDate } from "@/lib/i18n"
 import { sendTrackNotificationAction } from "../../actions"
 import AppShell from "@/components/AppShell"
 
@@ -41,7 +41,10 @@ export default async function TrackNotifyPage({ params }: { params: Promise<{ ke
   const preview = first
     ? reminderEmail(
         `https://${host}/documents`, host,
-        first.open.map(d => ({ title: d.documentTitle, versionLabel: d.versionLabel, days: 0 })),
+        first.open.map(d => ({
+          title: d.documentTitle, versionLabel: d.versionLabel, days: 0,
+          effectiveFrom: d.effectiveFrom ? formatDate(d.effectiveFrom, normalizeLanguage(ctx.person.language)) : undefined,
+        })),
         normalizeLanguage(ctx.person.language), branding, "notice",
       )
     : null

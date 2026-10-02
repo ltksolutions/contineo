@@ -128,6 +128,7 @@ export async function GET(request: Request) {
               r.items.map(i => ({
                 title: i.duty.documentTitle,
                 versionLabel: i.duty.versionLabel,
+                effectiveFrom: i.duty.effectiveFrom ? formatDate(i.duty.effectiveFrom, language) : undefined,
                 due: formatDate(i.due, language),
                 daysLeft: i.daysLeft,
               })),
