@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nastavenie organizácie: každá časť má vlastnú adresu (2026-10-02)
+
+Časti nastavenia majú vlastné adresy, napríklad `/organisation/signin`,
+a cesta hore vždy ukazuje, v ktorej časti človek je. `/organisation` je
+na počítači aj na telefóne zoznam častí v skupinách. Staré odkazy
+s `?tab=` fungujú ďalej — presmerujú na novú adresu.
+
 ### Záložky a nastavenie organizácie (2026-10-01)
 
 Zapnutú záložku je vidieť na prvý pohľad — má podklad a výrazný pruh.

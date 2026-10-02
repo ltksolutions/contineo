@@ -76,7 +76,7 @@ Nový zamestnanec uvidí zoznam a v ňom, kde skončil: „Krok 2 zo 4“. Syst�
 
 Toto je časť, ktorú nikto nevypĺňa ručne, ale oplatí sa jej rozumieť — rozhoduje o tom, či systém na otázku odpovie presne, alebo od veci.
 
-**Kedy index vzniká.** Do vyhľadávania ide **zverejnené znenie**: pri zverejnení sa jeho text nareže na úseky a tie sa uložia do indexu. Keď sa neskôr zmení nastavenie členenia, dokumenty sa preindexujú ručne v [Nastavení organizácie](/organisation?tab=chunking) — záložka Členenie ukáže, ktoré dokumenty by nové nastavenie narezalo inak, a preindexuje ich po dávkach.
+**Kedy index vzniká.** Do vyhľadávania ide **zverejnené znenie**: pri zverejnení sa jeho text nareže na úseky a tie sa uložia do indexu. Keď sa neskôr zmení nastavenie členenia, dokumenty sa preindexujú ručne v [Nastavení organizácie](/organisation/chunking) — záložka Členenie ukáže, ktoré dokumenty by nové nastavenie narezalo inak, a preindexuje ich po dávkach.
 
 **Ako prakticky vzniká členenie: pravidlá, nie jazykový model.** Text reže program podľa vzorov členenia predpisu — ČASŤ, hlava, diel, článok, paragraf, príloha. **Žiadne LLM v tom nie je.** Rovnaký text dá vždy rovnaké úseky, výsledok sa dá skontrolovať a pri rezaní sa nezmení ani slovo. Úsek tak zodpovedá tomu, na čo sa človek odvoláva, keď hovorí „podľa článku 78“. Spôsob narezania sa nastavuje **profilom pre každý dokument zvlášť** — norma s článkami a zápisnica zo zasadnutia sa nemajú rezať rovnako; dokument bez vlastného profilu používa základný.
 

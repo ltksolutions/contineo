@@ -81,10 +81,10 @@ export async function decideObjectionAction(fd: FormData) {
  * a námietky.
  */
 function backToGdpr(message: string, error: boolean, anchor: string): never {
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   revalidatePath("/dpo")
   revalidatePath("/privacy")
-  redirect(`/organisation?tab=gdpr&msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#${anchor}`)
+  redirect(`/organisation/gdpr?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#${anchor}`)
 }
 
 /**

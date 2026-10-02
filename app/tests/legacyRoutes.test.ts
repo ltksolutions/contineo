@@ -7,6 +7,7 @@
  */
 import { describe, it, expect } from "vitest"
 import { legacyRoute } from "../src/lib/legacyRoutes"
+import { legacyOrgSection } from "../src/lib/orgSections"
 
 describe("stare cesty", () => {
   it("prelozi korene", () => {
@@ -82,5 +83,23 @@ describe("stare cesty", () => {
       expect(next, path).not.toBeNull()
       expect(legacyRoute(next!), `${path} → ${next}`).toBeNull()
     }
+  })
+})
+
+describe("časť nastavenia organizácie z ?tab= na cestu (2. 10. 2026)", () => {
+  const go = (path: string, q: string) => legacyOrgSection(path, new URLSearchParams(q))
+  it("?tab= aj starý kľúč a stará hodnota", () => {
+    expect(go("/organisation", "tab=signin")).toBe("/organisation/signin")
+    expect(go("/organisation", "zalozka=prihlasenie")).toBe("/organisation/signin")
+    expect(go("/organisation", "tab=utvary")).toBe("/organisation/departments")
+  })
+  it("ostatné parametre ostanú, neznáma časť vedie na rozcestník", () => {
+    expect(go("/organisation", "tab=audit&search=jan&msg=ok")).toBe("/organisation/audit?search=jan&msg=ok")
+    expect(go("/organisation", "tab=nieco&msg=x")).toBe("/organisation?msg=x")
+  })
+  it("bez ?tab a na inej ceste nič", () => {
+    expect(go("/organisation", "msg=x")).toBeNull()
+    expect(go("/organisation/signin", "tab=audit")).toBeNull()
+    expect(go("/learning/manage", "tab=tags")).toBeNull()
   })
 })

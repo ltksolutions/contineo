@@ -154,6 +154,6 @@ describe("/dpo", () => {
     const page = await render()
     expect(page).not.toContain('id="retention"')
     expect(page).not.toContain('name="extra-sk"')
-    expect(page).toContain('href="/organisation?tab=gdpr"')
+    expect(page).toContain('href="/organisation/gdpr"')
   })
 })

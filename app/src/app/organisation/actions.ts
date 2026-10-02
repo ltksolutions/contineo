@@ -18,6 +18,7 @@ import { revalidatePath } from "next/cache"
 import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
 import { tabValue } from "@/lib/urlParams"
+import { isOrgSection, orgSectionHref } from "@/lib/orgSections"
 import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains } from "@/lib/tenantAdmin"
 import { saveBrand, deleteBrand } from "@/lib/branding"
 import { splitList } from "@/lib/oauth"
@@ -91,10 +92,11 @@ function back(fd: FormData, message: string, error = false): never {
   // formulár vykreslený pred premenovaním ho ešte nesie a bez prekladu by
   // človeka po uložení hodilo na prvú záložku.
   const given = fieldText(fd, "tab") || fieldText(fd, "zalozka")
-  const tab = tabValue(given) || "branding"
-  const q = new URLSearchParams({ tab, msg: message })
+  const section = tabValue(given)
+  const q = new URLSearchParams({ msg: message })
   if (error) q.set("error", "1")
-  redirect(`/organisation?${q.toString()}`)
+  // Každá časť má vlastnú cestu (2. 10. 2026); neznámy kľúč vedie na rozcestník.
+  redirect(`${isOrgSection(section) ? orgSectionHref(section) : "/organisation"}?${q.toString()}`)
 }
 
 // ── vzhľad ───────────────────────────────────────────────────────────────────
@@ -133,7 +135,7 @@ export async function saveBrandingAction(fd: FormData) {
     back(fd, errorMessage(e, self.language), true)
   }
 
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, say(self.language).saved)
 }
 
@@ -153,7 +155,7 @@ export async function saveAutoProvisionAction(fd: FormData) {
     if (isRedirect(e)) throw e
     back(fd, errorMessage(e, self.language), true)
   }
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, say(self.language).saved)
 }
 
@@ -185,7 +187,7 @@ export async function deleteLogoAction(fd: FormData) {
     back(fd, errorMessage(e, self.language), true)
   }
 
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, say(self.language).logoRemoved)
 }
 
@@ -211,7 +213,7 @@ export async function saveSignInAction(fd: FormData) {
     back(fd, errorMessage(e, self.language), true)
   }
 
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, say(self.language).saved)
 }
 
@@ -233,7 +235,7 @@ export async function deleteSignInAction(fd: FormData) {
     back(fd, errorMessage(e, self.language), true)
   }
 
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, say(self.language).signInRemoved)
 }
 
@@ -257,7 +259,7 @@ export async function requestDomainAction(fd: FormData) {
     back(fd, errorMessage(e, self.language), true)
   }
 
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, say(self.language).domainRequested)
 }
 
@@ -290,7 +292,7 @@ export async function verifyDomainAction(fd: FormData) {
     error = true
   }
 
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, message, error)
 }
 
@@ -305,7 +307,7 @@ export async function cancelDomainAction(fd: FormData) {
     back(fd, errorMessage(e, self.language), true)
   }
 
-  revalidatePath("/organisation")
+  revalidatePath("/organisation", "layout")
   back(fd, say(self.language).domainRemoved)
 }
 
@@ -326,7 +328,7 @@ export async function createDepartmentAction(fd: FormData) {
     await createDepartment(
       self.companyCode, fieldText(fd, "name"), fieldText(fd, "parentId") || null, self.email,
     )
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -339,7 +341,7 @@ export async function renameDepartmentAction(fd: FormData) {
   if (!self) redirect("/")
   try {
     await renameDepartment(self.companyCode, fieldText(fd, "id"), fieldText(fd, "name"), self.email)
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -356,7 +358,7 @@ export async function moveDepartmentAction(fd: FormData) {
     )
     // Presunom sa zmenili cesty ľudí v podstrome, a tie rozhodujú o tom, komu
     // sa pridelenia týkajú. Prepočet robí `presunOddelenie` sám.
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     revalidatePath("/people")
     back(fd, say(self.language).saved)
   } catch (e) {
@@ -370,7 +372,7 @@ export async function deleteDepartmentAction(fd: FormData) {
   if (!self) redirect("/")
   try {
     await deleteDepartment(self.companyCode, fieldText(fd, "id"), self.email)
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -387,7 +389,7 @@ export async function addCodelistItemAction(fd: FormData) {
     await addCodelistItem(
       self.companyCode, fieldText(fd, "codelist"), keyOrFromLabel(fd), fieldText(fd, "label"), self.email,
     )
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     revalidatePath("/library")
     back(fd, say(self.language).saved)
   } catch (e) {
@@ -401,7 +403,7 @@ export async function removeCodelistItemAction(fd: FormData) {
   if (!self) redirect("/")
   try {
     await removeCodelistItem(self.companyCode, fieldText(fd, "codelist"), fieldText(fd, "key"), self.email)
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     revalidatePath("/library")
     back(fd, say(self.language).codelistRemoved)
   } catch (e) {
@@ -424,7 +426,7 @@ export async function addLegalBasisAction(fd: FormData) {
       reference: fieldText(fd, "reference"),
       actor: self.email,
     })
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -437,7 +439,7 @@ export async function retireLegalBasisAction(fd: FormData) {
   if (!self) redirect("/")
   try {
     await retireLegalBasis(self.companyCode, fieldText(fd, "key"), self.email)
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -452,7 +454,7 @@ export async function toggleStandardLegalBasisAction(fd: FormData) {
     await setStandardLegalBasisHidden(
       self.companyCode, fieldText(fd, "key"), fieldText(fd, "hidden") === "1", self.email,
     )
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -503,7 +505,7 @@ export async function saveChunkingProfileAction(fd: FormData) {
     else profiles.push(edited as typeof profiles[number])
 
     await saveTenant(self.companyCode, { chunkingProfiles: profiles }, self.email)
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).chunkingSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -553,7 +555,7 @@ export async function shiftDepartmentAction(fd: FormData) {
   const direction = fieldText(fd, "direction") === "down" ? "down" : "up"
   try {
     await shiftDepartment(self.companyCode, fieldText(fd, "id"), direction, self.email)
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -568,7 +570,7 @@ export async function saveDepartmentOrderAction(fd: FormData) {
   const order = fieldText(fd, "order").split(",").map(x => x.trim()).filter(Boolean)
   try {
     if (order.length > 1) await saveOrder(self.companyCode, order, self.email)
-    revalidatePath("/organisation")
+    revalidatePath("/organisation", "layout")
     back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e

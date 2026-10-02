@@ -7711,13 +7711,15 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 
 /* ── /organisation: zoznam častí namiesto záložiek (ZAKLAD-zalozky, 1. 10. 2026)
-   Od 1024 px zvislý zoznam vľavo (220 px, sticky) v skupinách a časť
-   vpravo (do 720 px). Pod 1024 px je `/organisation` bez `?tab` len zoznam
-   (`org-set--index`), časť je samostatná obrazovka s odkazom späť. */
+   Rozcestník `/organisation` (`.org-index`) je zoznam častí v kartách na
+   každej šírke, od 1024 px v dvoch stĺpcoch. Stránka časti
+   (`/organisation/{section}`, 2. 10. 2026) má od 1024 px ten istý zoznam
+   ako stĺpec vľavo (220 px, sticky) a časť vpravo (do 720 px); pod 1024 px
+   len časť s odkazom späť na rozcestník. */
 .org-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .org-body { min-width: 0; }
 .org-nav { display: grid; gap: 18px; }
-.org-nav-group { display: grid; gap: 6px; }
+.org-nav-group { display: grid; gap: 6px; align-content: start; }
 .org-nav-title {
   margin: 0;
   padding: 0 4px;
@@ -7759,7 +7761,8 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .org-nav-item:hover { background: var(--surface-2); }
 .org-nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .org-nav-item .tab-pending.is-on { left: 0; right: auto; top: 20%; bottom: 20%; width: 3px; height: auto; }
-.org-grid:has(.tab-pending.is-on) .org-body { opacity: 0.55; pointer-events: none; transition: opacity 0.15s 0.1s; }
+.org-grid:has(.tab-pending.is-on) .org-body,
+.org-index:has(.tab-pending.is-on) { opacity: 0.55; pointer-events: none; transition: opacity 0.15s 0.1s; }
 
 .org-back {
   display: inline-flex;
@@ -7782,28 +7785,26 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .org-back:hover { color: var(--ink); }
 
 @media (max-width: 1023px) {
-  .org-set--index .org-body { display: none; }
-  .org-set:not(.org-set--index) .org-nav { display: none; }
-  /* Na úzkej obrazovke sa nič nevyberá — zoznam je rozcestník. */
-  .org-nav-item.is-active { font-weight: 550; }
+  .org-grid .org-nav { display: none; }
 }
 
 @media (min-width: 1024px) {
+  .org-index { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; max-width: 980px; }
   .org-grid { grid-template-columns: 220px minmax(0, 720px); gap: 28px; align-items: start; }
   .org-grid--single { grid-template-columns: minmax(0, 720px); }
-  .org-nav { position: sticky; top: 72px; gap: 14px; }
-  .org-nav-group { gap: 2px; }
-  .org-nav-title { padding: 0 12px 4px; }
-  .org-nav-list { gap: 2px; background: none; border: 0; border-radius: 0; overflow: visible; }
-  .org-nav-item {
+  .org-grid .org-nav { position: sticky; top: 72px; gap: 14px; }
+  .org-grid .org-nav-group { gap: 2px; }
+  .org-grid .org-nav-title { padding: 0 12px 4px; }
+  .org-grid .org-nav-list { gap: 2px; background: none; border: 0; border-radius: 0; overflow: visible; }
+  .org-grid .org-nav-item {
     min-height: 38px;
     padding: 0 12px;
     border-top: 0;
     border-radius: 9px;
     font-size: 14.5px;
   }
-  .org-nav-item::after { display: none; }
-  .org-nav-item.is-active {
+  .org-grid .org-nav-item::after { display: none; }
+  .org-grid .org-nav-item.is-active {
     font-weight: 700;
     background: var(--accent-soft);
     box-shadow: inset 3px 0 0 var(--accent);

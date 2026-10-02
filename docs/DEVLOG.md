@@ -67,6 +67,27 @@ spustilo lehotu jeho dokladov.
 
 ---
 
+## 2026-10-02 — časti nastavenia organizácie na vlastných cestách
+
+**Zadanie (Ján):** časť nastavenia má mať cestu, nie `?tab=`. Po
+ZAKLAD-zalozky ukazovala cesta pod hlavičkou názov časti len vtedy, keď
+`?tab` prišiel, a `/organisation` na počítači otváralo prvú časť, na
+telefóne rozcestník — tá istá adresa, dva rôzne obsahy. Rozhodnutie:
+možnosť 1, `/organisation` je rozcestník na každej šírke.
+
+- `/organisation/{section}` (`[section]/page.tsx`, presunutý obsah),
+  neznáma časť 404. DPO bez roly správcu: rozcestník ho pošle na
+  `/organisation/gdpr`, iné časti sú 404 (dovtedy ticho dostal GDPR).
+- Starý `?tab=` (aj `?zalozka=` a staré hodnoty) prekladá `proxy.ts`
+  307 na cestu, ostatné parametre nesie (`legacyOrgSection` v
+  `lib/orgSections.ts`). Uloženie formulára vracia na cestu časti.
+- Cesta sa skladá sama z adresy (`title` + `trail`); pomôcka `leaf`
+  v `AppShell` z #221 je preč.
+- `revalidatePath("/organisation", "layout")` — bez druhého argumentu by
+  sa týkal len rozcestníka, nie stránok častí.
+
+---
+
 ## 2026-10-01 — záložky a nastavenie organizácie (ZAKLAD-zalozky)
 
 **Záložky:** aktívna mala to isté pozadie ako ostatné a 2 px čiaru, ktorá

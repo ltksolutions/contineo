@@ -421,7 +421,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
         */}
         <p className="card" style={{ padding: "14px 16px", margin: "32px 0 0", fontSize: "var(--fs-body)" }}>
           {t.settingsMoved}{" "}
-          <a href="/organisation?tab=gdpr">{t.settingsLink}</a>
+          <Link href="/organisation/gdpr">{t.settingsLink}</Link>
         </p>
 
         {/*

@@ -27,6 +27,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 import { legacyRoute } from "@/lib/legacyRoutes"
+import { legacyOrgSection } from "@/lib/orgSections"
 import { PATHNAME_HEADER } from "@/lib/appNav"
 import { isHostCheckExempt, isPublicPath } from "@/lib/publicRoutes"
 import { resolveTenant } from "@/lib/tenants"
@@ -67,6 +68,9 @@ export async function proxy(req: NextRequest) {
     to.search = req.nextUrl.search
     return NextResponse.redirect(to, 307)
   }
+  // Časť nastavenia organizácie z `?tab=` na vlastnú cestu (2. 10. 2026).
+  const section = legacyOrgSection(pathname, req.nextUrl.searchParams)
+  if (section) return NextResponse.redirect(new URL(section, req.url), 307)
 
   if (isPublicPath(pathname)) return NextResponse.next()
 

@@ -3,7 +3,7 @@
  *
  * `t.org.codelists.labels` je `Record<string, …>`, takže typová kontrola mlčí,
  * keď k `CUSTOM_CODELISTS` pribudne druh bez popisku — a obrazovka
- * `/organisation?tab=codelists` potom padá na `labels[name].name`.
+ * `/organisation/codelists` potom padá na `labels[name].name`.
  * Presne to sa stalo s `workplace` (pribudol s D85): stránka vracala 500
  * a zhodila celé nastavenie číselníkov. Tento test to chytí pri builde,
  * nie u zákazníka.
