@@ -879,6 +879,8 @@ interface Dictionary {
       heading: string
       intro: string
       assign: string
+      /** Tlačidlo na trasy (`/hr/tracks`) — krátko; nadpis stránky ostáva „Trasy onboardingu“. */
+      tracks: string
       emptyTitle: string
       emptyText: string
       acknowledged: string
@@ -4175,6 +4177,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Pridelené dokumenty",
       intro: "Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri zobrazení — a týkajú sa ľudí, ktorí do skupiny patria",
       assign: "Prideliť dokument",
+      tracks: "Trasy",
       emptyTitle: "Žiadne pridelenia",
       emptyText: "Keď normu niekomu pridelíte, objaví sa tu aj s tým, koľkí ju už potvrdili.",
       acknowledged: "Potvrdili",
@@ -7707,6 +7710,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Přidělené dokumenty",
       intro: "Co bylo komu uloženo a kdo to už potvrdil. Počty se počítají při zobrazení — a týkají se lidí, kteří do skupiny patří",
       assign: "Přidělit dokument",
+      tracks: "Trasy",
       emptyTitle: "Žádná přidělení",
       emptyText: "Když předpis někomu přidělíte, objeví se tu i s tím, kolik lidí ho už potvrdilo.",
       acknowledged: "Potvrdili",
@@ -11230,6 +11234,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Assigned documents",
       intro: "What has been assigned to whom and who has already acknowledged it. The counts are computed when the page is opened — and cover the people who belong to the group",
       assign: "Assign a document",
+      tracks: "Tracks",
       emptyTitle: "No assignments",
       emptyText: "Once you assign a document to someone, it shows up here along with how many have acknowledged it.",
       acknowledged: "Acknowledged",
