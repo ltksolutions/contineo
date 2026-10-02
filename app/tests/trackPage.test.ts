@@ -26,6 +26,14 @@ vi.mock("@/lib/tracks", () => ({
     steps: [{ order: 1, type: "document", documentId: "sfz:pp", requiresAcknowledgement: true }],
   }),
 }))
+// Stav po ľuďoch z riadkov výkazu — Eva má z trasy 1 z 2 (2. 10. 2026).
+vi.mock("@/lib/hrReport", async importOriginal => ({
+  ...(await importOriginal<typeof import("../src/lib/hrReport")>()),
+  duties: async () => [
+    { personId: "p1", documentId: "sfz:pp", documentTitle: "Pracovný poriadok", versionLabel: "1", trackTitles: ["Nový zamestnanec"], sources: ["track"], acknowledgedAt: new Date() },
+    { personId: "p1", documentId: "sfz:fs", documentTitle: "Finančná smernica", versionLabel: "1", trackTitles: ["Nový zamestnanec"], sources: ["track"], acknowledgedAt: null },
+  ],
+}))
 vi.mock("@/lib/libraryRead", () => ({ libraryList: async () => [{ documentId: "sfz:pp", title: "Pracovný poriadok" }] }))
 vi.mock("@/lib/people", () => ({
   listPeople: async () => [
@@ -74,5 +82,8 @@ describe("stránka trasy", () => {
     expect(html).toContain("Oddelenie IT")
     // Na výber je len ten, kto na trase ešte nie je a nie je vyradený.
     expect(html).toContain("Anna Malá")
+    // Stav pri človeku a „Dať vedieť", keď niekomu niečo chýba.
+    expect(html).toContain("1 / 2")
+    expect(html).toContain('href="/hr/tracks/novy-zamestnanec/notify"')
   })
 })

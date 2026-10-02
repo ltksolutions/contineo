@@ -20,6 +20,9 @@ import Notice from "@/components/Notice"
 import AckBar from "@/components/AckBar"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import { allTracks } from "@/lib/tracks"
+import { duties, trackStatuses } from "@/lib/hrReport"
+import { listPeople } from "@/lib/people"
 
 export const dynamic = "force-dynamic"
 
@@ -35,7 +38,27 @@ export default async function HrOverviewPage({
   }
 
   const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
-  const overview = await assignmentOverviews(ctx.person.companyCode)
+  const [overview, tracks, rows, people] = await Promise.all([
+    assignmentOverviews(ctx.person.companyCode),
+    allTracks(ctx.person.companyCode),
+    duties(ctx.person.companyCode),
+    listPeople(ctx.person.companyCode),
+  ])
+  /*
+    Trasy (2. 10. 2026): povinnosť z trasy nevzniká pridelením, takže v zozname
+    pridelení nebola — kto pridal oddelenie na trasu, nevidel tu nič. Karta
+    za každú zapnutú trasu s ľuďmi, stav z tých istých riadkov ako výkaz.
+  */
+  const statuses = trackStatuses(rows)
+  const trackCards = tracks
+    .filter(tr => tr.isActive)
+    .map(tr => ({
+      track: tr,
+      people: people.filter(p => p.status !== "inactive" && p.tracks.includes(tr.key)).length,
+      documents: tr.steps.filter(s => s.type === "document" && s.requiresAcknowledgement && s.documentId).length,
+      status: statuses.get(tr.title) ?? { total: 0, done: 0, perPerson: new Map() },
+    }))
+    .filter(c => c.people > 0)
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).hr.overview
@@ -160,6 +183,47 @@ export default async function HrOverviewPage({
             )
           })}
         </ul>
+      )}
+
+      {trackCards.length > 0 && (
+        <section style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.tracks}</h2>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 14px" }}>{t.tracksNote}</p>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
+            {trackCards.map(({ track: tr, people: n, documents, status }) => {
+              const missing = status.total - status.done
+              const href = `/hr/tracks/${encodeURIComponent(tr.key)}`
+              return (
+                <li key={tr.key} className="card" style={{ padding: "18px 20px" }}>
+                  <Link href={href} style={{ fontSize: "var(--fs-section)", fontWeight: 700 }}>{tr.title}</Link>
+                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0" }}>{t.trackLine(n, documents)}</p>
+                  <div className="hr-ack">
+                    <AckBar acknowledged={status.done} assigned={status.total}
+                            label={tl.list.acknowledgedOf(status.done, status.total)} />
+                  </div>
+                  <div className="admin-data">
+                    <div>
+                      <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.acknowledged}</div>
+                      <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600 }}>{status.done} / {status.total}</div>
+                    </div>
+                    <div>
+                      <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.missing}</div>
+                      <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600, color: missing > 0 ? "var(--warn-fg)" : "var(--muted)" }}>
+                        {missing === 0 ? t.nobody : `${missing}`}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+                    {missing > 0 && (
+                      <Link className="button button--quiet" href={`${href}/notify`}>{t.notifyByEmail}</Link>
+                    )}
+                    <Link className="button button--quiet" href={href}>{t.openTrack}</Link>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
       )}
     </div>
     </AppShell>
