@@ -12,6 +12,7 @@ import { parseCsv } from "./csv"
 import type { NewPerson, PersonType } from "./persons"
 import type { CodelistItem } from "./codelists"
 import { normalizePhone, matchWorkplace, composeFullName, normalizeGender } from "./personFields"
+import { trackKeyFor } from "./trackNames"
 
 /** Hlavičky sa normalizujú (malé písmená, bez diakritiky), takže stačí tvar. */
 export const ALIASES: Record<string, string[]> = {
@@ -73,6 +74,12 @@ const list = (s: string) => s.split(/[,;|]/).map(x => x.trim()).filter(Boolean)
 export interface ImportSettings {
   phonePrefix?: string
   workplaces?: CodelistItem[]
+  /**
+   * Trasy organizácie. Stĺpec `trasy` nesie **názvy** (2. 10. 2026) — kľúč
+   * nikto nevidí; kľúč staršej trasy sa prijme tiež. Bez zoznamu (volajúci
+   * ho nedodal) sa hodnoty berú ako kľúče, ako doteraz.
+   */
+  tracks?: { key: string; title: string }[]
 }
 
 /** Čo sa v súbore našlo, ale nedalo sa použiť. Riadok kvôli tomu nepadá. */
@@ -81,6 +88,8 @@ export interface RowNotes {
   unknownWorkplaces: string[]
   /** Čísla, ktoré sa nedali prečítať ako telefón. */
   badPhones: string[]
+  /** Názvy trás, ktoré v organizácii nie sú — osoba ich nedostane. */
+  unknownTracks?: string[]
 }
 
 export function rowToPerson(
@@ -135,7 +144,7 @@ export function rowToPerson(
     personType: (type || undefined) as PersonType | undefined,
     startDate: date ? new Date(date) : undefined,
     // Prázdny stĺpec vyprázdni, chýbajúci stĺpec nechá tak (viď `hasField`).
-    tracks: hasField(row, "tracks") ? list(tracks) : undefined,
+    tracks: hasField(row, "tracks") ? trackKeys(list(tracks), settings, notes) : undefined,
     groups: hasField(row, "groups") ? list(groups) : undefined,
     // Nevyplnený jazyk necháme `undefined` — `upsertPersons()` ho potom
     // existujúcej osobe neprepíše (inak by opakovaný import prepol každého
@@ -167,5 +176,20 @@ export function csvToPersons(
 
 /** Prázdny zápisník pre `csvToPersons()` — aby ho volajúci nemusel skladať. */
 export function emptyNotes(): RowNotes {
-  return { unknownWorkplaces: [], badPhones: [] }
+  return { unknownWorkplaces: [], badPhones: [], unknownTracks: [] }
+}
+
+/**
+ * Názvy trás zo stĺpca `trasy` → kľúče. Neznámy názov sa **nevymyslí** ako
+ * nová trasa (tá sa zakladá v Trasách, 2. 10. 2026) — zapíše sa do poznámok
+ * a osoba ho nedostane; riadok kvôli tomu nepadá, ako pri pracovisku.
+ */
+function trackKeys(values: string[], settings: ImportSettings, notes?: RowNotes): string[] {
+  if (!settings.tracks) return values
+  const out: string[] = []
+  for (const v of values) {
+    const key = trackKeyFor(v, settings.tracks)
+    if (key) { if (!out.includes(key)) out.push(key) } else notes?.unknownTracks?.push(v)
+  }
+  return out
 }

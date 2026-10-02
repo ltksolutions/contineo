@@ -23,6 +23,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import { personAcknowledgements } from "@/lib/acknowledgements"
+import { trackNames } from "@/lib/tracks"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { dutyState, dutyTagClass } from "@/lib/due"
 
@@ -42,7 +43,10 @@ export default async function MyAcknowledgementsPage() {
 
   // Vlastné záznamy, nikdy nie cudzie: identifikátor ide z prihlásenej osoby,
   // nie z adresy (D32).
-  const records = await personAcknowledgements(ctx.person.companyCode, ctx.person.id)
+  const [records, names] = await Promise.all([
+    personAcknowledgements(ctx.person.companyCode, ctx.person.id),
+    trackNames(ctx.person.companyCode),
+  ])
 
   // Odvolanie je záznam s vlastným časom (D24), preto ide do `dutyState()`
   // ako `revokedAt` — pilulka ho kreslí sivo, nie výstražne: je to hotová vec.
@@ -85,7 +89,7 @@ export default async function MyAcknowledgementsPage() {
                     {r.type === "revocation"
                       ? t.revokedWhenLine(formatDate(r.acknowledgedAt, language))
                       : t.whenLine(formatDate(r.acknowledgedAt, language))}
-                    {r.trackId && <> · {t.viaTrack(r.trackId)}</>}
+                    {r.trackId && <> · {t.viaTrack(r.trackTitle ?? names[r.trackId] ?? r.trackId)}</>}
                   </p>
 
                   {/*

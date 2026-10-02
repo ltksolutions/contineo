@@ -291,6 +291,15 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
             </div>
           )}
 
+          {(preview.unknownTracks?.length ?? 0) > 0 && (
+            <div>
+              <div className="quiet field-hint">{t.unknownTracks}</div>
+              <p style={{ margin: "4px 0 0", fontSize: "var(--fs-body)", lineHeight: 1.6 }}>
+                {preview.unknownTracks!.join(", ")}
+              </p>
+            </div>
+          )}
+
           {(preview.badPhones?.length ?? 0) > 0 && (
             <div>
               <div className="quiet field-hint">{t.badPhones}</div>

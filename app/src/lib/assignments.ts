@@ -170,6 +170,8 @@ export function audienceFromSelection(selection: {
   addresses?: string
   /** `id` → názov oddelenia. Len na zapísanie čitateľnej kópie do `label`. */
   departmentNames?: Record<string, string>
+  /** Kľúč → názov trasy. Kľúč sa ľuďom neukazuje (2. 10. 2026), do `label` ide názov. */
+  trackNames?: Record<string, string>
 }): Audience[] {
   if (selection.all) return [{ kind: "all" }]
 
@@ -179,7 +181,9 @@ export function audienceFromSelection(selection: {
     const key = `${kind}:${value}`
     if (seen.has(key)) return
     seen.add(key)
-    const label = kind === "department" ? selection.departmentNames?.[value] : undefined
+    const label = kind === "department" ? selection.departmentNames?.[value]
+      : kind === "track" ? selection.trackNames?.[value]
+      : undefined
     out.push(label ? { kind, value, label } : { kind, value })
   }
 
@@ -213,7 +217,9 @@ export function audienceLabel(a: Audience): string {
   switch (a?.kind) {
     case "all": return "všetci v organizácii"
     case "group": return `skupina „${a.value}"`
-    case "track": return `trasa „${a.value}"`
+    // Názov z kópie v pridelení; kľúč len pri starších prideleniach bez nej
+    // (tie mali čitateľné kľúče — nové trasy majú UUID, 2. 10. 2026).
+    case "track": return `trasa „${a.label ?? a.value}"`
     // Bez názvu by v prehľade svietilo UUID. Ak kópia chýba (staršie záznamy),
     // radšej priznať, že názov nepoznáme, než ukázať identifikátor ako názov.
     case "department": return `oddelenie „${a.label ?? "(neznámy)"}" a jeho podriadené`

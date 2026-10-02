@@ -19,6 +19,7 @@ import { DOCUMENTS_COLLECTION } from "./documents"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { NoVersionReason } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
+import { sameTrackTitle } from "./trackNames"
 
 export const TRACKS_COLLECTION = "onboarding_tracks"
 
@@ -188,9 +189,6 @@ export async function trackProgress(person: {
 // Trasa dovtedy vznikala len seedovacím skriptom. Kurátor ju teraz skladá
 // z obrazovky — a to znamená, že sa musí dať aj pokaziť, takže sa kontroluje.
 
-/** Kľúč trasy — rovnaký tvar ako pri číselníkoch: ide do adries a zostáva. */
-const TRACK_KEY = /^[a-z0-9][a-z0-9-]{1,60}$/
-
 /** Krok tak, ako ho zadáva človek. Poradie sa odvodí z poľa, nečísluje ho. */
 export interface StepInput {
   documentId: string
@@ -201,6 +199,14 @@ export interface StepInput {
 export async function allTracks(companyCode: string): Promise<Track[]> {
   const col = await getCollection<Track>(TRACKS_COLLECTION)
   return col.find({ companyCode }).sort({ title: 1 }).toArray()
+}
+
+/**
+ * Kľúč → názov trasy, pre obrazovky, ktoré poznajú len kľúč (výber adresátov,
+ * dôkazy). Kľúč sa ľuďom neukazuje (2. 10. 2026).
+ */
+export async function trackNames(companyCode: string): Promise<Record<string, string>> {
+  return Object.fromEntries((await allTracks(companyCode)).map(t => [t.key, t.title]))
 }
 
 /** Jedna trasa vrátane neaktívnej. `null`, keď taká nie je. */
@@ -221,26 +227,38 @@ function checkTitle(title: string): string {
   return t
 }
 
+/**
+ * Názov trasy je **jedinečný v organizácii** (2. 10. 2026). Kľúč nikto nevidí,
+ * takže trasu pri osobe aj v importe určuje názov — dve trasy s rovnakým
+ * názvom by sa nedali rozlíšiť.
+ */
+async function checkTitleFree(companyCode: string, title: string, exceptKey?: string): Promise<void> {
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  const all = await col.find({ companyCode }, { projection: { key: 1, title: 1 } }).toArray()
+  if (all.some(t => t.key !== exceptKey && sameTrackTitle(t.title, title))) {
+    throw new TrackError("track.titleTaken", `Trasa s názvom „${title}" už existuje.`, { title })
+  }
+}
+
+/**
+ * Založí trasu a vráti jej kľúč.
+ *
+ * **Kľúč generuje server** (UUID, rozhodnutie Jána 2. 10. 2026) — nikto ho
+ * nezadáva ani nevidí, je len v adrese stránky trasy a v dátach (osoby,
+ * pridelenia, záznamy potvrdení). Trasy založené predtým majú čitateľné
+ * kľúče (`novy-zamestnanec`); tie sa nemenia, lebo sa na ne odkazujú
+ * záznamy potvrdení (D24).
+ */
 export async function createTrack(
   companyCode: string,
-  input: { key: string; title: string; description?: string },
+  input: { title: string; description?: string },
   actor: string,
-): Promise<void> {
-  const key = input.key.trim().toLowerCase()
-  if (!key) throw new TrackError("track.keyRequired", "Kľúč trasy je povinný.")
-  if (!TRACK_KEY.test(key)) {
-    throw new TrackError(
-      "track.badKey",
-      `„${key}" sa nedá použiť ako kľúč trasy. Malé písmená bez diakritiky, číslice a pomlčka.`,
-      { key },
-    )
-  }
+): Promise<string> {
   const title = checkTitle(input.title)
+  await checkTitleFree(companyCode, title)
+  const key = crypto.randomUUID()
 
   const col = await getCollection<Track>(TRACKS_COLLECTION)
-  if (await col.findOne({ companyCode, key })) {
-    throw new TrackError("track.alreadyExists", `Trasa „${key}" už existuje.`, { key })
-  }
 
   // Nová trasa je prázdna a **neaktívna**: kroky sa dopĺňajú vzápätí a trasa,
   // ktorá by medzitým visela na ľuďoch bez krokov, by tvrdila „hotovo".
@@ -254,6 +272,7 @@ export async function createTrack(
     companyCode, subject: "track", action: "created",
     actor, targetId: key, targetLabel: title,
   })
+  return key
 }
 
 export async function renameTrack(
@@ -264,6 +283,7 @@ export async function renameTrack(
 ): Promise<void> {
   const before = await trackOrThrow(companyCode, key)
   const title = checkTitle(input.title)
+  await checkTitleFree(companyCode, title, key)
   const description = input.description?.trim() || undefined
 
   const col = await getCollection<Track>(TRACKS_COLLECTION)

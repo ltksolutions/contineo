@@ -6,6 +6,7 @@
  * stav `draft`, zverejnená verzia sa nezmení ani súbežným klikom (D118).
  */
 
+import { trackNames } from "@/lib/tracks"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { learningAdminContext } from "@/lib/learning"
@@ -247,7 +248,10 @@ export async function assignCourseAction(fd: FormData) {
   const courseKey = field(fd, "courseKey")
   const tp = dictionary(ctx.person.language).learning.people
   const departmentNames = Object.fromEntries((await allDepartments(ctx.person.companyCode)).map(d => [d.id, d.name]))
-  const audiences = audienceFromSelection({ all: fd.get("all") === "1", selected: fd.getAll("audience").map(String), departmentNames })
+  const audiences = audienceFromSelection({
+    all: fd.get("all") === "1", selected: fd.getAll("audience").map(String), departmentNames,
+    trackNames: await trackNames(ctx.person.companyCode),
+  })
   let result = { created: 0, existing: 0 }
   try {
     if (!audiences.length) throw new AppError("learning.audienceRequired", "Vyberte adresátov.")

@@ -94,7 +94,7 @@ export default async function TrackDetailPage({
         </span>
       </div>
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 12px" }}>
-        <code>{track.key}</code> · {t.stepCount(steps.length)}
+        {t.stepCount(steps.length)}
       </p>
 
       {/*

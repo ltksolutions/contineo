@@ -17,6 +17,7 @@ import { evidenceForPerson } from "@/lib/evidenceDb"
 import { dutyState, dutyTagClass } from "@/lib/due"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
 import { audiencesInOrg, personTagClass, personDisplayStatus } from "@/lib/persons"
+import { allTracks } from "@/lib/tracks"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, needsInvitation } from "@/lib/personFields"
 import { allDepartments, flattenTree } from "@/lib/departments"
@@ -55,6 +56,11 @@ export default async function PersonDetailPage({
   // Zoznam sa odvodzuje z ľudí, nie z číselníka (D38) — a je to ten istý
   // zoznam, aký vidí prideľovanie noriem.
   const audiences = await audiencesInOrg(ctx.person.companyCode)
+  // Trasy podľa **názvu** zo zoznamu trás (2. 10. 2026) — kľúč sa nezadáva
+  // ani neukazuje. Kľúč, ktorý osoba má a trasa k nemu nie je (zapísaný
+  // kedysi ručne), ostane zaškrtnutý, aby ho uloženie potichu nezmazalo.
+  const tracks = await allTracks(ctx.person.companyCode)
+  const orphanTracks = o.tracks.filter(k => !tracks.some(tr => tr.key === k))
   // Ponuka pracovísk je číselník organizácie (D85) — ten istý zoznam, aký
   // sa spravuje v Organizácia → Číselníky.
   const workplaces = availableOptions(ctx.tenant, "workplace")
@@ -289,16 +295,31 @@ export default async function PersonDetailPage({
           <span className="quiet field-hint">{t.groupsNote}</span>
         </div>
 
-        <div className="field">
-          <span className="field-label">{t.tracks}</span>
-          <TagSelect
-            name="tracks"
-            options={audiences.tracks}
-            selected={o.tracks}
-            newLabel={t.newTrack}
-            language={language}
-          />
-        </div>
+        <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
+          <legend className="field-label">{t.tracks}</legend>
+          {tracks.length === 0 && orphanTracks.length === 0 ? (
+            <p className="quiet field-hint" style={{ margin: 0 }}>{t.noTracks}</p>
+          ) : (
+            <ul className="hr-choices">
+              {tracks.map(tr => (
+                <li key={tr.key}>
+                  <label className="hr-choice">
+                    <input type="checkbox" name="track" value={tr.key} defaultChecked={o.tracks.includes(tr.key)} />
+                    <span>{tr.title}{!tr.isActive && <span className="quiet"> · {t.trackInactive}</span>}</span>
+                  </label>
+                </li>
+              ))}
+              {orphanTracks.map(k => (
+                <li key={k}>
+                  <label className="hr-choice">
+                    <input type="checkbox" name="track" value={k} defaultChecked />
+                    <span className="quiet">{t.trackUnknown}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+        </fieldset>
 
         <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
           <legend className="field-label">{t.roles}</legend>

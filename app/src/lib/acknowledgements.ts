@@ -30,6 +30,9 @@
  * český rozhodca potvrdzoval slovenský text; a to je otázka, ktorá príde.
  */
 
+// Len konštanta; `tracks.ts` číta potvrdenia, takže je to kruh — hodnota sa
+// berie až pri volaní, nie pri načítaní modulu.
+import { TRACKS_COLLECTION } from "./tracks"
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { loadDocumentFor, effectiveVersion } from "./documents"
@@ -124,6 +127,13 @@ export interface Acknowledgement {
 
   // KONTEXT
   trackId: string | null
+  /**
+   * Názov trasy v čase potvrdenia — kópia, nie odkaz (2. 10. 2026). Kľúč
+   * trasy sa ľuďom neukazuje a nové trasy majú UUID; bez kópie by o rok
+   * v dôkaze svietil identifikátor alebo dnešný názov. Staršie záznamy ho
+   * nemajú — obrazovka ho vtedy dohľadá.
+   */
+  trackTitle?: string | null
   /** `import` je pripravené pre prípadné historické záznamy z iného systému. */
   origin: "portal" | "import"
   supersedes: ObjectId | null
@@ -293,6 +303,18 @@ export async function acknowledge(
   const statement = buildStatement(doc.title, effectiveFrom, language, actor.gender)
   const now = new Date()
 
+  // Názov trasy rovnako — teraz, ako kópia. Zlyhanie čítania potvrdenie
+  // nezhodí; záznam ostane s kľúčom.
+  let trackTitle: string | null = null
+  if (context.trackId) {
+    try {
+      const tracks = await getCollection<{ companyCode: string; key: string; title: string }>(TRACKS_COLLECTION)
+      trackTitle = (await tracks.findOne({ companyCode: actor.companyCode, key: context.trackId }))?.title ?? null
+    } catch (e) {
+      console.error("[acknowledgements] trasu sa nepodarilo prečítať:", e)
+    }
+  }
+
   // Názvy oddelení sa čítajú **teraz**, aby sa uložili tak, ako vtedy zneli.
   // Zlyhanie tohto čítania nesmie zhodiť potvrdenie: záznam bez oddelenia je
   // horší než záznam s ním, ale oveľa lepší než žiadny.
@@ -360,6 +382,7 @@ export async function acknowledge(
     departmentId: actor.departmentId ?? null,
     departmentNames,
     trackId: context.trackId ?? null,
+    trackTitle,
     origin: "portal",
     supersedes: null,
     createdAt: now,

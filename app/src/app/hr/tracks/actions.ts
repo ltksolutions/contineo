@@ -15,7 +15,6 @@
  */
 
 import { redirect } from "next/navigation"
-import { slugifyTrackKey } from "@/lib/slug"
 import { revalidatePath } from "next/cache"
 import { trackManagerContext } from "@/lib/hr"
 import { isRedirect } from "@/lib/redirects"
@@ -53,21 +52,20 @@ export async function createTrackAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
 
-  // Bez skriptu kľúč nepredvyplní nikto — odvodí sa z názvu tým istým pravidlom.
-  const key = text(fd, "key") || slugifyTrackKey(text(fd, "title"))
   try {
-    await createTrack(
+    // Kľúč vygeneruje server (UUID, 2. 10. 2026) — z formulára prichádza len názov.
+    const key = await createTrack(
       self.companyCode,
-      { key, title: text(fd, "title"), description: text(fd, "description") || undefined },
+      { title: text(fd, "title"), description: text(fd, "description") || undefined },
       self.email,
     )
     revalidatePath("/hr/tracks")
     // Rovno do detailu: po založení nasleduje skladanie krokov a hľadať
     // novú trasu v zozname je zbytočný krok.
-    back(`/hr/tracks/${encodeURIComponent(key.toLowerCase())}`, { msg: say(self.language).created })
+    back(`/hr/tracks/${encodeURIComponent(key)}`, { msg: say(self.language).created })
   } catch (e) {
     if (isRedirect(e)) throw e
-    back("/hr/tracks", { error: message(e, self.language), key, title: text(fd, "title") })
+    back("/hr/tracks", { error: message(e, self.language), title: text(fd, "title") })
   }
 }
 

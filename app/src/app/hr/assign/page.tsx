@@ -30,6 +30,7 @@ import { treeOptions } from "@/lib/treeOptions"
 import { hrContext, assignableDocuments } from "@/lib/hr"
 import { audienceFromSelection, audienceImpact, type Audience } from "@/lib/assignments"
 import { audiencesInOrg } from "@/lib/persons"
+import { trackNames } from "@/lib/tracks"
 import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -72,12 +73,13 @@ export default async function AssignPage({
   }
 
   const q = normalizeQuery<Query>(await searchParams)
-  const [documents, audiences, tree, departmentCounts, people] = await Promise.all([
+  const [documents, audiences, tree, departmentCounts, people, names] = await Promise.all([
     assignableDocuments(ctx.person.companyCode),
     audiencesInOrg(ctx.person.companyCode),
     allDepartments(ctx.person.companyCode),
     counts(ctx.person.companyCode),
     listPeople(ctx.person.companyCode),
+    trackNames(ctx.person.companyCode),
   ])
   const treeRows = flattenTree(tree)
   const branding = brandingView(ctx.tenant)
@@ -111,6 +113,7 @@ export default async function AssignPage({
         selected: [...selectedAudiences],
         addresses: q.addresses,
         departmentNames,
+        trackNames: names,
       })
     : []
   const impact = previewAudiences.length > 0
@@ -286,7 +289,8 @@ export default async function AssignPage({
                             defaultChecked={selectedAudiences.has(`track:${t.value}`)}
                           />
                           <span className="tag-mark" aria-hidden="true" />
-                          {t.value}
+                          {/* Názov, nie kľúč — kľúč sa ľuďom neukazuje (2. 10. 2026). */}
+                          {names[t.value] ?? t.value}
                           <span className="tag-count">{t.count}</span>
                         </label>
                       ))}

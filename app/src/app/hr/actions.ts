@@ -20,6 +20,7 @@ import {
   audienceFromSelection, audienceLabel,
 } from "@/lib/assignments"
 import { allDepartments } from "@/lib/departments"
+import { trackNames } from "@/lib/tracks"
 import { send, assignmentEmail, reminderEmail } from "@/lib/ecomail"
 import { overdue, byPersonReminder, NOTICE_DAYS, thresholdDays } from "@/lib/reminders"
 import { notify } from "@/lib/notifications"
@@ -129,6 +130,7 @@ export async function assignAction(fd: FormData) {
     selected: fd.getAll("audience").filter((v): v is string => typeof v === "string"),
     addresses: fieldText(fd, "addresses"),
     departmentNames: departmentNames,
+    trackNames: await trackNames(actor.companyCode),
   })
   if (audiences.length === 0) {
     backWithError(dictionary(actor.language).hr.actions.noAudience, fd)

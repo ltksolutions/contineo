@@ -36,6 +36,8 @@ vi.mock("@/lib/assignments", () => ({
   audienceMembers: async () => [{ id: "p1" }, { id: "p3" }, { id: "p4" }],
 }))
 vi.mock("@/lib/persons", () => ({ audiencesInOrg: async () => ({ groups: [{ value: "rozhodcovia", count: 4 }], tracks: [{ value: "zaklad", count: 2 }] }) }))
+// Trasy sa ukazujú názvom, nie kľúčom (2. 10. 2026).
+vi.mock("@/lib/tracks", () => ({ trackNames: async () => ({ zaklad: "Základný onboarding" }) }))
 vi.mock("@/lib/departments", () => ({ allDepartments: async () => [], flattenTree: () => [], counts: async () => new Map() }))
 vi.mock("@/lib/testsDb", () => ({ listTests: async () => [{ key: "evak", title: "Evakuácia", status: "ready", sections: [{ count: 5 }], rules: { passingPercent: 80, maxAttempts: 3 }, responsible: [{ fullName: "Marek" }] }] }))
 vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [{ key: "uroven", value: "1", label: "Úroveň: 1", courses: 2, questions: 0, tests: 0 }] }))
@@ -150,6 +152,8 @@ describe("/learning/manage/[courseKey]", () => {
     s.course = course([v(2, "published")])
     const html = await render({ tab: "people", assign: "1", preview: "1", all: "1" })
     expect(html).toContain("track:zaklad")
+    // Názov trasy, nie kľúč (2. 10. 2026).
+    expect(html).toContain("Základný onboarding")
     expect(html).toContain("Zapíše sa 2 ľudia do verzie 2 · 1 je už zapísaný a nič sa mu nezmení.")
     expect(html).toContain("Prideliť 2 ľuďom")
   })
