@@ -20,6 +20,8 @@ import { listPeople } from "@/lib/people"
 import { sortPeopleBySurname } from "@/lib/assignOrder"
 import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { treeOptions } from "@/lib/treeOptions"
+import { duties, trackStatuses } from "@/lib/hrReport"
+import Link from "next/link"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
@@ -63,11 +65,15 @@ export default async function TrackDetailPage({
     Ľudia na trase (2. 10. 2026) — z `persons.tracks`, jediného zdroja (D27).
     Vyradení ostávajú v zozname (trasu mali), do výberu sa neponúkajú.
   */
-  const [people, tree, departmentCounts] = await Promise.all([
+  const [people, tree, departmentCounts, rows] = await Promise.all([
     listPeople(ctx.tenant.companyCode),
     allDepartments(ctx.tenant.companyCode),
     counts(ctx.tenant.companyCode),
+    duties(ctx.tenant.companyCode),
   ])
+  // Stav po ľuďoch z tých istých riadkov ako výkaz a karta v Pridelených dokumentoch.
+  const status = trackStatuses(rows).get(track.title)
+  const missing = status ? status.total - status.done : 0
   const members = sortPeopleBySurname(people.filter(p => p.tracks.includes(track.key)))
   const choices = sortPeopleBySurname(people.filter(p => p.status !== "inactive" && !p.tracks.includes(track.key)))
     .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
@@ -217,7 +223,12 @@ export default async function TrackDetailPage({
 
       {/* ── ľudia na trase ── */}
 
-      <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.members(members.length)}</h2>
+      <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 12px" }}>
+        <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: 0, flex: "1 1 auto" }}>{t.members(members.length)}</h2>
+        {track.isActive && missing > 0 && (
+          <Link className="button button--quiet" href={`${here}/notify`}>{dictionary(ctx.person.language).hr.overview.notifyByEmail}</Link>
+        )}
+      </div>
       {members.length === 0 ? (
         <p className="quiet" style={{ margin: "0 0 16px" }}>{t.noMembers}</p>
       ) : (
@@ -228,6 +239,10 @@ export default async function TrackDetailPage({
                 <strong>{p.fullName}</strong>
                 {p.department && <span className="quiet"> · {p.department}</span>}
                 {p.status === "inactive" && <span className="quiet"> · {t.membersInactive}</span>}
+                {status?.perPerson.get(p.id) && (() => {
+                  const s = status.perPerson.get(p.id)!
+                  return <span className={s.done === s.total ? "tag tag--published" : "tag"} style={{ marginLeft: 8 }}>{s.done} / {s.total}</span>
+                })()}
               </span>
               <form action={removeMemberAction}>
                 <input type="hidden" name="key" value={track.key} />

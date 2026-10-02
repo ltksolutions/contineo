@@ -342,3 +342,33 @@ export function byTrack(rows: Duty[]): Summary[] {
   const expanded = rows.flatMap(d => d.trackTitles.map(title => ({ ...d, trackTitles: [title] })))
   return summarize(expanded, d => d.trackTitles[0], d => d.trackTitles[0], d => "")
 }
+
+/** Stav jednej trasy — spolu a po ľuďoch (2. 10. 2026). */
+export interface TrackStatus {
+  total: number
+  done: number
+  /** `personId` → jeho povinnosti z tejto trasy. */
+  perPerson: Map<string, { total: number; done: number; open: Duty[] }>
+}
+
+/**
+ * Stav trás z tých istých riadkov ako výkaz (`duties()`), podľa **názvu**
+ * trasy — názov je jedinečný (`checkTitleFree()`). Karta trasy v Pridelených
+ * dokumentoch, stránka trasy aj e-mail počítajú to isté; druhý výpočet by sa
+ * raz rozišiel s výkazom.
+ */
+export function trackStatuses(rows: Duty[]): Map<string, TrackStatus> {
+  const out = new Map<string, TrackStatus>()
+  for (const d of rows) {
+    for (const title of d.trackTitles) {
+      const s = out.get(title) ?? { total: 0, done: 0, perPerson: new Map() }
+      const p = s.perPerson.get(d.personId) ?? { total: 0, done: 0, open: [] }
+      s.total += 1
+      p.total += 1
+      if (d.acknowledgedAt) { s.done += 1; p.done += 1 } else p.open.push(d)
+      s.perPerson.set(d.personId, p)
+      out.set(title, s)
+    }
+  }
+  return out
+}

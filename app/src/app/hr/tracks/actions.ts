@@ -21,6 +21,12 @@ import { isRedirect } from "@/lib/redirects"
 import { createTrack, renameTrack, setTrackSteps, setTrackActive, addTrackMembers, removeTrackMember, type StepInput } from "@/lib/tracks"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
+import { trackRecipients } from "@/lib/trackNotify"
+import { send, reminderEmail } from "@/lib/ecomail"
+import { writeAudit } from "@/lib/audit"
+import { brandingView } from "@/lib/tenants"
+import { requestHostname } from "@/lib/session"
+import { normalizeLanguage } from "@/lib/i18n"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await trackManagerContext()
@@ -214,5 +220,61 @@ export async function removeMemberAction(fd: FormData) {
     if (isRedirect(e)) throw e
     back(to, { error: message(e, self.language) })
   }
+}
+
+/** Koľko e-mailov naraz — ako pri prideleniach v `/hr`. */
+const CONCURRENCY = 5
+
+/**
+ * Dá ľuďom na trase vedieť e-mailom (2. 10. 2026). **Len tým, ktorí z trasy
+ * ešte niečo nepotvrdili**, a len o tom, čo im chýba — zoznam sa prepočíta
+ * tu znova, neberie sa z formulára (medzi náhľadom a kliknutím mohol niekto
+ * potvrdiť). Jeden e-mail na človeka so všetkými dokumentmi.
+ */
+export async function sendTrackNotificationAction(fd: FormData) {
+  const ctx = await trackManagerContext()
+  if (ctx.state !== "ready") redirect("/")
+  const key = text(fd, "key")
+  const to = `/hr/tracks/${encodeURIComponent(key)}`
+  const t = dictionary(ctx.person.language).hr.actions
+
+  const found = await trackRecipients(ctx.person.companyCode, key)
+  if (!found) redirect("/hr/tracks")
+  if (found.recipients.length === 0) back(to, { error: t.nobodyToNotify })
+
+  const host = await requestHostname()
+  const branding = brandingView(ctx.tenant)
+  const link = `https://${host}/documents`
+  let sent = 0
+  const failed: string[] = []
+  for (let i = 0; i < found.recipients.length; i += CONCURRENCY) {
+    await Promise.all(found.recipients.slice(i, i + CONCURRENCY).map(async r => {
+      try {
+        await send({
+          to: r.person.email,
+          ...reminderEmail(
+            link, host,
+            r.open.map(d => ({ title: d.documentTitle, versionLabel: d.versionLabel, days: 0 })),
+            normalizeLanguage(r.person.language), branding, "notice",
+          ),
+        })
+        sent++
+      } catch (e) {
+        console.error(`[trasy] e-mail na ${r.person.email} zlyhal:`, e)
+        failed.push(r.person.email)
+      }
+    }))
+  }
+  if (sent > 0) {
+    await writeAudit({
+      companyCode: ctx.person.companyCode, subject: "track", action: "notified",
+      actor: ctx.person.email, targetId: found.track.key, targetLabel: found.track.title,
+      note: t.sent(sent),
+    })
+  }
+  const message = failed.length === 0
+    ? t.sent(sent)
+    : t.sentWithFailures(sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`)
+  back(to, failed.length ? { msg: message, error: "1" } : { msg: message })
 }
 

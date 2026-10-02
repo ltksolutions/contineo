@@ -881,6 +881,10 @@ interface Dictionary {
       assign: string
       /** Tlačidlo na trasy (`/hr/tracks`). Od 2. 10. 2026 sa všade volajú len „Trasy“. */
       tracks: string
+      /** Karty trás v zozname (2. 10. 2026). */
+      tracksNote: string
+      trackLine: (people: number, documents: number) => string
+      openTrack: string
       emptyTitle: string
       emptyText: string
       acknowledged: string
@@ -4197,6 +4201,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri zobrazení — a týkajú sa ľudí, ktorí do skupiny patria",
       assign: "Prideliť dokument",
       tracks: "Trasy",
+      tracksNote: "Ľudia na trase potvrdzujú jej kroky — povinnosť vzniká z trasy, nie z pridelenia.",
+      trackLine: (people, documents) =>
+        `${people === 1 ? "1 osoba" : people <= 4 ? `${people} osoby` : `${people} osôb`} · ` +
+        `${documents === 1 ? "1 dokument" : documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`}`,
+      openTrack: "Otvoriť trasu",
       emptyTitle: "Žiadne pridelenia",
       emptyText: "Keď normu niekomu pridelíte, objaví sa tu aj s tým, koľkí ju už potvrdili.",
       acknowledged: "Potvrdili",
@@ -7746,6 +7755,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Co bylo komu uloženo a kdo to už potvrdil. Počty se počítají při zobrazení — a týkají se lidí, kteří do skupiny patří",
       assign: "Přidělit dokument",
       tracks: "Trasy",
+      tracksNote: "Lidé na trase potvrzují její kroky — povinnost vzniká z trasy, ne z přidělení.",
+      trackLine: (people, documents) =>
+        `${people === 1 ? "1 osoba" : people <= 4 ? `${people} osoby` : `${people} osob`} · ` +
+        `${documents === 1 ? "1 dokument" : documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`}`,
+      openTrack: "Otevřít trasu",
       emptyTitle: "Žádná přidělení",
       emptyText: "Když předpis někomu přidělíte, objeví se tu i s tím, kolik lidí ho už potvrdilo.",
       acknowledged: "Potvrdili",
@@ -11286,6 +11300,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "What has been assigned to whom and who has already acknowledged it. The counts are computed when the page is opened — and cover the people who belong to the group",
       assign: "Assign a document",
       tracks: "Tracks",
+      tracksNote: "People on a track acknowledge its steps — the duty comes from the track, not from an assignment.",
+      trackLine: (people, documents) =>
+        `${people === 1 ? "1 person" : `${people} people`} · ${documents === 1 ? "1 document" : `${documents} documents`}`,
+      openTrack: "Open track",
       emptyTitle: "No assignments",
       emptyText: "Once you assign a document to someone, it shows up here along with how many have acknowledged it.",
       acknowledged: "Acknowledged",
