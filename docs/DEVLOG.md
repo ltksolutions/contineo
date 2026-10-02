@@ -67,6 +67,34 @@ spustilo lehotu jeho dokladov.
 
 ---
 
+## 2026-10-02 — podmenu, pohľady, akcie (ZAKLAD-podmenu-a-akcie, -tabview, -segmented-control)
+
+**Pravidlo:** kam idem = podmenu (pás TabView), ako to vidím = segmented
+control, čo urobím = tlačidlo (najviac jedno plné, vpravo v riadku
+nadpisu), odkiaľ som prišiel = cesta. Tri návrhy v jednej vetve.
+
+- **Podmenu** je plávajúci oblý pás (`.tabs` obal, `.tabs-bar` kapsula),
+  vybraná položka vo farbe organizácie. `SectionTabs` (najdlhšia zhoda
+  cesty) a `TabsBar` (klientsky posun vybranej do zorného poľa cez
+  `scrollLeft` — `scrollIntoView` by posunul aj stránku).
+- **HR** má nadpis sekcie a päť záložiek na `/hr`, Výkaze, Pripomienkach,
+  Trasách a Reťazi dôkazov (`HrTabs`). Správca obsahu bez roly
+  personalistu smie na Trasy, ale ostatné záložky by mu vrátili 404 —
+  podmenu sa mu nekreslí. `<title>` záložiek doplnený v `pageTitle()`.
+- **Prepínač pohľadu** ako segmented control. Spoločné CSS ho pod 640 px
+  skrývalo kvôli knižnici, takže na telefóne chýbal aj v Pripomienkach;
+  skrýva sa už len knižničný (`.view-switch--wide-only`) a výnimka pre
+  `/dpo` je zbytočná.
+- **Odkazy späť** preč (Výkaz, Trasy, časť kurzu, `.org-back`). Pri tom
+  sa ukázalo, že 17 kľúčov `back` v i18n nečíta nikto — zmazané vo všetkých
+  troch jazykoch (`tsc` overil, že ich nepoužíva žiadny súbor).
+
+**Sťahovanie návrhu:** prehliadač v paneli bol odhlásený z claude.ai;
+po prihlásení súbory chodili do `~/Downloads` s oneskorením a len po
+jednom, s pauzou medzi nimi.
+
+---
+
 ## 2026-10-02 — časti nastavenia organizácie na vlastných cestách
 
 **Zadanie (Ján):** časť nastavenia má mať cestu, nie `?tab=`. Po

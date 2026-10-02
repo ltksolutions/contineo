@@ -16,6 +16,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { createTrackAction } from "./actions"
 import AppShell from "@/components/AppShell"
+import HrTabs from "@/components/HrTabs"
 
 export const dynamic = "force-dynamic"
 
@@ -41,15 +42,12 @@ export default async function TracksPage({
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
+      {/* Nadpis sekcie a podmenu (ZAKLAD-podmenu-a-akcie, 2. 10. 2026);
+          „Späť do knižnice" preč — trasy sú od 2. 10. v sekcii HR a späť
+          vedie cesta pod hlavičkou. */}
+      <h1 className="page-title">{dictionary(ctx.person.language).nav.assigned}</h1>
+      <HrTabs current="/hr/tracks" person={ctx.person} language={ctx.person.language} />
       <Notice message={message ?? error} error={Boolean(error)} back="/hr/tracks" />
-
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>
-          {dictionary(ctx.person.language).library.upload.back}
-        </Link>
-      </p>
-
-      <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
       {/* `.empty` zo ZAKLADU (SPRAVA, úloha 1.1) — bez tlačidla, formulár

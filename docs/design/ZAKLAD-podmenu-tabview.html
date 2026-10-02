@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZAKLAD — podmenu ako SwiftUI TabView</title>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.18);--accent:#1d4ed8;--accent-soft:rgba(29,78,216,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--seg-track:rgba(118,118,128,.12);--seg-thumb:#fff;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);--seg-sep:rgba(60,60,67,.18);--tv-bar:rgba(255,255,255,.82);--tv-shadow:0 1px 2px rgba(20,28,42,.06),0 8px 24px rgba(20,28,42,.10)}
+.dark{--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--line-strong:rgba(255,255,255,.18);--accent:#8fb0ff;--accent-soft:rgba(143,176,255,.16);--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7;--seg-track:rgba(118,118,128,.24);--seg-thumb:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.3);--seg-sep:rgba(255,255,255,.14);--tv-bar:rgba(29,35,44,.86);--tv-shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+.sheet{padding:28px 32px 48px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+h2.sec{font-size:17px;margin:34px 0 12px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 22px;max-width:94ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#eceef1;padding:1px 5px;border-radius:4px}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.badge{display:inline-block;font-family:ui-sans-serif,system-ui;font-size:11px;font-weight:700;color:#fff;background:#161b22;border-radius:5px;padding:1px 6px;margin-right:6px}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);margin:0 0 10px;flex:none}
+.ann{font-size:12.5px;color:#5c6675;max-width:106ch;margin:0 0 30px;line-height:1.55}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin:0 4px 0 6px;vertical-align:1px}
+.q{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:#b45309;border-radius:5px;padding:0 5px;margin-left:4px;vertical-align:2px}
+.row2{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.path{background:var(--surface);border-bottom:1px solid var(--line);min-height:40px;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;padding:0 16px;font-size:13px;color:var(--muted)}
+.path b{color:var(--ink)}
+.main{padding:20px 24px 26px}
+.title{font-size:26px;letter-spacing:-.02em;line-height:1.2;margin:0}
+.lead{font-size:15px;color:var(--muted);margin:0 0 16px;max-width:620px}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.sp{flex:1 1 0}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 18px;border-radius:10px;font-size:15px;font-weight:600;white-space:nowrap;background:var(--surface);border:1px solid var(--line-strong)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:16px}
+.ct{font-weight:700}.meta{font-size:13px;color:var(--muted);margin-top:4px}
+.tagok{display:inline-flex;align-items:center;min-height:24px;padding:0 10px;border-radius:999px;background:var(--ok-bg);color:var(--ok-fg);font-size:12px;font-weight:600}
+/* A — záložky (rozhodnuté 2. 10.) */
+.tabs{display:flex;gap:2px;margin:16px 0 18px;border-bottom:1px solid var(--line-strong);overflow-x:auto;scrollbar-width:none}
+.tab{flex:none;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:10px 10px 0 0;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tab.on{color:var(--ink);font-weight:700;background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--accent)}
+/* B — TabView (iPadOS plávajúci pás) */
+.tv{display:flex;justify-content:center;margin:18px 0 20px}
+.tv-bar{display:inline-flex;gap:2px;padding:4px;border-radius:999px;background:var(--tv-bar);border:1px solid var(--line);box-shadow:var(--tv-shadow);backdrop-filter:blur(20px);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.tv-item{flex:none;display:inline-flex;align-items:center;min-height:38px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:550;color:var(--ink);white-space:nowrap}
+.tv-item:hover{background:var(--surface-2)}
+.tv-item.on{background:var(--accent-soft);color:var(--accent);font-weight:650}
+.tv--start{justify-content:flex-start}
+/* segmented (ZAKLAD-segmented-control) */
+.seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border-radius:9px;background:var(--seg-track)}
+.seg a{position:relative;display:flex;align-items:center;justify-content:center;min-height:32px;padding:0 16px;border-radius:7px;font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap}
+.seg a+a::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:var(--seg-sep)}
+.seg a.on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.seg a.on::before,.seg a.on+a::before{opacity:0}
+.seg--full{display:grid;width:100%}
+.w390 .main{padding:14px}.w390 .title{font-size:22px}
+.w390 .tv{margin:14px -14px 16px;padding:0 14px}
+.w390 .tv-item{padding:0 14px}
+/* spodná lišta aplikácie */
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);height:56px}
+.tabbar span{display:grid;place-items:center;font-size:10.5px;color:var(--muted);padding-top:22px;position:relative}
+.tabbar span::before{content:"";position:absolute;top:9px;left:50%;width:20px;height:16px;margin-left:-10px;border-radius:5px;background:var(--surface-2)}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ZAKLAD — podmenu sekcie ako SwiftUI TabView</h1>
+<p class="doc">Skúška na podnet používateľa (2. 10. 2026). Porovnáva <b>A</b> — záložky, ako sú rozhodnuté v <code>ZAKLAD-podmenu-a-akcie</code>, a <b>B</b> — podmenu v tvare <b>TabView z iPadOS</b>: plávajúci oblý pás uprostred pod nadpisom, vybraná položka má podklad a text vo farbe organizácie. Spodný TabView z iPhonu sa nepoužíva, lebo spodný okraj už patrí hlavnej lište aplikácie (Prehľad · Knižnica · Vzdelávanie · Úlohy · Menu). Rozhoduje <span class="q">Q1</span>. Zadanie: <code>ZAKLAD-podmenu-tabview.md</code>.</p>
+
+<h2 class="sec">1440 /hr/overview — podmenu nad prepínačom pohľadu</h2>
+<div class="row2">
+<div><p class="cap"><span class="badge">A</span>záložky (rozhodnuté)</p>
+<div class="frame" style="width:700px"><div class="path">Prehľad › Správa › Pridelené dokumenty › <b>Výkaz potvrdení</b></div><div class="main">
+<h1 class="title">Pridelené dokumenty</h1>
+<nav class="tabs"><a class="tab">Pridelenia</a><a class="tab on">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav>
+<p class="lead">Kto čo má potvrdiť a kto to už potvrdil.</p>
+<div class="head"><span class="seg"><a class="on">Podľa dokumentu</a><a>Podľa osoby</a><a>Podľa trasy</a></span><span class="sp"></span><a class="button">Stiahnuť ako CSV</a></div>
+<div class="card"><div class="head"><span class="ct">Skúšobný poriadok (znenia v indexe)</span><span class="sp"></span><span class="tagok">hotové</span></div><div class="meta">3 z 3 · medián čítania 38 s</div></div></div></div></div>
+<div><p class="cap"><span class="badge">B</span>TabView — plávajúci pás</p>
+<div class="frame" style="width:700px"><div class="path">Prehľad › Správa › Pridelené dokumenty › <b>Výkaz potvrdení</b></div><div class="main">
+<h1 class="title">Pridelené dokumenty</h1>
+<nav class="tv"><span class="tv-bar"><a class="tv-item">Pridelenia</a><a class="tv-item on">Výkaz potvrdení</a><a class="tv-item">Pripomienky</a><a class="tv-item">Trasy</a><a class="tv-item">Reťaz dôkazov</a></span></nav>
+<p class="lead">Kto čo má potvrdiť a kto to už potvrdil.</p>
+<div class="head"><span class="seg"><a class="on">Podľa dokumentu</a><a>Podľa osoby</a><a>Podľa trasy</a></span><span class="sp"></span><a class="button">Stiahnuť ako CSV</a></div>
+<div class="card"><div class="head"><span class="ct">Skúšobný poriadok (znenia v indexe)</span><span class="sp"></span><span class="tagok">hotové</span></div><div class="meta">3 z 3 · medián čítania 38 s</div></div></div></div></div>
+</div>
+<p class="ann"><span class="num">1</span><b>Pás</b>: kapsula (r999), biela s 82 % krytím a rozostrením pozadia, jemný tieň — „pláva" nad obsahom ako v iPadOS. Výška položky 38 px, pás 48 px. <span class="num">2</span><b>Vybraná položka</b>: podklad <code>--accent-soft</code> a text <code>--accent</code> (farba organizácie). Tým sa odlíši od prepínača pohľadu pod ňou, ktorý je sivý s bielou doskou a bez farby — dva ovládače sa nepomýlia. <span class="num">3</span><b>Uprostred</b> ako v iPadOS <span class="q">Q2</span>. <span class="num">4</span>Odkazy, <code>TabLink</code> s pruhom načítania a <code>aria-current</code> ostávajú — mení sa len tvar.</p>
+
+<h2 class="sec">1440 /learning/manage — tri položky + akcia</h2>
+<div class="row2">
+<div class="frame" style="width:700px"><div class="main"><div class="head"><h1 class="title">Správa kurzov</h1><span class="sp"></span><a class="button" style="background:var(--accent);border-color:var(--accent);color:#fff">Nový kurz</a></div>
+<nav class="tv"><span class="tv-bar"><a class="tv-item on">Kurzy</a><a class="tv-item">Témy</a><a class="tv-item">smart:tagy</a></span></nav>
+<div class="card" style="margin-top:0"><span class="ct">Bezpečnosť v sídle</span><div class="meta">Koncept · v1</div></div></div></div>
+<div class="frame" style="width:700px"><div class="main"><div class="head"><h1 class="title">Správa kurzov</h1><span class="sp"></span><a class="button" style="background:var(--accent);border-color:var(--accent);color:#fff">Nový kurz</a></div>
+<nav class="tv tv--start"><span class="tv-bar"><a class="tv-item on">Kurzy</a><a class="tv-item">Témy</a><a class="tv-item">smart:tagy</a></span></nav>
+<div class="card" style="margin-top:0"><span class="ct">Bezpečnosť v sídle</span><div class="meta">Koncept · v1</div></div></div></div>
+</div>
+<p class="ann">Vľavo uprostred (iPadOS), vpravo zarovnané k ľavému okraju obsahu — lícuje s nadpisom a cestou <span class="q">Q2</span>.</p>
+
+<h2 class="sec">390 — B na telefóne · tmavá téma</h2>
+<div class="row2">
+<div class="frame w390" style="width:390px"><div class="path" style="font-size:12.5px;padding:4px 10px">Prehľad › Správa › Pridelené dokumenty › <b>Výkaz potvrdení</b></div><div class="main">
+<h1 class="title">Pridelené dokumenty</h1>
+<nav class="tv tv--start"><span class="tv-bar" id="b390"><a class="tv-item">Pridelenia</a><a class="tv-item on">Výkaz potvrdení</a><a class="tv-item">Pripomienky</a><a class="tv-item">Trasy</a><a class="tv-item">Reťaz dôkazov</a></span></nav>
+<span class="seg seg--full"><a class="on">Dokument</a><a>Osoba</a><a>Trasa</a></span>
+<div class="card"><span class="ct">Skúšobný poriadok</span><div class="meta">3 z 3 · hotové</div></div></div>
+<div class="tabbar"><span>Prehľad</span><span>Knižnica</span><span>Vzdelávanie</span><span>Úlohy</span><span>Menu</span></div></div>
+<div class="frame w390 dark" style="width:390px"><div class="path" style="font-size:12.5px;padding:4px 10px">Prehľad › Správa › Pridelené dokumenty › <b>Výkaz potvrdení</b></div><div class="main">
+<h1 class="title">Pridelené dokumenty</h1>
+<nav class="tv tv--start"><span class="tv-bar" id="b390d"><a class="tv-item">Pridelenia</a><a class="tv-item on">Výkaz potvrdení</a><a class="tv-item">Pripomienky</a><a class="tv-item">Trasy</a><a class="tv-item">Reťaz dôkazov</a></span></nav>
+<span class="seg seg--full"><a class="on">Dokument</a><a>Osoba</a><a>Trasa</a></span>
+<div class="card"><span class="ct">Skúšobný poriadok</span><div class="meta">3 z 3 · hotové</div></div></div>
+<div class="tabbar"><span>Prehľad</span><span>Knižnica</span><span>Vzdelávanie</span><span>Úlohy</span><span>Menu</span></div></div>
+</div>
+<p class="ann"><span class="num">5</span><b>Päť položiek sa nezmestí</b> — pás sa posúva do strán vnútri kapsuly, aktívna položka je pri načítaní posunutá do zorného poľa (rovnako ako pri A, Q3 z <code>ZAKLAD-podmenu-a-akcie</code>). <span class="num">6</span><b>Dole ostáva lišta aplikácie</b> — podmenu sekcie nejde k nej (iPhone TabView), lebo dve lišty dole by sa navzájom pomýlili a hlavná navigácia je rozhodnutá (SHELL-menu-v-hlavicke, Q5).</p>
+</div>
+<script>for(const id of['b390','b390d']){const b=document.getElementById(id);b.scrollLeft=b.querySelector('.on').offsetLeft-60;}</script>
+</body></html>

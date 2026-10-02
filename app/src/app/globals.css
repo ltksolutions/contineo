@@ -16,6 +16,14 @@
   --line: rgba(20, 28, 42, 0.12);
   /* Silnejšia čiara — okraj lišty záložiek (ZAKLAD-zalozky). */
   --line-strong: rgba(20, 28, 42, 0.18);
+  /* Pás podmenu sekcie (ZAKLAD-podmenu-tabview, 2. 10. 2026). */
+  --tv-bar: rgba(255, 255, 255, 0.82);
+  --tv-shadow: 0 1px 2px rgba(20, 28, 42, 0.06), 0 8px 24px rgba(20, 28, 42, 0.1);
+  /* Prepínač pohľadu (ZAKLAD-segmented-control, 2. 10. 2026). */
+  --seg-track: rgba(118, 118, 128, 0.12);
+  --seg-thumb: #ffffff;
+  --seg-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  --seg-sep: rgba(60, 60, 67, 0.18);
 
   --accent: #232a35;
   --accent-strong: #11151c;
@@ -152,6 +160,12 @@ html[data-theme="dark"] {
   --muted: #9aa4b2;
   --line: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.18);
+  --tv-bar: rgba(29, 35, 44, 0.86);
+  --tv-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --seg-track: rgba(118, 118, 128, 0.24);
+  --seg-thumb: #636366;
+  --seg-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  --seg-sep: rgba(255, 255, 255, 0.14);
 
   --accent: #eef1f5;
   --accent-strong: #ffffff;
@@ -883,9 +897,11 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .button--quiet {
-  background: transparent;
+  /* Biele s okrajom `--line-strong` (ZAKLAD-podmenu-a-akcie, 2. 10. 2026):
+     priehľadné s okrajom 12 % na sivom `--bg` nebolo vidieť. */
+  background: var(--surface);
   color: var(--ink);
-  border-color: var(--line);
+  border-color: var(--line-strong);
 }
 
 .button--quiet:hover:not(:disabled) { background: var(--surface-2); }
@@ -1661,54 +1677,64 @@ html[data-theme="dark"] select.field-input {
 .tags-new .field-input { flex: 1; min-width: 0; }
 
 /*
- * Záložky.
+ * Podmenu sekcie — „kam idem" (ZAKLAD-podmenu-a-akcie, 2. 10. 2026).
  *
  * Sú to odkazy, nie prepínače s klientskym stavom: záložka je v adrese, takže
  * sa dá poslať odkazom, vrátiť sa naň z histórie a funguje bez JavaScriptu.
  *
- * Na úzkej obrazovke sa dá lištou posúvať do strán namiesto toho, aby sa
- * lámala do dvoch riadkov — pri troch až štyroch záložkách je posun lacnejší
- * než hlavička, ktorá zrazu rastie do výšky.
+ * Vzhľad: plávajúci oblý pás ako TabView z iPadOS (ZAKLAD-podmenu-tabview,
+ * Q1 B), zarovnaný vľavo k nadpisu na všetkých šírkach (Q2). `.tabs` je
+ * obal, `.tabs-bar` kapsula. Vybraná položka nesie farbu organizácie —
+ * prepínač pohľadu (`.view-switch`) je sivý, dva ovládače nad sebou sa
+ * nepomýlia. Na úzkej obrazovke sa pás posúva do strán; aktívnu položku
+ * do zorného poľa posunie `SectionTabs`.
  */
 .tabs {
   display: flex;
+  justify-content: flex-start;
+  margin: 18px 0 20px;
+}
+
+.tabs-bar {
+  display: inline-flex;
   gap: 2px;
-  margin: 0 0 20px;
-  border-bottom: 1px solid var(--line-strong);
+  max-width: 100%;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--tv-bar);
+  border: 1px solid var(--line);
+  box-shadow: var(--tv-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.tabs::-webkit-scrollbar { display: none; }
+.tabs-bar::-webkit-scrollbar { display: none; }
 
-/*
- * Aktívna záložka má podklad `--accent-soft` a 3 px pruh dole
- * (ZAKLAD-zalozky, 1. 10. 2026). Dovtedy ju od ostatných delila len hrúbka
- * písma a 2 px čiara, ktorá sa cez `margin-bottom: -3px` prekrývala
- * s okrajom lišty — na snímke nebolo vidieť, ktorá je zapnutá. Pruh je
- * `box-shadow: inset`, nie `border`: neposúva text (ZAKLAD, úloha 4).
- */
 .tab {
   flex: none;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 10px 10px 0 0;
+  min-height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
   font-size: var(--fs-lead);
-  font-weight: 600;
-  color: var(--muted);
+  font-weight: 550;
+  color: var(--ink);
   white-space: nowrap;
-  box-shadow: inset 0 -3px 0 transparent;
 }
 
-.tab:hover { color: var(--ink); background: var(--surface-2); }
+.tab:hover { background: var(--surface-2); }
 
 .tab.is-active {
-  font-weight: 700;
-  color: var(--ink);
+  font-weight: 650;
+  color: var(--accent);
   background: var(--accent-soft);
-  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+@media (max-width: 639px) {
+  .tab { padding: 0 14px; }
 }
 
 /* Náhľad súčasného loga nad poľom na nahratie. */
@@ -3695,52 +3721,87 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .page-more-item:hover { background: var(--surface-2); }
 .page-more-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-/* Prepínač pohľadu. Dva odkazy v jednom rámiku — vyzerá to ako prepínač,
-   ale je to navigácia, takže funguje aj bez skriptu. */
+/*
+ * Prepínač pohľadu — „ako to vidím". Odkazy v jednom rámiku: vyzerá to ako
+ * prepínač, ale je to navigácia, takže funguje aj bez skriptu.
+ *
+ * Segmented control zo SwiftUI (ZAKLAD-segmented-control, 2. 10. 2026):
+ * rovnako široké segmenty, vybraný na bielej doske s tieňom, nevybrané
+ * v `--ink` (výber nesie doska, nie farba), oddeľovače medzi nimi. Bez
+ * farby organizácie — tú má podmenu sekcie nad ním.
+ */
 .view-switch {
-  display: inline-flex;
-  gap: 2px;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   padding: 2px;
-  background: var(--surface-2);
   border-radius: 9px;
+  background: var(--seg-track);
 }
+
 
 .view-switch-item {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: center;
+  justify-content: center;
   min-height: 32px;
-  padding: 0 11px;
+  padding: 0 16px;
   border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
 }
 
-.view-switch-item:hover { color: var(--ink); }
+.view-switch-item + .view-switch-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--seg-sep);
+}
 
 .view-switch-item.is-on {
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--seg-thumb);
+  font-weight: 600;
+  box-shadow: var(--seg-shadow);
 }
+
+.view-switch-item.is-on::before,
+.view-switch-item.is-on + .view-switch-item::before { opacity: 0; }
 
 .view-switch-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/*
-  V automatickom pohľade nie je zvýraznená voľba človeka — nikto nič nevybral —
-  ale to, čo je práve vidieť. Preto tá istá medza ako pri zozname.
-*/
-.view-switch-item--auto-cards { background: var(--surface); color: var(--ink); }
-
-/* Pod 640 px sú len karty a prepínač sa skrýva (NASADENIE, PR 4): tabuľka
-   má min-width ~1160 px a na 390 px z nej ostane názov. Výslovná voľba
-   `view=table` v adrese sa ctí ďalej — odkaz je odkaz. */
 @media (max-width: 639px) {
-  .view-switch { display: none; }
+  .view-switch-item { min-height: 36px; }
+  /* Cez celú šírku — Výkaz potvrdení na telefóne. */
+  .view-switch--full { display: grid; width: 100%; }
+}
+
+/*
+  V automatickom pohľade knižnice nie je zvýraznená voľba človeka — nikto nič
+  nevybral — ale to, čo je práve vidieť. Preto tá istá medza ako pri zozname.
+*/
+.view-switch-item--auto-cards { background: var(--seg-thumb); font-weight: 600; box-shadow: var(--seg-shadow); }
+.view-switch-item--auto-cards + .view-switch-item::before { opacity: 0; }
+
+/* Knižnica pod 640 px ukazuje len karty a prepínač skrýva (NASADENIE,
+   PR 4): tabuľka má min-width ~1160 px a na 390 px z nej ostane názov.
+   Výslovná voľba `view=table` v adrese sa ctí ďalej — odkaz je odkaz.
+   Ostatné prepínače (DPO, Pripomienky, Výkaz) prepínajú len zoskupenie,
+   takže ostávajú aj na telefóne. */
+@media (max-width: 639px) {
+  .view-switch--wide-only { display: none; }
 }
 
 @media (min-width: 1024px) {
-  .view-switch-item--auto-cards { background: none; color: var(--muted); }
-  .view-switch-item--auto-table { background: var(--surface); color: var(--ink); }
+  .view-switch-item--auto-cards { background: none; font-weight: 500; box-shadow: none; }
+  .view-switch-item--auto-cards + .view-switch-item::before { opacity: 1; }
+  .view-switch-item--auto-table { background: var(--seg-thumb); font-weight: 600; box-shadow: var(--seg-shadow); }
+  .view-switch-item--auto-table::before { opacity: 0; }
 }
 
 /* ── knižnica: lišta nástrojov zoznamu (vzor, PR 7) ─────────────────────────
@@ -6585,14 +6646,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .dpo-pill { min-height: 40px; }
 }
 
-/* Prepínač zoskupenia ostáva aj na telefóne (rám 390) — knižnica ho pod
-   640 px skrýva, lebo tam prepína tabuľku, ktorá sa nezmestí; tu prepína
-   len skupiny kariet. */
-@media (max-width: 639px) {
-  .dpo .view-switch { display: inline-flex; }
-  .dpo .view-switch-item { min-height: 40px; }
-}
-
 .dpo-count { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin: 0 0 10px; }
 .dpo mark { background: var(--warn-bg); color: inherit; border-radius: 2px; padding: 0 1px; }
 
@@ -6925,7 +6978,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .tab { position: relative; }
 .tab-pending { display: none; }
 .tab-pending.is-on {
-  display: block; position: absolute; left: 10%; right: 10%; bottom: 0; height: 3px;
+  display: block; position: absolute; left: 14px; right: 14px; bottom: 3px; height: 2px;
   background: var(--accent); border-radius: 2px; animation: tab-pending 0.9s ease-in-out infinite alternate;
 }
 @keyframes tab-pending { from { opacity: 0.35; } to { opacity: 1; } }
@@ -7106,7 +7159,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .pp-main { min-width: 0; display: grid; gap: 22px; }
 .pnav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; font-size: 13px; }
 .pnav a { color: var(--ink); text-decoration: none; font-weight: 600; }
-.pnav .pos { flex: 1; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pnav .pos { flex: 1; text-align: left; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pnav-off { color: var(--muted); opacity: .6; }
 .pp-head { display: grid; gap: 8px; }
 .pp-head .page-title { margin: 0; text-wrap: pretty; }
@@ -7715,7 +7768,8 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
    každej šírke, od 1024 px v dvoch stĺpcoch. Stránka časti
    (`/organisation/{section}`, 2. 10. 2026) má od 1024 px ten istý zoznam
    ako stĺpec vľavo (220 px, sticky) a časť vpravo (do 720 px); pod 1024 px
-   len časť s odkazom späť na rozcestník. */
+   len časť — späť vedie cesta pod hlavičkou (ZAKLAD-podmenu-a-akcie Q2,
+   2. 10. 2026). */
 .org-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .org-body { min-width: 0; }
 .org-nav { display: grid; gap: 18px; }
@@ -7764,25 +7818,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .org-grid:has(.tab-pending.is-on) .org-body,
 .org-index:has(.tab-pending.is-on) { opacity: 0.55; pointer-events: none; transition: opacity 0.15s 0.1s; }
 
-.org-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  margin: -6px 0 6px;
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--muted);
-}
-.org-back::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
-}
-.org-back:hover { color: var(--ink); }
 
 @media (max-width: 1023px) {
   .org-grid .org-nav { display: none; }
@@ -7809,7 +7844,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
     background: var(--accent-soft);
     box-shadow: inset 3px 0 0 var(--accent);
   }
-  .org-back { display: none; }
 }
 
 /* ── Trasa: úprava názvu pri nadpise (`/hr/tracks/[key]`, 2. 10. 2026) ───── */
@@ -7823,3 +7857,26 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
 }
 .track-member-name { min-width: 0; overflow-wrap: anywhere; }
+
+/* ── Výkaz potvrdení: prepínač pohľadu a CSV v jednom riadku
+   (ZAKLAD-podmenu-a-akcie, ZAKLAD-segmented-control, 2. 10. 2026).
+   Na telefóne prepínač cez celú šírku s krátkymi popismi, CSV pod ním. */
+.hr-report-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 24px; }
+.hr-view-short { display: none; }
+@media (max-width: 639px) {
+  .hr-report-bar { display: grid; gap: 10px; }
+  .hr-report-bar .page-head-spacer { display: none; }
+  .hr-report-bar > .button { width: 100%; min-height: 44px; }
+  .hr-view-long { display: none; }
+  .hr-view-short { display: inline; }
+}
+
+/* Akcie v riadku nadpisu (ZAKLAD-podmenu-a-akcie, 2. 10. 2026): tiché, plné
+   posledné. Na telefóne plné na celú šírku hore, tiché pod ním vedľa seba. */
+.page-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 639px) {
+  .page-head:has(.page-actions) .page-head-spacer { display: none; }
+  .page-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .page-actions > .button { min-height: 44px; padding: 0 10px; white-space: normal; text-align: center; }
+  .page-actions-primary { grid-column: 1 / -1; order: -1; }
+}

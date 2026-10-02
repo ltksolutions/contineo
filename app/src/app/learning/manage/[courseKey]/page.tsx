@@ -25,6 +25,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import TabLink from "@/components/TabLink"
+import TabsBar from "@/components/TabsBar"
 import FlowSteps from "@/components/FlowSteps"
 import SubmitButton from "@/components/SubmitButton"
 import Select from "@/components/Select"
@@ -102,9 +103,11 @@ export default async function ManageCoursePage({ params, searchParams }: {
         <StatusCard course={course} draft={draft} published={published} latest={latest} inProgress={stats.enrolled - stats.completed} te={te} language={language} />
 
         <nav className="tabs" aria-label={t.manage.tabsLabel}>
-          <TabLink href={`${base}?tab=parts`} active={tab === "parts"}>{te.tabParts}</TabLink>
-          <TabLink href={`${base}?tab=settings`} active={tab === "settings"}>{te.tabSettings}</TabLink>
-          <TabLink href={`${base}?tab=people`} active={tab === "people"}>{te.tabPeople}</TabLink>
+          <TabsBar>
+            <TabLink href={`${base}?tab=parts`} active={tab === "parts"}>{te.tabParts}</TabLink>
+            <TabLink href={`${base}?tab=settings`} active={tab === "settings"}>{te.tabSettings}</TabLink>
+            <TabLink href={`${base}?tab=people`} active={tab === "people"}>{te.tabPeople}</TabLink>
+          </TabsBar>
         </nav>
 
         <div className="mc-body">

@@ -17,6 +17,10 @@ describe("názov v záložke", () => {
   it("sekcia a jej podstránka nesú názov sekcie", () => {
     expect(pageTitle("/ask", "Intranet SFZ", t)).toBe(`${t.nav.ask} · Intranet SFZ`)
     expect(pageTitle("/hr/assign", "Intranet SFZ", t)).toBe(`${t.nav.assigned} · Intranet SFZ`)
+    // Záložky HR nesú vlastný názov (ZAKLAD-podmenu-a-akcie).
+    expect(pageTitle("/hr/overview", "Intranet SFZ", t)).toBe("Výkaz potvrdení · Intranet SFZ")
+    expect(pageTitle("/hr/reminders", "Intranet SFZ", t)).toBe("Pripomienky · Intranet SFZ")
+    expect(pageTitle("/hr", "Intranet SFZ", t)).toBe(`${t.nav.assigned} · Intranet SFZ`)
     expect(pageTitle("/library/sfz:stanovy", "Intranet SFZ", t)).toBe(`${t.nav.library} · Intranet SFZ`)
   })
 

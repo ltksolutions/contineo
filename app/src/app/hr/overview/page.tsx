@@ -25,6 +25,7 @@ import type { UiLanguage } from "@/lib/i18n"
 import { dutyState, dutyTagClass } from "@/lib/due"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import HrTabs from "@/components/HrTabs"
 import Notice from "@/components/Notice"
 import { revokeAcknowledgementAction } from "../actions"
 
@@ -91,35 +92,38 @@ export default async function HrReportPage({
 
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
-    <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
+    <div className="hr-report" style={{ maxWidth: 900, ...tenantStyle(branding) }}>
+      <h1 className="page-title">{dictionary(language).nav.assigned}</h1>
+      <HrTabs current="/hr/overview" person={ctx.person} language={language} />
+      <p className="quiet page-lead" style={{ margin: "0 0 16px", maxWidth: 660 }}>{t.intro}</p>
+
       <Notice message={q.msg} error={q.error === "1"} back={link({})} />
 
-      <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>
-          {dictionary(language).hr.detail.back}
-        </Link>
-      </p>
-
-      <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-        <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>{t.heading}</h1>
+      {/*
+        Pohľad je prepínač, nie rad tlačidiel (ZAKLAD-segmented-control,
+        2. 10. 2026) — tlačidlá tu vyzerali ako akcie. Odkazy s `?view=`:
+        dajú sa poslať aj otvoriť na novej karte. Na telefóne cez celú šírku
+        s krátkymi popismi, CSV pod ním.
+      */}
+      <div className="hr-report-bar">
+        <nav className="view-switch view-switch--full" aria-label={t.viewsLabel}>
+          {VIEWS.map(v => (
+            <Link
+              key={v}
+              href={link({ view: v, open: null })}
+              className={`view-switch-item${v === view ? " is-on" : ""}`}
+              aria-current={v === view ? "true" : undefined}
+            >
+              <span className="hr-view-long">{t.views[v]}</span>
+              <span className="hr-view-short" aria-hidden="true">{t.viewsShort[v]}</span>
+            </Link>
+          ))}
+        </nav>
+        <span className="page-head-spacer" aria-hidden="true" />
         {rows.length > 0 && (
           <a className="button button--quiet" href={`/hr/overview/csv?view=${view}`}>{t.export}</a>
         )}
       </div>
-      <p className="quiet page-lead" style={{ margin: "0 0 20px", maxWidth: 660 }}>{t.intro}</p>
-
-      {/* Pohľady. Odkazy, nie tlačidlá — musia sa dať poslať aj otvoriť na novej karte. */}
-      <nav style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "0 0 24px" }}>
-        {VIEWS.map(v => (
-          <Link
-            key={v}
-            href={link({ view: v, open: null })}
-            className={v === view ? "button" : "button button--quiet"}
-          >
-            {t.views[v]}
-          </Link>
-        ))}
-      </nav>
 
       {summaries.length === 0 && (
         <div className="empty">

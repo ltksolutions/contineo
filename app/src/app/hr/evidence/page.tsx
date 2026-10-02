@@ -18,6 +18,7 @@ import { hrContext } from "@/lib/hr"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
+import HrTabs from "@/components/HrTabs"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
 import LiveFilter from "@/components/LiveFilter"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
@@ -69,16 +70,21 @@ export default async function EvidencePage({
   if (wantedState) csv.set("state", wantedState)
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={t.heading}>
       <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
+        {/* Nadpis sekcie a podmenu (ZAKLAD-podmenu-a-akcie, Q1, 2. 10. 2026);
+            CSV je akcia — vpravo v riadku nadpisu. */}
         <div className="page-head">
-          <h1 className="page-title" style={{ margin: 0 }}>{t.heading}</h1>
-          <span className="quiet library-count">{t.shown(rows.length, all.length)}</span>
+          <h1 className="page-title" style={{ margin: 0 }}>{dictionary(language).nav.assigned}</h1>
+          <span className="page-head-spacer" aria-hidden="true" />
           <Link className="button button--quiet" href={`/hr/evidence/csv?${csv.toString()}`}>
             {t.exportCsv}
           </Link>
         </div>
-        <p className="quiet page-lead" style={{ margin: "0 0 6px" }}>{t.intro}</p>
+        <HrTabs current="/hr/evidence" person={ctx.person} language={language} />
+        <p className="quiet page-lead" style={{ margin: "0 0 6px" }}>
+          {t.intro} <span className="library-count">{t.shown(rows.length, all.length)}</span>
+        </p>
         {/*
           Chýbajúci riadok o upozorneniach sa **pomenuje na obrazovke**, nie
           len v komentári v kóde. Kto os číta ako dôkaz, musí vedieť, čo v nej

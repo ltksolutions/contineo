@@ -34,6 +34,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import TabLink from "@/components/TabLink"
+import TabsBar from "@/components/TabsBar"
 import SubmitButton from "@/components/SubmitButton"
 import KeyFromLabel from "@/components/KeyFromLabel"
 import SmartTagInput from "@/components/SmartTagInput"
@@ -75,9 +76,11 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
         </div>
         <Notice message={q.msg} error={q.error === "1"} back={`/learning/tests?tab=${tab}`} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
-          <TabLink href="/learning/tests?tab=tests" active={tab === "tests"}>{tt.tabTests}</TabLink>
-          <TabLink href="/learning/tests?tab=questions" active={tab === "questions"}>{tt.tabQuestions}</TabLink>
-          {mine.length > 0 && <TabLink href="/learning/tests?tab=results" active={false}>{tt.tabResults}</TabLink>}
+          <TabsBar>
+            <TabLink href="/learning/tests?tab=tests" active={tab === "tests"}>{tt.tabTests}</TabLink>
+            <TabLink href="/learning/tests?tab=questions" active={tab === "questions"}>{tt.tabQuestions}</TabLink>
+            {mine.length > 0 && <TabLink href="/learning/tests?tab=results" active={false}>{tt.tabResults}</TabLink>}
+          </TabsBar>
         </nav>
         <div className="mg-body">{body}</div>
       </div>
@@ -426,9 +429,11 @@ async function ResultsPage(q: Q) {
         <div className="lp-head"><div className="grow"><h1 className="page-title">{d.testsHeading}</h1></div></div>
         <Notice message={q.msg} error={q.error === "1"} back={self} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
-          {ctx.isAdmin && <TabLink href="/learning/tests?tab=tests" active={false}>{tt.tabTests}</TabLink>}
-          {ctx.isAdmin && <TabLink href="/learning/tests?tab=questions" active={false}>{tt.tabQuestions}</TabLink>}
-          <TabLink href="/learning/tests?tab=results" active>{tt.tabResults}</TabLink>
+          <TabsBar>
+            {ctx.isAdmin && <TabLink href="/learning/tests?tab=tests" active={false}>{tt.tabTests}</TabLink>}
+            {ctx.isAdmin && <TabLink href="/learning/tests?tab=questions" active={false}>{tt.tabQuestions}</TabLink>}
+            <TabLink href="/learning/tests?tab=results" active>{tt.tabResults}</TabLink>
+          </TabsBar>
         </nav>
         <div className="mg-body">
           <div className="mc-people-head">

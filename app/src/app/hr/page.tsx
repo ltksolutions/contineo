@@ -20,6 +20,7 @@ import Notice from "@/components/Notice"
 import AckBar from "@/components/AckBar"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import HrTabs from "@/components/HrTabs"
 import { allTracks } from "@/lib/tracks"
 import { duties, trackStatuses } from "@/lib/hrReport"
 import { listPeople } from "@/lib/people"
@@ -67,28 +68,23 @@ export default async function HrOverviewPage({
   return (
     <AppShell language={language}>
     <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
-      <h1 className="page-title">
-        {t.heading}
-      </h1>
+      {/*
+        Nadpis sekcie, podmenu a jediná akcia vpravo (ZAKLAD-podmenu-a-akcie,
+        2. 10. 2026). Dovtedy rad tlačidiel, v ktorom „Prideliť dokument"
+        (akcia) stálo plné vedľa tichých odkazov na podstránky a vyzeralo
+        ako vybraná položka.
+      */}
+      <div className="page-head">
+        <h1 className="page-title">{dictionary(language).nav.assigned}</h1>
+        <span className="page-head-spacer" aria-hidden="true" />
+        <Link className="button" href="/hr/assign">{t.assign}</Link>
+      </div>
+      <HrTabs current="/hr" person={ctx.person} language={language} />
       <p className="quiet page-lead" style={{ maxWidth: 620 }}>
         {t.intro} <em>dnes</em>.
       </p>
 
       <Notice message={message} error={error === "1"} back="/hr" />
-
-      <p style={{ margin: "0 0 24px", display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <Link className="button" href="/hr/assign">{t.assign}</Link>
-        <Link className="button button--quiet" href="/hr/overview">
-          {dictionary(language).hr.report.heading}
-        </Link>
-        <Link className="button button--quiet" href="/hr/reminders">
-          {dictionary(language).hr.reminders.heading}
-        </Link>
-        {/* Trasy patria sem (Ján 2. 10. 2026): určujú, čo má nový človek potvrdiť. */}
-        <Link className="button button--quiet" href="/hr/tracks">
-          {t.tracks}
-        </Link>
-      </p>
 
       {overview.length === 0 ? (
         /* `.empty` zo ZAKLADU (HR.md, úloha 6). Bez tlačidla — „Prideliť

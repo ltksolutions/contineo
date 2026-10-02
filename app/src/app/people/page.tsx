@@ -49,20 +49,26 @@ export default async function PeoplePage({
   return (
     <AppShell language={language}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
-      <h1 className="page-title">{t.heading}</h1>
+      {/*
+        Akcie vpravo v riadku nadpisu, plná posledná (ZAKLAD-podmenu-a-akcie,
+        2. 10. 2026). Na telefóne plná na celú šírku, dve tiché pod ňou.
+      */}
+      <div className="page-head">
+        <h1 className="page-title">{t.heading}</h1>
+        <span className="page-head-spacer" aria-hidden="true" />
+        <div className="page-actions">
+          <Link className="button button--quiet" href="/people/import">{t.importCsv}</Link>
+          <Link className="button button--quiet" href="/people/invite">
+            {dictionary(language).people.inviteAll.open}
+          </Link>
+          <Link className="button page-actions-primary" href="/people/new">{t.invite}</Link>
+        </div>
+      </div>
       <p className="quiet page-lead" style={{ maxWidth: 620 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
       <Notice message={message} error={error === "1"} back={q ? `/people?q=${encodeURIComponent(q)}` : "/people"} />
-
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "0 0 20px" }}>
-        <Link className="button" href="/people/new">{t.invite}</Link>
-        <Link className="button button--quiet" href="/people/import">{t.importCsv}</Link>
-        <Link className="button button--quiet" href="/people/invite">
-          {dictionary(language).people.inviteAll.open}
-        </Link>
-      </div>
 
       {/* Serverový formulár — hľadanie je v adrese, takže sa dá poslať odkazom
           a vrátiť sa naň z histórie prehliadača. */}

@@ -36,7 +36,7 @@ vi.mock("@/components/TenantHeader", () => ({ tenantStyle: () => ({}) }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "SFZ" }) }))
 vi.mock("@/lib/session", () => ({ requestHostname: async () => "intranet.test" }))
 const ctx = { state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "hr", email: "hr@sfz.sk", companyCode: "SFZ", language: "sk", roles: ["hr"] } }
-vi.mock("@/lib/hr", () => ({ trackManagerContext: async () => ctx, hrContext: async () => ctx }))
+vi.mock("@/lib/hr", () => ({ trackManagerContext: async () => ctx, hrContext: async () => ctx, isHr: () => true }))
 vi.mock("@/lib/tracks", () => ({ trackByKey: async () => TRACK, allTracks: async () => [TRACK] }))
 vi.mock("@/lib/hrReport", async importOriginal => ({
   ...(await importOriginal<typeof import("../src/lib/hrReport")>()),

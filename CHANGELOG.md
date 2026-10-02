@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Podmenu sekcií, prepínač pohľadu a tlačidlá (2026-10-02)
+
+**Pridelené dokumenty** majú pod nadpisom podmenu Pridelenia · Výkaz
+potvrdení · Pripomienky · Trasy · Reťaz dôkazov a „Prideliť dokument"
+vpravo pri nadpise. Podmenu je oblý pás (aj v správe kurzov a testoch),
+prepínač pohľadu (Výkaz, Knižnica, Ochrana údajov, Pripomienky) vyzerá
+ako segmentový prepínač. Tiché tlačidlá sú biele s viditeľným okrajom.
+Na Osobách sú akcie pri nadpise. Odkazy „← Späť…" zmizli — späť vedie
+cesta pod hlavičkou.
+
 ### Nastavenie organizácie: každá časť má vlastnú adresu (2026-10-02)
 
 Časti nastavenia majú vlastné adresy, napríklad `/organisation/signin`,

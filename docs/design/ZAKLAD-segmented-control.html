@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZAKLAD — prepínač ako segmented control</title>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.18);--accent:#1d4ed8;--accent-soft:rgba(29,78,216,.11);--on-accent:#fff;--seg-track:rgba(118,118,128,.12);--seg-thumb:#fff;--seg-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);--seg-sep:rgba(60,60,67,.18)}
+.dark{--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--line-strong:rgba(255,255,255,.18);--accent:#8fb0ff;--accent-soft:rgba(143,176,255,.14);--seg-track:rgba(118,118,128,.24);--seg-thumb:#636366;--seg-shadow:0 3px 8px rgba(0,0,0,.3);--seg-sep:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+.sheet{padding:28px 32px 48px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 22px;max-width:92ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#eceef1;padding:1px 5px;border-radius:4px}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);margin:0 0 10px;flex:none}
+.ann{font-size:12.5px;color:#5c6675;max-width:104ch;margin:0 0 30px;line-height:1.55}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin:0 4px 0 6px;vertical-align:1px}
+.row2{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.main{padding:22px 24px 26px}
+.title{font-size:26px;letter-spacing:-.02em;line-height:1.2;margin:0 0 14px}
+.button{display:inline-flex;align-items:center;min-height:40px;padding:0 18px;border-radius:10px;font-size:15px;font-weight:600;white-space:nowrap;background:var(--surface);border:1px solid var(--line-strong)}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.sp{flex:1 1 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:16px;font-weight:700}
+/* dnes */
+.vs{display:inline-flex;gap:2px;padding:2px;background:var(--surface-2);border-radius:10px}
+.vs a{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap}
+.vs a.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,28,42,.12)}
+/* návrh — segmented control */
+.seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border-radius:9px;background:var(--seg-track);min-width:0}
+.seg a{position:relative;display:flex;align-items:center;justify-content:center;min-height:32px;padding:0 16px;border-radius:7px;font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap;text-align:center}
+.seg a+a::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:var(--seg-sep)}
+.seg a.on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.seg a.on::before,.seg a.on+a::before{opacity:0}
+.seg a:not(.on):hover{color:var(--muted)}
+.seg--full{display:grid;width:100%}
+.w390 .main{padding:14px}.w390 .title{font-size:22px}
+.q{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:#b45309;border-radius:5px;padding:0 5px;margin-left:4px;vertical-align:2px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line-strong)}
+.tab{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:10px 10px 0 0;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tab.on{color:var(--ink);font-weight:700;background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--accent)}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ZAKLAD — prepínač pohľadu ako segmented control</h1>
+<p class="doc">Nadväzuje na <code>ZAKLAD-podmenu-a-akcie</code>. Mení sa len vzhľad <code>.view-switch</code> (<code>globals.css</code> ~3700). Trieda, značkovanie, odkazy <code>?view=</code> a <code>is-on</code> ostávajú, takže sa to prejaví naraz na <code>/library</code>, <code>/dpo</code>, <code>/hr/reminders</code> aj na novom prepínači vo Výkaze potvrdení. Zadanie: <code>ZAKLAD-segmented-control.md</code>.</p>
+
+<div class="row2">
+<div><p class="cap">Dnes — .view-switch na /dpo (rovnaký na /library, /hr/reminders)</p>
+<div class="frame" style="width:640px"><div class="main"><h1 class="title">Ochrana údajov</h1>
+<div class="head"><span style="font-size:13px;color:var(--muted)">Zoskupiť</span><span class="vs"><a class="on">Podľa osoby</a><a>Podľa stavu</a></span><span class="sp"></span></div><div class="card">Michaela Žikavská</div></div></div></div>
+
+<div><p class="cap">Návrh — 1440 /hr/overview</p>
+<div class="frame" style="width:640px"><div class="main"><h1 class="title">Pridelené dokumenty</h1><nav class="tabs" style="margin:0 0 16px"><a class="tab">Pridelenia</a><a class="tab on">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav>
+<div class="head"><span class="seg"><a class="on">Podľa dokumentu</a><a>Podľa osoby</a><a>Podľa trasy</a></span><span class="sp"></span><a class="button">Stiahnuť ako CSV</a></div><div class="card">Skúšobný poriadok</div></div></div></div>
+</div>
+<p class="ann"><span class="num">1</span><b>Rovnako široké segmenty</b> (<code>grid-auto-columns: 1fr</code>) — v SwiftUI má každá voľba rovnakú šírku, prepínač pôsobí ako jeden ovládač, nie ako rad tlačidiel. <span class="num">2</span><b>Koľajnica</b> je sivá s priehľadnosťou (<code>rgba(118,118,128,.12)</code>, systémová hodnota iOS), <b>vybraný segment</b> je biela „doska" s mäkkým tieňom. <span class="num">3</span><b>Tenké oddeľovače</b> medzi nevybranými segmentmi, pri vybranom sa skryjú. <span class="num">4</span><b>Text nevybraných je <code>--ink</code></b>, nie <code>--muted</code> — v SwiftUI sa voľby čítajú všetky rovnako, výber nesie doska, nie farba písma. Výška 32 px, polomer 9 / 7 px. Bez farby tenantu — segmented control je neutrálny ovládač.</p>
+
+<div class="row2">
+<div><p class="cap">Návrh — 1440 /library · /dpo</p>
+<div class="frame" style="width:640px"><div class="main"><div class="head"><h1 class="title" style="margin:0">Knižnica</h1><span class="sp"></span><span class="seg"><a>Tabuľka</a><a class="on">Karty</a></span></div>
+<div class="head" style="margin-top:22px"><span style="font-size:13px;color:var(--muted)">Zoskupiť</span><span class="seg"><a class="on">Podľa osoby</a><a>Podľa stavu</a></span></div></div></div></div>
+<div><p class="cap">Návrh — 390 /hr/overview · tmavá</p>
+<div class="row2">
+<div class="frame w390" style="width:300px"><div class="main"><h1 class="title">Pridelené dokumenty</h1><div style="overflow:hidden"><nav class="tabs" style="margin:0 0 14px;overflow-x:auto"><a class="tab on">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav></div><span class="seg seg--full"><a class="on">Dokument</a><a>Osoba</a><a>Trasa</a></span><div class="card">Skúšobný poriadok</div></div></div>
+<div class="frame w390 dark" style="width:300px"><div class="main"><h1 class="title">Pridelené dokumenty</h1><div style="overflow:hidden"><nav class="tabs" style="margin:0 0 14px;overflow-x:auto"><a class="tab on">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav></div><span class="seg seg--full"><a class="on">Dokument</a><a>Osoba</a><a>Trasa</a></span><div class="card">Skúšobný poriadok</div></div></div>
+</div></div>
+</div>
+<p class="ann"><span class="num">5</span><b>Na 390 cez celú šírku</b> (<code>.seg--full</code>), krátke popisy. Na dotyk výška 36 px pod 640 (SwiftUI má 32, ale ZAKLAD drží terč ≥ 36 v páse). <span class="num">6</span><b>Tmavá téma</b>: koľajnica <code>rgba(118,118,128,.24)</code>, doska <code>#636366</code> — hodnoty iOS tmavého režimu, sedia s <code>--surface #161b22</code>.</p>
+
+<p class="cap">Podmenu ostáva záložkami <span class="q">Q1</span></p>
+<div class="frame" style="width:640px"><div class="main"><nav class="tabs"><a class="tab on">Pridelenia</a><a class="tab">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav></div></div>
+<p class="ann">Segmented control je na <b>prepnutie pohľadu</b> (2–4 krátke voľby), záložky na <b>prechod medzi stránkami</b> — rovnako to delí aj Apple (segmented control vs. tab bar). Päť záložiek HR by sa do segmentov na 390 nezmestilo.</p>
+</div></body></html>
