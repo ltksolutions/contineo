@@ -14,11 +14,18 @@ import { libraryList } from "@/lib/libraryRead"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import Select from "@/components/Select"
+import MultiSelect from "@/components/MultiSelect"
+import PeopleSearch from "@/components/PeopleSearch"
+import { listPeople } from "@/lib/people"
+import { sortPeopleBySurname } from "@/lib/assignOrder"
+import { allDepartments, flattenTree, counts } from "@/lib/departments"
+import { treeOptions } from "@/lib/treeOptions"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import {
   renameTrackAction, addStepAction, removeStepAction, moveStepAction, setTrackActiveAction,
+  addMembersAction, removeMemberAction,
 } from "../actions"
 import AppShell from "@/components/AppShell"
 
@@ -51,6 +58,21 @@ export default async function TrackDetailPage({
   const steps = track.steps.filter(s => s.documentId)
 
   const here = `/hr/tracks/${encodeURIComponent(track.key)}`
+
+  /*
+    Ľudia na trase (2. 10. 2026) — z `persons.tracks`, jediného zdroja (D27).
+    Vyradení ostávajú v zozname (trasu mali), do výberu sa neponúkajú.
+  */
+  const [people, tree, departmentCounts] = await Promise.all([
+    listPeople(ctx.tenant.companyCode),
+    allDepartments(ctx.tenant.companyCode),
+    counts(ctx.tenant.companyCode),
+  ])
+  const members = sortPeopleBySurname(people.filter(p => p.tracks.includes(track.key)))
+  const choices = sortPeopleBySurname(people.filter(p => p.status !== "inactive" && !p.tracks.includes(track.key)))
+    .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
+  const departmentOptions = treeOptions(flattenTree(tree).map(r => ({ id: r.department.id, name: r.department.name, level: r.level })))
+    .map(o => ({ ...o, count: (departmentCounts.get(o.value) ?? { withDescendants: 0 }).withDescendants }))
 
   // Skryté polia, ktoré nesú aktuálne poradie do každej akcie. Bez nich by
   // sa zmena vyhodnotila proti stavu v databáze a dve otvorené záložky by
@@ -192,6 +214,68 @@ export default async function TrackDetailPage({
           </p>
         </form>
       )}
+
+      {/* ── ľudia na trase ── */}
+
+      <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.members(members.length)}</h2>
+      {members.length === 0 ? (
+        <p className="quiet" style={{ margin: "0 0 16px" }}>{t.noMembers}</p>
+      ) : (
+        <ul className="track-members">
+          {members.map(p => (
+            <li key={p.id} className="track-member">
+              <span className="track-member-name">
+                <strong>{p.fullName}</strong>
+                {p.department && <span className="quiet"> · {p.department}</span>}
+                {p.status === "inactive" && <span className="quiet"> · {t.membersInactive}</span>}
+              </span>
+              <form action={removeMemberAction}>
+                <input type="hidden" name="key" value={track.key} />
+                <input type="hidden" name="personId" value={p.id} />
+                <button className="button button--quiet" type="submit">{t.removeMember}</button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <details className="track-edit" style={{ margin: "0 0 32px" }}>
+        <summary className="button">{t.addMembers}</summary>
+        <form action={addMembersAction} className="card" style={{ padding: 20, display: "grid", gap: 16, marginTop: 12 }}>
+          <input type="hidden" name="key" value={track.key} />
+          <p className="quiet field-hint" style={{ margin: 0 }}>{t.addMembersNote}</p>
+          {departmentOptions.length > 0 && (
+            <div>
+              <div className="hr-subtitle">{t.departments}</div>
+              <MultiSelect
+                name="department"
+                emit="repeat"
+                caseSensitive
+                noscript="checkboxes"
+                language={ctx.person.language}
+                selected={[]}
+                options={departmentOptions}
+              />
+            </div>
+          )}
+          {choices.length > 0 && (
+            <div>
+              <div className="hr-subtitle">{t.people}</div>
+              <PeopleSearch
+                people={choices}
+                name="person"
+                language={ctx.person.language}
+                multiple
+                listLabel={t.people}
+                missing="people"
+              />
+            </div>
+          )}
+          <p style={{ margin: 0 }}>
+            <button className="button" type="submit">{t.addSubmit}</button>
+          </p>
+        </form>
+      </details>
 
       {/* ── zapnutie ── */}
 

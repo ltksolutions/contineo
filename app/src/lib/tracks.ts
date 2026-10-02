@@ -20,6 +20,7 @@ import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { NoVersionReason } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
 import { sameTrackTitle } from "./trackNames"
+import { PERSONS_COLLECTION, type Person } from "./persons"
 
 export const TRACKS_COLLECTION = "onboarding_tracks"
 
@@ -373,3 +374,90 @@ export async function setTrackActive(
     actor, targetId: key, targetLabel: before.title,
   })
 }
+
+// ── ľudia na trase (2. 10. 2026) ─────────────────────────────────────────────
+//
+// Trasa sa osobe zapisuje do `persons.tracks` — to je jediný zdroj (D27).
+// Dovtedy sa dala prideliť len na karte osoby alebo importom; zo stránky
+// trasy sa teraz pridávajú osoby aj celé oddelenia naraz.
+
+export interface TrackMembersInput {
+  /** `persons.id` vybraných osôb. */
+  personIds?: string[]
+  /**
+   * Oddelenia — pridajú sa ich **dnešní** členovia vrátane podriadených
+   * (`departmentPath`). Kto do oddelenia príde neskôr, trasu nedostane sám;
+   * na to je pridelenie oddeleniu (D50).
+   */
+  departmentIds?: string[]
+}
+
+/**
+ * Pridá ľudí na trasu. Vyradené osoby sa nepridávajú. Vráti, koľkým trasa
+ * pribudla a koľkí ju už mali.
+ */
+export async function addTrackMembers(
+  companyCode: string,
+  key: string,
+  input: TrackMembersInput,
+  actor: string,
+): Promise<{ added: number; already: number }> {
+  const track = await trackOrThrow(companyCode, key)
+  const personIds = [...new Set((input.personIds ?? []).filter(Boolean))]
+  const departmentIds = [...new Set((input.departmentIds ?? []).filter(Boolean))]
+  if (personIds.length === 0 && departmentIds.length === 0) {
+    throw new TrackError("track.noMembersChosen", "Vyberte osoby alebo oddelenie.")
+  }
+
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  // `companyCode` je v podmienke (D32) — identifikátory sa dajú uhádnuť.
+  const people = await col.find(
+    {
+      companyCode, status: { $ne: "inactive" },
+      $or: [
+        ...(personIds.length ? [{ id: { $in: personIds } }] : []),
+        ...(departmentIds.length ? [{ departmentPath: { $in: departmentIds } }] : []),
+      ],
+    } as never,
+    { projection: { id: 1, fullName: 1, tracks: 1 } },
+  ).toArray()
+
+  const toAdd = people.filter(p => !(p.tracks ?? []).includes(track.key))
+  if (toAdd.length > 0) {
+    await col.updateMany(
+      { companyCode, id: { $in: toAdd.map(p => p.id) } } as never,
+      { $addToSet: { tracks: track.key } } as never,
+    )
+    await writeAudit({
+      companyCode, subject: "track", action: "membersAdded",
+      actor, targetId: track.key, targetLabel: track.title,
+      note: toAdd.map(p => p.fullName).join(", "),
+    })
+  }
+  return { added: toAdd.length, already: people.length - toAdd.length }
+}
+
+/** Odoberie osobu z trasy. Potvrdenia, ktoré vznikli, ostávajú (D24). */
+export async function removeTrackMember(
+  companyCode: string,
+  key: string,
+  personId: string,
+  actor: string,
+): Promise<boolean> {
+  const track = await trackOrThrow(companyCode, key)
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const person = await col.findOne({ companyCode, id: personId } as never, { projection: { fullName: 1 } })
+  if (!person) return false
+  const r = await col.updateOne(
+    { companyCode, id: personId, tracks: track.key } as never,
+    { $pull: { tracks: track.key } } as never,
+  )
+  if (r.modifiedCount > 0) {
+    await writeAudit({
+      companyCode, subject: "track", action: "memberRemoved",
+      actor, targetId: track.key, targetLabel: track.title, note: person.fullName,
+    })
+  }
+  return r.modifiedCount > 0
+}
+

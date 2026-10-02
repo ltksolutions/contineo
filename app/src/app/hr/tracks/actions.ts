@@ -18,7 +18,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { trackManagerContext } from "@/lib/hr"
 import { isRedirect } from "@/lib/redirects"
-import { createTrack, renameTrack, setTrackSteps, setTrackActive, type StepInput } from "@/lib/tracks"
+import { createTrack, renameTrack, setTrackSteps, setTrackActive, addTrackMembers, removeTrackMember, type StepInput } from "@/lib/tracks"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 
@@ -169,3 +169,50 @@ export async function setTrackActiveAction(fd: FormData) {
     back(to, { error: message(e, self.language) })
   }
 }
+
+/**
+ * Pridá na trasu vybrané osoby a dnešných členov vybraných oddelení
+ * (2. 10. 2026). Hodnoty prichádzajú z výberu — `person` je `persons.id`,
+ * `department` je `id` oddelenia; overuje ich `addTrackMembers()` proti
+ * organizácii prihláseného.
+ */
+export async function addMembersAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const key = text(fd, "key")
+  const to = `/hr/tracks/${encodeURIComponent(key)}`
+  const values = (name: string) => fd.getAll(name).filter((v): v is string => typeof v === "string" && v.trim() !== "")
+  try {
+    const r = await addTrackMembers(
+      self.companyCode, key,
+      { personIds: values("person"), departmentIds: values("department") },
+      self.email,
+    )
+    revalidatePath(to)
+    revalidatePath("/documents")
+    back(to, { msg: say(self.language).membersAdded(r.added, r.already) })
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(to, { error: message(e, self.language) })
+  }
+}
+
+/** Odoberie jednu osobu z trasy. Potvrdenia ostávajú (D24). */
+export async function removeMemberAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const key = text(fd, "key")
+  const to = `/hr/tracks/${encodeURIComponent(key)}`
+  try {
+    await removeTrackMember(self.companyCode, key, text(fd, "personId"), self.email)
+    revalidatePath(to)
+    revalidatePath("/documents")
+    back(to, { msg: say(self.language).memberRemoved })
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(to, { error: message(e, self.language) })
+  }
+}
+

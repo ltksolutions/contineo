@@ -7815,3 +7815,11 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* ── Trasa: úprava názvu pri nadpise (`/hr/tracks/[key]`, 2. 10. 2026) ───── */
 .track-edit > summary { display: inline-flex; list-style: none; cursor: pointer; }
 .track-edit > summary::-webkit-details-marker { display: none; }
+
+/* ── Trasa: ľudia na trase (`/hr/tracks/[key]`, 2. 10. 2026) ──────────────── */
+.track-members { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 6px; }
+.track-member {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+}
+.track-member-name { min-width: 0; overflow-wrap: anywhere; }
