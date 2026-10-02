@@ -305,11 +305,12 @@ export function legalBasisFromDraft(draft: DraftLegalBasis | null | undefined): 
 /**
  * Smie tento človek určiť právny základ znenia?
  *
- * Rozhoduje **zodpovedná osoba toho znenia** — ona predpis pozná a zodpovedá
- * zaň. Správca obsahu je len náhradník: smie, keď znenie zodpovednú osobu
- * nemá (znenie spred D91) alebo keď už nie je aktívna. Inak by rola správcu
- * obsahu potichu prebíjala rozhodnutie človeka, ktorý je za predpis
- * zodpovedný.
+ * **Zodpovedná osoba toho znenia** (kým je aktívna) a **správca obsahu**
+ * (D155, ADR-023 Dodatok 2). Do 2. 10. 2026 bol správca len náhradník —
+ * smel, keď znenie zodpovednú osobu nemalo alebo už nebola aktívna. Ján
+ * rozhodol inak: správca obsahu spravuje knižnicu a základ upraviť musí vedieť
+ * aj on (Smernica o pracovných cestách — základ chýbal a doplniť ho mohla len
+ * Michaela). Kto základ zmenil, nesie audit.
  *
  * Oprávnenie sa **odvodzuje, neukladá** (D27): žiadna rola „právnik" navyše,
  * ktorú by bolo treba udržiavať súbežne so zoznamom zodpovedných osôb.
@@ -321,10 +322,8 @@ export function canSetLegalBasis(input: {
   /** Je zodpovedná osoba v systéme a nie je vyradená? */
   responsibleActive: boolean
 }): boolean {
-  if (input.responsible && input.responsibleActive) {
-    return input.actorPersonId === input.responsible.personId
-  }
-  return input.isContentManager
+  if (input.isContentManager) return true
+  return Boolean(input.responsible && input.responsibleActive && input.actorPersonId === input.responsible.personId)
 }
 
 /** Znenie, pri ktorom má zodpovedná osoba úlohu určiť právny základ (ADR-023). */

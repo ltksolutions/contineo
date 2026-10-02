@@ -24,10 +24,10 @@ describe("kto smie určiť právny základ", () => {
     })).toBe(false)
   })
 
-  it("správca obsahu NEPREBÍJA aktívnu zodpovednú osobu", () => {
+  it("správca obsahu smie aj pri aktívnej zodpovednej osobe (D155)", () => {
     expect(canSetLegalBasis({
       actorPersonId: "p-spravca", isContentManager: true, responsible: GARANT, responsibleActive: true,
-    })).toBe(false)
+    })).toBe(true)
   })
 
   it("správca obsahu ako náhradník, keď zodpovedná osoba odišla", () => {

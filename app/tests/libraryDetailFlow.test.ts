@@ -204,11 +204,11 @@ describe("detail — postup znenia", () => {
 describe("detail — právny základ v príprave (ADR-023, D139)", () => {
   const MAREK = { personId: "p-marek", fullName: "Marek Horák", email: "marek@sfz.sk" }
 
-  it("s aktívnou zodpovednou osobou povie, kto ho určí — a správcovi formulár neponúkne", async () => {
+  it("s aktívnou zodpovednou osobou povie, kto ho určí — a správcovi formulár ponúkne tiež (D155)", async () => {
     state.detail = detail({ draftResponsible: MAREK })
     const html = await render()
     expect(html).toContain("Marek Horák ho môže určiť ešte pred zverejnením")
-    expect(html).not.toContain('name="draft" value="1"')
+    expect(html).toContain('name="draft" value="1"')
   })
 
   it("bez zodpovednej osoby ho smie určiť správca obsahu — mimo formulára kroku", async () => {
