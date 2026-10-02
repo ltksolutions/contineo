@@ -879,7 +879,7 @@ interface Dictionary {
       heading: string
       intro: string
       assign: string
-      /** Tlačidlo na trasy (`/hr/tracks`) — krátko; nadpis stránky ostáva „Trasy onboardingu“. */
+      /** Tlačidlo na trasy (`/hr/tracks`). Od 2. 10. 2026 sa všade volajú len „Trasy“. */
       tracks: string
       emptyTitle: string
       emptyText: string
@@ -5507,7 +5507,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       groups: "Skupiny",
       newGroup: "nová skupina, napr. rozhodcovia",
       groupsNote: "Podľa nich sa prideľujú normy. Číslo je počet ľudí, ktorí skupinu majú — skupina, ktorú nemá nikto, nedostane nič.",
-      tracks: "Trasy onboardingu",
+      tracks: "Trasy",
       noTracks: "Zatiaľ nie je žiadna trasa. Zakladajú sa v Pridelené dokumenty → Trasy.",
       trackInactive: "vypnutá",
       trackUnknown: "neznáma trasa (zrušte zaškrtnutie, ak ju osoba nemá mať)",
@@ -6010,7 +6010,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       and: "a",
     },
     tracks: {
-      heading: "Trasy onboardingu",
+      heading: "Trasy",
       intro: "Trasa je poradie krokov — „prejdi tieto dokumenty v tomto poradí“. Človek na nej vidí, kde skončil.",
       back: "Späť na trasy",
       newHeading: "Nová trasa",
@@ -9056,7 +9056,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       groups: "Skupiny",
       newGroup: "nová skupina, např. rozhodčí",
       groupsNote: "Podle nich se přidělují normy. Číslo je počet lidí, kteří skupinu mají — skupina, kterou nemá nikdo, nedostane nic.",
-      tracks: "Trasy onboardingu",
+      tracks: "Trasy",
       noTracks: "Zatím není žádná trasa. Zakládají se v Přidělené dokumenty → Trasy.",
       trackInactive: "vypnutá",
       trackUnknown: "neznámá trasa (zrušte zaškrtnutí, pokud ji osoba nemá mít)",
@@ -9556,7 +9556,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       and: "a",
     },
     tracks: {
-      heading: "Trasy onboardingu",
+      heading: "Trasy",
       intro: "Trasa je pořadí kroků — „projdi tyto dokumenty v tomto pořadí“. Člověk na ní vidí, kde skončil.",
       back: "Zpět na trasy",
       newHeading: "Nová trasa",
@@ -12595,7 +12595,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       groups: "Groups",
       newGroup: "new group, e.g. referees",
       groupsNote: "Documents are assigned by these. The number is how many people have the group — a group nobody has receives nothing.",
-      tracks: "Onboarding tracks",
+      tracks: "Tracks",
       noTracks: "There are no tracks yet. They are created in Assigned documents → Tracks.",
       trackInactive: "off",
       trackUnknown: "unknown track (untick it if the person should not have it)",
@@ -13089,7 +13089,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       and: "and",
     },
     tracks: {
-      heading: "Onboarding tracks",
+      heading: "Tracks",
       intro: "A track is an order of steps — “go through these documents in this order”. It is what shows a person where they stopped.",
       back: "Back to tracks",
       newHeading: "New track",

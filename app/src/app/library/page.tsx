@@ -523,7 +523,7 @@ export default async function LibraryPage({
     Všetko to sľubuje prácu, ktorá nikam nevedie.
 
     Ponuka „⋯" zostáva zámerne, proti rámu (rozhodnutie Jána, 23. 9. 2026):
-    vedie na Trasy onboardingu a Kuráciu, čo nie sú obsah knižnice — bez nej
+    vedie na Trasy a Kuráciu, čo nie sú obsah knižnice — bez nej
     by sa z prázdnej knižnice nedali dosiahnuť vôbec.
 
     `facets.all` je počet **bez filtrov**, takže nula znamená prázdnu
