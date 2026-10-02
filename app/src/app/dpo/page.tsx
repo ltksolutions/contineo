@@ -80,8 +80,10 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
   // neskladá z reťazca, takže názov predpisu nemôže vložiť značky.
   const titleOf = (r: LegalBasisRow) =>
     highlight(r.title, query.q).map((seg, i) => seg.hit ? <mark key={i}>{seg.text}</mark> : seg.text)
+  // Na kartu v správe, nie na čitateľskú stránku: právny základ sa určuje
+  // tam (D151) a `/documents/…` je potvrdzovanie (Ján 2. 10. 2026).
   const docLink = (r: LegalBasisRow) =>
-    <Link href={`/documents/${encodeURIComponent(r.documentId)}`} className="dpo-doc">{titleOf(r)}</Link>
+    <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="dpo-doc">{titleOf(r)}</Link>
   const todayIso = new Date().toISOString().slice(0, 10)
 
   /*
