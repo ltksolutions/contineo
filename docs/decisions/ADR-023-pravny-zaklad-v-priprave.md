@@ -12,6 +12,8 @@
 > zverejnení"
 > **Doplnené:** Dodatok 1 (2026-09-30) — D151, úloha odchádza z čitateľskej
 > karty na kartu dokumentu v správe; mení D140.
+> **Doplnené:** Dodatok 2 (2026-10-02) — D155, právny základ smie určiť aj
+> správca obsahu, nielen zodpovedná osoba.
 > **Implementácia:** hotová (2026-09-28) — štyri commity na vetve
 > `claude/lucid-curie-9giv6d` (dáta a prenos, stránka dokumentu, knižnica
 > a dokumentácia, platnosť nahradeného znenia D143).
@@ -168,3 +170,30 @@ v `library/[id]/page.tsx`, `notificationHref()`; testy
 `documentBasisTasks.test.ts`, `versionResponsibility.test.ts`,
 `notifications.test.ts`.
 
+---
+
+## Dodatok 2 (2026-10-02) — základ smie určiť aj správca obsahu (D155)
+
+> **Rozhodol:** Ján Letko (2026-10-02): „aj správca obsahu môže upravovať
+> právny základ".
+
+### D155 — Kto smie určiť právny základ
+
+Právny základ znenia (aj pripravovaného) smie určiť a zmeniť
+**zodpovedná osoba toho znenia** (kým je aktívna) **a správca obsahu**.
+
+Doteraz bol správca obsahu len náhradník — smel, keď znenie zodpovednú
+osobu nemalo alebo už nebola aktívna (D91). V praxi to znamenalo, že chýbajúci
+základ pri Smernici o pracovných cestách (zodpovedná osoba Michaela
+Žikavská) nemohol doplniť ani správca obsahu, ani DPO, ktorý nedostatok vo
+výkaze videl.
+
+- Úloha „určiť právny základ" a upozornenie ostávajú **zodpovednej osobe**
+  (D151) — tá predpis pozná; správca obsahu je druhá ruka, nie adresát.
+- Kto základ určil alebo zmenil, nesie **audit** ako doteraz.
+- Iný človek bez roly správcu obsahu, ktorý nie je zodpovednou osobou,
+  základ neurčí.
+
+**Implementácia:** `canSetLegalBasis()` (`versionResponsibility.ts`) —
+jedno pravidlo pre kartu, prípravu aj zápis na serveri
+(`setVersionLegalBasis()`, `setDraftLegalBasis()`).

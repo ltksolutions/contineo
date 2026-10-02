@@ -148,16 +148,22 @@ describe("právny základ z číselníka (D92)", () => {
     })).rejects.toMatchObject({ code: "legalBasis.unknownKey" })
   })
 
-  it("správca obsahu pri aktívnej zodpovednej osobe neprejde — overuje sa na serveri", async () => {
+  it("správca obsahu smie aj pri aktívnej zodpovednej osobe (D155); iný človek nie", async () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({ responsiblePerson: GARANT }))
     personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
     tenantHas()
     await expect(setVersionLegalBasis({
       companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
       legalBasisKey: "interna_smernica",
-      actor: { personId: "p-spravca", email: "spravca@futbalsfz.sk" }, isContentManager: true,
+      actor: { personId: "p-iny", email: "iny@futbalsfz.sk" }, isContentManager: false,
     })).rejects.toMatchObject({ code: "legalBasis.notAllowed" })
     expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+    await setVersionLegalBasis({
+      companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
+      legalBasisKey: "interna_smernica",
+      actor: { personId: "p-spravca", email: "spravca@futbalsfz.sk" }, isContentManager: true,
+    })
+    expect(collection(DOCUMENTS_COLLECTION).updateOne).toHaveBeenCalled()
   })
 
   it("správca obsahu smie, keď zodpovedná osoba odišla", async () => {
@@ -358,17 +364,18 @@ describe("právny základ v príprave (ADR-023, D139)", () => {
     expect(audit.writeAudit).toHaveBeenCalledOnce()
   })
 
-  it("iný človek ani správca obsahu pri aktívnej osobe z prípravy nezapíšu", async () => {
+  it("iný človek pri aktívnej osobe z prípravy nezapíše; správca obsahu áno (D155)", async () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(draftDoc())
     personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
     tenantHas()
     await expect(setDraftLegalBasis({
-      ...base, legalBasisKeys: ["bozp"], actor: { personId: "p-spravca", email: "s@futbalsfz.sk" }, isContentManager: true,
-    })).rejects.toMatchObject({ code: "legalBasis.draftNotAllowed" })
-    await expect(setDraftLegalBasis({
       ...base, legalBasisKeys: ["bozp"], actor: { personId: "p-iny", email: "i@futbalsfz.sk" },
     })).rejects.toMatchObject({ code: "legalBasis.draftNotAllowed" })
     expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+    await setDraftLegalBasis({
+      ...base, legalBasisKeys: ["bozp"], actor: { personId: "p-spravca", email: "s@futbalsfz.sk" }, isContentManager: true,
+    })
+    expect(collection(DOCUMENTS_COLLECTION).updateOne).toHaveBeenCalled()
   })
 
   it("správca obsahu smie, keď príprava zodpovednú osobu nemá", async () => {
