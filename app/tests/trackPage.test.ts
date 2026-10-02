@@ -27,9 +27,22 @@ vi.mock("@/lib/tracks", () => ({
   }),
 }))
 vi.mock("@/lib/libraryRead", () => ({ libraryList: async () => [{ documentId: "sfz:pp", title: "Pracovný poriadok" }] }))
+vi.mock("@/lib/people", () => ({
+  listPeople: async () => [
+    { id: "p1", email: "eva@sfz.sk", fullName: "Eva Nová", department: "Oddelenie IT", status: "active", tracks: ["novy-zamestnanec"] },
+    { id: "p2", email: "jan@sfz.sk", fullName: "Ján Starý", status: "inactive", tracks: ["novy-zamestnanec"] },
+    { id: "p3", email: "ana@sfz.sk", fullName: "Anna Malá", status: "active", tracks: [] },
+  ],
+}))
+vi.mock("@/lib/departments", async importOriginal => ({
+  ...(await importOriginal<typeof import("../src/lib/departments")>()),
+  allDepartments: async () => [{ companyCode: "SFZ", id: "it", name: "Oddelenie IT", parentId: null }],
+  counts: async () => new Map([["it", { direct: 1, withDescendants: 1 }]]),
+}))
 vi.mock("../src/app/hr/tracks/actions", () => ({
   renameTrackAction: async () => {}, addStepAction: async () => {}, removeStepAction: async () => {},
   moveStepAction: async () => {}, setTrackActiveAction: async () => {},
+  addMembersAction: async () => {}, removeMemberAction: async () => {},
 }))
 
 describe("stránka trasy", () => {
@@ -45,5 +58,21 @@ describe("stránka trasy", () => {
     expect(html).toMatch(/name="title"[^>]*value="Nový zamestnanec"|value="Nový zamestnanec"[^>]*name="title"/)
     // Formulár je len jeden — na konci stránky už nie je.
     expect(html.match(/name="title"/g)).toHaveLength(1)
+  })
+
+  it("ukáže ľudí na trase s odobratím a ponúkne pridať osoby aj oddelenia (2. 10. 2026)", async () => {
+    const { default: Page } = await import("../src/app/hr/tracks/[key]/page")
+    const html = renderToStaticMarkup(await Page({
+      params: Promise.resolve({ key: "novy-zamestnanec" }),
+      searchParams: Promise.resolve({}),
+    }))
+    expect(html).toContain("Osoby na trase (2)")
+    expect(html).toContain("Eva Nová")
+    expect(html).toContain("vyradená")
+    expect(html).toMatch(/name="personId"[^>]*value="p1"|value="p1"[^>]*name="personId"/)
+    expect(html).toContain("Pridať osoby")
+    expect(html).toContain("Oddelenie IT")
+    // Na výber je len ten, kto na trase ešte nie je a nie je vyradený.
+    expect(html).toContain("Anna Malá")
   })
 })

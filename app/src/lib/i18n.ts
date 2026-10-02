@@ -2446,6 +2446,18 @@ interface Dictionary {
       created: string
       renamed: string
       stepsSaved: string
+      /** Ľudia na trase (2. 10. 2026). */
+      members: (n: number) => string
+      noMembers: string
+      membersInactive: string
+      removeMember: string
+      addMembers: string
+      addMembersNote: string
+      departments: string
+      people: string
+      addSubmit: string
+      membersAdded: (added: number, already: number) => string
+      memberRemoved: string
       enabled: string
       disabled: string
     }
@@ -4886,6 +4898,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "track.titleRequired": "Názov trasy je povinný.",
     "track.notFound": "Taká trasa tu nie je.",
     "track.titleTaken": "Trasa s názvom „{title}“ už existuje — názov musí byť jedinečný, podľa neho sa trasa vyberá aj importuje.",
+    "track.noMembersChosen": "Vyberte osoby alebo oddelenie.",
     "track.documentNotFound": "Dokument „{documentId}“ v tejto organizácii nie je.",
     "track.noSteps": "Prázdnu trasu zapnúť nejde — najprv jej pridaj kroky.",
 
@@ -5006,6 +5019,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       created: "založené",
+      membersAdded: "pridaní na trasu",
+      memberRemoved: "odobratý z trasy",
       changed: "zmenené",
       excluded: "vyradené",
       restored: "vrátené",
@@ -6029,6 +6044,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       created: "Trasa je založená. Zapnúť ju pôjde, až keď bude mať kroky.",
       renamed: "Názov je uložený.",
       stepsSaved: "Kroky sú uložené.",
+      members: n => `Osoby na trase (${n})`,
+      noMembers: "Na trase zatiaľ nie je nikto.",
+      membersInactive: "vyradená",
+      removeMember: "Odobrať",
+      addMembers: "Pridať osoby",
+      addMembersNote: "Z oddelenia sa pridajú jeho dnešní členovia vrátane podriadených. Kto príde do oddelenia neskôr, trasu nedostane sám — na to je pridelenie oddeleniu.",
+      departments: "Oddelenia",
+      people: "Osoby",
+      addSubmit: "Pridať na trasu",
+      membersAdded: (added, already) => `Pridané na trasu: ${added}.` + (already > 0 ? ` ${already} už na nej ${already === 1 ? "bol" : "boli"}.` : ""),
+      memberRemoved: "Osoba je z trasy odobratá. Jej potvrdenia ostávajú.",
       enabled: "Trasa je zapnutá.",
       disabled: "Trasa je vypnutá. Zostáva zapísaná na ľuďoch, ktorí ju už majú.",
     },
@@ -8421,6 +8447,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "track.titleRequired": "Název trasy je povinný.",
     "track.notFound": "Taková trasa tu není.",
     "track.titleTaken": "Trasa s názvem „{title}“ už existuje — název musí být jedinečný, podle něj se trasa vybírá i importuje.",
+    "track.noMembersChosen": "Vyberte osoby nebo oddělení.",
     "track.documentNotFound": "Dokument „{documentId}“ v této organizaci není.",
     "track.noSteps": "Prázdnou trasu zapnout nelze — nejdřív jí přidej kroky.",
 
@@ -8541,6 +8568,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       created: "založeno",
+      membersAdded: "přidáni na trasu",
+      memberRemoved: "odebrán z trasy",
       changed: "změněno",
       excluded: "vyřazeno",
       restored: "vráceno",
@@ -9561,6 +9590,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       created: "Trasa je založena. Zapnout ji půjde, až bude mít kroky.",
       renamed: "Název je uložen.",
       stepsSaved: "Kroky jsou uloženy.",
+      members: n => `Osoby na trase (${n})`,
+      noMembers: "Na trase zatím nikdo není.",
+      membersInactive: "vyřazená",
+      removeMember: "Odebrat",
+      addMembers: "Přidat osoby",
+      addMembersNote: "Z oddělení se přidají jeho dnešní členové včetně podřízených. Kdo do oddělení přijde později, trasu nedostane sám — k tomu slouží přidělení oddělení.",
+      departments: "Oddělení",
+      people: "Osoby",
+      addSubmit: "Přidat na trasu",
+      membersAdded: (added, already) => `Přidáno na trasu: ${added}.` + (already > 0 ? ` ${already} už na ní ${already === 1 ? "byl" : "byli"}.` : ""),
+      memberRemoved: "Osoba je z trasy odebrána. Její potvrzení zůstávají.",
       enabled: "Trasa je zapnutá.",
       disabled: "Trasa je vypnutá. Zůstává zapsaná u lidí, kteří ji už mají.",
     },
@@ -11946,6 +11986,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "track.titleRequired": "The track title is required.",
     "track.notFound": "There is no such track here.",
     "track.titleTaken": "A track named “{title}” already exists — the name must be unique; tracks are chosen and imported by it.",
+    "track.noMembersChosen": "Choose people or a department.",
     "track.documentNotFound": "Document “{documentId}” is not in this organisation.",
     "track.noSteps": "An empty track cannot be switched on — add steps to it first.",
 
@@ -12066,6 +12107,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       created: "created",
+      membersAdded: "added to track",
+      memberRemoved: "removed from track",
       changed: "changed",
       excluded: "excluded",
       restored: "restored",
@@ -13080,6 +13123,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       created: "The track is created. You can switch it on once it has steps.",
       renamed: "The title is saved.",
       stepsSaved: "The steps are saved.",
+      members: n => `People on the track (${n})`,
+      noMembers: "Nobody is on the track yet.",
+      membersInactive: "deactivated",
+      removeMember: "Remove",
+      addMembers: "Add people",
+      addMembersNote: "A department adds its current members, including sub-departments. Whoever joins the department later does not get the track automatically — that is what assigning to a department is for.",
+      departments: "Departments",
+      people: "People",
+      addSubmit: "Add to track",
+      membersAdded: (added, already) => `Added to the track: ${added}.` + (already > 0 ? ` ${already} already on it.` : ""),
+      memberRemoved: "The person was removed from the track. Their acknowledgements remain.",
       enabled: "The track is on.",
       disabled: "The track is off. It stays recorded for the people who already have it.",
     },
