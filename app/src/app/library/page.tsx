@@ -580,7 +580,7 @@ export default async function LibraryPage({
           ukázali to isté prázdno.
         */}
         {!emptyLibrary && (
-        <span className="view-switch" role="group" aria-label={t.viewSwitch}>
+        <span className="view-switch view-switch--wide-only" role="group" aria-label={t.viewSwitch}>
           {([["table", t.viewTable], ["cards", t.viewCards]] as const).map(([key, label]) => (
             <Link
               key={key}

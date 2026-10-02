@@ -29,7 +29,14 @@ export function pageTitle(pathname: string | null | undefined, organisation: str
     overview: t.nav.overview,
     groups: { organisation: t.nav.groupOrganisation, management: t.nav.groupManagement },
     sections: Object.fromEntries(SECTION_KEYS.map(k => [k, t.nav[k]])) as Record<NavKey, string>,
-    pages: { "/more": t.nav.menu },
+    pages: {
+      "/more": t.nav.menu,
+      // Záložky sekcie Pridelené dokumenty — karta prehliadača má povedať,
+      // na ktorej je človek (ZAKLAD-podmenu-a-akcie, 2. 10. 2026).
+      "/hr/overview": t.hr.tabs.report,
+      "/hr/reminders": t.hr.tabs.reminders,
+      "/hr/tracks": t.hr.tabs.tracks,
+    },
   })
   // Z cesty stačí posledný krok; skupina (Organizácia, Správa) nie je stránka.
   const page = path === "/" ? t.nav.overview : crumbs.length > 1 ? crumbs[crumbs.length - 1].label : null

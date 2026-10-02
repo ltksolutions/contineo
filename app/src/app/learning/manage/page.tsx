@@ -25,6 +25,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import TabLink from "@/components/TabLink"
+import TabsBar from "@/components/TabsBar"
 import SubmitButton from "@/components/SubmitButton"
 import KeyFromLabel from "@/components/KeyFromLabel"
 import Select from "@/components/Select"
@@ -75,11 +76,13 @@ export default async function LearningManagePage({ searchParams }: { searchParam
         </div>
         <Notice message={q.msg} error={q.error === "1"} back={back} />
         <nav className="tabs" aria-label={tm.tabsLabel}>
-          {TABS.map(k => (
-            <TabLink key={k} href={`/learning/manage?tab=${k}`} active={k === tab}>
-              {{ courses: tm.tabCourses, topics: tm.tabTopics, tags: tm.tabTags }[k]}
-            </TabLink>
-          ))}
+          <TabsBar>
+            {TABS.map(k => (
+              <TabLink key={k} href={`/learning/manage?tab=${k}`} active={k === tab}>
+                {{ courses: tm.tabCourses, topics: tm.tabTopics, tags: tm.tabTags }[k]}
+              </TabLink>
+            ))}
+          </TabsBar>
         </nav>
         <div className="mg-body">
           {body}

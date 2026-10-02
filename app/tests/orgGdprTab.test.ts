@@ -119,10 +119,10 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
     expect(html).toContain("[path:Organizácia]")
   })
 
-  it("časť: vybraná v zozname, odkaz späť a názov v ceste (Q2)", async () => {
+  it("časť: vybraná v zozname, názov v ceste; odkaz späť nie je — späť vedie cesta (ZAKLAD-podmenu-a-akcie)", async () => {
     const html = await render("signin")
     expect(html).toMatch(/class="org-nav-item is-active"[^>]*href="\/organisation\/signin"/)
-    expect(html).toContain('<a class="org-back" href="/organisation">Nastavenie organizácie</a>')
+    expect(html).not.toContain("org-back")
     expect(html).toContain("[path:Organizácia › Prihlasovanie]")
   })
 

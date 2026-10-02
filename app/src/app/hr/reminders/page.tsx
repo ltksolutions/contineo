@@ -18,6 +18,7 @@ import { dutyState, dutyTagClass } from "@/lib/due"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { sendRemindersAction } from "../actions"
 import AppShell from "@/components/AppShell"
+import HrTabs from "@/components/HrTabs"
 
 export const dynamic = "force-dynamic"
 
@@ -51,16 +52,18 @@ export default async function RemindersPage({
   const people = byPersonReminder(await overdue(ctx.person.companyCode, days))
 
   return (
-    <AppShell language={ctx.person.language} title={notice ? t.noticeHeading : t.heading}>
+    <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
+      {/*
+        Nadpis sekcie a podmenu (ZAKLAD-podmenu-a-akcie, 2. 10. 2026). Názov
+        režimu „Dať vedieť e-mailom" je prvá veta úvodu — nadpis stránky je
+        sekcia, záložka hovorí „Pripomienky".
+      */}
+      <h1 className="page-title">{dictionary(ctx.person.language).nav.assigned}</h1>
+      <HrTabs current="/hr/reminders" person={ctx.person} language={ctx.person.language} />
       <Notice message={q.msg} error={q.error === "1"} back="/hr/reminders" />
-
-
-      <h1 className="page-title">
-        {notice ? t.noticeHeading : t.heading}
-      </h1>
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>
-        {notice ? t.noticeIntro : t.intro(days)}
+        {notice ? <><strong>{t.noticeHeading}.</strong> {t.noticeIntro}</> : t.intro(days)}
       </p>
 
       {/* Dva odkazy, nie tlačidlá s JavaScriptom: režim je súčasťou adresy,

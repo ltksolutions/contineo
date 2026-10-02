@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZAKLAD — podmenu, pohľady, akcie, odkazy späť</title>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.18);--accent:#1d4ed8;--accent-strong:#1e40af;--accent-soft:rgba(29,78,216,.11);--on-accent:#fff;--ok-bg:#ecfdf5;--ok-fg:#047857;--radius:12px}
+.dark{--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--line-strong:rgba(255,255,255,.18);--accent:#8fb0ff;--accent-strong:#b3c9ff;--accent-soft:rgba(143,176,255,.14);--on-accent:#11151c;--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--ink);text-decoration:none}a:hover{color:var(--accent)}
+.sheet{padding:28px 32px 48px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+h2.sec{font-size:17px;margin:36px 0 12px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 20px;max-width:92ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#eceef1;padding:1px 5px;border-radius:4px}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);margin:0 0 10px;flex:none}
+.ann{font-size:12.5px;color:#5c6675;max-width:104ch;margin:0 0 30px;line-height:1.55}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin:0 4px 0 6px;vertical-align:1px}
+.q{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:#b45309;border-radius:5px;padding:0 5px;margin-left:4px;vertical-align:2px}
+.row2{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.sys{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;max-width:1440px;margin:0 0 10px}
+.sys>div{background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:14px 16px;font-size:13px;color:#5c6675}
+.sys>div>b:first-child{display:block;color:#161b22;font-size:14.5px;margin:0 0 6px}
+.sys .demo{margin:10px 0 8px;color:var(--ink);overflow-x:auto}
+.hdr{background:var(--surface);border-bottom:1px solid var(--line);height:56px;display:flex;align-items:center;gap:10px;padding:0 16px}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--surface-2);flex:none}
+.org{font-size:14px;font-weight:600}
+.ask{flex:1;max-width:600px;margin:0 auto;height:36px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:#c9ced6;flex:none}
+.path{background:var(--surface);border-bottom:1px solid var(--line);min-height:40px;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;padding:0 16px;font-size:13px;color:var(--muted)}
+.path b{color:var(--ink)}
+.main{max-width:1240px;margin:0 auto;padding:20px 24px 36px}
+.title{font-size:26px;letter-spacing:-.02em;line-height:1.2;margin:0}
+.lead{font-size:15px;color:var(--muted);margin:6px 0 18px;max-width:640px;text-wrap:pretty}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.head .sp{flex:1 1 0}
+.back{display:inline-block;font-size:14px;color:var(--muted);text-decoration:underline;margin:0 0 14px}
+.strike{position:relative;display:inline-block}.strike::after{content:"";position:absolute;inset:-4px -6px;border:2px solid #b91c1c;border-radius:6px}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 18px;border-radius:10px;background:var(--accent);border:1px solid var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px}
+/* dnes */
+.qold{background:transparent;color:var(--ink);border-color:var(--line)}
+/* návrh */
+.quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.quiet:hover{background:var(--surface-2)}
+.tabs{display:flex;gap:2px;margin:16px 0 20px;border-bottom:1px solid var(--line-strong);overflow-x:auto;scrollbar-width:none}
+.tab{flex:none;display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:10px 10px 0 0;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap;box-shadow:inset 0 -3px 0 transparent}
+.tab:hover{color:var(--ink);background:var(--surface-2)}
+.tab.on{color:var(--ink);font-weight:700;background:var(--accent-soft);box-shadow:inset 0 -3px 0 var(--accent)}
+.vs{display:inline-flex;gap:2px;padding:2px;background:var(--surface-2);border-radius:10px;margin:0 0 20px}
+.vs a{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap}
+.vs a.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,28,42,.12)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.ct{font-size:17px;font-weight:700}
+.meta{font-size:13px;color:var(--muted);margin:6px 0 0}
+.bar{height:6px;border-radius:3px;background:var(--surface-2);margin:14px 0 10px;max-width:480px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:var(--ok-fg)}
+.tagok{display:inline-flex;align-items:center;min-height:24px;padding:0 10px;border-radius:999px;background:var(--ok-bg);color:var(--ok-fg);font-size:12px;font-weight:600}
+.w390 .main{padding:14px 14px 28px}.w390 .title{font-size:22px}.w390 .tab{padding:0 13px}
+.w390 .head .button{flex:1 1 100%}
+.fade{position:relative}.fade::after{content:"";position:absolute;right:0;top:0;bottom:1px;width:28px;background:linear-gradient(90deg,transparent,var(--bg));pointer-events:none}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ZAKLAD — podmenu, pohľady, akcie, odkazy späť</h1>
+<p class="doc">Snímky <code>uploads/Snímka obrazovky 2026-10-02 o 14.45.40 / 14.49.31 / 14.50.25.png</code>, <code>2026-10-01 o 21.56.24.png</code>. Dnes sa tým istým tlačidlom (<code>.button</code> + <code>.button--quiet</code>) robia tri rôzne veci: <b>prechod na podstránku</b> (<code>/hr</code> → Výkaz, Pripomienky, Trasy), <b>prepnutie pohľadu</b> (<code>/hr/overview</code> Podľa dokumentu / osoby / trasy) a <b>akcia</b> (Prideliť dokument, Pozvať osobu). Plné tlačidlo vedľa tichých potom vyzerá ako „vybraná" položka, hoci nič vybrané nie je. Tiché tlačidlo má navyše priehľadné pozadie a okraj <code>--line</code> (12 %) na sivom <code>--bg</code> — preto sú zle vidieť. Návrh: každá z troch vecí dostane vlastný prvok, ktorý v aplikácii už existuje. Zadanie: <code>ZAKLAD-podmenu-a-akcie.md</code>.</p>
+
+<div class="sys">
+<div><b>1 · Podmenu sekcie → záložky</b>Iná stránka tej istej sekcie. <code>.tabs</code> + <code>TabLink</code> (ZAKLAD-zalozky). Na každej stránke sekcie rovnaké, aktívna je zvýraznená.<div class="demo"><div class="tabs" style="margin:0"><a class="tab on">Pridelenia</a><a class="tab">Výkaz</a><a class="tab">Trasy</a></div></div></div>
+<div><b>2 · Pohľad na tie isté údaje → prepínač</b>Iné zoradenie / zoskupenie, ten istý zoznam. <code>.view-switch</code> — už na <code>/library</code>, <code>/dpo</code>, <code>/hr/reminders</code>.<div class="demo"><span class="vs" style="margin:0"><a class="on">Podľa dokumentu</a><a>Podľa osoby</a></span></div></div>
+<div><b>3 · Akcia → tlačidlo</b>Niečo sa stane alebo otvorí formulár. Najviac <b>jedno</b> plné na obrazovke, vpravo pri nadpise; ostatné tiché — biele s plným okrajom.<div class="demo" style="display:flex;gap:8px"><a class="button">Prideliť dokument</a><a class="button quiet">Import CSV</a></div></div>
+<div><b>4 · Návrat → cesta</b>Rodič je v ceste pod hlavičkou. Odkaz „← Späť na …" sa nekreslí. Výnimka: tlačidlo ďalšieho kroku na konci úlohy (výsledok testu, certifikát).<div class="demo" style="font-size:13px;color:var(--muted)">Prehľad › Správa › Pridelené dokumenty › <b style="color:var(--ink);display:inline">Výkaz potvrdení</b></div></div>
+</div>
+<p class="ann">Pravidlo na jednu vetu: <b>kam idem = záložka, ako to vidím = prepínač, čo urobím = tlačidlo, odkiaľ som prišiel = cesta.</b></p>
+
+<h2 class="sec">1 · /hr — Pridelené dokumenty</h2>
+<div class="row2">
+<div><p class="cap">Dnes — 1440 /hr</p>
+<div class="frame" style="width:700px"><div class="main"><h1 class="title">Pridelené dokumenty</h1><p class="lead">Čo bolo komu uložené a kto to už potvrdil.</p>
+<div class="btns"><a class="button">Prideliť dokument</a><a class="button qold">Výkaz potvrdení</a><a class="button qold">Pripomienky</a><a class="button qold">Trasy</a></div>
+<div class="card"><div class="ct">Skúšobný poriadok (znenia v indexe)</div><div class="meta">oddelenie „Oddelenie IT" · pridelil jan.letko@futbalsfz.sk · 30. 9. 2026</div><div class="bar"><i></i></div></div></div></div></div>
+<div><p class="cap">Návrh — 1440 /hr</p>
+<div class="frame" style="width:700px"><div class="main"><div class="head"><h1 class="title">Pridelené dokumenty</h1><span class="sp"></span><a class="button">Prideliť dokument</a></div>
+<nav class="tabs"><a class="tab on">Pridelenia</a><a class="tab">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav>
+<p class="lead" style="margin-top:0">Čo bolo komu uložené a kto to už potvrdil.</p>
+<div class="card"><div class="ct">Skúšobný poriadok (znenia v indexe)</div><div class="meta">oddelenie „Oddelenie IT" · pridelil jan.letko@futbalsfz.sk · 30. 9. 2026</div><div class="bar"><i></i></div></div></div></div></div>
+</div>
+<p class="ann"><span class="num">1</span><b>Výkaz, Pripomienky, Trasy sú záložky</b> pod nadpisom sekcie, nie tlačidlá. Na všetkých piatich stránkach rovnaké — človek vidí, kde je, a prejde ďalej jedným klikom. Prvá záložka „Pridelenia" (<code>/hr</code>) <span class="q">Q4</span>. Reťaz dôkazov (<code>/hr/evidence</code>) <span class="q">Q1</span>. <span class="num">2</span><b>Nadpis = sekcia</b> „Pridelené dokumenty" na všetkých záložkách (vzor <code>/learning/tests</code>, <code>/learning/manage</code>); úvodná veta pod záložkami je veta tej záložky. <span class="num">3</span><b>Prideliť dokument</b> je akcia → vpravo pri nadpise, len na záložke Pridelenia (vzor „Nový kurz" len na záložke Kurzy).</p>
+
+<h2 class="sec">2 · /hr/overview — Výkaz potvrdení</h2>
+<div class="row2">
+<div><p class="cap">Dnes — 1440 /hr/overview</p>
+<div class="frame" style="width:700px"><div class="path">Prehľad › Správa › Pridelené dokumenty › <b>Výkaz potvrdení</b></div><div class="main"><span class="strike"><a class="back">← Späť na prehľad</a></span>
+<div class="head"><h1 class="title">Výkaz potvrdení</h1><span class="sp"></span><a class="button qold">Stiahnuť ako CSV</a></div><p class="lead">Kto čo má potvrdiť a kto to už potvrdil.</p>
+<div class="btns"><a class="button">Podľa dokumentu</a><a class="button qold">Podľa osoby</a><a class="button qold">Podľa trasy</a></div>
+<div class="card"><div class="head"><span class="ct">Skúšobný poriadok (znenia v indexe)</span><span class="sp"></span><span style="font-size:14px;color:var(--muted)">3 z 3</span><span class="tagok">hotové</span></div><div class="meta">znenie účinné od 1. 7. 2026 · medián čítania: 38 s</div></div></div></div></div>
+<div><p class="cap">Návrh — 1440 /hr/overview</p>
+<div class="frame" style="width:700px"><div class="path">Prehľad › Správa › Pridelené dokumenty › <b>Výkaz potvrdení</b></div><div class="main">
+<div class="head"><h1 class="title">Pridelené dokumenty</h1></div>
+<nav class="tabs"><a class="tab">Pridelenia</a><a class="tab on">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav>
+<p class="lead" style="margin-top:0">Kto čo má potvrdiť a kto to už potvrdil.</p>
+<div class="head" style="margin:0 0 18px"><span class="vs" style="margin:0"><a class="on">Podľa dokumentu</a><a>Podľa osoby</a><a>Podľa trasy</a></span><span class="sp"></span><a class="button quiet">Stiahnuť ako CSV</a></div>
+<div class="card"><div class="head"><span class="ct">Skúšobný poriadok (znenia v indexe)</span><span class="sp"></span><span style="font-size:14px;color:var(--muted)">3 z 3</span><span class="tagok">hotové</span></div><div class="meta">znenie účinné od 1. 7. 2026 · medián čítania: 38 s</div></div></div></div></div>
+</div>
+<p class="ann"><span class="num">4</span><b>„← Späť na prehľad" preč</b> — „Pridelené dokumenty" je v ceste aj v záložkách, tretí odkaz na to isté miesto nič nepridáva. Navyše „prehľad" sa tu plietol s Prehľadom (domov). <span class="num">5</span><b>Podľa dokumentu / osoby / trasy = prepínač pohľadu</b> <code>.view-switch</code>: ten istý zoznam, iné zoskupenie — rovnako ako „Zoskupiť" na <code>/dpo</code>. Odkazy s <code>?view=</code> ostávajú (dajú sa poslať). <span class="num">6</span><b>CSV</b> je akcia nad tým, čo je zobrazené → tiché tlačidlo v riadku prepínača, vpravo.</p>
+
+<h2 class="sec">3 · Tiché tlačidlo — /people, /library/[id]</h2>
+<div class="row2">
+<div><p class="cap">Dnes — 1440 /people</p>
+<div class="frame" style="width:700px"><div class="main"><h1 class="title">Osoby</h1><p class="lead">Ľudia v organizácii SFZ.</p><div class="btns" style="margin:0"><a class="button">Pozvať osobu</a><a class="button qold">Import z CSV</a><a class="button qold">Pozvať všetkých</a></div></div></div></div>
+<div><p class="cap">Návrh — 1440 /people</p>
+<div class="frame" style="width:700px"><div class="main"><div class="head"><h1 class="title">Osoby</h1><span class="sp"></span><a class="button quiet">Import z CSV</a><a class="button quiet">Pozvať všetkých</a><a class="button">Pozvať osobu</a></div><p class="lead">Ľudia v organizácii SFZ.</p></div></div></div>
+</div>
+<p class="ann"><span class="num">7</span><b>Import a Pozvať všetkých sú akcie</b> (otvoria formulár), nie podstránky — ostávajú tlačidlami. Presúvajú sa do riadku nadpisu, plné tlačidlo je posledné (najbližšie k pravému okraju, kam oko dôjde nakoniec). Pod 640 px: plné tlačidlo na celú šírku, tiché pod ním vedľa seba. <span class="num">8</span><b><code>.button--quiet</code> pre celú aplikáciu</b>: <code>background: var(--surface)</code> namiesto <code>transparent</code>, okraj <code>var(--line-strong)</code> namiesto <code>--line</code>. Na sivom <code>--bg</code> je tiché tlačidlo biela plocha s viditeľným okrajom — je jasné, že sa naň dá kliknúť, a nevyzerá ako „nevybraná položka". Platí aj pre detail dokumentu (Stiahnuť PDF, Upraviť…), karty, formuláre — všade naraz.</p>
+
+<h2 class="sec">4 · 390 — záložky, pohľad, akcie · tmavá téma</h2>
+<div class="row2">
+<div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px"><span class="logo"></span><span class="org">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div><div class="path" style="font-size:12.5px;padding:4px 10px">Prehľad › Správa › <b>Pridelené dokumenty</b></div>
+<div class="main"><div class="head"><h1 class="title">Pridelené dokumenty</h1><a class="button" style="margin-top:12px">Prideliť dokument</a></div>
+<div class="fade"><nav class="tabs"><a class="tab on">Pridelenia</a><a class="tab">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav></div>
+<div class="card"><div class="ct" style="font-size:16px">Skúšobný poriadok (znenia v indexe)</div><div class="meta">Oddelenie IT · 30. 9. 2026</div><div class="bar"><i></i></div></div></div></div>
+<div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px"><span class="logo"></span><span class="org">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div><div class="path" style="font-size:12.5px;padding:4px 10px">Prehľad › Správa › Pridelené dokumenty › <b>Výkaz potvrdení</b></div>
+<div class="main"><h1 class="title">Pridelené dokumenty</h1>
+<div class="fade"><nav class="tabs" id="t390"><a class="tab">Pridelenia</a><a class="tab on">Výkaz potvrdení</a><a class="tab">Pripomienky</a><a class="tab">Trasy</a><a class="tab">Reťaz dôkazov</a></nav></div>
+<span class="vs" style="display:flex;margin:0 0 12px"><a class="on" style="flex:1;justify-content:center;padding:0 8px">Dokument</a><a style="flex:1;justify-content:center;padding:0 8px">Osoba</a><a style="flex:1;justify-content:center;padding:0 8px">Trasa</a></span>
+<a class="button quiet" style="width:100%;margin:0 0 14px">Stiahnuť ako CSV</a>
+<div class="card"><div class="ct" style="font-size:16px">Skúšobný poriadok</div><div class="meta">3 z 3 · hotové</div></div></div></div>
+<div class="frame w390 dark" style="width:390px"><div class="hdr" style="padding:0 10px"><span class="logo"></span><span class="org">SFZ</span><span class="ask">Opýtajte sa…</span><span class="av"></span></div><div class="path" style="font-size:12.5px;padding:4px 10px">Prehľad › Správa › <b>Osoby</b></div>
+<div class="main"><h1 class="title">Osoby</h1><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 18px"><a class="button" style="grid-column:1/-1">Pozvať osobu</a><a class="button quiet" style="padding:0 10px">Import z CSV</a><a class="button quiet" style="padding:0 10px">Pozvať všetkých</a></div>
+<div class="vs" style="margin:0 0 12px"><a class="on">Tabuľka</a><a>Karty</a></div></div></div>
+</div>
+<p class="ann"><span class="num">9</span><b>Päť záložiek sa na 390 nezmestí</b> — lišta sa posúva do strán (ako dnes <code>.tabs</code>), pravý okraj je zoslabený, aby bolo vidieť, že pokračuje, a <b>aktívna záložka je pri načítaní posunutá do zorného poľa</b> (na Výkaze je vidieť Výkaz, nie Pridelenia) <span class="q">Q3</span>. <span class="num">10</span>Prepínač pohľadu na 390 cez celú šírku, kratšie popisy (Dokument / Osoba / Trasa) cez i18n <code>views.short</code>. Tmavá téma: tie isté tokeny, <code>--line-strong</code> aj <code>--accent-soft</code> v tmavom bloku už sú.</p>
+
+<h2 class="sec">5 · Kde sa to mení (skontrolované v repozitári)</h2>
+<p class="ann" style="max-width:110ch">
+<b>Podmenu → záložky:</b> <code>/hr</code>, <code>/hr/overview</code>, <code>/hr/reminders</code>, <code>/hr/tracks</code>, <code>/hr/evidence</code> (Q1). Už záložky: <code>/learning/manage</code>, <code>/learning/tests</code> — bez zmeny. <code>/organisation</code> — zoznam častí (ZAKLAD-zalozky).<br>
+<b>Pohľad → <code>.view-switch</code>:</b> <code>/hr/overview</code> (dnes tlačidlá). Už prepínač: <code>/library</code>, <code>/dpo</code>, <code>/hr/reminders</code>.<br>
+<b>Akcie do riadku nadpisu:</b> <code>/hr</code> (Prideliť dokument), <code>/people</code> (3 tlačidlá). <code>/library/[id]</code> — rad akcií ostáva, len tichšie tlačidlá budú viditeľnejšie.<br>
+<b>Odkaz späť preč:</b> <code>hr/overview/page.tsx:97</code> „← Späť na prehľad", <code>hr/tracks/page.tsx:46</code> „Späť do knižnice" (navyše vedie na <code>/library</code>, hoci Trasy sú od 2. 10. v HR), <code>learning/[courseKey]/[partKey]/page.tsx:78</code> „← Späť na kurz" (Q2), <code>organisation/[section]/page.tsx:283</code> <code>.org-back</code> (Q2).<br>
+<b>Ostáva (ďalší krok, nie návrat):</b> výsledok testu „Späť na časť" (tlačidlo po odovzdaní), certifikát „Späť na kurz", <code>/learning</code> pri vypnutom module „Späť na Prehľad" (SHELL-menu-v-hlavicke Q5).
+</p>
+</div>
+<script>const t=document.getElementById('t390');t.scrollLeft=t.querySelector('.on').offsetLeft-14;</script>
+</body></html>

@@ -160,7 +160,6 @@ interface Dictionary {
     confirmPending: string
     confirmed: string
     confirmedAt: (when: string) => string
-    back: string
     error: Record<string, string>
   }
 
@@ -846,6 +845,9 @@ interface Dictionary {
      * ho zdieľajú, aby ten istý stav nevyzeral na každej inak.
      */
     dutyState: Record<"acknowledged" | "opened" | "not-opened" | "overdue" | "revoked", string>
+    /** Podmenu sekcie (ZAKLAD-podmenu-a-akcie, 2. 10. 2026). */
+    tabs: Record<"assignments" | "report" | "reminders" | "tracks" | "evidence", string>
+    tabsLabel: string
     /**
      * Výkaz „ako je na tom organizácia" (D33). Iný pohľad než `overview`:
      * ten je o prideleniach, teda o tom, čo kurátor poslal. Tento je o tom,
@@ -855,6 +857,9 @@ interface Dictionary {
       heading: string
       intro: string
       views: Record<"document" | "person" | "track", string>
+      /** Krátke popisy pre prepínač cez celú šírku na telefóne. */
+      viewsShort: Record<"document" | "person" | "track", string>
+      viewsLabel: string
       /** Prázdny stav cez `.empty` (HR.md, úloha 6). */
       emptyTitle: string
       emptyText: string
@@ -899,7 +904,6 @@ interface Dictionary {
       revoke: string
     }
     detail: {
-      back: string
       version: string
       assignedBy: string
       notAcknowledged: (missing: number, total: number) => string
@@ -931,7 +935,6 @@ interface Dictionary {
       alreadyRevoked: string
     }
     notify: {
-      back: string
       heading: string
       introBefore: string
       introHighlight: string
@@ -950,7 +953,6 @@ interface Dictionary {
     assign: {
       /** Počet v hlavičke skupiny „Ktoré normy" (rám HR-pravny-zaklad, bod 5). */
       documentsCount: (n: number) => string
-      back: string
       heading: string
       introBefore: string
       introHighlight: string
@@ -1037,7 +1039,6 @@ interface Dictionary {
     reminders: {
       heading: string
       intro: (days: number) => string
-      back: string
       open: string
       /** Prázdny stav; text sa líši podľa režimu (meškajúci / všetci nepotvrdení). */
       emptyTitle: string
@@ -1313,7 +1314,6 @@ interface Dictionary {
       domainsNoteAfter: string
     }
     create: {
-      back: string
       heading: string
       /** Veta okolo `contineo.app` a `CNAME` — tie zostávajú v JSX. */
       introBefore: string
@@ -1336,7 +1336,6 @@ interface Dictionary {
       submit: string
     }
     detail: {
-      back: string
       disabled: string
       /** Blok čísel organizácie — trasy sú tu, v prehľade nie. */
       numbersHeading: string
@@ -1454,8 +1453,6 @@ interface Dictionary {
     tabs: Record<string, string>
     /** Skupiny častí v zozname (ZAKLAD-zalozky, Q1). */
     groups: Record<"org" | "access" | "documents" | "oversight", string>
-    /** Odkaz z časti späť na zoznam častí pod 1024 px. */
-    back: string
     /** Záložka GDPR (D154) — upravuje len DPO. */
     gdpr: { readOnly: string; saveContact: string; contactSaved: string }
     branding: {
@@ -1697,7 +1694,6 @@ interface Dictionary {
     inviteAll: {
       heading: string
       intro: string
-      back: string
       emptyTitle: string
       none: string
       preview: string
@@ -1707,7 +1703,6 @@ interface Dictionary {
       open: string
     }
     invite: {
-      back: string
       heading: string
       introBefore: string
       introAfter: string
@@ -1723,7 +1718,6 @@ interface Dictionary {
       submit: string
     }
     import: {
-      back: string
       heading: string
       introBefore: string
       introHighlight: string
@@ -1770,7 +1764,6 @@ interface Dictionary {
       reasons: Record<string, string>
     }
     detail: {
-      back: string
       previously: (list: string) => string
       invitedNotSignedIn: string
       newNotInvited: string
@@ -2418,7 +2411,6 @@ interface Dictionary {
     tracks: {
       heading: string
       intro: string
-      back: string
       newHeading: string
       key: string
       keyHint: string
@@ -2497,7 +2489,6 @@ interface Dictionary {
       create: string
     }
     detail: {
-      back: string
       documentData: string
       /** Pravý panel detailu: potvrdenia, prehľad metadát, odkazy. */
       side: {
@@ -2674,7 +2665,6 @@ interface Dictionary {
       approvalCancelButton: string
     }
     editor: {
-      back: string
       intro: string
       modelDraft: string
       /** Ten istý štítok, keď návrh nevyrobil model, ale pravidlá. */
@@ -2755,7 +2745,6 @@ interface Dictionary {
       sectionMeta: string
       dropHint: string
       pick: string
-      back: string
       heading: string
       intro: string
       file: string
@@ -2923,7 +2912,6 @@ interface Dictionary {
     }
     /** Časť kurzu (rám PART). */
     part: {
-      backToCourse: string
       nextPart: string
       docKicker: string
       openPdf: string
@@ -3197,7 +3185,6 @@ interface Dictionary {
       nobody: string
       testsEmpty: string
       testsEmptyNote: string
-      back: string
       groupBase: string
       instructions: string
       responsibleLegend: string
@@ -3549,7 +3536,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     confirmPending: "Ukladá sa…",
     confirmed: "Potvrdené. Ďakujeme.",
     confirmedAt: (when) => `Potvrdili ste ${when}.`,
-    back: "Späť na zoznam",
     error: {
       "document-not-found": "Dokument sa nenašiel.",
       "no-effective-version": "Dokument nemá platné znenie, preto sa nedá potvrdiť.",
@@ -4169,6 +4155,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citácie neoverené",
   },
   hr: {
+    tabs: { assignments: "Pridelenia", report: "Výkaz potvrdení", reminders: "Pripomienky", tracks: "Trasy", evidence: "Reťaz dôkazov" },
+    tabsLabel: "Časti sekcie",
     dutyState: {
       acknowledged: "potvrdené",
       opened: "otvorené, nepotvrdené",
@@ -4180,6 +4168,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Výkaz potvrdení",
       intro: "Kto čo má potvrdiť a kto to už potvrdil. Do menovateľa vstupuje ten, komu bol dokument pridelený alebo ho má ako krok v zapnutej trase — nie všetci v organizácii.",
       views: { document: "Podľa dokumentu", person: "Podľa osoby", track: "Podľa trasy" },
+      viewsShort: { document: "Dokument", person: "Osoba", track: "Trasa" },
+      viewsLabel: "Pohľad",
       emptyTitle: "Zatiaľ niet čo zhrnúť",
       emptyText: "Súhrn sa zjaví, keď bude prvé pridelenie.",
       done: (done, total) => `${done} z ${total}`,
@@ -4221,7 +4211,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       revoke: "Odvolať pridelenie",
     },
     detail: {
-      back: "← Späť na prehľad",
       version: "verzia",
       assignedBy: "pridelil",
       notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
@@ -4251,7 +4240,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alreadyRevoked: "Toto pridelenie už neplatí.",
     },
     notify: {
-      back: "← Späť na detail",
       heading: "Dať vedieť e-mailom",
       introBefore: "Pošle sa ",
       introHighlight: "len tým, ktorí ešte nepotvrdili",
@@ -4268,7 +4256,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     assign: {
       documentsCount: n => `${n} platných`,
-      back: "← Späť na prehľad",
       heading: "Prideliť dokumenty",
       introBefore: "Prideľuje sa ",
       introHighlight: "konkrétne znenie",
@@ -4352,7 +4339,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reminders: {
       heading: "Pripomienky",
       intro: days => `Ľudia, ktorí majú niečo nepotvrdené dlhšie než ${daysSk(days)}. Jeden e-mail na človeka — kto mešká so štyrmi smernicami, dostane jednu správu so štyrmi riadkami.`,
-      back: "← Späť na prehľad",
       open: "Pripomenúť",
       emptyTitle: "Niet komu pripomínať",
       none: days => `Všetci, ktorým beží termín, už potvrdili — nikto nemešká viac než ${daysSk(days)}.`,
@@ -4597,7 +4583,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domainsNoteAfter: "; do obrazovky pribudne v rozsahu C spolu so zakladaním tenantov.",
     },
     create: {
-      back: "← Správa tenantov",
       heading: "Nová organizácia",
       introBefore: "Subdoména pod ",
       introMiddle: " funguje hneď — pokrýva ju wildcard. Vlastná doména zákazníka sa pridá do Vercelu automaticky a zostane mu nastaviť jeden ",
@@ -4617,7 +4602,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Založiť",
     },
     detail: {
-      back: "← Správa tenantov",
       disabled: " · vypnutá",
       numbersHeading: "Čísla organizácie",
       tracks: "Trasy",
@@ -5115,7 +5099,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     introAfter: ") a vypnutie portálu tu zámerne nie sú — s tým sa ozvite nám.",
     tabsLabel: "Časti nastavenia",
     groups: { org: "Organizácia", access: "Prístup", documents: "Dokumenty", oversight: "Dohľad" },
-    back: "Nastavenie organizácie",
     tabs: {
       branding: "Vzhľad a jazyky",
       departments: "Oddelenia",
@@ -5397,7 +5380,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     inviteAll: {
       heading: "Hromadné pozvánky",
       intro: "Ľudia, ktorí sa ešte ani raz neprihlásili. E-mail nesie odkaz na portál, nie prihlasovací odkaz — ten platí len krátko a poštové brány ho spotrebujú skôr, než sa k nemu človek dostane.",
-      back: "← Späť na osoby",
       emptyTitle: "Všetci sú pozvaní",
       none: "Nikto nečaká na pozvánku — všetci sa už aspoň raz prihlásili.",
       preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
@@ -5407,7 +5389,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       open: "Hromadné pozvánky",
     },
     invite: {
-      back: "← Späť na zoznam",
       heading: "Pozvať osobu",
       introBefore: "Zapíše sa do organizácie ",
       introAfter: ". Skupiny a trasy sa doplnia na jej detaile — po pozvaní tam prídeš rovno.",
@@ -5423,7 +5404,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Pozvať",
     },
     import: {
-      back: "← Späť na zoznam",
       heading: "Import z CSV",
       introBefore: "Najprv uvidíš, ",
       introHighlight: "čo by sa stalo",
@@ -5473,7 +5453,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
     },
     detail: {
-      back: "← Späť na zoznam",
       previously: (list) => `predtým ${list}`,
       invitedNotSignedIn: "pozvaná, ešte sa neprihlásila",
       newNotInvited: "nová — pozvánka jej ešte neodišla",
@@ -6025,7 +6004,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tracks: {
       heading: "Trasy",
       intro: "Trasa je poradie krokov — „prejdi tieto dokumenty v tomto poradí“. Človek na nej vidí, kde skončil.",
-      back: "Späť na trasy",
       newHeading: "Nová trasa",
       key: "Kľúč",
       keyHint: "Malé písmená bez diakritiky, číslice a pomlčka. Ide do adries a zostáva.",
@@ -6102,7 +6080,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       create: "Založiť",
     },
     detail: {
-      back: "← Späť do knižnice",
       documentData: "Údaje o dokumente",
       side: {
         progressHeading: "Potvrdenia",
@@ -6264,7 +6241,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalCancelButton: "Zrušiť kolo",
     },
     editor: {
-      back: "← Späť na dokument",
       intro: "Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.",
       modelDraft: "návrh modelu",
       ruleDraft: "návrh podľa pravidiel",
@@ -6345,7 +6321,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       sectionMeta: "Metadáta",
       dropHint: "Presuňte súbor sem, alebo ho vyberte.",
       pick: "Vybrať súbor",
-      back: "← Späť do knižnice",
       heading: "Nahrať dokument",
       intro: "Schvaľuje a potvrdzuje sa PDF — tak, ako ho ľudia uvidia, aj s prílohami. K nemu pridaj upraviteľný zdroj (Word, Excel…): z neho vznikne text na vyhľadávanie a pri ďalšom znení z neho budeš vychádzať. Oba súbory sa uložia tak, ako prišli.",
       file: "Súbor",
@@ -6497,7 +6472,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notEnrolledNote: "Kurz je otvorený — zapísať sa môže ktokoľvek v organizácii. Časti sa sprístupnia po zapísaní.",
     },
     part: {
-      backToCourse: "Kurz",
       nextPart: "Ďalšia",
       docKicker: "Dokument z knižnice",
       openPdf: "Otvoriť PDF",
@@ -6782,7 +6756,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nobody: "nikto — nedá sa pripraviť",
       testsEmpty: "Zatiaľ tu nie je žiadny test.",
       testsEmptyNote: "Test je recept: sekcie vyberajú otázky z banky podľa smart:tagov.",
-      back: "← Testy",
       groupBase: "Základ",
       instructions: "Inštrukcie",
       responsibleLegend: "Zodpovedné osoby",
@@ -7104,7 +7077,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     confirmPending: "Ukládá se…",
     confirmed: "Potvrzeno. Děkujeme.",
     confirmedAt: (when) => `Potvrdili jste ${when}.`,
-    back: "Zpět na seznam",
     error: {
       "document-not-found": "Dokument se nenašel.",
       "no-effective-version": "Dokument nemá platné znění, proto jej nelze potvrdit.",
@@ -7724,6 +7696,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citace neověřené",
   },
   hr: {
+    tabs: { assignments: "Přidělení", report: "Výkaz potvrzení", reminders: "Připomínky", tracks: "Trasy", evidence: "Řetěz důkazů" },
+    tabsLabel: "Části sekce",
     dutyState: {
       acknowledged: "potvrzeno",
       opened: "otevřeno, nepotvrzeno",
@@ -7735,6 +7709,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Výkaz potvrzení",
       intro: "Kdo co má potvrdit a kdo to už potvrdil. Do jmenovatele vstupuje ten, komu byl dokument přidělen nebo ho má jako krok v zapnuté trase — ne všichni v organizaci.",
       views: { document: "Podle dokumentu", person: "Podle osoby", track: "Podle trasy" },
+      viewsShort: { document: "Dokument", person: "Osoba", track: "Trasa" },
+      viewsLabel: "Pohled",
       emptyTitle: "Zatím není co shrnout",
       emptyText: "Souhrn se objeví, až bude první přidělení.",
       done: (done, total) => `${done} z ${total}`,
@@ -7776,7 +7752,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       revoke: "Odvolat přidělení",
     },
     detail: {
-      back: "← Zpět na přehled",
       version: "verze",
       assignedBy: "přidělil",
       notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
@@ -7806,7 +7781,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alreadyRevoked: "Toto přidělení už neplatí.",
     },
     notify: {
-      back: "← Zpět na detail",
       heading: "Dát vědět e-mailem",
       introBefore: "Pošle se ",
       introHighlight: "jen těm, kteří ještě nepotvrdili",
@@ -7823,7 +7797,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     assign: {
       documentsCount: n => `${n} platných`,
-      back: "← Zpět na přehled",
       heading: "Přidělit dokumenty",
       introBefore: "Přiděluje se ",
       introHighlight: "konkrétní znění",
@@ -7907,7 +7880,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reminders: {
       heading: "Připomínky",
       intro: days => `Lidé, kteří mají něco nepotvrzené déle než ${daysCs(days)}. Jeden e-mail na člověka — kdo mešká se čtyřmi předpisy, dostane jednu zprávu se čtyřmi řádky.`,
-      back: "← Zpět na přehled",
       open: "Připomenout",
       emptyTitle: "Není komu připomínat",
       none: days => `Všichni, kterým běží termín, už potvrdili — nikdo nemešká více než ${daysCs(days)}.`,
@@ -8152,7 +8124,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domainsNoteAfter: "; do obrazovky přibude v rozsahu C spolu se zakládáním tenantů.",
     },
     create: {
-      back: "← Správa tenantů",
       heading: "Nová organizace",
       introBefore: "Subdoména pod ",
       introMiddle: " funguje hned — pokrývá ji wildcard. Vlastní doména zákazníka se přidá do Vercelu automaticky a zbude mu nastavit jeden ",
@@ -8172,7 +8143,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Založit",
     },
     detail: {
-      back: "← Správa tenantů",
       disabled: " · vypnutá",
       numbersHeading: "Čísla organizace",
       tracks: "Trasy",
@@ -8670,7 +8640,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     introAfter: ") a vypnutí portálu tu záměrně nejsou — s tím se ozvěte nám.",
     tabsLabel: "Části nastavení",
     groups: { org: "Organizace", access: "Přístup", documents: "Dokumenty", oversight: "Dohled" },
-    back: "Nastavení organizace",
     tabs: {
       branding: "Vzhled a jazyky",
       departments: "Oddělení",
@@ -8952,7 +8921,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     inviteAll: {
       heading: "Hromadné pozvánky",
       intro: "Lidé, kteří se ještě ani jednou nepřihlásili. E-mail nese odkaz na portál, ne přihlašovací odkaz — ten platí jen krátce a poštovní brány ho spotřebují dřív, než se k němu člověk dostane.",
-      back: "← Zpět na osoby",
       emptyTitle: "Všichni jsou pozvaní",
       none: "Nikdo nečeká na pozvánku — všichni se už aspoň jednou přihlásili.",
       preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
@@ -8962,7 +8930,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       open: "Hromadné pozvánky",
     },
     invite: {
-      back: "← Zpět na seznam",
       heading: "Pozvat osobu",
       introBefore: "Zapíše se do organizace ",
       introAfter: ". Skupiny a trasy se doplní na jejím detailu — po pozvání tam přijdeš rovnou.",
@@ -8978,7 +8945,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Pozvat",
     },
     import: {
-      back: "← Zpět na seznam",
       heading: "Import z CSV",
       introBefore: "Nejdřív uvidíš, ",
       introHighlight: "co by se stalo",
@@ -9028,7 +8994,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
     },
     detail: {
-      back: "← Zpět na seznam",
       previously: (list) => `dříve ${list}`,
       invitedNotSignedIn: "pozvaná, ještě se nepřihlásila",
       newNotInvited: "nová — pozvánka jí ještě neodešla",
@@ -9577,7 +9542,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tracks: {
       heading: "Trasy",
       intro: "Trasa je pořadí kroků — „projdi tyto dokumenty v tomto pořadí“. Člověk na ní vidí, kde skončil.",
-      back: "Zpět na trasy",
       newHeading: "Nová trasa",
       key: "Klíč",
       keyHint: "Malá písmena bez diakritiky, číslice a pomlčka. Jde do adres a zůstává.",
@@ -9654,7 +9618,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       create: "Založit",
     },
     detail: {
-      back: "← Zpět do knihovny",
       documentData: "Údaje o dokumentu",
       side: {
         progressHeading: "Potvrzení",
@@ -9816,7 +9779,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalCancelButton: "Zrušit kolo",
     },
     editor: {
-      back: "← Zpět na dokument",
       intro: "Porovnej text s originálem. Publikování je samostatný krok — tady se nic nepouští ven.",
       modelDraft: "návrh modelu",
       ruleDraft: "návrh podle pravidel",
@@ -9897,7 +9859,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       sectionMeta: "Metadata",
       dropHint: "Přesuňte soubor sem, nebo ho vyberte.",
       pick: "Vybrat soubor",
-      back: "← Zpět do knihovny",
       heading: "Nahrát dokument",
       intro: "Schvaluje a potvrzuje se PDF — tak, jak ho lidé uvidí, i s přílohami. K němu přidej upravitelný zdroj (Word, Excel…): z něj vznikne text pro vyhledávání a při dalším znění z něj budeš vycházet. Oba soubory se uloží tak, jak přišly.",
       file: "Soubor",
@@ -10049,7 +10010,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notEnrolledNote: "Kurz je otevřený — zapsat se může kdokoli v organizaci. Části se zpřístupní po zapsání.",
     },
     part: {
-      backToCourse: "Kurz",
       nextPart: "Další",
       docKicker: "Dokument z knihovny",
       openPdf: "Otevřít PDF",
@@ -10334,7 +10294,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nobody: "nikdo — nelze připravit",
       testsEmpty: "Zatím tu není žádný test.",
       testsEmptyNote: "Test je recept: sekce vybírají otázky z banky podle smart:tagů.",
-      back: "← Testy",
       groupBase: "Základ",
       instructions: "Instrukce",
       responsibleLegend: "Odpovědné osoby",
@@ -10656,7 +10615,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     confirmPending: "Saving…",
     confirmed: "Acknowledged. Thank you.",
     confirmedAt: (when) => `You acknowledged this on ${when}.`,
-    back: "Back to the list",
     error: {
       "document-not-found": "The document was not found.",
       "no-effective-version": "The document has no effective version, so it cannot be acknowledged.",
@@ -11270,6 +11228,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citations not verified",
   },
   hr: {
+    tabs: { assignments: "Assignments", report: "Acknowledgement report", reminders: "Reminders", tracks: "Tracks", evidence: "Evidence chain" },
+    tabsLabel: "Section parts",
     dutyState: {
       acknowledged: "acknowledged",
       opened: "opened, not acknowledged",
@@ -11281,6 +11241,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Acknowledgement report",
       intro: "Who has to acknowledge what, and who already did. The denominator counts a person when the document was assigned to them or is a step in a track they are on — not everyone in the organisation.",
       views: { document: "By document", person: "By person", track: "By track" },
+      viewsShort: { document: "Document", person: "Person", track: "Track" },
+      viewsLabel: "View",
       emptyTitle: "Nothing to summarise yet",
       emptyText: "The summary appears once there is a first assignment.",
       done: (done, total) => `${done} of ${total}`,
@@ -11321,7 +11283,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       revoke: "Revoke assignment",
     },
     detail: {
-      back: "← Back to the overview",
       version: "version",
       assignedBy: "assigned by",
       notAcknowledged: (missing, total) => `Not acknowledged (${missing} of ${total})`,
@@ -11351,7 +11312,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alreadyRevoked: "This assignment is no longer in force.",
     },
     notify: {
-      back: "← Back to the detail",
       heading: "Notify by e-mail",
       introBefore: "It goes ",
       introHighlight: "only to those who have not acknowledged yet",
@@ -11368,7 +11328,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     assign: {
       documentsCount: n => `${n} current`,
-      back: "← Back to the overview",
       heading: "Assign documents",
       introBefore: "What is assigned is ",
       introHighlight: "a specific version",
@@ -11451,7 +11410,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reminders: {
       heading: "Reminders",
       intro: days => `People with something unacknowledged for more than ${daysEn(days)}. One email per person — someone behind on four documents gets one message with four lines.`,
-      back: "← Back to the overview",
       open: "Remind",
       emptyTitle: "Nobody to remind",
       none: days => `Everyone with a running deadline has acknowledged — nobody is more than ${daysEn(days)} behind.`,
@@ -11696,7 +11654,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domainsNoteAfter: "; it will appear on this screen in scope C, together with tenant creation.",
     },
     create: {
-      back: "← Tenant administration",
       heading: "New organisation",
       introBefore: "A subdomain under ",
       introMiddle: " works straight away — a wildcard covers it. A customer's own domain is added to Vercel automatically and all that is left for them is to set one ",
@@ -11716,7 +11673,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Create",
     },
     detail: {
-      back: "← Tenant administration",
       disabled: " · disabled",
       numbersHeading: "Organisation numbers",
       tracks: "Tracks",
@@ -12214,7 +12170,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     introAfter: ") and switching the portal off are deliberately not here — for those, get in touch with us.",
     tabsLabel: "Settings sections",
     groups: { org: "Organisation", access: "Access", documents: "Documents", oversight: "Oversight" },
-    back: "Organisation settings",
     tabs: {
       branding: "Appearance and languages",
       departments: "Departments",
@@ -12496,7 +12451,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     inviteAll: {
       heading: "Bulk invitations",
       intro: "People who have never signed in. The email carries a link to the portal, not a sign-in link — those are short-lived and mail gateways consume them before the person gets there.",
-      back: "← Back to people",
       emptyTitle: "Everyone is invited",
       none: "Nobody is waiting for an invitation — everyone has signed in at least once.",
       preview: "This goes to the addresses listed. A sent email cannot be taken back.",
@@ -12506,7 +12460,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       open: "Bulk invitations",
     },
     invite: {
-      back: "← Back to the list",
       heading: "Invite a person",
       introBefore: "They will be recorded in organisation ",
       introAfter: ". Groups and tracks are added on their detail page — the invitation takes you straight there.",
@@ -12522,7 +12475,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Invite",
     },
     import: {
-      back: "← Back to the list",
       heading: "Import from CSV",
       introBefore: "First you see ",
       introHighlight: "what would happen",
@@ -12572,7 +12524,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
     },
     detail: {
-      back: "← Back to the list",
       previously: (list) => `previously ${list}`,
       invitedNotSignedIn: "invited, has not signed in yet",
       newNotInvited: "new — no invitation has been sent yet",
@@ -13115,7 +13066,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tracks: {
       heading: "Tracks",
       intro: "A track is an order of steps — “go through these documents in this order”. It is what shows a person where they stopped.",
-      back: "Back to tracks",
       newHeading: "New track",
       key: "Key",
       keyHint: "Lower-case letters without diacritics, digits and a hyphen. It goes into addresses and stays there.",
@@ -13192,7 +13142,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       create: "Create",
     },
     detail: {
-      back: "← Back to library",
       documentData: "Document details",
       side: {
         progressHeading: "Acknowledgements",
@@ -13355,7 +13304,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalCancelButton: "Cancel the round",
     },
     editor: {
-      back: "← Back to the document",
       intro: "Compare the text with the original. Publishing is a separate step — nothing goes out from here.",
       modelDraft: "model draft",
       ruleDraft: "rule-based draft",
@@ -13435,7 +13383,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       sectionMeta: "Metadata",
       dropHint: "Drop a file here, or choose one.",
       pick: "Choose a file",
-      back: "← Back to the library",
       heading: "Upload a document",
       intro: "The PDF is what gets approved and acknowledged — exactly as people will see it, annexes included. Add an editable source (Word, Excel…): it gives the text for search and is what you start from for the next version. Both files are stored exactly as they arrived.",
       file: "File",
@@ -13586,7 +13533,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notEnrolledNote: "The course is open — anyone in the organisation can enrol. The parts open after you enrol.",
     },
     part: {
-      backToCourse: "Course",
       nextPart: "Next",
       docKicker: "Document from the library",
       openPdf: "Open PDF",
@@ -13871,7 +13817,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nobody: "nobody — cannot be made ready",
       testsEmpty: "There are no tests yet.",
       testsEmptyNote: "A test is a recipe: sections draw questions from the bank by smart:tags.",
-      back: "← Tests",
       groupBase: "Basics",
       instructions: "Instructions",
       responsibleLegend: "Responsible people",

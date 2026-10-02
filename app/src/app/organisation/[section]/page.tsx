@@ -6,7 +6,7 @@
  * obrazovke. Rozcestník je `/organisation` (`../page.tsx`), staré
  * `?tab=` prekladá `proxy.ts` (`legacyOrgSection`). Rozloženie podľa
  * ZAKLAD-zalozky (1. 10. 2026): zoznam častí vľavo od 1024 px, pod tým
- * časť s odkazom späť na rozcestník.
+ * časť; späť vedie cesta pod hlavičkou (ZAKLAD-podmenu-a-akcie, 2. 10. 2026).
  *
  * Čo tu **je**: vzhľad, jazyky, vlastné prihlasovacie údaje, domény
  * s overením a domény pre automatické zakladanie.
@@ -279,9 +279,6 @@ export default async function OrganisationSectionPage({
       {!single && <OrgNav current={now} label={t.tabsLabel} groups={t.groups} sections={t.tabs} />}
 
       <div className="org-body">
-      {!single && (
-        <Link className="org-back" href="/organisation">{t.back}</Link>
-      )}
 
       {/*
         Vzhľad a jazyky v sekciách (rám ADMIN-prevadzkovatel-a-ciselniky):
