@@ -7810,3 +7810,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   }
   .org-back { display: none; }
 }
+
+/* ── Trasa: úprava názvu pri nadpise (`/hr/tracks/[key]`, 2. 10. 2026) ───── */
+.track-edit > summary { display: inline-flex; list-style: none; cursor: pointer; }
+.track-edit > summary::-webkit-details-marker { display: none; }

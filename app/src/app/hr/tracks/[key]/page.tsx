@@ -93,9 +93,32 @@ export default async function TrackDetailPage({
           {track.isActive ? t.active : t.inactive}
         </span>
       </div>
-      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 24px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 12px" }}>
         <code>{track.key}</code> · {t.stepCount(steps.length)}
       </p>
+
+      {/*
+        Názov a popis — hore pri názve, nie pod krokmi. Na konci stránky bez
+        nadpisu ho Ján nenašiel (2. 10. 2026). `<details>`, takže bez
+        JavaScriptu; zbalené, lebo sa mení zriedka.
+      */}
+      <details className="track-edit" style={{ margin: "0 0 24px" }}>
+        <summary className="button button--quiet">{t.edit}</summary>
+        <form action={renameTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16, marginTop: 12 }}>
+          <input type="hidden" name="key" value={track.key} />
+          <label className="field">
+            <span className="field-label">{t.title}</span>
+            <input className="field-input" name="title" defaultValue={track.title} required />
+          </label>
+          <label className="field">
+            <span className="field-label">{t.description}</span>
+            <input className="field-input" name="description" defaultValue={track.description ?? ""} />
+          </label>
+          <p style={{ margin: 0 }}>
+            <button className="button" type="submit">{t.rename}</button>
+          </p>
+        </form>
+      </details>
 
       {/* ── kroky ── */}
 
@@ -180,22 +203,6 @@ export default async function TrackDetailPage({
         </button>
       </form>
 
-      {/* ── názov ── */}
-
-      <form action={renameTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
-        <input type="hidden" name="key" value={track.key} />
-        <label className="field">
-          <span className="field-label">{t.title}</span>
-          <input className="field-input" name="title" defaultValue={track.title} required />
-        </label>
-        <label className="field">
-          <span className="field-label">{t.description}</span>
-          <input className="field-input" name="description" defaultValue={track.description ?? ""} />
-        </label>
-        <p style={{ margin: 0 }}>
-          <button className="button button--quiet" type="submit">{t.rename}</button>
-        </p>
-      </form>
     </div>
     </AppShell>
   )
