@@ -40,6 +40,7 @@ import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { archiveDocument, restoreDocument, ArchiveError } from "@/lib/documentArchive"
 import { AppError } from "@/lib/appError"
 import { assignHref, summarize, type BulkOutcome } from "@/lib/libraryBulk"
 import { submitForApproval, cancelRound, markNotified } from "@/lib/approvalsDb"
@@ -1405,4 +1406,50 @@ async function notifyApprovers(input: {
     })
   }
   return sent.length
+}
+
+/**
+ * Archivácia predpisu (ADR-025, D156) — koniec platnosti ku dňu, s dôvodom.
+ * Dátum môže byť aj v budúcnosti; pridelenia sa odvolajú dňom účinnosti.
+ */
+export async function archiveDocumentAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  const t = dictionary(self.language).library.flow.archive
+  let message = ""
+  let error = false
+  try {
+    const until = parseDate(fieldText(fd, "until"))
+    if (!until) throw new ArchiveError("archive.bad-date", "Dátum nie je platný.")
+    const r = await archiveDocument({
+      companyCode: self.companyCode, documentId: id, until, reason: fieldText(fd, "reason"), actor: self.email,
+    })
+    const date = formatDate(until, self.language)
+    message = r.inEffect ? t.done(date, r.revoked) : t.scheduled(date)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  revalidatePath("/library")
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/** Obnoví platnosť archivovaného predpisu (omyl). Pridelenia sa neobnovujú. */
+export async function restoreDocumentAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  let message = dictionary(self.language).library.flow.archive.restored
+  let error = false
+  try {
+    await restoreDocument({ companyCode: self.companyCode, documentId: id, actor: self.email })
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  revalidatePath("/library")
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }

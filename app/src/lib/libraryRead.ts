@@ -18,6 +18,7 @@ import type { ResponsiblePerson, DraftLegalBasis } from "./versionResponsibility
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
 import { openRounds } from "./approvalsDb"
+import { archiveState } from "./documentArchiveState"
 import { allDepartments } from "./departments"
 import { codelistOptions, type CodelistExtras } from "./codelists"
 
@@ -92,6 +93,8 @@ export interface LibraryRow {
   effectiveFrom: Date | null
   /** Dokedy platí. `null` = do odvolania, alebo neplatí nič. */
   effectiveTo: Date | null
+  /** Archivovaný predpis, ktorého archivácia už platí (ADR-025). */
+  archived?: boolean
   /**
    * Znenie, ktoré platí teraz. Potvrdenia sa viažu naň, nie na dokument (D28),
    * takže bez neho sa stĺpec s potvrdeniami nedá naplniť.
@@ -181,7 +184,13 @@ function validityFrom(doc: { versions?: Version[] }): Date | null {
  */
 function validityTo(doc: { versions?: Version[] }): Date | null {
   const v = effectiveVersion(doc as never)
-  return v.ok && v.version.effectiveTo ? new Date(v.version.effectiveTo) : null
+  if (v.ok) return v.version.effectiveTo ? new Date(v.version.effectiveTo) : null
+  // Platnosť skončila (archivovaný predpis, ADR-025): najneskorší koniec —
+  // inak by zoznam ukazoval pilulku „Platný" pri predpise, ktorý neplatí.
+  if (v.reason !== "no-longer-effective") return null
+  const ends = (doc.versions ?? []).map(x => x.effectiveTo ? new Date(x.effectiveTo).getTime() : 0)
+  const last = Math.max(0, ...ends)
+  return last ? new Date(last) : null
 }
 
 /** Identita znenia, ktoré platí teraz — kľúč k potvrdeniam (D57). */
@@ -208,6 +217,7 @@ function toRow(d: RawRow): LibraryRow {
     effectiveLabel: validityLabel(d),
     effectiveFrom: validityFrom(d),
     effectiveTo: validityTo(d),
+    archived: (() => { const a = archiveState(d as never); return a.archived && a.inEffect })(),
     effectiveVersionId: effectiveVersionId(d),
     hasDraft: Boolean(String(d.draftMarkdown ?? "").trim()),
     originalFile: original
@@ -597,6 +607,8 @@ export async function libraryList(
         // znení sú veľké a v zozname by sa ťahali zbytočne.
         "versions.versionId": 1, "versions.label": 1, "versions.isActive": 1,
         "versions.effectiveFrom": 1, "versions.effectiveTo": 1,
+        // Záznam o archivácii — pre pilulku „Archivovaný" (ADR-025).
+        "versions.archives": 1,
       },
     })
     .sort({ updatedAt: -1, title: 1 })

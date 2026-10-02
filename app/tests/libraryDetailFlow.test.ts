@@ -65,7 +65,7 @@ vi.mock("@/lib/libraryRead", async importOriginal => ({
 }))
 vi.mock("@/app/documents/[documentId]/actions", () => stubs(["acknowledgeAction","setLegalBasisAction"]))
 vi.mock("@/lib/session", () => ({}))
-vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","reindexVersionAction","loadTextForFixAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction"]))
+vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","reindexVersionAction","loadTextForFixAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction","archiveDocumentAction","restoreDocumentAction"]))
 
 const pdf = (id: string) => ({ id, name: `${id}.pdf`, bytes: 1_300_000, sha256: id, type: "pdf", uploadedAt: new Date(), uploadedBy: "jan@sfz.sk" })
 const effective = {
@@ -440,5 +440,35 @@ describe("detail — oprava textu platného alebo pripravovaného znenia (fáza 
     expect(html).toMatch(/name="versionId" value="v-2"/)
     const other = await render({ fixTarget: "v-3" })
     expect(other).toContain("Opravuje sa: znenie účinné od 1. 1. 2099")
+  })
+})
+
+describe("detail — archivácia predpisu (ADR-025, D156)", () => {
+  it("platné znenie bez prípravy: v Správe formulár s dátumom a dôvodom", async () => {
+    state.detail = detail({ draftMarkdown: effective.markdown, draftPdf: effective.pdf, draftMeta: null })
+    const html = await render()
+    expect(html).toContain("Archivovať predpis")
+    expect(html).toContain('name="until"')
+    expect(html).toContain('name="reason"')
+  })
+
+  it("počas prípravy nového znenia formulár nie je — karta povie prečo", async () => {
+    const html = await render()
+    expect(html).toContain("Archivovať sa teraz nedá:")
+    expect(html).toContain("Pripravuje sa nové znenie.")
+    expect(html).not.toContain('name="until"')
+  })
+
+  it("archivovaný predpis: pás s dátumom, dôvodom a Obnoviť platnosť; formulár archivácie nie je", async () => {
+    const archived = {
+      ...effective, effectiveTo: new Date("2026-10-01T00:00:00Z"),
+      archives: [{ at: new Date("2026-09-30T10:00:00Z"), by: "jan@sfz.sk", reason: "Zrušené uznesením VV.", effectiveTo: new Date("2026-10-01T00:00:00Z"), restoredAt: null }],
+    }
+    state.detail = detail({ versions: [archived], effectiveVersionId: undefined, draftMarkdown: effective.markdown, draftPdf: effective.pdf, draftMeta: null })
+    const html = await render()
+    expect(html).toContain("Archivovaný — neplatí od 1. 10. 2026")
+    expect(html).toContain("Zrušené uznesením VV.")
+    expect(html).toContain("Obnoviť platnosť")
+    expect(html).not.toContain('name="until"')
   })
 })

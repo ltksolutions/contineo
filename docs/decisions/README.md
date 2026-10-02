@@ -36,6 +36,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-022](ADR-022-ochrana-udajov-podla-organizacie.md) | Ochrana osobných údajov podľa organizácie: krajina, sprostredkovatelia, lehoty, doplnkový text | ✅ prijaté |
 | [ADR-023](ADR-023-pravny-zaklad-v-priprave.md) | Právny základ už v príprave znenia; nahradené znenie platí do účinnosti nového; úloha zodpovednej osoby na karte v správe (D151) | ✅ prijaté |
 | [ADR-024](ADR-024-znenia-v-indexe.md) | Asistent odpovedá podľa znenia platného k dňu otázky; deň otázky, štítok nad odpoveďou, porovnanie dvoch znení po článkoch | ✅ prijaté |
+| [ADR-025](ADR-025-archivacia-predpisu.md) | Archivácia predpisu ku dňu (aj v budúcnosti), s dôvodom; pridelenia sa odvolajú, potvrdenia ostávajú | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -48,6 +49,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-025**. Súbor `ADR-025-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-026**. Súbor `ADR-026-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
