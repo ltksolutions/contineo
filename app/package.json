@@ -32,6 +32,7 @@
     "check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/check.mjs",
     "migrate:versionid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_versionid.mjs",
     "files:attach": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/attach_original_files.mjs",
+    "files:version-pdf": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/migrate_version_pdf.mjs",
     "migrate:fields": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_english_fields.mjs",
     "migrate:role-content": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_role_content.mjs",
     "migrate:eval-personid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_eval_personid.mjs",
