@@ -154,7 +154,7 @@ export default async function NewPersonPage({
           {departmentRows.length === 0 && (
             <span className="quiet field-hint">
               {td.noDepartmentsBefore}
-              <Link href="/organisation?tab=departments">{td.noDepartmentsLink}</Link>
+              <Link href="/organisation/departments">{td.noDepartmentsLink}</Link>
               {td.noDepartmentsAfter}
             </span>
           )}

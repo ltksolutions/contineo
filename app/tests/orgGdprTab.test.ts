@@ -19,10 +19,11 @@ const tenant = vi.hoisted(() => ({
   },
 }))
 
-vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") }, redirect: () => { throw new Error("redirect") } }))
+vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") }, redirect: (to: string) => { throw new Error(`redirect ${to}`) } }))
 // Krok cesty za stránkou (`leaf`, ZAKLAD-zalozky Q2) sa vypíše, nech ho test vidí.
 vi.mock("@/components/AppShell", () => ({
-  default: ({ children, leaf }: { children: unknown; leaf?: string }) => [leaf ? `[leaf:${leaf}]` : null, children],
+  default: ({ children, title, trail }: { children: unknown; title?: string; trail?: Record<string, string> }) =>
+    [`[path:${[...Object.values(trail ?? {}), title].join(" › ")}]`, children],
 }))
 vi.mock("@/lib/session", () => ({}))
 vi.mock("@/components/SubmitButton", () => ({ default: ({ children }: { children: unknown }) => children }))
@@ -62,14 +63,19 @@ vi.mock("../src/app/dpo/actions", () => ({
   saveGdprContactAction: async () => {}, saveRetentionAction: async () => {}, saveExtraAction: async () => {},
 }))
 
-async function render(tab: string | null = "gdpr") {
+async function render(section = "gdpr", query: Record<string, string> = {}) {
+  const { default: Page } = await import("../src/app/organisation/[section]/page")
+  return renderToStaticMarkup(await Page({ params: Promise.resolve({ section }), searchParams: Promise.resolve(query) }))
+}
+
+async function renderIndex() {
   const { default: Page } = await import("../src/app/organisation/page")
-  return renderToStaticMarkup(await Page({ searchParams: Promise.resolve(tab ? { tab } : {}) }))
+  return renderToStaticMarkup(await Page())
 }
 
 beforeEach(() => { s.canAdmin = true; s.canEditGdpr = true })
 
-describe("záložka GDPR", () => {
+describe("časť GDPR", () => {
   it("DPO: kontakt, lehoty a doplnok s uloženými hodnotami a tlačidlami", async () => {
     const html = await render()
     expect(html).toMatch(/name="privacyContactEmail"[^>]*value="gdpr@futbalsfz.sk"/)
@@ -89,41 +95,38 @@ describe("záložka GDPR", () => {
     expect(html).toContain("Kamerový systém v sídle.")
   })
 
-  it("DPO bez roly správcu: len záložka GDPR, aj keď adresa chce inú", async () => {
+  it("DPO bez roly správcu: len GDPR, bez zoznamu a odkazu späť; iná časť je 404 (D154)", async () => {
     s.canAdmin = false
-    const html = await render("branding")
-    // Jedna časť: bez zoznamu častí aj bez odkazu späť (ZAKLAD-zalozky, D154).
+    const html = await render("gdpr")
     expect(html).not.toContain("org-nav")
     expect(html).not.toContain("org-back")
-    expect(html).not.toContain('href="/organisation?tab=branding"')
     expect(html).toContain('name="privacyContactEmail"')
-    expect(html).not.toContain('name="displayName"')
-    expect(html).toContain("[leaf:GDPR]")
+    await expect(render("branding")).rejects.toThrow("notFound")
+    // Rozcestník ho pošle rovno do jeho jedinej časti.
+    await expect(renderIndex()).rejects.toThrow("redirect /organisation/gdpr")
   })
 })
 
-describe("zoznam častí (ZAKLAD-zalozky)", () => {
-  it("skupiny a poradie častí podľa skupín (Q1, Q3)", async () => {
-    const html = await render("signin")
+describe("časti na vlastných cestách (2. 10. 2026)", () => {
+  it("rozcestník: skupiny a poradie častí, odkazy na cesty, žiadna vybraná (Q1, Q3)", async () => {
+    const html = await renderIndex()
     const groups = [...html.matchAll(/<h2 class="org-nav-title">([^<]+)</g)].map(m => m[1])
     expect(groups).toEqual(["Organizácia", "Prístup", "Dokumenty", "Dohľad"])
-    const tabs = [...html.matchAll(/href="\/organisation\?tab=([a-z]+)"/g)].map(m => m[1])
-    expect(tabs).toEqual(["branding", "departments", "codelists", "domains", "signin", "chunking", "audit", "gdpr"])
-    expect(html).toMatch(/class="org-nav-item is-active"[^>]*href="\/organisation\?tab=signin"/)
+    const sections = [...html.matchAll(/href="\/organisation\/([a-z]+)"/g)].map(m => m[1])
+    expect(sections).toEqual(["branding", "departments", "codelists", "domains", "signin", "chunking", "audit", "gdpr"])
+    expect(html).not.toContain("is-active")
+    expect(html).toContain('class="org-nav org-index"')
+    expect(html).toContain("[path:Organizácia]")
   })
 
-  it("s ?tab: časť, odkaz späť a názov časti v ceste (Q2)", async () => {
+  it("časť: vybraná v zozname, odkaz späť a názov v ceste (Q2)", async () => {
     const html = await render("signin")
-    expect(html).toContain('<div class="org-set"')
+    expect(html).toMatch(/class="org-nav-item is-active"[^>]*href="\/organisation\/signin"/)
     expect(html).toContain('<a class="org-back" href="/organisation">Nastavenie organizácie</a>')
-    expect(html).toContain("[leaf:Prihlasovanie]")
+    expect(html).toContain("[path:Organizácia › Prihlasovanie]")
   })
 
-  it("bez ?tab: zoznam (org-set--index), prvá časť pre široké okno, cesta bez časti", async () => {
-    const html = await render(null)
-    expect(html).toContain('<div class="org-set org-set--index"')
-    expect(html).toMatch(/class="org-nav-item is-active"[^>]*href="\/organisation\?tab=branding"/)
-    expect(html).toContain('name="displayName"')
-    expect(html).not.toContain("[leaf:")
+  it("neznáma časť je 404", async () => {
+    await expect(render("nieco")).rejects.toThrow("notFound")
   })
 })

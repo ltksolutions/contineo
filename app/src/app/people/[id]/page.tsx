@@ -201,7 +201,7 @@ export default async function PersonDetailPage({
             {workplaces.length === 0 ? (
               <>
                 {t.noWorkplacesBefore}
-                <Link href="/organisation?tab=codelists">{t.noWorkplacesLink}</Link>
+                <Link href="/organisation/codelists">{t.noWorkplacesLink}</Link>
                 {t.noWorkplacesAfter}
               </>
             ) : t.workplaceNote}
@@ -223,7 +223,7 @@ export default async function PersonDetailPage({
             {treeRows.length === 0 ? (
               <>
                 {t.noDepartmentsBefore}
-                <Link href="/organisation?tab=departments">{t.noDepartmentsLink}</Link>
+                <Link href="/organisation/departments">{t.noDepartmentsLink}</Link>
                 {t.noDepartmentsAfter}
               </>
             ) : (
