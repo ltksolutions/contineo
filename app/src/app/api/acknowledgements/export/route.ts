@@ -12,6 +12,7 @@
 
 import { onboardingContext } from "@/lib/session"
 import { personAcknowledgements } from "@/lib/acknowledgements"
+import { trackNames } from "@/lib/tracks"
 import { toCsv } from "@/lib/csv"
 import { dictionary, formatDate } from "@/lib/i18n"
 
@@ -26,7 +27,10 @@ export async function GET() {
   const language = person.language
   const mine = dictionary(language).myAcknowledgements
   const t = mine.csv
-  const records = await personAcknowledgements(person.companyCode, person.id)
+  const [records, names] = await Promise.all([
+    personAcknowledgements(person.companyCode, person.id),
+    trackNames(person.companyCode),
+  ])
 
   const csv = toCsv(records, [
     { label: t.type, value: r => (r.type === "revocation" ? mine.revoked : mine.acknowledged) },
@@ -34,7 +38,8 @@ export async function GET() {
     { label: t.version, value: r => r.versionLabel },
     { label: t.effectiveFrom, value: r => formatDate(r.effectiveFrom, language) },
     { label: t.acknowledgedAt, value: r => formatDate(r.acknowledgedAt, language) },
-    { label: t.track, value: r => r.trackId ?? "" },
+    // Názov trasy, nie kľúč (2. 10. 2026): kópia zo záznamu, inak dnešný názov.
+    { label: t.track, value: r => (r.trackId ? r.trackTitle ?? names[r.trackId] ?? r.trackId : "") },
     // Doslovné znenie patrí do výpisu — bez neho je to zoznam názvov, nie doklad.
     { label: t.statement, value: r => r.statementText },
     { label: t.reason, value: r => r.reason ?? "" },

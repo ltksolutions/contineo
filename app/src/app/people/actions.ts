@@ -72,6 +72,7 @@ const INVITE_CONCURRENCY = 5
 import { csvToPersons, emptyNotes } from "@/lib/personsImport"
 import type { ImportSettings } from "@/lib/personsImport"
 import { tenantByCompanyCode } from "@/lib/tenants"
+import { allTracks } from "@/lib/tracks"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType, RowPlan } from "@/lib/persons"
@@ -135,7 +136,9 @@ export async function savePersonAction(fd: FormData) {
       personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
       language: fieldText(fd, "language") || undefined,
       gender: fieldText(fd, "gender"),
-      tracks: listField(fd, "tracks"),
+      // Trasy zo zaškrtávacích políčok podľa názvu (2. 10. 2026); neprítomná
+      // hodnota znamená „odobrať", ako pri rolách.
+      tracks: fd.getAll("track").filter((v): v is string => typeof v === "string"),
       groups: listField(fd, "groups"),
       // Zaškrtávacie políčka: neprítomná hodnota znamená „odobrať".
       roles: fd.getAll("roles").filter((r): r is string => typeof r === "string"),
@@ -328,6 +331,7 @@ export async function previewImportAction(text: string, overwrite = false): Prom
   /** Hodnoty, ktoré riadok neodmietli, ale pole nevyplnili (D85, D86). */
   unknownWorkplaces?: string[]
   badPhones?: string[]
+  unknownTracks?: string[]
 }> {
   const actor = await peopleAdmin()
   if (!actor) return { ok: false, message: NO_RIGHT }
@@ -351,6 +355,7 @@ export async function previewImportAction(text: string, overwrite = false): Prom
       // uvidí „100 osôb pribudne", import prejde bez jedinej chyby a pracoviská
       // budú prázdne — a hľadať sa to bude až o mesiac.
       unknownWorkplaces: [...new Set(notes.unknownWorkplaces)],
+      unknownTracks: [...new Set(notes.unknownTracks ?? [])],
       badPhones: [...new Set(notes.badPhones)],
     }
   } catch (e) {
@@ -370,6 +375,8 @@ async function importSettings(companyCode: string): Promise<ImportSettings> {
   return {
     phonePrefix: tenant?.phonePrefix,
     workplaces: availableOptions(tenant ?? { codelists: {} }, "workplace"),
+    // Stĺpec `trasy` nesie názvy trás (2. 10. 2026).
+    tracks: (await allTracks(companyCode)).map(t => ({ key: t.key, title: t.title })),
   }
 }
 

@@ -6,7 +6,6 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import KeyFromLabel from "@/components/KeyFromLabel"
 import Link from "next/link"
 import { trackManagerContext } from "@/lib/hr"
 import { allTracks } from "@/lib/tracks"
@@ -31,8 +30,8 @@ export default async function TracksPage({
     notFound()
   }
 
-  const { msg: message, error, key, title } = normalizeQuery<{
-    msg?: string; error?: string; key?: string; title?: string
+  const { msg: message, error, title } = normalizeQuery<{
+    msg?: string; error?: string; title?: string
   }>(await searchParams)
 
   const t = dictionary(ctx.person.language).library.tracks
@@ -75,7 +74,7 @@ export default async function TracksPage({
               </span>
             </div>
             <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "6px 0 0" }}>
-              <code>{tr.key}</code> · {t.stepCount(tr.steps.length)}
+              {t.stepCount(tr.steps.length)}
             </p>
             {tr.description && (
               <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "6px 0 0" }}>{tr.description}</p>
@@ -87,24 +86,12 @@ export default async function TracksPage({
       <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.newHeading}</h2>
 
       <form action={createTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
-        {/* Kľúč sa predgeneruje z názvu (ako pri dokumente a číselníkoch,
-            Ján 25. 9. 2026); ručne sa dá prepísať. */}
-        <KeyFromLabel
-          layout="fields"
-          labelName="title"
-          separator="-"
-          initialLabel={title ?? ""}
-          initialKey={key ?? ""}
-          usedKeys={tracks.map(tr => tr.key)}
-          hint={t.keyHint}
-          labels={{
-            label: t.title,
-            labelPlaceholder: "",
-            key: t.key,
-            keyPlaceholder: "novy-zamestnanec",
-            taken: t.keyTaken,
-          }}
-        />
+        {/* Len názov — kľúč vygeneruje server a nikto ho nevidí (2. 10. 2026).
+            Názov je jedinečný: podľa neho sa trasa vyberá aj importuje. */}
+        <label className="field">
+          <span className="field-label">{t.title}</span>
+          <input className="field-input" name="title" defaultValue={title ?? ""} required />
+        </label>
 
         <label className="field">
           <span className="field-label">{t.description}</span>

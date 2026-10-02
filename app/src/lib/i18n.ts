@@ -1751,6 +1751,8 @@ interface Dictionary {
       nothingToWrite: string
       emptyValue: string
       unknownWorkplaces: string
+      /** Stĺpec `trasy` nesie názvy (2. 10. 2026). */
+      unknownTracks: string
       badPhones: string
       statusNoteBefore: string
       statusNoteHighlight: string
@@ -1810,7 +1812,10 @@ interface Dictionary {
       newGroup: string
       groupsNote: string
       tracks: string
-      newTrack: string
+      /** Trasy pri osobe sa vyberajú podľa názvu (2. 10. 2026). */
+      noTracks: string
+      trackInactive: string
+      trackUnknown: string
       roles: string
       rolesNote: string
       save: string
@@ -4878,11 +4883,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.dueBeforeEffective": "Termín je skôr, než znenie začne platiť — takú povinnosť by nikto nesplnil (D6).",
 
     // ── trasy ──────────────────────────────────────────────────────────────
-    "track.keyRequired": "Kľúč trasy je povinný.",
-    "track.badKey": "„{key}“ sa nedá použiť ako kľúč trasy. Malé písmená bez diakritiky, číslice a pomlčka — kľúč ide do adries a zostáva.",
     "track.titleRequired": "Názov trasy je povinný.",
     "track.notFound": "Taká trasa tu nie je.",
-    "track.alreadyExists": "Trasa „{key}“ už existuje.",
+    "track.titleTaken": "Trasa s názvom „{title}“ už existuje — názov musí byť jedinečný, podľa neho sa trasa vyberá aj importuje.",
     "track.documentNotFound": "Dokument „{documentId}“ v tejto organizácii nie je.",
     "track.noSteps": "Prázdnu trasu zapnúť nejde — najprv jej pridaj kroky.",
 
@@ -5427,6 +5430,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nothingToWrite: "nič — všetko už má",
       emptyValue: "—",
       unknownWorkplaces: "Pracoviská, ktoré v číselníku nie sú — tieto riadky prejdú, len bez pracoviska:",
+      unknownTracks: "Trasy, ktoré v organizácii nie sú (stĺpec trasy čaká názov trasy) — tieto riadky prejdú, len bez nich:",
       badPhones: "Čísla, ktoré sa nedali prečítať — tieto riadky prejdú, len bez telefónu:",
       statusNoteBefore: "Existujúcim osobám sa ",
       statusNoteHighlight: "nemení stav",
@@ -5489,7 +5493,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newGroup: "nová skupina, napr. rozhodcovia",
       groupsNote: "Podľa nich sa prideľujú normy. Číslo je počet ľudí, ktorí skupinu majú — skupina, ktorú nemá nikto, nedostane nič.",
       tracks: "Trasy onboardingu",
-      newTrack: "nová trasa, napr. zaklad-2026",
+      noTracks: "Zatiaľ nie je žiadna trasa. Zakladajú sa v Pridelené dokumenty → Trasy.",
+      trackInactive: "vypnutá",
+      trackUnknown: "neznáma trasa (zrušte zaškrtnutie, ak ju osoba nemá mať)",
       roles: "Roly",
       rolesNote: "Správcu platformy sa odtiaľto prideliť nedá — patrí tenantovi dodávateľa a má vlastnú cestu.",
       save: "Uložiť",
@@ -8412,11 +8418,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.dueBeforeEffective": "Termín je dřív, než znění začne platit — takovou povinnost by nikdo nesplnil (D6).",
 
     // ── trasy ──────────────────────────────────────────────────────────────
-    "track.keyRequired": "Klíč trasy je povinný.",
-    "track.badKey": "„{key}“ nelze použít jako klíč trasy. Malá písmena bez diakritiky, číslice a pomlčka — klíč jde do adres a zůstává.",
     "track.titleRequired": "Název trasy je povinný.",
     "track.notFound": "Taková trasa tu není.",
-    "track.alreadyExists": "Trasa „{key}“ už existuje.",
+    "track.titleTaken": "Trasa s názvem „{title}“ už existuje — název musí být jedinečný, podle něj se trasa vybírá i importuje.",
     "track.documentNotFound": "Dokument „{documentId}“ v této organizaci není.",
     "track.noSteps": "Prázdnou trasu zapnout nelze — nejdřív jí přidej kroky.",
 
@@ -8961,6 +8965,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nothingToWrite: "nic — vše už má",
       emptyValue: "—",
       unknownWorkplaces: "Pracoviště, která v číselníku nejsou — tyto řádky projdou, jen bez pracoviště:",
+      unknownTracks: "Trasy, které v organizaci nejsou (sloupec trasy čeká název trasy) — tyto řádky projdou, jen bez nich:",
       badPhones: "Čísla, která se nedala přečíst — tyto řádky projdou, jen bez telefonu:",
       statusNoteBefore: "Existujícím osobám se ",
       statusNoteHighlight: "nemění stav",
@@ -9023,7 +9028,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newGroup: "nová skupina, např. rozhodčí",
       groupsNote: "Podle nich se přidělují normy. Číslo je počet lidí, kteří skupinu mají — skupina, kterou nemá nikdo, nedostane nic.",
       tracks: "Trasy onboardingu",
-      newTrack: "nová trasa, např. zaklad-2026",
+      noTracks: "Zatím není žádná trasa. Zakládají se v Přidělené dokumenty → Trasy.",
+      trackInactive: "vypnutá",
+      trackUnknown: "neznámá trasa (zrušte zaškrtnutí, pokud ji osoba nemá mít)",
       roles: "Role",
       rolesNote: "Správce platformy se odsud přidělit nedá — patří tenantovi dodavatele a má vlastní cestu.",
       save: "Uložit",
@@ -11936,11 +11943,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.dueBeforeEffective": "The deadline falls before the version takes effect — nobody could meet such a duty (D6).",
 
     // ── tracks ─────────────────────────────────────────────────────────────
-    "track.keyRequired": "The track key is required.",
-    "track.badKey": "“{key}” cannot be used as a track key. Lower-case letters without diacritics, digits and a hyphen — the key goes into addresses and stays there.",
     "track.titleRequired": "The track title is required.",
     "track.notFound": "There is no such track here.",
-    "track.alreadyExists": "Track “{key}” already exists.",
+    "track.titleTaken": "A track named “{title}” already exists — the name must be unique; tracks are chosen and imported by it.",
     "track.documentNotFound": "Document “{documentId}” is not in this organisation.",
     "track.noSteps": "An empty track cannot be switched on — add steps to it first.",
 
@@ -12485,6 +12490,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nothingToWrite: "nothing — already has it all",
       emptyValue: "—",
       unknownWorkplaces: "Workplaces not in the code list — these rows go through, just without a workplace:",
+      unknownTracks: "Tracks that do not exist in the organisation (the tracks column expects a track name) — these rows go through, just without them:",
       badPhones: "Numbers that could not be read — these rows go through, just without a phone:",
       statusNoteBefore: "Existing people ",
       statusNoteHighlight: "keep their status",
@@ -12547,7 +12553,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newGroup: "new group, e.g. referees",
       groupsNote: "Documents are assigned by these. The number is how many people have the group — a group nobody has receives nothing.",
       tracks: "Onboarding tracks",
-      newTrack: "new track, e.g. basics-2026",
+      noTracks: "There are no tracks yet. They are created in Assigned documents → Tracks.",
+      trackInactive: "off",
+      trackUnknown: "unknown track (untick it if the person should not have it)",
       roles: "Roles",
       rolesNote: "The platform administrator cannot be assigned from here — that role belongs to the supplier's tenant and has its own path.",
       save: "Save",

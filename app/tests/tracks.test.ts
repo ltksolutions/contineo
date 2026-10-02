@@ -3,7 +3,7 @@
  *
  * Trasa dovtedy vznikala len seedovacím skriptom, takže sa nedala pokaziť.
  * Odkedy ju skladá kurátor z obrazovky, pokaziť sa dá — a práve to sa tu
- * testuje: kľúč, ktorý ide do adries, poradie krokov a zapnutie prázdnej
+ * testuje: kľúč, ktorý generuje server, jedinečný názov, poradie krokov a zapnutie prázdnej
  * trasy, ktorá by ľuďom tvrdila „hotovo“.
  *
  * Odvodený progres (D27) sa netestuje tu — je to čítanie, nie zápis.
@@ -25,7 +25,7 @@ function collection(title: string): FakeCollection {
       findOne: vi.fn().mockResolvedValue(null),
       insertOne: vi.fn().mockResolvedValue({ insertedId: "id-1" }),
       updateOne: vi.fn().mockResolvedValue({ matchedCount: 1, modifiedCount: 1 }),
-      find: vi.fn().mockReturnValue({ sort: () => ({ toArray: async () => [] }) }),
+      find: vi.fn().mockReturnValue({ sort: () => ({ toArray: async () => [] }), toArray: async () => [] }),
     }
   }
   return collections[title]
@@ -77,48 +77,50 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-// ── kľúč ─────────────────────────────────────────────────────────────────────
+// ── kľúč a názov ─────────────────────────────────────────────────────────────
 
-describe("kluc trasy — ide do adries a zostava", () => {
-  it("prijme kluc v spravnom tvare a zalozi trasu neaktivnu", async () => {
-    await createTrack(COMPANY, { key: "novy-zamestnanec", title: "Nový zamestnanec" }, ACTOR)
+describe("kluc trasy generuje server, nazov je jedinecny (2. 10. 2026)", () => {
+  const existing = (rows: Partial<Track>[]) =>
+    collection(TRACKS_COLLECTION).find.mockReturnValue({
+      sort: () => ({ toArray: async () => rows }), toArray: async () => rows,
+    })
+
+  it("zalozi trasu s nahodnym klucom (UUID) a neaktivnu; kluc vrati", async () => {
+    const key = await createTrack(COMPANY, { title: "Nový zamestnanec" }, ACTOR)
 
     const written = collection(TRACKS_COLLECTION).insertOne.mock.calls[0][0]
-    expect(written.key).toBe("novy-zamestnanec")
+    expect(written.key).toBe(key)
+    expect(key).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
     // Prazdna trasa zapnuta by tvrdila „hotovo“ kazdemu, kto ju dostane.
     expect(written.isActive).toBe(false)
     expect(written.steps).toEqual([])
   })
 
-  it("neprijme velke pismena, diakritiku, medzeru ani podciarkovnik", async () => {
-    for (const bad of ["Nový", "novy zamestnanec", "novy_zamestnanec", "a", "-zaciatok"]) {
-      await expect(
-        createTrack(COMPANY, { key: bad, title: "Trasa" }, ACTOR),
-        bad,
-      ).rejects.toThrow(TrackError)
-    }
+  it("dve trasy dostanu dva rozne kluce", async () => {
+    const a = await createTrack(COMPANY, { title: "Prvá" }, ACTOR)
+    const b = await createTrack(COMPANY, { title: "Druhá" }, ACTOR)
+    expect(a).not.toBe(b)
   })
 
-  it("velke pismena sa neodmietaju, ale zmensia — kluc je jeden, nie dva", async () => {
-    // Odmietnut „NOVY“ by bolo prisne bez uzitku: v adrese aj tak skonci
-    // v malych pismenach a dva kluce, ktore sa lisia len velkostou pismen,
-    // by boli horsie nez jeden.
-    await createTrack(COMPANY, { key: "NOVY-ZAMESTNANEC", title: "Nový zamestnanec" }, ACTOR)
-    expect(collection(TRACKS_COLLECTION).insertOne.mock.calls[0][0].key).toBe("novy-zamestnanec")
-  })
-
-  it("prazdny kluc a prazdny nazov su chyba s vlastnym kodom", async () => {
-    await expect(createTrack(COMPANY, { key: "  ", title: "Trasa" }, ACTOR))
-      .rejects.toMatchObject({ code: "track.keyRequired" })
-    await expect(createTrack(COMPANY, { key: "trasa", title: "   " }, ACTOR))
+  it("prazdny nazov je chyba s vlastnym kodom", async () => {
+    await expect(createTrack(COMPANY, { title: "   " }, ACTOR))
       .rejects.toMatchObject({ code: "track.titleRequired" })
   })
 
-  it("dva razy ten isty kluc nejde", async () => {
+  it("ten isty nazov druhy raz nejde — ani inou velkostou pismen a s medzerami", async () => {
+    existing([existingTrack()])
+    await expect(createTrack(COMPANY, { title: "  nový   ZAMESTNANEC " }, ACTOR))
+      .rejects.toMatchObject({ code: "track.titleTaken" })
+    expect(collection(TRACKS_COLLECTION).insertOne).not.toHaveBeenCalled()
+  })
+
+  it("premenovat na nazov inej trasy nejde, na vlastny (zmena velkosti) ano", async () => {
     collection(TRACKS_COLLECTION).findOne.mockResolvedValue(existingTrack())
-    await expect(
-      createTrack(COMPANY, { key: "novy-zamestnanec", title: "Nový zamestnanec" }, ACTOR),
-    ).rejects.toMatchObject({ code: "track.alreadyExists", params: { key: "novy-zamestnanec" } })
+    existing([existingTrack(), existingTrack({ key: "ina", title: "Nástup" })])
+    await expect(renameTrack(COMPANY, "novy-zamestnanec", { title: "nástup" }, ACTOR))
+      .rejects.toBeInstanceOf(TrackError)
+    await expect(renameTrack(COMPANY, "novy-zamestnanec", { title: "NOVÝ zamestnanec" }, ACTOR))
+      .resolves.toBeUndefined()
   })
 })
 

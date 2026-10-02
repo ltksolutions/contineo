@@ -39,6 +39,7 @@ import MultiSelect from "@/components/MultiSelect"
 import { treeOptions } from "@/lib/treeOptions"
 import { audienceFromSelection, audienceMembers } from "@/lib/assignments"
 import { audiencesInOrg } from "@/lib/persons"
+import { trackNames } from "@/lib/tracks"
 import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { courseRoster, type RosterRow, type RosterState } from "@/lib/learningStats"
 import { listTests } from "@/lib/testsDb"
@@ -558,7 +559,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
     if (!published) {
       assign = <section className="card mg-new"><h2>{tp.assignHeading}</h2><p className="quiet" style={{ margin: 0 }}>{tp.notPublished}</p></section>
     } else {
-      const [tree, audiences, departmentCounts] = await Promise.all([allDepartments(companyCode), audiencesInOrg(companyCode), counts(companyCode)])
+      const [tree, audiences, departmentCounts, names] = await Promise.all([allDepartments(companyCode), audiencesInOrg(companyCode), counts(companyCode), trackNames(companyCode)])
       const selected = (Array.isArray(q.audience) ? q.audience : q.audience ? [q.audience] : [])
       const chosen = q.preview === "1" ? audienceFromSelection({ all: q.all === "1", selected, departmentNames: Object.fromEntries(tree.map(o => [o.id, o.name])) }) : []
       let impact: { total: number; already: number } | null = null
@@ -595,7 +596,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
             {audiences.tracks.length > 0 && (
               <fieldset className="mc-group"><legend className="field-label">{tp.tracks}</legend>
                 <p className="quiet mc-note">{tp.tracksNote}</p>
-                {audiences.tracks.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`track:${g.value}`} defaultChecked={selected.includes(`track:${g.value}`)} /> {g.value} <span className="quiet">{g.count}</span></label>)}
+                {audiences.tracks.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`track:${g.value}`} defaultChecked={selected.includes(`track:${g.value}`)} /> {names[g.value] ?? g.value} <span className="quiet">{g.count}</span></label>)}
               </fieldset>
             )}
             <div className="mg-actions"><button type="submit" className="button button--quiet">{tp.check}</button><Link className="button button--quiet" href={`${base}?tab=people`}>{tp.cancel}</Link></div>
