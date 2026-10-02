@@ -20,6 +20,7 @@ import type { DocumentRecord } from "./documents"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 import { sortDocumentsByEffective } from "./assignOrder"
+import { isContentManager } from "./library"
 
 export const HR_ROLE = "hr"
 
@@ -35,7 +36,7 @@ export type HrContext =
   | { state: "forbidden" }
   | { state: "ready"; person: Person; tenant: Tenant }
 
-export async function hrContext(): Promise<HrContext> {
+async function contextFor(allowed: (person: Person) => boolean): Promise<HrContext> {
   let tenant: Tenant | null = null
   try {
     tenant = await currentTenant()
@@ -48,9 +49,23 @@ export async function hrContext(): Promise<HrContext> {
 
   const person = await currentPerson()
   if (!person) return { state: "not-signed-in" }
-  if (person.companyCode !== tenant.companyCode || !isHr(person)) return { state: "forbidden" }
+  if (person.companyCode !== tenant.companyCode || !allowed(person)) return { state: "forbidden" }
 
   return { state: "ready", person, tenant }
+}
+
+export async function hrContext(): Promise<HrContext> {
+  return contextFor(isHr)
+}
+
+/**
+ * Trasy (`/hr/tracks`) spravuje personalista **aj** správca obsahu
+ * (rozhodnutie Jána 2. 10. 2026). Trasa je obsah aj adresát naraz: skladá sa
+ * z dokumentov, ale určuje, čo má nový človek potvrdiť — preto patrí medzi
+ * Pridelené dokumenty, a kto ju dovtedy skladal v knižnici, o ňu neprichádza.
+ */
+export async function trackManagerContext(): Promise<HrContext> {
+  return contextFor(person => isHr(person) || isContentManager(person))
 }
 
 // ── čo sa dá prideliť a komu ────────────────────────────────────────────────

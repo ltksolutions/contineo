@@ -20,8 +20,11 @@ describe("stare cesty", () => {
   it("dlhsia cesta vyhrava nad kratsou", () => {
     // Bez poradia by `/kniznica/trasy` spadlo pod `/kniznica` a skoncilo
     // ako `/library/trasy`.
-    expect(legacyRoute("/kniznica/trasy")).toBe("/library/tracks")
-    expect(legacyRoute("/kniznica/trasy/nastup")).toBe("/library/tracks/nastup")
+    expect(legacyRoute("/kniznica/trasy")).toBe("/hr/tracks")
+    expect(legacyRoute("/kniznica/trasy/nastup")).toBe("/hr/tracks/nastup")
+    // Trasy prešli z knižnice do Pridelených dokumentov (2. 10. 2026).
+    expect(legacyRoute("/library/tracks")).toBe("/hr/tracks")
+    expect(legacyRoute("/library/tracks/nastup")).toBe("/hr/tracks/nastup")
     expect(legacyRoute("/kniznica/nova")).toBe("/library/new")
     expect(legacyRoute("/osoby/pozvat")).toBe("/people/invite")
     expect(legacyRoute("/osoby/nova")).toBe("/people/new")
@@ -48,7 +51,7 @@ describe("stare cesty", () => {
 
   it("nove cesty necha na pokoji", () => {
     for (const path of [
-      "/", "/documents", "/library", "/library/tracks", "/people", "/people/invite",
+      "/", "/documents", "/library", "/hr/tracks", "/people", "/people/invite",
       "/organisation", "/sign-in", "/hr", "/hr/overview", "/hr/reminders",
       "/hr/assign", "/api/auth/session", "/api/chat", "/api/reading", "/api/cron/overdue",
       "/admin", "/admin/tenants",

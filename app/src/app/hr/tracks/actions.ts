@@ -3,8 +3,9 @@
 /**
  * actions.ts — skladanie trás onboardingu (rozsah C).
  *
- * Rovnaká zásada ako v knižnici: bránou je `libraryContext()`, `companyCode`
- * je z prihláseného človeka, nikdy z formulára (D32).
+ * Bránou je `trackManagerContext()` — personalista alebo správca obsahu
+ * (od 2. 10. 2026 sú trasy v Pridelených dokumentoch, dovtedy v knižnici).
+ * `companyCode` je z prihláseného človeka, nikdy z formulára (D32).
  *
  * Kroky sa **ukladajú celé**, nie po jednom. Pridanie, odobranie aj posun sú
  * tu len tri spôsoby, ako zostaviť to isté pole — a `setTrackSteps()` ho
@@ -16,14 +17,14 @@
 import { redirect } from "next/navigation"
 import { slugifyTrackKey } from "@/lib/slug"
 import { revalidatePath } from "next/cache"
-import { libraryContext } from "@/lib/library"
+import { trackManagerContext } from "@/lib/hr"
 import { isRedirect } from "@/lib/redirects"
 import { createTrack, renameTrack, setTrackSteps, setTrackActive, type StepInput } from "@/lib/tracks"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
-  const ctx = await libraryContext()
+  const ctx = await trackManagerContext()
   return ctx.state === "ready"
     ? { email: ctx.person.email, companyCode: ctx.person.companyCode, language: ctx.person.language }
     : null
@@ -60,13 +61,13 @@ export async function createTrackAction(fd: FormData) {
       { key, title: text(fd, "title"), description: text(fd, "description") || undefined },
       self.email,
     )
-    revalidatePath("/library/tracks")
+    revalidatePath("/hr/tracks")
     // Rovno do detailu: po založení nasleduje skladanie krokov a hľadať
     // novú trasu v zozname je zbytočný krok.
-    back(`/library/tracks/${encodeURIComponent(key.toLowerCase())}`, { msg: say(self.language).created })
+    back(`/hr/tracks/${encodeURIComponent(key.toLowerCase())}`, { msg: say(self.language).created })
   } catch (e) {
     if (isRedirect(e)) throw e
-    back("/library/tracks", { error: message(e, self.language), key, title: text(fd, "title") })
+    back("/hr/tracks", { error: message(e, self.language), key, title: text(fd, "title") })
   }
 }
 
@@ -75,7 +76,7 @@ export async function renameTrackAction(fd: FormData) {
   if (!self) redirect("/")
 
   const key = text(fd, "key")
-  const to = `/library/tracks/${encodeURIComponent(key)}`
+  const to = `/hr/tracks/${encodeURIComponent(key)}`
   try {
     await renameTrack(
       self.companyCode, key,
@@ -106,7 +107,7 @@ async function editSteps(
   if (!self) redirect("/")
 
   const key = text(fd, "key")
-  const to = `/library/tracks/${encodeURIComponent(key)}`
+  const to = `/hr/tracks/${encodeURIComponent(key)}`
   try {
     const ids = fd.getAll("stepDocumentId").filter((v): v is string => typeof v === "string")
     const acks = new Set(fd.getAll("stepAck").filter((v): v is string => typeof v === "string"))
@@ -159,7 +160,7 @@ export async function setTrackActiveAction(fd: FormData) {
 
   const key = text(fd, "key")
   const isActive = text(fd, "isActive") === "1"
-  const to = `/library/tracks/${encodeURIComponent(key)}`
+  const to = `/hr/tracks/${encodeURIComponent(key)}`
   try {
     await setTrackActive(self.companyCode, key, isActive, self.email)
     revalidatePath(to)

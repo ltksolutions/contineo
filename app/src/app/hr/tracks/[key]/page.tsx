@@ -8,7 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import { libraryContext } from "@/lib/library"
+import { trackManagerContext } from "@/lib/hr"
 import { trackByKey } from "@/lib/tracks"
 import { libraryList } from "@/lib/libraryRead"
 import { brandingView } from "@/lib/tenants"
@@ -31,7 +31,7 @@ export default async function TrackDetailPage({
   params: Promise<{ key: string }>
   searchParams: Promise<RawQuery>
 }) {
-  const ctx = await libraryContext()
+  const ctx = await trackManagerContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
@@ -50,7 +50,7 @@ export default async function TrackDetailPage({
   const titles = new Map(documents.map(d => [d.documentId, d.title]))
   const steps = track.steps.filter(s => s.documentId)
 
-  const here = `/library/tracks/${encodeURIComponent(track.key)}`
+  const here = `/hr/tracks/${encodeURIComponent(track.key)}`
 
   // Skryté polia, ktoré nesú aktuálne poradie do každej akcie. Bez nich by
   // sa zmena vyhodnotila proti stavu v databáze a dve otvorené záložky by
@@ -77,7 +77,7 @@ export default async function TrackDetailPage({
     .map(d => ({ value: d.documentId, label: d.title }))
 
   return (
-    <AppShell language={ctx.person.language} title={track.title} trail={{ "/library/tracks": t.heading }}>
+    <AppShell language={ctx.person.language} title={track.title} trail={{ "/hr/tracks": t.heading }}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={message ?? error} error={Boolean(error)} back={here} />
 

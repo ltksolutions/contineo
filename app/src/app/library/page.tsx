@@ -617,7 +617,10 @@ export default async function LibraryPage({
         <details className="page-more">
           <summary className="button button--quiet page-more-toggle" aria-label={t.moreActions}>⋯</summary>
           <div className="page-more-menu">
-            <Link className="page-more-item" href="/library/tracks">
+            {/* Trasy sú od 2. 10. 2026 v Pridelených dokumentoch; správca
+                obsahu ich smie spravovať aj bez roly personalistu, tak ich
+                nájde aj tu. */}
+            <Link className="page-more-item" href="/hr/tracks">
               {dictionary(uiLanguage).library.tracks.heading}
             </Link>
             {/* Kurácia: overené odpovede pripravené hodnotiteľom (D11). */}
