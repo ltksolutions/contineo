@@ -727,16 +727,16 @@ export default async function OrganisationSectionPage({
           {t.codelists.introBefore}<strong>{t.codelists.introHighlight}</strong>{t.codelists.introAfter}
         </p>
 
-        {/* Záložky s počtom položiek — jeden číselník naraz (Ján 3. 10. 2026). */}
+        {/* Záložky — jeden číselník naraz (Ján 3. 10. 2026). Bez počtu položiek: nič nehlásil. */}
         <nav className="tabs" aria-label={t.tabs.codelists}>
           <TabsBar>
             {codelists.map(c => (
               <TabLink key={c.name} href={`/organisation/codelists?list=${c.name}`} active={list === c.name}>
-                {t.codelists.labels[c.name].name} <span className="tab-count">{c.vsetky.length}</span>
+                {t.codelists.labels[c.name].name}
               </TabLink>
             ))}
             <TabLink href="/organisation/codelists?list=legal" active={list === "legal"}>
-              {tr.orgHeading} <span className="tab-count">{STANDARD_LEGAL_BASES.length + (tenant.legalBases ?? []).length}</span>
+              {tr.orgHeading}
             </TabLink>
           </TabsBar>
         </nav>
