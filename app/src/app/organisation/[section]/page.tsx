@@ -719,7 +719,10 @@ export default async function OrganisationSectionPage({
       )}
 
       {now === "codelists" && (
-      <div style={{ display: "grid", gap: 16 }}>
+      // `minmax(0, 1fr)`: bez neho sa stĺpec mriežky roztiahne na šírku pásu
+      // záložiek a na telefóne roztiahne celú stránku (565 px pri 375 px,
+      // 3. 10. 2026) — pás sa má posúvať, nie tlačiť.
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "minmax(0, 1fr)" }}>
         <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0, maxWidth: 620 }}>
           {t.codelists.introBefore}<strong>{t.codelists.introHighlight}</strong>{t.codelists.introAfter}
         </p>
