@@ -40,3 +40,10 @@ __pycache__/
 
 # docasna sprava commitu (pisana kvoli diakritike do suboru, commit cez git commit -F)
 .commit_msg.tmp
+
+# /design-sync — staged skripty, výstup zostavenia, lokálny stav
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

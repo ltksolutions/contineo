@@ -1,0 +1,37 @@
+{
+  "projectId": "f95a5ca5-9a29-4e6d-8915-5818da1a2b0e",
+  "pkg": "contineo-design-system",
+  "globalName": "Contineo",
+  "shape": "package",
+  "entry": "app/design-sync.entry.ts",
+  "srcDir": "src/components",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "src/app/globals.css",
+  "componentSrcMap": {
+    "Icon": "src/components/Icon.tsx",
+    "ContineoMark": "src/components/ContineoMark.tsx",
+    "SearchStrip": "src/components/SearchStrip.tsx",
+    "Select": "src/components/Select.tsx",
+    "MultiSelect": "src/components/MultiSelect.tsx",
+    "Skeleton": "src/components/Skeleton.tsx",
+    "SkeletonCard": "src/components/Skeleton.tsx",
+    "SkeletonList": "src/components/Skeleton.tsx",
+    "Fact": "src/components/Fact.tsx",
+    "TabsBar": "src/components/TabsBar.tsx",
+    "CopyLink": "src/components/CopyLink.tsx"
+  },
+  "dtsPropsFor": {
+    "Icon": "/** Názov ikony zo spoločnej sady (ťah 1,5 px na mriežke 18). */ name: \"overview\" | \"ask\" | \"toAcknowledge\" | \"toApprove\" | \"directory\" | \"library\" | \"assigned\" | \"evidence\" | \"evaluation\" | \"dpo\" | \"people\" | \"notifications\" | \"search\" | \"filters\" | \"mail\" | \"grid\" | \"learning\" | \"learningManage\" | \"learningTests\" | \"play\" | \"pause\" | \"volume\" | \"muted\" | \"fullscreen\" | \"more\"; /** Veľkosť v px, predvolene 17. */ size?: number;",
+    "ContineoMark": "/** Veľkosť značky v px, predvolene 26. Farba je `currentColor`. */ size?: number;",
+    "SearchStrip": "/** Názov poľa vo formulári (napr. \"q\"). */ name: string; defaultValue?: string; placeholder: string; /** Meno poľa pre čítačku — viditeľný popis lišta nemá. */ label: string; /** Neviditeľné tlačidlo na odoslanie pre čítačku. */ submitLabel?: string; className?: string; autoCapitalize?: string; autoCorrect?: string;",
+    "Select": "name: string; options: { value: string; label: string; /** Cesta v strome nad položkou. */ path?: string }[]; initial?: string; fieldLabel?: string; form?: string; /** Hľadanie v zozname; predvolene od 8 možností. */ searchable?: boolean; required?: boolean; searchPlaceholder?: string; emptyText?: string; language?: \"sk\" | \"cs\" | \"en\";",
+    "MultiSelect": "name: string; label?: string; options: { value: string; label: string; count?: number; /** Úroveň v strome (1 = koreň). */ level?: number; path?: string }[]; selected: string[]; placeholder?: string; /** Smie sa napísať hodnota, ktorá v ponuke nie je. */ allowNew?: boolean; emit?: \"csv\" | \"repeat\"; language?: \"sk\" | \"cs\" | \"en\"; caseSensitive?: boolean; noscript?: \"text\" | \"checkboxes\"; note?: string;",
+    "Skeleton": "className?: string; width?: number | string; height?: number | string;",
+    "SkeletonCard": "/** Počet riadkov textu, predvolene 4. */ lines?: number;",
+    "SkeletonList": "/** Počet položiek, predvolene 5. */ items?: number; chip?: boolean;",
+    "Fact": "label: string; value: string; /** Tlmená hodnota (napr. „—“). */ muted?: boolean;",
+    "TabsBar": "/** Položky podmenu: odkazy s triedou `tab` (vybraná `tab is-active`). */ children: React.ReactNode;",
+    "CopyLink": "/** Text, ktorý sa skopíruje. */ value: string; label: string; /** Text po skopírovaní. */ done: string;"
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
