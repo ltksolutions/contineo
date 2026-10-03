@@ -5124,7 +5124,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Časti nastavenia",
     groups: { org: "Organizácia", access: "Prístup", documents: "Dokumenty", oversight: "Dohľad" },
     tabs: {
-      branding: "Vzhľad a jazyky",
+      general: "Všeobecné",
       departments: "Oddelenia",
       domains: "Domény",
       signin: "Prihlasovanie",
@@ -8686,7 +8686,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Části nastavení",
     groups: { org: "Organizace", access: "Přístup", documents: "Dokumenty", oversight: "Dohled" },
     tabs: {
-      branding: "Vzhled a jazyky",
+      general: "Obecné",
       departments: "Oddělení",
       domains: "Domény",
       signin: "Přihlašování",
@@ -12237,7 +12237,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Settings sections",
     groups: { org: "Organisation", access: "Access", documents: "Documents", oversight: "Oversight" },
     tabs: {
-      branding: "Appearance and languages",
+      general: "General",
       departments: "Departments",
       domains: "Domains",
       signin: "Sign-in",
