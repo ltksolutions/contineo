@@ -67,6 +67,49 @@ spustilo lehotu jeho dokladov.
 
 ---
 
+## 2026-10-02 — PDF pri pôvodných normách, správca obsahu a právny základ, archivácia (PR #223–#227)
+
+**PDF pri znení.** Ján sa pýtal, prečo Volebný poriadok nemá „Stiahnuť PDF"
+ako Pracovný poriadok. Deväť pôvodných noriem prišlo 30. 8. ako ručne
+prevedený text; PDF sa k nim doplnilo k **dokumentu** (`originalFile`),
+lenže model súborov pri **znení** (ADR-011) prišiel neskôr a karta aj
+potvrdzovanie čítajú len zo znenia. Skript `files:version-pdf` zapísal
+odkaz na ten istý súbor so `sha256` k platnému zneniu, s auditom.
+Revízny poriadok má 3 staršie potvrdenia bez odtlačku PDF — ostali tak.
+
+**Odkaz z výkazu DPO** viedol na čitateľskú stránku s potvrdením, nie na
+kartu v správe, kde sa určuje základ (PR #224, regresia z výkazu #218).
+
+**D155 — právny základ aj správca obsahu.** Smernica o pracovných cestách
+mala základ „neurčený" a Ján ho nemohol doplniť: pravidlo pustilo správcu
+obsahu len ako náhradníka. Rozhodol inak; úloha a upozornenie ostávajú
+zodpovednej osobe. Text v paneli ostal starý a opravil sa až po kontrole
+na intranete (#226) — zmena pravidla bez prejdenia textov, ktoré ho opisujú.
+
+**D156 — archivácia namiesto mazania (ADR-025).** Pre skutočné predpisy
+archivácia ku dňu (aj v budúcnosti); pre skúšobné dokumenty mazanie, lebo
+ich potvrdenia nie sú doklady. Mechanika je koniec platnosti ako pri novele
+(D143) — väčšinu dôsledkov už počítal `effectiveVersion()`. Prieskum našiel
+dve diery: **pripomienky by k neplatnému predpisu chodili ďalej** (duties
+čítajú snímku znenia v pridelení) a **zoznam ukazoval „Platný"** pri
+predpise s ukončenou platnosťou. Prvú rieši odvolanie pridelení (pri dátume
+v budúcnosti v dennom behu pred pripomienkami), druhú `validityTo()`.
+
+**Čo nevyšlo:**
+
+- Skúšku archivácie som chcel robiť na Skúšobnom poriadku — archivovať ho
+  nejde, má novelu 3.0 vopred. Pravidlo zafungovalo; skúšalo sa na
+  Skúšobnej smernici pred jej zmazaním.
+- `restored` už v audite znamenalo „vrátené" — archivácia dostala
+  `validity-restored`.
+- Hláška po archivácii prekryla tlačidlo „Obnoviť platnosť"; prvý klik
+  nezabral. Tak sa správajú všetky hlášky, nie chyba archivácie.
+- Druhá session pracovala 2. 10. priamo v hlavnej pracovnej kópii na vetve
+  `feat/trasy-v-pridelenych-dokumentoch` (ADR-020 chce worktree); nič sa
+  nepomiešalo, lebo moja práca bežala vo worktree.
+
+---
+
 ## 2026-10-02 — podmenu, pohľady, akcie (ZAKLAD-podmenu-a-akcie, -tabview, -segmented-control)
 
 **Pravidlo:** kam idem = podmenu (pás TabView), ako to vidím = segmented

@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Archivácia predpisu a PDF pri pôvodných normách (2026-10-02)
+
+Predpis sa dá na karte dokumentu **archivovať** ku dňu — aj s dátumom
+v budúcnosti — s povinným dôvodom. Od toho dňa neplatí: asistent z neho
+neodpovedá, nedá sa prideliť a nepotvrdené pridelenia sa odvolajú; text,
+PDF a potvrdenia ostávajú. Karta ukazuje pás „Archivovaný" s možnosťou
+**Obnoviť platnosť**, zoznam knižnice pilulku „Archivovaný". Pôvodné
+normy SFZ majú **„Stiahnuť PDF"** a PDF aj pri potvrdzovaní. Právny
+základ môže určiť aj **správca obsahu**, nielen zodpovedná osoba. Predpis
+vo výkaze DPO vedie na kartu dokumentu.
+
 ### Podmenu sekcií, prepínač pohľadu a tlačidlá (2026-10-02)
 
 **Pridelené dokumenty** majú pod nadpisom podmenu Pridelenia · Výkaz

@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-01 večer** (čas po prvý token, `/dpo` naostro, námietka po prihlásení a záložka GDPR, PR #205–#216; D153, D154)
+Posledná aktualizácia: **2026-10-03** (PDF pri pôvodných normách, archivácia predpisu, správca obsahu a právny základ, trasy; PR #223–#240; D155, D156)
 
 ---
 
@@ -89,6 +89,17 @@ dve znenia po článkoch), nad odpoveďou je štítok dňa, pri zdroji znenie.
 Overuje sa `npm run versions:questions` na skúšobnom `sfz:test_znenia`
 (6 z 6). Ostré normy majú zatiaľ po jednom znení.
 
+**Knižnica (2. 10., PR #223–#227):** deväť pôvodných noriem má PDF pri
+platnom znení (`npm run files:version-pdf`), takže „Stiahnuť PDF" aj PDF pri
+potvrdzovaní; právny základ smie určiť aj **správca obsahu** (D155, ADR-023
+Dodatok 2); predpis sa dá **archivovať ku dňu** (aj v budúcnosti, s dôvodom;
+pridelenia sa odvolajú, potvrdenia ostávajú; D156, **ADR-025**). Skúšobná
+smernica `sfz:test_onboarding` je zmazaná; `sfz:test_znenia` ostáva.
+
+**Trasy (2.–3. 10., PR #228–#239, druhá session):** trasy sú v Pridelených
+dokumentoch („Pridelené normy" → „Pridelené dokumenty"), ľudia na trase,
+termín potvrdenia pri trase, e-mail pridaným, náhodný kľúč trasy.
+
 **Karta dokumentu (PR #183–#186):** platné znenie = platí dnes, novela vopred
 ako „Pripravované znenie“; preindexovanie každého znenia; oprava textu platného
 aj pripravovaného znenia (**D150**, dodatok k ADR-007), minulé nie.
@@ -134,10 +145,9 @@ licencií (Ján v exporte nebol).
 činnostiach prepísať do záznamu zväzu (C2, doplnené o Vzdelávanie
 a pohlavie), DPIA pred pilotom (C3), termín balančného testu (A3, A11).
 
-**Mazanie pôvodných noriem a testovacích dokumentov** pred ostrou prevádzkou
-— Ján povie kedy a ktoré; predtým výpis toho, čo sa na ne odkazuje. Pribudol
-`sfz:test_znenia` (skúšobné otázky asistenta ho potrebujú, kým nie je
-ostrá norma s viacerými zneniami).
+**Skúšobný poriadok `sfz:test_znenia`** — zmazať, keď kontrola asistenta
+(`npm run versions:questions`) prejde na ostrú normu s viacerými zneniami.
+Skúšobná smernica je zmazaná (2. 10.).
 
 **Staré pridelenia Oddeleniu IT** — Revízny poriadok (10. 9., Branislav
 nepotvrdil) a Skúšobná smernica (8. 9.): odvolať, alebo nechať?
@@ -185,8 +195,9 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (1. 10. večer): **0 errors, 41 warnings,
-2286 testov v 170 súboroch.** Pri veľkej záťaži stroja pomôže
+Baseline, proti ktorej sa porovnáva (3. 10.): **0 errors, 42 warnings,
+2341 testov v 180 súboroch.** Varovanie navyše prišlo s PR #238 (`hrReport.ts:342`
+nepoužitý parameter alebo `hr/actions.ts:172` výraz bez účinku) — upratať. Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
