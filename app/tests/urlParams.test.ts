@@ -48,7 +48,8 @@ describe("preklad hodnoty záložky", () => {
   })
 
   it("ostatné slovenské záložky sa preložia", () => {
-    expect(tabValue("vzhlad")).toBe("branding")
+    expect(tabValue("vzhlad")).toBe("general")
+    expect(tabValue("branding")).toBe("general")
     expect(tabValue("domeny")).toBe("domains")
     expect(tabValue("prihlasenie")).toBe("signin")
     expect(tabValue("ciselniky")).toBe("codelists")

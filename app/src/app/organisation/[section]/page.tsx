@@ -282,13 +282,13 @@ export default async function OrganisationSectionPage({
       <div className="org-body">
 
       {/*
-        Vzhľad a jazyky v sekciách (rám ADMIN-prevadzkovatel-a-ciselniky):
+        Všeobecné (do 3. 10. 2026 „Vzhľad a jazyky") v sekciách (rám ADMIN-prevadzkovatel-a-ciselniky):
         nadpis a vysvetlenie vľavo, polia vpravo (od 1024 px), jeden
         formulár a jedno Uložiť v lište, ktorá je vždy na dosah.
       */}
-      {now === "branding" && (
+      {now === "general" && (
       <form action={saveBrandingAction} className="card set-form">
-        <input type="hidden" name="tab" value="branding" />
+        <input type="hidden" name="tab" value="general" />
 
         <section className="set-sec">
           <div className="set-sec-head">
@@ -455,9 +455,9 @@ export default async function OrganisationSectionPage({
 
       {/* Formulár odstránenia loga — samostatný (formuláre sa vnárať nedajú),
           volá ho tlačidlo pri logu cez `form="remove-logo"`. */}
-      {now === "branding" && tenant.branding.logoUrl && (
+      {now === "general" && tenant.branding.logoUrl && (
         <form id="remove-logo" action={deleteLogoAction} hidden>
-          <input type="hidden" name="tab" value="branding" />
+          <input type="hidden" name="tab" value="general" />
         </form>
       )}
 

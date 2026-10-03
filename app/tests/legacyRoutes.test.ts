@@ -15,6 +15,8 @@ describe("stare cesty", () => {
     expect(legacyRoute("/kniznica")).toBe("/library")
     expect(legacyRoute("/osoby")).toBe("/people")
     expect(legacyRoute("/organizacia")).toBe("/organisation")
+    // „Vzhľad a jazyky" → „Všeobecné" (3. 10. 2026)
+    expect(legacyRoute("/organisation/branding")).toBe("/organisation/general")
     expect(legacyRoute("/prihlasenie")).toBe("/sign-in")
   })
 

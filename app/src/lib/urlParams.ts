@@ -30,7 +30,10 @@ export const LEGACY_QUERY_KEYS: Record<string, string> = {
 export const LEGACY_TAB_VALUES: Record<string, string> = {
   utvary: "departments",
   oddelenia: "departments",
-  vzhlad: "branding",
+  vzhlad: "general",
+  // „Vzhľad a jazyky" → „Všeobecné" (3. 10. 2026): odkazy a formuláre so
+  // starým kľúčom vedú na novú časť.
+  branding: "general",
   domeny: "domains",
   prihlasenie: "signin",
   ciselniky: "codelists",
