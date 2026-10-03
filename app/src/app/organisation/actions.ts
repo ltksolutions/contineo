@@ -95,6 +95,9 @@ function back(fd: FormData, message: string, error = false): never {
   const section = tabValue(given)
   const q = new URLSearchParams({ msg: message })
   if (error) q.set("error", "1")
+  // Záložka číselníkov (3. 10. 2026) — po uložení späť na ten istý číselník.
+  const list = fieldText(fd, "list")
+  if (list) q.set("list", list)
   // Každá časť má vlastnú cestu (2. 10. 2026); neznámy kľúč vedie na rozcestník.
   redirect(`${isOrgSection(section) ? orgSectionHref(section) : "/organisation"}?${q.toString()}`)
 }

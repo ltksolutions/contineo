@@ -17,6 +17,8 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import TabLink from "@/components/TabLink"
+import TabsBar from "@/components/TabsBar"
 import OrgNav from "@/components/OrgNav"
 import { isOrgSection, orgSectionHref, type OrgSection } from "@/lib/orgSections"
 import SubmitButton from "@/components/SubmitButton"
@@ -184,7 +186,7 @@ export default async function OrganisationSectionPage({
     notFound()
   }
 
-  const { msg: message, error, search } = normalizeQuery<{ msg?: string; error?: string; search?: string }>(await searchParams)
+  const { msg: message, error, search, list: listParam } = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string }>(await searchParams)
   const { section } = await params
   // Neznáma časť je 404 — adresa je zmluva, nie návrh. DPO bez roly
   // správcu osôb má len GDPR (D154); ostatné časti preňho neexistujú.
@@ -240,6 +242,11 @@ export default async function OrganisationSectionPage({
 
   // Právne základy (D92) — na tej istej záložke ako ostatné číselníky.
   const basisUsage = now === "codelists" ? await legalBasisUsage(tenant.companyCode) : new Map<string, number>()
+  // Číselníky ako záložky (3. 10. 2026): jeden číselník naraz, `?list=`.
+  // Neznáma hodnota padá na prvý — starý odkaz s kotvou `#cl-…` tiež.
+  const codelistTabs = [...CUSTOM_CODELISTS, "legal"] as const
+  const list: (typeof codelistTabs)[number] = (codelistTabs as readonly string[]).includes(listParam ?? "")
+    ? listParam as (typeof codelistTabs)[number] : "category"
   const hiddenBases = new Set(tenant.legalBasesHidden ?? [])
   const tr = d.responsibility
 
@@ -717,17 +724,21 @@ export default async function OrganisationSectionPage({
           {t.codelists.introBefore}<strong>{t.codelists.introHighlight}</strong>{t.codelists.introAfter}
         </p>
 
-        {/* Rozcestník s počtom položiek (rám ADMIN, bod 5). */}
-        <nav className="cl-nav" aria-label={t.tabs.codelists}>
-          {codelists.map(c => (
-            <a key={c.name} href={`#cl-${c.name}`}>
-              {t.codelists.labels[c.name].name} <span>{c.vsetky.length}</span>
-            </a>
-          ))}
-          <a href="#cl-legal">{tr.orgHeading} <span>{STANDARD_LEGAL_BASES.length + (tenant.legalBases ?? []).length}</span></a>
+        {/* Záložky s počtom položiek — jeden číselník naraz (Ján 3. 10. 2026). */}
+        <nav className="tabs" aria-label={t.tabs.codelists}>
+          <TabsBar>
+            {codelists.map(c => (
+              <TabLink key={c.name} href={`/organisation/codelists?list=${c.name}`} active={list === c.name}>
+                {t.codelists.labels[c.name].name} <span className="tab-count">{c.vsetky.length}</span>
+              </TabLink>
+            ))}
+            <TabLink href="/organisation/codelists?list=legal" active={list === "legal"}>
+              {tr.orgHeading} <span className="tab-count">{STANDARD_LEGAL_BASES.length + (tenant.legalBases ?? []).length}</span>
+            </TabLink>
+          </TabsBar>
         </nav>
 
-        {codelists.map(c => {
+        {codelists.filter(c => c.name === list).map(c => {
           const isCustom = (key: string) => c.vlastne.some(v => v.key === key)
           const base = c.vsetky.filter(p => !isCustom(p.key))
           const custom = c.vsetky.filter(p => isCustom(p.key))
@@ -745,6 +756,7 @@ export default async function OrganisationSectionPage({
                   {own && (
                     <form action={removeCodelistItemAction}>
                       <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="list" value={list} />
                       <input type="hidden" name="codelist" value={c.name} />
                       <input type="hidden" name="key" value={p.key} />
                       <SubmitButton className="button button--quiet">{t.codelists.remove}</SubmitButton>
@@ -776,6 +788,7 @@ export default async function OrganisationSectionPage({
 
             <form action={addCodelistItemAction} className="tree-form cl-add">
               <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="list" value={list} />
               <input type="hidden" name="codelist" value={c.name} />
               {/* Kľúč sa predgeneruje z názvu (ako pri novom dokumente, ADR-010).
                   Príklad v poli je `placeholder` pre daný číselník (rám, bod 7). */}
@@ -803,6 +816,7 @@ export default async function OrganisationSectionPage({
           Zoskupené podľa kategórie, odkaz na predpis pod názvom, akcia vždy
           v stĺpci (rám, bod 8).
         */}
+        {list === "legal" && (
         <section id="cl-legal" className="card cl">
           <div className="cl-head">
             <h2>{tr.orgHeading}</h2>
@@ -837,6 +851,7 @@ export default async function OrganisationSectionPage({
                       {i.source === "standard" && (
                         <form action={toggleStandardLegalBasisAction}>
                           <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="list" value={list} />
                           <input type="hidden" name="key" value={i.key} />
                           <input type="hidden" name="hidden" value={i.off ? "0" : "1"} />
                           <SubmitButton className="button button--quiet">{i.off ? tr.unhide : tr.hide}</SubmitButton>
@@ -845,6 +860,7 @@ export default async function OrganisationSectionPage({
                       {i.source === "custom" && !i.off && (
                         <form action={retireLegalBasisAction}>
                           <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="list" value={list} />
                           <input type="hidden" name="key" value={i.key} />
                           <SubmitButton className="button button--quiet">{tr.retire}</SubmitButton>
                         </form>
@@ -860,6 +876,7 @@ export default async function OrganisationSectionPage({
             <summary>+ {tr.addHeading}</summary>
           <form action={addLegalBasisAction} style={{ display: "grid", gap: 10, padding: "12px 18px 18px" }}>
             <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="list" value={list} />
             <KeyFromLabel
               layout="fields"
               usedKeys={[...STANDARD_LEGAL_BASES.map(i => i.key), ...(tenant.legalBases ?? []).map(i => i.key)]}
@@ -893,6 +910,7 @@ export default async function OrganisationSectionPage({
           </form>
           </details>
         </section>
+        )}
       </div>
       )}
 
