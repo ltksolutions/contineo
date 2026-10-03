@@ -339,7 +339,7 @@ export function byPerson(rows: Duty[]): Summary[] {
  */
 export function byTrack(rows: Duty[]): Summary[] {
   const expanded = rows.flatMap(d => d.trackTitles.map(title => ({ ...d, trackTitles: [title] })))
-  return summarize(expanded, d => d.trackTitles[0], d => d.trackTitles[0], d => "")
+  return summarize(expanded, d => d.trackTitles[0], d => d.trackTitles[0], () => "")
 }
 
 /** Stav jednej trasy — spolu a po ľuďoch (2. 10. 2026). */

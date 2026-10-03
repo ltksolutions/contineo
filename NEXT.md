@@ -195,9 +195,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (3. 10.): **0 errors, 42 warnings,
-2341 testov v 180 súboroch.** Varovanie navyše prišlo s PR #238 (`hrReport.ts:342`
-nepoužitý parameter alebo `hr/actions.ts:172` výraz bez účinku) — upratať. Pri veľkej záťaži stroja pomôže
+Baseline, proti ktorej sa porovnáva (3. 10.): **0 errors, 40 warnings,
+2341 testov v 180 súboroch.** Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri

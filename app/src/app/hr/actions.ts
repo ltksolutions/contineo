@@ -169,7 +169,8 @@ export async function assignAction(fd: FormData) {
           assignedBy: actor.email,
           due,
         })
-        v.status === "pridelene" ? assigned++ : already++
+        if (v.status === "pridelene") assigned++
+        else already++
       } catch (e) {
         // Chyba pri prvom páre zastaví celé rozposielanie: sú to tie isté
         // pravidlá pre všetky (dôvod, publikum), takže druhý pokus by zlyhal
