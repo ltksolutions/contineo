@@ -119,6 +119,78 @@ Podrobne: `docs/AKO_TO_BEZI.md`.
   v spoločnom bloku na konci `globals.css`, nie pri komponente. Základ
   z riadku (`flex: 1 1 160px`) sa inak v stĺpci stane výškou.
 
+## Otázky a rozhodnutia: vždy s odporúčaním
+
+Keď treba, aby Ján niečo rozhodol, otázka **vždy nesie odporúčanie**:
+ktorá možnosť, a jednou-dvomi vetami prečo. Odporúčaná je prvá. Holý
+zoznam možností bez názoru prenáša prácu späť na Jána — rozhodnutie má
+byť jedno slovo („áno", „B"), nie rešerš.
+
+Platí aj pre otázky v návrhoch z Claude Design (sekcia „Rozhodnuté" v `.md`).
+
+## Dizajn: Apple HIG a SwiftUI na všetkých šírkach
+
+Vzorom rozhrania sú **Apple Human Interface Guidelines a prvky SwiftUI** —
+nielen na telefóne a tablete, aj na počítači (rozhodnutie Jána 3. 10. 2026):
+pod 640 px iOS, 640–1023 px iPadOS, od 1024 px macOS. Nový prvok sa najprv
+hľadá v SwiftUI; vlastný vzniká, len keď tam ekvivalent nie je.
+
+| SwiftUI | U nás | Kedy |
+|---|---|---|
+| `TabView` (pás) | `SectionTabs` (`.tabs` + `.tabs-bar`) | podmenu sekcie, 2–5 častí |
+| `NavigationSplitView` (bočný panel) | zoznam vľavo od 1024 px (`OrgNav`) | sekcia s viac než 5 časťami |
+| `Picker(.segmented)` | `.view-switch` | prepnutie pohľadu, 2–4 krátke voľby |
+| `toolbar` | akcie vpravo v `.page-head` | čo sa dá na obrazovke urobiť |
+| `List` / `Table` | karty pod 1024 px, tabuľka od 1024 px | zoznamy |
+| `Form` + `Section` | `.set-sec` (nadpis vľavo, polia vpravo) | nastavenia |
+| `.sheet` / `.popover` | plachta (`AskSheet`, menu 9 bodiek) | krátka úloha nad obrazovkou |
+
+**Web ostáva webom.** Z Applu sa preberá tvar a správanie ovládačov, nie
+ich technika ani výzor systému:
+
+- stav je v adrese, ovládače sú odkazy a formuláre, stránka funguje bez
+  JavaScriptu;
+- farba a logo sú organizácie (`tenantStyle`), nie systémová modrá;
+- nekopíruje sa „chrome" macOS — semafory okna, priesvitnosť všade,
+  systémové menu;
+- terč na dotyk má aspoň 44 px, kontrast podľa WCAG AA, svetlá aj tmavá téma.
+
+## Rozhranie: navigácia a ovládače
+
+Jedno pravidlo pre každú obrazovku (ZAKLAD-podmenu-a-akcie, 2. 10. 2026):
+
+| Čo človek robí | Prvok |
+|---|---|
+| **kam idem** — iná stránka tej istej sekcie | podmenu pod nadpisom sekcie, rovnaké na všetkých jej stránkach |
+| **ako to vidím** — iné zoskupenie toho istého zoznamu | prepínač pohľadu `.view-switch` (sivý) |
+| **čo urobím** — akcia | `.button`: **najviac jedno plné** na obrazovke, vpravo v `.page-head`; ostatné `.button--quiet` |
+| **odkiaľ som prišiel** | cesta pod hlavičkou |
+
+- **Odkaz „← Späť…" sa nekreslí** — návrat je cesta. Výnimka je len
+  tlačidlo ďalšieho kroku na konci úlohy (výsledok testu, certifikát,
+  vypnuté Vzdelávanie).
+- **Podmenu má farbu organizácie, prepínač pohľadu nie** — dva ovládače
+  nad sebou sa nesmú dať zameniť.
+- **Spodok obrazovky patrí len hlavnej lište aplikácie.** Druhá lišta dole
+  (napr. spodný `TabView` z iPhonu) sa nepridáva.
+- **Časť, ktorú má cesta pomenovať, má vlastnú adresu**
+  (`/organisation/signin`), nie `?tab=`. Parameter ostáva tam, kde sa
+  miesto nemení (pohľad, filter, hľadanie).
+- Podmenu s jedinou položkou sa nekreslí; položku, ktorá by človeku vrátila
+  404, mu podmenu neukazuje.
+
+## Návrhy z Claude Design
+
+- Podklad (`.html` + `.md`) sa stiahne do `docs/design/` a commitne sa
+  s implementáciou. Komentár pri zmene odkazuje na názov návrhu
+  (`ZAKLAD-…`) a dátum.
+- **Rozhodnutie v repozitári má prednosť pred návrhom.** Keď si protirečia,
+  práca sa zastaví a Ján rozhodne — s odporúčaním, nie potichu podľa návrhu
+  ani podľa kódu.
+- Odchýlka od návrhu (iné rozmery, chýbajúca trieda, text navyše) sa
+  pomenuje v PR, nielen urobí.
+- Jeden návrh = jedna vetva a jeden PR, ak Ján nepovie inak.
+
 ## Kto smie commitovať priamo do `main`
 
 Ján Letko (a asistent, ktorý pracuje na jeho stroji pod jeho menom) smie commitovať
