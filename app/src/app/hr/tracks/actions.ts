@@ -21,7 +21,7 @@ import { isRedirect } from "@/lib/redirects"
 import { createTrack, renameTrack, setTrackSteps, setTrackActive, setTrackDue, addTrackMembers, removeTrackMember, TrackError, type StepInput } from "@/lib/tracks"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
-import { trackRecipients } from "@/lib/trackNotify"
+import { trackRecipients, type TrackRecipient } from "@/lib/trackNotify"
 import { send, reminderEmail } from "@/lib/ecomail"
 import { writeAudit } from "@/lib/audit"
 import { brandingView } from "@/lib/tenants"
@@ -221,7 +221,28 @@ export async function addMembersAction(fd: FormData) {
     )
     revalidatePath(to)
     revalidatePath("/documents")
-    back(to, { msg: say(self.language).membersAdded(r.added, r.already) })
+    const added = say(self.language).membersAdded(r.added, r.already)
+    /*
+      E-mail pridaným (3. 10. 2026) — len keď ho personalista zaškrtne,
+      a len novo pridaným: kto na trase už bol, o nej vie alebo dostal
+      e-mail skôr. Obsah a adresáti z toho istého výpočtu ako „Dať vedieť".
+    */
+    if (fd.get("notify") === "1" && r.addedIds.length > 0) {
+      const ctx = await trackManagerContext()
+      if (ctx.state !== "ready") redirect("/")
+      const found = await trackRecipients(self.companyCode, key)
+      const ids = new Set(r.addedIds)
+      const recipients = (found?.recipients ?? []).filter(x => ids.has(x.person.id))
+      if (found && recipients.length > 0) {
+        const { sent, failed } = await notifyRecipients(ctx, found.track, recipients)
+        const t = dictionary(self.language).hr.actions
+        const mail = failed.length === 0
+          ? t.sent(sent)
+          : t.sentWithFailures(sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`)
+        back(to, failed.length ? { msg: `${added} ${mail}`, error: "1" } : { msg: `${added} ${mail}` })
+      }
+    }
+    back(to, { msg: added })
   } catch (e) {
     if (isRedirect(e)) throw e
     back(to, { error: message(e, self.language) })
@@ -266,13 +287,31 @@ export async function sendTrackNotificationAction(fd: FormData) {
   if (!found) redirect("/hr/tracks")
   if (found.recipients.length === 0) back(to, { error: t.nobodyToNotify })
 
+  const { sent, failed } = await notifyRecipients(ctx, found.track, found.recipients)
+  const message = failed.length === 0
+    ? t.sent(sent)
+    : t.sentWithFailures(sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`)
+  back(to, failed.length ? { msg: message, error: "1" } : { msg: message })
+}
+
+/**
+ * Pošle e-mail „dokumenty na potvrdenie" a zapíše do auditu. Spoločné pre
+ * „Dať vedieť e-mailom" aj pre zaškrtávatko pri pridaní na trasu — jeden
+ * text a jedno pravidlo, nie dve kópie.
+ */
+async function notifyRecipients(
+  ctx: Extract<Awaited<ReturnType<typeof trackManagerContext>>, { state: "ready" }>,
+  track: { key: string; title: string },
+  recipients: TrackRecipient[],
+): Promise<{ sent: number; failed: string[] }> {
+  const t = dictionary(ctx.person.language).hr.actions
   const host = await requestHostname()
   const branding = brandingView(ctx.tenant)
   const link = `https://${host}/documents`
   let sent = 0
   const failed: string[] = []
-  for (let i = 0; i < found.recipients.length; i += CONCURRENCY) {
-    await Promise.all(found.recipients.slice(i, i + CONCURRENCY).map(async r => {
+  for (let i = 0; i < recipients.length; i += CONCURRENCY) {
+    await Promise.all(recipients.slice(i, i + CONCURRENCY).map(async r => {
       try {
         await send({
           to: r.person.email,
@@ -295,13 +334,10 @@ export async function sendTrackNotificationAction(fd: FormData) {
   if (sent > 0) {
     await writeAudit({
       companyCode: ctx.person.companyCode, subject: "track", action: "notified",
-      actor: ctx.person.email, targetId: found.track.key, targetLabel: found.track.title,
+      actor: ctx.person.email, targetId: track.key, targetLabel: track.title,
       note: t.sent(sent),
     })
   }
-  const message = failed.length === 0
-    ? t.sent(sent)
-    : t.sentWithFailures(sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`)
-  back(to, failed.length ? { msg: message, error: "1" } : { msg: message })
+  return { sent, failed }
 }
 

@@ -1,7 +1,8 @@
 /**
  * trackNotify.ts — komu a s čím dať vedieť o trase (2. 10. 2026).
  *
- * Pridanie na trasu e-mail neposiela — rovnako ako pridelenie: dať vedieť je
+ * Pridanie na trasu pošle e-mail len pri zaškrtnutom „poslať pridaným"
+ * (3. 10. 2026, predvolene zapnuté), a len novo pridaným. Inak je dať vedieť
  * samostatné rozhodnutie s náhľadom (`/hr/tracks/[key]/notify`). Píše sa
  * **len tým, ktorí z trasy ešte niečo nepotvrdili**, a len o tom, čo im
  * chýba. Stránka náhľadu aj odoslanie volajú túto funkciu, takže náhľad

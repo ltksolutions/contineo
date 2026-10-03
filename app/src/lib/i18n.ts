@@ -2472,6 +2472,9 @@ interface Dictionary {
       departments: string
       people: string
       addSubmit: string
+      /** Zaškrtávatko „poslať e-mail pridaným" (3. 10. 2026). */
+      notifyAdded: string
+      notifyAddedHint: string
       membersAdded: (added: number, already: number) => string
       memberRemoved: string
       enabled: string
@@ -6081,6 +6084,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departments: "Oddelenia",
       people: "Osoby",
       addSubmit: "Pridať na trasu",
+      notifyAdded: "Poslať pridaným e-mail s dokumentmi na potvrdenie",
+      notifyAddedHint: "Dostanú ho len tí, ktorým z trasy niečo chýba, a len o tom, čo im chýba. Bez zaškrtnutia sa im ozve až pripomienka pred termínom trasy.",
       membersAdded: (added, already) => `Pridané na trasu: ${added}.` + (already > 0 ? ` ${already} už na nej ${already === 1 ? "bol" : "boli"}.` : ""),
       memberRemoved: "Osoba je z trasy odobratá. Jej potvrdenia ostávajú.",
       enabled: "Trasa je zapnutá.",
@@ -9638,6 +9643,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departments: "Oddělení",
       people: "Osoby",
       addSubmit: "Přidat na trasu",
+      notifyAdded: "Poslat přidaným e-mail s dokumenty k potvrzení",
+      notifyAddedHint: "Dostanou ho jen ti, kterým z trasy něco chybí, a jen o tom, co jim chybí. Bez zaškrtnutí se jim ozve až připomínka před termínem trasy.",
       membersAdded: (added, already) => `Přidáno na trasu: ${added}.` + (already > 0 ? ` ${already} už na ní ${already === 1 ? "byl" : "byli"}.` : ""),
       memberRemoved: "Osoba je z trasy odebrána. Její potvrzení zůstávají.",
       enabled: "Trasa je zapnutá.",
@@ -13181,6 +13188,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departments: "Departments",
       people: "People",
       addSubmit: "Add to track",
+      notifyAdded: "Email the added people the documents to acknowledge",
+      notifyAddedHint: "Only those missing something from the track get it, and only about what they are missing. Without it they hear only from the reminder before the track deadline.",
       membersAdded: (added, already) => `Added to the track: ${added}.` + (already > 0 ? ` ${already} already on it.` : ""),
       memberRemoved: "The person was removed from the track. Their acknowledgements remain.",
       enabled: "The track is on.",
