@@ -139,7 +139,7 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
 })
 
 describe("číselníky ako záložky (3. 10. 2026)", () => {
-  it("štyri záložky s počtom; predvolene Druhy dokumentov, ostatné číselníky nie sú vykreslené", async () => {
+  it("štyri záložky bez počtu; predvolene Druhy dokumentov, ostatné číselníky nie sú vykreslené", async () => {
     const html = await render("codelists")
     for (const label of ["Druhy dokumentov", "Značky", "Pracoviská", "Právne základy"]) expect(html).toContain(label)
     expect(html).toContain('href="/organisation/codelists?list=tags"')
@@ -147,6 +147,8 @@ describe("číselníky ako záložky (3. 10. 2026)", () => {
     expect(html).toContain('id="cl-category"')
     expect(html).not.toContain('id="cl-tags"')
     expect(html).not.toContain('id="cl-legal"')
+    // Počet položiek pri záložke nič nehlásil (Ján 3. 10.) — nie je.
+    expect(html).not.toContain("tab-count")
   })
 
   it("?list=legal ukáže len právne základy; formuláre nesú list, aby sa po uložení vrátili", async () => {

@@ -6918,9 +6918,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .set-savebar > .button { width: 100%; min-height: 44px; }
 }
 
-/* Číselníky: záložky s počtom (3. 10. 2026), riadky so stĺpcami, skupiny. */
-.tab-count { margin-left: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.tab.is-active .tab-count { color: inherit; }
+/* Číselníky: riadky so stĺpcami, skupiny. */
 .cl { padding: 0; overflow: hidden; scroll-margin-top: 16px; }
 .cl-head { padding: 14px 18px; border-bottom: 1px solid var(--line); }
 .cl-head h2 { font-size: var(--fs-section); margin: 0 0 2px; }
