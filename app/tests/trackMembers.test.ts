@@ -48,7 +48,7 @@ describe("pridať ľudí na trasu", () => {
     ]
     const r = await addTrackMembers("SFZ", "t1", { personIds: ["p1"], departmentIds: ["it"] }, "hr@sfz.sk")
 
-    expect(r).toEqual({ added: 1, already: 1 })
+    expect(r).toEqual({ added: 1, already: 1, addedIds: ["p1"] })
     expect(state.personQuery).toMatchObject({
       companyCode: "SFZ", status: { $ne: "inactive" },
       $or: [{ id: { $in: ["p1"] } }, { departmentPath: { $in: ["it"] } }],
@@ -66,7 +66,7 @@ describe("pridať ľudí na trasu", () => {
 
   it("keď všetci už na trase sú, nič sa nezapíše", async () => {
     state.people = [{ id: "p2", fullName: "Ján Starý", tracks: ["t1"] }]
-    expect(await addTrackMembers("SFZ", "t1", { personIds: ["p2"] }, "hr@sfz.sk")).toEqual({ added: 0, already: 1 })
+    expect(await addTrackMembers("SFZ", "t1", { personIds: ["p2"] }, "hr@sfz.sk")).toEqual({ added: 0, already: 1, addedIds: [] })
     expect(state.updateMany).not.toHaveBeenCalled()
     expect(state.audit).not.toHaveBeenCalled()
   })

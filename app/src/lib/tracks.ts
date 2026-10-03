@@ -450,7 +450,7 @@ export async function addTrackMembers(
   key: string,
   input: TrackMembersInput,
   actor: string,
-): Promise<{ added: number; already: number }> {
+): Promise<{ added: number; already: number; addedIds: string[] }> {
   const track = await trackOrThrow(companyCode, key)
   const personIds = [...new Set((input.personIds ?? []).filter(Boolean))]
   const departmentIds = [...new Set((input.departmentIds ?? []).filter(Boolean))]
@@ -487,7 +487,7 @@ export async function addTrackMembers(
       note: toAdd.map(p => p.fullName).join(", "),
     })
   }
-  return { added: toAdd.length, already: people.length - toAdd.length }
+  return { added: toAdd.length, already: people.length - toAdd.length, addedIds: toAdd.map(p => p.id) }
 }
 
 /** Odoberie osobu z trasy. Potvrdenia, ktoré vznikli, ostávajú (D24). */

@@ -326,6 +326,18 @@ export default async function TrackDetailPage({
               />
             </div>
           )}
+          {/* Predvolene zaškrtnuté (Ján, 3. 10. 2026) — kto na trasu pribudne, má
+              sa to dozvedieť hneď, nie až z pripomienky pred termínom. Odškrtnúť
+              sa dá, takže e-mail ostáva rozhodnutím personalistu. */}
+          {track.isActive && (
+            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "var(--fs-body)" }}>
+              <input type="checkbox" name="notify" value="1" defaultChecked style={{ marginTop: 3 }} />
+              <span>
+                {t.notifyAdded}
+                <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>{t.notifyAddedHint}</span>
+              </span>
+            </label>
+          )}
           <p style={{ margin: 0 }}>
             <button className="button" type="submit">{t.addSubmit}</button>
           </p>
