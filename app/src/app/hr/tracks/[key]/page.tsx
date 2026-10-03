@@ -24,10 +24,10 @@ import { duties, trackStatuses } from "@/lib/hrReport"
 import Link from "next/link"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { dictionary } from "@/lib/i18n"
+import { dictionary, formatDate } from "@/lib/i18n"
 import {
   renameTrackAction, addStepAction, removeStepAction, moveStepAction, setTrackActiveAction,
-  addMembersAction, removeMemberAction,
+  addMembersAction, removeMemberAction, setTrackDueAction,
 } from "../actions"
 import AppShell from "@/components/AppShell"
 
@@ -74,6 +74,14 @@ export default async function TrackDetailPage({
   // Stav po ľuďoch z tých istých riadkov ako výkaz a karta v Pridelených dokumentoch.
   const status = trackStatuses(rows).get(track.title)
   const missing = status ? status.total - status.done : 0
+  // Najbližší termín každého, kto ešte niečo z trasy nepotvrdil — z tých istých riadkov.
+  const dueByPerson = new Map<string, Date>()
+  for (const d of rows) {
+    if (d.acknowledgedAt || !d.due || !d.trackTitles.includes(track.title)) continue
+    const known = dueByPerson.get(d.personId)
+    if (!known || d.due < known) dueByPerson.set(d.personId, d.due)
+  }
+  const tp = dictionary(ctx.person.language).pending
   const members = sortPeopleBySurname(people.filter(p => p.tracks.includes(track.key)))
   const choices = sortPeopleBySurname(people.filter(p => p.status !== "inactive" && !p.tracks.includes(track.key)))
     .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
@@ -144,6 +152,35 @@ export default async function TrackDetailPage({
           </label>
           <p style={{ margin: 0 }}>
             <button className="button" type="submit">{t.rename}</button>
+          </p>
+        </form>
+      </details>
+
+      {/*
+        Termín potvrdenia (3. 10. 2026) — len dni od pridania na trasu; pevný
+        dátum by neskôr pridaným nechal len zvyšok lehoty. Zbalené ako názov,
+        zhrnutie je vidieť aj bez rozbalenia.
+      */}
+      <details className="track-edit" style={{ margin: "0 0 24px" }}>
+        <summary className="button button--quiet">{t.dueHeading}: {t.dueCurrent(track.due?.days ?? null)}</summary>
+        <form action={setTrackDueAction} className="card" style={{ padding: 20, display: "grid", gap: 14, marginTop: 12 }}>
+          <input type="hidden" name="key" value={track.key} />
+          <label className="check-row" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input type="radio" name="dueMode" value="none" defaultChecked={!track.due} />
+            <span>{t.dueNone}</span>
+          </label>
+          <label className="check-row" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <input type="radio" name="dueMode" value="days" defaultChecked={Boolean(track.due)} />
+            <span>{t.dueDays}</span>
+          </label>
+          <label className="field" style={{ maxWidth: 220 }}>
+            <span className="quiet field-label">{t.dueDaysUnit}</span>
+            <input className="field-input" type="number" min={1} max={365} name="dueDays"
+                   defaultValue={track.due?.days ?? 14} />
+          </label>
+          <span className="quiet field-hint">{t.dueNote}</span>
+          <p style={{ margin: 0 }}>
+            <button className="button" type="submit">{t.dueSave}</button>
           </p>
         </form>
       </details>
@@ -243,6 +280,9 @@ export default async function TrackDetailPage({
                   const s = status.perPerson.get(p.id)!
                   return <span className={s.done === s.total ? "tag tag--published" : "tag"} style={{ marginLeft: 8 }}>{s.done} / {s.total}</span>
                 })()}
+                {dueByPerson.get(p.id) && (
+                  <span className="quiet"> · {tp.dueBy(formatDate(dueByPerson.get(p.id)!, ctx.person.language))}</span>
+                )}
               </span>
               <form action={removeMemberAction}>
                 <input type="hidden" name="key" value={track.key} />

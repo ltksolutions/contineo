@@ -17,8 +17,18 @@ import { duties, type Duty } from "./hrReport"
 import { reminderPlan, daysLeft } from "./due"
 import { getCollection } from "./mongodb"
 
-/** Odkedy sa nepotvrdené považuje za meškajúce. Dva týždne (TODO I2). */
+/**
+ * Odkedy sa nepotvrdené považuje za meškajúce, keď organizácia nenastavila
+ * inak. Dva týždne. Organizácia si prah mení v nastavení (Potvrdzovanie,
+ * 3. 10. 2026) — `overdueDaysFor()`.
+ */
 export const DEFAULT_DAYS = 14
+
+/** Prah meškania organizácie — z nastavenia, inak `DEFAULT_DAYS`. */
+export function overdueDaysFor(tenant: { acknowledgement?: { overdueDays?: number } } | null | undefined): number {
+  const n = tenant?.acknowledgement?.overdueDays
+  return typeof n === "number" && Number.isFinite(n) && n >= 1 ? Math.floor(n) : DEFAULT_DAYS
+}
 
 /**
  * Prah pre „dať vedieť všetkým, ktorí nepotvrdili".

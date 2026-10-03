@@ -50,7 +50,7 @@ vi.mock("@/lib/departments", async importOriginal => ({
 vi.mock("../src/app/hr/tracks/actions", () => ({
   renameTrackAction: async () => {}, addStepAction: async () => {}, removeStepAction: async () => {},
   moveStepAction: async () => {}, setTrackActiveAction: async () => {},
-  addMembersAction: async () => {}, removeMemberAction: async () => {},
+  addMembersAction: async () => {}, removeMemberAction: async () => {}, setTrackDueAction: async () => {},
 }))
 
 describe("stránka trasy", () => {

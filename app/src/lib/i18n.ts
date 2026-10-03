@@ -1594,6 +1594,14 @@ interface Dictionary {
       colUse: string
       baseBadge: string
     }
+    /** Časť Potvrdzovanie (3. 10. 2026) — prah meškania organizácie. */
+    acknowledgements: {
+      heading: string
+      intro: string
+      overdueDays: string
+      overdueDaysNote: string
+      save: string
+    }
     chunking: {
       heading: string
       introBefore: string
@@ -2445,6 +2453,15 @@ interface Dictionary {
       created: string
       renamed: string
       stepsSaved: string
+      /** Termín potvrdenia trasy — dni od pridania na ňu (3. 10. 2026). */
+      dueHeading: string
+      dueNone: string
+      dueDays: string
+      dueDaysUnit: string
+      dueNote: string
+      dueSave: string
+      dueSaved: string
+      dueCurrent: (days: number | null) => string
       /** Ľudia na trase (2. 10. 2026). */
       members: (n: number) => string
       noMembers: string
@@ -2496,6 +2513,8 @@ interface Dictionary {
         progressOf: (acknowledged: number, assigned: number) => string
         progressNobody: string
         progressWho: string
+        /** Odkaz na Prideliť dokument s týmto dokumentom (3. 10. 2026). */
+        progressAssign: string
         metaHeading: string
         folder: string
         unfiled: string
@@ -4869,6 +4888,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} je v organizácii už zapísaná.",
     "person.nameRequired": "Meno je povinné — bez neho je v zozname len adresa.",
     "person.nameRequiredShort": "Meno je povinné.",
+    "tenant.overdueDaysRange": "Počet dní musí byť od 1 do 365.",
     "tenant.phonePrefixShape": "Predvoľba „{value}“ nemá správny tvar — očakáva sa napríklad +421.",
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správny tvar — očakáva sa 6 až 12 číslic.",
     "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailovej adresy.",
@@ -4895,6 +4915,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "track.titleRequired": "Názov trasy je povinný.",
     "track.notFound": "Taká trasa tu nie je.",
     "track.titleTaken": "Trasa s názvom „{title}“ už existuje — názov musí byť jedinečný, podľa neho sa trasa vyberá aj importuje.",
+    "track.badDueDays": "Počet dní musí byť od 1 do 365.",
     "track.noMembersChosen": "Vyberte osoby alebo oddelenie.",
     "track.documentNotFound": "Dokument „{documentId}“ v tejto organizácii nie je.",
     "track.noSteps": "Prázdnu trasu zapnúť nejde — najprv jej pridaj kroky.",
@@ -5106,6 +5127,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Prihlasovanie",
       codelists: "Číselníky",
       chunking: "Členenie",
+      acknowledgements: "Potvrdzovanie",
       audit: "Audit",
       gdpr: "GDPR",
     },
@@ -5264,6 +5286,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colKey: "Kľúč",
       colUse: "Použitie",
       baseBadge: "základná",
+    },
+    acknowledgements: {
+      heading: "Potvrdzovanie",
+      intro: "Termín potvrdenia sa nastavuje pri každom pridelení a na každej trase. Tu je len prah pre personalistu: po koľkých dňoch bez potvrdenia je človek v Pripomienkach a v týždennom súhrne medzi meškajúcimi.",
+      overdueDays: "Meškajúci po (dňoch)",
+      overdueDaysNote: "Počíta sa od vzniku povinnosti — pridelenia, príchodu do oddelenia alebo pridania na trasu. Ľuďom samotným sa podľa toho nič neposiela. Predvolené je 14.",
+      save: "Uložiť",
     },
     chunking: {
       heading: "Členenie dokumentov na úseky",
@@ -6035,6 +6064,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       created: "Trasa je založená. Zapnúť ju pôjde, až keď bude mať kroky.",
       renamed: "Názov je uložený.",
       stepsSaved: "Kroky sú uložené.",
+      dueHeading: "Termín potvrdenia",
+      dueNone: "bez termínu",
+      dueDays: "do počtu dní od pridania na trasu",
+      dueDaysUnit: "dní od pridania",
+      dueNote: "Každému beží od dňa, keď ho na trasu pridali, takže kto príde neskôr, má rovnakú lehotu. S termínom ľuďom chodia pripomienky, keď sa blíži aj keď je po ňom. Platí aj pre tých, ktorí už na trase sú — kto je na nej dlhšie, môže byť hneď po termíne.",
+      dueSave: "Uložiť termín",
+      dueSaved: "Termín trasy je uložený.",
+      dueCurrent: days => (days === null ? "Bez termínu" : days === 1 ? "Do 1 dňa od pridania na trasu" : `Do ${days} dní od pridania na trasu`),
       members: n => `Osoby na trase (${n})`,
       noMembers: "Na trase zatiaľ nie je nikto.",
       membersInactive: "vyradená",
@@ -6086,6 +6123,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} osôb`,
         progressNobody: "Toto znenie zatiaľ nie je nikomu pridelené.",
         progressWho: "Kto nepotvrdil →",
+        progressAssign: "Prideliť na potvrdenie →",
         metaHeading: "Metadáta",
         folder: "Priečinok",
         unfiled: "Nezaradené",
@@ -8410,6 +8448,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} je v organizaci už zapsaná.",
     "person.nameRequired": "Jméno je povinné — bez něj je v seznamu jen adresa.",
     "person.nameRequiredShort": "Jméno je povinné.",
+    "tenant.overdueDaysRange": "Počet dnů musí být od 1 do 365.",
     "tenant.phonePrefixShape": "Předvolba „{value}“ nemá správný tvar — očekává se například +420.",
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správný tvar — očekává se 6 až 12 číslic.",
     "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailové adresy.",
@@ -8436,6 +8475,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "track.titleRequired": "Název trasy je povinný.",
     "track.notFound": "Taková trasa tu není.",
     "track.titleTaken": "Trasa s názvem „{title}“ už existuje — název musí být jedinečný, podle něj se trasa vybírá i importuje.",
+    "track.badDueDays": "Počet dnů musí být od 1 do 365.",
     "track.noMembersChosen": "Vyberte osoby nebo oddělení.",
     "track.documentNotFound": "Dokument „{documentId}“ v této organizaci není.",
     "track.noSteps": "Prázdnou trasu zapnout nelze — nejdřív jí přidej kroky.",
@@ -8647,6 +8687,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Přihlašování",
       codelists: "Číselníky",
       chunking: "Členění",
+      acknowledgements: "Potvrzování",
       audit: "Audit",
       gdpr: "GDPR",
     },
@@ -8805,6 +8846,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colKey: "Klíč",
       colUse: "Použití",
       baseBadge: "základní",
+    },
+    acknowledgements: {
+      heading: "Potvrzování",
+      intro: "Termín potvrzení se nastavuje u každého přidělení a na každé trase. Tady je jen práh pro personalistu: po kolika dnech bez potvrzení je člověk v Připomínkách a v týdenním souhrnu mezi opožděnými.",
+      overdueDays: "Opožděný po (dnech)",
+      overdueDaysNote: "Počítá se od vzniku povinnosti — přidělení, příchodu do oddělení nebo přidání na trasu. Lidem samotným se podle toho nic neposílá. Výchozí je 14.",
+      save: "Uložit",
     },
     chunking: {
       heading: "Členění dokumentů na úseky",
@@ -9573,6 +9621,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       created: "Trasa je založena. Zapnout ji půjde, až bude mít kroky.",
       renamed: "Název je uložen.",
       stepsSaved: "Kroky jsou uloženy.",
+      dueHeading: "Termín potvrzení",
+      dueNone: "bez termínu",
+      dueDays: "do počtu dnů od přidání na trasu",
+      dueDaysUnit: "dnů od přidání",
+      dueNote: "Každému běží ode dne, kdy ho na trasu přidali, takže kdo přijde později, má stejnou lhůtu. S termínem lidem chodí připomínky, když se blíží i když je po něm. Platí i pro ty, kdo už na trase jsou — kdo je na ní déle, může být hned po termínu.",
+      dueSave: "Uložit termín",
+      dueSaved: "Termín trasy je uložen.",
+      dueCurrent: days => (days === null ? "Bez termínu" : days === 1 ? "Do 1 dne od přidání na trasu" : `Do ${days} dnů od přidání na trasu`),
       members: n => `Osoby na trase (${n})`,
       noMembers: "Na trase zatím nikdo není.",
       membersInactive: "vyřazená",
@@ -9624,6 +9680,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} osob`,
         progressNobody: "Toto znění zatím není nikomu přiděleno.",
         progressWho: "Kdo nepotvrdil →",
+        progressAssign: "Přidělit k potvrzení →",
         metaHeading: "Metadata",
         folder: "Složka",
         unfiled: "Nezařazené",
@@ -11940,6 +11997,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} is already recorded in the organisation.",
     "person.nameRequired": "The name is required — without it the list shows only the address.",
     "person.nameRequiredShort": "The name is required.",
+    "tenant.overdueDaysRange": "The number of days must be between 1 and 365.",
     "tenant.phonePrefixShape": "The dialling code “{value}” has the wrong shape — something like +421 is expected.",
     "tenant.registrationNumberShape": "The company ID “{value}” has the wrong shape — 6 to 12 digits are expected.",
     "tenant.privacyContactEmailShape": "“{value}” is not an e-mail address.",
@@ -11966,6 +12024,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "track.titleRequired": "The track title is required.",
     "track.notFound": "There is no such track here.",
     "track.titleTaken": "A track named “{title}” already exists — the name must be unique; tracks are chosen and imported by it.",
+    "track.badDueDays": "The number of days must be between 1 and 365.",
     "track.noMembersChosen": "Choose people or a department.",
     "track.documentNotFound": "Document “{documentId}” is not in this organisation.",
     "track.noSteps": "An empty track cannot be switched on — add steps to it first.",
@@ -12177,6 +12236,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Sign-in",
       codelists: "Code lists",
       chunking: "Chunking",
+      acknowledgements: "Acknowledgement",
       audit: "Audit",
       gdpr: "GDPR",
     },
@@ -12335,6 +12395,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colKey: "Key",
       colUse: "Usage",
       baseBadge: "built-in",
+    },
+    acknowledgements: {
+      heading: "Acknowledgement",
+      intro: "The acknowledgement deadline is set on each assignment and each track. This is only the threshold for HR: after how many days without acknowledgement a person counts as overdue in Reminders and in the weekly summary.",
+      overdueDays: "Overdue after (days)",
+      overdueDaysNote: "Counted from when the duty arose — the assignment, joining the department or being added to the track. Nothing is sent to the people themselves because of it. The default is 14.",
+      save: "Save",
     },
     chunking: {
       heading: "Splitting documents into chunks",
@@ -13097,6 +13164,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       created: "The track is created. You can switch it on once it has steps.",
       renamed: "The title is saved.",
       stepsSaved: "The steps are saved.",
+      dueHeading: "Acknowledgement deadline",
+      dueNone: "no deadline",
+      dueDays: "within N days of being added to the track",
+      dueDaysUnit: "days after being added",
+      dueNote: "It runs for each person from the day they were added to the track, so whoever joins later gets the same time. With a deadline, people get reminders as it approaches and after it passes. It also applies to people already on the track — anyone who has been on it longer may be past the deadline straight away.",
+      dueSave: "Save deadline",
+      dueSaved: "The track deadline is saved.",
+      dueCurrent: days => (days === null ? "No deadline" : days === 1 ? "Within 1 day of being added to the track" : `Within ${days} days of being added to the track`),
       members: n => `People on the track (${n})`,
       noMembers: "Nobody is on the track yet.",
       membersInactive: "deactivated",
@@ -13148,6 +13223,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} people`,
         progressNobody: "This version has not been assigned to anyone yet.",
         progressWho: "Who has not acknowledged →",
+        progressAssign: "Assign for acknowledgement →",
         metaHeading: "Metadata",
         folder: "Folder",
         unfiled: "Unfiled",

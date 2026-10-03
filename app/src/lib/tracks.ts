@@ -20,7 +20,8 @@ import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { NoVersionReason } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
 import { sameTrackTitle } from "./trackNames"
-import { PERSONS_COLLECTION, type Person } from "./persons"
+import { PERSONS_COLLECTION, trackStart, type Person } from "./persons"
+import { dueFrom, type Due } from "./due"
 
 export const TRACKS_COLLECTION = "onboarding_tracks"
 
@@ -41,6 +42,12 @@ export interface Track {
   description?: string
   steps: TrackStep[]
   isActive: boolean
+  /**
+   * Termín potvrdenia (3. 10. 2026) — len v dňoch od pridania na trasu.
+   * Pevný dátum trasa nemá: kto na ňu príde deň pred ním, dostal by na
+   * dokumenty jeden deň (ADR-004). Chýba = bez termínu.
+   */
+  due?: Extract<Due, { kind: "days" }> | null
 }
 
 /** Prečo krok nejde prejsť — aby sa dalo povedať niečo konkrétne, nie „chyba". */
@@ -67,6 +74,21 @@ export interface TrackProgress {
   nextOrder: number | null
   doneCount: number
   totalCount: number
+  /** Termín pre túto osobu — od jej pridania na trasu. `null` = bez termínu. */
+  due: Date | null
+}
+
+/**
+ * Termín povinnosti z trasy pre osobu. Jedno miesto pre widget aj výkaz —
+ * dve kópie výpočtu by pri tej istej povinnosti ukázali iný dátum.
+ */
+export function trackDueFor(
+  track: Pick<Track, "key" | "due">,
+  person: Parameters<typeof trackStart>[0],
+): Date | null {
+  if (!track.due) return null
+  const start = trackStart(person, track.key)
+  return start ? dueFrom(start, track.due) : null
 }
 
 /**
@@ -118,7 +140,7 @@ export async function trackProgress(person: {
   id: string
   companyCode: string
   tracks?: string[]
-}): Promise<TrackProgress[]> {
+} & Parameters<typeof trackStart>[0]): Promise<TrackProgress[]> {
   const tracks = await loadTracks(person.companyCode, person.tracks ?? [])
   if (tracks.length === 0) return []
 
@@ -181,6 +203,7 @@ export async function trackProgress(person: {
       nextOrder: firstOpen ? firstOpen.order : null,
       doneCount: steps.filter(s => s.done).length,
       totalCount: steps.length,
+      due: trackDueFor(track, person),
     }
   })
 }
@@ -375,6 +398,32 @@ export async function setTrackActive(
   })
 }
 
+/**
+ * Nastaví termín trasy: počet dní od pridania na trasu, alebo `null` = bez
+ * termínu. Mení termín aj tým, ktorí na trase už sú — počíta sa od ich
+ * pridania, takže kto je na nej dlho, môže byť hneď po termíne. Stránka to
+ * pred uložením povie.
+ */
+export async function setTrackDue(
+  companyCode: string,
+  key: string,
+  days: number | null,
+  actor: string,
+): Promise<void> {
+  const before = await trackOrThrow(companyCode, key)
+  if (days !== null && (!Number.isFinite(days) || days < 1 || days > 365)) {
+    throw new TrackError("track.badDueDays", "Počet dní musí byť od 1 do 365.")
+  }
+  const due = days === null ? null : { kind: "days" as const, days: Math.floor(days) }
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  await col.updateOne({ companyCode, key }, { $set: { due } })
+  await writeAudit({
+    companyCode, subject: "track", action: "changed",
+    actor, targetId: key, targetLabel: before.title,
+    changes: diff({ dueDays: before.due?.days ?? null }, { dueDays: due?.days ?? null }),
+  })
+}
+
 // ── ľudia na trase (2. 10. 2026) ─────────────────────────────────────────────
 //
 // Trasa sa osobe zapisuje do `persons.tracks` — to je jediný zdroj (D27).
@@ -424,9 +473,13 @@ export async function addTrackMembers(
 
   const toAdd = people.filter(p => !(p.tracks ?? []).includes(track.key))
   if (toAdd.length > 0) {
+    // Dátum pridania ide s kľúčom — nesie termín trasy (`trackHistory`).
     await col.updateMany(
       { companyCode, id: { $in: toAdd.map(p => p.id) } } as never,
-      { $addToSet: { tracks: track.key } } as never,
+      {
+        $addToSet: { tracks: track.key },
+        $push: { trackHistory: { track: track.key, from: new Date() } },
+      } as never,
     )
     await writeAudit({
       companyCode, subject: "track", action: "membersAdded",
@@ -450,7 +503,12 @@ export async function removeTrackMember(
   if (!person) return false
   const r = await col.updateOne(
     { companyCode, id: personId, tracks: track.key } as never,
-    { $pull: { tracks: track.key } } as never,
+    {
+      $pull: { tracks: track.key },
+      // Úsek sa uzavrie, nemaže — „bol na trase od–do" je odpoveď pre audit.
+      $set: { "trackHistory.$[open].to": new Date() },
+    } as never,
+    { arrayFilters: [{ "open.track": track.key, "open.to": { $exists: false } }] },
   )
   if (r.modifiedCount > 0) {
     await writeAudit({

@@ -140,6 +140,24 @@ export async function saveBrandingAction(fd: FormData) {
 }
 
 /**
+ * Potvrdzovanie (3. 10. 2026) — prah meškania pre Pripomienky a týždenný
+ * súhrn personalistovi. Dovtedy 14 dní natvrdo v kóde.
+ */
+export async function saveAcknowledgementAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await saveTenant(self.companyCode, { overdueDays: Number(fieldText(fd, "overdueDays")) }, self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  revalidatePath("/organisation", "layout")
+  revalidatePath("/hr/reminders")
+  back(fd, say(self.language).saved)
+}
+
+/**
  * E-mailové domény pre automatické založenie — od 25. 9. 2026 v záložke
  * Prihlasovanie, nie vo Vzhľade: súvisia s tým, kto sa smie prihlásiť.
  * Vzhľad ich už neposiela, takže ich uloženie vzhľadu nezmaže.

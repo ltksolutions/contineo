@@ -107,6 +107,8 @@ export interface TenantChange {
   chunkingProfiles?: ChunkingProfileDef[]
   /** Modul Vzdelávanie (ADR-018). `undefined` = nemeniť. */
   learning?: boolean
+  /** Po koľkých dňoch je nepotvrdené „meškajúce" (3. 10. 2026). */
+  overdueDays?: number
   /** Lehoty uchovávania organizácie (ADR-022, D136) — len DPO. */
   privacyRetention?: Partial<RetentionSettings>
   /** Doplnkový text DPO na `/privacy` (D137). Prázdny reťazec = zmazať. */
@@ -278,6 +280,13 @@ function toSet(change: TenantChange): Record<string, unknown> {
   }
   // Bodková cesta, aby zapnutie jedného modulu nezmazalo ostatné.
   if (change.learning !== undefined) set["modules.learning"] = change.learning
+  if (change.overdueDays !== undefined) {
+    const n = change.overdueDays
+    if (!Number.isFinite(n) || n < 1 || n > 365) {
+      throw new TenantValidationError("tenant.overdueDaysRange", "Počet dní musí byť od 1 do 365.")
+    }
+    set["acknowledgement.overdueDays"] = Math.floor(n)
+  }
   return set
 }
 

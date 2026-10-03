@@ -80,6 +80,7 @@ function track(steps: StepStatus[], over: Partial<TrackProgress> = {}): TrackPro
     nextOrder: steps.find(s => !s.done && !s.blocked)?.order ?? null,
     doneCount: steps.filter(s => s.done).length,
     totalCount: steps.length,
+    due: null,
     ...over,
   }
 }

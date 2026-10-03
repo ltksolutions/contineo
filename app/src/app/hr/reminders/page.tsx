@@ -9,7 +9,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { hrContext } from "@/lib/hr"
-import { overdue, byPersonReminder, DEFAULT_DAYS, NOTICE_DAYS, thresholdDays } from "@/lib/reminders"
+import { overdue, byPersonReminder, overdueDaysFor, NOTICE_DAYS, thresholdDays } from "@/lib/reminders"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import Notice from "@/components/Notice"
@@ -34,10 +34,11 @@ export default async function RemindersPage({
   }
 
   const q = normalizeQuery<{ msg?: string; error?: string; days?: string }>(await searchParams)
-  // Prah je v adrese, nie v nastavení organizácie: sú to dve otázky, ktoré
-  // si personalista kladie v rôznych chvíľach — „daj vedieť všetkým" (0)
-  // a „kto mešká mesiac?" (30) — a ani jedna nemá prečo bývať vo formulári.
-  const days = thresholdDays(q.days)
+  // Predvolený prah je z nastavenia organizácie (Potvrdzovanie, 3. 10. 2026);
+  // adresa ho smie na jedno zobrazenie zmeniť — „daj vedieť všetkým" (0)
+  // a „kto mešká mesiac?" (30) sú otázky jednej chvíle, nie nastavenie.
+  const orgDays = overdueDaysFor(ctx.tenant)
+  const days = thresholdDays(q.days, orgDays)
   // Prah nula nie je „pripomienka s nulou dní", ale prvé oznámenie. Mení to
   // nadpis, vetu na obrazovke aj text e-mailu — pripomínať človeku niečo,
   // čo pribudlo dnes, znamená vyčítať mu meškanie, ktoré nemal ako spôsobiť.
@@ -84,7 +85,7 @@ export default async function RemindersPage({
             href="/hr/reminders"
             aria-current={notice ? undefined : "true"}
           >
-            {t.modeOverdue(DEFAULT_DAYS)}
+            {t.modeOverdue(orgDays)}
           </Link>
         </span>
       </div>

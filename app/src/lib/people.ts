@@ -21,7 +21,7 @@ import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
 import { writeAudit, diff } from "./audit"
 import { CONTENT_ROLE } from "./library"
-import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, newDepartmentHistory, newGroupHistory } from "./persons"
+import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, newDepartmentHistory, newGroupHistory, newTrackHistory } from "./persons"
 import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
@@ -417,7 +417,12 @@ export async function savePerson(
     if (change.gender.trim() && !s) throw new PersonValidationError("person.unknownGender", "Neznáme pohlavie.")
     set.gender = s
   }
-  if (change.tracks !== undefined) set.tracks = normalizeKeys(change.tracks)
+  if (change.tracks !== undefined) {
+    const tracks = normalizeKeys(change.tracks)
+    set.tracks = tracks
+    // Dátum pridania nesie termín trasy (3. 10. 2026) — zapisuje sa spolu.
+    set.trackHistory = newTrackHistory(existing.trackHistory, tracks, new Date())
+  }
   // Skupiny a ich história sa zapisujú **spolu**, rovnako ako oddelenie a cesta.
   // Rozdelené na dva zápisy by chvíľu platilo, že človek v skupine je, ale
   // pridelenie tej skupiny sa ho ešte netýka (D50).
@@ -441,7 +446,7 @@ export async function savePerson(
   // Audit až po úspešnom zápise (D51). Opačné poradie by zapisovalo zmeny,
   // ktoré sa nestali. `departmentPath` a obe histórie sa do rozdielu neberú:
   // sú to odvodené polia a v zázname by prehlušili to, čo človek naozaj menil.
-  const { departmentPath: _dp, departmentHistory: _dh, groupHistory: _gh,
+  const { departmentPath: _dp, departmentHistory: _dh, groupHistory: _gh, trackHistory: _th,
           updatedBy: _ub, updatedAt: _ua, ...interesting } = set
   const before: Record<string, unknown> = {}
   for (const k of Object.keys(interesting)) before[k] = (existing as Record<string, unknown>)[k]
