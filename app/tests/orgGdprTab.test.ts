@@ -59,6 +59,13 @@ vi.mock("../src/app/organisation/actions", () => ({
   shiftDepartmentAction: async () => {},
   saveDepartmentOrderAction: async () => {},
 }))
+// Číselníky (záložky, 3. 10. 2026): položky bez databázy.
+vi.mock("@/lib/codelistsTenant", () => ({
+  availableOptions: (_t: unknown, name: string) => [{ key: `${name}-a`, label: `${name} A` }, { key: `${name}-b`, label: `${name} B` }],
+  customItems: () => [],
+  codelistUsage: async () => 0,
+}))
+vi.mock("@/lib/legalBasesDb", () => ({ legalBasisUsage: async () => new Map() }))
 vi.mock("../src/app/dpo/actions", () => ({
   saveGdprContactAction: async () => {}, saveRetentionAction: async () => {}, saveExtraAction: async () => {},
 }))
@@ -128,5 +135,28 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
 
   it("neznáma časť je 404", async () => {
     await expect(render("nieco")).rejects.toThrow("notFound")
+  })
+})
+
+describe("číselníky ako záložky (3. 10. 2026)", () => {
+  it("štyri záložky s počtom; predvolene Druhy dokumentov, ostatné číselníky nie sú vykreslené", async () => {
+    const html = await render("codelists")
+    for (const label of ["Druhy dokumentov", "Značky", "Pracoviská", "Právne základy"]) expect(html).toContain(label)
+    expect(html).toContain('href="/organisation/codelists?list=tags"')
+    expect(html).toContain('class="tab is-active" aria-current="page" href="/organisation/codelists?list=category"')
+    expect(html).toContain('id="cl-category"')
+    expect(html).not.toContain('id="cl-tags"')
+    expect(html).not.toContain('id="cl-legal"')
+  })
+
+  it("?list=legal ukáže len právne základy; formuláre nesú list, aby sa po uložení vrátili", async () => {
+    const html = await render("codelists", { list: "legal" })
+    expect(html).toContain('id="cl-legal"')
+    expect(html).not.toContain('id="cl-category"')
+    expect(html).toContain('name="list" value="legal"')
+  })
+
+  it("neznámy číselník padá na prvý", async () => {
+    expect(await render("codelists", { list: "nieco" })).toContain('id="cl-category"')
   })
 })
