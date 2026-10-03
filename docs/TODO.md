@@ -65,14 +65,15 @@
 - [x] **profil členenia per organizácia** (D58) — slovo článku a prílohy, prah hlavičiek, veľkosť úseku; predvolený profil overený na 10 dokumentoch (10 zhôd, 0 rozdielov)
 - [x] **oprava údajov znenia** — pri zmene dátumu s existujúcimi potvrdeniami rozhodnutie človeka + povinný dôvod
 - [x] **`npm run check`** (D59) — invarianty medzi dokumentmi, úsekmi a potvrdeniami
-- [ ] **`sfz:test_onboarding` nemá aktívne úseky** — seedovací skript zapisuje dokument, nie chunky. Pri testovacom dokumente to nevadí, ale kontrola to bude hlásiť
+- [x] ~~**`sfz:test_onboarding` nemá aktívne úseky**~~ — dokument **zmazaný** 2026-10-02 (`npm run docs:delete -- --id sfz:test_onboarding --aj-s-vazbami --useky zmazat`): 3 úseky, 6 potvrdení, 2 pridelenia, 3 kolá, krok Skúšobnej trasy; `npm run check` bez rozporov. `sfz:test_znenia` ostáva pre `versions:questions`.
 - [x] **poradie oddelení** (D60) — ťahanie myšou v rámci úrovne, šípky ako bezJS cesta, čiary hierarchie
 - [x] **poradie aj pre priečinky knižnice** (D60) — ten istý komponent ako pri oddeleniach
 - [x] **`components/TreeWithOrder.tsx`** — premenované z `StromOddeleni.tsx` cez `StromSPoradim.tsx`, komponent slúži obom stromom
 - [x] **presun dokumentu do priečinka hromadne** ✅ hotové v 4e — `moveManyAction` v `app/src/app/library/actions.ts` (cyklus nad `assignDocument`, dávka môže skončiť čiastočne a vypíše, čo neprešlo). Zápis „zatiaľ po jednom v detaile" bol zastaraný.
 - [x] **hromadné preindexovanie** — v záložke Členenie, po dávkach 25, s počtom neaktuálnych dokumentov
 - [x] **pôvodné PDF doplnené k deviatim normám** — `npm run files:attach` (2026-08-30)
-- [ ] archivácia dokumentu z obrazovky — mazanie zámerne nie je (viažu sa potvrdenia)
+- [x] **archivácia dokumentu z obrazovky** ✅ 2026-10-02 (PR #227, **ADR-025, D156**) — karta → Správa → Archivovať predpis: deň neplatnosti (aj v budúcnosti), povinný dôvod, `versions[].archives[]`; pridelenia sa odvolajú dňom účinnosti (hneď alebo v dennom behu), overené odpovede sa ukončia; Obnoviť platnosť; pilulka „Archivovaný". Naostro vyskúšané na Skúšobnej smernici (archivovať → obnoviť).
+- [ ] **Filter „Archivované" v zozname knižnice** — pilulka je, filter nie (ADR-025, časť 3).
 - [ ] **KB / FAQ na verejnom webe** — samostatná fáza, `CMS_KONCEPCIA.md` časť B
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**
 - [ ] **Web obsah (nová fáza CMS-Web):** KB články, FAQ, kategórie, navigácia, statické stránky; publikačný workflow + SSG/ISR generovanie; i18n SK/EN (AI preklad → review, **D-CMS-5**)
