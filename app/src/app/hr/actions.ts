@@ -22,7 +22,7 @@ import {
 import { allDepartments } from "@/lib/departments"
 import { trackNames } from "@/lib/tracks"
 import { send, assignmentEmail, reminderEmail } from "@/lib/ecomail"
-import { overdue, byPersonReminder, NOTICE_DAYS, thresholdDays } from "@/lib/reminders"
+import { overdue, byPersonReminder, NOTICE_DAYS, thresholdDays, overdueDaysFor } from "@/lib/reminders"
 import { notify } from "@/lib/notifications"
 import { writeAudit, diff } from "@/lib/audit"
 import { brandingView } from "@/lib/tenants"
@@ -373,7 +373,7 @@ export async function sendRemindersAction(fd: FormData) {
 
   // Ten istý výpočet prahu ako na obrazovke — inak by formulár poslal inému
   // okruhu ľudí, než aký si personalista pred chvíľou prezrel.
-  const days = thresholdDays(fieldText(fd, "days"))
+  const days = thresholdDays(fieldText(fd, "days"), overdueDaysFor(ctx.tenant))
   const notice = days === NOTICE_DAYS
   const people = byPersonReminder(await overdue(code, days))
   if (people.length === 0) {

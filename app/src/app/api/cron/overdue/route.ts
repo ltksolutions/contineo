@@ -27,7 +27,7 @@ import type { Tenant } from "@/lib/tenants"
 import { PERSONS_COLLECTION } from "@/lib/persons"
 import type { Person } from "@/lib/persons"
 import { HR_ROLE } from "@/lib/hr"
-import { overdue, byPersonReminder, DEFAULT_DAYS, dueRemindersFor, claimReminder, dayKey, weekKey } from "@/lib/reminders"
+import { overdue, byPersonReminder, overdueDaysFor, dueRemindersFor, claimReminder, dayKey, weekKey } from "@/lib/reminders"
 import { notifyPeople, purgeExpired } from "@/lib/notifications"
 import { send, reminderEmail, dueReminderEmail } from "@/lib/ecomail"
 import { normalizeLanguage, formatDate } from "@/lib/i18n"
@@ -202,7 +202,7 @@ export async function GET(request: Request) {
   }
 
   /*
-   * Pôvodný týždenný prehľad pre personalistu podľa prahu 14 dní. **Zostáva**,
+   * Pôvodný týždenný prehľad pre personalistu podľa prahu organizácie (14 dní, ak nenastavila inak). **Zostáva**,
    * a nie je to duplicita: týka sa pridelení **bez termínu**, ktoré termínová
    * kadencia nevidí vôbec. Prah je spúšťač prehľadu, termín je sľub daný
    * človeku — dve rôzne veci (D61).
@@ -215,7 +215,7 @@ export async function GET(request: Request) {
   for (const tenant of tenants) {
     let people
     try {
-      people = byPersonReminder(await overdue(tenant.companyCode, DEFAULT_DAYS))
+      people = byPersonReminder(await overdue(tenant.companyCode, overdueDaysFor(tenant)))
     } catch (e) {
       // Jeden pokazený tenant nesmie zhodiť beh pre ostatných.
       console.error(`[cron] prehľad pre ${tenant.companyCode} zlyhal:`, e)

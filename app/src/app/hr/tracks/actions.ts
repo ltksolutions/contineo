@@ -18,7 +18,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { trackManagerContext } from "@/lib/hr"
 import { isRedirect } from "@/lib/redirects"
-import { createTrack, renameTrack, setTrackSteps, setTrackActive, addTrackMembers, removeTrackMember, type StepInput } from "@/lib/tracks"
+import { createTrack, renameTrack, setTrackSteps, setTrackActive, setTrackDue, addTrackMembers, removeTrackMember, TrackError, type StepInput } from "@/lib/tracks"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { trackRecipients } from "@/lib/trackNotify"
@@ -89,6 +89,30 @@ export async function renameTrackAction(fd: FormData) {
     )
     revalidatePath(to)
     back(to, { msg: say(self.language).renamed })
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(to, { error: message(e, self.language) })
+  }
+}
+
+/**
+ * Termín trasy (3. 10. 2026): bez termínu, alebo počet dní od pridania.
+ * Voľba je výslovná ako pri prideľovaní (`due.ts`) — prázdne pole by nevedelo
+ * povedať, či „bez termínu", alebo „zabudol som vyplniť".
+ */
+export async function setTrackDueAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const key = text(fd, "key")
+  const to = `/hr/tracks/${encodeURIComponent(key)}`
+  try {
+    const days = text(fd, "dueMode") === "days" ? Number(text(fd, "dueDays")) : null
+    if (days !== null && !Number.isFinite(days)) throw new TrackError("track.badDueDays", "Počet dní musí byť od 1 do 365.")
+    await setTrackDue(self.companyCode, key, days, self.email)
+    revalidatePath(to)
+    revalidatePath("/hr")
+    back(to, { msg: say(self.language).dueSaved })
   } catch (e) {
     if (isRedirect(e)) throw e
     back(to, { error: message(e, self.language) })

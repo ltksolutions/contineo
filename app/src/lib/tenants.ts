@@ -199,6 +199,14 @@ export interface Tenant {
    */
   certificateSigner?: { name: string; role: string }
 
+  /**
+   * Potvrdzovanie (3. 10. 2026). `overdueDays` — po koľkých dňoch bez
+   * potvrdenia je človek v Pripomienkach a v týždennom súhrne „meškajúci".
+   * Nie je to termín pre človeka (ten je na pridelení alebo trase, ADR-004),
+   * len prah prehľadu pre personalistu. Chýba = 14 (`DEFAULT_DAYS`).
+   */
+  acknowledgement?: { overdueDays?: number }
+
   learningTopics?: { key: string; label: string; retiredAt?: Date | null; createdAt?: Date; createdBy?: string }[]
 
   /**

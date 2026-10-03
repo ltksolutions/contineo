@@ -55,7 +55,11 @@ describe("pridať ľudí na trasu", () => {
     })
     expect(state.updateMany).toHaveBeenCalledWith(
       { companyCode: "SFZ", id: { $in: ["p1"] } },
-      { $addToSet: { tracks: "t1" } },
+      {
+        $addToSet: { tracks: "t1" },
+        // Dátum pridania nesie termín trasy (3. 10. 2026).
+        $push: { trackHistory: { track: "t1", from: expect.any(Date) } },
+      },
     )
     expect(state.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "membersAdded", note: "Eva Nová" }))
   })
@@ -84,7 +88,8 @@ describe("odobrať z trasy", () => {
     expect(await removeTrackMember("SFZ", "t1", "p1", "hr@sfz.sk")).toBe(true)
     expect(state.updateOne).toHaveBeenCalledWith(
       { companyCode: "SFZ", id: "p1", tracks: "t1" },
-      { $pull: { tracks: "t1" } },
+      { $pull: { tracks: "t1" }, $set: { "trackHistory.$[open].to": expect.any(Date) } },
+      { arrayFilters: [{ "open.track": "t1", "open.to": { $exists: false } }] },
     )
     expect(state.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "memberRemoved", note: "Eva Nová" }))
   })

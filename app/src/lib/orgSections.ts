@@ -15,7 +15,7 @@ import { tabValue } from "./urlParams"
 export const ORG_SECTION_GROUPS = [
   { key: "org", sections: ["branding", "departments", "codelists"] },
   { key: "access", sections: ["domains", "signin"] },
-  { key: "documents", sections: ["chunking"] },
+  { key: "documents", sections: ["acknowledgements", "chunking"] },
   { key: "oversight", sections: ["audit", "gdpr"] },
 ] as const
 

@@ -123,6 +123,12 @@ export interface AcknowledgementDuties {
   blockedCount: number
 }
 
+function earlier(a: Date | null, b: Date | null): Date | null {
+  if (!a) return b
+  if (!b) return a
+  return a < b ? a : b
+}
+
 export async function acknowledgementDuties(person: Person): Promise<AcknowledgementDuties> {
     const t = dictionary(person.language).pending
 
@@ -187,9 +193,9 @@ export async function acknowledgementDuties(person: Person): Promise<Acknowledge
           sortAt: assignedAt ?? step.effectiveFrom,
           assignedAt,
           isNew: isNewFor(person, assignedAt),
-          // Povinnosť z trasy má termín len vtedy, keď ju kryje pridelenie
-          // s termínom. Trasa vlastný termín zatiaľ niesť nevie (D62).
-          due: step.versionId ? dueOf.get(step.versionId) ?? null : null,
+          // Termín trasy (od pridania na ňu) alebo pridelenia, ktoré ten istý
+          // dokument kryje — platí skorší, prísnejší zaväzuje (D62).
+          due: earlier(track.due, step.versionId ? dueOf.get(step.versionId) ?? null : null),
         })
       }
     }

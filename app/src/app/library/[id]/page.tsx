@@ -1640,6 +1640,17 @@ export default async function DocumentDetailPage({
                 )}
               </>
             )}
+            {/*
+              Prideliť priamo odtiaľto (3. 10. 2026) — na `/hr/assign` s týmto
+              dokumentom vybraným, kde je aj termín potvrdenia. Druhý formulár
+              tu by bola druhá kópia pravidiel prideľovania (D30, D6). Len
+              personalista; platné znenie musí existovať, inak niet čo potvrdiť.
+            */}
+            {canSeeWho && current && (
+              <p className="detail-card-link">
+                <Link href={`/hr/assign?document=${encodeURIComponent(d.documentId)}`}>{ts.progressAssign}</Link>
+              </p>
+            )}
           </section>
 
           <section className="card detail-card">

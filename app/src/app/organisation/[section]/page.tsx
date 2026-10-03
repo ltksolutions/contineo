@@ -39,7 +39,8 @@ import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
 import { saveBrandingAction, saveAutoProvisionAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "../actions"
 import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "../actions"
-import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction } from "../actions"
+import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction, saveAcknowledgementAction } from "../actions"
+import { overdueDaysFor } from "@/lib/reminders"
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "../actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import KeyFromLabel from "@/components/KeyFromLabel"
@@ -893,6 +894,27 @@ export default async function OrganisationSectionPage({
           </details>
         </section>
       </div>
+      )}
+
+      {/*
+        Potvrdzovanie (3. 10. 2026). Len prah meškania — termín potvrdenia
+        je na pridelení a na trase, nie tu (ADR-004).
+      */}
+      {now === "acknowledgements" && (
+      <form action={saveAcknowledgementAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
+        <input type="hidden" name="tab" value="acknowledgements" />
+        <div>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.acknowledgements.heading}</h2>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.acknowledgements.intro}</p>
+        </div>
+        <label className="field" style={{ maxWidth: 260 }}>
+          <span className="field-label">{t.acknowledgements.overdueDays}</span>
+          <input className="field-input" type="number" name="overdueDays" min={1} max={365} required
+                 defaultValue={overdueDaysFor(tenant)} />
+        </label>
+        <span className="quiet field-hint">{t.acknowledgements.overdueDaysNote}</span>
+        <div><SubmitButton className="button">{t.acknowledgements.save}</SubmitButton></div>
+      </form>
       )}
 
       {now === "chunking" && (

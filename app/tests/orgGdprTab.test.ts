@@ -113,7 +113,7 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
     const groups = [...html.matchAll(/<h2 class="org-nav-title">([^<]+)</g)].map(m => m[1])
     expect(groups).toEqual(["Organizácia", "Prístup", "Dokumenty", "Dohľad"])
     const sections = [...html.matchAll(/href="\/organisation\/([a-z]+)"/g)].map(m => m[1])
-    expect(sections).toEqual(["branding", "departments", "codelists", "domains", "signin", "chunking", "audit", "gdpr"])
+    expect(sections).toEqual(["branding", "departments", "codelists", "domains", "signin", "acknowledgements", "chunking", "audit", "gdpr"])
     expect(html).not.toContain("is-active")
     expect(html).toContain('class="org-nav org-index"')
     expect(html).toContain("[path:Organizácia]")

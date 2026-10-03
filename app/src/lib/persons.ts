@@ -190,6 +190,15 @@ export interface Person {
   groupHistory?: { group: string; from: Date; to?: Date }[]
 
   /**
+   * Odkedy dokedy bola na ktorej trase (3. 10. 2026). Otvorený úsek trvá.
+   *
+   * Bez toho trasa nevedela niesť termín: „do 14 dní od pridania" potrebuje
+   * dátum pridania a `tracks` je len zoznam kľúčov. Ten istý dôvod ako pri
+   * skupinách — kto na trasu príde neskôr, má lehotu od svojho príchodu.
+   */
+  trackHistory?: { track: string; from: Date; to?: Date }[]
+
+  /**
    * Meno a priezvisko — **zadávané polia** (D83). `fullName` sa z nich skladá
    * (`composeFullName`), nie naopak.
    *
@@ -586,6 +595,9 @@ export interface FieldChange {
   after: unknown
 }
 
+/** Odvodené histórie členstva — v náhľade importu nie sú zmenou, ktorú človek robí. */
+const HISTORY_FIELDS = new Set(["groupHistory", "trackHistory"])
+
 /**
  * Plán zápisu pre jeden riadok — **to isté**, čo `upsertPersons()` zapíše.
  *
@@ -619,7 +631,10 @@ export function planChanges(
   // žiadne"), `undefined` je mlčanie — a mlčanie sa nesmie zapísať ako
   // prázdno: `roles` CSV nerozpoznáva vôbec, takže inak by každý import
   // zmazal roly každému, koho sa dotkne.
-  if (r.tracks !== undefined) set.tracks = r.tracks
+  if (r.tracks !== undefined) {
+    set.tracks = r.tracks
+    set.trackHistory = newTrackHistory(existing?.trackHistory, r.tracks, now)
+  }
   if (r.groups !== undefined) {
     const groups = normalizeKeys(r.groups)
     set.groups = groups
@@ -653,7 +668,7 @@ export function planChanges(
   if (!existing) {
     return {
       set,
-      changes: Object.keys(set).filter(f => f !== "groupHistory").map(f => ({ field: f, before: undefined, after: set[f] })),
+      changes: Object.keys(set).filter(f => !HISTORY_FIELDS.has(f)).map(f => ({ field: f, before: undefined, after: set[f] })),
     }
   }
 
@@ -667,17 +682,18 @@ export function planChanges(
   // sa ani ona, inak by pribudol záznam o zmene, ktorá sa nestala.
   if (mode === "fill") {
     for (const field of Object.keys(set)) {
-      if (field === "groupHistory") continue
+      if (HISTORY_FIELDS.has(field)) continue
       if (!empty(record[field])) delete set[field]
     }
     if (!("groups" in set)) delete set.groupHistory
+    if (!("tracks" in set)) delete set.trackHistory
   }
 
   // Čo sa naozaj zmení: porovnanie hodnotou, nie odkazom — zoznam
   // `["a"]` a `["a"]` je tá istá hodnota a nemá svietiť ako zmena.
   const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
   const changes = Object.keys(set)
-    .filter(f => f !== "groupHistory" && !same(record[f], set[f]))
+    .filter(f => !HISTORY_FIELDS.has(f) && !same(record[f], set[f]))
     .map(f => ({ field: f, before: record[f], after: set[f] }))
 
   return { set, changes }
@@ -1018,6 +1034,53 @@ export function inGroupSince(
   const openRecords = (person.groupHistory ?? []).filter(z => !z.to && z.group === key)
   if (openRecords.length === 0) return null
   return openRecords.reduce((a, b) => (a.from > b.from ? a : b)).from
+}
+
+/**
+ * Odkedy je osoba na trase. `null`, keď na nej nie je alebo to nevieme
+ * (osoby zapísané na trasu pred 3. 10. 2026 históriu nemajú).
+ */
+export function inTrackSince(
+  person: Pick<Person, "trackHistory">,
+  track: string,
+): Date | null {
+  const openRecords = (person.trackHistory ?? []).filter(z => !z.to && z.track === track)
+  if (openRecords.length === 0) return null
+  return openRecords.reduce((a, b) => (a.from > b.from ? a : b)).from
+}
+
+/**
+ * Odkiaľ beží povinnosť z trasy: od pridania na trasu, a keď ho nevieme,
+ * odkedy má človek prístup. `lastLoginAt` nie — prepíše sa pri každom
+ * prihlásení, takže by meškanie ani termín nikdy nenastali.
+ */
+export function trackStart(
+  person: Pick<Person, "trackHistory" | "firstLoginAt" | "invitedAt"> & { createdAt?: Date },
+  track: string,
+): Date | null {
+  return inTrackSince(person, track) ?? person.firstLoginAt ?? person.invitedAt ?? person.createdAt ?? null
+}
+
+/**
+ * Nová história trás po zmene zoznamu. Rovnaké pravidlá ako
+ * `newGroupHistory()` — nezmenené členstvo sa nedotýka, inak by uloženie
+ * karty osoby posunulo dátum pridania a s ním termín.
+ */
+export function newTrackHistory(
+  until: Person["trackHistory"],
+  newTracks: string[],
+  when: Date,
+): NonNullable<Person["trackHistory"]> {
+  const added = new Set(normalizeKeys(newTracks))
+  const records = (until ?? []).map(z => ({ ...z }))
+  for (const z of records) {
+    if (!z.to && !added.has(z.track)) z.to = when
+  }
+  const openRecords = new Set(records.filter(z => !z.to).map(z => z.track))
+  for (const k of added) {
+    if (!openRecords.has(k)) records.push({ track: k, from: when })
+  }
+  return records
 }
 
 /**

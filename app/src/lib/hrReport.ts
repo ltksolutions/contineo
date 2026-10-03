@@ -21,14 +21,14 @@
  */
 
 import { getCollection } from "./mongodb"
-import { PERSONS_COLLECTION } from "./persons"
+import { PERSONS_COLLECTION, trackStart } from "./persons"
 import type { Person } from "./persons"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { DocumentRecord } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
 import { ASSIGNMENTS_COLLECTION, matchesAudience, dueForPerson } from "./assignments"
 import type { Assignment } from "./assignments"
-import { TRACKS_COLLECTION } from "./tracks"
+import { TRACKS_COLLECTION, trackDueFor } from "./tracks"
 import type { Track } from "./tracks"
 import { READING_COLLECTION } from "./readingTime"
 import { opensFor } from "./documentOpens"
@@ -99,18 +99,10 @@ interface PersonRow {
    */
   departmentHistory?: Person["departmentHistory"]
   groupHistory?: Person["groupHistory"]
+  trackHistory?: Person["trackHistory"]
   firstLoginAt?: Date
   invitedAt?: Date
   createdAt?: Date
-}
-
-/**
- * Odkedy má človek prístup. Pre povinnosť z trasy je to jediný rozumný
- * začiatok — trasa sama dátum na osobu neviaže a `lastLoginAt` sa pri
- * každom prihlásení prepíše, takže by meškanie nikdy nenarástlo.
- */
-function accessSince(person: PersonRow): Date | null {
-  return person.firstLoginAt ?? person.invitedAt ?? person.createdAt ?? null
 }
 
 /**
@@ -135,7 +127,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
         {
           projection: {
             id: 1, email: 1, fullName: 1, groups: 1, tracks: 1, departmentPath: 1,
-            departmentHistory: 1, groupHistory: 1,
+            departmentHistory: 1, groupHistory: 1, trackHistory: 1,
             firstLoginAt: 1, invitedAt: 1, createdAt: 1,
           },
         },
@@ -230,7 +222,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
           versionId: effective.version.versionId,
           versionLabel: effective.version.label,
           effectiveFrom: effective.version.effectiveFrom ?? null,
-        }, "track", accessSince(person), null, track.title)
+        }, "track", trackStart(person, track.key), trackDueFor(track, person), track.title)
       }
     }
   }
