@@ -23,7 +23,7 @@ import EvidenceTimeline from "@/components/EvidenceTimeline"
 import LiveFilter from "@/components/LiveFilter"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
-import { evidenceRows } from "@/lib/evidenceDb"
+import { evidenceRows, evidenceDate } from "@/lib/evidenceDb"
 import type { EvidenceState } from "@/lib/evidence"
 import { dutyState, dutyTagClass } from "@/lib/due"
 
@@ -154,12 +154,10 @@ export default async function EvidencePage({
             // Dátum do `<summary>` (HR.md, úloha 5): to, čo kontrolór hľadá,
             // je vidieť bez rozbalenia. Kedy potvrdil; pri odvolaní kedy
             // odvolané; inak kedy otvoril — alebo že vôbec nie.
-            const when =
-              state === "acknowledged" && r.duty.acknowledgedAt ? formatDate(r.duty.acknowledgedAt, language)
-              : state === "revoked" && r.revocation ? formatDate(r.revocation.revokedAt, language)
-              : r.firstOpenedAt ? formatDate(r.firstOpenedAt, language)
-              // „—", nie druhýkrát „neotvorené" — to už hovorí štítok (rám HR, bod 7).
-              : "—"
+            // Ten istý dátum, podľa ktorého je zoznam zoradený (`byNewest()`).
+            const date = evidenceDate(r)
+            // „—", nie druhýkrát „neotvorené" — to už hovorí štítok (rám HR, bod 7).
+            const when = date ? formatDate(date, language) : "—"
             return (
             <li key={`${r.duty.personId}-${r.duty.versionId}`}>
               <details className="widget card">
