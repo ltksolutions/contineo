@@ -19,9 +19,9 @@ k návrhovému projektu „Contineo.app responzivny design".
   `.design-sync/conventions.md` (hlavička README pre dizajnového agenta).
 
 ## Čo nejde a prečo
-- `SubmitButton` vyradený: používa `useFormStatus` z `react-dom`, ktoré má
-  len React 19 pribalený v Nexte. Do Claude Design ide React 18.3.1
-  z `app/node_modules` a tam funkcia nie je — náhľad bol prázdny.
+- `SubmitButton` je späť od 4. 10. 2026: aplikácia prešla na React 19
+  (`app/package.json`), takže `useFormStatus` z `react-dom` je k dispozícii aj
+  v balíku pre Claude Design. Dovtedy bol React 18.3.1 a náhľad bol prázdny.
 - `Notice`, `TabLink`, `SectionTabs`, `Breadcrumbs`, `AppNav`… závisia od
   `next/link`/`next/navigation`. Ich vzhľad pokrývajú triedy (`.tabs`,
   `.tab`, `.view-switch`…) v conventions.md.
@@ -39,5 +39,5 @@ k návrhovému projektu „Contineo.app responzivny design".
 - `dtsPropsFor` je ručná kópia props — zastará, keď sa zmení komponent.
 - `conventions.md` menuje triedy a tokeny z `globals.css` — pri premenovaní
   triedy treba overiť (`grep` proti `ds-bundle/_ds_bundle.css`).
-- Ak aplikácia prejde na React 19 v `node_modules`, dá sa vrátiť `SubmitButton`.
+- React v `_vendor/` je z `app/node_modules` — pri zmene verzie Reactu v aplikácii sa celý balík nahrá znova.
 - Zoznam ikon v `dtsPropsFor.Icon` je kópia kľúčov `PATHS` v `Icon.tsx`.

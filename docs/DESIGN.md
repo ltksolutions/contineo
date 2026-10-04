@@ -71,9 +71,9 @@ v Termináli; pri prvom behu na novom počítači treba urobiť znova.
 
 **`app/design-sync.entry.ts`** vyberá, ktoré komponenty idú do knižnice.
 Smú tam byť **len komponenty bez `next/link`, `next/navigation`, relácie
-a databázy** — iné by sa v Claude Design nevykreslili. Dnes ich je 11:
+a databázy** — iné by sa v Claude Design nevykreslili. Dnes ich je 12:
 `Icon`, `ContineoMark`, `SearchStrip`, `Select`, `MultiSelect`, `Skeleton`,
-`SkeletonCard`, `SkeletonList`, `Fact`, `TabsBar`, `CopyLink`. Vzhľad zvyšku
+`SkeletonCard`, `SkeletonList`, `Fact`, `TabsBar`, `CopyLink`, `SubmitButton`. Vzhľad zvyšku
 aplikácie nesú triedy z `globals.css` opísané v `conventions.md`.
 
 Do gitu nejde (`.gitignore`): `.ds-sync/`, `ds-bundle/`,
@@ -93,8 +93,9 @@ v `conventions.md`.
 - **Typy props v `config.json` sú ručné** — aplikácia nemá zostavené `.d.ts`.
   Keď sa zmenia props komponentu z knižnice, treba ich upraviť, inak agent
   použije starú verziu.
-- **`SubmitButton` v knižnici nie je**: potrebuje `useFormStatus` z Reactu 19,
-  ktorý si pribaľuje Next; do Claude Design ide React 18.3.1 z `node_modules`.
+- **React v knižnici je ten z `app/node_modules`** (od 4. 10. 2026 verzia 19,
+  rovnaká ako React, ktorý si pribaľuje Next). Pri zmene verzie Reactu
+  v aplikácii treba spustiť `/design-sync`.
 - **Pravidlo ovládačov** (kam idem / ako to vidím / čo urobím / odkiaľ som
   prišiel) je na troch miestach: `CLAUDE.md` repozitára, `CLAUDE.md` projektu
   v Claude Design a `.design-sync/conventions.md`. Pri zmene treba všetky tri.

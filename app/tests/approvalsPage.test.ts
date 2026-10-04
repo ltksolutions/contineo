@@ -107,6 +107,11 @@ describe("/approvals", () => {
     state.rounds = [round("sfz:pp", "stara-identita")]
     const html = await render()
     expect(html).toContain('class="ap-warn"')
-    expect(html).toMatch(/<button class="button" type="submit" name="decision" value="approved">/)
+    // Poradie atribútov nekontrolujeme (React 19 dáva `name`/`value` na koniec);
+    // podstatné je, že tlačidlo nie je vypnuté.
+    const approve = html.match(/<button[^>]*value="approved"[^>]*>/)?.[0] ?? ""
+    expect(approve).toMatch(/^<button class="button" type="submit"/)
+    expect(approve).toContain('name="decision"')
+    expect(approve).not.toContain("disabled")
   })
 })

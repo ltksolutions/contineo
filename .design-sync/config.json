@@ -18,7 +18,8 @@
     "SkeletonList": "src/components/Skeleton.tsx",
     "Fact": "src/components/Fact.tsx",
     "TabsBar": "src/components/TabsBar.tsx",
-    "CopyLink": "src/components/CopyLink.tsx"
+    "CopyLink": "src/components/CopyLink.tsx",
+    "SubmitButton": "src/components/SubmitButton.tsx"
   },
   "dtsPropsFor": {
     "Icon": "/** Názov ikony zo spoločnej sady (ťah 1,5 px na mriežke 18). */ name: \"overview\" | \"ask\" | \"toAcknowledge\" | \"toApprove\" | \"directory\" | \"library\" | \"assigned\" | \"evidence\" | \"evaluation\" | \"dpo\" | \"people\" | \"notifications\" | \"search\" | \"filters\" | \"mail\" | \"grid\" | \"learning\" | \"learningManage\" | \"learningTests\" | \"play\" | \"pause\" | \"volume\" | \"muted\" | \"fullscreen\" | \"more\"; /** Veľkosť v px, predvolene 17. */ size?: number;",
@@ -31,7 +32,8 @@
     "SkeletonList": "/** Počet položiek, predvolene 5. */ items?: number; chip?: boolean;",
     "Fact": "label: string; value: string; /** Tlmená hodnota (napr. „—“). */ muted?: boolean;",
     "TabsBar": "/** Položky podmenu: odkazy s triedou `tab` (vybraná `tab is-active`). */ children: React.ReactNode;",
-    "CopyLink": "/** Text, ktorý sa skopíruje. */ value: string; label: string; /** Text po skopírovaní. */ done: string;"
+    "CopyLink": "/** Text, ktorý sa skopíruje. */ value: string; label: string; /** Text po skopírovaní. */ done: string;",
+    "SubmitButton": "/** Predvolene `button`; tiché tlačidlo `button button--quiet`. Počas odosielania formulára dostane `is-pending`, točiaci sa kruh a je neaktívne. */ className?: string; children: React.ReactNode; name?: string; value?: string; style?: React.CSSProperties; ariaLabel?: string;"
   },
   "readmeHeader": ".design-sync/conventions.md"
 }

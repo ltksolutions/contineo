@@ -10,6 +10,22 @@
 
 ---
 
+## 2026-10-04 — React 19 v aplikácii
+
+**Prečo:** `app/package.json` uvádzal React 18.3.1, ale stránky v `app/`
+(App Router) bežia na Reacte 19.3, ktorý si Next 16 pribaľuje sám. Verzia
+z `node_modules` sa uplatnila len v testoch, skriptoch a v balíku pre
+Claude Design — tam chýbal `useFormStatus`, preto `SubmitButton` v design
+systéme nefungoval (PR #246).
+
+**Čo sa zmenilo:** `react`/`react-dom` 19.3.0, `@types/react`/`@types/react-dom`
+^19. `tsc` bez jedinej chyby, build prešiel. Dva testy porovnávali HTML so
+pevným poradím atribútov — React 19 vypisuje `name`/`value` poľa a tlačidla
+na konci značky; testy už poradie nekontrolujú. `SubmitButton` je späť
+v `.design-sync/` (vstup, typy, náhľad), nahrá sa pri ďalšom `/design-sync`.
+
+---
+
 ## 2026-10-01 — čas po prvý token, `/dpo` naostro, námietka po prihlásení (PR #205–#216)
 
 **Čas po prvý token (D9).** Na 26 hodnoteniach mal TTFT medián 5,2 s
