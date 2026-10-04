@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### React 19 (2026-10-04)
+
+Aplikácia uvádza React 19, ten istý, na ktorom už bežala cez Next. Pre
+používateľov sa nič nemení; tlačidlo formulára so stavom ukladania je
+odteraz aj v design systéme v Claude Design.
+
 ### Archivácia predpisu a PDF pri pôvodných normách (2026-10-02)
 
 Predpis sa dá na karte dokumentu **archivovať** ku dňu — aj s dátumom

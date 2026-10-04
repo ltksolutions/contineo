@@ -18,7 +18,10 @@ const render = (over: Partial<Parameters<typeof SearchStrip>[0]> = {}) =>
 describe("pás hľadania", () => {
   it("lupa a pole sú v jednom rámiku, lupa pred poľom a pre čítačku skrytá", () => {
     const html = render({ defaultValue: "poriadok" })
-    expect(html).toMatch(/^<div class="search-strip"><span class="search-strip-icon" aria-hidden="true"><svg[^]*<\/svg><\/span><input type="search" class="search-strip-input" name="search"/)
+    // Poradie atribútov nekontrolujeme — React 19 vypisuje `name` a `value`
+    // poľa na konci značky.
+    expect(html).toMatch(/^<div class="search-strip"><span class="search-strip-icon" aria-hidden="true"><svg[^]*<\/svg><\/span><input type="search" class="search-strip-input"[^>]*>/)
+    expect(html).toMatch(/<input[^>]*name="search"/)
     expect(html).toContain('aria-label="Hľadať"')
     expect(html).toContain('value="poriadok"')
   })
