@@ -33,7 +33,7 @@ import { brandingView, tenantByCompanyCode } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
 import SearchStrip from "@/components/SearchStrip"
-import { DEFAULT_PHONE_PREFIX } from "@/lib/personFields"
+import { countryForPrefix, phoneCountries } from "@/lib/phoneCountries"
 import { UI_LANGUAGES, formatDate, dictionary } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
 import Select from "@/components/Select"
@@ -410,19 +410,20 @@ export default async function OrganisationSectionPage({
               <span className="quiet field-hint">{t.branding.supportEmailNote}</span>
             </label>
 
-            {/* Predvoľba telefónu (D86) — nastavenie organizácie, jediné pole
-                vo svojej skupine; vlastná záložka by ho skryla. */}
-            <label className="field">
+            {/* Predvolená krajina telefónu (D86). Zoznam namiesto voľného poľa
+                (4. 10. 2026): do poľa „Predvoľba" sa písalo celé číslo. Ukladá
+                sa naďalej predvoľba (`+421`), krajinu z nej odvodí
+                `countryForPrefix()`. */}
+            <div className="field">
               <span className="field-label">{t.branding.phonePrefix}</span>
-              <input
-                className="field-input"
-                name="phonePrefix"
-                inputMode="tel"
-                placeholder={DEFAULT_PHONE_PREFIX}
-                defaultValue={tenant.phonePrefix ?? ""}
+              <Select language={language}
+                name="phoneCountry"
+                fieldLabel={t.branding.phonePrefix}
+                initial={countryForPrefix(tenant.phonePrefix)}
+                options={phoneCountries(language).map(c => ({ value: c.code, label: c.label }))}
               />
               <span className="quiet field-hint">{t.branding.phonePrefixNote}</span>
-            </label>
+            </div>
           </div>
         </section>
 

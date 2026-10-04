@@ -7873,3 +7873,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .page-actions > .button { min-height: 44px; padding: 0 10px; white-space: normal; text-align: center; }
   .page-actions-primary { grid-column: 1 / -1; order: -1; }
 }
+
+/* Telefón: krajina + číslo (D86, 4. 10. 2026). Mriežka, nie flex — na
+   telefóne ostanú obe vedľa seba a číslo dostane viac miesta. */
+.phone-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 8px; }

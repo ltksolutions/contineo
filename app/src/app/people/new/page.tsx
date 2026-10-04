@@ -14,6 +14,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary } from "@/lib/i18n"
 import Select from "@/components/Select"
+import PhoneField from "@/components/PhoneField"
 import { allDepartments, flattenTree } from "@/lib/departments"
 import { treeOptions } from "@/lib/treeOptions"
 import { invitePersonAction } from "../actions"
@@ -42,6 +43,7 @@ export default async function NewPersonPage({
     titleAfter?: string
     jobTitle?: string
     mobilePhone?: string
+    mobilePhoneCountry?: string
     workplace?: string
     departmentId?: string
   }>(await searchParams)
@@ -110,18 +112,14 @@ export default async function NewPersonPage({
           <input className="field-input" name="jobTitle" defaultValue={q.jobTitle ?? ""} />
         </label>
 
-        <label className="field">
-          <span className="field-label">{td.mobilePhone}</span>
-          <input
-            className="field-input"
-            name="mobilePhone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            defaultValue={q.mobilePhone ?? ""}
-          />
-          <span className="quiet field-hint">{td.mobilePhoneNote}</span>
-        </label>
+        <PhoneField language={ctx.person.language}
+          label={td.mobilePhone}
+          countryLabel={td.mobilePhoneCountry}
+          hint={td.mobilePhoneNote}
+          value={q.mobilePhone}
+          country={q.mobilePhoneCountry}
+          tenantPrefix={ctx.tenant.phonePrefix}
+        />
 
         <div className="field">
           <span className="field-label">{td.workplace}</span>

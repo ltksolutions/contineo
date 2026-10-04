@@ -60,7 +60,7 @@ export function splitFullName(fullName: string): { givenName: string; surname: s
 
 export type PhoneResult =
   | { ok: true; value: string }
-  | { ok: false; reason: "phone.shape" | "phone.noPrefix" }
+  | { ok: false; reason: "phone.shape" | "phone.noPrefix" | "phone.invalid" }
 
 /** Predvolená predvoľba, keď ju organizácia nemá nastavenú. */
 export const DEFAULT_PHONE_PREFIX = "+421"
