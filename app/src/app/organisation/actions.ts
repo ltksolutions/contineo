@@ -34,6 +34,7 @@ import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { DEFAULT_PROFILE_KEY } from "@/lib/chunkingProfile"
 import { addLegalBasis, retireLegalBasis, setStandardLegalBasisHidden } from "@/lib/legalBasesDb"
+import { prefixForCountry } from "@/lib/phoneCountries"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -126,7 +127,8 @@ export async function saveBrandingAction(fd: FormData) {
       supportEmail: fieldText(fd, "supportEmail"),
       languages: fd.getAll("languages").filter(v => typeof v === "string") as string[],
       defaultLanguage: fieldText(fd, "defaultLanguage"),
-      phonePrefix: fieldText(fd, "phonePrefix"),
+      // Krajina zo zoznamu → predvoľba; uložený tvar sa nemení (`+421`).
+      phonePrefix: prefixForCountry(fieldText(fd, "phoneCountry")),
       controllerLegalName: fieldText(fd, "controllerLegalName"),
       controllerAddress: fieldText(fd, "controllerAddress"),
       controllerRegistrationNumber: fieldText(fd, "controllerRegistrationNumber"),

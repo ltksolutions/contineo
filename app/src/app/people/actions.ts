@@ -126,6 +126,7 @@ export async function savePersonAction(fd: FormData) {
       titleBefore: fieldText(fd, "titleBefore"),
       titleAfter: fieldText(fd, "titleAfter"),
       mobilePhone: fieldText(fd, "mobilePhone"),
+      mobilePhoneCountry: fieldText(fd, "mobilePhoneCountry"),
       // Prázdna voľba znamená „bez pracoviska", nie „nemeniť" — rovnako ako
       // pri oddelení.
       workplace: fieldText(fd, "workplace"),
@@ -202,6 +203,7 @@ export async function invitePersonAction(fd: FormData) {
       titleAfter: fieldText(fd, "titleAfter"),
       jobTitle: fieldText(fd, "jobTitle"),
       mobilePhone: fieldText(fd, "mobilePhone"),
+      mobilePhoneCountry: fieldText(fd, "mobilePhoneCountry"),
       workplace: fieldText(fd, "workplace"),
       departmentId: fieldText(fd, "departmentId") || null,
       personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
@@ -240,6 +242,7 @@ export async function invitePersonAction(fd: FormData) {
       titleAfter: fieldText(fd, "titleAfter"),
       jobTitle: fieldText(fd, "jobTitle"),
       mobilePhone: fieldText(fd, "mobilePhone"),
+      mobilePhoneCountry: fieldText(fd, "mobilePhoneCountry"),
       workplace: fieldText(fd, "workplace"),
       departmentId: fieldText(fd, "departmentId"),
     })

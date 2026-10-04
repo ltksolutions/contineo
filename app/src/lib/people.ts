@@ -28,6 +28,7 @@ import type { Person, PersonStatus, PersonType } from "./persons"
 import { tenantByCompanyCode } from "./tenants"
 import type { Tenant } from "./tenants"
 import { composeFullName, splitFullName, normalizePhone, matchWorkplace, normalizeGender, type Gender } from "./personFields"
+import { isPhoneCountry, normalizeCountryPhone } from "./phoneCountries"
 import { availableOptions } from "./codelistsTenant"
 import { allDepartments, pathIdsTo, pathTo } from "./departments"
 import { AppError } from "./appError"
@@ -230,6 +231,11 @@ export interface PersonChange {
   titleAfter?: string
   /** Surový zápis; do E.164 ho prevedie `normalizePhone()` podľa organizácie. */
   mobilePhone?: string
+  /**
+   * Krajina zvolená vo formulári (`SK`). Keď príde, číslo sa overí podľa nej;
+   * bez nej (import, adresár) platí predvoľba organizácie ako doteraz.
+   */
+  mobilePhoneCountry?: string
   /** Kľúč z číselníka. Prázdny reťazec = vyprázdniť pole. */
   workplace?: string
   department?: string
@@ -258,7 +264,7 @@ export interface PersonChange {
  */
 async function tenantFields(
   companyCode: string,
-  input: { mobilePhone?: string; workplace?: string },
+  input: { mobilePhone?: string; mobilePhoneCountry?: string; workplace?: string },
 ): Promise<{ mobilePhone?: string; workplace?: string }> {
   const out: { mobilePhone?: string; workplace?: string } = {}
   if (input.mobilePhone === undefined && input.workplace === undefined) return out
@@ -266,13 +272,17 @@ async function tenantFields(
   const tenant = await tenantByCompanyCode(companyCode)
 
   if (input.mobilePhone !== undefined) {
-    const phone = normalizePhone(input.mobilePhone, tenant?.phonePrefix)
+    const phone = isPhoneCountry(input.mobilePhoneCountry)
+      ? normalizeCountryPhone(input.mobilePhone, input.mobilePhoneCountry)
+      : normalizePhone(input.mobilePhone, tenant?.phonePrefix)
     if (!phone.ok) {
       throw new PersonValidationError(
         phone.reason,
         phone.reason === "phone.noPrefix"
           ? "Číslu chýba predvoľba — napíšte ho s nulou (0905…) alebo medzinárodne (+421…)."
-          : "To nevyzerá ako telefónne číslo.",
+          : phone.reason === "phone.invalid"
+            ? "Číslo nemá platný tvar pre zvolenú krajinu."
+            : "To nevyzerá ako telefónne číslo.",
         { value: input.mobilePhone },
       )
     }
@@ -477,6 +487,7 @@ export async function invitePerson(
     titleAfter?: string
     jobTitle?: string
     mobilePhone?: string
+    mobilePhoneCountry?: string
     workplace?: string
     /** Text spred stromu oddelení — len import z CSV (mapuje sa zvlášť). */
     department?: string

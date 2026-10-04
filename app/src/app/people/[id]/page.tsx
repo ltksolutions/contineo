@@ -22,6 +22,7 @@ import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, needsInvitation } from "@/lib/personFields"
 import { allDepartments, flattenTree } from "@/lib/departments"
 import Select from "@/components/Select"
+import PhoneField from "@/components/PhoneField"
 import TagSelect from "@/components/TagSelect"
 import Notice from "@/components/Notice"
 import { brandingView } from "@/lib/tenants"
@@ -179,18 +180,13 @@ export default async function PersonDetailPage({
           <span className="quiet field-hint">{t.jobTitleNote}</span>
         </label>
 
-        <label className="field">
-          <span className="field-label">{t.mobilePhone}</span>
-          <input
-            className="field-input"
-            name="mobilePhone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            defaultValue={o.mobilePhone ?? ""}
-          />
-          <span className="quiet field-hint">{t.mobilePhoneNote}</span>
-        </label>
+        <PhoneField language={language}
+          label={t.mobilePhone}
+          countryLabel={t.mobilePhoneCountry}
+          hint={t.mobilePhoneNote}
+          value={o.mobilePhone}
+          tenantPrefix={ctx.tenant.phonePrefix}
+        />
 
         <div className="field">
           <span className="field-label">{t.workplace}</span>
