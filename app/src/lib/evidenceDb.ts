@@ -46,7 +46,7 @@ export async function evidenceRows(companyCode: string): Promise<EvidenceRow[]> 
 
   // Otvorenie už nesie `Duty` (jeden join v `duties()`, kľúč osoba × znenie,
   // D28) — tu sa neskladá druhýkrát.
-  return rows.map(duty => {
+  const out = rows.map(duty => {
     const firstOpenedAt = duty.firstOpenedAt
     const rec = records.get(`${duty.personId}|${duty.versionId}`)
     const input = {
@@ -64,6 +64,32 @@ export async function evidenceRows(companyCode: string): Promise<EvidenceRow[]> 
       revocation: rec?.revocation ?? null,
     }
   })
+  return out.sort(byNewest)
+}
+
+/**
+ * Dátum v stĺpci „Dátum": kedy odvolané, inak kedy potvrdil, inak kedy
+ * otvoril. `null` = ešte sa nič nestalo (neotvorené).
+ */
+export function evidenceDate(r: Pick<EvidenceRow, "duty" | "firstOpenedAt" | "revocation">): Date | null {
+  return r.revocation?.revokedAt ?? r.duty.acknowledgedAt ?? r.firstOpenedAt ?? null
+}
+
+/**
+ * Najnovšie navrchu (rozhodnutie Jána 4. 10. 2026) — podľa dátumu, ktorý
+ * riadok ukazuje. Riadky bez dátumu (neotvorené) idú za ne, medzi sebou
+ * podľa pridelenia, tiež najnovšie navrchu.
+ */
+export function byNewest(
+  a: Pick<EvidenceRow, "duty" | "firstOpenedAt" | "revocation">,
+  b: Pick<EvidenceRow, "duty" | "firstOpenedAt" | "revocation">,
+): number {
+  const da = evidenceDate(a)
+  const db = evidenceDate(b)
+  if (da && db) return db.getTime() - da.getTime()
+  if (da) return -1
+  if (db) return 1
+  return (b.duty.since?.getTime() ?? 0) - (a.duty.since?.getTime() ?? 0)
 }
 
 /** Reťaz jednej osoby. Tá istá funkcia, len užší výber — nie druhý výpočet. */
