@@ -16,6 +16,10 @@ vi.mock("@/lib/library", () => ({
   }),
 }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "Intranet SFZ" }) }))
+vi.mock("../src/app/library/actions", () => ({
+  applyChunkingProfileAction: async () => {},
+  saveChunkingProfileAction: async () => {},
+}))
 
 const stored = [
   { chunkIndex: 0, heading: "Úvodné ustanovenia", articleRef: null, chunkType: "preambula", text: "Finančná smernica upravuje " + "x".repeat(25000), tokens: 7187 },
@@ -24,20 +28,34 @@ vi.mock("@/lib/chunkingInspect", async (orig) => {
   const real = await orig<typeof import("../src/lib/chunkingInspect")>()
   return {
     ...real,
-    inspectChunking: async (_c: string, id: string) => id === "sfz:nic" ? null : ({
+    inspectChunking: async (_c: string, id: string, trialValues?: { articleWord: string; maxTokens: number; minTokens: number }) => id === "sfz:nic" ? null : ({
       documentId: id, title: "Finančná smernica SFZ",
       version: { versionId: "v1", label: "2026" },
       profile: { key: "zakladny", label: "Základný", values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 300, maxTokens: 800 } },
       stored, stats: real.chunkStats(stored), warnings: real.chunkWarnings(stored, { minTokens: 300, maxTokens: 800 }),
       today: { count: 1, withArticlePercent: 0, outdated: false },
+      profiles: [
+        { key: "zakladny", label: "Základný", values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 300, maxTokens: 800 } },
+        { key: "zakon", label: "Zákon (§)", values: { articleWord: "§", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 300, maxTokens: 800 } },
+      ],
+      trial: trialValues ? {
+        values: trialValues,
+        chunks: [{ chunkIndex: 0, heading: "Predmet", articleRef: "§ 1", chunkType: "clanok", text: "§ 1 text", tokens: 400, complete: true }],
+        stats: { count: 1, withArticle: 1, withArticlePercent: 100, tokensMin: 400, tokensMax: 400, tokensAvg: 400 },
+        warnings: [],
+        matchesProfile: trialValues.articleWord === "§" && trialValues.maxTokens === 800 ? "zakon" : null,
+      } : null,
       analysis: { signals: { lines: 120, articleWord: 0, paragraphSign: 0, pointWord: 0, numberedParagraphs: 4, markdownHeadings: 9, annexes: 0, repeatedLines: 0 }, suggestions: [{ key: "volny_text", articleWord: null, hits: 0, score: 0 }], confident: false },
     }),
   }
 })
 
-async function render(id: string) {
+async function render(id: string, query: Record<string, string> = {}) {
   const { default: Page } = await import("../src/app/library/[id]/chunks/page")
-  return renderToStaticMarkup(await Page({ params: Promise.resolve({ id: encodeURIComponent(id) }) }) as never)
+  return renderToStaticMarkup(await Page({
+    params: Promise.resolve({ id: encodeURIComponent(id) }),
+    searchParams: Promise.resolve(query),
+  }) as never)
 }
 
 describe("stránka Členenie na úseky", () => {
@@ -51,6 +69,29 @@ describe("stránka Členenie na úseky", () => {
     expect(html).toContain("7187 tokenov")
     expect(html).toContain("veľký")
     expect(html).toContain("Úseky zodpovedajú dnešnému členeniu.")
+  })
+
+  it("skúšobný rez: porovnanie, skúšobné úseky a uloženie nového profilu", async () => {
+    const html = await render("sfz:financna_smernica_sfz", { trial: "1", articleWord: "Bod", maxTokens: "600" })
+    expect(html).toContain("Porovnanie")
+    expect(html).toContain("Úseky po skúšobnom reze")
+    expect(html).toContain("Uložiť hodnoty skúšky ako nový profil")
+    expect(html).toMatch(/name="articleWord"[^>]*value="Bod"|value="Bod"[^>]*name="articleWord"/)
+    expect(html).toContain("Zrušiť skúšku")
+  })
+
+  it("skúška zhodná s existujúcim profilom ho ponúkne, nový sa neukladá", async () => {
+    const html = await render("sfz:financna_smernica_sfz", { trial: "1", articleWord: "§" })
+    expect(html).toContain("Tieto hodnoty má profil „Zákon (§)“.")
+    expect(html).not.toContain("Uložiť hodnoty skúšky ako nový profil")
+    expect(html).toMatch(/<option[^>]*value="zakon"[^>]*selected/)
+  })
+
+  it("bez skúšky: zoznam uložených úsekov, výber profilu, žiadne ukladanie nového", async () => {
+    const html = await render("sfz:financna_smernica_sfz")
+    expect(html).toContain("Skúsiť iný rez")
+    expect(html).toContain("Použiť existujúci profil")
+    expect(html).not.toContain("Uložiť hodnoty skúšky ako nový profil")
   })
 
   it("neznámy dokument je 404", async () => {

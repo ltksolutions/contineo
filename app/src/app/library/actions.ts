@@ -41,6 +41,7 @@ import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
+import { setDocumentChunkingProfile, createChunkingProfileForDocument } from "@/lib/chunkingProfilesDb"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { archiveDocument, restoreDocument, ArchiveError } from "@/lib/documentArchive"
 import { AppError } from "@/lib/appError"
@@ -1470,4 +1471,60 @@ export async function restoreDocumentAction(fd: FormData) {
   revalidatePath(`/library/${id}`)
   revalidatePath("/library")
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+// ── profil členenia pri dokumente (ADR-027, krok B) ──────────────────────────
+
+/** Späť na stránku Členenie s hlásením; skúšobné hodnoty sa nenesú — sú uložené. */
+function backToChunks(id: string, message: string, error: boolean): never {
+  redirect(`/library/${encodeURIComponent(id)}/chunks?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/** Dokument dostane existujúci pomenovaný profil. Nepreindexuje sa (D58). */
+export async function applyChunkingProfileAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    const { label } = await setDocumentChunkingProfile(self.companyCode, id, fieldText(fd, "profileKey"), self.email)
+    message = say(self.language).chunkingProfileSet(label)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  backToChunks(id, message, error)
+}
+
+/**
+ * Nový pomenovaný profil z hodnôt skúšobného rezu (D79: žiadne vlastné
+ * hodnoty na dokumente — odchýlka sa zapíše raz, s menom a viditeľne).
+ */
+export async function saveChunkingProfileAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  const number = (name: string) => {
+    const v = Number(fieldText(fd, name))
+    return Number.isFinite(v) && fieldText(fd, name) !== "" ? v : undefined
+  }
+  let message = ""
+  let error = false
+  try {
+    const { label } = await createChunkingProfileForDocument(self.companyCode, id, fieldText(fd, "label"), {
+      articleWord: fieldText(fd, "articleWord"),
+      annexWord: fieldText(fd, "annexWord"),
+      headerRepeats: number("headerRepeats"),
+      minTokens: number("minTokens"),
+      maxTokens: number("maxTokens"),
+    }, self.email)
+    message = say(self.language).chunkingProfileCreated(label)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  backToChunks(id, message, error)
 }

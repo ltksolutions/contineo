@@ -2737,6 +2737,30 @@ interface Dictionary {
       noArticle: string
       tokens: (n: number) => string
       oversizedTag: string
+      trialHeading: string
+      trialIntro: string
+      fieldArticleWord: string
+      fieldArticleWordHint: string
+      fieldAnnexWord: string
+      fieldMinTokens: string
+      fieldMaxTokens: string
+      trialShow: string
+      trialReset: string
+      compareHeading: string
+      compareNow: string
+      compareTrial: string
+      compareMax: string
+      trialMatches: (label: string) => string
+      trialListHeading: string
+      saveHeading: string
+      saveIntro: string
+      useProfile: string
+      useProfileButton: string
+      currentProfile: string
+      newProfile: string
+      newProfileLabel: string
+      newProfileHint: string
+      newProfileButton: string
     }
     editor: {
       intro: string
@@ -2796,6 +2820,8 @@ interface Dictionary {
       bulkMoved: (moved: number, total: number) => string
       bulkMovedPartly: (moved: number, total: number, failed: string) => string
       reindexUpToDate: string
+      chunkingProfileSet: (label: string) => string
+      chunkingProfileCreated: (label: string) => string
       reindexed: (chunks: number, archived: number) => string
       /** Súhrn „Preindexovať všetky znenia": koľko sa preindexovalo a koľko bolo bez zmeny. */
       reindexAllResult: (done: number, unchanged: number) => string
@@ -5025,6 +5051,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.sourceNotPdf": "Zdrojový súbor má byť upraviteľný (.docx, .xlsx, .md…), nie druhé PDF.",
     "library.uploadedFileNotFound": "Nahratý súbor sa nenašiel. Skús ho nahrať znova.",
     "library.documentNotFound": "Taký dokument tu nie je.",
+    "chunking.unknownProfile": "Profil členenia „{value}“ neexistuje.",
+    "chunking.labelRequired": "Profil potrebuje názov.",
+    "chunking.labelTaken": "Profil s názvom „{value}“ už existuje — použite ho, alebo zvoľte iný názov.",
     "library.titleLocked": "Názov dokumentu so zverejneným znením sa mení len novým znením — zmeň ho v príprave nového znenia, schváli sa s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znenie sa nahráva na jeho detaile, nie ako nový dokument — táto obrazovka zakladá nový dokument.",
     "library.documentKeyShape": "Kľúč dokumentu „{key}“ nemá správny tvar — smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
@@ -5116,6 +5145,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: "preindexované",
       reordered: "preusporiadané",
       "model-draft": "návrh modelu",
+      "chunking-profile": "profil členenia",
       "version-fix": "oprava znenia",
       "text-fix": "oprava textu znenia",
       "new-version": "nahraté nové znenie",
@@ -6376,7 +6406,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: "Znenie",
       noVersion: "Dokument zatiaľ nemá platné znenie, preto nemá úseky. Nižšie je len rozbor konceptu.",
       upToDate: "Úseky zodpovedajú dnešnému členeniu.",
-      outdated: (stored, today) => `Úseky sú narezané starším spôsobom (${stored} úsekov); dnes by ich vzniklo ${today}.`,
+      outdated: (stored, today) => `Úseky sú narezané starším spôsobom (${stored} ${stored === 1 ? "úsek" : stored >= 2 && stored <= 4 ? "úseky" : "úsekov"}); dnes by ich vzniklo ${today}.`,
       reindexHint: "Preindexovať sa dá v detaile dokumentu (Správa → Preindexovať). Znenie ani potvrdenia sa nemenia.",
       statsCount: "Úsekov",
       statsArticles: "S článkom",
@@ -6387,8 +6417,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       warnings: {
         oneBlock: "Celý text je v jednom úseku — nenašiel sa ani jeden článok. Asistent z neho nevie citovať konkrétne miesto. Typické pre manuál alebo zmluvu; pomôže členenie podľa nadpisov.",
         fewArticles: percent => `Článok má len ${percent} % úsekov — členenie dokumentu profil takmer nerozpoznal.`,
-        oversized: (count, limit) => `${count} ${count === 1 ? "úsek je väčší" : "úsekov je väčších"} než ${limit} tokenov — asistent z neho dostane priveľa naraz.`,
-        fragments: count => `${count} ${count === 1 ? "krátky úlomok" : "krátkych úlomkov"} rozdeleného článku — majú málo kontextu.`,
+        oversized: (count, limit) => `${count} ${count === 1 ? "úsek je väčší" : count <= 4 ? "úseky sú väčšie" : "úsekov je väčších"} než ${limit} tokenov — asistent z ${count === 1 ? "neho" : "nich"} dostane priveľa naraz.`,
+        fragments: count => count === 1 ? "1 krátky úlomok rozdeleného článku — má málo kontextu." : `${count} ${count <= 4 ? "krátke úlomky" : "krátkych úlomkov"} rozdelených článkov — majú málo kontextu.`,
       },
       noWarnings: "Bez nálezov.",
       analysisHeading: "Rozbor textu",
@@ -6399,8 +6429,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       analysisPlain: "Text nemá články ani paragrafy. Potrebuje členenie podľa nadpisov.",
       listHeading: "Úseky",
       noArticle: "bez článku",
-      tokens: n => `${n} tokenov`,
+      tokens: n => `${n} ${n === 1 ? "token" : n >= 2 && n <= 4 ? "tokeny" : "tokenov"}`,
       oversizedTag: "veľký",
+      trialHeading: "Skúsiť iný rez",
+      trialIntro: "Zmeňte hodnoty a pozrite sa, ako by sa text narezal. Nič sa neuloží, kým nižšie nezvolíte profil.",
+      fieldArticleWord: "Slovo článku",
+      fieldArticleWordHint: "Slovo, ktorým začína nadpis článku: Článok, § alebo Bod.",
+      fieldAnnexWord: "Slovo prílohy",
+      fieldMinTokens: "Úsek od (tokenov)",
+      fieldMaxTokens: "Úsek do (tokenov)",
+      trialShow: "Ukázať rez",
+      trialReset: "Zrušiť skúšku",
+      compareHeading: "Porovnanie",
+      compareNow: "teraz",
+      compareTrial: "skúška",
+      compareMax: "Najväčší úsek",
+      trialMatches: label => `Tieto hodnoty má profil „${label}“.`,
+      trialListHeading: "Úseky po skúšobnom reze",
+      saveHeading: "Profil pre tento dokument",
+      saveIntro: "Dokument nesie len pomenovaný profil — ten sa dá použiť aj pri ďalších dokumentoch. Po zmene profilu treba dokument preindexovať; dovtedy asistent odpovedá zo starých úsekov.",
+      useProfile: "Použiť existujúci profil",
+      useProfileButton: "Použiť",
+      currentProfile: "súčasný",
+      newProfile: "Uložiť hodnoty skúšky ako nový profil",
+      newProfileLabel: "Názov profilu",
+      newProfileHint: "Napríklad „Zákon (§)“. Existujúce profily sa tu nemenia — zmena by ticho prerezala všetky dokumenty, ktoré ich používajú.",
+      newProfileButton: "Uložiť profil",
     },
     editor: {
       intro: "Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.",
@@ -6458,6 +6512,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Presunuté ${moved} z ${total}. Neprešli: ${failed}`,
       reindexUpToDate: "Členenie je už aktuálne — nič sa nemenilo.",
+      chunkingProfileSet: label => `Dokument má profil „${label}“. Ešte ho preindexujte — dovtedy asistent odpovedá zo starých úsekov.`,
+      chunkingProfileCreated: label => `Profil „${label}“ je uložený a priradený dokumentu. Ešte dokument preindexujte.`,
       reindexAllResult: (done, unchanged) => `Preindexované znenia: ${done}, bez zmeny: ${unchanged}. Znenia ani potvrdenia sa nedotklo.`,
       reindexed: (chunks, archived) =>
         `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
@@ -8654,6 +8710,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.sourceNotPdf": "Zdrojový soubor má být upravitelný (.docx, .xlsx, .md…), ne druhé PDF.",
     "library.uploadedFileNotFound": "Nahraný soubor se nenašel. Zkus ho nahrát znovu.",
     "library.documentNotFound": "Takový dokument tu není.",
+    "chunking.unknownProfile": "Profil členění „{value}“ neexistuje.",
+    "chunking.labelRequired": "Profil potřebuje název.",
+    "chunking.labelTaken": "Profil s názvem „{value}“ už existuje — použijte ho, nebo zvolte jiný název.",
     "library.titleLocked": "Název dokumentu se zveřejněným zněním se mění jen novým zněním — změň ho v přípravě nového znění, schválí se s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znění se nahrává na jeho detailu, ne jako nový dokument — tato obrazovka zakládá nový dokument.",
     "library.documentKeyShape": "Klíč dokumentu „{key}“ nemá správný tvar — smí mít jen malá písmena bez diakritiky, číslice a podtržítka.",
@@ -8745,6 +8804,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: "přeindexováno",
       reordered: "přeuspořádáno",
       "model-draft": "návrh modelu",
+      "chunking-profile": "profil členění",
       "version-fix": "oprava znění",
       "text-fix": "oprava textu znění",
       "new-version": "nahráno nové znění",
@@ -10002,7 +10062,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: "Znění",
       noVersion: "Dokument zatím nemá platné znění, proto nemá úseky. Níže je jen rozbor konceptu.",
       upToDate: "Úseky odpovídají dnešnímu členění.",
-      outdated: (stored, today) => `Úseky jsou rozřezané starším způsobem (${stored} úseků); dnes by jich vzniklo ${today}.`,
+      outdated: (stored, today) => `Úseky jsou rozřezané starším způsobem (${stored} ${stored === 1 ? "úsek" : stored >= 2 && stored <= 4 ? "úseky" : "úseků"}); dnes by jich vzniklo ${today}.`,
       reindexHint: "Přeindexovat lze v detailu dokumentu (Správa → Přeindexovat). Znění ani potvrzení se nemění.",
       statsCount: "Úseků",
       statsArticles: "S článkem",
@@ -10013,8 +10073,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       warnings: {
         oneBlock: "Celý text je v jednom úseku — nenašel se ani jeden článek. Asistent z něj neumí citovat konkrétní místo. Typické pro manuál nebo smlouvu; pomůže členění podle nadpisů.",
         fewArticles: percent => `Článek má jen ${percent} % úseků — členění dokumentu profil téměř nerozpoznal.`,
-        oversized: (count, limit) => `${count} ${count === 1 ? "úsek je větší" : "úseků je větších"} než ${limit} tokenů — asistent z něj dostane příliš mnoho najednou.`,
-        fragments: count => `${count} ${count === 1 ? "krátký úlomek" : "krátkých úlomků"} rozděleného článku — mají málo kontextu.`,
+        oversized: (count, limit) => `${count} ${count === 1 ? "úsek je větší" : count <= 4 ? "úseky jsou větší" : "úseků je větších"} než ${limit} tokenů — asistent z ${count === 1 ? "něj" : "nich"} dostane příliš mnoho najednou.`,
+        fragments: count => count === 1 ? "1 krátký úlomek rozděleného článku — má málo kontextu." : `${count} ${count <= 4 ? "krátké úlomky" : "krátkých úlomků"} rozdělených článků — mají málo kontextu.`,
       },
       noWarnings: "Bez nálezů.",
       analysisHeading: "Rozbor textu",
@@ -10025,8 +10085,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       analysisPlain: "Text nemá články ani paragrafy. Potřebuje členění podle nadpisů.",
       listHeading: "Úseky",
       noArticle: "bez článku",
-      tokens: n => `${n} tokenů`,
+      tokens: n => `${n} ${n === 1 ? "token" : n >= 2 && n <= 4 ? "tokeny" : "tokenů"}`,
       oversizedTag: "velký",
+      trialHeading: "Zkusit jiný řez",
+      trialIntro: "Změňte hodnoty a podívejte se, jak by se text rozřezal. Nic se neuloží, dokud níže nezvolíte profil.",
+      fieldArticleWord: "Slovo článku",
+      fieldArticleWordHint: "Slovo, kterým začíná nadpis článku: Článek, § nebo Bod.",
+      fieldAnnexWord: "Slovo přílohy",
+      fieldMinTokens: "Úsek od (tokenů)",
+      fieldMaxTokens: "Úsek do (tokenů)",
+      trialShow: "Ukázat řez",
+      trialReset: "Zrušit zkoušku",
+      compareHeading: "Porovnání",
+      compareNow: "teď",
+      compareTrial: "zkouška",
+      compareMax: "Největší úsek",
+      trialMatches: label => `Tyto hodnoty má profil „${label}“.`,
+      trialListHeading: "Úseky po zkušebním řezu",
+      saveHeading: "Profil pro tento dokument",
+      saveIntro: "Dokument nese jen pojmenovaný profil — ten lze použít i u dalších dokumentů. Po změně profilu je třeba dokument přeindexovat; do té doby asistent odpovídá ze starých úseků.",
+      useProfile: "Použít existující profil",
+      useProfileButton: "Použít",
+      currentProfile: "současný",
+      newProfile: "Uložit hodnoty zkoušky jako nový profil",
+      newProfileLabel: "Název profilu",
+      newProfileHint: "Například „Zákon (§)“. Existující profily se zde nemění — změna by potichu přeřezala všechny dokumenty, které je používají.",
+      newProfileButton: "Uložit profil",
     },
     editor: {
       intro: "Porovnej text s originálem. Publikování je samostatný krok — tady se nic nepouští ven.",
@@ -10084,6 +10168,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Přesunuto ${moved} z ${total}. Neprošly: ${failed}`,
       reindexUpToDate: "Členění je už aktuální — nic se neměnilo.",
+      chunkingProfileSet: label => `Dokument má profil „${label}“. Ještě ho přeindexujte — do té doby asistent odpovídá ze starých úseků.`,
+      chunkingProfileCreated: label => `Profil „${label}“ je uložen a přiřazen dokumentu. Ještě dokument přeindexujte.`,
       reindexAllResult: (done, unchanged) => `Přeindexovaná znění: ${done}, beze změny: ${unchanged}. Znění ani potvrzení se to nedotklo.`,
       reindexed: (chunks, archived) =>
         `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
@@ -12272,6 +12358,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.sourceNotPdf": "The source file must be editable (.docx, .xlsx, .md…), not a second PDF.",
     "library.uploadedFileNotFound": "The uploaded file was not found. Try uploading it again.",
     "library.documentNotFound": "There is no such document here.",
+    "chunking.unknownProfile": "The chunking profile “{value}” does not exist.",
+    "chunking.labelRequired": "The profile needs a name.",
+    "chunking.labelTaken": "A profile named “{value}” already exists — use it or choose another name.",
     "library.titleLocked": "The title of a document with a published version changes only with a new version — change it when preparing the new version; it is approved with it.",
     "library.documentExists": "The document \u201C{title}\u201D ({documentId}) already exists. A new version is uploaded on its detail page, not as a new document — this screen creates a new document.",
     "library.documentKeyShape": "The document key \u201C{key}\u201D has the wrong shape — only lowercase letters without diacritics, digits and underscores are allowed.",
@@ -12363,6 +12452,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: "reindexed",
       reordered: "reordered",
       "model-draft": "model draft",
+      "chunking-profile": "chunking profile",
       "version-fix": "version correction",
       "text-fix": "text correction",
       "new-version": "new version uploaded",
@@ -13627,7 +13717,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         oneBlock: "The whole text is in one chunk — not a single article was found. The assistant cannot cite a specific place from it. Typical for a manual or a contract; splitting by headings will help.",
         fewArticles: percent => `Only ${percent} % of chunks have an article — the profile barely recognised the document's structure.`,
         oversized: (count, limit) => `${count} ${count === 1 ? "chunk is" : "chunks are"} larger than ${limit} tokens — the assistant gets too much at once.`,
-        fragments: count => `${count} short ${count === 1 ? "fragment" : "fragments"} of a split article — little context.`,
+        fragments: count => `${count} short ${count === 1 ? "fragment of a split article" : "fragments of split articles"} — little context.`,
       },
       noWarnings: "No findings.",
       analysisHeading: "Text analysis",
@@ -13638,8 +13728,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       analysisPlain: "The text has no articles or paragraphs. It needs splitting by headings.",
       listHeading: "Chunks",
       noArticle: "no article",
-      tokens: n => `${n} tokens`,
+      tokens: n => `${n} ${n === 1 ? "token" : "tokens"}`,
       oversizedTag: "large",
+      trialHeading: "Try a different split",
+      trialIntro: "Change the values and see how the text would be split. Nothing is saved until you choose a profile below.",
+      fieldArticleWord: "Article word",
+      fieldArticleWordHint: "The word an article heading starts with: Článok, § or Bod.",
+      fieldAnnexWord: "Annex word",
+      fieldMinTokens: "Chunk from (tokens)",
+      fieldMaxTokens: "Chunk to (tokens)",
+      trialShow: "Show split",
+      trialReset: "Cancel trial",
+      compareHeading: "Comparison",
+      compareNow: "now",
+      compareTrial: "trial",
+      compareMax: "Largest chunk",
+      trialMatches: label => `These values belong to the profile “${label}”.`,
+      trialListHeading: "Chunks after the trial split",
+      saveHeading: "Profile for this document",
+      saveIntro: "A document carries only a named profile — it can be used for other documents too. After changing the profile the document must be reindexed; until then the assistant answers from the old chunks.",
+      useProfile: "Use an existing profile",
+      useProfileButton: "Use",
+      currentProfile: "current",
+      newProfile: "Save the trial values as a new profile",
+      newProfileLabel: "Profile name",
+      newProfileHint: "For example “Act (§)”. Existing profiles are not changed here — a change would silently re-split every document that uses them.",
+      newProfileButton: "Save profile",
     },
     editor: {
       intro: "Compare the text with the original. Publishing is a separate step — nothing goes out from here.",
@@ -13696,6 +13810,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Moved ${moved} of ${total}. Failed: ${failed}`,
       reindexUpToDate: "The chunking is already up to date — nothing changed.",
+      chunkingProfileSet: label => `The document now has the profile “${label}”. Reindex it — until then the assistant answers from the old chunks.`,
+      chunkingProfileCreated: label => `The profile “${label}” was saved and assigned to the document. Reindex the document next.`,
       reindexAllResult: (done, unchanged) => `Versions reindexed: ${done}, unchanged: ${unchanged}. No version or acknowledgement was touched.`,
       reindexed: (chunks, archived) =>
         `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +

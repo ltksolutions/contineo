@@ -298,7 +298,7 @@ function toSet(change: TenantChange): Record<string, unknown> {
  * zas jeden úsek na celý dokument — v oboch prípadoch vyhľadávanie prestane
  * fungovať a nikto to nespojí s číslom v nastavení.
  */
-function clampChunking(c: Partial<ChunkingProfile>): ChunkingProfile {
+export function clampChunking(c: Partial<ChunkingProfile>): ChunkingProfile {
   const between = (v: number | undefined, min: number, max: number, previous: number) =>
     v === undefined || Number.isNaN(v) ? previous : Math.min(Math.max(Math.round(v), min), max)
   return {

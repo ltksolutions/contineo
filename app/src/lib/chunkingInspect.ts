@@ -27,6 +27,12 @@ export interface InspectedChunk {
   chunkType: string
   text: string
   tokens: number
+  /**
+   * Celý článok v jednom úseku (`true`) alebo kúsok rozdeleného (`false`).
+   * Uložené úseky to v databáze nemajú — doplní sa z dnešného rezu, keď
+   * s uloženým sedí; inak `undefined` a úlomky sa nepočítajú.
+   */
+  complete?: boolean
 }
 
 /** Upozornenie s kódom — vetu skladá slovník, nie táto knižnica. */
@@ -79,7 +85,7 @@ export function chunkStats(chunks: Pick<InspectedChunk, "articleRef" | "tokens">
  * - **fragments**: krátke úlomky rozdeleného článku (pod polovicou minima).
  */
 export function chunkWarnings(
-  chunks: Pick<InspectedChunk, "articleRef" | "tokens" | "chunkType">[],
+  chunks: Pick<InspectedChunk, "articleRef" | "tokens" | "chunkType" | "complete">[],
   profile: Pick<ChunkingProfile, "minTokens" | "maxTokens">,
 ): ChunkWarning[] {
   const out: ChunkWarning[] = []
@@ -93,9 +99,46 @@ export function chunkWarnings(
   const limit = Math.round(profile.maxTokens * OVERSIZE_FACTOR)
   const oversized = chunks.filter(c => c.tokens > limit).length
   if (oversized) out.push({ code: "oversized", count: oversized, limit })
-  const fragments = chunks.filter(c => c.articleRef && c.tokens < profile.minTokens / 2).length
+  // Len **kúsky rozdeleného** článku. Krátky celý článok (čl. 15 Finančnej
+  // smernice, 129 tokenov) je prirodzená jednotka, nie problém (5. 10. 2026).
+  const fragments = chunks.filter(c => c.articleRef && c.complete === false && c.tokens < profile.minTokens / 2).length
   if (fragments) out.push({ code: "fragments", count: fragments })
   return out
+}
+
+type RawChunk = {
+  chunkIndex: number; heading?: string; articleRef?: string | null; typ?: string; text: string; uplnaJednotka?: boolean
+}
+
+/** Rez textu danými parametrami — to isté, čo by urobilo preindexovanie. */
+export function cutWith(
+  text: string,
+  title: string,
+  params: Partial<ChunkingProfile> | undefined,
+): { chunks: InspectedChunk[]; fingerprint: string } {
+  const forChunker = toChunkerProfile(params)
+  const { chunky } = chunkText(text, { nazovDokumentu: title, profil: forChunker }) as { chunky: RawChunk[] }
+  return {
+    chunks: chunky.map(c => ({
+      chunkIndex: c.chunkIndex,
+      heading: c.heading ?? "",
+      articleRef: c.articleRef ?? null,
+      chunkType: c.typ ?? "clanok",
+      text: c.text,
+      tokens: estimateTokens(c.text),
+      complete: Boolean(c.uplnaJednotka),
+    })),
+    fingerprint: chunkingFingerprint(chunky as never, { ...DEFAULT_PROFILE, ...forChunker }),
+  }
+}
+
+export interface ChunkingTrial {
+  values: ChunkingProfile
+  chunks: InspectedChunk[]
+  stats: ChunkStats
+  warnings: ChunkWarning[]
+  /** Skúšobné hodnoty sú zhodné s niektorým pomenovaným profilom. */
+  matchesProfile: string | null
 }
 
 export interface ChunkingInspection {
@@ -110,6 +153,16 @@ export interface ChunkingInspection {
   /** Dnešný rez tým istým profilom — koľko úsekov a či sa líši od uloženého. */
   today: { count: number; withArticlePercent: number; outdated: boolean } | null
   analysis: ChunkingAnalysis | null
+  /** Pomenované profily organizácie — na výber „Použiť profil". */
+  profiles: { key: string; label: string; values: ChunkingProfile }[]
+  /** Skúšobný rez, keď prišli skúšobné parametre (krok B). */
+  trial: ChunkingTrial | null
+}
+
+/** Rovnaké parametre rezu? (kľúč a menovka nehrajú rolu) */
+function sameValues(a: ChunkingProfile, b: ChunkingProfile): boolean {
+  return a.articleWord === b.articleWord && a.annexWord === b.annexWord &&
+    a.headerRepeats === b.headerRepeats && a.minTokens === b.minTokens && a.maxTokens === b.maxTokens
 }
 
 interface VersionRow {
@@ -126,7 +179,11 @@ interface VersionRow {
  * neho (koncept) nemá uložené úseky; ukáže sa len návrh analyzátora nad
  * konceptom, aby sa členenie dalo posúdiť ešte pred zverejnením.
  */
-export async function inspectChunking(companyCode: string, documentId: string): Promise<ChunkingInspection | null> {
+export async function inspectChunking(
+  companyCode: string,
+  documentId: string,
+  trialValues?: ChunkingProfile | null,
+): Promise<ChunkingInspection | null> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne(
     { companyCode, documentId },
@@ -165,14 +222,28 @@ export async function inspectChunking(companyCode: string, documentId: string): 
 
   let today: ChunkingInspection["today"] = null
   if (effective && text) {
-    const forChunker = toChunkerProfile(params)
-    const { chunky } = chunkText(text, { nazovDokumentu: doc.title ?? "", profil: forChunker })
-    const id = chunkingFingerprint(chunky, { ...DEFAULT_PROFILE, ...forChunker })
-    const withArticle = chunky.filter((c: { articleRef?: string | null }) => c.articleRef).length
-    today = {
-      count: chunky.length,
-      withArticlePercent: chunky.length ? Math.round((withArticle / chunky.length) * 100) : 0,
-      outdated: needsReindex(raw[0]?.chunkingId, id),
+    const cut = cutWith(text, doc.title ?? "", params)
+    const outdated = needsReindex(raw[0]?.chunkingId, cut.fingerprint)
+    today = { count: cut.chunks.length, withArticlePercent: chunkStats(cut.chunks).withArticlePercent, outdated }
+    // Uložené úseky nevedia, či sú celý článok — keď sedia s dnešným rezom,
+    // vezme sa to z neho (rovnaké poradie, rovnaký text).
+    if (!outdated) for (const c of stored) c.complete = cut.chunks[c.chunkIndex]?.complete
+  }
+
+  const profiles = (tenant?.chunkingProfiles ?? []).map(p => {
+    const { key: k, label: l, ...rest } = p
+    return { key: k, label: l || k, values: { ...DEFAULT_CHUNKING, ...rest } as ChunkingProfile }
+  })
+
+  let trial: ChunkingTrial | null = null
+  if (trialValues && text) {
+    const cut = cutWith(text, doc.title ?? "", trialValues)
+    trial = {
+      values: trialValues,
+      chunks: cut.chunks,
+      stats: chunkStats(cut.chunks),
+      warnings: chunkWarnings(cut.chunks, trialValues),
+      matchesProfile: profiles.find(p => sameValues(p.values, trialValues))?.key ?? null,
     }
   }
 
@@ -186,5 +257,7 @@ export async function inspectChunking(companyCode: string, documentId: string): 
     warnings: chunkWarnings(stored, values),
     today,
     analysis: text ? analyseChunking(text) : null,
+    profiles,
+    trial,
   }
 }

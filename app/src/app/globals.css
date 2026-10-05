@@ -7966,3 +7966,15 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   margin: 0; padding: 0 14px 14px; white-space: pre-wrap; overflow-wrap: anywhere;
   font: inherit; font-size: var(--fs-small); line-height: 1.55;
 }
+
+/* Skúšobný rez a profil dokumentu (ADR-027, krok B). Polia pod sebou na
+   telefóne, dve vedľa seba od 640 px. */
+.chunks-fields { display: grid; gap: 12px; }
+@media (min-width: 640px) { .chunks-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.chunks-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.chunks-row { display: grid; gap: 10px; }
+@media (min-width: 640px) { .chunks-row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; } }
+.chunks-compare { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.chunks-compare th, .chunks-compare td { padding: 4px 18px 4px 0; text-align: left; }
+.chunks-compare thead th { font-size: var(--fs-small); color: var(--muted); font-weight: 600; }
+.chunks-compare tbody th { font-weight: 400; color: var(--muted); }
