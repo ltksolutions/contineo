@@ -26,6 +26,7 @@ import type { UiLanguage } from "./i18n"
 import type { RetentionSettings } from "./retention"
 import type { Person } from "./persons"
 import type { TenantOAuth } from "./oauth"
+import type { TenantAi } from "./aiSettings"
 import type { ChunkingProfile, ChunkingProfileDef } from "./chunkingProfile"
 import type { TenantLegalBasis } from "./legalBases"
 
@@ -112,6 +113,9 @@ export interface Tenant {
    * Číslo zadané s `+` sa ňou **nedopĺňa** — to je už medzinárodný zápis.
    */
   phonePrefix?: string
+
+  /** Umelá inteligencia — vlastný kľúč a modely (D157, `aiSettings.ts`). */
+  ai?: TenantAi
 
   /**
    * **Prevádzkovateľ** v zmysle GDPR — kto spracúva osobné údaje (C1,

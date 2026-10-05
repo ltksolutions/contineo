@@ -81,8 +81,17 @@ ZÁKAZ, ktorý je dôležitejší než výsledok:
 
 Odpovedz LEN samotným Markdownom, bez akéhokoľvek komentára pred ním či za ním.`
 
-function client(): Anthropic {
-  const key = process.env.ANTHROPIC_API_KEY
+/**
+ * Kľúč a model z nastavenia organizácie (D157) — `aiForCompany()`. Volajúci
+ * ho načíta raz a odovzdá; táto knižnica do databázy nesiaha.
+ */
+export interface RewriteAi {
+  apiKey: string | null
+  model: string
+}
+
+function client(ai: RewriteAi): Anthropic {
+  const key = ai.apiKey
   if (!key) {
     throw new RewriteError(
       "rewrite.notConfigured",
@@ -90,10 +99,6 @@ function client(): Anthropic {
     )
   }
   return new Anthropic({ apiKey: key })
-}
-
-function model(): string {
-  return process.env.CMS_PREPIS_MODEL ?? "claude-sonnet-4-5"
 }
 
 /**
@@ -113,9 +118,9 @@ function model(): string {
  * znamenalo, že sa prepis ticho zastaví v polovici predpisu. Streamuje sa
  * a čaká sa na celú odpoveď — volajúci dostane to isté, čo dostával predtým.
  */
-async function ask(message: { content: unknown }) {
-  const stream = client().messages.stream({
-    model: model(),
+async function ask(ai: RewriteAi, message: { content: unknown }) {
+  const stream = client(ai).messages.stream({
+    model: ai.model,
     max_tokens: 32_000,
     system: INSTRUCTION,
     messages: [{ role: "user", content: message.content as never }],
@@ -168,7 +173,7 @@ function answerText(blocks: { type: string; text?: string }[]): string {
  * potrebná — ale nech je jasné, že dnes nie je zapojená a že jej limit
  * 120 tisíc znakov je aj tak vyšší, než čo sa zmestí do odpovede.
  */
-export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
+export async function cleanMarkdown(markdown: string, ai: RewriteAi): Promise<ModelDraft> {
   const input = (markdown ?? "").trim()
   if (!input) throw new RewriteError("rewrite.emptyInput", "Niet čo prečisťovať — text je prázdny.")
   if (input.length > MAX_CHARS) {
@@ -180,17 +185,17 @@ export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
     )
   }
 
-  const answer = await ask({
+  const answer = await ask(ai, {
     content: [{ type: "text", text: `Uprav členenie tohto textu:\n\n${input}` }],
   })
 
   const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("rewrite.emptyAnswer", "Model vrátil prázdnu odpoveď.")
-  return { text, model: model(), mode: "clean", at: new Date() }
+  return { text, model: ai.model, mode: "clean", at: new Date() }
 }
 
 /** Prepíše skenované PDF, ktoré nemá textovú vrstvu. */
-export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
+export async function rewritePdf(pdf: Buffer, ai: RewriteAi): Promise<ModelDraft> {
   if (!pdf?.byteLength) throw new RewriteError("rewrite.emptyFile", "Súbor je prázdny.")
   if (pdf.byteLength > MAX_PDF_BYTES) {
     throw new RewriteError(
@@ -201,7 +206,7 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
     )
   }
 
-  const answer = await ask({
+  const answer = await ask(ai, {
     content: [
       {
         type: "document",
@@ -216,5 +221,5 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
 
   const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("rewrite.modelReadNothing", "Model z dokumentu nič neprečítal.")
-  return { text, model: model(), mode: "rewrite-scan", at: new Date() }
+  return { text, model: ai.model, mode: "rewrite-scan", at: new Date() }
 }

@@ -50,6 +50,8 @@ export type AuditSubject =
   | "organisation"
   | "domain"
   | "signin-settings"
+  /** Nastavenie AI organizácie — kľúč a modely (D157). */
+  | "ai-settings"
   | "tenant"
   | "track"
   /** Modul Vzdelávanie (ADR-018). */

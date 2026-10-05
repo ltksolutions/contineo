@@ -12,11 +12,12 @@
  * bez nej by sa staré a nové sumy sčítavali, akoby boli porovnateľné.
  *
  * Zdroj cien: https://platform.claude.com/docs/en/about-claude/pricing
- * Overené 2026-07-27.
+ * Overené 2026-07-27, doplnené 2026-10-05 (Sonnet 5.5, Opus 5.5; Sonnet 5
+ * zostal na $2/$10 — ohlásené zdraženie od 1. 9. 2026 sa nekonalo).
  */
 
 /** Označenie cenníka, ktoré sa ukladá k záznamu. */
-export const PRICELIST_VERSION = "2026-07-27"
+export const PRICELIST_VERSION = "2026-10-05"
 
 /** Ceny za milión tokenov v USD. */
 export interface ModelPrice {
@@ -39,20 +40,28 @@ export interface ModelPrice {
 /**
  * Ceny podľa presného označenia modelu.
  *
- * Pozor na Sonnet 5: do 31. augusta 2026 beží úvodná cena $2/$10, potom
- * nabieha štandardná $3/$15. To je **o 50 % viac** a pri plánovaní rozpočtu
- * na rok to nie je detail.
+ * Sonnet 5: úvodná cena $2/$10 mala do 31. 8. 2026 a potom $3/$15. Anthropic
+ * zdraženie zrušil a $2/$10 je štandardná cena (cenník overený 5. 10. 2026).
+ * Dovtedy tu bolo `platiDo` a od 1. 9. sa odhad počítal o 50 % vyšší.
  */
 export const PRICELIST: Record<string, ModelPrice> = {
   "claude-sonnet-5": {
     input: 2, cacheWrite: 2.5, cacheRead: 0.2, output: 10,
-    platiDo: "2026-08-31",
-    potom: { input: 3, cacheWrite: 3.75, cacheRead: 0.3, output: 15 },
+  },
+  "claude-sonnet-5-5": {
+    input: 2, cacheWrite: 2.5, cacheRead: 0.2, output: 10,
+  },
+  // Čítanie z cache je pri Opus 5.5 0,05× vstupu, nie 0,1×.
+  "claude-opus-5-5": {
+    input: 4, cacheWrite: 5, cacheRead: 0.2, output: 20,
   },
   "claude-opus-5": {
     input: 5, cacheWrite: 6.25, cacheRead: 0.5, output: 25,
   },
   "claude-haiku-4-5-20251001": {
+    input: 1, cacheWrite: 1.25, cacheRead: 0.1, output: 5,
+  },
+  "claude-haiku-4-5": {
     input: 1, cacheWrite: 1.25, cacheRead: 0.1, output: 5,
   },
   "claude-sonnet-4-5": {

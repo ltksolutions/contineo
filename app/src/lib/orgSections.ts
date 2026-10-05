@@ -13,7 +13,7 @@
 import { tabValue } from "./urlParams"
 
 export const ORG_SECTION_GROUPS = [
-  { key: "org", sections: ["general", "departments", "codelists"] },
+  { key: "org", sections: ["general", "departments", "codelists", "ai"] },
   { key: "access", sections: ["domains", "signin"] },
   { key: "documents", sections: ["acknowledgements", "chunking"] },
   { key: "oversight", sections: ["audit", "gdpr"] },

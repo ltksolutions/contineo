@@ -12,6 +12,7 @@ import { getCollection } from "./mongodb"
 import { ProviderConfigError } from "./providers/types"
 import type { TenantProfile } from "./providers/types"
 import { checkResidency, checkIsolation } from "./residency"
+import { aiForCompany, type ResolvedAi } from "./aiSettings"
 
 const TTL_MS = 5 * 60 * 1000   // 5 minút
 
@@ -149,8 +150,45 @@ export function validateProfile(p: TenantProfile): void {
   }
 }
 
-/** Načíta profil tenanta. Pri chýbajúcom zázname vráti predvolený. */
+/**
+ * Doplní do profilu kľúč a modely z nastavenia organizácie (D157).
+ *
+ * Len pre adaptér `anthropic` — Bedrock a vlastné servery majú kľúč aj model
+ * inde a nastavenie organizácie sa ich netýka. Vracia kópiu; profil v cache
+ * zostáva bez kľúča.
+ */
+export function withAi(profile: TenantProfile, ai: ResolvedAi): TenantProfile {
+  const g = profile.providers.generation
+  const u = profile.providers.utility
+  // Prázdny reťazec = kľúč organizácie je, ale nedá sa použiť → adaptér zlyhá
+  // s jasnou vetou. `undefined` = adaptér si vezme kľúč prevádzkovateľa sám.
+  const apiKey = ai.ownKeyUnreadable ? "" : (ai.apiKey ?? undefined)
+  return {
+    ...profile,
+    providers: {
+      ...profile.providers,
+      generation: g.kind === "anthropic"
+        ? { ...g, model: ai.models.answer, apiKey }
+        : g,
+      utility: u && u.kind === "anthropic"
+        ? { ...u, model: ai.models.utility, apiKey }
+        : u,
+    },
+  }
+}
+
+/**
+ * Načíta profil tenanta. Pri chýbajúcom zázname vráti predvolený.
+ *
+ * Nastavenie AI z organizácie sa číta **zakaždým, mimo cache**: správca,
+ * ktorý zmení model alebo kľúč, čaká, že to platí od ďalšej otázky — nie
+ * o päť minút a nie len na jednej inštancii servera.
+ */
 export async function getTenantProfile(companyCode: string): Promise<TenantProfile> {
+  return withAi(await baseProfile(companyCode), await aiForCompany(companyCode))
+}
+
+async function baseProfile(companyCode: string): Promise<TenantProfile> {
   const hit = cache.get(companyCode)
   if (hit && hit.expiresAt > Date.now()) return hit.profile
 

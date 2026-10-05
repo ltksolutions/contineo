@@ -1455,6 +1455,33 @@ interface Dictionary {
     groups: Record<"org" | "access" | "documents" | "oversight", string>
     /** Záložka GDPR (D154) — upravuje len DPO. */
     gdpr: { readOnly: string; saveContact: string; contactSaved: string }
+    ai: {
+      intro: string
+      secProvider: string
+      provider: string
+      providerNote: string
+      secKey: string
+      secKeyNote: string
+      keyLabel: string
+      keyHint: string
+      keyOwn: (hint: string, date: string, by: string) => string
+      keyOperator: string
+      keyNone: string
+      deleteKey: string
+      deleteKeyNote: string
+      secModels: string
+      secModelsNote: string
+      answer: string
+      answerNote: string
+      utility: string
+      utilityNote: string
+      rewrite: string
+      rewriteNote: string
+      price: (input: string, output: string) => string
+      save: string
+      saved: string
+      keyDeleted: string
+    }
     branding: {
       name: string
       nameNote: string
@@ -4960,6 +4987,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.needsDomain": "Bez domény sa portál organizácie nikde neukáže. Nechaj aspoň jednu.",
     "tenant.nameRequired": "Názov organizácie je povinný — je to to, čo ľudia uvidia v hlavičke.",
     "tenant.alreadyExists": "Organizácia {code} už existuje. Voľný je {free} — použite ten, alebo zvoľte vlastnú skratku.",
+    "ai.keyRejected": "Anthropic kľúč odmietol — skontrolujte, či je celý a platný.",
+    "ai.keyUnverified": "Kľúč sa nepodarilo overiť — Anthropic neodpovedá. Skúste to o chvíľu.",
+    "ai.unknownModel": "Model „{value}“ nie je v ponuke.",
     "tenant.noEncryptionKey": "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému.",
     "tenant.needsBothCredentials": "Treba aj clientId, aj tajomstvo — jedno bez druhého sa nedá použiť.",
 
@@ -5030,6 +5060,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       organisation: "organizácia",
       domain: "doména",
       "signin-settings": "prihlasovanie",
+      "ai-settings": "umelá inteligencia",
       tenant: "tenant",
       track: "trasa",
       course: "kurz",
@@ -5131,6 +5162,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domains: "Domény",
       signin: "Prihlasovanie",
       codelists: "Číselníky",
+      ai: "Umelá inteligencia",
       chunking: "Členenie",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
@@ -5140,6 +5172,33 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       readOnly: "Tieto nastavenia upravuje zodpovedná osoba (DPO). Vidíte ich len na čítanie.",
       saveContact: "Uložiť kontakt",
       contactSaved: "Kontakt GDPR je uložený.",
+    },
+    ai: {
+      intro: "Asistent, úprava otázok a prepis skenov používajú model Claude od spoločnosti Anthropic. Tu nastavíte, cez aký kľúč sa platí a ktoré modely sa použijú.",
+      secProvider: "Poskytovateľ",
+      provider: "Anthropic (Claude)",
+      providerNote: "Zatiaľ jediný podporovaný poskytovateľ.",
+      secKey: "API kľúč",
+      secKeyNote: "S vlastným kľúčom platí volania organizácia priamo spoločnosti Anthropic. Bez neho sa použije kľúč prevádzkovateľa portálu.",
+      keyLabel: "Nový kľúč",
+      keyHint: "Pri uložení sa overí. Uložený kľúč sa už nikdy neukáže, len jeho koncovka. Prázdne pole kľúč nemení.",
+      keyOwn: (hint, date, by) => `Nastavený je kľúč organizácie …${hint} (${date}, ${by}).`,
+      keyOperator: "Organizácia nemá vlastný kľúč — používa sa kľúč prevádzkovateľa portálu.",
+      keyNone: "Nie je nastavený žiadny kľúč — asistent ani prepis skenov nefungujú.",
+      deleteKey: "Odstrániť kľúč",
+      deleteKeyNote: "Volania potom pôjdu cez kľúč prevádzkovateľa portálu.",
+      secModels: "Modely",
+      secModelsNote: "Ktorý model sa použije na ktorú úlohu. Cena je za milión tokenov podľa cenníka Anthropic. Zmena platí od ďalšieho volania.",
+      answer: "Odpovede asistenta",
+      answerNote: "Silnejší model odpovedá presnejšie, ale pomalšie a drahšie. Sonnet 5.5 a Opus 5.5 pred odpoveďou premýšľajú — prvé slovo príde neskôr.",
+      utility: "Úprava otázky",
+      utilityNote: "Beží pred vyhľadávaním a čaká sa naň, preto len najrýchlejší model.",
+      rewrite: "Prepis skenov PDF",
+      rewriteNote: "Prepisuje skenované predpisy v knižnici do textu.",
+      price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
+      save: "Uložiť",
+      saved: "Nastavenie AI je uložené.",
+      keyDeleted: "Kľúč organizácie je odstránený.",
     },
     branding: {
       name: "Názov portálu",
@@ -8524,6 +8583,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.needsDomain": "Bez domény se portál organizace nikde neukáže. Nech aspoň jednu.",
     "tenant.nameRequired": "Název organizace je povinný — je to to, co lidé uvidí v hlavičce.",
     "tenant.alreadyExists": "Organizace {code} už existuje. Volný je {free} — použijte ten, nebo zvolte vlastní zkratku.",
+    "ai.keyRejected": "Anthropic klíč odmítl — zkontrolujte, zda je celý a platný.",
+    "ai.keyUnverified": "Klíč se nepodařilo ověřit — Anthropic neodpovídá. Zkuste to za chvíli.",
+    "ai.unknownModel": "Model „{value}“ není v nabídce.",
     "tenant.noEncryptionKey": "Tajemství nelze uložit: chybí OAUTH_SECRET_ENCRYPTION_KEY. Ukládat ho čitelně nebudeme — je to přístup do cizího systému.",
     "tenant.needsBothCredentials": "Je potřeba clientId i tajemství — jedno bez druhého použít nelze.",
 
@@ -8594,6 +8656,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       organisation: "organizace",
       domain: "doména",
       "signin-settings": "přihlašování",
+      "ai-settings": "umělá inteligence",
       tenant: "tenant",
       track: "trasa",
       course: "kurz",
@@ -8695,6 +8758,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domains: "Domény",
       signin: "Přihlašování",
       codelists: "Číselníky",
+      ai: "Umělá inteligence",
       chunking: "Členění",
       acknowledgements: "Potvrzování",
       audit: "Audit",
@@ -8704,6 +8768,33 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       readOnly: "Tato nastavení upravuje pověřenec (DPO). Vidíte je jen pro čtení.",
       saveContact: "Uložit kontakt",
       contactSaved: "Kontakt GDPR je uložen.",
+    },
+    ai: {
+      intro: "Asistent, úprava dotazů a přepis skenů používají model Claude od společnosti Anthropic. Zde nastavíte, přes jaký klíč se platí a které modely se použijí.",
+      secProvider: "Poskytovatel",
+      provider: "Anthropic (Claude)",
+      providerNote: "Zatím jediný podporovaný poskytovatel.",
+      secKey: "API klíč",
+      secKeyNote: "S vlastním klíčem platí volání organizace přímo společnosti Anthropic. Bez něj se použije klíč provozovatele portálu.",
+      keyLabel: "Nový klíč",
+      keyHint: "Při uložení se ověří. Uložený klíč se už nikdy neukáže, jen jeho koncovka. Prázdné pole klíč nemění.",
+      keyOwn: (hint, date, by) => `Nastaven je klíč organizace …${hint} (${date}, ${by}).`,
+      keyOperator: "Organizace nemá vlastní klíč — používá se klíč provozovatele portálu.",
+      keyNone: "Není nastaven žádný klíč — asistent ani přepis skenů nefungují.",
+      deleteKey: "Odstranit klíč",
+      deleteKeyNote: "Volání pak půjdou přes klíč provozovatele portálu.",
+      secModels: "Modely",
+      secModelsNote: "Který model se použije na kterou úlohu. Cena je za milion tokenů podle ceníku Anthropic. Změna platí od dalšího volání.",
+      answer: "Odpovědi asistenta",
+      answerNote: "Silnější model odpovídá přesněji, ale pomaleji a dráž. Sonnet 5.5 a Opus 5.5 před odpovědí přemýšlejí — první slovo přijde později.",
+      utility: "Úprava dotazu",
+      utilityNote: "Běží před vyhledáváním a čeká se na ni, proto jen nejrychlejší model.",
+      rewrite: "Přepis skenů PDF",
+      rewriteNote: "Přepisuje skenované předpisy v knihovně do textu.",
+      price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
+      save: "Uložit",
+      saved: "Nastavení AI je uloženo.",
+      keyDeleted: "Klíč organizace je odstraněn.",
     },
     branding: {
       name: "Název portálu",
@@ -12077,6 +12168,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.needsDomain": "Without a domain the organisation's portal will not appear anywhere. Leave at least one.",
     "tenant.nameRequired": "The organisation name is required — it is what people see in the header.",
     "tenant.alreadyExists": "Organisation {code} already exists. {free} is free — use that, or pick your own abbreviation.",
+    "ai.keyRejected": "Anthropic rejected the key — check that it is complete and valid.",
+    "ai.keyUnverified": "The key could not be verified — Anthropic is not responding. Try again in a moment.",
+    "ai.unknownModel": "The model “{value}” is not on offer.",
     "tenant.noEncryptionKey": "The secret cannot be stored: OAUTH_SECRET_ENCRYPTION_KEY is missing. We will not store it readable — it is access to someone else's system.",
     "tenant.needsBothCredentials": "Both clientId and the secret are needed — one without the other cannot be used.",
 
@@ -12147,6 +12241,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       organisation: "organisation",
       domain: "domain",
       "signin-settings": "sign-in",
+      "ai-settings": "artificial intelligence",
       tenant: "tenant",
       track: "track",
       course: "course",
@@ -12248,6 +12343,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domains: "Domains",
       signin: "Sign-in",
       codelists: "Code lists",
+      ai: "Artificial intelligence",
       chunking: "Chunking",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
@@ -12257,6 +12353,33 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       readOnly: "These settings are managed by the data protection officer (DPO). You can only view them.",
       saveContact: "Save contact",
       contactSaved: "The GDPR contact has been saved.",
+    },
+    ai: {
+      intro: "The assistant, question rewriting and scan transcription use Anthropic's Claude model. Here you set which key pays for it and which models are used.",
+      secProvider: "Provider",
+      provider: "Anthropic (Claude)",
+      providerNote: "The only supported provider for now.",
+      secKey: "API key",
+      secKeyNote: "With its own key the organisation pays Anthropic directly for its calls. Without one, the portal operator's key is used.",
+      keyLabel: "New key",
+      keyHint: "It is verified on save. A stored key is never shown again, only its last characters. An empty field leaves the key unchanged.",
+      keyOwn: (hint, date, by) => `The organisation's key …${hint} is set (${date}, ${by}).`,
+      keyOperator: "The organisation has no key of its own — the portal operator's key is used.",
+      keyNone: "No key is set — the assistant and scan transcription do not work.",
+      deleteKey: "Remove key",
+      deleteKeyNote: "Calls will then go through the portal operator's key.",
+      secModels: "Models",
+      secModelsNote: "Which model is used for which task. Prices are per million tokens according to Anthropic's price list. A change applies from the next call.",
+      answer: "Assistant answers",
+      answerNote: "A stronger model answers more precisely, but slower and at a higher cost. Sonnet 5.5 and Opus 5.5 think before answering — the first word comes later.",
+      utility: "Question rewriting",
+      utilityNote: "Runs before the search and is waited for, so only the fastest model.",
+      rewrite: "PDF scan transcription",
+      rewriteNote: "Transcribes scanned regulations in the library into text.",
+      price: (input, output) => `input $${input} · output $${output}`,
+      save: "Save",
+      saved: "The AI settings have been saved.",
+      keyDeleted: "The organisation's key has been removed.",
     },
     branding: {
       name: "Portal name",
