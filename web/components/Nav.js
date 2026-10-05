@@ -44,6 +44,7 @@ export default function Nav({ dict, lang }) {
     { href: `/${lang}#demo`, label: dict.nav.demo },
     { href: `/${lang}#modes`, label: dict.nav.modes },
     { href: `/${lang}#verzie`, label: dict.nav.versions },
+    { href: `/${lang}#potvrdzovanie`, label: dict.nav.governance },
     { href: `/${lang}#features`, label: dict.nav.features },
     { href: `/${lang}#audience`, label: dict.nav.audience },
     { href: `/${lang}#how`, label: dict.nav.how },
