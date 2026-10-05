@@ -23,6 +23,8 @@
  */
 
 /** Čo sa v texte našlo. Čísla, nie dojmy — aby sa dali ukázať človeku. */
+import { stripHeadingEmphasis } from "./chunker.mjs"
+
 export interface StructureSignals {
   /** Riadkov spolu (neprázdnych). */
   lines: number
@@ -101,7 +103,9 @@ const ANNEX = new RegExp(`^${MD}pr[íi]loha\\s+č\\.\\s*\\d+[a-z]?\\b`, "i")
  * polovica súboru, takže by podiel zriedili na nezmysel.
  */
 export function structureSignals(markdown: string): StructureSignals {
-  const all = String(markdown ?? "").split(/\r?\n/).map(l => l.trim())
+  // Tučné nadpisy (`# **Článok 1**`) číta rovnako ako chunker — inak by
+  // hlásil 0 článkov tam, kde chunker články nájde (5. 10. 2026).
+  const all = String(markdown ?? "").split(/\r?\n/).map(l => stripHeadingEmphasis(l.trim()))
   const lines = all.filter(Boolean)
 
   const seen = new Map<string, number>()

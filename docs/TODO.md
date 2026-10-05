@@ -755,6 +755,8 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 ### O5 — D79, etapa 2: analyzátor, dávka, stratégia „voľný text", obrazovky
 
 - [x] **Členenie zrušené v Nastaveniach organizácie** ✅ 2026-10-05 (ADR-027, D160) — technické parametre (slovo článku, tokeny) správca nemá dôvod meniť; preindexovanie celej knižnice je `npm run chunking:reindex -- --company SFZ [--naozaj]`
+- [x] **Tučné nadpisy z Wordu** ✅ 2026-10-05 — `# **Článok 1 – …**` chunker ani analyzátor nepoznali; obe smernice SFZ boli v 1–2 úsekoch, po oprave 18 (17 s článkom). Ostatné dokumenty majú odtlačok rovnaký (overené pred a po)
+- [ ] **Časť v zápise „Časť I –"** — chunker pozná „PRVÁ ČASŤ", nie „Časť I – Základné ustanovenia" (Pracovný poriadok, obe smernice); cesta úseku je preto bez úrovne časti. Oprava zmení odtlačok týchto troch dokumentov → preindexovať
 - [ ] **Spôsob členenia podľa druhu dokumentu** (ADR-027, D160) — **s prvým manuálom, zmluvou alebo zápisnicou**, nie skôr (bez skutočného textu sa nedá overiť):
       - v Číselníky → Druhy dokumentov voľba pri každom druhu: po článkoch („Článok"), po paragrafoch („§"), po bodoch, podľa nadpisov;
       - stratégia „podľa nadpisov" = `chunkerPlain.mjs` (krok D1 plánu D79, ~1,5 d); `chunker.mjs` sa nemení;
