@@ -1478,6 +1478,8 @@ export default async function DocumentDetailPage({
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
           <h2 className="detail-block-title">{t.text}</h2>
           <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
+          {/* Ako je text narezaný pre asistenta (ADR-027, krok A). */}
+          <Link href={`/library/${encodeURIComponent(documentId)}/chunks`}>{dictionary(language).library.chunks.openLink}</Link>
         </div>
 
         {d.originalFile ? (
