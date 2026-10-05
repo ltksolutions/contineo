@@ -6,7 +6,7 @@
  *
  *   1. cache read stojí desatinu vstupu — bez rozlíšenia by odhad klamal
  *      až o rád,
- *   2. úvodná cena Sonnet 5 platí len do 31. 8. 2026 a potom stúpa o 50 %.
+ *   2. ohlásené zdraženie Sonnet 5 od 1. 9. 2026 sa nekonalo (overené 5. 10. 2026).
  */
 import {
   cost, ratesForDate, formatUsd, formatEur, toEur, sumCosts,
@@ -53,24 +53,26 @@ const typical = cost("claude-sonnet-5", tok({ input: 6_000, output: 1_500 }), BE
 t("typická odpoveď stojí rádovo centy",
   typical > 0.005 && typical < 0.1, formatUsd(typical))
 
-// ── zmena cenníka 1. septembra 2026 ──────────────────────────────────────────
+// ── zrušené zdraženie Sonnet 5 (cenník overený 5. 10. 2026) ─────────────────
+//
+// Ohlásená zmena na $3/$15 od 1. 9. 2026 sa nekonala; $2/$10 je štandardná
+// cena. Starý odhad po 1. 9. počítal o 50 % viac, než Anthropic účtuje.
 
-t("do 31. 8. platí úvodná cena $2",
-  ratesForDate("claude-sonnet-5", BEFORE).sadzby?.input === 2)
-t("od 1. 9. platí štandardná cena $3",
-  ratesForDate("claude-sonnet-5", AFTER).sadzby?.input === 3)
-t("výstup stúpne z $10 na $15",
-  ratesForDate("claude-sonnet-5", AFTER).sadzby?.output === 15)
+t("aj po 1. 9. platí Sonnet 5 za $2",
+  ratesForDate("claude-sonnet-5", AFTER).sadzby?.input === 2)
+t("výstup Sonnet 5 ostáva $10",
+  ratesForDate("claude-sonnet-5", AFTER).sadzby?.output === 10)
 
-t("tá istá otázka bude po 1. 9. drahšia o 50 %",
+t("Sonnet 5.5 stojí rovnako ako Sonnet 5",
   approx(
+    cost("claude-sonnet-5-5", tok({ input: 6_000, output: 1_500 }), AFTER).usd,
     cost("claude-sonnet-5", tok({ input: 6_000, output: 1_500 }), AFTER).usd,
-    cost("claude-sonnet-5", tok({ input: 6_000, output: 1_500 }), BEFORE).usd * 1.5
-  ),
-  `${formatUsd(cost("claude-sonnet-5", tok({ input: 6_000, output: 1_500 }), BEFORE).usd)} → ` +
-  `${formatUsd(cost("claude-sonnet-5", tok({ input: 6_000, output: 1_500 }), AFTER).usd)}`)
+  ))
 
-t("prepnutie na novú cenu sa NEoznačí ako expirované",
+t("Opus 5.5: $4 vstup, $20 výstup, cache čítanie $0,20",
+  approx(cost("claude-opus-5-5", tok({ input: 1_000_000, output: 1_000_000, cacheRead: 1_000_000 }), AFTER).usd, 24.2))
+
+t("cena bez dátumu konca sa NEoznačí ako expirovaná",
   cost("claude-sonnet-5", tok({ input: 100 }), AFTER).pricelistExpired === false)
 
 // Model s vypršanou cenou a bez známej následnej sa musí priznať.

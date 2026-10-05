@@ -35,6 +35,7 @@ import { AppError } from "@/lib/appError"
 import { DEFAULT_PROFILE_KEY } from "@/lib/chunkingProfile"
 import { addLegalBasis, retireLegalBasis, setStandardLegalBasisHidden } from "@/lib/legalBasesDb"
 import { prefixForCountry } from "@/lib/phoneCountries"
+import { saveAiSettings, deleteAiKey } from "@/lib/aiSettings"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -599,4 +600,43 @@ export async function saveDepartmentOrderAction(fd: FormData) {
     if (isRedirect(e)) throw e
     back(fd, errorMessage(e, self.language), true)
   }
+}
+
+// ── umelá inteligencia (D157) ────────────────────────────────────────────────
+
+/**
+ * Kľúč a modely. Prázdne pole kľúča znamená „nemeň" (`saveAiSettings()`);
+ * kľúč sa pred uložením overí volaním Anthropic, preto môže akcia trvať
+ * sekundu-dve.
+ */
+export async function saveAiSettingsAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await saveAiSettings(self.companyCode, {
+      apiKey: fieldText(fd, "apiKey"),
+      models: {
+        answer: fieldText(fd, "modelAnswer") || undefined,
+        rewrite: fieldText(fd, "modelRewrite") || undefined,
+      },
+    }, self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  revalidatePath("/organisation", "layout")
+  back(fd, dictionary(self.language).org.ai.saved)
+}
+
+export async function deleteAiKeyAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await deleteAiKey(self.companyCode, self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  revalidatePath("/organisation", "layout")
+  back(fd, dictionary(self.language).org.ai.keyDeleted)
 }

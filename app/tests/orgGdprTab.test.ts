@@ -58,6 +58,8 @@ vi.mock("../src/app/organisation/actions", () => ({
   reindexAllAction: async () => {},
   shiftDepartmentAction: async () => {},
   saveDepartmentOrderAction: async () => {},
+  saveAiSettingsAction: async () => {},
+  deleteAiKeyAction: async () => {},
 }))
 // Číselníky (záložky, 3. 10. 2026): položky bez databázy.
 vi.mock("@/lib/codelistsTenant", () => ({
@@ -120,7 +122,7 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
     const groups = [...html.matchAll(/<h2 class="org-nav-title">([^<]+)</g)].map(m => m[1])
     expect(groups).toEqual(["Organizácia", "Prístup", "Dokumenty", "Dohľad"])
     const sections = [...html.matchAll(/href="\/organisation\/([a-z]+)"/g)].map(m => m[1])
-    expect(sections).toEqual(["general", "departments", "codelists", "domains", "signin", "acknowledgements", "chunking", "audit", "gdpr"])
+    expect(sections).toEqual(["general", "departments", "codelists", "ai", "domains", "signin", "acknowledgements", "chunking", "audit", "gdpr"])
     expect(html).not.toContain("is-active")
     expect(html).toContain('class="org-nav org-index"')
     expect(html).toContain("[path:Organizácia]")
@@ -131,6 +133,18 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
     expect(html).toMatch(/class="org-nav-item is-active"[^>]*href="\/organisation\/signin"/)
     expect(html).not.toContain("org-back")
     expect(html).toContain("[path:Organizácia › Prihlasovanie]")
+  })
+
+  it("umelá inteligencia: poskytovateľ, pole na kľúč bez hodnoty, modely s cenou (D157)", async () => {
+    const html = await render("ai")
+    expect(html).toContain("[path:Organizácia › Umelá inteligencia]")
+    expect(html).toContain("Anthropic (Claude)")
+    expect(html).toMatch(/<input[^>]*(name="apiKey"[^>]*type="password"|type="password"[^>]*name="apiKey")/)
+    expect(html).not.toMatch(/name="apiKey"[^>]*value=/)
+    expect(html).toContain("Claude Sonnet 5 — vstup 2 $ · výstup 10 $")
+    expect(html).toContain("Claude Haiku 4.5")
+    // Bez vlastného kľúča sa tlačidlo odstránenia neukazuje.
+    expect(html).not.toContain("Odstrániť kľúč")
   })
 
   it("neznáma časť je 404", async () => {

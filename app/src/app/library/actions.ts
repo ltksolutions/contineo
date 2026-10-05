@@ -35,6 +35,7 @@ import {
 } from "@/lib/folders"
 import type { CodelistExtras } from "@/lib/codelists"
 import { rewritePdf } from "@/lib/llmRewrite"
+import { aiForCompany } from "@/lib/aiSettings"
 import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
@@ -572,7 +573,9 @@ export async function sendToModelAction(fd: FormData) {
           }
           const s = await loadFile(self.companyCode, original.id)
           if (!s) throw new LibraryError("library.originalNotFound", "Pôvodný súbor sa nenašiel.")
-          return rewritePdf(s.data)
+          // Kľúč a model prepisu z nastavenia organizácie (D157).
+          const ai = await aiForCompany(self.companyCode)
+          return rewritePdf(s.data, { apiKey: ai.apiKey, model: ai.models.rewrite })
         })()
       : await (async () => {
           const text = String(doc.draftMarkdown ?? "").trim()

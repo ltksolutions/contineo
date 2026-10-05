@@ -39,6 +39,9 @@ import type { UiLanguage } from "@/lib/i18n"
 import Select from "@/components/Select"
 import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
+import { saveAiSettingsAction, deleteAiKeyAction } from "../actions"
+import { AI_MODELS, aiSettingsView } from "@/lib/aiSettings"
+import { ratesForDate } from "@/lib/pricing"
 import { saveBrandingAction, saveAutoProvisionAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "../actions"
 import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "../actions"
 import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction, saveAcknowledgementAction } from "../actions"
@@ -262,6 +265,14 @@ export default async function OrganisationSectionPage({
   // nemajú — čítať oba naraz by znamenalo ukazovať niečo iné, než sa použije.
   const baseProfile = (tenant.chunkingProfiles ?? []).find(p => p.key === DEFAULT_PROFILE_KEY)
   const chunkingValues = baseProfile ?? tenant.chunking ?? DEFAULT_CHUNKING
+
+  // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
+  const ai = now === "ai" ? aiSettingsView(tenant.ai) : null
+  // „Claude Sonnet 5 — vstup 2 $ · výstup 10 $" (cena za milión tokenov dnes).
+  const modelLabel = (id: string, label: string) => {
+    const r = ratesForDate(id).sadzby
+    return r ? `${label} — ${t.ai.price(String(r.input), String(r.output))}` : label
+  }
 
   const records = now === "audit"
     ? await auditRecords(tenant.companyCode, { search: search, limit: 200 })
@@ -1060,6 +1071,99 @@ export default async function OrganisationSectionPage({
           <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 14 }}>{t.auditTab.capped}</p>
         )}
       </div>
+      )}
+
+      {/*
+        Umelá inteligencia (D157, 5. 10. 2026): kľúč a modely. Kľúč sa nikdy
+        neukazuje — ani zašifrovaný; obrazovka vie len, či je nastavený,
+        jeho koncovku a kto ho kedy zadal.
+      */}
+      {now === "ai" && ai && (
+      <>
+      <form action={saveAiSettingsAction} className="card set-form">
+        <input type="hidden" name="tab" value="ai" />
+        <p className="quiet" style={{ margin: 0, padding: "18px 20px 0", maxWidth: 680 }}>{t.ai.intro}</p>
+
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.ai.secProvider}</h2>
+            <p>{t.ai.providerNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <p style={{ margin: 0, fontWeight: 600 }}>{t.ai.provider}</p>
+          </div>
+        </section>
+
+        <section className="set-sec" id="key">
+          <div className="set-sec-head">
+            <h2>{t.ai.secKey}</h2>
+            <p>{t.ai.secKeyNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <p style={{ margin: 0 }}>
+              {ai.hasOwnKey
+                ? t.ai.keyOwn(ai.apiKeyHint ?? "", ai.apiKeySetAt ? formatDate(ai.apiKeySetAt, language) : "—", ai.apiKeySetBy ?? "—")
+                : ai.operatorKeyAvailable ? t.ai.keyOperator : t.ai.keyNone}
+            </p>
+            <label className="field">
+              <span className="field-label">{t.ai.keyLabel}</span>
+              <input className="field-input" name="apiKey" type="password" autoComplete="off"
+                     spellCheck={false} placeholder="sk-ant-…" />
+              <span className="quiet field-hint">{t.ai.keyHint}</span>
+            </label>
+            {ai.hasOwnKey && (
+              <div>
+                <button className="button button--quiet" type="submit" form="remove-ai-key">{t.ai.deleteKey}</button>
+                <span className="quiet field-hint" style={{ display: "block", marginTop: 6 }}>{t.ai.deleteKeyNote}</span>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="set-sec" id="models">
+          <div className="set-sec-head">
+            <h2>{t.ai.secModels}</h2>
+            <p>{t.ai.secModelsNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <div className="field">
+              <span className="field-label">{t.ai.answer}</span>
+              <Select language={language}
+                name="modelAnswer"
+                fieldLabel={t.ai.answer}
+                initial={ai.models.answer}
+                options={AI_MODELS.answer.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
+              />
+              <span className="quiet field-hint">{t.ai.answerNote}</span>
+            </div>
+            {/* Jediná voľba — text, nie zoznam (Haiku 4.5, `AI_MODELS.utility`). */}
+            <div className="field">
+              <span className="field-label">{t.ai.utility}</span>
+              <p style={{ margin: 0 }}>{AI_MODELS.utility.map(m => modelLabel(m.id, m.label)).join(", ")}</p>
+              <span className="quiet field-hint">{t.ai.utilityNote}</span>
+            </div>
+            <div className="field">
+              <span className="field-label">{t.ai.rewrite}</span>
+              <Select language={language}
+                name="modelRewrite"
+                fieldLabel={t.ai.rewrite}
+                initial={ai.models.rewrite}
+                options={AI_MODELS.rewrite.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
+              />
+              <span className="quiet field-hint">{t.ai.rewriteNote}</span>
+            </div>
+          </div>
+        </section>
+
+        <div className="set-savebar">
+          <SubmitButton className="button">{t.ai.save}</SubmitButton>
+        </div>
+      </form>
+      {/* Odstránenie kľúča — vlastný formulár, tlačidlo je hore pri kľúči. */}
+      <form id="remove-ai-key" action={deleteAiKeyAction} hidden>
+        <input type="hidden" name="tab" value="ai" />
+      </form>
+      </>
       )}
 
       {/*

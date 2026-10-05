@@ -52,8 +52,15 @@ export class AnthropicGenerationProvider implements GenerationProvider {
 
   constructor(cfg: GenerationConfig) {
     const envName = cfg.apiKeyEnv ?? "ANTHROPIC_API_KEY"
-    const key = process.env[envName]
-    if (!key) throw new ProviderConfigError(`Chýba env premenná ${envName}`)
+    // Kľúč organizácie (D157) má prednosť; bez neho kľúč prevádzkovateľa.
+    const key = cfg.apiKey !== undefined ? cfg.apiKey : process.env[envName]
+    if (!key) {
+      throw new ProviderConfigError(
+        cfg.apiKey !== undefined
+          ? "Kľúč organizácie k AI sa nedá použiť — nastavte ho znova v Organizácia → Umelá inteligencia."
+          : `Chýba env premenná ${envName}`,
+      )
+    }
     this.apiKey = key
     this.model = cfg.model
     this.supportsCitations = cfg.citations !== false
@@ -129,7 +136,10 @@ export class AnthropicGenerationProvider implements GenerationProvider {
     }
 
     const data: any = await res.json()
-    const text = data?.content?.[0]?.text
+    // Prvý **textový** blok, nie prvý blok: novšie modely pred textom
+    // posielajú blok premýšľania.
+    const blocks: { type?: string; text?: unknown }[] = data?.content ?? []
+    const text = blocks.find(b => b?.type === "text")?.text
     if (typeof text !== "string") throw new Error("Anthropic: odpoveď bez textu")
     return text.trim()
   }

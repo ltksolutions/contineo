@@ -91,6 +91,12 @@ export interface GenerationConfig {
   /** základná URL pri kind: "openai" (vLLM, SGLang, Ollama) */
   url?: string
   apiKeyEnv?: string
+  /**
+   * Kľúč organizácie z nastavenia (D157), už rozšifrovaný. **Len v pamäti** —
+   * do `tenant_profiles` sa nikdy nezapisuje; dopĺňa ho `getTenantProfile()`.
+   * Prázdny reťazec = kľúč organizácie je nastavený, ale nedá sa použiť.
+   */
+  apiKey?: string
 }
 
 export interface TenantProfile {
