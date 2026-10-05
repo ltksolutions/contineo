@@ -37,10 +37,24 @@ async function main() {
   t("anthropic complete: nestreamuje", calls[0].body.stream === undefined)
   t("anthropic complete: respektuje maxTokens", calls[0].body.max_tokens === 5)
 
+  // Spotreba (D158): tokeny z `usage`, prvý TEXTOVÝ blok (nie blok premýšľania).
+  mockFetch(() => ({ json: {
+    content: [{ type: "thinking", thinking: "" }, { type: "text", text: "vector" }],
+    usage: { input_tokens: 120, output_tokens: 3, cache_read_input_tokens: 7 },
+  } }))
+  const seen: { tokens: any; failed?: boolean }[] = []
+  out = await ant.complete("otazka", { onUsage: (tokens, failed) => seen.push({ tokens, failed }) })
+  t("anthropic complete: preskočí blok premýšľania", out === "vector", JSON.stringify(out))
+  t("anthropic complete: nahlási tokeny",
+    seen.length === 1 && seen[0].tokens.input === 120 && seen[0].tokens.output === 3 && seen[0].tokens.cacheRead === 7 && !seen[0].failed,
+    JSON.stringify(seen))
+
   mockFetch(() => ({ status: 429, text: "rate limit" }))
   let error = false
-  try { await ant.complete("x") } catch { error = true }
+  const failedSeen: boolean[] = []
+  try { await ant.complete("x", { onUsage: (_t, f) => failedSeen.push(Boolean(f)) }) } catch { error = true }
   t("anthropic complete: chyba servera vyhodi", error)
+  t("anthropic complete: zlyhanie sa nahlási do spotreby", failedSeen.length === 1 && failedSeen[0] === true)
 
   // ── complete(): OpenAI-compat ────────────────────────────────────────
   calls = mockFetch(() => ({ json: { choices: [{ message: { content: "vector" } }] } }))

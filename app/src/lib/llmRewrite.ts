@@ -19,6 +19,7 @@
  *    prepísať, čo na stranách vidí.
  */
 
+import type { TokenCounts } from "./pricing"
 import Anthropic from "@anthropic-ai/sdk"
 import { AppError } from "./appError"
 
@@ -88,6 +89,8 @@ Odpovedz LEN samotným Markdownom, bez akéhokoľvek komentára pred ním či za
 export interface RewriteAi {
   apiKey: string | null
   model: string
+  /** Spotreba do výkazu (D158). Volá sa aj pri neúspechu, s `failed`. */
+  onUsage?: (tokens: Partial<TokenCounts>, failed?: boolean) => void
 }
 
 function client(ai: RewriteAi): Anthropic {
@@ -119,13 +122,25 @@ function client(ai: RewriteAi): Anthropic {
  * a čaká sa na celú odpoveď — volajúci dostane to isté, čo dostával predtým.
  */
 async function ask(ai: RewriteAi, message: { content: unknown }) {
-  const stream = client(ai).messages.stream({
-    model: ai.model,
-    max_tokens: 32_000,
-    system: INSTRUCTION,
-    messages: [{ role: "user", content: message.content as never }],
+  const c = client(ai)
+  let answer
+  try {
+    answer = await c.messages.stream({
+      model: ai.model,
+      max_tokens: 32_000,
+      system: INSTRUCTION,
+      messages: [{ role: "user", content: message.content as never }],
+    }).finalMessage()
+  } catch (e) {
+    ai.onUsage?.({}, true)
+    throw e
+  }
+  ai.onUsage?.({
+    input: answer.usage.input_tokens,
+    output: answer.usage.output_tokens,
+    cacheWrite: answer.usage.cache_creation_input_tokens ?? 0,
+    cacheRead: answer.usage.cache_read_input_tokens ?? 0,
   })
-  const answer = await stream.finalMessage()
 
   /*
    * **Useknutá odpoveď sa nesmie vydávať za dokument.**

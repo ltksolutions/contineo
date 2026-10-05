@@ -114,6 +114,15 @@ export class AnthropicGenerationProvider implements GenerationProvider {
 
   /** Nestreamované doplnenie pre pomocné úlohy (klasifikácia, prepis dotazu). */
   async complete(prompt: string, opts: CompleteOptions = {}): Promise<string> {
+    try {
+      return await this.completeOnce(prompt, opts)
+    } catch (e) {
+      opts.onUsage?.({}, true)
+      throw e
+    }
+  }
+
+  private async completeOnce(prompt: string, opts: CompleteOptions): Promise<string> {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: {
@@ -136,6 +145,13 @@ export class AnthropicGenerationProvider implements GenerationProvider {
     }
 
     const data: any = await res.json()
+    const u = data?.usage
+    opts.onUsage?.({
+      input: u?.input_tokens ?? 0,
+      output: u?.output_tokens ?? 0,
+      cacheWrite: u?.cache_creation_input_tokens ?? 0,
+      cacheRead: u?.cache_read_input_tokens ?? 0,
+    })
     // Prvý **textový** blok, nie prvý blok: novšie modely pred textom
     // posielajú blok premýšľania.
     const blocks: { type?: string; text?: unknown }[] = data?.content ?? []

@@ -36,6 +36,7 @@ import {
 import type { CodelistExtras } from "@/lib/codelists"
 import { rewritePdf } from "@/lib/llmRewrite"
 import { aiForCompany } from "@/lib/aiSettings"
+import { recordAiUsage, usageRecord } from "@/lib/aiUsage"
 import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
@@ -48,7 +49,7 @@ import { submitForApproval, cancelRound, markNotified } from "@/lib/approvalsDb"
 import { approvalEmail, send } from "@/lib/ecomail"
 import { requestHostname, currentTenant } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
-import { personLanguage } from "@/lib/persons"
+import { findPerson, personLanguage } from "@/lib/persons"
 import type { ApprovalRound } from "@/lib/approvals"
 import { formatDate } from "@/lib/i18n"
 import { setVersionResponsible } from "@/lib/versionResponsibilityDb"
@@ -575,7 +576,21 @@ export async function sendToModelAction(fd: FormData) {
           if (!s) throw new LibraryError("library.originalNotFound", "Pôvodný súbor sa nenašiel.")
           // Kľúč a model prepisu z nastavenia organizácie (D157).
           const ai = await aiForCompany(self.companyCode)
-          return rewritePdf(s.data, { apiKey: ai.apiKey, model: ai.models.rewrite })
+          // Spotreba (D158): kto prepis spustil a ktorý dokument — názov
+          // dokumentu nie je osobný údaj, znenie otázky by bolo.
+          const who = await findPerson(self.companyCode, self.email)
+          return rewritePdf(s.data, {
+            apiKey: ai.apiKey,
+            model: ai.models.rewrite,
+            onUsage: (tokens, failed) => void recordAiUsage(usageRecord({
+              actor: {
+                companyCode: self.companyCode, personId: self.personId,
+                personName: who?.fullName ?? self.email, email: self.email,
+              },
+              purpose: "pdf-rewrite", subject: String(doc.title ?? id),
+              provider: "anthropic", model: ai.models.rewrite, keySource: ai.keySource, tokens, failed,
+            })),
+          })
         })()
       : await (async () => {
           const text = String(doc.draftMarkdown ?? "").trim()
