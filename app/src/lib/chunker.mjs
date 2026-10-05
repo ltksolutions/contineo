@@ -223,10 +223,28 @@ export const estimateTokens = (s) => Math.round(s.length / CHARS_PER_TOKEN)
  * v poriadku, ale sama osebe riadok tiež nenapĺňa.
  */
 function normalizeLine(line) {
-  return line
+  return stripHeadingEmphasis(line
     .replace(/[\u200B-\u200D\uFEFF\u2060]/g, "")   // zero-width a spol.
     .replace(/\u00A0/g, " ")                        // nezlomiteľná medzera
-    .trim()
+    .trim())
+}
+
+/**
+ * Tučné písmo v **nadpise Markdownu** preč: `# **Článok 1 – Predmet úpravy**`
+ * → `# Článok 1 – Predmet úpravy`.
+ *
+ * Nájdené 5. 10. 2026 na smerniciach prevedených z Wordu: nadpis článku prišiel
+ * zabalený v `**` a vzor `Článok N` ho nechytil, takže celá smernica (17 článkov)
+ * padla do jedného úseku „Úvodné ustanovenia" so 7 000 tokenmi. Normy SFZ
+ * tučné nadpisy nemajú, ich rez sa tým nemení (overené odtlačkom všetkých
+ * dokumentov pred a po).
+ *
+ * **Len riadok nadpisu.** Tučné písmo v texte článku je obsah — a riadok
+ * `**Článok 3**` uprostred odseku nie je nadpis. Rovnakú úpravu robí
+ * analyzátor (`chunkingAnalysis.ts`), aby čítali text rovnako.
+ */
+export function stripHeadingEmphasis(line) {
+  return /^#{1,6}\s/.test(line) ? line.replace(/\*\*|__/g, "").replace(/\s+$/, "") : line
 }
 
 export function clean(text, { nazovDokumentu, vzory } = {}) {

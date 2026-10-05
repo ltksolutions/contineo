@@ -95,3 +95,6 @@ export function chunkText(
   text: string,
   meta?: { nazovDokumentu?: string; profil?: Partial<ChunkerProfile> },
 ): { chunky: Chunk[]; statistiky: ChunkStats }
+
+/** Tučné písmo v nadpise Markdownu preč — `# **Článok 1**` → `# Článok 1`. */
+export function stripHeadingEmphasis(line: string): string
