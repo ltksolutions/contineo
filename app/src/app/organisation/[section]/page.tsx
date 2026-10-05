@@ -46,13 +46,11 @@ import { ratesForDate, formatUsd } from "@/lib/pricing"
 
 import { saveBrandingAction, saveAutoProvisionAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "../actions"
 import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "../actions"
-import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction, saveAcknowledgementAction } from "../actions"
+import { addCodelistItemAction, removeCodelistItemAction, saveAcknowledgementAction } from "../actions"
 import { overdueDaysFor } from "@/lib/reminders"
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "../actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import KeyFromLabel from "@/components/KeyFromLabel"
-import { reindexState } from "@/lib/libraryWrite"
-import { DEFAULT_CHUNKING, DEFAULT_PROFILE_KEY } from "@/lib/chunkingProfile"
 import { availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { CUSTOM_CODELISTS } from "@/lib/codelists"
@@ -258,19 +256,6 @@ export default async function OrganisationSectionPage({
     ? listParam as (typeof codelistTabs)[number] : "category"
   const hiddenBases = new Set(tenant.legalBasesHidden ?? [])
   const tr = d.responsibility
-
-  // Koľko dokumentov by nový profil narezal inak. Počíta sa naozajstným
-  // narezaním — odhad by pri zmene parametra nevedel povedať, či na tomto
-  // obsahu vôbec niečo spraví.
-  const indexState = now === "chunking"
-    ? await reindexState(tenant.companyCode)
-    : null
-
-  // Hodnoty v poliach idú zo **základného pomenovaného profilu** (D79).
-  // `tenant.chunking` je už len záchyt pre organizácie, ktoré profily ešte
-  // nemajú — čítať oba naraz by znamenalo ukazovať niečo iné, než sa použije.
-  const baseProfile = (tenant.chunkingProfiles ?? []).find(p => p.key === DEFAULT_PROFILE_KEY)
-  const chunkingValues = baseProfile ?? tenant.chunking ?? DEFAULT_CHUNKING
 
   // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
   const aiView: "settings" | "usage" = query.view === "usage" ? "usage" : "settings"
@@ -979,93 +964,6 @@ export default async function OrganisationSectionPage({
         </label>
         <span className="quiet field-hint">{t.acknowledgements.overdueDaysNote}</span>
         <div><SubmitButton className="button">{t.acknowledgements.save}</SubmitButton></div>
-      </form>
-      )}
-
-      {now === "chunking" && (
-      <form action={saveChunkingProfileAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
-        <input type="hidden" name="tab" value="chunking" />
-
-        <div>
-          <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.chunking.heading}</h2>
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-            {t.chunking.introBefore}
-            <strong>{t.chunking.introHighlight}</strong>{t.chunking.introAfter}
-          </p>
-        </div>
-
-        <label className="field">
-          <span className="field-label">{t.chunking.articleWord}</span>
-          <input className="field-input" name="articleWord"
-                 defaultValue={chunkingValues.articleWord ?? DEFAULT_CHUNKING.articleWord} />
-          <span className="quiet field-hint">
-            {t.chunking.articleNote1}<code>Článok</code>{t.chunking.articleNote2}<code>§</code>
-            {t.chunking.articleNote3}<code>Bod</code>{t.chunking.articleNote4}
-            <strong>{t.chunking.articleNoteHighlight}</strong>{t.chunking.articleNote5}
-          </span>
-        </label>
-
-        <label className="field">
-          <span className="field-label">{t.chunking.annexWord}</span>
-          <input className="field-input" name="annexWord"
-                 defaultValue={chunkingValues.annexWord ?? DEFAULT_CHUNKING.annexWord} />
-          <span className="quiet field-hint">{t.chunking.annexWordNote}</span>
-        </label>
-
-        <label className="field">
-          <span className="field-label">{t.chunking.headerRepeats}</span>
-          <input className="field-input" type="number" name="headerRepeats" min={2} max={50}
-                 defaultValue={chunkingValues.headerRepeats ?? DEFAULT_CHUNKING.headerRepeats} />
-          <span className="quiet field-hint">{t.chunking.headerRepeatsNote}</span>
-        </label>
-
-        <label className="field">
-          <span className="field-label">{t.chunking.minTokens}</span>
-          <input className="field-input" type="number" name="minTokens" min={50} max={2000}
-                 defaultValue={chunkingValues.minTokens ?? DEFAULT_CHUNKING.minTokens} />
-        </label>
-
-        <label className="field">
-          <span className="field-label">{t.chunking.maxTokens}</span>
-          <input className="field-input" type="number" name="maxTokens" min={100} max={4000}
-                 defaultValue={chunkingValues.maxTokens ?? DEFAULT_CHUNKING.maxTokens} />
-          <span className="quiet field-hint">
-            {t.chunking.tokensNoteBefore}<code>300–800</code>{t.chunking.tokensNoteAfter}
-          </span>
-        </label>
-
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-          {t.chunking.saveNoteBefore}<strong>{t.chunking.saveNoteHighlight}</strong>
-          {t.chunking.saveNoteMiddle}<em>{t.chunking.saveNoteButton}</em>{t.chunking.saveNoteAfter}
-        </p>
-
-        <div><SubmitButton className="button">{t.chunking.save}</SubmitButton></div>
-      </form>
-      )}
-
-      {now === "chunking" && indexState && (
-      <form action={reindexAllAction} className="card" style={{ padding: 20, display: "grid", gap: 12, marginTop: 16 }}>
-        <input type="hidden" name="tab" value="chunking" />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.chunking.reindexAllHeading}</h2>
-
-        {indexState.neaktualnych === 0 ? (
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-            {t.chunking.allUpToDate(indexState.celkom)}
-          </p>
-        ) : (
-          <>
-            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-              <strong>{indexState.neaktualnych}</strong>{t.chunking.outdatedOf(indexState.celkom)}
-              <strong>{t.chunking.outdatedHighlight}</strong>{t.chunking.outdatedAfter}
-            </p>
-            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.chunking.batchNote}</p>
-            <div>
-              <SubmitButton className="button">
-                {t.chunking.reindexAll(indexState.neaktualnych)}
-              </SubmitButton>
-            </div>
-          </>
-        )}
       </form>
       )}
 

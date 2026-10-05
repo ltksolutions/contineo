@@ -28,6 +28,8 @@ const PREFIXES: [string, string][] = [
   // Trasy prešli z knižnice do Pridelených dokumentov (2. 10. 2026).
   // „Vzhľad a jazyky" → „Všeobecné" (3. 10. 2026).
   ["/organisation/branding", "/organisation/general"],
+  // Členenie sa od 5. 10. 2026 v organizácii nenastavuje (D160) — rozcestník.
+  ["/organisation/chunking", "/organisation"],
   ["/kniznica/trasy", "/hr/tracks"],
   ["/library/tracks", "/hr/tracks"],
   ["/kniznica/nova", "/library/new"],

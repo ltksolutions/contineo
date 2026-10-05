@@ -15,7 +15,9 @@ import { tabValue } from "./urlParams"
 export const ORG_SECTION_GROUPS = [
   { key: "org", sections: ["general", "departments", "codelists", "ai"] },
   { key: "access", sections: ["domains", "signin"] },
-  { key: "documents", sections: ["acknowledgements", "chunking"] },
+  // Členenie (`chunking`) tu do 5. 10. 2026 bolo; od D160 sa nenastavuje
+  // v organizácii — stará adresa vedie na rozcestník (`legacyRoutes.ts`).
+  { key: "documents", sections: ["acknowledgements"] },
   { key: "oversight", sections: ["audit", "gdpr"] },
 ] as const
 

@@ -754,6 +754,13 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 
 ### O5 — D79, etapa 2: analyzátor, dávka, stratégia „voľný text", obrazovky
 
+- [x] **Členenie zrušené v Nastaveniach organizácie** ✅ 2026-10-05 (ADR-027, D160) — technické parametre (slovo článku, tokeny) správca nemá dôvod meniť; preindexovanie celej knižnice je `npm run chunking:reindex -- --company SFZ [--naozaj]`
+- [ ] **Spôsob členenia podľa druhu dokumentu** (ADR-027, D160) — **s prvým manuálom, zmluvou alebo zápisnicou**, nie skôr (bez skutočného textu sa nedá overiť):
+      - v Číselníky → Druhy dokumentov voľba pri každom druhu: po článkoch („Článok"), po paragrafoch („§"), po bodoch, podľa nadpisov;
+      - stratégia „podľa nadpisov" = `chunkerPlain.mjs` (krok D1 plánu D79, ~1,5 d); `chunker.mjs` sa nemení;
+      - pri nahratí sa profil odvodí z druhu; žiadne pole navyše na dokumente;
+      - odtlačok (`chunkingId`) dnešných noriem sa nesmie zmeniť — test (riziko R1 plánu D79)
+
 ### O18 — Návod (`/guide`)
 
 - [x] **Návod v osobnom menu** ✅ 2026-09-14 — štyri časti: postup od nahratia, možnosti schvaľovania, čo je trasa (s príkladom), členenie a inteligentné vyhľadávanie. Vidí ho každý prihlásený. Text v `src/content/guide.ts`, obal v `i18n.ts`, odkazy stráži `tests/guide.test.ts`
