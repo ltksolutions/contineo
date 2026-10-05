@@ -4,7 +4,7 @@
  * neverí naslepo (orezanie, predvolené hodnoty).
  */
 import { describe, it, expect } from "vitest"
-import { structureOutline, parseAdvice, OUTLINE_MAX_LINES, ADVICE_SCHEMA } from "../src/lib/chunkingAdvice"
+import { structureOutline, parseAdvice, OUTLINE_MAX_LINES, ADVICE_SCHEMA, ADVICE_SYSTEM } from "../src/lib/chunkingAdvice"
 
 const DOC = `# Finančná smernica SFZ
 | **Názov** | Smernica |
@@ -65,5 +65,14 @@ describe("odpoveď modelu", () => {
   it("schéma vyžaduje všetky polia a nič navyše", () => {
     expect(ADVICE_SCHEMA.additionalProperties).toBe(false)
     expect([...ADVICE_SCHEMA.required].sort()).toEqual(Object.keys(ADVICE_SCHEMA.properties).sort())
+  })
+})
+
+describe("zadanie pre model", () => {
+  // Rovná úvodzovka za „ v zadaní naučila model písať ju aj v odpovedi —
+  // a v štruktúrovanom výstupe ukončila reťazec (5. 10. 2026).
+  it("nemá rovnú uzatváraciu úvodzovku za slovenskou otváracou", () => {
+    expect(ADVICE_SYSTEM).not.toMatch(/„[^“\n]*"/)
+    expect(ADVICE_SYSTEM).toContain("„Článok 5 – Názov“")
   })
 })
