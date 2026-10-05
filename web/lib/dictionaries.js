@@ -5,7 +5,7 @@ export const dictionaries = {
   sk: {
     locale: "sk",
     metaDescription:
-      "RAG helpdesk s hybridným vyhľadávaním nad vaším obsahom. MongoDB $rankFusion, Voyage a Claude. EU hosting, GDPR. Odpoveď s citáciou zdroja.",
+      "Vyhľadávanie a riadenie predpisov nad vaším obsahom: odpoveď s citáciou zdroja, schvaľovanie znení, potvrdzovanie s dôkazom a vzdelávanie. MongoDB $rankFusion, Voyage a Claude. EU hosting, GDPR.",
     nav: {
       features: "Funkcie",
       how: "Ako to funguje",
@@ -15,17 +15,18 @@ export const dictionaries = {
       modes: "Nasadenie",
       overview: "Čo je Contineo",
       versions: "Verzie",
+      governance: "Potvrdzovanie",
       runtime: "Prevádzka",
       identity: "Identita",
       security: "Bezpečnosť",
       cta: "Vyskúšať",
     },
     hero: {
-      badge: "Inteligentné vyhľadávanie a helpdesk nad vaším obsahom",
+      badge: "Vyhľadávanie, riadenie a potvrdzovanie predpisov",
       title: "Opýtajte sa. Nehľadajte.",
       claim: "Odpovede z vášho sveta, nie z internetu.",
       subtitle:
-        "Contineo nájde odpoveď vo vašom vlastnom obsahu — v normách, smerniciach a interných predpisoch, ktoré do neho nahráte. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije.",
+        "Contineo nájde odpoveď vo vašom vlastnom obsahu — v normách, smerniciach a interných predpisoch, ktoré do neho nahráte. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije. A predpis, ktorý musia ľudia poznať, rozpošle, pripomenie a doloží, kto sa s ním kedy oboznámil.",
       ctaPrimary: "Vyskúšať vyhľadávanie",
       ctaSecondary: "Ako to funguje",
       note: "Firemný portál na vašej subdoméne, prístupný po prihlásení cez SSO.",
@@ -68,6 +69,21 @@ export const dictionaries = {
           icon: "shield",
           title: "Oddelené pre každú firmu",
           text: "Multi-tenant architektúra — obsah a prístupy každej organizácie sú bezpečne oddelené.",
+        },
+        {
+          icon: "file",
+          title: "Schvaľovanie a potvrdzovanie",
+          text: "Nové znenie prejde prípravou, schválením a zverejnením. Ľudia, ktorých sa týka, ho potvrdia — a vy to viete doložiť.",
+        },
+        {
+          icon: "sparkles",
+          title: "Vzdelávanie a certifikáty",
+          text: "Kurzy s textom a videom, testy z banky otázok a certifikát s QR kódom, ktorého pravosť overí ktokoľvek.",
+        },
+        {
+          icon: "globe",
+          title: "Rozhranie v troch jazykoch",
+          text: "Slovenčina, čeština a angličtina — jazyk si volí každý sám. Predpis v inom jazyku je samostatný dokument, nie strojový preklad.",
         },
       ],
     },
@@ -380,9 +396,11 @@ export const dictionaries = {
       nowTitle: "Čo Contineo rieši dnes",
       nowIntro: "Funguje a je nasadené.",
       now: [
-        "Každý dokument má verzie. Staršie sa archivujú, ale nezmažú — vyhľadávanie ich predvolene preskočí.",
-        "Odpoveď vždy vychádza z platného znenia a uvádza konkrétny predpis aj článok, z ktorého čerpá.",
-        "Novšie znenie má prednosť pred starším — odpoveď vychádza z verzie platnej k dnešku.",
+        "Každý dokument má znenia s dátumom účinnosti. Staršie sa archivujú, nemažú sa.",
+        "Odpoveď vychádza zo znenia platného k dňu otázky a uvádza predpis, článok aj znenie, z ktorého čerpá. Novela zverejnená vopred sa do odpovedí dostane až dňom účinnosti.",
+        "Otázka k dátumu — „aká bola lehota k 1. 3. 2025?“ — dostane odpoveď podľa vtedy platného znenia. Nad odpoveďou je napísané, ku ktorému dňu platí.",
+        "Porovnanie znení — „čo sa zmenilo v stanovách?“ — po článkoch, s citáciou starého aj nového znenia.",
+        "Predpis sa dá archivovať ku dňu. Od toho dňa z neho asistent neodpovedá a nedá sa prideliť; text, PDF a potvrdenia zostávajú.",
       ],
 
       nextTitle: "Na čom pracujeme",
@@ -390,11 +408,32 @@ export const dictionaries = {
       nextIntro: "Zatiaľ nie je súčasťou nasadenia.",
       next: [
         "Ďalšie pravidlá prednosti — vyššia norma pred nižšou, osobitná pred všeobecnou.",
-        "Dotaz na historické znenie — archivované verzie sú uložené aj s dátumami platnosti, sprístupnenie vo vyhľadávaní pripravujeme.",
         "Automatické sledovanie externých zdrojov — zbierka zákonov a vestníky sa aktualizujú samy.",
         "Upozornenie na rozpor: interná smernica hovorí niečo iné než platný zákon alebo vykonávací predpis.",
         "Prehľad, ktoré vlastné predpisy sa novelou dotkli a treba ich prejsť.",
       ],
+    },
+    governance: {
+      eyebrow: "Riadenie a potvrdzovanie",
+      title: "Predpis nestačí nájsť. Ľudia ho musia poznať — a vy to musíte vedieť doložiť.",
+      subtitle:
+        "Contineo vedie predpis od prípravy až po potvrdenie každým, koho sa týka. Každý krok zostane v zázname, ktorý sa nedá spätne zmeniť.",
+      stepsTitle: "Nové znenie v štyroch krokoch",
+      steps: [
+        { title: "Príprava", text: "Nahráte PDF a upraviteľný zdroj, určíte účinnosť, schvaľovateľov a zodpovednú osobu." },
+        { title: "Schválenie", text: "Schvaľovatelia vidia PDF, o ktorom rozhodujú, aj s prílohami. Môžu ho vrátiť s pripomienkou." },
+        { title: "Zverejnenie", text: "Znenie platí odo dňa účinnosti. Novela zverejnená vopred nahradí doterajšie znenie až v ten deň." },
+        { title: "Pridelenie", text: "Novelu pridelíte tým istým ľuďom jedným krokom — alebo vyberiete nových adresátov." },
+      ],
+      items: [
+        { icon: "check", title: "Potvrdenie s dôkazom", text: "Človek potvrdí PDF, ktoré mal pred sebou. Záznam nesie odtlačok súboru, doslovnú formulku v jazyku, v ktorom ju čítal, a jeho oddelenie v tej chvíli. To isté znenie sa nedá potvrdiť dvakrát." },
+        { icon: "layers", title: "Komu a dokedy", text: "Prideľuje sa osobe, oddeleniu, skupine alebo trase — napríklad pri nástupe. Kto príde do oddelenia neskôr, dostane úlohu s termínom od svojho príchodu." },
+        { icon: "refresh", title: "Pripomienky a výkaz", text: "Výzva aj pripomienky prídu e-mailom, úloha čaká v portáli aj na telefóne. Výkaz potvrdení ukáže, kto chýba, a dá sa exportovať." },
+        { icon: "lock", title: "Reťaz dôkazov", text: "Potvrdenia ani pridelenia sa nemenia a nemažú. Odvolanie je nový záznam s dôvodom — aj o rok sa dá prečítať, čo vtedy platilo a kto to vedel." },
+        { icon: "shield", title: "Ochrana údajov (DPO)", text: "Pri každom predpise je zodpovedná osoba a právny základ z číselníka. Zodpovedná osoba pre GDPR má výkaz, lehoty uchovávania a námietky na jednom mieste." },
+        { icon: "sparkles", title: "Vzdelávanie", text: "Kurzy s textom a videom, testy losované z banky otázok a certifikát s číslom a QR kódom. Pravosť overí ktokoľvek s odkazom — bez mena držiteľa." },
+      ],
+      note: "Overené naostro v Slovenskom futbalovom zväze: pridelenie, výzva e-mailom, potvrdenie z počítača aj z telefónu a výkaz pre personálne oddelenie.",
     },
     usecases: {
       navLabel: "Pre koho",
@@ -458,7 +497,8 @@ export const dictionaries = {
           benefits: [
             "Členovia dostanú odpoveď sami, bez telefonátu na sekretariát.",
             "Každá odpoveď je doložená článkom, takže sa dá overiť aj spochybniť.",
-            "Historické znenie zostáva dostupné pre spory o staršie obdobia.",
+            "Otázka k dátumu odpovie podľa znenia, ktoré platilo vtedy — pre spory o staršie obdobia.",
+            "Doložené, kto sa s platným znením oboznámil a kedy — rozhodca, delegát aj štatutár.",
           ],
         },
         {
@@ -524,7 +564,7 @@ export const dictionaries = {
       providersLabel: "Poskytovatelia identity, ktorí dnes bežia (ďalších vieme doplniť)",
       points: [
         { icon: "lock", title: "SSO a jednotné prihlásenie", text: "Prihlásenie e-mailovým odkazom alebo cez SSO — Microsoft Entra ID a Google Workspace. Jedna kanonická session naprieč celým systémom; ďalších poskytovateľov OIDC vieme doplniť." },
-        { icon: "refresh", title: "Automatické zakladanie účtov", text: "Osoba sa založí sama pri prvom prihlásení cez SSO, ak patrí do domény, ktorú organizácia povolila. Roly sa prideľujú v aplikácii; synchronizáciu rolí a skupín z CRM pripravujeme." },
+        { icon: "refresh", title: "Automatické zakladanie účtov", text: "Osoba sa založí sama pri prvom prihlásení cez SSO, ak patrí do domény, ktorú organizácia povolila. Osoby sa dajú aj hromadne naimportovať zo zoznamu a pozvať e-mailom. Roly sa prideľujú v aplikácii; synchronizáciu rolí a skupín z CRM pripravujeme." },
         { icon: "layers", title: "Multi-tenant prístup", text: "Každá organizácia je samostatný priestor na vlastnej doméne. Verejný obsah vidia všetci prihlásení; interný len ľudia danej organizácie. Viacúrovňovú hierarchiu a menovité zdieľanie dokumentu inej organizácii pripravujeme." },
         { icon: "shield", title: "Bezpečnosť na úrovni dotazu", text: "Prístupové právo je povinný filter odvodený zo session na strane servera (default-deny). Aplikuje sa pred jazykovým modelom — nedá sa obísť promptom. Audit pri každej zmene." },
       ],
@@ -559,7 +599,7 @@ export const dictionaries = {
         "Cloud · Claude API — Citations, prompt caching",
         "Pripravené, nenasadené · Infinity / TEI — embedding + rerank",
         "Pripravené, nenasadené · vLLM — Qwen3, EuroLLM, Gemma",
-        "Next.js 16 (App Router) · Vercel cron",
+        "Next.js 16 (App Router) · React 19 · Vercel cron",
         "Pripravujeme: e-mail (IMAP), zdroj členstiev/CRM, MCP konektory",
       ],
       flowsTitle: "Kľúčové dátové toky",
@@ -640,6 +680,8 @@ export const dictionaries = {
         "Multi-tenant: každá organizácia je oddelený priestor a vidí len vlastný obsah — aj ten verejný. Zdieľanie v hierarchii (centrála → regionálne → lokálne jednotky) pripravujeme.",
         "Súkromie dát: obsah ostáva vo vašej databáze a úložisku; AI odpovedá výhradne z vášho obsahu (RAG), verejná spotrebiteľská AI sa nepoužíva.",
         "Voľba prevádzkového režimu na úrovni tenanta: cloud (EU rezidencia dát; neuchovávanie u poskytovateľov AI potvrdzujeme zmluvne) alebo plne on-prem — obsah ani dotazy neopustia vašu infraštruktúru. Jedna inštalácia obslúži oba typy zákazníkov súčasne.",
+        "Kľúč k AI a modely si môže organizácia nastaviť sama; kľúč sa ukladá zašifrovaný. Každé volanie AI sa zapíše do prehľadu spotreby — bez znenia otázky, ktorá môže obsahovať osobné údaje.",
+        "Dôkazné záznamy (potvrdenia, pridelenia, schválenia) sa nemenia ani nemažú. Oprava je nový záznam, odvolanie má dôvod a autora.",
       ],
       caseStudy: {
         eyebrow: "Prípadová štúdia",
@@ -648,7 +690,9 @@ export const dictionaries = {
         points: [
           "Tenant model: SFZ, regionálne a oblastné zväzy ako samostatné organizácie s vlastným obsahom; zdieľanie noriem zhora nadol pripravujeme.",
           "Obsah: súťažné a prestupové poriadky, rozpisy súťaží, smernice, IT FAQ (aplikácia ISSF).",
-          "Identita: prihlásenie e-mailovým odkazom, cez Microsoft Entra ID alebo Google Workspace; roly sa prideľujú v aplikácii. Napojenie na sportnet.online ako zdroj členstiev je ďalší krok.",
+          "Identita: prihlásenie e-mailovým odkazom, cez Microsoft Entra ID alebo Google Workspace; osoby naimportované zo zoznamu a pozvané e-mailom, roly sa prideľujú v aplikácii. Napojenie na sportnet.online ako zdroj členstiev je ďalší krok.",
+          "Potvrdzovanie overené naostro: pridelenie osobe, oddeleniu aj trase, výzva e-mailom, potvrdenie z počítača aj z telefónu a výkaz pre personálne oddelenie.",
+          "Vzdelávanie: kurzy, testy a certifikáty s overením cez QR kód.",
           "Príklad otázky: „Môže hráč nastúpiť v dvoch stretnutiach za jeden deň?“ → odpoveď s citáciou § a verzie.",
         ],
       },
@@ -738,7 +782,7 @@ export const dictionaries = {
   cs: {
     locale: "cs",
     metaDescription:
-      "RAG helpdesk s hybridním vyhledáváním nad vaším obsahem. MongoDB $rankFusion, Voyage a Claude. EU hosting, GDPR. Odpověď s citací zdroje.",
+      "Vyhledávání a řízení předpisů nad vaším obsahem: odpověď s citací zdroje, schvalování znění, potvrzování s důkazem a vzdělávání. MongoDB $rankFusion, Voyage a Claude. EU hosting, GDPR.",
     nav: {
       features: "Funkce",
       how: "Jak to funguje",
@@ -748,17 +792,18 @@ export const dictionaries = {
       modes: "Nasazení",
       overview: "Co je Contineo",
       versions: "Verze",
+      governance: "Potvrzování",
       runtime: "Provoz",
       identity: "Identita",
       security: "Bezpečnost",
       cta: "Vyzkoušet",
     },
     hero: {
-      badge: "Inteligentní vyhledávání a helpdesk nad vaším obsahem",
+      badge: "Vyhledávání, řízení a potvrzování předpisů",
       title: "Zeptejte se. Nehledejte.",
       claim: "Odpovědi z vašeho světa, ne z internetu.",
       subtitle:
-        "Contineo najde odpověď ve vašem vlastním obsahu — v normách, směrnicích a interních předpisech, které do něj nahrajete. Žádné listování ve složkách, žádné dohady z internetu. Jen ověřená odpověď odtud, kde skutečně žije.",
+        "Contineo najde odpověď ve vašem vlastním obsahu — v normách, směrnicích a interních předpisech, které do něj nahrajete. Žádné listování ve složkách, žádné dohady z internetu. Jen ověřená odpověď odtud, kde skutečně žije. A předpis, který musí lidé znát, rozešle, připomene a doloží, kdo se s ním kdy seznámil.",
       ctaPrimary: "Vyzkoušet vyhledávání",
       ctaSecondary: "Jak to funguje",
       note: "Firemní portál na vaší subdoméně, přístupný po přihlášení přes SSO.",
@@ -801,6 +846,21 @@ export const dictionaries = {
           icon: "shield",
           title: "Odděleno pro každou firmu",
           text: "Multi-tenant architektura — obsah a přístupy každé organizace jsou bezpečně odděleny.",
+        },
+        {
+          icon: "file",
+          title: "Schvalování a potvrzování",
+          text: "Nové znění projde přípravou, schválením a zveřejněním. Lidé, kterých se týká, ho potvrdí — a vy to umíte doložit.",
+        },
+        {
+          icon: "sparkles",
+          title: "Vzdělávání a certifikáty",
+          text: "Kurzy s textem a videem, testy z banky otázek a certifikát s QR kódem, jehož pravost ověří kdokoli.",
+        },
+        {
+          icon: "globe",
+          title: "Rozhraní ve třech jazycích",
+          text: "Slovenština, čeština a angličtina — jazyk si volí každý sám. Předpis v jiném jazyce je samostatný dokument, ne strojový překlad.",
         },
       ],
     },
@@ -1113,9 +1173,11 @@ export const dictionaries = {
       nowTitle: "Co Contineo řeší dnes",
       nowIntro: "Funguje a je nasazeno.",
       now: [
-        "Každý dokument má verze. Starší se archivují, ale nemažou — vyhledávání je ve výchozím stavu přeskočí.",
-        "Odpověď vždy vychází z platného znění a uvádí konkrétní předpis i článek, ze kterého čerpá.",
-        "Novější znění má přednost před starším — odpověď vychází z verze platné k dnešku.",
+        "Každý dokument má znění s datem účinnosti. Starší se archivují, nemažou se.",
+        "Odpověď vychází ze znění platného ke dni otázky a uvádí předpis, článek i znění, ze kterého čerpá. Novela zveřejněná předem se do odpovědí dostane až dnem účinnosti.",
+        "Otázka k datu — „jaká byla lhůta k 1. 3. 2025?“ — dostane odpověď podle tehdy platného znění. Nad odpovědí je napsáno, ke kterému dni platí.",
+        "Porovnání znění — „co se změnilo ve stanovách?“ — po článcích, s citací starého i nového znění.",
+        "Předpis lze archivovat ke dni. Od toho dne z něj asistent neodpovídá a nelze ho přidělit; text, PDF a potvrzení zůstávají.",
       ],
 
       nextTitle: "Na čem pracujeme",
@@ -1123,11 +1185,32 @@ export const dictionaries = {
       nextIntro: "Zatím není součástí nasazení.",
       next: [
         "Další pravidla přednosti — vyšší norma před nižší, zvláštní před obecnou.",
-        "Dotaz na historické znění — archivované verze jsou uložené i s daty platnosti, zpřístupnění ve vyhledávání připravujeme.",
         "Automatické sledování externích zdrojů — Sbírka zákonů a věstníky se aktualizují samy.",
         "Upozornění na rozpor: interní směrnice říká něco jiného než platný zákon nebo prováděcí předpis.",
         "Přehled, kterých vlastních předpisů se novela dotkla a je třeba je projít.",
       ],
+    },
+    governance: {
+      eyebrow: "Řízení a potvrzování",
+      title: "Předpis nestačí najít. Lidé ho musí znát — a vy to musíte umět doložit.",
+      subtitle:
+        "Contineo vede předpis od přípravy až po potvrzení každým, koho se týká. Každý krok zůstane v záznamu, který nelze zpětně změnit.",
+      stepsTitle: "Nové znění ve čtyřech krocích",
+      steps: [
+        { title: "Příprava", text: "Nahrajete PDF a upravitelný zdroj, určíte účinnost, schvalovatele a odpovědnou osobu." },
+        { title: "Schválení", text: "Schvalovatelé vidí PDF, o kterém rozhodují, i s přílohami. Mohou ho vrátit s připomínkou." },
+        { title: "Zveřejnění", text: "Znění platí ode dne účinnosti. Novela zveřejněná předem nahradí dosavadní znění až ten den." },
+        { title: "Přidělení", text: "Novelu přidělíte stejným lidem jedním krokem — nebo vyberete nové adresáty." },
+      ],
+      items: [
+        { icon: "check", title: "Potvrzení s důkazem", text: "Člověk potvrdí PDF, které měl před sebou. Záznam nese otisk souboru, doslovnou formulku v jazyce, ve kterém ji četl, a jeho oddělení v tu chvíli. Totéž znění nelze potvrdit dvakrát." },
+        { icon: "layers", title: "Komu a dokdy", text: "Přiděluje se osobě, oddělení, skupině nebo trase — například při nástupu. Kdo přijde do oddělení později, dostane úkol s termínem od svého příchodu." },
+        { icon: "refresh", title: "Připomínky a výkaz", text: "Výzva i připomínky přijdou e-mailem, úkol čeká v portálu i v telefonu. Výkaz potvrzení ukáže, kdo chybí, a lze ho exportovat." },
+        { icon: "lock", title: "Řetěz důkazů", text: "Potvrzení ani přidělení se nemění a nemažou. Odvolání je nový záznam s důvodem — i za rok lze přečíst, co tehdy platilo a kdo to věděl." },
+        { icon: "shield", title: "Ochrana údajů (DPO)", text: "U každého předpisu je odpovědná osoba a právní základ z číselníku. Pověřenec pro GDPR má výkaz, lhůty uchovávání a námitky na jednom místě." },
+        { icon: "sparkles", title: "Vzdělávání", text: "Kurzy s textem a videem, testy losované z banky otázek a certifikát s číslem a QR kódem. Pravost ověří kdokoli s odkazem — bez jména držitele." },
+      ],
+      note: "Ověřeno naostro ve Slovenském fotbalovém svazu: přidělení, výzva e-mailem, potvrzení z počítače i z telefonu a výkaz pro personální oddělení.",
     },
     usecases: {
       navLabel: "Pro koho",
@@ -1191,7 +1274,8 @@ export const dictionaries = {
           benefits: [
             "Členové dostanou odpověď sami, bez telefonátu na sekretariát.",
             "Každá odpověď je doložena článkem, takže se dá ověřit i zpochybnit.",
-            "Historické znění zůstává dostupné pro spory o starší období.",
+            "Otázka k datu odpoví podle znění, které platilo tehdy — pro spory o starší období.",
+            "Doloženo, kdo se s platným zněním seznámil a kdy — rozhodčí, delegát i statutár.",
           ],
         },
         {
@@ -1257,7 +1341,7 @@ export const dictionaries = {
       providersLabel: "Podporovaní poskytovatelé identity",
       points: [
         { icon: "lock", title: "SSO a jednotné přihlášení", text: "Přihlášení e-mailovým odkazem nebo přes SSO — Microsoft Entra ID a Google Workspace. Jedna kanonická session napříč celým systémem; další poskytovatele OIDC umíme doplnit." },
-        { icon: "refresh", title: "Automatické zakládání účtů", text: "Osoba se založí sama při prvním přihlášení přes SSO, pokud patří do domény, kterou organizace povolila. Role se přidělují v aplikaci; synchronizaci rolí a skupin z CRM připravujeme." },
+        { icon: "refresh", title: "Automatické zakládání účtů", text: "Osoba se založí sama při prvním přihlášení přes SSO, pokud patří do domény, kterou organizace povolila. Osoby lze také hromadně naimportovat ze seznamu a pozvat e-mailem. Role se přidělují v aplikaci; synchronizaci rolí a skupin z CRM připravujeme." },
         { icon: "layers", title: "Multi-tenant přístup", text: "Každá organizace je samostatný prostor na vlastní doméně. Veřejný obsah vidí všichni přihlášení; interní jen lidé dané organizace. Víceúrovňovou hierarchii a jmenovité sdílení dokumentu jiné organizaci připravujeme." },
         { icon: "shield", title: "Bezpečnost na úrovni dotazu", text: "Přístupové právo je povinný filtr odvozený ze session na straně serveru (default-deny). Aplikuje se před jazykovým modelem — nedá se obejít promptem. Audit při každé změně." },
       ],
@@ -1292,7 +1376,7 @@ export const dictionaries = {
         "Cloud · Claude API — Citations, prompt caching",
         "Připraveno, nenasazeno · Infinity / TEI — embedding + rerank",
         "Připraveno, nenasazeno · vLLM — Qwen3, EuroLLM, Gemma",
-        "Next.js 16 (App Router) · Vercel cron",
+        "Next.js 16 (App Router) · React 19 · Vercel cron",
         "Připravujeme: e-mail (IMAP), zdroj členství/CRM, MCP konektory",
       ],
       flowsTitle: "Klíčové datové toky",
@@ -1373,6 +1457,8 @@ export const dictionaries = {
         "Multi-tenant: každá organizace je oddělený prostor a vidí jen vlastní obsah — i ten veřejný. Sdílení v hierarchii (centrála → regionální → lokální jednotky) připravujeme.",
         "Soukromí dat: obsah zůstává ve vaší databázi a úložišti; AI odpovídá výhradně z vašeho obsahu (RAG), veřejná spotřebitelská AI se nepoužívá.",
         "Volba provozního režimu na úrovni tenanta: cloud (databáze v EU) nebo plně on-prem — obsah ani dotazy neopustí vaši infrastrukturu. Jedna instalace obslouží oba typy zákazníků současně.",
+        "Klíč k AI a modely si organizace může nastavit sama; klíč se ukládá zašifrovaný. Každé volání AI se zapíše do přehledu spotřeby — bez znění otázky, která může obsahovat osobní údaje.",
+        "Důkazní záznamy (potvrzení, přidělení, schválení) se nemění ani nemažou. Oprava je nový záznam, odvolání má důvod a autora.",
       ],
       caseStudy: {
         eyebrow: "Případová studie",
@@ -1381,7 +1467,9 @@ export const dictionaries = {
         points: [
           "Tenant model: SFZ, regionální a oblastní svazy jako samostatné organizace s vlastním obsahem; sdílení norem shora dolů připravujeme.",
           "Obsah: soutěžní a přestupní řády, rozpisy soutěží, směrnice, IT FAQ (aplikace ISSF).",
-          "Identita: přihlášení e-mailovým odkazem, přes Microsoft Entra ID nebo Google Workspace; role se přidělují v aplikaci. Napojení na sportnet.online jako zdroj členství je další krok.",
+          "Identita: přihlášení e-mailovým odkazem, přes Microsoft Entra ID nebo Google Workspace; osoby naimportované ze seznamu a pozvané e-mailem, role se přidělují v aplikaci. Napojení na sportnet.online jako zdroj členství je další krok.",
+          "Potvrzování ověřené naostro: přidělení osobě, oddělení i trase, výzva e-mailem, potvrzení z počítače i z telefonu a výkaz pro personální oddělení.",
+          "Vzdělávání: kurzy, testy a certifikáty s ověřením přes QR kód.",
           "Příklad otázky: „Může hráč nastoupit ve dvou utkáních za jeden den?“ → odpověď s citací § a verze.",
         ],
       },
@@ -1471,7 +1559,7 @@ export const dictionaries = {
   en: {
     locale: "en",
     metaDescription:
-      "Contineo is an intelligent RAG helpdesk over your own content. Hybrid search (MongoDB $rankFusion) with Voyage and Claude. Answers with citations. EU hosting, GDPR.",
+      "Search and governance of regulations over your own content: answers with citations, approval of new wording, evidenced acknowledgement and training. Hybrid search (MongoDB $rankFusion) with Voyage and Claude. EU hosting, GDPR.",
     nav: {
       features: "Features",
       how: "How it works",
@@ -1481,17 +1569,18 @@ export const dictionaries = {
       modes: "Deployment",
       overview: "What Contineo is",
       versions: "Versions",
+      governance: "Acknowledgement",
       runtime: "Runtime",
       identity: "Identity",
       security: "Security",
       cta: "Try it",
     },
     hero: {
-      badge: "Intelligent search and helpdesk over your content",
+      badge: "Search, governance and acknowledgement of regulations",
       title: "Ask. Don't search.",
       claim: "Answers from your world, not the internet.",
       subtitle:
-        "Contineo finds the answer in your own content — in the regulations, policies and internal guidelines you upload into it. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives.",
+        "Contineo finds the answer in your own content — in the regulations, policies and internal guidelines you upload into it. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives. And a regulation people must know, it sends out, follows up on and proves who read it and when.",
       ctaPrimary: "Try the search",
       ctaSecondary: "How it works",
       note: "A company portal on your own subdomain, reachable after SSO sign-in.",
@@ -1534,6 +1623,21 @@ export const dictionaries = {
           icon: "shield",
           title: "Isolated per company",
           text: "Multi-tenant architecture — each organisation's content and access are securely separated.",
+        },
+        {
+          icon: "file",
+          title: "Approval and acknowledgement",
+          text: "New wording goes through preparation, approval and publication. The people it concerns acknowledge it — and you can prove it.",
+        },
+        {
+          icon: "sparkles",
+          title: "Training and certificates",
+          text: "Courses with text and video, tests drawn from a question bank, and a certificate with a QR code anyone can verify.",
+        },
+        {
+          icon: "globe",
+          title: "Interface in three languages",
+          text: "Slovak, Czech and English — everyone picks their own. A regulation in another language is a separate document, not a machine translation.",
         },
       ],
     },
@@ -1846,9 +1950,11 @@ export const dictionaries = {
       nowTitle: "What Contineo solves today",
       nowIntro: "Working and deployed.",
       now: [
-        "Every document is versioned. Older versions are archived, not deleted — and search skips them by default.",
-        "Answers always come from the text in force and name the exact regulation and article behind them.",
-        "Newer wording takes precedence over older — answers come from the version in force today.",
+        "Every document has versions with an effective date. Older ones are archived, never deleted.",
+        "Answers come from the wording in force on the day of the question and name the regulation, article and version behind them. An amendment published in advance reaches answers only on its effective date.",
+        "Questions about a date — “what was the deadline on 1 March 2025?” — are answered from the wording in force then. The answer states which day it applies to.",
+        "Comparing versions — “what changed in the statutes?” — article by article, citing both the old and the new wording.",
+        "A regulation can be archived as of a date. From then on the assistant no longer answers from it and it cannot be assigned; the text, PDF and acknowledgements remain.",
       ],
 
       nextTitle: "What we are working on",
@@ -1856,11 +1962,32 @@ export const dictionaries = {
       nextIntro: "Not part of the deployment yet.",
       next: [
         "Further precedence rules — higher law over lower, specific over general.",
-        "Querying historical wording — archived versions are stored with their validity dates; exposing them in search is in preparation.",
         "Automatic tracking of external sources — the statute book and official bulletins update themselves.",
         "Conflict alerts: an internal directive says something different from the law or implementing decree in force.",
         "An overview of which of your own rules an amendment touched and need reviewing.",
       ],
+    },
+    governance: {
+      eyebrow: "Governance and acknowledgement",
+      title: "Finding a regulation is not enough. People must know it — and you must be able to prove it.",
+      subtitle:
+        "Contineo takes a regulation from preparation all the way to acknowledgement by everyone it concerns. Every step stays in a record that cannot be changed afterwards.",
+      stepsTitle: "New wording in four steps",
+      steps: [
+        { title: "Preparation", text: "Upload the PDF and an editable source, set the effective date, the approvers and the person responsible." },
+        { title: "Approval", text: "Approvers see the PDF they are deciding on, attachments included. They can send it back with a comment." },
+        { title: "Publication", text: "The wording applies from its effective date. An amendment published in advance replaces the current wording only on that day." },
+        { title: "Assignment", text: "Assign the amendment to the same people in one step — or choose new recipients." },
+      ],
+      items: [
+        { icon: "check", title: "Acknowledgement with proof", text: "A person acknowledges the PDF they actually saw. The record holds the file's fingerprint, the exact statement in the language they read it in, and their department at that moment. The same wording cannot be acknowledged twice." },
+        { icon: "layers", title: "To whom and by when", text: "Assign to a person, a department, a group or a route — onboarding, for example. Whoever joins a department later gets the task with a deadline counted from their arrival." },
+        { icon: "refresh", title: "Reminders and report", text: "The request and reminders arrive by e-mail; the task waits in the portal and on the phone. The acknowledgement report shows who is missing and can be exported." },
+        { icon: "lock", title: "Chain of evidence", text: "Acknowledgements and assignments are never changed or deleted. A revocation is a new record with a reason — a year later you can still read what applied then and who knew it." },
+        { icon: "shield", title: "Data protection (DPO)", text: "Every regulation has a person responsible and a legal basis from a code list. The data protection officer has the report, retention periods and objections in one place." },
+        { icon: "sparkles", title: "Training", text: "Courses with text and video, tests drawn from a question bank, and a numbered certificate with a QR code. Anyone with the link can verify it — without the holder's name." },
+      ],
+      note: "Verified in production at the Slovak Football Association: assignment, e-mail request, acknowledgement from a computer or a phone, and a report for HR.",
     },
     usecases: {
       navLabel: "Who it's for",
@@ -1924,7 +2051,8 @@ export const dictionaries = {
           benefits: [
             "Members get answers themselves, without phoning the secretariat.",
             "Every answer is backed by an article, so it can be verified — or challenged.",
-            "Historical wording stays available for disputes about earlier periods.",
+            "A question about a past date is answered from the wording in force then — for disputes about earlier periods.",
+            "Proof of who read the wording in force and when — referees, match delegates and officers alike.",
           ],
         },
         {
@@ -1990,7 +2118,7 @@ export const dictionaries = {
       providersLabel: "Supported identity providers",
       points: [
         { icon: "lock", title: "SSO and single sign-on", text: "Sign in with an e-mail link or via SSO — Microsoft Entra ID and Google Workspace. One canonical session across the whole system; further OIDC providers can be added." },
-        { icon: "refresh", title: "Automatic account provisioning", text: "A person is created on first SSO sign-in if they belong to a domain the organisation has allow-listed. Roles are assigned in the app; syncing roles and groups from a CRM is in preparation." },
+        { icon: "refresh", title: "Automatic account provisioning", text: "A person is created on first SSO sign-in if they belong to a domain the organisation has allow-listed. People can also be bulk-imported from a list and invited by e-mail. Roles are assigned in the app; syncing roles and groups from a CRM is in preparation." },
         { icon: "layers", title: "Multi-tenant access", text: "Each organisation is its own space on its own domain. Public content is visible to every signed-in person; internal only to people of that organisation. A multi-level hierarchy and per-document sharing with another organisation are in preparation." },
         { icon: "shield", title: "Security at query level", text: "An access right is a mandatory filter derived from the server-side session (default-deny). It is applied before the language model — it cannot be bypassed by a prompt. Audit on every change." },
       ],
@@ -2025,7 +2153,7 @@ export const dictionaries = {
         "Cloud · Claude API — Citations, prompt caching",
         "Ready, not deployed · Infinity / TEI — embedding + rerank",
         "Ready, not deployed · vLLM — Qwen3, EuroLLM, Gemma",
-        "Next.js 16 (App Router) · Vercel cron",
+        "Next.js 16 (App Router) · React 19 · Vercel cron",
         "In preparation: e-mail (IMAP), membership/CRM source, MCP connectors",
       ],
       flowsTitle: "Key data flows",
@@ -2106,6 +2234,8 @@ export const dictionaries = {
         "Multi-tenant: each organisation is an isolated space and sees only its own content — the public part included. Sharing across a hierarchy (headquarters → regional → local units) is in preparation.",
         "Data privacy: content stays in your database and storage; the AI answers strictly from your content (RAG), no public consumer AI is used.",
         "Runtime mode chosen per tenant: cloud (EU data residency; zero retention with the AI providers being confirmed contractually) or fully on-prem — neither content nor queries leave your infrastructure. A single installation serves both kinds of customer at once.",
+        "An organisation can set its own AI key and models; the key is stored encrypted. Every AI call is recorded in a usage overview — without the question text, which may contain personal data.",
+        "Evidence records (acknowledgements, assignments, approvals) are never changed or deleted. A correction is a new record; a revocation carries a reason and an author.",
       ],
       caseStudy: {
         eyebrow: "Case study",
@@ -2114,7 +2244,9 @@ export const dictionaries = {
         points: [
           "Tenant model: SFZ, regional and district associations as separate organisations, each with its own content; top-down sharing of rules is in preparation.",
           "Content: competition and transfer rules, fixtures, guidelines, IT FAQ (the ISSF app).",
-          "Identity: sign-in with an e-mail link, via Microsoft Entra ID or Google Workspace; roles are assigned in the app. Connecting sportnet.online as the source of memberships is the next step.",
+          "Identity: sign-in with an e-mail link, via Microsoft Entra ID or Google Workspace; people imported from a list and invited by e-mail, roles assigned in the app. Connecting sportnet.online as the source of memberships is the next step.",
+          "Acknowledgement verified in production: assignment to a person, department or onboarding route, e-mail request, acknowledgement from a computer or a phone, and a report for HR.",
+          "Training: courses, tests and certificates verifiable by QR code.",
           "Example question: “Can a player play in two matches in a single day?” → an answer citing the article and version.",
         ],
       },

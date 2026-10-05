@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: riadenie a potvrdzovanie predpisov (2026-10-05)
+
+Verejný web predstavoval Contineo len ako vyhľadávanie. Pribudla sekcia
+**Riadenie a potvrdzovanie**: postup nového znenia v štyroch krokoch,
+potvrdenie s dôkazom, pridelenie osobe, oddeleniu, skupine aj trase,
+pripomienky a výkaz, reťaz dôkazov, ochrana údajov (DPO) a vzdelávanie.
+Do časti „Dnes" sa presunulo, čo už beží — odpoveď podľa znenia platného
+k dňu otázky, otázka k dátumu, porovnanie znení a archivácia ku dňu.
+Funkcie, identita, bezpečnosť a prípadová štúdia SFZ sú doplnené; všetko
+v slovenčine, češtine aj angličtine.
+
 ### React 19 (2026-10-04)
 
 Aplikácia uvádza React 19, ten istý, na ktorom už bežala cez Next. Pre
