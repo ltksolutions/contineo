@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: ochrana údajov, titulky a čeština v metadátach (2026-10-05)
+
+Stránka **Ochrana údajov** bola nevyplnená šablóna; teraz uvádza
+prevádzkovateľa (LTK Solutions, s.r.o.), čo web spracúva, právny základ,
+práva a dozorný úrad. Titulok stránok je „vyhľadávanie a potvrdzovanie
+predpisov" namiesto „helpdesk". Česká verzia sa hlási ako čeština aj
+vyhľadávačom. Zo štruktúrovaných dát zmizla cena 0 EUR. Demo namiesto
+obnovy hesla odpovedá na služobnú cestu a nápoveda vloženého vyhľadávania
+je preložená.
+
 ### Web contineo.app: riadenie a potvrdzovanie predpisov (2026-10-05)
 
 Verejný web predstavoval Contineo len ako vyhľadávanie. Pribudla sekcia

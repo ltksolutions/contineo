@@ -30,7 +30,6 @@ export default function JsonLd({ dict, lang }) {
         operatingSystem: "Web",
         url,
         description: desc,
-        offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
         publisher: { "@id": `${base}/#organization` },
       },
     ],

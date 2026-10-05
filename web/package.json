@@ -2,7 +2,7 @@
   "name": "contineo-web",
   "version": "0.1.0",
   "private": true,
-  "description": "Contineo — prezentačný web pre inteligentný helpdesk (SK/EN)",
+  "description": "Contineo — prezentačný web (SK/CS/EN)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

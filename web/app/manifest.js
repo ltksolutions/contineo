@@ -1,9 +1,9 @@
 export default function manifest() {
   return {
-    name: "Contineo — inteligentné vyhľadávanie a helpdesk",
+    name: "Contineo — vyhľadávanie a potvrdzovanie predpisov",
     short_name: "Contineo",
     description:
-      "Inteligentné vyhľadávanie nad obsahom vašej firmy. Opýtajte sa — odpoveď príde z vášho vlastného obsahu.",
+      "Vyhľadávanie a riadenie predpisov nad obsahom vašej organizácie — odpoveď s citáciou, potvrdzovanie s dôkazom.",
     start_url: "/sk",
     display: "standalone",
     background_color: "#0d1016",

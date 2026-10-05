@@ -6,9 +6,9 @@ export function generateStaticParams() {
 
 /** Podtitul, OG locale a text preskočenia pre každý jazyk na jednom mieste. */
 const META = {
-  sk: { podtitul: "inteligentné vyhľadávanie a helpdesk", ogLocale: "sk_SK", skip: "Preskočiť na obsah" },
-  cs: { podtitul: "inteligentní vyhledávání a helpdesk",  ogLocale: "cs_CZ", skip: "Přeskočit na obsah" },
-  en: { podtitul: "intelligent search & helpdesk",        ogLocale: "en_US", skip: "Skip to content" },
+  sk: { podtitul: "vyhľadávanie a potvrdzovanie predpisov", ogLocale: "sk_SK", skip: "Preskočiť na obsah" },
+  cs: { podtitul: "vyhledávání a potvrzování předpisů", ogLocale: "cs_CZ", skip: "Přeskočit na obsah" },
+  en: { podtitul: "search & acknowledgement of regulations", ogLocale: "en_US", skip: "Skip to content" },
 };
 
 export async function generateMetadata({ params }) {

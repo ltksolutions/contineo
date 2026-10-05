@@ -3,17 +3,19 @@ import "./globals.css";
 export const metadata = {
   metadataBase: new URL("https://contineo.app"),
   applicationName: "Contineo",
-  title: "Contineo — inteligentné vyhľadávanie a helpdesk",
+  title: "Contineo — vyhľadávanie a potvrdzovanie predpisov",
   description:
-    "Inteligentné vyhľadávanie nad obsahom vašej firmy. Opýtajte sa — odpoveď príde z vášho vlastného obsahu, s citáciou.",
+    "Vyhľadávanie a riadenie predpisov nad obsahom vašej organizácie: odpoveď s citáciou zdroja, schvaľovanie znení a potvrdzovanie s dôkazom.",
   keywords: [
     "Contineo",
     "inteligentné vyhľadávanie",
-    "helpdesk",
+    "riadenie predpisov",
+    "potvrdzovanie predpisov",
     "RAG",
     "firemný obsah",
     "intranet",
-    "ticketing",
+    "schvaľovanie znení",
+    "GDPR",
     "vyhľadávanie noriem",
     "enterprise search",
   ],
@@ -22,20 +24,20 @@ export const metadata = {
   publisher: "Contineo",
   alternates: {
     canonical: "/",
-    languages: { sk: "/sk", en: "/en", "x-default": "/sk" },
+    languages: { sk: "/sk", cs: "/cs", en: "/en", "x-default": "/sk" },
   },
   openGraph: {
     type: "website",
     siteName: "Contineo",
     url: "https://contineo.app",
-    title: "Contineo — inteligentné vyhľadávanie a helpdesk",
+    title: "Contineo — vyhľadávanie a potvrdzovanie predpisov",
     description:
       "Opýtajte sa. Nehľadajte. Odpovede z vášho sveta, nie z internetu.",
     locale: "sk_SK",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Contineo — inteligentné vyhľadávanie a helpdesk",
+    title: "Contineo — vyhľadávanie a potvrdzovanie predpisov",
     description:
       "Opýtajte sa. Nehľadajte. Odpovede z vášho sveta, nie z internetu.",
   },
@@ -47,7 +49,7 @@ export const metadata = {
   manifest: "/manifest.webmanifest",
 };
 
-const themeScript = `(function(){try{var t=localStorage.getItem('contineo-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);var l=location.pathname.split('/')[1];document.documentElement.lang=(l==='en'?'en':'sk');}catch(e){}})();`;
+const themeScript = `(function(){try{var t=localStorage.getItem('contineo-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);var l=location.pathname.split('/')[1];document.documentElement.lang=(l==='en'||l==='cs'?l:'sk');}catch(e){}})();`;
 
 export default function RootLayout({ children }) {
   return (
