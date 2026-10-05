@@ -15,7 +15,7 @@ import type { TenantProfile } from "./providers/types"
  * Dátum verzie textu. **Pri každej zmene textu v `i18n.ts` sa posunie** —
  * je to dôkaz, ktorá verzia informovania bola zverejnená kedy.
  */
-export const PRIVACY_NOTICE_VERSION = new Date("2026-09-30T00:00:00Z")
+export const PRIVACY_NOTICE_VERSION = new Date("2026-10-05T00:00:00Z")
 
 /** Kontakt na DPO organizácie — meno a adresa, nič viac. */
 export async function dpoContacts(companyCode: string): Promise<{ fullName: string; email: string }[]> {
