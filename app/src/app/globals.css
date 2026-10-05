@@ -7903,7 +7903,9 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 
 .usage-table { display: grid; gap: 8px; }
-.usage-head { display: none; }
+/* Dvojitá trieda: hlavička je aj `.usage-row` a jej `display: grid` nižšie
+   by ju na telefóne inak ukázal (5. 10. 2026). */
+.usage-row.usage-head { display: none; }
 /* Karta: kto a suma hore, na čo pod tým, čas, model a tokeny dole. */
 .usage-row {
   padding: 12px 14px; display: grid; gap: 4px 12px;
@@ -7920,7 +7922,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .usage-key { display: block; font-size: 12px; }
 @media (min-width: 1024px) {
   .usage-table { gap: 0; }
-  .usage-head, .usage-row {
+  .usage-row, .usage-row.usage-head {
     display: grid;
     grid-template-columns: 130px minmax(0, 1fr) minmax(0, 2.2fr) 130px 130px 80px;
     grid-template-areas: "when person what model tokens sum";
