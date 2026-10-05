@@ -2751,6 +2751,7 @@ interface Dictionary {
       compareTrial: string
       compareMax: string
       trialMatches: (label: string) => string
+      trialSameAsCurrent: string
       trialListHeading: string
       saveHeading: string
       saveIntro: string
@@ -6460,6 +6461,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       compareTrial: "skúška",
       compareMax: "Najväčší úsek",
       trialMatches: label => `Tieto hodnoty má profil „${label}“.`,
+      trialSameAsCurrent: "Skúšobný rez je rovnaký ako súčasný — netreba nič meniť.",
       trialListHeading: "Úseky po skúšobnom reze",
       saveHeading: "Profil pre tento dokument",
       saveIntro: "Dokument nesie len pomenovaný profil — ten sa dá použiť aj pri ďalších dokumentoch. Po zmene profilu treba dokument preindexovať; dovtedy asistent odpovedá zo starých úsekov.",
@@ -10131,6 +10133,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       compareTrial: "zkouška",
       compareMax: "Největší úsek",
       trialMatches: label => `Tyto hodnoty má profil „${label}“.`,
+      trialSameAsCurrent: "Zkušební řez je stejný jako současný — není třeba nic měnit.",
       trialListHeading: "Úseky po zkušebním řezu",
       saveHeading: "Profil pro tento dokument",
       saveIntro: "Dokument nese jen pojmenovaný profil — ten lze použít i u dalších dokumentů. Po změně profilu je třeba dokument přeindexovat; do té doby asistent odpovídá ze starých úseků.",
@@ -13789,6 +13792,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       compareTrial: "trial",
       compareMax: "Largest chunk",
       trialMatches: label => `These values belong to the profile “${label}”.`,
+      trialSameAsCurrent: "The trial split is the same as the current one — nothing needs to change.",
       trialListHeading: "Chunks after the trial split",
       saveHeading: "Profile for this document",
       saveIntro: "A document carries only a named profile — it can be used for other documents too. After changing the profile the document must be reindexed; until then the assistant answers from the old chunks.",

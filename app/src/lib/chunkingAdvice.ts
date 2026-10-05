@@ -108,11 +108,12 @@ Chunker funguje takto: každý článok je úsek; dlhý článok sa delí po ods
 Navrhni:
 - strategy: "articles", ak má dokument články, paragrafy alebo body; "headings", ak ich nemá a dá sa deliť len podľa nadpisov (manuál, zápisnica, zmluva bez článkov);
 - articleWord: slovo, ktorým začínajú nadpisy článkov presne tak, ako je v texte (Článok, §, Bod…);
-- annexWord: slovo prílohy (predvolene PRÍLOHA);
+- annexWord: slovo prílohy presne tak, ako je v texte;
 - minTokens a maxTokens: cieľová veľkosť úseku (bežne 300–800; menšie pre krátke husté články, väčšie pre dlhé súvislé);
 - confidence: ako veľmi si si istý;
 - reasoning: 2–4 vety po slovensky, prečo;
 - issues: krátky zoznam toho, čo v štruktúre nesedí (napríklad nejednotné nadpisy, veľké tabuľky, text pred prvým článkom). Prázdny, keď nič.
+Hodnoty, ktoré netreba meniť, ponechaj presne také, aké má súčasný profil (sú v údajoch) — aj slovo prílohy.
 Píš po slovensky, vecne, bez úvodu.
 Úvodzovky v texte píš výhradne ako „…“ — nikdy rovné úvodzovky ("), tie by ukončili reťazec v JSON.`
 
@@ -168,7 +169,7 @@ export async function requestChunkingAdvice(
     `Dokument: ${doc.title ?? documentId}`,
     `Neprázdnych riadkov: ${outline.total}${outline.truncated ? ` (štruktúra skrátená na ${OUTLINE_MAX_LINES} riadkov)` : ""}`,
     a ? `Výskyty na začiatku riadku: Článok ${a.articleWord}×, § ${a.paragraphSign}×, Bod ${a.pointWord}×, nadpisov Markdownu ${a.markdownHeadings}, očíslovaných odsekov ${a.numberedParagraphs}` : "",
-    inspection ? `Súčasný profil: slovo článku „${inspection.profile.values.articleWord}“, úsek ${inspection.profile.values.minTokens}–${inspection.profile.values.maxTokens} tokenov` : "",
+    inspection ? `Súčasný profil: slovo článku „${inspection.profile.values.articleWord}“, slovo prílohy „${inspection.profile.values.annexWord}“, úsek ${inspection.profile.values.minTokens}–${inspection.profile.values.maxTokens} tokenov` : "",
     inspection?.version ? `Súčasný rez: ${inspection.stats.count} úsekov, ${inspection.stats.withArticlePercent} % s článkom, veľkosť ${inspection.stats.tokensMin}–${inspection.stats.tokensMax} tokenov` : "",
   ].filter(Boolean).join("\n")
 
