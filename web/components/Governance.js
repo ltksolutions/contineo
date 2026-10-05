@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon from "./Icon";
 
 /**
@@ -12,18 +13,24 @@ import Icon from "./Icon";
  * alebo do Pripravujeme, nie sem.
  */
 
-export default function Governance({ dict }) {
+/**
+ * `bare` — na stránke /potvrdzovanie je nadpis v jej úvode, tu by bol dvakrát.
+ * `lang` — na úvodnej stránke pridá odkaz na tú stránku.
+ */
+export default function Governance({ dict, lang, bare = false }) {
   const g = dict.governance;
   if (!g) return null;
 
   return (
     <section id="potvrdzovanie" className="section">
       <div className="container">
-        <div className="center maxw-720 mx-auto" style={{ marginBottom: 40 }}>
-          <span className="eyebrow">{g.eyebrow}</span>
-          <h2>{g.title}</h2>
-          <p className="lead" style={{ marginTop: 16 }}>{g.subtitle}</p>
-        </div>
+        {!bare && (
+          <div className="center maxw-720 mx-auto" style={{ marginBottom: 40 }}>
+            <span className="eyebrow">{g.eyebrow}</span>
+            <h2>{g.title}</h2>
+            <p className="lead" style={{ marginTop: 16 }}>{g.subtitle}</p>
+          </div>
+        )}
 
         {/* Postup znenia — štyri kroky v poradí, v akom ich vidí správca na karte dokumentu */}
         <h3 className="center" style={{ fontSize: 17, marginBottom: 18 }}>{g.stepsTitle}</h3>
@@ -57,6 +64,14 @@ export default function Governance({ dict }) {
           </span>
           {g.note}
         </p>
+
+        {!bare && lang && (
+          <div className="center" style={{ marginTop: 26 }}>
+            <Link className="btn btn--ghost" href={`/${lang}/potvrdzovanie`}>
+              {dict.ackPage.more} <Icon name="arrow" size={16} />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

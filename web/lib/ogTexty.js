@@ -15,6 +15,8 @@ export function textyStranky(dict, stranka) {
   switch (stranka) {
     case "pre-koho":
       return { eyebrow: dict.usecases.eyebrow, title: dict.usecases.title, sub: dict.usecases.subtitle };
+    case "potvrdzovanie":
+      return { eyebrow: dict.governance.eyebrow, title: dict.governance.title, sub: dict.governance.subtitle };
     case "bezpecnost":
       return { eyebrow: dict.residency.eyebrow, title: dict.residency.title, sub: dict.residency.subtitle };
     case "prevadzka":

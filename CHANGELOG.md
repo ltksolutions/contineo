@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: stránka Potvrdzovanie a GDPR na Bezpečnosti (2026-10-05)
+
+Web má novú stránku **Potvrdzovanie** (`/potvrdzovanie`): tri pohľady na
+to isté potvrdenie — úloha zamestnanca, výkaz personalistu a záznam pre
+audit — štyri kroky nového znenia a časté otázky. Ukážky sú kreslené,
+s vymyslenými údajmi. Stránka **Bezpečnosť** má nový blok o ochrane
+osobných údajov v produkte a o bezpečnostnej kontrole kódu zo septembra.
+Horná lišta sa na menu prepína už pod 1100 px.
+
 ### Web contineo.app: Technológia, demo a Pripravujeme podľa aplikácie (2026-10-05)
 
 Stránka **Technológia** opisuje hľadanie tak, ako dnes beží: v zneniach

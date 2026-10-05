@@ -33,6 +33,7 @@ export default function Nav({ dict, lang }) {
   // lebo sa na ne odkazuje v ponukach a maju vlastnu hlbku (ADR-002).
   const strany = [
     { href: `/${lang}`, label: dict.nav.overview },
+    { href: `/${lang}/potvrdzovanie`, label: dict.ackPage.navLabel },
     { href: `/${lang}/pre-koho`, label: dict.usecases.navLabel },
     { href: `/${lang}/bezpecnost`, label: dict.residency.navLabel },
     { href: `/${lang}/prevadzka`, label: dict.nav.runtime },
@@ -44,7 +45,6 @@ export default function Nav({ dict, lang }) {
     { href: `/${lang}#demo`, label: dict.nav.demo },
     { href: `/${lang}#modes`, label: dict.nav.modes },
     { href: `/${lang}#verzie`, label: dict.nav.versions },
-    { href: `/${lang}#potvrdzovanie`, label: dict.nav.governance },
     { href: `/${lang}#features`, label: dict.nav.features },
     { href: `/${lang}#audience`, label: dict.nav.audience },
     { href: `/${lang}#how`, label: dict.nav.how },
@@ -167,7 +167,8 @@ export default function Nav({ dict, lang }) {
         .lang-item--on { color: var(--ink); background: var(--surface-2); }
         .nav-burger { display: none; }
         .nav-mobile { display: none; }
-        @media (max-width: 1000px) {
+        /* Šesť stránok sa do lišty zmestí až od 1100 px (pribudlo Potvrdzovanie). */
+        @media (max-width: 1100px) {
           .nav-links { display: none !important; }
           .nav-desktop { display: none !important; }
           .nav-burger { display: inline-flex !important; }

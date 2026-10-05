@@ -4,6 +4,7 @@ import Nav from "@/components/Nav";
 import Security from "@/components/Security";
 import Residency from "@/components/Residency";
 import Identity from "@/components/Identity";
+import Compliance from "@/components/Compliance";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 
@@ -32,6 +33,7 @@ export default async function BezpecnostPage({ params }) {
         <Security dict={dict} />
         <Residency dict={dict} />
         <Identity dict={dict} />
+        <Compliance dict={dict} />
         <CTA dict={dict} />
       </main>
       <Footer dict={dict} lang={lang} />

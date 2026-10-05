@@ -41,7 +41,7 @@ describe("textyStranky()", () => {
   const dict = getDictionary("sk")
 
   it("dá každej známej stránke jej vlastný nadpis", () => {
-    const stranky = ["pre-koho", "bezpecnost", "prevadzka", "technologia"]
+    const stranky = ["potvrdzovanie", "pre-koho", "bezpecnost", "prevadzka", "technologia"]
     const nadpisy = stranky.map(s => textyStranky(dict, s).title)
 
     expect(new Set(nadpisy).size).toBe(stranky.length)
