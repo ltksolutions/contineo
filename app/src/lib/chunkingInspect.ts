@@ -18,6 +18,7 @@ import { chunkText, DEFAULT_PROFILE, estimateTokens } from "./chunker.mjs"
 import { chunkingFor, toChunkerProfile, DEFAULT_PROFILE_KEY, DEFAULT_CHUNKING, type ChunkingProfile } from "./chunkingProfile"
 import { chunkingFingerprint, needsReindex } from "./chunkIdentity"
 import { analyseChunking, type ChunkingAnalysis } from "./chunkingAnalysis"
+import type { ChunkingAdvice } from "./chunkingAdvice"
 
 /** Úsek tak, ako sa zobrazí. Text celý — obrazovka ho skryje do rozbaľovača. */
 export interface InspectedChunk {
@@ -157,6 +158,8 @@ export interface ChunkingInspection {
   profiles: { key: string; label: string; values: ChunkingProfile }[]
   /** Skúšobný rez, keď prišli skúšobné parametre (krok B). */
   trial: ChunkingTrial | null
+  /** Posledný návrh AI uložený pri dokumente (krok C). */
+  advice: ChunkingAdvice | null
 }
 
 /** Rovnaké parametre rezu? (kľúč a menovka nehrajú rolu) */
@@ -187,8 +190,11 @@ export async function inspectChunking(
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne(
     { companyCode, documentId },
-    { projection: { documentId: 1, title: 1, versions: 1, chunkingProfile: 1, draftMarkdown: 1 } },
-  ) as { documentId: string; title?: string; versions?: VersionRow[]; chunkingProfile?: string; draftMarkdown?: string } | null
+    { projection: { documentId: 1, title: 1, versions: 1, chunkingProfile: 1, draftMarkdown: 1, chunkingAdvice: 1 } },
+  ) as {
+    documentId: string; title?: string; versions?: VersionRow[]; chunkingProfile?: string; draftMarkdown?: string
+    chunkingAdvice?: ChunkingAdvice
+  } | null
   if (!doc) return null
 
   const tenant = await chunkingTenant(companyCode)
@@ -259,5 +265,6 @@ export async function inspectChunking(
     analysis: text ? analyseChunking(text) : null,
     profiles,
     trial,
+    advice: doc.chunkingAdvice ?? null,
   }
 }

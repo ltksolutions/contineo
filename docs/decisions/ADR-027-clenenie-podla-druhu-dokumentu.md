@@ -42,3 +42,20 @@ dokumenty, kvôli ktorým by sa mali meniť — manuál, zmluva, zápisnica bez
 - Menej obrazovky, ktorej nikto nerozumie; žiadny dokument sa nenareže inak.
 - Krok 2 sa robí až so skutočným textom — algoritmus odladený bez neho by
   bol odhad (rovnaký dôvod ako odklad D79 etapy 2).
+
+## 4. Editor členenia pri dokumente (2026-10-05)
+
+Rozhodnutie Jána: úpravy cez **pomenované profily** (D79 ostáva), AI dostane
+**štruktúru**, nie celý text, editor používa **správca obsahu**.
+
+- **Krok A** — `/library/[id]/chunks`: uložené úseky, súhrn, upozornenia,
+  rozbor analyzátorom, stav oproti dnešnému rezu (`chunkingInspect.ts`).
+- **Krok B** — skúšobný rez (GET, nič neukladá), porovnanie, použitie
+  existujúceho profilu alebo nový pomenovaný profil z hodnôt skúšky
+  (`chunkingProfilesDb.ts`). Existujúci profil sa tu nemení.
+- **Krok C** — návrh AI (`chunkingAdvice.ts`): štruktúra (nadpisy, články,
+  začiatky odsekov do 60 znakov, strop 400 riadkov) ide modelu z nastavenia
+  „Odpovede asistenta"; odpoveď je JSON podľa schémy, hodnoty sa orežú;
+  posledný návrh sa ukladá pri dokumente (`documents.chunkingAdvice`) a
+  spotreba ide pod účel „Analýza členenia". Pracovný poriadok: ~12,7 tis.
+  tokenov vstupu, ~$0,03, ~13 s.

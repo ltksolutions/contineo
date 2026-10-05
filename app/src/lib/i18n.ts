@@ -1511,7 +1511,7 @@ interface Dictionary {
       emptyText: string
       capped: (shown: number, all: number) => string
       note: string
-      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean", { label: string; why: string }>
+      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis", { label: string; why: string }>
     }
     branding: {
       name: string
@@ -2761,6 +2761,16 @@ interface Dictionary {
       newProfileLabel: string
       newProfileHint: string
       newProfileButton: string
+      adviceHeading: string
+      adviceIntro: string
+      adviceButton: string
+      adviceAgain: string
+      adviceMeta: (date: string, model: string, by: string) => string
+      adviceStrategyArticles: (word: string, min: number, max: number) => string
+      adviceStrategyHeadings: string
+      adviceConfidence: Record<"low" | "medium" | "high", string>
+      adviceIssues: string
+      adviceTry: string
     }
     editor: {
       intro: string
@@ -2822,6 +2832,7 @@ interface Dictionary {
       reindexUpToDate: string
       chunkingProfileSet: (label: string) => string
       chunkingProfileCreated: (label: string) => string
+      chunkingAdviceReady: string
       reindexed: (chunks: number, archived: number) => string
       /** Súhrn „Preindexovať všetky znenia": koľko sa preindexovalo a koľko bolo bez zmeny. */
       reindexAllResult: (done: number, unchanged: number) => string
@@ -5053,6 +5064,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.documentNotFound": "Taký dokument tu nie je.",
     "chunking.unknownProfile": "Profil členenia „{value}“ neexistuje.",
     "chunking.labelRequired": "Profil potrebuje názov.",
+    "chunking.aiNoText": "Dokument nemá text, nie je čo analyzovať.",
+    "chunking.aiNoKey": "Umelá inteligencia nemá nastavený kľúč — nastavte ho v Organizácia → Umelá inteligencia.",
+    "chunking.aiFailed": "Analýza sa nepodarila — skúste to o chvíľu.",
     "chunking.labelTaken": "Profil s názvom „{value}“ už existuje — použite ho, alebo zvoľte iný názov.",
     "library.titleLocked": "Názov dokumentu so zverejneným znením sa mení len novým znením — zmeň ho v príprave nového znenia, schváli sa s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znenie sa nahráva na jeho detaile, nie ako nový dokument — táto obrazovka zakladá nový dokument.",
@@ -5290,6 +5304,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "query-classify": { label: "Výber spôsobu hľadania", why: "rozhodnutie medzi hľadaním podľa slov a podľa významu" },
         "pdf-rewrite": { label: "Prepis skenu PDF", why: "sken bez textovej vrstvy sa prepisuje do textu predpisu" },
         "markdown-clean": { label: "Úprava členenia textu", why: "obnovenie nadpisov a článkov v prevedenom texte" },
+        "chunking-analysis": { label: "Analýza členenia", why: "návrh, ako dokument narezať na úseky pre vyhľadávanie" },
       },
     },
     branding: {
@@ -6455,6 +6470,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newProfileLabel: "Názov profilu",
       newProfileHint: "Napríklad „Zákon (§)“. Existujúce profily sa tu nemenia — zmena by ticho prerezala všetky dokumenty, ktoré ich používajú.",
       newProfileButton: "Uložiť profil",
+      adviceHeading: "Návrh AI",
+      adviceIntro: "Model dostane štruktúru dokumentu — nadpisy, články a začiatky odsekov, nie celý text — a navrhne, ako ho narezať. Nič sa nezmení; návrh si môžete skúsiť a uložiť ako profil. Volanie sa zapíše do spotreby AI.",
+      adviceButton: "Analyzovať pomocou AI",
+      adviceAgain: "Analyzovať znova",
+      adviceMeta: (date, model, by) => `${date} · ${model} · ${by}`,
+      adviceStrategyArticles: (word, min, max) => `Po článkoch — slovo „${word}“, úsek ${min}–${max} tokenov.`,
+      adviceStrategyHeadings: "Podľa nadpisov — dokument nemá články. Tento spôsob členenia zatiaľ nie je k dispozícii (ADR-027, krok 2).",
+      adviceConfidence: { low: "istota nízka", medium: "istota stredná", high: "istota vysoká" },
+      adviceIssues: "Čo nesedí",
+      adviceTry: "Skúsiť tento rez",
     },
     editor: {
       intro: "Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.",
@@ -6514,6 +6539,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexUpToDate: "Členenie je už aktuálne — nič sa nemenilo.",
       chunkingProfileSet: label => `Dokument má profil „${label}“. Ešte ho preindexujte — dovtedy asistent odpovedá zo starých úsekov.`,
       chunkingProfileCreated: label => `Profil „${label}“ je uložený a priradený dokumentu. Ešte dokument preindexujte.`,
+      chunkingAdviceReady: "Návrh AI je hotový — nižšie. Nič sa nezmenilo.",
       reindexAllResult: (done, unchanged) => `Preindexované znenia: ${done}, bez zmeny: ${unchanged}. Znenia ani potvrdenia sa nedotklo.`,
       reindexed: (chunks, archived) =>
         `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
@@ -8712,6 +8738,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.documentNotFound": "Takový dokument tu není.",
     "chunking.unknownProfile": "Profil členění „{value}“ neexistuje.",
     "chunking.labelRequired": "Profil potřebuje název.",
+    "chunking.aiNoText": "Dokument nemá text, není co analyzovat.",
+    "chunking.aiNoKey": "Umělá inteligence nemá nastavený klíč — nastavte ho v Organizace → Umělá inteligence.",
+    "chunking.aiFailed": "Analýza se nepodařila — zkuste to za chvíli.",
     "chunking.labelTaken": "Profil s názvem „{value}“ už existuje — použijte ho, nebo zvolte jiný název.",
     "library.titleLocked": "Název dokumentu se zveřejněným zněním se mění jen novým zněním — změň ho v přípravě nového znění, schválí se s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znění se nahrává na jeho detailu, ne jako nový dokument — tato obrazovka zakládá nový dokument.",
@@ -8949,6 +8978,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "query-classify": { label: "Výběr způsobu hledání", why: "rozhodnutí mezi hledáním podle slov a podle významu" },
         "pdf-rewrite": { label: "Přepis skenu PDF", why: "sken bez textové vrstvy se přepisuje do textu předpisu" },
         "markdown-clean": { label: "Úprava členění textu", why: "obnovení nadpisů a článků v převedeném textu" },
+        "chunking-analysis": { label: "Analýza členění", why: "návrh, jak dokument rozřezat na úseky pro vyhledávání" },
       },
     },
     branding: {
@@ -10111,6 +10141,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newProfileLabel: "Název profilu",
       newProfileHint: "Například „Zákon (§)“. Existující profily se zde nemění — změna by potichu přeřezala všechny dokumenty, které je používají.",
       newProfileButton: "Uložit profil",
+      adviceHeading: "Návrh AI",
+      adviceIntro: "Model dostane strukturu dokumentu — nadpisy, články a začátky odstavců, ne celý text — a navrhne, jak ho rozřezat. Nic se nezmění; návrh si můžete vyzkoušet a uložit jako profil. Volání se zapíše do spotřeby AI.",
+      adviceButton: "Analyzovat pomocí AI",
+      adviceAgain: "Analyzovat znovu",
+      adviceMeta: (date, model, by) => `${date} · ${model} · ${by}`,
+      adviceStrategyArticles: (word, min, max) => `Po článcích — slovo „${word}“, úsek ${min}–${max} tokenů.`,
+      adviceStrategyHeadings: "Podle nadpisů — dokument nemá články. Tento způsob členění zatím není k dispozici (ADR-027, krok 2).",
+      adviceConfidence: { low: "jistota nízká", medium: "jistota střední", high: "jistota vysoká" },
+      adviceIssues: "Co nesedí",
+      adviceTry: "Zkusit tento řez",
     },
     editor: {
       intro: "Porovnej text s originálem. Publikování je samostatný krok — tady se nic nepouští ven.",
@@ -10170,6 +10210,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexUpToDate: "Členění je už aktuální — nic se neměnilo.",
       chunkingProfileSet: label => `Dokument má profil „${label}“. Ještě ho přeindexujte — do té doby asistent odpovídá ze starých úseků.`,
       chunkingProfileCreated: label => `Profil „${label}“ je uložen a přiřazen dokumentu. Ještě dokument přeindexujte.`,
+      chunkingAdviceReady: "Návrh AI je hotový — níže. Nic se nezměnilo.",
       reindexAllResult: (done, unchanged) => `Přeindexovaná znění: ${done}, beze změny: ${unchanged}. Znění ani potvrzení se to nedotklo.`,
       reindexed: (chunks, archived) =>
         `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
@@ -12360,6 +12401,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.documentNotFound": "There is no such document here.",
     "chunking.unknownProfile": "The chunking profile “{value}” does not exist.",
     "chunking.labelRequired": "The profile needs a name.",
+    "chunking.aiNoText": "The document has no text, there is nothing to analyse.",
+    "chunking.aiNoKey": "Artificial intelligence has no key set — set it in Organisation → Artificial intelligence.",
+    "chunking.aiFailed": "The analysis failed — try again in a moment.",
     "chunking.labelTaken": "A profile named “{value}” already exists — use it or choose another name.",
     "library.titleLocked": "The title of a document with a published version changes only with a new version — change it when preparing the new version; it is approved with it.",
     "library.documentExists": "The document \u201C{title}\u201D ({documentId}) already exists. A new version is uploaded on its detail page, not as a new document — this screen creates a new document.",
@@ -12597,6 +12641,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "query-classify": { label: "Search mode choice", why: "deciding between word search and meaning search" },
         "pdf-rewrite": { label: "PDF scan transcription", why: "a scan without a text layer is transcribed into the regulation text" },
         "markdown-clean": { label: "Text structure cleanup", why: "restoring headings and articles in converted text" },
+        "chunking-analysis": { label: "Chunking analysis", why: "a proposal for splitting the document into chunks for search" },
       },
     },
     branding: {
@@ -13754,6 +13799,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newProfileLabel: "Profile name",
       newProfileHint: "For example “Act (§)”. Existing profiles are not changed here — a change would silently re-split every document that uses them.",
       newProfileButton: "Save profile",
+      adviceHeading: "AI proposal",
+      adviceIntro: "The model receives the document structure — headings, articles and paragraph openings, not the full text — and proposes how to split it. Nothing changes; you can try the proposal and save it as a profile. The call is recorded in AI usage.",
+      adviceButton: "Analyse with AI",
+      adviceAgain: "Analyse again",
+      adviceMeta: (date, model, by) => `${date} · ${model} · ${by}`,
+      adviceStrategyArticles: (word, min, max) => `By articles — word “${word}”, chunk ${min}–${max} tokens.`,
+      adviceStrategyHeadings: "By headings — the document has no articles. This splitting method is not available yet (ADR-027, step 2).",
+      adviceConfidence: { low: "low confidence", medium: "medium confidence", high: "high confidence" },
+      adviceIssues: "What does not fit",
+      adviceTry: "Try this split",
     },
     editor: {
       intro: "Compare the text with the original. Publishing is a separate step — nothing goes out from here.",
@@ -13812,6 +13867,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexUpToDate: "The chunking is already up to date — nothing changed.",
       chunkingProfileSet: label => `The document now has the profile “${label}”. Reindex it — until then the assistant answers from the old chunks.`,
       chunkingProfileCreated: label => `The profile “${label}” was saved and assigned to the document. Reindex the document next.`,
+      chunkingAdviceReady: "The AI proposal is ready — see below. Nothing has changed.",
       reindexAllResult: (done, unchanged) => `Versions reindexed: ${done}, unchanged: ${unchanged}. No version or acknowledgement was touched.`,
       reindexed: (chunks, archived) =>
         `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +

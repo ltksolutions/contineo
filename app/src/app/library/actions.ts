@@ -42,6 +42,7 @@ import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
 import { setDocumentChunkingProfile, createChunkingProfileForDocument } from "@/lib/chunkingProfilesDb"
+import { requestChunkingAdvice } from "@/lib/chunkingAdvice"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { archiveDocument, restoreDocument, ArchiveError } from "@/lib/documentArchive"
 import { AppError } from "@/lib/appError"
@@ -1521,6 +1522,31 @@ export async function saveChunkingProfileAction(fd: FormData) {
       maxTokens: number("maxTokens"),
     }, self.email)
     message = say(self.language).chunkingProfileCreated(label)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  backToChunks(id, message, error)
+}
+
+/**
+ * Návrh členenia od AI (krok C). Pošle štruktúru, nie celý text; návrh sa
+ * uloží pri dokumente a nič iné sa nemení.
+ */
+export async function requestChunkingAdviceAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    const who = await findPerson(self.companyCode, self.email)
+    await requestChunkingAdvice({
+      companyCode: self.companyCode, personId: self.personId,
+      personName: who?.fullName ?? self.email, email: self.email,
+    }, id)
+    message = say(self.language).chunkingAdviceReady
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
