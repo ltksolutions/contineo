@@ -27,9 +27,21 @@ const NUM = `(\\d+[a-z]?${ODS})`
 // Bez markdownového prefixu ju chunker nerozpoznal a breadcrumb prišiel
 // o úroveň — „Disciplinárny poriadok › Článok 5" namiesto
 // „Disciplinárny poriadok › PRVÁ ČASŤ › Článok 5".
-const PART = new RegExp(
-  `^${MD}(PRVÁ|DRUHÁ|TRETIA|ŠTVRTÁ|PIATA|ŠIESTA|SIEDMA|ÔSMA|DEVIATA|DESIATA|JEDENÁSTA|DVANÁSTA)\\s+ČASŤ\\s*[-–—]?\\s*(.*)$`,
-)
+const PART_ORDINAL =
+  `^${MD}(PRVÁ|DRUHÁ|TRETIA|ŠTVRTÁ|PIATA|ŠIESTA|SIEDMA|ÔSMA|DEVIATA|DESIATA|JEDENÁSTA|DVANÁSTA)\\s+ČASŤ\\s*[-–—]?\\s*(.*)$`
+/*
+ * Časť s číslom — `Časť I – Základné ustanovenia`, `ČASŤ V - Zodpovednosť`
+ * (5. 10. 2026). Tak ju píšu predpisy z Wordu (Pracovný poriadok, smernice
+ * SFZ) a chunker ju nepoznal: cesta úseku bola bez úrovne časti.
+ *
+ * Rovnaké pravidlo ako pri článku: v nadpise Markdownu (`#`) je pomlčka
+ * nepovinná, mimo neho povinná — inak by veta „Časť 2 tejto smernice
+ * upravuje…" na začiatku riadku vyrobila časť.
+ */
+const PART_NUMBER = "(?:ČASŤ|Časť)\\s+(?:[IVXLC]+|\\d+)\\.?"
+const PART_NUMBERED_MD = `^#{1,6}\\s*${PART_NUMBER}(?:\\s*[-–—]?\\s*(\\D.*))?$`
+const PART_NUMBERED = `^${PART_NUMBER}\\s*[-–—]\\s*(\\D.*)$`
+const PART = new RegExp(`${PART_ORDINAL}|${PART_NUMBERED_MD}|${PART_NUMBERED}`)
 // Pozor na pomlčky: dokumenty miešajú "-" (U+002D) a "–" (U+2013).
 //
 // ── Hlavičky v tvare Markdownu (2026-09-14) ──────────────────────────────────
