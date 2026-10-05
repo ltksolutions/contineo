@@ -19,7 +19,9 @@ vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "Intranet 
 vi.mock("../src/app/library/actions", () => ({
   applyChunkingProfileAction: async () => {},
   saveChunkingProfileAction: async () => {},
+  requestChunkingAdviceAction: async () => {},
 }))
+vi.mock("@/components/SubmitButton", () => ({ default: ({ children }: { children: unknown }) => children }))
 
 const stored = [
   { chunkIndex: 0, heading: "Úvodné ustanovenia", articleRef: null, chunkType: "preambula", text: "Finančná smernica upravuje " + "x".repeat(25000), tokens: 7187 },
@@ -38,6 +40,11 @@ vi.mock("@/lib/chunkingInspect", async (orig) => {
         { key: "zakladny", label: "Základný", values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 300, maxTokens: 800 } },
         { key: "zakon", label: "Zákon (§)", values: { articleWord: "§", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 300, maxTokens: 800 } },
       ],
+      advice: id === "sfz:s_navrhom" ? {
+        at: new Date("2026-10-05T12:00:00Z"), by: "Ján Letko", model: "claude-sonnet-5", strategy: "articles",
+        values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 250, maxTokens: 700 },
+        confidence: "high", reasoning: "Nadpisy článkov sú tučné.", issues: ["Tabuľka v čl. 4 je veľká."],
+      } : null,
       trial: trialValues ? {
         values: trialValues,
         chunks: [{ chunkIndex: 0, heading: "Predmet", articleRef: "§ 1", chunkType: "clanok", text: "§ 1 text", tokens: 400, complete: true }],
@@ -92,6 +99,23 @@ describe("stránka Členenie na úseky", () => {
     expect(html).toContain("Skúsiť iný rez")
     expect(html).toContain("Použiť existujúci profil")
     expect(html).not.toContain("Uložiť hodnoty skúšky ako nový profil")
+  })
+
+  it("návrh AI: odôvodnenie, nálezy a odkaz na skúšobný rez s navrhnutými hodnotami", async () => {
+    const html = await render("sfz:s_navrhom")
+    expect(html).toContain("Návrh AI")
+    expect(html).toContain("Po článkoch — slovo „Článok“, úsek 250–700 tokenov.")
+    expect(html).toContain("Nadpisy článkov sú tučné.")
+    expect(html).toContain("Tabuľka v čl. 4 je veľká.")
+    expect(html).toContain("istota vysoká")
+    expect(html).toContain("trial=1&amp;articleWord=%C4%8Cl%C3%A1nok&amp;annexWord=PR%C3%8DLOHA&amp;minTokens=250&amp;maxTokens=700")
+    expect(html).toContain("Analyzovať znova")
+  })
+
+  it("bez návrhu: vysvetlenie a tlačidlo analýzy", async () => {
+    const html = await render("sfz:financna_smernica_sfz")
+    expect(html).toContain("Analyzovať pomocou AI")
+    expect(html).toContain("nie celý text")
   })
 
   it("neznámy dokument je 404", async () => {

@@ -16,10 +16,11 @@ import { inspectChunking, OVERSIZE_FACTOR, type ChunkWarning, type InspectedChun
 import { clampChunking } from "@/lib/tenantAdmin"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Notice from "@/components/Notice"
-import { applyChunkingProfileAction, saveChunkingProfileAction } from "../../actions"
+import { applyChunkingProfileAction, saveChunkingProfileAction, requestChunkingAdviceAction } from "../../actions"
+import SubmitButton from "@/components/SubmitButton"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { dictionary } from "@/lib/i18n"
+import { dictionary, formatDate } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
@@ -187,6 +188,55 @@ export default async function ChunksPage({
               r.analysis.signals.pointWord, r.analysis.signals.markdownHeadings,
             )}
           </p>
+        </section>
+      )}
+
+      {/*
+        Návrh AI (krok C): štruktúra dokumentu ide modelu, posledný návrh je
+        uložený pri dokumente. „Skúsiť tento rez" vedie na skúšobný rez
+        z kroku B s navrhnutými hodnotami — uloženie ide tou istou cestou.
+      */}
+      {r.analysis && (
+        <section className="card chunks-block">
+          <h2>{t.adviceHeading}</h2>
+          {r.advice ? (
+            <>
+              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>
+                {t.adviceMeta(formatDate(new Date(r.advice.at), language), r.advice.model, r.advice.by)} · {t.adviceConfidence[r.advice.confidence]}
+              </p>
+              <p style={{ margin: 0 }}>
+                <strong>
+                  {r.advice.strategy === "headings"
+                    ? t.adviceStrategyHeadings
+                    : t.adviceStrategyArticles(r.advice.values.articleWord, r.advice.values.minTokens, r.advice.values.maxTokens)}
+                </strong>
+              </p>
+              {r.advice.reasoning && <p style={{ margin: 0 }}>{r.advice.reasoning}</p>}
+              {r.advice.issues.length > 0 && (
+                <>
+                  <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.adviceIssues}</p>
+                  <ul className="chunks-warnings">{r.advice.issues.map((x, i) => <li key={i}>{x}</li>)}</ul>
+                </>
+              )}
+              {r.advice.strategy === "articles" && (
+                <p style={{ margin: 0 }}>
+                  <a href={`${here}?${new URLSearchParams({
+                    trial: "1",
+                    articleWord: r.advice.values.articleWord,
+                    annexWord: r.advice.values.annexWord,
+                    minTokens: String(r.advice.values.minTokens),
+                    maxTokens: String(r.advice.values.maxTokens),
+                  }).toString()}`}>{t.adviceTry} →</a>
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.adviceIntro}</p>
+          )}
+          <form action={requestChunkingAdviceAction}>
+            <input type="hidden" name="documentId" value={documentId} />
+            <SubmitButton className="button button--quiet">{r.advice ? t.adviceAgain : t.adviceButton}</SubmitButton>
+          </form>
         </section>
       )}
 
