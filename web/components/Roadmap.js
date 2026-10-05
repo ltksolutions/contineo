@@ -1,6 +1,6 @@
 import Icon from "./Icon";
 
-const ICONS = ["globe", "layers", "refresh"];
+const ICONS = ["lock", "layers", "file", "scale", "refresh", "globe"];
 
 export default function Roadmap({ dict }) {
   const r = dict.roadmap;
