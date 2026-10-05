@@ -30,7 +30,7 @@ export default async function Home({ params }) {
         <BotDemo dict={dict} kb={sampleKB[lang]} />
         <Modes dict={dict} kb={sampleKB[lang]} />
         <Versions dict={dict} />
-        <Governance dict={dict} />
+        <Governance dict={dict} lang={lang} />
         <Features dict={dict} />
         <HowItWorks dict={dict} />
         <Audience dict={dict} lang={lang} />
