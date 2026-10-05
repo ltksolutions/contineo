@@ -140,6 +140,12 @@ export interface ChunkingTrial {
   warnings: ChunkWarning[]
   /** Skúšobné hodnoty sú zhodné s niektorým pomenovaným profilom. */
   matchesProfile: string | null
+  /**
+   * Skúšobný rez dá **tie isté úseky** ako dnešný rez profilom dokumentu —
+   * iné hodnoty, rovnaký výsledok (napr. „PRÍLOHA" proti „PRÍLOHA č." v texte
+   * bez príloh). Vtedy nie je čo ukladať.
+   */
+  sameAsCurrent: boolean
 }
 
 export interface ChunkingInspection {
@@ -244,12 +250,16 @@ export async function inspectChunking(
   let trial: ChunkingTrial | null = null
   if (trialValues && text) {
     const cut = cutWith(text, doc.title ?? "", trialValues)
+    const current = cutWith(text, doc.title ?? "", params).chunks
+    const sameAsCurrent = current.length === cut.chunks.length &&
+      current.every((c, i) => c.text === cut.chunks[i].text && c.articleRef === cut.chunks[i].articleRef)
     trial = {
       values: trialValues,
       chunks: cut.chunks,
       stats: chunkStats(cut.chunks),
       warnings: chunkWarnings(cut.chunks, trialValues),
       matchesProfile: profiles.find(p => sameValues(p.values, trialValues))?.key ?? null,
+      sameAsCurrent,
     }
   }
 

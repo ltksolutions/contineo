@@ -290,6 +290,9 @@ export default async function ChunksPage({
               {r.trial.warnings.map(w => <li key={w.code}>{warningText(w)}</li>)}
             </ul>
           )}
+          {r.trial.sameAsCurrent && !r.trial.matchesProfile && (
+            <p className="quiet" style={{ margin: 0 }}>{t.trialSameAsCurrent}</p>
+          )}
           {r.trial.matchesProfile && (
             <p className="quiet" style={{ margin: 0 }}>
               {t.trialMatches(r.profiles.find(p => p.key === r.trial!.matchesProfile)?.label ?? r.trial.matchesProfile)}
@@ -318,7 +321,7 @@ export default async function ChunksPage({
             <div><button className="button button--quiet" type="submit">{t.useProfileButton}</button></div>
           </form>
         )}
-        {r.trial && !r.trial.matchesProfile && (
+        {r.trial && !r.trial.matchesProfile && !r.trial.sameAsCurrent && (
           <form action={saveChunkingProfileAction} className="chunks-row">
             <input type="hidden" name="documentId" value={documentId} />
             <input type="hidden" name="articleWord" value={r.trial.values.articleWord} />

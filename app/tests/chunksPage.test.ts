@@ -30,7 +30,7 @@ vi.mock("@/lib/chunkingInspect", async (orig) => {
   const real = await orig<typeof import("../src/lib/chunkingInspect")>()
   return {
     ...real,
-    inspectChunking: async (_c: string, id: string, trialValues?: { articleWord: string; maxTokens: number; minTokens: number }) => id === "sfz:nic" ? null : ({
+    inspectChunking: async (_c: string, id: string, trialValues?: { articleWord: string; annexWord?: string; maxTokens: number; minTokens: number }) => id === "sfz:nic" ? null : ({
       documentId: id, title: "Finančná smernica SFZ",
       version: { versionId: "v1", label: "2026" },
       profile: { key: "zakladny", label: "Základný", values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 300, maxTokens: 800 } },
@@ -51,6 +51,7 @@ vi.mock("@/lib/chunkingInspect", async (orig) => {
         stats: { count: 1, withArticle: 1, withArticlePercent: 100, tokensMin: 400, tokensMax: 400, tokensAvg: 400 },
         warnings: [],
         matchesProfile: trialValues.articleWord === "§" && trialValues.maxTokens === 800 ? "zakon" : null,
+        sameAsCurrent: trialValues.annexWord === "Príloha",
       } : null,
       analysis: { signals: { lines: 120, articleWord: 0, paragraphSign: 0, pointWord: 0, numberedParagraphs: 4, markdownHeadings: 9, annexes: 0, repeatedLines: 0 }, suggestions: [{ key: "volny_text", articleWord: null, hits: 0, score: 0 }], confident: false },
     }),
@@ -92,6 +93,12 @@ describe("stránka Členenie na úseky", () => {
     expect(html).toContain("Tieto hodnoty má profil „Zákon (§)“.")
     expect(html).not.toContain("Uložiť hodnoty skúšky ako nový profil")
     expect(html).toMatch(/<option[^>]*value="zakon"[^>]*selected/)
+  })
+
+  it("skúška s iným zápisom, ale rovnakým rezom: netreba nič meniť, nový profil sa neponúka", async () => {
+    const html = await render("sfz:financna_smernica_sfz", { trial: "1", annexWord: "Príloha" })
+    expect(html).toContain("Skúšobný rez je rovnaký ako súčasný — netreba nič meniť.")
+    expect(html).not.toContain("Uložiť hodnoty skúšky ako nový profil")
   })
 
   it("bez skúšky: zoznam uložených úsekov, výber profilu, žiadne ukladanie nového", async () => {
