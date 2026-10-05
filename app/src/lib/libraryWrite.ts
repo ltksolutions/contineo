@@ -61,7 +61,7 @@ type ChunkingTenant = {
  * by sa tak zahodilo celé ladenie a zistilo by sa to až tým, že model odcituje
  * nesprávny článok.
  */
-async function chunkingTenant(companyCode: string): Promise<ChunkingTenant | null> {
+export async function chunkingTenant(companyCode: string): Promise<ChunkingTenant | null> {
   const col = await getCollection(TENANTS_COLLECTION)
   return await col.findOne({ companyCode }) as unknown as ChunkingTenant | null
 }

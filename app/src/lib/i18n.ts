@@ -2705,6 +2705,39 @@ interface Dictionary {
       approvalCancelHint: string
       approvalCancelButton: string
     }
+    chunks: {
+      heading: string
+      intro: string
+      openLink: string
+      profile: string
+      version: string
+      noVersion: string
+      upToDate: string
+      outdated: (stored: number, today: number) => string
+      reindexHint: string
+      statsCount: string
+      statsArticles: string
+      statsTokens: string
+      tokensRange: (min: number, avg: number, max: number) => string
+      target: (min: number, max: number) => string
+      warningsHeading: string
+      warnings: {
+        oneBlock: string
+        fewArticles: (percent: number) => string
+        oversized: (count: number, limit: number) => string
+        fragments: (count: number) => string
+      }
+      noWarnings: string
+      analysisHeading: string
+      analysisFound: (lines: number, articles: number, paragraphs: number, points: number, headings: number) => string
+      analysisFits: (word: string) => string
+      analysisOther: (word: string) => string
+      analysisPlain: string
+      listHeading: string
+      noArticle: string
+      tokens: (n: number) => string
+      oversizedTag: string
+    }
     editor: {
       intro: string
       modelDraft: string
@@ -6335,6 +6368,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Kolo sa nezmaže \u2014 dostane dôvod a zostane v histórii. Je to jediná cesta, ako zo zoznamu odstrániť schvaľovateľa, ktorý tam byť nemá.",
       approvalCancelButton: "Zrušiť kolo",
     },
+    chunks: {
+      heading: "Členenie na úseky",
+      intro: "Asistent nečíta celý dokument naraz — dostane niekoľko úsekov a odpovedá z nich. Tu vidíte, ako je platné znenie narezané a či to sedí.",
+      openLink: "členenie na úseky →",
+      profile: "Profil členenia",
+      version: "Znenie",
+      noVersion: "Dokument zatiaľ nemá platné znenie, preto nemá úseky. Nižšie je len rozbor konceptu.",
+      upToDate: "Úseky zodpovedajú dnešnému členeniu.",
+      outdated: (stored, today) => `Úseky sú narezané starším spôsobom (${stored} úsekov); dnes by ich vzniklo ${today}.`,
+      reindexHint: "Preindexovať sa dá v detaile dokumentu (Správa → Preindexovať). Znenie ani potvrdenia sa nemenia.",
+      statsCount: "Úsekov",
+      statsArticles: "S článkom",
+      statsTokens: "Veľkosť (tokeny)",
+      tokensRange: (min, avg, max) => `${min} – ${avg} – ${max}`,
+      target: (min, max) => `cieľ ${min}–${max}`,
+      warningsHeading: "Čo nesedí",
+      warnings: {
+        oneBlock: "Celý text je v jednom úseku — nenašiel sa ani jeden článok. Asistent z neho nevie citovať konkrétne miesto. Typické pre manuál alebo zmluvu; pomôže členenie podľa nadpisov.",
+        fewArticles: percent => `Článok má len ${percent} % úsekov — členenie dokumentu profil takmer nerozpoznal.`,
+        oversized: (count, limit) => `${count} ${count === 1 ? "úsek je väčší" : "úsekov je väčších"} než ${limit} tokenov — asistent z neho dostane priveľa naraz.`,
+        fragments: count => `${count} ${count === 1 ? "krátky úlomok" : "krátkych úlomkov"} rozdeleného článku — majú málo kontextu.`,
+      },
+      noWarnings: "Bez nálezov.",
+      analysisHeading: "Rozbor textu",
+      analysisFound: (lines, articles, paragraphs, points, headings) =>
+        `${lines} riadkov · „Článok" ${articles}× · „§" ${paragraphs}× · „Bod" ${points}× · nadpisov ${headings}`,
+      analysisFits: word => `Text je členený na „${word}" — profil sedí.`,
+      analysisOther: word => `Text je členený skôr na „${word}" než podľa profilu — zvážte iný profil.`,
+      analysisPlain: "Text nemá články ani paragrafy. Potrebuje členenie podľa nadpisov.",
+      listHeading: "Úseky",
+      noArticle: "bez článku",
+      tokens: n => `${n} tokenov`,
+      oversizedTag: "veľký",
+    },
     editor: {
       intro: "Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.",
       modelDraft: "návrh modelu",
@@ -9927,6 +9994,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Kolo se nesmaže \u2014 dostane důvod a zůstane v historii. Je to jediná cesta, jak ze seznamu odstranit schvalovatele, který tam být nemá.",
       approvalCancelButton: "Zrušit kolo",
     },
+    chunks: {
+      heading: "Členění na úseky",
+      intro: "Asistent nečte celý dokument najednou — dostane několik úseků a odpovídá z nich. Zde vidíte, jak je platné znění rozřezané a zda to sedí.",
+      openLink: "členění na úseky →",
+      profile: "Profil členění",
+      version: "Znění",
+      noVersion: "Dokument zatím nemá platné znění, proto nemá úseky. Níže je jen rozbor konceptu.",
+      upToDate: "Úseky odpovídají dnešnímu členění.",
+      outdated: (stored, today) => `Úseky jsou rozřezané starším způsobem (${stored} úseků); dnes by jich vzniklo ${today}.`,
+      reindexHint: "Přeindexovat lze v detailu dokumentu (Správa → Přeindexovat). Znění ani potvrzení se nemění.",
+      statsCount: "Úseků",
+      statsArticles: "S článkem",
+      statsTokens: "Velikost (tokeny)",
+      tokensRange: (min, avg, max) => `${min} – ${avg} – ${max}`,
+      target: (min, max) => `cíl ${min}–${max}`,
+      warningsHeading: "Co nesedí",
+      warnings: {
+        oneBlock: "Celý text je v jednom úseku — nenašel se ani jeden článek. Asistent z něj neumí citovat konkrétní místo. Typické pro manuál nebo smlouvu; pomůže členění podle nadpisů.",
+        fewArticles: percent => `Článek má jen ${percent} % úseků — členění dokumentu profil téměř nerozpoznal.`,
+        oversized: (count, limit) => `${count} ${count === 1 ? "úsek je větší" : "úseků je větších"} než ${limit} tokenů — asistent z něj dostane příliš mnoho najednou.`,
+        fragments: count => `${count} ${count === 1 ? "krátký úlomek" : "krátkých úlomků"} rozděleného článku — mají málo kontextu.`,
+      },
+      noWarnings: "Bez nálezů.",
+      analysisHeading: "Rozbor textu",
+      analysisFound: (lines, articles, paragraphs, points, headings) =>
+        `${lines} řádků · „Článok" ${articles}× · „§" ${paragraphs}× · „Bod" ${points}× · nadpisů ${headings}`,
+      analysisFits: word => `Text je členěný na „${word}" — profil sedí.`,
+      analysisOther: word => `Text je členěný spíše na „${word}" než podle profilu — zvažte jiný profil.`,
+      analysisPlain: "Text nemá články ani paragrafy. Potřebuje členění podle nadpisů.",
+      listHeading: "Úseky",
+      noArticle: "bez článku",
+      tokens: n => `${n} tokenů`,
+      oversizedTag: "velký",
+    },
     editor: {
       intro: "Porovnej text s originálem. Publikování je samostatný krok — tady se nic nepouští ven.",
       modelDraft: "návrh modelu",
@@ -13505,6 +13606,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalCancelHint:
         "The round is not deleted \u2014 it keeps the reason and stays in the history. It is the only way to remove an approver who should not be on the list.",
       approvalCancelButton: "Cancel the round",
+    },
+    chunks: {
+      heading: "Splitting into chunks",
+      intro: "The assistant does not read the whole document at once — it gets a few chunks and answers from them. Here you can see how the current version is split and whether it fits.",
+      openLink: "splitting into chunks →",
+      profile: "Splitting profile",
+      version: "Version",
+      noVersion: "The document has no effective version yet, so it has no chunks. Below is only an analysis of the draft.",
+      upToDate: "The chunks match today's splitting.",
+      outdated: (stored, today) => `The chunks were split the older way (${stored} chunks); today ${today} would be created.`,
+      reindexHint: "Reindex in the document detail (Manage → Reindex). Neither the text nor acknowledgements change.",
+      statsCount: "Chunks",
+      statsArticles: "With an article",
+      statsTokens: "Size (tokens)",
+      tokensRange: (min, avg, max) => `${min} – ${avg} – ${max}`,
+      target: (min, max) => `target ${min}–${max}`,
+      warningsHeading: "What does not fit",
+      warnings: {
+        oneBlock: "The whole text is in one chunk — not a single article was found. The assistant cannot cite a specific place from it. Typical for a manual or a contract; splitting by headings will help.",
+        fewArticles: percent => `Only ${percent} % of chunks have an article — the profile barely recognised the document's structure.`,
+        oversized: (count, limit) => `${count} ${count === 1 ? "chunk is" : "chunks are"} larger than ${limit} tokens — the assistant gets too much at once.`,
+        fragments: count => `${count} short ${count === 1 ? "fragment" : "fragments"} of a split article — little context.`,
+      },
+      noWarnings: "No findings.",
+      analysisHeading: "Text analysis",
+      analysisFound: (lines, articles, paragraphs, points, headings) =>
+        `${lines} lines · “Článok” ${articles}× · “§” ${paragraphs}× · “Bod” ${points}× · ${headings} headings`,
+      analysisFits: word => `The text is structured by “${word}” — the profile fits.`,
+      analysisOther: word => `The text is structured by “${word}” rather than by the profile — consider another profile.`,
+      analysisPlain: "The text has no articles or paragraphs. It needs splitting by headings.",
+      listHeading: "Chunks",
+      noArticle: "no article",
+      tokens: n => `${n} tokens`,
+      oversizedTag: "large",
     },
     editor: {
       intro: "Compare the text with the original. Publishing is a separate step — nothing goes out from here.",
