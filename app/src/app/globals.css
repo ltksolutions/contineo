@@ -7880,3 +7880,62 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 @media (max-width: 639px) {
   .phone-row { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ── Spotreba AI (ADR-026, 5. 10. 2026) ──────────────────────────────────────
+   Filter: pod 640 px polia pod sebou, od 640 px dva stĺpce, od 1024 px
+   v jednom riadku. Zoznam: karta pod 1024 px, tabuľka od 1024 px (List/Table). */
+.usage-filter { padding: 16px 18px; display: grid; gap: 12px; }
+@media (min-width: 640px) {
+  .usage-filter { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+}
+@media (min-width: 1024px) {
+  .usage-filter { grid-template-columns: 150px 150px minmax(0, 1.4fr) minmax(0, 1.2fr) auto; }
+}
+.usage-summary { padding: 14px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.usage-summary > div:not(.usage-export) { display: grid; gap: 2px; }
+.usage-summary > div > .quiet { font-size: var(--fs-small); }
+.usage-summary strong { font-variant-numeric: tabular-nums; }
+.usage-export { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 639px) {
+  .usage-summary .page-head-spacer { display: none; }
+  .usage-export { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+  .usage-export > .button { min-height: 44px; justify-content: center; }
+}
+
+.usage-table { display: grid; gap: 8px; }
+.usage-head { display: none; }
+/* Karta: kto a suma hore, na čo pod tým, čas, model a tokeny dole. */
+.usage-row {
+  padding: 12px 14px; display: grid; gap: 4px 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "person sum" "what what" "when tokens" "model model";
+}
+.usage-person { grid-area: person; font-weight: 600; overflow-wrap: anywhere; }
+.usage-what { grid-area: what; font-size: var(--fs-small); overflow-wrap: anywhere; }
+.usage-when { grid-area: when; font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+.usage-model { grid-area: model; font-size: var(--fs-small); }
+.usage-tokens { grid-area: tokens; font-size: var(--fs-small); }
+.usage-sum { grid-area: sum; font-weight: 600; }
+.usage-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.usage-key { display: block; font-size: 12px; }
+@media (min-width: 1024px) {
+  .usage-table { gap: 0; }
+  .usage-head, .usage-row {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr) minmax(0, 2.2fr) 130px 130px 80px;
+    grid-template-areas: "when person what model tokens sum";
+    gap: 12px; align-items: baseline;
+  }
+  .usage-head {
+    padding: 8px 16px; font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .usage-head > span:nth-child(1) { grid-area: when; }
+  .usage-head > span:nth-child(2) { grid-area: person; }
+  .usage-head > span:nth-child(3) { grid-area: what; }
+  .usage-head > span:nth-child(4) { grid-area: model; }
+  .usage-head > span:nth-child(5) { grid-area: tokens; }
+  .usage-head > span:nth-child(6) { grid-area: sum; }
+  .usage-row { padding: 10px 16px; border-radius: 0; border-width: 0 0 1px; box-shadow: none; }
+  .usage-person { font-weight: 500; }
+}

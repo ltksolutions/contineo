@@ -68,6 +68,22 @@ vi.mock("@/lib/codelistsTenant", () => ({
   codelistUsage: async () => 0,
 }))
 vi.mock("@/lib/legalBasesDb", () => ({ legalBasisUsage: async () => new Map() }))
+// Spotreba AI (D158): dva riadky bez databázy.
+vi.mock("@/lib/aiUsage", async (orig) => {
+  const real = await orig<typeof import("../src/lib/aiUsage")>()
+  const actor = { companyCode: "SFZ", personId: "p1", personName: "Ján Letko", email: "jan@sfz.sk" }
+  const at = new Date("2026-10-05T08:15:00Z")
+  const rows = [
+    real.usageRecord({ actor, purpose: "answer", provider: "anthropic", model: "claude-sonnet-5", keySource: "operator", tokens: { input: 6000, output: 1500 }, at }),
+    real.usageRecord({ actor, purpose: "pdf-rewrite", subject: "Volebný poriadok SFZ", provider: "anthropic", model: "claude-sonnet-4-5", keySource: "tenant", tokens: { input: 20000, output: 9000 }, at }),
+  ]
+  return {
+    ...real,
+    usageRows: async () => rows,
+    usageTotals: async () => ({ calls: 2, usd: rows[0].usd + rows[1].usd, tokens: { input: 26000, output: 10500, cacheRead: 0, cacheWrite: 0 } }),
+    usagePeople: async () => [{ personId: "p1", personName: "Ján Letko" }],
+  }
+})
 vi.mock("../src/app/dpo/actions", () => ({
   saveGdprContactAction: async () => {}, saveRetentionAction: async () => {}, saveExtraAction: async () => {},
 }))
@@ -145,6 +161,20 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
     expect(html).toContain("Claude Haiku 4.5")
     // Bez vlastného kľúča sa tlačidlo odstránenia neukazuje.
     expect(html).not.toContain("Odstrániť kľúč")
+  })
+
+  it("umelá inteligencia → spotreba: filter, súčty, riadky s účelom, exporty s tými istými filtrami (D158)", async () => {
+    const html = await render("ai", { view: "usage", from: "2026-10-01", to: "2026-10-05", purpose: "answer" })
+    expect(html).toMatch(/class="[^"]*is-active[^"]*"[^>]*href="\/organisation\/ai\?view=usage"|href="\/organisation\/ai\?view=usage"[^>]*class="[^"]*is-active/)
+    expect(html).toMatch(/name="from"[^>]*value="2026-10-01"|value="2026-10-01"[^>]*name="from"/)
+    expect(html).toContain("Odpoveď asistenta")
+    expect(html).toContain("Prepis skenu PDF")
+    expect(html).toContain("Volebný poriadok SFZ")
+    expect(html).toContain("kľúč organizácie")
+    expect(html).toContain("/api/ai-usage?format=xlsx&amp;from=2026-10-01&amp;to=2026-10-05&amp;purpose=answer")
+    expect(html).toContain("Ján Letko")
+    // Nastavenie (kľúč) sa na záložke Spotreba nekreslí.
+    expect(html).not.toContain('name="apiKey"')
   })
 
   it("neznáma časť je 404", async () => {

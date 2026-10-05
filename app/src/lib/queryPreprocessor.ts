@@ -7,7 +7,7 @@
  * zámerne lacnejším než ten, ktorý tvorí odpoveď.
  */
 
-import type { GenerationProvider } from "./providers/types"
+import type { GenerationProvider, CompleteOptions } from "./providers/types"
 import { parseModelTime } from "./queryTime"
 import type { QueryTime } from "./queryTime"
 import { calendarDate } from "./versionContext"
@@ -107,6 +107,8 @@ export async function preprocessQuery(
   query: string,
   provider?: GenerationProvider,
   now: Date = new Date(),
+  /** Spotreba do výkazu (D158) — volajúci vie, kto sa pýta. */
+  onUsage?: CompleteOptions["onUsage"],
 ): Promise<PreprocessedQuery> {
   if (query.trim().split(/\s+/).length <= SHORT_QUERY_WORDS) return passthrough(query)
   if (!provider) return passthrough(query)
@@ -114,7 +116,7 @@ export async function preprocessQuery(
   try {
     const raw = await provider.complete(
       PREPROCESS_PROMPT.replace("{query}", query).replace("{today}", calendarDate(now).toISOString().slice(0, 10)),
-      { maxTokens: 256, timeoutMs: PREPROCESS_TIMEOUT_MS }
+      { maxTokens: 256, timeoutMs: PREPROCESS_TIMEOUT_MS, onUsage }
     )
     return parsePreprocessed(raw, query, now)
   } catch {

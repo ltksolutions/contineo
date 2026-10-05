@@ -50,6 +50,8 @@ import { buildComparison } from "@/lib/comparison"
 import type { ComparisonBrief } from "@/lib/versionContext"
 import { detectQueryTime, resolveQueryTime, searchInstant, withoutTimePhrase } from "@/lib/queryTime"
 import { generateAnswer }     from "@/lib/llmGenerator"
+import { recordAiUsage, usageRecord, type UsageActor } from "@/lib/aiUsage"
+import type { TokenCounts } from "@/lib/pricing"
 import { getTenantProfile }   from "@/lib/tenantProfile"
 import { onboardingContext }  from "@/lib/session"
 import { getProviders }       from "@/lib/providers/factory"
@@ -91,6 +93,10 @@ export async function POST(req: NextRequest) {
   // Úroveň skladá `accessLevelFor()` — tá istá, ktorú `/api/rating` zapíše
   // do záznamu, aby metrika úniku merala to, podľa čoho sa filtrovalo.
   const userRole = accessLevelFor(ctx)
+  // Kto sa pýta — do výkazu spotreby AI (D158). Kópia mena, nie odkaz.
+  const usageActor: UsageActor = {
+    companyCode, personId: ctx.person.id, personName: ctx.person.fullName, email: ctx.person.email,
+  }
   const accessLevel: SearchOptions["accessLevel"] = userRole
 
   // 2. Parsovanie a validácia
@@ -159,20 +165,29 @@ export async function POST(req: NextRequest) {
         //    tej istej organizácie.
         const profile = await getTenantProfile(companyCode)
         const providers = getProviders(profile)
+        // Spotreba pomocného modelu (úprava a klasifikácia otázky), D158.
+        const utilityCfg = profile.providers.utility ?? profile.providers.generation
+        const utilityUsage = (purpose: "query-rewrite" | "query-classify") =>
+          (tokens: Partial<TokenCounts>, failed?: boolean) => {
+            void recordAiUsage(usageRecord({
+              actor: usageActor, purpose, provider: utilityCfg.kind, model: providers.utility.model,
+              keySource: utilityCfg.keySource ?? null, tokens, failed,
+            }))
+          }
 
         // 4. Klasifikácia dotazu (predvolene heuristika, bez volania modelu)
         phase("reading")
         // Bez časového údaja: dátum nie je obsah otázky a klasifikátor by rok
         // vzal za kód normy a poslal otázku do fulltextu (krok 6).
         const contentQuery = withoutTimePhrase(query)
-        const searchMode = await classifyQuery(contentQuery, useLLMClassifier, providers.utility)
+        const searchMode = await classifyQuery(contentQuery, useLLMClassifier, providers.utility, utilityUsage("query-classify"))
         measure("klasifikacia")
 
         // 5. [Voliteľne] preprocessing na lacnejšom utility modeli
         const shouldPreprocess = usePreprocessing && searchMode !== "fulltext"
         const now = new Date()
         const processed = shouldPreprocess
-          ? await preprocessQuery(query, providers.utility, now)
+          ? await preprocessQuery(query, providers.utility, now, utilityUsage("query-rewrite"))
           : { rewritten: contentQuery, subQueries: [], keywords: [], time: null }
         // Ku ktorému dňu sa otázka pýta (krok 6). Pravidlá bežia vždy — aj pri
         // krátkej a fulltextovej otázke, kde prepis modelom nebeží; model
@@ -323,6 +338,7 @@ export async function POST(req: NextRequest) {
         // hľadania, bez ďalšieho dotazu (krok 5).
         const inner = generateAnswer({
           query, chunks: answerChunks, userRole, profile, timings, language, asOf: scope.asOf, time, comparison,
+          usage: usageActor,
         })
         const reader = inner.getReader()
         for (;;) {

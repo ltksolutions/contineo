@@ -17,6 +17,7 @@ import type { ChunkResult } from "./mongoSearch"
 import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
 import { cost, EMPTY_TOKENS } from "./pricing"
+import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
 import { dictionary } from "./i18n"
 import { asOfInstruction, calendarDate, compareInstruction } from "./versionContext"
 import type { ComparisonBrief } from "./versionContext"
@@ -32,6 +33,8 @@ export interface GenerateOptions {
   companyCode?: string
   /** Voliteľné — keď je odovzdaný, nenačítava sa znova z DB. */
   profile?: TenantProfile
+  /** Kto sa pýta — do výkazu spotreby (D158). Bez neho sa volanie nezapíše. */
+  usage?: UsageActor
   /**
    * Trvanie fáz pred generovaním (ms). Posiela sa klientovi v `done`,
    * aby sa dalo povedať, ktorá časť reťaze zožrala čas — D9 meria
@@ -152,6 +155,17 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
       const encode = (data: object) =>
         controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
 
+      /*
+        Spotreba (D158) sa zapíše **v každom prípade** — aj pri chybe alebo
+        prerušení. Vstupné tokeny sa platia hneď, ako ich model prijme;
+        výkaz, ktorý by zlyhané volania vynechal, by tvrdil menej, než príde
+        na faktúre.
+      */
+      const tokens: TokenCounts = { ...EMPTY_TOKENS }
+      let generationCfg: TenantProfile["providers"]["generation"] | null = null
+      let modelUsed = ""
+      let failed = true
+
       try {
         const profile =
           opts.profile ??
@@ -160,13 +174,14 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
             : defaultProfile())
 
         const { generation } = getProviders(profile)
+        generationCfg = profile.providers.generation
+        modelUsed = generation.model
         const system = buildSystemPrompt(userRole, generation.supportsCitations, opts.asOf, opts.comparison)
 
         // Overiteľné citácie zbierame zvlášť — pri OpenAI adaptéri
         // zostane pole prázdne a klient sa oprie o `sources`.
         const citations: GeneratedCitation[] = []
         let stopReason = ""
-        const tokens: TokenCounts = { ...EMPTY_TOKENS }
 
         // Čas hlavného modelu po prvý token — merané na serveri, bez siete.
         // Bez neho zostávala z TTFT asi tretina nevysvetlená (D9).
@@ -221,6 +236,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           // označenie použitého cenníka.
           cost: cost(generation.model, tokens),
         })
+        failed = false
       } catch (err) {
         /*
          * Podrobnosti výnimky na obrazovku nepatria (N6): text z SDK
@@ -233,6 +249,17 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
         encode({ type: "error", message: dictionary(opts.language).answer.failed })
       } finally {
         controller.close()
+        if (opts.usage && generationCfg) {
+          void recordAiUsage(usageRecord({
+            actor: opts.usage,
+            purpose: "answer",
+            provider: generationCfg.kind,
+            model: modelUsed,
+            keySource: generationCfg.keySource ?? null,
+            tokens,
+            failed,
+          }))
+        }
       }
     },
   })

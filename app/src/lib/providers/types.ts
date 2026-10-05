@@ -97,6 +97,8 @@ export interface GenerationConfig {
    * Prázdny reťazec = kľúč organizácie je nastavený, ale nedá sa použiť.
    */
   apiKey?: string
+  /** Čí kľúč sa použil — do spotreby (D158). Len v pamäti, ako `apiKey`. */
+  keySource?: "tenant" | "operator" | null
 }
 
 export interface TenantProfile {
@@ -194,6 +196,11 @@ export interface CompleteOptions {
   temperature?: number
   /** Tvrdý strop na odpoveď. Po uplynutí sa volanie zruší. */
   timeoutMs?: number
+  /**
+   * Spotreba tokenov po skončení volania (D158). Volá sa aj pri neúspechu,
+   * s `failed` — zrušené volanie sa platí tiež, len nevieme koľko.
+   */
+  onUsage?: (tokens: Partial<import("../pricing").TokenCounts>, failed?: boolean) => void
 }
 
 export interface GenerationProvider {

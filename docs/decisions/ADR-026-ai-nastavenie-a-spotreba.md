@@ -8,7 +8,10 @@
 > **Nadväzuje na:** ADR-001 (adaptéry poskytovateľov), D51 (audit bez tajomstiev),
 > D43 (šifrované tajomstvá prihlásenia), ADR-012 (retencia)
 > **Implementácia:** PR 1 — `lib/aiSettings.ts`, `getTenantProfile()` + `withAi()`,
-> `/organisation/ai`; PR 2 — záznam volaní, záložka Spotreba, exporty.
+> `/organisation/ai`; PR 2 — `lib/aiUsage.ts` (kolekcia `ai_usage`, TTL index),
+> `lib/aiUsageExport.ts`, `/api/ai-usage` (CSV a Excel), záložka Spotreba
+> (`/organisation/ai?view=usage`); zápis v `llmGenerator`, `/api/chat`
+> (úprava a klasifikácia otázky) a pri prepise PDF v knižnici.
 
 ---
 
@@ -65,3 +68,14 @@ ale prevádzkový výkaz nákladov.
 Overený 2026-10-05 (platform.claude.com/docs/en/about-claude/pricing).
 Sonnet 5 ostal na $2/$10 — ohlásené zdraženie na $3/$15 od 1. 9. 2026 sa
 nekonalo; `pricing.ts` dovtedy po 1. 9. počítal o 50 % viac.
+
+## 4. Čo výkaz nevidí
+
+- Volania cez **Bedrock a vlastné servery** (`kind: "bedrock" | "openai"`)
+  zapisuje len odpoveď asistenta; ich `complete()` tokeny nehlási. Dnes
+  žiadna organizácia takýto profil nemá.
+- **Zrušené volanie** (prerušenie, časový strop úpravy otázky 2,5 s) sa zapíše
+  s príznakom zlyhania a bez tokenov — Anthropic ho môže účtovať, my nevieme
+  koľko.
+- Obdobie sa delí podľa **dní v UTC**; volanie medzi polnocou a druhou ráno
+  miestneho času padne do predchádzajúceho dňa. Čas v riadku je miestny.

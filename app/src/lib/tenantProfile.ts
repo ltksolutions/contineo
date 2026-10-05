@@ -168,10 +168,10 @@ export function withAi(profile: TenantProfile, ai: ResolvedAi): TenantProfile {
     providers: {
       ...profile.providers,
       generation: g.kind === "anthropic"
-        ? { ...g, model: ai.models.answer, apiKey }
+        ? { ...g, model: ai.models.answer, apiKey, keySource: ai.keySource }
         : g,
       utility: u && u.kind === "anthropic"
-        ? { ...u, model: ai.models.utility, apiKey }
+        ? { ...u, model: ai.models.utility, apiKey, keySource: ai.keySource }
         : u,
     },
   }

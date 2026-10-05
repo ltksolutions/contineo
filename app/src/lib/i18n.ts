@@ -1482,6 +1482,37 @@ interface Dictionary {
       saved: string
       keyDeleted: string
     }
+    aiUsage: {
+      tabSettings: string
+      tabUsage: string
+      from: string
+      to: string
+      person: string
+      purpose: string
+      all: string
+      apply: string
+      exportCsv: string
+      exportXlsx: string
+      calls: string
+      tokensIn: string
+      tokensOut: string
+      tokensCache: string
+      total: string
+      colWhen: string
+      colPerson: string
+      colWhat: string
+      colModel: string
+      colTokens: string
+      colSum: string
+      keyTenant: string
+      keyOperator: string
+      failed: string
+      empty: string
+      emptyText: string
+      capped: (shown: number, all: number) => string
+      note: string
+      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean", { label: string; why: string }>
+    }
     branding: {
       name: string
       nameNote: string
@@ -5200,6 +5231,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavenie AI je uložené.",
       keyDeleted: "Kľúč organizácie je odstránený.",
     },
+    aiUsage: {
+      tabSettings: "Nastavenie",
+      tabUsage: "Spotreba",
+      from: "Od",
+      to: "Do",
+      person: "Osoba",
+      purpose: "Účel",
+      all: "všetky",
+      apply: "Použiť",
+      exportCsv: "Export CSV",
+      exportXlsx: "Export Excel",
+      calls: "Volaní",
+      tokensIn: "Vstup",
+      tokensOut: "Výstup",
+      tokensCache: "Cache",
+      total: "Suma",
+      colWhen: "Dátum",
+      colPerson: "Osoba",
+      colWhat: "Na čo a prečo",
+      colModel: "Model",
+      colTokens: "Tokeny",
+      colSum: "Suma",
+      keyTenant: "kľúč organizácie",
+      keyOperator: "kľúč prevádzkovateľa",
+      failed: "zlyhalo",
+      empty: "V tomto období sa AI nevolala",
+      emptyText: "Skúste iné obdobie. Volania sa zapisujú od 5. 10. 2026.",
+      capped: (shown, all) => `Zobrazených je ${shown} najnovších z ${all}. Celé obdobie je v exporte.`,
+      note: "Suma je odhad podľa cenníka Anthropic v deň volania, v dolároch; presnú sumu povie faktúra. Znenie otázok sa neukladá. Záznamy sa držia 25 mesiacov.",
+      purposes: {
+        "answer": { label: "Odpoveď asistenta", why: "odpoveď na otázku s citáciami z predpisov" },
+        "query-rewrite": { label: "Úprava otázky", why: "preformulovanie pred vyhľadávaním, aby sa našli správne články" },
+        "query-classify": { label: "Výber spôsobu hľadania", why: "rozhodnutie medzi hľadaním podľa slov a podľa významu" },
+        "pdf-rewrite": { label: "Prepis skenu PDF", why: "sken bez textovej vrstvy sa prepisuje do textu predpisu" },
+        "markdown-clean": { label: "Úprava členenia textu", why: "obnovenie nadpisov a článkov v prevedenom texte" },
+      },
+    },
     branding: {
       name: "Názov portálu",
       nameNote: "Ako sa portál volá — je v hlavičke, v e-mailoch a na prihlasovacej obrazovke (napríklad „Intranet SFZ“).",
@@ -8796,6 +8864,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavení AI je uloženo.",
       keyDeleted: "Klíč organizace je odstraněn.",
     },
+    aiUsage: {
+      tabSettings: "Nastavení",
+      tabUsage: "Spotřeba",
+      from: "Od",
+      to: "Do",
+      person: "Osoba",
+      purpose: "Účel",
+      all: "všechny",
+      apply: "Použít",
+      exportCsv: "Export CSV",
+      exportXlsx: "Export Excel",
+      calls: "Volání",
+      tokensIn: "Vstup",
+      tokensOut: "Výstup",
+      tokensCache: "Cache",
+      total: "Částka",
+      colWhen: "Datum",
+      colPerson: "Osoba",
+      colWhat: "Na co a proč",
+      colModel: "Model",
+      colTokens: "Tokeny",
+      colSum: "Částka",
+      keyTenant: "klíč organizace",
+      keyOperator: "klíč provozovatele",
+      failed: "selhalo",
+      empty: "V tomto období se AI nevolala",
+      emptyText: "Zkuste jiné období. Volání se zapisují od 5. 10. 2026.",
+      capped: (shown, all) => `Zobrazeno je ${shown} nejnovějších z ${all}. Celé období je v exportu.`,
+      note: "Částka je odhad podle ceníku Anthropic v den volání, v dolarech; přesnou částku řekne faktura. Znění dotazů se neukládá. Záznamy se drží 25 měsíců.",
+      purposes: {
+        "answer": { label: "Odpověď asistenta", why: "odpověď na dotaz s citacemi z předpisů" },
+        "query-rewrite": { label: "Úprava dotazu", why: "přeformulování před vyhledáváním, aby se našly správné články" },
+        "query-classify": { label: "Výběr způsobu hledání", why: "rozhodnutí mezi hledáním podle slov a podle významu" },
+        "pdf-rewrite": { label: "Přepis skenu PDF", why: "sken bez textové vrstvy se přepisuje do textu předpisu" },
+        "markdown-clean": { label: "Úprava členění textu", why: "obnovení nadpisů a článků v převedeném textu" },
+      },
+    },
     branding: {
       name: "Název portálu",
       nameNote: "Jak se portál jmenuje — je v hlavičce, v e-mailech a na přihlašovací obrazovce (například „Intranet SFZ“).",
@@ -12380,6 +12485,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Save",
       saved: "The AI settings have been saved.",
       keyDeleted: "The organisation's key has been removed.",
+    },
+    aiUsage: {
+      tabSettings: "Settings",
+      tabUsage: "Usage",
+      from: "From",
+      to: "To",
+      person: "Person",
+      purpose: "Purpose",
+      all: "all",
+      apply: "Apply",
+      exportCsv: "Export CSV",
+      exportXlsx: "Export Excel",
+      calls: "Calls",
+      tokensIn: "Input",
+      tokensOut: "Output",
+      tokensCache: "Cache",
+      total: "Amount",
+      colWhen: "Date",
+      colPerson: "Person",
+      colWhat: "What for and why",
+      colModel: "Model",
+      colTokens: "Tokens",
+      colSum: "Amount",
+      keyTenant: "organisation's key",
+      keyOperator: "operator's key",
+      failed: "failed",
+      empty: "AI was not used in this period",
+      emptyText: "Try another period. Calls are recorded from 5 October 2026.",
+      capped: (shown, all) => `Showing the ${shown} most recent of ${all}. The whole period is in the export.`,
+      note: "The amount is an estimate in US dollars from Anthropic's price list on the day of the call; the invoice gives the exact figure. Question texts are not stored. Records are kept for 25 months.",
+      purposes: {
+        "answer": { label: "Assistant answer", why: "answering a question with citations from regulations" },
+        "query-rewrite": { label: "Question rewriting", why: "rephrasing before the search so the right articles are found" },
+        "query-classify": { label: "Search mode choice", why: "deciding between word search and meaning search" },
+        "pdf-rewrite": { label: "PDF scan transcription", why: "a scan without a text layer is transcribed into the regulation text" },
+        "markdown-clean": { label: "Text structure cleanup", why: "restoring headings and articles in converted text" },
+      },
     },
     branding: {
       name: "Portal name",

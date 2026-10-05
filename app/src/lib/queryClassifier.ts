@@ -6,7 +6,7 @@
  * Voliteľne: model cez utility adaptér (ADR-001) — presnejší, ale pomalší.
  */
 
-import type { GenerationProvider } from "./providers/types"
+import type { GenerationProvider, CompleteOptions } from "./providers/types"
 
 export type SearchMode = "fulltext" | "vector" | "hybrid"
 
@@ -54,7 +54,8 @@ Odpoveď:`
 
 export async function classifyByLLM(
   query: string,
-  provider?: GenerationProvider
+  provider?: GenerationProvider,
+  onUsage?: CompleteOptions["onUsage"],
 ): Promise<SearchMode> {
   // Bez adaptéra nemá zmysel volať model — spadneme na heuristiku.
   if (!provider) return classifyByHeuristic(query)
@@ -62,7 +63,7 @@ export async function classifyByLLM(
   try {
     const raw = (await provider.complete(
       LLM_CLASSIFY_PROMPT.replace("{query}", query),
-      { maxTokens: 5, timeoutMs: 2000 }
+      { maxTokens: 5, timeoutMs: 2000, onUsage }
     )).toLowerCase()
 
     if (raw.includes("fulltext")) return "fulltext"
@@ -87,8 +88,9 @@ export async function classifyByLLM(
 export async function classifyQuery(
   query: string,
   useLLM = false,
-  provider?: GenerationProvider
+  provider?: GenerationProvider,
+  onUsage?: CompleteOptions["onUsage"],
 ): Promise<SearchMode> {
-  if (useLLM) return classifyByLLM(query, provider)
+  if (useLLM) return classifyByLLM(query, provider, onUsage)
   return classifyByHeuristic(query)
 }

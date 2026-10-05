@@ -41,7 +41,9 @@ import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
 import { saveAiSettingsAction, deleteAiKeyAction } from "../actions"
 import { AI_MODELS, aiSettingsView } from "@/lib/aiSettings"
-import { ratesForDate } from "@/lib/pricing"
+import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
+import { ratesForDate, formatUsd } from "@/lib/pricing"
+
 import { saveBrandingAction, saveAutoProvisionAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "../actions"
 import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "../actions"
 import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction, saveAcknowledgementAction } from "../actions"
@@ -69,6 +71,9 @@ import {
 
 
 export const dynamic = "force-dynamic"
+
+/** Koľko riadkov spotreby ukáže obrazovka; export berie celé obdobie. */
+const USAGE_SCREEN_LIMIT = 500
 
 function ProviderRow({
   tenant, provider, domain, language,
@@ -189,7 +194,8 @@ export default async function OrganisationSectionPage({
     notFound()
   }
 
-  const { msg: message, error, search, list: listParam } = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string }>(await searchParams)
+  const { msg: message, error, search, list: listParam } = query
   const { section } = await params
   // Neznáma časť je 404 — adresa je zmluva, nie návrh. DPO bez roly
   // správcu osôb má len GDPR (D154); ostatné časti preňho neexistujú.
@@ -267,7 +273,33 @@ export default async function OrganisationSectionPage({
   const chunkingValues = baseProfile ?? tenant.chunking ?? DEFAULT_CHUNKING
 
   // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
-  const ai = now === "ai" ? aiSettingsView(tenant.ai) : null
+  const aiView: "settings" | "usage" = query.view === "usage" ? "usage" : "settings"
+  const ai = now === "ai" && aiView === "settings" ? aiSettingsView(tenant.ai) : null
+  const tu = t.aiUsage
+  // Spotreba (D158): súčty za celé obdobie, na obrazovke najnovších 500.
+  const usage = now === "ai" && aiView === "usage"
+    ? await (async () => {
+        const filter = usageFilterFromQuery(query)
+        const [rows, totals, people] = await Promise.all([
+          usageRows(tenant.companyCode, filter, USAGE_SCREEN_LIMIT),
+          usageTotals(tenant.companyCode, filter),
+          usagePeople(tenant.companyCode),
+        ])
+        const q = new URLSearchParams({ from: filter.fromText, to: filter.toText })
+        if (filter.personId) q.set("person", filter.personId)
+        if (filter.purpose) q.set("purpose", filter.purpose)
+        return { filter, rows, totals, people, query: q.toString() }
+      })()
+    : null
+  const locale = language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK"
+  const num = (n: number) => new Intl.NumberFormat(locale).format(n)
+  // Čas volania v miestnom čase organizácie, nie UTC — „o 23:30" má byť
+  // ten istý deň, aký si človek pamätá.
+  const when = (d: Date) => new Intl.DateTimeFormat(locale, {
+    timeZone: "Europe/Bratislava", day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
+  }).format(d)
+  const modelName = (id: string) =>
+    Object.values(AI_MODELS).flat().find(m => m.id === id)?.label ?? id
   // „Claude Sonnet 5 — vstup 2 $ · výstup 10 $" (cena za milión tokenov dnes).
   const modelLabel = (id: string, label: string) => {
     const r = ratesForDate(id).sadzby
@@ -1078,7 +1110,17 @@ export default async function OrganisationSectionPage({
         neukazuje — ani zašifrovaný; obrazovka vie len, či je nastavený,
         jeho koncovku a kto ho kedy zadal.
       */}
-      {now === "ai" && ai && (
+      {now === "ai" && (
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "minmax(0, 1fr)" }}>
+        {/* Nastavenie a Spotreba (ADR-026) — dve časti tej istej sekcie, `?view=`. */}
+        <nav className="tabs" aria-label={t.tabs.ai}>
+          <TabsBar>
+            <TabLink href="/organisation/ai" active={aiView === "settings"}>{tu.tabSettings}</TabLink>
+            <TabLink href="/organisation/ai?view=usage" active={aiView === "usage"}>{tu.tabUsage}</TabLink>
+          </TabsBar>
+        </nav>
+
+      {aiView === "settings" && ai && (
       <>
       <form action={saveAiSettingsAction} className="card set-form">
         <input type="hidden" name="tab" value="ai" />
@@ -1164,6 +1206,98 @@ export default async function OrganisationSectionPage({
         <input type="hidden" name="tab" value="ai" />
       </form>
       </>
+      )}
+
+      {/*
+        Spotreba (D158): filter obdobia od–do, osoby a účelu; súčty za celé
+        obdobie, najnovších 500 riadkov, export CSV a Excel s tými istými
+        filtrami (`/api/ai-usage`). Formulár je GET — stav je v adrese.
+      */}
+      {aiView === "usage" && usage && (
+      <>
+        <form action="/organisation/ai" method="get" className="card usage-filter">
+          <input type="hidden" name="view" value="usage" />
+          <label className="field">
+            <span className="field-label">{tu.from}</span>
+            <input className="field-input" type="date" name="from" defaultValue={usage.filter.fromText} />
+          </label>
+          <label className="field">
+            <span className="field-label">{tu.to}</span>
+            <input className="field-input" type="date" name="to" defaultValue={usage.filter.toText} />
+          </label>
+          <label className="field">
+            <span className="field-label">{tu.person}</span>
+            {/* Obyčajný `<select>` — filter musí fungovať bez JavaScriptu. */}
+            <select className="field-input" name="person" defaultValue={usage.filter.personId ?? ""}>
+              <option value="">{tu.all}</option>
+              {usage.people.map(p => <option key={p.personId} value={p.personId}>{p.personName}</option>)}
+            </select>
+          </label>
+          <label className="field">
+            <span className="field-label">{tu.purpose}</span>
+            <select className="field-input" name="purpose" defaultValue={usage.filter.purpose ?? ""}>
+              <option value="">{tu.all}</option>
+              {AI_USAGE_PURPOSES.map(p => <option key={p} value={p}>{tu.purposes[p].label}</option>)}
+            </select>
+          </label>
+          <div><button className="button" type="submit">{tu.apply}</button></div>
+        </form>
+
+        <div className="usage-summary card">
+          <div><span className="quiet">{tu.calls}</span><strong>{num(usage.totals.calls)}</strong></div>
+          <div><span className="quiet">{tu.tokensIn}</span><strong>{num(usage.totals.tokens.input)}</strong></div>
+          <div><span className="quiet">{tu.tokensOut}</span><strong>{num(usage.totals.tokens.output)}</strong></div>
+          <div><span className="quiet">{tu.tokensCache}</span><strong>{num(usage.totals.tokens.cacheRead + usage.totals.tokens.cacheWrite)}</strong></div>
+          <div><span className="quiet">{tu.total}</span><strong>{formatUsd(usage.totals.usd)}</strong></div>
+          <span className="page-head-spacer" aria-hidden="true" />
+          <div className="usage-export">
+            <a className="button button--quiet" href={`/api/ai-usage?format=csv&${usage.query}`}>{tu.exportCsv}</a>
+            <a className="button button--quiet" href={`/api/ai-usage?format=xlsx&${usage.query}`}>{tu.exportXlsx}</a>
+          </div>
+        </div>
+
+        {usage.rows.length === 0 ? (
+          <div className="empty">
+            <div className="empty-title">{tu.empty}</div>
+            <div className="empty-text">{tu.emptyText}</div>
+          </div>
+        ) : (
+          <div className="usage-table" role="table">
+            <div className="usage-row usage-head" role="row" aria-hidden="true">
+              <span>{tu.colWhen}</span><span>{tu.colPerson}</span><span>{tu.colWhat}</span>
+              <span>{tu.colModel}</span><span className="usage-num">{tu.colTokens}</span><span className="usage-num">{tu.colSum}</span>
+            </div>
+            {usage.rows.map(r => {
+              const p = tu.purposes[r.purpose]
+              return (
+                <div className="usage-row card" role="row" key={String(r._id ?? `${r.at.getTime()}-${r.purpose}`)}>
+                  <span className="quiet usage-when">{when(r.at)}</span>
+                  <span className="usage-person">{r.personName}</span>
+                  <span className="usage-what">
+                    <strong>{p?.label ?? r.purpose}</strong>
+                    {r.subject && <> · {r.subject}</>}
+                    <span className="quiet"> — {p?.why}</span>
+                    {r.failed && <> <span className="tag tag--expired">{tu.failed}</span></>}
+                    {r.keySource && <span className="quiet usage-key">{r.keySource === "tenant" ? tu.keyTenant : tu.keyOperator}</span>}
+                  </span>
+                  <span className="quiet usage-model">{modelName(r.model)}</span>
+                  <span className="usage-num usage-tokens">
+                    {num(r.tokens.input)} / {num(r.tokens.output)}
+                    {(r.tokens.cacheRead + r.tokens.cacheWrite) > 0 && <span className="quiet"> + {num(r.tokens.cacheRead + r.tokens.cacheWrite)}</span>}
+                  </span>
+                  <span className="usage-num usage-sum">{formatUsd(r.usd)}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+        {usage.totals.calls > usage.rows.length && (
+          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tu.capped(usage.rows.length, usage.totals.calls)}</p>
+        )}
+        <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)", maxWidth: 680 }}>{tu.note}</p>
+      </>
+      )}
+      </div>
       )}
 
       {/*
