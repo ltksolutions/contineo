@@ -1,10 +1,10 @@
 # Contineo — prezentačný web
 
-Dvojjazyčný (SK/EN) marketingový web pre **Contineo** — inteligentný helpdesk, ktorý odpovedá z overených noriem. Súčasťou je živé demo „inteligentného vyhľadávania" (ContineoBot) so vzorovými dátami.
+Trojjazyčný (SK/CS/EN) marketingový web pre **Contineo** — vyhľadávanie, riadenie a potvrdzovanie predpisov nad obsahom organizácie. Súčasťou je živé demo „inteligentného vyhľadávania" (ContineoBot) so vzorovými dátami.
 
 ## Technológie
 
-- [Next.js 14](https://nextjs.org/) (App Router)
+- [Next.js 16](https://nextjs.org/) (App Router)
 - React 18
 - Čisté CSS (žiadne build závislosti navyše)
 
@@ -31,18 +31,18 @@ app/
   layout.js          # root layout + metadata
   page.js            # presmerovanie / -> /sk
   [lang]/
-    layout.js        # generateStaticParams pre sk/en, metadata
+    layout.js        # generateStaticParams pre sk/cs/en, metadata
     page.js          # skladá sekcie webu
   globals.css        # dizajn systém a brand Contineo
 components/
   Nav, Hero, Features, HowItWorks, BotDemo, Audience, CTA, Footer, Icon
 lib/
-  dictionaries.js    # všetky texty SK/EN + vzorové dáta pre demo
+  dictionaries.js    # všetky texty SK/CS/EN + vzorové dáta pre demo
 ```
 
 ## Obsah a preklady
 
-Všetky texty sú v `lib/dictionaries.js` (objekty `sk` a `en`). Úprava textu = úprava jedného súboru, netreba zasahovať do komponentov. Vzorové otázky a odpovede pre demo bota sú tiež tam (`sampleKB`).
+Všetky texty sú v `lib/dictionaries.js` (objekty `sk`, `cs` a `en`; zhodu kľúčov stráži `tests/dictionaries.test.mjs`). Úprava textu = úprava jedného súboru, netreba zasahovať do komponentov. Vzorové otázky a odpovede pre demo bota sú tiež tam (`sampleKB`).
 
 ## Demo bota
 
