@@ -224,7 +224,7 @@ export default function BotDemo({ dict, kb }) {
                   {searchMode}
                 </span>
               )}
-              <span className="muted" style={{ fontSize: 12 }}>ACME-BA</span>
+              <span className="muted" style={{ fontSize: 12 }}>ACME</span>
             </span>
           </div>
         </div>
@@ -239,6 +239,15 @@ function AnswerCard({ d, it, feedback, onRate, showTicket, ticketDone, onTicket,
     <div className="card" style={{ padding: "20px 24px" }}>
       <p className="muted" style={{ fontSize: 13, marginBottom: 10, display: "inline-flex", alignItems: "center", gap: 6 }}>
         <Icon name="help" size={15} /> {it.q}
+      </p>
+      {/* Štítok dňa, ku ktorému sa odpovedá — v aplikácii je nad každou odpoveďou (ADR-024) */}
+      <p
+        style={{
+          fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 10,
+          border: "1px solid var(--line)", borderRadius: 999, padding: "3px 10px", display: "table",
+        }}
+      >
+        {it.asOf || d.asOfToday}
       </p>
       <p style={{ fontSize: 16, lineHeight: 1.7, marginBottom: 14 }}>{it.a}</p>
 

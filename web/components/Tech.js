@@ -5,10 +5,10 @@ const DOC_CHUNKS = `{
   _id, documentId, versionId,
   sourceType: "pdf",            // pdf | md | web | scan | qa
 
-  // tagging (used for filtering at search time)
-  sectionKey: "smernice",
-  companyCode: "ACME-BA",       // "ACME" = applies company-wide
-  scope: "company",         // global | company | region
+  // filtre pri hľadaní — všetky sú aj v oboch search indexoch
+  companyCode: "ACME",          // organizácia; podmienka KAŽDÉHO dotazu
+  accessLevel: "internal",      // public | internal
+  scope: "global",              // global | company | region
   language: "sk",
 
   // content
@@ -23,8 +23,11 @@ const DOC_CHUNKS = `{
   embeddingProvider: "atlas-auto",    // atlas-auto | infinity | tei
   embeddedAt: ISODate(),              // pre plánovanie re-embedu
 
-  isActive: true,               // false = archived version
-  effectiveFrom, effectiveTo
+  // znenie a členenie
+  // Účinnosť sa NEČÍTA z úseku — počíta sa zo znení dokumentu.
+  // Úsek nesie len odkaz na znenie, aby nevznikla druhá pravda.
+  superseded: false,            // true = členenie nahradené preindexovaním
+  isActive: true                // úsek patrí k práve zverejnenému členeniu
 }`;
 
 const TENANT_PROFILE = `{
@@ -61,8 +64,7 @@ const TICKETS = `{
   source: "bot",                // bot | email
   status: "open",               // lifecycle below
   priority: "normal",
-  sectionKey: "hr",
-  companyCode: "ACME-BA",
+  companyCode: "ACME",
   requester: { email, name, userRef },
   subject, conversationId,      // full context if from bot
   assignedTo, slaDueAt,
@@ -70,7 +72,12 @@ const TICKETS = `{
   tags: []
 }`;
 
-const VECTOR_QUERY = `db.document_chunks.aggregate([
+const VECTOR_QUERY = `// Znenia platné k dňu otázky sa spočítajú vopred z kolekcie documents
+// tým istým pravidlom, podľa ktorého sa predpis potvrdzuje a prideľuje.
+// Bez platného znenia sa nehľadá vôbec — prázdny zoznam nie je „bez obmedzenia".
+const validVersionIds = versionsInForceOn(askedDate, "ACME")
+
+db.document_chunks.aggregate([
   { $rankFusion: {
       input: {
         pipelines: {
@@ -79,16 +86,15 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
             path: "text",                // Automated Embedding — vektor počíta databáza
             query: queryText,            // posiela sa TEXT otázky, nie vektor
             numCandidates: 200, limit: 20,
-            filter: { sectionKey: { $eq: "smernice" },
-                      companyCode: { $in: ["ACME-BA","ACME"] },
-                      accessLevel: { $in: ["public","internal"] },
-                      isActive: { $eq: true } }
+            filter: { companyCode: "ACME",            // vždy prvá, zo session
+                      versionId: { $in: validVersionIds },
+                      superseded: false }
           }}],
           fulltext: [{ $search: {
             index: "rag_text_index",
             compound: {                  // filter je na OBOCH vetvách, nie len na vektorovej
               must: [{ text: { query: queryText, path: "text" } }],
-              filter: [ /* companyCode, accessLevel, isActive */ ]
+              filter: [ /* companyCode, versionId, superseded */ ]
             }
           }}]
         }
@@ -112,19 +118,16 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
 // Počet kandidátov na vstupe rerankera drž rovnaký (20),
 // aby boli oba režimy porovnateľné na hodnoteniach z prevádzky.`;
 
-const TAG_EXAMPLES = `// company-wide policy (applies to all units)
-{ sourceType: "pdf", sectionKey: "smernice",
-  companyCode: "ACME", scope: "global",
-  articleRef: "čl. 4 ods. 2", isActive: true }
+const TAG_EXAMPLES = `// úsek smernice — článok a znenie idú do citácie
+{ sourceType: "pdf", companyCode: "ACME", accessLevel: "internal",
+  versionId: "…", articleRef: "čl. 4 ods. 2", superseded: false }
 
-// document specific to one unit
-{ sourceType: "pdf", sectionKey: "hr",
-  companyCode: "ACME-BA", scope: "company",
-  articleRef: "čl. 8", isActive: true }
+// to isté znenie po preindexovaní — staré členenie ostáva, len sa nehľadá
+{ sourceType: "pdf", companyCode: "ACME", accessLevel: "internal",
+  versionId: "…", articleRef: "čl. 4 ods. 2", superseded: true }
 
-// IT FAQ for an internal app (FAQ, not a policy)
-{ sourceType: "faq", sectionKey: "it_aplikacie",
-  companyCode: "ACME", scope: "global",
+// overená odpoveď — nemá znenie, použije sa len pri otázke na dnešok
+{ sourceType: "qa", companyCode: "ACME", accessLevel: "internal",
   articleRef: null, isActive: true }`;
 
 function Code({ children, label }) {

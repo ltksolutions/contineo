@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: Technológia, demo a Pripravujeme podľa aplikácie (2026-10-05)
+
+Stránka **Technológia** opisuje hľadanie tak, ako dnes beží: v zneniach
+platných k dňu otázky, bez zaniknutého zaradenia; pribudlo členenie po
+článkoch, nastavenie AI organizáciou a otázka k dátumu s porovnaním znení.
+**Demo** ukazuje štítok dňa nad odpoveďou a vie odpovedať na „čo sa
+zmenilo". **Pripravujeme** vymenúva šesť vecí, ktoré ešte nie sú nasadené,
+namiesto jedinej.
+
 ### Web contineo.app: ochrana údajov, titulky a čeština v metadátach (2026-10-05)
 
 Stránka **Ochrana údajov** bola nevyplnená šablóna; teraz uvádza
