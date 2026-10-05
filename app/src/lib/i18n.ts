@@ -1660,41 +1660,6 @@ interface Dictionary {
       overdueDaysNote: string
       save: string
     }
-    chunking: {
-      heading: string
-      introBefore: string
-      introHighlight: string
-      introAfter: string
-      articleWord: string
-      /** Veta okolo ukážok `Článok`, `§` a `Bod` — tie zostávajú v JSX. */
-      articleNote1: string
-      articleNote2: string
-      articleNote3: string
-      articleNote4: string
-      articleNoteHighlight: string
-      articleNote5: string
-      annexWord: string
-      annexWordNote: string
-      headerRepeats: string
-      headerRepeatsNote: string
-      minTokens: string
-      maxTokens: string
-      tokensNoteBefore: string
-      tokensNoteAfter: string
-      saveNoteBefore: string
-      saveNoteHighlight: string
-      saveNoteMiddle: string
-      saveNoteButton: string
-      saveNoteAfter: string
-      save: string
-      reindexAllHeading: string
-      allUpToDate: (total: number) => string
-      outdatedOf: (total: number) => string
-      outdatedHighlight: string
-      outdatedAfter: string
-      batchNote: string
-      reindexAll: (n: number) => string
-    }
     /** Hlásenia serverových akcií nastavenia organizácie. */
     actions: {
       saved: string
@@ -1709,11 +1674,6 @@ interface Dictionary {
       domainOn: (host: string) => string
       domainRemoved: string
       codelistRemoved: string
-      chunkingSaved: string
-      reindexedCount: (n: number) => string
-      reindexSkipped: (n: number) => string
-      reindexRemaining: (n: number) => string
-      reindexErrors: (list: string) => string
     }
     auditTab: {
       introBefore: string
@@ -5196,7 +5156,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Prihlasovanie",
       codelists: "Číselníky",
       ai: "Umelá inteligencia",
-      chunking: "Členenie",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
       gdpr: "GDPR",
@@ -5428,40 +5387,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       overdueDaysNote: "Počíta sa od vzniku povinnosti — pridelenia, príchodu do oddelenia alebo pridania na trasu. Ľuďom samotným sa podľa toho nič neposiela. Predvolené je 14.",
       save: "Uložiť",
     },
-    chunking: {
-      heading: "Členenie dokumentov na úseky",
-      introBefore: "Vyhľadávanie nepracuje s celým dokumentom — model dostane niekoľko úsekov a odpovedá z nich. Tieto hodnoty určujú, ako sa dokument na úseky reže.",
-      introHighlight: " S textom normy ani s potvrdeniami to nemá nič spoločné:",
-      introAfter: " členenie sa dá meniť koľkokrát treba a nikomu nenaskočí povinnosť potvrdzovať znova.",
-      articleWord: "Slovo, ktorým začína článok",
-      articleNote1: "Predvolene ",
-      articleNote2: ". Predpisy členené na ",
-      articleNote3: " alebo na ",
-      articleNote4: " sa bez tejto zmeny zlejú do jedného bloku a vyhľadávanie nemá čoho chytiť. Je to ",
-      articleNoteHighlight: "slovo, nie vzor",
-      articleNote5: " — okolie si doplní systém.",
-      annexWord: "Slovo, ktorým začína príloha",
-      annexWordNote: "Prílohy stoja mimo číslovania článkov — bez rozpoznania by spadli pod posledný článok a citácia by klamala.",
-      headerRepeats: "Riadok je hlavička, keď sa opakuje viac ráz než",
-      headerRepeatsNote: "Hlavičky a päty sa v PDF opakujú na každej strane. Nižšie číslo odstráni viac šumu, ale pri krátkom dokumente môže zožrať aj obsah.",
-      minTokens: "Cieľová veľkosť úseku — od (tokenov)",
-      maxTokens: "Cieľová veľkosť úseku — do (tokenov)",
-      tokensNoteBefore: "Malý úsek znamená tisíce úryvkov bez kontextu, veľký zas jeden úsek na celý dokument. Predvolené ",
-      tokensNoteAfter: " je odladené na slovenských predpisoch.",
-      saveNoteBefore: "Uloženie ",
-      saveNoteHighlight: "nepreindexuje existujúce dokumenty",
-      saveNoteMiddle: ". Vyskúšaj nový profil najprv na jednom — v jeho detaile v knižnici je tlačidlo ",
-      saveNoteButton: "Preindexovať",
-      saveNoteAfter: ".",
-      save: "Uložiť členenie",
-      reindexAllHeading: "Preindexovať všetko",
-      allUpToDate: (total) => `Všetkých ${total} dokumentov je narezaných podľa tohto profilu. Niet čo preindexovať.`,
-      outdatedOf: (total) => ` z ${total} dokumentov je narezaných inak, než hovorí tento profil. Preindexovanie `,
-      outdatedHighlight: "nemení znenia ani potvrdenia",
-      outdatedAfter: " — vymení len úseky, z ktorých číta vyhľadávanie.",
-      batchNote: "Spracuje sa najviac 25 dokumentov naraz. Nie je to opatrnosť navyše: pri väčšej dávke by beh spadol na časovom strope a časť dokumentov by zostala narezaná po starom. Keď niečo zostane, stlač to znova — hotové sa preskočia.",
-      reindexAll: (n) => `Preindexovať (${n})`,
-    },
     actions: {
       saved: "Zmeny boli uložené.",
       failed: "Zmenu sa nepodarilo uložiť. Skús to znova.",
@@ -5477,11 +5402,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domainOn: (host) => `${host} je zapnutá. Portál na nej odpovedá.`,
       domainRemoved: "Doména odstránená. Portál na nej prestal odpovedať.",
       codelistRemoved: "Odobraté z ponuky. Dokumenty, ktoré túto hodnotu majú, si ju nesú ďalej.",
-      chunkingSaved: "Uložené. Existujúce dokumenty sa nepreindexovali — spusti to pri konkrétnom dokumente.",
-      reindexedCount: (n) => `preindexovaných ${n}`,
-      reindexSkipped: (n) => `bez zmeny ${n}`,
-      reindexRemaining: (n) => `zostáva ${n} — spusti znova`,
-      reindexErrors: (list) => `chyby: ${list}`,
     },
     auditTab: {
       introBefore: "Kto, čo a kedy zmenil. Zapisuje sa každá správcovská zmena — rola, prístup, oddelenie, pridelenie aj nastavenie organizácie. Záznamy sa",
@@ -8831,7 +8751,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Přihlašování",
       codelists: "Číselníky",
       ai: "Umělá inteligence",
-      chunking: "Členění",
       acknowledgements: "Potvrzování",
       audit: "Audit",
       gdpr: "GDPR",
@@ -9063,40 +8982,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       overdueDaysNote: "Počítá se od vzniku povinnosti — přidělení, příchodu do oddělení nebo přidání na trasu. Lidem samotným se podle toho nic neposílá. Výchozí je 14.",
       save: "Uložit",
     },
-    chunking: {
-      heading: "Členění dokumentů na úseky",
-      introBefore: "Vyhledávání nepracuje s celým dokumentem — model dostane několik úseků a odpovídá z nich. Tyto hodnoty určují, jak se dokument na úseky řeže.",
-      introHighlight: " S textem normy ani s potvrzeními to nemá nic společného:",
-      introAfter: " členění se dá měnit kolikrát je třeba a nikomu nenaskočí povinnost potvrzovat znovu.",
-      articleWord: "Slovo, kterým začíná článek",
-      articleNote1: "Výchozí je ",
-      articleNote2: ". Předpisy členěné na ",
-      articleNote3: " nebo na ",
-      articleNote4: " se bez této změny slijí do jednoho bloku a vyhledávání nemá čeho se chytit. Je to ",
-      articleNoteHighlight: "slovo, ne vzor",
-      articleNote5: " — okolí si doplní systém.",
-      annexWord: "Slovo, kterým začíná příloha",
-      annexWordNote: "Přílohy stojí mimo číslování článků — bez rozpoznání by spadly pod poslední článek a citace by lhala.",
-      headerRepeats: "Řádek je hlavička, když se opakuje víckrát než",
-      headerRepeatsNote: "Hlavičky a patičky se v PDF opakují na každé straně. Nižší číslo odstraní víc šumu, ale u krátkého dokumentu může sežrat i obsah.",
-      minTokens: "Cílová velikost úseku — od (tokenů)",
-      maxTokens: "Cílová velikost úseku — do (tokenů)",
-      tokensNoteBefore: "Malý úsek znamená tisíce úryvků bez kontextu, velký zase jeden úsek na celý dokument. Výchozí ",
-      tokensNoteAfter: " je odladěné na slovenských předpisech.",
-      saveNoteBefore: "Uložení ",
-      saveNoteHighlight: "nepřeindexuje existující dokumenty",
-      saveNoteMiddle: ". Vyzkoušej nový profil nejdřív na jednom — v jeho detailu v knihovně je tlačítko ",
-      saveNoteButton: "Přeindexovat",
-      saveNoteAfter: ".",
-      save: "Uložit členění",
-      reindexAllHeading: "Přeindexovat vše",
-      allUpToDate: (total) => `Všech ${total} dokumentů je nařezaných podle tohoto profilu. Není co přeindexovat.`,
-      outdatedOf: (total) => ` z ${total} dokumentů je nařezaných jinak, než říká tento profil. Přeindexování `,
-      outdatedHighlight: "nemění znění ani potvrzení",
-      outdatedAfter: " — vymění jen úseky, ze kterých čte vyhledávání.",
-      batchNote: "Zpracuje se nejvýše 25 dokumentů najednou. Není to opatrnost navíc: u větší dávky by běh spadl na časovém stropu a část dokumentů by zůstala nařezaná po starém. Když něco zůstane, stiskni to znovu — hotové se přeskočí.",
-      reindexAll: (n) => `Přeindexovat (${n})`,
-    },
     actions: {
       saved: "Změny byly uloženy.",
       failed: "Změnu se nepodařilo uložit. Zkus to znovu.",
@@ -9112,11 +8997,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domainOn: (host) => `${host} je zapnutá. Portál na ní odpovídá.`,
       domainRemoved: "Doména odstraněna. Portál na ní přestal odpovídat.",
       codelistRemoved: "Odebráno z nabídky. Dokumenty, které tuto hodnotu mají, si ji nesou dál.",
-      chunkingSaved: "Uloženo. Existující dokumenty se nepřeindexovaly — spusť to u konkrétního dokumentu.",
-      reindexedCount: (n) => `přeindexováno ${n}`,
-      reindexSkipped: (n) => `beze změny ${n}`,
-      reindexRemaining: (n) => `zbývá ${n} — spusť znovu`,
-      reindexErrors: (list) => `chyby: ${list}`,
     },
     auditTab: {
       introBefore: "Kdo, co a kdy změnil. Zapisuje se každá správcovská změna — role, přístup, oddělení, přidělení i nastavení organizace. Záznamy se",
@@ -12455,7 +12335,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Sign-in",
       codelists: "Code lists",
       ai: "Artificial intelligence",
-      chunking: "Chunking",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
       gdpr: "GDPR",
@@ -12687,40 +12566,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       overdueDaysNote: "Counted from when the duty arose — the assignment, joining the department or being added to the track. Nothing is sent to the people themselves because of it. The default is 14.",
       save: "Save",
     },
-    chunking: {
-      heading: "Splitting documents into chunks",
-      introBefore: "Search does not work on the whole document — the model receives a few chunks and answers from them. These values decide how a document is cut into chunks.",
-      introHighlight: " This has nothing to do with the text of the regulation or with acknowledgements:",
-      introAfter: " the chunking can be changed as often as needed and nobody is asked to acknowledge again.",
-      articleWord: "The word an article starts with",
-      articleNote1: "The default is ",
-      articleNote2: ". Regulations organised by ",
-      articleNote3: " or by ",
-      articleNote4: " merge into a single block without this change, and search has nothing to grab onto. It is ",
-      articleNoteHighlight: "a word, not a pattern",
-      articleNote5: " — the system fills in what surrounds it.",
-      annexWord: "The word an annex starts with",
-      annexWordNote: "Annexes sit outside the article numbering — unrecognised, they fall under the last article and the citation lies.",
-      headerRepeats: "A line is a running head when it repeats more often than",
-      headerRepeatsNote: "Headers and footers repeat on every page of a PDF. A lower number removes more noise, but on a short document it can eat the content too.",
-      minTokens: "Target chunk size — from (tokens)",
-      maxTokens: "Target chunk size — to (tokens)",
-      tokensNoteBefore: "A small chunk means thousands of context-free snippets; a large one means a single chunk for the whole document. The default ",
-      tokensNoteAfter: " is tuned on Slovak regulations.",
-      saveNoteBefore: "Saving ",
-      saveNoteHighlight: "does not reindex existing documents",
-      saveNoteMiddle: ". Try a new profile on one document first — its library detail has a ",
-      saveNoteButton: "Reindex",
-      saveNoteAfter: " button.",
-      save: "Save the chunking profile",
-      reindexAllHeading: "Reindex everything",
-      allUpToDate: (total) => `All ${total} documents are chunked according to this profile. There is nothing to reindex.`,
-      outdatedOf: (total) => ` of ${total} documents are chunked differently from what this profile says. Reindexing `,
-      outdatedHighlight: "changes neither the wording nor the acknowledgements",
-      outdatedAfter: " — it only replaces the chunks that search reads from.",
-      batchNote: "At most 25 documents are processed at a time. This is not extra caution: with a larger batch the run would hit the time limit and some documents would stay chunked the old way. If anything is left, press it again — what is done is skipped.",
-      reindexAll: (n) => `Reindex (${n})`,
-    },
     actions: {
       saved: "Changes saved.",
       failed: "The change could not be saved. Try again.",
@@ -12736,11 +12581,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domainOn: (host) => `${host} is on. The portal answers there.`,
       domainRemoved: "Domain removed. The portal stopped answering there.",
       codelistRemoved: "Removed from the menu. Documents that carry this value keep it.",
-      chunkingSaved: "Saved. Existing documents were not reindexed — run that on a specific document.",
-      reindexedCount: (n) => `${n} reindexed`,
-      reindexSkipped: (n) => `${n} unchanged`,
-      reindexRemaining: (n) => `${n} remaining — run it again`,
-      reindexErrors: (list) => `errors: ${list}`,
     },
     auditTab: {
       introBefore: "Who changed what and when. Every administrative change is recorded — a role, an access level, a department, an assignment and organisation settings. Records",

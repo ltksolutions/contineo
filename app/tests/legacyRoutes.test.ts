@@ -17,6 +17,8 @@ describe("stare cesty", () => {
     expect(legacyRoute("/organizacia")).toBe("/organisation")
     // „Vzhľad a jazyky" → „Všeobecné" (3. 10. 2026)
     expect(legacyRoute("/organisation/branding")).toBe("/organisation/general")
+    // Členenie sa od D160 v organizácii nenastavuje — rozcestník.
+    expect(legacyRoute("/organisation/chunking")).toBe("/organisation")
     expect(legacyRoute("/prihlasenie")).toBe("/sign-in")
   })
 

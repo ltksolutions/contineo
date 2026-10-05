@@ -39,6 +39,7 @@
     "migrate:chunking": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_chunking_profile.mjs",
     "chunking:analyze": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/analyze_library.mjs",
     "chunking:status": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/chunking_status.mjs",
+    "chunking:reindex": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/reindex_library.mjs",
     "migrate:profiles": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_chunking_profiles.mjs",
     "migrate:documentkey": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_document_key.mjs",
     "migrate:personname": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_person_name.mjs",

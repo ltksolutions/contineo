@@ -7,6 +7,8 @@
 > per organizácia), **D57** (oddelenie `versionId` od `chunkingId`), **D1**
 > (štruktúrne chunkovanie).
 > **Založené:** 2026-09-13. **Rozhodnuté:** 2026-09-13 (Ján).
+> **2026-10-05 (ADR-027, D160):** E1 sa mení — záložka Členenie v organizácii
+> zrušená; profil sa bude odvodzovať z **druhu dokumentu**, nie vyberať na dokumente.
 
 ## 0. Rozhodnutia
 

@@ -54,8 +54,6 @@ vi.mock("../src/app/organisation/actions", () => ({
   addLegalBasisAction: async () => {},
   retireLegalBasisAction: async () => {},
   toggleStandardLegalBasisAction: async () => {},
-  saveChunkingProfileAction: async () => {},
-  reindexAllAction: async () => {},
   shiftDepartmentAction: async () => {},
   saveDepartmentOrderAction: async () => {},
   saveAiSettingsAction: async () => {},
@@ -138,7 +136,7 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
     const groups = [...html.matchAll(/<h2 class="org-nav-title">([^<]+)</g)].map(m => m[1])
     expect(groups).toEqual(["Organizácia", "Prístup", "Dokumenty", "Dohľad"])
     const sections = [...html.matchAll(/href="\/organisation\/([a-z]+)"/g)].map(m => m[1])
-    expect(sections).toEqual(["general", "departments", "codelists", "ai", "domains", "signin", "acknowledgements", "chunking", "audit", "gdpr"])
+    expect(sections).toEqual(["general", "departments", "codelists", "ai", "domains", "signin", "acknowledgements", "audit", "gdpr"])
     expect(html).not.toContain("is-active")
     expect(html).toContain('class="org-nav org-index"')
     expect(html).toContain("[path:Organizácia]")
@@ -175,6 +173,10 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
     expect(html).toContain("Ján Letko")
     // Nastavenie (kľúč) sa na záložke Spotreba nekreslí.
     expect(html).not.toContain('name="apiKey"')
+  })
+
+  it("členenie už nie je časť nastavení (D160)", async () => {
+    await expect(render("chunking")).rejects.toThrow("notFound")
   })
 
   it("neznáma časť je 404", async () => {
