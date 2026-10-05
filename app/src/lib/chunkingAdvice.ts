@@ -95,10 +95,15 @@ export const ADVICE_SCHEMA = {
   },
 } as const
 
-const SYSTEM = `Si odborník na členenie právnych a interných predpisov na úseky pre vyhľadávanie (RAG).
+/*
+ * Úvodzovky v zadaní sú „…“, nie „…" (5. 10. 2026): model napodobnil rovnú
+ * uzatváraciu úvodzovku a tá v štruktúrovanom výstupe ukončila reťazec —
+ * odôvodnenie sa uťalo na „…slovom „Článok" a nálezy prišli prázdne.
+ */
+export const ADVICE_SYSTEM = `Si odborník na členenie právnych a interných predpisov na úseky pre vyhľadávanie (RAG).
 Dostaneš štruktúru dokumentu: nadpisy, riadky s časťami, článkami, paragrafmi, bodmi a prílohami a začiatky odsekov. Celý text nedostaneš.
 
-Chunker funguje takto: každý článok je úsek; dlhý článok sa delí po odsekoch do cieľovej veľkosti; tabuľka sa nikdy nedelí. Článok rozpozná podľa slova na začiatku riadku nadpisu (napríklad „Článok 5 – Názov", „§ 5", „Bod 5"), aj s mriežkami Markdownu. Prílohu podľa slova prílohy.
+Chunker funguje takto: každý článok je úsek; dlhý článok sa delí po odsekoch do cieľovej veľkosti; tabuľka sa nikdy nedelí. Článok rozpozná podľa slova na začiatku riadku nadpisu (napríklad „Článok 5 – Názov“, „§ 5“, „Bod 5“), aj s mriežkami Markdownu. Prílohu podľa slova prílohy.
 
 Navrhni:
 - strategy: "articles", ak má dokument články, paragrafy alebo body; "headings", ak ich nemá a dá sa deliť len podľa nadpisov (manuál, zápisnica, zmluva bez článkov);
@@ -108,7 +113,8 @@ Navrhni:
 - confidence: ako veľmi si si istý;
 - reasoning: 2–4 vety po slovensky, prečo;
 - issues: krátky zoznam toho, čo v štruktúre nesedí (napríklad nejednotné nadpisy, veľké tabuľky, text pred prvým článkom). Prázdny, keď nič.
-Píš po slovensky, vecne, bez úvodu.`
+Píš po slovensky, vecne, bez úvodu.
+Úvodzovky v texte píš výhradne ako „…“ — nikdy rovné úvodzovky ("), tie by ukončili reťazec v JSON.`
 
 /** Odpoveď modelu → návrh. Hodnoty sa orežú ako pri uložení profilu. */
 export function parseAdvice(
@@ -162,7 +168,7 @@ export async function requestChunkingAdvice(
     `Dokument: ${doc.title ?? documentId}`,
     `Neprázdnych riadkov: ${outline.total}${outline.truncated ? ` (štruktúra skrátená na ${OUTLINE_MAX_LINES} riadkov)` : ""}`,
     a ? `Výskyty na začiatku riadku: Článok ${a.articleWord}×, § ${a.paragraphSign}×, Bod ${a.pointWord}×, nadpisov Markdownu ${a.markdownHeadings}, očíslovaných odsekov ${a.numberedParagraphs}` : "",
-    inspection ? `Súčasný profil: slovo článku „${inspection.profile.values.articleWord}", úsek ${inspection.profile.values.minTokens}–${inspection.profile.values.maxTokens} tokenov` : "",
+    inspection ? `Súčasný profil: slovo článku „${inspection.profile.values.articleWord}“, úsek ${inspection.profile.values.minTokens}–${inspection.profile.values.maxTokens} tokenov` : "",
     inspection?.version ? `Súčasný rez: ${inspection.stats.count} úsekov, ${inspection.stats.withArticlePercent} % s článkom, veľkosť ${inspection.stats.tokensMin}–${inspection.stats.tokensMax} tokenov` : "",
   ].filter(Boolean).join("\n")
 
@@ -176,7 +182,7 @@ export async function requestChunkingAdvice(
     answer = await new Anthropic({ apiKey: ai.apiKey, maxRetries: 1, timeout: 120_000 }).messages.create({
       model,
       max_tokens: 8000,
-      system: SYSTEM,
+      system: ADVICE_SYSTEM,
       messages: [{ role: "user", content: `${facts}\n\nŠtruktúra:\n${outline.lines.join("\n")}` }],
       output_config: { format: { type: "json_schema", schema: ADVICE_SCHEMA as unknown as Record<string, unknown> } },
     })
