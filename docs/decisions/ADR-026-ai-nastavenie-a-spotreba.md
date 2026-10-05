@@ -79,3 +79,11 @@ nekonalo; `pricing.ts` dovtedy po 1. 9. počítal o 50 % viac.
   koľko.
 - Obdobie sa delí podľa **dní v UTC**; volanie medzi polnocou a druhou ráno
   miestneho času padne do predchádzajúceho dňa. Čas v riadku je miestny.
+
+## 5. Informovanie dotknutých osôb (2026-10-05)
+
+Spotreba drží meno a e-mail toho, kto AI použil — je to spracúvanie osobných
+údajov. Na stránke Ochrana osobných údajov pribudol riadok v „Aké údaje
+a prečo" (bez znenia otázky), právny základ (oprávnený záujem na kontrole
+nákladov) a lehota 25 mesiacov; v nastaveniach GDPR je medzi pevnými
+lehotami. Verzia textu `PRIVACY_NOTICE_VERSION` posunutá na 2026-10-05.
