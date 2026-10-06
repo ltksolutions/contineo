@@ -1765,10 +1765,9 @@ function CarryOverFields({
         <legend className="form-group-head">{tc.due}</legend>
         {/* Tri voľby s fajkou vpravo, pole pod svojou voľbou — ten istý
             tvar ako na /hr/assign (ZAKLAD-vyber-a-prepinace). Meno `dueMode`
-            a hodnoty none/date/days ako predtým výber zo zoznamu. Obe polia
-            sú v DOM stále — formulár beží bez JavaScriptu, takže sa skryť
-            nedajú, a `dueFromFields()` číta len to, ktoré patrí k zvolenému
-            režimu. */}
+            a hodnoty none/date/days ako predtým výber zo zoznamu. Pole
+            nezvolenej voľby skrýva len CSS, hodnota ostáva v DOM;
+            `dueFromFields()` číta len to, ktoré patrí k zvolenému režimu. */}
         <div className="card form-group-body form-group-body--rows">
         <div className="form-list">
           <label className="form-row choice-row">

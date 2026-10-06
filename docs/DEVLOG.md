@@ -27,6 +27,12 @@ gombík zapnutého prepínača majú `--on-accent`, lebo v tmavej téme je
 `--accent` takmer biely. Zmizli `.tag--field`, `.hr-choices`, `.hr-due-opt`,
 `.due-fields`, `.assign-all`.
 
+**Rozhodnutie Jána (6. 10. 2026, varianta A):** pole termínu (dátum, dni)
+je vidieť len pod zvolenou voľbou. Skrýva ho len CSS
+(`.choice-row:not(:has(> input:checked)) + .choice-field`), takže platí
+pôvodný dôvod, prečo sa polia neskrývali: bez JavaScriptu to funguje
+a hodnota v skrytom poli ostáva.
+
 **Nález:** oddeľovač riadkov `.form-row + .form-row` kreslí čiaru aj nad
 prvým viditeľným riadkom, keď sú riadky nad ním skryté hľadaním.
 Zoznam sa preto orezáva o 1 px zhora (`clip-path`).

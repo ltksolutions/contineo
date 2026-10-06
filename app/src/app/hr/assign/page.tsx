@@ -372,9 +372,9 @@ export default async function AssignPage({
             prázdne pole je dvojznačné a pri sľube danom človeku sa hádať nemá,
             či termín nechcel, alebo ho zabudol vyplniť.
 
-            Obe polia zostávajú vidieť aj vtedy, keď k voľbe nepatria:
-            formulár beží bez JavaScriptu, takže sa skrývať nedajú — a kto sa
-            prepne z dátumu na dni a späť, o svoj dátum nepríde.
+            Pole nezvolenej voľby skrýva len CSS (`.choice-field`, varianta A
+            z 6. 10. 2026) — bez JavaScriptu a hodnota ostáva vo formulári,
+            takže kto sa prepne z dátumu na dni a späť, o svoj dátum nepríde.
           */}
           <fieldset className="form-group form-group--lg">
             <legend className="form-group-head form-group-head--step">

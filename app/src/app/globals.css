@@ -7623,6 +7623,11 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   border-width: 0 2.4px 2.4px 0; transform: translateY(-2px) rotate(45deg);
 }
 .choice-field { display: flex; align-items: center; gap: 8px; padding: 0 16px 12px; }
+/* Pole nezvolenej voľby sa skryje len cez CSS (Ján, 6. 10. 2026, varianta A):
+   bez JavaScriptu, a hodnota v skrytom poli ostáva — kto sa prepne z dátumu
+   na dni a späť, o dátum nepríde; server (`dueFromFields()`) číta len pole
+   zvoleného režimu. Prehliadač bez `:has()` pravidlo zahodí a ukáže všetky. */
+.choice-row:not(:has(> input:checked)) + .choice-field { display: none; }
 .choice-field .field-input { max-width: 200px; }
 
 /* Prepínač 46 × 28. Uloží sa formulárom (tlačidlom), nie hneď (Q4). */

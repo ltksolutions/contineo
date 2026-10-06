@@ -14,7 +14,8 @@ fajku vpravo a **zapnúť / vypnúť** („Všetkým v organizácii", nastavenia
 kurzu, prenos pridelení) prepínač. Celý riadok sa dá kliknúť, terč má
 aspoň 44 px. Skupiny a trasy na Prideliť dokumenty sú riadky namiesto
 pilulky. Termín pri zverejnení znenia sa vyberá rovnako ako na Prideliť
-dokumenty. Mená a hodnoty polí sa nezmenili, bez JavaScriptu všetko
+dokumenty; pole pre dátum alebo počet dní je vidieť len pod zvolenou
+voľbou a vyplnená hodnota sa pri prepnutí nestratí. Mená a hodnoty polí sa nezmenili, bez JavaScriptu všetko
 funguje ako predtým.
 
 ### Formuláre: nadpis skupiny nad kartou (2026-10-06)
