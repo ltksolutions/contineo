@@ -163,7 +163,10 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
 
   it("umelá inteligencia → spotreba: filter, súčty, riadky s účelom, exporty s tými istými filtrami (D158)", async () => {
     const html = await render("ai", { view: "usage", from: "2026-10-01", to: "2026-10-05", purpose: "answer" })
-    expect(html).toMatch(/class="[^"]*is-active[^"]*"[^>]*href="\/organisation\/ai\?view=usage"|href="\/organisation\/ai\?view=usage"[^>]*class="[^"]*is-active/)
+    // Spotreba má vlastnú adresu (R5, 6. 10. 2026); filter ju posiela na tú istú.
+    expect(html).toMatch(/class="[^"]*is-active[^"]*"[^>]*href="\/organisation\/ai\/usage"|href="\/organisation\/ai\/usage"[^>]*class="[^"]*is-active/)
+    expect(html).toContain('action="/organisation/ai/usage"')
+    expect(html).not.toContain('name="view"')
     expect(html).toMatch(/name="from"[^>]*value="2026-10-01"|value="2026-10-01"[^>]*name="from"/)
     expect(html).toContain("Odpoveď asistenta")
     expect(html).toContain("Prepis skenu PDF")

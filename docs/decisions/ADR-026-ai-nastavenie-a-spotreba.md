@@ -87,3 +87,12 @@ Spotreba drží meno a e-mail toho, kto AI použil — je to spracúvanie osobn�
 a prečo" (bez znenia otázky), právny základ (oprávnený záujem na kontrole
 nákladov) a lehota 25 mesiacov; v nastaveniach GDPR je medzi pevnými
 lehotami. Verzia textu `PRIVACY_NOTICE_VERSION` posunutá na 2026-10-05.
+
+---
+
+> **Poznámka 2026-10-06 — adresa Spotreby.** Záložka Spotreba je od
+> 6. 10. 2026 na `/organisation/ai/usage`, nie `/organisation/ai?view=usage`
+> (rozhodnutie Jána R5 v `docs/DESIGN_ODCHYLKY.md`): pravidlo „časť, ktorú
+> má cesta pomenovať, má vlastnú adresu" v `CLAUDE.md` platí od 2. 10.
+> a tento ADR ho pri zápise `?view=` obišiel. Rozhodnutia D157–D159 sa
+> nemenia; starú adresu presmeruje `proxy.ts` (`legacyQueryRoute`).

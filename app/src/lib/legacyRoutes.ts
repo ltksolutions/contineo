@@ -75,6 +75,8 @@ export function legacyRoute(pathname: string): string | null {
  * pomenovať, má vlastnú adresu". Ostatné parametre idú so sebou.
  *
  * - `/library/<id>?edit=document` → `/library/<id>/edit`
+ * - `/organisation/ai?view=usage` → `/organisation/ai/usage` (R5; ADR-026
+ *   zapísal `?view=`, poznámka o zmene je v ňom)
  */
 export function legacyQueryRoute(pathname: string, search: URLSearchParams): string | null {
   const doc = /^\/library\/([^/]+)$/.exec(pathname)
@@ -83,6 +85,12 @@ export function legacyQueryRoute(pathname: string, search: URLSearchParams): str
     rest.delete("edit")
     const q = rest.toString()
     return `/library/${doc[1]}/edit${q ? `?${q}` : ""}`
+  }
+  if (pathname === "/organisation/ai" && search.get("view") === "usage") {
+    const rest = new URLSearchParams(search)
+    rest.delete("view")
+    const q = rest.toString()
+    return `/organisation/ai/usage${q ? `?${q}` : ""}`
   }
   return null
 }

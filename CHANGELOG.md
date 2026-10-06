@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Spotreba umelej inteligencie má vlastnú adresu (2026-10-06)
+
+Spotreba AI v nastaveniach organizácie je na `/organisation/ai/usage`;
+cesta pod hlavičkou aj karta prehliadača ju pomenujú „Spotreba". Staré
+odkazy s `?view=usage` presmerujú, filter obdobia ostane.
+
 ### Úprava dokumentu má vlastnú adresu (2026-10-06)
 
 Úprava dokumentu (názov, kategória, priečinok…) je na

@@ -64,7 +64,7 @@ samostatná obrazovka s vlastným nadpisom, ako `/version` a `/text`.
   presmerovať.
 - B: nechať (rám KNIZNICA-uprava-dokumentu to tak opisuje).
 
-**R5 — AI: Nastavenie | Spotreba cez `?view=usage`** (`/organisation/ai`).
+**R5 — AI: Nastavenie | Spotreba cez `?view=usage`** (✓ hotové 6. 10. 2026, `/organisation/ai/usage`) (`/organisation/ai`).
 ADR-026 (5. 10.) to zapísal takto výslovne, pravidlo v `CLAUDE.md` (2. 10.)
 chce vlastnú adresu. Repozitár si protirečí sám.
 - **A (odporúčam):** `/organisation/ai/usage` a v ADR-026 doplniť poznámku
