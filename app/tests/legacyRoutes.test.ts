@@ -6,7 +6,7 @@
  * všetky nové odkazy v aplikácii ukazujú na nové cesty.
  */
 import { describe, it, expect } from "vitest"
-import { legacyRoute } from "../src/lib/legacyRoutes"
+import { legacyRoute, legacyQueryRoute } from "../src/lib/legacyRoutes"
 import { legacyOrgSection } from "../src/lib/orgSections"
 
 describe("stare cesty", () => {
@@ -105,5 +105,18 @@ describe("časť nastavenia organizácie z ?tab= na cestu (2. 10. 2026)", () => 
     expect(go("/organisation", "msg=x")).toBeNull()
     expect(go("/organisation/signin", "tab=audit")).toBeNull()
     expect(go("/learning/manage", "tab=tags")).toBeNull()
+  })
+})
+
+describe("časť obrazovky z parametra na vlastnú cestu (R4, 6. 10. 2026)", () => {
+  const go = (path: string, query: string) => legacyQueryRoute(path, new URLSearchParams(query))
+  it("úprava dokumentu: ?edit=document → /edit, ostatné parametre ostanú", () => {
+    expect(go("/library/sfz%3Astanovy", "edit=document")).toBe("/library/sfz%3Astanovy/edit")
+    expect(go("/library/abc", "edit=document&msg=x")).toBe("/library/abc/edit?msg=x")
+  })
+  it("iné adresy a parametre nechá tak", () => {
+    expect(go("/library/abc", "open=history")).toBeNull()
+    expect(go("/library/abc/version", "edit=document")).toBeNull()
+    expect(go("/library/new", "edit=document")).toBeNull()
   })
 })

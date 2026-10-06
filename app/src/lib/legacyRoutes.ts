@@ -68,3 +68,21 @@ export function legacyRoute(pathname: string): string | null {
   }
   return null
 }
+
+/**
+ * Časť obrazovky, ktorú mala adresa v parametri a ktorá dostala vlastnú
+ * cestu (DESIGN_ODCHYLKY R4, 6. 10. 2026) — „časť, ktorú má cesta
+ * pomenovať, má vlastnú adresu". Ostatné parametre idú so sebou.
+ *
+ * - `/library/<id>?edit=document` → `/library/<id>/edit`
+ */
+export function legacyQueryRoute(pathname: string, search: URLSearchParams): string | null {
+  const doc = /^\/library\/([^/]+)$/.exec(pathname)
+  if (doc && search.get("edit") === "document" && doc[1] !== "new") {
+    const rest = new URLSearchParams(search)
+    rest.delete("edit")
+    const q = rest.toString()
+    return `/library/${doc[1]}/edit${q ? `?${q}` : ""}`
+  }
+  return null
+}

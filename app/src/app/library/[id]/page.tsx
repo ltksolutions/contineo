@@ -784,13 +784,15 @@ export default async function DocumentDetailPage({
   const tfaq = dictionary(language).library.faq
 
   return (
-    <AppShell language={ctx.person.language} title={d.title}>
+    // Úprava má vlastnú adresu a cesta ju pomenuje (DESIGN_ODCHYLKY R4).
+    <AppShell language={ctx.person.language} title={editDocument ? tflow.editDocument : d.title}
+              trail={editDocument ? { [base]: d.title } : undefined}>
     <div className="detail-page" style={tenantStyle(branding)}>
       <Notice language={language} message={message} error={error === "1"} back={base} />
 
       {/*
         Úprava dokumentu ako samostatný pohľad (rám KNIZNICA-uprava-dokumentu):
-        pri `?edit=document` sa hlavný stĺpec nahradí formulárom — karta
+        na `/library/[id]/edit` sa hlavný stĺpec nahradí formulárom — karta
         nového znenia, platné znenie ani Správa sa nekreslia. Úseky ako pri
         nahratí; priečinok je v tom istom formulári (Q2).
       */}
@@ -997,7 +999,7 @@ export default async function DocumentDetailPage({
             {tflow.downloadSource}
           </a>
         )}
-        <Link className="button button--quiet" href={`${base}?edit=document`}>{tflow.editDocument}</Link>
+        <Link className="button button--quiet" href={`${base}/edit`}>{tflow.editDocument}</Link>
         {isFaq ? (
           <Link className="button" href={`${base}/faq`}>{tfaq.editEntries}</Link>
         ) : newVersionBlocked ? (
@@ -1467,7 +1469,7 @@ export default async function DocumentDetailPage({
         Správa — vzácne úkony za jedným nadpisom (DETAIL, úloha 1): údaje
         o dokumente, text a pôvodný súbor, priečinok, oprava textu,
         preindexovanie. Zatvorené je správny predvolený stav; „Upraviť
-        dokument" ju otvorí adresou (`?edit=document`), bez JavaScriptu.
+        dokument" ju otvorí adresou (`/library/[id]/edit`), bez JavaScriptu.
       */}
       <details className="detail-tools">
         <summary>{tflow.manage}</summary>
@@ -1688,7 +1690,7 @@ export default async function DocumentDetailPage({
           <section className="card detail-card">
             <h2 className="detail-card-title">
               {ts.metaHeading}
-              <Link href={`${base}?edit=document`}>{tflow.editDocument}</Link>
+              <Link href={`${base}/edit`}>{tflow.editDocument}</Link>
             </h2>
             <dl className="detail-meta">
               {([

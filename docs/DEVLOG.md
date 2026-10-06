@@ -10,6 +10,17 @@
 
 ---
 
+## 2026-10-06 — úprava dokumentu na vlastnej adrese (R4)
+
+**Čo sa zmenilo:** `/library/[id]/edit` je tenká stránka, ktorá zavolá
+detail s `edit: "document"` — formulár ostáva v `library/[id]/page.tsx`,
+lebo zdieľa načítanie, práva aj akcie. Odkazy idú na `/edit`; starý
+`?edit=document` presmeruje `proxy.ts` cez nový `legacyQueryRoute()`
+(307, ostatné parametre ostanú). Cesta pod hlavičkou: dokument → Upraviť
+dokument.
+
+---
+
 ## 2026-10-06 — názov v karte na verejných stránkach
 
 **Nález pri kontrole naživo po #283:** `/privacy` mal v karte stále len
