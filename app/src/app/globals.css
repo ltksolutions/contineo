@@ -3721,11 +3721,18 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .view-switch-item.is-on + .view-switch-item::before { opacity: 0; }
 
 .view-switch-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Počet pri voľbe filtra (stav zoznamu) — tlmený, nech výber nesie doska. */
+.view-switch--fit { margin: 0 0 10px; }
+.view-switch-count { margin-left: 5px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 639px) {
   .view-switch-item { min-height: 36px; }
   /* Cez celú šírku — Výkaz potvrdení na telefóne. */
   .view-switch--full { display: grid; width: 100%; }
+  /* Filter so štyrmi voľbami a počtom: cez celú šírku, užšie segmenty —
+     inak by na 390 px pretiekol (DESIGN_ODCHYLKY P4). */
+  .view-switch--fit { display: grid; width: 100%; }
+  .view-switch--fit .view-switch-item { padding: 0 6px; font-size: 13px; }
 }
 
 /*
@@ -7193,9 +7200,13 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .tg-bar.is-on { position: sticky; bottom: 0; z-index: 5; padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .tg-bar-count { flex: 1; font-weight: 600; font-size: 14px; }
 
-@media (max-width: 639px) {
+/* Tabuľka správy vzdelávania až od 1024 px, pod tým karty — ako ostatné
+   zoznamy (CLAUDE.md, List/Table; DESIGN_ODCHYLKY P5). */
+@media (max-width: 1023px) {
   .mg-table { display: none; }
   .mg-cards { display: grid; }
+}
+@media (max-width: 639px) {
   .tgv-main input { width: 22px; height: 22px; }
   .tgv-main { min-height: 44px; }
   .tgv-usage { flex-basis: 100%; padding-left: 32px; }
@@ -7275,7 +7286,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 
 /* ── Úprava kurzu: zapísaní a prideľovanie (rám MANAGE-COURSE) ──────────── */
 .mc-people-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
-.mc-people-head .lpills { margin: 0; }
+.mc-people-head .view-switch { margin: 0; }
 .mc-impact { padding-top: 12px; border-top: 1px solid var(--line); }
 .ok-fg { color: var(--ok-fg); }
 
@@ -7353,6 +7364,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .at-confirm p { margin: 0; }
 .lnote--bad { background: var(--bad-bg); }
 .lnote--bad .lnote-mark, .lnote--bad .lnote-text { color: var(--bad-fg); }
+.signin-error { margin-bottom: 18px; }
 .tone-ok { color: var(--ok-fg); font-weight: 600; }
 .tone-bad { color: var(--bad-fg); font-weight: 600; }
 .tone-warn { color: var(--warn-fg); font-weight: 600; }
@@ -7603,6 +7615,11 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 .form-row > input:focus-visible { outline: none; }
 .form-row:has(> input:disabled) { cursor: default; opacity: 0.5; }
+/* Riadok mimo karty s riadkami — áno/nie v obyčajnom formulári
+   (DESIGN_ODCHYLKY P6): bez vlastného odsadenia, zarovnaný s poľami. */
+.form-row--bare { padding: 6px 0; }
+.form-row--bare:hover { background: none; }
+.form-row--bare + .form-row--bare::before { content: none; }
 .form-row-main { flex: 1 1 auto; min-width: 0; display: grid; gap: 1px; }
 .form-row-sub { font-size: 12.5px; color: var(--muted); }
 

@@ -140,15 +140,11 @@ export default function SignIn({
       </noscript>
 
       {error && (
-        <div
-          style={{
-            background: "var(--bad-bg)", color: "var(--bad-fg)",
-            border: "1px solid var(--line)", borderRadius: 9,
-            padding: "11px 14px", fontSize: "var(--fs-body)", lineHeight: 1.55,
-            marginBottom: 18,
-          }}
-        >
-          {t.error[error] ?? t.genericError}
+        // Chyba pri formulári, nie oznam cez obrazovku — prihlásenie je
+        // krátke a človek je pri poli, ktoré má opraviť.
+        <div className="lnote lnote--bad signin-error" role="alert">
+          <span className="lnote-mark" aria-hidden="true">!</span>
+          <span className="lnote-text">{t.error[error] ?? t.genericError}</span>
         </div>
       )}
 
@@ -183,7 +179,7 @@ export default function SignIn({
             }}
           >
             <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
-            alebo
+            {t.or}
             <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
           </div>
         </>
@@ -197,7 +193,7 @@ export default function SignIn({
           autoComplete="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          placeholder="meno@futbalsfz.sk"
+          placeholder={t.emailPlaceholder}
           style={{
             width: "100%", background: "var(--surface)", color: "var(--ink)",
             border: "1px solid var(--line)", borderRadius: 10,

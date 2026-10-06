@@ -73,7 +73,7 @@ export default async function NotificationsPage({
   return (
     <AppShell language={language} title={t.title}>
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
-        {message && <Notice message={message} back="/notifications" />}
+        {message && <Notice language={language} message={message} back="/notifications" />}
 
         <h1 className="page-title">{t.title}</h1>
         <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 18px" }}>

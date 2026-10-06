@@ -63,7 +63,7 @@ export default async function RemindersPage({
       */}
       <h1 className="page-title">{dictionary(ctx.person.language).nav.assigned}</h1>
       <HrTabs current="/hr/reminders" person={ctx.person} language={ctx.person.language} />
-      <Notice message={q.msg} error={q.error === "1"} back="/hr/reminders" />
+      <Notice language={language} message={q.msg} error={q.error === "1"} back="/hr/reminders" />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>
         {notice ? <><strong>{t.noticeHeading}.</strong> {t.noticeIntro}</> : t.intro(days)}
       </p>

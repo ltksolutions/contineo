@@ -18,17 +18,21 @@
  */
 
 import Link from "next/link"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 export default function Notice({
   message: message,
   error: error,
   back: back,
+  language,
 }: {
   message?: string
   /** Rozlíšenie je na volajúcom. Hádať to z textu by sa raz pomýlilo. */
   error?: boolean
   /** Kam vedie potvrdenie — tá istá stránka bez parametra so správou. */
   back: string
+  /** Jazyk prostredia — aj potvrdenie je text pre človeka. */
+  language: UiLanguage
 }) {
   if (!message) return null
 
@@ -61,7 +65,7 @@ export default function Notice({
         {/* `autoFocus`: na klávesnici je potvrdenie prvé, kam sa dá stlačiť
             Enter, a nie je nutné hľadať ho tabulátorom cez celú stránku. */}
         <Link href={back} className="button notice-confirm" autoFocus>
-          Rozumiem
+          {dictionary(language).common.noticeConfirm}
         </Link>
       </div>
     </div>

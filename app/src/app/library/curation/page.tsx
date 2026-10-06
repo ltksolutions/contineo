@@ -57,7 +57,7 @@ export default async function CurationPage({
         <p className="quiet page-lead" style={{ margin: 0, maxWidth: 660 }}>{t.publishIntro}</p>
       </div>
 
-      <Notice message={message} error={error === "1"} back="/library/curation" />
+      <Notice language={language} message={message} error={error === "1"} back="/library/curation" />
 
 
       {/* `.empty` zo ZAKLADU (SPRAVA, úloha 2.1). Bez akcie: správca si

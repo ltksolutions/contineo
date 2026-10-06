@@ -48,7 +48,7 @@ export default async function TracksPage({
           vedie cesta pod hlavičkou. */}
       <h1 className="page-title">{dictionary(ctx.person.language).nav.assigned}</h1>
       <HrTabs current="/hr/tracks" person={ctx.person} language={ctx.person.language} />
-      <Notice message={message ?? error} error={Boolean(error)} back="/hr/tracks" />
+      <Notice language={ctx.person.language} message={message ?? error} error={Boolean(error)} back="/hr/tracks" />
       <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
       {/* `.empty` zo ZAKLADU (SPRAVA, úloha 1.1) — bez tlačidla, formulár

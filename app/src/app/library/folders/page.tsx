@@ -57,7 +57,7 @@ export default async function FoldersPage({
   return (
     <AppShell language={uiLanguage} title={tf.manage}>
       <div style={{ maxWidth: 640, ...tenantStyle(branding) }}>
-        <Notice message={q.msg} error={q.error === "1"} back="/library/folders" />
+        <Notice language={uiLanguage} message={q.msg} error={q.error === "1"} back="/library/folders" />
 
         <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
           <h1 className="page-title" style={{ margin: 0 }}>{tf.manage}</h1>

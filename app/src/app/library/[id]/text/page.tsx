@@ -89,7 +89,7 @@ export default async function EditorPage({
       trail={{ [`/library/${documentId}`]: d.title }}
     >
     <div style={{ maxWidth: 1200, ...tenantStyle(branding) }}>
-      <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
+      <Notice language={language} message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
 
 
       <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>

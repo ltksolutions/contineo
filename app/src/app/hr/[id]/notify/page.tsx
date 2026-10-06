@@ -20,6 +20,7 @@ import { requestHostname } from "@/lib/session"
 import { formatDate, normalizeLanguage, dictionary } from "@/lib/i18n"
 import { sendNotificationAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
 
@@ -85,11 +86,7 @@ export default async function NotifyPage({
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
-      {error && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)", color: "var(--warn-fg)" }}>
-          {error}
-        </p>
-      )}
+      <Notice language={language} message={error} error back={`/hr/${encodeURIComponent(id)}/notify`} />
 
       {assignment.notified?.length ? (
         <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)" }}>

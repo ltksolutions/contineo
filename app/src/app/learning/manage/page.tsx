@@ -75,7 +75,7 @@ export default async function LearningManagePage({ searchParams }: { searchParam
           <div className="grow"><h1 className="page-title">{t.manageHeading}</h1></div>
           {tab === "courses" && <Link className="button" href="/learning/manage?tab=courses&new=1">{tm.newCourse}</Link>}
         </div>
-        <Notice message={q.msg} error={q.error === "1"} back={back} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={back} />
         <nav className="tabs" aria-label={tm.tabsLabel}>
           <TabsBar>
             {TABS.map(k => (
@@ -164,13 +164,16 @@ async function CoursesTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLa
         </div>
       ) : (
         <>
-          <div className="lpills">
+          {/* Filter toho istého zoznamu = prepínač pohľadu, nie pilulky
+              (Picker .segmented; DESIGN_ODCHYLKY P4, 6. 10. 2026). */}
+          <nav className="view-switch view-switch--fit" aria-label={t.statusFilter}>
             {STATUSES.map(s => (
-              <Link key={s} className={`pill${s === status ? " is-on" : ""}`} href={`/learning/manage?tab=courses${s === "all" ? "" : `&status=${s}`}`}>
-                {labelOf[s]} <span className="pill-count">{count(s)}</span>
+              <Link key={s} className={`view-switch-item${s === status ? " is-on" : ""}`} aria-current={s === status ? "true" : undefined}
+                    href={`/learning/manage?tab=courses${s === "all" ? "" : `&status=${s}`}`}>
+                {labelOf[s]} <span className="view-switch-count">{count(s)}</span>
               </Link>
             ))}
-          </div>
+          </nav>
           <div className="doc-table-wrap mg-table">
             <table className="doc-table">
               <thead>

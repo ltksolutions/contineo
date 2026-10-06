@@ -77,7 +77,7 @@ export default async function ApprovalsPage({
   return (
     <AppShell language={person.language}>
       <div className="approval-page" style={tenantStyle(branding)}>
-        <Notice message={q.msg} error={q.error === "1"} back="/approvals" />
+        <Notice language={person.language} message={q.msg} error={q.error === "1"} back="/approvals" />
 
         <h1 className="page-title">{t.heading}</h1>
         <p className="quiet page-lead">{t.intro}</p>

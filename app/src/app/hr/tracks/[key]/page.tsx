@@ -116,17 +116,15 @@ export default async function TrackDetailPage({
   return (
     <AppShell language={ctx.person.language} title={track.title} trail={{ "/hr/tracks": t.heading }}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
-      <Notice message={message ?? error} error={Boolean(error)} back={here} />
+      <Notice language={ctx.person.language} message={message ?? error} error={Boolean(error)} back={here} />
 
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>
           {track.title}
         </h1>
-        <span
-          className="tag"
-          style={track.isActive ? { background: "var(--ok-bg)", color: "var(--ok-fg)" } : undefined}
-        >
+        {/* Tie isté štítky ako v zozname trás. */}
+        <span className={track.isActive ? "tag tag--published" : "tag tag--archived"}>
           {track.isActive ? t.active : t.inactive}
         </span>
       </div>
@@ -245,11 +243,12 @@ export default async function TrackDetailPage({
             />
           </div>
 
-          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "var(--fs-body)" }}>
-            <input type="checkbox" name="requiresAcknowledgement" defaultChecked style={{ marginTop: 3 }} />
-            <span>
-              {t.requiresAck}
-              <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>{t.requiresAckHint}</span>
+          {/* Áno/nie ako prepínač (DESIGN_ODCHYLKY P6); meno a hodnota bez zmeny. */}
+          <label className="form-row form-row--bare">
+            <input type="checkbox" role="switch" className="toggle" name="requiresAcknowledgement" defaultChecked />
+            <span className="form-row-main">
+              <span>{t.requiresAck}</span>
+              <span className="form-row-sub">{t.requiresAckHint}</span>
             </span>
           </label>
 
@@ -331,11 +330,11 @@ export default async function TrackDetailPage({
               sa to dozvedieť hneď, nie až z pripomienky pred termínom. Odškrtnúť
               sa dá, takže e-mail ostáva rozhodnutím personalistu. */}
           {track.isActive && (
-            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "var(--fs-body)" }}>
-              <input type="checkbox" name="notify" value="1" defaultChecked style={{ marginTop: 3 }} />
-              <span>
-                {t.notifyAdded}
-                <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>{t.notifyAddedHint}</span>
+            <label className="form-row form-row--bare">
+              <input type="checkbox" role="switch" className="toggle" name="notify" value="1" defaultChecked />
+              <span className="form-row-main">
+                <span>{t.notifyAdded}</span>
+                <span className="form-row-sub">{t.notifyAddedHint}</span>
               </span>
             </label>
           )}

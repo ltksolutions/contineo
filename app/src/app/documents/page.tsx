@@ -92,7 +92,7 @@ export default async function DocumentsPage({
     {/* Šírka 760 px zostáva: je to text na čítanie, nie tabuľka. Shell dáva
         odsadenie a navigáciu, obmedzenie riadka je vec obsahu. */}
     <div className="duty-page" style={tenantStyle(branding)}>
-      <Notice message={query.msg} error={query.error === "1"} back="/documents" />
+      <Notice language={person.language} message={query.msg} error={query.error === "1"} back="/documents" />
       <h1 className="page-title">{t.listHeading}</h1>
       <p className="quiet page-lead">{t.listIntro}</p>
 

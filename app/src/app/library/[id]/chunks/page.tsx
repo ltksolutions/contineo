@@ -117,7 +117,7 @@ export default async function ChunksPage({
   return (
     <AppShell language={language} title={t.heading} trail={{ [`/library/${documentId}`]: r.title }}>
     <div className="chunks-page" style={{ maxWidth: 900, ...tenantStyle(branding) }}>
-      <Notice message={q.msg} error={q.error === "1"} back={here} />
+      <Notice language={language} message={q.msg} error={q.error === "1"} back={here} />
       <h1 className="page-title" style={{ margin: "0 0 4px" }}>{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 18px", maxWidth: 680 }}>{t.intro}</p>
 

@@ -37,7 +37,8 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
 import { assignAction, previewAssignAction } from "../actions"
-import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { normalizeQuery, hrefWithout, type RawQuery } from "@/lib/urlParams"
+import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
@@ -73,7 +74,8 @@ export default async function AssignPage({
     notFound()
   }
 
-  const q = normalizeQuery<Query>(await searchParams)
+  const raw = await searchParams
+  const q = normalizeQuery<Query>(raw)
   const [documents, audiences, tree, departmentCounts, people, names] = await Promise.all([
     assignableDocuments(ctx.person.companyCode),
     audiencesInOrg(ctx.person.companyCode),
@@ -165,14 +167,9 @@ export default async function AssignPage({
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
-      {q.error && (
-        <p
-          className="card"
-          style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)", color: "var(--warn-fg)" }}
-        >
-          {q.error}
-        </p>
-      )}
+      {/* Chyba ako oznam s potvrdením, nie karta hore — pri dlhom formulári
+          je človek dole pri tlačidle a kartu by nevidel. Výber v adrese ostáva. */}
+      <Notice language={language} message={q.error} error back={hrefWithout("/hr/assign", raw, ["error"])} />
 
       {documents.length === 0 ? (
         <div className="empty">
