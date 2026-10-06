@@ -18,8 +18,9 @@
  * Bez JavaScriptu je to obyčajné tlačidlo a formulár odošle prehliadač.
  */
 
-import { useState } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { useFormStatus } from "react-dom"
+import { isFormPending, subscribeFormPending } from "@/lib/formPending"
 import type { CSSProperties, MouseEvent, ReactNode } from "react"
 
 export default function SubmitButton({
@@ -34,6 +35,7 @@ export default function SubmitButton({
   disabled = false,
   pendingLabel,
   formAction,
+  form,
 }: {
   className?: string
   children: ReactNode
@@ -53,8 +55,19 @@ export default function SubmitButton({
   pendingLabel?: ReactNode
   /** Iná serverová akcia než formulárová — druhé tlačidlo v tom istom formulári. */
   formAction?: (formData: FormData) => void | Promise<void>
+  /**
+   * `id` formulára, ktorému tlačidlo patrí, keď v ňom nestojí (formuláre sa
+   * nevnárajú). Stav sa vtedy číta z `FormPendingSignal` v cieľovom formulári.
+   */
+  form?: string
 }) {
-  const { pending } = useFormStatus()
+  const own = useFormStatus().pending
+  const remote = useSyncExternalStore(
+    subscribeFormPending,
+    () => (form ? isFormPending(form) : false),
+    () => false,
+  )
+  const pending = form ? remote : own
   const [clicked, setClicked] = useState(false)
 
   // Po skončení sa značka zhodí, aby pri ďalšom odoslaní iným tlačidlom
@@ -69,8 +82,8 @@ export default function SubmitButton({
   const onClick = (e: MouseEvent<HTMLButtonElement>) => {
     // Formulár, ktorý neprejde kontrolou prehliadača (`required`), sa
     // neodošle — značka by ostala visieť a točilo by pri cudzom odoslaní.
-    const form = e.currentTarget.form
-    if (!form || form.checkValidity()) setClicked(true)
+    const target = e.currentTarget.form
+    if (!target || target.checkValidity()) setClicked(true)
   }
 
   const busy = pending && clicked
@@ -81,6 +94,7 @@ export default function SubmitButton({
       name={name}
       value={value}
       formAction={formAction}
+      form={form}
       disabled={pending || disabled}
       aria-busy={busy || undefined}
       aria-label={ariaLabel}

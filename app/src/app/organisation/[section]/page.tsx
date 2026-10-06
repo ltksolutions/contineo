@@ -22,6 +22,7 @@ import TabsBar from "@/components/TabsBar"
 import OrgNav from "@/components/OrgNav"
 import { isOrgSection, orgSectionHref, type OrgSection } from "@/lib/orgSections"
 import SubmitButton from "@/components/SubmitButton"
+import FormPendingSignal from "@/components/FormPendingSignal"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { orgPageContext } from "@/lib/orgSettings"
@@ -363,10 +364,10 @@ export default async function OrganisationSectionPage({
                   {/* „Odstrániť logo" pri logu (rám, Q1 — Ján 24. 9.). Je to druhý
                       formulár; vnoriť sa nedá, tlačidlo ho volá cez `form`. */}
                   {tenant.branding.logoUrl && (
-                    <button className="set-remove" type="submit" form="remove-logo"
+                    <SubmitButton className="set-remove" form="remove-logo"
                             title={t.branding.logoRemoveNote}>
                       {t.branding.logoRemove}
-                    </button>
+                    </SubmitButton>
                   )}
                   <span className="quiet field-hint">{t.branding.logoNote}</span>
                 </div>
@@ -493,6 +494,7 @@ export default async function OrganisationSectionPage({
           volá ho tlačidlo pri logu cez `form="remove-logo"`. */}
       {now === "general" && tenant.branding.logoUrl && (
         <form id="remove-logo" action={deleteLogoAction} hidden>
+          <FormPendingSignal form="remove-logo" />
           <input type="hidden" name="tab" value="general" />
         </form>
       )}
@@ -1053,7 +1055,7 @@ export default async function OrganisationSectionPage({
             </label>
             {ai.hasOwnKey && (
               <div>
-                <button className="button button--quiet" type="submit" form="remove-ai-key">{t.ai.deleteKey}</button>
+                <SubmitButton className="button button--quiet" form="remove-ai-key">{t.ai.deleteKey}</SubmitButton>
                 <span className="quiet field-hint" style={{ display: "block", marginTop: 6 }}>{t.ai.deleteKeyNote}</span>
               </div>
             )}
@@ -1101,6 +1103,7 @@ export default async function OrganisationSectionPage({
       </form>
       {/* Odstránenie kľúča — vlastný formulár, tlačidlo je hore pri kľúči. */}
       <form id="remove-ai-key" action={deleteAiKeyAction} hidden>
+        <FormPendingSignal form="remove-ai-key" />
         <input type="hidden" name="tab" value="ai" />
       </form>
       </>
