@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: obrázok architektúry podľa dnešnej aplikácie, helpdesk na webe (2026-10-06)
+
+Stĺpce **Worker** a **MongoDB — jadro** v obrázku na stránke Technológia
+hovoria po novom: prevod súboru, členenie bez jazykového modelu, metadáta
+úseku so znením namiesto zaniknutého zaradenia, embedding v indexe, filter
+podľa znení platných k dňu; kolekcie sú skutočné (potvrdenia, vzdelávanie,
+helpdesk, dohľad), hierarchia organizácií, ktorá v kóde nie je, zmizla.
+Po zlúčení helpdesku (ADR-028) sú schránka kanála, tickety, widget
+a eskalácia na ticket v obrázku aj v textoch stránky ako hotové; FAQ je
+zdroj; RSS/web, MCP a IMAP ostávajú „pripravujeme". Vo všetkých troch
+jazykoch, PNG kópia pregenerovaná.
+
 ### Dizajn: hlavičky stránok a jedno plné tlačidlo (2026-10-06)
 
 Stránky Vzdelávania, história otázok, detail pridelenia, trasa, karta
