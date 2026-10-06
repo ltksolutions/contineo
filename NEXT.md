@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-06** (helpdesk ADR-028: FAQ, kanály a schránka, tickety, `/helpdesk`, widget pre ISSF; PR #273, #276, #278; D161–D168)
+Posledná aktualizácia: **2026-10-06 večer** (helpdesk ADR-028: FAQ, kanály a schránka, tickety, `/helpdesk`, widget pre ISSF; Kanály ako sekcia s typom; PR #273, #276, #278, #285; D161–D169)
 
 ---
 
@@ -16,7 +16,8 @@ Posledná aktualizácia: **2026-10-06** (helpdesk ADR-028: FAQ, kanály a schrá
 krokov: FAQ ako druh dokumentu (D164), kanály so schránkou cez Microsoft
 Graph a ťažba histórie do FAQ (D161, D162, D165), e-mail je ticket (D163),
 obrazovka riešiteľa `/helpdesk` (rola `helpdesk`, D167), widget s tokenom pre
-ISSF (D166) a druh osoby `internal`/`employee`/`external` (D168). Čaká na
+ISSF (D166), druh osoby `internal`/`employee`/`external` (D168) a **Kanály
+ako sekcia v menu s typom widget / portál (D169, PR #285)**. Čaká na
 ľudí mimo kódu: registrácia aplikácie v Entra a zúženie na schránku
 (`docs/NASADENIE_app.md` § 5, správca M365), prvý kanál v sekcii Kanály (typ widget, D169) a rola `helpdesk`, tajomstvo widgetu pre prevádzkovateľa ISSF
 (`docs/WIDGET_ISSF.md`). Poradie overenia: FAQ → kanál a Overiť spojenie →

@@ -61,6 +61,34 @@ ZAKLAD-segmented-control to tak určil pre telefón).
 
 ---
 
+## 2026-10-06 (večer) — Kanály ako sekcia s typom (D169, PR #285) a web
+
+**Prečo:** Ján: kanál je rozhranie, cez ktoré obsah ide k ľuďom, ako na
+contineo.app/sk/technologia — nie nastavenie helpdesku schované
+v organizácii. Typy podľa neho: **widget** (do cudzej stránky namiesto
+vyhľadávania: asistent, voliteľne tickety a schránka) a **portál** (články,
+knižnica, formuláre — dnes len knižnica).
+
+**Čo sa zmenilo:** sekcia Kanály v menu pre správcu organizácie, kolekcia
+`channels` s `kind` a `tickets`, časť Organizácia → Helpdesk preč,
+`/helpdesk` vidí len kanály s ticketmi, API widgetu odmieta portál
+a eskaláciu bez ticketov. Bez migrácie — kanál ešte nikto nezaložil.
+Na webe blok KANÁLY v obrázku architektúry (sk, cs, en, PNG) a pilier
+„Kanály: widget a portál" podľa D169.
+
+**Nálezy:**
+- `web/scripts/gen_diagram.py` sa vydáva za jediný zdroj SVG, ale SVG na
+  webe sa odvtedy menili ručne (#280 aj dnes) — generátor je zastaraný
+  („VSTUPNÉ KANÁLY"). Buď ho dotiahnuť, alebo zmazať; dnes by prepísal
+  správny obrázok starým. Zapísané do `docs/TODO.md`.
+- PR #285 Ján hlásil ako zlúčený, GitHub ho mal otvorený (zlúčil sa
+  medzitým #283 z druhej session). Zlúčil som ho podľa jeho pokynu — po
+  merge `main` do vetvy a `tsc`, aby sa neopakoval pád buildu z rána.
+- PNG z SVG: `sharp` (je v `web/node_modules`), density 144 → 3040×2020;
+  dva riadky presahovali rámik, skrátené.
+
+---
+
 ## 2026-10-06 — helpdesk od ADR po widget (ADR-028, PR #273, #276, #278)
 
 **Prečo:** chat pre ISSF (kluby, rozhodcovia, tréneri, rodičia) nad normami

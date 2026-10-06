@@ -10,6 +10,16 @@ Ochrana osobných údajov, Prihlásenie a Overenie certifikátu majú v karte
 prehliadača názov stránky („Ochrana osobných údajov · Intranet SFZ"),
 nie len názov organizácie.
 
+### Kanály ako samostatná sekcia s typom widget a portál (2026-10-06, ADR-028 D169)
+
+Kanály majú vlastnú sekciu v menu (Správa, správca organizácie) namiesto
+časti Organizácia → Helpdesk. Kanál má typ: **widget** sa vloží do cudzej
+stránky namiesto vyhľadávania — vždy asistent, voliteľne tickety a schránka
+helpdesku; **portál** sú články, knižnica a formuláre, dnes knižnica.
+Vstavané rozhrania intranetu (asistent, knižnica) sú v zozname ako pevné
+riadky. Obrázok architektúry a text na contineo.app/sk/technologia hovoria
+to isté.
+
 ### Dizajn: formulárové kroky, rozhodnutie námietky a názov v karte prehliadača (2026-10-06)
 
 Kroky pri nahrávaní a úprave dokumentu, nová trasa a pridávanie ľudí na
