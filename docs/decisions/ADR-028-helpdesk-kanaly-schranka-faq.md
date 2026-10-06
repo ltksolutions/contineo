@@ -11,7 +11,11 @@
 > ADR-022 (ochrana údajov podľa organizácie), ADR-026 (AI ako nastavenie
 > organizácie, tajomstvá cez `secrets.ts`), ADR-027 (členenie podľa druhu
 > dokumentu), `docs/Contineo_RAG_Projektovy_plan.md` Fáza 4b.
-> **Implementácia:** po krokoch v § 4; prvý krok je FAQ ako druh dokumentu.
+> **Implementácia:** po krokoch v § 4. Krok 2 (FAQ) 6. 10. 2026: druh `faq`
+> so stratégiou členenia `entries` v `codelists/category.json`
+> (`chunkingStrategyFor()`), `lib/faq.ts` (záznamy, Markdown, úseky, koncept),
+> `lib/faqPdf.ts`, vetvy v `publish()`, `reindexVersion()` a `saveMetadata()`,
+> obrazovky `/library/new/faq` a `/library/[id]/faq`, kontrola v `check.mjs`.
 
 ---
 
@@ -136,8 +140,15 @@ z PDF**, ale píše sa v aplikácii.
 - **Členenie:** jeden záznam = jeden úsek, `sourceType: "qa"`,
   `derivedFrom` = dokumenty zo zdrojov záznamu. Nové znenie zdrojovej normy
   záznam **expiruje** rovnako ako dnešný kurovaný pár
-  (`expireCurationFor()`), prístupová úroveň sa odvodzuje z najprísnejšieho
-  zdroja (`strictestAccessLevel()`), nie zadáva.
+  (`expireCurationFor()`). Prístupová úroveň záznamu sa **odvodzuje**
+  najprísnejšou stranou z úrovne samotného FAQ dokumentu a všetkých jeho
+  zdrojov (`entryAccessLevel()` v `lib/faq.ts`); záznam bez zdroja má úroveň
+  dokumentu — postup v ISSF nemá článok normy, ale FAQ má nastavenú úroveň.
+- **Úsek nesie `faqVersionId`, nie `versionId`** (spresnenie z implementácie
+  6. 10. 2026). Vetva „platné znenia" (`versionId` + `superseded: false`) by
+  úsek našla aj po expirácii, lebo expirácia mení len `isActive`; vetva
+  overených odpovedí `isActive` rešpektuje. Záznam FAQ má tak jednu cestu do
+  vyhľadávania — tú istú ako kurovaný pár — a nájde sa pri otázke o dnešku.
 - PDF: pri zverejnení sa zo záznamov vykreslí PDF, aby ADR-011 (potvrdzuje
   sa a archivuje PDF) platilo bez výnimky. Potvrdzovanie FAQ sa neočakáva,
   ale výnimka v dátovom modeli by bola drahšia než jedno vykreslenie.

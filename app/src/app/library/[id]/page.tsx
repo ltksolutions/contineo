@@ -31,7 +31,7 @@ import { allFolders, flattenTree } from "@/lib/folders"
 import { allDepartments, flattenTree as flattenDepartments } from "@/lib/departments"
 import { MAX_INTERNAL_NUMBER } from "@/lib/libraryWrite"
 import { carryOverCandidates, audienceRef, audienceLabel } from "@/lib/assignments"
-import { codelistOptions } from "@/lib/codelists"
+import { codelistOptions, chunkingStrategyFor } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
@@ -772,6 +772,14 @@ export default async function DocumentDetailPage({
 
   const newVersionHref = `${base}/version`
   const newVersionBlocked = hasChangesToPublish
+  /*
+   * FAQ (ADR-028, D164) nemá čo nahrávať: nové znenie vzniká úpravou záznamov,
+   * ktoré zložia PDF aj text. Hlavné tlačidlo preto vedie do editora
+   * záznamov a je dostupné vždy — aj počas prípravy, lebo úprava konceptu
+   * **je** príprava.
+   */
+  const isFaq = chunkingStrategyFor(d.category) === "entries"
+  const tfaq = dictionary(language).library.faq
 
   return (
     <AppShell language={ctx.person.language} title={d.title}>
@@ -984,7 +992,9 @@ export default async function DocumentDetailPage({
           </a>
         )}
         <Link className="button button--quiet" href={`${base}?edit=document`}>{tflow.editDocument}</Link>
-        {newVersionBlocked ? (
+        {isFaq ? (
+          <Link className="button" href={`${base}/faq`}>{tfaq.editEntries}</Link>
+        ) : newVersionBlocked ? (
           <span className="button is-disabled" aria-disabled="true" title={latest ? tflow.newVersionBusy : tflow.newVersionFirst}>
             {tflow.newVersion}
           </span>
@@ -1477,7 +1487,12 @@ export default async function DocumentDetailPage({
       <section className="card detail-block">
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
           <h2 className="detail-block-title">{t.text}</h2>
-          <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
+          {isFaq ? (
+            // Text FAQ sa skladá zo záznamov — editor textu by ho prepísal naprázdno.
+            <Link href={`${base}/faq`}>{tfaq.openEntries}</Link>
+          ) : (
+            <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
+          )}
           {/* Ako je text narezaný pre asistenta (ADR-027, krok A). */}
           <Link href={`/library/${encodeURIComponent(documentId)}/chunks`}>{dictionary(language).library.chunks.openLink}</Link>
         </div>

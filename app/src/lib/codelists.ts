@@ -23,10 +23,24 @@ import tags from "@/codelists/tags.json"
 import workplace from "@/codelists/workplace.json"
 import { AppError } from "./appError"
 
+/**
+ * Spôsob členenia na úseky — vlastnosť **druhu dokumentu** (ADR-027 krok 2,
+ * D160; prvý nositeľ je FAQ, ADR-028 D164).
+ *
+ *   • `articles` — chunker po článkoch a prílohách (`chunker.mjs`), predvolené;
+ *   • `entries`  — jeden záznam FAQ = jeden úsek (`lib/faq.ts`), text sa
+ *     nereže vôbec.
+ *
+ * Je to kľúč v číselníku, nie pole na dokumente: dokument si druh vyberá aj
+ * tak a dva dokumenty toho istého druhu sa nemajú rezať každý inak.
+ */
+export type ChunkingStrategy = "articles" | "entries"
+
 export interface CodelistItem {
   key: string
   label?: string
   description?: string
+  chunking?: ChunkingStrategy
 }
 
 export interface Codelist {
@@ -34,7 +48,7 @@ export interface Codelist {
   items: CodelistItem[]
 }
 
-type RawCodelist = { closed?: boolean; items?: { key: string; label?: string; description?: string }[] }
+type RawCodelist = { closed?: boolean; items?: { key: string; label?: string; description?: string; chunking?: ChunkingStrategy }[] }
 
 function prepare(c: unknown): Codelist {
   const s = c as RawCodelist
@@ -53,6 +67,18 @@ export const CODELISTS: Record<string, Codelist> = {
   sourceType: prepare(sourceType),
   tags: prepare(tags),
   workplace: prepare(workplace),
+}
+
+/**
+ * Stratégia členenia podľa druhu dokumentu. Číta sa len z globálneho
+ * číselníka: vlastné položky organizácie nesú dnes len kľúč a názov, takže
+ * sa režú po článkoch ako doteraz. Neznámy alebo prázdny druh = `articles`,
+ * aby sa žiadnemu existujúcemu dokumentu nezmenilo členenie (D160).
+ */
+export function chunkingStrategyFor(category: string | null | undefined): ChunkingStrategy {
+  if (!category) return "articles"
+  const item = CODELISTS.category.items.find(p => p.key === category)
+  return item?.chunking === "entries" ? "entries" : "articles"
 }
 
 /** Povinné metadáta dokumentu — zhodné s `scripts/lib/meta.mjs`. */
