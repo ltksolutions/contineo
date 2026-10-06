@@ -60,18 +60,17 @@ const TENANT_PROFILE = `{
 //                 model: "Qwen3-8B", citations: false }`;
 
 const TICKETS = `{
-  ticketNumber: "CNT-2026-000412",
-  source: "bot",                // bot | email
-  status: "open",               // lifecycle below
-  priority: "normal",
-  companyCode: "ACME",
-  requester: { email, name, userRef },
-  subject, conversationId,      // full context if from bot
-  assignedTo, slaDueAt,
-  resolution: { answeredBy, qaPairId, closedAt },
-  tags: []
+  companyCode: "ACME",          // organizácia, podmienka každého dotazu
+  channelKey: "podpora",        // kanál helpdesku: obsah, riešitelia, schránka, widget
+  source: "email",              // email | chat (eskalácia z asistenta alebo widgetu)
+  state: "new",                 // new → drafted → sent → closed (→ reopened)
+  subject, conversationId,      // vlákno = ticket; ďalšia správa ho dopĺňa
+  messages: [ { from, at, text } ],
+  requester: { email, name, personId },
+  draft,                        // návrh odpovede od asistenta, len z verejného obsahu
+  sentAnswer: { at, by, text }, // odoslané e-mailom zo schránky kanála
+  faqEntryId                    // ak odpoveď pribudla do FAQ
 }`;
-
 const VECTOR_QUERY = `// Znenia platné k dňu otázky sa spočítajú vopred z kolekcie documents
 // tým istým pravidlom, podľa ktorého sa predpis potvrdzuje a prideľuje.
 // Bez platného znenia sa nehľadá vôbec — prázdny zoznam nie je „bez obmedzenia".
