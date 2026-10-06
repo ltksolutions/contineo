@@ -27,6 +27,7 @@ import Notice from "@/components/Notice"
 import TabLink from "@/components/TabLink"
 import TabsBar from "@/components/TabsBar"
 import SubmitButton from "@/components/SubmitButton"
+import FormPendingSignal from "@/components/FormPendingSignal"
 import KeyFromLabel from "@/components/KeyFromLabel"
 import Select from "@/components/Select"
 import MergeSelectionBar from "@/components/MergeSelectionBar"
@@ -329,7 +330,7 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
             {q.renameKey === key && (
               <div className="tgv-form">
                 <input className="field-input" name="to" form="rename-key" defaultValue={keyLabel(key)} aria-label={tm.keyLabel} required />
-                <button type="submit" form="rename-key" className="button">{tm.rename}</button>
+                <SubmitButton form="rename-key" className="button">{tm.rename}</SubmitButton>
                 <Link className="button button--quiet" href="/learning/manage?tab=tags">{tm.cancel}</Link>
               </div>
             )}
@@ -351,7 +352,7 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
                         {q.exists === "1" && renameTo ? `${tm.exists(renameTo.label)} ` : ""}
                         {tm.impact(renameImpact.courses, renameImpact.questions, renameImpact.tests)}
                       </p>
-                      <button type="submit" form="rename-tag" className="button">{q.exists === "1" ? tm.mergeButton : tm.rename}</button>
+                      <SubmitButton form="rename-tag" className="button">{q.exists === "1" ? tm.mergeButton : tm.rename}</SubmitButton>
                       <Link className="button button--quiet" href="/learning/manage?tab=tags">{tm.cancel}</Link>
                     </div>
                   )}
@@ -366,11 +367,12 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
       {/* Premenovanie je vlastný formulár (nie vnorený) — polia ho odkazujú cez `form=`. */}
       {renaming && (
         <form id="rename-tag" action={renameTagAction}>
+          <FormPendingSignal form="rename-tag" />
           <input type="hidden" name="from" value={tagId(renaming)} />
           {q.exists === "1" && <input type="hidden" name="confirm" value="1" />}
         </form>
       )}
-      {q.renameKey && <form id="rename-key" action={renameKeyAction}><input type="hidden" name="from" value={q.renameKey} /></form>}
+      {q.renameKey && <form id="rename-key" action={renameKeyAction}><FormPendingSignal form="rename-key" /><input type="hidden" name="from" value={q.renameKey} /></form>}
     </>
   )
 }

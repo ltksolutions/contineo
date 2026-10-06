@@ -46,6 +46,7 @@ import {
 } from "@/lib/libraryConditions"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
+import FormPendingSignal from "@/components/FormPendingSignal"
 
 export const dynamic = "force-dynamic"
 
@@ -953,6 +954,7 @@ export default async function LibraryPage({
         */}
         {filters.picked.length > 0 && (
           <form id="bulk-move" action={moveManyAction} className="bulk-move-form">
+            <FormPendingSignal form="bulk-move" />
             {filters.picked.map(id => (
               <input key={id} type="hidden" name="document" value={id} />
             ))}
@@ -1051,9 +1053,9 @@ export default async function LibraryPage({
                     form="bulk-move"
                   />
                 </div>
-                <button className="button filter-sheet-apply" type="submit" form="bulk-move">
+                <SubmitButton className="button filter-sheet-apply" form="bulk-move">
                   {tl.moveConfirm(filters.picked.length)}
-                </button>
+                </SubmitButton>
               </div>
             </details>
             <SubmitButton className="button button--quiet" formAction={assignManyAction}>
