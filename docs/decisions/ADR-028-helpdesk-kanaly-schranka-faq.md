@@ -22,6 +22,12 @@
 > `lib/faqMining.ts` (D165), `/api/cron/helpdesk-sync`, časť Organizácia →
 > Helpdesk, rola `helpdesk` (D167), `searchScope()` zúžený na priečinky (D161),
 > postup registrácie v Entra a zúženia v Exchange: `docs/NASADENIE_app.md` § 5.
+> Krok 4 (obrazovka riešiteľa) 6. 10. 2026: `/helpdesk` (fronta, prepínač
+> pohľadu) a `/helpdesk/[id]` (vlákno, návrh, odoslanie, pridať do FAQ),
+> `lib/helpdeskAgents.ts` (brána roly a kanálov), `lib/ticketDraft.ts` (návrh
+> odpovede tou istou cestou ako `/api/chat`, bez streamu, len verejný obsah),
+> práca s ticketom v `lib/tickets.ts`, položka Helpdesk v navigácii s počtom
+> otvorených ticketov.
 
 ---
 

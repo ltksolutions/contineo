@@ -598,6 +598,8 @@ interface Dictionary {
   nav: {
     ask: string
     dpo: string
+    /** Helpdesk (ADR-028) — len pre rolu `helpdesk`. */
+    helpdesk: string
     /** Modul Vzdelávanie (ADR-018) — len pri zapnutom module. */
     learning: string
     learningManage: string
@@ -630,7 +632,7 @@ interface Dictionary {
     escCloses: string
     sheetHint: string
     /** Jedna veta pod názvom dlaždice — čo v sekcii je. */
-    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "learningManage" | "learningTests", string>
+    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "helpdesk" | "learningManage" | "learningTests", string>
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
     toAcknowledge: string
@@ -2120,6 +2122,65 @@ interface Dictionary {
     categoryField: string
     referenceField: string
     addButton: string
+  }
+  /** Obrazovka riešiteľa helpdesku `/helpdesk` (ADR-028 krok 4). */
+  helpdesk: {
+    heading: string
+    intro: string
+    noChannels: string
+    viewOpen: string
+    viewSent: string
+    viewClosed: string
+    viewAll: string
+    empty: string
+    colSubject: string
+    colAsker: string
+    colChannel: string
+    colState: string
+    colUpdated: string
+    colMessages: string
+    state: Record<"new" | "drafted" | "sent" | "closed" | "reopened", string>
+    source: Record<"chat" | "email", string>
+    mine: string
+    unassigned: string
+    assignedTo: (name: string) => string
+    take: string
+    release: string
+    thread: string
+    fromHelpdesk: string
+    fromAsker: (name: string) => string
+    attachments: (n: number) => string
+    draftHeading: string
+    draftIntro: string
+    draftFromAi: string
+    draftMeta: (model: string, when: string) => string
+    noDraft: string
+    draftSources: string
+    answer: string
+    answerHint: string
+    saveDraft: string
+    send: string
+    sendHint: string
+    sent: (by: string, when: string) => string
+    sentUnchanged: string
+    sentEdited: string
+    close: string
+    reopen: string
+    toFaq: string
+    toFaqIntro: string
+    toFaqDocument: string
+    toFaqSubmit: string
+    toFaqDone: string
+    noFaqDocuments: string
+    noMailbox: string
+    msgDrafted: string
+    msgDraftSaved: string
+    msgSent: string
+    msgTaken: string
+    msgReleased: string
+    msgClosed: string
+    msgReopened: string
+    aiFailed: string
   }
   library: {
     /** Knižnica pre osobu bez roly správy obsahu — platné dokumenty (SHELL-menu-v-hlavicke). */
@@ -4195,6 +4256,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       people: "Zamestnanci, pracovné vzťahy, roly",
       evaluation: "Odpovede, pri ktorých niekto povedal, že nesedia",
       dpo: "Právne základy predpisov a námietky",
+      helpdesk: "Tickety kanálov, ktorých si riešiteľom",
       learningManage: "Kurzy, časti a pridelenie",
       learningTests: "Banka otázok a výsledky pokusov",
     },
@@ -4203,6 +4265,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Pridelené dokumenty",
     evaluation: "Na posúdenie",
     dpo: "Ochrana údajov",
+    helpdesk: "Helpdesk",
     learning: "Vzdelávanie",
     learningManage: "Správa kurzov",
     learningTests: "Testy",
@@ -5187,6 +5250,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.imapNotYet": "IMAP schránka ešte nie je k dispozícii — zatiaľ len Microsoft 365.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
     "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
+    "ticket.notFound": "Taký ticket tu nie je.",
+    "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
+    "ticket.emptyAnswer": "Prázdna odpoveď sa odoslať nedá.",
+    "ticket.noRecipient": "Ticket nemá komu odpovedať — chýba adresa.",
+    "ticket.aiFailed": "Asistent návrh nepripravil — skúste to o chvíľu.",
     "mailbox.auth": "Prihlásenie aplikácie do Microsoft 365 zlyhalo — skontroluj tenant, client id a tajomstvo.",
     "mailbox.forbidden": "Schránka odmietla prístup — skontroluj oprávnenia aplikácie a zúženie na schránku.",
     "mailbox.notFound": "Schránka s touto adresou v organizácii nie je.",
@@ -6068,6 +6136,64 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     referenceField: "Odkaz na predpis",
     addButton: "Pridať",
     usedIn: n => (n === 1 ? "1 znenie" : n >= 2 && n <= 4 ? `${n} znenia` : `${n} znení`),
+  },
+  helpdesk: {
+    heading: "Helpdesk",
+    intro: "Tickety kanálov, ktorých si riešiteľom. Návrh odpovede pripraví asistent z noriem a FAQ kanála; odošleš ho ty, nikdy nie systém sám.",
+    noChannels: "Nie si riešiteľom žiadneho kanála. Správca organizácie ťa pridá v Organizácia → Helpdesk.",
+    viewOpen: "Otvorené",
+    viewSent: "Odpovedané",
+    viewClosed: "Zavreté",
+    viewAll: "Všetky",
+    empty: "Žiadne tickety.",
+    colSubject: "Predmet",
+    colAsker: "Pýta sa",
+    colChannel: "Kanál",
+    colState: "Stav",
+    colUpdated: "Zmenené",
+    colMessages: "Správ",
+    state: { new: "nový", drafted: "s návrhom", sent: "odpovedaný", closed: "zavretý", reopened: "znovu otvorený" },
+    source: { chat: "chat", email: "e-mail" },
+    mine: "moje",
+    unassigned: "nikto",
+    assignedTo: (name: string) => `rieši ${name}`,
+    take: "Prevziať",
+    release: "Uvoľniť",
+    thread: "Vlákno",
+    fromHelpdesk: "Helpdesk",
+    fromAsker: (name: string) => name || "Pýtajúci sa",
+    attachments: (n: number) => (n === 1 ? "1 príloha (v schránke)" : `${n} príloh (v schránke)`),
+    draftHeading: "Odpoveď",
+    draftIntro: "Asistent navrhne odpoveď z noriem a FAQ kanála. Uprav ju a odošli — rozdiel medzi návrhom a odoslaným textom je to, z čoho sa systém učí.",
+    draftFromAi: "Navrhnúť odpoveď asistentom",
+    draftMeta: (model: string, when: string) => `návrh ${model}, ${when}`,
+    noDraft: "Zatiaľ bez návrhu.",
+    draftSources: "Zdroje návrhu",
+    answer: "Text odpovede",
+    answerHint: "Odíde ako čistý text z adresy schránky kanála. Bez pozdravu a podpisu, ak ich nechceš — pridáva sa nič.",
+    saveDraft: "Uložiť návrh",
+    send: "Odoslať odpoveď",
+    sendHint: "Odošle e-mail pýtajúcemu sa a ticket označí ako odpovedaný.",
+    sent: (by: string, when: string) => `odoslané ${when} (${by})`,
+    sentUnchanged: "návrh odišiel bez zmeny",
+    sentEdited: "návrh bol pred odoslaním upravený",
+    close: "Zavrieť ticket",
+    reopen: "Znovu otvoriť",
+    toFaq: "Pridať do FAQ",
+    toFaqIntro: "Z odoslanej odpovede vznikne záznam v koncepte FAQ dokumentu. Pred uložením odstráň mená a údaje konkrétnej osoby; schváli to správca obsahu.",
+    toFaqDocument: "FAQ dokument",
+    toFaqSubmit: "Uložiť do konceptu FAQ",
+    toFaqDone: "Záznam je v koncepte FAQ.",
+    noFaqDocuments: "V knižnici ešte nie je FAQ dokument.",
+    noMailbox: "Kanál nemá schránku — odpoveď sa nedá odoslať e-mailom.",
+    msgDrafted: "Návrh je pripravený. Skontroluj ho pred odoslaním.",
+    msgDraftSaved: "Návrh je uložený.",
+    msgSent: "Odpoveď je odoslaná.",
+    msgTaken: "Ticket je tvoj.",
+    msgReleased: "Ticket je uvoľnený.",
+    msgClosed: "Ticket je zavretý.",
+    msgReopened: "Ticket je znovu otvorený.",
+    aiFailed: "Asistent návrh nepripravil — skús to o chvíľu alebo napíš odpoveď sám.",
   },
   library: {
     emptyForYou: "Zatiaľ tu pre vás nie sú žiadne dokumenty.",
@@ -8015,6 +8141,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       people: "Zaměstnanci, pracovní vztahy, role",
       evaluation: "Odpovědi, u kterých někdo řekl, že nesedí",
       dpo: "Právní základy předpisů a námitky",
+      helpdesk: "Tickety kanálů, kterých jsi řešitelem",
       learningManage: "Kurzy, části a přidělení",
       learningTests: "Banka otázek a výsledky pokusů",
     },
@@ -8023,6 +8150,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Přidělené dokumenty",
     evaluation: "K posouzení",
     dpo: "Ochrana údajů",
+    helpdesk: "Helpdesk",
     learning: "Vzdělávání",
     learningManage: "Správa kurzů",
     learningTests: "Testy",
@@ -9007,6 +9135,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.imapNotYet": "IMAP schránka ještě není k dispozici — zatím jen Microsoft 365.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
     "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
+    "ticket.notFound": "Takový ticket tady není.",
+    "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
+    "ticket.emptyAnswer": "Prázdná odpověď se odeslat nedá.",
+    "ticket.noRecipient": "Ticket nemá komu odpovědět — chybí adresa.",
+    "ticket.aiFailed": "Asistent návrh nepřipravil — zkuste to za chvíli.",
     "mailbox.auth": "Přihlášení aplikace do Microsoft 365 selhalo — zkontroluj tenant, client id a tajemství.",
     "mailbox.forbidden": "Schránka odmítla přístup — zkontroluj oprávnění aplikace a zúžení na schránku.",
     "mailbox.notFound": "Schránka s touto adresou v organizaci není.",
@@ -9886,6 +10019,64 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     referenceField: "Odkaz na předpis",
     addButton: "Přidat",
     usedIn: n => (n === 1 ? "1 znění" : `${n} znění`),
+  },
+  helpdesk: {
+    heading: "Helpdesk",
+    intro: "Tickety kanálů, kterých jsi řešitelem. Návrh odpovědi připraví asistent z norem a FAQ kanálu; odešleš ho ty, nikdy ne systém sám.",
+    noChannels: "Nejsi řešitelem žádného kanálu. Správce organizace tě přidá v Organizace → Helpdesk.",
+    viewOpen: "Otevřené",
+    viewSent: "Zodpovězené",
+    viewClosed: "Zavřené",
+    viewAll: "Všechny",
+    empty: "Žádné tickety.",
+    colSubject: "Předmět",
+    colAsker: "Ptá se",
+    colChannel: "Kanál",
+    colState: "Stav",
+    colUpdated: "Změněno",
+    colMessages: "Zpráv",
+    state: { new: "nový", drafted: "s návrhem", sent: "zodpovězený", closed: "zavřený", reopened: "znovu otevřený" },
+    source: { chat: "chat", email: "e-mail" },
+    mine: "moje",
+    unassigned: "nikdo",
+    assignedTo: (name: string) => `řeší ${name}`,
+    take: "Převzít",
+    release: "Uvolnit",
+    thread: "Vlákno",
+    fromHelpdesk: "Helpdesk",
+    fromAsker: (name: string) => name || "Tazatel",
+    attachments: (n: number) => (n === 1 ? "1 příloha (ve schránce)" : `${n} příloh (ve schránce)`),
+    draftHeading: "Odpověď",
+    draftIntro: "Asistent navrhne odpověď z norem a FAQ kanálu. Uprav ji a odešli — rozdíl mezi návrhem a odeslaným textem je to, z čeho se systém učí.",
+    draftFromAi: "Navrhnout odpověď asistentem",
+    draftMeta: (model: string, when: string) => `návrh ${model}, ${when}`,
+    noDraft: "Zatím bez návrhu.",
+    draftSources: "Zdroje návrhu",
+    answer: "Text odpovědi",
+    answerHint: "Odejde jako čistý text z adresy schránky kanálu. Nic se nepřidává.",
+    saveDraft: "Uložit návrh",
+    send: "Odeslat odpověď",
+    sendHint: "Odešle e-mail tazateli a ticket označí jako zodpovězený.",
+    sent: (by: string, when: string) => `odesláno ${when} (${by})`,
+    sentUnchanged: "návrh odešel beze změny",
+    sentEdited: "návrh byl před odesláním upraven",
+    close: "Zavřít ticket",
+    reopen: "Znovu otevřít",
+    toFaq: "Přidat do FAQ",
+    toFaqIntro: "Z odeslané odpovědi vznikne záznam v konceptu FAQ dokumentu. Před uložením odstraň jména a údaje konkrétní osoby; schválí to správce obsahu.",
+    toFaqDocument: "FAQ dokument",
+    toFaqSubmit: "Uložit do konceptu FAQ",
+    toFaqDone: "Záznam je v konceptu FAQ.",
+    noFaqDocuments: "V knihovně ještě není FAQ dokument.",
+    noMailbox: "Kanál nemá schránku — odpověď se nedá odeslat e-mailem.",
+    msgDrafted: "Návrh je připraven. Zkontroluj ho před odesláním.",
+    msgDraftSaved: "Návrh je uložen.",
+    msgSent: "Odpověď je odeslána.",
+    msgTaken: "Ticket je tvůj.",
+    msgReleased: "Ticket je uvolněn.",
+    msgClosed: "Ticket je zavřen.",
+    msgReopened: "Ticket je znovu otevřen.",
+    aiFailed: "Asistent návrh nepřipravil — zkus to za chvíli nebo napiš odpověď sám.",
   },
   library: {
     emptyForYou: "Zatím tu pro vás nejsou žádné dokumenty.",
@@ -11826,6 +12017,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       people: "Employees, employment relationships, roles",
       evaluation: "Answers someone said were wrong",
       dpo: "Legal bases of regulations and objections",
+      helpdesk: "Tickets of the channels you are an agent of",
       learningManage: "Courses, parts and assignment",
       learningTests: "Question bank and attempt results",
     },
@@ -11834,6 +12026,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Assigned documents",
     evaluation: "To evaluate",
     dpo: "Data protection",
+    helpdesk: "Helpdesk",
     learning: "Learning",
     learningManage: "Course management",
     learningTests: "Tests",
@@ -12816,6 +13009,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.imapNotYet": "IMAP mailboxes are not available yet — Microsoft 365 only for now.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
     "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
+    "ticket.notFound": "There is no such ticket here.",
+    "ticket.emptyDraft": "An empty draft cannot be saved.",
+    "ticket.emptyAnswer": "An empty answer cannot be sent.",
+    "ticket.noRecipient": "The ticket has nobody to answer — the address is missing.",
+    "ticket.aiFailed": "The assistant did not produce a draft — try again in a moment.",
     "mailbox.auth": "The application could not sign in to Microsoft 365 — check the tenant, client id and secret.",
     "mailbox.forbidden": "The mailbox refused access — check the application permissions and the mailbox scoping.",
     "mailbox.notFound": "There is no mailbox with this address in the organisation.",
@@ -13695,6 +13893,64 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     referenceField: "Legal reference",
     addButton: "Add",
     usedIn: n => (n === 1 ? "1 version" : `${n} versions`),
+  },
+  helpdesk: {
+    heading: "Helpdesk",
+    intro: "Tickets of the channels you are an agent of. The assistant drafts an answer from the channel's regulations and FAQ; you send it, never the system on its own.",
+    noChannels: "You are not an agent of any channel. The organisation administrator adds you in Organisation → Helpdesk.",
+    viewOpen: "Open",
+    viewSent: "Answered",
+    viewClosed: "Closed",
+    viewAll: "All",
+    empty: "No tickets.",
+    colSubject: "Subject",
+    colAsker: "Asked by",
+    colChannel: "Channel",
+    colState: "State",
+    colUpdated: "Updated",
+    colMessages: "Messages",
+    state: { new: "new", drafted: "drafted", sent: "answered", closed: "closed", reopened: "reopened" },
+    source: { chat: "chat", email: "e-mail" },
+    mine: "mine",
+    unassigned: "nobody",
+    assignedTo: (name: string) => `handled by ${name}`,
+    take: "Take",
+    release: "Release",
+    thread: "Thread",
+    fromHelpdesk: "Helpdesk",
+    fromAsker: (name: string) => name || "Asker",
+    attachments: (n: number) => (n === 1 ? "1 attachment (in the mailbox)" : `${n} attachments (in the mailbox)`),
+    draftHeading: "Answer",
+    draftIntro: "The assistant drafts an answer from the channel's regulations and FAQ. Edit it and send — the difference between the draft and the sent text is what the system learns from.",
+    draftFromAi: "Draft an answer with the assistant",
+    draftMeta: (model: string, when: string) => `draft by ${model}, ${when}`,
+    noDraft: "No draft yet.",
+    draftSources: "Draft sources",
+    answer: "Answer text",
+    answerHint: "Goes out as plain text from the channel mailbox address. Nothing is added.",
+    saveDraft: "Save draft",
+    send: "Send answer",
+    sendHint: "Sends an e-mail to the asker and marks the ticket as answered.",
+    sent: (by: string, when: string) => `sent ${when} (${by})`,
+    sentUnchanged: "the draft was sent unchanged",
+    sentEdited: "the draft was edited before sending",
+    close: "Close ticket",
+    reopen: "Reopen",
+    toFaq: "Add to FAQ",
+    toFaqIntro: "The sent answer becomes an entry in the draft of an FAQ document. Remove names and personal details before saving; the content manager approves it.",
+    toFaqDocument: "FAQ document",
+    toFaqSubmit: "Save to FAQ draft",
+    toFaqDone: "The entry is in the FAQ draft.",
+    noFaqDocuments: "There is no FAQ document in the library yet.",
+    noMailbox: "The channel has no mailbox — the answer cannot be sent by e-mail.",
+    msgDrafted: "The draft is ready. Review it before sending.",
+    msgDraftSaved: "The draft is saved.",
+    msgSent: "The answer has been sent.",
+    msgTaken: "The ticket is yours.",
+    msgReleased: "The ticket is released.",
+    msgClosed: "The ticket is closed.",
+    msgReopened: "The ticket is reopened.",
+    aiFailed: "The assistant did not produce a draft — try again in a moment or write the answer yourself.",
   },
   library: {
     emptyForYou: "There are no documents for you here yet.",

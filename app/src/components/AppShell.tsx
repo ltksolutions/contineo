@@ -33,7 +33,7 @@ import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 const ALL_KEYS: NavKey[] = [
   "overview", "ask", "toAcknowledge", "toApprove", "directory", "library", "learning",
-  "assigned", "evidence", "people", "evaluation", "dpo", "learningManage", "learningTests",
+  "assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "learningManage", "learningTests",
 ]
 
 export default async function AppShell({

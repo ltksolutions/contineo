@@ -98,7 +98,7 @@ describe("počty pri položkách", () => {
 
 describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
   const ALL = {
-    isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true, isDpo: true,
+    isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true, isDpo: true, isHelpdesk: true,
     learning: true, isLearningAdmin: true,
   }
 
@@ -107,7 +107,7 @@ describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
     expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
     expect(groups.map(g => g.items.map(o => o.key))).toEqual([
       ["directory", "library", "learning"],
-      ["assigned", "evidence", "people", "evaluation", "dpo", "learningManage", "learningTests"],
+      ["assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "learningManage", "learningTests"],
     ])
   })
 
