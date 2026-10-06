@@ -82,9 +82,10 @@ export default async function TracksPage({
         ))}
       </ul>
 
-      <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.newHeading}</h2>
-
-      <form action={createTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
+      {/* Nadpis nad kartou, ako ostatné skupiny polí (DESIGN_ODCHYLKY P7). */}
+      <form action={createTrackAction} className="form-group form-group--lg">
+        <h2 className="form-group-head form-group-head--step">{t.newHeading}</h2>
+        <div className="card form-group-body">
         {/* Len názov — kľúč vygeneruje server a nikto ho nevidí (2. 10. 2026).
             Názov je jedinečný: podľa neho sa trasa vyberá aj importuje. */}
         <label className="field">
@@ -100,6 +101,7 @@ export default async function TracksPage({
         <p style={{ margin: 0 }}>
           <SubmitButton className="button">{t.create}</SubmitButton>
         </p>
+        </div>
       </form>
     </div>
     </AppShell>

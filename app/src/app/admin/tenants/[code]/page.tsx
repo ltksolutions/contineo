@@ -301,21 +301,20 @@ export default async function TenantDetailPage({
           hint={t.supportEmailNote}
         />
 
-        <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
-          <span className="field-label">{t.languages}</span>
-          <span className="admin-languages">
-            {UI_LANGUAGES.map(j => (
-              <label key={j} className="tag" style={{ gap: 6, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  name="languages"
-                  value={j}
-                  defaultChecked={tenant.languages.includes(j)}
-                />
-                {d.people.languages[j] ?? j}
-              </label>
-            ))}
-          </span>
+        {/* Výber viacerých — riadky s kruhom vľavo, ako jazyky v nastaveniach
+            organizácie (ZAKLAD-vyber-a-prepinace, DESIGN_ODCHYLKY). */}
+        <fieldset className="form-group">
+          <legend className="form-group-head">{t.languages}</legend>
+          <div className="card form-group-body form-group-body--rows">
+            <div className="form-list">
+              {UI_LANGUAGES.map(j => (
+                <label key={j} className="form-row select-row">
+                  <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
+                  <span className="form-row-main">{d.people.languages[j] ?? j}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </fieldset>
 
         <div className="field">

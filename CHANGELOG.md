@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dizajn: formulárové kroky, rozhodnutie námietky a názov v karte prehliadača (2026-10-06)
+
+Kroky pri nahrávaní a úprave dokumentu, nová trasa a pridávanie ľudí na
+trasu majú nadpis nad kartou ako ostatné formuláre. Termín trasy sa
+vyberá ako na Prideliť dokumenty (voľba s fajkou, pole dní pod ňou).
+Rozhodnutie o námietke v `/dpo` sú dva riadky s fajkou; „Vyhovieť", ktoré
+maže doklady natrvalo, je červené. Jazyky v správe organizácií sa vyberajú
+ako v nastaveniach organizácie. Karta prehliadača ukazuje názov stránky aj
+na Upozorneniach, Mojich potvrdeniach, Organizácii a jej častiach, Ochrane
+údajov, Návode, Prihlásení, Overení certifikátu a v správe organizácií —
+dovtedy tam bolo len „Intranet SFZ".
+
 ### Web contineo.app: obrázok architektúry podľa dnešnej aplikácie, helpdesk na webe (2026-10-06)
 
 Stĺpce **Worker** a **MongoDB — jadro** v obrázku na stránke Technológia

@@ -10,6 +10,26 @@
 
 ---
 
+## 2026-10-06 — formulárové kroky (P7, R9) a názov v karte prehliadača
+
+**Čo sa zmenilo:** `section.card.upload-section` + `h2.upload-step` →
+`.form-group--lg` + `.form-group-head--step` (číslo `.assign-step`); CSS
+`.upload-step*`, `.hr-subtitle`, `.hr-choice--tile`, `.admin-languages`
+zmizlo. Termín trasy `.choice-row` + `.choice-field`; pridanie ľudí na
+trasu bez karty okolo formulára (inak karta v karte). `/dpo`: nový
+`.form-row--danger`.
+
+**Názov v karte:** `pageTitle()` skladá názov z cesty pod hlavičkou; stránky
+mimo sekcií menu v `pages` neboli, takže v karte bolo len „Intranet SFZ".
+Test to dokonca strážil ako zámer („mimo sekcií len organizácia").
+Pribudlo 12 adries vrátane častí `/organisation/*`.
+
+**Nález:** inline `style={{ margin: 0 }}` na odseku s tlačidlom prebil
+odstup z `.form-group-body--rows` — tlačidlo sa lepilo na okraj karty.
+Inline okraje v kartách s riadkami nepatria.
+
+---
+
 ## 2026-10-06 — hlavičky stránok (P1, P10, R1)
 
 **Čo sa zmenilo:** `.lp-head`, `.ask-history-head` a ručné flexy s inline
