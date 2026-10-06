@@ -10,6 +10,20 @@
 
 ---
 
+## 2026-10-06 — názov v karte na verejných stránkach
+
+**Nález pri kontrole naživo po #283:** `/privacy` mal v karte stále len
+„Intranet SFZ". Koreňový layout berie adresu z hlavičky, ktorú nastavuje
+`proxy.ts` — ale verejné cesty (`isPublicPath`) púšťa skôr, než ju nastaví.
+Test `pageTitle` to nezachytil, lebo funkciu volá s adresou priamo.
+
+**Čo sa zmenilo:** `lib/publicPageTitle.ts`; `/privacy`, `/sign-in`
+a `/verify/*` majú vlastné `generateMetadata`. Adresu verejným cestám v
+`proxy.ts` neposielame zámerne — podľa nej by sa na verejnej stránke
+začala kresliť aj cesta pod hlavičkou.
+
+---
+
 ## 2026-10-06 — formulárové kroky (P7, R9) a názov v karte prehliadača
 
 **Čo sa zmenilo:** `section.card.upload-section` + `h2.upload-step` →

@@ -20,6 +20,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Notice from "@/components/Notice"
 import { submitObjectionAction } from "./actions"
 import SubmitButton from "@/components/SubmitButton"
+import { publicPageTitle } from "@/lib/publicPageTitle"
 
 export const dynamic = "force-dynamic"
 
@@ -44,6 +45,12 @@ function Table({ columns, rows }: { columns: string[]; rows: string[][] }) {
       </ul>
     </>
   )
+}
+
+
+/** Názov v karte — verejná stránka si ho nastaví sama (`lib/publicPageTitle.ts`). */
+export async function generateMetadata() {
+  return publicPageTitle("/privacy")
 }
 
 export default async function PrivacyPage({ searchParams }: { searchParams?: Promise<RawQuery> } = {}) {

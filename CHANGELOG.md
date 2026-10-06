@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Názov v karte prehliadača aj na verejných stránkach (2026-10-06)
+
+Ochrana osobných údajov, Prihlásenie a Overenie certifikátu majú v karte
+prehliadača názov stránky („Ochrana osobných údajov · Intranet SFZ"),
+nie len názov organizácie.
+
 ### Dizajn: formulárové kroky, rozhodnutie námietky a názov v karte prehliadača (2026-10-06)
 
 Kroky pri nahrávaní a úprave dokumentu, nová trasa a pridávanie ľudí na
