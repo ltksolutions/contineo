@@ -15,7 +15,7 @@
   </defs>
 
   <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektúra a dátový tok</text>
-  <text x="40" y="74" font-size="14" fill="#5f6368">CMS (kanály · spracovanie · review) → MongoDB (jadro) → AI adaptéry → rozhrania. Adaptéry sa vyberajú konfiguráciou tenanta, nie kódom.</text>
+  <text x="40" y="74" font-size="14" fill="#5f6368">Zdroje · spracovanie · review → MongoDB (jadro) → AI adaptéry → kanály. Adaptéry sa vyberajú konfiguráciou tenanta, nie kódom.</text>
 
   <rect x="470" y="96" width="580" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
   <text x="760" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, roly) · auto-zakladanie používateľov</text>
@@ -27,20 +27,20 @@
   <text x="46" y="196" font-size="15" font-weight="700" fill="#174EA6">CMS — SPRÁVA OBSAHU</text>
   <text x="46" y="215" font-size="11" fill="#5f6368">jediné miesto pravdy pre obsah — knižnica, verzie, tagy, review</text>
 
-  <!-- VSTUPNÉ KANÁLY -->
+  <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
-  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6">VSTUPNÉ KANÁLY</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368">obsah aj integrácie = jedna vrstva</text>
+  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6">ZDROJE</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368">dnes nahratý súbor · ostatné pripravujeme</text>
   <g font-size="12.5" fill="#202124">
-    <text x="60" y="316">• PDF normy a smernice</text>
-    <text x="60" y="342">• RSS / web (Všeobecné info)</text>
-    <text x="60" y="368">• FAQ</text>
-    <text x="60" y="394">• E-mail (IMAP)  ⇅</text>
-    <text x="60" y="420">• MCP konektory</text>
-    <text x="74" y="440" font-size="11" fill="#5f6368">Drive · SharePoint · Confluence</text>
-    <text x="74" y="457" font-size="11" fill="#5f6368">Notion · Slack …</text>
+    <text x="60" y="316">• Nahraté súbory — PDF + Word/Excel</text>
+    <text x="60" y="342" fill="#9aa0a6">• RSS / web (pripravujeme)</text>
+    <text x="60" y="368">• Overené odpovede z kurácie</text>
+    <text x="60" y="394" fill="#9aa0a6">• E-mail (IMAP) ⇅ (pripravujeme)</text>
+    <text x="60" y="420" fill="#9aa0a6">• MCP konektory (pripravujeme)</text>
+    <text x="74" y="440" font-size="11" fill="#9aa0a6" font-style="italic">Drive · SharePoint · Confluence</text>
+    <text x="74" y="457" font-size="11" fill="#9aa0a6" font-style="italic">Notion · Slack …</text>
   </g>
-  <text x="60" y="496" font-size="11" fill="#1A73E8">⇅ e-mail je aj výstupný kanál</text>
+  <text x="60" y="496" font-size="11" fill="#1A73E8">⇅ e-mail by bol aj výstupný kanál</text>
 
   <!-- WORKER -->
   <rect x="333" y="236" width="264" height="372" rx="14" fill="#FEF3E0" stroke="#E8920C" stroke-width="1.5"/>
@@ -103,21 +103,21 @@
   <text x="939" y="536" font-size="10.5" fill="#5f6368">$rankFusion — v pipeline (cloud)</text>
   <text x="939" y="552" font-size="10.5" fill="#5f6368">alebo v aplikácii (on-prem).</text>
 
-  <!-- ROZHRANIA -->
+  <!-- KANÁLY -->
   <rect x="1212" y="236" width="264" height="372" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
-  <text x="1232" y="266" font-size="15" font-weight="700" fill="#54309E">ROZHRANIA</text>
-  <text x="1232" y="285" font-size="11" fill="#5f6368">odpoveď vždy s citáciou + verziou</text>
+  <text x="1232" y="266" font-size="15" font-weight="700" fill="#54309E">KANÁLY</text>
+  <text x="1232" y="285" font-size="11" fill="#5f6368">odpoveď vždy s citáciou + znením</text>
   <g font-size="12.5" fill="#202124">
-    <text x="1232" y="318">• Chat</text>
-    <text x="1246" y="337" font-size="11" fill="#5f6368">streaming, história konverzácie</text>
-    <text x="1232" y="369">• E-mail odpovede  ⇅</text>
-    <text x="1246" y="388" font-size="11" fill="#5f6368">IMAP vstup aj výstup</text>
-    <text x="1232" y="420">• Tickety</text>
-    <text x="1246" y="439" font-size="11" fill="#5f6368">helpdesk, SLA, životný cyklus</text>
-    <text x="1232" y="471">• Vložený widget</text>
-    <text x="1246" y="490" font-size="11" fill="#5f6368">overlay v cudzej stránke</text>
-    <text x="1232" y="522">• Portál (KB + onboarding)</text>
-    <text x="1246" y="541" font-size="11" fill="#5f6368">verejná KB · potvrdzovanie noriem</text>
+    <text x="1232" y="318">• Asistent — otázka a odpoveď</text>
+    <text x="1246" y="337" font-size="11" fill="#5f6368">streaming, história otázok</text>
+    <text x="1232" y="369" fill="#9aa0a6">• E-mail odpovede ⇅ (pripravujeme)</text>
+    <text x="1246" y="388" font-size="11" fill="#9aa0a6" font-style="italic">IMAP vstup aj výstup</text>
+    <text x="1232" y="420" fill="#9aa0a6">• Tickety (pripravujeme)</text>
+    <text x="1246" y="439" font-size="11" fill="#9aa0a6" font-style="italic">helpdesk, SLA, životný cyklus</text>
+    <text x="1232" y="471" fill="#9aa0a6">• Vložený widget (pripravujeme)</text>
+    <text x="1246" y="490" font-size="11" fill="#9aa0a6" font-style="italic">overlay v cudzej stránke</text>
+    <text x="1232" y="522">• Portál — knižnica a potvrdzovanie</text>
+    <text x="1246" y="541" font-size="11" fill="#5f6368">predpisy · pridelenia · vzdelávanie</text>
   </g>
 
   <path d="M304,422 L331,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
@@ -128,11 +128,11 @@
   <path d="M1300,608 C1258,656 1020,664 838,614" fill="none" stroke="#00897B" stroke-width="2.2" marker-end="url(#arrowTeal)"/>
   <path d="M1392,608 C1430,678 1064,686 880,616" fill="none" stroke="#D93025" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arrowRed)"/>
 
-  <text x="40" y="742" font-size="15" font-weight="700" fill="#202124">Dva spätné cykly</text>
+  <text x="40" y="742" font-size="15" font-weight="700" fill="#202124">Dva spätné cykly — druhý pripravujeme</text>
   <circle cx="52" cy="766" r="4.5" fill="#00897B"/>
   <text x="66" y="771" font-size="12.5" fill="#00695C"><tspan font-weight="700">① qa_pair</tspan> — schválená odpoveď späť do znalostí</text>
   <circle cx="52" cy="792" r="4.5" fill="#D93025"/>
-  <text x="66" y="797" font-size="12.5" fill="#B31412"><tspan font-weight="700">② ticket</tspan> — eskalácia s kontextom konverzácie</text>
+  <text x="66" y="797" font-size="12.5" fill="#B31412"><tspan font-weight="700">② ticket</tspan> — eskalácia s kontextom konverzácie (pripravujeme)</text>
 
   <rect x="40" y="820" width="700" height="88" rx="12" fill="#E0F2F1" stroke="#00897B" stroke-width="1.5"/>
   <text x="60" y="848" font-size="15" font-weight="700" fill="#00695C">① KURÁCIA — kontrola kvality</text>
@@ -140,7 +140,7 @@
   <text x="60" y="892" font-size="12" fill="#5f6368">Nie je to strojové „učenie“, ale ľudská kurácia obsahu.</text>
 
   <rect x="776" y="820" width="700" height="88" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
-  <text x="796" y="848" font-size="15" font-weight="700" fill="#B31412">② ESKALÁCIA — na ticket</text>
+  <text x="796" y="848" font-size="15" font-weight="700" fill="#B31412">② ESKALÁCIA — na ticket (pripravujeme)</text>
   <text x="796" y="872" font-size="12.5" fill="#3c4043">Nízke skóre podobnosti alebo 3× neúspech na tú istú tému →</text>
   <text x="796" y="892" font-size="12.5" fill="#3c4043">bot ponúkne vytvorenie ticketu s celým kontextom konverzácie.</text>
 
