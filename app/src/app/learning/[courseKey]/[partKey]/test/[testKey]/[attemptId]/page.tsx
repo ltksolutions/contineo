@@ -144,8 +144,24 @@ function QuestionView({ q, n, total, attempt, ta }: { q: QuestionSnapshot; n: nu
           ? <div key={i} className="at-video"><video src={media(m.source.assetId)} controls preload="metadata" /><p className="quiet mc-note">{ta.videoNote}</p></div>
           : null)}
       {q.text && <div className="at-text"><FormattedText text={q.text} /></div>}
-      {(q.type === "single" || q.type === "multiple") && (
-        <div className={`at-opts${withMedia ? " at-opts--tiles" : ""}`}>
+      {/*
+        Textové odpovede ako riadky zoznamu (rozhodnutie R7, 6. 10. 2026):
+        jedna správna — fajka vpravo, viac správnych — kruh vľavo, ten istý
+        tvar ako vo formulároch. Odpovede s obrázkom ostávajú dlaždice —
+        obrázok potrebuje plochu. Meno `a` a hodnoty bez zmeny.
+      */}
+      {(q.type === "single" || q.type === "multiple") && !withMedia && (
+        <div className="at-rows form-list">
+          {q.answers.map(a => (
+            <label key={a.id} className={`form-row ${q.type === "single" ? "choice-row" : "select-row"}`}>
+              <input type={q.type === "single" ? "radio" : "checkbox"} name="a" value={a.id} defaultChecked={chosen.has(a.id)} />
+              <span className="form-row-main">{a.text}</span>
+            </label>
+          ))}
+        </div>
+      )}
+      {(q.type === "single" || q.type === "multiple") && withMedia && (
+        <div className="at-opts at-opts--tiles">
           {q.answers.map(a => (
             <label key={a.id} className="opt">
               <input type={q.type === "single" ? "radio" : "checkbox"} name="a" value={a.id} defaultChecked={chosen.has(a.id)} />
@@ -159,9 +175,15 @@ function QuestionView({ q, n, total, attempt, ta }: { q: QuestionSnapshot; n: nu
         </div>
       )}
       {q.type === "true_false" && (
-        <div className="tf2">
-          <label className="opt"><input type="radio" name="a" value="true" defaultChecked={saved?.kind === "bool" && saved.value} /> {ta.trueLabel}</label>
-          <label className="opt"><input type="radio" name="a" value="false" defaultChecked={saved?.kind === "bool" && !saved.value} /> {ta.falseLabel}</label>
+        <div className="at-rows form-list">
+          <label className="form-row choice-row">
+            <input type="radio" name="a" value="true" defaultChecked={saved?.kind === "bool" && saved.value} />
+            <span className="form-row-main">{ta.trueLabel}</span>
+          </label>
+          <label className="form-row choice-row">
+            <input type="radio" name="a" value="false" defaultChecked={saved?.kind === "bool" && !saved.value} />
+            <span className="form-row-main">{ta.falseLabel}</span>
+          </label>
         </div>
       )}
       {q.type === "short_text" && (

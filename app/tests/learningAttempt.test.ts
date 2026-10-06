@@ -105,11 +105,15 @@ describe("priebeh", () => {
     expect(html).toContain("Otázka 2 / 3")
     expect(html).toContain("Táto otázka má viac správnych odpovedí")
     expect(html).toContain('type="checkbox" name="a" value="x"')
+    // Textové odpovede ako riadky: viac správnych = kruh vľavo (R7, 6. 10. 2026).
+    expect(html).toContain('<label class="form-row select-row"><input type="checkbox" name="a" value="x"')
     expect(html).toContain("Prehľad odpovedí · 2 nezodpovedané")
   })
   it("krátky text a jedna správna so zapamätanou voľbou", async () => {
     expect(await run({ q: "3" })).toContain("Na diakritike a veľkých písmenách nezáleží.")
     expect(await run({ q: "1" })).toMatch(/type="radio" name="a" (checked="" value="a1"|value="a1" checked="")/)
+    // Jedna správna = fajka vpravo (R7).
+    expect(await run({ q: "1" })).toContain('<label class="form-row choice-row"><input type="radio" name="a"')
   })
   it("prehľad a potvrdenie s číslami nezodpovedaných", async () => {
     expect(await run({ review: "1" })).toContain("Odovzdať test")
