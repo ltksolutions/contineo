@@ -19,6 +19,7 @@ import { OBJECTION_TEXT_MAX } from "@/lib/objections"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Notice from "@/components/Notice"
 import { submitObjectionAction } from "./actions"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -194,7 +195,7 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
                 <textarea className="field-input" name="text" rows={4} required maxLength={OBJECTION_TEXT_MAX} />
                 <span className="quiet field-hint">{t.objectionFormHint}</span>
               </label>
-              <button className="button" type="submit">{t.objectionSubmit}</button>
+              <SubmitButton className="button">{t.objectionSubmit}</SubmitButton>
             </form>
           )}
         </div>

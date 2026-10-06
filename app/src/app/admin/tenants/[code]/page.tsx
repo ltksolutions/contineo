@@ -26,6 +26,7 @@ import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 
 /**
@@ -104,7 +105,7 @@ function ProviderRow({
         )}
 
         <div>
-          <button className="button" type="submit">{t.save}</button>
+          <SubmitButton className="button">{t.save}</SubmitButton>
         </div>
       </form>
 
@@ -114,7 +115,7 @@ function ProviderRow({
           <input type="hidden" name="provider" value={provider} />
           <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.deleteNote}</p>
           <Field name="confirmation" label={t.confirmLabel(tenant.companyCode)} />
-          <button className="button button--quiet" type="submit">{t.deleteSubmit}</button>
+          <SubmitButton className="button button--quiet">{t.deleteSubmit}</SubmitButton>
         </form>
       )}
     </section>
@@ -269,7 +270,7 @@ export default async function TenantDetailPage({
               type="email"
               hint={t.sendHint(pending.length)}
             />
-            <button className="button" type="submit">{t.send}</button>
+            <SubmitButton className="button">{t.send}</SubmitButton>
           </form>
         )}
       </section>
@@ -360,7 +361,7 @@ export default async function TenantDetailPage({
           </span>
         </label>
 
-        <button className="button" type="submit">{t.save}</button>
+        <SubmitButton className="button">{t.save}</SubmitButton>
       </form>
 
       {/* Prihlasovacie údaje sú medzi úpravou a vypnutím zámerne: patria
@@ -384,10 +385,10 @@ export default async function TenantDetailPage({
               label={t.confirmLabel(tenant.companyCode)}
               hint={t.confirmHint}
             />
-            <button className="button button--quiet" type="submit">{t.disable}</button>
+            <SubmitButton className="button button--quiet">{t.disable}</SubmitButton>
           </>
         ) : (
-          <button className="button" type="submit">{t.enable}</button>
+          <SubmitButton className="button">{t.enable}</SubmitButton>
         )}
       </form>
 

@@ -25,6 +25,7 @@ import {
 } from "@/lib/notifications"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { markAllReadAction } from "./actions"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -90,7 +91,7 @@ export default async function NotificationsPage({
           <>
             {unread > 0 && (
               <form action={markAllReadAction} style={{ margin: "0 0 18px" }}>
-                <button className="button" type="submit">{t.markAllRead}</button>
+                <SubmitButton className="button">{t.markAllRead}</SubmitButton>
                 <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: 12 }}>{t.unread(unread)}</span>
               </form>
             )}

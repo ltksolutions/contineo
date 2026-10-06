@@ -16,6 +16,7 @@ import type { ApprovalRound, VersionState } from "@/lib/approvals"
 import { submitForApprovalAction, cancelApprovalAction } from "@/app/library/actions"
 import ApprovalRounds from "./ApprovalRounds"
 import PeopleSearch from "./PeopleSearch"
+import SubmitButton from "@/components/SubmitButton"
 
 export interface ApproverChoice {
   id: string
@@ -138,9 +139,9 @@ export default function ApprovalPanel({
             </label>
 
             <div>
-              <button className="button" type="submit" disabled={people.length === 0}>
+              <SubmitButton className="button" disabled={people.length === 0}>
                 {t.approvalSubmitButton}
-              </button>
+              </SubmitButton>
             </div>
           </form>
         </details>
@@ -158,7 +159,7 @@ export default function ApprovalPanel({
               <span className="quiet field-hint">{t.approvalCancelHint}</span>
             </label>
             <div>
-              <button className="button button--quiet" type="submit">{t.approvalCancelButton}</button>
+              <SubmitButton className="button button--quiet">{t.approvalCancelButton}</SubmitButton>
             </div>
           </form>
         </details>

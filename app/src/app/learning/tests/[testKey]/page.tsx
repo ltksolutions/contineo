@@ -102,9 +102,9 @@ export default async function TestEditorPage({ params, searchParams }: { params:
                     <input type="hidden" name={`section_${i}_key`} value={s.key} />
                     <div className="sec2-head"><b>{tt.sectionTitle(i + 1)}</b>
                       <span className="mc-arrows">
-                        <button type="submit" name="op" value={`up:${i}`} className="button button--quiet mc-arrow" aria-label={tt.up} disabled={i === 0}>↑</button>
-                        <button type="submit" name="op" value={`down:${i}`} className="button button--quiet mc-arrow" aria-label={tt.down} disabled={i === test.sections.length - 1}>↓</button>
-                        <button type="submit" name="op" value={`remove:${i}`} className="button button--quiet">{tt.removeSection}</button>
+                        <SubmitButton name="op" value={`up:${i}`} className="button button--quiet mc-arrow" ariaLabel={tt.up} disabled={i === 0}>↑</SubmitButton>
+                        <SubmitButton name="op" value={`down:${i}`} className="button button--quiet mc-arrow" ariaLabel={tt.down} disabled={i === test.sections.length - 1}>↓</SubmitButton>
+                        <SubmitButton name="op" value={`remove:${i}`} className="button button--quiet">{tt.removeSection}</SubmitButton>
                       </span>
                     </div>
                     <div className="field"><span className="field-label">{tt.sectionFilter}</span>
@@ -118,7 +118,7 @@ export default async function TestEditorPage({ params, searchParams }: { params:
                   </div>
                 )
               })}
-              <div><button type="submit" name="op" value="add" className="button button--quiet">{tt.addSection}</button></div>
+              <div><SubmitButton name="op" value="add" className="button button--quiet">{tt.addSection}</SubmitButton></div>
             </fieldset>
 
             <fieldset className="mc-group">

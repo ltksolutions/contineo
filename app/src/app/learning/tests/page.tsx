@@ -342,9 +342,9 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
       </div>
       {question && (
         <div className="mg-actions">
-          <button type="submit" formAction={questionStatusAction} name="retire" value={question.status === "retired" ? "0" : "1"} className="button button--quiet">
+          <SubmitButton formAction={questionStatusAction} name="retire" value={question.status === "retired" ? "0" : "1"} className="button button--quiet">
             {question.status === "retired" ? tt.restoreQ : tt.retireQ}
-          </button>
+          </SubmitButton>
         </div>
       )}
     </form>

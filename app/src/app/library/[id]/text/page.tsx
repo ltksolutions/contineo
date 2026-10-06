@@ -25,6 +25,7 @@ import TextEditor from "@/components/TextEditor"
 import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -124,8 +125,8 @@ export default async function EditorPage({
           <textarea className="field-input editor-text" readOnly rows={14} value={draft.text} />
           <form action={decideOnDraftAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <input type="hidden" name="documentId" value={documentId} />
-            <button className="button" type="submit" name="choice" value="accept">{t.useAsDraft}</button>
-            <button className="button button--quiet" type="submit" name="choice" value="discard">{t.discard}</button>
+            <SubmitButton className="button" name="choice" value="accept">{t.useAsDraft}</SubmitButton>
+            <SubmitButton className="button button--quiet" name="choice" value="discard">{t.discard}</SubmitButton>
           </form>
         </section>
       ) : null}
@@ -182,7 +183,7 @@ export default async function EditorPage({
               name="markdown"
               initial={d.editableText}
             />
-            <div><button className="button" type="submit">{t.saveText}</button></div>
+            <div><SubmitButton className="button">{t.saveText}</SubmitButton></div>
           </form>
         </section>
       </div>
@@ -194,13 +195,13 @@ export default async function EditorPage({
         </p>
         <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input type="hidden" name="documentId" value={documentId} />
-          <button className="button button--quiet" type="submit" name="mode" value="clean">
+          <SubmitButton className="button button--quiet" name="mode" value="clean">
             {t.clean}
-          </button>
+          </SubmitButton>
           {isPdf && (
-            <button className="button button--quiet" type="submit" name="mode" value="rewrite-scan">
+            <SubmitButton className="button button--quiet" name="mode" value="rewrite-scan">
               {t.rewriteScan}
-            </button>
+            </SubmitButton>
           )}
         </form>
         {/*

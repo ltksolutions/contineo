@@ -266,7 +266,7 @@ function MoveButton({ action, values, label, disabled, glyph }: {
   return (
     <form action={action}>
       <Hidden values={values} />
-      <button type="submit" className="button button--quiet mc-arrow" aria-label={label} disabled={disabled}>{glyph}</button>
+      <SubmitButton className="button button--quiet mc-arrow" ariaLabel={label} disabled={disabled}>{glyph}</SubmitButton>
     </form>
   )
 }
@@ -431,7 +431,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
                 {editable ? (
                   <>
                     <form action={partTestRequiredAction}><Hidden values={{ ...ids, testKey: pt.testKey, required: pt.required ? "0" : "1" }} />
-                      <button type="submit" className="button button--quiet" aria-pressed={pt.required}>{pt.required ? `✓ ${ta.testRequired}` : ta.testRequired}</button></form>
+                      <SubmitButton className="button button--quiet" ariaPressed={pt.required}>{pt.required ? `✓ ${ta.testRequired}` : ta.testRequired}</SubmitButton></form>
                     <form action={removePartTestAction}><Hidden values={{ ...ids, testKey: pt.testKey }} /><SubmitButton className="button button--quiet">{ta.removeTest}</SubmitButton></form>
                   </>
                 ) : <span className="quiet">{pt.required ? ta.testRequired : ""}{pt.testVersion ? ` · v${pt.testVersion}` : ""}</span>}

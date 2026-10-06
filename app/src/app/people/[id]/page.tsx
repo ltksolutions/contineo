@@ -32,6 +32,7 @@ import { savePersonAction, togglePersonStatusAction, resendInviteAction, setEnde
 import { addYears, RETENTION_YEARS } from "@/lib/retention"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -339,7 +340,7 @@ export default async function PersonDetailPage({
         </fieldset>
 
         <div>
-          <button className="button" type="submit">{t.save}</button>
+          <SubmitButton className="button">{t.save}</SubmitButton>
         </div>
       </form>
 
@@ -373,7 +374,7 @@ export default async function PersonDetailPage({
               {o.invitationSentAt && ` ${t.inviteNoteSent(formatDate(o.invitationSentAt, language))}`}
             </p>
 
-            <div><button className="button button--quiet" type="submit">{o.invitationSentAt ? t.inviteSubmit : t.inviteSubmitFirst}</button></div>
+            <div><SubmitButton className="button button--quiet">{o.invitationSentAt ? t.inviteSubmit : t.inviteSubmitFirst}</SubmitButton></div>
           </form>
         )}
 
@@ -415,7 +416,7 @@ export default async function PersonDetailPage({
               </label>
             </div>
             <div className="ex-foot">
-              <button className="button button--danger" type="submit">{t.excludeSubmit}</button>
+              <SubmitButton className="button button--danger">{t.excludeSubmit}</SubmitButton>
             </div>
           </form>
         )}
@@ -456,7 +457,7 @@ export default async function PersonDetailPage({
               </label>
             </div>
             <div className="ex-foot">
-              <button className="button button--quiet" type="submit">{t.endedAtSubmit}</button>
+              <SubmitButton className="button button--quiet">{t.endedAtSubmit}</SubmitButton>
             </div>
           </form>
         )}
@@ -470,7 +471,7 @@ export default async function PersonDetailPage({
             <p className="quiet">
               {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
             </p>
-            <button className="button button--quiet" type="submit">{t.returnSubmit}</button>
+            <SubmitButton className="button button--quiet">{t.returnSubmit}</SubmitButton>
           </form>
         )}
         </div>

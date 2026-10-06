@@ -318,7 +318,7 @@ export default async function ChunksPage({
                 ))}
               </select>
             </label>
-            <div><button className="button button--quiet" type="submit">{t.useProfileButton}</button></div>
+            <div><SubmitButton className="button button--quiet">{t.useProfileButton}</SubmitButton></div>
           </form>
         )}
         {r.trial && !r.trial.matchesProfile && !r.trial.sameAsCurrent && (
@@ -334,7 +334,7 @@ export default async function ChunksPage({
               <input className="field-input" name="label" required maxLength={60} placeholder={t.newProfileLabel} aria-label={t.newProfileLabel} />
               <span className="quiet field-hint">{t.newProfileHint}</span>
             </label>
-            <div><button className="button" type="submit">{t.newProfileButton}</button></div>
+            <div><SubmitButton className="button">{t.newProfileButton}</SubmitButton></div>
           </form>
         )}
       </section>

@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
   redirect: (to: string) => { throw new Error(`redirect ${to}`) },
 }))
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
-vi.mock("@/components/SubmitButton", async () => { const { createElement: h } = await import("react"); return { default: ({ children }: { children: string }) => h("button", { type: "submit" }, children) } })
+vi.mock("@/components/SubmitButton", async () => { const { createElement: h } = await import("react"); return { default: ({ children, name, value, ariaLabel, disabled }: { children: string; name?: string; value?: string; ariaLabel?: string; disabled?: boolean }) => h("button", { type: "submit", name, value, "aria-label": ariaLabel, disabled }, children) } })
 vi.mock("@/components/AttemptBar", async () => { const { createElement: h } = await import("react"); return { default: ({ labels }: { labels: { position: string } }) => h("div", { className: "abar" }, labels.position) } })
 vi.mock("@/lib/testPage", () => ({ loadTestContext: async () => s.ctx }))
 vi.mock("@/lib/testAttemptsDb", () => ({ getAttempt: async () => s.attempt }))
