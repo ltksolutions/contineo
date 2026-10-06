@@ -3725,7 +3725,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .view-switch-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Počet pri voľbe filtra (stav zoznamu) — tlmený, nech výber nesie doska. */
-.view-switch--fit { margin: 0 0 10px; }
+/* V mriežke (`.mg-body`) by sa roztiahol na celú šírku — na počítači len
+   na šírku volieb; na telefóne cez celú šírku (nižšie). */
+.view-switch--fit { margin: 0 0 10px; justify-self: start; }
 .view-switch-count { margin-left: 5px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 639px) {
@@ -3734,7 +3736,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .view-switch--full { display: grid; width: 100%; }
   /* Filter so štyrmi voľbami a počtom: cez celú šírku, užšie segmenty —
      inak by na 390 px pretiekol (DESIGN_ODCHYLKY P4). */
-  .view-switch--fit { display: grid; width: 100%; }
+  .view-switch--fit { display: grid; width: 100%; justify-self: stretch; }
   .view-switch--fit .view-switch-item { padding: 0 6px; font-size: 13px; }
 }
 
@@ -4413,14 +4415,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* ── história otázok (ASK-historia-otazok) ──────────────────────────────── */
 .ask-history { max-width: 900px; display: grid; gap: 16px; }
-.ask-history-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-}
-.ask-history-head .page-lead { margin: 0; }
 .ask-history-filter { display: flex; gap: 8px; }
 .ask-history-filter .field-input { flex: 1 1 auto; min-width: 0; }
 .ask-history-confirm { display: grid; gap: 12px; padding: 16px; }
@@ -6909,10 +6903,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* ── Vzdelávanie: moje kurzy (rám LEARNING-moje-kurzy, 27. 9. 2026) ─────────
    Rám kreslí 390 / 834 / 1440 triedou rámu; tu sú to zlomy 640 a 1024. */
 .lp { max-width: 1180px; margin: 0 auto; }
-.lp-head { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin: 0 0 14px; }
-.lp-head .grow { flex: 1 1 320px; min-width: 0; }
-.lp-head .page-title { margin: 0 0 4px; }
-.lp-head .page-lead { margin: 0; }
 .lp-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
 .lf { display: none; gap: 16px; align-content: start; }
 .lf-k { font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }

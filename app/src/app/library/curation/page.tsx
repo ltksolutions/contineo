@@ -45,17 +45,12 @@ export default async function CurationPage({
   return (
     <AppShell language={language} title={t.publishHeading}>
     <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
-      <div style={{ marginBottom: 20 }}>
-        <h1 className="page-title" style={{ margin: "0 0 8px" }}>
-          {t.publishHeading}
-          {pending.length > 0 && (
-            <span className="tag" style={{ fontSize: "var(--fs-micro)", marginLeft: 10, verticalAlign: "middle" }}>
-              {t.waiting(pending.length)}
-            </span>
-          )}
-        </h1>
-        <p className="quiet page-lead" style={{ margin: 0, maxWidth: 660 }}>{t.publishIntro}</p>
+      {/* Hlavička stránky (DESIGN_ODCHYLKY P1); počet čakajúcich ako štítok vedľa. */}
+      <div className="page-head">
+        <h1 className="page-title">{t.publishHeading}</h1>
+        {pending.length > 0 && <span className="tag">{t.waiting(pending.length)}</span>}
       </div>
+      <p className="quiet page-lead" style={{ margin: "0 0 20px", maxWidth: 660 }}>{t.publishIntro}</p>
 
       <Notice language={language} message={message} error={error === "1"} back="/library/curation" />
 
@@ -114,7 +109,8 @@ export default async function CurationPage({
 
             <form action={publishCurationAction}>
               <input type="hidden" name="id" value={item.id} />
-              <SubmitButton className="button">{t.publish}</SubmitButton>
+              {/* Zoznam kariet s vlastnou akciou — tiché (rozhodnutie R1, 6. 10. 2026). */}
+              <SubmitButton className="button button--quiet">{t.publish}</SubmitButton>
             </form>
           </div>
         ))}

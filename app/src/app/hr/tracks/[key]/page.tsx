@@ -119,10 +119,9 @@ export default async function TrackDetailPage({
       <Notice language={ctx.person.language} message={message ?? error} error={Boolean(error)} back={here} />
 
 
-      <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-        <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>
-          {track.title}
-        </h1>
+      {/* Hlavička stránky (DESIGN_ODCHYLKY P1). */}
+      <div className="page-head">
+        <h1 className="page-title">{track.title}</h1>
         {/* Tie isté štítky ako v zozname trás. */}
         <span className={track.isActive ? "tag tag--published" : "tag tag--archived"}>
           {track.isActive ? t.active : t.inactive}

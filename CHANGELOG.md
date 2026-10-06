@@ -16,6 +16,18 @@ a eskalácia na ticket v obrázku aj v textoch stránky ako hotové; FAQ je
 zdroj; RSS/web, MCP a IMAP ostávajú „pripravujeme". Vo všetkých troch
 jazykoch, PNG kópia pregenerovaná.
 
+### Dizajn: hlavičky stránok a jedno plné tlačidlo (2026-10-06)
+
+Stránky Vzdelávania, história otázok, detail pridelenia, trasa, karta
+osoby, správa organizácií, text dokumentu, kurátorstvo, priečinky,
+posúdenie, potvrdenia a upozornenia majú rovnakú hlavičku: nadpis vľavo,
+jediná akcia vpravo. Na detaile pridelenia je „Dať vedieť e-mailom" ako
+tlačidlo v hlavičke, na potvrdeniach „Stiahnuť". Keď je otvorený formulár
+(nový kurz, nový test, otázka, import), tlačidlo v hlavičke sa neukazuje.
+V zoznamoch kariet (úlohy, kurzy, kurátorstvo, posúdenie, námietky) sú
+tlačidlá kariet tiché; plné ostáva len v hlavičke. Filter stavu vo
+Vzdelávaní sa na počítači už neroztiahne cez celú šírku.
+
 ### Helpdesk: FAQ, kanály so schránkou, tickety, obrazovka riešiteľa a widget pre ISSF (2026-10-06, ADR-028)
 
 **FAQ je nový druh dokumentu** v knižnici: píše sa v aplikácii ako záznamy

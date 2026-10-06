@@ -1187,7 +1187,8 @@ export default async function OrganisationSectionPage({
               {AI_USAGE_PURPOSES.map(p => <option key={p} value={p}>{tu.purposes[p].label}</option>)}
             </select>
           </label>
-          <div><button className="button" type="submit">{tu.apply}</button></div>
+          {/* Filter nie je hlavná akcia — tiché (DESIGN_ODCHYLKY). */}
+          <div><button className="button button--quiet" type="submit">{tu.apply}</button></div>
         </form>
 
         <div className="usage-summary card">

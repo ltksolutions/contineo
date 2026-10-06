@@ -29,12 +29,13 @@ export default async function TenantAdminPage() {
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 900 }}>
-      <h1 className="page-title">{t.heading}</h1>
-      <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
-
-      <p style={{ margin: "0 0 24px" }}>
+      {/* Jediná akcia vpravo v hlavičke (DESIGN_ODCHYLKY P1). */}
+      <div className="page-head">
+        <h1 className="page-title">{t.heading}</h1>
+        <span className="page-head-spacer" aria-hidden="true" />
         <Link className="button" href="/admin/new">{t.newTenant}</Link>
-      </p>
+      </div>
+      <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
       {/* V praxi sa nestane — `/admin` vidí ten, kto organizáciu už má —
           ale prázdna obrazovka bez textu je horšia než veta, ktorá sa

@@ -639,8 +639,9 @@ export default async function LibraryPage({
         <div className="empty">
           <div className="empty-title">{t.empty}</div>
           <div className="empty-text">{t.emptyText}</div>
+          {/* Plné „Nahrať" je v hlavičke; tu ten istý krok tichý (DESIGN_ODCHYLKY P10). */}
           <div className="empty-action">
-            <Link className="button" href="/library/new">{t.upload}</Link>
+            <Link className="button button--quiet" href="/library/new">{t.upload}</Link>
           </div>
         </div>
       ) : (
