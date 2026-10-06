@@ -1666,6 +1666,10 @@ interface Dictionary {
       deleteSubmit: string
     }
     codelists: {
+      /** Tlačidlo výberu bez JavaScriptu. */
+      show: string
+      /** Výber číselníka (R6, 6. 10. 2026) — popis poľa. */
+      pick: string
       introBefore: string
       introHighlight: string
       introAfter: string
@@ -5740,6 +5744,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteSubmit: "Odstrániť",
     },
     codelists: {
+      show: "Zobraziť",
+      pick: "Číselník",
       introBefore: "Čím označujete vlastný obsah v knižnici. Základné hodnoty sú tu vždy — je nimi označený existujúci obsah a ich zmiznutie by z neho spravilo neplatné údaje. Odobrať sa dá len to, čo ste pridali vy, a aj vtedy zmizne ",
       introHighlight: "len z ponuky",
       introAfter: ": dokumenty, ktoré hodnotu majú, si ju nesú ďalej.",
@@ -9687,6 +9693,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteSubmit: "Odstranit",
     },
     codelists: {
+      show: "Zobrazit",
+      pick: "Číselník",
       introBefore: "Čím označujete vlastní obsah v knihovně. Základní hodnoty jsou tu vždy — je jimi označený existující obsah a jejich zmizení by z něj udělalo neplatné údaje. Odebrat se dá jen to, co jste přidali vy, a i tehdy zmizí ",
       introHighlight: "jen z nabídky",
       introAfter: ": dokumenty, které hodnotu mají, si ji nesou dál.",
@@ -13623,6 +13631,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteSubmit: "Remove",
     },
     codelists: {
+      show: "Show",
+      pick: "Code list",
       introBefore: "What you label your own library content with. The base values are always here — existing content is labelled with them, and their disappearance would turn it into invalid data. Only what you added can be removed, and even then it disappears ",
       introHighlight: "from the menu only",
       introAfter: ": documents that carry the value keep it.",

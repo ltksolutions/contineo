@@ -10,6 +10,13 @@ Pri vypĺňaní testu sú textové odpovede riadky zoznamu ako vo formulároch:
 pri jednej správnej odpovedi fajka vpravo, pri viacerých kruh vľavo; aj
 Áno/Nie. Odpovede s obrázkom ostávajú dlaždice.
 
+### Číselníky: výber zo zoznamu namiesto druhého podmenu (2026-10-06)
+
+V nastaveniach organizácie sa číselník (Druhy dokumentov, Značky,
+Pracoviská, Právne základy) vyberá zo zoznamu nad ním, nie druhým
+farebným podmenu pod bočným zoznamom. Výber zaberie hneď; bez
+JavaScriptu tlačidlom Zobraziť.
+
 ### Spotreba umelej inteligencie má vlastnú adresu (2026-10-06)
 
 Spotreba AI v nastaveniach organizácie je na `/organisation/ai/usage`;

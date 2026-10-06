@@ -763,19 +763,26 @@ export default async function OrganisationSectionPage({
           {t.codelists.introBefore}<strong>{t.codelists.introHighlight}</strong>{t.codelists.introAfter}
         </p>
 
-        {/* Záložky — jeden číselník naraz (Ján 3. 10. 2026). Bez počtu položiek: nič nehlásil. */}
-        <nav className="tabs" aria-label={t.tabs.codelists}>
-          <TabsBar>
-            {codelists.map(c => (
-              <TabLink key={c.name} href={`/organisation/codelists?list=${c.name}`} active={list === c.name}>
-                {t.codelists.labels[c.name].name}
-              </TabLink>
-            ))}
-            <TabLink href="/organisation/codelists?list=legal" active={list === "legal"}>
-              {tr.orgHeading}
-            </TabLink>
-          </TabsBar>
-        </nav>
+        {/*
+          Jeden číselník naraz (Ján 3. 10. 2026) — výber zo zoznamu, nie druhé
+          farebné podmenu pod bočným zoznamom organizácie: dva farebné
+          ovládače nad sebou sa nesmú dať zameniť (rozhodnutie R6, 6. 10. 2026,
+          Picker .menu). Parameter `?list=` ostáva — miesto sa nemení, mení sa
+          zoznam. S JavaScriptom zaberie výber hneď (`LiveFilter`), bez neho
+          tlačidlo.
+        */}
+        <LiveFilter className="cl-pick" action="/organisation/codelists" label={t.codelists.pick}>
+          <label className="field">
+            <span className="field-label">{t.codelists.pick}</span>
+            <select className="field-input" name="list" defaultValue={list}>
+              {codelists.map(c => (
+                <option key={c.name} value={c.name}>{t.codelists.labels[c.name].name}</option>
+              ))}
+              <option value="legal">{tr.orgHeading}</option>
+            </select>
+          </label>
+          <noscript><button className="button button--quiet" type="submit">{t.codelists.show}</button></noscript>
+        </LiveFilter>
 
         {codelists.filter(c => c.name === list).map(c => {
           const isCustom = (key: string) => c.vlastne.some(v => v.key === key)

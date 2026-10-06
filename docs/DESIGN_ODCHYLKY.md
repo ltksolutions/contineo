@@ -71,7 +71,7 @@ chce vlastnú adresu. Repozitár si protirečí sám.
   (nie prepísať) — cesta má Spotrebu pomenovať, je to iná obrazovka.
 - B: ponechať podľa ADR-026 a doplniť výnimku do `CLAUDE.md`.
 
-**R6 — Číselníky: druhé farebné podmenu `?list=`** (`/organisation/codelists`)
+**R6 — Číselníky: druhé farebné podmenu `?list=`** (✓ hotové 6. 10. 2026) (`/organisation/codelists`)
 vnútri časti, ktorá už má bočný zoznam. Dve farebné podmenu nad sebou sa
 podľa pravidla nesmú dať zameniť.
 - **A (odporúčam):** parameter ponechať (miesto sa nemení), tvar zmeniť na
