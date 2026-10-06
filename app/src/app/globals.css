@@ -7307,8 +7307,10 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .opt input { width: 20px; height: 20px; accent-color: var(--accent); flex: 0 0 auto; }
 .opt:has(input:checked) { border: 2px solid var(--accent); background: var(--accent-soft); padding: 7px 13px; }
 .opt img { width: 96px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; }
-.tf2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.tf2 .opt { min-height: 72px; justify-content: center; font-weight: 650; font-size: 17px; }
+/* Odpovede ako riadky zoznamu v karte otázky (R7) — orámovaná skupina,
+   nie karta v karte; riadky 52 px, aby sa pri teste netrafilo vedľa. */
+.at-rows { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.at-rows .form-row { min-height: 52px; }
 .at-short { min-height: 48px; font-size: 16px; }
 .at-nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; }
 .at-grid { display: none; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
@@ -7357,7 +7359,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 
 @media (max-width: 639px) {
   .at-nav .button, .rs-act .button { flex: 1 1 auto; min-height: 48px; justify-content: center; }
-  .tf2 .opt { min-height: 64px; }
 }
 
 @media (min-width: 640px) {

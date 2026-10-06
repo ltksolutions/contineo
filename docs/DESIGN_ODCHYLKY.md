@@ -79,7 +79,7 @@ podľa pravidla nesmú dať zameniť.
   než 4, takže `.view-switch` by sa nezmestil.
 - B: `.view-switch`.
 
-**R7 — Odpovede v pokuse o test** (`.opt`). Výber odpovede je ten istý
+**R7 — Odpovede v pokuse o test** (`.opt`). (✓ hotové 6. 10. 2026) Výber odpovede je ten istý
 druh voľby ako vo formulári.
 - **A (odporúčam):** textové odpovede ako `.choice-row` (jedna) /
   `.select-row` (viac); dlaždice s obrázkami (`at-opts--tiles`) ponechať —

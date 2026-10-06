@@ -10,6 +10,16 @@
 
 ---
 
+## 2026-10-06 — odpovede v teste ako riadky (R7)
+
+**Čo sa zmenilo:** v pokuse o test sú textové odpovede `.form-row` v
+`.at-rows` (orámovaná skupina v karte otázky, nie karta v karte):
+`single` a `true_false` → `.choice-row`, `multiple` → `.select-row`.
+Odpovede s obrázkom ostali `.opt` dlaždice. `.tf2` zmizlo. Meno `a`
+a hodnoty bez zmeny.
+
+---
+
 ## 2026-10-06 — číselníky cez výber zo zoznamu (R6)
 
 **Čo sa zmenilo:** druhé `.tabs` pod `OrgNav` → `LiveFilter` (GET na
