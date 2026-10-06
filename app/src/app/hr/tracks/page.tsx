@@ -16,6 +16,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { createTrackAction } from "./actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 import HrTabs from "@/components/HrTabs"
 
 export const dynamic = "force-dynamic"
@@ -97,7 +98,7 @@ export default async function TracksPage({
         </label>
 
         <p style={{ margin: 0 }}>
-          <button className="button" type="submit">{t.create}</button>
+          <SubmitButton className="button">{t.create}</SubmitButton>
         </p>
       </form>
     </div>

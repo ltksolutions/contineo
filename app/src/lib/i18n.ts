@@ -118,6 +118,14 @@ interface Dictionary {
       failed: string
       page: string
     }
+    /**
+     * Text tlačidla, kým beží dlhšia akcia (`SubmitButton.pendingLabel`).
+     * Rozposlanie e-mailov trvá pri väčšom oddelení desiatky sekúnd.
+     */
+    pending: {
+      adding: string
+      sending: string
+    }
   }
 
   /** Texty potvrdzovacích obrazoviek. */
@@ -3613,6 +3621,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Načítavam PDF…",
       failed: "PDF sa nepodarilo zobraziť priamo na stránke. Otvor ho odkazom vyššie.",
       page: "Strana {page} z {pages}",
+    },
+    pending: {
+      adding: "Pridávam…",
+      sending: "Posielam e-maily…",
     },
   },
   onboarding: {
@@ -7289,6 +7301,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "PDF se nepodařilo zobrazit přímo na stránce. Otevři ho odkazem výše.",
       page: "Strana {page} z {pages}",
     },
+    pending: {
+      adding: "Přidávám…",
+      sending: "Posílám e-maily…",
+    },
   },
   onboarding: {
     openPdf: "Otevřít PDF",
@@ -10960,6 +10976,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Loading PDF…",
       failed: "The PDF could not be shown on the page. Open it with the link above.",
       page: "Page {page} of {pages}",
+    },
+    pending: {
+      adding: "Adding…",
+      sending: "Sending e-mails…",
     },
   },
   onboarding: {

@@ -19,6 +19,7 @@ import { formatDate, dictionary } from "@/lib/i18n"
 import { loadDocument, effectiveVersion } from "@/lib/documents"
 import { revokeAction } from "../../actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -104,7 +105,7 @@ export default async function RevokeAssignmentPage({
             <textarea id="revoke-reason" name="reason" className="field-input" rows={3} maxLength={500} />
             <p className="quiet field-hint" style={{ margin: 0 }}>{t.reasonHint}</p>
             <div className="revoke-actions">
-              <button className="button button--danger" type="submit">{t.confirm}</button>
+              <SubmitButton className="button button--danger">{t.confirm}</SubmitButton>
               <Link className="button button--quiet" href="/hr">{t.cancel}</Link>
             </div>
           </form>

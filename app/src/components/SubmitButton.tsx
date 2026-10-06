@@ -21,6 +21,8 @@ export default function SubmitButton({
   value,
   style,
   ariaLabel,
+  disabled = false,
+  pendingLabel,
 }: {
   className?: string
   children: ReactNode
@@ -28,6 +30,13 @@ export default function SubmitButton({
   value?: string
   style?: CSSProperties
   ariaLabel?: string
+  disabled?: boolean
+  /**
+   * Text počas ukladania, keď akcia trvá dlhšie (rozosielanie e-mailov).
+   * Samotný krúžok pri desiatkach sekúnd nestačí — človek nevie, či sa
+   * niečo deje, alebo stránka zamrzla (Ján, 6. 10. 2026, „Pridať na trasu").
+   */
+  pendingLabel?: ReactNode
 }) {
   const { pending } = useFormStatus()
   return (
@@ -36,13 +45,13 @@ export default function SubmitButton({
       type="submit"
       name={name}
       value={value}
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending || undefined}
       aria-label={ariaLabel}
       style={style}
     >
       {pending && <span className="button-spinner" aria-hidden="true" />}
-      {children}
+      {pending && pendingLabel ? pendingLabel : children}
     </button>
   )
 }

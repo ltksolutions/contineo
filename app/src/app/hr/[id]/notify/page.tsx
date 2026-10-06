@@ -21,6 +21,7 @@ import { formatDate, normalizeLanguage, dictionary } from "@/lib/i18n"
 import { sendNotificationAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -142,9 +143,9 @@ export default async function NotifyPage({
 
           <form action={sendNotificationAction}>
             <input type="hidden" name="id" value={id} />
-            <button className="button" type="submit">
+            <SubmitButton className="button" pendingLabel={dictionary(language).common.pending.sending}>
               {t.send(recipients.length)}
-            </button>
+            </SubmitButton>
           </form>
         </>
       )}

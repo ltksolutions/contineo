@@ -18,6 +18,7 @@ import { dutyState, dutyTagClass } from "@/lib/due"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { sendRemindersAction } from "../actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 import HrTabs from "@/components/HrTabs"
 
 export const dynamic = "force-dynamic"
@@ -139,9 +140,9 @@ export default async function RemindersPage({
 
           <form action={sendRemindersAction}>
             <input type="hidden" name="days" value={String(days)} />
-            <button className="button" type="submit">
+            <SubmitButton className="button" pendingLabel={dictionary(language).common.pending.sending}>
               {notice ? t.noticeSend(people.length) : t.send(people.length)}
-            </button>
+            </SubmitButton>
           </form>
         </>
       )}
