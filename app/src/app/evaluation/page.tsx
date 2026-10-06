@@ -196,8 +196,9 @@ export default async function EvaluationPage({
                           defaultValue={item.draft?.answer ?? item.verifiedAnswer} required />
               </label>
 
-              <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
-                <legend className="field-label">{tc.sourcesLabel}</legend>
+              <fieldset className="form-group">
+                <legend className="form-group-head">{tc.sourcesLabel}</legend>
+                <div className="card form-group-body">
                 {item.sources.length === 0 ? (
                   <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tc.noSources}</p>
                 ) : (
@@ -213,7 +214,8 @@ export default async function EvaluationPage({
                     ))}
                   </ul>
                 )}
-                <p className="quiet field-hint" style={{ margin: "6px 0 0" }}>{tc.sourcesHint}</p>
+                </div>
+                <p className="form-group-foot quiet">{tc.sourcesHint}</p>
               </fieldset>
 
               {item.correctSources && (

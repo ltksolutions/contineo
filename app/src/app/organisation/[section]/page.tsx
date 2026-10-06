@@ -922,8 +922,9 @@ export default async function OrganisationSectionPage({
                 taken: t.codelists.keyTakenHint,
               }}
             />
-            <fieldset className="hr-group">
-              <legend className="field-label">{tr.categoryField}</legend>
+            <fieldset className="form-group">
+              <legend className="form-group-head">{tr.categoryField}</legend>
+              <div className="card form-group-body">
               {LEGAL_BASES.map(b => (
                 <label key={b} className="hr-choice">
                   <input type="radio" name="basis" value={b} required />
@@ -933,6 +934,7 @@ export default async function OrganisationSectionPage({
                   </span>
                 </label>
               ))}
+              </div>
             </fieldset>
             <label className="field">
               <span className="field-label">{tr.referenceField}</span>

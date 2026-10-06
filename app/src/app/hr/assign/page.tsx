@@ -181,13 +181,15 @@ export default async function AssignPage({
       ) : (
         <form id="assign-form" action={assignAction} className="assign">
           {/* Normy | Komu vedľa seba (HR-pridelit-normy-hladanie, bod 1).
-              Čísla krokov sú len orientácia, nie sprievodca (bod 6). */}
+              Čísla krokov sú len orientácia, nie sprievodca (bod 6). Nadpis
+              kroku nad kartou, nie v jej čiare (HR-pridelit-nadpis-karty). */}
           <div className="assign-cols">
-          <fieldset className="card hr-group assign-panel">
-            <legend className="assign-legend">
+          <fieldset className="form-group form-group--lg">
+            <legend className="form-group-head form-group-head--step">
               <span className="assign-step" aria-hidden="true">1</span>
               {t.whichDocuments} <span className="quiet hr-count">{t.documentsCount(documents.length)}</span>
             </legend>
+            <div className="card form-group-body">
             {/* Upozornenie, nie brána (D91): pridelenie bez právneho základu
                 prejde. Jantárový rámček namiesto sivej nápovedy (rám HR, bod 1). */}
             {documents.some(d => d.legalBasisMissing) && (
@@ -203,13 +205,15 @@ export default async function AssignPage({
               listLabel={t.whichDocuments}
               listClassName="assign-doc-list"
             />
+            </div>
           </fieldset>
 
-          <fieldset className="card hr-group assign-panel">
-            <legend className="assign-legend">
+          <fieldset className="form-group form-group--lg">
+            <legend className="form-group-head form-group-head--step">
               <span className="assign-step" aria-hidden="true">2</span>
               {t.to}
             </legend>
+            <div className="card form-group-body">
 
             {/* „Všetkým" prebije výber nižšie — s JS sa zvyšok stlmí (Q4),
                 hodnoty ostávajú. Podsekcie oddelené čiarou (bod 4). */}
@@ -334,17 +338,21 @@ export default async function AssignPage({
             </label>
             </div>
             </AudienceAll>
+            </div>
           </fieldset>
           </div>
 
-          {/* Dôvod | Termín v jednej karte, pod tým súhrn a tlačidlá (bod 1). */}
-          <section className="card assign-finish">
+          {/* Dôvod | Termín ako dve skupiny vedľa seba, pod nimi súhrn
+              a tlačidlá v karte bez nadpisu (HR-pridelit-nadpis-karty, Q4).
+              Nápovedy pod kartou (Q3). */}
           <div className="assign-finish-grid">
-          <label className="field">
-            <span className="assign-legend">
+          <fieldset className="form-group form-group--lg">
+            <legend id="assign-reason" className="form-group-head form-group-head--step">
               <span className="assign-step" aria-hidden="true">3</span>
               {t.reason}
-            </span>
+            </legend>
+            <div className="card form-group-body">
+            {/* Textarea nemá vlastný `<label>` — názov nesie legenda nad kartou. */}
             <textarea
               name="reason"
               defaultValue={q.reason ?? ""}
@@ -352,11 +360,11 @@ export default async function AssignPage({
               rows={4}
               className="field-input"
               placeholder={t.reasonPlaceholder}
+              aria-labelledby="assign-reason"
             />
-            <span className="quiet field-hint">
-              {t.reasonNote}
-            </span>
-          </label>
+            </div>
+            <p className="form-group-foot quiet">{t.reasonNote}</p>
+          </fieldset>
 
           {/*
             Termín (D61). **Výslovná voľba, nie „čo je vyplnené, to platí"** —
@@ -367,11 +375,12 @@ export default async function AssignPage({
             formulár beží bez JavaScriptu, takže sa skrývať nedajú — a kto sa
             prepne z dátumu na dni a späť, o svoj dátum nepríde.
           */}
-          <fieldset className="hr-group assign-due">
-            <legend className="assign-legend">
+          <fieldset className="form-group form-group--lg">
+            <legend className="form-group-head form-group-head--step">
               <span className="assign-step" aria-hidden="true">4</span>
               {t.due}
             </legend>
+            <div className="card form-group-body">
 
             {/*
               Tri voľby, pole vedľa svojej (rám HR, bod 4). Tie isté mená
@@ -398,8 +407,8 @@ export default async function AssignPage({
                 </label>
               ))}
             </div>
-
-            <span className="quiet field-hint">{t.dueNote}</span>
+            </div>
+            <p className="form-group-foot quiet">{t.dueNote}</p>
           </fieldset>
           </div>
 
@@ -408,6 +417,7 @@ export default async function AssignPage({
             po „Skontrolovať dopad" (Ján, 22. 9. 2026) — súhrn nad ním je počet
             vybraných položiek, nie počet ľudí.
           */}
+          <div className="card form-group-body form-group-body--lg">
           <AssignFinish
             formId="assign-form"
             language={language}
@@ -415,7 +425,7 @@ export default async function AssignPage({
             previewSignature={previewSignature}
             previewAction={previewAssignAction}
           />
-          </section>
+          </div>
         </form>
       )}
     </div>

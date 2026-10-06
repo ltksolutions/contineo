@@ -55,8 +55,9 @@ export default function LegalBasisForm({
         const list = options.filter(o => o.basis === category)
         if (list.length === 0) return null
         return (
-          <fieldset key={category} className="hr-group">
-            <legend className="field-label">{t.basisLabel[category]}</legend>
+          <fieldset key={category} className="form-group">
+            <legend className="form-group-head">{t.basisLabel[category]}</legend>
+            <div className="card form-group-body">
             {list.map(o => (
               <label key={o.key} className="hr-choice hr-choice--tile">
                 <input type="checkbox" name="legalBasisKey" value={o.key} defaultChecked={currentKeys?.includes(o.key)} />
@@ -67,6 +68,7 @@ export default function LegalBasisForm({
                 </span>
               </label>
             ))}
+            </div>
           </fieldset>
         )
       })}

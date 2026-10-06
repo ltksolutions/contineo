@@ -283,18 +283,22 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
       {usage && <p className="quiet mc-note">{tt.usage(usage.tests, usage.attempts)}</p>}
       <label className="field"><span className="field-label">{tt.questionText}</span><textarea className="field-input" name="text" rows={4} defaultValue={question?.text ?? ""} /></label>
 
-      <fieldset className="mc-group">
-        <legend className="field-label">{tt.media}</legend>
+      {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tt.media}</legend>
+        <div className="card form-group-body">
         {(question?.media ?? []).map((m, i) => (
           <label key={i} className="mc-check"><input type="checkbox" name="keepMedia" value={String(i)} defaultChecked /> {m.kind === "image" ? m.alt : dictionary(language).learning.edit.blockTypes.video}</label>
         ))}
         <CourseMediaUpload kind="gallery" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" maxBytes={MAX_BYTES}
           labels={{ title: tt.media, note: tt.mediaNote, progressTitle: dictionary(language).learning.edit.progressTitle, uploading: dictionary(language).learning.edit.uploading, failed: dictionary(language).learning.edit.uploadFailed, tooLarge: dictionary(language).learning.edit.tooLarge }} />
         <label className="field"><span className="field-label">{tt.mediaAlt}</span><input className="field-input" name="mediaAlt" /></label>
+        </div>
       </fieldset>
 
-      <fieldset className="mc-group">
-        <legend className="field-label">{tt.answers}</legend>
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tt.answers}</legend>
+        <div className="card form-group-body">
         {type === "multiple" && <p className="quiet mc-note">{tt.multipleNote}</p>}
         {(type === "single" || type === "multiple") && Array.from({ length: Math.min(rows, MAX_ANSWERS) }, (_, i) => {
           const a = prevAnswers[i]
@@ -320,6 +324,7 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
           </>
         )}
         {type !== "short_text" && <p className="quiet mc-note">{tt.answerMediaLater}</p>}
+        </div>
       </fieldset>
 
       <label className="field"><span className="field-label">{tt.explanation}</span><textarea className="field-input" name="explanation" rows={3} defaultValue={question?.explanation ?? ""} /><span className="quiet field-hint">{tt.explanationNote}</span></label>
