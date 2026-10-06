@@ -54,7 +54,7 @@ export default async function NewFaqPage({ searchParams }: { searchParams: Promi
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <h1 className="page-title">{t.newHeading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>{t.newIntro}</p>
-      <Notice message={error ? `${tu.errorBefore}${error}` : undefined} error back="/library/new/faq" />
+      <Notice message={error ? `${tu.errorBefore}${error}` : undefined} error back="/library/new/faq" language={language} />
 
       <form action={createFaqAction} className="upload-form">
         <section className="card upload-section">

@@ -50,9 +50,9 @@ export default function ResponsiblePicker({
   const t = dictionary(language).responsibility
   const choices = exclude ? people.filter(p => p.id !== exclude) : people
   return (
-    <fieldset className="hr-group">
-      <legend className="field-label">{legend ?? t.responsiblePerson}</legend>
-      <span className="quiet field-hint">{note ?? t.responsibleNote}</span>
+    <fieldset className="form-group">
+      <legend className="form-group-head">{legend ?? t.responsiblePerson}</legend>
+      <div className="card form-group-body form-group-body--rows">
       <PeopleSearch
         people={choices}
         name="responsiblePersonId"
@@ -63,6 +63,8 @@ export default function ResponsiblePicker({
         listLabel={legend ?? t.responsiblePerson}
         missing="responsible"
       />
+      </div>
+      <p className="form-group-foot quiet">{note ?? t.responsibleNote}</p>
     </fieldset>
   )
 }

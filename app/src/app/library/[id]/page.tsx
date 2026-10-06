@@ -66,6 +66,7 @@ import { onboardingContext } from "@/lib/session"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { archiveState, type ArchiveEntry } from "@/lib/documentArchiveState"
 import { draftBasisTaskFor } from "@/lib/versionResponsibilityDb"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -382,9 +383,10 @@ export default async function DocumentDetailPage({
    */
   const diffStyle = (kind: DiffKind): CSSProperties =>
     kind === "added"
-      ? { background: "rgba(46, 160, 67, 0.16)" }
+      // Tokeny stavu, nie natvrdo farby — v tmavej téme sa prepnú samy.
+      ? { background: "var(--ok-bg)" }
       : kind === "removed"
-        ? { background: "rgba(248, 81, 73, 0.16)" }
+        ? { background: "var(--bad-bg)" }
         : kind === "gap"
           ? { opacity: 0.55, fontStyle: "italic" }
           : {}
@@ -513,7 +515,7 @@ export default async function DocumentDetailPage({
               <input className="field-input" name="reason" required
                      placeholder={tr.changeReasonPlaceholder} />
             </label>
-            <div><button className="button button--quiet" type="submit">{tr.saveResponsible}</button></div>
+            <div><SubmitButton className="button button--quiet">{tr.saveResponsible}</SubmitButton></div>
           </form>
         )}
 
@@ -553,7 +555,7 @@ export default async function DocumentDetailPage({
                      placeholder={t.revokeVersionReasonPlaceholder} />
             </label>
             <div>
-              <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
+              <SubmitButton className="button button--quiet">{t.revokeVersionSubmit}</SubmitButton>
             </div>
           </form>
         )}
@@ -563,7 +565,7 @@ export default async function DocumentDetailPage({
             <input type="hidden" name="documentId" value={d.documentId} />
             <input type="hidden" name="versionId" value={v.versionId} />
             <p className="detail-block-small">{t.textFixPanelNote}</p>
-            <div><button className="button button--quiet" type="submit">{t.textFixLoad}</button></div>
+            <div><SubmitButton className="button button--quiet">{t.textFixLoad}</SubmitButton></div>
           </form>
         )}
 
@@ -572,7 +574,7 @@ export default async function DocumentDetailPage({
             <input type="hidden" name="documentId" value={d.documentId} />
             <input type="hidden" name="versionId" value={v.versionId} />
             <p className="detail-block-small">{t.reindexVersionNote}</p>
-            <div><button className="button button--quiet" type="submit">{t.reindexVersion}</button></div>
+            <div><SubmitButton className="button button--quiet">{t.reindexVersion}</SubmitButton></div>
           </form>
         )}
 
@@ -784,7 +786,7 @@ export default async function DocumentDetailPage({
   return (
     <AppShell language={ctx.person.language} title={d.title}>
     <div className="detail-page" style={tenantStyle(branding)}>
-      <Notice message={message} error={error === "1"} back={base} />
+      <Notice language={language} message={message} error={error === "1"} back={base} />
 
       {/*
         Úprava dokumentu ako samostatný pohľad (rám KNIZNICA-uprava-dokumentu):
@@ -916,7 +918,7 @@ export default async function DocumentDetailPage({
               </p>
 
               <div className="set-savebar edit-savebar">
-                <button className="button" type="submit">{t.save}</button>
+                <SubmitButton className="button">{t.save}</SubmitButton>
                 <Link className="button button--quiet" href={base}>{tflow.cancel}</Link>
                 <span className="quiet">{tflow.editSaveNote}</span>
               </div>
@@ -1099,9 +1101,9 @@ export default async function DocumentDetailPage({
               </div>
 
               {/* Schvaľovatelia predvyplnení z posledného kola (ADR-014, D110). */}
-              <fieldset className="hr-group">
-                <legend className="field-label">{tflow.approvers}</legend>
-                <span className="quiet field-hint">{tflow.approversPrefilled}</span>
+              <fieldset className="form-group">
+                <legend className="form-group-head">{tflow.approvers}</legend>
+                <div className="card form-group-body form-group-body--rows">
                 {approverChoices.length === 0 ? (
                   <p className="quiet">{t.approvalNoPeople}</p>
                 ) : (
@@ -1115,6 +1117,8 @@ export default async function DocumentDetailPage({
                     missing="approvers"
                   />
                 )}
+                </div>
+                <p className="form-group-foot quiet">{tflow.approversPrefilled}</p>
               </fieldset>
 
               {/* Zodpovedná osoba už v príprave (ADR-014, D109) — nepovinná tu,
@@ -1133,10 +1137,10 @@ export default async function DocumentDetailPage({
               </label>
             </div>
             <div className="flow-foot">
-              <button className="button" type="submit" name="intent" value="submit">
+              <SubmitButton className="button" name="intent" value="submit">
                 {draftRounds.length > 0 ? tflow.resubmit(nextRound) : tflow.submitAndSave}
-              </button>
-              <button className="button button--quiet" type="submit" name="intent" value="save">{tflow.saveOnly}</button>
+              </SubmitButton>
+              <SubmitButton className="button button--quiet" name="intent" value="save">{tflow.saveOnly}</SubmitButton>
             </div>
           </form>
         )}
@@ -1206,7 +1210,7 @@ export default async function DocumentDetailPage({
                     <span className="field-label">{t.approvalCancelReason}</span>
                     <input className="field-input" name="reason" required />
                   </label>
-                  <div><button className="button button--quiet" type="submit">{tflow.withdraw}</button></div>
+                  <div><SubmitButton className="button button--quiet">{tflow.withdraw}</SubmitButton></div>
                 </form>
               </details>
             </div>
@@ -1254,13 +1258,20 @@ export default async function DocumentDetailPage({
               {/* Prenos pridelení ako voľba pri zverejnení (ADR-014, D111). */}
               {draftCarryOver.length > 0 && (
                 <div style={{ display: "grid", gap: 12 }}>
-                  <label className="approval-person">
-                    <input type="checkbox" name="carryOver" value="1" defaultChecked />
-                    <span>
-                      <span className="approval-person-name">{tflow.carryOver(draftCarryOver.length)}</span>
-                      <span className="quiet approval-person-meta">{tflow.carryOverNote}</span>
-                    </span>
-                  </label>
+                  {/* Áno/nie, ktoré zapína časť formulára pod sebou — prepínač
+                      (ZAKLAD-vyber-a-prepinace). Meno a hodnota bez zmeny,
+                      `PublishSubmit` ho hľadá podľa mena. */}
+                  <div className="card form-group-body form-group-body--rows">
+                    <div className="form-list">
+                      <label className="form-row">
+                        <input type="checkbox" role="switch" className="toggle" name="carryOver" value="1" defaultChecked />
+                        <span className="form-row-main">
+                          <span>{tflow.carryOver(draftCarryOver.length)}</span>
+                          <span className="form-row-sub">{tflow.carryOverNote}</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
                   <div data-carry-over style={{ display: "grid", gap: 12 }}>
                     <CarryOverFields
                       candidates={draftCarryOver}
@@ -1296,7 +1307,7 @@ export default async function DocumentDetailPage({
               />
             </div>
             <div className="flow-foot">
-              <button className="button" type="submit">{tflow.assignChosen}</button>
+              <SubmitButton className="button">{tflow.assignChosen}</SubmitButton>
               <Link href={assignHref([d.documentId])}>{tflow.assignElsewhere}</Link>
             </div>
           </form>
@@ -1357,7 +1368,7 @@ export default async function DocumentDetailPage({
           <p className="detail-block-small" style={{ margin: 0 }}>{tflow.archive.bannerMeta(nameOf(archive.entry.by), date(archive.entry.at))}</p>
           <form action={restoreDocumentAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
             <input type="hidden" name="documentId" value={d.documentId} />
-            <button className="button button--quiet" type="submit">{tflow.archive.restore}</button>
+            <SubmitButton className="button button--quiet">{tflow.archive.restore}</SubmitButton>
             <span className="quiet field-hint">{tflow.archive.restoreHint}</span>
           </form>
         </section>
@@ -1479,7 +1490,7 @@ export default async function DocumentDetailPage({
                 <span className="field-label">{tflow.archive.reason}</span>
                 <textarea className="field-input" name="reason" rows={2} required maxLength={500} placeholder={tflow.archive.reasonHint} />
               </label>
-              <div><button className="button button--danger" type="submit">{tflow.archive.submit}</button></div>
+              <div><SubmitButton className="button button--danger">{tflow.archive.submit}</SubmitButton></div>
             </form>
           )}
         </section>
@@ -1601,7 +1612,7 @@ export default async function DocumentDetailPage({
                       <span className="quiet field-hint">{t.textFixReasonNote}</span>
                     </label>
 
-                    <div><button className="button button--quiet" type="submit">{t.textFixSubmit}</button></div>
+                    <div><SubmitButton className="button button--quiet">{t.textFixSubmit}</SubmitButton></div>
                   </form>
                 </div>
               </details>
@@ -1612,7 +1623,7 @@ export default async function DocumentDetailPage({
         <p className="detail-block-note">
           {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
         </p>
-        <div><button className="button button--quiet" type="submit">{t.reindex}</button></div>
+        <div><SubmitButton className="button button--quiet">{t.reindex}</SubmitButton></div>
       </form>
         </div>
       </details>
@@ -1746,15 +1757,18 @@ function CarryOverFields({
   const tc = dictionary(language).library.carryOver
   return (
     <>
-      <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: 0 }}>
-        <legend className="field-label">{tc.audiences}</legend>
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tc.audiences}</legend>
+        <div className="card form-group-body form-group-body--rows">
+        <div className="form-list">
         {candidates.map(c => (
-          <label key={audienceRef(c.audience)} className="check-row" style={{ display: "block", padding: "6px 0" }}>
+          <label key={audienceRef(c.audience)} className="form-row select-row">
             <input type="checkbox" name="audience" value={audienceRef(c.audience)} defaultChecked />
-            {" "}
-            <span>{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
+            <span className="form-row-main">{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
           </label>
         ))}
+        </div>
+        </div>
       </fieldset>
 
       <label className="field">
@@ -1763,32 +1777,37 @@ function CarryOverFields({
         <span className="quiet field-hint">{tc.reasonNote}</span>
       </label>
 
-      <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: 0 }}>
-        <legend className="field-label">{tc.due}</legend>
-        <Select language={language}
-          name="dueMode"
-          fieldLabel={tc.due}
-          initial="none"
-          options={[
-            { value: "none", label: tc.dueNone },
-            { value: "date", label: tc.dueDate },
-            { value: "days", label: tc.dueDays },
-          ]}
-        />
-        {/* Obe polia sú v DOM stále — formulár beží bez JavaScriptu, takže
-            sa skryť nedajú, a `dueFromFields()` číta len to, ktoré patrí
-            k zvolenému režimu. */}
-        <div className="due-fields">
-          <label className="field">
-            <span className="quiet field-label">{tc.dueDate}</span>
-            <input className="field-input" type="date" name="dueDate" defaultValue="" />
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tc.due}</legend>
+        {/* Tri voľby s fajkou vpravo, pole pod svojou voľbou — ten istý
+            tvar ako na /hr/assign (ZAKLAD-vyber-a-prepinace). Meno `dueMode`
+            a hodnoty none/date/days ako predtým výber zo zoznamu. Pole
+            nezvolenej voľby skrýva len CSS, hodnota ostáva v DOM;
+            `dueFromFields()` číta len to, ktoré patrí k zvolenému režimu. */}
+        <div className="card form-group-body form-group-body--rows">
+        <div className="form-list">
+          <label className="form-row choice-row">
+            <input type="radio" name="dueMode" value="none" defaultChecked />
+            <span className="form-row-main">{tc.dueNone}</span>
           </label>
-          <label className="field">
-            <span className="quiet field-label">{tc.dueDaysUnit}</span>
-            <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" />
+          <label className="form-row choice-row">
+            <input type="radio" name="dueMode" value="date" />
+            <span className="form-row-main">{tc.dueDate}</span>
           </label>
+          <div className="choice-field">
+            <input className="field-input" type="date" name="dueDate" defaultValue="" aria-label={tc.dueDate} />
+          </div>
+          <label className="form-row choice-row">
+            <input type="radio" name="dueMode" value="days" />
+            <span className="form-row-main">{tc.dueDays}</span>
+          </label>
+          <div className="choice-field">
+            <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" aria-label={tc.dueDaysUnit}
+                   placeholder={tc.dueDaysUnit} />
+          </div>
         </div>
-        <span className="quiet field-hint">{tc.dueNote}</span>
+        </div>
+        <p className="form-group-foot quiet">{tc.dueNote}</p>
       </fieldset>
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{tc.noEmailNote}</p>
     </>
@@ -1829,7 +1848,7 @@ async function responsibleBasisPage(documentId: string, raw: RawQuery) {
   return (
     <AppShell language={language} title={title}>
       <div style={{ maxWidth: 760, ...tenantStyle(brandingView(ctx.tenant)) }}>
-        <Notice message={query.msg} error={query.error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
+        <Notice language={language} message={query.msg} error={query.error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
         <h1 className="page-title">{title}</h1>
         <p className="quiet detail-lead">
           {tr.basisPageLead}

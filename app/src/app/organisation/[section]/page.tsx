@@ -22,6 +22,7 @@ import TabsBar from "@/components/TabsBar"
 import OrgNav from "@/components/OrgNav"
 import { isOrgSection, orgSectionHref, type OrgSection } from "@/lib/orgSections"
 import SubmitButton from "@/components/SubmitButton"
+import FormPendingSignal from "@/components/FormPendingSignal"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { orgPageContext } from "@/lib/orgSettings"
@@ -99,10 +100,7 @@ function ProviderRow({
     <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
         <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
-        <span
-          className="tag"
-          style={s.state === "unreadable" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
-        >
+        <span className={s.state === "unreadable" ? "tag tag--warn" : "tag"}>
           {s.state === "set" ? t.stateOn
             : s.state === "from-environment" ? t.stateFromSupplier
             : s.state === "unreadable" ? t.stateUnreadable : t.stateOff}
@@ -339,6 +337,7 @@ export default async function OrganisationSectionPage({
     <AppShell language={ctx.person.language} title={t.tabs[now]} trail={{ "/organisation": t.heading }}>
     <div className="org-set" style={tenantStyle(branding)}>
       <Notice
+        language={language}
         message={message}
         error={error === "1"}
         back={orgSectionHref(now)}
@@ -403,10 +402,10 @@ export default async function OrganisationSectionPage({
                   {/* „Odstrániť logo" pri logu (rám, Q1 — Ján 24. 9.). Je to druhý
                       formulár; vnoriť sa nedá, tlačidlo ho volá cez `form`. */}
                   {tenant.branding.logoUrl && (
-                    <button className="set-remove" type="submit" form="remove-logo"
+                    <SubmitButton className="set-remove" form="remove-logo"
                             title={t.branding.logoRemoveNote}>
                       {t.branding.logoRemove}
-                    </button>
+                    </SubmitButton>
                   )}
                   <span className="quiet field-hint">{t.branding.logoNote}</span>
                 </div>
@@ -500,14 +499,17 @@ export default async function OrganisationSectionPage({
             <h2>{t.branding.languages}</h2>
           </div>
           <div className="set-sec-body">
-            <div className="tags-list">
+            {/* Výber viacerých — riadky s kruhom vľavo, nie pilulky
+                (ZAKLAD-vyber-a-prepinace, Q3). */}
+            <div className="card form-group-body form-group-body--rows">
+            <div className="form-list">
               {UI_LANGUAGES.map(j => (
-                <label key={j} className="tag tag--choice tag--field">
+                <label key={j} className="form-row select-row">
                   <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
-                  <span className="tag-mark" aria-hidden="true" />
-                  {d.people.languages[j] ?? j}
+                  <span className="form-row-main">{d.people.languages[j] ?? j}</span>
                 </label>
               ))}
+            </div>
             </div>
             <div className="field">
               <span className="field-label">{t.branding.defaultLanguage}</span>
@@ -533,6 +535,7 @@ export default async function OrganisationSectionPage({
           volá ho tlačidlo pri logu cez `form="remove-logo"`. */}
       {now === "general" && tenant.branding.logoUrl && (
         <form id="remove-logo" action={deleteLogoAction} hidden>
+          <FormPendingSignal form="remove-logo" />
           <input type="hidden" name="tab" value="general" />
         </form>
       )}
@@ -682,7 +685,7 @@ export default async function OrganisationSectionPage({
           {tenant.hostnames.map(h => (
             <li key={h} className="card" style={{ padding: "10px 14px", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ fontWeight: 600 }}>{h}</span>
-              <span className="tag" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>{t.domains.works}</span>
+              <span className="tag tag--published">{t.domains.works}</span>
               {tenant.hostnames.length > 1 && (
                 <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
@@ -704,7 +707,7 @@ export default async function OrganisationSectionPage({
                 <li key={z.host} className="card" style={{ padding: "12px 14px", display: "grid", gap: 8 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 600 }}>{z.host}</span>
-                    <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+                    <span className="tag tag--warn">
                       {t.domains.waitingDns}
                     </span>
                     <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
@@ -773,7 +776,7 @@ export default async function OrganisationSectionPage({
               name="autoProvisionDomains"
               rows={2}
               defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-              placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+              placeholder={dictionary(language).common.domainsPlaceholder}
               autoCapitalize="none"
               autoCorrect="off"
             />
@@ -960,17 +963,22 @@ export default async function OrganisationSectionPage({
                 taken: t.codelists.keyTakenHint,
               }}
             />
-            <fieldset className="hr-group">
-              <legend className="field-label">{tr.categoryField}</legend>
+            <fieldset className="form-group">
+              <legend className="form-group-head">{tr.categoryField}</legend>
+              {/* Jedna z mála volieb — fajka vpravo (ZAKLAD-vyber-a-prepinace). */}
+              <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
               {LEGAL_BASES.map(b => (
-                <label key={b} className="hr-choice">
+                <label key={b} className="form-row choice-row">
                   <input type="radio" name="basis" value={b} required />
-                  <span>
-                    {tr.basisLabel[b]}
-                    <span className="quiet field-hint"> {tr.basisHint[b]}</span>
+                  <span className="form-row-main">
+                    <span>{tr.basisLabel[b]}</span>
+                    <span className="form-row-sub">{tr.basisHint[b]}</span>
                   </span>
                 </label>
               ))}
+              </div>
+              </div>
             </fieldset>
             <label className="field">
               <span className="field-label">{tr.referenceField}</span>
@@ -1093,7 +1101,7 @@ export default async function OrganisationSectionPage({
             </label>
             {ai.hasOwnKey && (
               <div>
-                <button className="button button--quiet" type="submit" form="remove-ai-key">{t.ai.deleteKey}</button>
+                <SubmitButton className="button button--quiet" form="remove-ai-key">{t.ai.deleteKey}</SubmitButton>
                 <span className="quiet field-hint" style={{ display: "block", marginTop: 6 }}>{t.ai.deleteKeyNote}</span>
               </div>
             )}
@@ -1141,6 +1149,7 @@ export default async function OrganisationSectionPage({
       </form>
       {/* Odstránenie kľúča — vlastný formulár, tlačidlo je hore pri kľúči. */}
       <form id="remove-ai-key" action={deleteAiKeyAction} hidden>
+        <FormPendingSignal form="remove-ai-key" />
         <input type="hidden" name="tab" value="ai" />
       </form>
       </>
@@ -1471,7 +1480,7 @@ export default async function OrganisationSectionPage({
                     <span className="quiet field-hint">{t.branding.gdprEmailNote}</span>
                   </label>
                 </div>
-                {ctx.canEditGdpr && <div><button className="button" type="submit">{t.gdpr.saveContact}</button></div>}
+                {ctx.canEditGdpr && <div><SubmitButton className="button">{t.gdpr.saveContact}</SubmitButton></div>}
               </div>
             </section>
           </fieldset>
@@ -1504,7 +1513,7 @@ export default async function OrganisationSectionPage({
                 {ctx.canEditGdpr && (
                   <>
                     <div className="lnote lnote--bad"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{tt.warning}</span></div>
-                    <div><button className="button" type="submit">{tt.save}</button></div>
+                    <div><SubmitButton className="button">{tt.save}</SubmitButton></div>
                   </>
                 )}
               </div>
@@ -1528,7 +1537,7 @@ export default async function OrganisationSectionPage({
                               defaultValue={tenant.privacy?.extra?.[l] ?? ""} />
                   </label>
                 ))}
-                {ctx.canEditGdpr && <div><button className="button" type="submit">{d.dpo.extra.save}</button></div>}
+                {ctx.canEditGdpr && <div><SubmitButton className="button">{d.dpo.extra.save}</SubmitButton></div>}
               </div>
             </section>
           </fieldset>

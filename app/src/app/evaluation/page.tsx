@@ -30,6 +30,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import Rating from "@/components/Rating"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -69,7 +70,7 @@ export default async function EvaluationPage({
         <p className="quiet page-lead" style={{ margin: 0, maxWidth: 660 }}>{t.intro}</p>
       </div>
 
-      <Notice message={message} error={error === "1"} back="/evaluation" />
+      <Notice language={language} message={message} error={error === "1"} back="/evaluation" />
 
       {queue.length === 0 && (
         <div className="empty">
@@ -83,7 +84,7 @@ export default async function EvaluationPage({
           <div key={item.id} className="card">
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
               {item.readerVerdict === 0 && (
-                <span className="tag" style={{ background: "var(--bad-bg)", color: "var(--bad-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}>
+                <span className="tag tag--expired" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
                   {t.saidDoesNotFit}
                 </span>
               )}
@@ -195,24 +196,25 @@ export default async function EvaluationPage({
                           defaultValue={item.draft?.answer ?? item.verifiedAnswer} required />
               </label>
 
-              <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
-                <legend className="field-label">{tc.sourcesLabel}</legend>
+              <fieldset className="form-group">
+                <legend className="form-group-head">{tc.sourcesLabel}</legend>
+                <div className="card form-group-body form-group-body--rows">
                 {item.sources.length === 0 ? (
-                  <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tc.noSources}</p>
+                  <p className="quiet" style={{ fontSize: "var(--fs-small)" }}>{tc.noSources}</p>
                 ) : (
-                  <ul className="hr-choices">
+                  // Riadky s kruhom vľavo (ZAKLAD-vyber-a-prepinace, 6. 10. 2026).
+                  <div className="form-list">
                     {item.sources.map(src => (
-                      <li key={src.chunkId}>
-                        <label className="hr-choice">
-                          <input type="checkbox" name="chunkIds" value={src.chunkId}
-                                 defaultChecked={item.draft?.chunkIds?.includes(src.chunkId) ?? true} />
-                          <span>{[src.title, src.articleRef].filter(Boolean).join(" · ")}</span>
-                        </label>
-                      </li>
+                      <label key={src.chunkId} className="form-row select-row">
+                        <input type="checkbox" name="chunkIds" value={src.chunkId}
+                               defaultChecked={item.draft?.chunkIds?.includes(src.chunkId) ?? true} />
+                        <span className="form-row-main">{[src.title, src.articleRef].filter(Boolean).join(" · ")}</span>
+                      </label>
                     ))}
-                  </ul>
+                  </div>
                 )}
-                <p className="quiet field-hint" style={{ margin: "6px 0 0" }}>{tc.sourcesHint}</p>
+                </div>
+                <p className="form-group-foot quiet">{tc.sourcesHint}</p>
               </fieldset>
 
               {item.correctSources && (
@@ -223,7 +225,7 @@ export default async function EvaluationPage({
 
               {item.sources.length > 0 && (
                 <p style={{ margin: "14px 0 0" }}>
-                  <button className="button" type="submit">{tc.save}</button>
+                  <SubmitButton className="button">{tc.save}</SubmitButton>
                 </p>
               )}
             </form>

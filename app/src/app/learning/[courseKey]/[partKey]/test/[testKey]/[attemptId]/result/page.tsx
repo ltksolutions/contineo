@@ -105,10 +105,11 @@ export default async function ResultPage({ params, searchParams }: {
             ) : visible ? (
               <section className="card mc-list">
                 <div className="parts-head"><h2>{ta.reviewTitle}</h2>
-                  <span className="lpills" style={{ margin: 0 }}>
-                    <Link className={`pill${q.only !== "wrong" ? " is-on" : ""}`} href="?">{ta.filterAll}</Link>
-                    <Link className={`pill${q.only === "wrong" ? " is-on" : ""}`} href="?only=wrong">{ta.filterWrong} <span className="pill-count">{wrong}</span></Link>
-                  </span>
+                  {/* Všetky | Nesprávne — pohľad na ten istý prehľad (DESIGN_ODCHYLKY P4). */}
+                  <nav className="view-switch" aria-label={ta.reviewTitle}>
+                    <Link className={`view-switch-item${q.only !== "wrong" ? " is-on" : ""}`} aria-current={q.only !== "wrong" ? "true" : undefined} href="?">{ta.filterAll}</Link>
+                    <Link className={`view-switch-item${q.only === "wrong" ? " is-on" : ""}`} aria-current={q.only === "wrong" ? "true" : undefined} href="?only=wrong">{ta.filterWrong} <span className="view-switch-count">{wrong}</span></Link>
+                  </nav>
                 </div>
                 {shown.map(({ x, i, ok }) => <ReviewRow key={x.questionKey} q={x} n={i + 1} total={a.questions.length} ok={ok} answer={a.answers[x.questionKey]} ta={ta} />)}
               </section>

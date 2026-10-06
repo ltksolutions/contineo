@@ -30,6 +30,7 @@ import {
   addMembersAction, removeMemberAction, setTrackDueAction,
 } from "../actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -115,17 +116,15 @@ export default async function TrackDetailPage({
   return (
     <AppShell language={ctx.person.language} title={track.title} trail={{ "/hr/tracks": t.heading }}>
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
-      <Notice message={message ?? error} error={Boolean(error)} back={here} />
+      <Notice language={ctx.person.language} message={message ?? error} error={Boolean(error)} back={here} />
 
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>
           {track.title}
         </h1>
-        <span
-          className="tag"
-          style={track.isActive ? { background: "var(--ok-bg)", color: "var(--ok-fg)" } : undefined}
-        >
+        {/* Tie isté štítky ako v zozname trás. */}
+        <span className={track.isActive ? "tag tag--published" : "tag tag--archived"}>
           {track.isActive ? t.active : t.inactive}
         </span>
       </div>
@@ -151,7 +150,7 @@ export default async function TrackDetailPage({
             <input className="field-input" name="description" defaultValue={track.description ?? ""} />
           </label>
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.rename}</button>
+            <SubmitButton className="button">{t.rename}</SubmitButton>
           </p>
         </form>
       </details>
@@ -180,7 +179,7 @@ export default async function TrackDetailPage({
           </label>
           <span className="quiet field-hint">{t.dueNote}</span>
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.dueSave}</button>
+            <SubmitButton className="button">{t.dueSave}</SubmitButton>
           </p>
         </form>
       </details>
@@ -209,22 +208,22 @@ export default async function TrackDetailPage({
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
                 <input type="hidden" name="direction" value="up" />
-                <button className="button button--quiet" type="submit" disabled={i === 0}>
+                <SubmitButton className="button button--quiet" disabled={i === 0}>
                   {t.moveUp}
-                </button>
+                </SubmitButton>
               </form>
               <form action={moveStepAction}>
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
                 <input type="hidden" name="direction" value="down" />
-                <button className="button button--quiet" type="submit" disabled={i === steps.length - 1}>
+                <SubmitButton className="button button--quiet" disabled={i === steps.length - 1}>
                   {t.moveDown}
-                </button>
+                </SubmitButton>
               </form>
               <form action={removeStepAction}>
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
-                <button className="button button--quiet" type="submit">{t.remove}</button>
+                <SubmitButton className="button button--quiet">{t.remove}</SubmitButton>
               </form>
             </div>
           </li>
@@ -244,16 +243,17 @@ export default async function TrackDetailPage({
             />
           </div>
 
-          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "var(--fs-body)" }}>
-            <input type="checkbox" name="requiresAcknowledgement" defaultChecked style={{ marginTop: 3 }} />
-            <span>
-              {t.requiresAck}
-              <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>{t.requiresAckHint}</span>
+          {/* Áno/nie ako prepínač (DESIGN_ODCHYLKY P6); meno a hodnota bez zmeny. */}
+          <label className="form-row form-row--bare">
+            <input type="checkbox" role="switch" className="toggle" name="requiresAcknowledgement" defaultChecked />
+            <span className="form-row-main">
+              <span>{t.requiresAck}</span>
+              <span className="form-row-sub">{t.requiresAckHint}</span>
             </span>
           </label>
 
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.addStep}</button>
+            <SubmitButton className="button">{t.addStep}</SubmitButton>
           </p>
         </form>
       )}
@@ -287,7 +287,7 @@ export default async function TrackDetailPage({
               <form action={removeMemberAction}>
                 <input type="hidden" name="key" value={track.key} />
                 <input type="hidden" name="personId" value={p.id} />
-                <button className="button button--quiet" type="submit">{t.removeMember}</button>
+                <SubmitButton className="button button--quiet">{t.removeMember}</SubmitButton>
               </form>
             </li>
           ))}
@@ -330,16 +330,16 @@ export default async function TrackDetailPage({
               sa to dozvedieť hneď, nie až z pripomienky pred termínom. Odškrtnúť
               sa dá, takže e-mail ostáva rozhodnutím personalistu. */}
           {track.isActive && (
-            <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "var(--fs-body)" }}>
-              <input type="checkbox" name="notify" value="1" defaultChecked style={{ marginTop: 3 }} />
-              <span>
-                {t.notifyAdded}
-                <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>{t.notifyAddedHint}</span>
+            <label className="form-row form-row--bare">
+              <input type="checkbox" role="switch" className="toggle" name="notify" value="1" defaultChecked />
+              <span className="form-row-main">
+                <span>{t.notifyAdded}</span>
+                <span className="form-row-sub">{t.notifyAddedHint}</span>
               </span>
             </label>
           )}
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.addSubmit}</button>
+            <SubmitButton className="button" pendingLabel={dictionary(ctx.person.language).common.pending.adding}>{t.addSubmit}</SubmitButton>
           </p>
         </form>
       </details>
@@ -349,9 +349,9 @@ export default async function TrackDetailPage({
       <form action={setTrackActiveAction} style={{ margin: "0 0 32px" }}>
         <input type="hidden" name="key" value={track.key} />
         <input type="hidden" name="isActive" value={track.isActive ? "0" : "1"} />
-        <button className="button button--quiet" type="submit">
+        <SubmitButton className="button button--quiet">
           {track.isActive ? t.disable : t.enable}
-        </button>
+        </SubmitButton>
       </form>
 
     </div>

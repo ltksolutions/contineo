@@ -45,6 +45,8 @@ import {
   type ConditionField, type ConditionOp,
 } from "@/lib/libraryConditions"
 import MultiSelect from "@/components/MultiSelect"
+import SubmitButton from "@/components/SubmitButton"
+import FormPendingSignal from "@/components/FormPendingSignal"
 
 export const dynamic = "force-dynamic"
 
@@ -544,7 +546,7 @@ export default async function LibraryPage({
     // pri 1440 px okna má stĺpec zoznamu 938 px, tabuľka potrebuje ~1060).
     <AppShell language={uiLanguage} wide>
     <div style={tenantStyle(branding)}>
-      <Notice message={message} error={error === "1"} back="/library" />
+      <Notice language={uiLanguage} message={message} error={error === "1"} back="/library" />
 
       {/*
         Nad zoznamom, nie v ňom: je to úloha, nie obsah knižnice. Názvy sa
@@ -952,6 +954,7 @@ export default async function LibraryPage({
         */}
         {filters.picked.length > 0 && (
           <form id="bulk-move" action={moveManyAction} className="bulk-move-form">
+            <FormPendingSignal form="bulk-move" />
             {filters.picked.map(id => (
               <input key={id} type="hidden" name="document" value={id} />
             ))}
@@ -1018,9 +1021,9 @@ export default async function LibraryPage({
               />
             </div>
 
-            <button className="button button--quiet bulk-move-wide" type="submit" formAction={moveManyAction}>
+            <SubmitButton className="button button--quiet bulk-move-wide" formAction={moveManyAction}>
               {tl.move}
-            </button>
+            </SubmitButton>
 
             {/*
               Presun na telefóne — zásuvka, nie výber v páse (KNIZNICA.md,
@@ -1050,14 +1053,14 @@ export default async function LibraryPage({
                     form="bulk-move"
                   />
                 </div>
-                <button className="button filter-sheet-apply" type="submit" form="bulk-move">
+                <SubmitButton className="button filter-sheet-apply" form="bulk-move">
                   {tl.moveConfirm(filters.picked.length)}
-                </button>
+                </SubmitButton>
               </div>
             </details>
-            <button className="button button--quiet" type="submit" formAction={assignManyAction}>
+            <SubmitButton className="button button--quiet" formAction={assignManyAction}>
               {tl.assign}
-            </button>
+            </SubmitButton>
             {/* Na telefóne sa text nezmestí — ostáva ×; meno akcie nesie
                 `aria-label` (KNIZNICA.md, úloha 4). */}
             <Link className="bulk-clear" href={toQuery(clearPicked(filters))} aria-label={tl.clearPicked}>

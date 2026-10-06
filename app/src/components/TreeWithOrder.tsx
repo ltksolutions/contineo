@@ -31,6 +31,8 @@
 import { useState } from "react"
 import type { ReactNode } from "react"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import SubmitButton from "@/components/SubmitButton"
+import FormPendingSignal from "@/components/FormPendingSignal"
 
 export interface TreeItem {
   id: string
@@ -89,6 +91,7 @@ export default function TreeWithOrder({
           a v riadkoch sú vlastné (premenovať, presunúť, zrušiť). Tlačidlo sa
           naň odkazuje cez `form`. */}
       <form id={FORM_ID} action={action}>
+        <FormPendingSignal form={FORM_ID} />
         {(Array.isArray(hidden) ? hidden : Object.entries(hidden ?? {})).map(([k, v], i) => (
           <input key={`${k}-${i}`} type="hidden" name={k} value={v} />
         ))}
@@ -118,7 +121,7 @@ export default function TreeWithOrder({
 
       {changed && (
         <div className="tree-save">
-          <button className="button" type="submit" form={FORM_ID}>{t.saveOrder}</button>
+          <SubmitButton className="button" form={FORM_ID}>{t.saveOrder}</SubmitButton>
           <button
             className="button button--quiet"
             type="button"

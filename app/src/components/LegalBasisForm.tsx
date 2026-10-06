@@ -17,6 +17,7 @@ import { setLegalBasisAction } from "@/app/documents/[documentId]/actions"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { LEGAL_BASES, type LegalBasis } from "@/lib/versionResponsibility"
 import type { LegalBasisOption } from "@/lib/legalBases"
+import SubmitButton from "@/components/SubmitButton"
 
 export default function LegalBasisForm({
   documentId,
@@ -54,18 +55,23 @@ export default function LegalBasisForm({
         const list = options.filter(o => o.basis === category)
         if (list.length === 0) return null
         return (
-          <fieldset key={category} className="hr-group">
-            <legend className="field-label">{t.basisLabel[category]}</legend>
+          <fieldset key={category} className="form-group">
+            <legend className="form-group-head">{t.basisLabel[category]}</legend>
+            {/* Riadky s kruhom vľavo namiesto dlaždíc (ZAKLAD-vyber-a-prepinace). */}
+            <div className="card form-group-body form-group-body--rows">
+            <div className="form-list">
             {list.map(o => (
-              <label key={o.key} className="hr-choice hr-choice--tile">
+              <label key={o.key} className="form-row select-row">
                 <input type="checkbox" name="legalBasisKey" value={o.key} defaultChecked={currentKeys?.includes(o.key)} />
-                <span>
-                  {o.label}
+                <span className="form-row-main">
+                  <span>{o.label}</span>
                   {/* Odkaz na zákon na vlastnom riadku (ZNENIE-kontakt-a-privacy, bod 4). */}
-                  {o.reference && <span className="quiet field-hint hr-choice-ref">{o.reference}</span>}
+                  {o.reference && <span className="form-row-sub">{o.reference}</span>}
                 </span>
               </label>
             ))}
+            </div>
+            </div>
           </fieldset>
         )
       })}
@@ -79,7 +85,7 @@ export default function LegalBasisForm({
         </label>
       )}
 
-      <div><button className="button" type="submit">{t.saveBasis}</button></div>
+      <div><SubmitButton className="button">{t.saveBasis}</SubmitButton></div>
     </form>
   )
 }

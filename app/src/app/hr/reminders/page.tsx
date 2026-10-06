@@ -18,6 +18,7 @@ import { dutyState, dutyTagClass } from "@/lib/due"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { sendRemindersAction } from "../actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 import HrTabs from "@/components/HrTabs"
 
 export const dynamic = "force-dynamic"
@@ -62,7 +63,7 @@ export default async function RemindersPage({
       */}
       <h1 className="page-title">{dictionary(ctx.person.language).nav.assigned}</h1>
       <HrTabs current="/hr/reminders" person={ctx.person} language={ctx.person.language} />
-      <Notice message={q.msg} error={q.error === "1"} back="/hr/reminders" />
+      <Notice language={language} message={q.msg} error={q.error === "1"} back="/hr/reminders" />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>
         {notice ? <><strong>{t.noticeHeading}.</strong> {t.noticeIntro}</> : t.intro(days)}
       </p>
@@ -139,9 +140,9 @@ export default async function RemindersPage({
 
           <form action={sendRemindersAction}>
             <input type="hidden" name="days" value={String(days)} />
-            <button className="button" type="submit">
+            <SubmitButton className="button" pendingLabel={dictionary(language).common.pending.sending}>
               {notice ? t.noticeSend(people.length) : t.send(people.length)}
-            </button>
+            </SubmitButton>
           </form>
         </>
       )}

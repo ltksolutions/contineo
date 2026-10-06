@@ -18,6 +18,7 @@ import FormattedText from "@/components/FormattedText"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { answerAction } from "../../../../../actions"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -89,12 +90,12 @@ export default async function AttemptPage({ params, searchParams }: {
                 <Hidden values={{ ...hidden, index: "0", go: "submit" }} />
                 <h2>{ta.confirmTitle}</h2>
                 <p>{unanswered.length ? ta.confirmText(unanswered.length, unanswered.join(", ")) : ta.confirmAll}</p>
-                <div className="mg-actions"><button type="submit" className="button">{ta.submit}</button><Link className="button button--quiet" href={`${self}?q=1`}>{ta.cancelReview}</Link></div>
+                <div className="mg-actions"><SubmitButton className="button">{ta.submit}</SubmitButton><Link className="button button--quiet" href={`${self}?q=1`}>{ta.cancelReview}</Link></div>
               </form>
             ) : (
               <form action={answerAction} className="mg-actions">
                 <Hidden values={{ ...hidden, index: "0", go: "confirm" }} />
-                <button type="submit" className="button">{ta.submit}</button>
+                <SubmitButton className="button">{ta.submit}</SubmitButton>
               </form>
             )}
           </section>
@@ -106,9 +107,9 @@ export default async function AttemptPage({ params, searchParams }: {
               <button type="submit" name="go" value="next" hidden tabIndex={-1} aria-hidden="true" />
               <QuestionView q={attempt.questions[index]} n={index + 1} total={total} attempt={attempt} ta={ta} />
               <div className="at-nav">
-                <button type="submit" name="go" value="prev" className="button button--quiet" disabled={index === 0}>{ta.prev}</button>
-                <button type="submit" name="go" value="review" className="button button--quiet">{unanswered.length ? ta.reviewUnanswered(unanswered.length) : ta.review}</button>
-                <button type="submit" name="go" value="next" className="button">{ta.next}</button>
+                <SubmitButton name="go" value="prev" className="button button--quiet" disabled={index === 0}>{ta.prev}</SubmitButton>
+                <SubmitButton name="go" value="review" className="button button--quiet">{unanswered.length ? ta.reviewUnanswered(unanswered.length) : ta.review}</SubmitButton>
+                <SubmitButton name="go" value="next" className="button">{ta.next}</SubmitButton>
               </div>
               <nav className="at-grid" aria-label={ta.review}>
                 {attempt.questions.map((x, i) => (

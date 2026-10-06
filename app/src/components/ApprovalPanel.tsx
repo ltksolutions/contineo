@@ -16,6 +16,7 @@ import type { ApprovalRound, VersionState } from "@/lib/approvals"
 import { submitForApprovalAction, cancelApprovalAction } from "@/app/library/actions"
 import ApprovalRounds from "./ApprovalRounds"
 import PeopleSearch from "./PeopleSearch"
+import SubmitButton from "@/components/SubmitButton"
 
 export interface ApproverChoice {
   id: string
@@ -101,9 +102,9 @@ export default function ApprovalPanel({
               value={effectiveFrom ? new Date(effectiveFrom).toISOString() : ""}
             />
 
-            <fieldset className="hr-group">
-              <legend className="field-label">{t.approvalApprovers}</legend>
-              <span className="quiet field-hint">{t.approvalApproversHint}</span>
+            <fieldset className="form-group">
+              <legend className="form-group-head">{t.approvalApprovers}</legend>
+              <div className="card form-group-body form-group-body--rows">
 
               {people.length === 0 ? (
                 <p className="quiet">{t.approvalNoPeople}</p>
@@ -124,6 +125,8 @@ export default function ApprovalPanel({
                   missing="approvers"
                 />
               )}
+              </div>
+              <p className="form-group-foot quiet">{t.approvalApproversHint}</p>
             </fieldset>
 
             <label className="field">
@@ -138,9 +141,9 @@ export default function ApprovalPanel({
             </label>
 
             <div>
-              <button className="button" type="submit" disabled={people.length === 0}>
+              <SubmitButton className="button" disabled={people.length === 0}>
                 {t.approvalSubmitButton}
-              </button>
+              </SubmitButton>
             </div>
           </form>
         </details>
@@ -158,7 +161,7 @@ export default function ApprovalPanel({
               <span className="quiet field-hint">{t.approvalCancelHint}</span>
             </label>
             <div>
-              <button className="button button--quiet" type="submit">{t.approvalCancelButton}</button>
+              <SubmitButton className="button button--quiet">{t.approvalCancelButton}</SubmitButton>
             </div>
           </form>
         </details>

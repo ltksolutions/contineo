@@ -81,10 +81,10 @@ export default async function HrOverviewPage({
       </div>
       <HrTabs current="/hr" person={ctx.person} language={language} />
       <p className="quiet page-lead" style={{ maxWidth: 620 }}>
-        {t.intro} <em>dnes</em>.
+        {t.intro} <em>{t.today}</em>.
       </p>
 
-      <Notice message={message} error={error === "1"} back="/hr" />
+      <Notice language={language} message={message} error={error === "1"} back="/hr" />
 
       {overview.length === 0 ? (
         /* `.empty` zo ZAKLADU (HR.md, úloha 6). Bez tlačidla — „Prideliť
@@ -106,11 +106,11 @@ export default async function HrOverviewPage({
                   >
                     {p.subject.documentTitle}
                   </Link>
-                  <span className="tag">verzia {p.subject.versionLabel}</span>
+                  <span className="tag">{t.versionTag(p.subject.versionLabel)}</span>
                 </div>
 
                 <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0" }}>
-                  {audienceLabel(p.audience)} · pridelil {p.assignedBy} ·{" "}
+                  {audienceLabel(p.audience)} · {t.assignedBy(p.assignedBy)} ·{" "}
                   {formatDate(p.assignedAt, language)}
                 </p>
 

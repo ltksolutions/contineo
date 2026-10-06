@@ -26,6 +26,7 @@ import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 
 /**
@@ -54,12 +55,7 @@ function ProviderRow({
     <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
         <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
-        <span
-          className="tag"
-          style={s.state === "unreadable"
-            ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
-            : undefined}
-        >
+        <span className={s.state === "unreadable" ? "tag tag--warn" : "tag"}>
           {t.state[s.state] ?? s.state}
         </span>
       </div>
@@ -104,7 +100,7 @@ function ProviderRow({
         )}
 
         <div>
-          <button className="button" type="submit">{t.save}</button>
+          <SubmitButton className="button">{t.save}</SubmitButton>
         </div>
       </form>
 
@@ -114,7 +110,7 @@ function ProviderRow({
           <input type="hidden" name="provider" value={provider} />
           <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.deleteNote}</p>
           <Field name="confirmation" label={t.confirmLabel(tenant.companyCode)} />
-          <button className="button button--quiet" type="submit">{t.deleteSubmit}</button>
+          <SubmitButton className="button button--quiet">{t.deleteSubmit}</SubmitButton>
         </form>
       )}
     </section>
@@ -218,7 +214,7 @@ export default async function TenantDetailPage({
         {!enabled && t.disabled}
       </p>
 
-      <Notice message={message} error={error === "1"} back={`/admin/tenants/${encodeURIComponent(code)}`} />
+      <Notice language={language} message={message} error={error === "1"} back={`/admin/tenants/${encodeURIComponent(code)}`} />
 
       {overview && (
         <section className="card" style={{ padding: "18px 20px", marginBottom: 16 }}>
@@ -269,7 +265,7 @@ export default async function TenantDetailPage({
               type="email"
               hint={t.sendHint(pending.length)}
             />
-            <button className="button" type="submit">{t.send}</button>
+            <SubmitButton className="button">{t.send}</SubmitButton>
           </form>
         )}
       </section>
@@ -316,7 +312,7 @@ export default async function TenantDetailPage({
                   value={j}
                   defaultChecked={tenant.languages.includes(j)}
                 />
-                {j}
+                {d.people.languages[j] ?? j}
               </label>
             ))}
           </span>
@@ -351,7 +347,7 @@ export default async function TenantDetailPage({
             name="autoProvisionDomains"
             rows={2}
             defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-            placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+            placeholder={dictionary(language).common.domainsPlaceholder}
             autoCapitalize="none"
             autoCorrect="off"
           />
@@ -360,7 +356,7 @@ export default async function TenantDetailPage({
           </span>
         </label>
 
-        <button className="button" type="submit">{t.save}</button>
+        <SubmitButton className="button">{t.save}</SubmitButton>
       </form>
 
       {/* Prihlasovacie údaje sú medzi úpravou a vypnutím zámerne: patria
@@ -384,10 +380,10 @@ export default async function TenantDetailPage({
               label={t.confirmLabel(tenant.companyCode)}
               hint={t.confirmHint}
             />
-            <button className="button button--quiet" type="submit">{t.disable}</button>
+            <SubmitButton className="button button--quiet">{t.disable}</SubmitButton>
           </>
         ) : (
-          <button className="button" type="submit">{t.enable}</button>
+          <SubmitButton className="button">{t.enable}</SubmitButton>
         )}
       </form>
 

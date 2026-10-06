@@ -32,6 +32,7 @@ import { savePersonAction, togglePersonStatusAction, resendInviteAction, setEnde
 import { addYears, RETENTION_YEARS } from "@/lib/retention"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -121,7 +122,7 @@ export default async function PersonDetailPage({
         {o.accounts.length > 0 && ` · ${t.signsInVia(o.accounts.join(", "))}`}
       </p>
 
-      <Notice message={message} error={error === "1"} back={`/people/${encodeURIComponent(id)}`} />
+      <Notice language={language} message={message} error={error === "1"} back={`/people/${encodeURIComponent(id)}`} />
 
       <form action={savePersonAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="id" value={o.id} />
@@ -291,55 +292,55 @@ export default async function PersonDetailPage({
           <span className="quiet field-hint">{t.groupsNote}</span>
         </div>
 
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
-          <legend className="field-label">{t.tracks}</legend>
+        {/* Nadpis nad kartou (HR-pridelit-nadpis-karty), riadky s kruhom
+            vľavo (ZAKLAD-vyber-a-prepinace, 6. 10. 2026). */}
+        <fieldset className="form-group">
+          <legend className="form-group-head">{t.tracks}</legend>
+          <div className="card form-group-body form-group-body--rows">
           {tracks.length === 0 && orphanTracks.length === 0 ? (
-            <p className="quiet field-hint" style={{ margin: 0 }}>{t.noTracks}</p>
+            <p className="quiet field-hint">{t.noTracks}</p>
           ) : (
-            <ul className="hr-choices">
+            <div className="form-list">
               {tracks.map(tr => (
-                <li key={tr.key}>
-                  <label className="hr-choice">
-                    <input type="checkbox" name="track" value={tr.key} defaultChecked={o.tracks.includes(tr.key)} />
+                <label key={tr.key} className="form-row select-row">
+                  <input type="checkbox" name="track" value={tr.key} defaultChecked={o.tracks.includes(tr.key)} />
+                  <span className="form-row-main">
                     <span>{tr.title}{!tr.isActive && <span className="quiet"> · {t.trackInactive}</span>}</span>
-                  </label>
-                </li>
+                  </span>
+                </label>
               ))}
               {orphanTracks.map(k => (
-                <li key={k}>
-                  <label className="hr-choice">
-                    <input type="checkbox" name="track" value={k} defaultChecked />
-                    <span className="quiet">{t.trackUnknown}</span>
-                  </label>
-                </li>
+                <label key={k} className="form-row select-row">
+                  <input type="checkbox" name="track" value={k} defaultChecked />
+                  <span className="form-row-main quiet">{t.trackUnknown}</span>
+                </label>
               ))}
-            </ul>
+            </div>
           )}
+          </div>
         </fieldset>
 
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
-          <legend className="field-label">{t.roles}</legend>
-          <ul className="hr-choices">
+        <fieldset className="form-group">
+          <legend className="form-group-head">{t.roles}</legend>
+          <div className="card form-group-body form-group-body--rows">
+          <div className="form-list">
             {ASSIGNABLE_ROLES.filter(r => r !== LEARNING_ROLE || learningEnabled(ctx.tenant)).map(r => (
-              <li key={r}>
-                <label className="hr-choice">
-                  <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
-                  <span>{d.roles[r] ?? r}</span>
-                </label>
-              </li>
+              <label key={r} className="form-row select-row">
+                <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
+                <span className="form-row-main">{d.roles[r] ?? r}</span>
+              </label>
             ))}
-          </ul>
+          </div>
           {/* Vypnutý modul: rola sa neukáže, ale uložením sa nesmie stratiť. */}
           {!learningEnabled(ctx.tenant) && o.roles.includes(LEARNING_ROLE) && (
             <input type="hidden" name="roles" value={LEARNING_ROLE} />
           )}
-          <p className="quiet field-hint" style={{ margin: "6px 0 0" }}>
-            {t.rolesNote}
-          </p>
+          </div>
+          <p className="form-group-foot quiet">{t.rolesNote}</p>
         </fieldset>
 
         <div>
-          <button className="button" type="submit">{t.save}</button>
+          <SubmitButton className="button">{t.save}</SubmitButton>
         </div>
       </form>
 
@@ -373,7 +374,7 @@ export default async function PersonDetailPage({
               {o.invitationSentAt && ` ${t.inviteNoteSent(formatDate(o.invitationSentAt, language))}`}
             </p>
 
-            <div><button className="button button--quiet" type="submit">{o.invitationSentAt ? t.inviteSubmit : t.inviteSubmitFirst}</button></div>
+            <div><SubmitButton className="button button--quiet">{o.invitationSentAt ? t.inviteSubmit : t.inviteSubmitFirst}</SubmitButton></div>
           </form>
         )}
 
@@ -415,7 +416,7 @@ export default async function PersonDetailPage({
               </label>
             </div>
             <div className="ex-foot">
-              <button className="button button--danger" type="submit">{t.excludeSubmit}</button>
+              <SubmitButton className="button button--danger">{t.excludeSubmit}</SubmitButton>
             </div>
           </form>
         )}
@@ -456,7 +457,7 @@ export default async function PersonDetailPage({
               </label>
             </div>
             <div className="ex-foot">
-              <button className="button button--quiet" type="submit">{t.endedAtSubmit}</button>
+              <SubmitButton className="button button--quiet">{t.endedAtSubmit}</SubmitButton>
             </div>
           </form>
         )}
@@ -470,7 +471,7 @@ export default async function PersonDetailPage({
             <p className="quiet">
               {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
             </p>
-            <button className="button button--quiet" type="submit">{t.returnSubmit}</button>
+            <SubmitButton className="button button--quiet">{t.returnSubmit}</SubmitButton>
           </form>
         )}
         </div>

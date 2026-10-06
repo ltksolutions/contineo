@@ -28,7 +28,7 @@ export default async function VerifyPage({ params, searchParams }: { params: Pro
   if (!c) notFound()
   const language = tenant.defaultLanguage
   const t = dictionary(language).learning.cert
-  const issuerLine = [c.issuedBy.legalName ?? c.issuedBy.name, c.issuedBy.address, c.issuedBy.registrationNumber ? `IČO ${c.issuedBy.registrationNumber}` : null].filter(Boolean).join(" · ")
+  const issuerLine = [c.issuedBy.legalName ?? c.issuedBy.name, c.issuedBy.address, c.issuedBy.registrationNumber ? t.registrationNumber(c.issuedBy.registrationNumber) : null].filter(Boolean).join(" · ")
 
   return (
     <div className="vf">

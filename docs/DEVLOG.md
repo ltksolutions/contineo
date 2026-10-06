@@ -10,6 +10,77 @@
 
 ---
 
+## 2026-10-06 — prierezové opravy zo súpisu odchýlok (P2–P13)
+
+**Prečo:** `docs/DESIGN_ODCHYLKY.md` našiel opravy, ktoré platia naprieč
+stránkami a nečakajú na rozhodnutie ani návrh.
+
+**Čo sa zmenilo:** chyba formulára cez `Notice` + nový `hrefWithout()`
+(`lib/urlParams.ts`) — návrat na tú istú adresu bez správy, vyplnené
+hodnoty ostanú. V klientskych formulároch (import osôb, prihlásenie) ostala
+chyba v riadku ako `.lnote`: stav je v prehliadači a odkaz späť by ho
+zahodil. `Notice` má povinný `language` — „Rozumiem" bolo natvrdo na 40
+miestach. Filtre `.pill` → `.view-switch` (+ `--fit`, `.view-switch-count`),
+áno/nie → `input.toggle` v `.form-row--bare` (riadok bez vlastného
+odsadenia v obyčajnom formulári). `.mg-table` → karty pod 1024 px.
+`formatNumber()` v `i18n.ts`.
+
+**Nález:** prvý pokus o názov roly v zozname osôb siahol na `people.detail.roles`
+(text „Roly"), nie na mapu `people.roles` — `tsc` to nechytil, lebo reťazec
+sa dá indexovať tiež. Opravené pred commitom.
+
+---
+
+## 2026-10-06 — výbery a prepínače (ZAKLAD-vyber-a-prepinace)
+
+**Prečo:** jeden vzhľad (štvorček prehliadača) pre tri rôzne veci — zapnúť
+nastavenie, vybrať položky, zvoliť jednu možnosť. Na telefóne navyše
+17 px políčka pod 44 px terčom.
+
+**Čo sa zmenilo:** `.form-row` (celý riadok je `<label>`) s tromi tvarmi:
+`.select-row` (kruh vľavo), `.choice-row` (fajka vpravo, pole voľby pod
+riadkom v `.choice-field`) a `input.toggle` s `role="switch"`. Natívny
+`input` ostáva, mení sa `appearance`. Karta s riadkami je
+`.form-group-body--rows` (bez vnútorného odstupu). `PeopleSearch` kreslí
+riadky tak isto — platí to pre schvaľovanie, zodpovednú osobu aj normy.
+Nové tokeny `--control-line`, `--toggle-off`, `--toggle-knob`; fajka a
+gombík zapnutého prepínača majú `--on-accent`, lebo v tmavej téme je
+`--accent` takmer biely. Zmizli `.tag--field`, `.hr-choices`, `.hr-due-opt`,
+`.due-fields`, `.assign-all`.
+
+**Rozhodnutie Jána (6. 10. 2026, varianta A):** pole termínu (dátum, dni)
+je vidieť len pod zvolenou voľbou. Skrýva ho len CSS
+(`.choice-row:not(:has(> input:checked)) + .choice-field`), takže platí
+pôvodný dôvod, prečo sa polia neskrývali: bez JavaScriptu to funguje
+a hodnota v skrytom poli ostáva.
+
+**Nález:** oddeľovač riadkov `.form-row + .form-row` kreslí čiaru aj nad
+prvým viditeľným riadkom, keď sú riadky nad ním skryté hľadaním.
+Zoznam sa preto orezáva o 1 px zhora (`clip-path`).
+
+---
+
+## 2026-10-06 — nadpis skupiny nad kartou (HR-pridelit-nadpis-karty)
+
+**Prečo:** `<legend>` v orámovanom `<fieldset>` kreslí prehliadač do hornej
+čiary — nadpis sa bil s okrajom a zaobleným rohom. Na stránkach boli tri
+vzory (`.hr-group` s inline rámom, `.mc-group`, `.assign-panel`).
+
+**Čo sa zmenilo:** jeden vzor `.form-group` (SwiftUI `Section(header:footer:)`):
+legenda s `float` (prehliadač do rámu kreslí len legendu, ktorá nepláva),
+rám nesie vnútorný `div.card.form-group-body`, nápoveda pod kartou
+(`.form-group-foot`). `.mc-group`, `.hr-group` a `.assign-panel` z CSS
+zmizli.
+
+**Nález:** návrh predpokladal, že `.hr-group` bez inline `border` rám nemá.
+Má — `globals.css` mu ho dáva vlastným pravidlom, takže ApprovalPanel,
+ResponsiblePicker, LegalBasisForm, schvaľovatelia v príprave znenia
+a kategória právneho základu v organizácii mali legendu v čiare tiež.
+Podľa promptu návrhu prešli na nový vzor aj ony. Skupina v skupine
+(zodpovedné osoby v „Základ" testu) kartu nekreslí — rám v ráme.
+
+---
+
 ## 2026-10-04 — React 19 v aplikácii
 
 **Prečo:** `app/package.json` uvádzal React 18.3.1, ale stránky v `app/`

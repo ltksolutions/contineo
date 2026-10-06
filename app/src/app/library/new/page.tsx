@@ -97,6 +97,7 @@ export default async function NewDocumentPage({
         formulár predvyplnený z adresy a zóna na súbor zvýraznená.
       */}
       <Notice
+        language={ctx.person.language}
         message={error ? `${t.errorBefore}${error} ${t.errorFileAgain}` : undefined}
         error
         back={`/library/new?${new URLSearchParams({
