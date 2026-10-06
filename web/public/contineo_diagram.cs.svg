@@ -117,18 +117,18 @@
   <!-- KANÁLY -->
   <rect x="1212" y="236" width="264" height="372" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
   <text x="1232" y="266" font-size="15" font-weight="700" fill="#54309E">KANÁLY</text>
-  <text x="1232" y="285" font-size="11" fill="#5f6368">odpověď vždy s citací + zněním</text>
+  <text x="1232" y="285" font-size="11" fill="#5f6368">dva typy: widget a portál · vždy s citací</text>
   <g font-size="12.5" fill="#202124">
-    <text x="1232" y="318">• Asistent — otázka a odpověď</text>
-    <text x="1246" y="337" font-size="11" fill="#5f6368">streaming, historie konverzace</text>
-    <text x="1232" y="369">• Schránka helpdesku ⇅</text>
-    <text x="1246" y="388" font-size="11" fill="#5f6368">Microsoft Graph · e-mail = ticket</text>
-    <text x="1232" y="420">• Tickety</text>
-    <text x="1246" y="439" font-size="11" fill="#5f6368">fronta řešitele · návrh odpovědi · do FAQ</text>
-    <text x="1232" y="471">• Vložený widget</text>
-    <text x="1246" y="490" font-size="11" fill="#5f6368">podepsaná identita (ISSF) · eskalace na ticket</text>
-    <text x="1232" y="522">• Portál — knihovna a potvrzování</text>
-    <text x="1246" y="541" font-size="11" fill="#5f6368">veřejná KB · potvrzování norem</text>
+    <text x="1232" y="318">• Widget — do cizí stránky</text>
+    <text x="1246" y="337" font-size="11" fill="#5f6368">asistent · podepsaná identita (ISSF)</text>
+    <text x="1232" y="369">• Widget: tickety (volitelně)</text>
+    <text x="1246" y="388" font-size="11" fill="#5f6368">eskalace z chatu · fronta řešitele · do FAQ</text>
+    <text x="1232" y="420">• Widget: schránka helpdesku ⇅ (volitelně)</text>
+    <text x="1246" y="439" font-size="11" fill="#5f6368">e-mail = ticket · odpověď e-mailem (Graph)</text>
+    <text x="1232" y="471">• Portál — knihovna</text>
+    <text x="1246" y="490" font-size="11" fill="#5f6368">články a formuláře (připravujeme)</text>
+    <text x="1232" y="522">• Intranet (vestavěné)</text>
+    <text x="1246" y="541" font-size="11" fill="#5f6368">asistent · knihovna · potvrzování · vzdělávání</text>
   </g>
 
   <path d="M304,422 L331,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>

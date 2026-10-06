@@ -15,7 +15,7 @@
   </defs>
 
   <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektúra a dátový tok</text>
-  <text x="40" y="74" font-size="14" fill="#5f6368">CMS (kanály · spracovanie · review) → MongoDB (jadro) → AI adaptéry → rozhrania. Adaptéry sa vyberajú konfiguráciou tenanta, nie kódom.</text>
+  <text x="40" y="74" font-size="14" fill="#5f6368">Zdroje · spracovanie · review → MongoDB (jadro) → AI adaptéry → kanály. Adaptéry sa vyberajú konfiguráciou tenanta, nie kódom.</text>
 
   <rect x="470" y="96" width="580" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
   <text x="760" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, roly) · auto-zakladanie používateľov</text>
@@ -27,34 +27,41 @@
   <text x="46" y="196" font-size="15" font-weight="700" fill="#174EA6">CMS — SPRÁVA OBSAHU</text>
   <text x="46" y="215" font-size="11" fill="#5f6368">jediné miesto pravdy pre obsah — knižnica, verzie, tagy, review</text>
 
-  <!-- VSTUPNÉ KANÁLY -->
+  <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
-  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6">VSTUPNÉ KANÁLY</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368">obsah aj integrácie = jedna vrstva</text>
+  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6">ZDROJE</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368">dnes: súbory, FAQ, schránka (Graph)</text>
   <g font-size="12.5" fill="#202124">
-    <text x="60" y="316">• PDF normy a smernice</text>
-    <text x="60" y="342">• RSS / web (Všeobecné info)</text>
-    <text x="60" y="368">• FAQ</text>
-    <text x="60" y="394">• E-mail (IMAP)  ⇅</text>
-    <text x="60" y="420">• MCP konektory</text>
-    <text x="74" y="440" font-size="11" fill="#5f6368">Drive · SharePoint · Confluence</text>
-    <text x="74" y="457" font-size="11" fill="#5f6368">Notion · Slack …</text>
+    <text x="60" y="316">• Nahraté súbory — PDF + Word/Excel</text>
+    <text x="60" y="342" fill="#9aa0a6">• RSS / web (pripravujeme)</text>
+    <text x="60" y="368">• FAQ (druh dokumentu) · overené odpovede</text>
+    <text x="60" y="394">• Schránka helpdesku (Graph) ⇅</text>
+    <text x="60" y="420" fill="#9aa0a6">• MCP konektory (pripravujeme)</text>
+    <text x="74" y="440" font-size="11" fill="#9aa0a6" font-style="italic">Drive · SharePoint · Confluence</text>
+    <text x="74" y="457" font-size="11" fill="#9aa0a6" font-style="italic">Notion · Slack …</text>
   </g>
-  <text x="60" y="496" font-size="11" fill="#1A73E8">⇅ e-mail je aj výstupný kanál</text>
+  <text x="60" y="496" font-size="11" fill="#1A73E8">⇅ schránka je aj výstupný kanál</text>
 
   <!-- WORKER -->
   <rect x="333" y="236" width="264" height="372" rx="14" fill="#FEF3E0" stroke="#E8920C" stroke-width="1.5"/>
   <text x="353" y="266" font-size="15" font-weight="700" fill="#B05A00">WORKER</text>
-  <text x="353" y="285" font-size="11" fill="#5f6368">spracovanie (mimo DB)</text>
+  <text x="353" y="285" font-size="11" fill="#5f6368">spracovanie mimo DB · bez jazykového modelu</text>
   <g font-size="12.5" fill="#202124">
-    <text x="353" y="316">• Chunking — úryvok po §/čl.</text>
-    <text x="353" y="350">• Značkovanie z číselníka:</text>
-    <text x="367" y="369" font-size="11" fill="#5f6368">sekcia · scope · companyCode</text>
-    <text x="367" y="386" font-size="11" fill="#5f6368">verzia (effectiveFrom/To)</text>
-    <text x="353" y="418">• Embedding pri ingescii</text>
-    <text x="367" y="437" font-size="11" fill="#5f6368">cez adaptér podľa profilu</text>
-    <text x="353" y="469">• Verzovanie — staré chunky</text>
-    <text x="367" y="488" font-size="11" fill="#5f6368">isActive:false, nemazať</text>
+    <text x="353" y="316">• Prevod súboru</text>
+    <text x="367" y="334" font-size="10.5" fill="#5f6368">PDF sa schvaľuje · text z Wordu/Excelu</text>
+    <text x="367" y="349" font-size="10.5" fill="#5f6368">sken → ručný prepis modelom</text>
+    <text x="353" y="377">• Členenie po článkoch / §</text>
+    <text x="367" y="395" font-size="10.5" fill="#5f6368">analyzátor zo signálov navrhne profil</text>
+    <text x="367" y="410" font-size="10.5" fill="#5f6368">FAQ po záznamoch · človek potvrdí</text>
+    <text x="353" y="438">• Metadáta úseku</text>
+    <text x="367" y="456" font-size="10.5" fill="#5f6368">companyCode · accessLevel · language</text>
+    <text x="367" y="471" font-size="10.5" fill="#5f6368">versionId · articleRef · druh z číselníka</text>
+    <text x="353" y="499">• Embedding</text>
+    <text x="367" y="517" font-size="10.5" fill="#5f6368">cloud: počíta databáza priamo v indexe</text>
+    <text x="367" y="532" font-size="10.5" fill="#5f6368">on-prem: adaptér Infinity / TEI</text>
+    <text x="353" y="560">• Znenia</text>
+    <text x="367" y="578" font-size="10.5" fill="#5f6368">účinnosť nesie dokument, nie úsek</text>
+    <text x="367" y="593" font-size="10.5" fill="#5f6368">staré členenie: superseded, nič sa nemaže</text>
   </g>
 
   <!-- KURÁTORSKÁ BRÁNA (v rámci CMS) -->
@@ -68,22 +75,26 @@
   <text x="646" y="285" font-size="11" fill="#5f6368">rovnaké dotazy cloud aj on-prem</text>
   <g font-size="12.5" fill="#202124">
     <text x="646" y="316">• $vectorSearch + $search</text>
-    <text x="646" y="348">• $rankFusion — hybrid</text>
-    <text x="660" y="367" font-size="11" fill="#5f6368">vektor 60 % + fulltext 40 %</text>
-    <text x="646" y="397">• Filter companyCode</text>
-    <text x="660" y="416" font-size="11" fill="#5f6368">default-deny, pred LLM</text>
-    <text x="660" y="431" font-size="10.5" fill="#B31412">hierarchia nedáva prístup</text>
+    <text x="646" y="342">• $rankFusion — hybrid</text>
+    <text x="660" y="360" font-size="10.5" fill="#5f6368">vektor 60 % + fulltext 40 %</text>
+    <text x="646" y="388">• Filter pred LLM</text>
+    <text x="660" y="406" font-size="10.5" fill="#5f6368">companyCode — vždy prvý, bez výnimky</text>
+    <text x="660" y="421" font-size="10.5" fill="#5f6368">versionId ∈ znenia platné k dňu otázky</text>
+    <text x="660" y="436" font-size="10.5" fill="#5f6368">superseded: false · accessLevel</text>
   </g>
-  <line x1="646" y1="444" x2="870" y2="444" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="460" font-size="11.5" fill="#0B6E2E" font-weight="600">Kolekcie:</text>
-  <text x="646" y="478" font-size="11" fill="#3c4043">documents (+ versions) · document_chunks</text>
-  <text x="646" y="495" font-size="11" fill="#3c4043">channels · channel_runs · navigation</text>
-  <text x="646" y="512" font-size="11" fill="#3c4043">categories · qa_pairs · tickets</text>
-  <text x="646" y="529" font-size="11" fill="#3c4043">conversations · tenant_profiles</text>
-  <text x="646" y="546" font-size="10.5" fill="#3c4043">persons · acknowledgements · onboarding_tracks</text>
-  <line x1="646" y1="559" x2="870" y2="559" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="575" font-size="10.5" fill="#0B6E2E">companyCode.parent — hierarchia tenantov</text>
-  <text x="646" y="590" font-size="10.5" fill="#5f6368">centrála → dcéry → prevádzky</text>
+  <line x1="646" y1="448" x2="870" y2="448" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="646" y="465" font-size="11.5" fill="#0B6E2E" font-weight="600">Kolekcie:</text>
+  <text x="646" y="479" font-size="10" fill="#3c4043">Obsah: documents · document_chunks</text>
+  <text x="646" y="492.5" font-size="10" fill="#3c4043">Schvaľovanie: approval_rounds · cms_folders</text>
+  <text x="646" y="506" font-size="10" fill="#3c4043">Ľudia: persons · departments</text>
+  <text x="646" y="519.5" font-size="10" fill="#3c4043">Pridelenia: onboarding_tracks · assignments</text>
+  <text x="646" y="533" font-size="10" fill="#3c4043">Potvrdenia: acknowledgements</text>
+  <text x="646" y="546.5" font-size="10" fill="#3c4043">Helpdesk: helpdesk_channels · tickets</text>
+  <text x="646" y="560" font-size="10" fill="#3c4043">Vzdelávanie: courses · tests · certificates</text>
+  <text x="646" y="573.5" font-size="10" fill="#3c4043">Dohľad: audit · evaluations · ai_usage</text>
+  <line x1="646" y1="583" x2="870" y2="583" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="646" y="596" font-size="10" fill="#0B6E2E">Dôkazné záznamy sa nemenia (D24)</text>
+  <text x="646" y="606" font-size="9.5" fill="#5f6368">oprava = nový záznam · odvolanie = revokedAt</text>
 
   <!-- AI VRSTVA -->
   <rect x="919" y="236" width="264" height="372" rx="14" fill="#E0F7FA" stroke="#00838F" stroke-width="2"/>
@@ -103,21 +114,21 @@
   <text x="939" y="536" font-size="10.5" fill="#5f6368">$rankFusion — v pipeline (cloud)</text>
   <text x="939" y="552" font-size="10.5" fill="#5f6368">alebo v aplikácii (on-prem).</text>
 
-  <!-- ROZHRANIA -->
+  <!-- KANÁLY -->
   <rect x="1212" y="236" width="264" height="372" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
-  <text x="1232" y="266" font-size="15" font-weight="700" fill="#54309E">ROZHRANIA</text>
-  <text x="1232" y="285" font-size="11" fill="#5f6368">odpoveď vždy s citáciou + verziou</text>
+  <text x="1232" y="266" font-size="15" font-weight="700" fill="#54309E">KANÁLY</text>
+  <text x="1232" y="285" font-size="11" fill="#5f6368">dva typy: widget a portál · vždy s citáciou</text>
   <g font-size="12.5" fill="#202124">
-    <text x="1232" y="318">• Chat</text>
-    <text x="1246" y="337" font-size="11" fill="#5f6368">streaming, história konverzácie</text>
-    <text x="1232" y="369">• E-mail odpovede  ⇅</text>
-    <text x="1246" y="388" font-size="11" fill="#5f6368">IMAP vstup aj výstup</text>
-    <text x="1232" y="420">• Tickety</text>
-    <text x="1246" y="439" font-size="11" fill="#5f6368">helpdesk, SLA, životný cyklus</text>
-    <text x="1232" y="471">• Vložený widget</text>
-    <text x="1246" y="490" font-size="11" fill="#5f6368">overlay v cudzej stránke</text>
-    <text x="1232" y="522">• Portál (KB + onboarding)</text>
-    <text x="1246" y="541" font-size="11" fill="#5f6368">verejná KB · potvrdzovanie noriem</text>
+    <text x="1232" y="318">• Widget — do cudzej stránky</text>
+    <text x="1246" y="337" font-size="11" fill="#5f6368">asistent · podpísaná identita (ISSF)</text>
+    <text x="1232" y="369">• Widget: tickety (voliteľne)</text>
+    <text x="1246" y="388" font-size="11" fill="#5f6368">eskalácia z chatu · fronta riešiteľa · do FAQ</text>
+    <text x="1232" y="420">• Widget: schránka helpdesku ⇅ (voliteľne)</text>
+    <text x="1246" y="439" font-size="11" fill="#5f6368">e-mail = ticket · odpoveď e-mailom (Graph)</text>
+    <text x="1232" y="471">• Portál — knižnica</text>
+    <text x="1246" y="490" font-size="11" fill="#5f6368">články a formuláre (pripravujeme)</text>
+    <text x="1232" y="522">• Intranet (vstavané)</text>
+    <text x="1246" y="541" font-size="11" fill="#5f6368">asistent · knižnica · potvrdzovanie · vzdelávanie</text>
   </g>
 
   <path d="M304,422 L331,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
@@ -126,23 +137,23 @@
   <path d="M1183,422 L1210,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
 
   <path d="M1300,608 C1258,656 1020,664 838,614" fill="none" stroke="#00897B" stroke-width="2.2" marker-end="url(#arrowTeal)"/>
-  <path d="M1392,608 C1430,678 1064,686 880,616" fill="none" stroke="#D93025" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arrowRed)"/>
+  <path d="M1392,608 C1430,678 1064,686 880,616" fill="none" stroke="#D93025" stroke-width="2.2" marker-end="url(#arrowRed)"/>
 
   <text x="40" y="742" font-size="15" font-weight="700" fill="#202124">Dva spätné cykly</text>
   <circle cx="52" cy="766" r="4.5" fill="#00897B"/>
-  <text x="66" y="771" font-size="12.5" fill="#00695C"><tspan font-weight="700">① qa_pair</tspan> — schválená odpoveď späť do znalostí</text>
+  <text x="66" y="771" font-size="12.5" fill="#00695C"><tspan font-weight="700">① overená odpoveď</tspan> — späť do indexu ako úsek (sourceType qa)</text>
   <circle cx="52" cy="792" r="4.5" fill="#D93025"/>
-  <text x="66" y="797" font-size="12.5" fill="#B31412"><tspan font-weight="700">② ticket</tspan> — eskalácia s kontextom konverzácie</text>
+  <text x="66" y="797" font-size="12.5" fill="#B31412"><tspan font-weight="700">② ticket</tspan> — eskalácia z chatu alebo widgetu, odpoveď e-mailom</text>
 
   <rect x="40" y="820" width="700" height="88" rx="12" fill="#E0F2F1" stroke="#00897B" stroke-width="1.5"/>
   <text x="60" y="848" font-size="15" font-weight="700" fill="#00695C">① KURÁCIA — kontrola kvality</text>
-  <text x="60" y="872" font-size="12.5" fill="#3c4043">Správca ohodnotí a schváli odpoveď → uloží sa ako qa_pair → embeduje späť.</text>
+  <text x="60" y="872" font-size="12.5" fill="#3c4043">Hodnotiteľ pripraví znenie, správca obsahu ho zverejní → úsek sourceType qa v indexe.</text>
   <text x="60" y="892" font-size="12" fill="#5f6368">Nie je to strojové „učenie“, ale ľudská kurácia obsahu.</text>
 
   <rect x="776" y="820" width="700" height="88" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
   <text x="796" y="848" font-size="15" font-weight="700" fill="#B31412">② ESKALÁCIA — na ticket</text>
-  <text x="796" y="872" font-size="12.5" fill="#3c4043">Nízke skóre podobnosti alebo 3× neúspech na tú istú tému →</text>
-  <text x="796" y="892" font-size="12.5" fill="#3c4043">bot ponúkne vytvorenie ticketu s celým kontextom konverzácie.</text>
+  <text x="796" y="872" font-size="12.5" fill="#3c4043">Po dvoch negatívnych hodnoteniach asistent ponúkne ticket; e-mail do schránky kanála je ticket tiež.</text>
+  <text x="796" y="892" font-size="12.5" fill="#3c4043">Riešiteľ dostane návrh odpovede, upraví ho, odošle e-mailom a môže ho pridať do FAQ.</text>
 
   <text x="40" y="944" font-size="11.5" fill="#9aa0a6">Cloud: MongoDB Atlas EU · Voyage voyage-4 + rerank-2 · Claude API (Citations)  │  On-prem: MongoDB Community 8.2 · Infinity / TEI · vLLM (Qwen3 / EuroLLM)</text>
   <text x="40" y="964" font-size="11.5" fill="#9aa0a6">Jadro je v oboch režimoch identické — $rankFusion beží aj self-hosted. Líšia sa len tri adaptéry: embedding, rerank, generovanie (ADR-001).</text>
