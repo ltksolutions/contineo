@@ -69,7 +69,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
         {" · "}{channel?.name ?? ticket.channelKey} · {t.source[ticket.source]}
         {" · "}{ticket.assigneeId ? t.assignedTo(assignee?.fullName ?? ticket.assigneeId) : t.unassigned}
       </p>
-      <Notice message={msg} error={error === "1"} back={base} />
+      <Notice message={msg} error={error === "1"} back={base} language={language} />
 
       <div className="detail-grid">
         <div className="detail-main">

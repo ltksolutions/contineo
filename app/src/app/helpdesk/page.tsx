@@ -46,7 +46,7 @@ export default async function HelpdeskPage({ searchParams }: { searchParams: Pro
         <h1 className="page-title">{t.heading}</h1>
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
-      <Notice message={msg} error={error === "1"} back="/helpdesk" />
+      <Notice message={msg} error={error === "1"} back="/helpdesk" language={language} />
 
       {ctx.channels.length === 0 ? (
         <div className="empty"><p className="empty-text">{t.noChannels}</p></div>
