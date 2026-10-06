@@ -62,3 +62,18 @@ export function tabValue(value: string | undefined): string | undefined {
   if (!value) return undefined
   return LEGACY_TAB_VALUES[value] ?? value
 }
+
+/**
+ * Tá istá adresa bez vybraných kľúčov — kam vedie potvrdenie oznamu
+ * (`Notice`). Vyplnené hodnoty formulára, ktoré akcia vrátila v adrese,
+ * ostanú; zmizne len správa, inak by sa oznam po potvrdení ukázal znova.
+ */
+export function hrefWithout(path: string, sp: RawQuery, drop: string[]): string {
+  const out = new URLSearchParams()
+  for (const [key, value] of Object.entries(sp)) {
+    if (value === undefined || drop.includes(key)) continue
+    for (const v of Array.isArray(value) ? value : [value]) out.append(key, v)
+  }
+  const qs = out.toString()
+  return qs ? `${path}?${qs}` : path
+}

@@ -121,7 +121,7 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
       {toc("privacy-toc")}
       <div className="privacy-main">
         <h1 className="page-title">{t.title}</h1>
-        <Notice message={q.msg} error={q.error === "1"} back="/privacy#rights" />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back="/privacy#rights" />
         <p className="quiet page-lead">{t.lead}</p>
         {toc("privacy-chips")}
 

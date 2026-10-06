@@ -383,9 +383,10 @@ export default async function DocumentDetailPage({
    */
   const diffStyle = (kind: DiffKind): CSSProperties =>
     kind === "added"
-      ? { background: "rgba(46, 160, 67, 0.16)" }
+      // Tokeny stavu, nie natvrdo farby — v tmavej téme sa prepnú samy.
+      ? { background: "var(--ok-bg)" }
       : kind === "removed"
-        ? { background: "rgba(248, 81, 73, 0.16)" }
+        ? { background: "var(--bad-bg)" }
         : kind === "gap"
           ? { opacity: 0.55, fontStyle: "italic" }
           : {}
@@ -777,7 +778,7 @@ export default async function DocumentDetailPage({
   return (
     <AppShell language={ctx.person.language} title={d.title}>
     <div className="detail-page" style={tenantStyle(branding)}>
-      <Notice message={message} error={error === "1"} back={base} />
+      <Notice language={language} message={message} error={error === "1"} back={base} />
 
       {/*
         Úprava dokumentu ako samostatný pohľad (rám KNIZNICA-uprava-dokumentu):
@@ -1832,7 +1833,7 @@ async function responsibleBasisPage(documentId: string, raw: RawQuery) {
   return (
     <AppShell language={language} title={title}>
       <div style={{ maxWidth: 760, ...tenantStyle(brandingView(ctx.tenant)) }}>
-        <Notice message={query.msg} error={query.error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
+        <Notice language={language} message={query.msg} error={query.error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
         <h1 className="page-title">{title}</h1>
         <p className="quiet detail-lead">
           {tr.basisPageLead}

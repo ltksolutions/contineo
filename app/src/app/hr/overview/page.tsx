@@ -98,7 +98,7 @@ export default async function HrReportPage({
       <HrTabs current="/hr/overview" person={ctx.person} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px", maxWidth: 660 }}>{t.intro}</p>
 
-      <Notice message={q.msg} error={q.error === "1"} back={link({})} />
+      <Notice language={language} message={q.msg} error={q.error === "1"} back={link({})} />
 
       {/*
         Pohľad je prepínač, nie rad tlačidiel (ZAKLAD-segmented-control,

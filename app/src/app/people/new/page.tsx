@@ -18,7 +18,8 @@ import PhoneField from "@/components/PhoneField"
 import { allDepartments, flattenTree } from "@/lib/departments"
 import { treeOptions } from "@/lib/treeOptions"
 import { invitePersonAction } from "../actions"
-import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { normalizeQuery, hrefWithout, type RawQuery } from "@/lib/urlParams"
+import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
 
@@ -35,6 +36,7 @@ export default async function NewPersonPage({
     notFound()
   }
 
+  const raw = await searchParams
   const q = normalizeQuery<{
     error?: string
     email?: string
@@ -47,7 +49,7 @@ export default async function NewPersonPage({
     mobilePhoneCountry?: string
     workplace?: string
     departmentId?: string
-  }>(await searchParams)
+  }>(raw)
   const branding = brandingView(ctx.tenant)
   const workplaces = availableOptions(ctx.tenant, "workplace")
   const departmentRows = flattenTree(await allDepartments(ctx.tenant.companyCode))
@@ -65,11 +67,8 @@ export default async function NewPersonPage({
         {t.introBefore}<strong>{ctx.tenant.companyCode}</strong>{t.introAfter}
       </p>
 
-      {q.error && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)", color: "var(--warn-fg)" }}>
-          {q.error}
-        </p>
-      )}
+      {/* Vyplnené polia, ktoré akcia vrátila v adrese, po potvrdení ostanú. */}
+      <Notice language={ctx.person.language} message={q.error} error back={hrefWithout("/people/new", raw, ["error"])} />
 
       <form action={invitePersonAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
         <label className="field">

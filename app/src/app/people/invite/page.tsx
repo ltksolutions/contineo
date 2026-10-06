@@ -44,7 +44,7 @@ export default async function InviteAllPage({
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
-      <Notice message={q.msg} error={q.error === "1"} back="/people/invite" />
+      <Notice language={language} message={q.msg} error={q.error === "1"} back="/people/invite" />
 
 
       <h1 className="page-title">{t.heading}</h1>

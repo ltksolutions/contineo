@@ -62,7 +62,7 @@ export default async function TrackNotifyPage({ params }: { params: Promise<{ ke
 
       {recipients.length === 0 || !preview ? (
         <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
-          {t.allAcknowledged(`trasa „${track.title}"`)}
+          {t.allAcknowledged(t.trackAudience(track.title))}
         </p>
       ) : (
         <>

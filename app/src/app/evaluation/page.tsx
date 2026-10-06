@@ -70,7 +70,7 @@ export default async function EvaluationPage({
         <p className="quiet page-lead" style={{ margin: 0, maxWidth: 660 }}>{t.intro}</p>
       </div>
 
-      <Notice message={message} error={error === "1"} back="/evaluation" />
+      <Notice language={language} message={message} error={error === "1"} back="/evaluation" />
 
       {queue.length === 0 && (
         <div className="empty">
@@ -84,7 +84,7 @@ export default async function EvaluationPage({
           <div key={item.id} className="card">
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
               {item.readerVerdict === 0 && (
-                <span className="tag" style={{ background: "var(--bad-bg)", color: "var(--bad-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}>
+                <span className="tag tag--expired" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
                   {t.saidDoesNotFit}
                 </span>
               )}

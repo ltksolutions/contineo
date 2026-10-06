@@ -117,15 +117,17 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
         <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
           {overwrite ? t.overwriteNote : t.existingNote}
         </div>
-        <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: "var(--fs-small)", cursor: "pointer" }}>
+        {/* Áno/nie ako prepínač (DESIGN_ODCHYLKY P6). */}
+        <label className="form-row form-row--bare">
           <input
             type="checkbox"
+            role="switch"
+            className="toggle"
             checked={overwrite}
             onChange={e => toggleOverwrite(e.target.checked)}
             disabled={busy}
-            style={{ marginTop: 3 }}
           />
-          <span>{t.overwriteLabel}</span>
+          <span className="form-row-main">{t.overwriteLabel}</span>
         </label>
       </div>
 
@@ -154,9 +156,12 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
       )}
 
       {preview && !preview.ok && (
-        <p className="card" style={{ padding: "12px 16px", fontSize: "var(--fs-body)", margin: 0, color: "var(--warn-fg)" }}>
-          {preview.message}
-        </p>
+        // Stav náhľadu je v prehliadači — oznam s návratom na adresu by ho
+        // zahodil, preto chyba v riadku, ale cez spoločnú triedu.
+        <div className="lnote lnote--warn" role="alert">
+          <span className="lnote-mark" aria-hidden="true">!</span>
+          <span className="lnote-text">{preview.message}</span>
+        </div>
       )}
 
       {preview?.ok && preview.rows && (() => {

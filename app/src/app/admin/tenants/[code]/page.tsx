@@ -55,12 +55,7 @@ function ProviderRow({
     <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
         <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
-        <span
-          className="tag"
-          style={s.state === "unreadable"
-            ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
-            : undefined}
-        >
+        <span className={s.state === "unreadable" ? "tag tag--warn" : "tag"}>
           {t.state[s.state] ?? s.state}
         </span>
       </div>
@@ -219,7 +214,7 @@ export default async function TenantDetailPage({
         {!enabled && t.disabled}
       </p>
 
-      <Notice message={message} error={error === "1"} back={`/admin/tenants/${encodeURIComponent(code)}`} />
+      <Notice language={language} message={message} error={error === "1"} back={`/admin/tenants/${encodeURIComponent(code)}`} />
 
       {overview && (
         <section className="card" style={{ padding: "18px 20px", marginBottom: 16 }}>
@@ -317,7 +312,7 @@ export default async function TenantDetailPage({
                   value={j}
                   defaultChecked={tenant.languages.includes(j)}
                 />
-                {j}
+                {d.people.languages[j] ?? j}
               </label>
             ))}
           </span>
@@ -352,7 +347,7 @@ export default async function TenantDetailPage({
             name="autoProvisionDomains"
             rows={2}
             defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-            placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+            placeholder={dictionary(language).common.domainsPlaceholder}
             autoCapitalize="none"
             autoCorrect="off"
           />

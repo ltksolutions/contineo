@@ -15,7 +15,7 @@ import type { QueryTime } from "@/lib/queryTime"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
-import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
+import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18n"
 import { isAutoVersionLabel } from "@/lib/versionLabel"
 import { SkeletonText } from "./Skeleton"
 
@@ -331,20 +331,14 @@ export function AnswerAside({
                     )}
                   </span>
                   {z.sourceType === "qa" && (
-                    <span
-                      className="tag"
-                      style={{ background: "var(--ok-bg)", color: "var(--ok-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}
-                    >
+                    <span className="tag tag--published" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
                       {t.verified}
                     </span>
                   )}
                   {/* Interný obsah vo verejnej odpovedi je tvrdá brána D9,
                       preto to musí byť vidieť na prvý pohľad. */}
                   {z.accessLevel === "internal" && (
-                    <span
-                      className="tag"
-                      style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: "var(--fs-micro)" }}
-                    >
+                    <span className="tag tag--warn" style={{ fontSize: "var(--fs-micro)" }}>
                       {t.internal}
                     </span>
                   )}
@@ -385,41 +379,37 @@ export function AnswerAside({
         <div
           className="quiet answer-technical"
         >
-          {done.model && <Line label="model" value={done.model} />}
+          {done.model && <Line label={t.techModel} value={done.model} />}
           {done.provider && <Line label={t.adapter} value={done.provider} />}
           {done.ttftMs !== null && (
             <Line label={t.firstToken} value={`${(done.ttftMs / 1000).toFixed(1)} s`} />
           )}
-          <Line label="celkom" value={`${(done.totalMs / 1000).toFixed(1)} s`} />
+          <Line label={t.techTotal} value={`${(done.totalMs / 1000).toFixed(1)} s`} />
 
           {/* Tokeny a cena. Cache sa uvádza zvlášť, lebo čítanie z nej stojí
               desatinu ceny vstupu — bez toho rozlíšenia by číslo klamalo. */}
           {done.tokens && (
             <Line
-              label="tokeny"
+              label={t.techTokens}
               value={
-                `${done.tokens.input.toLocaleString("sk")} → ` +
-                `${done.tokens.output.toLocaleString("sk")}` +
+                `${formatNumber(done.tokens.input, language)} → ` +
+                `${formatNumber(done.tokens.output, language)}` +
                 (done.tokens.cacheRead
-                  ? ` · z cache ${done.tokens.cacheRead.toLocaleString("sk")}` : "") +
+                  ? ` · ${t.cacheFrom} ${formatNumber(done.tokens.cacheRead, language)}` : "") +
                 (done.tokens.cacheWrite
-                  ? ` · do cache ${done.tokens.cacheWrite.toLocaleString("sk")}` : "")
+                  ? ` · ${t.cacheTo} ${formatNumber(done.tokens.cacheWrite, language)}` : "")
               }
             />
           )}
           {done.cost && !done.cost.unknownModel && (
-            <span
-              className="tag"
-              style={{ background: "var(--surface-2)", color: "var(--muted)" }}
-              title={t.costNote(done.cost.pricelistVersion)}
-            >
+            <span className="tag tag--archived" title={t.costNote(done.cost.pricelistVersion)}>
               ≈ {formatUsd(done.cost.usd)} · {formatEur(toEur(done.cost.usd))}
             </span>
           )}
           {/* Cenník, ktorý prestal platiť, radšej priznáme, než by sme ticho
               počítali starou sadzbou. */}
           {done.cost?.pricelistExpired && (
-            <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+            <span className="tag tag--warn">
               {t.pricelistStale}
             </span>
           )}
@@ -428,14 +418,7 @@ export function AnswerAside({
           {done.timings && Object.entries(done.timings).filter(([, ms]) => ms >= 50).map(([f, ms]) => (
             <Line key={f} label={f} value={`${(ms / 1000).toFixed(1)} s`} />
           ))}
-          <span
-            className="tag"
-            style={
-              done.verifiedCitations
-                ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
-                : { background: "var(--warn-bg)", color: "var(--warn-fg)" }
-            }
-          >
+          <span className={done.verifiedCitations ? "tag tag--published" : "tag tag--warn"}>
             {done.verifiedCitations ? t.citationsVerified : t.citationsUnverified}
           </span>
         </div>

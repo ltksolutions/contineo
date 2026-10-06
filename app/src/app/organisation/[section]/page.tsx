@@ -91,10 +91,7 @@ function ProviderRow({
     <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
         <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
-        <span
-          className="tag"
-          style={s.state === "unreadable" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
-        >
+        <span className={s.state === "unreadable" ? "tag tag--warn" : "tag"}>
           {s.state === "set" ? t.stateOn
             : s.state === "from-environment" ? t.stateFromSupplier
             : s.state === "unreadable" ? t.stateUnreadable : t.stateOff}
@@ -300,6 +297,7 @@ export default async function OrganisationSectionPage({
     <AppShell language={ctx.person.language} title={t.tabs[now]} trail={{ "/organisation": t.heading }}>
     <div className="org-set" style={tenantStyle(branding)}>
       <Notice
+        language={language}
         message={message}
         error={error === "1"}
         back={orgSectionHref(now)}
@@ -647,7 +645,7 @@ export default async function OrganisationSectionPage({
           {tenant.hostnames.map(h => (
             <li key={h} className="card" style={{ padding: "10px 14px", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ fontWeight: 600 }}>{h}</span>
-              <span className="tag" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>{t.domains.works}</span>
+              <span className="tag tag--published">{t.domains.works}</span>
               {tenant.hostnames.length > 1 && (
                 <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
@@ -669,7 +667,7 @@ export default async function OrganisationSectionPage({
                 <li key={z.host} className="card" style={{ padding: "12px 14px", display: "grid", gap: 8 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 600 }}>{z.host}</span>
-                    <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+                    <span className="tag tag--warn">
                       {t.domains.waitingDns}
                     </span>
                     <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
@@ -738,7 +736,7 @@ export default async function OrganisationSectionPage({
               name="autoProvisionDomains"
               rows={2}
               defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-              placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+              placeholder={dictionary(language).common.domainsPlaceholder}
               autoCapitalize="none"
               autoCorrect="off"
             />

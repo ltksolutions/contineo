@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dizajn: prierezové opravy podľa súpisu odchýlok (2026-10-06)
+
+Chyby pri odoslaní formulára (Prideliť dokumenty, upozornenie e-mailom,
+nová osoba, nová organizácia) sa ukážu ako oznam s potvrdením, nie ako
+karta hore na stránke, ktorú pri dlhom formulári nebolo vidieť; vyplnené
+hodnoty po potvrdení ostanú. Filtre stavu vo Vzdelávaní (kurzy, testy,
+zapísaní, prehľad odpovedí) sú prepínač pohľadu. Voľby áno/nie (povinná
+časť, dopozerať video, povinný test, vyžaduje potvrdenie, upozorniť
+pridaných, aktualizovať existujúcich) sú prepínače. Tabuľky v správe
+vzdelávania sa na tablete menia na karty ako ostatné zoznamy. Štítky stavu
+majú jednotné farby aj v tmavej téme. Do prekladov prešli texty, ktoré boli
+natvrdo po slovensky: potvrdenie oznamu („Rozumiem"), technické údaje pod
+odpoveďou, prehľad pridelení, prihlásenie, overenie certifikátu; v zozname
+osôb sa ukazuje názov roly namiesto kľúča.
+
 ### Formuláre: výbery a prepínače podľa SwiftUI (2026-10-06)
 
 Zaškrtávacie políčka a krúžky v predvolenom vzhľade prehliadača nahradili

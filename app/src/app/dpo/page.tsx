@@ -230,7 +230,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
             <Link className="button button--quiet dpo-csv dpo-csv--head" href="/dpo/csv">{t.csv}</Link>
           )}
         </div>
-        <Notice message={q.msg} error={q.error === "1"} back="/dpo" />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back="/dpo" />
 
         {/*
           Čakajúca námietka (D153) je pás nad výkazom, nie piata dlaždica

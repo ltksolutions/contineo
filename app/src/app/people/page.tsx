@@ -68,7 +68,7 @@ export default async function PeoplePage({
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
-      <Notice message={message} error={error === "1"} back={q ? `/people?q=${encodeURIComponent(q)}` : "/people"} />
+      <Notice language={language} message={message} error={error === "1"} back={q ? `/people?q=${encodeURIComponent(q)}` : "/people"} />
 
       {/* Serverový formulár — hľadanie je v adrese, takže sa dá poslať odkazom
           a vrátiť sa naň z histórie prehliadača. */}
@@ -122,7 +122,7 @@ export default async function PeoplePage({
                 {/* Stav farbou, role neutrálne (OSOBY.md, úloha 1). */}
                 <span className={personTagClass(o)}>{t.status[personDisplayStatus(o)] ?? o.status}</span>
                 {o.roles.map(r => (
-                  <span key={r} className="tag">{r}</span>
+                  <span key={r} className="tag">{dictionary(language).people.roles[r] ?? r}</span>
                 ))}
                 <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
                   {o.lastLoginAt ? formatDate(o.lastLoginAt, language) : t.neverSignedIn}

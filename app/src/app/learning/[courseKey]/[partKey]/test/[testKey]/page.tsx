@@ -44,7 +44,7 @@ export default async function TestIntroPage({ params, searchParams }: {
   return (
     <AppShell language={language} trail={c.trail}>
       <div className="at">
-        <Notice message={q.msg} error={q.error === "1"} back={base} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={base} />
         <section className="card at-intro">
           <h1 className="page-title">{row.test?.title ?? row.testKey}</h1>
           {row.test?.instructions && <div className="cp-desc"><FormattedText text={row.test.instructions} /></div>}

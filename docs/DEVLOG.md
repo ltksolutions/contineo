@@ -10,6 +10,27 @@
 
 ---
 
+## 2026-10-06 — prierezové opravy zo súpisu odchýlok (P2–P13)
+
+**Prečo:** `docs/DESIGN_ODCHYLKY.md` našiel opravy, ktoré platia naprieč
+stránkami a nečakajú na rozhodnutie ani návrh.
+
+**Čo sa zmenilo:** chyba formulára cez `Notice` + nový `hrefWithout()`
+(`lib/urlParams.ts`) — návrat na tú istú adresu bez správy, vyplnené
+hodnoty ostanú. V klientskych formulároch (import osôb, prihlásenie) ostala
+chyba v riadku ako `.lnote`: stav je v prehliadači a odkaz späť by ho
+zahodil. `Notice` má povinný `language` — „Rozumiem" bolo natvrdo na 40
+miestach. Filtre `.pill` → `.view-switch` (+ `--fit`, `.view-switch-count`),
+áno/nie → `input.toggle` v `.form-row--bare` (riadok bez vlastného
+odsadenia v obyčajnom formulári). `.mg-table` → karty pod 1024 px.
+`formatNumber()` v `i18n.ts`.
+
+**Nález:** prvý pokus o názov roly v zozname osôb siahol na `people.detail.roles`
+(text „Roly"), nie na mapu `people.roles` — `tsc` to nechytil, lebo reťazec
+sa dá indexovať tiež. Opravené pred commitom.
+
+---
+
 ## 2026-10-06 — výbery a prepínače (ZAKLAD-vyber-a-prepinace)
 
 **Prečo:** jeden vzhľad (štvorček prehliadača) pre tri rôzne veci — zapnúť

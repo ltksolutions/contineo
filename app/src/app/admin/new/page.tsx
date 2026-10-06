@@ -10,7 +10,8 @@ import { notFound, redirect } from "next/navigation"
 import { platformContext, tenantOverviews } from "@/lib/admin"
 import CompanyCodeField from "@/components/CompanyCodeField"
 import { createTenantAction } from "../actions"
-import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { normalizeQuery, hrefWithout, type RawQuery } from "@/lib/urlParams"
+import Notice from "@/components/Notice"
 import { dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
@@ -28,7 +29,8 @@ export default async function NewTenantPage({
     notFound()
   }
 
-  const q = normalizeQuery<{ msg?: string; companyCode?: string; displayName?: string }>(await searchParams)
+  const raw = await searchParams
+  const q = normalizeQuery<{ msg?: string; error?: string; companyCode?: string; displayName?: string }>(raw)
   const t = dictionary(ctx.person.language).admin.create
 
   // Obsadené kódy sa načítajú **raz, pri otvorení** — kolízia sa tak dá
@@ -44,11 +46,8 @@ export default async function NewTenantPage({
         {t.introBefore}<code>contineo.app</code>{t.introMiddle}<code>CNAME</code>{t.introAfter}
       </p>
 
-      {q.msg && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 20px", fontSize: "var(--fs-body)" }}>
-          {q.msg}
-        </p>
-      )}
+      {/* Kód a názov, ktoré akcia vrátila v adrese, po potvrdení ostanú. */}
+      <Notice language={ctx.person.language} message={q.msg} error={q.error === "1"} back={hrefWithout("/admin/new", raw, ["msg", "error"])} />
 
       <form action={createTenantAction} className="card admin-form">
         {/*

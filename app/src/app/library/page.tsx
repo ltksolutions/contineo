@@ -546,7 +546,7 @@ export default async function LibraryPage({
     // pri 1440 px okna má stĺpec zoznamu 938 px, tabuľka potrebuje ~1060).
     <AppShell language={uiLanguage} wide>
     <div style={tenantStyle(branding)}>
-      <Notice message={message} error={error === "1"} back="/library" />
+      <Notice language={uiLanguage} message={message} error={error === "1"} back="/library" />
 
       {/*
         Nad zoznamom, nie v ňom: je to úloha, nie obsah knižnice. Názvy sa

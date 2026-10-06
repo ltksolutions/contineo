@@ -82,7 +82,7 @@ export default async function LearningPage({ searchParams }: { searchParams: Pro
             <p className="quiet page-lead lp-lead">{t.intro}</p>
           </div>
         </div>
-        <Notice message={q.msg} error={q.error === "1"} back="/learning" />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back="/learning" />
 
         {total === 0 ? (
           <div className="empty">

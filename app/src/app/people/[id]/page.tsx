@@ -122,7 +122,7 @@ export default async function PersonDetailPage({
         {o.accounts.length > 0 && ` · ${t.signsInVia(o.accounts.join(", "))}`}
       </p>
 
-      <Notice message={message} error={error === "1"} back={`/people/${encodeURIComponent(id)}`} />
+      <Notice language={language} message={message} error={error === "1"} back={`/people/${encodeURIComponent(id)}`} />
 
       <form action={savePersonAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="id" value={o.id} />

@@ -145,7 +145,9 @@ describe("/learning/manage/[courseKey]", () => {
     expect(html).toContain("1 z 2 častí")
     expect(html).toContain("samozápisom")
     expect(html).toContain("/api/learning/courses/bozp/people")
-    expect(html).toContain("Dokončili <span class=\"pill-count\">1</span>")
+    // Filter zapísaných je prepínač pohľadu (DESIGN_ODCHYLKY P4).
+    expect(html).toContain("Dokončili <span class=\"view-switch-count\">1</span>")
+    expect(html).toContain("<nav class=\"view-switch view-switch--fit\"")
   })
 
   it("prideliť: trasa aj skupina, dopad s už zapísanými", async () => {
