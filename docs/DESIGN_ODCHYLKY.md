@@ -23,9 +23,13 @@
 - **rozhodnutie** — pravidlo a kód (alebo návrh) si protirečia, alebo pravidlo
   na prípad nepamätá. Rozhoduje Ján; otázky sú nižšie.
 
-## Na rozhodnutie
+## Rozhodnuté (6. 10. 2026)
 
-Každá otázka má odporúčanie (prvá možnosť).
+**Ján rozhodol vo všetkých desiatich otázkach A.** Znenie otázok ostáva
+nižšie, aby bolo vidieť, čo sa zvažovalo. Pravidlá, ktoré z R1, R2 a R10
+vyplývajú, sú zapísané v `CLAUDE.md` (Rozhranie) a v
+`.design-sync/conventions.md`; R5 dostane poznámku v ADR-026 spolu so zmenou
+cesty.
 
 **R1 — Zoznam kariet, každá s vlastnou akciou** (Potvrdzovanie, kurátorstvo,
 posúdenie, `/dpo`, karty právneho základu, karty kurzov, overenie domén).

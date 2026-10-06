@@ -21,7 +21,7 @@ sú len doplnok. Texty sú po slovensky.
 |---|---|
 | kam idem (časti sekcie) | `<nav class="tabs"><TabsBar><a class="tab is-active">…</a>…</TabsBar></nav>` |
 | ako to vidím (pohľad) | `<nav class="view-switch"><a class="view-switch-item is-on">…</a>…</nav>` — sivý, bez farby |
-| čo urobím | `.button` — **najviac jedno plné**, vpravo v `.page-head`; ostatné `.button button--quiet` |
+| čo urobím | `.button` — **najviac jedno plné**, vpravo v `.page-head`; ostatné `.button button--quiet`. V zozname kariet sú tlačidlá kariet tiché. Výnimka: „Odoslať" po náhľade je plné na konci stránky |
 | odkiaľ som prišiel | cesta pod hlavičkou; **nikdy „← Späť…"** |
 
 ## Triedy
@@ -32,7 +32,8 @@ sú len doplnok. Texty sú po slovensky.
   `.set-form` > `section.set-sec`.
 - Štítky: `.tag`, `.tag--draft` (upozornenie); tlmený text `.quiet`.
 - Hľadanie v zozname: komponent `SearchStrip` vo `<form method="get">`.
-- Na telefóne terč aspoň 44 px; zoznamy pod 1024 px ako karty, od 1024 px tabuľka.
+- Na telefóne terč aspoň 44 px; zoznamy pod 1024 px ako karty, od 1024 px tabuľka — len ak sa
+  porovnávajú stĺpce; zoznam s 2–3 údajmi ostáva kartami.
 
 ## Formuláre (SwiftUI `Form` + `Section`)
 - Skupina polí: `<fieldset class="form-group">` > `legend.form-group-head` (nadpis **nad**
