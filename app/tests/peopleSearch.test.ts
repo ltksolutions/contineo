@@ -28,7 +28,7 @@ const PEOPLE: PersonChoice[] = [
 
 /** Riadok zoznamu (`<label …><input …/>`) osoby s daným id. */
 const row = (html: string, id: string) =>
-  html.match(new RegExp(`<label class="approval-person"[^>]*><input [^>]*value="${id}"[^>]*/>`))?.[0] ?? ""
+  html.match(new RegExp(`<label class="form-row (?:select|choice)-row approval-person"[^>]*><input [^>]*value="${id}"[^>]*/>`))?.[0] ?? ""
 
 const view = (over: Partial<Parameters<typeof PeopleSearchView>[0]> = {}) =>
   renderToStaticMarkup(createElement(PeopleSearchView, {

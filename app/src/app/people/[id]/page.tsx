@@ -292,48 +292,45 @@ export default async function PersonDetailPage({
           <span className="quiet field-hint">{t.groupsNote}</span>
         </div>
 
-        {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
+        {/* Nadpis nad kartou (HR-pridelit-nadpis-karty), riadky s kruhom
+            vľavo (ZAKLAD-vyber-a-prepinace, 6. 10. 2026). */}
         <fieldset className="form-group">
           <legend className="form-group-head">{t.tracks}</legend>
-          <div className="card form-group-body">
+          <div className="card form-group-body form-group-body--rows">
           {tracks.length === 0 && orphanTracks.length === 0 ? (
-            <p className="quiet field-hint" style={{ margin: 0 }}>{t.noTracks}</p>
+            <p className="quiet field-hint">{t.noTracks}</p>
           ) : (
-            <ul className="hr-choices">
+            <div className="form-list">
               {tracks.map(tr => (
-                <li key={tr.key}>
-                  <label className="hr-choice">
-                    <input type="checkbox" name="track" value={tr.key} defaultChecked={o.tracks.includes(tr.key)} />
+                <label key={tr.key} className="form-row select-row">
+                  <input type="checkbox" name="track" value={tr.key} defaultChecked={o.tracks.includes(tr.key)} />
+                  <span className="form-row-main">
                     <span>{tr.title}{!tr.isActive && <span className="quiet"> · {t.trackInactive}</span>}</span>
-                  </label>
-                </li>
+                  </span>
+                </label>
               ))}
               {orphanTracks.map(k => (
-                <li key={k}>
-                  <label className="hr-choice">
-                    <input type="checkbox" name="track" value={k} defaultChecked />
-                    <span className="quiet">{t.trackUnknown}</span>
-                  </label>
-                </li>
+                <label key={k} className="form-row select-row">
+                  <input type="checkbox" name="track" value={k} defaultChecked />
+                  <span className="form-row-main quiet">{t.trackUnknown}</span>
+                </label>
               ))}
-            </ul>
+            </div>
           )}
           </div>
         </fieldset>
 
         <fieldset className="form-group">
           <legend className="form-group-head">{t.roles}</legend>
-          <div className="card form-group-body">
-          <ul className="hr-choices">
+          <div className="card form-group-body form-group-body--rows">
+          <div className="form-list">
             {ASSIGNABLE_ROLES.filter(r => r !== LEARNING_ROLE || learningEnabled(ctx.tenant)).map(r => (
-              <li key={r}>
-                <label className="hr-choice">
-                  <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
-                  <span>{d.roles[r] ?? r}</span>
-                </label>
-              </li>
+              <label key={r} className="form-row select-row">
+                <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
+                <span className="form-row-main">{d.roles[r] ?? r}</span>
+              </label>
             ))}
-          </ul>
+          </div>
           {/* Vypnutý modul: rola sa neukáže, ale uložením sa nesmie stratiť. */}
           {!learningEnabled(ctx.tenant) && o.roles.includes(LEARNING_ROLE) && (
             <input type="hidden" name="roles" value={LEARNING_ROLE} />

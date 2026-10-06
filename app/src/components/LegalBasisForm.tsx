@@ -57,17 +57,20 @@ export default function LegalBasisForm({
         return (
           <fieldset key={category} className="form-group">
             <legend className="form-group-head">{t.basisLabel[category]}</legend>
-            <div className="card form-group-body">
+            {/* Riadky s kruhom vľavo namiesto dlaždíc (ZAKLAD-vyber-a-prepinace). */}
+            <div className="card form-group-body form-group-body--rows">
+            <div className="form-list">
             {list.map(o => (
-              <label key={o.key} className="hr-choice hr-choice--tile">
+              <label key={o.key} className="form-row select-row">
                 <input type="checkbox" name="legalBasisKey" value={o.key} defaultChecked={currentKeys?.includes(o.key)} />
-                <span>
-                  {o.label}
+                <span className="form-row-main">
+                  <span>{o.label}</span>
                   {/* Odkaz na zákon na vlastnom riadku (ZNENIE-kontakt-a-privacy, bod 4). */}
-                  {o.reference && <span className="quiet field-hint hr-choice-ref">{o.reference}</span>}
+                  {o.reference && <span className="form-row-sub">{o.reference}</span>}
                 </span>
               </label>
             ))}
+            </div>
             </div>
           </fieldset>
         )

@@ -10,6 +10,29 @@
 
 ---
 
+## 2026-10-06 — výbery a prepínače (ZAKLAD-vyber-a-prepinace)
+
+**Prečo:** jeden vzhľad (štvorček prehliadača) pre tri rôzne veci — zapnúť
+nastavenie, vybrať položky, zvoliť jednu možnosť. Na telefóne navyše
+17 px políčka pod 44 px terčom.
+
+**Čo sa zmenilo:** `.form-row` (celý riadok je `<label>`) s tromi tvarmi:
+`.select-row` (kruh vľavo), `.choice-row` (fajka vpravo, pole voľby pod
+riadkom v `.choice-field`) a `input.toggle` s `role="switch"`. Natívny
+`input` ostáva, mení sa `appearance`. Karta s riadkami je
+`.form-group-body--rows` (bez vnútorného odstupu). `PeopleSearch` kreslí
+riadky tak isto — platí to pre schvaľovanie, zodpovednú osobu aj normy.
+Nové tokeny `--control-line`, `--toggle-off`, `--toggle-knob`; fajka a
+gombík zapnutého prepínača majú `--on-accent`, lebo v tmavej téme je
+`--accent` takmer biely. Zmizli `.tag--field`, `.hr-choices`, `.hr-due-opt`,
+`.due-fields`, `.assign-all`.
+
+**Nález:** oddeľovač riadkov `.form-row + .form-row` kreslí čiaru aj nad
+prvým viditeľným riadkom, keď sú riadky nad ním skryté hľadaním.
+Zoznam sa preto orezáva o 1 px zhora (`clip-path`).
+
+---
+
 ## 2026-10-06 — nadpis skupiny nad kartou (HR-pridelit-nadpis-karty)
 
 **Prečo:** `<legend>` v orámovanom `<fieldset>` kreslí prehliadač do hornej

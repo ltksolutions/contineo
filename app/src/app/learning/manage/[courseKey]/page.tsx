@@ -513,12 +513,31 @@ function SettingsTab({ course, version, editable, tenant, usage, language }: {
       {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
       <fieldset className="form-group">
         <legend className="form-group-head">{ts.groupFlow}</legend>
-        <div className="card form-group-body">
-        <label className="mc-check"><input type="checkbox" name="sequential" value="1" defaultChecked={version.sequential} /> {ts.sequential}</label>
-        <p className="quiet mc-note">{ts.sequentialNote}</p>
-        <label className="mc-check"><input type="checkbox" name="openEnrollment" value="1" defaultChecked={course.openEnrollment} /> {ts.openEnrollment}</label>
-        <p className="quiet mc-note">{ts.openEnrollmentNote}</p>
-        <label className="mc-check"><input type="checkbox" name="issuesCertificate" value="1" defaultChecked={version.issuesCertificate} /> {ts.issuesCertificate}</label>
+        {/* Áno/nie nastavenia kurzu ako prepínače (ZAKLAD-vyber-a-prepinace);
+            uložia sa tlačidlom, nie hneď (Q4). */}
+        <div className="card form-group-body form-group-body--rows">
+        <div className="form-list">
+          <label className="form-row">
+            <input type="checkbox" role="switch" className="toggle" name="sequential" value="1" defaultChecked={version.sequential} />
+            <span className="form-row-main">
+              <span>{ts.sequential}</span>
+              <span className="form-row-sub">{ts.sequentialNote}</span>
+            </span>
+          </label>
+          <label className="form-row">
+            <input type="checkbox" role="switch" className="toggle" name="openEnrollment" value="1" defaultChecked={course.openEnrollment} />
+            <span className="form-row-main">
+              <span>{ts.openEnrollment}</span>
+              <span className="form-row-sub">{ts.openEnrollmentNote}</span>
+            </span>
+          </label>
+          <label className="form-row">
+            <input type="checkbox" role="switch" className="toggle" name="issuesCertificate" value="1" defaultChecked={version.issuesCertificate} />
+            <span className="form-row-main">
+              <span>{ts.issuesCertificate}</span>
+            </span>
+          </label>
+        </div>
         <div className="mc-grid2">
           <label className="field"><span className="field-label">{ts.signerName}</span><input className="field-input" name="signerName" defaultValue={version.signer?.name ?? tenant.certificateSigner?.name ?? ""} /></label>
           <label className="field"><span className="field-label">{ts.signerRole}</span><input className="field-input" name="signerRole" defaultValue={version.signer?.role ?? tenant.certificateSigner?.role ?? ""} /></label>
@@ -586,7 +605,18 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
             <input type="hidden" name="tab" value="people" />
             <input type="hidden" name="assign" value="1" />
             <input type="hidden" name="preview" value="1" />
-            <label className="mc-check"><input type="checkbox" name="all" value="1" defaultChecked={q.all === "1"} /> <b>{tp.everyone}</b> <span className="quiet">{tp.everyoneNote}</span></label>
+            {/* „Všetkým" ako prepínač, ako na /hr/assign (ZAKLAD-vyber-a-prepinace, Q2). */}
+            <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
+                <label className="form-row">
+                  <input type="checkbox" role="switch" className="toggle" name="all" value="1" defaultChecked={q.all === "1"} />
+                  <span className="form-row-main">
+                    <span>{tp.everyone}</span>
+                    <span className="form-row-sub">{tp.everyoneNote}</span>
+                  </span>
+                </label>
+              </div>
+            </div>
             {rows.length > 0 && (
               <div className="field">
                 <span className="field-label">{tp.departments}</span>
@@ -598,16 +628,16 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
             )}
             {audiences.groups.length > 0 && (
               <fieldset className="form-group"><legend className="form-group-head">{tp.groups}</legend>
-                <div className="card form-group-body">
-                {audiences.groups.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`group:${g.value}`} defaultChecked={selected.includes(`group:${g.value}`)} /> {g.value} <span className="quiet">{g.count}</span></label>)}
-                </div>
+                <div className="card form-group-body form-group-body--rows"><div className="form-list">
+                {audiences.groups.map(g => <label key={g.value} className="form-row select-row"><input type="checkbox" name="audience" value={`group:${g.value}`} defaultChecked={selected.includes(`group:${g.value}`)} /><span className="form-row-main">{g.value}</span><span className="form-row-sub">{g.count}</span></label>)}
+                </div></div>
               </fieldset>
             )}
             {audiences.tracks.length > 0 && (
               <fieldset className="form-group"><legend className="form-group-head">{tp.tracks}</legend>
-                <div className="card form-group-body">
-                {audiences.tracks.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`track:${g.value}`} defaultChecked={selected.includes(`track:${g.value}`)} /> {names[g.value] ?? g.value} <span className="quiet">{g.count}</span></label>)}
-                </div>
+                <div className="card form-group-body form-group-body--rows"><div className="form-list">
+                {audiences.tracks.map(g => <label key={g.value} className="form-row select-row"><input type="checkbox" name="audience" value={`track:${g.value}`} defaultChecked={selected.includes(`track:${g.value}`)} /><span className="form-row-main">{names[g.value] ?? g.value}</span><span className="form-row-sub">{g.count}</span></label>)}
+                </div></div>
                 <p className="form-group-foot quiet">{tp.tracksNote}</p>
               </fieldset>
             )}

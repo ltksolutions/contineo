@@ -52,7 +52,7 @@ export default function ResponsiblePicker({
   return (
     <fieldset className="form-group">
       <legend className="form-group-head">{legend ?? t.responsiblePerson}</legend>
-      <div className="card form-group-body">
+      <div className="card form-group-body form-group-body--rows">
       <PeopleSearch
         people={choices}
         name="responsiblePersonId"

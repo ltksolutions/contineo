@@ -19,6 +19,7 @@
  * potvrdiť znova.
  */
 
+import { Fragment } from "react"
 import { notFound, redirect } from "next/navigation"
 import MultiSelect from "@/components/MultiSelect"
 import PeopleSearch, { DocumentSearch } from "@/components/PeopleSearch"
@@ -189,7 +190,7 @@ export default async function AssignPage({
               <span className="assign-step" aria-hidden="true">1</span>
               {t.whichDocuments} <span className="quiet hr-count">{t.documentsCount(documents.length)}</span>
             </legend>
-            <div className="card form-group-body">
+            <div className="card form-group-body form-group-body--rows">
             {/* Upozornenie, nie brána (D91): pridelenie bez právneho základu
                 prejde. Jantárový rámček namiesto sivej nápovedy (rám HR, bod 1). */}
             {documents.some(d => d.legalBasisMissing) && (
@@ -213,10 +214,10 @@ export default async function AssignPage({
               <span className="assign-step" aria-hidden="true">2</span>
               {t.to}
             </legend>
-            <div className="card form-group-body">
 
-            {/* „Všetkým" prebije výber nižšie — s JS sa zvyšok stlmí (Q4),
-                hodnoty ostávajú. Podsekcie oddelené čiarou (bod 4). */}
+            {/* „Všetkým" je prepínač nad ostatným výberom (ZAKLAD-vyber-a-prepinace,
+                Q2) — s JS sa zvyšok stlmí (Q4), hodnoty ostávajú. Každé
+                publikum má vlastnú kartu s nadpisom nad ňou. */}
             <AudienceAll label={t.everyone} note={t.everyoneNote} defaultChecked={q.all === "1"}>
 
             {/*
@@ -227,8 +228,9 @@ export default async function AssignPage({
               políčka. Počet ľudí vrátane podriadených (`withDescendants`).
             */}
             {treeRows.length > 0 && (
-              <div className="assign-sub">
-                <div className="hr-subtitle">{t.departments}</div>
+              <fieldset className="form-group assign-sub">
+                <legend className="form-group-head">{t.departments}</legend>
+                <div className="card form-group-body">
                 <MultiSelect
                   name="audience"
                   emit="repeat"
@@ -244,70 +246,71 @@ export default async function AssignPage({
                       count: (departmentCounts.get(o.value) ?? { withDescendants: 0 }).withDescendants,
                     }))}
                 />
-              </div>
+                </div>
+              </fieldset>
             )}
 
             {audiences.groups.length === 0 && audiences.tracks.length === 0 ? (
-              <div className="assign-sub">
-                <p className="quiet field-hint" style={{ margin: "10px 0 0" }}>
-                  {t.noGroupsOrTracks}
-                  <code> npm run person</code>.
-                </p>
-              </div>
+              <p className="form-group-foot quiet">
+                {t.noGroupsOrTracks}
+                <code> npm run person</code>.
+              </p>
             ) : (
               <>
-                {/* Rovnaké štítky ako pri úprave osoby — tá istá vec má
-                    vyzerať rovnako. Tu ich ale nesie zaškrtávacie políčko,
-                    lebo tento formulár funguje aj bez JavaScriptu. */}
+                {/* Skupiny a trasy ako riadky s kruhom vľavo, nie pilulky
+                    (ZAKLAD-vyber-a-prepinace, Q3). Počet ľudí vpravo. */}
                 {audiences.groups.length > 0 && (
-                  <div className="assign-sub">
-                    <div className="hr-subtitle">{t.groups}</div>
-                    <div className="tags-list">
+                  <fieldset className="form-group assign-sub">
+                    <legend className="form-group-head">{t.groups}</legend>
+                    <div className="card form-group-body form-group-body--rows">
+                    <div className="form-list">
                       {audiences.groups.map(s => (
-                        <label key={`g-${s.value}`} className="tag tag--choice tag--field">
+                        <label key={`g-${s.value}`} className="form-row select-row">
                           <input
                             type="checkbox"
                             name="audience"
                             value={`group:${s.value}`}
                             defaultChecked={selectedAudiences.has(`group:${s.value}`)}
                           />
-                          <span className="tag-mark" aria-hidden="true" />
-                          {s.value}
-                          <span className="tag-count">{s.count}</span>
+                          <span className="form-row-main">{s.value}</span>
+                          <span className="form-row-sub">{s.count}</span>
                         </label>
                       ))}
                     </div>
-                  </div>
+                    </div>
+                  </fieldset>
                 )}
 
                 {audiences.tracks.length > 0 && (
-                  <div className="assign-sub">
-                    <div className="hr-subtitle">{t.tracks}</div>
-                    <div className="tags-list">
+                  <fieldset className="form-group assign-sub">
+                    <legend className="form-group-head">{t.tracks}</legend>
+                    <div className="card form-group-body form-group-body--rows">
+                    <div className="form-list">
                       {audiences.tracks.map(t => (
-                        <label key={`t-${t.value}`} className="tag tag--choice tag--field">
+                        <label key={`t-${t.value}`} className="form-row select-row">
                           <input
                             type="checkbox"
                             name="audience"
                             value={`track:${t.value}`}
                             defaultChecked={selectedAudiences.has(`track:${t.value}`)}
                           />
-                          <span className="tag-mark" aria-hidden="true" />
                           {/* Názov, nie kľúč — kľúč sa ľuďom neukazuje (2. 10. 2026). */}
-                          {names[t.value] ?? t.value}
-                          <span className="tag-count">{t.count}</span>
+                          <span className="form-row-main">{names[t.value] ?? t.value}</span>
+                          <span className="form-row-sub">{t.count}</span>
                         </label>
                       ))}
                     </div>
-                  </div>
+                    </div>
+                  </fieldset>
                 )}
               </>
             )}
 
             {/* Osoby podľa priezviska (bod 5), ako adresár. */}
             {personChoices.length > 0 && (
-              <div className="assign-sub">
-                <div className="hr-subtitle">{t.people}</div>
+              <fieldset className="form-group assign-sub">
+                <legend className="form-group-head">{t.people}</legend>
+                <div className="card form-group-body form-group-body--rows">
                 <PeopleSearch
                   people={personChoices}
                   name="audience"
@@ -317,11 +320,12 @@ export default async function AssignPage({
                   listLabel={t.people}
                   missing="people"
                 />
-              </div>
+                </div>
+              </fieldset>
             )}
 
             <div className="assign-sub">
-            <label className="field" style={{ marginTop: 14 }}>
+            <label className="field card form-group-body">
               <span className="field-label">{t.addresses}</span>
               <textarea
                 className="field-input"
@@ -332,13 +336,10 @@ export default async function AssignPage({
                 autoCapitalize="none"
                 autoCorrect="off"
               />
-              <span className="quiet field-hint">
-                {t.addressesNote}
-              </span>
             </label>
+            <p className="form-group-foot quiet">{t.addressesNote}</p>
             </div>
             </AudienceAll>
-            </div>
           </fieldset>
           </div>
 
@@ -380,14 +381,15 @@ export default async function AssignPage({
               <span className="assign-step" aria-hidden="true">4</span>
               {t.due}
             </legend>
-            <div className="card form-group-body">
+            <div className="card form-group-body form-group-body--rows">
 
             {/*
-              Tri voľby, pole vedľa svojej (rám HR, bod 4). Tie isté mená
+              Tri voľby s fajkou vpravo, pole pod svojou voľbou
+              (ZAKLAD-vyber-a-prepinace, Picker .inline). Tie isté mená
               a hodnoty ako predtým výber (`dueMode` none/date/days) — server
               (`dueFromFields()`) číta to isté. Bez JavaScriptu funguje rovnako.
             */}
-            <div className="hr-due">
+            <div className="form-list">
               {([
                 ["none", t.dueNone, null],
                 ["date", t.dueDate, (
@@ -400,11 +402,13 @@ export default async function AssignPage({
                          placeholder={t.dueDaysUnit} />
                 )],
               ] as [string, string, React.ReactNode][]).map(([value, label, input]) => (
-                <label key={value} className="hr-due-opt">
-                  <input type="radio" name="dueMode" value={value} defaultChecked={(q.dueMode ?? "none") === value} />
-                  <span>{label}</span>
-                  {input}
-                </label>
+                <Fragment key={value}>
+                  <label className="form-row choice-row">
+                    <input type="radio" name="dueMode" value={value} defaultChecked={(q.dueMode ?? "none") === value} />
+                    <span className="form-row-main">{label}</span>
+                  </label>
+                  {input && <div className="choice-field">{input}</div>}
+                </Fragment>
               ))}
             </div>
             </div>

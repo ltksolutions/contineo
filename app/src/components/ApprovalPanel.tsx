@@ -104,7 +104,7 @@ export default function ApprovalPanel({
 
             <fieldset className="form-group">
               <legend className="form-group-head">{t.approvalApprovers}</legend>
-              <div className="card form-group-body">
+              <div className="card form-group-body form-group-body--rows">
 
               {people.length === 0 ? (
                 <p className="quiet">{t.approvalNoPeople}</p>

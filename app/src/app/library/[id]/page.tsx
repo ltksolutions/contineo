@@ -1092,7 +1092,7 @@ export default async function DocumentDetailPage({
               {/* Schvaľovatelia predvyplnení z posledného kola (ADR-014, D110). */}
               <fieldset className="form-group">
                 <legend className="form-group-head">{tflow.approvers}</legend>
-                <div className="card form-group-body">
+                <div className="card form-group-body form-group-body--rows">
                 {approverChoices.length === 0 ? (
                   <p className="quiet">{t.approvalNoPeople}</p>
                 ) : (
@@ -1247,13 +1247,20 @@ export default async function DocumentDetailPage({
               {/* Prenos pridelení ako voľba pri zverejnení (ADR-014, D111). */}
               {draftCarryOver.length > 0 && (
                 <div style={{ display: "grid", gap: 12 }}>
-                  <label className="approval-person">
-                    <input type="checkbox" name="carryOver" value="1" defaultChecked />
-                    <span>
-                      <span className="approval-person-name">{tflow.carryOver(draftCarryOver.length)}</span>
-                      <span className="quiet approval-person-meta">{tflow.carryOverNote}</span>
-                    </span>
-                  </label>
+                  {/* Áno/nie, ktoré zapína časť formulára pod sebou — prepínač
+                      (ZAKLAD-vyber-a-prepinace). Meno a hodnota bez zmeny,
+                      `PublishSubmit` ho hľadá podľa mena. */}
+                  <div className="card form-group-body form-group-body--rows">
+                    <div className="form-list">
+                      <label className="form-row">
+                        <input type="checkbox" role="switch" className="toggle" name="carryOver" value="1" defaultChecked />
+                        <span className="form-row-main">
+                          <span>{tflow.carryOver(draftCarryOver.length)}</span>
+                          <span className="form-row-sub">{tflow.carryOverNote}</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
                   <div data-carry-over style={{ display: "grid", gap: 12 }}>
                     <CarryOverFields
                       candidates={draftCarryOver}
@@ -1736,14 +1743,15 @@ function CarryOverFields({
     <>
       <fieldset className="form-group">
         <legend className="form-group-head">{tc.audiences}</legend>
-        <div className="card form-group-body">
+        <div className="card form-group-body form-group-body--rows">
+        <div className="form-list">
         {candidates.map(c => (
-          <label key={audienceRef(c.audience)} className="check-row" style={{ display: "block", padding: "6px 0" }}>
+          <label key={audienceRef(c.audience)} className="form-row select-row">
             <input type="checkbox" name="audience" value={audienceRef(c.audience)} defaultChecked />
-            {" "}
-            <span>{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
+            <span className="form-row-main">{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
           </label>
         ))}
+        </div>
         </div>
       </fieldset>
 
@@ -1755,29 +1763,33 @@ function CarryOverFields({
 
       <fieldset className="form-group">
         <legend className="form-group-head">{tc.due}</legend>
-        <div className="card form-group-body">
-        <Select language={language}
-          name="dueMode"
-          fieldLabel={tc.due}
-          initial="none"
-          options={[
-            { value: "none", label: tc.dueNone },
-            { value: "date", label: tc.dueDate },
-            { value: "days", label: tc.dueDays },
-          ]}
-        />
-        {/* Obe polia sú v DOM stále — formulár beží bez JavaScriptu, takže
-            sa skryť nedajú, a `dueFromFields()` číta len to, ktoré patrí
-            k zvolenému režimu. */}
-        <div className="due-fields">
-          <label className="field">
-            <span className="quiet field-label">{tc.dueDate}</span>
-            <input className="field-input" type="date" name="dueDate" defaultValue="" />
+        {/* Tri voľby s fajkou vpravo, pole pod svojou voľbou — ten istý
+            tvar ako na /hr/assign (ZAKLAD-vyber-a-prepinace). Meno `dueMode`
+            a hodnoty none/date/days ako predtým výber zo zoznamu. Obe polia
+            sú v DOM stále — formulár beží bez JavaScriptu, takže sa skryť
+            nedajú, a `dueFromFields()` číta len to, ktoré patrí k zvolenému
+            režimu. */}
+        <div className="card form-group-body form-group-body--rows">
+        <div className="form-list">
+          <label className="form-row choice-row">
+            <input type="radio" name="dueMode" value="none" defaultChecked />
+            <span className="form-row-main">{tc.dueNone}</span>
           </label>
-          <label className="field">
-            <span className="quiet field-label">{tc.dueDaysUnit}</span>
-            <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" />
+          <label className="form-row choice-row">
+            <input type="radio" name="dueMode" value="date" />
+            <span className="form-row-main">{tc.dueDate}</span>
           </label>
+          <div className="choice-field">
+            <input className="field-input" type="date" name="dueDate" defaultValue="" aria-label={tc.dueDate} />
+          </div>
+          <label className="form-row choice-row">
+            <input type="radio" name="dueMode" value="days" />
+            <span className="form-row-main">{tc.dueDays}</span>
+          </label>
+          <div className="choice-field">
+            <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" aria-label={tc.dueDaysUnit}
+                   placeholder={tc.dueDaysUnit} />
+          </div>
         </div>
         </div>
         <p className="form-group-foot quiet">{tc.dueNote}</p>

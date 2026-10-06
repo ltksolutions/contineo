@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Formuláre: výbery a prepínače podľa SwiftUI (2026-10-06)
+
+Zaškrtávacie políčka a krúžky v predvolenom vzhľade prehliadača nahradili
+tri tvary podľa toho, čo sa vyberá: **výber viacerých** (normy, osoby,
+trasy, skupiny, zdroje, roly, jazyky) má kruh vľavo, **jedna voľba**
+(termín potvrdenia, kategória právneho základu, jedna zodpovedná osoba)
+fajku vpravo a **zapnúť / vypnúť** („Všetkým v organizácii", nastavenia
+kurzu, prenos pridelení) prepínač. Celý riadok sa dá kliknúť, terč má
+aspoň 44 px. Skupiny a trasy na Prideliť dokumenty sú riadky namiesto
+pilulky. Termín pri zverejnení znenia sa vyberá rovnako ako na Prideliť
+dokumenty. Mená a hodnoty polí sa nezmenili, bez JavaScriptu všetko
+funguje ako predtým.
+
 ### Formuláre: nadpis skupiny nad kartou (2026-10-06)
 
 Nadpis skupiny polí („Trasy", „Zdroje", „Pravidlá", „Termín"…) už nesedí
