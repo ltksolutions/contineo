@@ -138,6 +138,8 @@
 
 **Zostáva otvorené:** helpdesk — `tickets`, SLA a smerovanie per zväz. Kurácia dnes beží nad odpoveďami z vyhľadávania, nie nad ticketmi.
 
+**✅ Uzavreté 2026-10-06 — ADR-028:** kanál helpdesku ako entita organizácie s prideleným obsahom (D161), schránka cez adaptér IMAP/Graph (D162), e-mail je ticket v kolekcii `tickets` (D163), FAQ ako druh dokumentu (D164), rola `helpdesk` (D167).
+
 ### D12 — Email politika 🟡
 **Otázka:** smie bot auto-odoslať odpoveď, alebo vždy cez človeka?
 **Odporúčanie:** **nikdy auto-odoslať** bez schválenia človekom; bot len pripraví návrh do ticketu (bezpečnostné pravidlo).
@@ -152,6 +154,8 @@
 **Otázka:** konfigurácia embed widgetu (companyCode kontext), theming, ochrana proti zneužitiu anonymného prístupu.
 **Odporúčanie:** embed kód nesie `companyCode` kontext (PRISTUPOVE_PRAVA kap. 3/10-5); rate-limiting a len `public` pre anonym.
 **✅ Rozhodnuté (2026-06-26):** embed s `companyCode` kontextom (zúženie na zväz + globálne SFZ), rate-limiting, len `public` pre anonym.
+
+**Dodatok 2026-10-06 (ADR-028, D166):** v cudzom systéme s vlastným prihlásením (ISSF) nesie widget podpísaný token kanálu s identitou osoby; anonymný režim sa tam nepoužíva, lebo bez e-mailu niet ticketu.
 
 ### D15 — Modely / fallback / náklady 🟢
 **Otázka:** kedy presne padá Ollama → Claude, sledovanie nákladov (Voyage tokeny, Claude), výber lokálnych modelov.

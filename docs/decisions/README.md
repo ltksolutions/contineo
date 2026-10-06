@@ -39,6 +39,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-025](ADR-025-archivacia-predpisu.md) | Archivácia predpisu ku dňu (aj v budúcnosti), s dôvodom; pridelenia sa odvolajú, potvrdenia ostávajú | ✅ prijaté |
 | [ADR-026](ADR-026-ai-nastavenie-a-spotreba.md) | Umelá inteligencia ako nastavenie organizácie (kľúč, modely) a prehľad spotreby bez znenia otázok | ✅ prijaté |
 | [ADR-027](ADR-027-clenenie-podla-druhu-dokumentu.md) | Členenie sa nenastavuje v organizácii; spôsob členenia podľa druhu dokumentu (s prvým manuálom či zmluvou) | ✅ prijaté |
+| [ADR-028](ADR-028-helpdesk-kanaly-schranka-faq.md) | Helpdesk: kanály s prideleným obsahom, schránka cez adaptér (IMAP, Microsoft Graph), e-mail ako ticket, FAQ ako druh dokumentu, identita z ISSF tokenom | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -51,6 +52,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-028**. Súbor `ADR-028-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-029**. Súbor `ADR-029-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.

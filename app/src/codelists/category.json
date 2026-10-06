@@ -2,7 +2,7 @@
   "codelist": "category",
   "closed": false,
   "hierarchical": false,
-  "description": "Kategória dokumentu (úroveň documents). Rozšíriteľné cez governance. Zápisnica, zmluva a tlačivo pribudli 2026-09-22 so zlúčením Zaradenia do Druhu (O21 krok 2) — bez nich by sa dokumenty s týmto zaradením nemali kam preniesť.",
+  "description": "Kategória dokumentu (úroveň documents). Rozšíriteľné cez governance. Zápisnica, zmluva a tlačivo pribudli 2026-09-22 so zlúčením Zaradenia do Druhu (O21 krok 2) — bez nich by sa dokumenty s týmto zaradením nemali kam preniesť. FAQ pribudlo 2026-10-06 (ADR-028, D164): prvý druh, ktorý sa nečlení po článkoch, ale po záznamoch (`chunking: \"entries\"`, ADR-027 krok 2).",
   "items": [
     {
       "key": "norma",
@@ -54,6 +54,13 @@
       "label": "Tlačivo a formulár",
       "parent": null,
       "sortOrder": 80
+    },
+    {
+      "key": "faq",
+      "label": "FAQ – časté otázky",
+      "parent": null,
+      "sortOrder": 90,
+      "chunking": "entries"
     }
   ]
 }

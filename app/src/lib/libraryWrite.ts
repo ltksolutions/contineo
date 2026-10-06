@@ -26,7 +26,7 @@ import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, versionFixProblem, fixableVersions, closestVersion, draftIsFree, type TextFixProblem } from "./textFix"
-import { checkValue, checkList, KEY_PATTERN } from "./codelists"
+import { checkValue, checkList, KEY_PATTERN, chunkingStrategyFor } from "./codelists"
 import { slugifyKey } from "./slug"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile, fileInfo, loadFile } from "./fileStore"
@@ -807,10 +807,24 @@ export async function publish(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
+  /*
+   * Spôsob členenia určuje **druh dokumentu** (ADR-027 krok 2, D160). FAQ
+   * (ADR-028, D164) sa nereže chunkerom: jeden záznam = jeden úsek a stavia
+   * ich `lib/faq.ts`. Import je dynamický — `faq.ts` si odtiaľto berie
+   * `uploadDocument` a `CHUNKS_COLLECTION`, pevný import by spravil kruh.
+   */
+  const strategy = chunkingStrategyFor(doc.category as string | null | undefined)
+  const faqEntries = strategy === "entries"
+    ? ((Array.isArray(doc.draftFaq) ? doc.draftFaq : []) as import("./faq").FaqEntry[])
+    : null
+  if (faqEntries && !faqEntries.length) {
+    throw new LibraryError("library.faqNoEntries", "FAQ nemá ani jeden záznam — pridaj aspoň jednu otázku s odpoveďou.")
+  }
+
   const profile = chunkingFor(await chunkingTenant(companyCode), doc.chunkingProfile as string | undefined)
   const forChunker = toChunkerProfile(profile)
-  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
-  if (!chunks.length) {
+  const { chunky: chunks } = faqEntries ? { chunky: [] as Chunk[] } : chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
+  if (!faqEntries && !chunks.length) {
     throw new LibraryError(
       "library.noChunks",
       "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
@@ -844,8 +858,25 @@ export async function publish(
   const draftPdf = (doc.draftPdf as VersionFile | null | undefined) ?? null
   const draftSource = (doc.draftSource as VersionFile | null | undefined) ?? null
   const versionId = documentDraftIdentity({ draftMarkdown: markdown, draftPdf, draftMeta, draftTitle })
-  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
   const now = new Date()
+  // Úseky FAQ až tu: potrebujú `versionId` aj `now`. Úroveň každého záznamu
+  // sa odvodí z úrovne dokumentu a jeho zdrojov (`entryAccessLevel`).
+  const faqChunkDocs = faqEntries
+    ? await (async () => {
+        const { faqChunks, sourceAccessLevels } = await import("./faq")
+        const sourceIds = [...new Set(faqEntries.flatMap(e => e.sources.map(src => src.documentId)))]
+        return faqChunks(faqEntries, {
+          companyCode, documentId, versionId, scope: meta.scope, language: meta.language, tags,
+          documentAccessLevel: meta.accessLevel,
+          sourceLevels: await sourceAccessLevels(companyCode, sourceIds),
+          effectiveFrom, now,
+        })
+      })()
+    : null
+  const chunkingId = faqChunkDocs
+    ? String(faqChunkDocs[0]?.chunkingId ?? "")
+    : chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
+  const chunkCount = faqChunkDocs ? faqChunkDocs.length : chunks.length
   // Právny základ určený v príprave (ADR-023, D139) — kópia z okamihu výberu.
   const draftBasis = legalBasisFromDraft(doc.draftLegalBasis as DraftLegalBasis | null | undefined)
 
@@ -853,7 +884,7 @@ export async function publish(
   const existing = (doc.versions as { versionId: string }[] | undefined)?.some(v => v.versionId === versionId)
   if (existing) {
     const was = (doc.versions as { versionId: string; label?: string }[]).find(v => v.versionId === versionId)
-    return { versionId, label: String(was?.label ?? label), chunks: chunks.length, archived: 0, alreadyDone: true }
+    return { versionId, label: String(was?.label ?? label), chunks: chunkCount, archived: 0, alreadyDone: true }
   }
 
   /*
@@ -920,7 +951,7 @@ export async function publish(
   }
 
   await chunkCol.insertMany(
-    chunks.map(ch => ({
+    faqChunkDocs ?? chunks.map(ch => ({
       ...toDb(ch),
       documentId,
       versionId,
@@ -988,6 +1019,8 @@ export async function publish(
             metaApproved: true,
           } : {}),
           markdown,
+          // Záznamy FAQ — kópia v okamihu zverejnenia (ADR-028, D164).
+          ...(faqEntries ? { faq: faqEntries } : {}),
           // Kópia pri znení (D97): ďalšie nahratie prepíše koncept, nie toto.
           ...(draftPdf ? { pdf: draftPdf } : {}),
           ...(draftSource ? { source: draftSource } : {}),
@@ -1004,14 +1037,14 @@ export async function publish(
   await writeAudit({
     companyCode, subject: "document", action: "published", actor: actor,
     targetId: documentId, targetLabel: `${meta.title} — ${label}`,
-    note: `${chunks.length} úsekov · platné od ${effectiveFrom.toISOString().slice(0, 10)}` +
+    note: `${chunkCount} úsekov · platné od ${effectiveFrom.toISOString().slice(0, 10)}` +
       (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : "") +
       ` · zodpovedná osoba: ${responsible.fullName}` +
       (draftTitle && draftTitle !== String(doc.title ?? "") ? ` · nový názov: „${draftTitle}" (pôvodne „${String(doc.title ?? "")}")` : ""),
   })
 
   return {
-    versionId, label, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false,
+    versionId, label, chunks: chunkCount, archived: archive.modifiedCount, alreadyDone: false,
     legalBasisCarried: Boolean(draftBasis),
   }
 }
@@ -1129,6 +1162,14 @@ export async function saveMetadata(
     const { reconcileCurationAccess } = await import("./curation")
     const changed = await reconcileCurationAccess(companyCode, documentId)
     if (changed) console.log(`[kuracia] prepocitany pristup parom: ${changed}`)
+    // Úseky FAQ tohto dokumentu (ADR-028, D164): hromadná kópia vyššie ich
+    // vynechala (sú `qa`), tak sa im rozsah, jazyk, štítky aj úroveň
+    // prepočítajú tu — rovnaká záchranná brzda v `catch` platí aj pre ne.
+    if (chunkingStrategyFor(meta.category) === "entries") {
+      const { reconcileFaqAccess } = await import("./faq")
+      const faqChanged = await reconcileFaqAccess(companyCode, documentId)
+      if (faqChanged) console.log(`[faq] prepocitany pristup zaznamom: ${faqChanged}`)
+    }
   } catch (e) {
     console.error("[kuracia] prepocet pristupu parom zlyhal, stahujem na internal:", e)
     await chunkCol.updateMany(
@@ -1224,6 +1265,15 @@ export async function reindexVersion(
   if (!version) throw new LibraryError("library.versionNotFound", "Také znenie tento dokument nemá.")
   const isLatest = version.isActive === true
   const label = String(version.label ?? "")
+
+  // FAQ (ADR-028, D164) sa nereže chunkerom — jeden záznam je jeden úsek a
+  // zmena chunkera sa ho netýka. Hromadné preindexovanie knižnice preto
+  // FAQ preskočí ako „už hotové", nie ako chybu.
+  if (chunkingStrategyFor(doc.category as string | null | undefined) === "entries") {
+    const faqList = (version as { faq?: unknown }).faq
+    const count = Array.isArray(faqList) ? faqList.length : 0
+    return { chunks: count, archived: 0, alreadyDone: true, chunkingId: String(doc.chunkingId ?? ""), label }
+  }
 
   // Text **tohto** znenia. `doc.markdown` nesie len najnovšie — staršiemu sa
   // nepodstrčí (rovnaké pravidlo ako `versionText()` pri porovnaní).

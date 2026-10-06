@@ -964,6 +964,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   roztiahlo stĺpec a riadok by pretiekol cez okraj obrazovky.
 */
 .field-row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+/* Zdroj záznamu FAQ: dokument a článok vedľa seba, pod 640 px pod sebou (ADR-028). */
+.faq-source-row { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .faq-source-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
 @media (min-width: 640px) {
   .field-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }

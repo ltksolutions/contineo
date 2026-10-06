@@ -2884,6 +2884,59 @@ interface Dictionary {
       carryOverFailed: string
       failed: string
     }
+    /** FAQ ako druh dokumentu (ADR-028, D164): založenie, editor záznamov, texty znenia a indexu. */
+    faq: {
+      newHeading: string
+      newIntro: string
+      /** Odkaz z nahrávania: FAQ sa nenahráva ako súbor. */
+      newLink: string
+      create: string
+      created: string
+      heading: string
+      intro: string
+      empty: string
+      addHeading: string
+      editHeading: (n: number) => string
+      question: string
+      questionHint: string
+      variants: string
+      variantsHint: string
+      answer: string
+      answerHint: string
+      sources: string
+      sourcesHint: string
+      sourceDocument: string
+      sourceNone: string
+      sourceArticle: string
+      sourceArticlePlaceholder: string
+      audience: string
+      audienceHint: string
+      save: string
+      add: string
+      remove: string
+      saved: string
+      removed: string
+      stateNew: string
+      stateChanged: string
+      statePublished: string
+      stateSourceChanged: string
+      access: (level: string) => string
+      count: (n: number) => string
+      /** Hlavné tlačidlo na detaile FAQ namiesto „Nové znenie". */
+      editEntries: string
+      openEntries: string
+      pdfNote: string
+      publishNote: string
+      /** Texty v jazyku dokumentu — Markdown, PDF a úsek v indexe. */
+      mdIntro: string
+      mdQuestion: string
+      mdVariants: string
+      mdAnswer: string
+      mdSources: string
+      mdAudience: string
+      mdEmpty: string
+      pdfPage: (n: number, total: number) => string
+    }
     upload: {
       /** Číslované sekcie formulára — nie kroky sprievodcu, viď komentár v `new/page.tsx`. */
       sectionFile: string
@@ -5144,6 +5197,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.effectiveFromSourceRequired": "Zdroj dátumu platnosti je povinný — napíš, odkiaľ dátum je (napríklad uznesenie VV SFZ č. … z …). Po prvom potvrdení sa dátum už meniť nedá.",
     "library.documentHasNoText": "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.",
     "library.noChunks": "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
+    "library.faqNoEntries": "FAQ nemá ani jeden záznam — pridaj aspoň jednu otázku s odpoveďou.",
+    "library.faqQuestionRequired": "Otázka je povinná — bez nej záznam nemá čo zodpovedať.",
+    "library.faqAnswerRequired": "Odpoveď je povinná — otázka bez odpovede do FAQ nepatrí.",
+    "library.faqTooLong": "Záznam je príliš dlhý — otázka do {question} a odpoveď do {answer} znakov.",
+    "library.faqEntryNotFound": "Taký záznam v tomto FAQ nie je.",
+    "library.faqSourceUnknown": "Zdrojový dokument {documentId} tu nie je.",
+    "library.notFaq": "Tento dokument nie je FAQ.",
     "library.noPublishedVersion": "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
     "library.versionHasNoText": "Toto znenie nemá uložený text — nie je čo narezať.",
     "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.",
@@ -6616,6 +6676,55 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Príprava je uložená.",
       carryOverFailed: "Znenie je zverejnené, prenos pridelení sa ale nepodaril:",
       failed: "Nepodarilo sa to. Skús to znova.",
+    },
+    faq: {
+      newHeading: "Nové FAQ – časté otázky",
+      newIntro: "FAQ sa nenahráva ako súbor. Založ ho tu, potom pridávaj záznamy: otázku, odpoveď a predpis, z ktorého odpoveď vychádza. Zverejnenie prejde schválením ako každé iné znenie.",
+      newLink: "Časté otázky (FAQ) sa nenahrávajú ako súbor — založ ich tu →",
+      create: "Založiť FAQ",
+      created: "FAQ je založené. Pridaj prvý záznam.",
+      heading: "Záznamy FAQ",
+      intro: "Jeden záznam je jedna otázka a odpoveď. Asistent z každého záznamu urobí jeden úsek; prístup k záznamu je najprísnejší z prístupu tohto FAQ a jeho zdrojov.",
+      empty: "Zatiaľ žiadny záznam.",
+      addHeading: "Nový záznam",
+      editHeading: (n: number) => `Záznam ${n}`,
+      question: "Otázka",
+      questionHint: "Tak, ako ju ľudia kladú — jedna veta.",
+      variants: "Ďalšie znenia otázky",
+      variantsHint: "Každé na nový riadok. Pomáhajú nájsť odpoveď aj na inak položenú otázku.",
+      answer: "Odpoveď",
+      answerHint: "Úplná odpoveď, ktorú by helpdesk poslal e-mailom. Bez osobných údajov.",
+      sources: "Zdroje",
+      sourcesHint: "Predpisy, z ktorých odpoveď vychádza. Keď niektorý dostane nové znenie, záznam sa označí na kontrolu.",
+      sourceDocument: "Dokument",
+      sourceNone: "— bez zdroja —",
+      sourceArticle: "Článok",
+      sourceArticlePlaceholder: "napr. čl. 12 ods. 3",
+      audience: "Pre koho",
+      audienceHint: "Roly, ktorým je odpoveď určená, oddelené čiarkou: klubový manažér, rozhodca, tréner…",
+      save: "Uložiť záznam",
+      add: "Pridať záznam",
+      remove: "Odstrániť",
+      saved: "Záznam je uložený. Zverejní sa so znením po schválení.",
+      removed: "Záznam je odstránený z konceptu.",
+      stateNew: "nový, nezverejnený",
+      stateChanged: "zmenený oproti zverejnenému",
+      statePublished: "zverejnený",
+      stateSourceChanged: "zdroj dostal nové znenie — skontroluj odpoveď",
+      access: (level: string) => `prístup: ${level}`,
+      count: (n: number) => (n === 1 ? "1 záznam" : n >= 2 && n <= 4 ? `${n} záznamy` : `${n} záznamov`),
+      editEntries: "Upraviť záznamy",
+      openEntries: "záznamy FAQ →",
+      pdfNote: "PDF a text znenia sa skladajú zo záznamov pri každom uložení (ADR-011); nič sa nenahráva.",
+      publishNote: "Zmeny záznamov sú koncept. Zverejnia sa postupom znenia na detaile dokumentu: údaje o znení, schválenie, zverejnenie.",
+      mdIntro: "Časté otázky a odpovede. Odpoveď vychádza z uvedených predpisov v znení platnom ku dňu zverejnenia.",
+      mdQuestion: "Otázka",
+      mdVariants: "Ďalšie znenia otázky",
+      mdAnswer: "Odpoveď",
+      mdSources: "Zdroje",
+      mdAudience: "Pre koho",
+      mdEmpty: "Zatiaľ bez záznamov.",
+      pdfPage: (n: number, total: number) => `strana ${n} z ${total}`,
     },
     upload: {
       sectionFile: "Súbor",
@@ -8839,6 +8948,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.effectiveFromSourceRequired": "Zdroj data platnosti je povinný — napiš, odkud datum je (například usnesení VV SFZ č. … z …). Po prvním potvrzení se datum už měnit nedá.",
     "library.documentHasNoText": "Dokument nemá text — nejprve nahraj soubor nebo napiš znění.",
     "library.noChunks": "Z textu nevznikl ani jeden úsek. Zkontroluj, jestli má dokument členění na články nebo nadpisy.",
+    "library.faqNoEntries": "FAQ nemá ani jeden záznam — přidej aspoň jednu otázku s odpovědí.",
+    "library.faqQuestionRequired": "Otázka je povinná — bez ní záznam nemá co zodpovědět.",
+    "library.faqAnswerRequired": "Odpověď je povinná — otázka bez odpovědi do FAQ nepatří.",
+    "library.faqTooLong": "Záznam je příliš dlouhý — otázka do {question} a odpověď do {answer} znaků.",
+    "library.faqEntryNotFound": "Takový záznam v tomto FAQ není.",
+    "library.faqSourceUnknown": "Zdrojový dokument {documentId} tady není.",
+    "library.notFaq": "Tento dokument není FAQ.",
     "library.noPublishedVersion": "Dokument nemá publikované znění — přeindexovat lze jen to, co už je venku.",
     "library.versionHasNoText": "Toto znění nemá uložený text — není co rozdělit.",
     "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontroluj profil členění.",
@@ -10308,6 +10424,55 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Příprava je uložena.",
       carryOverFailed: "Znění je zveřejněno, přenos přidělení se ale nepodařil:",
       failed: "Nepodařilo se to. Zkus to znovu.",
+    },
+    faq: {
+      newHeading: "Nové FAQ – časté otázky",
+      newIntro: "FAQ se nenahrává jako soubor. Založ ho tady, potom přidávej záznamy: otázku, odpověď a předpis, ze kterého odpověď vychází. Zveřejnění projde schválením jako každé jiné znění.",
+      newLink: "Časté otázky (FAQ) se nenahrávají jako soubor — založ je tady →",
+      create: "Založit FAQ",
+      created: "FAQ je založeno. Přidej první záznam.",
+      heading: "Záznamy FAQ",
+      intro: "Jeden záznam je jedna otázka a odpověď. Asistent z každého záznamu udělá jeden úsek; přístup k záznamu je nejpřísnější z přístupu tohoto FAQ a jeho zdrojů.",
+      empty: "Zatím žádný záznam.",
+      addHeading: "Nový záznam",
+      editHeading: (n: number) => `Záznam ${n}`,
+      question: "Otázka",
+      questionHint: "Tak, jak ji lidé kladou — jedna věta.",
+      variants: "Další znění otázky",
+      variantsHint: "Každé na nový řádek. Pomáhají najít odpověď i na jinak položenou otázku.",
+      answer: "Odpověď",
+      answerHint: "Úplná odpověď, kterou by helpdesk poslal e-mailem. Bez osobních údajů.",
+      sources: "Zdroje",
+      sourcesHint: "Předpisy, ze kterých odpověď vychází. Když některý dostane nové znění, záznam se označí ke kontrole.",
+      sourceDocument: "Dokument",
+      sourceNone: "— bez zdroje —",
+      sourceArticle: "Článek",
+      sourceArticlePlaceholder: "např. čl. 12 odst. 3",
+      audience: "Pro koho",
+      audienceHint: "Role, kterým je odpověď určena, oddělené čárkou: klubový manažer, rozhodčí, trenér…",
+      save: "Uložit záznam",
+      add: "Přidat záznam",
+      remove: "Odstranit",
+      saved: "Záznam je uložen. Zveřejní se se zněním po schválení.",
+      removed: "Záznam je odstraněn z konceptu.",
+      stateNew: "nový, nezveřejněný",
+      stateChanged: "změněný oproti zveřejněnému",
+      statePublished: "zveřejněný",
+      stateSourceChanged: "zdroj dostal nové znění — zkontroluj odpověď",
+      access: (level: string) => `přístup: ${level}`,
+      count: (n: number) => (n === 1 ? "1 záznam" : n >= 2 && n <= 4 ? `${n} záznamy` : `${n} záznamů`),
+      editEntries: "Upravit záznamy",
+      openEntries: "záznamy FAQ →",
+      pdfNote: "PDF a text znění se skládají ze záznamů při každém uložení (ADR-011); nic se nenahrává.",
+      publishNote: "Změny záznamů jsou koncept. Zveřejní se postupem znění na detailu dokumentu: údaje o znění, schválení, zveřejnění.",
+      mdIntro: "Časté otázky a odpovědi. Odpověď vychází z uvedených předpisů ve znění platném ke dni zveřejnění.",
+      mdQuestion: "Otázka",
+      mdVariants: "Další znění otázky",
+      mdAnswer: "Odpověď",
+      mdSources: "Zdroje",
+      mdAudience: "Pro koho",
+      mdEmpty: "Zatím bez záznamů.",
+      pdfPage: (n: number, total: number) => `strana ${n} z ${total}`,
     },
     upload: {
       sectionFile: "Soubor",
@@ -12523,6 +12688,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.effectiveFromSourceRequired": "The source of the effective date is required — write down where the date comes from (for example board resolution no. … of …). After the first acknowledgement the date can no longer be changed.",
     "library.documentHasNoText": "The document has no text — upload a file or write the wording first.",
     "library.noChunks": "The text produced no chunks at all. Check whether the document is organised into articles or headings.",
+    "library.faqNoEntries": "The FAQ has no entries — add at least one question with an answer.",
+    "library.faqQuestionRequired": "The question is required — without it the entry has nothing to answer.",
+    "library.faqAnswerRequired": "The answer is required — a question without an answer does not belong in an FAQ.",
+    "library.faqTooLong": "The entry is too long — the question up to {question} and the answer up to {answer} characters.",
+    "library.faqEntryNotFound": "There is no such entry in this FAQ.",
+    "library.faqSourceUnknown": "The source document {documentId} is not here.",
+    "library.notFaq": "This document is not an FAQ.",
     "library.noPublishedVersion": "The document has no published version — only what is already out can be reindexed.",
     "library.versionHasNoText": "This version has no stored text — there is nothing to split.",
     "library.noChunksProfile": "The text produced no chunks at all — check the chunking profile.",
@@ -13986,6 +14158,55 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Preparation saved.",
       carryOverFailed: "The version is published, but carrying over assignments failed:",
       failed: "That did not work. Try again.",
+    },
+    faq: {
+      newHeading: "New FAQ",
+      newIntro: "An FAQ is not uploaded as a file. Create it here, then add entries: a question, the answer and the regulation it is based on. Publishing goes through approval like any other version.",
+      newLink: "Frequently asked questions (FAQ) are not uploaded as a file — create them here →",
+      create: "Create FAQ",
+      created: "The FAQ has been created. Add the first entry.",
+      heading: "FAQ entries",
+      intro: "One entry is one question and answer. The assistant turns each entry into one chunk; access to an entry is the strictest of this FAQ's access and its sources.",
+      empty: "No entries yet.",
+      addHeading: "New entry",
+      editHeading: (n: number) => `Entry ${n}`,
+      question: "Question",
+      questionHint: "The way people actually ask it — one sentence.",
+      variants: "Other wordings of the question",
+      variantsHint: "One per line. They help find the answer to a differently phrased question.",
+      answer: "Answer",
+      answerHint: "The full answer the helpdesk would send by e-mail. No personal data.",
+      sources: "Sources",
+      sourcesHint: "Regulations the answer is based on. When one of them gets a new version, the entry is flagged for review.",
+      sourceDocument: "Document",
+      sourceNone: "— no source —",
+      sourceArticle: "Article",
+      sourceArticlePlaceholder: "e.g. Art. 12(3)",
+      audience: "Audience",
+      audienceHint: "Roles the answer is meant for, comma-separated: club manager, referee, coach…",
+      save: "Save entry",
+      add: "Add entry",
+      remove: "Remove",
+      saved: "The entry is saved. It is published with the version after approval.",
+      removed: "The entry has been removed from the draft.",
+      stateNew: "new, unpublished",
+      stateChanged: "changed since publication",
+      statePublished: "published",
+      stateSourceChanged: "a source has a new version — review the answer",
+      access: (level: string) => `access: ${level}`,
+      count: (n: number) => (n === 1 ? "1 entry" : `${n} entries`),
+      editEntries: "Edit entries",
+      openEntries: "FAQ entries →",
+      pdfNote: "The PDF and the text of the version are built from the entries on every save (ADR-011); nothing is uploaded.",
+      publishNote: "Changes to entries are a draft. They are published through the version flow on the document page: version details, approval, publication.",
+      mdIntro: "Frequently asked questions and answers. Each answer is based on the regulations listed, as in force on the day of publication.",
+      mdQuestion: "Question",
+      mdVariants: "Other wordings",
+      mdAnswer: "Answer",
+      mdSources: "Sources",
+      mdAudience: "Audience",
+      mdEmpty: "No entries yet.",
+      pdfPage: (n: number, total: number) => `page ${n} of ${total}`,
     },
     upload: {
       sectionFile: "File",

@@ -1554,3 +1554,83 @@ export async function requestChunkingAdviceAction(fd: FormData) {
   revalidatePath(`/library/${id}`)
   backToChunks(id, message, error)
 }
+
+// ── FAQ ako druh dokumentu (ADR-028, D164) ──────────────────────────────────
+
+/**
+ * Založí FAQ: metadáta ako pri nahratí, ale bez súboru — PDF a text sa zložia
+ * zo (zatiaľ prázdneho) zoznamu záznamov (`lib/faq.ts`). Druh je vždy FAQ.
+ */
+export async function createFaqAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const { createFaqDocument } = await import("@/lib/faq")
+  try {
+    const meta = checkMetadata({
+      title: fieldText(fd, "title"),
+      documentKey: fieldText(fd, "documentKey"),
+      sectionKey: "",
+      companyCode: self.companyCode,
+      scope: fieldText(fd, "scope") || "company",
+      accessLevel: fieldText(fd, "accessLevel"),
+      language: fieldText(fd, "language"),
+      category: "faq",
+      tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
+      ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
+    }, self.extras)
+    const r = await createFaqDocument(meta, self.email)
+    revalidatePath("/library")
+    redirect(`/library/${encodeURIComponent(r.documentId)}/faq?msg=${encodeURIComponent(dictionary(self.language).library.faq.created)}`)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    const q = new URLSearchParams({ error: errorMessage(e, self.language), title: fieldText(fd, "title"), documentKey: fieldText(fd, "documentKey") })
+    redirect(`/library/new/faq?${q.toString()}`)
+  }
+}
+
+/** Zdroje z formulára: dvojice `sourceDocument[]` a `sourceArticle[]` v poradí riadkov. */
+function faqSourcesFromForm(fd: FormData): { documentId: string; articleRef: string }[] {
+  const docs = fd.getAll("sourceDocument").map(v => (typeof v === "string" ? v : ""))
+  const articles = fd.getAll("sourceArticle").map(v => (typeof v === "string" ? v : ""))
+  return docs.map((documentId, i) => ({ documentId, articleRef: articles[i] ?? "" }))
+}
+
+/** Pridá alebo upraví záznam FAQ v koncepte. Zverejnenie je samostatný krok (ADR-014). */
+export async function saveFaqEntryAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const documentId = fieldText(fd, "documentId")
+  const base = `/library/${encodeURIComponent(documentId)}/faq`
+  const { saveFaqEntry, checkEntry } = await import("@/lib/faq")
+  try {
+    const entry = checkEntry({
+      question: fieldText(fd, "question"),
+      variants: fieldText(fd, "variants"),
+      answer: fieldText(fd, "answer"),
+      sources: faqSourcesFromForm(fd),
+      audience: fieldText(fd, "audience").split(","),
+    })
+    const saved = await saveFaqEntry(self.companyCode, documentId, { ...entry, id: fieldText(fd, "entryId") || null }, self.email)
+    revalidatePath(`/library/${documentId}`)
+    redirect(`${base}?msg=${encodeURIComponent(dictionary(self.language).library.faq.saved)}#${saved.id}`)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    redirect(`${base}?error=${encodeURIComponent(errorMessage(e, self.language))}`)
+  }
+}
+
+export async function removeFaqEntryAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const documentId = fieldText(fd, "documentId")
+  const base = `/library/${encodeURIComponent(documentId)}/faq`
+  const { removeFaqEntry } = await import("@/lib/faq")
+  try {
+    await removeFaqEntry(self.companyCode, documentId, fieldText(fd, "entryId"), self.email)
+    revalidatePath(`/library/${documentId}`)
+    redirect(`${base}?msg=${encodeURIComponent(dictionary(self.language).library.faq.removed)}`)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    redirect(`${base}?error=${encodeURIComponent(errorMessage(e, self.language))}`)
+  }
+}
