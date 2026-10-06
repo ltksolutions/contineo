@@ -194,7 +194,7 @@ Nahrádza premennú `POVOLENE_EMAILY` ako hlavnú cestu (ADR-003 kap. 5.3). Je t
   email: "jan.novak@futbalsfz.sk",        // vždy lowercase
   fullName: "Ján Novák",
   department: "Úsek legislatívy",
-  personType: "employee" | "external" | "referee" | "official",
+  personType: "internal" | "employee" | "external",   // D168: rozhodcovia a funkcionári sú skupiny
   startDate: ISODate,
   status: "invited" | "active" | "inactive",
   language: "sk" | "cs" | "en",           // jazyk PROSTREDIA, nie obsahu (D35)

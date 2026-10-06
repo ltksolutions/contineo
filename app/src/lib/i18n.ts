@@ -5809,10 +5809,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   people: {
     types: {
+      internal: "interný (funkcionár, komisia…)",
       employee: "zamestnanec",
-      external: "externý",
-      referee: "rozhodca",
-      official: "funkcionár",
+      external: "externý — len cez cudzí systém, bez prístupu do intranetu",
     },
     genders: { male: "muž", female: "žena", none: "nevyplnené" },
     languages: {
@@ -5969,7 +5968,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       legacyDepartmentBefore: "Pôvodne tu bolo zapísané textom: ",
       legacyDepartmentAfter: ". Ostáva to uložené, kým sa nezaradí do štruktúry — aby bolo vidieť, z čoho oddelenie vzniklo.",
       personType: "Typ osoby",
-      personTypeNote: "Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia a úroveň dokumentu.",
+      personTypeNote: "Kto človek je voči organizácii. Druh „externý“ sa do intranetu neprihlási (ADR-028); o prístupe k obsahu rozhoduje organizácia a úroveň dokumentu. Rozhodcovia a funkcionári sú skupiny, nie druh.",
       language: "Jazyk prostredia",
       languageNote: "V čom sa s človekom rozprávame. Nie jazyk dokumentov, ktoré číta.",
       gender: "Pohlavie",
@@ -9723,10 +9722,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   people: {
     types: {
+      internal: "interní (funkcionář, komise…)",
       employee: "zaměstnanec",
-      external: "externí",
-      referee: "rozhodčí",
-      official: "funkcionář",
+      external: "externí — jen přes cizí systém, bez přístupu do intranetu",
     },
     genders: { male: "muž", female: "žena", none: "nevyplněno" },
     languages: {
@@ -9883,7 +9881,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       legacyDepartmentBefore: "Původně tu bylo zapsáno textem: ",
       legacyDepartmentAfter: ". Zůstává to uložené, dokud se nezařadí do struktury — aby bylo vidět, z čeho oddělení vzniklo.",
       personType: "Typ osoby",
-      personTypeNote: "Evidenční údaj. O přístupu k obsahu nerozhoduje — ten řeší organizace a úroveň dokumentu.",
+      personTypeNote: "Kdo člověk je vůči organizaci. Druh „externí“ se do intranetu nepřihlásí (ADR-028); o přístupu k obsahu rozhoduje organizace a úroveň dokumentu. Rozhodčí a funkcionáři jsou skupiny, ne druh.",
       language: "Jazyk prostředí",
       languageNote: "V čem se s člověkem bavíme. Ne jazyk dokumentů, které čte.",
       gender: "Pohlaví",
@@ -13626,10 +13624,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   people: {
     types: {
+      internal: "internal (official, committee…)",
       employee: "employee",
-      external: "external",
-      referee: "referee",
-      official: "official",
+      external: "external — only via a foreign system, no intranet access",
     },
     genders: { male: "male", female: "female", none: "not set" },
     languages: {
@@ -13786,7 +13783,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       legacyDepartmentBefore: "Originally recorded here as text: ",
       legacyDepartmentAfter: ". It stays stored until the person is placed in the structure — so it is visible where the department came from.",
       personType: "Person type",
-      personTypeNote: "A record-keeping field. It does not decide access to content — that is settled by the organisation and the document's access level.",
+      personTypeNote: "Who the person is to the organisation. The “external” type cannot sign in to the intranet (ADR-028); access to content is settled by the organisation and the document's access level. Referees and officials are groups, not a type.",
       language: "Interface language",
       languageNote: "The language we speak to this person in. Not the language of the documents they read.",
       gender: "Gender",

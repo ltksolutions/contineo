@@ -50,7 +50,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
   try {
     const id = await createChatTicket(gate.tenant.companyCode, {
       channelKey: gate.channel.key,
-      asker: { personId: gate.person.id, email: gate.identity.email, name: gate.identity.name || gate.person.fullName, roles: gate.identity.roles, club: gate.identity.club },
+      asker: {
+        personId: gate.person.id, email: gate.identity.email, name: gate.identity.name || gate.person.fullName,
+        roles: gate.identity.roles, club: gate.identity.club, reference: gate.identity.registrationNumber,
+      },
       message,
       conversation,
     })

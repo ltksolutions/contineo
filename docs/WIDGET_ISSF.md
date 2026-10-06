@@ -38,14 +38,22 @@ Organizácia → Helpdesk → kanál:
 Na strane servera ISSF, pre prihláseného používateľa, JWT **HS256**
 podpísaný tajomstvom kanála:
 
-| claim | hodnota |
+Názvy `iss`, `aud`, `sub`, `iat`, `exp` sú **štandardné claimy JWT**
+a `given_name`, `family_name`, `email` štandardné claimy OIDC (rovnaké
+posielajú tokeny Microsoftu a Googlu). Každá JWT knižnica ich sama nastaví
+aj overí; preto nemajú vlastné názvy (rozhodnutie Jána 6. 10. 2026).
+
+| claim | význam v ISSF |
 |---|---|
-| `iss` | pôvod stránky ISSF, napr. `https://issf.futbalsfz.sk` — musí byť medzi povolenými pôvodmi kanála |
-| `aud` | kľúč kanála, napr. `issf` |
-| `sub` | stabilný identifikátor osoby v ISSF (Sportnet ID) |
-| `email` | e-mail osoby — sem príde odpoveď helpdesku |
-| `name` | meno a priezvisko |
-| `roles` | pole rolí, napr. `["klubový manažér", "rozhodca"]` — vyberá FAQ pre publikum |
+| `iss` | **kto token vydal** — pôvod stránky ISSF, napr. `https://issf.futbalsfz.sk`. Musí byť medzi povolenými pôvodmi kanála v Contineu. |
+| `aud` | **pre koho je** — kľúč kanála v Contineu, napr. `issf`. |
+| `sub` | **účet, ktorý sa prihlásil** — Sportnet ID. Stabilné a jedinečné; podľa neho sa osoba pri ďalšej otázke spozná. |
+| `email` | e-mail účtu — sem príde odpoveď helpdesku. Musí byť v ISSF overený. |
+| `given_name` | meno |
+| `family_name` | priezvisko |
+| `name` | celé meno — len záloha, keď `given_name` a `family_name` chýbajú |
+| `registrationNumber` | registračné číslo v ISSF (nepovinné). Riešiteľ si podľa neho človeka v ISSF nájde. Identifikátorom nie je: osoba môže mať viac registrácií, účet jeden. |
+| `roles` | pole rolí, napr. `["klubový manažér", "rozhodca"]` — vyberá FAQ pre publikum, riešiteľ ich vidí pri tickete |
 | `club` | klub (nepovinné) |
 | `lang` | `sk`, `cs` alebo `en` (nepovinné) |
 | `iat`, `exp` | vydanie a platnosť; `exp − iat` **najviac 15 minút** |
@@ -63,7 +71,8 @@ function issueToken(user, secret) {
   const header = b64(JSON.stringify({ alg: "HS256", typ: "JWT" }))
   const payload = b64(JSON.stringify({
     iss: "https://issf.futbalsfz.sk", aud: "issf", sub: user.sportnetId,
-    email: user.email, name: user.displayName, roles: user.roles, club: user.club, lang: "sk",
+    email: user.email, given_name: user.firstName, family_name: user.lastName,
+    registrationNumber: user.registrationNumber, roles: user.roles, club: user.club, lang: "sk",
     iat, exp: iat + 15 * 60,
   }))
   const sig = createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url")
@@ -102,10 +111,13 @@ Všetky volania vyžadujú hlavičku `Origin` z povolených pôvodov; preflight
 
 ## Osobné údaje
 
-- Osoba z tokenu sa založí v `persons` s príznakom `widgetOnly` —
+- Osoba z tokenu sa hľadá podľa identifikátora (`sub`), potom podľa
+  **e-mailu** — zamestnanec s rovnakou adresou v ISSF aj intranete sa len
+  spáruje a intranet mu ostáva. Inak sa založí s druhom **`external`**:
   **nemôže sa prihlásiť do intranetu**, aj keby mala adresu, ktorú by
-  prihlásenie prijalo. Import osôb správcom príznak zhodí.
-- E-mail, meno, roly a klub sú kópia z tokenu v čase otázky.
+  prihlásenie prijalo. Import osôb správcom druh prepíše a tým ju pustí dnu.
+- E-mail, meno, priezvisko, roly, klub a registračné číslo sú kópia
+  z tokenu v čase otázky; riešiteľ ich vidí pri tickete.
 - Otázky a odpovede sú záznamy v `evaluations` ako pri intranete
   (hodnotenie, kurácia); účel „helpdesk" patrí do informovania dotknutých
   osôb (ADR-022) — doplní DPO.

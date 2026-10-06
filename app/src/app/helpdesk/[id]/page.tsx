@@ -63,7 +63,10 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
         <span className={`tag ${ticket.state === "sent" || ticket.state === "closed" ? "tag--published" : "tag--draft"}`}>{t.state[ticket.state]}</span>
       </div>
       <p className="quiet" style={{ margin: "0 0 12px" }}>
-        {t.fromAsker(ticket.asker.name ?? "")}{ticket.asker.email ? ` · ${ticket.asker.email}` : ""} · {channel?.name ?? ticket.channelKey} · {t.source[ticket.source]}
+        {t.fromAsker(ticket.asker.name ?? "")}{ticket.asker.email ? ` · ${ticket.asker.email}` : ""}
+        {ticket.asker.club ? ` · ${ticket.asker.club}` : ""}{ticket.asker.reference ? ` · ${ticket.asker.reference}` : ""}
+        {ticket.asker.roles.length ? ` · ${ticket.asker.roles.join(", ")}` : ""}
+        {" · "}{channel?.name ?? ticket.channelKey} · {t.source[ticket.source]}
         {" · "}{ticket.assigneeId ? t.assignedTo(assignee?.fullName ?? ticket.assigneeId) : t.unassigned}
       </p>
       <Notice message={msg} error={error === "1"} back={base} />

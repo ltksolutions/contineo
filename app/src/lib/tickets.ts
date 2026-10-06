@@ -53,6 +53,8 @@ export interface Ticket {
     name: string | null
     roles: string[]
     club: string | null
+    /** Registračné číslo v cudzom systéme (ISSF) — riešiteľ si podľa neho človeka nájde. */
+    reference?: string | null
   }
   subject: string
   messages: TicketMessage[]
@@ -124,7 +126,7 @@ export async function ingestMessages(
 
     const ticket: Ticket = {
       companyCode, channelKey, source: "email", threadRef: m.threadRef,
-      asker: { personId: null, email: m.from?.address ?? null, name: m.from?.name ?? null, roles: [], club: null },
+      asker: { personId: null, email: m.from?.address ?? null, name: m.from?.name ?? null, roles: [], club: null, reference: null },
       subject: m.subject,
       messages: [tm],
       state: "new", assigneeId: null, draft: null, sentAnswer: null,

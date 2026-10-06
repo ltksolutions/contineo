@@ -11,8 +11,12 @@
  *   iss  – pôvod cudzieho systému (napr. https://issf.futbalsfz.sk), musí byť
  *          medzi povolenými pôvodmi kanála;
  *   aud  – kľúč kanála;
- *   sub  – stabilný identifikátor osoby v cudzom systéme (Sportnet ID);
- *   email, name, roles[], club – údaje o osobe (kópia v čase vydania);
+ *   sub  – stabilný identifikátor účtu v cudzom systéme (Sportnet ID);
+ *   email, given_name, family_name, roles[], club – údaje o osobe (kópia
+ *          v čase vydania); `name` len ako záloha, keď mená zvlášť chýbajú;
+ *   registrationNumber – registračné číslo v ISSF, nepovinné — riešiteľ si
+ *          podľa neho človeka nájde; identifikátorom nie je (osoba môže mať
+ *          viac registrácií, účet jeden);
  *   lang – jazyk rozhrania (sk/cs/en), nepovinný;
  *   iat, exp – vydanie a platnosť; `exp - iat` najviac 15 minút.
  *
@@ -34,7 +38,11 @@ export interface WidgetIdentity {
   /** Identifikátor v cudzom systéme (`sub`). */
   externalId: string
   email: string
+  givenName: string
+  familyName: string
+  /** Celé meno — z `given_name` + `family_name`, inak z `name`. */
   name: string
+  registrationNumber: string | null
   roles: string[]
   club: string | null
   language: "sk" | "cs" | "en" | null
@@ -51,7 +59,7 @@ function fromB64url(s: string): Buffer {
 
 /** Vydanie tokenu — pre testy, dokumentáciu a skúšobnú stránku; ISSF má vlastnú implementáciu. */
 export function signWidgetToken(
-  claims: { iss: string; aud: string; sub: string; email: string; name?: string; roles?: string[]; club?: string | null; lang?: string },
+  claims: { iss: string; aud: string; sub: string; email: string; given_name?: string; family_name?: string; name?: string; registrationNumber?: string; roles?: string[]; club?: string | null; lang?: string },
   secret: string,
   now: Date = new Date(),
   ttlSeconds: number = MAX_TOKEN_TTL_S,
@@ -112,10 +120,16 @@ export function verifyWidgetToken(
     throw new WidgetTokenError("widget.tokenClaims", "Token nemá identifikátor osoby alebo e-mail.")
   }
   const lang = String(payload.lang ?? "")
+  const tidy = (v: unknown) => String(v ?? "").replace(/\s+/g, " ").trim()
+  const givenName = tidy(payload.given_name)
+  const familyName = tidy(payload.family_name)
   return {
     externalId: sub,
     email,
-    name: String(payload.name ?? "").replace(/\s+/g, " ").trim(),
+    givenName,
+    familyName,
+    name: [givenName, familyName].filter(Boolean).join(" ") || tidy(payload.name),
+    registrationNumber: tidy(payload.registrationNumber) || null,
     roles: Array.isArray(payload.roles) ? payload.roles.map(r => String(r).trim()).filter(Boolean).slice(0, 20) : [],
     club: payload.club ? String(payload.club).trim() : null,
     language: lang === "sk" || lang === "cs" || lang === "en" ? lang : null,

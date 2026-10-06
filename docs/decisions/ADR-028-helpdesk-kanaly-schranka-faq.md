@@ -199,17 +199,34 @@ e-mail, meno, roly, klub, `exp` do 15 minút). Widget je `<script>` z
 Continea (webový komponent vo farbách organizácie, `tenantStyle`), volá
 `/api/chat` s tokenom a kľúčom kanálu.
 
-- Osoba sa založí alebo spáruje cez `externalRef.widget[kanál]` = `sub`
-  z tokenu (spresnenie 6. 10. 2026: generické podľa kanála, nie
-  `sportnetId`), s `personType: "external"` a príznakom **`widgetOnly`**,
-  ktorý ju nepustí do intranetu (`personMaySignIn()`); zamestnanec s tým
-  istým e-mailom sa len spáruje a intranet mu ostáva. Vidí `public` úseky
-  z rozsahu kanála.
+- Token nesie štandardné claimy JWT a OIDC (`iss`, `aud`, `sub`, `email`,
+  `given_name`, `family_name`, `iat`, `exp`), nie vlastné názvy — každá
+  knižnica ich sama nastaví aj overí (Ján 6. 10. 2026). Navyše nepovinné
+  `registrationNumber` (registračné číslo v ISSF pre riešiteľa), `roles`,
+  `club`, `lang`.
+- Osoba sa spáruje cez `externalRef.widget[kanál]` = `sub` z tokenu
+  (generické podľa kanála, nie `sportnetId`) alebo cez **e-mail** —
+  zamestnanec s rovnakou adresou si intranet nechá. Inak sa založí
+  s druhom **`external`** (D168), ktorý ju nepustí do intranetu
+  (`personMaySignIn()`). Vidí `public` úseky z rozsahu kanála.
 - Strop požiadaviek na osobu a hodinu je na kanáli (D14).
 - Po **dvoch negatívnych hodnoteniach** v rozhovore sa ponúkne ticket;
   e-mail a meno sú z tokenu, človek dopíše len, čo mu chýba.
 - Nie iframe s vlastným prihlásením a nie anonymný chat: pri anonymovi
   nemáme e-mail na ticket ani rolu na výber FAQ.
+
+### D168 — Druh osoby: `internal`, `employee`, `external`; rozhodcovia a funkcionári sú skupiny
+
+Rozhodnutie Jána 6. 10. 2026 pri D166. `personType` má tri hodnoty:
+`employee` (zamestnanec), `internal` (interný človek, ktorý nie je
+zamestnanec: funkcionár, člen komisie) a `external` (človek známy len cez
+cudzí systém — widget). **`external` sa do intranetu neprihlási**
+(`personMaySignIn()`); import správcom mu druh prepíše a tým ho pustí dnu.
+Doterajšie druhy `referee` a `official` sa rušia bez migrácie (v dátach ich
+nikto nemal, 155 osôb je `employee`) a nahrádzajú ich **skupiny**
+`rozhodcovia` a `funkcionari`, ktoré sú v ponuke vždy (`DEFAULT_GROUPS`):
+druh hovorí, kto človek je voči organizácii, skupina komu sa čo posiela.
+Zamietnutý príznak `widgetOnly` — druhá klasifikácia vedľa druhu.
 
 ### D167 — Rola `helpdesk` je oddelená od správcu obsahu
 
