@@ -24,6 +24,11 @@
   --seg-thumb: #ffffff;
   --seg-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
   --seg-sep: rgba(60, 60, 67, 0.18);
+  /* Výbery a prepínače (ZAKLAD-vyber-a-prepinace): obrys prázdneho kruhu
+     má kontrast aspoň 3 : 1 (WCAG pre ovládače), vypnutý prepínač je sivý. */
+  --control-line: rgba(20, 28, 42, 0.42);
+  --toggle-off: rgba(120, 120, 128, 0.2);
+  --toggle-knob: #ffffff;
 
   --accent: #232a35;
   --accent-strong: #11151c;
@@ -166,6 +171,9 @@ html[data-theme="dark"] {
   --seg-thumb: #636366;
   --seg-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   --seg-sep: rgba(255, 255, 255, 0.14);
+  --control-line: rgba(255, 255, 255, 0.42);
+  --toggle-off: rgba(120, 120, 128, 0.36);
+  --toggle-knob: #ffffff;
 
   --accent: #eef1f5;
   --accent-strong: #ffffff;
@@ -1788,32 +1796,6 @@ html[data-theme="dark"] select.field-input {
 .colors-custom { display: grid; gap: 8px; }
 .colors-custom > summary { cursor: pointer; font-size: 13.5px; color: var(--muted); }
 
-/*
- * Ten istý štítok, ale postavený na zaškrtávacom políčku.
- *
- * Prideľovanie noriem je serverový formulár bez JavaScriptu, takže tam štítok
- * nemôže byť tlačidlo s klientskym stavom. Vyzerať má ale rovnako — inak by
- * tá istá vec vyzerala na dvoch obrazovkách inak a človek by hádal, či je to
- * naozaj to isté. Stav nesie `:has()` nad skrytým políčkom.
- */
-.tag--field { position: relative; }
-.tag--field input {
-  position: absolute;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  inset: 0;
-  margin: 0;
-  cursor: pointer;
-}
-.tag--field:has(input:checked) {
-  background: var(--surface-2);
-  border-color: var(--accent);
-  color: var(--ink);
-}
-.tag--field:has(input:checked) .tag-mark::before { content: "✓"; }
-.tag--field .tag-mark::before { content: "+"; }
-.tag--field:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .admin-languages { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -1834,12 +1816,6 @@ html[data-theme="dark"] select.field-input {
  * palcom netrafí. Preto `padding` na celom `label`, nie len na `input` —
  * kliknuteľný je celý riadok vrátane textu.
  */
-.hr-group {
-  border: 1px solid var(--line);
-  padding: 16px 18px 18px;
-  margin: 0;
-}
-
 /*
  * `<fieldset>` má v prehliadači predvolene `min-width: min-content` — na
  * rozdiel od `<div>` sa nezúži pod šírku najdlhšieho nezalomiteľného obsahu.
@@ -1849,14 +1825,6 @@ html[data-theme="dark"] select.field-input {
  */
 fieldset { min-width: 0; }
 .hr-choice { overflow-wrap: anywhere; }
-/* Voliteľný štítok (oddelenie, skupina) sa pri dlhom názve smie zalomiť —
-   „Národné tréningové centrum Senec" odsadené v strome by inak na telefóne
-   pretieklo. Štítky stavu (`.tag` bez `--field`) zostávajú v jednom riadku. */
-.tag--field { max-width: 100%; white-space: normal; text-align: left; }
-
-.hr-group legend {
-  padding: 0 6px;
-}
 
 .hr-subtitle {
   font-size: 12px;
@@ -1864,12 +1832,6 @@ fieldset { min-width: 0; }
   letter-spacing: 0.05em;
   color: var(--muted);
   margin: 14px 0 4px;
-}
-
-.hr-choices {
-  list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 .hr-choice {
@@ -3160,18 +3122,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .duty-order { flex: 1 0 100%; }
 }
 
-/* Dve polia termínu vedľa seba, na telefóne pod sebou. Nechávajú sa vidieť
-   obe: formulár beží bez JavaScriptu, takže sa skryť nedajú, a kto sa prepne
-   z dátumu na dni a späť, o svoj dátum nepríde. */
-.due-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.due-fields .field { flex: 1 1 180px; margin: 0; }
-
 /* Súhrn dopadu pred pridelením a pred pripomienkami (HR.md, úlohy 3–4):
    číslo pred odoslaním je jediná poistka proti prekliku. Jemné pozadie
    v akcente, nie výstraha — nie je to chyba, je to fakt na prečítanie. */
@@ -3185,9 +3135,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 .assign-impact-count { font-size: var(--fs-lead); font-weight: 650; }
 
-/* Rámik termínu je ten istý ako pri výbere publika nad ním; zvyšok formulára
-   ho nemá, takže bez tohto by mal každý fieldset iný odstup. */
-.hr-group .due-fields { margin-bottom: 4px; }
 
 /* ── knižnica: hromadné akcie ───────────────────────────────────────────
    Panel je vidieť stále, nie až po označení: bez skriptu server nevie, či je
@@ -3777,11 +3724,18 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .view-switch-item.is-on + .view-switch-item::before { opacity: 0; }
 
 .view-switch-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Počet pri voľbe filtra (stav zoznamu) — tlmený, nech výber nesie doska. */
+.view-switch--fit { margin: 0 0 10px; }
+.view-switch-count { margin-left: 5px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 639px) {
   .view-switch-item { min-height: 36px; }
   /* Cez celú šírku — Výkaz potvrdení na telefóne. */
   .view-switch--full { display: grid; width: 100%; }
+  /* Filter so štyrmi voľbami a počtom: cez celú šírku, užšie segmenty —
+     inak by na 390 px pretiekol (DESIGN_ODCHYLKY P4). */
+  .view-switch--fit { display: grid; width: 100%; }
+  .view-switch--fit .view-switch-item { padding: 0 6px; font-size: 13px; }
 }
 
 /*
@@ -5065,35 +5019,15 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    obrazovku a na telefóne by sa k nemu nikto neprerolloval. */
 .approval-people {
   display: grid;
-  gap: 2px;
-  max-height: 260px;
+  max-height: 300px;
   overflow-y: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 6px;
-  background: var(--surface);
 }
 
-.approval-person {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 8px 6px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.approval-person:hover { background: var(--surface-2); }
-/* Cieľ na dotyk má mať aspoň 44 px — políčko samotné je menšie, preto sa
-   klikacou plochou stáva celý riadok. */
-.approval-person > input { margin-top: 3px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
-.approval-person > span { display: grid; gap: 1px; min-width: 0; }
-.approval-person-name { font-size: 14.5px; }
+/* Riadok osoby je `.form-row` (ZAKLAD-vyber-a-prepinace): kruh vľavo pri
+   výbere viacerých, fajka vpravo pri jednej osobe. Celý riadok je terč. */
+.approval-person > span { display: grid; gap: 1px; min-width: 0; flex: 1 1 auto; }
+.approval-person-name { font-size: 15px; }
 .approval-person-meta { font-size: 12.5px; overflow-wrap: anywhere; }
-/* Riadok odfiltrovaný hľadaním. `display: flex` vyššie by atribút `hidden`
-   prebil — prehliadač ho skrýva len pravidlom s najnižšou váhou. */
-.approval-person[hidden] { display: none; }
-/* Vybraný riadok podľa políčka, nie podľa triedy: funguje aj bez skriptu. */
-.approval-person:has(> input:checked) { background: var(--accent-soft); }
 .approval-person mark { background: var(--warn-bg); color: inherit; border-radius: 2px; padding: 0 1px; }
 
 /* ── hľadanie v zozname osôb (KOMPONENT-hladanie-osob) ────────────────────
@@ -6240,7 +6174,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   border: 1px solid var(--line); border-radius: 9px;
 }
 .hr-choice--tile:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
-.hr-choice-ref { display: block; }
 
 /* Text na vyhľadávanie pod PDF — zbalený, lebo potvrdzuje sa PDF. */
 .approval-search-text,
@@ -6856,31 +6789,17 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   display: flex; gap: 8px; align-items: flex-start; margin: 0 0 10px; padding: 9px 12px;
   border-radius: 9px; background: var(--warn-bg); color: var(--warn-fg); font-size: 12.5px; line-height: 1.5;
 }
-.hr-doc {
-  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start;
-  padding: 8px; border-radius: 8px; cursor: pointer;
-}
-.hr-doc:has(input:checked) { background: var(--accent-soft); }
-.hr-doc > input { margin-top: 3px; }
-.hr-doc-title { grid-column: 2; font-size: var(--fs-body); overflow-wrap: anywhere; }
-.hr-doc-tag { grid-column: 3; grid-row: 1; }
-.hr-doc-meta { grid-column: 2 / 4; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hr-due { display: grid; gap: 6px; }
-.hr-due-opt {
-  display: grid; grid-template-columns: 18px auto minmax(0, 1fr); gap: 10px; align-items: center;
-  min-height: 44px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 9px;
-  background: var(--bg); font-size: 13.5px; cursor: pointer;
-}
-.hr-due-opt:has(input[type="radio"]:checked) { border-color: var(--accent); background: var(--accent-soft); }
-.hr-due-opt .field-input { min-height: 32px; padding: 4px 10px; font-size: 13px; max-width: 170px; justify-self: end; }
+.hr-doc { align-items: flex-start; }
+.hr-doc > input { margin-top: 1px; }
+.hr-doc-text { flex: 1 1 auto; min-width: 0; display: grid; gap: 1px; }
+.hr-doc-title { font-size: 15px; overflow-wrap: anywhere; }
+.hr-doc-meta { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-doc-tag { flex: none; }
+/* Na telefóne štítok pod názvom, nie vedľa — mriežka drží text v stĺpci
+   za kruhom aj pri dlhom názve. */
 @media (max-width: 639px) {
-  .hr-due-opt { grid-template-columns: 18px minmax(0, 1fr); }
-  .hr-due-opt .field-input { grid-column: 2; justify-self: stretch; max-width: none; min-height: 40px; font-size: 16px; }
-}
-@media (max-width: 639px) {
-  .hr-doc { grid-template-columns: 20px minmax(0, 1fr); }
-  .hr-doc-tag { grid-column: 2; grid-row: auto; justify-self: start; }
-  .hr-doc-meta { grid-column: 2; }
+  .form-row.hr-doc { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px 12px; }
+  .hr-doc-tag { grid-column: 2; justify-self: start; }
 }
 
 /* ── Nastavenie organizácie (rám ADMIN-prevadzkovatel-a-ciselniky) ─────────
@@ -6962,10 +6881,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   /* Na telefóne a tablete rozcestník pod formulárom, nie nad ním. */
   .edit-form + .detail-side { order: 1; }
 }
-
-/* Odkaz na predpis pod názvom základu, nie nalepený za ním — `.hr-choice
-   .field-hint` ho inak drží v riadku (snímka Jána, 25. 9. 2026). */
-.hr-choice .field-hint.hr-choice-ref { display: block; margin-top: 2px; }
 
 /* ── Stav načítavania pri záložkách a tlačidlách (Ján, 25. 9. 2026) ────────
    Záložka s inou `?tab=` je tá istá stránka — `loading.tsx` sa neukáže.
@@ -7288,9 +7203,13 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .tg-bar.is-on { position: sticky; bottom: 0; z-index: 5; padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .tg-bar-count { flex: 1; font-weight: 600; font-size: 14px; }
 
-@media (max-width: 639px) {
+/* Tabuľka správy vzdelávania až od 1024 px, pod tým karty — ako ostatné
+   zoznamy (CLAUDE.md, List/Table; DESIGN_ODCHYLKY P5). */
+@media (max-width: 1023px) {
   .mg-table { display: none; }
   .mg-cards { display: grid; }
+}
+@media (max-width: 639px) {
   .tgv-main input { width: 22px; height: 22px; }
   .tgv-main { min-height: 44px; }
   .tgv-usage { flex-basis: 100%; padding-left: 32px; }
@@ -7347,8 +7266,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* ── Úprava kurzu: nastavenia a vstup smart:tagov (rám MANAGE-COURSE) ─────── */
 .mc-settings { padding: 18px; display: grid; gap: 14px; max-width: 820px; }
 .mc-grid2 { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-.mc-group { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin: 0; display: grid; gap: 6px; }
-.mc-group legend { padding: 0 4px; }
 .mc-kv { padding: 8px 16px; margin: 0; display: grid; }
 .mc-kv-row { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .mc-kv-row:last-child { border-bottom: 0; }
@@ -7372,7 +7289,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 
 /* ── Úprava kurzu: zapísaní a prideľovanie (rám MANAGE-COURSE) ──────────── */
 .mc-people-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
-.mc-people-head .lpills { margin: 0; }
+.mc-people-head .view-switch { margin: 0; }
 .mc-impact { padding-top: 12px; border-top: 1px solid var(--line); }
 .ok-fg { color: var(--ok-fg); }
 
@@ -7450,6 +7367,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .at-confirm p { margin: 0; }
 .lnote--bad { background: var(--bad-bg); }
 .lnote--bad .lnote-mark, .lnote--bad .lnote-text { color: var(--bad-fg); }
+.signin-error { margin-bottom: 18px; }
 .tone-ok { color: var(--ok-fg); font-weight: 600; }
 .tone-bad { color: var(--bad-fg); font-weight: 600; }
 .tone-warn { color: var(--warn-fg); font-weight: 600; }
@@ -7635,48 +7553,155 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .cert-print { width: 297mm; height: 210mm; max-width: none; border-width: 1.5px; }
 }
 
+/* ── Skupina polí: nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026) ──
+   SwiftUI `Form` + `Section(header:footer:)`: nadpis nad zaoblenou kartou,
+   nápoveda pod ňou. Jeden vzor namiesto `.hr-group` s rámom, `.mc-group`
+   a `.assign-panel`. Legenda v čiare rámu bola predvolené správanie
+   prehliadača, nie zámer — bila sa s okrajom a zaobleným rohom.
+
+   `float` na `<legend>` je to, čo ju z čiary vytiahne: prehliadač kreslí
+   do rámu len prvú legendu, ktorá nepláva. Rám nesie vnútorný `div`, nie
+   `<fieldset>`, takže čiara nad nadpisom nevznikne vôbec. */
+.form-group { display: grid; gap: 10px; min-width: 0; border: 0; padding: 0; margin: 0; }
+.form-group-head {
+  float: left; width: 100%; padding: 0 4px; margin: 0;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: var(--fs-small); font-weight: 600; color: var(--ink);
+}
+.form-group-head--step { font-size: var(--fs-section); font-weight: 650; letter-spacing: -0.01em; }
+.form-group-head .hr-count { font-size: var(--fs-small); font-weight: 400; }
+.form-group-body { display: grid; gap: 8px; padding: 12px 14px; min-width: 0; }
+.form-group--lg { gap: 14px; }
+/* `--lg` bez nadpisu: súhrn a tlačidlá na /hr/assign (Section bez hlavičky). */
+.form-group--lg > .form-group-body, .form-group-body--lg { gap: 12px; padding: 18px 20px 20px; }
+.form-group-foot { font-size: var(--fs-micro); padding: 0 4px; margin: 0; }
+/* Skupina v skupine (zodpovedné osoby v „Základ" testu): druhá karta
+   v karte by bola rám v ráme — vnútorná ostane len nadpis a obsah. */
+.form-group-body .form-group-body { border: 0; border-radius: 0; background: none; padding: 0; }
+@media (max-width: 639px) {
+  .form-group--lg > .form-group-body, .form-group-body--lg { padding: 14px; }
+}
+
+/* ── Výbery a prepínače podľa SwiftUI (ZAKLAD-vyber-a-prepinace, 6. 10. 2026) ──
+   Tri tvary podľa toho, čo sa vyberá — jeden vzhľad pre tri rôzne veci
+   nechával človeka hádať, či zaškrtnutie niečo zmení, alebo len pridá do
+   výberu:
+     .select-row  niekoľko zo zoznamu   List(selection:)  kruh vľavo
+     .choice-row  jedna z 2–5           Picker(.inline)   fajka vpravo
+     .toggle      zapnuté / vypnuté     Toggle            prepínač vpravo
+   V HTML ostáva natívny `input` (meno, hodnota, `required`, klávesnica,
+   čítačka, bez JavaScriptu); mení sa len vzhľad (`appearance: none`).
+   Celý riadok je `<label>`, terč aspoň 44 px. */
+.form-list { display: grid; min-width: 0; }
+.form-row {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  min-height: 44px; padding: 9px 16px; margin: 0;
+  font-size: 15px; line-height: 1.35; color: var(--ink); cursor: pointer; overflow-wrap: anywhere;
+}
+/* Oddeľovač odsadený zľava ako v `List`; pri kruhu až za ním. Prvý
+   viditeľný riadok môže byť za skrytými (hľadanie) — jeho čiaru zakryje
+   orezanie zoznamu o 1 px zhora. */
+.form-row + .form-row::before {
+  content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--line);
+}
+.select-row + .select-row::before { left: 50px; }
+.choice-field + .form-row::before {
+  content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--line);
+}
+.form-list, .approval-people { clip-path: inset(1px 0 0 0); }
+.form-row:hover { background: var(--surface-2); }
+.form-row[hidden] { display: none; }
+.form-row:has(> input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+.form-row > input {
+  appearance: none; -webkit-appearance: none; flex: none; margin: 0; cursor: pointer;
+  display: grid; place-items: center; font: inherit; color: inherit;
+}
+.form-row > input:focus-visible { outline: none; }
+.form-row:has(> input:disabled) { cursor: default; opacity: 0.5; }
+/* Riadok mimo karty s riadkami — áno/nie v obyčajnom formulári
+   (DESIGN_ODCHYLKY P6): bez vlastného odsadenia, zarovnaný s poľami. */
+.form-row--bare { padding: 6px 0; }
+.form-row--bare:hover { background: none; }
+.form-row--bare + .form-row--bare::before { content: none; }
+.form-row-main { flex: 1 1 auto; min-width: 0; display: grid; gap: 1px; }
+.form-row-sub { font-size: 12.5px; color: var(--muted); }
+
+/* Kruh vľavo; vybraný plný farby organizácie s fajkou (Q1 — variant A). */
+.select-row > input {
+  width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--control-line);
+}
+.select-row > input:checked { background: var(--accent); border-color: var(--accent); }
+.select-row > input:checked::after {
+  content: ""; width: 6px; height: 11px; border: solid var(--on-accent);
+  border-width: 0 2.2px 2.2px 0; transform: translateY(-1px) rotate(45deg);
+}
+
+/* Fajka vpravo pri zvolenej voľbe; pole, ktoré k voľbe patrí, je pod ňou. */
+.choice-row > input { order: 2; width: 18px; height: 18px; }
+.choice-row > input:checked::after {
+  content: ""; width: 6px; height: 12px; border: solid var(--accent);
+  border-width: 0 2.4px 2.4px 0; transform: translateY(-2px) rotate(45deg);
+}
+.choice-field { display: flex; align-items: center; gap: 8px; padding: 0 16px 12px; }
+/* Pole nezvolenej voľby sa skryje len cez CSS (Ján, 6. 10. 2026, varianta A):
+   bez JavaScriptu, a hodnota v skrytom poli ostáva — kto sa prepne z dátumu
+   na dni a späť, o dátum nepríde; server (`dueFromFields()`) číta len pole
+   zvoleného režimu. Prehliadač bez `:has()` pravidlo zahodí a ukáže všetky. */
+.choice-row:not(:has(> input:checked)) + .choice-field { display: none; }
+.choice-field .field-input { max-width: 200px; }
+
+/* Prepínač 46 × 28. Uloží sa formulárom (tlačidlom), nie hneď (Q4). */
+.form-row > input.toggle {
+  order: 2; position: relative; width: 46px; height: 28px; border-radius: 999px;
+  background: var(--toggle-off); transition: background-color 0.15s;
+}
+.form-row > input.toggle::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--toggle-knob); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: left 0.15s;
+}
+.form-row > input.toggle:checked { background: var(--accent); }
+.form-row > input.toggle:checked::after { left: 20px; background: var(--on-accent); }
+@media (prefers-reduced-motion: reduce) {
+  .form-row > input.toggle, .form-row > input.toggle::after { transition: none; }
+}
+
+/* Karta s riadkami: bez vnútorného odstupu, riadky po okraj. Ostatný
+   obsah karty (hľadanie, upozornenie, pole) si odstup nesie sám. */
+.form-group-body.form-group-body--rows { padding: 0; gap: 0; overflow: hidden; }
+.form-group-body--rows > :not(.form-list):not(.approval-people):not(.choice-field) { margin: 12px 14px 0; }
+.form-group-body--rows > :last-child:not(.form-list):not(.approval-people):not(.choice-field) { margin-bottom: 12px; }
+.form-group-body--rows > .approval-people { margin-top: 8px; }
+.form-group-body--rows > .approval-people:first-child { margin-top: 0; }
+
 /* ── /hr/assign: Normy | Komu a hľadanie (HR-pridelit-normy-hladanie) ────────
    Od 1100 px dva stĺpce a šírka 1180 (Q1 — výnimka z HR šírky 680–900:
    dva zoznamy vedľa seba, nie jeden dlhý formulár). Pod 1100 jeden stĺpec
    v dnešnom poradí. Bez JavaScriptu to isté rozloženie, len bez hľadania. */
 .assign-page { max-width: 1180px; }
-.assign { display: grid; gap: 20px; }
-.assign-cols { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-.assign-panel { display: grid; gap: 12px; align-content: start; }
-.assign-legend {
-  display: flex; align-items: center; gap: 8px; padding: 0 6px;
-  font-size: var(--fs-section); font-weight: 650; letter-spacing: -0.01em;
-}
-.assign-legend .hr-count { font-size: var(--fs-small); }
-/* Číslo kroku 1–4 — orientácia, nie sprievodca (bod 6). */
+/* 24 px medzi skupinami — nadpis nad kartou potrebuje nad sebou viac miesta
+   než legenda v čiare (HR-pridelit-nadpis-karty). */
+.assign { display: grid; gap: 24px; }
+.assign-cols { display: grid; gap: 24px 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+/* Číslo kroku 1–4 — orientácia, nie sprievodca (bod 6). 20 px, aby sa
+   v nadpise nad kartou nedotýkalo jej obrysu (HR-pridelit-nadpis-karty). */
 .assign-step {
-  display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 700; letter-spacing: 0;
+  display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); font-size: 11.5px; font-weight: 700; letter-spacing: 0;
 }
 /* Zoznam noriem v rámiku s posunom — stránka už nie je 14 riadkov dlhá. */
 .assign-doc-list { max-height: 420px; }
-.hr-doc[hidden] { display: none; }
 
-/* Komu: „Všetkým" a podsekcie oddelené čiarou (bod 4). */
-.assign-all {
-  padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
-}
-.assign-all:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
-.assign-rest { display: grid; gap: 12px; }
-.assign-sub { display: grid; gap: 6px; min-width: 0; }
-.assign-sub + .assign-sub { padding-top: 12px; border-top: 1px solid var(--line); }
-.assign-sub .hr-subtitle { margin: 0; }
+/* Komu: prepínač „Všetkým" a pod ním publiká, každé vo vlastnej karte
+   (ZAKLAD-vyber-a-prepinace). */
+.assign-rest { display: grid; gap: 14px; min-width: 0; }
+.assign-sub { display: grid; gap: 8px; min-width: 0; }
 /* Stlmenie pri „Všetkým" (Q4) — len s JS; hodnoty ostávajú vo formulári. */
 .assign-rest.is-dim { opacity: 0.42; pointer-events: none; }
 
-/* Dôvod | Termín v jednej karte, pod tým súhrn a tlačidlá. */
-.assign-finish { padding: 18px 20px 20px; display: grid; gap: 18px; }
-.assign-finish-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
-.assign-finish .field { align-content: start; }
-/* Termín je v tej istej karte ako dôvod — vlastný rámik by bol druhý rámik v karte. */
-.assign-due { border: 0; padding: 0; }
-.assign-due > legend { margin-bottom: 8px; }
-.assign-summary { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+/* Dôvod | Termín ako dve skupiny vedľa seba, pod nimi súhrn a tlačidlá
+   v karte bez nadpisu (HR-pridelit-nadpis-karty, Q4). */
+.assign-finish-grid { display: grid; gap: 24px 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.assign-summary { display: grid; gap: 12px; }
 .assign-summary-line {
   display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0;
   font-size: var(--fs-small); color: var(--muted);
@@ -7698,7 +7723,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 @media (max-width: 639px) {
   .assign-doc-list { max-height: 300px; }
-  .assign-finish { padding: 14px; }
   .assign-actions > .button { width: 100%; min-height: 44px; }
 }
 

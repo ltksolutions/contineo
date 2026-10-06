@@ -4,6 +4,54 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: obrázok architektúry hovorí Zdroje → Kanály (2026-10-06)
+
+V obrázku na stránke Technológia sa „Vstupné kanály" volajú **Zdroje**
+a „Rozhrania" **Kanály** — e-mail aj portál idú oboma smermi, nie sú to
+výstupy. Položky, ktoré sa len pripravujú (RSS a web, e-mail, MCP
+konektory, tickety, vložený widget, eskalácia na ticket), sú sivé
+a označené; doteraz vyzerali ako hotové. Rovnako pilier a popis pod
+obrázkom; vo všetkých troch jazykoch.
+
+### Dizajn: prierezové opravy podľa súpisu odchýlok (2026-10-06)
+
+Chyby pri odoslaní formulára (Prideliť dokumenty, upozornenie e-mailom,
+nová osoba, nová organizácia) sa ukážu ako oznam s potvrdením, nie ako
+karta hore na stránke, ktorú pri dlhom formulári nebolo vidieť; vyplnené
+hodnoty po potvrdení ostanú. Filtre stavu vo Vzdelávaní (kurzy, testy,
+zapísaní, prehľad odpovedí) sú prepínač pohľadu. Voľby áno/nie (povinná
+časť, dopozerať video, povinný test, vyžaduje potvrdenie, upozorniť
+pridaných, aktualizovať existujúcich) sú prepínače. Tabuľky v správe
+vzdelávania sa na tablete menia na karty ako ostatné zoznamy. Štítky stavu
+majú jednotné farby aj v tmavej téme. Do prekladov prešli texty, ktoré boli
+natvrdo po slovensky: potvrdenie oznamu („Rozumiem"), technické údaje pod
+odpoveďou, prehľad pridelení, prihlásenie, overenie certifikátu; v zozname
+osôb sa ukazuje názov roly namiesto kľúča.
+
+### Formuláre: výbery a prepínače podľa SwiftUI (2026-10-06)
+
+Zaškrtávacie políčka a krúžky v predvolenom vzhľade prehliadača nahradili
+tri tvary podľa toho, čo sa vyberá: **výber viacerých** (normy, osoby,
+trasy, skupiny, zdroje, roly, jazyky) má kruh vľavo, **jedna voľba**
+(termín potvrdenia, kategória právneho základu, jedna zodpovedná osoba)
+fajku vpravo a **zapnúť / vypnúť** („Všetkým v organizácii", nastavenia
+kurzu, prenos pridelení) prepínač. Celý riadok sa dá kliknúť, terč má
+aspoň 44 px. Skupiny a trasy na Prideliť dokumenty sú riadky namiesto
+pilulky. Termín pri zverejnení znenia sa vyberá rovnako ako na Prideliť
+dokumenty; pole pre dátum alebo počet dní je vidieť len pod zvolenou
+voľbou a vyplnená hodnota sa pri prepnutí nestratí. Mená a hodnoty polí sa nezmenili, bez JavaScriptu všetko
+funguje ako predtým.
+
+### Formuláre: nadpis skupiny nad kartou (2026-10-06)
+
+Nadpis skupiny polí („Trasy", „Zdroje", „Pravidlá", „Termín"…) už nesedí
+v hornej čiare rámu, ale stojí nad kartou; nápoveda je pod kartou. Platí
+na všetkých formulároch s orámovanou skupinou — Prideliť dokumenty, osoba,
+posúdenie, detail a príprava dokumentu, schvaľovanie, zodpovedná osoba,
+právny základ, úprava kurzu a testu, otázka v banke. Na **Prideliť
+dokumenty** sú Dôvod a Termín dve samostatné skupiny vedľa seba a súhrn
+s tlačidlami má vlastnú kartu pod nimi. Mená a hodnoty polí sa nezmenili.
+
 ### Web contineo.app: stránka Potvrdzovanie a GDPR na Bezpečnosti (2026-10-05)
 
 Web má novú stránku **Potvrdzovanie** (`/potvrdzovanie`): tri pohľady na

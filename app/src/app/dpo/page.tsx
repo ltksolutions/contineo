@@ -35,6 +35,7 @@ import Icon from "@/components/Icon"
 import SearchStrip from "@/components/SearchStrip"
 import { tenantOrigin } from "@/lib/certificates"
 import { recordObjectionAction, decideObjectionAction } from "./actions"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -157,7 +158,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
             <span className="field-label">{t.decisionNote}</span>
             <textarea className="field-input" name="note" rows={3} required />
           </label>
-          <div><button className="button" type="submit">{t.decideSubmit}</button></div>
+          <div><SubmitButton className="button">{t.decideSubmit}</SubmitButton></div>
         </form>
       ) : (
         <div className="dpo-obj-done">
@@ -229,7 +230,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
             <Link className="button button--quiet dpo-csv dpo-csv--head" href="/dpo/csv">{t.csv}</Link>
           )}
         </div>
-        <Notice message={q.msg} error={q.error === "1"} back="/dpo" />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back="/dpo" />
 
         {/*
           Čakajúca námietka (D153) je pás nad výkazom, nie piata dlaždica
@@ -466,7 +467,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
                   <textarea className="field-input" name="text" rows={4} required />
                   <span className="quiet field-hint">{t.objectionTextNote}</span>
                 </label>
-                <div><button className="button button--quiet" type="submit">{t.recordSubmit}</button></div>
+                <div><SubmitButton className="button button--quiet">{t.recordSubmit}</SubmitButton></div>
               </form>
             </details>
           </div>

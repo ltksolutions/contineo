@@ -141,7 +141,7 @@ hľadá v SwiftUI; vlastný vzniká, len keď tam ekvivalent nie je.
 | `NavigationSplitView` (bočný panel) | zoznam vľavo od 1024 px (`OrgNav`) | sekcia s viac než 5 časťami |
 | `Picker(.segmented)` | `.view-switch` | prepnutie pohľadu, 2–4 krátke voľby |
 | `toolbar` | akcie vpravo v `.page-head` | čo sa dá na obrazovke urobiť |
-| `List` / `Table` | karty pod 1024 px, tabuľka od 1024 px | zoznamy |
+| `List` / `Table` | karty pod 1024 px, tabuľka od 1024 px | zoznamy, v ktorých sa porovnávajú stĺpce; zoznam s 2–3 údajmi ostáva kartami na všetkých šírkach |
 | `Form` + `Section` | `.set-sec` (nadpis vľavo, polia vpravo) | nastavenia |
 | `.sheet` / `.popover` | plachta (`AskSheet`, menu 9 bodiek) | krátka úloha nad obrazovkou |
 
@@ -166,6 +166,12 @@ Jedno pravidlo pre každú obrazovku (ZAKLAD-podmenu-a-akcie, 2. 10. 2026):
 | **čo urobím** — akcia | `.button`: **najviac jedno plné** na obrazovke, vpravo v `.page-head`; ostatné `.button--quiet` |
 | **odkiaľ som prišiel** | cesta pod hlavičkou |
 
+- **Zoznam kariet, z ktorých má každá vlastnú akciu**, má všetky tlačidlá
+  tiché; plné je len v `.page-head` (rozhodnutie Jána 6. 10. 2026,
+  `docs/DESIGN_ODCHYLKY.md` R1).
+- **Odoslanie po náhľade** (e-mail, pripomienky, pozvánky, spustenie testu)
+  je plné tlačidlo na konci stránky, nie v `.page-head` — stlačí sa až po
+  prečítaní toho, čo odíde (R2).
 - **Odkaz „← Späť…" sa nekreslí** — návrat je cesta. Výnimka je len
   tlačidlo ďalšieho kroku na konci úlohy (výsledok testu, certifikát,
   vypnuté Vzdelávanie).

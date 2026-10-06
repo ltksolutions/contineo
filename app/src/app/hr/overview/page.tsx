@@ -25,6 +25,7 @@ import type { UiLanguage } from "@/lib/i18n"
 import { dutyState, dutyTagClass } from "@/lib/due"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 import HrTabs from "@/components/HrTabs"
 import Notice from "@/components/Notice"
 import { revokeAcknowledgementAction } from "../actions"
@@ -97,7 +98,7 @@ export default async function HrReportPage({
       <HrTabs current="/hr/overview" person={ctx.person} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px", maxWidth: 660 }}>{t.intro}</p>
 
-      <Notice message={q.msg} error={q.error === "1"} back={link({})} />
+      <Notice language={language} message={q.msg} error={q.error === "1"} back={link({})} />
 
       {/*
         Pohľad je prepínač, nie rad tlačidiel (ZAKLAD-segmented-control,
@@ -209,7 +210,7 @@ export default async function HrReportPage({
                               <span className="quiet field-hint">{t.revokeHint}</span>
                             </label>
                             <div>
-                              <button className="button button--quiet" type="submit">{t.revokeButton}</button>
+                              <SubmitButton className="button button--quiet">{t.revokeButton}</SubmitButton>
                             </div>
                           </form>
                         </details>

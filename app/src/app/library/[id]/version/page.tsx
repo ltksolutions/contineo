@@ -57,7 +57,7 @@ export default async function NewVersionPage({
   return (
     <AppShell language={language} title={tflow.versionPageTitle} trail={{ [base]: d.title }}>
     <div style={{ maxWidth: 880, ...tenantStyle(brandingView(ctx.tenant)) }}>
-      <Notice message={message} error={error === "1"} back={`${base}/version`} />
+      <Notice language={language} message={message} error={error === "1"} back={`${base}/version`} />
       <h1 className="page-title">{tflow.versionPageTitle}</h1>
       <p className="quiet detail-lead">{d.title}</p>
 

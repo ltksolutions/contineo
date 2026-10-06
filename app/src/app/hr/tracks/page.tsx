@@ -16,6 +16,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { createTrackAction } from "./actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 import HrTabs from "@/components/HrTabs"
 
 export const dynamic = "force-dynamic"
@@ -47,7 +48,7 @@ export default async function TracksPage({
           vedie cesta pod hlavičkou. */}
       <h1 className="page-title">{dictionary(ctx.person.language).nav.assigned}</h1>
       <HrTabs current="/hr/tracks" person={ctx.person} language={ctx.person.language} />
-      <Notice message={message ?? error} error={Boolean(error)} back="/hr/tracks" />
+      <Notice language={ctx.person.language} message={message ?? error} error={Boolean(error)} back="/hr/tracks" />
       <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
       {/* `.empty` zo ZAKLADU (SPRAVA, úloha 1.1) — bez tlačidla, formulár
@@ -97,7 +98,7 @@ export default async function TracksPage({
         </label>
 
         <p style={{ margin: 0 }}>
-          <button className="button" type="submit">{t.create}</button>
+          <SubmitButton className="button">{t.create}</SubmitButton>
         </p>
       </form>
     </div>

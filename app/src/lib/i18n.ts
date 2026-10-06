@@ -79,6 +79,11 @@ export function formatDate(d: Date, language: UiLanguage = DEFAULT_LANGUAGE): st
   return `${day}. ${month + 1}. ${year}`
 }
 
+/** Číslo s oddeľovačom tisícov podľa jazyka prostredia (12 345 / 12,345). */
+export function formatNumber(n: number, language: UiLanguage = DEFAULT_LANGUAGE): string {
+  return n.toLocaleString(language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK")
+}
+
 // ── Slovník prostredia ───────────────────────────────────────────────────────
 
 interface Dictionary {
@@ -99,6 +104,10 @@ interface Dictionary {
 
   /** Spoločné texty prierezových komponentov (ZAKLAD). */
   common: {
+    /** Príklad zoznamu domén (jedna na riadok) — neutrálny. */
+    domainsPlaceholder: string
+    /** Potvrdenie oznamu (Notice). */
+    noticeConfirm: string
     /** Prázdny stav zoznamu (`.empty`) — dve rôzne vety podľa filtra. */
     empty: {
       /** Filter je nasadený a nič mu nevyhovuje. */
@@ -117,6 +126,14 @@ interface Dictionary {
       loading: string
       failed: string
       page: string
+    }
+    /**
+     * Text tlačidla, kým beží dlhšia akcia (`SubmitButton.pendingLabel`).
+     * Rozposlanie e-mailov trvá pri väčšom oddelení desiatky sekúnd.
+     */
+    pending: {
+      adding: string
+      sending: string
     }
   }
 
@@ -685,6 +702,10 @@ interface Dictionary {
 
   /** Prihlasovacia obrazovka. Jazyk určuje organizácia — človek ešte nie je známy. */
   signIn: {
+    /** Príklad adresy — neutrálny, nie doména konkrétnej organizácie. */
+    emailPlaceholder: string
+    /** Oddeľovač medzi prihlásením kontom a e-mailom. */
+    or: string
     heading: string
     intro: string
     submit: string
@@ -788,6 +809,12 @@ interface Dictionary {
   }
 
   answer: {
+    cacheTo: string
+    cacheFrom: string
+    techTokens: string
+    techTotal: string
+    /** Technické údaje pod odpoveďou (len hodnotitelia). */
+    techModel: string
     /** Hlavička karty odpovede — hovorí, odkiaľ odpoveď je. */
     fromDocuments: string
     failed: string
@@ -884,6 +911,10 @@ interface Dictionary {
       source: Record<"assignment" | "track" | "both", string>
     }
     overview: {
+      assignedBy: (who: string) => string
+      versionTag: (label: string) => string
+      /** Posledné slovo úvodu (zvýraznené). */
+      today: string
       heading: string
       intro: string
       assign: string
@@ -935,6 +966,8 @@ interface Dictionary {
       alreadyRevoked: string
     }
     notify: {
+      /** Publikum trasy vo vete „Potvrdili už všetci, ktorých sa … týka". */
+      trackAudience: (title: string) => string
       heading: string
       introBefore: string
       introHighlight: string
@@ -3045,6 +3078,8 @@ interface Dictionary {
   }
   /** Modul Vzdelávanie (ADR-018). L0: len nadpisy a prázdne stavy. */
   learning: {
+    /** Popis prepínača stavu nad zoznamom (čítačka). */
+    statusFilter: string
     /** Modul organizácia nemá zapnutý (SHELL-menu-v-hlavicke, Q5) — nie 404. */
     off: {
       title: string
@@ -3643,6 +3678,9 @@ interface Dictionary {
     }
     /** Certifikát a verejné overenie (rám CERTIFICATE). */
     cert: {
+      backToCertificate: string
+      /** Identifikátor vydavateľa v riadku pod certifikátom. */
+      registrationNumber: (n: string) => string
       kicker: string
       valid: string
       revoked: string
@@ -3725,6 +3763,8 @@ const daysEn = (n: number) => (n === 1 ? "1 day" : `${n} days`)
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   sk: {
   common: {
+    domainsPlaceholder: "organizacia.sk\nmarketing.organizacia.sk",
+    noticeConfirm: "Rozumiem",
     empty: {
       filtered: "Filtru nič nevyhovuje",
       none: "Zatiaľ tu nič nie je",
@@ -3734,6 +3774,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Načítavam PDF…",
       failed: "PDF sa nepodarilo zobraziť priamo na stránke. Otvor ho odkazom vyššie.",
       page: "Strana {page} z {pages}",
+    },
+    pending: {
+      adding: "Pridávam…",
+      sending: "Posielam e-maily…",
     },
   },
   onboarding: {
@@ -4246,6 +4290,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   signIn: {
+    emailPlaceholder: "meno@organizacia.sk",
+    or: "alebo",
     heading: "Prihlásenie",
     intro: "Zadajte e-mail, na ktorý ste dostali pozvánku. Pošleme vám odkaz — heslo si pamätať nemusíte.",
     noScript: "Prihlásenie potrebuje JavaScript — bez neho sa nedá odoslať ani odkaz na e-mail, ani prihlásenie firemným kontom. Zapnite ho, prosím, a stránku načítajte znova.",
@@ -4351,6 +4397,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   answer: {
+    cacheTo: "do cache",
+    cacheFrom: "z cache",
+    techTokens: "tokeny",
+    techTotal: "celkom",
+    techModel: "model",
     fromDocuments: "Odpoveď z vašich dokumentov",
     failed: "Odpoveď sa nepodarilo získať.",
     incompleteHeading: "Odpoveď je neúplná.",
@@ -4426,6 +4477,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       source: { assignment: "pridelenie", track: "trasa", both: "pridelenie aj trasa" },
     },
     overview: {
+      assignedBy: (who: string) => `pridelil ${who}`,
+      versionTag: (label: string) => `verzia ${label}`,
+      today: "dnes",
       heading: "Pridelené dokumenty",
       intro: "Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri zobrazení — a týkajú sa ľudí, ktorí do skupiny patria",
       assign: "Prideliť dokument",
@@ -4475,6 +4529,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alreadyRevoked: "Toto pridelenie už neplatí.",
     },
     notify: {
+      trackAudience: (title: string) => `trasa „${title}"`,
       heading: "Dať vedieť e-mailom",
       introBefore: "Pošle sa ",
       introHighlight: "len tým, ktorí ešte nepotvrdili",
@@ -6881,6 +6936,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   learning: {
+    statusFilter: "Filter podľa stavu",
     off: {
       title: "Vzdelávanie nie je pre vašu organizáciu zapnuté",
       lead: "Kurzy, testy a certifikáty tu uvidíte, keď ho organizácia zapne. Povinné normy na potvrdenie nájdete v Úlohách.",
@@ -7490,6 +7546,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resetDone: n => `Resetované pokusy: ${n}.`,
     },
     cert: {
+      backToCertificate: "Späť na certifikát",
+      registrationNumber: (n: string) => `IČO ${n}`,
       kicker: "Certifikát o absolvovaní kurzu",
       valid: "Platný",
       revoked: "Odvolaný",
@@ -7545,6 +7603,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
   cs: {
   common: {
+    domainsPlaceholder: "organizace.cz\nmarketing.organizace.cz",
+    noticeConfirm: "Rozumím",
     empty: {
       filtered: "Filtru nic nevyhovuje",
       none: "Zatím tu nic není",
@@ -7554,6 +7614,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Načítám PDF…",
       failed: "PDF se nepodařilo zobrazit přímo na stránce. Otevři ho odkazem výše.",
       page: "Strana {page} z {pages}",
+    },
+    pending: {
+      adding: "Přidávám…",
+      sending: "Posílám e-maily…",
     },
   },
   onboarding: {
@@ -8066,6 +8130,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   signIn: {
+    emailPlaceholder: "jmeno@organizace.cz",
+    or: "nebo",
     heading: "Přihlášení",
     intro: "Zadejte e-mail, na který jste dostali pozvánku. Pošleme vám odkaz — heslo si pamatovat nemusíte.",
     noScript: "Přihlášení potřebuje JavaScript — bez něj se nedá odeslat ani odkaz na e-mail, ani přihlášení firemním kontem. Zapněte ho, prosím, a stránku načtěte znovu.",
@@ -8171,6 +8237,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   answer: {
+    cacheTo: "do cache",
+    cacheFrom: "z cache",
+    techTokens: "tokeny",
+    techTotal: "celkem",
+    techModel: "model",
     fromDocuments: "Odpověď z vašich dokumentů",
     failed: "Odpověď se nepodařilo získat.",
     incompleteHeading: "Odpověď je neúplná.",
@@ -8246,6 +8317,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       source: { assignment: "přidělení", track: "trasa", both: "přidělení i trasa" },
     },
     overview: {
+      assignedBy: (who: string) => `přidělil ${who}`,
+      versionTag: (label: string) => `verze ${label}`,
+      today: "dnes",
       heading: "Přidělené dokumenty",
       intro: "Co bylo komu uloženo a kdo to už potvrdil. Počty se počítají při zobrazení — a týkají se lidí, kteří do skupiny patří",
       assign: "Přidělit dokument",
@@ -8295,6 +8369,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alreadyRevoked: "Toto přidělení už neplatí.",
     },
     notify: {
+      trackAudience: (title: string) => `trasa „${title}"`,
       heading: "Dát vědět e-mailem",
       introBefore: "Pošle se ",
       introHighlight: "jen těm, kteří ještě nepotvrdili",
@@ -10698,6 +10773,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   learning: {
+    statusFilter: "Filtr podle stavu",
     off: {
       title: "Vzdělávání není pro vaši organizaci zapnuté",
       lead: "Kurzy, testy a certifikáty tu uvidíte, až ho organizace zapne. Povinné normy k potvrzení najdete v Úkolech.",
@@ -11307,6 +11383,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resetDone: n => `Resetované pokusy: ${n}.`,
     },
     cert: {
+      backToCertificate: "Zpět na certifikát",
+      registrationNumber: (n: string) => `IČO ${n}`,
       kicker: "Certifikát o absolvování kurzu",
       valid: "Platný",
       revoked: "Odvolaný",
@@ -11362,6 +11440,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
   en: {
   common: {
+    domainsPlaceholder: "example.com\nmarketing.example.com",
+    noticeConfirm: "OK",
     empty: {
       filtered: "Nothing matches the filter",
       none: "Nothing here yet",
@@ -11371,6 +11451,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Loading PDF…",
       failed: "The PDF could not be shown on the page. Open it with the link above.",
       page: "Page {page} of {pages}",
+    },
+    pending: {
+      adding: "Adding…",
+      sending: "Sending e-mails…",
     },
   },
   onboarding: {
@@ -11877,6 +11961,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   signIn: {
+    emailPlaceholder: "name@organisation.com",
+    or: "or",
     heading: "Sign in",
     intro: "Enter the e-mail address your invitation was sent to. We will send you a link — no password to remember.",
     noScript: "Signing in needs JavaScript — without it neither the e-mail link nor the work-account sign-in can be sent. Please turn it on and reload the page.",
@@ -11982,6 +12068,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   answer: {
+    cacheTo: "to cache",
+    cacheFrom: "from cache",
+    techTokens: "tokens",
+    techTotal: "total",
+    techModel: "model",
     fromDocuments: "Answer from your documents",
     failed: "The answer could not be retrieved.",
     incompleteHeading: "The answer is incomplete.",
@@ -12057,6 +12148,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       source: { assignment: "assignment", track: "track", both: "assignment and track" },
     },
     overview: {
+      assignedBy: (who: string) => `assigned by ${who}`,
+      versionTag: (label: string) => `version ${label}`,
+      today: "today",
       heading: "Assigned documents",
       intro: "What has been assigned to whom and who has already acknowledged it. The counts are computed when the page is opened — and cover the people who belong to the group",
       assign: "Assign a document",
@@ -12105,6 +12199,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alreadyRevoked: "This assignment is no longer in force.",
     },
     notify: {
+      trackAudience: (title: string) => `track "${title}"`,
       heading: "Notify by e-mail",
       introBefore: "It goes ",
       introHighlight: "only to those who have not acknowledged yet",
@@ -14501,6 +14596,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   learning: {
+    statusFilter: "Filter by status",
     off: {
       title: "Learning is not enabled for your organisation",
       lead: "You will see courses, tests and certificates here once your organisation enables it. Mandatory rules to acknowledge are in Tasks.",
@@ -15109,6 +15205,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resetDone: n => `Attempts reset: ${n}.`,
     },
     cert: {
+      backToCertificate: "Back to certificate",
+      registrationNumber: (n: string) => `Reg. No. ${n}`,
       kicker: "Certificate of course completion",
       valid: "Valid",
       revoked: "Revoked",

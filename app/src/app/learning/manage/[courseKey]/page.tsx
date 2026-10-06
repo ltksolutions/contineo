@@ -93,7 +93,7 @@ export default async function ManageCoursePage({ params, searchParams }: {
   return (
     <AppShell language={language} title={shown.title}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
-        <Notice message={q.msg} error={q.error === "1"} back={`${base}${part ? `?tab=parts&part=${part.key}` : ""}`} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={`${base}${part ? `?tab=parts&part=${part.key}` : ""}`} />
         <header className="ch">
           <span className="ch-topic">{course.topicLabel}</span>
           <h1 className="page-title">{shown.title}</h1>
@@ -247,7 +247,7 @@ function PartList({ course, version, editable, te }: { course: Course; version: 
           <form action={addPartAction} className="mc-inline">
             <Hidden values={{ courseKey: course.key }} />
             <input className="field-input" name="title" aria-label={te.partTitle} placeholder={te.partTitle} required />
-            <label className="mc-check"><input type="checkbox" name="required" value="1" defaultChecked /> {te.required}</label>
+            <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked /><span className="form-row-main">{te.required}</span></label>
             <SubmitButton className="button">{te.addPart}</SubmitButton>
           </form>
         </section>
@@ -266,7 +266,7 @@ function MoveButton({ action, values, label, disabled, glyph }: {
   return (
     <form action={action}>
       <Hidden values={values} />
-      <button type="submit" className="button button--quiet mc-arrow" aria-label={label} disabled={disabled}>{glyph}</button>
+      <SubmitButton className="button button--quiet mc-arrow" ariaLabel={label} disabled={disabled}>{glyph}</SubmitButton>
     </form>
   )
 }
@@ -324,7 +324,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
               <label className="field"><span className="field-label">{te.partTitle}</span><input className="field-input" name="title" defaultValue={part.title} required /></label>
               <label className="field"><span className="field-label">{te.summary}</span><input className="field-input" name="summary" defaultValue={part.summary ?? ""} /></label>
               <div className="mc-inline">
-                <label className="mc-check"><input type="checkbox" name="required" value="1" defaultChecked={part.required} /> {te.required}</label>
+                <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked={part.required} /><span className="form-row-main">{te.required}</span></label>
                 <label className="field mc-minutes"><span className="field-label">{te.minutes}</span><input className="field-input" name="estimatedMinutes" type="number" min="1" defaultValue={part.estimatedMinutes ?? ""} /></label>
               </div>
               <div className="mg-actions"><SubmitButton className="button">{te.save}</SubmitButton></div>
@@ -364,7 +364,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
                       <label className="field"><span className="field-label">{te.caption}</span><input className="field-input" name="caption" defaultValue={b.caption ?? ""} /></label>
                     </>
                   )}
-                  {b.type === "video" && <label className="mc-check"><input type="checkbox" name="mustWatch" value="1" defaultChecked={b.mustWatch} /> {te.mustWatch}</label>}
+                  {b.type === "video" && <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="mustWatch" value="1" defaultChecked={b.mustWatch} /><span className="form-row-main">{te.mustWatch}</span></label>}
                   <div className="mg-actions"><SubmitButton className="button">{te.save}</SubmitButton><Link className="button button--quiet" href={self}>{te.cancel}</Link></div>
                 </form>
               )}
@@ -407,7 +407,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
                   ) : (
                     <>
                       <CourseMediaUpload kind="video" accept=".mp4,.webm" maxBytes={MAX_BYTES} labels={mediaLabels("video")} />
-                      <label className="mc-check"><input type="checkbox" name="mustWatch" value="1" /> {te.mustWatch}</label>
+                      <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="mustWatch" value="1" /><span className="form-row-main">{te.mustWatch}</span></label>
                       <p className="quiet mc-note">{te.mustWatchNote}</p>
                     </>
                   )}
@@ -431,7 +431,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
                 {editable ? (
                   <>
                     <form action={partTestRequiredAction}><Hidden values={{ ...ids, testKey: pt.testKey, required: pt.required ? "0" : "1" }} />
-                      <button type="submit" className="button button--quiet" aria-pressed={pt.required}>{pt.required ? `✓ ${ta.testRequired}` : ta.testRequired}</button></form>
+                      <SubmitButton className="button button--quiet" ariaPressed={pt.required}>{pt.required ? `✓ ${ta.testRequired}` : ta.testRequired}</SubmitButton></form>
                     <form action={removePartTestAction}><Hidden values={{ ...ids, testKey: pt.testKey }} /><SubmitButton className="button button--quiet">{ta.removeTest}</SubmitButton></form>
                   </>
                 ) : <span className="quiet">{pt.required ? ta.testRequired : ""}{pt.testVersion ? ` · v${pt.testVersion}` : ""}</span>}
@@ -444,7 +444,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
               <form action={addPartTestAction} className="mc-row mc-inline">
                 <Hidden values={ids} />
                 <Select name="testKey" searchable options={offer.map(t => ({ value: t.key, label: t.title }))} fieldLabel={ta.assignTest} language={language} />
-                <label className="mc-check"><input type="checkbox" name="required" value="1" defaultChecked /> {ta.testRequired}</label>
+                <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked /><span className="form-row-main">{ta.testRequired}</span></label>
                 <SubmitButton className="button">{ta.assignTest}</SubmitButton>
               </form>
             ) : <p className="quiet mc-row">{ta.noReadyTests}</p>
@@ -510,23 +510,47 @@ function SettingsTab({ course, version, editable, tenant, usage, language }: {
         />
       </div>
 
-      <fieldset className="mc-group">
-        <legend className="field-label">{ts.groupFlow}</legend>
-        <label className="mc-check"><input type="checkbox" name="sequential" value="1" defaultChecked={version.sequential} /> {ts.sequential}</label>
-        <p className="quiet mc-note">{ts.sequentialNote}</p>
-        <label className="mc-check"><input type="checkbox" name="openEnrollment" value="1" defaultChecked={course.openEnrollment} /> {ts.openEnrollment}</label>
-        <p className="quiet mc-note">{ts.openEnrollmentNote}</p>
-        <label className="mc-check"><input type="checkbox" name="issuesCertificate" value="1" defaultChecked={version.issuesCertificate} /> {ts.issuesCertificate}</label>
+      {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
+      <fieldset className="form-group">
+        <legend className="form-group-head">{ts.groupFlow}</legend>
+        {/* Áno/nie nastavenia kurzu ako prepínače (ZAKLAD-vyber-a-prepinace);
+            uložia sa tlačidlom, nie hneď (Q4). */}
+        <div className="card form-group-body form-group-body--rows">
+        <div className="form-list">
+          <label className="form-row">
+            <input type="checkbox" role="switch" className="toggle" name="sequential" value="1" defaultChecked={version.sequential} />
+            <span className="form-row-main">
+              <span>{ts.sequential}</span>
+              <span className="form-row-sub">{ts.sequentialNote}</span>
+            </span>
+          </label>
+          <label className="form-row">
+            <input type="checkbox" role="switch" className="toggle" name="openEnrollment" value="1" defaultChecked={course.openEnrollment} />
+            <span className="form-row-main">
+              <span>{ts.openEnrollment}</span>
+              <span className="form-row-sub">{ts.openEnrollmentNote}</span>
+            </span>
+          </label>
+          <label className="form-row">
+            <input type="checkbox" role="switch" className="toggle" name="issuesCertificate" value="1" defaultChecked={version.issuesCertificate} />
+            <span className="form-row-main">
+              <span>{ts.issuesCertificate}</span>
+            </span>
+          </label>
+        </div>
         <div className="mc-grid2">
           <label className="field"><span className="field-label">{ts.signerName}</span><input className="field-input" name="signerName" defaultValue={version.signer?.name ?? tenant.certificateSigner?.name ?? ""} /></label>
           <label className="field"><span className="field-label">{ts.signerRole}</span><input className="field-input" name="signerRole" defaultValue={version.signer?.role ?? tenant.certificateSigner?.role ?? ""} /></label>
         </div>
+        </div>
       </fieldset>
 
-      <fieldset className="mc-group">
-        <legend className="field-label">{ts.groupLegal}</legend>
-        <p className="quiet mc-note">{ts.legalNote}</p>
+      <fieldset className="form-group">
+        <legend className="form-group-head">{ts.groupLegal}</legend>
+        <div className="card form-group-body">
         <Select name="legalBasisKey" initial={version.legalBasisKey ?? ""} options={[{ value: "", label: ts.legalNone }, ...legal.map(o => ({ value: o.key, label: o.label, path: d.responsibility.basisLabel[o.basis] }))]} fieldLabel={ts.groupLegal} language={language} />
+        </div>
+        <p className="form-group-foot quiet">{ts.legalNote}</p>
       </fieldset>
 
       <div className="mg-actions"><SubmitButton className="button">{ts.save}</SubmitButton></div>
@@ -581,7 +605,18 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
             <input type="hidden" name="tab" value="people" />
             <input type="hidden" name="assign" value="1" />
             <input type="hidden" name="preview" value="1" />
-            <label className="mc-check"><input type="checkbox" name="all" value="1" defaultChecked={q.all === "1"} /> <b>{tp.everyone}</b> <span className="quiet">{tp.everyoneNote}</span></label>
+            {/* „Všetkým" ako prepínač, ako na /hr/assign (ZAKLAD-vyber-a-prepinace, Q2). */}
+            <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
+                <label className="form-row">
+                  <input type="checkbox" role="switch" className="toggle" name="all" value="1" defaultChecked={q.all === "1"} />
+                  <span className="form-row-main">
+                    <span>{tp.everyone}</span>
+                    <span className="form-row-sub">{tp.everyoneNote}</span>
+                  </span>
+                </label>
+              </div>
+            </div>
             {rows.length > 0 && (
               <div className="field">
                 <span className="field-label">{tp.departments}</span>
@@ -592,14 +627,18 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
               </div>
             )}
             {audiences.groups.length > 0 && (
-              <fieldset className="mc-group"><legend className="field-label">{tp.groups}</legend>
-                {audiences.groups.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`group:${g.value}`} defaultChecked={selected.includes(`group:${g.value}`)} /> {g.value} <span className="quiet">{g.count}</span></label>)}
+              <fieldset className="form-group"><legend className="form-group-head">{tp.groups}</legend>
+                <div className="card form-group-body form-group-body--rows"><div className="form-list">
+                {audiences.groups.map(g => <label key={g.value} className="form-row select-row"><input type="checkbox" name="audience" value={`group:${g.value}`} defaultChecked={selected.includes(`group:${g.value}`)} /><span className="form-row-main">{g.value}</span><span className="form-row-sub">{g.count}</span></label>)}
+                </div></div>
               </fieldset>
             )}
             {audiences.tracks.length > 0 && (
-              <fieldset className="mc-group"><legend className="field-label">{tp.tracks}</legend>
-                <p className="quiet mc-note">{tp.tracksNote}</p>
-                {audiences.tracks.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`track:${g.value}`} defaultChecked={selected.includes(`track:${g.value}`)} /> {names[g.value] ?? g.value} <span className="quiet">{g.count}</span></label>)}
+              <fieldset className="form-group"><legend className="form-group-head">{tp.tracks}</legend>
+                <div className="card form-group-body form-group-body--rows"><div className="form-list">
+                {audiences.tracks.map(g => <label key={g.value} className="form-row select-row"><input type="checkbox" name="audience" value={`track:${g.value}`} defaultChecked={selected.includes(`track:${g.value}`)} /><span className="form-row-main">{names[g.value] ?? g.value}</span><span className="form-row-sub">{g.count}</span></label>)}
+                </div></div>
+                <p className="form-group-foot quiet">{tp.tracksNote}</p>
               </fieldset>
             )}
             <div className="mg-actions"><button type="submit" className="button button--quiet">{tp.check}</button><Link className="button button--quiet" href={`${base}?tab=people`}>{tp.cancel}</Link></div>
@@ -621,13 +660,15 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
   return (
     <>
       <div className="mc-people-head">
-        <div className="lpills">
+        {/* Filter zapísaných = prepínač pohľadu (DESIGN_ODCHYLKY P4). */}
+        <nav className="view-switch view-switch--fit" aria-label={d.learning.statusFilter}>
           {filters.map(f => (
-            <Link key={f} className={`pill${f === filter ? " is-on" : ""}`} href={`${base}?tab=people${f === "all" ? "" : `&filter=${f}`}`}>
-              {label[f]} <span className="pill-count">{f === "all" ? roster.length : roster.filter(r => r.state === f).length}</span>
+            <Link key={f} className={`view-switch-item${f === filter ? " is-on" : ""}`} aria-current={f === filter ? "true" : undefined}
+                  href={`${base}?tab=people${f === "all" ? "" : `&filter=${f}`}`}>
+              {label[f]} <span className="view-switch-count">{f === "all" ? roster.length : roster.filter(r => r.state === f).length}</span>
             </Link>
           ))}
-        </div>
+        </nav>
         <div className="mg-actions">
           <Link className="button" href={`${base}?tab=people&assign=1`}>{tp.assign}</Link>
           <a className="button button--quiet" href={`/api/learning/courses/${course.key}/people`}>{tp.exportCsv}</a>

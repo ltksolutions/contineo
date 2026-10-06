@@ -235,16 +235,21 @@ export function ListSearchView({
         {items.map(i => {
           const on = selected.includes(i.id)
           const hidden = !shown.has(i.id)
-          // Norma: riadok `.hr-doc` ako doteraz — názov, štítok vpravo, znenie pod ním.
+          // Riadok zoznamu (ZAKLAD-vyber-a-prepinace): výber viacerých má
+          // kruh vľavo, jedna osoba fajku vpravo.
+          const row = multiple ? "form-row select-row" : "form-row choice-row"
+          // Norma: názov, znenie pod ním, štítok vpravo.
           return docs ? (
-            <label key={i.id} className="hr-doc" hidden={hidden}>
+            <label key={i.id} className={`${row} hr-doc`} hidden={hidden}>
               {input(i, on)}
-              <span className="hr-doc-title">{mark(i.name)}</span>
+              <span className="hr-doc-text">
+                <span className="hr-doc-title">{mark(i.name)}</span>
+                {i.meta?.length ? <span className="quiet hr-doc-meta">{i.meta.join(" · ")}</span> : null}
+              </span>
               {i.flagged && <span className="tag tag--draft hr-doc-tag">{dict.responsibility.missingBasisTag}</span>}
-              {i.meta?.length ? <span className="quiet hr-doc-meta">{i.meta.join(" · ")}</span> : null}
             </label>
           ) : (
-            <label key={i.id} className="approval-person" hidden={hidden}>
+            <label key={i.id} className={`${row} approval-person`} hidden={hidden}>
               {input(i, on)}
               <span>
                 <span className="approval-person-name">{mark(i.name)}</span>

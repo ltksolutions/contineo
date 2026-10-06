@@ -73,7 +73,7 @@ export default async function PartPage({ params, searchParams }: {
   return (
     <AppShell language={language} title={current.part.title} trail={{ [base]: version.title }}>
       <div className="pp" style={tenantStyle(brandingView(ctx.tenant))}>
-        <Notice message={q.msg} error={q.error === "1"} back={self} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={self} />
         {/* „← Späť na kurz" preč — kurz je v ceste pod hlavičkou
             (ZAKLAD-podmenu-a-akcie, Q2, 2. 10. 2026). */}
         <nav className="pnav">

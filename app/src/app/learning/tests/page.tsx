@@ -62,7 +62,7 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
   const tab = q.tab === "questions" ? "questions" : "tests"
   const [tests, bank, mine] = await Promise.all([listTests(ctx.person.companyCode), listQuestions(ctx.person.companyCode), testsResponsibleFor(ctx.person.companyCode, ctx.person.id)])
   const body = tab === "tests"
-    ? <TestsTab tests={tests} bank={bank} q={q} tt={tt} />
+    ? <TestsTab tests={tests} bank={bank} q={q} tt={tt} filterLabel={dictionary(language).learning.statusFilter} />
     : await QuestionsTab({ companyCode: ctx.person.companyCode, actor: ctx.person.email, bank, q, tt, language })
 
   return (
@@ -74,7 +74,7 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
             ? <Link className="button" href="/learning/tests?tab=tests&new=1">{tt.newTest}</Link>
             : <span className="mg-actions"><Link className="button" href="/learning/tests?tab=questions&new=1">{tt.newQuestion}</Link><Link className="button button--quiet" href="/learning/tests?tab=questions&import=1">{tt.importCsv}</Link></span>}
         </div>
-        <Notice message={q.msg} error={q.error === "1"} back={`/learning/tests?tab=${tab}`} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={`/learning/tests?tab=${tab}`} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
           <TabsBar>
             <TabLink href="/learning/tests?tab=tests" active={tab === "tests"}>{tt.tabTests}</TabLink>
@@ -92,7 +92,7 @@ function initials(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]!.toUpperCase()).join("")
 }
 
-function TestsTab({ tests, bank, q, tt }: { tests: Test[]; bank: Question[]; q: Q; tt: Tt }) {
+function TestsTab({ tests, bank, q, tt, filterLabel }: { tests: Test[]; bank: Question[]; q: Q; tt: Tt; filterLabel: string }) {
   const filters = ["all", "ready", "draft", "retired"] as const
   const status = (filters as readonly string[]).includes(q.status ?? "") ? q.status! : "all"
   const rows = tests.map(t => ({ t, s: displayStatus(t, bank) }))
@@ -115,13 +115,16 @@ function TestsTab({ tests, bank, q, tt }: { tests: Test[]; bank: Question[]; q: 
         <div className="empty"><div className="empty-title">{tt.testsEmpty}</div><div className="empty-text">{tt.testsEmptyNote}</div></div>
       ) : (
         <>
-          <div className="lpills">
+          {/* Filter toho istého zoznamu = prepínač pohľadu, nie pilulky
+              (Picker .segmented; DESIGN_ODCHYLKY P4, 6. 10. 2026). */}
+          <nav className="view-switch view-switch--fit" aria-label={filterLabel}>
             {filters.map(f => (
-              <Link key={f} className={`pill${f === status ? " is-on" : ""}`} href={`/learning/tests?tab=tests${f === "all" ? "" : `&status=${f}`}`}>
-                {label[f]} <span className="pill-count">{rows.filter(r => inFilter(r.s, f)).length}</span>
+              <Link key={f} className={`view-switch-item${f === status ? " is-on" : ""}`} aria-current={f === status ? "true" : undefined}
+                    href={`/learning/tests?tab=tests${f === "all" ? "" : `&status=${f}`}`}>
+                {label[f]} <span className="view-switch-count">{rows.filter(r => inFilter(r.s, f)).length}</span>
               </Link>
             ))}
-          </div>
+          </nav>
           <div className="doc-table-wrap mg-table">
             <table className="doc-table">
               <thead><tr><th>{tt.colTest}</th><th className="doc-col-right">{tt.colSections}</th><th className="doc-col-right">{tt.colQuestions}</th><th className="doc-col-right">{tt.colPassing}</th><th>{tt.colResponsible}</th><th>{tt.colStatus}</th><th /></tr></thead>
@@ -283,18 +286,27 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
       {usage && <p className="quiet mc-note">{tt.usage(usage.tests, usage.attempts)}</p>}
       <label className="field"><span className="field-label">{tt.questionText}</span><textarea className="field-input" name="text" rows={4} defaultValue={question?.text ?? ""} /></label>
 
-      <fieldset className="mc-group">
-        <legend className="field-label">{tt.media}</legend>
-        {(question?.media ?? []).map((m, i) => (
-          <label key={i} className="mc-check"><input type="checkbox" name="keepMedia" value={String(i)} defaultChecked /> {m.kind === "image" ? m.alt : dictionary(language).learning.edit.blockTypes.video}</label>
-        ))}
+      {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tt.media}</legend>
+        <div className="card form-group-body form-group-body--rows">
+        {(question?.media ?? []).length > 0 && (
+          // Ponechať médiá — výber viacerých, kruh vľavo (ZAKLAD-vyber-a-prepinace).
+          <div className="form-list">
+            {(question?.media ?? []).map((m, i) => (
+              <label key={i} className="form-row select-row"><input type="checkbox" name="keepMedia" value={String(i)} defaultChecked /><span className="form-row-main">{m.kind === "image" ? m.alt : dictionary(language).learning.edit.blockTypes.video}</span></label>
+            ))}
+          </div>
+        )}
         <CourseMediaUpload kind="gallery" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" maxBytes={MAX_BYTES}
           labels={{ title: tt.media, note: tt.mediaNote, progressTitle: dictionary(language).learning.edit.progressTitle, uploading: dictionary(language).learning.edit.uploading, failed: dictionary(language).learning.edit.uploadFailed, tooLarge: dictionary(language).learning.edit.tooLarge }} />
         <label className="field"><span className="field-label">{tt.mediaAlt}</span><input className="field-input" name="mediaAlt" /></label>
+        </div>
       </fieldset>
 
-      <fieldset className="mc-group">
-        <legend className="field-label">{tt.answers}</legend>
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tt.answers}</legend>
+        <div className="card form-group-body">
         {type === "multiple" && <p className="quiet mc-note">{tt.multipleNote}</p>}
         {(type === "single" || type === "multiple") && Array.from({ length: Math.min(rows, MAX_ANSWERS) }, (_, i) => {
           const a = prevAnswers[i]
@@ -320,6 +332,7 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
           </>
         )}
         {type !== "short_text" && <p className="quiet mc-note">{tt.answerMediaLater}</p>}
+        </div>
       </fieldset>
 
       <label className="field"><span className="field-label">{tt.explanation}</span><textarea className="field-input" name="explanation" rows={3} defaultValue={question?.explanation ?? ""} /><span className="quiet field-hint">{tt.explanationNote}</span></label>
@@ -342,9 +355,9 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
       </div>
       {question && (
         <div className="mg-actions">
-          <button type="submit" formAction={questionStatusAction} name="retire" value={question.status === "retired" ? "0" : "1"} className="button button--quiet">
+          <SubmitButton formAction={questionStatusAction} name="retire" value={question.status === "retired" ? "0" : "1"} className="button button--quiet">
             {question.status === "retired" ? tt.restoreQ : tt.retireQ}
-          </button>
+          </SubmitButton>
         </div>
       )}
     </form>
@@ -427,7 +440,7 @@ async function ResultsPage(q: Q) {
     <AppShell language={language}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
         <div className="lp-head"><div className="grow"><h1 className="page-title">{d.testsHeading}</h1></div></div>
-        <Notice message={q.msg} error={q.error === "1"} back={self} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={self} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
           <TabsBar>
             {ctx.isAdmin && <TabLink href="/learning/tests?tab=tests" active={false}>{tt.tabTests}</TabLink>}

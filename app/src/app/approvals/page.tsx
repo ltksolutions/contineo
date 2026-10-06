@@ -35,6 +35,7 @@ import { listPeople } from "@/lib/people"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, type Version, type VersionFile } from "@/lib/documents"
 import { decideAction } from "./actions"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -76,7 +77,7 @@ export default async function ApprovalsPage({
   return (
     <AppShell language={person.language}>
       <div className="approval-page" style={tenantStyle(branding)}>
-        <Notice message={q.msg} error={q.error === "1"} back="/approvals" />
+        <Notice language={person.language} message={q.msg} error={q.error === "1"} back="/approvals" />
 
         <h1 className="page-title">{t.heading}</h1>
         <p className="quiet page-lead">{t.intro}</p>
@@ -215,12 +216,12 @@ export default async function ApprovalsPage({
                 </label>
 
                 <div className="ap-btns">
-                  <button className="button" type="submit" name="decision" value="approved">
+                  <SubmitButton className="button" name="decision" value="approved">
                     {t.approve}
-                  </button>
-                  <button className="button button--quiet" type="submit" name="decision" value="rejected">
+                  </SubmitButton>
+                  <SubmitButton className="button button--quiet" name="decision" value="rejected">
                     {t.reject}
-                  </button>
+                  </SubmitButton>
                 </div>
               </form>
             )

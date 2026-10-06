@@ -68,7 +68,7 @@ export default async function TestEditorPage({ params, searchParams }: { params:
   return (
     <AppShell language={language} title={test.title}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
-        <Notice message={q.msg} error={q.error === "1"} back={`/learning/tests/${key}`} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={`/learning/tests/${key}`} />
         <header className="ch">
           <h1 className="page-title">{test.title}</h1>
           <div className="ch-facts"><code>{test.key}</code><span>{tt.version(test.version)}</span><TestStatusTag status={status} labels={tt} /></div>
@@ -80,8 +80,10 @@ export default async function TestEditorPage({ params, searchParams }: { params:
             <input type="hidden" name="sections" value={String(test.sections.length)} />
             {/* Enter v poli odošle prvé tlačidlo formulára — nech je to „Uložiť", nie „↑". */}
             <button type="submit" hidden tabIndex={-1} aria-hidden="true" />
-            <fieldset className="mc-group">
-              <legend className="field-label">{tt.groupBase}</legend>
+            {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
+            <fieldset className="form-group">
+              <legend className="form-group-head">{tt.groupBase}</legend>
+              <div className="card form-group-body">
               <label className="field"><span className="field-label">{tt.testTitle}</span><input className="field-input" name="title" defaultValue={test.title} required /></label>
               <label className="field"><span className="field-label">{tt.instructions}</span><textarea className="field-input" name="instructions" rows={3} defaultValue={test.instructions ?? ""} /></label>
               {people.length
@@ -89,11 +91,12 @@ export default async function TestEditorPage({ params, searchParams }: { params:
                     people={people.filter(p => p.status !== "inactive").map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))} language={language} />
                 : <p className="quiet">{tt.noResponsiblePeople}</p>}
               {test.responsible.length === 0 && <p className="mg-error">{tt.noResponsible}</p>}
+              </div>
             </fieldset>
 
-            <fieldset className="mc-group" id="sections">
-              <legend className="field-label">{tt.groupSections}</legend>
-              <p className="quiet mc-note">{tt.sectionsNote}</p>
+            <fieldset className="form-group" id="sections">
+              <legend className="form-group-head">{tt.groupSections}</legend>
+              <div className="card form-group-body">
               {test.sections.map((s, i) => {
                 const have = avail.get(s.key) ?? 0
                 const short = have < s.count || s.filter.length === 0
@@ -102,9 +105,9 @@ export default async function TestEditorPage({ params, searchParams }: { params:
                     <input type="hidden" name={`section_${i}_key`} value={s.key} />
                     <div className="sec2-head"><b>{tt.sectionTitle(i + 1)}</b>
                       <span className="mc-arrows">
-                        <button type="submit" name="op" value={`up:${i}`} className="button button--quiet mc-arrow" aria-label={tt.up} disabled={i === 0}>↑</button>
-                        <button type="submit" name="op" value={`down:${i}`} className="button button--quiet mc-arrow" aria-label={tt.down} disabled={i === test.sections.length - 1}>↓</button>
-                        <button type="submit" name="op" value={`remove:${i}`} className="button button--quiet">{tt.removeSection}</button>
+                        <SubmitButton name="op" value={`up:${i}`} className="button button--quiet mc-arrow" ariaLabel={tt.up} disabled={i === 0}>↑</SubmitButton>
+                        <SubmitButton name="op" value={`down:${i}`} className="button button--quiet mc-arrow" ariaLabel={tt.down} disabled={i === test.sections.length - 1}>↓</SubmitButton>
+                        <SubmitButton name="op" value={`remove:${i}`} className="button button--quiet">{tt.removeSection}</SubmitButton>
                       </span>
                     </div>
                     <div className="field"><span className="field-label">{tt.sectionFilter}</span>
@@ -118,11 +121,14 @@ export default async function TestEditorPage({ params, searchParams }: { params:
                   </div>
                 )
               })}
-              <div><button type="submit" name="op" value="add" className="button button--quiet">{tt.addSection}</button></div>
+              <div><SubmitButton name="op" value="add" className="button button--quiet">{tt.addSection}</SubmitButton></div>
+              </div>
+              <p className="form-group-foot quiet">{tt.sectionsNote}</p>
             </fieldset>
 
-            <fieldset className="mc-group">
-              <legend className="field-label">{tt.groupRules}</legend>
+            <fieldset className="form-group">
+              <legend className="form-group-head">{tt.groupRules}</legend>
+              <div className="card form-group-body">
               <div className="mc-grid2">
                 <label className="field"><span className="field-label">{tt.passing}</span><input className="field-input" type="number" min="0" max="100" name="passingPercent" defaultValue={test.rules.passingPercent} /></label>
                 <label className="field"><span className="field-label">{tt.timeLimit}</span><input className="field-input" type="number" min="1" name="timeLimitMinutes" defaultValue={test.rules.timeLimitMinutes ?? ""} /></label>
@@ -133,6 +139,7 @@ export default async function TestEditorPage({ params, searchParams }: { params:
               <label className="field"><span className="field-label">{tt.showAnswers}</span>
                 <Select name="showAnswers" initial={test.rules.showAnswers} options={SHOW_ANSWERS.map(x => ({ value: x, label: showLabel[x] }))} fieldLabel={tt.showAnswers} language={language} />
               </label>
+              </div>
             </fieldset>
 
             <div className="field"><span className="field-label">{tt.testTags}</span>

@@ -27,6 +27,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -56,7 +57,7 @@ export default async function FoldersPage({
   return (
     <AppShell language={uiLanguage} title={tf.manage}>
       <div style={{ maxWidth: 640, ...tenantStyle(branding) }}>
-        <Notice message={q.msg} error={q.error === "1"} back="/library/folders" />
+        <Notice language={uiLanguage} message={q.msg} error={q.error === "1"} back="/library/folders" />
 
         <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
           <h1 className="page-title" style={{ margin: 0 }}>{tf.manage}</h1>
@@ -110,15 +111,15 @@ export default async function FoldersPage({
                         <input type="hidden" name="id" value={p.id} />
                         {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
                         <input type="hidden" name="direction" value="up" />
-                        <button className="button button--quiet" type="submit"
-                                aria-label={tf.moveUp(p.name)}>{tf.up}</button>
+                        <SubmitButton className="button button--quiet"
+                                ariaLabel={tf.moveUp(p.name)}>{tf.up}</SubmitButton>
                       </form>
                       <form action={shiftFolderAction}>
                         <input type="hidden" name="id" value={p.id} />
                         {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
                         <input type="hidden" name="direction" value="down" />
-                        <button className="button button--quiet" type="submit"
-                                aria-label={tf.moveDown(p.name)}>{tf.down}</button>
+                        <SubmitButton className="button button--quiet"
+                                ariaLabel={tf.moveDown(p.name)}>{tf.down}</SubmitButton>
                       </form>
                     </div>
 
@@ -127,7 +128,7 @@ export default async function FoldersPage({
                       {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
                       <input className="field-input" name="name" defaultValue={p.name}
                              aria-label={tf.nameOf(p.name)} required />
-                      <button className="button button--quiet" type="submit">{tf.rename}</button>
+                      <SubmitButton className="button button--quiet">{tf.rename}</SubmitButton>
                     </form>
 
                     <form action={moveFolderAction} className="tree-form">
@@ -148,7 +149,7 @@ export default async function FoldersPage({
                             .filter(o => canMove(folders, p.id, o.value) === null),
                         ]}
                       />
-                      <button className="button button--quiet" type="submit">{tf.move}</button>
+                      <SubmitButton className="button button--quiet">{tf.move}</SubmitButton>
                     </form>
 
                     {/*
@@ -166,9 +167,9 @@ export default async function FoldersPage({
                         <form action={deleteFolderAction} className="tree-delete">
                           <input type="hidden" name="id" value={p.id} />
                           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                          <button className="button button--quiet" type="submit" disabled={!canDelete}>
+                          <SubmitButton className="button button--quiet" disabled={!canDelete}>
                             {tf.remove}
-                          </button>
+                          </SubmitButton>
                           {!canDelete && (
                             <span className="quiet tree-delete-hint">
                               {tf.removeBlocked(c.withDescendants, inside.size - 1)}
@@ -199,7 +200,7 @@ export default async function FoldersPage({
                 .filter(o => depth(folders, o.value) < MAX_DEPTH),
             ]}
           />
-          <button className="button button--quiet" type="submit">{tf.create}</button>
+          <SubmitButton className="button button--quiet">{tf.create}</SubmitButton>
         </form>
       </div>
     </AppShell>

@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => {} }),
 }))
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
-vi.mock("@/components/SubmitButton", async () => { const { createElement: h } = await import("react"); return { default: ({ children }: { children: string }) => h("button", { type: "submit" }, children) } })
+vi.mock("@/components/SubmitButton", async () => { const { createElement: h } = await import("react"); return { default: ({ children, name, value, ariaLabel, disabled }: { children: string; name?: string; value?: string; ariaLabel?: string; disabled?: boolean }) => h("button", { type: "submit", name, value, "aria-label": ariaLabel, disabled }, children) } })
 vi.mock("@/components/TabLink", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/components/CourseMediaUpload", async () => { const { createElement: h } = await import("react"); return { default: ({ kind }: { kind: string }) => h("div", { "data-media": kind }) } })
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
@@ -145,7 +145,9 @@ describe("/learning/manage/[courseKey]", () => {
     expect(html).toContain("1 z 2 častí")
     expect(html).toContain("samozápisom")
     expect(html).toContain("/api/learning/courses/bozp/people")
-    expect(html).toContain("Dokončili <span class=\"pill-count\">1</span>")
+    // Filter zapísaných je prepínač pohľadu (DESIGN_ODCHYLKY P4).
+    expect(html).toContain("Dokončili <span class=\"view-switch-count\">1</span>")
+    expect(html).toContain("<nav class=\"view-switch view-switch--fit\"")
   })
 
   it("prideliť: trasa aj skupina, dopad s už zapísanými", async () => {

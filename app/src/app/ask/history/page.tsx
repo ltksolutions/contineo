@@ -21,6 +21,7 @@ import { SEARCH_TIME_ZONE } from "@/lib/versionContext"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { hideQuestionAction, unhideQuestionAction, hideAllAction, unhideAllAction } from "./actions"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -86,7 +87,7 @@ export default async function AskHistoryPage({ searchParams }: { searchParams: P
           <div className="card ask-history-confirm" role="alertdialog" aria-labelledby="clear-title">
             <p id="clear-title">{t.clearConfirm}</p>
             <form action={hideAllAction}>
-              <button className="button" type="submit">{t.clearAll}</button>{" "}
+              <SubmitButton className="button">{t.clearAll}</SubmitButton>{" "}
               <Link className="button button--quiet" href="/ask/history">{t.clearCancel}</Link>
             </form>
           </div>
@@ -98,7 +99,7 @@ export default async function AskHistoryPage({ searchParams }: { searchParams: P
               <input type="hidden" name="id" value={q.hidden} />
               <input type="hidden" name="q" value={query} />
               {t.removed}
-              <button type="submit">{t.undo}</button>
+              <SubmitButton>{t.undo}</SubmitButton>
             </form>
           </AutoDismiss>
         )}
@@ -107,7 +108,7 @@ export default async function AskHistoryPage({ searchParams }: { searchParams: P
             <form action={unhideAllAction} className="ask-toast" role="status">
               <input type="hidden" name="at" value={q.cleared} />
               {t.removedAll}
-              <button type="submit">{t.undo}</button>
+              <SubmitButton>{t.undo}</SubmitButton>
             </form>
           </AutoDismiss>
         )}
@@ -139,12 +140,12 @@ export default async function AskHistoryPage({ searchParams }: { searchParams: P
                   <form action={hideQuestionAction}>
                     <input type="hidden" name="id" value={it.id} />
                     <input type="hidden" name="q" value={query} />
-                    <button type="submit" className="ask-history-hide" aria-label={t.remove} title={t.remove}>
+                    <SubmitButton className="ask-history-hide" ariaLabel={t.remove} title={t.remove}>
                       <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.7"
                            strokeLinecap="round" aria-hidden="true">
                         <path d="M5 5l8 8M13 5l-8 8" />
                       </svg>
-                    </button>
+                    </SubmitButton>
                   </form>
                 </li>
               ))}

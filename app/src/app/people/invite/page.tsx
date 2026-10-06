@@ -19,6 +19,7 @@ import { dictionary } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { sendInvitationsAction } from "../actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,7 @@ export default async function InviteAllPage({
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
-      <Notice message={q.msg} error={q.error === "1"} back="/people/invite" />
+      <Notice language={language} message={q.msg} error={q.error === "1"} back="/people/invite" />
 
 
       <h1 className="page-title">{t.heading}</h1>
@@ -73,7 +74,7 @@ export default async function InviteAllPage({
           <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 14px" }}>{t.preview}</p>
 
           <form action={sendInvitationsAction}>
-            <button className="button" type="submit">{t.send(people.length)}</button>
+            <SubmitButton className="button" pendingLabel={dictionary(language).common.pending.sending}>{t.send(people.length)}</SubmitButton>
           </form>
         </>
       )}

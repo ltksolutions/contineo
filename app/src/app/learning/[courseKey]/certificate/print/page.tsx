@@ -34,7 +34,7 @@ export default async function CertificatePrintPage({ params }: { params: Promise
 
   return (
     <div className="cert-print-wrap">
-      <p className="cert-print-hint no-print">{t.printNote} <Link className="linkish" href={`/learning/${key}/certificate`}>{t.backToCourse}</Link></p>
+      <p className="cert-print-hint no-print">{t.printNote} <Link className="linkish" href={`/learning/${key}/certificate`}>{t.backToCertificate}</Link></p>
       <section className="cert-print">
         <div className="cp-top">
           <CertificateLogo c={c} height={64} />

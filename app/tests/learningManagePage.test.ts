@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => {} }),
 }))
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
-vi.mock("@/components/SubmitButton", () => ({ default: ({ children }: { children: unknown }) => children }))
+vi.mock("@/components/SubmitButton", async () => { const { createElement: h } = await import("react"); return { default: ({ children, form, className }: { children: string; form?: string; className?: string }) => h("button", { type: "submit", form, className }, children) } })
 vi.mock("@/components/TabLink", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/learning", () => ({

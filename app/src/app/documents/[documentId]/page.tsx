@@ -124,6 +124,7 @@ export default async function DocumentPage({
         a odsadenie, dĺžku riadka určuje obsah. */}
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice
+        language={person.language}
         message={message}
         error={failed}
         back={`/documents/${encodeURIComponent(documentId)}`}
