@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => {} }),
 }))
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
-vi.mock("@/components/SubmitButton", async () => { const { createElement: h } = await import("react"); return { default: ({ children }: { children: string }) => h("button", { type: "submit" }, children) } })
+vi.mock("@/components/SubmitButton", async () => { const { createElement: h } = await import("react"); return { default: ({ children, name, value, ariaLabel, disabled }: { children: string; name?: string; value?: string; ariaLabel?: string; disabled?: boolean }) => h("button", { type: "submit", name, value, "aria-label": ariaLabel, disabled }, children) } })
 vi.mock("@/components/TabLink", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/components/CourseMediaUpload", async () => { const { createElement: h } = await import("react"); return { default: ({ kind }: { kind: string }) => h("div", { "data-media": kind }) } })
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))

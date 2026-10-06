@@ -20,6 +20,7 @@ import { treeOptions } from "@/lib/treeOptions"
 import { invitePersonAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -195,7 +196,7 @@ export default async function NewPersonPage({
         </div>
 
         <div>
-          <button className="button" type="submit">{t.submit}</button>
+          <SubmitButton className="button">{t.submit}</SubmitButton>
         </div>
       </form>
     </div>

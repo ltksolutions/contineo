@@ -8,11 +8,19 @@
  * 25. 9. 2026). `useFormStatus()` musí byť vnútri `<form>`, preto
  * samostatný komponent — ten istý vzor ako `UploadSubmit`.
  *
+ * Jednotné správanie všetkých odosielacích tlačidiel (Ján, 6. 10. 2026):
+ * kým formulár beží, **všetky** jeho tlačidlá sú zablokované (proti
+ * druhému kliknutiu), ale krúžok a `pendingLabel` ukazuje **len to, na
+ * ktoré sa kliklo**. Formulár s dvomi tlačidlami („Schváliť" / „Vrátiť",
+ * `formAction`) by inak točil obe a nebolo by vidieť, čo sa vlastne robí.
+ * Enter v poli je pre prehliadač klik na prvé tlačidlo, takže sa ráta tiež.
+ *
  * Bez JavaScriptu je to obyčajné tlačidlo a formulár odošle prehliadač.
  */
 
+import { useState } from "react"
 import { useFormStatus } from "react-dom"
-import type { CSSProperties, ReactNode } from "react"
+import type { CSSProperties, MouseEvent, ReactNode } from "react"
 
 export default function SubmitButton({
   className = "button",
@@ -21,8 +29,11 @@ export default function SubmitButton({
   value,
   style,
   ariaLabel,
+  title,
+  ariaPressed,
   disabled = false,
   pendingLabel,
+  formAction,
 }: {
   className?: string
   children: ReactNode
@@ -30,6 +41,9 @@ export default function SubmitButton({
   value?: string
   style?: CSSProperties
   ariaLabel?: string
+  title?: string
+  /** Prepínač (zapnuté/vypnuté) — čítačka obrazovky ohlási stav. */
+  ariaPressed?: boolean
   disabled?: boolean
   /**
    * Text počas ukladania, keď akcia trvá dlhšie (rozosielanie e-mailov).
@@ -37,21 +51,46 @@ export default function SubmitButton({
    * niečo deje, alebo stránka zamrzla (Ján, 6. 10. 2026, „Pridať na trasu").
    */
   pendingLabel?: ReactNode
+  /** Iná serverová akcia než formulárová — druhé tlačidlo v tom istom formulári. */
+  formAction?: (formData: FormData) => void | Promise<void>
 }) {
   const { pending } = useFormStatus()
+  const [clicked, setClicked] = useState(false)
+
+  // Po skončení sa značka zhodí, aby pri ďalšom odoslaní iným tlačidlom
+  // netočilo aj toto. Úprava stavu počas vykresľovania, nie v `useEffect` —
+  // tak to pre stav odvodený z predchádzajúcej hodnoty odporúča React.
+  const [wasPending, setWasPending] = useState(pending)
+  if (pending !== wasPending) {
+    setWasPending(pending)
+    if (!pending) setClicked(false)
+  }
+
+  const onClick = (e: MouseEvent<HTMLButtonElement>) => {
+    // Formulár, ktorý neprejde kontrolou prehliadača (`required`), sa
+    // neodošle — značka by ostala visieť a točilo by pri cudzom odoslaní.
+    const form = e.currentTarget.form
+    if (!form || form.checkValidity()) setClicked(true)
+  }
+
+  const busy = pending && clicked
   return (
     <button
-      className={`${className}${pending ? " is-pending" : ""}`}
+      className={`${className}${busy ? " is-pending" : ""}`}
       type="submit"
       name={name}
       value={value}
+      formAction={formAction}
       disabled={pending || disabled}
-      aria-busy={pending || undefined}
+      aria-busy={busy || undefined}
       aria-label={ariaLabel}
+      title={title}
+      aria-pressed={ariaPressed}
       style={style}
+      onClick={onClick}
     >
-      {pending && <span className="button-spinner" aria-hidden="true" />}
-      {pending && pendingLabel ? pendingLabel : children}
+      {busy && <span className="button-spinner" aria-hidden="true" />}
+      {busy && pendingLabel ? pendingLabel : children}
     </button>
   )
 }

@@ -13,6 +13,7 @@ import { createTenantAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -82,7 +83,7 @@ export default async function NewTenantPage({
           <span className="quiet field-hint">{t.domainsNote}</span>
         </label>
 
-        <button className="button" type="submit">{t.submit}</button>
+        <SubmitButton className="button">{t.submit}</SubmitButton>
       </form>
     </div>
     </AppShell>

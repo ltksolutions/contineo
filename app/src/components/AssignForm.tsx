@@ -17,6 +17,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import SubmitButton from "@/components/SubmitButton"
 import { audienceSignature, selectionCounts, selectionFromForm, type SelectionCounts } from "@/lib/assignSummary"
 
 const noop = () => () => {}
@@ -108,12 +109,12 @@ export function AssignFinish({
           akcia, ktorá nič nezapíše — vráti výber v adrese a súhrn hore.
           Počet v „Prideliť" len s JS a len pre platný dopad (Q3). */}
       <div className="assign-actions">
-        <button className="button" type="submit">
+        <SubmitButton className="button">
           {ready && impact && !stale ? t.submitN(impact.people) : t.submit}
-        </button>
-        <button className="button button--quiet" type="submit" formAction={previewAction}>
+        </SubmitButton>
+        <SubmitButton className="button button--quiet" formAction={previewAction}>
           {t.checkImpact}
-        </button>
+        </SubmitButton>
       </div>
     </div>
   )

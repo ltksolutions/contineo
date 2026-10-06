@@ -21,6 +21,7 @@ import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { publishCurationAction } from "./actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -113,7 +114,7 @@ export default async function CurationPage({
 
             <form action={publishCurationAction}>
               <input type="hidden" name="id" value={item.id} />
-              <button className="button" type="submit">{t.publish}</button>
+              <SubmitButton className="button">{t.publish}</SubmitButton>
             </form>
           </div>
         ))}

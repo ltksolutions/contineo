@@ -17,6 +17,7 @@ import { setLegalBasisAction } from "@/app/documents/[documentId]/actions"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { LEGAL_BASES, type LegalBasis } from "@/lib/versionResponsibility"
 import type { LegalBasisOption } from "@/lib/legalBases"
+import SubmitButton from "@/components/SubmitButton"
 
 export default function LegalBasisForm({
   documentId,
@@ -79,7 +80,7 @@ export default function LegalBasisForm({
         </label>
       )}
 
-      <div><button className="button" type="submit">{t.saveBasis}</button></div>
+      <div><SubmitButton className="button">{t.saveBasis}</SubmitButton></div>
     </form>
   )
 }

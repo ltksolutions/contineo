@@ -1229,7 +1229,7 @@ export default async function OrganisationSectionPage({
                     <span className="quiet field-hint">{t.branding.gdprEmailNote}</span>
                   </label>
                 </div>
-                {ctx.canEditGdpr && <div><button className="button" type="submit">{t.gdpr.saveContact}</button></div>}
+                {ctx.canEditGdpr && <div><SubmitButton className="button">{t.gdpr.saveContact}</SubmitButton></div>}
               </div>
             </section>
           </fieldset>
@@ -1262,7 +1262,7 @@ export default async function OrganisationSectionPage({
                 {ctx.canEditGdpr && (
                   <>
                     <div className="lnote lnote--bad"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{tt.warning}</span></div>
-                    <div><button className="button" type="submit">{tt.save}</button></div>
+                    <div><SubmitButton className="button">{tt.save}</SubmitButton></div>
                   </>
                 )}
               </div>
@@ -1286,7 +1286,7 @@ export default async function OrganisationSectionPage({
                               defaultValue={tenant.privacy?.extra?.[l] ?? ""} />
                   </label>
                 ))}
-                {ctx.canEditGdpr && <div><button className="button" type="submit">{d.dpo.extra.save}</button></div>}
+                {ctx.canEditGdpr && <div><SubmitButton className="button">{d.dpo.extra.save}</SubmitButton></div>}
               </div>
             </section>
           </fieldset>

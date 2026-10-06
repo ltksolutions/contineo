@@ -66,6 +66,7 @@ import { onboardingContext } from "@/lib/session"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { archiveState, type ArchiveEntry } from "@/lib/documentArchiveState"
 import { draftBasisTaskFor } from "@/lib/versionResponsibilityDb"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -513,7 +514,7 @@ export default async function DocumentDetailPage({
               <input className="field-input" name="reason" required
                      placeholder={tr.changeReasonPlaceholder} />
             </label>
-            <div><button className="button button--quiet" type="submit">{tr.saveResponsible}</button></div>
+            <div><SubmitButton className="button button--quiet">{tr.saveResponsible}</SubmitButton></div>
           </form>
         )}
 
@@ -553,7 +554,7 @@ export default async function DocumentDetailPage({
                      placeholder={t.revokeVersionReasonPlaceholder} />
             </label>
             <div>
-              <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
+              <SubmitButton className="button button--quiet">{t.revokeVersionSubmit}</SubmitButton>
             </div>
           </form>
         )}
@@ -563,7 +564,7 @@ export default async function DocumentDetailPage({
             <input type="hidden" name="documentId" value={d.documentId} />
             <input type="hidden" name="versionId" value={v.versionId} />
             <p className="detail-block-small">{t.textFixPanelNote}</p>
-            <div><button className="button button--quiet" type="submit">{t.textFixLoad}</button></div>
+            <div><SubmitButton className="button button--quiet">{t.textFixLoad}</SubmitButton></div>
           </form>
         )}
 
@@ -572,7 +573,7 @@ export default async function DocumentDetailPage({
             <input type="hidden" name="documentId" value={d.documentId} />
             <input type="hidden" name="versionId" value={v.versionId} />
             <p className="detail-block-small">{t.reindexVersionNote}</p>
-            <div><button className="button button--quiet" type="submit">{t.reindexVersion}</button></div>
+            <div><SubmitButton className="button button--quiet">{t.reindexVersion}</SubmitButton></div>
           </form>
         )}
 
@@ -908,7 +909,7 @@ export default async function DocumentDetailPage({
               </p>
 
               <div className="set-savebar edit-savebar">
-                <button className="button" type="submit">{t.save}</button>
+                <SubmitButton className="button">{t.save}</SubmitButton>
                 <Link className="button button--quiet" href={base}>{tflow.cancel}</Link>
                 <span className="quiet">{tflow.editSaveNote}</span>
               </div>
@@ -1123,10 +1124,10 @@ export default async function DocumentDetailPage({
               </label>
             </div>
             <div className="flow-foot">
-              <button className="button" type="submit" name="intent" value="submit">
+              <SubmitButton className="button" name="intent" value="submit">
                 {draftRounds.length > 0 ? tflow.resubmit(nextRound) : tflow.submitAndSave}
-              </button>
-              <button className="button button--quiet" type="submit" name="intent" value="save">{tflow.saveOnly}</button>
+              </SubmitButton>
+              <SubmitButton className="button button--quiet" name="intent" value="save">{tflow.saveOnly}</SubmitButton>
             </div>
           </form>
         )}
@@ -1196,7 +1197,7 @@ export default async function DocumentDetailPage({
                     <span className="field-label">{t.approvalCancelReason}</span>
                     <input className="field-input" name="reason" required />
                   </label>
-                  <div><button className="button button--quiet" type="submit">{tflow.withdraw}</button></div>
+                  <div><SubmitButton className="button button--quiet">{tflow.withdraw}</SubmitButton></div>
                 </form>
               </details>
             </div>
@@ -1286,7 +1287,7 @@ export default async function DocumentDetailPage({
               />
             </div>
             <div className="flow-foot">
-              <button className="button" type="submit">{tflow.assignChosen}</button>
+              <SubmitButton className="button">{tflow.assignChosen}</SubmitButton>
               <Link href={assignHref([d.documentId])}>{tflow.assignElsewhere}</Link>
             </div>
           </form>
@@ -1347,7 +1348,7 @@ export default async function DocumentDetailPage({
           <p className="detail-block-small" style={{ margin: 0 }}>{tflow.archive.bannerMeta(nameOf(archive.entry.by), date(archive.entry.at))}</p>
           <form action={restoreDocumentAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
             <input type="hidden" name="documentId" value={d.documentId} />
-            <button className="button button--quiet" type="submit">{tflow.archive.restore}</button>
+            <SubmitButton className="button button--quiet">{tflow.archive.restore}</SubmitButton>
             <span className="quiet field-hint">{tflow.archive.restoreHint}</span>
           </form>
         </section>
@@ -1469,7 +1470,7 @@ export default async function DocumentDetailPage({
                 <span className="field-label">{tflow.archive.reason}</span>
                 <textarea className="field-input" name="reason" rows={2} required maxLength={500} placeholder={tflow.archive.reasonHint} />
               </label>
-              <div><button className="button button--danger" type="submit">{tflow.archive.submit}</button></div>
+              <div><SubmitButton className="button button--danger">{tflow.archive.submit}</SubmitButton></div>
             </form>
           )}
         </section>
@@ -1586,7 +1587,7 @@ export default async function DocumentDetailPage({
                       <span className="quiet field-hint">{t.textFixReasonNote}</span>
                     </label>
 
-                    <div><button className="button button--quiet" type="submit">{t.textFixSubmit}</button></div>
+                    <div><SubmitButton className="button button--quiet">{t.textFixSubmit}</SubmitButton></div>
                   </form>
                 </div>
               </details>
@@ -1597,7 +1598,7 @@ export default async function DocumentDetailPage({
         <p className="detail-block-note">
           {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
         </p>
-        <div><button className="button button--quiet" type="submit">{t.reindex}</button></div>
+        <div><SubmitButton className="button button--quiet">{t.reindex}</SubmitButton></div>
       </form>
         </div>
       </details>

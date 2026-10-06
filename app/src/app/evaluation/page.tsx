@@ -30,6 +30,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import Rating from "@/components/Rating"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -223,7 +224,7 @@ export default async function EvaluationPage({
 
               {item.sources.length > 0 && (
                 <p style={{ margin: "14px 0 0" }}>
-                  <button className="button" type="submit">{tc.save}</button>
+                  <SubmitButton className="button">{tc.save}</SubmitButton>
                 </p>
               )}
             </form>

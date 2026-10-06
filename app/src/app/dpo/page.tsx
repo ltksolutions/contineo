@@ -35,6 +35,7 @@ import Icon from "@/components/Icon"
 import SearchStrip from "@/components/SearchStrip"
 import { tenantOrigin } from "@/lib/certificates"
 import { recordObjectionAction, decideObjectionAction } from "./actions"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -157,7 +158,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
             <span className="field-label">{t.decisionNote}</span>
             <textarea className="field-input" name="note" rows={3} required />
           </label>
-          <div><button className="button" type="submit">{t.decideSubmit}</button></div>
+          <div><SubmitButton className="button">{t.decideSubmit}</SubmitButton></div>
         </form>
       ) : (
         <div className="dpo-obj-done">
@@ -466,7 +467,7 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
                   <textarea className="field-input" name="text" rows={4} required />
                   <span className="quiet field-hint">{t.objectionTextNote}</span>
                 </label>
-                <div><button className="button button--quiet" type="submit">{t.recordSubmit}</button></div>
+                <div><SubmitButton className="button button--quiet">{t.recordSubmit}</SubmitButton></div>
               </form>
             </details>
           </div>

@@ -45,6 +45,7 @@ import {
   type ConditionField, type ConditionOp,
 } from "@/lib/libraryConditions"
 import MultiSelect from "@/components/MultiSelect"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -1018,9 +1019,9 @@ export default async function LibraryPage({
               />
             </div>
 
-            <button className="button button--quiet bulk-move-wide" type="submit" formAction={moveManyAction}>
+            <SubmitButton className="button button--quiet bulk-move-wide" formAction={moveManyAction}>
               {tl.move}
-            </button>
+            </SubmitButton>
 
             {/*
               Presun na telefóne — zásuvka, nie výber v páse (KNIZNICA.md,
@@ -1055,9 +1056,9 @@ export default async function LibraryPage({
                 </button>
               </div>
             </details>
-            <button className="button button--quiet" type="submit" formAction={assignManyAction}>
+            <SubmitButton className="button button--quiet" formAction={assignManyAction}>
               {tl.assign}
-            </button>
+            </SubmitButton>
             {/* Na telefóne sa text nezmestí — ostáva ×; meno akcie nesie
                 `aria-label` (KNIZNICA.md, úloha 4). */}
             <Link className="bulk-clear" href={toQuery(clearPicked(filters))} aria-label={tl.clearPicked}>
