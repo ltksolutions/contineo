@@ -10,6 +10,49 @@
 
 ---
 
+## 2026-10-06 — helpdesk od ADR po widget (ADR-028, PR #273, #276, #278)
+
+**Prečo:** chat pre ISSF (kluby, rozhodcovia, tréneri, rodičia) nad normami
+a častými otázkami zo schránky helpdesk@futbalsfz.sk; keď asistent
+nepomôže, ticket človeku, ktorý odpovie e-mailom a systém sa z opravy učí.
+Ján dodal, že kanálov bude viac, každý s iným obsahom.
+
+**Čo sa rozhodlo (ADR-028, D161–D168):** kanál ako entita organizácie
+s rozsahom cez priečinky knižnice; schránka cez adaptér (IMAP pre bežné
+služby, Microsoft Graph pre M365, zúžené na schránku cez RBAC for
+Applications, nie Application Access Policy); e-mail je ticket; FAQ ako
+druh dokumentu — prvý druh podľa ADR-027 krok 2, ktorý sa nereže po
+článkoch; história schránky sa ťaží do návrhov FAQ bez osobných údajov;
+identita z ISSF podpísaným tokenom (štandardné claimy JWT/OIDC, `sub` =
+registračné číslo v ISSF; ISSF nie je platforma Sportnet); rola `helpdesk`;
+druh osoby `internal` / `employee` / `external`, pričom `external` sa do
+intranetu neprihlási a rozhodcovia a funkcionári sú skupiny, nie druh.
+
+**Čo sa postavilo v jeden deň:** FAQ (záznamy → Markdown a deterministické
+PDF, úsek `qa` s `faqVersionId`), kanály v Organizácii, adaptér Graph,
+synchronizácia cronom, tickety, ťažba FAQ, obrazovka `/helpdesk` s návrhom
+odpovede bez streamu (len verejný obsah), widget v Shadow DOM s eskaláciou
+po dvoch negatívnych, `/api/widget/*` s CORS len pre povolený pôvod, osoba
+z tokenu, skúšobná stránka `npm run widget:test`.
+
+**Čo nevyšlo a prečo:**
+- commit kroku 5 šiel omylom na vetvu kroku 4; vrátiť by znamenalo force
+  push, tak PR #278 nesie oba kroky;
+- build na Verceli po zlúčení #273 padol: PR #279 z druhej session medzitým
+  spravil `language` povinným v `Notice` a vetva helpdesku ho nemala —
+  lokálne prešlo všetko, zlúčený `main` nie. Oprava priamo na `main`
+  (6c00c53) a merge `main` do zvyšných vetiev pred ich zlúčením. Poučenie:
+  pri paralelnej session **pred zlúčením zmergovať `main` do vetvy
+  a pustiť `tsc`**, nie len veriť zelenému PR;
+- `sub` som najprv chcel ako Sportnet ID — Ján opravil, ISSF a Sportnet sú
+  dve platformy; `registrationNumber` ako zvláštny claim odpadol;
+- slovenské úvodzovky v `git commit -m` rozbijú bash — správa ide zo súboru.
+
+**Naostro neoverené:** celý helpdesk čaká na registráciu aplikácie v Entra
+(správca M365), tajomstvo widgetu pre prevádzkovateľa ISSF a prvý kanál.
+
+---
+
 ## 2026-10-06 — prierezové opravy zo súpisu odchýlok (P2–P13)
 
 **Prečo:** `docs/DESIGN_ODCHYLKY.md` našiel opravy, ktoré platia naprieč

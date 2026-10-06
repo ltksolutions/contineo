@@ -6,11 +6,25 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-03** (PDF pri pôvodných normách, archivácia predpisu, správca obsahu a právny základ, trasy; PR #223–#240; D155, D156)
+Posledná aktualizácia: **2026-10-06** (helpdesk ADR-028: FAQ, kanály a schránka, tickety, `/helpdesk`, widget pre ISSF; PR #273, #276, #278; D161–D168)
 
 ---
 
 ## Kde sme teraz
+
+**Helpdesk (ADR-028, 6. 10.) je celý v `main`, naostro neoverený.** Päť
+krokov: FAQ ako druh dokumentu (D164), kanály so schránkou cez Microsoft
+Graph a ťažba histórie do FAQ (D161, D162, D165), e-mail je ticket (D163),
+obrazovka riešiteľa `/helpdesk` (rola `helpdesk`, D167), widget s tokenom pre
+ISSF (D166) a druh osoby `internal`/`employee`/`external` (D168). Čaká na
+ľudí mimo kódu: registrácia aplikácie v Entra a zúženie na schránku
+(`docs/NASADENIE_app.md` § 5, správca M365), prvý kanál a rola `helpdesk`
+v Organizácii, tajomstvo widgetu pre prevádzkovateľa ISSF
+(`docs/WIDGET_ISSF.md`). Poradie overenia: FAQ → kanál a Overiť spojenie →
+Synchronizovať → ťažba FAQ → ticket a odpoveď → widget
+(`npm run widget:test` bez ISSF). Otvorené po nasadení: upozornenie
+riešiteľom na nový ticket, tickety v „čo čaká na mňa“, IMAP adaptér, cron
+častejšie než denne (Pro), text účelu „helpdesk“ na `/privacy` (DPO).
 
 Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
@@ -195,8 +209,10 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (3. 10.): **0 errors, 40 warnings,
-2341 testov v 180 súboroch.** Pri veľkej záťaži stroja pomôže
+Baseline, proti ktorej sa porovnáva (6. 10.): **0 errors, 40 warnings,
+2452 testov v 199 súboroch.** Pri paralelnej session pred zlúčením PR
+zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
+`main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
