@@ -137,8 +137,8 @@ export default async function FaqEditorPage({ params, searchParams }: { params: 
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 12px" }}>{t.intro}</p>
       <p className="quiet field-hint" style={{ margin: "0 0 20px" }}>{t.publishNote} {t.pdfNote}</p>
-      <Notice message={msg} back={`${base}/faq`} />
-      <Notice message={error} error back={`${base}/faq`} />
+      <Notice message={msg} back={`${base}/faq`} language={language} />
+      <Notice message={error} error back={`${base}/faq`} language={language} />
 
       <section className="card detail-block" id="new">
         <h2 className="detail-block-title">{t.addHeading}</h2>
