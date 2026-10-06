@@ -15,6 +15,7 @@
  * spoločné úložisko pre obsah zo všetkých vstupných kanálov (D25).
  */
 
+import type { FaqEntry } from "./faq"
 import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
 import type {
@@ -45,6 +46,12 @@ export interface VersionFile {
 export interface Version {
   /** Nemenné. Zhodné s `document_chunks.versionId` — chunk patrí verzii. */
   versionId: string
+  /**
+   * Záznamy FAQ v tomto znení (ADR-028, D164) — **kópia** zoznamu z konceptu
+   * v okamihu zverejnenia. Len pri druhu FAQ; úseky z nich sú v indexe pod
+   * `faqVersionId`, nie `versionId` (prečo: hlavička `lib/faq.ts`).
+   */
+  faq?: FaqEntry[]
   /** Ľudské označenie: „1.2", „novela 2026". */
   label: string
 

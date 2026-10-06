@@ -42,6 +42,7 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
+import { DOCUMENTS_COLLECTION } from "./documents"
 import { CHUNKS_COLLECTION } from "./libraryWrite"
 import { RATINGS_COLLECTION } from "./ratings"
 import { PERSONS_COLLECTION } from "./persons"
@@ -377,11 +378,27 @@ export async function reconcileCurationAccess(
   companyCode: string,
   documentId: string,
 ): Promise<number> {
-  const chunkCol = await getCollection<SourceChunk & { derivedFrom?: string[]; sourceType?: string }>(CHUNKS_COLLECTION)
+  const chunkCol = await getCollection<SourceChunk & { derivedFrom?: string[]; sourceType?: string; faqVersionId?: string }>(CHUNKS_COLLECTION)
   const pairs = await chunkCol
     .find({ companyCode, sourceType: QA_SOURCE_TYPE, derivedFrom: documentId } as never)
     .toArray()
   if (!pairs.length) return 0
+
+  /*
+   * Záznam FAQ (ADR-028, D164) je tiež úsek `qa` odvodený zo zdrojov — ale
+   * má navyše **vlastný dokument** s nastavenou úrovňou a tá vstupuje do
+   * najprísnejšej strany spolu so zdrojmi (`lib/faq.ts`, `entryAccessLevel`).
+   * Bez toho by zmena zdroja na verejný zverejnila záznam z interného FAQ.
+   */
+  const faqDocumentIds = [...new Set(pairs.filter(p => p.faqVersionId && p.documentId).map(p => String(p.documentId)))]
+  const faqLevels = new Map<string, string>()
+  if (faqDocumentIds.length) {
+    const docs = await getCollection(DOCUMENTS_COLLECTION)
+    const rows = await docs
+      .find({ companyCode, documentId: { $in: faqDocumentIds } }, { projection: { documentId: 1, accessLevel: 1 } })
+      .toArray() as unknown as { documentId: string; accessLevel?: string }[]
+    for (const r of rows) faqLevels.set(r.documentId, String(r.accessLevel ?? ""))
+  }
 
   // Úroveň zdrojových dokumentov sa číta z ich **vlastných** úsekov, nie
   // z párov — inak by sa pár odvodzoval sám zo seba.
@@ -403,6 +420,7 @@ export async function reconcileCurationAccess(
   const records = await getCollection<RatingRecord>(RATINGS_COLLECTION)
   for (const pair of pairs) {
     const levels = (pair.derivedFrom ?? []).flatMap(d => byDocument.get(d) ?? [""])
+    if (pair.faqVersionId) levels.push(faqLevels.get(pair.documentId ?? "") ?? "")
     const level = strictestAccessLevel(levels)
     if (level === pair.accessLevel) continue
 

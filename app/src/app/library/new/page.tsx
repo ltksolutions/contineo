@@ -8,6 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
 import { treeOptions } from "@/lib/treeOptions"
 import Notice from "@/components/Notice"
 import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
@@ -80,8 +81,12 @@ export default async function NewDocumentPage({
     <AppShell language={ctx.person.language} title={t.heading}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <h1 className="page-title">{t.heading}</h1>
-      <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>
+      <p className="quiet page-lead" style={{ margin: "0 0 8px" }}>
         {t.intro}
+      </p>
+      {/* FAQ sa nenahráva ako súbor — píše sa v aplikácii (ADR-028, D164). */}
+      <p className="quiet" style={{ margin: "0 0 20px" }}>
+        <Link href="/library/new/faq">{dictionary(ctx.person.language).library.faq.newLink}</Link>
       </p>
 
       {/*
