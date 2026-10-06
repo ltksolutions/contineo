@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: obrázok architektúry hovorí Zdroje → Kanály (2026-10-06)
+
+V obrázku na stránke Technológia sa „Vstupné kanály" volajú **Zdroje**
+a „Rozhrania" **Kanály** — e-mail aj portál idú oboma smermi, nie sú to
+výstupy. Položky, ktoré sa len pripravujú (RSS a web, e-mail, MCP
+konektory, tickety, vložený widget, eskalácia na ticket), sú sivé
+a označené; doteraz vyzerali ako hotové. Rovnako pilier a popis pod
+obrázkom; vo všetkých troch jazykoch.
+
 ### Dizajn: prierezové opravy podľa súpisu odchýlok (2026-10-06)
 
 Chyby pri odoslaní formulára (Prideliť dokumenty, upozornenie e-mailom,
