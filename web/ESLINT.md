@@ -18,5 +18,6 @@ nie nález.
 
 ## Čo sa nekontroluje
 
-`public/` (generované obrázky a diagramy) a `scripts/` (`gen_diagram.py` je
-Python, nie JavaScript).
+`public/` (obrázky a diagramy). `scripts/` sa kontroluje — od 6. 10. 2026 je
+tam `diagram.mjs` (kontrola zhody troch SVG a PNG), Python generátor
+`gen_diagram.py` je zmazaný.

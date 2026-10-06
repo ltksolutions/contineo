@@ -10,6 +10,13 @@ Ochrana osobných údajov, Prihlásenie a Overenie certifikátu majú v karte
 prehliadača názov stránky („Ochrana osobných údajov · Intranet SFZ"),
 nie len názov organizácie.
 
+### Web: obrázok architektúry má zdroj v SVG, generátor zmazaný (2026-10-06)
+
+`web/scripts/gen_diagram.py` zaostal za ručne menenými SVG a spustený by
+prepísal správny obrázok starým. Namiesto neho `npm run diagram:check`
+(tri jazykové SVG majú rovnakú štruktúru, kópia v `docs/` sedí)
+a `npm run diagram:render` (PNG cez `sharp`).
+
 ### Kanály ako samostatná sekcia s typom widget a portál (2026-10-06, ADR-028 D169)
 
 Kanály majú vlastnú sekciu v menu (Správa, správca organizácie) namiesto

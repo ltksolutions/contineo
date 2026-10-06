@@ -17,9 +17,9 @@ import coreWebVitals from "eslint-config-next/core-web-vitals"
 const konfiguracia = [
   {
     // Generované a cudzie veci sa nekontrolujú. `public/` sú obrázky
-    // a diagramy, `scripts/gen_diagram.py` je Python — ESLint tam nemá čo
-    // hľadať a chyby by len zaplavili výpis.
-    ignores: [".next/**", "node_modules/**", "public/**", "scripts/**"],
+    // a diagramy — ESLint tam nemá čo hľadať a chyby by len zaplavili výpis.
+    // `scripts/` sa kontroluje: `diagram.mjs` je náš JavaScript.
+    ignores: [".next/**", "node_modules/**", "public/**"],
   },
 
   ...coreWebVitals,
