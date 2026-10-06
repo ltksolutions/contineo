@@ -117,7 +117,7 @@ describe("normy s hľadaním", () => {
 describe("„Všetkým v organizácii\" ako prepínač (ZAKLAD-vyber-a-prepinace, Q2)", () => {
   it("natívny checkbox s role=switch, to isté meno a hodnota", async () => {
     const { AudienceAll } = await import("../src/components/AssignForm")
-    const html = renderToStaticMarkup(createElement(AudienceAll, { label: "Všetkým", note: "prebije výber", defaultChecked: true, children: "x" }))
+    const html = renderToStaticMarkup(createElement(AudienceAll, { label: "Všetkým", note: "prebije výber", defaultChecked: true } as Parameters<typeof AudienceAll>[0], "x"))
     expect(html).toMatch(/<label class="form-row"><input type="checkbox" role="switch" class="toggle"[^>]*name="all"[^>]*value="1"/)
     expect(html).toMatch(/checked=""/)
     expect(html).toContain('<span class="form-row-sub">prebije výber</span>')
