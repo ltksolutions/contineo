@@ -121,6 +121,13 @@ export async function listChannels(companyCode: string): Promise<HelpdeskChannel
   return col.find({ companyCode: code }).sort({ name: 1 }).toArray()
 }
 
+/** Kanály, ktorých je osoba riešiteľom (D161: ticket vidí len riešiteľ svojho kanála). */
+export async function channelsForAgent(companyCode: string, personId: string): Promise<HelpdeskChannel[]> {
+  const code = requireCompanyCode(companyCode, "channelsForAgent")
+  const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
+  return col.find({ companyCode: code, assigneeIds: personId }).sort({ name: 1 }).toArray()
+}
+
 export async function channelByKey(companyCode: string, key: string): Promise<HelpdeskChannel | null> {
   const code = requireCompanyCode(companyCode, "channelByKey")
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)

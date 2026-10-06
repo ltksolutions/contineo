@@ -311,7 +311,7 @@ async function tenantFields(
   return out
 }
 
-const TYPES: PersonType[] = ["employee", "external", "referee", "official"]
+const TYPES: PersonType[] = ["internal", "employee", "external"]
 
 /**
  * Uloží zmeny osoby vrátane adresy.

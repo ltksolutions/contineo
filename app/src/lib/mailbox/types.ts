@@ -59,6 +59,8 @@ export interface MailboxAdapter {
   listRecent(limit: number): Promise<MailMessage[]>
   /** Odpoveď vo vlákne z adresy schránky. Vracia `internetMessageId` odoslanej správy, ak ho poskytovateľ vráti. */
   reply(messageId: string, text: string): Promise<{ messageId: string | null }>
+  /** Nová správa z adresy schránky — pre ticket z chatu, ktorý vlákno v schránke nemá (D163). */
+  send(to: string, subject: string, text: string): Promise<{ messageId: string | null }>
   /** Overenie spojenia: prihlásenie a čítanie schránky. Vyhadzuje `MailboxError`. */
   verify(): Promise<{ address: string; displayName: string | null }>
 }

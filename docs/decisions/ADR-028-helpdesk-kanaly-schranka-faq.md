@@ -22,13 +22,26 @@
 > `lib/faqMining.ts` (D165), `/api/cron/helpdesk-sync`, časť Organizácia →
 > Helpdesk, rola `helpdesk` (D167), `searchScope()` zúžený na priečinky (D161),
 > postup registrácie v Entra a zúženia v Exchange: `docs/NASADENIE_app.md` § 5.
+> Krok 4 (obrazovka riešiteľa) 6. 10. 2026: `/helpdesk` (fronta, prepínač
+> pohľadu) a `/helpdesk/[id]` (vlákno, návrh, odoslanie, pridať do FAQ),
+> `lib/helpdeskAgents.ts` (brána roly a kanálov), `lib/ticketDraft.ts` (návrh
+> odpovede tou istou cestou ako `/api/chat`, bez streamu, len verejný obsah),
+> práca s ticketom v `lib/tickets.ts`, položka Helpdesk v navigácii s počtom
+> otvorených ticketov.
+> Krok 5 (widget a token) 6. 10. 2026: `lib/widgetToken.ts` (HS256, ≤ 15 min),
+> `lib/widgetPersons.ts` (osoba z tokenu, `widgetOnly`), `lib/widgetApi.ts`
+> (pôvod, CORS, strop, zápis odpovede zo streamu), `lib/chatStream.ts`
+> (postup `/api/chat` vytiahnutý pre obe brány), `/api/widget/[kanál]/
+> {script,chat,feedback,ticket}`, `lib/widgetScript.ts` (skript v Shadow DOM,
+> eskalácia po dvoch negatívnych), návod `docs/WIDGET_ISSF.md`.
 
 ---
 
 ## 1. Kontext
 
-Prvý zákazník mimo intranetu je **ISSF** (`issf.futbalsfz.sk`, vyvíja
-Sportnet): prihlasujú sa tam klubové a tímoví manažéri, rozhodcovia,
+Prvý zákazník mimo intranetu je **ISSF** (`issf.futbalsfz.sk`, Informačný
+systém slovenského futbalu; nie je to platforma Sportnet — tá má vlastný
+`sportnetID`, ISSF registračné číslo): prihlasujú sa tam klubové a tímoví manažéri, rozhodcovia,
 tréneri, hráči, rodičia maloletých hráčov a komisie. Majú sa pýtať na normy
 SFZ a na časté otázky, ktorých odpovede dnes ležia v schránke
 **helpdesk@futbalsfz.sk** na Microsoft 365 — v tisícoch mailov a odpovedí
@@ -187,14 +200,35 @@ e-mail, meno, roly, klub, `exp` do 15 minút). Widget je `<script>` z
 Continea (webový komponent vo farbách organizácie, `tenantStyle`), volá
 `/api/chat` s tokenom a kľúčom kanálu.
 
-- Osoba sa založí alebo spáruje cez `externalRef` (pre ISSF
-  `sportnetId`), s rolou `external` bez prístupu do intranetu; vidí
-  `public` úseky z rozsahu kanálu.
+- Token nesie štandardné claimy JWT a OIDC (`iss`, `aud`, `sub`, `email`,
+  `given_name`, `family_name`, `iat`, `exp`), nie vlastné názvy — každá
+  knižnica ich sama nastaví aj overí (Ján 6. 10. 2026). `sub` je jedinečný
+  identifikátor osoby **vo vydávajúcom systéme**: v ISSF registračné číslo
+  (ISSF nie je platforma Sportnet, tá má `sportnetID`). Navyše `roles`,
+  `club`, `lang`.
+- Osoba sa spáruje cez `externalRef.widget[kanál]` = `sub` z tokenu
+  (generické podľa kanála, nie `sportnetId`) alebo cez **e-mail** —
+  zamestnanec s rovnakou adresou si intranet nechá. Inak sa založí
+  s druhom **`external`** (D168), ktorý ju nepustí do intranetu
+  (`personMaySignIn()`). Vidí `public` úseky z rozsahu kanála.
 - Strop požiadaviek na osobu a hodinu je na kanáli (D14).
 - Po **dvoch negatívnych hodnoteniach** v rozhovore sa ponúkne ticket;
   e-mail a meno sú z tokenu, človek dopíše len, čo mu chýba.
 - Nie iframe s vlastným prihlásením a nie anonymný chat: pri anonymovi
   nemáme e-mail na ticket ani rolu na výber FAQ.
+
+### D168 — Druh osoby: `internal`, `employee`, `external`; rozhodcovia a funkcionári sú skupiny
+
+Rozhodnutie Jána 6. 10. 2026 pri D166. `personType` má tri hodnoty:
+`employee` (zamestnanec), `internal` (interný človek, ktorý nie je
+zamestnanec: funkcionár, člen komisie) a `external` (človek známy len cez
+cudzí systém — widget). **`external` sa do intranetu neprihlási**
+(`personMaySignIn()`); import správcom mu druh prepíše a tým ho pustí dnu.
+Doterajšie druhy `referee` a `official` sa rušia bez migrácie (v dátach ich
+nikto nemal, 155 osôb je `employee`) a nahrádzajú ich **skupiny**
+`rozhodcovia` a `funkcionari`, ktoré sú v ponuke vždy (`DEFAULT_GROUPS`):
+druh hovorí, kto človek je voči organizácii, skupina komu sa čo posiela.
+Zamietnutý príznak `widgetOnly` — druhá klasifikácia vedľa druhu.
 
 ### D167 — Rola `helpdesk` je oddelená od správcu obsahu
 
@@ -226,7 +260,7 @@ schvaľuje ich správca obsahu (`content-admin`). Pridáva sa do
 4. **Tickety a obrazovka `/helpdesk`** (D163, D167): fronta, ticket, návrh
    AI, odoslanie cez adaptér, „pridať do FAQ".
 5. **Widget a token** (D166), eskalácia z chatu do ticketu. Posledné —
-   závisí od Sportnetu.
+   závisí od prevádzkovateľa ISSF.
 
 Kroky 2 a 3 prinášajú hodnotu aj intranetu bez čakania na ISSF.
 

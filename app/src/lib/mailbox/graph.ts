@@ -205,4 +205,19 @@ export class GraphMailbox implements MailboxAdapter {
     // Ticket si preto odoslanie zapíše sám (text, kto, kedy) — D163.
     return { messageId: null }
   }
+
+  async send(to: string, subject: string, text: string): Promise<{ messageId: string | null }> {
+    const token = await this.accessToken()
+    const r = await withTimeout(signal => fetch(`${this.userPath()}/sendMail`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: { subject, body: { contentType: "Text", content: text }, toRecipients: [{ emailAddress: { address: to } }] },
+        saveToSentItems: true,
+      }),
+      signal, cache: "no-store",
+    }))
+    if (!r.ok) throw await graphError(r, "odoslanie")
+    return { messageId: null }
+  }
 }

@@ -17,6 +17,8 @@
  * nepohodlie, navigácia, ktorá zhodila obrazovku, je výpadok.
  */
 
+import { helpdeskContext } from "./helpdeskAgents"
+import { listTickets } from "./tickets"
 import { cache } from "react"
 import type { NavFlags, NavCounts } from "@/lib/appNav"
 import { hrContext } from "@/lib/hr"
@@ -62,6 +64,13 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
   } catch (e) {
     console.error("[shell] rolu DPO sa nepodarilo overiť:", e)
   }
+  let helpdesk: Awaited<ReturnType<typeof helpdeskContext>> | null = null
+  try {
+    helpdesk = await helpdeskContext()
+    flags.isHelpdesk = helpdesk.state === "ready"
+  } catch (e) {
+    console.error("[shell] rolu helpdesku sa nepodarilo overiť:", e)
+  }
   try {
     const learning = await learningContext()
     flags.learning = learning.state === "ready"
@@ -91,6 +100,10 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
       // Počíta sa len tomu, kto frontu vôbec vidí — cudzie čakajúce
       // odpovede nikomu inému nič nehovoria a je to dotaz navyše.
       if (flags.isEvaluator) counts.evaluation = await queueCount(person.companyCode)
+      // Otvorené tickety kanálov riešiteľa (ADR-028) — tá istá fronta ako `/helpdesk`.
+      if (helpdesk?.state === "ready" && helpdesk.channels.length) {
+        counts.helpdesk = (await listTickets(person.companyCode, helpdesk.channels.map(c => c.key), "open")).length
+      }
     }
   } catch (e) {
     console.error("[shell] počty pre navigáciu sa nepodarilo zistiť:", e)

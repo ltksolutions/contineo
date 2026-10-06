@@ -139,6 +139,14 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M9 6.2v3.6M9 12.1v.1" />
     </>
   ),
+  // Helpdesk (ADR-028): slúchadlá — človek, ktorý odpovedá.
+  helpdesk: (
+    <>
+      <path d="M3 10.5V9a6 6 0 0 1 12 0v1.5" />
+      <path d="M3 10.5h2.2v3.5H3.8a.8.8 0 0 1-.8-.8zM15 10.5h-2.2v3.5h1.4a.8.8 0 0 0 .8-.8z" />
+      <path d="M12.8 14v.6a1.4 1.4 0 0 1-1.4 1.4H9.5" />
+    </>
+  ),
   people: (
     <>
       <circle cx="7" cy="6.4" r="2.6" />
