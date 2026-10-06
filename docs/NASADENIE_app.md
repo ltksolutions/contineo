@@ -583,3 +583,71 @@ awk -F= '{print $1, length($0)-length($1)-1}' /tmp/o.env && rm /tmp/o.env
 **Build nesmie potrebovať databázu.** `next build` prechádza route handlery,
 takže naimportuje aj `mongodb.ts`. Preto sa spojenie zostavuje až pri prvom
 použití, nie na úrovni modulu.
+
+## 5. Schránka helpdesku cez Microsoft Graph (ADR-028, D162)
+
+Kanál helpdesku (Organizácia → Helpdesk) číta schránku na Microsoft 365
+**aplikačne**, bez prihláseného človeka: synchronizácia beží z cronu. Preto
+treba registráciu aplikácie v Entra a **zúženie oprávnení na jednu
+schránku** — bez zúženia by aplikácia s `Mail.Read` čítala celú poštu
+organizácie.
+
+### 5a. Registrácia v Entra (správca M365)
+
+1. Entra admin center → App registrations → New registration: názov
+   „Contineo helpdesk", bez redirect URI (aplikačný tok nemá prihlásenie).
+2. Certificates & secrets → New client secret; **hodnotu skopírovať hneď**,
+   zobrazí sa raz. Platnosť podľa politiky organizácie (odporúčame 12 mesiacov
+   a pripomienku v kalendári — po vypršaní synchronizácia skončí chybou
+   `mailbox.auth`).
+3. Z Overview si zapísať **Directory (tenant) ID** a **Application (client) ID**.
+4. **Neprideľovať** oprávnenia `Mail.Read` / `Mail.Send` v Entra (API
+   permissions). Oprávnenia sa dávajú zúžené v Exchange (5b). Keby ostali aj
+   v Entra, zúženie neplatí — platí zjednotenie oboch (dokumentácia RBAC for
+   Applications, FAQ „Why does my application still have access…").
+
+### 5b. Zúženie na schránku (Exchange Online PowerShell)
+
+RBAC for Applications nahrádza staršie Application Access Policy. Potrebný je
+člen skupiny Organization Management.
+
+```powershell
+Connect-ExchangeOnline
+
+# 1. Ukazovateľ na service principal aplikácie. ID sú z Enterprise applications
+#    (nie z App registrations): Application ID = AppId, Object ID = ObjectId.
+New-ServicePrincipal -AppId <Application ID> -ObjectId <Object ID> -DisplayName "Contineo helpdesk"
+
+# 2. Rozsah: len schránka helpdesku.
+New-ManagementScope -Name "Contineo helpdesk mailbox" `
+  -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'helpdesk@futbalsfz.sk'"
+
+# 3. Čítanie a odosielanie, oboje zúžené na ten rozsah.
+New-ManagementRoleAssignment -App <Object ID> -Role "Application Mail.Read" -CustomResourceScope "Contineo helpdesk mailbox"
+New-ManagementRoleAssignment -App <Object ID> -Role "Application Mail.Send" -CustomResourceScope "Contineo helpdesk mailbox"
+
+# 4. Overenie — InScope má byť True pre helpdesk@ a False pre inú schránku.
+Test-ServicePrincipalAuthorization -Identity <Object ID> -Resource helpdesk@futbalsfz.sk | Format-Table
+Test-ServicePrincipalAuthorization -Identity <Object ID> -Resource ina.osoba@futbalsfz.sk | Format-Table
+```
+
+Zmena oprávnení sa prejaví do 30 minút až 2 hodín (cache); `Test-…` cache
+obchádza.
+
+### 5c. V Contineu
+
+Organizácia → Helpdesk → kanál → Schránka: druh **Microsoft 365 (Graph)**,
+adresa schránky, tenant ID, client ID, tajomstvo. Tajomstvo sa ukladá
+zašifrované kľúčom `OAUTH_SECRET_ENCRYPTION_KEY` (ten istý ako kľúč AI).
+Potom **Overiť spojenie** (prihlásenie aplikácie + čítanie priečinka
+Doručené) a **Synchronizovať teraz**.
+
+- **Prvá synchronizácia** len označí začiatok (`syncSince`): staršie správy
+  sa ticketmi nestanú. História ide do **Ťažby FAQ** (D165), ktorá telá
+  správ neukladá.
+- Rozvrh je v `app/vercel.json` (`/api/cron/helpdesk-sync`). Na pláne Hobby
+  smie cron bežať raz denne; na Pro sa dá zmeniť na `*/15 * * * *`.
+  Tlačidlo „Synchronizovať teraz" rozvrh nepotrebuje.
+- Chyby synchronizácie sú pri kanáli (`lastSyncError`): `mailbox.auth` =
+  tajomstvo alebo ID; `mailbox.forbidden` = chýba alebo nedobehlo zúženie
+  z 5b; `mailbox.notFound` = adresa schránky.

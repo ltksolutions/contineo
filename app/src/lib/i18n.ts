@@ -1515,6 +1515,74 @@ interface Dictionary {
       saved: string
       keyDeleted: string
     }
+    /** Kanály helpdesku (ADR-028): obsah, schránka, riešitelia, widget, ťažba FAQ. */
+    helpdesk: {
+      heading: string
+      intro: string
+      list: string
+      empty: string
+      newChannel: string
+      edit: string
+      key: string
+      keyHint: string
+      name: string
+      audience: string
+      audienceHint: string
+      folders: string
+      foldersHint: string
+      assignees: string
+      assigneesHint: string
+      languages: string
+      mailbox: string
+      mailboxIntro: string
+      mailboxNone: string
+      mailboxKind: string
+      kindGraph: string
+      kindImap: string
+      address: string
+      addressHint: string
+      tenantId: string
+      clientId: string
+      clientSecret: string
+      clientSecretHint: string
+      secretSet: (hint: string, when: string, by: string) => string
+      secretNone: string
+      sync: string
+      syncNow: string
+      syncNever: string
+      syncLast: (when: string) => string
+      syncError: (code: string) => string
+      syncCounts: (created: number, appended: number, skipped: number) => string
+      syncSinceHint: string
+      syncDone: (created: number, appended: number, beforeStart: number) => string
+      verify: string
+      verified: (address: string, name: string) => string
+      widget: string
+      widgetIntro: string
+      widgetOrigins: string
+      widgetOriginsHint: string
+      rateLimit: string
+      rateLimitHint: string
+      widgetSecret: string
+      widgetSecretRotate: string
+      widgetSecretShown: string
+      widgetSecretNone: string
+      widgetSecretSet: (hint: string, when: string) => string
+      mining: string
+      miningIntro: string
+      miningDocument: string
+      miningLimit: string
+      miningRun: string
+      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => string
+      noFaqDocuments: string
+      tickets: (open: number, total: number) => string
+      save: string
+      saved: string
+      created: string
+      remove: string
+      removed: string
+      deployNote: string
+    }
     aiUsage: {
       tabSettings: string
       tabUsage: string
@@ -1544,7 +1612,7 @@ interface Dictionary {
       emptyText: string
       capped: (shown: number, all: number) => string
       note: string
-      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis", { label: string; why: string }>
+      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining", { label: string; why: string }>
     }
     branding: {
       name: string
@@ -5162,6 +5230,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ai.keyRejected": "Anthropic kľúč odmietol — skontrolujte, či je celý a platný.",
     "ai.keyUnverified": "Kľúč sa nepodarilo overiť — Anthropic neodpovedá. Skúste to o chvíľu.",
     "ai.unknownModel": "Model „{value}“ nie je v ponuke.",
+    "helpdesk.keyShape": "Kľúč kanála smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
+    "helpdesk.nameRequired": "Názov kanála je povinný.",
+    "helpdesk.notFound": "Taký kanál tu nie je.",
+    "helpdesk.mailboxKind": "Neznámy druh schránky.",
+    "helpdesk.mailboxAddress": "Adresa schránky nie je e-mailová adresa.",
+    "helpdesk.graphIds": "Pri Microsoft 365 je povinný tenant a client id aplikácie.",
+    "helpdesk.noMailbox": "Kanál nemá schránku.",
+    "helpdesk.noSecret": "Schránka nemá uložené tajomstvo aplikácie.",
+    "helpdesk.secretUnreadable": "Tajomstvo schránky sa nedá rozšifrovať — zadaj ho znova.",
+    "helpdesk.imapNotYet": "IMAP schránka ešte nie je k dispozícii — zatiaľ len Microsoft 365.",
+    "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
+    "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
+    "mailbox.auth": "Prihlásenie aplikácie do Microsoft 365 zlyhalo — skontroluj tenant, client id a tajomstvo.",
+    "mailbox.forbidden": "Schránka odmietla prístup — skontroluj oprávnenia aplikácie a zúženie na schránku.",
+    "mailbox.notFound": "Schránka s touto adresou v organizácii nie je.",
+    "mailbox.cursorExpired": "Značka synchronizácie vypršala — ďalšie spustenie začne odznova.",
+    "mailbox.failed": "Schránka neodpovedala správne.",
     "tenant.noEncryptionKey": "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému.",
     "tenant.needsBothCredentials": "Treba aj clientId, aj tajomstvo — jedno bez druhého sa nedá použiť.",
 
@@ -5246,6 +5331,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domain: "doména",
       "signin-settings": "prihlasovanie",
       "ai-settings": "umelá inteligencia",
+      ticket: "ticket helpdesku",
+      "helpdesk-channel": "kanál helpdesku",
       tenant: "tenant",
       track: "trasa",
       course: "kurz",
@@ -5349,6 +5436,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Prihlasovanie",
       codelists: "Číselníky",
       ai: "Umelá inteligencia",
+      helpdesk: "Helpdesk",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
       gdpr: "GDPR",
@@ -5384,6 +5472,73 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Uložiť",
       saved: "Nastavenie AI je uložené.",
       keyDeleted: "Kľúč organizácie je odstránený.",
+    },
+    helpdesk: {
+      heading: "Helpdesk",
+      intro: "Kanál je jedno miesto, kde sa ľudia pýtajú: má vlastný obsah (priečinky knižnice), schránku, riešiteľov a widget. Kanálov môže byť viac — každý pre iný projekt a publikum.",
+      list: "Kanály",
+      empty: "Zatiaľ žiadny kanál.",
+      newChannel: "Nový kanál",
+      edit: "upraviť",
+      key: "Kľúč",
+      keyHint: "Identita kanála v adrese a v tokene widgetu. Po založení sa nemení.",
+      name: "Názov",
+      audience: "Publikum",
+      audienceHint: "Komu kanál slúži — klubové manažérky, rozhodcovia, rodičia…",
+      folders: "Obsah kanála",
+      foldersHint: "Priečinky knižnice, z ktorých asistent odpovedá. Bez výberu vidí celú knižnicu organizácie.",
+      assignees: "Riešitelia",
+      assigneesHint: "Osoby s rolou helpdesk, ktoré vidia tickety tohto kanála.",
+      languages: "Jazyky kanála",
+      mailbox: "Schránka",
+      mailboxIntro: "E-maily do schránky sa stávajú ticketmi a odpovede odchádzajú z nej. Microsoft 365 cez Microsoft Graph; IMAP pre bežné služby príde s prvým zákazníkom, ktorý ho má.",
+      mailboxNone: "Kanál bez schránky — len chat a tickety z neho.",
+      mailboxKind: "Druh schránky",
+      kindGraph: "Microsoft 365 (Graph)",
+      kindImap: "IMAP (zatiaľ nedostupné)",
+      address: "Adresa schránky",
+      addressHint: "napr. helpdesk@futbalsfz.sk — číta sa z nej aj odpovedá",
+      tenantId: "Tenant (Directory ID)",
+      clientId: "Client ID aplikácie",
+      clientSecret: "Tajomstvo aplikácie (client secret)",
+      clientSecretHint: "Uloží sa zašifrované; prázdne pole ho nemení. Postup registrácie v Entra je v docs/NASADENIE_app.md.",
+      secretSet: (hint: string, when: string, by: string) => `tajomstvo …${hint} zadané ${when} (${by})`,
+      secretNone: "tajomstvo zatiaľ nie je zadané",
+      sync: "Synchronizácia",
+      syncNow: "Synchronizovať teraz",
+      syncNever: "ešte nebežala",
+      syncLast: (when: string) => `naposledy ${when}`,
+      syncError: (code: string) => `posledná chyba: ${code}`,
+      syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplnené ${appended} · preskočené ${skipped}`,
+      syncSinceHint: "Prvé spustenie len označí začiatok: staršie správy sa ticketmi nestanú, história ide do ťažby FAQ.",
+      syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizácia prebehla: nové tickety ${created}, doplnené ${appended}, správ z histórie preskočených ${beforeStart}.`,
+      verify: "Overiť spojenie",
+      verified: (address: string, name: string) => `Spojenie funguje: ${address}${name ? ` (${name})` : ""}.`,
+      widget: "Widget pre cudzí systém",
+      widgetIntro: "Cudzí systém (ISSF) vydá po prihlásení podpísaný token s identitou osoby; widget ho pošle s otázkou. Tajomstvo sa ukáže len raz, hneď po vytvorení.",
+      widgetOrigins: "Povolené pôvody",
+      widgetOriginsHint: "Adresy, z ktorých smie widget volať, každá na nový riadok: https://issf.futbalsfz.sk",
+      rateLimit: "Strop požiadaviek na osobu a hodinu",
+      rateLimitHint: "Ochrana pred zneužitím (D14).",
+      widgetSecret: "Tajomstvo widgetu",
+      widgetSecretRotate: "Vytvoriť nové tajomstvo",
+      widgetSecretShown: "Nové tajomstvo — skopíruj ho teraz, znova sa neukáže:",
+      widgetSecretNone: "zatiaľ nevytvorené",
+      widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvorené ${when}`,
+      mining: "Ťažba FAQ z histórie",
+      miningIntro: "Model prečíta posledné vlákna schránky, očistí ich od osobných údajov a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Telá správ sa neukladajú; návrhy schvaľuje správca obsahu postupom znenia.",
+      miningDocument: "FAQ dokument",
+      miningLimit: "Koľko posledných správ prečítať",
+      miningRun: "Navrhnúť záznamy FAQ",
+      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Ťažba prebehla: vlákien ${threads}, návrhov ${proposed}, uložených do konceptu ${saved}, duplicitných ${duplicates}.`,
+      noFaqDocuments: "V knižnici ešte nie je FAQ dokument — založ ho v Knižnici → Nový dokument → FAQ.",
+      tickets: (open: number, total: number) => `tickety: ${open} otvorených z ${total}`,
+      save: "Uložiť kanál",
+      saved: "Kanál je uložený.",
+      created: "Kanál je založený.",
+      remove: "Odstrániť kanál",
+      removed: "Kanál je odstránený.",
+      deployNote: "Aplikácia v Entra potrebuje oprávnenia Mail.Read a Mail.Send zúžené na schránku kanála (RBAC for Applications). Postup: docs/NASADENIE_app.md § 5.",
     },
     aiUsage: {
       tabSettings: "Nastavenie",
@@ -5421,6 +5576,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "pdf-rewrite": { label: "Prepis skenu PDF", why: "sken bez textovej vrstvy sa prepisuje do textu predpisu" },
         "markdown-clean": { label: "Úprava členenia textu", why: "obnovenie nadpisov a článkov v prevedenom texte" },
         "chunking-analysis": { label: "Analýza členenia", why: "návrh, ako dokument narezať na úseky pre vyhľadávanie" },
+        "faq-mining": { label: "Ťažba FAQ", why: "návrhy záznamov FAQ z histórie schránky helpdesku (ADR-028)" },
       },
     },
     branding: {
@@ -5628,6 +5784,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluator: "evaluator — posudzuje odpovede systému, keď niekto povie, že nesedia",
       dpo: "dpo — zodpovedná osoba: kontroluje právne základy, rozhoduje o námietkach",
       "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázok a testy",
+      helpdesk: "helpdesk — riešiteľ: odpovedá na tickety svojich kanálov a navrhuje záznamy do FAQ",
     },
     list: {
       heading: "Osoby",
@@ -8913,6 +9070,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ai.keyRejected": "Anthropic klíč odmítl — zkontrolujte, zda je celý a platný.",
     "ai.keyUnverified": "Klíč se nepodařilo ověřit — Anthropic neodpovídá. Zkuste to za chvíli.",
     "ai.unknownModel": "Model „{value}“ není v nabídce.",
+    "helpdesk.keyShape": "Klíč kanálu smí mít jen malá písmena bez diakritiky, číslice a podtržítka.",
+    "helpdesk.nameRequired": "Název kanálu je povinný.",
+    "helpdesk.notFound": "Takový kanál tady není.",
+    "helpdesk.mailboxKind": "Neznámý druh schránky.",
+    "helpdesk.mailboxAddress": "Adresa schránky není e-mailová adresa.",
+    "helpdesk.graphIds": "U Microsoft 365 je povinný tenant a client id aplikace.",
+    "helpdesk.noMailbox": "Kanál nemá schránku.",
+    "helpdesk.noSecret": "Schránka nemá uložené tajemství aplikace.",
+    "helpdesk.secretUnreadable": "Tajemství schránky se nedá rozšifrovat — zadej ho znovu.",
+    "helpdesk.imapNotYet": "IMAP schránka ještě není k dispozici — zatím jen Microsoft 365.",
+    "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
+    "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
+    "mailbox.auth": "Přihlášení aplikace do Microsoft 365 selhalo — zkontroluj tenant, client id a tajemství.",
+    "mailbox.forbidden": "Schránka odmítla přístup — zkontroluj oprávnění aplikace a zúžení na schránku.",
+    "mailbox.notFound": "Schránka s touto adresou v organizaci není.",
+    "mailbox.cursorExpired": "Značka synchronizace vypršela — další spuštění začne znovu.",
+    "mailbox.failed": "Schránka neodpověděla správně.",
     "tenant.noEncryptionKey": "Tajemství nelze uložit: chybí OAUTH_SECRET_ENCRYPTION_KEY. Ukládat ho čitelně nebudeme — je to přístup do cizího systému.",
     "tenant.needsBothCredentials": "Je potřeba clientId i tajemství — jedno bez druhého použít nelze.",
 
@@ -8997,6 +9171,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domain: "doména",
       "signin-settings": "přihlašování",
       "ai-settings": "umělá inteligence",
+      ticket: "ticket helpdesku",
+      "helpdesk-channel": "kanál helpdesku",
       tenant: "tenant",
       track: "trasa",
       course: "kurz",
@@ -9100,6 +9276,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Přihlašování",
       codelists: "Číselníky",
       ai: "Umělá inteligence",
+      helpdesk: "Helpdesk",
       acknowledgements: "Potvrzování",
       audit: "Audit",
       gdpr: "GDPR",
@@ -9135,6 +9312,73 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Uložit",
       saved: "Nastavení AI je uloženo.",
       keyDeleted: "Klíč organizace je odstraněn.",
+    },
+    helpdesk: {
+      heading: "Helpdesk",
+      intro: "Kanál je jedno místo, kde se lidé ptají: má vlastní obsah (složky knihovny), schránku, řešitele a widget. Kanálů může být víc — každý pro jiný projekt a publikum.",
+      list: "Kanály",
+      empty: "Zatím žádný kanál.",
+      newChannel: "Nový kanál",
+      edit: "upravit",
+      key: "Klíč",
+      keyHint: "Identita kanálu v adrese a v tokenu widgetu. Po založení se nemění.",
+      name: "Název",
+      audience: "Publikum",
+      audienceHint: "Komu kanál slouží — klubové manažerky, rozhodčí, rodiče…",
+      folders: "Obsah kanálu",
+      foldersHint: "Složky knihovny, ze kterých asistent odpovídá. Bez výběru vidí celou knihovnu organizace.",
+      assignees: "Řešitelé",
+      assigneesHint: "Osoby s rolí helpdesk, které vidí tickety tohoto kanálu.",
+      languages: "Jazyky kanálu",
+      mailbox: "Schránka",
+      mailboxIntro: "E-maily do schránky se stávají tickety a odpovědi odcházejí z ní. Microsoft 365 přes Microsoft Graph; IMAP pro běžné služby přijde s prvním zákazníkem, který ho má.",
+      mailboxNone: "Kanál bez schránky — jen chat a tickety z něj.",
+      mailboxKind: "Druh schránky",
+      kindGraph: "Microsoft 365 (Graph)",
+      kindImap: "IMAP (zatím nedostupné)",
+      address: "Adresa schránky",
+      addressHint: "např. helpdesk@futbalsfz.sk — čte se z ní i odpovídá",
+      tenantId: "Tenant (Directory ID)",
+      clientId: "Client ID aplikace",
+      clientSecret: "Tajemství aplikace (client secret)",
+      clientSecretHint: "Uloží se zašifrované; prázdné pole ho nemění. Postup registrace v Entra je v docs/NASADENIE_app.md.",
+      secretSet: (hint: string, when: string, by: string) => `tajemství …${hint} zadané ${when} (${by})`,
+      secretNone: "tajemství zatím není zadané",
+      sync: "Synchronizace",
+      syncNow: "Synchronizovat teď",
+      syncNever: "ještě neběžela",
+      syncLast: (when: string) => `naposledy ${when}`,
+      syncError: (code: string) => `poslední chyba: ${code}`,
+      syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplněné ${appended} · přeskočené ${skipped}`,
+      syncSinceHint: "První spuštění jen označí začátek: starší zprávy se tickety nestanou, historie jde do těžby FAQ.",
+      syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizace proběhla: nové tickety ${created}, doplněné ${appended}, zpráv z historie přeskočeno ${beforeStart}.`,
+      verify: "Ověřit spojení",
+      verified: (address: string, name: string) => `Spojení funguje: ${address}${name ? ` (${name})` : ""}.`,
+      widget: "Widget pro cizí systém",
+      widgetIntro: "Cizí systém (ISSF) vydá po přihlášení podepsaný token s identitou osoby; widget ho pošle s otázkou. Tajemství se ukáže jen jednou, hned po vytvoření.",
+      widgetOrigins: "Povolené původy",
+      widgetOriginsHint: "Adresy, ze kterých smí widget volat, každá na nový řádek: https://issf.futbalsfz.sk",
+      rateLimit: "Strop požadavků na osobu a hodinu",
+      rateLimitHint: "Ochrana před zneužitím (D14).",
+      widgetSecret: "Tajemství widgetu",
+      widgetSecretRotate: "Vytvořit nové tajemství",
+      widgetSecretShown: "Nové tajemství — zkopíruj ho teď, znovu se neukáže:",
+      widgetSecretNone: "zatím nevytvořené",
+      widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvořené ${when}`,
+      mining: "Těžba FAQ z historie",
+      miningIntro: "Model přečte poslední vlákna schránky, očistí je od osobních údajů a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Těla zpráv se neukládají; návrhy schvaluje správce obsahu postupem znění.",
+      miningDocument: "FAQ dokument",
+      miningLimit: "Kolik posledních zpráv přečíst",
+      miningRun: "Navrhnout záznamy FAQ",
+      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Těžba proběhla: vláken ${threads}, návrhů ${proposed}, uložených do konceptu ${saved}, duplicitních ${duplicates}.`,
+      noFaqDocuments: "V knihovně ještě není FAQ dokument — založ ho v Knihovně → Nový dokument → FAQ.",
+      tickets: (open: number, total: number) => `tickety: ${open} otevřených z ${total}`,
+      save: "Uložit kanál",
+      saved: "Kanál je uložen.",
+      created: "Kanál je založen.",
+      remove: "Odstranit kanál",
+      removed: "Kanál je odstraněn.",
+      deployNote: "Aplikace v Entra potřebuje oprávnění Mail.Read a Mail.Send zúžená na schránku kanálu (RBAC for Applications). Postup: docs/NASADENIE_app.md § 5.",
     },
     aiUsage: {
       tabSettings: "Nastavení",
@@ -9172,6 +9416,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "pdf-rewrite": { label: "Přepis skenu PDF", why: "sken bez textové vrstvy se přepisuje do textu předpisu" },
         "markdown-clean": { label: "Úprava členění textu", why: "obnovení nadpisů a článků v převedeném textu" },
         "chunking-analysis": { label: "Analýza členění", why: "návrh, jak dokument rozřezat na úseky pro vyhledávání" },
+        "faq-mining": { label: "Těžba FAQ", why: "návrhy záznamů FAQ z historie schránky helpdesku (ADR-028)" },
       },
     },
     branding: {
@@ -9379,6 +9624,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluator: "evaluator — posuzuje odpovědi systému, když někdo řekne, že nesedí",
       dpo: "dpo — pověřenec: kontroluje právní základy, rozhoduje o námitkách",
       "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázek a testy",
+      helpdesk: "helpdesk — řešitel: odpovídá na tickety svých kanálů a navrhuje záznamy do FAQ",
     },
     list: {
       heading: "Osoby",
@@ -12653,6 +12899,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ai.keyRejected": "Anthropic rejected the key — check that it is complete and valid.",
     "ai.keyUnverified": "The key could not be verified — Anthropic is not responding. Try again in a moment.",
     "ai.unknownModel": "The model “{value}” is not on offer.",
+    "helpdesk.keyShape": "The channel key may contain only lowercase letters without diacritics, digits and underscores.",
+    "helpdesk.nameRequired": "The channel name is required.",
+    "helpdesk.notFound": "There is no such channel here.",
+    "helpdesk.mailboxKind": "Unknown mailbox type.",
+    "helpdesk.mailboxAddress": "The mailbox address is not an e-mail address.",
+    "helpdesk.graphIds": "For Microsoft 365 the tenant and the application client id are required.",
+    "helpdesk.noMailbox": "The channel has no mailbox.",
+    "helpdesk.noSecret": "The mailbox has no stored application secret.",
+    "helpdesk.secretUnreadable": "The mailbox secret cannot be decrypted — enter it again.",
+    "helpdesk.imapNotYet": "IMAP mailboxes are not available yet — Microsoft 365 only for now.",
+    "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
+    "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
+    "mailbox.auth": "The application could not sign in to Microsoft 365 — check the tenant, client id and secret.",
+    "mailbox.forbidden": "The mailbox refused access — check the application permissions and the mailbox scoping.",
+    "mailbox.notFound": "There is no mailbox with this address in the organisation.",
+    "mailbox.cursorExpired": "The synchronisation cursor expired — the next run starts over.",
+    "mailbox.failed": "The mailbox did not respond correctly.",
     "tenant.noEncryptionKey": "The secret cannot be stored: OAUTH_SECRET_ENCRYPTION_KEY is missing. We will not store it readable — it is access to someone else's system.",
     "tenant.needsBothCredentials": "Both clientId and the secret are needed — one without the other cannot be used.",
 
@@ -12737,6 +13000,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domain: "domain",
       "signin-settings": "sign-in",
       "ai-settings": "artificial intelligence",
+      ticket: "helpdesk ticket",
+      "helpdesk-channel": "helpdesk channel",
       tenant: "tenant",
       track: "track",
       course: "course",
@@ -12840,6 +13105,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Sign-in",
       codelists: "Code lists",
       ai: "Artificial intelligence",
+      helpdesk: "Helpdesk",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
       gdpr: "GDPR",
@@ -12875,6 +13141,73 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Save",
       saved: "The AI settings have been saved.",
       keyDeleted: "The organisation's key has been removed.",
+    },
+    helpdesk: {
+      heading: "Helpdesk",
+      intro: "A channel is one place where people ask: it has its own content (library folders), mailbox, agents and widget. There can be several channels — one per project and audience.",
+      list: "Channels",
+      empty: "No channels yet.",
+      newChannel: "New channel",
+      edit: "edit",
+      key: "Key",
+      keyHint: "The channel's identity in the address and in the widget token. It does not change after creation.",
+      name: "Name",
+      audience: "Audience",
+      audienceHint: "Who the channel serves — club managers, referees, parents…",
+      folders: "Channel content",
+      foldersHint: "Library folders the assistant answers from. With none selected it sees the whole library of the organisation.",
+      assignees: "Agents",
+      assigneesHint: "People with the helpdesk role who see this channel's tickets.",
+      languages: "Channel languages",
+      mailbox: "Mailbox",
+      mailboxIntro: "E-mails to the mailbox become tickets and replies go out from it. Microsoft 365 via Microsoft Graph; IMAP for ordinary services arrives with the first customer who has one.",
+      mailboxNone: "Channel without a mailbox — chat and its tickets only.",
+      mailboxKind: "Mailbox type",
+      kindGraph: "Microsoft 365 (Graph)",
+      kindImap: "IMAP (not available yet)",
+      address: "Mailbox address",
+      addressHint: "e.g. helpdesk@futbalsfz.sk — read from and replied from",
+      tenantId: "Tenant (Directory ID)",
+      clientId: "Application client ID",
+      clientSecret: "Application secret (client secret)",
+      clientSecretHint: "Stored encrypted; an empty field leaves it unchanged. The Entra registration procedure is in docs/NASADENIE_app.md.",
+      secretSet: (hint: string, when: string, by: string) => `secret …${hint} set ${when} (${by})`,
+      secretNone: "no secret set yet",
+      sync: "Synchronisation",
+      syncNow: "Synchronise now",
+      syncNever: "has not run yet",
+      syncLast: (when: string) => `last ${when}`,
+      syncError: (code: string) => `last error: ${code}`,
+      syncCounts: (created: number, appended: number, skipped: number) => `new tickets ${created} · appended ${appended} · skipped ${skipped}`,
+      syncSinceHint: "The first run only marks the start: older messages do not become tickets, history goes to FAQ mining.",
+      syncDone: (created: number, appended: number, beforeStart: number) => `Synchronisation finished: new tickets ${created}, appended ${appended}, history messages skipped ${beforeStart}.`,
+      verify: "Verify connection",
+      verified: (address: string, name: string) => `The connection works: ${address}${name ? ` (${name})` : ""}.`,
+      widget: "Widget for an external system",
+      widgetIntro: "The external system (ISSF) issues a signed token with the person's identity after sign-in; the widget sends it with the question. The secret is shown only once, right after creation.",
+      widgetOrigins: "Allowed origins",
+      widgetOriginsHint: "Addresses the widget may call from, one per line: https://issf.futbalsfz.sk",
+      rateLimit: "Request limit per person and hour",
+      rateLimitHint: "Protection against abuse (D14).",
+      widgetSecret: "Widget secret",
+      widgetSecretRotate: "Create a new secret",
+      widgetSecretShown: "New secret — copy it now, it will not be shown again:",
+      widgetSecretNone: "not created yet",
+      widgetSecretSet: (hint: string, when: string) => `…${hint}, created ${when}`,
+      mining: "FAQ mining from history",
+      miningIntro: "The model reads the latest mailbox threads, strips personal data and proposes FAQ entries into the draft of the selected FAQ document. Message bodies are not stored; the content manager approves the proposals through the version flow.",
+      miningDocument: "FAQ document",
+      miningLimit: "How many recent messages to read",
+      miningRun: "Propose FAQ entries",
+      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Mining finished: threads ${threads}, proposals ${proposed}, saved to the draft ${saved}, duplicates ${duplicates}.`,
+      noFaqDocuments: "There is no FAQ document in the library yet — create one in Library → New document → FAQ.",
+      tickets: (open: number, total: number) => `tickets: ${open} open of ${total}`,
+      save: "Save channel",
+      saved: "The channel is saved.",
+      created: "The channel is created.",
+      remove: "Remove channel",
+      removed: "The channel is removed.",
+      deployNote: "The Entra application needs Mail.Read and Mail.Send scoped to the channel mailbox (RBAC for Applications). Procedure: docs/NASADENIE_app.md § 5.",
     },
     aiUsage: {
       tabSettings: "Settings",
@@ -12912,6 +13245,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "pdf-rewrite": { label: "PDF scan transcription", why: "a scan without a text layer is transcribed into the regulation text" },
         "markdown-clean": { label: "Text structure cleanup", why: "restoring headings and articles in converted text" },
         "chunking-analysis": { label: "Chunking analysis", why: "a proposal for splitting the document into chunks for search" },
+        "faq-mining": { label: "FAQ mining", why: "FAQ entry proposals from the helpdesk mailbox history (ADR-028)" },
       },
     },
     branding: {
@@ -13119,6 +13453,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluator: "evaluator — reviews the system's answers when someone says they are wrong",
       dpo: "dpo — data protection officer: reviews legal bases, decides on objections",
       "learning-admin": "learning-admin — instructor: manages courses, the question bank and tests",
+      helpdesk: "helpdesk — agent: answers tickets of their channels and proposes FAQ entries",
     },
     list: {
       heading: "People",
