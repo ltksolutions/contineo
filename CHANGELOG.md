@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Úprava dokumentu má vlastnú adresu (2026-10-06)
+
+Úprava dokumentu (názov, kategória, priečinok…) je na
+`/library/<dokument>/edit` a cesta pod hlavičkou ju pomenuje „Upraviť
+dokument" s návratom na dokument. Staré odkazy s `?edit=document`
+presmerujú na novú adresu.
+
 ### Názov v karte prehliadača aj na verejných stránkach (2026-10-06)
 
 Ochrana osobných údajov, Prihlásenie a Overenie certifikátu majú v karte

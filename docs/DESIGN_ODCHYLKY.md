@@ -58,7 +58,7 @@ s kurzom s kľúčom `topics`.
 - B: predpona pre detail (`/learning/manage/c/[courseKey]`) — mení všetky
   existujúce adresy kurzov, preto nie.
 
-**R4 — Úprava dokumentu na `?edit=document`** (`/library/[id]`). Je to
+**R4 — Úprava dokumentu na `?edit=document`** (✓ hotové 6. 10. 2026, `/library/[id]/edit`) (`/library/[id]`). Je to
 samostatná obrazovka s vlastným nadpisom, ako `/version` a `/text`.
 - **A (odporúčam):** vlastná cesta `/library/[id]/edit`, starý tvar
   presmerovať.
