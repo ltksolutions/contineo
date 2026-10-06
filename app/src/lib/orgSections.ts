@@ -13,7 +13,7 @@
 import { tabValue } from "./urlParams"
 
 export const ORG_SECTION_GROUPS = [
-  { key: "org", sections: ["general", "departments", "codelists", "ai"] },
+  { key: "org", sections: ["general", "departments", "codelists", "ai", "helpdesk"] },
   { key: "access", sections: ["domains", "signin"] },
   // Členenie (`chunking`) tu do 5. 10. 2026 bolo; od D160 sa nenastavuje
   // v organizácii — stará adresa vedie na rozcestník (`legacyRoutes.ts`).

@@ -98,12 +98,24 @@ export function attachVersions(chunks: ChunkResult[], versions: Record<string, C
  * v podmienke dotazu (D32) — znenia inej organizácie sa do zoznamu nedostanú
  * ani omylom.
  */
-export async function searchScope(companyCode: string, asOf: Date = new Date(), now: Date = new Date()): Promise<SearchScope> {
+export async function searchScope(
+  companyCode: string,
+  asOf: Date = new Date(),
+  now: Date = new Date(),
+  /**
+   * Zúženie na priečinky knižnice — rozsah kanála helpdesku (ADR-028, D161).
+   * Prázdny zoznam znamená celú knižnicu, nie nič: kanál bez priečinkov
+   * vidí všetko organizácie.
+   */
+  narrow?: { folderIds?: string[] },
+): Promise<SearchScope> {
   const code = requireCompanyCode(companyCode, "searchScope")
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
+  const folderIds = (narrow?.folderIds ?? []).filter(Boolean)
   const docs = await col
     .find(
-      { companyCode: code },
+      // `folderPath` nesie aj predkov (D56), takže jeden `$in` pokryje podstrom.
+      folderIds.length ? { companyCode: code, folderPath: { $in: folderIds } } : { companyCode: code },
       { projection: VERSION_PROJECTION },
     )
     .toArray()

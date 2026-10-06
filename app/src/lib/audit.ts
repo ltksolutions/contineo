@@ -62,6 +62,9 @@ export type AuditSubject =
   | "test"
   | "test-attempt"
   | "certificate"
+  // Helpdesk (ADR-028): ticket a kanál
+  | "ticket"
+  | "helpdesk-channel"
 
 export interface AuditRecord {
   _id?: ObjectId

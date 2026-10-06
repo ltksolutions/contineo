@@ -78,9 +78,9 @@
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**
 - [ ] **Web obsah (nová fáza CMS-Web):** KB články, FAQ, kategórie, navigácia, statické stránky; publikačný workflow + SSG/ISR generovanie; i18n SK/EN (AI preklad → review, **D-CMS-5**)
 - [ ] Editor: Markdown + náhľad, neskôr WYSIWYG vrstva — **D-CMS-2**
-- [ ] **Overené odpovede → publikovaný FAQ** (zatváranie slučky); norma na webe len ako kanonický odkaz — **D-CMS-4**. Pár už existuje (úsek so `sourceType: "qa"`, 2026-09-15), otvorené je len jeho zverejnenie na verejnom webe. Kolekcia `qa_pairs` nevznikne (D11 revidované)
+- [ ] **Overené odpovede → publikovaný FAQ** (zatváranie slučky); norma na webe len ako kanonický odkaz — **D-CMS-4**. Pár už existuje (úsek so `sourceType: "qa"`, 2026-09-15); **FAQ ako druh dokumentu v knižnici je hotové 2026-10-06 (ADR-028 D164)** — otvorené ostáva len zverejnenie na verejnom webe a zlúčenie kurácie z `/evaluation` do „pridať záznam do FAQ“ (odporúčanie v ADR-028). Kolekcia `qa_pairs` nevznikne (D11 revidované)
 - [ ] **Kanály:** kolekcie `channels` + `channel_runs`, admin CRUD, test `discover`, review fronta, monitoring behov; bez auto-publish (**D-CMS-6**)
-- [ ] Helpdesk: štart **web widget** (`tickets`), e-mailový kanál ako druhý krok — **D-CMS-3**
+- [x] Helpdesk: **web widget** (`tickets`) aj **e-mailový kanál** ✅ 2026-10-06 (ADR-028, PR #273/#276/#278): kanály, schránka cez Graph, tickety, `/helpdesk`, widget pre ISSF. **Naostro neoverené** — čaká na Entra registráciu a prvý kanál (`NEXT.md`). Zostáva: upozornenie riešiteľom na nový ticket (`notify()` nový druh), tickety v „čo čaká na mňa“ (`pending.ts`, zatiaľ by sa pripočítali k „Na potvrdenie“), IMAP adaptér (s prvým zákazníkom), cron `helpdesk-sync` častejšie než denne (až na pláne Pro), text účelu „helpdesk“ na `/privacy` (DPO, ADR-022), skupiny `rozhodcovia`/`funkcionari` bez členov (D168) — **D-CMS-3**
 - [ ] Preniesť D-CMS-1..6 do `OPEN_DECISIONS.md` (D16+) pri revízii backlogu
 
 #### Intranet — dizajnový handoff (`design_handoff_contineo_intranet`, od 2026-09-07)
@@ -673,7 +673,7 @@ Overené na `sfz:test_znenia` (pridelenie osobe, Oddeleniu IT, trase `test-2026`
 **Rozsah C — až keď existujú ďalšie zdroje**
 
 - [ ] kurácia (dokumenty čakajúce na kurátora, otvorený rozpor s D25)
-- [ ] helpdesk (Fáza 4b)
+- [ ] helpdesk (Fáza 4b) — tickety existujú (ADR-028, 2026-10-06), do registra `pending.ts` zatiaľ nejdú: pripočítali by sa k „Na potvrdenie“; majú vlastný počet pri položke Helpdesk v menu
 - [ ] prípadné jednorazové hlásenia podľa D40
 
 ---
@@ -950,7 +950,7 @@ nie táto sekcia.
 - [x] **N6** ✅ 2026-09-18 — `generateAnswer()` posiela `answer.failed` v jazyku prostredia, príčina ide do logu; test `tests/llmGeneratorError.test.ts`.
 - [x] **Web vs D90** ✅ 2026-09-18 — `web/lib/dictionaries.js` (SK/CS/EN): hierarchia a `scope: global` preformulované na „zdieľanie pripravujeme" (viditeľnosť = vlastná organizácia, D90); Vertex AI odstránený (Bedrock zostáva — jediná cesta k eu-full generovaniu); „Infinity (voyage-4-nano) / TEI (BGE-M3)" (O7 nález A); zero-retention pri Anthropic zmiernené na „potvrdzujeme zmluvne", kým nepríde odpoveď zo sales supportu (žiadosť odoslaná 2026-09-18) — potom vrátiť silné znenie. Build webu prešiel.
 - [ ] **N8 — `.env.local.example` zastaraný**: zosúladiť so skutočnými premennými (bez Ollama/Blob; doplniť CRON_SECRET, ALLOWED_EMAILS, OAUTH_SECRET_ENCRYPTION_KEY, PLATFORM_TENANT, VERCEL_TOKEN, ECOMAIL_*).
-- [ ] **N5/N7 — rate limiting a timingSafeEqual pre CRON_SECRET**: až s verejným widgetom, nie skôr.
+- [ ] **N5/N7 — rate limiting a timingSafeEqual pre CRON_SECRET**: widget už je (ADR-028, 2026-10-06) a má vlastný strop na osobu a hodinu z `evaluations`; CRON_SECRET sa stále porovnáva `!==` — doplniť `timingSafeEqual` v oboch cron routách.
 
 ## P. Vzdelávanie — modul `learning` (zaradené 2026-09-27)
 

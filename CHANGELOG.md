@@ -16,6 +16,32 @@ V zoznamoch kariet (úlohy, kurzy, kurátorstvo, posúdenie, námietky) sú
 tlačidlá kariet tiché; plné ostáva len v hlavičke. Filter stavu vo
 Vzdelávaní sa na počítači už neroztiahne cez celú šírku.
 
+### Helpdesk: FAQ, kanály so schránkou, tickety, obrazovka riešiteľa a widget pre ISSF (2026-10-06, ADR-028)
+
+**FAQ je nový druh dokumentu** v knižnici: píše sa v aplikácii ako záznamy
+(otázka, ďalšie znenia, odpoveď, zdroje, pre koho), PDF a text znenia sa
+skladajú zo záznamov, zverejnenie ide schválením ako každé iné znenie.
+Asistent z každého záznamu odpovedá ako z overenej odpovede; keď zdrojová
+norma dostane nové znenie, záznam sa označí na kontrolu.
+
+**Organizácia → Helpdesk:** kanály s obsahom (priečinky knižnice),
+riešiteľmi, schránkou na Microsoft 365 (cez Microsoft Graph, zúžené na
+jednu schránku) a widgetom. Overiť spojenie, Synchronizovať teraz, ťažba
+histórie schránky do návrhov FAQ bez osobných údajov. E-maily do schránky
+sa stávajú ticketmi.
+
+**`/helpdesk` pre rolu `helpdesk`:** fronta ticketov svojich kanálov,
+vlákno, návrh odpovede od asistenta len z verejného obsahu, úprava,
+odoslanie e-mailom zo schránky kanála, pridanie odpovede do FAQ.
+
+**Widget pre cudzí systém (ISSF):** skript v Shadow DOM, farba organizácie,
+podpísaný token s identitou osoby (štandardné claimy JWT/OIDC), odpovede
+z rozsahu kanála, po dvoch negatívnych hodnoteniach ticket helpdesku.
+Osoba z tokenu má druh `external` a do intranetu sa neprihlási. Návod pre
+prevádzkovateľa ISSF: `docs/WIDGET_ISSF.md`; postup v Entra a Exchange:
+`docs/NASADENIE_app.md` § 5. Druh osoby má tri hodnoty (`internal`,
+`employee`, `external`); rozhodcovia a funkcionári sú skupiny.
+
 ### Web contineo.app: obrázok architektúry hovorí Zdroje → Kanály (2026-10-06)
 
 V obrázku na stránke Technológia sa „Vstupné kanály" volajú **Zdroje**

@@ -32,11 +32,22 @@ import { requireCompanyCode } from "./tenantScope"
 export const PERSONS_COLLECTION = "persons"
 
 /**
- * Typ osoby. Pripravené pole, **nie filtrovacie kritérium pre prístup** —
- * prístup rieši `accessLevel` + `companyCode` ako všade inde. Druhá cesta
- * k obsahu by raz zaostala za tou prvou.
+ * Druh osoby (rozhodnutie Jána 6. 10. 2026, ADR-028 D168):
+ *
+ *   • `employee` — zamestnanec organizácie;
+ *   • `internal` — interný človek, ktorý nie je zamestnanec: funkcionár,
+ *     člen komisie, externý spolupracovník s prístupom do intranetu;
+ *   • `external` — človek, ktorého poznáme **len cez cudzí systém** (widget
+ *     helpdesku, D166). Do intranetu sa **neprihlási** — `personMaySignIn()`
+ *     ho nepustí, aj keby mal adresu, ktorú by prihlásenie inak prijalo.
+ *     Import správcom mu druh prepíše a tým ho pustí dnu.
+ *
+ * O prístupe k **obsahu** druh nerozhoduje — ten rieši `accessLevel`
+ * a `companyCode` ako všade inde. Rozhodcovia a funkcionári nie sú druh,
+ * ale **skupina** (`groups`): druh hovorí, kto človek je voči organizácii,
+ * skupina komu sa čo posiela.
  */
-export type PersonType = "employee" | "external" | "referee" | "official"
+export type PersonType = "internal" | "employee" | "external"
 
 /**
  * `invited` = zapísaná, ešte sa neprihlásila. `inactive` = už sem nepatrí.
@@ -292,6 +303,8 @@ export interface Person {
     entraObjectId?: string | null
     /** `sub` z Google. */
     googleSub?: string | null
+    /** Identifikátor v cudzom systéme podľa kľúča kanála helpdesku (ADR-028, D166): `{ issf: "<sub>" }`. */
+    widget?: Record<string, string>
   }
 
   createdBy?: string
@@ -387,8 +400,10 @@ export async function personMaySignIn(email: string, companyCode: string): Promi
     // tak prihlásil aj na portál LTK a až stránka mu povedala, že tam nepatrí.
     // Relácia platí pre doménu, takže o vstupe rozhoduje organizácia domény.
     const col = await getCollection<Person>(PERSONS_COLLECTION)
+    // Druh `external` (ADR-028, D166/D168) nemá do intranetu vstup — človek
+    // sa pýta cez cudzí systém a tam aj zostáva.
     const count = await col.countDocuments(
-      { companyCode: code, email: address, status: { $ne: "inactive" } },
+      { companyCode: code, email: address, status: { $ne: "inactive" }, personType: { $ne: "external" } },
       { limit: 1 }
     )
     return count > 0
@@ -470,6 +485,9 @@ export async function recordExternalRef(
   }
 }
 
+/** Skupiny ponúkané vždy — viď `audiencesInOrg()`. Malými písmenami ako každá skupina. */
+export const DEFAULT_GROUPS = ["rozhodcovia", "funkcionari"] as const
+
 /**
  * Skupiny a trasy, ktoré v organizácii naozaj existujú.
  *
@@ -500,8 +518,15 @@ export async function audiencesInOrg(companyCode: string): Promise<{
       .sort((a, b) => a.value.localeCompare(b.value, "sk"))
   }
 
-  return { groups: countInto(o => o.groups), tracks: countInto(o => o.tracks) }
+  // Skupiny, ktoré má organizácia mať vždy v ponuke, aj kým v nich nikto nie
+  // je (rozhodnutie Jána 6. 10. 2026): rozhodcovia a funkcionári boli dovtedy
+  // druhy osoby; druh hovorí, kto človek je, skupina komu sa čo posiela.
+  const groups = countInto(o => o.groups)
+  for (const g of DEFAULT_GROUPS) if (!groups.some(x => x.value === g)) groups.push({ value: g, count: 0 })
+  groups.sort((a, b) => a.value.localeCompare(b.value, "sk"))
+  return { groups, tracks: countInto(o => o.tracks) }
 }
+
 
 // ── Import osôb ──────────────────────────────────────────────────────────────
 
@@ -720,6 +745,11 @@ export async function upsertPersons(
     // už má, a história členstva (D50) sa odvíja od tej dnešnej.
     const existing = await col.findOne(key)
     const { set } = planChanges(existing, r, mode, now)
+    // Naimportovaný človek patrí do intranetu — druh `external` z widgetu
+    // (ADR-028, D166) sa importom prepíše na druh z riadku, inak na
+    // zamestnanca. Len vtedy: inak by každý import „menil" aj osobu, ktorej
+    // niet čo doplniť.
+    if (existing?.personType === "external") set.personType = r.personType ?? "employee"
 
     // Existujúcej osobe, ktorej niet čo doplniť, sa nezapíše nič.
     if (existing && Object.keys(set).length === 0) { v.unchanged++; continue }

@@ -393,7 +393,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 ### Fáza 4b – Kuračný cyklus + Helpdesk `[plán]`
 
 - [x] **Kurácia hotová 2026-09-15** — overená odpoveď späť do znalostí. Bez kolekcie `qa_pairs` (D11 revidované): stav je na zázname v `evaluations`, do indexu ide úsek so `sourceType: "qa"`.
-- [ ] `tickets`: eskalácia z bota/e-mailu, prepojenie na `conversations`, SLA, životný cyklus
+- [x] **`tickets` hotové 2026-10-06 (ADR-028):** e-mail zo schránky kanála aj eskalácia z widgetu sú ticket v jednej kolekcii; priebeh rozhovoru odkazuje na záznamy v `evaluations` (kolekcia `conversations` nevznikla); životný cyklus new → drafted → sent → closed → reopened; SLA zatiaľ nie.
 
 ### Fáza 6 – Scheduler & monitoring `[1 týždeň]`
 

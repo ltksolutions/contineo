@@ -19,7 +19,7 @@
  */
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "learning" | "learningManage" | "learningTests"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "helpdesk" | "learning" | "learningManage" | "learningTests"
 
 export interface NavItem {
   href: string
@@ -48,6 +48,8 @@ export interface NavFlags {
   isContentManager?: boolean
   isEvaluator?: boolean
   isDpo?: boolean
+  /** Rola `helpdesk` (ADR-028, D167) — fronta ticketov svojich kanálov. */
+  isHelpdesk?: boolean
   /** Organizácia má zapnutý modul Vzdelávanie a človek je prihlásený (ADR-018). */
   learning?: boolean
   /** Rola `learning-admin` — má zmysel len spolu s `learning`. */
@@ -103,6 +105,8 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // Ochrana údajov (ADR-012, D104) — výkaz právnych základov a námietky.
     // Len pre rolu `dpo`: námietka je osobný údaj o konkrétnom človeku.
     ...(flags.isDpo ? [{ href: "/dpo", key: "dpo" as const }] : []),
+    // Helpdesk (ADR-028): pracovný stôl riešiteľa — tickety kanálov, ktorých je riešiteľom.
+    ...(flags.isHelpdesk ? [{ href: "/helpdesk", key: "helpdesk" as const }] : []),
     /*
      * Vzdelávanie (ADR-018, D123) — **pre každého** (SHELL-menu-v-hlavicke,
      * Q5): položka je na tom istom mieste u všetkých, aj keď organizácia
@@ -265,7 +269,7 @@ export const MAIN_KEYS: NavKey[] = ["overview", "ask", "toAcknowledge", "toAppro
  */
 const SECTION_GROUPS: { key: SectionGroupKey; keys: NavKey[] }[] = [
   { key: "organisation", keys: ["directory", "library", "learning"] },
-  { key: "management", keys: ["assigned", "evidence", "people", "evaluation", "dpo", "learningManage", "learningTests"] },
+  { key: "management", keys: ["assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "learningManage", "learningTests"] },
 ]
 
 export interface SectionGroup {
@@ -379,6 +383,7 @@ const SECTION_HREF: Record<NavKey, string> = {
   people: "/people",
   evaluation: "/evaluation",
   dpo: "/dpo",
+  helpdesk: "/helpdesk",
   learningManage: "/learning/manage",
   learningTests: "/learning/tests",
 }
