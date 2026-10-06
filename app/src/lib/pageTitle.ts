@@ -48,6 +48,7 @@ export function pageTitle(pathname: string | null | undefined, organisation: str
       "/verify": t.learning.cert.vTitle,
       "/organisation": t.org.heading,
       ...Object.fromEntries(ORG_SECTIONS.map(s => [`/organisation/${s}`, t.org.tabs[s] ?? t.org.heading])),
+      "/organisation/ai/usage": t.org.aiUsage.tabUsage,
       "/admin": t.admin.list.heading,
       "/admin/new": t.admin.create.heading,
     },

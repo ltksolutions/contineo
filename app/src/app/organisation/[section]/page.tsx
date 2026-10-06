@@ -294,7 +294,11 @@ export default async function OrganisationSectionPage({
     : []
 
   return (
-    <AppShell language={ctx.person.language} title={t.tabs[now]} trail={{ "/organisation": t.heading }}>
+    <AppShell language={ctx.person.language}
+              title={now === "ai" && aiView === "usage" ? tu.tabUsage : t.tabs[now]}
+              trail={now === "ai" && aiView === "usage"
+                ? { "/organisation": t.heading, "/organisation/ai": t.tabs.ai }
+                : { "/organisation": t.heading }}>
     <div className="org-set" style={tenantStyle(branding)}>
       <Notice
         language={language}
@@ -1018,11 +1022,12 @@ export default async function OrganisationSectionPage({
       */}
       {now === "ai" && (
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "minmax(0, 1fr)" }}>
-        {/* Nastavenie a Spotreba (ADR-026) — dve časti tej istej sekcie, `?view=`. */}
+        {/* Nastavenie a Spotreba (ADR-026) — dve časti tej istej sekcie. Spotreba
+            má od 6. 10. 2026 vlastnú adresu `/organisation/ai/usage` (R5). */}
         <nav className="tabs" aria-label={t.tabs.ai}>
           <TabsBar>
             <TabLink href="/organisation/ai" active={aiView === "settings"}>{tu.tabSettings}</TabLink>
-            <TabLink href="/organisation/ai?view=usage" active={aiView === "usage"}>{tu.tabUsage}</TabLink>
+            <TabLink href="/organisation/ai/usage" active={aiView === "usage"}>{tu.tabUsage}</TabLink>
           </TabsBar>
         </nav>
 
@@ -1122,8 +1127,7 @@ export default async function OrganisationSectionPage({
       */}
       {aiView === "usage" && usage && (
       <>
-        <form action="/organisation/ai" method="get" className="card usage-filter">
-          <input type="hidden" name="view" value="usage" />
+        <form action="/organisation/ai/usage" method="get" className="card usage-filter">
           <label className="field">
             <span className="field-label">{tu.from}</span>
             <input className="field-input" type="date" name="from" defaultValue={usage.filter.fromText} />

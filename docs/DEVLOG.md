@@ -10,6 +10,16 @@
 
 ---
 
+## 2026-10-06 — spotreba AI na vlastnej adrese (R5)
+
+**Čo sa zmenilo:** `/organisation/[section]/usage` (pod inou časťou než
+`ai` vráti 404) zavolá stránku časti s `view: "usage"`; podmenu a filter
+vedú na `/organisation/ai/usage`, filter už neposiela `view`. Cesta:
+Organizácia › Umelá inteligencia › Spotreba. `legacyQueryRoute()` presmeruje
+`?view=usage`. ADR-026 dostal poznámku (nie prepis).
+
+---
+
 ## 2026-10-06 — úprava dokumentu na vlastnej adrese (R4)
 
 **Čo sa zmenilo:** `/library/[id]/edit` je tenká stránka, ktorá zavolá
