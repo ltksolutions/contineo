@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Číselníky: výber zo zoznamu namiesto druhého podmenu (2026-10-06)
+
+V nastaveniach organizácie sa číselník (Druhy dokumentov, Značky,
+Pracoviská, Právne základy) vyberá zo zoznamu nad ním, nie druhým
+farebným podmenu pod bočným zoznamom. Výber zaberie hneď; bez
+JavaScriptu tlačidlom Zobraziť.
+
 ### Spotreba umelej inteligencie má vlastnú adresu (2026-10-06)
 
 Spotreba AI v nastaveniach organizácie je na `/organisation/ai/usage`;

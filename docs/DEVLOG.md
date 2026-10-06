@@ -10,6 +10,16 @@
 
 ---
 
+## 2026-10-06 — číselníky cez výber zo zoznamu (R6)
+
+**Čo sa zmenilo:** druhé `.tabs` pod `OrgNav` → `LiveFilter` (GET na
+`/organisation/codelists`) s natívnym `select name="list"`; tlačidlo
+„Zobraziť" len v `<noscript>`. Parameter `?list=` ostáva — miesto sa
+nemení. Natívny `select`, nie komponent `Select`, z toho istého dôvodu
+ako na `/hr/evidence`: `LiveFilter` odosiela pri zmene `HTMLSelectElement`.
+
+---
+
 ## 2026-10-06 — spotreba AI na vlastnej adrese (R5)
 
 **Čo sa zmenilo:** `/organisation/[section]/usage` (pod inou časťou než

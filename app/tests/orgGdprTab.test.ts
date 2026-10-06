@@ -19,7 +19,7 @@ const tenant = vi.hoisted(() => ({
   },
 }))
 
-vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") }, redirect: (to: string) => { throw new Error(`redirect ${to}`) } }))
+vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") }, redirect: (to: string) => { throw new Error(`redirect ${to}`) }, useRouter: () => ({ replace: () => {} }) }))
 // Krok cesty za stránkou (`leaf`, ZAKLAD-zalozky Q2) sa vypíše, nech ho test vidí.
 vi.mock("@/components/AppShell", () => ({
   default: ({ children, title, trail }: { children: unknown; title?: string; trail?: Record<string, string> }) =>
@@ -188,11 +188,15 @@ describe("časti na vlastných cestách (2. 10. 2026)", () => {
 })
 
 describe("číselníky ako záložky (3. 10. 2026)", () => {
-  it("štyri záložky bez počtu; predvolene Druhy dokumentov, ostatné číselníky nie sú vykreslené", async () => {
+  // Výber zo zoznamu, nie druhé farebné podmenu (rozhodnutie R6, 6. 10. 2026).
+  it("štyri číselníky vo výbere; predvolene Druhy dokumentov, ostatné číselníky nie sú vykreslené", async () => {
     const html = await render("codelists")
     for (const label of ["Druhy dokumentov", "Značky", "Pracoviská", "Právne základy"]) expect(html).toContain(label)
-    expect(html).toContain('href="/organisation/codelists?list=tags"')
-    expect(html).toContain('class="tab is-active" aria-current="page" href="/organisation/codelists?list=category"')
+    expect(html).toMatch(/<form class="cl-pick"[^>]*action="\/organisation\/codelists" method="get"/)
+    expect(html).toMatch(/<select class="field-input" name="list">/)
+    expect(html).toMatch(/<option value="category" selected="">Druhy dokumentov<\/option>/)
+    expect(html).toContain('<option value="tags">')
+    expect(html).not.toContain('href="/organisation/codelists?list=tags"')
     expect(html).toContain('id="cl-category"')
     expect(html).not.toContain('id="cl-tags"')
     expect(html).not.toContain('id="cl-legal"')
