@@ -63,4 +63,13 @@ describe("karta osoby — trasy", () => {
     expect(html).toMatch(/value="stara-trasa"[^>]*checked|checked[^>]*value="stara-trasa"/)
     expect(html).toContain("neznáma trasa")
   })
+
+  it("trasy a roly: nadpis nad kartou, nápoveda pod ňou (HR-pridelit-nadpis-karty)", async () => {
+    const { default: Page } = await import("../src/app/people/[id]/page")
+    const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ id: "p1" }), searchParams: Promise.resolve({}) }))
+
+    expect(html).toMatch(/<fieldset class="form-group"><legend class="form-group-head">Trasy<\/legend><div class="card form-group-body">/)
+    expect(html).toMatch(/<\/div><p class="form-group-foot quiet">[^<]+<\/p><\/fieldset>/)
+    expect(html).not.toContain("hr-group")
+  })
 })

@@ -292,8 +292,10 @@ export default async function PersonDetailPage({
           <span className="quiet field-hint">{t.groupsNote}</span>
         </div>
 
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
-          <legend className="field-label">{t.tracks}</legend>
+        {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
+        <fieldset className="form-group">
+          <legend className="form-group-head">{t.tracks}</legend>
+          <div className="card form-group-body">
           {tracks.length === 0 && orphanTracks.length === 0 ? (
             <p className="quiet field-hint" style={{ margin: 0 }}>{t.noTracks}</p>
           ) : (
@@ -316,10 +318,12 @@ export default async function PersonDetailPage({
               ))}
             </ul>
           )}
+          </div>
         </fieldset>
 
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
-          <legend className="field-label">{t.roles}</legend>
+        <fieldset className="form-group">
+          <legend className="form-group-head">{t.roles}</legend>
+          <div className="card form-group-body">
           <ul className="hr-choices">
             {ASSIGNABLE_ROLES.filter(r => r !== LEARNING_ROLE || learningEnabled(ctx.tenant)).map(r => (
               <li key={r}>
@@ -334,9 +338,8 @@ export default async function PersonDetailPage({
           {!learningEnabled(ctx.tenant) && o.roles.includes(LEARNING_ROLE) && (
             <input type="hidden" name="roles" value={LEARNING_ROLE} />
           )}
-          <p className="quiet field-hint" style={{ margin: "6px 0 0" }}>
-            {t.rolesNote}
-          </p>
+          </div>
+          <p className="form-group-foot quiet">{t.rolesNote}</p>
         </fieldset>
 
         <div>

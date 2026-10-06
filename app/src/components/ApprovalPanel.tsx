@@ -102,9 +102,9 @@ export default function ApprovalPanel({
               value={effectiveFrom ? new Date(effectiveFrom).toISOString() : ""}
             />
 
-            <fieldset className="hr-group">
-              <legend className="field-label">{t.approvalApprovers}</legend>
-              <span className="quiet field-hint">{t.approvalApproversHint}</span>
+            <fieldset className="form-group">
+              <legend className="form-group-head">{t.approvalApprovers}</legend>
+              <div className="card form-group-body">
 
               {people.length === 0 ? (
                 <p className="quiet">{t.approvalNoPeople}</p>
@@ -125,6 +125,8 @@ export default function ApprovalPanel({
                   missing="approvers"
                 />
               )}
+              </div>
+              <p className="form-group-foot quiet">{t.approvalApproversHint}</p>
             </fieldset>
 
             <label className="field">

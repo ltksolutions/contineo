@@ -1090,9 +1090,9 @@ export default async function DocumentDetailPage({
               </div>
 
               {/* Schvaľovatelia predvyplnení z posledného kola (ADR-014, D110). */}
-              <fieldset className="hr-group">
-                <legend className="field-label">{tflow.approvers}</legend>
-                <span className="quiet field-hint">{tflow.approversPrefilled}</span>
+              <fieldset className="form-group">
+                <legend className="form-group-head">{tflow.approvers}</legend>
+                <div className="card form-group-body">
                 {approverChoices.length === 0 ? (
                   <p className="quiet">{t.approvalNoPeople}</p>
                 ) : (
@@ -1106,6 +1106,8 @@ export default async function DocumentDetailPage({
                     missing="approvers"
                   />
                 )}
+                </div>
+                <p className="form-group-foot quiet">{tflow.approversPrefilled}</p>
               </fieldset>
 
               {/* Zodpovedná osoba už v príprave (ADR-014, D109) — nepovinná tu,
@@ -1732,8 +1734,9 @@ function CarryOverFields({
   const tc = dictionary(language).library.carryOver
   return (
     <>
-      <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: 0 }}>
-        <legend className="field-label">{tc.audiences}</legend>
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tc.audiences}</legend>
+        <div className="card form-group-body">
         {candidates.map(c => (
           <label key={audienceRef(c.audience)} className="check-row" style={{ display: "block", padding: "6px 0" }}>
             <input type="checkbox" name="audience" value={audienceRef(c.audience)} defaultChecked />
@@ -1741,6 +1744,7 @@ function CarryOverFields({
             <span>{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
           </label>
         ))}
+        </div>
       </fieldset>
 
       <label className="field">
@@ -1749,8 +1753,9 @@ function CarryOverFields({
         <span className="quiet field-hint">{tc.reasonNote}</span>
       </label>
 
-      <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: 0 }}>
-        <legend className="field-label">{tc.due}</legend>
+      <fieldset className="form-group">
+        <legend className="form-group-head">{tc.due}</legend>
+        <div className="card form-group-body">
         <Select language={language}
           name="dueMode"
           fieldLabel={tc.due}
@@ -1774,7 +1779,8 @@ function CarryOverFields({
             <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" />
           </label>
         </div>
-        <span className="quiet field-hint">{tc.dueNote}</span>
+        </div>
+        <p className="form-group-foot quiet">{tc.dueNote}</p>
       </fieldset>
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{tc.noEmailNote}</p>
     </>

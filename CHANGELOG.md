@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Formuláre: nadpis skupiny nad kartou (2026-10-06)
+
+Nadpis skupiny polí („Trasy", „Zdroje", „Pravidlá", „Termín"…) už nesedí
+v hornej čiare rámu, ale stojí nad kartou; nápoveda je pod kartou. Platí
+na všetkých formulároch s orámovanou skupinou — Prideliť dokumenty, osoba,
+posúdenie, detail a príprava dokumentu, schvaľovanie, zodpovedná osoba,
+právny základ, úprava kurzu a testu, otázka v banke. Na **Prideliť
+dokumenty** sú Dôvod a Termín dve samostatné skupiny vedľa seba a súhrn
+s tlačidlami má vlastnú kartu pod nimi. Mená a hodnoty polí sa nezmenili.
+
 ### Web contineo.app: stránka Potvrdzovanie a GDPR na Bezpečnosti (2026-10-05)
 
 Web má novú stránku **Potvrdzovanie** (`/potvrdzovanie`): tri pohľady na

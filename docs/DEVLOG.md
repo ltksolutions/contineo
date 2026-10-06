@@ -10,6 +10,27 @@
 
 ---
 
+## 2026-10-06 — nadpis skupiny nad kartou (HR-pridelit-nadpis-karty)
+
+**Prečo:** `<legend>` v orámovanom `<fieldset>` kreslí prehliadač do hornej
+čiary — nadpis sa bil s okrajom a zaobleným rohom. Na stránkach boli tri
+vzory (`.hr-group` s inline rámom, `.mc-group`, `.assign-panel`).
+
+**Čo sa zmenilo:** jeden vzor `.form-group` (SwiftUI `Section(header:footer:)`):
+legenda s `float` (prehliadač do rámu kreslí len legendu, ktorá nepláva),
+rám nesie vnútorný `div.card.form-group-body`, nápoveda pod kartou
+(`.form-group-foot`). `.mc-group`, `.hr-group` a `.assign-panel` z CSS
+zmizli.
+
+**Nález:** návrh predpokladal, že `.hr-group` bez inline `border` rám nemá.
+Má — `globals.css` mu ho dáva vlastným pravidlom, takže ApprovalPanel,
+ResponsiblePicker, LegalBasisForm, schvaľovatelia v príprave znenia
+a kategória právneho základu v organizácii mali legendu v čiare tiež.
+Podľa promptu návrhu prešli na nový vzor aj ony. Skupina v skupine
+(zodpovedné osoby v „Základ" testu) kartu nekreslí — rám v ráme.
+
+---
+
 ## 2026-10-04 — React 19 v aplikácii
 
 **Prečo:** `app/package.json` uvádzal React 18.3.1, ale stránky v `app/`

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Formuláre — nadpis skupiny nad kartou</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.22);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--warn-fg:#b45309;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:92ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.sec{margin:34px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:92ch}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:10px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line)}
+.crumbs b{color:var(--ink);font-weight:600}
+.body{padding:22px 24px 28px}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:0 0 22px;max-width:70ch}
+.page-lead b{color:var(--ink)}
+.stack{display:grid;gap:24px}
+.cols{display:grid;gap:24px 20px;grid-template-columns:minmax(0,1fr);align-items:start}
+.cols.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cols.fin{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+/* nový vzor: .form-group > legend.form-group-head + .form-group-body */
+.fg{display:grid;gap:10px;min-width:0;border:0;padding:0;margin:0}
+.fg:has(> .fg-head.lg){gap:14px}
+.fg-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 4px;margin:0}
+.fg-head.lg h2{font-size:var(--fs-section);font-weight:650;letter-spacing:-.01em;margin:0}
+.fg-head.sm{font-size:var(--fs-small);font-weight:600;color:var(--ink)}
+.fg-head .n{font-size:var(--fs-small);color:var(--muted);font-weight:400}
+.step{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:11.5px;font-weight:700;flex:none}
+.fg-body{display:grid;gap:12px;padding:18px 20px 20px;min-width:0}
+.fg-body.sm{padding:12px 14px;gap:8px}
+.fg-foot{font-size:var(--fs-micro);color:var(--muted);padding:0 4px;margin:0}
+.search{display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
+.ta{min-height:96px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
+.list{display:grid;gap:2px;border:1px solid var(--line);border-radius:8px;padding:6px}
+.r{display:flex;gap:10px;padding:7px 6px}
+.cb{width:17px;height:17px;border:1.5px solid var(--line-strong);border-radius:4px;flex:none;margin-top:2px}
+.cb.on{background:var(--accent);border-color:var(--accent)}
+.rd{width:17px;height:17px;border:1.5px solid var(--line-strong);border-radius:50%;flex:none}
+.rd.on{border:5px solid var(--accent)}
+.r b{display:block;font-weight:400;font-size:14.5px;line-height:1.35}
+.r small{font-size:12.5px;color:var(--muted)}
+.all{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+.all b{font-size:14.5px}
+.hint{font-size:var(--fs-micro);color:var(--muted)}
+.sub{display:grid;gap:6px;padding-top:12px;border-top:1px solid var(--line)}
+.sub-t{font-size:var(--fs-small);font-weight:600}
+.due{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 12px;border:1px solid var(--line);border-radius:8px;font-size:14.5px}
+.due.on{background:var(--accent-soft);border-color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);font-size:13.5px}
+.tag.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.summary{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:var(--fs-small);color:var(--muted)}
+.summary b{color:var(--ink)}
+.summary > span{display:inline-flex;gap:4px;white-space:nowrap;flex:none}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;font-size:15px;font-weight:600}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.m .body{padding:16px 14px}
+.m .page-title{font-size:22px}
+.m .fg-body{padding:14px}
+.m .search{height:44px;font-size:16px}
+.m .button{width:100%;min-height:44px}
+/* pred/po */
+.pp{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:18px;max-width:1440px}
+.pp-c{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:grid;gap:14px;align-content:start}
+.pp-c h4{margin:0;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-weight:500}
+.pp-l{font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.old{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin:0;background:var(--surface);display:grid;gap:8px;min-width:0}
+.old legend{padding:0 4px;font-size:var(--fs-small);font-weight:600}
+.spec{width:100%;max-width:1100px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.spec tr:last-child td{border-bottom:0}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">Formuláre — nadpis skupiny nad kartou (SwiftUI <code>Section</code> header)</h1>
+<p class="doc">Rozhodnuté 6. 10. 2026: <b>B</b>. Nadpis skupiny už nie je <code>&lt;legend&gt;</code> v čiare rámu, ale stojí nad kartou — vzor <code>Form { Section("…") { … } }</code>. Platí <b>všade</b>, kde má fieldset viditeľný rám (<code>.hr-group</code> s rámom, <code>.mc-group</code>, <code>.assign-panel</code>). Jeden spoločný vzor <code>.form-group</code>. Popis v <code>HR-pridelit-nadpis-karty.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">1440 — /hr/assign, kroky 1–4 ako štyri skupiny</p>
+  <p class="sec-w">Karta „Dôvod | Termín" sa rozdelí na dve skupiny vedľa seba, aby všetky štyri kroky mali nadpis nad kartou. Súhrn a tlačidlá v poslednej karte bez nadpisu (<code>Section</code> bez hlavičky).</p>
+  <div class="frame" style="width:1440px" data-w="1440"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 a 390 — jeden stĺpec</p>
+  <div class="row-frames">
+    <div class="frame" style="width:834px" data-w="834"></div>
+    <div class="frame m" style="width:390px" data-w="390"></div>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Ostatné obrazovky — pred / po</p>
+  <p class="sec-w">Menšie skupiny bez čísla kroku: nadpis <code>--fs-small</code> 600 nad kartou, vnútorný odstup 12/14 px. Nápoveda pod kartou (<code>Section</code> footer), nie v nej.</p>
+  <div class="pp" id="pp"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Kde všade</p>
+  <table class="spec">
+    <tr><th>Obrazovka</th><th>Súbor</th><th>Skupiny</th></tr>
+    <tr><td>Prideliť dokumenty</td><td><code>app/hr/assign/page.tsx</code></td><td>1 Ktoré normy, 2 Komu, 3 Dôvod, 4 Termín (veľký nadpis s číslom)</td></tr>
+    <tr><td>Osoba</td><td><code>app/people/[id]/page.tsx</code> r. 295, 321</td><td>Trasy, Roly</td></tr>
+    <tr><td>Posúdenie</td><td><code>app/evaluation/page.tsx</code> r. 199</td><td>Zdroje</td></tr>
+    <tr><td>Detail dokumentu</td><td><code>app/library/[id]/page.tsx</code> r. 1735, 1752</td><td>Komu, Termín</td></tr>
+    <tr><td>Kurz — úprava</td><td><code>app/learning/manage/[courseKey]/page.tsx</code> r. 513, 526, 595, 600</td><td>Priebeh, Právny základ, Skupiny, Trasy</td></tr>
+    <tr><td>Test — úprava</td><td><code>app/learning/tests/[testKey]/page.tsx</code> r. 83, 94, 124</td><td>Základ, Časti, Pravidlá</td></tr>
+    <tr><td>Testy — otázka</td><td><code>app/learning/tests/page.tsx</code> r. 286, 296</td><td>Médiá, Odpovede</td></tr>
+    <tr><td>Bez rámu — nemení sa</td><td><code>ApprovalPanel</code>, <code>LegalBasisForm</code>, <code>ResponsiblePicker</code>, <code>library/[id]</code> r. 1093, <code>organisation/[section]</code> r. 923, <code>/dpo</code>, <code>/admin/tenants</code>, <code>.set-fieldset</code></td><td>legenda je tam obyčajný štítok poľa nad obsahom, nie v čiare</td></tr>
+  </table>
+</div>
+</div>
+<script>
+const SRCH='<svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M12.2 12.2 16 16"/></svg>';
+const docs=[["Finančná smernica SFZ","7. 9. 2026",1],["Pracovný poriadok SFZ","7. 9. 2026",0],["Smernica o pracovných cestách a poskytovaní cestovných náhrad SFZ","7. 9. 2026",0],["Skúšobný poriadok (znenia v indexe)","1. 7. 2026",0]];
+const big=(n,t,c)=>`<legend class="fg-head lg"><span class="step">${n}</span><h2>${t}</h2>${c?`<span class="n">${c}</span>`:""}</legend>`;
+const grp=(head,body,foot,sm)=>`<fieldset class="fg">${head}<div class="card fg-body${sm?" sm":""}">${body}</div>${foot?`<p class="fg-foot">${foot}</p>`:""}</fieldset>`;
+const docsB=`<div class="search">${SRCH}Hľadať normu</div><div class="list">${docs.map(([t,d,on])=>`<div class="r"><i class="cb${on?" on":""}"></i><span><b>${t}</b><small>znenie účinné od ${d}</small></span></div>`).join("")}</div>`;
+const audB=`<div class="all"><i class="cb"></i><span><b>Všetkým v organizácii</b><br><span class="hint">prebije výber nižšie — inak by to isté znenie viselo v prehľade niekoľkokrát.</span></span></div>
+<div class="sub" style="border-top:0;padding-top:0"><span class="sub-t">Oddelenia</span><div class="search">Hľadať oddelenie…</div></div>
+<div class="sub"><span class="sub-t">Trasy</span><div class="tags"><span class="tag on">Rozhodcovia 2026</span><span class="tag">Nástup 2026</span></div></div>
+<div class="sub"><span class="sub-t">Osoby</span><div class="search">${SRCH}Hľadať meno, e-mail alebo oddelenie</div></div>`;
+const reasonB=`<div class="ta">napr. novela čl. 12 — mení sa lehota na podanie odvolania</div>`;
+const dueB=`<div class="due"><i class="rd"></i>bez termínu</div><div class="due"><i class="rd"></i>do dátumu</div><div class="due on"><i class="rd on"></i>do počtu dní od vzniku povinnosti</div>`;
+document.querySelectorAll("[data-w]").forEach(f=>{
+  const w=+f.dataset.w, two=w>=1100, m=w<640;
+  f.innerHTML=`<div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av"></span></div>
+  <div class="crumbs">${m?"":"<span>Prehľad</span><span>›</span><span>Správa</span><span>›</span>"}<span>Pridelené dokumenty</span><span>›</span><b>Prideliť dokumenty</b></div>
+  <div class="body"><div style="max-width:1180px"><h1 class="page-title">Prideliť dokumenty</h1><p class="page-lead">Prideľuje sa <b>konkrétne znenie</b>, nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.</p>
+  <div class="stack">
+    <div class="cols${two?" two":""}">${grp(big(1,"Ktoré normy","13 platných"),docsB)}${grp(big(2,"Komu"),audB)}</div>
+    <div class="cols${two?" fin":""}">${grp(big(3,"Dôvod"),reasonB,"Povinný a spoločný pre celý výber. Príde aj v e-maile ľuďom.")}${grp(big(4,"Termín potvrdenia"),dueB,"Nepovinný. Počet dní beží každému odo dňa, keď mu povinnosť vznikla.")}</div>
+    <div class="card fg-body"><div class="summary"><span><b>1</b> norma</span><span>·</span><span><b>1</b> trasa</span></div><div class="acts"><span class="button">Prideliť</span><span class="button button--quiet">Skontrolovať dopad</span></div></div>
+  </div></div></div>`;
+});
+const ex=[
+ ["people/[id] — Trasy","Trasy",`<div class="tags"><span class="tag on">Rozhodcovia 2026</span><span class="tag">Nástup 2026</span><span class="tag">test-2026</span></div>`,"Osoba dostane všetko, čo je trase pridelené."],
+ ["evaluation — Zdroje","Zdroje",`<div class="r"><i class="cb on"></i><span><b>Disciplinárny poriadok SFZ</b></span></div><div class="r"><i class="cb"></i><span><b>Stanovy SFZ</b></span></div>`,""],
+ ["learning/tests/[testKey] — Pravidlá","Pravidlá",`<div class="r"><i class="cb on"></i><span><b>Zamiešať poradie otázok</b></span></div><div class="r"><i class="cb"></i><span><b>Ukázať správne odpovede po odoslaní</b></span></div>`,""],
+];
+document.getElementById("pp").innerHTML=ex.map(([h,t,b,f])=>`<div class="pp-c"><h4>${h}</h4>
+ <div><p class="pp-l">Dnes</p><fieldset class="old"><legend>${t}</legend>${b}${f?`<span class="hint">${f}</span>`:""}</fieldset></div>
+ <div><p class="pp-l">Po</p>${grp(`<legend class="fg-head sm">${t}</legend>`,b,f,1)}</div></div>`).join("");
+</script>
+</body></html>

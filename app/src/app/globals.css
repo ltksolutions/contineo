@@ -1831,12 +1831,6 @@ html[data-theme="dark"] select.field-input {
  * palcom netrafí. Preto `padding` na celom `label`, nie len na `input` —
  * kliknuteľný je celý riadok vrátane textu.
  */
-.hr-group {
-  border: 1px solid var(--line);
-  padding: 16px 18px 18px;
-  margin: 0;
-}
-
 /*
  * `<fieldset>` má v prehliadači predvolene `min-width: min-content` — na
  * rozdiel od `<div>` sa nezúži pod šírku najdlhšieho nezalomiteľného obsahu.
@@ -1850,10 +1844,6 @@ fieldset { min-width: 0; }
    „Národné tréningové centrum Senec" odsadené v strome by inak na telefóne
    pretieklo. Štítky stavu (`.tag` bez `--field`) zostávajú v jednom riadku. */
 .tag--field { max-width: 100%; white-space: normal; text-align: left; }
-
-.hr-group legend {
-  padding: 0 6px;
-}
 
 .hr-subtitle {
   font-size: 12px;
@@ -3182,9 +3172,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 .assign-impact-count { font-size: var(--fs-lead); font-weight: 650; }
 
-/* Rámik termínu je ten istý ako pri výbere publika nad ním; zvyšok formulára
-   ho nemá, takže bez tohto by mal každý fieldset iný odstup. */
-.hr-group .due-fields { margin-bottom: 4px; }
+/* Termín v karte skupiny (`.form-group-body`) — bez tohto by mal iný odstup
+   než zvyšok formulára. */
+.form-group-body .due-fields { margin-bottom: 4px; }
 
 /* ── knižnica: hromadné akcie ───────────────────────────────────────────
    Panel je vidieť stále, nie až po označení: bez skriptu server nevie, či je
@@ -7344,8 +7334,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* ── Úprava kurzu: nastavenia a vstup smart:tagov (rám MANAGE-COURSE) ─────── */
 .mc-settings { padding: 18px; display: grid; gap: 14px; max-width: 820px; }
 .mc-grid2 { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-.mc-group { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin: 0; display: grid; gap: 6px; }
-.mc-group legend { padding: 0 4px; }
 .mc-kv { padding: 8px 16px; margin: 0; display: grid; }
 .mc-kv-row { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .mc-kv-row:last-child { border-bottom: 0; }
@@ -7632,23 +7620,49 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .cert-print { width: 297mm; height: 210mm; max-width: none; border-width: 1.5px; }
 }
 
+/* ── Skupina polí: nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026) ──
+   SwiftUI `Form` + `Section(header:footer:)`: nadpis nad zaoblenou kartou,
+   nápoveda pod ňou. Jeden vzor namiesto `.hr-group` s rámom, `.mc-group`
+   a `.assign-panel`. Legenda v čiare rámu bola predvolené správanie
+   prehliadača, nie zámer — bila sa s okrajom a zaobleným rohom.
+
+   `float` na `<legend>` je to, čo ju z čiary vytiahne: prehliadač kreslí
+   do rámu len prvú legendu, ktorá nepláva. Rám nesie vnútorný `div`, nie
+   `<fieldset>`, takže čiara nad nadpisom nevznikne vôbec. */
+.form-group { display: grid; gap: 10px; min-width: 0; border: 0; padding: 0; margin: 0; }
+.form-group-head {
+  float: left; width: 100%; padding: 0 4px; margin: 0;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: var(--fs-small); font-weight: 600; color: var(--ink);
+}
+.form-group-head--step { font-size: var(--fs-section); font-weight: 650; letter-spacing: -0.01em; }
+.form-group-head .hr-count { font-size: var(--fs-small); font-weight: 400; }
+.form-group-body { display: grid; gap: 8px; padding: 12px 14px; min-width: 0; }
+.form-group--lg { gap: 14px; }
+/* `--lg` bez nadpisu: súhrn a tlačidlá na /hr/assign (Section bez hlavičky). */
+.form-group--lg > .form-group-body, .form-group-body--lg { gap: 12px; padding: 18px 20px 20px; }
+.form-group-foot { font-size: var(--fs-micro); padding: 0 4px; margin: 0; }
+/* Skupina v skupine (zodpovedné osoby v „Základ" testu): druhá karta
+   v karte by bola rám v ráme — vnútorná ostane len nadpis a obsah. */
+.form-group-body .form-group-body { border: 0; border-radius: 0; background: none; padding: 0; }
+@media (max-width: 639px) {
+  .form-group--lg > .form-group-body, .form-group-body--lg { padding: 14px; }
+}
+
 /* ── /hr/assign: Normy | Komu a hľadanie (HR-pridelit-normy-hladanie) ────────
    Od 1100 px dva stĺpce a šírka 1180 (Q1 — výnimka z HR šírky 680–900:
    dva zoznamy vedľa seba, nie jeden dlhý formulár). Pod 1100 jeden stĺpec
    v dnešnom poradí. Bez JavaScriptu to isté rozloženie, len bez hľadania. */
 .assign-page { max-width: 1180px; }
-.assign { display: grid; gap: 20px; }
-.assign-cols { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-.assign-panel { display: grid; gap: 12px; align-content: start; }
-.assign-legend {
-  display: flex; align-items: center; gap: 8px; padding: 0 6px;
-  font-size: var(--fs-section); font-weight: 650; letter-spacing: -0.01em;
-}
-.assign-legend .hr-count { font-size: var(--fs-small); }
-/* Číslo kroku 1–4 — orientácia, nie sprievodca (bod 6). */
+/* 24 px medzi skupinami — nadpis nad kartou potrebuje nad sebou viac miesta
+   než legenda v čiare (HR-pridelit-nadpis-karty). */
+.assign { display: grid; gap: 24px; }
+.assign-cols { display: grid; gap: 24px 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+/* Číslo kroku 1–4 — orientácia, nie sprievodca (bod 6). 20 px, aby sa
+   v nadpise nad kartou nedotýkalo jej obrysu (HR-pridelit-nadpis-karty). */
 .assign-step {
-  display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 700; letter-spacing: 0;
+  display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); font-size: 11.5px; font-weight: 700; letter-spacing: 0;
 }
 /* Zoznam noriem v rámiku s posunom — stránka už nie je 14 riadkov dlhá. */
 .assign-doc-list { max-height: 420px; }
@@ -7666,14 +7680,10 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* Stlmenie pri „Všetkým" (Q4) — len s JS; hodnoty ostávajú vo formulári. */
 .assign-rest.is-dim { opacity: 0.42; pointer-events: none; }
 
-/* Dôvod | Termín v jednej karte, pod tým súhrn a tlačidlá. */
-.assign-finish { padding: 18px 20px 20px; display: grid; gap: 18px; }
-.assign-finish-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
-.assign-finish .field { align-content: start; }
-/* Termín je v tej istej karte ako dôvod — vlastný rámik by bol druhý rámik v karte. */
-.assign-due { border: 0; padding: 0; }
-.assign-due > legend { margin-bottom: 8px; }
-.assign-summary { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+/* Dôvod | Termín ako dve skupiny vedľa seba, pod nimi súhrn a tlačidlá
+   v karte bez nadpisu (HR-pridelit-nadpis-karty, Q4). */
+.assign-finish-grid { display: grid; gap: 24px 20px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.assign-summary { display: grid; gap: 12px; }
 .assign-summary-line {
   display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0;
   font-size: var(--fs-small); color: var(--muted);
@@ -7695,7 +7705,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 @media (max-width: 639px) {
   .assign-doc-list { max-height: 300px; }
-  .assign-finish { padding: 14px; }
   .assign-actions > .button { width: 100%; min-height: 44px; }
 }
 
