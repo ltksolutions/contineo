@@ -11,12 +11,12 @@
  *   iss  – pôvod cudzieho systému (napr. https://issf.futbalsfz.sk), musí byť
  *          medzi povolenými pôvodmi kanála;
  *   aud  – kľúč kanála;
- *   sub  – stabilný identifikátor účtu v cudzom systéme (Sportnet ID);
+ *   sub  – jedinečný identifikátor osoby **vo vydávajúcom systéme**: v ISSF
+ *          je to registračné číslo, na platforme Sportnet by to bolo
+ *          sportnetID (Ján 6. 10. 2026 — dve rôzne platformy, dva rôzne
+ *          identifikátory). Riešiteľ ho vidí pri tickete;
  *   email, given_name, family_name, roles[], club – údaje o osobe (kópia
  *          v čase vydania); `name` len ako záloha, keď mená zvlášť chýbajú;
- *   registrationNumber – registračné číslo v ISSF, nepovinné — riešiteľ si
- *          podľa neho človeka nájde; identifikátorom nie je (osoba môže mať
- *          viac registrácií, účet jeden);
  *   lang – jazyk rozhrania (sk/cs/en), nepovinný;
  *   iat, exp – vydanie a platnosť; `exp - iat` najviac 15 minút.
  *
@@ -42,7 +42,6 @@ export interface WidgetIdentity {
   familyName: string
   /** Celé meno — z `given_name` + `family_name`, inak z `name`. */
   name: string
-  registrationNumber: string | null
   roles: string[]
   club: string | null
   language: "sk" | "cs" | "en" | null
@@ -59,7 +58,7 @@ function fromB64url(s: string): Buffer {
 
 /** Vydanie tokenu — pre testy, dokumentáciu a skúšobnú stránku; ISSF má vlastnú implementáciu. */
 export function signWidgetToken(
-  claims: { iss: string; aud: string; sub: string; email: string; given_name?: string; family_name?: string; name?: string; registrationNumber?: string; roles?: string[]; club?: string | null; lang?: string },
+  claims: { iss: string; aud: string; sub: string; email: string; given_name?: string; family_name?: string; name?: string; roles?: string[]; club?: string | null; lang?: string },
   secret: string,
   now: Date = new Date(),
   ttlSeconds: number = MAX_TOKEN_TTL_S,
@@ -129,7 +128,6 @@ export function verifyWidgetToken(
     givenName,
     familyName,
     name: [givenName, familyName].filter(Boolean).join(" ") || tidy(payload.name),
-    registrationNumber: tidy(payload.registrationNumber) || null,
     roles: Array.isArray(payload.roles) ? payload.roles.map(r => String(r).trim()).filter(Boolean).slice(0, 20) : [],
     club: payload.club ? String(payload.club).trim() : null,
     language: lang === "sk" || lang === "cs" || lang === "en" ? lang : null,

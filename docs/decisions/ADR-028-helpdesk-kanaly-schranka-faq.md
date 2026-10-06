@@ -39,8 +39,9 @@
 
 ## 1. Kontext
 
-Prvý zákazník mimo intranetu je **ISSF** (`issf.futbalsfz.sk`, vyvíja
-Sportnet): prihlasujú sa tam klubové a tímoví manažéri, rozhodcovia,
+Prvý zákazník mimo intranetu je **ISSF** (`issf.futbalsfz.sk`, Informačný
+systém slovenského futbalu; nie je to platforma Sportnet — tá má vlastný
+`sportnetID`, ISSF registračné číslo): prihlasujú sa tam klubové a tímoví manažéri, rozhodcovia,
 tréneri, hráči, rodičia maloletých hráčov a komisie. Majú sa pýtať na normy
 SFZ a na časté otázky, ktorých odpovede dnes ležia v schránke
 **helpdesk@futbalsfz.sk** na Microsoft 365 — v tisícoch mailov a odpovedí
@@ -201,8 +202,9 @@ Continea (webový komponent vo farbách organizácie, `tenantStyle`), volá
 
 - Token nesie štandardné claimy JWT a OIDC (`iss`, `aud`, `sub`, `email`,
   `given_name`, `family_name`, `iat`, `exp`), nie vlastné názvy — každá
-  knižnica ich sama nastaví aj overí (Ján 6. 10. 2026). Navyše nepovinné
-  `registrationNumber` (registračné číslo v ISSF pre riešiteľa), `roles`,
+  knižnica ich sama nastaví aj overí (Ján 6. 10. 2026). `sub` je jedinečný
+  identifikátor osoby **vo vydávajúcom systéme**: v ISSF registračné číslo
+  (ISSF nie je platforma Sportnet, tá má `sportnetID`). Navyše `roles`,
   `club`, `lang`.
 - Osoba sa spáruje cez `externalRef.widget[kanál]` = `sub` z tokenu
   (generické podľa kanála, nie `sportnetId`) alebo cez **e-mail** —
@@ -258,7 +260,7 @@ schvaľuje ich správca obsahu (`content-admin`). Pridáva sa do
 4. **Tickety a obrazovka `/helpdesk`** (D163, D167): fronta, ticket, návrh
    AI, odoslanie cez adaptér, „pridať do FAQ".
 5. **Widget a token** (D166), eskalácia z chatu do ticketu. Posledné —
-   závisí od Sportnetu.
+   závisí od prevádzkovateľa ISSF.
 
 Kroky 2 a 3 prinášajú hodnotu aj intranetu bez čakania na ISSF.
 

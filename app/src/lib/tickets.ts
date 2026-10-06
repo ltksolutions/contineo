@@ -53,7 +53,7 @@ export interface Ticket {
     name: string | null
     roles: string[]
     club: string | null
-    /** Registračné číslo v cudzom systéme (ISSF) — riešiteľ si podľa neho človeka nájde. */
+    /** Identifikátor osoby vo vydávajúcom systéme (v ISSF registračné číslo) — riešiteľ si podľa neho človeka nájde. */
     reference?: string | null
   }
   subject: string

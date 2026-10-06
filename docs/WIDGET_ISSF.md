@@ -1,6 +1,9 @@
 # Widget helpdesku pre cudzí systém (ISSF)
 
-> Pre Sportnet (vývojár ISSF) a správcu kanála v Contineu. Rozhodnutie:
+> Pre prevádzkovateľa ISSF (Informačný systém slovenského futbalu) a správcu
+> kanála v Contineu. **ISSF nie je Sportnet**: Sportnet je platforma
+> sportnet.online s CRM a identifikátorom `sportnetID`; ISSF má vlastný
+> identifikátor osoby, **registračné číslo**. Rozhodnutie:
 > ADR-028, D166. Stav 6. 10. 2026: implementované (krok 5), naostro
 > neoverené — čaká na vydávanie tokenu na strane ISSF.
 
@@ -25,13 +28,13 @@ Organizácia → Helpdesk → kanál:
 - **Povolené pôvody**: `https://issf.futbalsfz.sk` (presný pôvod stránky,
   bez cesty). Z iného pôvodu API odpovie 403.
 - **Tajomstvo widgetu**: „Vytvoriť nové tajomstvo" — ukáže sa **raz**;
-  odovzdať Sportnetu bezpečným kanálom. Každé ďalšie vytvorenie staré
+  odovzdať prevádzkovateľovi ISSF bezpečným kanálom. Každé ďalšie vytvorenie staré
   zneplatní.
 - **Obsah kanála** (priečinky knižnice) a **jazyky** — prvý jazyk je jazyk
   textov widgetu, keď token jazyk nenesie.
 - **Strop otázok na osobu a hodinu** (predvolene 60).
 
-## Čo urobí ISSF (Sportnet)
+## Čo urobí ISSF
 
 ### 1. Vydávanie tokenu
 
@@ -47,12 +50,11 @@ aj overí; preto nemajú vlastné názvy (rozhodnutie Jána 6. 10. 2026).
 |---|---|
 | `iss` | **kto token vydal** — pôvod stránky ISSF, napr. `https://issf.futbalsfz.sk`. Musí byť medzi povolenými pôvodmi kanála v Contineu. |
 | `aud` | **pre koho je** — kľúč kanála v Contineu, napr. `issf`. |
-| `sub` | **účet, ktorý sa prihlásil** — Sportnet ID. Stabilné a jedinečné; podľa neho sa osoba pri ďalšej otázke spozná. |
+| `sub` | **jedinečný identifikátor osoby v ISSF** — registračné číslo. Podľa neho sa osoba pri ďalšej otázke spozná a riešiteľ ju podľa neho nájde v ISSF. (Iný systém by sem dal svoj identifikátor, napr. platforma Sportnet `sportnetID`.) |
 | `email` | e-mail účtu — sem príde odpoveď helpdesku. Musí byť v ISSF overený. |
 | `given_name` | meno |
 | `family_name` | priezvisko |
 | `name` | celé meno — len záloha, keď `given_name` a `family_name` chýbajú |
-| `registrationNumber` | registračné číslo v ISSF (nepovinné). Riešiteľ si podľa neho človeka v ISSF nájde. Identifikátorom nie je: osoba môže mať viac registrácií, účet jeden. |
 | `roles` | pole rolí, napr. `["klubový manažér", "rozhodca"]` — vyberá FAQ pre publikum, riešiteľ ich vidí pri tickete |
 | `club` | klub (nepovinné) |
 | `lang` | `sk`, `cs` alebo `en` (nepovinné) |
@@ -70,9 +72,9 @@ function issueToken(user, secret) {
   const iat = Math.floor(Date.now() / 1000)
   const header = b64(JSON.stringify({ alg: "HS256", typ: "JWT" }))
   const payload = b64(JSON.stringify({
-    iss: "https://issf.futbalsfz.sk", aud: "issf", sub: user.sportnetId,
+    iss: "https://issf.futbalsfz.sk", aud: "issf", sub: user.registrationNumber,
     email: user.email, given_name: user.firstName, family_name: user.lastName,
-    registrationNumber: user.registrationNumber, roles: user.roles, club: user.club, lang: "sk",
+    roles: user.roles, club: user.club, lang: "sk",
     iat, exp: iat + 15 * 60,
   }))
   const sig = createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url")
@@ -98,6 +100,20 @@ Widget ho zavolá sám, keď API odpovie 401.
 Skript sa cachuje hodinu; zmena textov alebo farby v Contineu sa prejaví
 do hodiny bez zásahu v ISSF.
 
+## Skúška bez ISSF
+
+Kým ISSF token nevydáva, krok 5 sa dá vyskúšať lokálnou stránkou, ktorá
+token podpíše tajomstvom kanála sama (to isté, čo urobí ISSF):
+
+```bash
+cd app && npm run widget:test -- --company SFZ --channel issf --origin http://localhost:4567 --app https://intranet.futbalsfz.sk --email jan@klub.sk --given Ján --family Letko --sub 1234567
+```
+
+Predtým v Organizácia → Helpdesk pridať `http://localhost:4567` medzi
+povolené pôvody kanála. Stránka beží na tom pôvode, vloží skript widgetu
+z aplikácie a pri 401 si vyžiada nový token z `/token`. Po skúške pôvod
+z kanála odobrať.
+
 ## Čo API vracia
 
 | volanie | odpoveď |
@@ -116,8 +132,8 @@ Všetky volania vyžadujú hlavičku `Origin` z povolených pôvodov; preflight
   spáruje a intranet mu ostáva. Inak sa založí s druhom **`external`**:
   **nemôže sa prihlásiť do intranetu**, aj keby mala adresu, ktorú by
   prihlásenie prijalo. Import osôb správcom druh prepíše a tým ju pustí dnu.
-- E-mail, meno, priezvisko, roly, klub a registračné číslo sú kópia
-  z tokenu v čase otázky; riešiteľ ich vidí pri tickete.
+- E-mail, meno, priezvisko, roly, klub a registračné číslo (`sub`) sú
+  kópia z tokenu v čase otázky; riešiteľ ich vidí pri tickete.
 - Otázky a odpovede sú záznamy v `evaluations` ako pri intranete
   (hodnotenie, kurácia); účel „helpdesk" patrí do informovania dotknutých
   osôb (ADR-022) — doplní DPO.

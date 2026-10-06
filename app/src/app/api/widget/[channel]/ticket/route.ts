@@ -52,7 +52,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
       channelKey: gate.channel.key,
       asker: {
         personId: gate.person.id, email: gate.identity.email, name: gate.identity.name || gate.person.fullName,
-        roles: gate.identity.roles, club: gate.identity.club, reference: gate.identity.registrationNumber,
+        // Identifikátor vo vydávajúcom systéme (v ISSF registračné číslo) — riešiteľ si podľa neho človeka nájde.
+        roles: gate.identity.roles, club: gate.identity.club, reference: gate.identity.externalId,
       },
       message,
       conversation,
