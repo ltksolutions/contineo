@@ -10,6 +10,23 @@
 
 ---
 
+## 2026-10-06 — hlavičky stránok (P1, P10, R1)
+
+**Čo sa zmenilo:** `.lp-head`, `.ask-history-head` a ručné flexy s inline
+okrajmi → `.page-head` (+ `.page-head-spacer`); CSS `.lp-head` a
+`.ask-history-head` zmizlo. Pri `?new=1`, `?q=`, `?import=` hlavička akciu
+nekreslí. R1: tlačidlá kariet tiché (Úlohy, `CourseCard`, kurátorstvo,
+posúdenie, `/dpo`). Filtre „Použiť" (`/hr/evidence`, spotreba AI) tiché.
+
+**Nález:** `.view-switch--fit` z #279 sa v mriežke `.mg-body` roztiahol na
+celú šírku aj na počítači — `inline-grid` ako položka mriežky dostane
+`justify-self: stretch`. Opravené `justify-self: start`.
+
+**Nechané:** CSV na `/hr/overview` ostáva pod prepínačom pohľadu (rám
+ZAKLAD-segmented-control to tak určil pre telefón).
+
+---
+
 ## 2026-10-06 — helpdesk od ADR po widget (ADR-028, PR #273, #276, #278)
 
 **Prečo:** chat pre ISSF (kluby, rozhodcovia, tréneri, rodičia) nad normami

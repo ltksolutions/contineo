@@ -92,10 +92,10 @@ export default async function EditorPage({
       <Notice language={language} message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
 
 
-      <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 16px" }}>
-        {t.intro}
-      </p>
+      <div className="page-head">
+        <h1 className="page-title">{d.title}</h1>
+      </div>
+      <p className="quiet page-lead">{t.intro}</p>
 
       {d.conversion?.warnings?.length ? (
         <ul className="card" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: "var(--fs-body)" }}>
@@ -183,7 +183,9 @@ export default async function EditorPage({
               name="markdown"
               initial={d.editableText}
             />
-            <div><SubmitButton className="button">{t.saveText}</SubmitButton></div>
+            {/* Kým čaká návrh na rozhodnutie, plné je „Použiť ako koncept"
+                vyššie; uloženie vlastného textu je vtedy tiché (jedno plné). */}
+            <div><SubmitButton className={draft ? "button button--quiet" : "button"}>{t.saveText}</SubmitButton></div>
           </form>
         </section>
       </div>

@@ -133,7 +133,8 @@ describe("/dpo", () => {
     const page = await render()
     expect(page).toContain("1 námietka čaká na rozhodnutie")
     expect(page).toContain("Martin Novák · doručená 22. 9. 2026")
-    expect(page).toContain('<a class="button dpo-button-sm" href="#objections">Rozhodnúť</a>')
+    // Skok na kotvu je tichý (rozhodnutie R1, 6. 10. 2026).
+    expect(page).toContain('<a class="button button--quiet dpo-button-sm" href="#objections">Rozhodnúť</a>')
     expect(page).toContain("1 čaká na rozhodnutie")
     expect(page).toContain("dpo-choice--danger")
     expect(page).toMatch(/<details class="dpo-record">/)
