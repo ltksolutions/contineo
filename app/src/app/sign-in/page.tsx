@@ -16,11 +16,18 @@ import { tenantStyle } from "@/components/TenantHeader"
 import type { Tenant } from "@/lib/tenants"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { normalizeLanguage } from "@/lib/i18n"
+import { publicPageTitle } from "@/lib/publicPageTitle"
 
 export const dynamic = "force-dynamic"
 
 // Od Next 15 sú `params` aj `searchParams` prísľuby — stránka sa smie začať
 // vykresľovať skôr, než sú známe. Preto `await`, nie priamy prístup.
+
+/** Názov v karte — verejná stránka si ho nastaví sama (`lib/publicPageTitle.ts`). */
+export async function generateMetadata() {
+  return publicPageTitle("/sign-in")
+}
+
 export default async function SignInPage({
   searchParams,
 }: {

@@ -15,9 +15,13 @@ import { CertificateLogo } from "@/components/CertificateCard"
 import { ContineoMark } from "@/components/ContineoMark"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { publicPageTitle } from "@/lib/publicPageTitle"
 
 export const dynamic = "force-dynamic"
-export const metadata: Metadata = { robots: { index: false, follow: false } }
+export async function generateMetadata(): Promise<Metadata> {
+  // Názov v karte (verejná stránka — `lib/publicPageTitle.ts`); indexovať nie.
+  return { ...(await publicPageTitle("/verify")), robots: { index: false, follow: false } }
+}
 
 export default async function VerifyPage({ params, searchParams }: { params: Promise<{ registrationNumber: string }>; searchParams: Promise<RawQuery> }) {
   const q = normalizeQuery<{ h?: string }>(await searchParams)
