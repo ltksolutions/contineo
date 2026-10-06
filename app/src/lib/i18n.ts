@@ -617,6 +617,8 @@ interface Dictionary {
     dpo: string
     /** Helpdesk (ADR-028) — len pre rolu `helpdesk`. */
     helpdesk: string
+    /** Kanály (ADR-028, D169) — widget a portál; správca organizácie. */
+    channels: string
     /** Modul Vzdelávanie (ADR-018) — len pri zapnutom module. */
     learning: string
     learningManage: string
@@ -649,7 +651,7 @@ interface Dictionary {
     escCloses: string
     sheetHint: string
     /** Jedna veta pod názvom dlaždice — čo v sekcii je. */
-    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "helpdesk" | "learningManage" | "learningTests", string>
+    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "helpdesk" | "channels" | "learningManage" | "learningTests", string>
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
     toAcknowledge: string
@@ -1517,74 +1519,6 @@ interface Dictionary {
       saved: string
       keyDeleted: string
     }
-    /** Kanály helpdesku (ADR-028): obsah, schránka, riešitelia, widget, ťažba FAQ. */
-    helpdesk: {
-      heading: string
-      intro: string
-      list: string
-      empty: string
-      newChannel: string
-      edit: string
-      key: string
-      keyHint: string
-      name: string
-      audience: string
-      audienceHint: string
-      folders: string
-      foldersHint: string
-      assignees: string
-      assigneesHint: string
-      languages: string
-      mailbox: string
-      mailboxIntro: string
-      mailboxNone: string
-      mailboxKind: string
-      kindGraph: string
-      kindImap: string
-      address: string
-      addressHint: string
-      tenantId: string
-      clientId: string
-      clientSecret: string
-      clientSecretHint: string
-      secretSet: (hint: string, when: string, by: string) => string
-      secretNone: string
-      sync: string
-      syncNow: string
-      syncNever: string
-      syncLast: (when: string) => string
-      syncError: (code: string) => string
-      syncCounts: (created: number, appended: number, skipped: number) => string
-      syncSinceHint: string
-      syncDone: (created: number, appended: number, beforeStart: number) => string
-      verify: string
-      verified: (address: string, name: string) => string
-      widget: string
-      widgetIntro: string
-      widgetOrigins: string
-      widgetOriginsHint: string
-      rateLimit: string
-      rateLimitHint: string
-      widgetSecret: string
-      widgetSecretRotate: string
-      widgetSecretShown: string
-      widgetSecretNone: string
-      widgetSecretSet: (hint: string, when: string) => string
-      mining: string
-      miningIntro: string
-      miningDocument: string
-      miningLimit: string
-      miningRun: string
-      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => string
-      noFaqDocuments: string
-      tickets: (open: number, total: number) => string
-      save: string
-      saved: string
-      created: string
-      remove: string
-      removed: string
-      deployNote: string
-    }
     aiUsage: {
       tabSettings: string
       tabUsage: string
@@ -2235,6 +2169,86 @@ interface Dictionary {
     error: string
     expired: string
     poweredBy: string
+  }
+  /** Kanály (ADR-028, D161, D169): widget a portál — obsah, schránka, riešitelia, ťažba FAQ. */
+  channels: {
+    kinds: Record<"widget" | "portal", string>
+    kindHints: Record<"widget" | "portal", string>
+    kind: string
+    ticketsOn: string
+    ticketsHint: string
+    portalNote: string
+    builtIn: string
+    builtInAssistant: string
+    builtInPortal: string
+    agentsNote: string
+    back: string
+
+    heading: string
+    intro: string
+    list: string
+    empty: string
+    newChannel: string
+    edit: string
+    key: string
+    keyHint: string
+    name: string
+    audience: string
+    audienceHint: string
+    folders: string
+    foldersHint: string
+    assignees: string
+    assigneesHint: string
+    languages: string
+    mailbox: string
+    mailboxIntro: string
+    mailboxNone: string
+    mailboxKind: string
+    kindGraph: string
+    kindImap: string
+    address: string
+    addressHint: string
+    tenantId: string
+    clientId: string
+    clientSecret: string
+    clientSecretHint: string
+    secretSet: (hint: string, when: string, by: string) => string
+    secretNone: string
+    sync: string
+    syncNow: string
+    syncNever: string
+    syncLast: (when: string) => string
+    syncError: (code: string) => string
+    syncCounts: (created: number, appended: number, skipped: number) => string
+    syncSinceHint: string
+    syncDone: (created: number, appended: number, beforeStart: number) => string
+    verify: string
+    verified: (address: string, name: string) => string
+    widget: string
+    widgetIntro: string
+    widgetOrigins: string
+    widgetOriginsHint: string
+    rateLimit: string
+    rateLimitHint: string
+    widgetSecret: string
+    widgetSecretRotate: string
+    widgetSecretShown: string
+    widgetSecretNone: string
+    widgetSecretSet: (hint: string, when: string) => string
+    mining: string
+    miningIntro: string
+    miningDocument: string
+    miningLimit: string
+    miningRun: string
+    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => string
+    noFaqDocuments: string
+    tickets: (open: number, total: number) => string
+    save: string
+    saved: string
+    created: string
+    remove: string
+    removed: string
+    deployNote: string
   }
   library: {
     /** Knižnica pre osobu bez roly správy obsahu — platné dokumenty (SHELL-menu-v-hlavicke). */
@@ -4322,6 +4336,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluation: "Odpovede, pri ktorých niekto povedal, že nesedia",
       dpo: "Právne základy predpisov a námietky",
       helpdesk: "Tickety kanálov, ktorých si riešiteľom",
+      channels: "Widget do cudzej stránky a portál — kam ide obsah organizácie",
       learningManage: "Kurzy, časti a pridelenie",
       learningTests: "Banka otázok a výsledky pokusov",
     },
@@ -4331,6 +4346,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evaluation: "Na posúdenie",
     dpo: "Ochrana údajov",
     helpdesk: "Helpdesk",
+    channels: "Kanály",
     learning: "Vzdelávanie",
     learningManage: "Správa kurzov",
     learningTests: "Testy",
@@ -5325,6 +5341,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.secretUnreadable": "Tajomstvo schránky sa nedá rozšifrovať — zadaj ho znova.",
     "helpdesk.imapNotYet": "IMAP schránka ešte nie je k dispozícii — zatiaľ len Microsoft 365.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
+    "helpdesk.kind": "Neznámy typ kanála.",
+    "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
     "ticket.notFound": "Taký ticket tu nie je.",
     "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
@@ -5534,7 +5552,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Prihlasovanie",
       codelists: "Číselníky",
       ai: "Umelá inteligencia",
-      helpdesk: "Helpdesk",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
       gdpr: "GDPR",
@@ -5570,73 +5587,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Uložiť",
       saved: "Nastavenie AI je uložené.",
       keyDeleted: "Kľúč organizácie je odstránený.",
-    },
-    helpdesk: {
-      heading: "Helpdesk",
-      intro: "Kanál je jedno miesto, kde sa ľudia pýtajú: má vlastný obsah (priečinky knižnice), schránku, riešiteľov a widget. Kanálov môže byť viac — každý pre iný projekt a publikum.",
-      list: "Kanály",
-      empty: "Zatiaľ žiadny kanál.",
-      newChannel: "Nový kanál",
-      edit: "upraviť",
-      key: "Kľúč",
-      keyHint: "Identita kanála v adrese a v tokene widgetu. Po založení sa nemení.",
-      name: "Názov",
-      audience: "Publikum",
-      audienceHint: "Komu kanál slúži — klubové manažérky, rozhodcovia, rodičia…",
-      folders: "Obsah kanála",
-      foldersHint: "Priečinky knižnice, z ktorých asistent odpovedá. Bez výberu vidí celú knižnicu organizácie.",
-      assignees: "Riešitelia",
-      assigneesHint: "Osoby s rolou helpdesk, ktoré vidia tickety tohto kanála.",
-      languages: "Jazyky kanála",
-      mailbox: "Schránka",
-      mailboxIntro: "E-maily do schránky sa stávajú ticketmi a odpovede odchádzajú z nej. Microsoft 365 cez Microsoft Graph; IMAP pre bežné služby príde s prvým zákazníkom, ktorý ho má.",
-      mailboxNone: "Kanál bez schránky — len chat a tickety z neho.",
-      mailboxKind: "Druh schránky",
-      kindGraph: "Microsoft 365 (Graph)",
-      kindImap: "IMAP (zatiaľ nedostupné)",
-      address: "Adresa schránky",
-      addressHint: "napr. helpdesk@futbalsfz.sk — číta sa z nej aj odpovedá",
-      tenantId: "Tenant (Directory ID)",
-      clientId: "Client ID aplikácie",
-      clientSecret: "Tajomstvo aplikácie (client secret)",
-      clientSecretHint: "Uloží sa zašifrované; prázdne pole ho nemení. Postup registrácie v Entra je v docs/NASADENIE_app.md.",
-      secretSet: (hint: string, when: string, by: string) => `tajomstvo …${hint} zadané ${when} (${by})`,
-      secretNone: "tajomstvo zatiaľ nie je zadané",
-      sync: "Synchronizácia",
-      syncNow: "Synchronizovať teraz",
-      syncNever: "ešte nebežala",
-      syncLast: (when: string) => `naposledy ${when}`,
-      syncError: (code: string) => `posledná chyba: ${code}`,
-      syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplnené ${appended} · preskočené ${skipped}`,
-      syncSinceHint: "Prvé spustenie len označí začiatok: staršie správy sa ticketmi nestanú, história ide do ťažby FAQ.",
-      syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizácia prebehla: nové tickety ${created}, doplnené ${appended}, správ z histórie preskočených ${beforeStart}.`,
-      verify: "Overiť spojenie",
-      verified: (address: string, name: string) => `Spojenie funguje: ${address}${name ? ` (${name})` : ""}.`,
-      widget: "Widget pre cudzí systém",
-      widgetIntro: "Cudzí systém (ISSF) vydá po prihlásení podpísaný token s identitou osoby; widget ho pošle s otázkou. Tajomstvo sa ukáže len raz, hneď po vytvorení.",
-      widgetOrigins: "Povolené pôvody",
-      widgetOriginsHint: "Adresy, z ktorých smie widget volať, každá na nový riadok: https://issf.futbalsfz.sk",
-      rateLimit: "Strop požiadaviek na osobu a hodinu",
-      rateLimitHint: "Ochrana pred zneužitím (D14).",
-      widgetSecret: "Tajomstvo widgetu",
-      widgetSecretRotate: "Vytvoriť nové tajomstvo",
-      widgetSecretShown: "Nové tajomstvo — skopíruj ho teraz, znova sa neukáže:",
-      widgetSecretNone: "zatiaľ nevytvorené",
-      widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvorené ${when}`,
-      mining: "Ťažba FAQ z histórie",
-      miningIntro: "Model prečíta posledné vlákna schránky, očistí ich od osobných údajov a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Telá správ sa neukladajú; návrhy schvaľuje správca obsahu postupom znenia.",
-      miningDocument: "FAQ dokument",
-      miningLimit: "Koľko posledných správ prečítať",
-      miningRun: "Navrhnúť záznamy FAQ",
-      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Ťažba prebehla: vlákien ${threads}, návrhov ${proposed}, uložených do konceptu ${saved}, duplicitných ${duplicates}.`,
-      noFaqDocuments: "V knižnici ešte nie je FAQ dokument — založ ho v Knižnici → Nový dokument → FAQ.",
-      tickets: (open: number, total: number) => `tickety: ${open} otvorených z ${total}`,
-      save: "Uložiť kanál",
-      saved: "Kanál je uložený.",
-      created: "Kanál je založený.",
-      remove: "Odstrániť kanál",
-      removed: "Kanál je odstránený.",
-      deployNote: "Aplikácia v Entra potrebuje oprávnenia Mail.Read a Mail.Send zúžené na schránku kanála (RBAC for Applications). Postup: docs/NASADENIE_app.md § 5.",
     },
     aiUsage: {
       tabSettings: "Nastavenie",
@@ -6224,7 +6174,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   helpdesk: {
     heading: "Helpdesk",
     intro: "Tickety kanálov, ktorých si riešiteľom. Návrh odpovede pripraví asistent z noriem a FAQ kanála; odošleš ho ty, nikdy nie systém sám.",
-    noChannels: "Nie si riešiteľom žiadneho kanála. Správca organizácie ťa pridá v Organizácia → Helpdesk.",
+    noChannels: "Nie si riešiteľom žiadneho kanála. Správca organizácie ťa pridá medzi riešiteľov v Kanáloch.",
     viewOpen: "Otvorené",
     viewSent: "Odpovedané",
     viewClosed: "Zavreté",
@@ -6298,6 +6248,84 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     error: "Niečo sa pokazilo. Skús to o chvíľu.",
     expired: "Prihlásenie vypršalo — obnov stránku.",
     poweredBy: "Contineo",
+  },
+  channels: {
+    heading: "Kanály",
+    kinds: { widget: "Widget", portal: "Portál" },
+    kindHints: { widget: "Vložiteľný do cudzej stránky namiesto vyhľadávania: asistent (otázka a odpoveď), voliteľne tickety a schránka helpdesku.", portal: "Články, knižnica a formuláre. Dnes existuje knižnica; články a formuláre pripravujeme." },
+    kind: "Typ kanála",
+    ticketsOn: "Tickety",
+    ticketsHint: "Po dvoch negatívnych hodnoteniach môže človek napísať helpdesku; e-maily zo schránky sa stávajú ticketmi. Bez ticketov je kanál len asistent.",
+    portalNote: "Portál zatiaľ nesie len rozsah obsahu a jazyky — knižnica ich použije pri verejnom čítaní, články a formuláre pripravujeme.",
+    builtIn: "Vstavané",
+    builtInAssistant: "Asistent v intranete — otázka a odpoveď nad celou knižnicou pre prihlásených; nenastavuje sa.",
+    builtInPortal: "Knižnica v intranete — platné dokumenty pre prihlásených; nenastavuje sa.",
+    agentsNote: "Riešitelia majú zmysel, keď sú zapnuté tickety.",
+    back: "Kanály",
+    intro: "Kanál je jedno miesto, kde sa ľudia pýtajú: má vlastný obsah (priečinky knižnice), schránku, riešiteľov a widget. Kanálov môže byť viac — každý pre iný projekt a publikum.",
+    list: "Kanály",
+    empty: "Zatiaľ žiadny kanál.",
+    newChannel: "Nový kanál",
+    edit: "upraviť",
+    key: "Kľúč",
+    keyHint: "Identita kanála v adrese a v tokene widgetu. Po založení sa nemení.",
+    name: "Názov",
+    audience: "Publikum",
+    audienceHint: "Komu kanál slúži — klubové manažérky, rozhodcovia, rodičia…",
+    folders: "Obsah kanála",
+    foldersHint: "Priečinky knižnice, z ktorých asistent odpovedá. Bez výberu vidí celú knižnicu organizácie.",
+    assignees: "Riešitelia",
+    assigneesHint: "Osoby s rolou helpdesk, ktoré vidia tickety tohto kanála.",
+    languages: "Jazyky kanála",
+    mailbox: "Schránka",
+    mailboxIntro: "E-maily do schránky sa stávajú ticketmi a odpovede odchádzajú z nej. Microsoft 365 cez Microsoft Graph; IMAP pre bežné služby príde s prvým zákazníkom, ktorý ho má.",
+    mailboxNone: "Kanál bez schránky — len chat a tickety z neho.",
+    mailboxKind: "Druh schránky",
+    kindGraph: "Microsoft 365 (Graph)",
+    kindImap: "IMAP (zatiaľ nedostupné)",
+    address: "Adresa schránky",
+    addressHint: "napr. helpdesk@futbalsfz.sk — číta sa z nej aj odpovedá",
+    tenantId: "Tenant (Directory ID)",
+    clientId: "Client ID aplikácie",
+    clientSecret: "Tajomstvo aplikácie (client secret)",
+    clientSecretHint: "Uloží sa zašifrované; prázdne pole ho nemení. Postup registrácie v Entra je v docs/NASADENIE_app.md.",
+    secretSet: (hint: string, when: string, by: string) => `tajomstvo …${hint} zadané ${when} (${by})`,
+    secretNone: "tajomstvo zatiaľ nie je zadané",
+    sync: "Synchronizácia",
+    syncNow: "Synchronizovať teraz",
+    syncNever: "ešte nebežala",
+    syncLast: (when: string) => `naposledy ${when}`,
+    syncError: (code: string) => `posledná chyba: ${code}`,
+    syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplnené ${appended} · preskočené ${skipped}`,
+    syncSinceHint: "Prvé spustenie len označí začiatok: staršie správy sa ticketmi nestanú, história ide do ťažby FAQ.",
+    syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizácia prebehla: nové tickety ${created}, doplnené ${appended}, správ z histórie preskočených ${beforeStart}.`,
+    verify: "Overiť spojenie",
+    verified: (address: string, name: string) => `Spojenie funguje: ${address}${name ? ` (${name})` : ""}.`,
+    widget: "Widget pre cudzí systém",
+    widgetIntro: "Cudzí systém (ISSF) vydá po prihlásení podpísaný token s identitou osoby; widget ho pošle s otázkou. Tajomstvo sa ukáže len raz, hneď po vytvorení.",
+    widgetOrigins: "Povolené pôvody",
+    widgetOriginsHint: "Adresy, z ktorých smie widget volať, každá na nový riadok: https://issf.futbalsfz.sk",
+    rateLimit: "Strop požiadaviek na osobu a hodinu",
+    rateLimitHint: "Ochrana pred zneužitím (D14).",
+    widgetSecret: "Tajomstvo widgetu",
+    widgetSecretRotate: "Vytvoriť nové tajomstvo",
+    widgetSecretShown: "Nové tajomstvo — skopíruj ho teraz, znova sa neukáže:",
+    widgetSecretNone: "zatiaľ nevytvorené",
+    widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvorené ${when}`,
+    mining: "Ťažba FAQ z histórie",
+    miningIntro: "Model prečíta posledné vlákna schránky, očistí ich od osobných údajov a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Telá správ sa neukladajú; návrhy schvaľuje správca obsahu postupom znenia.",
+    miningDocument: "FAQ dokument",
+    miningLimit: "Koľko posledných správ prečítať",
+    miningRun: "Navrhnúť záznamy FAQ",
+    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Ťažba prebehla: vlákien ${threads}, návrhov ${proposed}, uložených do konceptu ${saved}, duplicitných ${duplicates}.`,
+    noFaqDocuments: "V knižnici ešte nie je FAQ dokument — založ ho v Knižnici → Nový dokument → FAQ.",
+    tickets: (open: number, total: number) => `tickety: ${open} otvorených z ${total}`,
+    save: "Uložiť kanál",
+    saved: "Kanál je uložený.",
+    created: "Kanál je založený.",
+    remove: "Odstrániť kanál",
+    removed: "Kanál je odstránený.",
+    deployNote: "Aplikácia v Entra potrebuje oprávnenia Mail.Read a Mail.Send zúžené na schránku kanála (RBAC for Applications). Postup: docs/NASADENIE_app.md § 5.",
   },
   library: {
     emptyForYou: "Zatiaľ tu pre vás nie sú žiadne dokumenty.",
@@ -8255,6 +8283,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluation: "Odpovědi, u kterých někdo řekl, že nesedí",
       dpo: "Právní základy předpisů a námitky",
       helpdesk: "Tickety kanálů, kterých jsi řešitelem",
+      channels: "Widget do cizí stránky a portál — kam jde obsah organizace",
       learningManage: "Kurzy, části a přidělení",
       learningTests: "Banka otázek a výsledky pokusů",
     },
@@ -8264,6 +8293,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evaluation: "K posouzení",
     dpo: "Ochrana údajů",
     helpdesk: "Helpdesk",
+    channels: "Kanály",
     learning: "Vzdělávání",
     learningManage: "Správa kurzů",
     learningTests: "Testy",
@@ -9258,6 +9288,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.secretUnreadable": "Tajemství schránky se nedá rozšifrovat — zadej ho znovu.",
     "helpdesk.imapNotYet": "IMAP schránka ještě není k dispozici — zatím jen Microsoft 365.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
+    "helpdesk.kind": "Neznámý typ kanálu.",
+    "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
     "ticket.notFound": "Takový ticket tady není.",
     "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
@@ -9467,7 +9499,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Přihlašování",
       codelists: "Číselníky",
       ai: "Umělá inteligence",
-      helpdesk: "Helpdesk",
       acknowledgements: "Potvrzování",
       audit: "Audit",
       gdpr: "GDPR",
@@ -9503,73 +9534,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Uložit",
       saved: "Nastavení AI je uloženo.",
       keyDeleted: "Klíč organizace je odstraněn.",
-    },
-    helpdesk: {
-      heading: "Helpdesk",
-      intro: "Kanál je jedno místo, kde se lidé ptají: má vlastní obsah (složky knihovny), schránku, řešitele a widget. Kanálů může být víc — každý pro jiný projekt a publikum.",
-      list: "Kanály",
-      empty: "Zatím žádný kanál.",
-      newChannel: "Nový kanál",
-      edit: "upravit",
-      key: "Klíč",
-      keyHint: "Identita kanálu v adrese a v tokenu widgetu. Po založení se nemění.",
-      name: "Název",
-      audience: "Publikum",
-      audienceHint: "Komu kanál slouží — klubové manažerky, rozhodčí, rodiče…",
-      folders: "Obsah kanálu",
-      foldersHint: "Složky knihovny, ze kterých asistent odpovídá. Bez výběru vidí celou knihovnu organizace.",
-      assignees: "Řešitelé",
-      assigneesHint: "Osoby s rolí helpdesk, které vidí tickety tohoto kanálu.",
-      languages: "Jazyky kanálu",
-      mailbox: "Schránka",
-      mailboxIntro: "E-maily do schránky se stávají tickety a odpovědi odcházejí z ní. Microsoft 365 přes Microsoft Graph; IMAP pro běžné služby přijde s prvním zákazníkem, který ho má.",
-      mailboxNone: "Kanál bez schránky — jen chat a tickety z něj.",
-      mailboxKind: "Druh schránky",
-      kindGraph: "Microsoft 365 (Graph)",
-      kindImap: "IMAP (zatím nedostupné)",
-      address: "Adresa schránky",
-      addressHint: "např. helpdesk@futbalsfz.sk — čte se z ní i odpovídá",
-      tenantId: "Tenant (Directory ID)",
-      clientId: "Client ID aplikace",
-      clientSecret: "Tajemství aplikace (client secret)",
-      clientSecretHint: "Uloží se zašifrované; prázdné pole ho nemění. Postup registrace v Entra je v docs/NASADENIE_app.md.",
-      secretSet: (hint: string, when: string, by: string) => `tajemství …${hint} zadané ${when} (${by})`,
-      secretNone: "tajemství zatím není zadané",
-      sync: "Synchronizace",
-      syncNow: "Synchronizovat teď",
-      syncNever: "ještě neběžela",
-      syncLast: (when: string) => `naposledy ${when}`,
-      syncError: (code: string) => `poslední chyba: ${code}`,
-      syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplněné ${appended} · přeskočené ${skipped}`,
-      syncSinceHint: "První spuštění jen označí začátek: starší zprávy se tickety nestanou, historie jde do těžby FAQ.",
-      syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizace proběhla: nové tickety ${created}, doplněné ${appended}, zpráv z historie přeskočeno ${beforeStart}.`,
-      verify: "Ověřit spojení",
-      verified: (address: string, name: string) => `Spojení funguje: ${address}${name ? ` (${name})` : ""}.`,
-      widget: "Widget pro cizí systém",
-      widgetIntro: "Cizí systém (ISSF) vydá po přihlášení podepsaný token s identitou osoby; widget ho pošle s otázkou. Tajemství se ukáže jen jednou, hned po vytvoření.",
-      widgetOrigins: "Povolené původy",
-      widgetOriginsHint: "Adresy, ze kterých smí widget volat, každá na nový řádek: https://issf.futbalsfz.sk",
-      rateLimit: "Strop požadavků na osobu a hodinu",
-      rateLimitHint: "Ochrana před zneužitím (D14).",
-      widgetSecret: "Tajemství widgetu",
-      widgetSecretRotate: "Vytvořit nové tajemství",
-      widgetSecretShown: "Nové tajemství — zkopíruj ho teď, znovu se neukáže:",
-      widgetSecretNone: "zatím nevytvořené",
-      widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvořené ${when}`,
-      mining: "Těžba FAQ z historie",
-      miningIntro: "Model přečte poslední vlákna schránky, očistí je od osobních údajů a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Těla zpráv se neukládají; návrhy schvaluje správce obsahu postupem znění.",
-      miningDocument: "FAQ dokument",
-      miningLimit: "Kolik posledních zpráv přečíst",
-      miningRun: "Navrhnout záznamy FAQ",
-      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Těžba proběhla: vláken ${threads}, návrhů ${proposed}, uložených do konceptu ${saved}, duplicitních ${duplicates}.`,
-      noFaqDocuments: "V knihovně ještě není FAQ dokument — založ ho v Knihovně → Nový dokument → FAQ.",
-      tickets: (open: number, total: number) => `tickety: ${open} otevřených z ${total}`,
-      save: "Uložit kanál",
-      saved: "Kanál je uložen.",
-      created: "Kanál je založen.",
-      remove: "Odstranit kanál",
-      removed: "Kanál je odstraněn.",
-      deployNote: "Aplikace v Entra potřebuje oprávnění Mail.Read a Mail.Send zúžená na schránku kanálu (RBAC for Applications). Postup: docs/NASADENIE_app.md § 5.",
     },
     aiUsage: {
       tabSettings: "Nastavení",
@@ -10155,7 +10119,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   helpdesk: {
     heading: "Helpdesk",
     intro: "Tickety kanálů, kterých jsi řešitelem. Návrh odpovědi připraví asistent z norem a FAQ kanálu; odešleš ho ty, nikdy ne systém sám.",
-    noChannels: "Nejsi řešitelem žádného kanálu. Správce organizace tě přidá v Organizace → Helpdesk.",
+    noChannels: "Nejsi řešitelem žádného kanálu. Správce organizace tě přidá mezi řešitele v Kanálech.",
     viewOpen: "Otevřené",
     viewSent: "Zodpovězené",
     viewClosed: "Zavřené",
@@ -10229,6 +10193,84 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     error: "Něco se pokazilo. Zkus to za chvíli.",
     expired: "Přihlášení vypršelo — obnov stránku.",
     poweredBy: "Contineo",
+  },
+  channels: {
+    heading: "Kanály",
+    kinds: { widget: "Widget", portal: "Portál" },
+    kindHints: { widget: "Vložitelný do cizí stránky místo vyhledávání: asistent (otázka a odpověď), volitelně tickety a schránka helpdesku.", portal: "Články, knihovna a formuláře. Dnes existuje knihovna; články a formuláře připravujeme." },
+    kind: "Typ kanálu",
+    ticketsOn: "Tickety",
+    ticketsHint: "Po dvou negativních hodnoceních může člověk napsat helpdesku; e-maily ze schránky se stávají tickety. Bez ticketů je kanál jen asistent.",
+    portalNote: "Portál zatím nese jen rozsah obsahu a jazyky — knihovna je použije při veřejném čtení, články a formuláře připravujeme.",
+    builtIn: "Vestavěné",
+    builtInAssistant: "Asistent v intranetu — otázka a odpověď nad celou knihovnou pro přihlášené; nenastavuje se.",
+    builtInPortal: "Knihovna v intranetu — platné dokumenty pro přihlášené; nenastavuje se.",
+    agentsNote: "Řešitelé mají smysl, když jsou zapnuté tickety.",
+    back: "Kanály",
+    intro: "Kanál je jedno místo, kde se lidé ptají: má vlastní obsah (složky knihovny), schránku, řešitele a widget. Kanálů může být víc — každý pro jiný projekt a publikum.",
+    list: "Kanály",
+    empty: "Zatím žádný kanál.",
+    newChannel: "Nový kanál",
+    edit: "upravit",
+    key: "Klíč",
+    keyHint: "Identita kanálu v adrese a v tokenu widgetu. Po založení se nemění.",
+    name: "Název",
+    audience: "Publikum",
+    audienceHint: "Komu kanál slouží — klubové manažerky, rozhodčí, rodiče…",
+    folders: "Obsah kanálu",
+    foldersHint: "Složky knihovny, ze kterých asistent odpovídá. Bez výběru vidí celou knihovnu organizace.",
+    assignees: "Řešitelé",
+    assigneesHint: "Osoby s rolí helpdesk, které vidí tickety tohoto kanálu.",
+    languages: "Jazyky kanálu",
+    mailbox: "Schránka",
+    mailboxIntro: "E-maily do schránky se stávají tickety a odpovědi odcházejí z ní. Microsoft 365 přes Microsoft Graph; IMAP pro běžné služby přijde s prvním zákazníkem, který ho má.",
+    mailboxNone: "Kanál bez schránky — jen chat a tickety z něj.",
+    mailboxKind: "Druh schránky",
+    kindGraph: "Microsoft 365 (Graph)",
+    kindImap: "IMAP (zatím nedostupné)",
+    address: "Adresa schránky",
+    addressHint: "např. helpdesk@futbalsfz.sk — čte se z ní i odpovídá",
+    tenantId: "Tenant (Directory ID)",
+    clientId: "Client ID aplikace",
+    clientSecret: "Tajemství aplikace (client secret)",
+    clientSecretHint: "Uloží se zašifrované; prázdné pole ho nemění. Postup registrace v Entra je v docs/NASADENIE_app.md.",
+    secretSet: (hint: string, when: string, by: string) => `tajemství …${hint} zadané ${when} (${by})`,
+    secretNone: "tajemství zatím není zadané",
+    sync: "Synchronizace",
+    syncNow: "Synchronizovat teď",
+    syncNever: "ještě neběžela",
+    syncLast: (when: string) => `naposledy ${when}`,
+    syncError: (code: string) => `poslední chyba: ${code}`,
+    syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplněné ${appended} · přeskočené ${skipped}`,
+    syncSinceHint: "První spuštění jen označí začátek: starší zprávy se tickety nestanou, historie jde do těžby FAQ.",
+    syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizace proběhla: nové tickety ${created}, doplněné ${appended}, zpráv z historie přeskočeno ${beforeStart}.`,
+    verify: "Ověřit spojení",
+    verified: (address: string, name: string) => `Spojení funguje: ${address}${name ? ` (${name})` : ""}.`,
+    widget: "Widget pro cizí systém",
+    widgetIntro: "Cizí systém (ISSF) vydá po přihlášení podepsaný token s identitou osoby; widget ho pošle s otázkou. Tajemství se ukáže jen jednou, hned po vytvoření.",
+    widgetOrigins: "Povolené původy",
+    widgetOriginsHint: "Adresy, ze kterých smí widget volat, každá na nový řádek: https://issf.futbalsfz.sk",
+    rateLimit: "Strop požadavků na osobu a hodinu",
+    rateLimitHint: "Ochrana před zneužitím (D14).",
+    widgetSecret: "Tajemství widgetu",
+    widgetSecretRotate: "Vytvořit nové tajemství",
+    widgetSecretShown: "Nové tajemství — zkopíruj ho teď, znovu se neukáže:",
+    widgetSecretNone: "zatím nevytvořené",
+    widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvořené ${when}`,
+    mining: "Těžba FAQ z historie",
+    miningIntro: "Model přečte poslední vlákna schránky, očistí je od osobních údajů a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Těla zpráv se neukládají; návrhy schvaluje správce obsahu postupem znění.",
+    miningDocument: "FAQ dokument",
+    miningLimit: "Kolik posledních zpráv přečíst",
+    miningRun: "Navrhnout záznamy FAQ",
+    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Těžba proběhla: vláken ${threads}, návrhů ${proposed}, uložených do konceptu ${saved}, duplicitních ${duplicates}.`,
+    noFaqDocuments: "V knihovně ještě není FAQ dokument — založ ho v Knihovně → Nový dokument → FAQ.",
+    tickets: (open: number, total: number) => `tickety: ${open} otevřených z ${total}`,
+    save: "Uložit kanál",
+    saved: "Kanál je uložen.",
+    created: "Kanál je založen.",
+    remove: "Odstranit kanál",
+    removed: "Kanál je odstraněn.",
+    deployNote: "Aplikace v Entra potřebuje oprávnění Mail.Read a Mail.Send zúžená na schránku kanálu (RBAC for Applications). Postup: docs/NASADENIE_app.md § 5.",
   },
   library: {
     emptyForYou: "Zatím tu pro vás nejsou žádné dokumenty.",
@@ -12179,6 +12221,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluation: "Answers someone said were wrong",
       dpo: "Legal bases of regulations and objections",
       helpdesk: "Tickets of the channels you are an agent of",
+      channels: "Widget for an external page and portal — where the organisation's content goes",
       learningManage: "Courses, parts and assignment",
       learningTests: "Question bank and attempt results",
     },
@@ -12188,6 +12231,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evaluation: "To evaluate",
     dpo: "Data protection",
     helpdesk: "Helpdesk",
+    channels: "Channels",
     learning: "Learning",
     learningManage: "Course management",
     learningTests: "Tests",
@@ -13180,6 +13224,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.secretUnreadable": "The mailbox secret cannot be decrypted — enter it again.",
     "helpdesk.imapNotYet": "IMAP mailboxes are not available yet — Microsoft 365 only for now.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
+    "helpdesk.kind": "Unknown channel type.",
+    "helpdesk.noTickets": "The channel has tickets switched off.",
     "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
     "ticket.notFound": "There is no such ticket here.",
     "ticket.emptyDraft": "An empty draft cannot be saved.",
@@ -13389,7 +13435,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Sign-in",
       codelists: "Code lists",
       ai: "Artificial intelligence",
-      helpdesk: "Helpdesk",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
       gdpr: "GDPR",
@@ -13425,73 +13470,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Save",
       saved: "The AI settings have been saved.",
       keyDeleted: "The organisation's key has been removed.",
-    },
-    helpdesk: {
-      heading: "Helpdesk",
-      intro: "A channel is one place where people ask: it has its own content (library folders), mailbox, agents and widget. There can be several channels — one per project and audience.",
-      list: "Channels",
-      empty: "No channels yet.",
-      newChannel: "New channel",
-      edit: "edit",
-      key: "Key",
-      keyHint: "The channel's identity in the address and in the widget token. It does not change after creation.",
-      name: "Name",
-      audience: "Audience",
-      audienceHint: "Who the channel serves — club managers, referees, parents…",
-      folders: "Channel content",
-      foldersHint: "Library folders the assistant answers from. With none selected it sees the whole library of the organisation.",
-      assignees: "Agents",
-      assigneesHint: "People with the helpdesk role who see this channel's tickets.",
-      languages: "Channel languages",
-      mailbox: "Mailbox",
-      mailboxIntro: "E-mails to the mailbox become tickets and replies go out from it. Microsoft 365 via Microsoft Graph; IMAP for ordinary services arrives with the first customer who has one.",
-      mailboxNone: "Channel without a mailbox — chat and its tickets only.",
-      mailboxKind: "Mailbox type",
-      kindGraph: "Microsoft 365 (Graph)",
-      kindImap: "IMAP (not available yet)",
-      address: "Mailbox address",
-      addressHint: "e.g. helpdesk@futbalsfz.sk — read from and replied from",
-      tenantId: "Tenant (Directory ID)",
-      clientId: "Application client ID",
-      clientSecret: "Application secret (client secret)",
-      clientSecretHint: "Stored encrypted; an empty field leaves it unchanged. The Entra registration procedure is in docs/NASADENIE_app.md.",
-      secretSet: (hint: string, when: string, by: string) => `secret …${hint} set ${when} (${by})`,
-      secretNone: "no secret set yet",
-      sync: "Synchronisation",
-      syncNow: "Synchronise now",
-      syncNever: "has not run yet",
-      syncLast: (when: string) => `last ${when}`,
-      syncError: (code: string) => `last error: ${code}`,
-      syncCounts: (created: number, appended: number, skipped: number) => `new tickets ${created} · appended ${appended} · skipped ${skipped}`,
-      syncSinceHint: "The first run only marks the start: older messages do not become tickets, history goes to FAQ mining.",
-      syncDone: (created: number, appended: number, beforeStart: number) => `Synchronisation finished: new tickets ${created}, appended ${appended}, history messages skipped ${beforeStart}.`,
-      verify: "Verify connection",
-      verified: (address: string, name: string) => `The connection works: ${address}${name ? ` (${name})` : ""}.`,
-      widget: "Widget for an external system",
-      widgetIntro: "The external system (ISSF) issues a signed token with the person's identity after sign-in; the widget sends it with the question. The secret is shown only once, right after creation.",
-      widgetOrigins: "Allowed origins",
-      widgetOriginsHint: "Addresses the widget may call from, one per line: https://issf.futbalsfz.sk",
-      rateLimit: "Request limit per person and hour",
-      rateLimitHint: "Protection against abuse (D14).",
-      widgetSecret: "Widget secret",
-      widgetSecretRotate: "Create a new secret",
-      widgetSecretShown: "New secret — copy it now, it will not be shown again:",
-      widgetSecretNone: "not created yet",
-      widgetSecretSet: (hint: string, when: string) => `…${hint}, created ${when}`,
-      mining: "FAQ mining from history",
-      miningIntro: "The model reads the latest mailbox threads, strips personal data and proposes FAQ entries into the draft of the selected FAQ document. Message bodies are not stored; the content manager approves the proposals through the version flow.",
-      miningDocument: "FAQ document",
-      miningLimit: "How many recent messages to read",
-      miningRun: "Propose FAQ entries",
-      miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Mining finished: threads ${threads}, proposals ${proposed}, saved to the draft ${saved}, duplicates ${duplicates}.`,
-      noFaqDocuments: "There is no FAQ document in the library yet — create one in Library → New document → FAQ.",
-      tickets: (open: number, total: number) => `tickets: ${open} open of ${total}`,
-      save: "Save channel",
-      saved: "The channel is saved.",
-      created: "The channel is created.",
-      remove: "Remove channel",
-      removed: "The channel is removed.",
-      deployNote: "The Entra application needs Mail.Read and Mail.Send scoped to the channel mailbox (RBAC for Applications). Procedure: docs/NASADENIE_app.md § 5.",
     },
     aiUsage: {
       tabSettings: "Settings",
@@ -14077,7 +14055,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   helpdesk: {
     heading: "Helpdesk",
     intro: "Tickets of the channels you are an agent of. The assistant drafts an answer from the channel's regulations and FAQ; you send it, never the system on its own.",
-    noChannels: "You are not an agent of any channel. The organisation administrator adds you in Organisation → Helpdesk.",
+    noChannels: "You are not an agent of any channel. The organisation administrator adds you as an agent in Channels.",
     viewOpen: "Open",
     viewSent: "Answered",
     viewClosed: "Closed",
@@ -14151,6 +14129,84 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     error: "Something went wrong. Try again in a moment.",
     expired: "Your session expired — reload the page.",
     poweredBy: "Contineo",
+  },
+  channels: {
+    heading: "Channels",
+    kinds: { widget: "Widget", portal: "Portal" },
+    kindHints: { widget: "Embeddable into an external page instead of search: the assistant (question and answer), optionally tickets and a helpdesk mailbox.", portal: "Articles, library and forms. The library exists today; articles and forms are in preparation." },
+    kind: "Channel type",
+    ticketsOn: "Tickets",
+    ticketsHint: "After two negative ratings a person can write to the helpdesk; e-mails from the mailbox become tickets. Without tickets the channel is just the assistant.",
+    portalNote: "A portal carries only the content scope and languages for now — the library will use them for public reading; articles and forms are in preparation.",
+    builtIn: "Built in",
+    builtInAssistant: "The assistant in the intranet — question and answer over the whole library for signed-in people; not configurable.",
+    builtInPortal: "The library in the intranet — documents in force for signed-in people; not configurable.",
+    agentsNote: "Agents matter when tickets are on.",
+    back: "Channels",
+    intro: "A channel is one place where people ask: it has its own content (library folders), mailbox, agents and widget. There can be several channels — one per project and audience.",
+    list: "Channels",
+    empty: "No channels yet.",
+    newChannel: "New channel",
+    edit: "edit",
+    key: "Key",
+    keyHint: "The channel's identity in the address and in the widget token. It does not change after creation.",
+    name: "Name",
+    audience: "Audience",
+    audienceHint: "Who the channel serves — club managers, referees, parents…",
+    folders: "Channel content",
+    foldersHint: "Library folders the assistant answers from. With none selected it sees the whole library of the organisation.",
+    assignees: "Agents",
+    assigneesHint: "People with the helpdesk role who see this channel's tickets.",
+    languages: "Channel languages",
+    mailbox: "Mailbox",
+    mailboxIntro: "E-mails to the mailbox become tickets and replies go out from it. Microsoft 365 via Microsoft Graph; IMAP for ordinary services arrives with the first customer who has one.",
+    mailboxNone: "Channel without a mailbox — chat and its tickets only.",
+    mailboxKind: "Mailbox type",
+    kindGraph: "Microsoft 365 (Graph)",
+    kindImap: "IMAP (not available yet)",
+    address: "Mailbox address",
+    addressHint: "e.g. helpdesk@futbalsfz.sk — read from and replied from",
+    tenantId: "Tenant (Directory ID)",
+    clientId: "Application client ID",
+    clientSecret: "Application secret (client secret)",
+    clientSecretHint: "Stored encrypted; an empty field leaves it unchanged. The Entra registration procedure is in docs/NASADENIE_app.md.",
+    secretSet: (hint: string, when: string, by: string) => `secret …${hint} set ${when} (${by})`,
+    secretNone: "no secret set yet",
+    sync: "Synchronisation",
+    syncNow: "Synchronise now",
+    syncNever: "has not run yet",
+    syncLast: (when: string) => `last ${when}`,
+    syncError: (code: string) => `last error: ${code}`,
+    syncCounts: (created: number, appended: number, skipped: number) => `new tickets ${created} · appended ${appended} · skipped ${skipped}`,
+    syncSinceHint: "The first run only marks the start: older messages do not become tickets, history goes to FAQ mining.",
+    syncDone: (created: number, appended: number, beforeStart: number) => `Synchronisation finished: new tickets ${created}, appended ${appended}, history messages skipped ${beforeStart}.`,
+    verify: "Verify connection",
+    verified: (address: string, name: string) => `The connection works: ${address}${name ? ` (${name})` : ""}.`,
+    widget: "Widget for an external system",
+    widgetIntro: "The external system (ISSF) issues a signed token with the person's identity after sign-in; the widget sends it with the question. The secret is shown only once, right after creation.",
+    widgetOrigins: "Allowed origins",
+    widgetOriginsHint: "Addresses the widget may call from, one per line: https://issf.futbalsfz.sk",
+    rateLimit: "Request limit per person and hour",
+    rateLimitHint: "Protection against abuse (D14).",
+    widgetSecret: "Widget secret",
+    widgetSecretRotate: "Create a new secret",
+    widgetSecretShown: "New secret — copy it now, it will not be shown again:",
+    widgetSecretNone: "not created yet",
+    widgetSecretSet: (hint: string, when: string) => `…${hint}, created ${when}`,
+    mining: "FAQ mining from history",
+    miningIntro: "The model reads the latest mailbox threads, strips personal data and proposes FAQ entries into the draft of the selected FAQ document. Message bodies are not stored; the content manager approves the proposals through the version flow.",
+    miningDocument: "FAQ document",
+    miningLimit: "How many recent messages to read",
+    miningRun: "Propose FAQ entries",
+    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Mining finished: threads ${threads}, proposals ${proposed}, saved to the draft ${saved}, duplicates ${duplicates}.`,
+    noFaqDocuments: "There is no FAQ document in the library yet — create one in Library → New document → FAQ.",
+    tickets: (open: number, total: number) => `tickets: ${open} open of ${total}`,
+    save: "Save channel",
+    saved: "The channel is saved.",
+    created: "The channel is created.",
+    remove: "Remove channel",
+    removed: "The channel is removed.",
+    deployNote: "The Entra application needs Mail.Read and Mail.Send scoped to the channel mailbox (RBAC for Applications). Procedure: docs/NASADENIE_app.md § 5.",
   },
   library: {
     emptyForYou: "There are no documents for you here yet.",

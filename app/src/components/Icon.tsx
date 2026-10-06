@@ -139,6 +139,14 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M9 6.2v3.6M9 12.1v.1" />
     </>
   ),
+  // Kanály (ADR-028, D169): tri šípky von — obsah ide k ľuďom viacerými cestami.
+  channels: (
+    <>
+      <path d="M3 9h5" />
+      <path d="M8 9 12 4.5h3M8 9h7M8 9l4 4.5h3" />
+      <path d="M13.5 3 15 4.5 13.5 6M13.5 7.5 15 9l-1.5 1.5M13.5 12 15 13.5 13.5 15" />
+    </>
+  ),
   // Helpdesk (ADR-028): slúchadlá — človek, ktorý odpovedá.
   helpdesk: (
     <>

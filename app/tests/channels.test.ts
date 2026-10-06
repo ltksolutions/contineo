@@ -1,5 +1,5 @@
 /**
- * helpdeskChannels.test.ts — kanal helpdesku (ADR-028, D161).
+ * channels.test.ts — kanal organizacie (ADR-028, D161, D169).
  *
  * Co sa drzi: tajomstva sa na obrazovku nedostanu (`channelView`), adapter
  * sa vybera podla nastavenia a bez tajomstva alebo pri IMAP zlyha nahlas.
@@ -9,12 +9,12 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
-import { channelView, mailboxFor, HELPDESK_ROLE, type HelpdeskChannel } from "../src/lib/helpdeskChannels"
+import { channelView, mailboxFor, HELPDESK_ROLE, CHANNEL_KINDS, type HelpdeskChannel } from "../src/lib/channels"
 import { ASSIGNABLE_ROLES } from "../src/lib/people"
 
 const now = new Date("2026-10-06T10:00:00Z")
 const channel = (over: Partial<HelpdeskChannel> = {}): HelpdeskChannel => ({
-  companyCode: "SFZ", key: "issf", name: "ISSF", audience: "kluby", folderIds: ["f1"],
+  companyCode: "SFZ", key: "issf", kind: "widget", name: "ISSF", audience: "kluby", folderIds: ["f1"], tickets: true,
   mailbox: {
     kind: "graph", address: "helpdesk@futbalsfz.sk",
     graph: { tenantId: "t", clientId: "c", clientSecretEnc: "v1.x.y.z", clientSecretHint: "ab12", secretSetAt: now, secretSetBy: "a@b.sk" },
@@ -50,6 +50,13 @@ describe("mailboxFor", () => {
   it("necitatelne tajomstvo nepada potichu", () => {
     // `v1.x.y.z` nie je platny sifrovany tvar — decrypt vyhodi, my prelozime.
     expect(() => mailboxFor(channel())).toThrow(/rozšifrovať/)
+  })
+})
+
+describe("typy kanalov (D169)", () => {
+  it("widget a portal, nic ine", () => {
+    expect(CHANNEL_KINDS).toEqual(["widget", "portal"])
+    expect(channelView(channel({ kind: "portal", mailbox: null })).kind).toBe("portal")
   })
 })
 

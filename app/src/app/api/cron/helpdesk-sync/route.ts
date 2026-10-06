@@ -15,7 +15,7 @@
  */
 
 import { NextResponse } from "next/server"
-import { channelsWithMailbox, syncChannel, type SyncReport } from "@/lib/helpdeskChannels"
+import { channelsWithMailbox, syncChannel, type SyncReport } from "@/lib/channels"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60

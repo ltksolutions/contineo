@@ -1,9 +1,19 @@
 /**
- * helpdeskChannels.ts — kanál helpdesku ako entita organizácie (ADR-028, D161).
+ * channels.ts — kanály organizácie (ADR-028, D161; typy D169).
  *
- * Kanálov je viac a každý má vlastný obsah, schránku, riešiteľov a widget:
- * ISSF pre kluby a rozhodcov, iný projekt s iným priečinkom knižnice. Preto
- * nič z toho nie je „helpdesk organizácie", ale záznam v `helpdesk_channels`.
+ * Kanál je rozhranie, cez ktoré obsah organizácie ide k ľuďom — rovnaký
+ * pojem ako na contineo.app/sk/technologia. Dva typy (Ján 6. 10. 2026):
+ *
+ *   • **widget** — vložiteľný do cudzej stránky namiesto vyhľadávania:
+ *     vždy asistent (otázka a odpoveď), voliteľne tickety (eskalácia
+ *     z chatu) a schránka helpdesku (e-maily sa stávajú ticketmi, odpovede
+ *     odchádzajú z nej, história sa ťaží do FAQ);
+ *   • **portal** — články, knižnica a formuláre; dnes existuje len knižnica
+ *     (čitateľský pohľad intranetu), články a formuláre sa pripravujú.
+ *
+ * Spoločné: kľúč, názov, publikum, obsah (priečinky knižnice), riešitelia,
+ * jazyky. Kanálov je viac — ISSF pre kluby, iný projekt s iným priečinkom —
+ * preto nič z toho nie je „helpdesk organizácie", ale záznam v `channels`.
  *
  * **Rozsah obsahu sú priečinky knižnice** (`folderIds`): do hľadania idú
  * platné znenia dokumentov, ktorých `folderPath` niektorý z nich obsahuje
@@ -28,7 +38,9 @@ import { GraphMailbox } from "./mailbox/graph"
 import type { MailboxAdapter, MailboxKind } from "./mailbox/types"
 import { ingestMessages, TICKETS_COLLECTION } from "./tickets"
 
-export const CHANNELS_COLLECTION = "helpdesk_channels"
+export const CHANNELS_COLLECTION = "channels"
+export type ChannelKind = "widget" | "portal"
+export const CHANNEL_KINDS: ChannelKind[] = ["widget", "portal"]
 /** Rola riešiteľa (D167) — oddelená od správcu obsahu. */
 export const HELPDESK_ROLE = "helpdesk"
 export const MAILBOX_KINDS: MailboxKind[] = ["graph", "imap"]
@@ -76,11 +88,21 @@ export interface ChannelWidget {
 export interface HelpdeskChannel {
   companyCode: string
   key: string
+  /** Typ kanála (D169). Po založení sa nemení — tickety a widget sa naň odkazujú. */
+  kind: ChannelKind
   name: string
   audience: string
   folderIds: string[]
+  /**
+   * Tickety zapnuté (len `widget`): eskalácia z chatu po dvoch negatívnych
+   * hodnoteniach a e-maily zo schránky, ak je. Bez ticketov je kanál len
+   * asistent — odpovedá a nič neeviduje.
+   */
+  tickets: boolean
+  /** Schránka helpdesku (len `widget`, voliteľná). */
   mailbox: ChannelMailbox | null
   assigneeIds: string[]
+  /** Nastavenie vloženia (len `widget`); pri portáli prázdne. */
   widget: ChannelWidget
   languages: UiLanguage[]
   createdAt: Date
@@ -121,11 +143,11 @@ export async function listChannels(companyCode: string): Promise<HelpdeskChannel
   return col.find({ companyCode: code }).sort({ name: 1 }).toArray()
 }
 
-/** Kanály, ktorých je osoba riešiteľom (D161: ticket vidí len riešiteľ svojho kanála). */
+/** Kanály s ticketmi, ktorých je osoba riešiteľom (D161: ticket vidí len riešiteľ svojho kanála). */
 export async function channelsForAgent(companyCode: string, personId: string): Promise<HelpdeskChannel[]> {
   const code = requireCompanyCode(companyCode, "channelsForAgent")
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
-  return col.find({ companyCode: code, assigneeIds: personId }).sort({ name: 1 }).toArray()
+  return col.find({ companyCode: code, assigneeIds: personId, tickets: true }).sort({ name: 1 }).toArray()
 }
 
 export async function channelByKey(companyCode: string, key: string): Promise<HelpdeskChannel | null> {
@@ -136,6 +158,9 @@ export async function channelByKey(companyCode: string, key: string): Promise<He
 
 export interface ChannelInput {
   key: string
+  /** Pri založení povinný; pri úprave sa ignoruje (typ sa nemení). */
+  kind?: string
+  tickets?: boolean
   name: string
   audience?: string
   folderIds?: string[]
@@ -174,9 +199,14 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
   const existing = await col.findOne({ companyCode: code, key })
   const now = new Date()
 
-  // Schránka: druh a adresa sú povinné, keď je schránka vôbec zadaná.
+  // Typ sa určuje raz, pri založení (D169).
+  const kind: ChannelKind = existing?.kind ?? (input.kind as ChannelKind)
+  if (!CHANNEL_KINDS.includes(kind)) throw new HelpdeskError("helpdesk.kind", "Neznámy typ kanála.", { kind: String(input.kind ?? "") })
+  const tickets = kind === "widget" ? Boolean(input.tickets ?? existing?.tickets ?? false) : false
+
+  // Schránka: druh a adresa sú povinné, keď je schránka vôbec zadaná. Portál schránku nemá.
   let mailbox: ChannelMailbox | null = existing?.mailbox ?? null
-  if (input.mailbox === null) {
+  if (input.mailbox === null || kind === "portal") {
     mailbox = null
   } else if (input.mailbox) {
     const kind = input.mailbox.kind.trim() as MailboxKind
@@ -220,12 +250,13 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
   }
 
   const channel: HelpdeskChannel = {
-    companyCode: code, key, name,
+    companyCode: code, key, kind, name,
     audience: (input.audience ?? "").trim(),
     folderIds: tidyList(input.folderIds),
+    tickets,
     mailbox,
     assigneeIds: tidyList(input.assigneeIds),
-    widget,
+    widget: kind === "widget" ? widget : { origins: [], rateLimitPerHour: DEFAULT_RATE_LIMIT },
     languages: languages.length ? languages : (existing?.languages ?? []),
     createdAt: existing?.createdAt ?? now, createdBy: existing?.createdBy ?? actor,
     updatedAt: now, updatedBy: actor,
@@ -234,7 +265,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
   await writeAudit({
     companyCode: code, subject: "helpdesk-channel", action: existing ? "changed" : "created", actor,
     targetId: key, targetLabel: name,
-    note: mailbox ? `schránka ${mailbox.kind} · ${mailbox.address}` : "bez schránky",
+    note: `${kind}${tickets ? " · tickety" : ""}${mailbox ? ` · schránka ${mailbox.kind} · ${mailbox.address}` : ""}`,
   })
   return channel
 }

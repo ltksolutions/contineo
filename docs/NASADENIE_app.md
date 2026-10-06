@@ -586,7 +586,7 @@ použití, nie na úrovni modulu.
 
 ## 5. Schránka helpdesku cez Microsoft Graph (ADR-028, D162)
 
-Kanál helpdesku (Organizácia → Helpdesk) číta schránku na Microsoft 365
+Kanál (sekcia Kanály, typ widget so schránkou) číta schránku na Microsoft 365
 **aplikačne**, bez prihláseného človeka: synchronizácia beží z cronu. Preto
 treba registráciu aplikácie v Entra a **zúženie oprávnení na jednu
 schránku** — bez zúženia by aplikácia s `Mail.Read` čítala celú poštu
@@ -636,7 +636,7 @@ obchádza.
 
 ### 5c. V Contineu
 
-Organizácia → Helpdesk → kanál → Schránka: druh **Microsoft 365 (Graph)**,
+Kanály → kanál typu widget → Schránka: druh **Microsoft 365 (Graph)**,
 adresa schránky, tenant ID, client ID, tajomstvo. Tajomstvo sa ukladá
 zašifrované kľúčom `OAUTH_SECRET_ENCRYPTION_KEY` (ten istý ako kľúč AI).
 Potom **Overiť spojenie** (prihlásenie aplikácie + čítanie priečinka

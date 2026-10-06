@@ -18,8 +18,7 @@ Graph a ťažba histórie do FAQ (D161, D162, D165), e-mail je ticket (D163),
 obrazovka riešiteľa `/helpdesk` (rola `helpdesk`, D167), widget s tokenom pre
 ISSF (D166) a druh osoby `internal`/`employee`/`external` (D168). Čaká na
 ľudí mimo kódu: registrácia aplikácie v Entra a zúženie na schránku
-(`docs/NASADENIE_app.md` § 5, správca M365), prvý kanál a rola `helpdesk`
-v Organizácii, tajomstvo widgetu pre prevádzkovateľa ISSF
+(`docs/NASADENIE_app.md` § 5, správca M365), prvý kanál v sekcii Kanály (typ widget, D169) a rola `helpdesk`, tajomstvo widgetu pre prevádzkovateľa ISSF
 (`docs/WIDGET_ISSF.md`). Poradie overenia: FAQ → kanál a Overiť spojenie →
 Synchronizovať → ťažba FAQ → ticket a odpoveď → widget
 (`npm run widget:test` bez ISSF). Otvorené po nasadení: upozornenie

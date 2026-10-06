@@ -23,7 +23,7 @@
 
 ## Čo urobí správca kanála (Contineo)
 
-Organizácia → Helpdesk → kanál:
+Kanály (menu, správca organizácie) → kanál typu **widget**:
 
 - **Povolené pôvody**: `https://issf.futbalsfz.sk` (presný pôvod stránky,
   bez cesty). Z iného pôvodu API odpovie 403.
@@ -109,8 +109,8 @@ token podpíše tajomstvom kanála sama (to isté, čo urobí ISSF):
 cd app && npm run widget:test -- --company SFZ --channel issf --origin http://localhost:4567 --app https://intranet.futbalsfz.sk --email jan@klub.sk --given Ján --family Letko --sub 1234567
 ```
 
-Predtým v Organizácia → Helpdesk pridať `http://localhost:4567` medzi
-povolené pôvody kanála. Stránka beží na tom pôvode, vloží skript widgetu
+Predtým v Kanáloch pridať `http://localhost:4567` medzi povolené pôvody
+kanála. Stránka beží na tom pôvode, vloží skript widgetu
 z aplikácie a pri 401 si vyžiada nový token z `/token`. Po skúške pôvod
 z kanála odobrať.
 

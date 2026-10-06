@@ -23,7 +23,7 @@ import { searchScope, attachVersions } from "./searchVersions"
 import { buildSystemPrompt, buildSources } from "./llmGenerator"
 import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
 import { AppError } from "./appError"
-import type { HelpdeskChannel } from "./helpdeskChannels"
+import type { HelpdeskChannel } from "./channels"
 import { questionText, type Ticket } from "./tickets"
 
 export class TicketDraftError extends AppError {}

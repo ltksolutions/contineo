@@ -9,7 +9,7 @@
 
 import { NextResponse } from "next/server"
 import { currentTenant, requestHostname } from "@/lib/session"
-import { channelByKey } from "@/lib/helpdeskChannels"
+import { channelByKey } from "@/lib/channels"
 import { dictionary } from "@/lib/i18n"
 import { brandingView } from "@/lib/tenants"
 import { widgetScript } from "@/lib/widgetScript"
@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ channel
   const tenant = await currentTenant().catch(() => null)
   if (!tenant) return new Response(null, { status: 404 })
   const channel = await channelByKey(tenant.companyCode, key)
-  if (!channel || !channel.widget.origins.length) return new Response(null, { status: 404 })
+  if (!channel || channel.kind !== "widget" || !channel.widget.origins.length) return new Response(null, { status: 404 })
   const language = channel.languages[0] ?? tenant.defaultLanguage
   const host = await requestHostname()
   const js = widgetScript({

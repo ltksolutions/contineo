@@ -19,7 +19,7 @@
  */
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "helpdesk" | "learning" | "learningManage" | "learningTests"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "helpdesk" | "channels" | "learning" | "learningManage" | "learningTests"
 
 export interface NavItem {
   href: string
@@ -99,6 +99,8 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // personalista, nie správca obsahu (D67).
     ...(flags.isHr ? [{ href: "/hr/evidence", key: "evidence" as const }] : []),
     ...(flags.isPeopleAdmin ? [{ href: "/people", key: "people" as const }] : []),
+    // Kanály (ADR-028, D169): rozhrania, cez ktoré obsah ide k ľuďom — widget a portál. Spravuje správca organizácie.
+    ...(flags.isPeopleAdmin ? [{ href: "/channels", key: "channels" as const }] : []),
     // Fronta hodnotiteľa. Podmienená rolou zámerne: nie je to zoznam vecí
     // na prečítanie, ale pracovný stôl s cudzími otázkami a odpoveďami.
     ...(flags.isEvaluator ? [{ href: "/evaluation", key: "evaluation" as const }] : []),
@@ -269,7 +271,7 @@ export const MAIN_KEYS: NavKey[] = ["overview", "ask", "toAcknowledge", "toAppro
  */
 const SECTION_GROUPS: { key: SectionGroupKey; keys: NavKey[] }[] = [
   { key: "organisation", keys: ["directory", "library", "learning"] },
-  { key: "management", keys: ["assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "learningManage", "learningTests"] },
+  { key: "management", keys: ["assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "channels", "learningManage", "learningTests"] },
 ]
 
 export interface SectionGroup {
@@ -384,6 +386,7 @@ const SECTION_HREF: Record<NavKey, string> = {
   evaluation: "/evaluation",
   dpo: "/dpo",
   helpdesk: "/helpdesk",
+  channels: "/channels",
   learningManage: "/learning/manage",
   learningTests: "/learning/tests",
 }

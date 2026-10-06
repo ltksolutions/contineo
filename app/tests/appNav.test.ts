@@ -107,7 +107,7 @@ describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
     expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
     expect(groups.map(g => g.items.map(o => o.key))).toEqual([
       ["directory", "library", "learning"],
-      ["assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "learningManage", "learningTests"],
+      ["assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "channels", "learningManage", "learningTests"],
     ])
   })
 

@@ -230,6 +230,27 @@ nikto nemal, 155 osôb je `employee`) a nahrádzajú ich **skupiny**
 druh hovorí, kto človek je voči organizácii, skupina komu sa čo posiela.
 Zamietnutý príznak `widgetOnly` — druhá klasifikácia vedľa druhu.
 
+### D169 — Kanály sú samostatná sekcia s typom: widget a portál
+
+Rozhodnutie Jána 6. 10. 2026 (večer). Kanál je rozhranie, cez ktoré obsah
+organizácie ide k ľuďom — rovnaký pojem ako na contineo.app/sk/technologia.
+Nie je to nastavenie helpdesku: sekcia **Kanály** je v menu (skupina
+Správa, správca organizácie), časť Organizácia → Helpdesk sa ruší. Dva typy:
+
+- **widget** — vložiteľný do cudzej stránky namiesto vyhľadávania: vždy
+  asistent (otázka a odpoveď), **voliteľne tickety** (eskalácia z chatu)
+  a **schránka helpdesku** (e-maily sa stávajú ticketmi, odpovede odchádzajú
+  z nej, história sa ťaží do FAQ). Bez ticketov je kanál len asistent;
+  `/helpdesk` vidí len kanály s ticketmi.
+- **portál** — články, knižnica a formuláre; dnes existuje len knižnica
+  (čitateľský pohľad intranetu), články a formuláre sa pripravujú. Nesie
+  rozsah obsahu, publikum a jazyky.
+
+Vstavané rozhrania intranetu (asistent, knižnica) sú v zozname ako pevné
+riadky. Kolekcia sa volá `channels` (ako na obrázku architektúry), typ je
+`kind`, tickety `tickets`. Žiadna migrácia — kanál dovtedy neexistoval.
+Implementácia: `lib/channels.ts`, `/channels`, `/channels/[key]`.
+
 ### D167 — Rola `helpdesk` je oddelená od správcu obsahu
 
 Odpovedá iný človek, než kto schvaľuje normy. `helpdesk` vidí frontu a
@@ -266,7 +287,7 @@ Kroky 2 a 3 prinášajú hodnotu aj intranetu bez čakania na ISSF.
 
 ## 5. Dôsledky
 
-- Nové kolekcie `helpdesk_channels`, `tickets`; nový druh dokumentu FAQ;
+- Nové kolekcie `channels` (D169), `tickets`; nový druh dokumentu FAQ;
   nová rola `helpdesk` a `external`; nový účel spotreby AI.
 - Registrácia aplikácie v Entra (SFZ) s Application Access Policy — úloha
   správcu M365, nie kódu; postup bude v `docs/NASADENIE_app.md`.
