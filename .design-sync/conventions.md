@@ -34,6 +34,34 @@ sú len doplnok. Texty sú po slovensky.
 - Hľadanie v zozname: komponent `SearchStrip` vo `<form method="get">`.
 - Na telefóne terč aspoň 44 px; zoznamy pod 1024 px ako karty, od 1024 px tabuľka.
 
+## Formuláre (SwiftUI `Form` + `Section`)
+- Skupina polí: `<fieldset class="form-group">` > `legend.form-group-head` (nadpis **nad**
+  kartou) + `div.card.form-group-body` (obsah) + voliteľne `p.form-group-foot.quiet`
+  (nápoveda **pod** kartou). Kroky s číslom: `.form-group--lg`, nadpis
+  `.form-group-head--step`. Legendu nikdy nekresli do okraja karty.
+- Karta s riadkami výberu: `.card.form-group-body.form-group-body--rows` > `.form-list` >
+  `label.form-row` (celý riadok je terč, min. 44 px). Text v `span.form-row-main`,
+  podnadpis `span.form-row-sub`. Vždy natívny `input`, nikdy vlastný `div`:
+  | čo sa vyberá | riadok | input |
+  |---|---|---|
+  | niekoľko zo zoznamu | `.form-row.select-row` (kruh vľavo) | `type="checkbox"` |
+  | jedna z 2–5 | `.form-row.choice-row` (fajka vpravo) | `type="radio"`; pole voľby v `div.choice-field` hneď za riadkom |
+  | zapnuté / vypnuté | `.form-row` | `type="checkbox" role="switch" class="toggle"` |
+- Pilulky (`.tag`) sú len na čítanie, vo formulári nie. `.view-switch` do formulára nepatrí.
+
+```jsx
+<fieldset className="form-group">
+  <legend className="form-group-head">Komu</legend>
+  <div className="card form-group-body form-group-body--rows"><div className="form-list">
+    <label className="form-row"><input type="checkbox" role="switch" className="toggle" name="all" value="1" />
+      <span className="form-row-main"><span>Všetkým v organizácii</span><span className="form-row-sub">prebije výber nižšie</span></span></label>
+    <label className="form-row select-row"><input type="checkbox" name="audience" value="track:a" />
+      <span className="form-row-main">Rozhodcovia 2026</span><span className="form-row-sub">14</span></label>
+  </div></div>
+  <p className="form-group-foot quiet">Osoba dostane všetko, čo je trase pridelené.</p>
+</fieldset>
+```
+
 ## Príklad
 ```jsx
 <div>
