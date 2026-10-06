@@ -16,6 +16,7 @@ import { requestHostname } from "@/lib/session"
 import { normalizeLanguage, dictionary, formatDate } from "@/lib/i18n"
 import { sendTrackNotificationAction } from "../../actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -90,7 +91,7 @@ export default async function TrackNotifyPage({ params }: { params: Promise<{ ke
 
           <form action={sendTrackNotificationAction}>
             <input type="hidden" name="key" value={track.key} />
-            <button className="button" type="submit">{t.send(recipients.length)}</button>
+            <SubmitButton className="button" pendingLabel={dictionary(ctx.person.language).common.pending.sending}>{t.send(recipients.length)}</SubmitButton>
           </form>
         </>
       )}

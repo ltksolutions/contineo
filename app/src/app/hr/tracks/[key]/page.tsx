@@ -30,6 +30,7 @@ import {
   addMembersAction, removeMemberAction, setTrackDueAction,
 } from "../actions"
 import AppShell from "@/components/AppShell"
+import SubmitButton from "@/components/SubmitButton"
 
 export const dynamic = "force-dynamic"
 
@@ -151,7 +152,7 @@ export default async function TrackDetailPage({
             <input className="field-input" name="description" defaultValue={track.description ?? ""} />
           </label>
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.rename}</button>
+            <SubmitButton className="button">{t.rename}</SubmitButton>
           </p>
         </form>
       </details>
@@ -180,7 +181,7 @@ export default async function TrackDetailPage({
           </label>
           <span className="quiet field-hint">{t.dueNote}</span>
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.dueSave}</button>
+            <SubmitButton className="button">{t.dueSave}</SubmitButton>
           </p>
         </form>
       </details>
@@ -209,22 +210,22 @@ export default async function TrackDetailPage({
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
                 <input type="hidden" name="direction" value="up" />
-                <button className="button button--quiet" type="submit" disabled={i === 0}>
+                <SubmitButton className="button button--quiet" disabled={i === 0}>
                   {t.moveUp}
-                </button>
+                </SubmitButton>
               </form>
               <form action={moveStepAction}>
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
                 <input type="hidden" name="direction" value="down" />
-                <button className="button button--quiet" type="submit" disabled={i === steps.length - 1}>
+                <SubmitButton className="button button--quiet" disabled={i === steps.length - 1}>
                   {t.moveDown}
-                </button>
+                </SubmitButton>
               </form>
               <form action={removeStepAction}>
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
-                <button className="button button--quiet" type="submit">{t.remove}</button>
+                <SubmitButton className="button button--quiet">{t.remove}</SubmitButton>
               </form>
             </div>
           </li>
@@ -253,7 +254,7 @@ export default async function TrackDetailPage({
           </label>
 
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.addStep}</button>
+            <SubmitButton className="button">{t.addStep}</SubmitButton>
           </p>
         </form>
       )}
@@ -287,7 +288,7 @@ export default async function TrackDetailPage({
               <form action={removeMemberAction}>
                 <input type="hidden" name="key" value={track.key} />
                 <input type="hidden" name="personId" value={p.id} />
-                <button className="button button--quiet" type="submit">{t.removeMember}</button>
+                <SubmitButton className="button button--quiet">{t.removeMember}</SubmitButton>
               </form>
             </li>
           ))}
@@ -339,7 +340,7 @@ export default async function TrackDetailPage({
             </label>
           )}
           <p style={{ margin: 0 }}>
-            <button className="button" type="submit">{t.addSubmit}</button>
+            <SubmitButton className="button" pendingLabel={dictionary(ctx.person.language).common.pending.adding}>{t.addSubmit}</SubmitButton>
           </p>
         </form>
       </details>
@@ -349,9 +350,9 @@ export default async function TrackDetailPage({
       <form action={setTrackActiveAction} style={{ margin: "0 0 32px" }}>
         <input type="hidden" name="key" value={track.key} />
         <input type="hidden" name="isActive" value={track.isActive ? "0" : "1"} />
-        <button className="button button--quiet" type="submit">
+        <SubmitButton className="button button--quiet">
           {track.isActive ? t.disable : t.enable}
-        </button>
+        </SubmitButton>
       </form>
 
     </div>
