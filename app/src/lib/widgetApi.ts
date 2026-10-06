@@ -18,7 +18,7 @@
 import { NextResponse } from "next/server"
 import { getCollection } from "./mongodb"
 import { currentTenant } from "./session"
-import { channelByKey, widgetSecret, type HelpdeskChannel } from "./helpdeskChannels"
+import { channelByKey, widgetSecret, type HelpdeskChannel } from "./channels"
 import { verifyWidgetToken, type WidgetIdentity } from "./widgetToken"
 import { ensureWidgetPerson } from "./widgetPersons"
 import { recordAnswer, RATINGS_COLLECTION, type RatingRecord } from "./ratings"
@@ -67,7 +67,8 @@ export async function widgetGate(req: Request, channelKey: string, token: string
   const tenant = await currentTenant().catch(() => null)
   if (!tenant) return new Response(null, { status: 404 })
   const channel = await channelByKey(tenant.companyCode, channelKey)
-  if (!channel) return new Response(null, { status: 404 })
+  // Portál widget nemá (D169) — pre API je to, ako keby kanál neexistoval.
+  if (!channel || channel.kind !== "widget") return new Response(null, { status: 404 })
   const origin = requestOrigin(req.headers)
   if (!originAllowed(channel, origin)) return new Response(null, { status: 403 })
   const cors = corsHeaders(origin!)

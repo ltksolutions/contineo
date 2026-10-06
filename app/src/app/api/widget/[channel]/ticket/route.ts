@@ -32,6 +32,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
   const gate = await widgetGate(req, key, body.token ?? null)
   if (gate instanceof Response) return gate
   const cors = corsHeaders(gate.origin)
+  // Kanál bez ticketov je len asistent (D169) — eskalácia nemá kam ísť.
+  if (!gate.channel.tickets) return NextResponse.json({ error: "helpdesk.noTickets" }, { status: 404, headers: cors })
   const message = String(body.message ?? "").trim().slice(0, 4000)
   if (!message) return NextResponse.json({ error: "ticket.emptyQuestion" }, { status: 400, headers: cors })
 

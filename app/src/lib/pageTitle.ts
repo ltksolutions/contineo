@@ -21,7 +21,7 @@ type Dictionary = ReturnType<typeof dictionary>
 
 const SECTION_KEYS: NavKey[] = [
   "overview", "ask", "toAcknowledge", "toApprove", "directory", "library", "learning",
-  "assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "learningManage", "learningTests",
+  "assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "channels", "learningManage", "learningTests",
 ]
 
 export function pageTitle(pathname: string | null | undefined, organisation: string, t: Dictionary): string {

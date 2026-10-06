@@ -10,7 +10,7 @@
 import { currentTenant, currentPerson } from "./session"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
-import { HELPDESK_ROLE, channelsForAgent, type HelpdeskChannel } from "./helpdeskChannels"
+import { HELPDESK_ROLE, channelsForAgent, type HelpdeskChannel } from "./channels"
 
 export type HelpdeskContext =
   | { state: "unknown-host" }

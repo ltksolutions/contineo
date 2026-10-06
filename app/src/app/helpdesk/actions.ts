@@ -15,7 +15,7 @@ import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { helpdeskContext } from "@/lib/helpdeskAgents"
-import { mailboxFor } from "@/lib/helpdeskChannels"
+import { mailboxFor } from "@/lib/channels"
 import {
   ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, lastIncoming, faqPrefillFromTicket, TicketError,
 } from "@/lib/tickets"
