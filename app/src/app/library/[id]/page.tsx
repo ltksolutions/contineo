@@ -802,8 +802,9 @@ export default async function DocumentDetailPage({
             <form action={saveDocumentMetadataAction} className="detail-main edit-form" id="document-data">
               <input type="hidden" name="documentId" value={d.documentId} />
 
-              <section className="card upload-section">
-                <h2 className="upload-step"><span className="upload-step-no">1</span>{tflow.secBasic}</h2>
+              <section className="form-group form-group--lg">
+                <h2 className="form-group-head form-group-head--step"><span className="assign-step" aria-hidden="true">1</span>{tflow.secBasic}</h2>
+              <div className="card form-group-body">
                 <div className="upload-grid">
                   {/* Názov sa pri zverejnenom znení mení len novým znením (Q3,
                       ADR-015). Hodnota ide skryto, aby ju server dostal nezmenenú. */}
@@ -846,13 +847,15 @@ export default async function DocumentDetailPage({
                     <Select language={language} name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel={t.documentLanguage} />
                   </div>
                 </div>
+              </div>
               </section>
 
-              <section className="card upload-section">
-                <h2 className="upload-step">
-                  <span className="upload-step-no">2</span>{tflow.secPlacement}
+              <section className="form-group form-group--lg">
+                <h2 className="form-group-head form-group-head--step">
+                  <span className="assign-step" aria-hidden="true">2</span>{tflow.secPlacement}
                   <span className="upload-step-opt">{tflow.optional}</span>
                 </h2>
+              <div className="card form-group-body">
                 <div className="upload-grid">
                   <div className="field">
                     <span className="field-label">{t.folder}</span>
@@ -910,6 +913,7 @@ export default async function DocumentDetailPage({
                     />
                   </div>
                 </div>
+              </div>
               </section>
 
               {/* Identifikátor len na čítanie (bod 3). */}

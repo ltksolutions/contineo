@@ -24,9 +24,17 @@ describe("názov v záložke", () => {
     expect(pageTitle("/library/sfz:stanovy", "Intranet SFZ", t)).toBe(`${t.nav.library} · Intranet SFZ`)
   })
 
-  it("bez adresy alebo mimo sekcií len organizácia", () => {
+  it("bez adresy len organizácia", () => {
     expect(pageTitle(null, "Intranet SFZ", t)).toBe("Intranet SFZ")
-    expect(pageTitle("/notifications", "Intranet SFZ", t)).toBe("Intranet SFZ")
+  })
+
+  // Do 6. 10. 2026 mali stránky mimo sekcií menu v karte len organizáciu —
+  // desať kariet „Intranet SFZ" sa nedalo rozlíšiť (Ján, 6. 10. 2026).
+  it("stránky mimo sekcií menu majú vlastný názov", () => {
+    expect(pageTitle("/notifications", "Intranet SFZ", t)).toBe("Upozornenia · Intranet SFZ")
+    expect(pageTitle("/acknowledgements", "Intranet SFZ", t)).toBe("Moje potvrdenia · Intranet SFZ")
+    expect(pageTitle("/organisation/signin", "Intranet SFZ", t)).toBe("Prihlasovanie · Intranet SFZ")
+    expect(pageTitle("/privacy", "Intranet SFZ", t)).toBe("Ochrana osobných údajov · Intranet SFZ")
   })
 
   it("Menu má vlastný názov", () => {

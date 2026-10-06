@@ -129,14 +129,15 @@ describe("/dpo", () => {
     expect(page).not.toContain("dpo-facets")
   })
 
-  it("čakajúca námietka: pás nad výkazom, voľby ako dlaždice, zaevidovanie zbalené v hlavičke", async () => {
+  it("čakajúca námietka: pás nad výkazom, voľby s fajkou, zaevidovanie zbalené v hlavičke", async () => {
     const page = await render()
     expect(page).toContain("1 námietka čaká na rozhodnutie")
     expect(page).toContain("Martin Novák · doručená 22. 9. 2026")
     // Skok na kotvu je tichý (rozhodnutie R1, 6. 10. 2026).
     expect(page).toContain('<a class="button button--quiet dpo-button-sm" href="#objections">Rozhodnúť</a>')
     expect(page).toContain("1 čaká na rozhodnutie")
-    expect(page).toContain("dpo-choice--danger")
+    // Dve voľby ako riadky s fajkou, „Vyhovieť" červené (R9, 6. 10. 2026).
+    expect(page).toContain('<label class="form-row choice-row form-row--danger"><input type="radio" name="decision" value="upheld"/>')
     expect(page).toMatch(/<details class="dpo-record">/)
   })
 
