@@ -292,7 +292,18 @@ export interface Person {
     entraObjectId?: string | null
     /** `sub` z Google. */
     googleSub?: string | null
+    /** Identifikátor v cudzom systéme podľa kľúča kanála helpdesku (ADR-028, D166): `{ issf: "<sub>" }`. */
+    widget?: Record<string, string>
   }
+
+  /**
+   * Osoba založená z widgetu cudzieho systému (ADR-028, D166) — pýta sa cez
+   * ISSF, do intranetu **nepatrí**. `personMaySignIn()` ju nepustí, aj keby
+   * mala adresu, ktorú by prihlásenie cez Microsoft či Google inak prijalo.
+   * Import osôb (`upsertPersons`) príznak zhodí: človek, ktorého správca
+   * naimportoval, do intranetu patrí.
+   */
+  widgetOnly?: boolean
 
   createdBy?: string
   createdAt: Date
@@ -387,8 +398,10 @@ export async function personMaySignIn(email: string, companyCode: string): Promi
     // tak prihlásil aj na portál LTK a až stránka mu povedala, že tam nepatrí.
     // Relácia platí pre doménu, takže o vstupe rozhoduje organizácia domény.
     const col = await getCollection<Person>(PERSONS_COLLECTION)
+    // Osoba len z widgetu (ADR-028, D166) nemá do intranetu vstup — pýta sa
+    // cez cudzí systém a tam aj zostáva.
     const count = await col.countDocuments(
-      { companyCode: code, email: address, status: { $ne: "inactive" } },
+      { companyCode: code, email: address, status: { $ne: "inactive" }, widgetOnly: { $ne: true } },
       { limit: 1 }
     )
     return count > 0
@@ -720,6 +733,10 @@ export async function upsertPersons(
     // už má, a história členstva (D50) sa odvíja od tej dnešnej.
     const existing = await col.findOne(key)
     const { set } = planChanges(existing, r, mode, now)
+    // Naimportovaný človek patrí do intranetu — príznak osoby z widgetu
+    // (ADR-028, D166) padá. Len keď ho má: inak by každý import „menil" aj
+    // osobu, ktorej niet čo doplniť.
+    if (existing?.widgetOnly) set.widgetOnly = false
 
     // Existujúcej osobe, ktorej niet čo doplniť, sa nezapíše nič.
     if (existing && Object.keys(set).length === 0) { v.unchanged++; continue }

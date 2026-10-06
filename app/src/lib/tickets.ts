@@ -326,3 +326,47 @@ export function faqPrefillFromTicket(t: Ticket): { question: string; answer: str
     origin: { channelKey: t.channelKey, threadRefs: t.threadRef ? [t.threadRef] : [], messageIds: t.messages.map(m => m.internetMessageId ?? m.providerId) },
   }
 }
+
+// ── ticket z chatu (ADR-028 krok 5, D166) ───────────────────────────────────
+
+export interface ChatTicketInput {
+  channelKey: string
+  asker: Ticket["asker"]
+  /** Čo človek napísal helpdesku po tom, čo mu asistent nepomohol. */
+  message: string
+  /**
+   * Priebeh rozhovoru — identifikátory záznamov v `evaluations` (otázka,
+   * odpoveď, hodnotenie); riešiteľ si ich otvorí, telá sa sem nekopírujú.
+   */
+  conversation: { recordId: string; question: string; verdict: 0 | 1 | null }[]
+}
+
+/**
+ * Ticket z widgetu. Prvá správa je otázka pýtajúceho sa spolu so stručným
+ * priebehom: čo sa pýtal a čo asistent odpovedal zle — riešiteľ tak nemusí
+ * hádať, kde asistent zlyhal.
+ */
+export async function createChatTicket(companyCode: string, input: ChatTicketInput): Promise<string> {
+  const message = input.message.replace(/\r\n?/g, "\n").trim()
+  if (!message) throw new TicketError("ticket.emptyQuestion", "Ticket nemá text otázky.")
+  const now = new Date()
+  const history = input.conversation
+    .map(c => `– ${c.question.trim()}${c.verdict === 0 ? " (odpoveď asistenta nepomohla)" : ""}`)
+    .join("\n")
+  const subject = (input.conversation[0]?.question ?? message).split("\n")[0].slice(0, 120)
+  const col = await getCollection<Ticket & { conversation?: ChatTicketInput["conversation"] }>(TICKETS_COLLECTION)
+  const r = await col.insertOne({
+    companyCode, channelKey: input.channelKey, source: "chat", threadRef: null,
+    asker: input.asker, subject,
+    messages: [{
+      internetMessageId: null, providerId: `chat:${now.getTime()}`, direction: "in",
+      from: input.asker.email ? { address: input.asker.email, name: input.asker.name } : null,
+      subject, text: history ? `${message}\n\nPredtým sa pýtal(a):\n${history}` : message, at: now, attachments: [],
+    }],
+    conversation: input.conversation,
+    state: "new", assigneeId: null, draft: null, sentAnswer: null,
+    createdAt: now, updatedAt: now, closedAt: null,
+  })
+  await writeAudit({ companyCode, subject: "ticket", action: "zalozeny-z-chatu", actor: input.asker.email ?? "widget", targetId: String(r.insertedId), targetLabel: subject, note: input.channelKey })
+  return String(r.insertedId)
+}

@@ -72,6 +72,8 @@ describe("osobaSmiePrihlasenie — jediné miesto medzi smernicami a internetom"
       companyCode: "SFZ",
       email: "novak@futbalsfz.sk",
       status: { $ne: "inactive" },
+      // Osoba z widgetu cudzieho systému (ADR-028, D166) do intranetu nepatrí.
+      widgetOnly: { $ne: true },
     })
   })
 

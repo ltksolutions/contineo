@@ -2182,6 +2182,27 @@ interface Dictionary {
     msgReopened: string
     aiFailed: string
   }
+  /** Widget pre cudzí systém (ADR-028, D166) — texty idú do skriptu widgetu podľa jazyka z tokenu. */
+  widget: {
+    open: string
+    title: string
+    placeholder: string
+    send: string
+    thinking: string
+    sources: string
+    helpful: string
+    notHelpful: string
+    thanks: string
+    tryAgain: string
+    noAnswer: string
+    escalateIntro: string
+    escalateMessage: string
+    escalateSubmit: string
+    escalated: string
+    error: string
+    expired: string
+    poweredBy: string
+  }
   library: {
     /** Knižnica pre osobu bez roly správy obsahu — platné dokumenty (SHELL-menu-v-hlavicke). */
     emptyForYou: string
@@ -5255,6 +5276,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ticket.emptyAnswer": "Prázdna odpoveď sa odoslať nedá.",
     "ticket.noRecipient": "Ticket nemá komu odpovedať — chýba adresa.",
     "ticket.aiFailed": "Asistent návrh nepripravil — skúste to o chvíľu.",
+    "ticket.emptyQuestion": "Ticket nemá text otázky.",
+    "widget.tokenShape": "Token nemá tvar JWT.",
+    "widget.tokenSignature": "Podpis tokenu nesedí.",
+    "widget.tokenExpired": "Token vypršal.",
+    "widget.tokenAudience": "Token patrí inému kanálu.",
+    "widget.tokenIssuer": "Vydavateľ tokenu nie je medzi povolenými pôvodmi kanála.",
+    "widget.tokenClaims": "Token nemá potrebné údaje o osobe.",
+    "widget.noSecret": "Kanál nemá tajomstvo widgetu.",
+    "widget.rateLimited": "Príliš veľa otázok — skús to neskôr.",
     "mailbox.auth": "Prihlásenie aplikácie do Microsoft 365 zlyhalo — skontroluj tenant, client id a tajomstvo.",
     "mailbox.forbidden": "Schránka odmietla prístup — skontroluj oprávnenia aplikácie a zúženie na schránku.",
     "mailbox.notFound": "Schránka s touto adresou v organizácii nie je.",
@@ -6194,6 +6224,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgClosed: "Ticket je zavretý.",
     msgReopened: "Ticket je znovu otvorený.",
     aiFailed: "Asistent návrh nepripravil — skús to o chvíľu alebo napíš odpoveď sám.",
+  },
+  widget: {
+    open: "Opýtať sa",
+    title: "Pomocník",
+    placeholder: "Napíš otázku…",
+    send: "Odoslať",
+    thinking: "Hľadám v predpisoch…",
+    sources: "Zdroje",
+    helpful: "Pomohlo",
+    notHelpful: "Nepomohlo",
+    thanks: "Ďakujeme.",
+    tryAgain: "Skús otázku položiť inak, alebo napíš helpdesku.",
+    noAnswer: "V predpisoch a častých otázkach som na to nenašiel odpoveď.",
+    escalateIntro: "Asistent ti nepomohol. Napíš helpdesku — odpovie človek e-mailom na tvoju adresu.",
+    escalateMessage: "Čo potrebuješ vyriešiť",
+    escalateSubmit: "Odoslať helpdesku",
+    escalated: "Správa je odoslaná. Helpdesk odpovie e-mailom.",
+    error: "Niečo sa pokazilo. Skús to o chvíľu.",
+    expired: "Prihlásenie vypršalo — obnov stránku.",
+    poweredBy: "Contineo",
   },
   library: {
     emptyForYou: "Zatiaľ tu pre vás nie sú žiadne dokumenty.",
@@ -9140,6 +9190,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ticket.emptyAnswer": "Prázdná odpověď se odeslat nedá.",
     "ticket.noRecipient": "Ticket nemá komu odpovědět — chybí adresa.",
     "ticket.aiFailed": "Asistent návrh nepřipravil — zkuste to za chvíli.",
+    "ticket.emptyQuestion": "Ticket nemá text otázky.",
+    "widget.tokenShape": "Token nemá tvar JWT.",
+    "widget.tokenSignature": "Podpis tokenu nesedí.",
+    "widget.tokenExpired": "Token vypršel.",
+    "widget.tokenAudience": "Token patří jinému kanálu.",
+    "widget.tokenIssuer": "Vydavatel tokenu není mezi povolenými původy kanálu.",
+    "widget.tokenClaims": "Token nemá potřebné údaje o osobě.",
+    "widget.noSecret": "Kanál nemá tajemství widgetu.",
+    "widget.rateLimited": "Příliš mnoho otázek — zkus to později.",
     "mailbox.auth": "Přihlášení aplikace do Microsoft 365 selhalo — zkontroluj tenant, client id a tajemství.",
     "mailbox.forbidden": "Schránka odmítla přístup — zkontroluj oprávnění aplikace a zúžení na schránku.",
     "mailbox.notFound": "Schránka s touto adresou v organizaci není.",
@@ -10077,6 +10136,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgClosed: "Ticket je zavřen.",
     msgReopened: "Ticket je znovu otevřen.",
     aiFailed: "Asistent návrh nepřipravil — zkus to za chvíli nebo napiš odpověď sám.",
+  },
+  widget: {
+    open: "Zeptat se",
+    title: "Pomocník",
+    placeholder: "Napiš otázku…",
+    send: "Odeslat",
+    thinking: "Hledám v předpisech…",
+    sources: "Zdroje",
+    helpful: "Pomohlo",
+    notHelpful: "Nepomohlo",
+    thanks: "Děkujeme.",
+    tryAgain: "Zkus otázku položit jinak, nebo napiš helpdesku.",
+    noAnswer: "V předpisech a častých otázkách jsem na to nenašel odpověď.",
+    escalateIntro: "Asistent ti nepomohl. Napiš helpdesku — odpoví člověk e-mailem na tvou adresu.",
+    escalateMessage: "Co potřebuješ vyřešit",
+    escalateSubmit: "Odeslat helpdesku",
+    escalated: "Zpráva je odeslána. Helpdesk odpoví e-mailem.",
+    error: "Něco se pokazilo. Zkus to za chvíli.",
+    expired: "Přihlášení vypršelo — obnov stránku.",
+    poweredBy: "Contineo",
   },
   library: {
     emptyForYou: "Zatím tu pro vás nejsou žádné dokumenty.",
@@ -13014,6 +13093,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ticket.emptyAnswer": "An empty answer cannot be sent.",
     "ticket.noRecipient": "The ticket has nobody to answer — the address is missing.",
     "ticket.aiFailed": "The assistant did not produce a draft — try again in a moment.",
+    "ticket.emptyQuestion": "The ticket has no question text.",
+    "widget.tokenShape": "The token is not a JWT.",
+    "widget.tokenSignature": "The token signature does not match.",
+    "widget.tokenExpired": "The token has expired.",
+    "widget.tokenAudience": "The token belongs to another channel.",
+    "widget.tokenIssuer": "The token issuer is not among the channel's allowed origins.",
+    "widget.tokenClaims": "The token lacks the required person data.",
+    "widget.noSecret": "The channel has no widget secret.",
+    "widget.rateLimited": "Too many questions — try again later.",
     "mailbox.auth": "The application could not sign in to Microsoft 365 — check the tenant, client id and secret.",
     "mailbox.forbidden": "The mailbox refused access — check the application permissions and the mailbox scoping.",
     "mailbox.notFound": "There is no mailbox with this address in the organisation.",
@@ -13951,6 +14039,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgClosed: "The ticket is closed.",
     msgReopened: "The ticket is reopened.",
     aiFailed: "The assistant did not produce a draft — try again in a moment or write the answer yourself.",
+  },
+  widget: {
+    open: "Ask",
+    title: "Assistant",
+    placeholder: "Type your question…",
+    send: "Send",
+    thinking: "Searching the regulations…",
+    sources: "Sources",
+    helpful: "Helpful",
+    notHelpful: "Not helpful",
+    thanks: "Thank you.",
+    tryAgain: "Try asking differently, or write to the helpdesk.",
+    noAnswer: "I could not find an answer in the regulations and FAQ.",
+    escalateIntro: "The assistant did not help. Write to the helpdesk — a person will reply by e-mail to your address.",
+    escalateMessage: "What do you need to resolve",
+    escalateSubmit: "Send to the helpdesk",
+    escalated: "Your message has been sent. The helpdesk will reply by e-mail.",
+    error: "Something went wrong. Try again in a moment.",
+    expired: "Your session expired — reload the page.",
+    poweredBy: "Contineo",
   },
   library: {
     emptyForYou: "There are no documents for you here yet.",

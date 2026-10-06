@@ -64,7 +64,9 @@ describe("brána prihlásenia", () => {
     // treba sa pýtať prečo.
     // 7. položka: verejné overenie certifikátu (ADR-018, D122) — chránené
     // 80-bitovým hashom v adrese, nie prihlásením.
-    expect(PUBLIC_PATHS.length).toBeLessThanOrEqual(7)
+    // 8. položka: widget cudzieho systému (ADR-028, D166) — chránený
+    // podpísaným tokenom kanála a povoleným pôvodom, overuje každá route.
+    expect(PUBLIC_PATHS.length).toBeLessThanOrEqual(8)
   })
 })
 

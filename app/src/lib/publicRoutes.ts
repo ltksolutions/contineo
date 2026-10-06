@@ -51,6 +51,13 @@ export const PUBLIC_PATHS = [
    * číslo. Meno držiteľa neukáže nikdy.
    */
   "/verify/",
+  /*
+   * Widget pre cudzí systém (ADR-028, D166): skript, otázka, hodnotenie
+   * a ticket. Prihlásenie nahrádza podpísaný token kanála overený v každej
+   * route (`lib/widgetApi.ts`) a pôvod musí byť medzi povolenými pôvodmi
+   * kanála — bez toho route odpovie 403 skôr, než sa čohokoľvek dotkne.
+   */
+  "/api/widget/",
 ] as const
 
 /** Je táto cesta prístupná bez prihlásenia? */

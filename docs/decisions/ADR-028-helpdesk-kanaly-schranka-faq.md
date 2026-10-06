@@ -28,6 +28,12 @@
 > odpovede tou istou cestou ako `/api/chat`, bez streamu, len verejný obsah),
 > práca s ticketom v `lib/tickets.ts`, položka Helpdesk v navigácii s počtom
 > otvorených ticketov.
+> Krok 5 (widget a token) 6. 10. 2026: `lib/widgetToken.ts` (HS256, ≤ 15 min),
+> `lib/widgetPersons.ts` (osoba z tokenu, `widgetOnly`), `lib/widgetApi.ts`
+> (pôvod, CORS, strop, zápis odpovede zo streamu), `lib/chatStream.ts`
+> (postup `/api/chat` vytiahnutý pre obe brány), `/api/widget/[kanál]/
+> {script,chat,feedback,ticket}`, `lib/widgetScript.ts` (skript v Shadow DOM,
+> eskalácia po dvoch negatívnych), návod `docs/WIDGET_ISSF.md`.
 
 ---
 
@@ -193,9 +199,12 @@ e-mail, meno, roly, klub, `exp` do 15 minút). Widget je `<script>` z
 Continea (webový komponent vo farbách organizácie, `tenantStyle`), volá
 `/api/chat` s tokenom a kľúčom kanálu.
 
-- Osoba sa založí alebo spáruje cez `externalRef` (pre ISSF
-  `sportnetId`), s rolou `external` bez prístupu do intranetu; vidí
-  `public` úseky z rozsahu kanálu.
+- Osoba sa založí alebo spáruje cez `externalRef.widget[kanál]` = `sub`
+  z tokenu (spresnenie 6. 10. 2026: generické podľa kanála, nie
+  `sportnetId`), s `personType: "external"` a príznakom **`widgetOnly`**,
+  ktorý ju nepustí do intranetu (`personMaySignIn()`); zamestnanec s tým
+  istým e-mailom sa len spáruje a intranet mu ostáva. Vidí `public` úseky
+  z rozsahu kanála.
 - Strop požiadaviek na osobu a hodinu je na kanáli (D14).
 - Po **dvoch negatívnych hodnoteniach** v rozhovore sa ponúkne ticket;
   e-mail a meno sú z tokenu, človek dopíše len, čo mu chýba.
