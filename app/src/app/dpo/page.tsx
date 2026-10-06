@@ -142,23 +142,31 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
       {o.status === "pending" ? (
         <form action={decideObjectionAction} className="dpo-obj-decide">
           <input type="hidden" name="id" value={o.id} />
-          <fieldset className="field" style={{ border: 0, padding: 0, margin: 0, display: "grid", gap: 6 }}>
-            <legend className="field-label">{t.decideHeading}</legend>
-            {/* Voľby ako dlaždice; „Vyhovieť" pri výbere červené —
-                maže doklady natrvalo, hneď po odoslaní (D105). */}
-            <label className="hr-choice hr-choice--tile">
-              <input type="radio" name="decision" value="rejected" required /> {t.rejected}
-            </label>
-            <label className="hr-choice hr-choice--tile dpo-choice--danger">
-              <input type="radio" name="decision" value="upheld" /> {t.upheld}
-            </label>
+          {/* Jedna z dvoch volieb — fajka vpravo (ZAKLAD-vyber-a-prepinace).
+              „Vyhovieť" je červené (`.form-row--danger`, rozhodnutie R9,
+              6. 10. 2026) — maže doklady natrvalo, hneď po odoslaní (D105). */}
+          <fieldset className="form-group">
+            <legend className="form-group-head">{t.decideHeading}</legend>
+            <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
+                <label className="form-row choice-row">
+                  <input type="radio" name="decision" value="rejected" required />
+                  <span className="form-row-main">{t.rejected}</span>
+                </label>
+                <label className="form-row choice-row form-row--danger">
+                  <input type="radio" name="decision" value="upheld" />
+                  <span className="form-row-main">{t.upheld}</span>
+                </label>
+              </div>
+            </div>
             <p className="dpo-warn">{t.upheldWarning}</p>
           </fieldset>
           <label className="field">
             <span className="field-label">{t.decisionNote}</span>
             <textarea className="field-input" name="note" rows={3} required />
           </label>
-          <div><SubmitButton className="button">{t.decideSubmit}</SubmitButton></div>
+          {/* Každá čakajúca námietka má vlastné rozhodnutie — tiché (R1, 6. 10. 2026). */}
+          <div><SubmitButton className="button button--quiet">{t.decideSubmit}</SubmitButton></div>
         </form>
       ) : (
         <div className="dpo-obj-done">
@@ -242,7 +250,8 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
               <strong>{t.pendingBanner(pending)}</strong>
               {t.pendingBannerMeta(pendingList[0].personName, formatDate(pendingList[0].receivedAt, language))}
             </div>
-            <a className="button dpo-button-sm" href="#objections">{t.pendingDecide}</a>
+            {/* Skok na kotvu, nie akcia — tiché. */}
+            <a className="button button--quiet dpo-button-sm" href="#objections">{t.pendingDecide}</a>
           </div>
         )}
 

@@ -76,12 +76,11 @@ export default async function LearningPage({ searchParams }: { searchParams: Pro
   return (
     <AppShell language={language}>
       <div className="lp" style={tenantStyle(brandingView(ctx.tenant))}>
-        <div className="lp-head">
-          <div className="grow">
-            <h1 className="page-title">{t.heading}</h1>
-            <p className="quiet page-lead lp-lead">{t.intro}</p>
-          </div>
+        {/* Hlavička ako na ostatných stránkach (DESIGN_ODCHYLKY P1). */}
+        <div className="page-head">
+          <h1 className="page-title">{t.heading}</h1>
         </div>
+        <p className="quiet page-lead lp-lead">{t.intro}</p>
         <Notice language={language} message={q.msg} error={q.error === "1"} back="/learning" />
 
         {total === 0 ? (

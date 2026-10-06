@@ -52,9 +52,15 @@ export default async function AssignmentDetailPage({
   return (
     <AppShell language={ctx.person.language} title={assignment.subject.documentTitle}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
-      <h1 className="page-title">
-        {assignment.subject.documentTitle}
-      </h1>
+      {/* Akcia stránky vpravo v hlavičke (DESIGN_ODCHYLKY P1) — dovtedy
+          obyčajný odkaz pri nadpise zoznamu nižšie. */}
+      <div className="page-head">
+        <h1 className="page-title">{assignment.subject.documentTitle}</h1>
+        <span className="page-head-spacer" aria-hidden="true" />
+        {missing.length > 0 && (
+          <Link className="button" href={`/hr/${encodeURIComponent(id)}/notify`}>{t.notifyLink}</Link>
+        )}
+      </div>
       <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 4px" }}>
         {t.version} {assignment.subject.versionLabel}
         {assignment.subject.effectiveFrom &&
@@ -73,11 +79,6 @@ export default async function AssignmentDetailPage({
         <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>
           {t.notAcknowledged(missing.length, assignment.count)}
         </h2>
-        {missing.length > 0 && (
-          <Link href={`/hr/${encodeURIComponent(id)}/notify`} style={{ fontSize: "var(--fs-body)" }}>
-            {t.notifyLink}
-          </Link>
-        )}
       </div>
 
       {missing.length === 0 ? (

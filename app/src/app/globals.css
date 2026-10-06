@@ -1797,7 +1797,6 @@ html[data-theme="dark"] select.field-input {
 .colors-custom > summary { cursor: pointer; font-size: 13.5px; color: var(--muted); }
 
 
-.admin-languages { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .admin-domains {
   list-style: none;
@@ -1825,14 +1824,6 @@ html[data-theme="dark"] select.field-input {
  */
 fieldset { min-width: 0; }
 .hr-choice { overflow-wrap: anywhere; }
-
-.hr-subtitle {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  margin: 14px 0 4px;
-}
 
 .hr-choice {
   display: flex;
@@ -2697,29 +2688,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 /* ── nahratie dokumentu: sekcie a zóna na súbor ─────────────────────────
    Číslované sekcie, nie stepper: nahratie je jedno odoslanie formulára
    a schvaľovací krok v systéme neexistuje. */
-.upload-form { display: grid; gap: 14px; }
+/* Kroky ako skupiny s nadpisom nad kartou (DESIGN_ODCHYLKY P7) — 24 px ako
+   na Prideliť dokumenty. */
+.upload-form { display: grid; gap: 24px; }
 
 .upload-section { padding: 18px 20px; }
-
-.upload-step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 14px;
-  font-size: 15px;
-}
-
-.upload-step-no {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-size: 12.5px;
-  font-weight: 700;
-}
 
 /*
  * Zóna na pretiahnutie je `<label>` okolo skutočného `<input type="file">` —
@@ -3725,7 +3698,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .view-switch-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Počet pri voľbe filtra (stav zoznamu) — tlmený, nech výber nesie doska. */
-.view-switch--fit { margin: 0 0 10px; }
+/* V mriežke (`.mg-body`) by sa roztiahol na celú šírku — na počítači len
+   na šírku volieb; na telefóne cez celú šírku (nižšie). */
+.view-switch--fit { margin: 0 0 10px; justify-self: start; }
 .view-switch-count { margin-left: 5px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 @media (max-width: 639px) {
@@ -3734,7 +3709,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .view-switch--full { display: grid; width: 100%; }
   /* Filter so štyrmi voľbami a počtom: cez celú šírku, užšie segmenty —
      inak by na 390 px pretiekol (DESIGN_ODCHYLKY P4). */
-  .view-switch--fit { display: grid; width: 100%; }
+  .view-switch--fit { display: grid; width: 100%; justify-self: stretch; }
   .view-switch--fit .view-switch-item { padding: 0 6px; font-size: 13px; }
 }
 
@@ -4413,14 +4388,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* ── história otázok (ASK-historia-otazok) ──────────────────────────────── */
 .ask-history { max-width: 900px; display: grid; gap: 16px; }
-.ask-history-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-}
-.ask-history-head .page-lead { margin: 0; }
 .ask-history-filter { display: flex; gap: 8px; }
 .ask-history-filter .field-input { flex: 1 1 auto; min-width: 0; }
 .ask-history-confirm { display: grid; gap: 12px; padding: 16px; }
@@ -6168,13 +6135,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 .ack-privacy a { color: var(--ink); text-underline-offset: 2px; }
 
-/* Voľby právneho základu ako dlaždice (bod 4). */
-.hr-choice--tile {
-  padding: 10px 12px; margin-top: 6px;
-  border: 1px solid var(--line); border-radius: 9px;
-}
-.hr-choice--tile:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
-
 /* Text na vyhľadávanie pod PDF — zbalený, lebo potvrdzuje sa PDF. */
 .approval-search-text,
 .document-search-text { margin-top: 12px; }
@@ -6655,8 +6615,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere;
 }
 .dpo-obj-decide { padding: 14px 16px; border-top: 1px solid var(--line); background: var(--bg); display: grid; gap: 10px; margin: 0; }
-.dpo-obj-decide .hr-choice--tile { background: var(--surface); display: flex; gap: 8px; }
-.dpo-choice--danger:has(input:checked) { background: var(--bad-bg); border-color: var(--bad-fg); }
 .dpo-warn { margin: 4px 0 0; padding: 10px 12px; border-radius: 9px; background: var(--bad-bg); color: var(--bad-fg); font-size: 13px; line-height: 1.5; }
 .dpo-obj-done { padding: 12px 16px; border-top: 1px solid var(--line); font-size: var(--fs-small); display: grid; gap: 3px; }
 .dpo-record > summary { list-style: none; display: inline-flex; cursor: pointer; }
@@ -6909,10 +6867,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* ── Vzdelávanie: moje kurzy (rám LEARNING-moje-kurzy, 27. 9. 2026) ─────────
    Rám kreslí 390 / 834 / 1440 triedou rámu; tu sú to zlomy 640 a 1024. */
 .lp { max-width: 1180px; margin: 0 auto; }
-.lp-head { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin: 0 0 14px; }
-.lp-head .grow { flex: 1 1 320px; min-width: 0; }
-.lp-head .page-title { margin: 0 0 4px; }
-.lp-head .page-lead { margin: 0; }
 .lp-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
 .lf { display: none; gap: 16px; align-content: start; }
 .lf-k { font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
@@ -7618,6 +7572,11 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 .form-row > input:focus-visible { outline: none; }
 .form-row:has(> input:disabled) { cursor: default; opacity: 0.5; }
+/* Nevratná voľba (vyhovieť námietke — maže doklady): červený text a pri
+   výbere červená fajka a pozadie (rozhodnutie R9, 6. 10. 2026). */
+.form-row--danger .form-row-main { color: var(--bad-fg); }
+.form-row--danger:has(> input:checked) { background: var(--bad-bg); }
+.choice-row.form-row--danger > input:checked::after { border-color: var(--bad-fg); }
 /* Riadok mimo karty s riadkami — áno/nie v obyčajnom formulári
    (DESIGN_ODCHYLKY P6): bez vlastného odsadenia, zarovnaný s poľami. */
 .form-row--bare { padding: 6px 0; }

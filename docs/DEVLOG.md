@@ -10,6 +10,43 @@
 
 ---
 
+## 2026-10-06 — formulárové kroky (P7, R9) a názov v karte prehliadača
+
+**Čo sa zmenilo:** `section.card.upload-section` + `h2.upload-step` →
+`.form-group--lg` + `.form-group-head--step` (číslo `.assign-step`); CSS
+`.upload-step*`, `.hr-subtitle`, `.hr-choice--tile`, `.admin-languages`
+zmizlo. Termín trasy `.choice-row` + `.choice-field`; pridanie ľudí na
+trasu bez karty okolo formulára (inak karta v karte). `/dpo`: nový
+`.form-row--danger`.
+
+**Názov v karte:** `pageTitle()` skladá názov z cesty pod hlavičkou; stránky
+mimo sekcií menu v `pages` neboli, takže v karte bolo len „Intranet SFZ".
+Test to dokonca strážil ako zámer („mimo sekcií len organizácia").
+Pribudlo 12 adries vrátane častí `/organisation/*`.
+
+**Nález:** inline `style={{ margin: 0 }}` na odseku s tlačidlom prebil
+odstup z `.form-group-body--rows` — tlačidlo sa lepilo na okraj karty.
+Inline okraje v kartách s riadkami nepatria.
+
+---
+
+## 2026-10-06 — hlavičky stránok (P1, P10, R1)
+
+**Čo sa zmenilo:** `.lp-head`, `.ask-history-head` a ručné flexy s inline
+okrajmi → `.page-head` (+ `.page-head-spacer`); CSS `.lp-head` a
+`.ask-history-head` zmizlo. Pri `?new=1`, `?q=`, `?import=` hlavička akciu
+nekreslí. R1: tlačidlá kariet tiché (Úlohy, `CourseCard`, kurátorstvo,
+posúdenie, `/dpo`). Filtre „Použiť" (`/hr/evidence`, spotreba AI) tiché.
+
+**Nález:** `.view-switch--fit` z #279 sa v mriežke `.mg-body` roztiahol na
+celú šírku aj na počítači — `inline-grid` ako položka mriežky dostane
+`justify-self: stretch`. Opravené `justify-self: start`.
+
+**Nechané:** CSV na `/hr/overview` ostáva pod prepínačom pohľadu (rám
+ZAKLAD-segmented-control to tak určil pre telefón).
+
+---
+
 ## 2026-10-06 — helpdesk od ADR po widget (ADR-028, PR #273, #276, #278)
 
 **Prečo:** chat pre ISSF (kluby, rozhodcovia, tréneri, rodičia) nad normami

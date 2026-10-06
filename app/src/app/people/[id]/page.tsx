@@ -105,8 +105,8 @@ export default async function PersonDetailPage({
       {/* V nadpise meno **s titulmi** (D84) — je to zobrazenie, nie záznam.
           Vedľa neho stav osoby tou istou pilulkou ako v zozname (OSOBY.md,
           úloha 1); stav povinností nižšie je iná škála a nezlučuje sa s ním. */}
-      <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 4px" }}>
-        <h1 className="page-title" style={{ margin: 0 }}>{displayName(o)}</h1>
+      <div className="page-head">
+        <h1 className="page-title">{displayName(o)}</h1>
         <span className={personTagClass(o)}>{tl.status[personDisplayStatus(o)] ?? o.status}</span>
       </div>
       <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 4px", overflowWrap: "anywhere" }}>

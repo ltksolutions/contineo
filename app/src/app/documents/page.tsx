@@ -180,7 +180,9 @@ export default async function DocumentsPage({
                   {!s.blocked && (
                     <p className="duty-action">
                       <Link
-                        className={isNext ? "button" : "button button--quiet"}
+                        // Zoznam kariet s vlastnou akciou — všetky tiché, aj
+                        // ďalší krok (rozhodnutie R1, 6. 10. 2026).
+                        className="button button--quiet"
                         /*
                           Kľúč trasy ide so sebou, aby sa do dôkazného
                           záznamu dostalo, **ako** sa človek k dokumentu
@@ -225,7 +227,7 @@ export default async function DocumentsPage({
                 </div>
                 {item.detail && <p className="duty-meta">{item.detail}</p>}
                 <p className="duty-action">
-                  <Link className="button" href={item.href}>{t.open}</Link>
+                  <Link className="button button--quiet" href={item.href}>{t.open}</Link>
                 </p>
               </li>
             ))}

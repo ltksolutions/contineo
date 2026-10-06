@@ -4,6 +4,42 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dizajn: formulárové kroky, rozhodnutie námietky a názov v karte prehliadača (2026-10-06)
+
+Kroky pri nahrávaní a úprave dokumentu, nová trasa a pridávanie ľudí na
+trasu majú nadpis nad kartou ako ostatné formuláre. Termín trasy sa
+vyberá ako na Prideliť dokumenty (voľba s fajkou, pole dní pod ňou).
+Rozhodnutie o námietke v `/dpo` sú dva riadky s fajkou; „Vyhovieť", ktoré
+maže doklady natrvalo, je červené. Jazyky v správe organizácií sa vyberajú
+ako v nastaveniach organizácie. Karta prehliadača ukazuje názov stránky aj
+na Upozorneniach, Mojich potvrdeniach, Organizácii a jej častiach, Ochrane
+údajov, Návode, Prihlásení, Overení certifikátu a v správe organizácií —
+dovtedy tam bolo len „Intranet SFZ".
+
+### Web contineo.app: obrázok architektúry podľa dnešnej aplikácie, helpdesk na webe (2026-10-06)
+
+Stĺpce **Worker** a **MongoDB — jadro** v obrázku na stránke Technológia
+hovoria po novom: prevod súboru, členenie bez jazykového modelu, metadáta
+úseku so znením namiesto zaniknutého zaradenia, embedding v indexe, filter
+podľa znení platných k dňu; kolekcie sú skutočné (potvrdenia, vzdelávanie,
+helpdesk, dohľad), hierarchia organizácií, ktorá v kóde nie je, zmizla.
+Po zlúčení helpdesku (ADR-028) sú schránka kanála, tickety, widget
+a eskalácia na ticket v obrázku aj v textoch stránky ako hotové; FAQ je
+zdroj; RSS/web, MCP a IMAP ostávajú „pripravujeme". Vo všetkých troch
+jazykoch, PNG kópia pregenerovaná.
+
+### Dizajn: hlavičky stránok a jedno plné tlačidlo (2026-10-06)
+
+Stránky Vzdelávania, história otázok, detail pridelenia, trasa, karta
+osoby, správa organizácií, text dokumentu, kurátorstvo, priečinky,
+posúdenie, potvrdenia a upozornenia majú rovnakú hlavičku: nadpis vľavo,
+jediná akcia vpravo. Na detaile pridelenia je „Dať vedieť e-mailom" ako
+tlačidlo v hlavičke, na potvrdeniach „Stiahnuť". Keď je otvorený formulár
+(nový kurz, nový test, otázka, import), tlačidlo v hlavičke sa neukazuje.
+V zoznamoch kariet (úlohy, kurzy, kurátorstvo, posúdenie, námietky) sú
+tlačidlá kariet tiché; plné ostáva len v hlavičke. Filter stavu vo
+Vzdelávaní sa na počítači už neroztiahne cez celú šírku.
+
 ### Helpdesk: FAQ, kanály so schránkou, tickety, obrazovka riešiteľa a widget pre ISSF (2026-10-06, ADR-028)
 
 **FAQ je nový druh dokumentu** v knižnici: píše sa v aplikácii ako záznamy

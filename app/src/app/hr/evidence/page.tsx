@@ -117,7 +117,8 @@ export default async function EvidencePage({
               {STATES.map(s => <option key={s} value={s}>{t.states[s]}</option>)}
             </select>
           </label>
-          <div><button className="button" type="submit">{t.apply}</button></div>
+          {/* Filter nie je hlavná akcia stránky — tiché (DESIGN_ODCHYLKY, jedno plné). */}
+          <div><button className="button button--quiet" type="submit">{t.apply}</button></div>
         </LiveFilter>
 
         {/* Dva prázdne stavy (HR.md, úloha 6): filter, ktorému nič nevyhovuje,

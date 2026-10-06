@@ -79,13 +79,14 @@ export default function CourseCard({
       <div className="lc-act">
         {kind === "in-progress" && (
           <>
-            <Link href={next ? `${href}/${next.key}` : href} className="button">{t.continue}</Link>
+            {/* Karty v zozname majú tiché tlačidlá (rozhodnutie R1, 6. 10. 2026). */}
+            <Link href={next ? `${href}/${next.key}` : href} className="button button--quiet">{t.continue}</Link>
             {next && <span className="lc-next">{t.next(nextIndex, next.title)}</span>}
           </>
         )}
         {kind === "assigned" && enrollment && (
           <>
-            <Link href={href} className="button">{t.start}</Link>
+            <Link href={href} className="button button--quiet">{t.start}</Link>
             <span className="lc-next">
               {enrollment.assignedBy
                 ? t.assignedOn(formatDate(enrollment.enrolledAt, language), enrollment.assignedBy.fullName)

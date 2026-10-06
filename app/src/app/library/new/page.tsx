@@ -134,8 +134,9 @@ export default async function NewDocumentPage({
         len z iného dôvodu než vtedy.
       */}
       <form action={upload} className="upload-form">
-        <section className="card upload-section">
-          <h2 className="upload-step"><span className="upload-step-no">1</span>{t.sectionFile}</h2>
+        <section className="form-group form-group--lg">
+          <h2 className="form-group-head form-group-head--step"><span className="assign-step" aria-hidden="true">1</span>{t.sectionFile}</h2>
+        <div className="card form-group-body">
 
           <UploadFiles
             highlight={retry}
@@ -157,10 +158,12 @@ export default async function NewDocumentPage({
               change: t.change,
             }}
           />
+        </div>
         </section>
 
-        <section className="card upload-section">
-          <h2 className="upload-step"><span className="upload-step-no">2</span>{t.sectionMeta}</h2>
+        <section className="form-group form-group--lg">
+          <h2 className="form-group-head form-group-head--step"><span className="assign-step" aria-hidden="true">2</span>{t.sectionMeta}</h2>
+        <div className="card form-group-body">
           <div className="upload-grid">
 
         {/*
@@ -272,23 +275,26 @@ export default async function NewDocumentPage({
         </details>
 
           </div>
+        </div>
         </section>
 
         {/*
           Údaje o znení (ADR-013). Nepovinné už tu: keď sa nevyplnia,
           predvyplnia sa z prvej strany dokumentu a potvrdia na detaile (D108).
         */}
-        <section className="card upload-section">
-          <h2 className="upload-step">
-            <span className="upload-step-no">3</span>{tm.uploadHeading}
+        <section className="form-group form-group--lg">
+          <h2 className="form-group-head form-group-head--step">
+            <span className="assign-step" aria-hidden="true">3</span>{tm.uploadHeading}
             <span className="upload-step-opt">{t.optional}</span>
           </h2>
+        <div className="card form-group-body">
           <PrefillNote text={tm.uploadNote} wordText={t.prefillFromWord} />
           <VersionMetaFields
             authors={metaOptions.authors}
             approvers={metaOptions.approvers}
             language={ctx.person.language}
           />
+        </div>
         </section>
 
         <div className="upload-submit">

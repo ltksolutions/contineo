@@ -68,11 +68,15 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
   return (
     <AppShell language={language}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
-        <div className="lp-head">
-          <div className="grow"><h1 className="page-title">{dictionary(language).learning.testsHeading}</h1></div>
+        {/* Hlavička s akciami vpravo (DESIGN_ODCHYLKY P1). Pri otvorenom
+            formulári (nový test, otázka, import) sa akcie nekreslia — plné
+            tlačidlo je vtedy vo formulári (P10). */}
+        <div className="page-head">
+          <h1 className="page-title">{dictionary(language).learning.testsHeading}</h1>
+          <span className="page-head-spacer" aria-hidden="true" />
           {tab === "tests"
-            ? <Link className="button" href="/learning/tests?tab=tests&new=1">{tt.newTest}</Link>
-            : <span className="mg-actions"><Link className="button" href="/learning/tests?tab=questions&new=1">{tt.newQuestion}</Link><Link className="button button--quiet" href="/learning/tests?tab=questions&import=1">{tt.importCsv}</Link></span>}
+            ? q.new !== "1" && <Link className="button" href="/learning/tests?tab=tests&new=1">{tt.newTest}</Link>
+            : q.new !== "1" && !q.q && !q.import && <span className="mg-actions"><Link className="button" href="/learning/tests?tab=questions&new=1">{tt.newQuestion}</Link><Link className="button button--quiet" href="/learning/tests?tab=questions&import=1">{tt.importCsv}</Link></span>}
         </div>
         <Notice language={language} message={q.msg} error={q.error === "1"} back={`/learning/tests?tab=${tab}`} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
@@ -439,7 +443,7 @@ async function ResultsPage(q: Q) {
   return (
     <AppShell language={language}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
-        <div className="lp-head"><div className="grow"><h1 className="page-title">{d.testsHeading}</h1></div></div>
+        <div className="page-head"><h1 className="page-title">{d.testsHeading}</h1></div>
         <Notice language={language} message={q.msg} error={q.error === "1"} back={self} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
           <TabsBar>

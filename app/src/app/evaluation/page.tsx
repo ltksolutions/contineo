@@ -58,17 +58,12 @@ export default async function EvaluationPage({
   return (
     <AppShell language={language}>
     <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 className="page-title" style={{ margin: "0 0 8px" }}>
-          {t.heading}
-          {queue.length > 0 && (
-            <span className="tag" style={{ fontSize: "var(--fs-micro)", marginLeft: 10, verticalAlign: "middle" }}>
-              {t.waiting(queue.length)}
-            </span>
-          )}
-        </h1>
-        <p className="quiet page-lead" style={{ margin: 0, maxWidth: 660 }}>{t.intro}</p>
+      {/* Hlavička stránky (DESIGN_ODCHYLKY P1); počet čakajúcich ako štítok vedľa. */}
+      <div className="page-head">
+        <h1 className="page-title">{t.heading}</h1>
+        {queue.length > 0 && <span className="tag">{t.waiting(queue.length)}</span>}
       </div>
+      <p className="quiet page-lead" style={{ margin: "0 0 24px", maxWidth: 660 }}>{t.intro}</p>
 
       <Notice language={language} message={message} error={error === "1"} back="/evaluation" />
 
@@ -225,7 +220,8 @@ export default async function EvaluationPage({
 
               {item.sources.length > 0 && (
                 <p style={{ margin: "14px 0 0" }}>
-                  <SubmitButton className="button">{tc.save}</SubmitButton>
+                  {/* Každá položka má vlastné uloženie — tiché (R1, 6. 10. 2026). */}
+                  <SubmitButton className="button button--quiet">{tc.save}</SubmitButton>
                 </p>
               )}
             </form>

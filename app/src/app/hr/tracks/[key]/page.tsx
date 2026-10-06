@@ -119,10 +119,9 @@ export default async function TrackDetailPage({
       <Notice language={ctx.person.language} message={message ?? error} error={Boolean(error)} back={here} />
 
 
-      <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-        <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>
-          {track.title}
-        </h1>
+      {/* Hlavička stránky (DESIGN_ODCHYLKY P1). */}
+      <div className="page-head">
+        <h1 className="page-title">{track.title}</h1>
         {/* Tie isté štítky ako v zozname trás. */}
         <span className={track.isActive ? "tag tag--published" : "tag tag--archived"}>
           {track.isActive ? t.active : t.inactive}
@@ -162,23 +161,29 @@ export default async function TrackDetailPage({
       */}
       <details className="track-edit" style={{ margin: "0 0 24px" }}>
         <summary className="button button--quiet">{t.dueHeading}: {t.dueCurrent(track.due?.days ?? null)}</summary>
-        <form action={setTrackDueAction} className="card" style={{ padding: 20, display: "grid", gap: 14, marginTop: 12 }}>
+        {/* Dve voľby s fajkou vpravo a pole dní pod svojou voľbou — ten istý
+            tvar ako termín na /hr/assign (ZAKLAD-vyber-a-prepinace, P7).
+            Meno `dueMode` a hodnoty bez zmeny. */}
+        <form action={setTrackDueAction} className="card form-group-body form-group-body--rows" style={{ marginTop: 12 }}>
           <input type="hidden" name="key" value={track.key} />
-          <label className="check-row" style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <input type="radio" name="dueMode" value="none" defaultChecked={!track.due} />
-            <span>{t.dueNone}</span>
-          </label>
-          <label className="check-row" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <input type="radio" name="dueMode" value="days" defaultChecked={Boolean(track.due)} />
-            <span>{t.dueDays}</span>
-          </label>
-          <label className="field" style={{ maxWidth: 220 }}>
-            <span className="quiet field-label">{t.dueDaysUnit}</span>
-            <input className="field-input" type="number" min={1} max={365} name="dueDays"
-                   defaultValue={track.due?.days ?? 14} />
-          </label>
+          <div className="form-list">
+            <label className="form-row choice-row">
+              <input type="radio" name="dueMode" value="none" defaultChecked={!track.due} />
+              <span className="form-row-main">{t.dueNone}</span>
+            </label>
+            <label className="form-row choice-row">
+              <input type="radio" name="dueMode" value="days" defaultChecked={Boolean(track.due)} />
+              <span className="form-row-main">{t.dueDays}</span>
+            </label>
+            <div className="choice-field">
+              <input className="field-input" type="number" min={1} max={365} name="dueDays"
+                     defaultValue={track.due?.days ?? 14} aria-label={t.dueDaysUnit} />
+              <span className="quiet">{t.dueDaysUnit}</span>
+            </div>
+          </div>
           <span className="quiet field-hint">{t.dueNote}</span>
-          <p style={{ margin: 0 }}>
+          {/* Bez inline okraja — odstup v karte s riadkami dáva `.form-group-body--rows`. */}
+          <p>
             <SubmitButton className="button">{t.dueSave}</SubmitButton>
           </p>
         </form>
@@ -296,12 +301,16 @@ export default async function TrackDetailPage({
 
       <details className="track-edit" style={{ margin: "0 0 32px" }}>
         <summary className="button">{t.addMembers}</summary>
-        <form action={addMembersAction} className="card" style={{ padding: 20, display: "grid", gap: 16, marginTop: 12 }}>
+        {/* Oddelenia a ľudia ako skupiny s nadpisom nad kartou, ako „Komu"
+            na /hr/assign (DESIGN_ODCHYLKY P7). Formulár sám kartou nie je —
+            inak by bola karta v karte. */}
+        <form action={addMembersAction} style={{ display: "grid", gap: 16, marginTop: 12 }}>
           <input type="hidden" name="key" value={track.key} />
           <p className="quiet field-hint" style={{ margin: 0 }}>{t.addMembersNote}</p>
           {departmentOptions.length > 0 && (
-            <div>
-              <div className="hr-subtitle">{t.departments}</div>
+            <fieldset className="form-group">
+              <legend className="form-group-head">{t.departments}</legend>
+              <div className="card form-group-body">
               <MultiSelect
                 name="department"
                 emit="repeat"
@@ -311,11 +320,13 @@ export default async function TrackDetailPage({
                 selected={[]}
                 options={departmentOptions}
               />
-            </div>
+              </div>
+            </fieldset>
           )}
           {choices.length > 0 && (
-            <div>
-              <div className="hr-subtitle">{t.people}</div>
+            <fieldset className="form-group">
+              <legend className="form-group-head">{t.people}</legend>
+              <div className="card form-group-body form-group-body--rows">
               <PeopleSearch
                 people={choices}
                 name="person"
@@ -324,7 +335,8 @@ export default async function TrackDetailPage({
                 listLabel={t.people}
                 missing="people"
               />
-            </div>
+              </div>
+            </fieldset>
           )}
           {/* Predvolene zaškrtnuté (Ján, 3. 10. 2026) — kto na trasu pribudne, má
               sa to dozvedieť hneď, nie až z pripomienky pred termínom. Odškrtnúť

@@ -58,21 +58,21 @@ export default async function MyAcknowledgementsPage() {
   return (
     <AppShell language={language} title={t.heading}>
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
-        <h1 className="page-title">{t.heading}</h1>
+        {/* Hlavička s jedinou akciou vpravo (DESIGN_ODCHYLKY P1). Stiahnutie
+            je obyčajný odkaz, nie tlačidlo so skriptom: súbor servíruje
+            serverová cesta, takže funguje aj bez JavaScriptu. */}
+        <div className="page-head">
+          <h1 className="page-title">{t.heading}</h1>
+          <span className="page-head-spacer" aria-hidden="true" />
+          {records.length > 0 && <a className="button" href="/api/acknowledgements/export">{t.download}</a>}
+        </div>
         <p className="quiet page-lead" style={{ maxWidth: 620 }}>{t.intro}</p>
 
         {records.length === 0 ? (
-          <p className="card" style={{ padding: 18 }}>{t.nothing}</p>
+          <div className="empty"><div className="empty-title">{t.nothing}</div></div>
         ) : (
           <>
-            <p style={{ margin: "0 0 20px" }}>
-              {/*
-                Obyčajný odkaz, nie tlačidlo so skriptom: súbor servíruje
-                serverová cesta, takže sťahovanie funguje aj bez JavaScriptu.
-              */}
-              <a className="button" href="/api/acknowledgements/export">{t.download}</a>
-              <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: 12 }}>{t.count(records.length)}</span>
-            </p>
+            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 12px" }}>{t.count(records.length)}</p>
 
             <div style={{ display: "grid", gap: 12 }}>
               {records.map(r => (

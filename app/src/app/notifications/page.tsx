@@ -75,7 +75,18 @@ export default async function NotificationsPage({
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
         {message && <Notice language={language} message={message} back="/notifications" />}
 
-        <h1 className="page-title">{t.title}</h1>
+        {/* Hlavička s akciou vpravo (DESIGN_ODCHYLKY P1) — „Označiť všetko"
+            nie je hlavná úloha stránky, preto tiché. */}
+        <div className="page-head">
+          <h1 className="page-title">{t.title}</h1>
+          {unread > 0 && <span className="tag tag--review">{t.unread(unread)}</span>}
+          <span className="page-head-spacer" aria-hidden="true" />
+          {unread > 0 && (
+            <form action={markAllReadAction}>
+              <SubmitButton className="button button--quiet">{t.markAllRead}</SubmitButton>
+            </form>
+          )}
+        </div>
         <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 18px" }}>
           {t.retentionNote(RETENTION_DAYS)}
         </p>
@@ -89,12 +100,6 @@ export default async function NotificationsPage({
           </div>
         ) : (
           <>
-            {unread > 0 && (
-              <form action={markAllReadAction} style={{ margin: "0 0 18px" }}>
-                <SubmitButton className="button">{t.markAllRead}</SubmitButton>
-                <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: 12 }}>{t.unread(unread)}</span>
-              </form>
-            )}
 
             <ul className="card notif-list">
               {rows.map((r, i) => {
