@@ -126,9 +126,9 @@
     <text x="1232" y="420">• Widget: schránka helpdesku ⇅ (voliteľne)</text>
     <text x="1246" y="439" font-size="11" fill="#5f6368">e-mail = ticket · odpoveď e-mailom (Graph)</text>
     <text x="1232" y="471">• Portál — knižnica</text>
-    <text x="1246" y="490" font-size="11" fill="#5f6368">články a formuláre (pripravujeme)</text>
-    <text x="1232" y="522">• Intranet (vstavané)</text>
-    <text x="1246" y="541" font-size="11" fill="#5f6368">asistent · knižnica · potvrdzovanie · vzdelávanie</text>
+    <text x="1246" y="490" font-size="11" fill="#5f6368">intranet: asistent · potvrdzovanie · vzdelávanie</text>
+    <text x="1232" y="522" fill="#9aa0a6">• Portál: články a formuláre (pripravujeme)</text>
+    <text x="1246" y="541" font-size="11" fill="#9aa0a6" font-style="italic">KB články · oznamy · tlačivá</text>
   </g>
 
   <path d="M304,422 L331,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>

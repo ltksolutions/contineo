@@ -126,9 +126,9 @@
     <text x="1232" y="420">• Widget: helpdesk mailbox ⇅ (optional)</text>
     <text x="1246" y="439" font-size="11" fill="#5f6368">e-mail = ticket · reply by e-mail (Graph)</text>
     <text x="1232" y="471">• Portal — library</text>
-    <text x="1246" y="490" font-size="11" fill="#5f6368">articles and forms (in preparation)</text>
-    <text x="1232" y="522">• Intranet (built in)</text>
-    <text x="1246" y="541" font-size="11" fill="#5f6368">assistant · library · acknowledgements · learning</text>
+    <text x="1246" y="490" font-size="11" fill="#5f6368">intranet: assistant · acknowledgement · learning</text>
+    <text x="1232" y="522" fill="#9aa0a6">• Portal: articles and forms (in preparation)</text>
+    <text x="1246" y="541" font-size="11" fill="#9aa0a6" font-style="italic">KB articles · notices · forms</text>
   </g>
 
   <path d="M304,422 L331,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
