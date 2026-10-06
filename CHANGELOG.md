@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dizajn: hlavičky stránok a jedno plné tlačidlo (2026-10-06)
+
+Stránky Vzdelávania, história otázok, detail pridelenia, trasa, karta
+osoby, správa organizácií, text dokumentu, kurátorstvo, priečinky,
+posúdenie, potvrdenia a upozornenia majú rovnakú hlavičku: nadpis vľavo,
+jediná akcia vpravo. Na detaile pridelenia je „Dať vedieť e-mailom" ako
+tlačidlo v hlavičke, na potvrdeniach „Stiahnuť". Keď je otvorený formulár
+(nový kurz, nový test, otázka, import), tlačidlo v hlavičke sa neukazuje.
+V zoznamoch kariet (úlohy, kurzy, kurátorstvo, posúdenie, námietky) sú
+tlačidlá kariet tiché; plné ostáva len v hlavičke. Filter stavu vo
+Vzdelávaní sa na počítači už neroztiahne cez celú šírku.
+
 ### Dizajn: prierezové opravy podľa súpisu odchýlok (2026-10-06)
 
 Chyby pri odoslaní formulára (Prideliť dokumenty, upozornenie e-mailom,

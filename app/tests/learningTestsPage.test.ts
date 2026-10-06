@@ -84,6 +84,8 @@ describe("/learning/tests", () => {
     const form = await renderList({ tab: "questions", new: "1", type: "multiple" })
     expect(form).toContain("Táto otázka má viac správnych odpovedí")
     expect(form).toContain('type="checkbox" name="correct"')
+    // Formulár otvorený — „Nová otázka" v hlavičke sa nekreslí (P10).
+    expect(form).not.toContain('href="/learning/tests?tab=questions&amp;new=1"')
     const edit = await renderList({ tab: "questions", q: "a" })
     expect(edit).toContain("Použitá v 2 testoch · 41 pokusov ju cituje snímkou")
   })

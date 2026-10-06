@@ -112,9 +112,15 @@ od 1024".
 **Hotové 6. 10. 2026** (PR „Prierezové opravy"): P2, P3, P4, P5, P6, P11, P13 —
 s výnimkami zapísanými pri riadku.
 
+**Hotové 6. 10. 2026** (PR „Hlavičky"): P1 a P10, R1 na zoznamoch kariet
+(Úlohy, kurzy, kurátorstvo, posúdenie, `/dpo`), filtre „Použiť" tiché.
+Výnimky: `/hr/overview` necháva CSV pod prepínačom (rozhodnutie rámu
+ZAKLAD-segmented-control); akcie detailu dokumentu (`.detail-actions`) a
+karty úloh zodpovednej osoby idú s úpravou knižnice.
+
 | # | Čo | Kde | Typ |
 |---|---|---|---|
-| P1 | Hlavička stránky: `.lp-head`, `header.ch`, `.ask-history-head`, vlastné `div`y s inline okrajom → `.page-head` (+ `.page-head-spacer`, akcia vpravo) | learning, learning/manage, ask/history, hr/[id], hr/overview, hr/tracks/[key], people/[id], admin, library/[id]/text, library/curation, library/folders, evaluation, acknowledgements, notifications | mechanicky |
+| P1 | ✓ Hlavička stránky: `.lp-head`, `header.ch`, `.ask-history-head`, vlastné `div`y s inline okrajom → `.page-head` (+ `.page-head-spacer`, akcia vpravo) | learning, learning/manage, ask/history, hr/[id], hr/overview, hr/tracks/[key], people/[id], admin, library/[id]/text, library/curation, library/folders, evaluation, acknowledgements, notifications | mechanicky |
 | P2 | ✓ Chyba ako `.card` s inline `color: var(--warn-fg)` → `Notice` (import osôb a prihlásenie: `.lnote` v riadku — stav formulára je v prehliadači a návrat na adresu by ho zahodil) | hr/assign, hr/[id]/notify, people/new, people/import, admin/new, SignIn | mechanicky |
 | P3 | ✓ Stav na `.tag` cez inline `--ok-bg/--warn-bg/--bad-bg` → `tag--published` / `tag--draft` / `tag--archived` / `tag--expired` | hr/tracks/[key], organisation (domény, prihlásenie), admin/tenants/[code], evaluation, Answer.tsx | mechanicky |
 | P4 | ✓ Filtre a prepínače pohľadu z `.pill` / `.lpills` → `.view-switch` | learning/manage (stav), manage/[courseKey] (zapísaní), learning/tests (stav), výsledok testu (Všetky / Len chybné) | mechanicky |
@@ -123,7 +129,7 @@ s výnimkami zapísanými pri riadku.
 | P7 | Kroky formulára `section.card.upload-section` + `h2.upload-step` a podnadpisy veľkými písmenami (`.hr-subtitle`, `.flow-section-title`, Rating `h3`) → `.form-group(--lg)` + `.form-group-head(--step)` | library/new, library/[id] (úprava, metaúdaje), hr/tracks, hr/tracks/[key], evaluation, Rating | mechanicky |
 | P8 | `TagSelect` (pilulky s JS na skupiny a značky) → `.select-row` + pole „nová položka" pod zoznamom | people/[id], library/[id], library/new | návrh |
 | P9 | Stránky s viacerými samostatnými formulármi, každý s plným „Uložiť" → jedna lišta na uloženie (`.set-savebar`, ako `/organisation/general`) alebo tiché tlačidlá | organisation/signin, /gdpr, /domains, admin/tenants/[code], hr/tracks/[key] | návrh |
-| P10 | Formulár otvorený cez `?new=1` / `?assign=1` pridá plné tlačidlo vedľa plného v hlavičke → pri otvorenom formulári hlavičkové tlačidlo skryť; v prázdnom stave `.empty-action` tiché | learning/manage, learning/tests, library (prázdna knižnica) | mechanicky |
+| P10 | ✓ Formulár otvorený cez `?new=1` / `?assign=1` pridá plné tlačidlo vedľa plného v hlavičke → pri otvorenom formulári hlavičkové tlačidlo skryť; v prázdnom stave `.empty-action` tiché | learning/manage, learning/tests, library (prázdna knižnica) | mechanicky |
 | P11 | ✓ Texty natvrdo mimo `i18n.ts` (navyše „Rozumiem" v `Notice`; predpona „v" verzie ostala — medzinárodná skratka) | Answer.tsx (model, tokeny, cache), hr (dnes, verzia, pridelil), hr/tracks/[key]/notify, people (surový kľúč roly), admin/tenants (kód jazyka), SignIn („alebo", placeholder s doménou SFZ), verify (IČO), organisation/admin (placeholder `futbalsfz.sk`), learning (predpona „v" verzie), certificate/print (text odkazu) | mechanicky |
 | P12 | Používateľovi sa ukazuje vývojársky príkaz (`npm run person`, `npm run domains`) | hr/assign, admin | návrh (čo ukázať namiesto) |
 | P13 | ✓ Natvrdo farby v `diffStyle` → `var(--ok-bg)` / `var(--bad-bg)` (tmavá téma ich dnes nemení) | library/[id] r. 384–390 | mechanicky |

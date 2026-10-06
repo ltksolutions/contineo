@@ -226,7 +226,8 @@ function PartRow({ p, index, parts, facts, rows, href, isNext, language, started
         : <span className={`pr-title${locked ? " is-locked" : ""}`}>{n}. {p.part.title}</span>}
       <span className={`pr-state${p.state === "done" ? " okc" : ""}`}>
         {isNext && link
-          ? <Link className="button" href={link}>{started ? tc.continueHere : tc.startCourse}</Link>
+          // Plné je v bočnej karte postupu (rám COURSE, R8); v riadku tiché.
+          ? <Link className="button button--quiet" href={link}>{started ? tc.continueHere : tc.startCourse}</Link>
           : p.state === "done" && p.evaluation.doneAt
             ? tc.partDoneOn(formatDate(p.evaluation.doneAt, language))
             : locked && after ? tc.partLockedAfter(after)

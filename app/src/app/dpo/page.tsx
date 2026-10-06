@@ -158,7 +158,8 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
             <span className="field-label">{t.decisionNote}</span>
             <textarea className="field-input" name="note" rows={3} required />
           </label>
-          <div><SubmitButton className="button">{t.decideSubmit}</SubmitButton></div>
+          {/* Každá čakajúca námietka má vlastné rozhodnutie — tiché (R1, 6. 10. 2026). */}
+          <div><SubmitButton className="button button--quiet">{t.decideSubmit}</SubmitButton></div>
         </form>
       ) : (
         <div className="dpo-obj-done">
@@ -242,7 +243,8 @@ export default async function DpoPage({ searchParams }: { searchParams: Promise<
               <strong>{t.pendingBanner(pending)}</strong>
               {t.pendingBannerMeta(pendingList[0].personName, formatDate(pendingList[0].receivedAt, language))}
             </div>
-            <a className="button dpo-button-sm" href="#objections">{t.pendingDecide}</a>
+            {/* Skok na kotvu, nie akcia — tiché. */}
+            <a className="button button--quiet dpo-button-sm" href="#objections">{t.pendingDecide}</a>
           </div>
         )}
 

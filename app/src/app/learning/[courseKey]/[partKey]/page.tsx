@@ -141,7 +141,8 @@ function TestRows({ rows, base, language }: { rows: PartTestRow[]; base: string;
             <span className="ptr-name"><span>{d.course.testLabel}: </span><b>{r.test?.title ?? r.testKey}</b> <span>· {r.required ? d.course.testRequired : d.course.testOptional}</span></span>
             <span className={`ptr-res tone-${v.tone}`}>{v.state}</span>
             {v.resultHref && <Link className="lc-link" href={v.resultHref}>{d.attempt.result}</Link>}
-            {v.action && <Link className={v.tone === "warn" ? "button" : "button button--quiet"} href={v.action.href}>{v.action.label}</Link>}
+            {/* Plné je „Označiť ako prejdené" v doku; akcia testu tichá (jedno plné). */}
+            {v.action && <Link className="button button--quiet" href={v.action.href}>{v.action.label}</Link>}
           </div>
         )
       })}

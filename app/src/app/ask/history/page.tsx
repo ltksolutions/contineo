@@ -72,14 +72,16 @@ export default async function AskHistoryPage({ searchParams }: { searchParams: P
   return (
     <AppShell language={language} title={t.title}>
       <div className="ask-history">
-        <div className="ask-history-head">
-          <div>
+        {/* Hlavička ako na ostatných stránkach (DESIGN_ODCHYLKY P1). */}
+        <div>
+          <div className="page-head">
             <h1 className="page-title">{t.title}</h1>
-            <p className="quiet page-lead">{t.lead}</p>
+            <span className="page-head-spacer" aria-hidden="true" />
+            {items.length > 0 && !query && (
+              <Link className="button button--quiet" href="/ask/history?confirm=1">{t.clearAll}</Link>
+            )}
           </div>
-          {items.length > 0 && !query && (
-            <Link className="button button--quiet" href="/ask/history?confirm=1">{t.clearAll}</Link>
-          )}
+          <p className="quiet page-lead">{t.lead}</p>
         </div>
 
         {/* Potvrdenie „Vymazať celú históriu" — stav v adrese, bez skriptu. */}

@@ -71,9 +71,12 @@ export default async function LearningManagePage({ searchParams }: { searchParam
   return (
     <AppShell language={language}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
-        <div className="lp-head">
-          <div className="grow"><h1 className="page-title">{t.manageHeading}</h1></div>
-          {tab === "courses" && <Link className="button" href="/learning/manage?tab=courses&new=1">{tm.newCourse}</Link>}
+        {/* Hlavička s jedinou akciou vpravo (DESIGN_ODCHYLKY P1). Pri otvorenom
+            formulári sa „Nový kurz" nekreslí — plné je vtedy „Vytvoriť" (P10). */}
+        <div className="page-head">
+          <h1 className="page-title">{t.manageHeading}</h1>
+          <span className="page-head-spacer" aria-hidden="true" />
+          {tab === "courses" && q.new !== "1" && <Link className="button" href="/learning/manage?tab=courses&new=1">{tm.newCourse}</Link>}
         </div>
         <Notice language={language} message={q.msg} error={q.error === "1"} back={back} />
         <nav className="tabs" aria-label={tm.tabsLabel}>
@@ -160,7 +163,8 @@ async function CoursesTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLa
         <div className="empty">
           <div className="empty-title">{t.manageEmpty}</div>
           <div className="empty-text">{tm.emptyText}</div>
-          {q.new !== "1" && <p style={{ margin: "12px 0 0" }}><Link className="button" href="/learning/manage?tab=courses&new=1">{tm.newCourse}</Link></p>}
+          {/* Plné „Nový kurz" je v hlavičke; tu tiché (DESIGN_ODCHYLKY P10). */}
+          {q.new !== "1" && <div className="empty-action"><Link className="button button--quiet" href="/learning/manage?tab=courses&new=1">{tm.newCourse}</Link></div>}
         </div>
       ) : (
         <>
