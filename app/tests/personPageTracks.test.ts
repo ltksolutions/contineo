@@ -68,7 +68,9 @@ describe("karta osoby — trasy", () => {
     const { default: Page } = await import("../src/app/people/[id]/page")
     const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ id: "p1" }), searchParams: Promise.resolve({}) }))
 
-    expect(html).toMatch(/<fieldset class="form-group"><legend class="form-group-head">Trasy<\/legend><div class="card form-group-body">/)
+    expect(html).toMatch(/<fieldset class="form-group"><legend class="form-group-head">Trasy<\/legend><div class="card form-group-body form-group-body--rows">/)
+    // Riadky s kruhom vľavo (ZAKLAD-vyber-a-prepinace), nie zoznam `<ul>`.
+    expect(html).toMatch(/<label class="form-row select-row"><input type="checkbox" name="track"/)
     expect(html).toMatch(/<\/div><p class="form-group-foot quiet">[^<]+<\/p><\/fieldset>/)
     expect(html).not.toContain("hr-group")
   })

@@ -461,14 +461,17 @@ export default async function OrganisationSectionPage({
             <h2>{t.branding.languages}</h2>
           </div>
           <div className="set-sec-body">
-            <div className="tags-list">
+            {/* Výber viacerých — riadky s kruhom vľavo, nie pilulky
+                (ZAKLAD-vyber-a-prepinace, Q3). */}
+            <div className="card form-group-body form-group-body--rows">
+            <div className="form-list">
               {UI_LANGUAGES.map(j => (
-                <label key={j} className="tag tag--choice tag--field">
+                <label key={j} className="form-row select-row">
                   <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
-                  <span className="tag-mark" aria-hidden="true" />
-                  {d.people.languages[j] ?? j}
+                  <span className="form-row-main">{d.people.languages[j] ?? j}</span>
                 </label>
               ))}
+            </div>
             </div>
             <div className="field">
               <span className="field-label">{t.branding.defaultLanguage}</span>
@@ -924,16 +927,19 @@ export default async function OrganisationSectionPage({
             />
             <fieldset className="form-group">
               <legend className="form-group-head">{tr.categoryField}</legend>
-              <div className="card form-group-body">
+              {/* Jedna z mála volieb — fajka vpravo (ZAKLAD-vyber-a-prepinace). */}
+              <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
               {LEGAL_BASES.map(b => (
-                <label key={b} className="hr-choice">
+                <label key={b} className="form-row choice-row">
                   <input type="radio" name="basis" value={b} required />
-                  <span>
-                    {tr.basisLabel[b]}
-                    <span className="quiet field-hint"> {tr.basisHint[b]}</span>
+                  <span className="form-row-main">
+                    <span>{tr.basisLabel[b]}</span>
+                    <span className="form-row-sub">{tr.basisHint[b]}</span>
                   </span>
                 </label>
               ))}
+              </div>
               </div>
             </fieldset>
             <label className="field">

@@ -83,7 +83,8 @@ describe("normy s hľadaním", () => {
   it("riadok .hr-doc s poľom `document`, štítkom a znením; čipy „Vybrané (n)\"", () => {
     const html = view()
     expect(html).toContain('class="approval-people assign-doc-list"')
-    expect(html).toMatch(/<label class="hr-doc"><input type="checkbox" name="document"[^>]*value="d0"/)
+    // Riadok výberu s kruhom vľavo (ZAKLAD-vyber-a-prepinace).
+    expect(html).toMatch(/<label class="form-row select-row hr-doc"><input type="checkbox" name="document"[^>]*value="d0"/)
     expect(html).toContain("bez právneho základu")
     expect(html).toContain("znenie účinné od 1. 1. 2026")
     expect(html).toContain("Vybrané (2)")
@@ -110,5 +111,15 @@ describe("normy s hľadaním", () => {
     expect(html).not.toContain("Vybrané")
     expect(html).not.toContain("len bez právneho")
     expect(html).not.toContain("hidden")
+  })
+})
+
+describe("„Všetkým v organizácii\" ako prepínač (ZAKLAD-vyber-a-prepinace, Q2)", () => {
+  it("natívny checkbox s role=switch, to isté meno a hodnota", async () => {
+    const { AudienceAll } = await import("../src/components/AssignForm")
+    const html = renderToStaticMarkup(createElement(AudienceAll, { label: "Všetkým", note: "prebije výber", defaultChecked: true } as Parameters<typeof AudienceAll>[0], "x"))
+    expect(html).toMatch(/<label class="form-row"><input type="checkbox" role="switch" class="toggle"[^>]*name="all"[^>]*value="1"/)
+    expect(html).toMatch(/checked=""/)
+    expect(html).toContain('<span class="form-row-sub">prebije výber</span>')
   })
 })

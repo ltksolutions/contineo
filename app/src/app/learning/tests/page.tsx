@@ -286,10 +286,15 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
       {/* Nadpis nad kartou (HR-pridelit-nadpis-karty, 6. 10. 2026). */}
       <fieldset className="form-group">
         <legend className="form-group-head">{tt.media}</legend>
-        <div className="card form-group-body">
-        {(question?.media ?? []).map((m, i) => (
-          <label key={i} className="mc-check"><input type="checkbox" name="keepMedia" value={String(i)} defaultChecked /> {m.kind === "image" ? m.alt : dictionary(language).learning.edit.blockTypes.video}</label>
-        ))}
+        <div className="card form-group-body form-group-body--rows">
+        {(question?.media ?? []).length > 0 && (
+          // Ponechať médiá — výber viacerých, kruh vľavo (ZAKLAD-vyber-a-prepinace).
+          <div className="form-list">
+            {(question?.media ?? []).map((m, i) => (
+              <label key={i} className="form-row select-row"><input type="checkbox" name="keepMedia" value={String(i)} defaultChecked /><span className="form-row-main">{m.kind === "image" ? m.alt : dictionary(language).learning.edit.blockTypes.video}</span></label>
+            ))}
+          </div>
+        )}
         <CourseMediaUpload kind="gallery" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" maxBytes={MAX_BYTES}
           labels={{ title: tt.media, note: tt.mediaNote, progressTitle: dictionary(language).learning.edit.progressTitle, uploading: dictionary(language).learning.edit.uploading, failed: dictionary(language).learning.edit.uploadFailed, tooLarge: dictionary(language).learning.edit.tooLarge }} />
         <label className="field"><span className="field-label">{tt.mediaAlt}</span><input className="field-input" name="mediaAlt" /></label>

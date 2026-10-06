@@ -171,14 +171,21 @@ export function AudienceAll({
 
   return (
     <>
-      <label className={`hr-choice assign-all${dim ? " is-on" : ""}`}>
-        <input type="checkbox" name="all" value="1" defaultChecked={defaultChecked}
-               onChange={e => setAll(e.target.checked)} />
-        <span>
-          <strong>{label}</strong>
-          <span className="quiet field-hint">{" "}{note}</span>
-        </span>
-      </label>
+      {/* Prepínač, nie položka zoznamu: je to stav celého publika
+          (ZAKLAD-vyber-a-prepinace, Q2). `role="switch"` — čítačka ohlási
+          „prepínač"; hodnota a meno poľa ostávajú. */}
+      <div className="card form-group-body form-group-body--rows">
+        <div className="form-list">
+          <label className="form-row">
+            <input type="checkbox" role="switch" className="toggle" name="all" value="1"
+                   defaultChecked={defaultChecked} onChange={e => setAll(e.target.checked)} />
+            <span className="form-row-main">
+              <span>{label}</span>
+              <span className="form-row-sub">{note}</span>
+            </span>
+          </label>
+        </div>
+      </div>
       <div className={`assign-rest${dim ? " is-dim" : ""}`} ref={rest}>{children}</div>
     </>
   )

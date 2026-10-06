@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="sk"><head>
+
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Základ — výbery a prepínače podľa SwiftUI</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:var(--bg)}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 8px;max-width:92ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 14px;max-width:92ch}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px;background:var(--ink);color:#fff;margin-right:6px}
+.rec{display:inline-block;font-size:11px;font-weight:650;padding:1px 7px;border-radius:5px;background:#dcfce7;color:#166534;margin-left:6px}
+.cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px;max-width:1440px}
+.cat-c{display:grid;gap:10px;align-content:start}
+.cat-c h3{margin:0;font-size:15px}
+.cat-c .sw{font-size:12px;color:var(--muted);font-family:ui-monospace,Menlo,monospace}
+.cat-c p{margin:0;font-size:12.5px;color:var(--muted)}
+/* skupina */
+.fg{display:grid;gap:10px;min-width:0;border:0;padding:0;margin:0}
+.fg:has(> .fg-head.lg){gap:14px}
+.fg-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 4px;margin:0;font-size:var(--fs-small);font-weight:600}
+.fg-head.lg{font-size:var(--fs-section);font-weight:650;letter-spacing:-.01em}
+.fg-head .n{font-size:var(--fs-small);color:var(--muted);font-weight:400}
+.step{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700;flex:none}
+.fg-foot{font-size:var(--fs-micro);color:var(--muted);padding:0 4px;margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.pad{padding:14px 16px;display:grid;gap:10px}
+/* riadky zoznamu (List / Form row) */
+.list{display:grid;overflow:hidden}
+.row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 16px;cursor:pointer;font-size:15px;line-height:1.35}
+.row + .row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.row.lead + .row.lead::before{left:50px}
+.row:hover{background:var(--surface-2)}
+.row-main{flex:1;min-width:0;display:grid;gap:1px}
+.row-main small{font-size:12.5px;color:var(--muted)}
+.row-val{color:var(--muted);font-size:14.5px;white-space:nowrap}
+.scroll{max-height:300px;overflow-y:auto}
+/* výber — kruh vľavo */
+.ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none;display:grid;place-items:center}
+.on .ck{background:var(--accent);border-color:var(--accent)}
+.on .ck::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:translateY(-1px) rotate(45deg)}
+/* výber — fajka vpravo */
+.tick{width:16px;flex:none;color:var(--accent);font-weight:700;font-size:16px;text-align:center}
+.row.on .tick::after{content:"✓"}
+.row.on.trail{color:var(--ink)}
+/* Toggle */
+.tg{width:46px;height:28px;border-radius:999px;background:rgba(20,28,42,.16);flex:none;position:relative;transition:background .15s}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+.on .tg{background:var(--accent)}
+.on .tg::after{left:20px}
+/* Picker .menu */
+.menu{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-size:14.5px;white-space:nowrap}
+.menu svg{color:var(--muted)}
+.inlinefield{display:flex;align-items:center;gap:8px;padding:0 16px 10px 16px}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:38px;padding:6px 12px}
+.search{display:flex;align-items:center;gap:9px;height:40px;margin:12px 12px 4px;padding:0 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--warn-bg);color:var(--warn-fg)}
+.dim{opacity:.42}
+.hint{font-size:var(--fs-micro);color:var(--muted)}
+/* rámy */
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.frame{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:10px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line)}
+.crumbs b{color:var(--ink);font-weight:600}
+.body{padding:22px 24px 28px}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:0 0 22px;max-width:70ch}
+.page-lead b{color:var(--ink)}
+.stack{display:grid;gap:24px}
+.cols{display:grid;gap:24px 20px;grid-template-columns:minmax(0,1fr);align-items:start}
+.cols.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cols.fin{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.ta{min-height:96px;margin:12px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
+.summary{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:var(--fs-small);color:var(--muted)}
+.summary > span{display:inline-flex;gap:4px;white-space:nowrap}
+.summary b{color:var(--ink)}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:15px;font-weight:600}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.m .body{padding:16px 14px}
+.m .page-title{font-size:22px}
+.m .search{height:44px;font-size:16px}
+.m .button{width:100%;min-height:44px}
+.m .row{font-size:16px}
+.spec{width:100%;max-width:1200px;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+.spec td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.spec tr:last-child td{border-bottom:0}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">Základ — výbery a prepínače podľa SwiftUI</h1>
+<p class="doc">Dnes je každý výber vo formulári štvorcové zaškrtávacie políčko (<code>input type=checkbox</code>) alebo krúžok (<code>radio</code>) v predvolenom vzhľade prehliadača. SwiftUI rozlišuje <b>štyri prvky podľa toho, čo sa vyberá</b>. Návrh ich preberá — v HTML ostávajú tie isté natívne <code>input</code> (mená, hodnoty, bez JS, klávesnica, čítačka), mení sa len vzhľad a riadok. Popis v <code>ZAKLAD-vyber-a-prepinace.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Prvky</p>
+  <p class="sec-w">Riadky v skupine ako <code>List</code> / <code>Form</code> v SwiftUI: celý riadok je terč (min. 44 px), oddeľovač je odsadený zľava, ovládač je na kraji riadku.</p>
+  <div class="cat" id="cat"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">Kedy ktorý</p>
+  <table class="spec">
+    <tr><th>Čo sa vyberá</th><th>SwiftUI</th><th>V aplikácii</th><th>Príklady</th></tr>
+    <tr><td>zapnuté / vypnuté — nastavenie, ktoré platí hneď</td><td><code>Toggle</code></td><td><code>input type=checkbox role=switch</code> + <code>.toggle</code>, vpravo v riadku</td><td>Všetkým v organizácii · Zamiešať poradie otázok · Ukázať odpovede · nastavenia organizácie</td></tr>
+    <tr><td>niekoľko položiek zo zoznamu</td><td><code>List(selection:)</code> s výberom</td><td><code>input type=checkbox</code> + <code>.select-row</code>, kruh vľavo</td><td>Ktoré normy · Osoby · Zdroje · Trasy · Skupiny</td></tr>
+    <tr><td>jedna z 2–5 volieb, vidno všetky</td><td><code>Picker(.inline)</code></td><td><code>input type=radio</code> + <code>.choice-row</code>, fajka vpravo; pole voľby pod riadkom</td><td>Termín potvrdenia · Kategória právneho základu</td></tr>
+    <tr><td>jedna z mnohých, alebo málo miesta</td><td><code>Picker(.menu)</code></td><td>natívny <code>&lt;select&gt;</code> v riadku, hodnota vpravo s ⌃⌄</td><td>Jazyk · Rola · Oddelenie osoby</td></tr>
+    <tr><td>prepnutie pohľadu</td><td><code>Picker(.segmented)</code></td><td><code>.view-switch</code> — <b>nie do formulára</b>, len pohľad (pravidlo ZAKLAD-podmenu-a-akcie)</td><td>Karty / Tabuľka</td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — /hr/assign s novými prvkami</p>
+  <p class="sec-w">Normy a osoby: kruh vľavo. „Všetkým v organizácii": prepínač — keď je zapnutý, zvyšok „Komu" je stlmený. Termín: inline picker, pole dní pod zvolenou voľbou.</p>
+  <div class="frame" style="width:1440px" data-w="1440"></div>
+</div>
+<div class="sec">
+  <p class="sec-h">834 a 390</p>
+  <div class="row-frames">
+    <div class="frame" style="width:834px" data-w="834"></div>
+    <div class="frame m" style="width:390px" data-w="390"></div>
+  </div>
+</div>
+</div>
+<script>
+const SRCH='<svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><path d="M12.2 12.2 16 16"/></svg>';
+const UD='<svg width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l3-3 3 3M2 9l3 3 3-3"/></svg>';
+const grp=(head,body,foot,lg)=>`<fieldset class="fg"><legend class="fg-head${lg?" lg":""}">${head}</legend><div class="card">${body}</div>${foot?`<p class="fg-foot">${foot}</p>`:""}</fieldset>`;
+const sel=(items)=>`<div class="list">${items.map(([t,s,on,flag])=>`<label class="row lead${on?" on":""}"><i class="ck"></i><span class="row-main"><span>${t}</span>${s?`<small>${s}</small>`:""}</span>${flag?'<span class="tag">bez právneho základu</span>':""}</label>`).join("")}</div>`;
+const trail=(items)=>`<div class="list">${items.map(([t,on])=>`<label class="row trail${on?" on":""}"><span class="row-main">${t}</span><i class="tick"></i></label>`).join("")}</div>`;
+const tog=(items)=>`<div class="list">${items.map(([t,s,on])=>`<label class="row${on?" on":""}"><span class="row-main"><span>${t}</span>${s?`<small>${s}</small>`:""}</span><i class="tg"></i></label>`).join("")}</div>`;
+const pick=(cur)=>`<div class="list">${[["none","bez termínu"],["date","do dátumu"],["days","do počtu dní od vzniku povinnosti"]].map(([v,t])=>{const on=v===cur;return `<label class="row trail${on?" on":""}" style="${on&&v!=="none"?"padding-bottom:4px":""}"><span class="row-main">${t}</span><i class="tick"></i></label>${on&&v==="days"?`<div class="inlinefield"><input class="field-input" value="14" style="width:80px" /><span class="hint" style="font-size:14px">dní</span></div>`:""}${on&&v==="date"?`<div class="inlinefield"><input class="field-input" value="31. 10. 2026" style="width:150px" /></div>`:""}`}).join("")}</div>`;
+const menu=(rows)=>`<div class="list">${rows.map(([t,v])=>`<label class="row"><span class="row-main">${t}</span><span class="menu">${v} ${UD}</span></label>`).join("")}</div>`;
+
+document.getElementById("cat").innerHTML=[
+ ["Prepínač","Toggle","Zapnuté / vypnuté. Mení stav, nie výber položiek.",grp("Pravidlá",tog([["Zamiešať poradie otázok","",1],["Ukázať správne odpovede po odoslaní","",0]]))],
+ ["Výber viacerých","List(selection:)","Kruh vľavo — prázdny je vidno, takže je jasné, že sa dá vybrať. Plný kruh s fajkou farby organizácie.",grp("Zdroje",sel([["Disciplinárny poriadok SFZ","",1],["Stanovy SFZ","",0],["Súťažný poriadok futbalu","",1]]))],
+ ["Výber viacerých — fajka vpravo","List · .checkmark","Ako v Nastaveniach iOS. Prázdny stav nie je vidno — vhodné skôr pre jednu voľbu.",grp("Zdroje",trail([["Disciplinárny poriadok SFZ",1],["Stanovy SFZ",0],["Súťažný poriadok futbalu",1]]))],
+ ["Jedna voľba","Picker(.inline)","Fajka vpravo pri zvolenej. Pole, ktoré k voľbe patrí, je pod ňou v tom istom riadku.",grp("Termín potvrdenia",pick("days"))],
+ ["Jedna z mnohých","Picker(.menu)","Hodnota vpravo, klik otvorí natívny výber. Na telefóne systémové koliesko.",grp("Osoba",menu([["Jazyk","Slovenčina"],["Rola","Zamestnanec"],["Oddelenie","Oddelenie IT"]]))],
+].map(([h,sw,p,ex],i)=>`<div class="cat-c"><h3>${i===2?'<span class="badge">B</span>':i===1?'<span class="badge">A</span>':""}${h}${i===1?'<span class="rec">odporúčané</span>':""}</h3><span class="sw">${sw}</span><p>${p}</p>${ex}</div>`).join("");
+
+const docs=[["Finančná smernica SFZ","znenie účinné od 7. 9. 2026",1,0],["Pracovný poriadok SFZ","znenie účinné od 7. 9. 2026",0,0],["Smernica o pracovných cestách a poskytovaní cestovných náhrad SFZ","znenie účinné od 7. 9. 2026",0,0],["Skúšobný poriadok (znenia v indexe)","znenie účinné od 1. 7. 2026",0,1],["Súťažný poriadok futbalu SFZ","znenie účinné od 24. 6. 2026",0,0]];
+const people=[["Agáta Galková","Oddelenie IT",0],["Ivana Galbavá","Oddelenie ľudských zdrojov",1],["Boris Galík","Úsek súťaží",0]];
+document.querySelectorAll("[data-w]").forEach(f=>{
+  const w=+f.dataset.w, two=w>=1100, m=w<640;
+  const p1=grp(`<span class="step">1</span>Ktoré normy<span class="n">13 platných</span>`,`<div class="search">${SRCH}Hľadať normu</div><div class="scroll">${sel(docs)}</div>`,"",1);
+  const p2=`<fieldset class="fg"><legend class="fg-head lg"><span class="step">2</span>Komu</legend>
+    <div class="card">${tog([["Všetkým v organizácii","prebije výber nižšie",0]])}</div>
+    <p class="fg-head" style="margin-top:10px">Oddelenia</p><div class="card">${menu([["Oddelenia","2 vybrané"]])}</div>
+    <p class="fg-head" style="margin-top:10px">Trasy</p><div class="card">${sel([["Rozhodcovia 2026","14 ľudí",1],["Nástup 2026","3 ľudia",0]])}</div>
+    <p class="fg-head" style="margin-top:10px">Osoby<span class="n">148 aktívnych</span></p><div class="card"><div class="search">${SRCH}gal</div>${sel(people)}</div></fieldset>`;
+  const p3=grp(`<span class="step">3</span>Dôvod`,`<div class="ta">napr. novela čl. 12 — mení sa lehota na podanie odvolania</div>`,"Povinný a spoločný pre celý výber. Príde aj v e-maile ľuďom.",1);
+  const p4=grp(`<span class="step">4</span>Termín potvrdenia`,pick("days"),"Nepovinný. Počet dní beží každému odo dňa, keď mu povinnosť vznikla.",1);
+  f.innerHTML=`<div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa svojich dokumentov…</span><span class="av"></span></div>
+  <div class="crumbs">${m?"":"<span>Prehľad</span><span>›</span><span>Správa</span><span>›</span>"}<span>Pridelené dokumenty</span><span>›</span><b>Prideliť dokumenty</b></div>
+  <div class="body"><div style="max-width:1180px"><h1 class="page-title">Prideliť dokumenty</h1><p class="page-lead">Prideľuje sa <b>konkrétne znenie</b>, nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.</p>
+  <div class="stack"><div class="cols${two?" two":""}">${p1}${p2}</div><div class="cols${two?" fin":""}">${p3}${p4}</div>
+  <div class="card pad"><div class="summary"><span><b>1</b> norma</span><span>·</span><span><b>2</b> oddelenia</span><span>·</span><span><b>1</b> trasa</span><span>·</span><span><b>1</b> osoba</span></div><div class="acts"><span class="button">Prideliť</span><span class="button button--quiet">Skontrolovať dopad</span></div></div>
+  </div></div></div>`;
+});
+</script>
+</body></html>

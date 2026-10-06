@@ -198,21 +198,20 @@ export default async function EvaluationPage({
 
               <fieldset className="form-group">
                 <legend className="form-group-head">{tc.sourcesLabel}</legend>
-                <div className="card form-group-body">
+                <div className="card form-group-body form-group-body--rows">
                 {item.sources.length === 0 ? (
-                  <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tc.noSources}</p>
+                  <p className="quiet" style={{ fontSize: "var(--fs-small)" }}>{tc.noSources}</p>
                 ) : (
-                  <ul className="hr-choices">
+                  // Riadky s kruhom vľavo (ZAKLAD-vyber-a-prepinace, 6. 10. 2026).
+                  <div className="form-list">
                     {item.sources.map(src => (
-                      <li key={src.chunkId}>
-                        <label className="hr-choice">
-                          <input type="checkbox" name="chunkIds" value={src.chunkId}
-                                 defaultChecked={item.draft?.chunkIds?.includes(src.chunkId) ?? true} />
-                          <span>{[src.title, src.articleRef].filter(Boolean).join(" · ")}</span>
-                        </label>
-                      </li>
+                      <label key={src.chunkId} className="form-row select-row">
+                        <input type="checkbox" name="chunkIds" value={src.chunkId}
+                               defaultChecked={item.draft?.chunkIds?.includes(src.chunkId) ?? true} />
+                        <span className="form-row-main">{[src.title, src.articleRef].filter(Boolean).join(" · ")}</span>
+                      </label>
                     ))}
-                  </ul>
+                  </div>
                 )}
                 </div>
                 <p className="form-group-foot quiet">{tc.sourcesHint}</p>
