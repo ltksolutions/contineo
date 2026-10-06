@@ -69,6 +69,11 @@ export interface FaqEntry {
   sources: FaqSource[]
   /** Komu je odpoveď určená — voľné štítky (klubový manažér, rozhodca…). */
   audience: string[]
+  /**
+   * Odkiaľ záznam vznikol, keď ho navrhla ťažba histórie schránky (D165):
+   * kanál, vlákna a `messageId` správ. Telá správ sa neukladajú.
+   */
+  origin?: { channelKey: string; threadRefs: string[]; messageIds: string[]; minedAt: Date; model: string } | null
   createdAt: Date
   createdBy: string
   updatedAt: Date
@@ -419,7 +424,7 @@ async function loadFaqDoc(companyCode: string, documentId: string): Promise<RawD
 export async function saveFaqEntry(
   companyCode: string,
   documentId: string,
-  input: FaqEntryInput & { id?: string | null },
+  input: FaqEntryInput & { id?: string | null; origin?: FaqEntry["origin"] },
   actor: string,
 ): Promise<FaqEntry> {
   const doc = await loadFaqDoc(companyCode, documentId)
@@ -432,7 +437,8 @@ export async function saveFaqEntry(
     ? { ...existing, question: input.question, variants: input.variants, answer: input.answer, sources: input.sources, audience: input.audience, updatedAt: now, updatedBy: actor }
     : {
         id: newEntryId(), question: input.question, variants: input.variants, answer: input.answer,
-        sources: input.sources, audience: input.audience, createdAt: now, createdBy: actor, updatedAt: now, updatedBy: actor,
+        sources: input.sources, audience: input.audience, ...(input.origin ? { origin: input.origin } : {}),
+        createdAt: now, createdBy: actor, updatedAt: now, updatedBy: actor,
       }
   const next = existing ? entries.map(e => (e.id === saved.id ? saved : e)) : [...entries, saved]
   await writeDraft(companyCode, doc, next, actor)

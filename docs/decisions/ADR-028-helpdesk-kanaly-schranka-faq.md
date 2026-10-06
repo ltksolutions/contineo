@@ -16,6 +16,12 @@
 > (`chunkingStrategyFor()`), `lib/faq.ts` (záznamy, Markdown, úseky, koncept),
 > `lib/faqPdf.ts`, vetvy v `publish()`, `reindexVersion()` a `saveMetadata()`,
 > obrazovky `/library/new/faq` a `/library/[id]/faq`, kontrola v `check.mjs`.
+> Krok 3 (kanál a schránka) 6. 10. 2026: `lib/helpdeskChannels.ts`
+> (kolekcia `helpdesk_channels`, tajomstvá cez `secrets.ts`, synchronizácia),
+> `lib/mailbox/` (rozhranie a adaptér Graph), `lib/tickets.ts` (vlákno = ticket),
+> `lib/faqMining.ts` (D165), `/api/cron/helpdesk-sync`, časť Organizácia →
+> Helpdesk, rola `helpdesk` (D167), `searchScope()` zúžený na priečinky (D161),
+> postup registrácie v Entra a zúženia v Exchange: `docs/NASADENIE_app.md` § 5.
 
 ---
 
@@ -91,8 +97,10 @@ formát. `lib/mailbox/types.ts` definuje:
   kanálu, vráti `messageId`.
 
 **Microsoft Graph** pre M365: aplikačné oprávnenia `Mail.Read` a
-`Mail.Send`, **zúžené Application Access Policy na schránku kanálu** —
-Contineo technicky nevidí inú poštu organizácie. Prečo nie IMAP na M365:
+`Mail.Send`, **zúžené na schránku kanála** cez RBAC for Applications v Exchange
+Online (nahrádza Application Access Policy; oprávnenia sa v Entra
+neprideľujú, inak by zúženie neplatilo) — Contineo technicky nevidí inú
+poštu organizácie. Prečo nie IMAP na M365:
 základné prihlásenie je v Exchange Online vypnuté, IMAP cez OAuth potrebuje
 tú istú registráciu v Entra a nedá delta synchronizáciu, vlákna ani
 odosielanie.

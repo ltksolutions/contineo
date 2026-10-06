@@ -40,6 +40,15 @@ import Select from "@/components/Select"
 import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
 import { saveAiSettingsAction, deleteAiKeyAction } from "../actions"
+import { saveHelpdeskChannelAction, removeHelpdeskChannelAction, verifyHelpdeskMailboxAction, syncHelpdeskChannelAction, rotateWidgetSecretAction, mineFaqAction } from "../actions"
+import { listChannels, channelView, takeRevealedWidgetSecret, HELPDESK_ROLE, DEFAULT_RATE_LIMIT, type ChannelView } from "@/lib/helpdeskChannels"
+import { ticketCounts } from "@/lib/tickets"
+import { allFolders, flattenTree as flattenFolders } from "@/lib/folders"
+import { listPeople } from "@/lib/people"
+import MultiSelect from "@/components/MultiSelect"
+import { getCollection } from "@/lib/mongodb"
+import { DOCUMENTS_COLLECTION } from "@/lib/documents"
+import { DEFAULT_HISTORY_LIMIT } from "@/lib/faqMining"
 import { AI_MODELS, aiSettingsView } from "@/lib/aiSettings"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { ratesForDate, formatUsd } from "@/lib/pricing"
@@ -192,7 +201,7 @@ export default async function OrganisationSectionPage({
     notFound()
   }
 
-  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string; channel?: string }>(await searchParams)
   const { msg: message, error, search, list: listParam } = query
   const { section } = await params
   // Neznáma časť je 404 — adresa je zmluva, nie návrh. DPO bez roly
@@ -274,6 +283,37 @@ export default async function OrganisationSectionPage({
         if (filter.personId) q.set("person", filter.personId)
         if (filter.purpose) q.set("purpose", filter.purpose)
         return { filter, rows, totals, people, query: q.toString() }
+      })()
+    : null
+  /*
+   * Helpdesk (ADR-028, D161): zoznam kanálov a jeden otvorený na úpravu
+   * (`?channel=key`, `?channel=new`). Tajomstvá sa na obrazovku nedostanú
+   * (`channelView`); nové tajomstvo widgetu sa ukáže raz zo servera.
+   */
+  const th = t.helpdesk
+  const helpdesk = now === "helpdesk"
+    ? await (async () => {
+        const channels = (await listChannels(tenant.companyCode)).map(channelView)
+        const counts = new Map(await Promise.all(channels.map(async c => [c.key, await ticketCounts(tenant.companyCode, c.key)] as const)))
+        const editing: ChannelView | "new" | null = query.channel === "new"
+          ? "new"
+          : (channels.find(c => c.key === query.channel) ?? null)
+        const [folders, people, faqDocs] = await Promise.all([
+          allFolders(tenant.companyCode),
+          listPeople(tenant.companyCode),
+          (await getCollection(DOCUMENTS_COLLECTION))
+            .find({ companyCode: tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1 } })
+            .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string }[]>,
+        ])
+        const revealed = editing && editing !== "new" && editing.widget.revealOnce
+          ? await takeRevealedWidgetSecret(tenant.companyCode, editing.key)
+          : null
+        return {
+          channels, counts, editing, revealed,
+          folderOptions: treeOptions(flattenFolders(folders).map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level }))),
+          agentOptions: people.filter(p => p.roles.includes(HELPDESK_ROLE)).map(p => ({ value: p.id, label: `${p.fullName} (${p.email})` })),
+          faqDocs: faqDocs.map(x => ({ value: x.documentId, label: String(x.title ?? x.documentId) })),
+        }
       })()
     : null
   const locale = language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK"
@@ -1195,6 +1235,208 @@ export default async function OrganisationSectionPage({
         <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)", maxWidth: 680 }}>{tu.note}</p>
       </>
       )}
+      </div>
+      )}
+
+      {/* Helpdesk (ADR-028): kanály s obsahom, schránkou, riešiteľmi a widgetom. */}
+      {now === "helpdesk" && helpdesk && (
+      <div className="org-section">
+        <p className="quiet" style={{ margin: "0 0 16px", maxWidth: 680 }}>{th.intro}</p>
+
+        <section className="card set-form">
+          <div className="set-sec">
+            <div className="set-sec-head"><h2>{th.list}</h2></div>
+            <div className="set-sec-body" style={{ display: "grid", gap: 10 }}>
+              {helpdesk.channels.length === 0 && <p className="quiet" style={{ margin: 0 }}>{th.empty}</p>}
+              {helpdesk.channels.map(c => {
+                const n = helpdesk.counts.get(c.key)
+                const total = n ? Object.values(n).reduce((a, b) => a + b, 0) : 0
+                const open = n ? n.new + n.drafted + n.reopened : 0
+                return (
+                  <div key={c.key} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                    <b>{c.name}</b>
+                    <code>{c.key}</code>
+                    {c.mailbox && <span className="quiet">{c.mailbox.address}</span>}
+                    <span className="quiet">{th.tickets(open, total)}</span>
+                    <Link href={`/organisation/helpdesk?channel=${encodeURIComponent(c.key)}`}>{th.edit}</Link>
+                  </div>
+                )
+              })}
+              <div><Link className="button button--quiet" href="/organisation/helpdesk?channel=new">{th.newChannel}</Link></div>
+            </div>
+          </div>
+        </section>
+
+        {helpdesk.editing && (() => {
+          const c = helpdesk.editing === "new" ? null : helpdesk.editing
+          return (
+          <>
+          <form action={saveHelpdeskChannelAction} className="card set-form" id="channel">
+            <input type="hidden" name="tab" value="helpdesk" />
+            <input type="hidden" name="isNew" value={c ? "0" : "1"} />
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{c ? c.name : th.newChannel}</h2></div>
+              <div className="set-sec-body">
+                <label className="field">
+                  <span className="field-label">{th.key}</span>
+                  {c ? <><input type="hidden" name="key" value={c.key} /><code>{c.key}</code></>
+                     : <input className="field-input" name="key" required pattern="[a-z0-9][a-z0-9_]{1,60}" autoCapitalize="none" autoCorrect="off" />}
+                  <span className="quiet field-hint">{th.keyHint}</span>
+                </label>
+                <label className="field">
+                  <span className="field-label">{th.name}</span>
+                  <input className="field-input" name="name" required maxLength={120} defaultValue={c?.name ?? ""} />
+                </label>
+                <label className="field">
+                  <span className="field-label">{th.audience}</span>
+                  <input className="field-input" name="audience" maxLength={300} defaultValue={c?.audience ?? ""} />
+                  <span className="quiet field-hint">{th.audienceHint}</span>
+                </label>
+                <div className="field">
+                  <span className="field-label">{th.folders}</span>
+                  <MultiSelect name="folderIds" options={helpdesk.folderOptions} selected={c?.folderIds ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+                  <span className="quiet field-hint">{th.foldersHint}</span>
+                </div>
+                <div className="field">
+                  <span className="field-label">{th.assignees}</span>
+                  <MultiSelect name="assigneeIds" options={helpdesk.agentOptions} selected={c?.assigneeIds ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+                  <span className="quiet field-hint">{th.assigneesHint}</span>
+                </div>
+                <div className="field">
+                  <span className="field-label">{th.languages}</span>
+                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                    {UI_LANGUAGES.map(l => (
+                      <label key={l} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <input type="checkbox" name="languages" value={l} defaultChecked={(c?.languages ?? tenant.languages).includes(l)} /> {l}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{th.mailbox}</h2><p>{th.mailboxIntro}</p></div>
+              <div className="set-sec-body">
+                <div className="field">
+                  <span className="field-label">{th.mailboxKind}</span>
+                  <Select language={language} name="mailboxKind" fieldLabel={th.mailboxKind} initial={c?.mailbox?.kind ?? ""}
+                    options={[{ value: "", label: th.mailboxNone }, { value: "graph", label: th.kindGraph }, { value: "imap", label: th.kindImap }]} />
+                </div>
+                <label className="field">
+                  <span className="field-label">{th.address}</span>
+                  <input className="field-input" name="address" type="email" defaultValue={c?.mailbox?.address ?? ""} autoCapitalize="none" />
+                  <span className="quiet field-hint">{th.addressHint}</span>
+                </label>
+                <label className="field">
+                  <span className="field-label">{th.tenantId}</span>
+                  <input className="field-input" name="tenantId" defaultValue={c?.mailbox?.graph?.tenantId ?? ""} autoCapitalize="none" spellCheck={false} />
+                </label>
+                <label className="field">
+                  <span className="field-label">{th.clientId}</span>
+                  <input className="field-input" name="clientId" defaultValue={c?.mailbox?.graph?.clientId ?? ""} autoCapitalize="none" spellCheck={false} />
+                </label>
+                <label className="field">
+                  <span className="field-label">{th.clientSecret}</span>
+                  <input className="field-input" name="clientSecret" type="password" autoComplete="off" spellCheck={false} />
+                  <span className="quiet field-hint">
+                    {c?.mailbox?.graph?.hasSecret
+                      ? th.secretSet(c.mailbox.graph.clientSecretHint ?? "", c.mailbox.graph.secretSetAt ? formatDate(c.mailbox.graph.secretSetAt, language) : "", c.mailbox.graph.secretSetBy ?? "")
+                      : th.secretNone}
+                    {" "}{th.clientSecretHint}
+                  </span>
+                </label>
+                <p className="quiet field-hint" style={{ margin: 0 }}>{th.deployNote}</p>
+              </div>
+            </section>
+
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{th.widget}</h2><p>{th.widgetIntro}</p></div>
+              <div className="set-sec-body">
+                <label className="field">
+                  <span className="field-label">{th.widgetOrigins}</span>
+                  <textarea className="field-input" name="widgetOrigins" rows={2} defaultValue={c?.widget.origins.join("\n") ?? ""} />
+                  <span className="quiet field-hint">{th.widgetOriginsHint}</span>
+                </label>
+                <label className="field">
+                  <span className="field-label">{th.rateLimit}</span>
+                  <input className="field-input" name="rateLimitPerHour" type="number" min={1} max={10000} defaultValue={c?.widget.rateLimitPerHour ?? DEFAULT_RATE_LIMIT} style={{ maxWidth: 160 }} />
+                  <span className="quiet field-hint">{th.rateLimitHint}</span>
+                </label>
+              </div>
+            </section>
+
+            <div className="set-savebar"><SubmitButton className="button">{th.save}</SubmitButton></div>
+          </form>
+
+          {c && (
+          <section className="card set-form">
+            {c.mailbox && (
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{th.sync}</h2><p>{th.syncSinceHint}</p></div>
+              <div className="set-sec-body" style={{ display: "grid", gap: 10 }}>
+                <p className="quiet" style={{ margin: 0 }}>
+                  {c.mailbox.lastSyncAt ? th.syncLast(formatDate(c.mailbox.lastSyncAt, language)) : th.syncNever}
+                  {c.mailbox.lastSyncCounts && ` · ${th.syncCounts(c.mailbox.lastSyncCounts.created, c.mailbox.lastSyncCounts.appended, c.mailbox.lastSyncCounts.skipped)}`}
+                  {c.mailbox.lastSyncError && ` · ${th.syncError(c.mailbox.lastSyncError)}`}
+                </p>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <form action={verifyHelpdeskMailboxAction}><input type="hidden" name="key" value={c.key} /><SubmitButton className="button button--quiet">{th.verify}</SubmitButton></form>
+                  <form action={syncHelpdeskChannelAction}><input type="hidden" name="key" value={c.key} /><SubmitButton className="button button--quiet">{th.syncNow}</SubmitButton></form>
+                </div>
+              </div>
+            </section>
+            )}
+
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{th.widgetSecret}</h2></div>
+              <div className="set-sec-body" style={{ display: "grid", gap: 10 }}>
+                {helpdesk.revealed ? (
+                  <p style={{ margin: 0 }}>{th.widgetSecretShown} <code style={{ userSelect: "all", wordBreak: "break-all" }}>{helpdesk.revealed}</code></p>
+                ) : (
+                  <p className="quiet" style={{ margin: 0 }}>
+                    {c.widget.hasSecret ? th.widgetSecretSet(c.widget.secretHint ?? "", c.widget.secretSetAt ? formatDate(c.widget.secretSetAt, language) : "") : th.widgetSecretNone}
+                  </p>
+                )}
+                <form action={rotateWidgetSecretAction}><input type="hidden" name="key" value={c.key} /><SubmitButton className="button button--quiet">{th.widgetSecretRotate}</SubmitButton></form>
+              </div>
+            </section>
+
+            {c.mailbox && (
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{th.mining}</h2><p>{th.miningIntro}</p></div>
+              <div className="set-sec-body">
+                {helpdesk.faqDocs.length === 0 ? (
+                  <p className="quiet" style={{ margin: 0 }}>{th.noFaqDocuments}</p>
+                ) : (
+                  <form action={mineFaqAction} style={{ display: "grid", gap: 12 }}>
+                    <input type="hidden" name="key" value={c.key} />
+                    <div className="field">
+                      <span className="field-label">{th.miningDocument}</span>
+                      <Select language={language} name="documentId" fieldLabel={th.miningDocument} options={helpdesk.faqDocs} initial={helpdesk.faqDocs[0].value} />
+                    </div>
+                    <label className="field">
+                      <span className="field-label">{th.miningLimit}</span>
+                      <input className="field-input" name="limit" type="number" min={10} max={2000} defaultValue={DEFAULT_HISTORY_LIMIT} style={{ maxWidth: 160 }} />
+                    </label>
+                    <div><SubmitButton className="button button--quiet">{th.miningRun}</SubmitButton></div>
+                  </form>
+                )}
+              </div>
+            </section>
+            )}
+
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{th.remove}</h2></div>
+              <div className="set-sec-body">
+                <form action={removeHelpdeskChannelAction}><input type="hidden" name="key" value={c.key} /><SubmitButton className="button button--danger">{th.remove}</SubmitButton></form>
+              </div>
+            </section>
+          </section>
+          )}
+          </>
+          )
+        })()}
       </div>
       )}
 
