@@ -26,7 +26,7 @@ vi.mock("@/lib/dpoDb", () => ({ legalBasisRows: async () => state.rows }))
 vi.mock("@/lib/objectionsDb", () => ({ listObjections: async () => state.objections }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/session", () => ({}))
-vi.mock("../src/app/dpo/actions", () => ({ recordObjectionAction: async () => {}, decideObjectionAction: async () => {}, saveRetentionAction: async () => {}, saveExtraAction: async () => {} }))
+vi.mock("../src/app/dpo/actions", () => ({ recordObjectionAction: async () => {}, decideObjectionAction: async () => {} }))
 
 const row = (over: Record<string, unknown>) => ({
   documentId: "sfz:a", title: "Predpis A", versionId: "v1", versionLabel: "1.0",

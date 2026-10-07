@@ -8,6 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
 import { auditRecords } from "@/lib/audit"
 import AuditList from "@/components/AuditList"
 import { platformContext, tenantOverviews, trackCount } from "@/lib/admin"
@@ -20,7 +21,7 @@ import Select from "@/components/Select"
 import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
 import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
-import { saveTenantAction, toggleTenantStatusAction, sendInstructionsAction, saveSignInAction, deleteSignInAction } from "../../actions"
+import { saveTenantPageAction, toggleTenantStatusAction, sendInstructionsAction, deleteSignInAction } from "../../actions"
 import type { DomainStatus } from "@/lib/vercel"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
@@ -30,13 +31,15 @@ import SubmitButton from "@/components/SubmitButton"
 
 
 /**
- * Prihlasovacie údaje jedného poskytovateľa (D43).
+ * Prihlasovacie údaje jedného poskytovateľa (D43) ako sekcia spoločného
+ * formulára (ZAKLAD-lista-ulozenia, 7. 10. 2026). Polia nesú predponu
+ * poskytovateľa (`microsoft.clientId`), uloží ich lišta celej stránky.
  *
  * **Tajomstvo sa nikdy nevypisuje.** Pole je pri každom otvorení prázdne
  * a prázdne znamená „nemeň" — inak by uloženie zmeneného `clientId` ticho
  * vymazalo tajomstvo a prihlásenie by prestalo fungovať.
  */
-function ProviderRow({
+function ProviderSection({
   tenant, provider, domain, language,
 }: {
   tenant: Tenant
@@ -49,70 +52,39 @@ function ProviderRow({
   const name = PROVIDER_LABEL[provider]
   const s = providerStatus(tenant, provider)
   const back = `https://${domain ?? "<…>"}/api/auth/callback/${PROVIDER_ID[provider]}`
-  const statusLabel = t.stateLong[s.state] ?? s.state
+  const f = (field: string) => `${provider}.${field}`
+  // Slovník má stavy pod pôvodnými kľúčmi (`nastavene`…); `providerStatus`
+  // vracia anglické. Bez prekladu sa v štítku ukazovalo holé „set" / „unset".
+  const stateKey = ({ set: "nastavene", "from-environment": "z-prostredia", unreadable: "necitatelne", unset: "nenastavene" } as const)[s.state]
 
   return (
-    <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
-        <span className={s.state === "unreadable" ? "tag tag--warn" : "tag"}>
-          {t.state[s.state] ?? s.state}
-        </span>
+    <section className="set-sec" id={`signin-${provider}`}>
+      <div className="set-sec-head">
+        <h2>
+          {t.heading(name)}{" "}
+          <span className={s.state === "unreadable" ? "tag tag--warn" : s.state === "set" ? "tag tag--published" : "tag"}>
+            {t.state[stateKey] ?? s.state}
+          </span>
+        </h2>
+        <p>{t.stateLong[stateKey] ?? s.state}</p>
       </div>
-
-      <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{statusLabel}</p>
-
-      {/* Najčastejšia príčina toho, prečo prihlásenie hneď na prvý raz nejde. */}
-      <div>
-        <div className="quiet field-hint">{t.callback}</div>
-        <code style={{ fontSize: "var(--fs-small)", overflowWrap: "anywhere" }}>{back}</code>
-      </div>
-
-      <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
-        <input type="hidden" name="companyCode" value={tenant.companyCode} />
-        <input type="hidden" name="provider" value={provider} />
-
-        <Field name="clientId" label={t.clientId} value={s.source === "tenant" ? s.clientId : ""} />
-        <Field name="clientSecret" label={t.clientSecret} type="password" hint={t.clientSecretHint} />
-
+      <div className="set-sec-body">
+        {/* Najčastejšia príčina toho, prečo prihlásenie hneď na prvý raz nejde. */}
+        <div className="set-callback">
+          <span className="quiet field-hint">{t.callback}</span>
+          <code>{back}</code>
+        </div>
+        <Field name={f("clientId")} label={t.clientId} value={s.source === "tenant" ? s.clientId : ""} />
+        <Field name={f("clientSecret")} label={t.clientSecret} type="password" hint={t.clientSecretHint} />
         {provider === "microsoft" ? (
           <>
-            <Field
-              name="tenantMode"
-              label={t.tenantMode}
-              value={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
-              hint={t.tenantModeHint}
-            />
-            <Field
-              name="allowedTenantIds"
-              label={t.allowedTenantIds}
-              value={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
-              hint={t.allowedTenantIdsHint}
-            />
+            <Field name={f("tenantMode")} label={t.tenantMode} value={tenant.oauth?.microsoft?.tenantMode ?? "organizations"} hint={t.tenantModeHint} />
+            <Field name={f("allowedTenantIds")} label={t.allowedTenantIds} value={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")} hint={t.allowedTenantIdsHint} />
           </>
         ) : (
-          <Field
-            name="hostedDomain"
-            label={t.hostedDomain}
-            value={tenant.oauth?.google?.hostedDomain ?? ""}
-            hint={t.hostedDomainHint}
-          />
+          <Field name={f("hostedDomain")} label={t.hostedDomain} value={tenant.oauth?.google?.hostedDomain ?? ""} hint={t.hostedDomainHint} />
         )}
-
-        <div>
-          <SubmitButton className="button">{t.save}</SubmitButton>
-        </div>
-      </form>
-
-      {s.source === "tenant" && (
-        <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
-          <input type="hidden" name="companyCode" value={tenant.companyCode} />
-          <input type="hidden" name="provider" value={provider} />
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.deleteNote}</p>
-          <Field name="confirmation" label={t.confirmLabel(tenant.companyCode)} />
-          <SubmitButton className="button button--quiet">{t.deleteSubmit}</SubmitButton>
-        </form>
-      )}
+      </div>
     </section>
   )
 }
@@ -180,7 +152,7 @@ export default async function TenantDetailPage({
   }
 
   const { code } = await params
-  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const { msg: message, error, remove, disable } = normalizeQuery<{ msg?: string; error?: string; remove?: string; disable?: string }>(await searchParams)
   const tenant = (await allTenants()).find(t => t.companyCode === code.toUpperCase())
   if (!tenant) notFound()
 
@@ -254,137 +226,184 @@ export default async function TenantDetailPage({
           {domains.map(x => <DomainRow key={x.host} s={x} language={language} />)}
         </ul>
 
+      </section>
+
+      {/*
+        Jeden formulár a jedna lišta (ZAKLAD-lista-ulozenia, 7. 10. 2026):
+        vzhľad a údaje, domény a zakladanie, Microsoft a Google. Prihlasovacie
+        údaje patria k zavedeniu zákazníka — preto až za údajmi organizácie.
+      */}
+      <form action={saveTenantPageAction} className="card set-form admin-set">
+        <input type="hidden" name="companyCode" value={tenant.companyCode} />
+        <section className="set-sec">
+          <div className="set-sec-head"><h2>{t.brandingHeading}</h2></div>
+          <div className="set-sec-body">
+            <Field name="displayName" label={t.displayName} value={tenant.branding.displayName} />
+            <Field name="shortName" label={t.shortName} value={tenant.branding.shortName} />
+            <div className="field">
+              <span className="field-label">{t.logo}</span>
+              {tenant.branding.logoUrl && (
+                <span className="logo-preview">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={tenant.branding.logoUrl} alt="" width={34} height={34} />
+                  <span className="quiet field-hint">{t.logoCurrent}</span>
+                </span>
+              )}
+              <input className="field-input" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
+              <span className="quiet field-hint">{t.logoNote}</span>
+            </div>
+            <div className="field">
+              <span className="field-label">{t.color}</span>
+              <ColorSelect name="accentColor" value={tenant.branding.accentColor} language={language} />
+              <span className="quiet field-hint">{t.colorNote}</span>
+            </div>
+            <Field name="supportEmail" label={t.supportEmail} value={tenant.branding.supportEmail} type="email" hint={t.supportEmailNote} />
+            {/* Výber viacerých — riadky s kruhom vľavo, ako jazyky v nastaveniach
+                organizácie (ZAKLAD-vyber-a-prepinace, DESIGN_ODCHYLKY). */}
+            <fieldset className="form-group">
+              <legend className="form-group-head">{t.languages}</legend>
+              <div className="card form-group-body form-group-body--rows">
+                <div className="form-list">
+                  {UI_LANGUAGES.map(j => (
+                    <label key={j} className="form-row select-row">
+                      <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
+                      <span className="form-row-main">{d.people.languages[j] ?? j}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </fieldset>
+            <div className="field">
+              <span className="field-label">{t.defaultLanguage}</span>
+              <Select language={language}
+                name="defaultLanguage"
+                options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
+                initial={tenant.defaultLanguage}
+                fieldLabel={t.defaultLanguage}
+              />
+              <span className="quiet field-hint">{t.defaultLanguageNote}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="set-sec">
+          <div className="set-sec-head"><h2>{t.domainsSection}</h2></div>
+          <div className="set-sec-body">
+            <label className="field">
+              <span className="field-label">{t.domains}</span>
+              <textarea className="field-input" name="hostnames" rows={3} defaultValue={tenant.hostnames.join("\n")} />
+              <span className="quiet field-hint">{t.domainsNote}</span>
+            </label>
+            <label className="field">
+              <span className="field-label">{t.autoProvision}</span>
+              <textarea
+                className="field-input"
+                name="autoProvisionDomains"
+                rows={2}
+                defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
+                placeholder={dictionary(language).common.domainsPlaceholder}
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+              <span className="quiet field-hint">
+                {t.autoProvisionBefore}<strong>{t.autoProvisionHighlight}</strong>{t.autoProvisionAfter}
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <ProviderSection tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} language={language} />
+        <ProviderSection tenant={tenant} provider="google" domain={tenant.hostnames[0]} language={language} />
+
+        <div className="set-savebar">
+          <SubmitButton className="button">{t.save}</SubmitButton>
+          <span className="quiet">{d.common.saveBarNote}</span>
+        </div>
+      </form>
+
+      {/*
+        Ďalšie akcie — nič neukladajú (ZAKLAD-lista-ulozenia). Vratné tiché,
+        nevratné `--danger` s potvrdením cez adresu: odstránenie vlastného
+        prihlásenia (`?remove=`) a vypnutie organizácie (`?disable=1`) si
+        pýtajú kód organizácie — „naozaj?" sa odklikne skôr, než sa prečíta.
+      */}
+      <section className="card more admin-more">
+        <div className="more-head"><h2>{d.common.moreActions}</h2></div>
+
         {pending.length > 0 && (
-          <form action={sendInstructionsAction} className="admin-subform">
+          <form action={sendInstructionsAction} className="more-row">
             <input type="hidden" name="companyCode" value={tenant.companyCode} />
             <input type="hidden" name="hostnames" value={tenant.hostnames.join(" ")} />
-            <Field
-              name="to"
-              label={t.sendTo}
-              value={tenant.branding.supportEmail}
-              type="email"
-              hint={t.sendHint(pending.length)}
-            />
-            <SubmitButton className="button">{t.send}</SubmitButton>
+            <div className="more-main">
+              <b>{t.sendTitle}</b>
+              <span>{t.sendHint(pending.length)}</span>
+              <input className="field-input" type="email" name="to" defaultValue={tenant.branding.supportEmail} aria-label={t.sendTo} />
+            </div>
+            <SubmitButton className="button button--quiet">{t.send}</SubmitButton>
+          </form>
+        )}
+
+        {(["microsoft", "google"] as const).filter(p => providerStatus(tenant, p).source === "tenant").map(p => {
+          const ts = d.admin.signIn
+          return (
+            <div key={p}>
+              <div className="more-row">
+                <div className="more-main">
+                  <b>{ts.removeOwnTitle(PROVIDER_LABEL[p])}</b>
+                  <span>{ts.removeOwnNote}</span>
+                </div>
+                {remove !== p && <Link className="button button--danger" href={`${`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}?remove=${p}#remove-${p}`}>{ts.removeOpen}</Link>}
+              </div>
+              {remove === p && (
+                <form action={deleteSignInAction} className="more-confirm" id={`remove-${p}`}>
+                  <input type="hidden" name="companyCode" value={tenant.companyCode} />
+                  <input type="hidden" name="provider" value={p} />
+                  <p>{ts.deleteNote}</p>
+                  <Field name="confirmation" label={ts.confirmLabel(tenant.companyCode)} />
+                  <div className="more-acts">
+                    <SubmitButton className="button button--danger">{ts.deleteSubmit}</SubmitButton>
+                    <Link className="button button--quiet" href={`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}>{ts.cancel}</Link>
+                  </div>
+                </form>
+              )}
+            </div>
+          )
+        })}
+
+        {enabled ? (
+          <>
+            <div className="more-row">
+              <div className="more-main">
+                <b>{t.disableHeading}</b>
+                <span>{t.disableNote}</span>
+              </div>
+              {disable !== "1" && <Link className="button button--danger" href={`${`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}?disable=1#disable`}>{t.disableOpen}</Link>}
+            </div>
+            {disable === "1" && (
+              <form action={toggleTenantStatusAction} className="more-confirm" id="disable">
+                <input type="hidden" name="companyCode" value={tenant.companyCode} />
+                <input type="hidden" name="status" value="disabled" />
+                <Field name="confirmation" label={t.confirmLabel(tenant.companyCode)} hint={t.confirmHint} />
+                <div className="more-acts">
+                  <SubmitButton className="button button--danger">{t.disable}</SubmitButton>
+                  <Link className="button button--quiet" href={`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}>{t.cancel}</Link>
+                </div>
+              </form>
+            )}
+          </>
+        ) : (
+          // Zapnutie je vratné — tiché, bez potvrdenia (Q5).
+          <form action={toggleTenantStatusAction} className="more-row">
+            <input type="hidden" name="companyCode" value={tenant.companyCode} />
+            <input type="hidden" name="status" value="active" />
+            <div className="more-main">
+              <b>{t.enableHeading}</b>
+              <span>{t.enableNote}</span>
+            </div>
+            <SubmitButton className="button button--quiet">{t.enable}</SubmitButton>
           </form>
         )}
       </section>
-
-      <form action={saveTenantAction} className="card admin-form">
-        <input type="hidden" name="companyCode" value={tenant.companyCode} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.brandingHeading}</h2>
-
-        <Field name="displayName" label={t.displayName} value={tenant.branding.displayName} />
-        <Field name="shortName" label={t.shortName} value={tenant.branding.shortName} />
-        <div className="field">
-          <span className="field-label">{t.logo}</span>
-          {tenant.branding.logoUrl && (
-            <span className="logo-preview">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={tenant.branding.logoUrl} alt="" width={34} height={34} />
-              <span className="quiet field-hint">{t.logoCurrent}</span>
-            </span>
-          )}
-          <input className="field-input" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
-          <span className="quiet field-hint">{t.logoNote}</span>
-        </div>
-        <div className="field">
-          <span className="field-label">{t.color}</span>
-          <ColorSelect name="accentColor" value={tenant.branding.accentColor} language={language} />
-          <span className="quiet field-hint">{t.colorNote}</span>
-        </div>
-        <Field
-          name="supportEmail"
-          label={t.supportEmail}
-          value={tenant.branding.supportEmail}
-          type="email"
-          hint={t.supportEmailNote}
-        />
-
-        {/* Výber viacerých — riadky s kruhom vľavo, ako jazyky v nastaveniach
-            organizácie (ZAKLAD-vyber-a-prepinace, DESIGN_ODCHYLKY). */}
-        <fieldset className="form-group">
-          <legend className="form-group-head">{t.languages}</legend>
-          <div className="card form-group-body form-group-body--rows">
-            <div className="form-list">
-              {UI_LANGUAGES.map(j => (
-                <label key={j} className="form-row select-row">
-                  <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
-                  <span className="form-row-main">{d.people.languages[j] ?? j}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </fieldset>
-
-        <div className="field">
-          <span className="field-label">{t.defaultLanguage}</span>
-          <Select language={language}
-            name="defaultLanguage"
-            options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
-            initial={tenant.defaultLanguage}
-            fieldLabel={t.defaultLanguage}
-          />
-          <span className="quiet field-hint">{t.defaultLanguageNote}</span>
-        </div>
-
-        <label className="field">
-          <span className="field-label">{t.domains}</span>
-          <textarea
-            className="field-input"
-            name="hostnames"
-            rows={3}
-            defaultValue={tenant.hostnames.join("\n")}
-          />
-          <span className="quiet field-hint">{t.domainsNote}</span>
-        </label>
-
-        <label className="field">
-          <span className="field-label">{t.autoProvision}</span>
-          <textarea
-            className="field-input"
-            name="autoProvisionDomains"
-            rows={2}
-            defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-            placeholder={dictionary(language).common.domainsPlaceholder}
-            autoCapitalize="none"
-            autoCorrect="off"
-          />
-          <span className="quiet field-hint">
-            {t.autoProvisionBefore}<strong>{t.autoProvisionHighlight}</strong>{t.autoProvisionAfter}
-          </span>
-        </label>
-
-        <SubmitButton className="button">{t.save}</SubmitButton>
-      </form>
-
-      {/* Prihlasovacie údaje sú medzi úpravou a vypnutím zámerne: patria
-          k zavedeniu zákazníka, nie k jeho dennému nastaveniu. */}
-      <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
-        <ProviderRow tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} language={language} />
-        <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} language={language} />
-      </div>
-
-      <form action={toggleTenantStatusAction} className="card admin-form" style={{ marginTop: 16 }}>
-        <input type="hidden" name="companyCode" value={tenant.companyCode} />
-        <input type="hidden" name="status" value={enabled ? "disabled" : "active"} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>
-          {enabled ? t.disableHeading : t.enableHeading}
-        </h2>
-        {enabled ? (
-          <>
-            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.disableNote}</p>
-            <Field
-              name="confirmation"
-              label={t.confirmLabel(tenant.companyCode)}
-              hint={t.confirmHint}
-            />
-            <SubmitButton className="button button--quiet">{t.disable}</SubmitButton>
-          </>
-        ) : (
-          <SubmitButton className="button">{t.enable}</SubmitButton>
-        )}
-      </form>
 
       <section style={{ marginTop: 28 }}>
         <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.auditHeading}</h2>

@@ -19,7 +19,7 @@ import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
 import { tabValue } from "@/lib/urlParams"
 import { isOrgSection, orgSectionHref } from "@/lib/orgSections"
-import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains } from "@/lib/tenantAdmin"
+import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains, plannedOAuth } from "@/lib/tenantAdmin"
 import { saveBrand, deleteBrand } from "@/lib/branding"
 import { splitList } from "@/lib/oauth"
 import { requestDomain, verifyRequest, cancelDomain } from "@/lib/customerDomains"
@@ -162,26 +162,6 @@ export async function saveAcknowledgementAction(fd: FormData) {
 }
 
 /**
- * E-mailové domény pre automatické založenie — od 25. 9. 2026 v záložke
- * Prihlasovanie, nie vo Vzhľade: súvisia s tým, kto sa smie prihlásiť.
- * Vzhľad ich už neposiela, takže ich uloženie vzhľadu nezmaže.
- */
-export async function saveAutoProvisionAction(fd: FormData) {
-  const self = await actor()
-  if (!self) redirect("/")
-  try {
-    await saveTenant(self.companyCode, {
-      autoProvisionDomains: normalizeDomains(fieldText(fd, "autoProvisionDomains")),
-    }, self.email)
-  } catch (e) {
-    if (isRedirect(e)) throw e
-    back(fd, errorMessage(e, self.language), true)
-  }
-  revalidatePath("/organisation", "layout")
-  back(fd, say(self.language).saved)
-}
-
-/**
  * Odstráni logo organizácie.
  *
  * Dve veci, nie jedna: zmaže sa **obrázok** z `tenant_assets` aj **odkaz naň**
@@ -215,21 +195,35 @@ export async function deleteLogoAction(fd: FormData) {
 
 // ── prihlasovanie kontom ─────────────────────────────────────────────────────
 
-export async function saveSignInAction(fd: FormData) {
+/**
+ * Celá stránka Prihlásenie jedným uložením (ZAKLAD-lista-ulozenia,
+ * 7. 10. 2026): Microsoft, Google aj domény automatického zakladania.
+ * Polia poskytovateľov nesú predponu (`microsoft.clientId`). Najprv sa všetko
+ * skontroluje (`plannedOAuth`, `normalizeDomains`), až potom sa zapisuje —
+ * keď jedna sekcia neprejde, neuloží sa nič (Q6).
+ */
+export async function saveSignInPageAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
 
-  const provider = fieldText(fd, "provider") === "google" ? "google" : "microsoft"
+  const inputs = {
+    microsoft: {
+      clientId: fieldText(fd, "microsoft.clientId"),
+      clientSecret: fieldText(fd, "microsoft.clientSecret"),
+      tenantMode: fieldText(fd, "microsoft.tenantMode"),
+      allowedTenantIds: splitList(fieldText(fd, "microsoft.allowedTenantIds")),
+    },
+    google: {
+      clientId: fieldText(fd, "google.clientId"),
+      clientSecret: fieldText(fd, "google.clientSecret"),
+      hostedDomain: fieldText(fd, "google.hostedDomain"),
+    },
+  }
   try {
-    await saveOAuth(self.companyCode, provider, {
-      clientId: fieldText(fd, "clientId"),
-      clientSecret: fieldText(fd, "clientSecret"),
-      tenantMode: provider === "microsoft" ? fieldText(fd, "tenantMode") : undefined,
-      allowedTenantIds: provider === "microsoft"
-        ? splitList(fieldText(fd, "allowedTenantIds"))
-        : undefined,
-      hostedDomain: provider === "google" ? fieldText(fd, "hostedDomain") : undefined,
-    }, self.email)
+    const domains = normalizeDomains(fieldText(fd, "autoProvisionDomains"))
+    const providers = await plannedOAuth(self.companyCode, inputs)
+    for (const p of providers) await saveOAuth(self.companyCode, p, inputs[p], self.email)
+    await saveTenant(self.companyCode, { autoProvisionDomains: domains }, self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
     back(fd, errorMessage(e, self.language), true)

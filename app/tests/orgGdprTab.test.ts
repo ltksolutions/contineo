@@ -38,9 +38,8 @@ vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "Intranet 
 vi.mock("@/lib/customerDomains", () => ({ domainRequests: async () => [], domainInstruction: () => "" }))
 vi.mock("../src/app/organisation/actions", () => ({
   saveBrandingAction: async () => {},
-  saveAutoProvisionAction: async () => {},
   deleteLogoAction: async () => {},
-  saveSignInAction: async () => {},
+  saveSignInPageAction: async () => {},
   deleteSignInAction: async () => {},
   requestDomainAction: async () => {},
   verifyDomainAction: async () => {},
@@ -83,7 +82,7 @@ vi.mock("@/lib/aiUsage", async (orig) => {
   }
 })
 vi.mock("../src/app/dpo/actions", () => ({
-  saveGdprContactAction: async () => {}, saveRetentionAction: async () => {}, saveExtraAction: async () => {},
+  saveGdprPageAction: async () => {},
 }))
 
 async function render(section = "gdpr", query: Record<string, string> = {}) {
@@ -105,7 +104,9 @@ describe("časť GDPR", () => {
     expect(html).toMatch(/name="evidenceYears"[^>]*value="2"/)
     expect(html).toContain('name="extra-cs"')
     expect(html).toContain("Kamerový systém v sídle.")
-    expect(html).toContain("Uložiť kontakt")
+    // Jeden formulár a jedna lišta (ZAKLAD-lista-ulozenia, 7. 10. 2026).
+    expect(html.match(/class="set-savebar"/g)).toHaveLength(1)
+    expect(html.match(/<form /g)).toHaveLength(1)
     expect(html).not.toContain("<fieldset disabled")
   })
 
@@ -113,8 +114,8 @@ describe("časť GDPR", () => {
     s.canEditGdpr = false
     const html = await render()
     expect(html).toContain("Vidíte ich len na čítanie.")
-    expect(html.match(/<fieldset disabled=""/g)).toHaveLength(3)
-    expect(html).not.toContain("Uložiť kontakt")
+    expect(html.match(/<fieldset disabled=""/g)).toHaveLength(1)
+    expect(html).not.toContain("set-savebar")
     expect(html).toContain("Kamerový systém v sídle.")
   })
 
@@ -213,5 +214,36 @@ describe("číselníky ako záložky (3. 10. 2026)", () => {
 
   it("neznámy číselník padá na prvý", async () => {
     expect(await render("codelists", { list: "nieco" })).toContain('id="cl-category"')
+  })
+})
+
+describe("lišta uloženia (ZAKLAD-lista-ulozenia, 7. 10. 2026)", () => {
+  it("Prihlásenie: jeden formulár, polia s predponou poskytovateľa, jedna lišta", async () => {
+    const html = await render("signin")
+    expect(html.match(/<form /g)).toHaveLength(1)
+    expect(html.match(/class="set-savebar"/g)).toHaveLength(1)
+    expect(html).toContain('name="microsoft.clientId"')
+    expect(html).toContain('name="google.hostedDomain"')
+    expect(html).toContain('name="autoProvisionDomains"')
+    // Bez vlastného nastavenia nie je čo odstrániť — karta Ďalšie akcie chýba.
+    expect(html).not.toContain("Ďalšie akcie")
+  })
+
+  it("Domény: plné Požiadať o doménu otvorí úlohu; odstránenie fungujúcej s potvrdením", async () => {
+    const list = await render("domains")
+    expect(list).toContain('<a class="button" href="/organisation/domains?request=1#request">Požiadať o doménu</a>')
+    expect(list).not.toContain('name="host"')
+    const task = await render("domains", { request: "1" })
+    expect(task).toContain('name="host"')
+    expect(task).not.toContain("?request=1#request")
+    tenant.hostnames = ["intranet.futbalsfz.sk", "stary.futbalsfz.sk"]
+    try {
+      const rows = await render("domains")
+      expect(rows).toContain('href="/organisation/domains?remove=stary.futbalsfz.sk#remove"')
+      const confirm = await render("domains", { remove: "stary.futbalsfz.sk" })
+      expect(confirm).toContain("Odstrániť doménu stary.futbalsfz.sk?")
+    } finally {
+      tenant.hostnames = ["intranet.futbalsfz.sk"]
+    }
   })
 })

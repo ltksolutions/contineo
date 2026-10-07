@@ -24,7 +24,7 @@ import {
   normalizeDomains,
 } from "@/lib/tenantAdmin"
 import { addDomain, customerInstructions, domainStatus, skipVercel } from "@/lib/vercel"
-import { saveOAuth, deleteOAuth } from "@/lib/tenantAdmin"
+import { saveOAuth, deleteOAuth, plannedOAuth } from "@/lib/tenantAdmin"
 import { splitList, PROVIDER_LABEL } from "@/lib/oauth"
 import { saveBrand } from "@/lib/branding"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
@@ -81,16 +81,37 @@ async function saveUploadedLogo(fd: FormData, code: string, actor: string): Prom
 
 // ── rozsah B: zmena existujúcej organizácie ─────────────────────────────────
 
-export async function saveTenantAction(fd: FormData) {
+/**
+ * Celá úprava organizácie jedným uložením (ZAKLAD-lista-ulozenia,
+ * 7. 10. 2026): vzhľad a údaje, domény a zakladanie, Microsoft aj Google.
+ * Prihlasovacie údaje sa skontrolujú **pred** prvým zápisom (`plannedOAuth`)
+ * — keď neprejdú, neuloží sa nič (Q6). Polia poskytovateľov nesú predponu
+ * (`microsoft.clientId`); prázdne tajomstvo znamená „nemeň" (D43).
+ */
+export async function saveTenantPageAction(fd: FormData) {
   const actor = await isAdmin()
   if (!actor) redirect("/admin")
 
   const code = fieldText(fd, "companyCode")
   const hostnames = normalizeHostnames(fieldText(fd, "hostnames"))
+  const oauth = {
+    microsoft: {
+      clientId: fieldText(fd, "microsoft.clientId"),
+      clientSecret: fieldText(fd, "microsoft.clientSecret"),
+      tenantMode: fieldText(fd, "microsoft.tenantMode"),
+      allowedTenantIds: splitList(fieldText(fd, "microsoft.allowedTenantIds")),
+    },
+    google: {
+      clientId: fieldText(fd, "google.clientId"),
+      clientSecret: fieldText(fd, "google.clientSecret"),
+      hostedDomain: fieldText(fd, "google.hostedDomain"),
+    },
+  }
   let message = ""
   let error = false
 
   try {
+    const providers = await plannedOAuth(code, oauth)
     // Nahraté logo prebije predchádzajúce. Prázdny vstup znamená „nemeň" —
     // súbor sa vo formulári po načítaní nepamätá, takže prázdno je stav pri
     // každom otvorení a mazať ním by znamenalo, že uloženie názvu zmaže logo.
@@ -111,6 +132,7 @@ export async function saveTenantAction(fd: FormData) {
       },
       actor.email,
     )
+    for (const p of providers) await saveOAuth(code, p, oauth[p], actor.email)
     const vercel = await ensureDomains(hostnames, actor.language)
     message = [say(actor.language).saved, ...vercel].join(" ")
   } catch (e) {
@@ -256,44 +278,6 @@ async function writeInstructions(code: string, to: string, hostnames: string[]) 
 }
 
 // ── prihlasovacie údaje poskytovateľov (D43) ─────────────────────────────────
-
-/**
- * Uloží údaje k Entra alebo Google aplikácii zákazníka.
- *
- * Tajomstvo prichádza z formulára čitateľné a **odchádza odtiaľto zašifrované**
- * — do databázy sa v pôvodnej podobe nedostane ani na okamih. Do logu ani do
- * chybovej hlášky sa nedostane vôbec; preto sa nikde nevypisuje `vstup`.
- */
-export async function saveSignInAction(fd: FormData) {
-  const actor = await isAdmin()
-  if (!actor) redirect("/admin")
-
-  const code = fieldText(fd, "companyCode")
-  const provider = fieldText(fd, "provider") === "google" ? "google" : "microsoft"
-  let message = ""
-  let error = false
-
-  try {
-    await saveOAuth(code, provider, {
-      clientId: fieldText(fd, "clientId"),
-      // Prázdne pole znamená „nemeň" — obrazovka hodnotu nikdy neukazuje,
-      // takže je pri každom otvorení prázdne.
-      clientSecret: fieldText(fd, "clientSecret"),
-      tenantMode: provider === "microsoft" ? fieldText(fd, "tenantMode") : undefined,
-      allowedTenantIds: provider === "microsoft"
-        ? splitList(fieldText(fd, "allowedTenantIds"))
-        : undefined,
-      hostedDomain: provider === "google" ? fieldText(fd, "hostedDomain") : undefined,
-    }, actor.email)
-    message = say(actor.language).signInSaved(PROVIDER_LABEL[provider])
-  } catch (e) {
-    message = errorMessage(e, actor.language)
-    error = true
-  }
-
-  revalidatePath("/admin")
-  redirect(`/admin/tenants/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
-}
 
 /**
  * Odstráni údaje poskytovateľa — tlačidlo prihlásenia tým zmizne.

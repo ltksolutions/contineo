@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ZAKLAD — lišta uloženia (P9)</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px;--shadow:0 -6px 18px rgba(20,28,42,.08)}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--shadow:0 -6px 18px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:96ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.sec-w{font-size:13px;color:#5c6675;margin:0 0 14px;max-width:96ch}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+.notes{display:grid;gap:6px;max-width:96ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+/* rám */
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.scroll{flex:1;overflow:hidden;position:relative}
+.body{padding:22px 28px 32px}
+.narrow{max-width:760px;display:grid;gap:18px}
+.page-head{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-head-spacer{flex:1}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:0;max-width:66ch}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--danger{background:var(--surface);color:var(--bad-fg);border-color:var(--bad-fg)}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--warn{background:var(--warn-bg);color:var(--warn-fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+/* nastavenie organizácie */
+.org-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:28px;align-items:start}
+.org-nav{display:grid;gap:2px}
+.org-nav p{margin:10px 10px 4px;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.org-nav a{display:flex;align-items:center;min-height:36px;padding:0 10px;border-radius:9px;color:var(--ink);text-decoration:none;font-size:14px;position:relative}
+.org-nav a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.org-body{display:grid;gap:18px;min-width:0}
+/* set-form */
+.set-form{padding:0;overflow:visible}
+.set-sec{display:grid;gap:12px;padding:20px 22px;border-bottom:1px solid var(--line)}
+.wide .set-sec{grid-template-columns:240px minmax(0,1fr);gap:24px}
+.set-sec-head h2{font-size:var(--fs-section);margin:0 0 3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.set-sec-head p{margin:0;font-size:13px;color:var(--muted);line-height:1.55;max-width:60ch}
+.set-sec-body{display:grid;gap:14px;min-width:0}
+.set-savebar{position:sticky;bottom:0;z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 22px;background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow)}
+.set-savebar .quiet{font-size:12.5px}
+.field{display:grid;gap:5px}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%}
+.field-input.ph{color:var(--muted)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.set-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.callback{display:grid;gap:2px;font-size:var(--fs-micro);color:var(--muted)}
+.lnote{display:flex;gap:10px;padding:10px 12px;border-radius:10px;font-size:13px;background:var(--bad-bg);color:var(--bad-fg)}
+.lnote b{flex:none}
+/* ďalšie akcie */
+.more{display:grid}
+.more-head{padding:16px 22px 4px}
+.more-head h2{margin:0;font-size:var(--fs-section)}
+.more-row{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line)}
+.more-head + .more-row{border-top:0}
+.more-main{flex:1 1 280px;display:grid;gap:2px;min-width:0}
+.more-main b{font-weight:600;font-size:15px}
+.more-main span{font-size:13px;color:var(--muted)}
+.confirm{display:grid;gap:10px;padding:14px 22px 18px;border-top:1px solid var(--line);background:var(--bad-bg)}
+.confirm p{margin:0;font-size:13.5px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* riadky */
+.list{display:grid;overflow:hidden}
+.lrow{position:relative;display:flex;gap:10px 12px;align-items:center;flex-wrap:wrap;min-height:52px;padding:10px 16px;font-size:15px}
+.lrow + .lrow::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.lrow-main{flex:1 1 200px;display:grid;gap:2px;min-width:0}
+.lrow-main b{font-weight:600}
+.lrow-main small{font-size:12.5px;color:var(--muted)}
+.lrow-acts{display:flex;gap:8px;flex-wrap:wrap}
+.num{width:22px;height:22px;border-radius:50%;background:var(--surface-2);color:var(--muted);display:grid;place-items:center;font-size:11.5px;font-weight:700;flex:none}
+.arr{display:flex;gap:4px}
+.arr span{width:36px;height:36px;border-radius:9px;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:14px;background:var(--surface)}
+.arr span.off{opacity:.35}
+.fr{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 16px;font-size:15px}
+.fr + .fr::before,.fr + .choice-field::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.fr-main{flex:1;display:grid;gap:1px}
+.fr-main small{font-size:12.5px;color:var(--muted)}
+.tg{width:46px;height:28px;border-radius:999px;background:rgba(120,128,140,.3);flex:none;position:relative}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.tg.on{background:var(--accent)}.tg.on::after{left:20px}
+.tick{width:16px;flex:none;color:var(--accent);font-weight:700;text-align:center}
+.ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none}
+.ck.on{background:var(--accent);border-color:var(--accent);position:relative}
+.ck.on::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #fff;border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.choice-field{position:relative;display:flex;align-items:center;gap:8px;padding:0 16px 10px}
+.choice-field .field-input{width:90px}
+.form-group{display:grid;gap:10px}
+.form-group-head{font-size:var(--fs-small);font-weight:600;padding:0 4px;margin:0;display:flex;gap:8px;align-items:center}
+.form-group-head.lg{font-size:var(--fs-section);font-weight:650}
+.form-group-foot{font-size:var(--fs-micro);color:var(--muted);padding:0 4px;margin:0}
+.h2{font-size:var(--fs-section);letter-spacing:-.01em;margin:0}
+.sum{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px;font-size:15px;font-weight:600}
+.sum small{font-weight:400;color:var(--muted);font-size:13px}
+.sum .chev{margin-left:auto;color:var(--muted)}
+.task{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.task-head{padding:16px 18px 0}
+.task-body{padding:14px 18px 18px;display:grid;gap:14px}
+.search{display:flex;align-items:center;gap:9px;height:44px;margin:10px 12px 2px;padding:0 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
+/* mobil */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 0}
+.m .page-title{font-size:22px}
+.m .button{min-height:44px}
+.m .full{width:100%}
+.m .set-sec,.m .set-savebar,.m .more-row,.m .more-head,.m .confirm{padding-left:14px;padding-right:14px}
+.m .set-savebar > .button{width:100%}
+.m .set-pair{grid-template-columns:1fr}
+.m .page-head .button{flex:1 1 100%}
+.m .narrow{gap:16px}
+.pad-b{height:20px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ZAKLAD — lišta uloženia (DESIGN_ODCHYLKY P9)</h1>
+<p class="doc">Päť obrazoviek má viac samostatných formulárov a každý má vlastné plné „Uložiť". Na <code>/organisation/signin</code> sú tri a na <code>/admin/tenants/&lt;kód&gt;</code> až päť. Návrh preberá vzor z <code>/organisation/general</code>: jeden <code>form.card.set-form</code> so sekciami <code>.set-sec</code> a na konci prilepená <code>.set-savebar</code> s jediným plným tlačidlom. Vedľajšie a nevratné akcie sú v karte „Ďalšie akcie" pod formulárom, ako na <code>/channels/&lt;kľúč&gt;</code>. Polia a ich význam sa nemenia. Popis je v <code>ZAKLAD-lista-ulozenia.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Súpis — dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Obrazovka</th><th>Dnes</th><th>Návrh</th><th>Plné tlačidlo</th></tr>
+    <tr><td><code>/organisation/signin</code></td><td class="old">3 formuláre, 3 plné „Uložiť"; pod poskytovateľom stále viditeľné pole kódu + tiché „Odstrániť"</td><td class="new">jeden <code>.set-form</code>: Microsoft · Google · Automatické zakladanie; „Ďalšie akcie" → „Odstrániť vlastné prihlásenie…" (<code>?remove=microsoft</code>) otvorí potvrdenie kódom</td><td>Uložiť (lišta)</td></tr>
+    <tr><td><code>/organisation/gdpr</code></td><td class="old">3 <code>.set-form</code>, 3 plné</td><td class="new">jeden <code>.set-form</code>: Kontakt · Lehoty uchovávania · Doplnok; varovanie pri lehotách ostáva v sekcii; kto nie je DPO: bez lišty, polia len na čítanie</td><td>Uložiť (lišta)</td></tr>
+    <tr><td><code>/organisation/domains</code></td><td class="old">plné malé „Overiť" v každom čakajúcom riadku (inline rozmery)</td><td class="new">„Overiť" a „Zrušiť žiadosť" tiché <code>.button--sm</code>; „Požiadať o doménu" plné v hlavičke časti → <code>?request=1</code></td><td>Požiadať o doménu / pri <code>?request=1</code> „Požiadať"</td></tr>
+    <tr><td><code>/admin/tenants/&lt;kód&gt;</code></td><td class="old">Poslať pokyny · Uložiť · Uložiť MS · Uložiť Google · Zapnúť — až 5 plných</td><td class="new">jeden <code>.set-form</code>: Vzhľad a údaje · Domény a zakladanie · Microsoft · Google; „Ďalšie akcie": Poslať pokyny (tiché), Odstrániť vlastné prihlásenie (danger), Vypnúť organizáciu (danger s kódom)</td><td>Uložiť (lišta)</td></tr>
+    <tr><td><code>/hr/tracks/&lt;kľúč&gt;</code></td><td class="old">Premenovať, Uložiť termín, Pridať krok, „Pridať ľudí" (súhrn ako plné), Pridať — 5 plných</td><td class="new">„Pridať ľudí" plné v <code>.page-head</code> → <code>?add=people</code>; „Nastavenia trasy" (názov, popis, termín) jeden formulár s tichým Uložiť; „Pridať krok" tichý pod krokmi; Deaktivovať v „Ďalšie akcie"</td><td>Pridať ľudí / pri <code>?add=people</code> „Pridať na trasu"</td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — /organisation/signin (oba poskytovatelia, Microsoft vlastný)</p>
+  <div class="frame" style="width:1440px" id="f-signin"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Jeden formulár, tri sekcie. Mená polí s predponou poskytovateľa (<code>microsoft.clientId</code>, <code>google.clientId</code>). Prázdne tajomstvo = ponechať uložené (platí aj dnes).</p>
+    <p><span class="ann">2</span><code>.set-savebar</code> je prilepená dole, má jedno plné „Uložiť" a vetu „Uloží všetky sekcie na tejto stránke." Netvrdí „neuložené zmeny", lebo bez JS to nevie.</p>
+    <p><span class="ann">3</span>„Ďalšie akcie": len pri vlastnom nastavení. <code>.button--danger</code> vedie na <code>?remove=microsoft</code>; potvrdenie kódom sa otvorí v tom istom riadku.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — /admin/tenants/&lt;kód&gt; (čakajúca doména, organizácia zapnutá)</p>
+  <div class="frame" style="width:1440px" id="f-admin"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Čísla a stav domén ostávajú nad formulárom na čítanie (stav sa číta naživo, D27).</p>
+    <p><span class="ann">2</span>Jeden formulár: <code>saveTenantAction</code> + oba <code>saveSignInAction</code> sa spoja do jednej akcie, ktorá uloží všetko naraz alebo nič.</p>
+    <p><span class="ann">3</span>„Poslať pokyny" je tiché a má vlastné pole adresáta. Nič neukladá, iba pošle e-mail.</p>
+    <p><span class="ann">4</span>„Vypnúť organizáciu…" (danger) → <code>?disable=1</code>, potvrdenie kódom organizácie. Pri vypnutej organizácii je tu tiché „Zapnúť organizáciu".</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — /hr/tracks/&lt;kľúč&gt;</p>
+  <div class="frame" style="width:1440px" id="f-track"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>„Pridať ľudí" je jediné plné tlačidlo, vpravo v <code>.page-head</code>. Odkaz vedie na <code>?add=people</code>.</p>
+    <p><span class="ann">2</span>„Nastavenia trasy": jeden zbalený <code>&lt;details&gt;</code> (názov, popis, termín) namiesto dvoch. Súhrn ukazuje termín aj bez rozbalenia a „Uložiť" je tiché.</p>
+    <p><span class="ann">3</span>Kroky sú tiché ↑ ↓ a „Odobrať" v riadku. Formulár „Pridať krok" je pod nimi a jeho tlačidlo je tiché.</p>
+    <p><span class="ann">4</span>„Deaktivovať trasu" je vratná akcia, preto tiché tlačidlo, nie danger.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — /organisation/gdpr · /organisation/domains · /hr/tracks ?add=people</p>
+  <div class="row-frames">
+    <div><p class="cap">GDPR — DPO, lišta prilepená dole</p><div class="frame m dark" style="width:390px;height:844px" id="f-gdpr"></div></div>
+    <div><p class="cap">Domény — dve čakajúce</p><div class="frame m dark" style="width:390px;height:844px" id="f-dom"></div></div>
+    <div><p class="cap">Trasa — otvorené Pridať ľudí</p><div class="frame m dark" style="width:390px;height:844px" id="f-tm"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Lišta je pri spodnom okraji obrazovky po celý čas posúvania (<code>position: sticky</code>) a tlačidlo v nej má celú šírku. Pod lištou je ešte hlavná lišta aplikácie.</p>
+    <p><span class="ann">2</span>Varovanie pri lehotách ostáva v sekcii. Server mazanie podľa lehôt spustí, len keď sa lehoty zmenili.</p>
+    <p><span class="ann">3</span>Domény: plné „Požiadať o doménu" vpravo v hlavičke časti, na telefóne cez celú šírku. Tlačidlá v riadkoch sú tiché a malé (<code>.button--sm</code>, 36 px; na telefóne 44 px).</p>
+    <p><span class="ann">4</span><code>?add=people</code>: úloha je karta hore a „Pridať ľudí" v hlavičke zmizne. Plné tlačidlo je „Pridať na trasu", „Zrušiť" je tichý odkaz bez parametra.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,cls)=>`<span class="ann" style="${cls}">${n}</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=a=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const F=(l,v,h,ph)=>`<label class="field"><span class="field-label">${l}</span><input class="field-input${ph?" ph":""}" value="${v}" readonly>${h?`<span class="field-hint">${h}</span>`:""}</label>`;
+const sec=(h,p,body,tag)=>`<section class="set-sec"><div class="set-sec-head"><h2>${h}${tag||""}</h2>${p?`<p>${p}</p>`:""}</div><div class="set-sec-body">${body}</div></section>`;
+const bar=(m,note="Uloží všetky sekcie na tejto stránke.")=>`<div class="set-savebar"><span class="button">Uložiť</span><span class="quiet">${note}</span></div>`;
+const orgNav=on=>`<nav class="org-nav"><p>Organizácia</p>${["Všeobecné","Oddelenia","Číselníky"].map(t=>`<a href="#">${t}</a>`).join("")}<p>Prístup</p>${["Prihlásenie","Domény"].map(t=>`<a href="#" class="${t===on?"on":""}">${t}</a>`).join("")}<p>Ochrana údajov</p>${["GDPR","AI","Záznam zmien"].map(t=>`<a href="#" class="${t===on?"on":""}">${t}</a>`).join("")}</nav>`;
+const cb=(p)=>`<div class="callback">Adresa návratu (zadajte u poskytovateľa)<code>https://intranet.futbalsfz.sk/api/auth/callback/${p}</code></div>`;
+const msBody=`${cb("azure-ad")}${F("ID aplikácie (client ID)","4b1f0c2e-9a7d-4e21-b3c8-0f5a6d2e91aa")}${F("Tajomstvo (client secret)","","Prázdne pole = ponechať uložené tajomstvo.",1)}<div class="set-pair">${F("Režim tenanta","organizations","")}${F("Povolené ID tenantov","8f2c…e41b","oddelené čiarkou")}</div>`;
+const gBody=`${cb("google")}${F("ID klienta","","",1)}${F("Tajomstvo","","Prázdne pole = ponechať uložené tajomstvo.",1)}${F("Doména Google Workspace","","napr. futbalsfz.sk",1)}`;
+const apBody=`<label class="field"><span class="field-label">E-mailové domény pracovných kont</span><textarea class="field-input" rows="2" readonly>futbalsfz.sk</textarea><span class="field-hint">Kto sa prihlási kontom s touto doménou a ešte tu nie je, <b>založí sa sám</b>. Nie sú to webové adresy portálu z časti Domény.</span></label>`;
+
+document.getElementById("f-signin").innerHTML=hdr()+crumbs(["Prehľad","Nastavenie organizácie","Prihlásenie"])+`<div class="scroll"><div class="body"><h1 class="page-title">Nastavenie organizácie</h1><p class="page-lead" style="margin:4px 0 22px">Nastavenia platia pre celú organizáciu <b>SFZ</b>.</p>
+<div class="org-grid">${orgNav("Prihlásenie")}<div class="org-body">
+<form class="card set-form wide rel">${an(1,"left:-11px;top:20px")}
+${sec("Prihlásenie cez Microsoft","Ľudia sa prihlásia pracovným kontom Microsoft 365 vašej organizácie.",msBody,' <span class="tag tag--ok">vlastné nastavenie</span>')}
+${sec("Prihlásenie cez Google","Ľudia sa prihlásia kontom Google Workspace.",gBody,' <span class="tag">od dodávateľa</span>')}
+${sec("Automatické zakladanie","Pre e-mailové domény pracovných kont.",apBody)}
+<div class="rel">${an(2,"left:-11px;top:20px")}${bar()}</div></form>
+<section class="card more rel">${an(3,"left:-11px;top:18px")}<div class="more-head"><h2>Ďalšie akcie</h2></div>
+<div class="more-row"><div class="more-main"><b>Odstrániť vlastné prihlásenie cez Microsoft</b><span>Prihlásenie sa vráti na nastavenie od dodávateľa. Ľudia, ktorí sa prihlasujú týmto spôsobom, sa môžu dočasne odhlásiť.</span></div><span class="button button--danger">Odstrániť…</span></div>
+</section></div></div></div></div>`;
+
+const fact=(l,v)=>`<div style="display:grid;gap:2px"><span class="field-hint">${l}</span><b style="font-size:20px;letter-spacing:-.01em">${v}</b></div>`;
+document.getElementById("f-admin").innerHTML=hdr()+crumbs(["Správa platformy","Organizácie","Slovenský futbalový zväz"])+`<div class="scroll"><div class="body"><div class="narrow">
+<div class="page-head"><div style="display:grid;gap:2px"><h1 class="page-title">Slovenský futbalový zväz</h1><span class="quiet">SFZ · zapnutá</span></div></div>
+<section class="card rel" style="padding:18px 20px;display:grid;gap:14px">${an(1,"left:-11px;top:18px")}<h2 class="h2">Čísla</h2><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">${fact("Dokumenty","36 / 38")}${fact("Znenia","121")}${fact("Ľudia","148 / 162")}${fact("Potvrdenia","2 914")}${fact("Trasy","4")}</div>
+<h2 class="h2" style="margin-top:6px">Domény</h2><div class="list" style="font-size:14px;gap:6px"><span><b>intranet.futbalsfz.sk</b> — nastavená cez CNAME</span><span><b>portal.futbalsfz.sk</b> — <span style="color:var(--warn-fg)">čaká na zákazníka:</span> <code>CNAME portal → cname.contineo.app</code></span></div></section>
+<form class="card set-form rel">${an(2,"left:-11px;top:20px")}
+${sec("Vzhľad a údaje","",`<div class="set-pair">${F("Názov portálu","Slovenský futbalový zväz")}${F("Krátky názov","SFZ")}</div>${F("E-mail podpory","podpora@futbalsfz.sk","Zobrazí sa ľuďom pri chybe prihlásenia.")}<div class="field"><span class="field-label">Jazyky</span><div class="card list">${[["Slovenčina",1],["Čeština",0],["English",1]].map(([t,o])=>`<div class="fr"><i class="ck${o?" on":""}"></i><span class="fr-main">${t}</span></div>`).join("")}</div></div>`)}
+${sec("Domény a zakladanie","",`<label class="field"><span class="field-label">Domény portálu</span><textarea class="field-input" rows="2" readonly>intranet.futbalsfz.sk
+portal.futbalsfz.sk</textarea><span class="field-hint">Jedna na riadok.</span></label>${F("E-mailové domény pre automatické zakladanie","futbalsfz.sk")}`)}
+${sec("Prihlásenie cez Microsoft","",msBody,' <span class="tag tag--ok">vlastné</span>')}
+${sec("Prihlásenie cez Google","",gBody,' <span class="tag">vypnuté</span>')}
+${bar()}</form>
+<section class="card more"><div class="more-head"><h2>Ďalšie akcie</h2></div>
+<div class="more-row rel">${an(3,"left:-11px;top:18px")}<div class="more-main"><b>Poslať pokyny k doméne</b><span>1 doména čaká na nastavenie DNS. E-mail s pokynmi pôjde na adresu nižšie.</span><input class="field-input" value="podpora@futbalsfz.sk" readonly style="margin-top:6px;max-width:340px"></div><span class="button button--quiet">Poslať pokyny</span></div>
+<div class="more-row"><div class="more-main"><b>Odstrániť vlastné prihlásenie cez Microsoft</b><span>Vráti sa nastavenie od dodávateľa.</span></div><span class="button button--danger">Odstrániť…</span></div>
+<div class="more-row rel">${an(4,"left:-11px;top:18px")}<div class="more-main"><b>Vypnúť organizáciu</b><span>Nikto sa neprihlási, údaje ostávajú. Dá sa znova zapnúť.</span></div><span class="button button--danger">Vypnúť…</span></div>
+</section></div></div></div>`;
+
+const steps=[["Pracovný poriadok SFZ","s potvrdením"],["Smernica o ochrane osobných údajov","s potvrdením"],["Bezpečnosť a ochrana zdravia pri práci","s potvrdením"],["Etický kódex","len na prečítanie"]];
+const stepList=`<div class="card list">${steps.map(([t,a],i)=>`<div class="lrow"><span class="num">${i+1}</span><span class="lrow-main"><b>${t}</b><small>${a}</small></span><span class="arr"><span class="${i===0?"off":""}">↑</span><span class="${i===steps.length-1?"off":""}">↓</span></span><span class="button button--quiet button--sm">Odobrať</span></div>`).join("")}</div>`;
+const members=[["Agáta Galková","Oddelenie IT","4 / 4"],["Ivana Galbavá","Oddelenie ľudských zdrojov","2 / 4 · do 21. 10. 2026"],["Boris Galík","Úsek súťaží","0 / 4 · do 21. 10. 2026"]];
+const memberList=`<div class="card list">${members.map(([n,d,s])=>`<div class="lrow"><span class="lrow-main"><b>${n}</b><small>${d} · ${s}</small></span><span class="button button--quiet button--sm">Odobrať</span></div>`).join("")}</div>`;
+document.getElementById("f-track").innerHTML=hdr()+crumbs(["Prehľad","Pridelené dokumenty","Trasy","Nástup 2026"])+`<div class="scroll"><div class="body"><div class="narrow">
+<div class="page-head rel"><h1 class="page-title">Nástup 2026</h1><span class="tag tag--ok">aktívna</span><span class="page-head-spacer"></span>${an(1,"right:-30px;top:9px")}<span class="button">Pridať ľudí</span></div>
+<p class="quiet" style="margin:-8px 0 0;font-size:var(--fs-small)">4 kroky · 3 ľudia</p>
+<details class="card rel" open>${an(2,"left:-11px;top:13px")}<summary class="sum">Nastavenia trasy <small>termín 14 dní od pridania</small><span class="chev">⌃</span></summary>
+<div style="padding:4px 16px 16px;display:grid;gap:14px;border-top:1px solid var(--line)"><div class="set-pair" style="margin-top:12px">${F("Názov","Nástup 2026")}${F("Popis","Dokumenty pre nových zamestnancov")}</div>
+<div class="form-group"><p class="form-group-head">Termín potvrdenia</p><div class="card list"><label class="fr"><span class="fr-main">bez termínu</span><i class="tick"></i></label><label class="fr"><span class="fr-main">do počtu dní od pridania na trasu</span><i class="tick">✓</i></label><div class="choice-field"><input class="field-input" value="14" readonly><span class="quiet">dní</span></div></div></div>
+<div class="acts"><span class="button button--quiet">Uložiť nastavenia</span></div></div></details>
+<div class="form-group rel">${an(3,"left:-11px;top:2px")}<p class="form-group-head lg">Kroky</p>${stepList}</div>
+<div class="form-group"><p class="form-group-head">Pridať krok</p><div class="card list"><div class="fr"><span class="fr-main">Dokument</span><span class="quiet">Vybrať dokument ⌃⌄</span></div><label class="fr"><span class="fr-main"><span>Vyžaduje potvrdenie</span><small>Človek potvrdí, že dokument prečítal.</small></span><i class="tg on"></i></label></div><div class="acts"><span class="button button--quiet">Pridať krok</span></div></div>
+<div class="form-group"><div class="page-head"><p class="form-group-head lg" style="padding:0">Ľudia na trase · 3</p><span class="page-head-spacer"></span><span class="button button--quiet button--sm">Upozorniť e-mailom</span></div>${memberList}</div>
+<section class="card more rel">${an(4,"left:-11px;top:18px")}<div class="more-head"><h2>Ďalšie akcie</h2></div><div class="more-row"><div class="more-main"><b>Deaktivovať trasu</b><span>Nikto nový nepribudne a pripomienky sa zastavia. Potvrdenia ostávajú.</span></div><span class="button button--quiet">Deaktivovať</span></div></section>
+</div></div></div>`;
+
+document.getElementById("f-gdpr").innerHTML=hdr(1)+crumbs(["Nastavenie organizácie","GDPR"])+`<div class="scroll" style="overflow:hidden"><div class="body">
+<h1 class="page-title">GDPR</h1><p class="page-lead" style="margin:4px 0 16px;font-size:14px">Kontakt, lehoty a doplnok k vyhláseniu. Mení len DPO.</p>
+<form class="card set-form" style="position:relative">
+${sec("Kontakt na ochranu údajov","Zobrazí sa na stránke Ochrana osobných údajov.",`${F("Meno","Mgr. Lucia Hrušková")}${F("E-mail","dpo@futbalsfz.sk")}`)}
+${sec("Lehoty uchovávania","Po uplynutí sa údaje zmažú.",`${F("Dôkazy o potvrdení (roky)","10","3–15")}${F("Odpovede asistenta (mesiace)","6","1–24")}<div class="lnote rel"><b>!</b><span>Kratšia lehota zmaže staršie údaje pri najbližšom behu. Nedá sa vrátiť.</span>${an(2,"right:-6px;top:-10px")}</div>`)}
+${sec("Doplnok k vyhláseniu","Voliteľný text pod vyhlásením.",`<label class="field"><span class="field-label">Doplnok (slovenčina)</span><textarea class="field-input" rows="3" readonly>Kamerový systém v sídle zväzu…</textarea></label>`)}
+<div class="rel">${an(1,"right:8px;top:-11px")}${bar(1)}</div>
+</form></div></div>`;
+/* lišta prilepená dole v ráme 390 */
+(()=>{const f=document.getElementById("f-gdpr"),s=f.querySelector(".scroll"),form=s.querySelector("form"),b=form.querySelector(".set-savebar").parentElement;form.removeChild(b);b.style.cssText="position:absolute;left:14px;right:14px;bottom:0";b.querySelector(".set-savebar").style.borderRadius="var(--radius) var(--radius) 0 0";b.querySelector(".set-savebar").style.border="1px solid var(--line)";s.appendChild(b);s.style.position="relative"})();
+
+const dom=(h,since,rec)=>`<div class="lrow" style="display:grid;gap:8px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${h}</b><span class="tag tag--warn">čaká na DNS</span><span class="quiet" style="font-size:12.5px;margin-left:auto">od ${since}</span></div><span class="quiet" style="font-size:12.5px">Nastavte záznam <b>CNAME</b> <code>${rec}</code> → <code>cname.contineo.app</code></span><div class="acts"><span class="button button--quiet button--sm">Overiť</span><span class="button button--quiet button--sm">Zrušiť žiadosť</span></div></div>`;
+document.getElementById("f-dom").innerHTML=hdr(1)+crumbs(["Nastavenie organizácie","Domény"])+`<div class="scroll"><div class="body" style="display:grid;gap:16px">
+<div class="page-head rel"><h1 class="page-title">Domény</h1><span class="page-head-spacer"></span><span class="button">Požiadať o doménu</span>${an(3,"right:-6px;top:40px")}</div>
+<p class="page-lead" style="font-size:14px;margin-top:-6px">Webové adresy, na ktorých portál beží.</p>
+<div class="card list"><div class="lrow"><span class="lrow-main"><b>intranet.futbalsfz.sk</b></span><span class="tag tag--ok">funguje</span></div></div>
+<div class="form-group"><p class="form-group-head">Čakajú na overenie · 2</p><div class="card list">${dom("portal.futbalsfz.sk","3. 10. 2026","portal")}${dom("kurzy.futbalsfz.sk","6. 10. 2026","kurzy")}</div><p class="form-group-foot">Overenie sa dá spustiť, keď je záznam DNS nastavený. Zmena DNS sa môže prejaviť až po niekoľkých hodinách.</p></div>
+</div></div>`;
+
+document.getElementById("f-tm").innerHTML=hdr(1)+crumbs(["Trasy","Nástup 2026"])+`<div class="scroll"><div class="body" style="display:grid;gap:16px">
+<div class="page-head"><h1 class="page-title">Nástup 2026</h1><span class="tag tag--ok">aktívna</span></div>
+<section class="card task rel">${an(4,"right:-6px;top:14px")}<div class="task-head"><h2 class="h2">Pridať ľudí na trasu</h2><p class="quiet" style="margin:2px 0 0;font-size:13px">Dostanú všetky 4 kroky s termínom 14 dní.</p></div><div class="task-body">
+<div class="form-group"><p class="form-group-head">Oddelenia</p><div class="card list"><div class="fr"><span class="fr-main">Oddelenia</span><span class="quiet">žiadne ⌃⌄</span></div></div></div>
+<div class="form-group"><p class="form-group-head">Ľudia</p><div class="card list" style="padding-bottom:4px"><div class="search">⌕ gal</div>${[["Agáta Galková","Oddelenie IT",0],["Ivan Galbavý","Úsek súťaží",1]].map(([n,d,o])=>`<div class="fr"><i class="ck${o?" on":""}"></i><span class="fr-main"><span>${n}</span><small>${d}</small></span></div>`).join("")}</div></div>
+<div class="card list"><label class="fr"><span class="fr-main"><span>Poslať e-mail</span><small>Pridaní sa to dozvedia hneď.</small></span><i class="tg on"></i></label></div>
+<div class="acts" style="display:grid"><span class="button full">Pridať na trasu</span><span class="button button--quiet full">Zrušiť</span></div></div></section>
+<p class="form-group-head lg" style="margin:4px 0 -6px">Kroky</p>${stepList.replace(/button--sm/g,"")}
+</div></div>`;
+</script>
+</body></html>

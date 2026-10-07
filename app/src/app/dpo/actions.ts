@@ -14,6 +14,7 @@ import { recordObjection, decideObjection } from "@/lib/objectionsDb"
 import { dictionary, errorText } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { saveTenant } from "@/lib/tenantAdmin"
+import { retentionSettings } from "@/lib/retention"
 
 async function dpo() {
   const ctx = await dpoContext()
@@ -88,73 +89,43 @@ function backToGdpr(message: string, error: boolean, anchor: string): never {
 }
 
 /**
- * Kontakt pre ochranu osobných údajov (D153) — meno a spoločná schránka na
- * `/privacy`. Od D154 ho nastavuje DPO, nie správca osôb.
+ * Celá časť GDPR jedným uložením (ZAKLAD-lista-ulozenia, 7. 10. 2026):
+ * kontakt (D153), lehoty uchovávania (ADR-022, D136) a doplnok na `/privacy`
+ * (D137) v jazykoch organizácie. Jeden zápis `saveTenant` — buď sa uloží
+ * všetko, alebo nič (Q6).
+ *
+ * **Lehoty len pri zmene** (Q2): oprava e-mailu DPO nemá znova potvrdiť
+ * lehoty, pri ktorých stojí varovanie o mazaní, ani ich zapísať do auditu.
+ * Rozsahy stráži `retentionSettings`.
  */
-export async function saveGdprContactAction(fd: FormData) {
+export async function saveGdprPageAction(fd: FormData) {
   const ctx = await dpoContext()
   if (ctx.state !== "ready") redirect("/")
   const t = dictionary(ctx.person.language)
-  let message = t.org.gdpr.contactSaved
+  const retention = {
+    evidenceYears: Number(field(fd, "evidenceYears")),
+    capYears: Number(field(fd, "capYears")),
+    learningDetailMonths: Number(field(fd, "learningDetailMonths")),
+    answersMonths: Number(field(fd, "answersMonths")),
+  }
+  const before = retentionSettings(ctx.tenant.privacy?.retention)
+  const after = retentionSettings(retention)
+  const retentionChanged = (Object.keys(after) as (keyof typeof after)[]).some(k => after[k] !== before[k])
+  const extra: Record<string, string> = {}
+  for (const l of ctx.tenant.languages) extra[l] = field(fd, `extra-${l}`)
+  let message = t.org.gdpr.saved
   let error = false
   try {
     await saveTenant(ctx.person.companyCode, {
       privacyContactName: field(fd, "privacyContactName"),
       privacyContactEmail: field(fd, "privacyContactEmail"),
+      ...(retentionChanged ? { privacyRetention: retention } : {}),
+      privacyExtra: extra,
     }, ctx.person.email)
   } catch (e) {
-    if (!(e instanceof AppError)) console.error("[dpo] uloženie kontaktu GDPR zlyhalo:", e)
+    if (!(e instanceof AppError)) console.error("[dpo] uloženie časti GDPR zlyhalo:", e)
     message = errorText(e, ctx.person.language)
     error = true
   }
   backToGdpr(message, error, "contact")
-}
-
-/**
- * Lehoty uchovávania organizácie (ADR-022, D136). Uloží ich DPO; tie isté
- * čísla číta mazacia dávka aj `/privacy`. Rozsahy stráži `retentionSettings`.
- */
-export async function saveRetentionAction(fd: FormData) {
-  const ctx = await dpoContext()
-  if (ctx.state !== "ready") redirect("/")
-  const t = dictionary(ctx.person.language)
-  let message = t.dpo.retention.saved
-  let error = false
-  try {
-    await saveTenant(ctx.person.companyCode, {
-      privacyRetention: {
-        evidenceYears: Number(field(fd, "evidenceYears")),
-        capYears: Number(field(fd, "capYears")),
-        learningDetailMonths: Number(field(fd, "learningDetailMonths")),
-        answersMonths: Number(field(fd, "answersMonths")),
-      },
-    }, ctx.person.email)
-  } catch (e) {
-    if (!(e instanceof AppError)) console.error("[dpo] uloženie lehôt zlyhalo:", e)
-    message = errorText(e, ctx.person.language)
-    error = true
-  }
-  backToGdpr(message, error, "retention")
-}
-
-/**
- * Doplnkový text DPO na `/privacy` (ADR-022, D137) — v jazykoch
- * organizácie. Prázdne pole doplnok v danom jazyku zmaže.
- */
-export async function saveExtraAction(fd: FormData) {
-  const ctx = await dpoContext()
-  if (ctx.state !== "ready") redirect("/")
-  const t = dictionary(ctx.person.language)
-  const extra: Record<string, string> = {}
-  for (const l of ctx.tenant.languages) extra[l] = field(fd, `extra-${l}`)
-  let message = t.dpo.extra.saved
-  let error = false
-  try {
-    await saveTenant(ctx.person.companyCode, { privacyExtra: extra }, ctx.person.email)
-  } catch (e) {
-    if (!(e instanceof AppError)) console.error("[dpo] uloženie doplnku zlyhalo:", e)
-    message = errorText(e, ctx.person.language)
-    error = true
-  }
-  backToGdpr(message, error, "privacy-extra")
 }
