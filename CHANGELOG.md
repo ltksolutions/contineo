@@ -4,6 +4,11 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Oprava: „Upraviť" blok v časti kurzu (2026-10-07)
+
+Odkaz „Upraviť" pri bloku v detaile časti kurzu po zmene adries (R3)
+viedol na neexistujúcu stránku. Opravené.
+
 ### Kanály: kľúč kanála prideľuje systém (2026-10-07)
 
 Pri založení kanála sa kľúč už nezadáva — Contineo pridelí UUID a ukáže

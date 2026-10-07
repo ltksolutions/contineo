@@ -354,7 +354,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
                     <MoveButton action={moveBlockAction} values={{ ...ids, blockId: b.id, dir: "down" }} label={te.down} disabled={i === part.blocks.length - 1} glyph="↓" />
                   </span>
                   {["text", "image", "video"].includes(b.type) && !(b.type === "video" && b.source.kind === "external") && (
-                    <Link className="lc-link" href={`${self}&editBlock=${b.id}`}>{te.editBlock}</Link>
+                    <Link className="lc-link" href={`${self}?editBlock=${b.id}`}>{te.editBlock}</Link>
                   )}
                   <form action={removeBlockAction}><Hidden values={{ ...ids, blockId: b.id }} /><SubmitButton className="button button--quiet">{te.removeBlock}</SubmitButton></form>
                 </>
