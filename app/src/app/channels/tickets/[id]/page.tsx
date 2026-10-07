@@ -1,5 +1,6 @@
 /**
- * /helpdesk/[id] — ticket (ADR-028 krok 4).
+ * /channels/tickets/[id] — ticket (ADR-028 krok 4; pod Kanálmi od D170,
+ * predtým `/helpdesk/[id]`). Len riešiteľ kanála ticketu — správca nie (D170).
  *
  * Vľavo vlákno správ, pod ním návrh odpovede a odoslanie; vpravo (od 1024 px)
  * kto rieši, zdroje návrhu a „Pridať do FAQ". Všetko sú formuláre — bez
@@ -23,7 +24,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { findPerson } from "@/lib/persons"
-import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, ticketToFaqAction } from "../actions"
+import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, ticketToFaqAction, importThreadAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -42,7 +43,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const language = ctx.person.language
   const t = dictionary(language).helpdesk
   const branding = brandingView(ctx.tenant)
-  const base = `/helpdesk/${encodeURIComponent(id)}`
+  const base = `/channels/tickets/${encodeURIComponent(id)}`
   const assignee = ticket.assigneeId ? await findPerson(ctx.tenant.companyCode, ticket.assigneeId).catch(() => null) : null
   const faqDocs = (await (await getCollection(DOCUMENTS_COLLECTION))
     .find({ companyCode: ctx.tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1 } })
@@ -50,12 +51,19 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
     .map(x => ({ value: x.documentId, label: String(x.title ?? x.documentId) }))
   const prefill = faqPrefillFromTicket(ticket)
   const draftText = ticket.draft?.text ?? ""
+  const who = (m: (typeof ticket.messages)[number]) =>
+    m.direction === "out" ? t.fromHelpdesk : t.fromAsker(m.from?.name ?? m.from?.address ?? ticket.asker.name ?? "")
+  // Začiatok celého textu, nie prvý riadok — ten býva len „Dobrý deň,".
+  const preview = (text: string) => text.replace(/\s+/g, " ").trim().slice(0, 200)
+  // Vlákno pod odpoveďou, najnovšia správa hore a rozbalená, staršie zbalené
+  // (Ján 7. 10. 2026). Kópia poľa — `messages` ostáva od najstaršej.
+  const newestFirst = [...ticket.messages].reverse()
   const isOpen = ticket.state !== "closed"
   const canSend = isOpen && Boolean(channel?.mailbox) && (ticket.asker.email || ticket.messages.some(m => m.direction === "in"))
   const sources = (ticket.draft?.sources ?? []) as { documentId?: string; title?: string; articleRef?: string | null; sourceType?: string }[]
 
   return (
-    <AppShell language={language} title={ticket.subject || t.heading}>
+    <AppShell language={language} title={ticket.subject || t.heading} trail={{ "/channels/tickets": dictionary(language).channels.tabMyTickets }}>
     <div className="detail-page" style={{ maxWidth: 1100, ...tenantStyle(branding) }}>
       <div className="page-head">
         <h1 className="page-title">{ticket.subject || "—"}</h1>
@@ -73,19 +81,6 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
 
       <div className="detail-grid">
         <div className="detail-main">
-          <section className="card detail-block">
-            <h2 className="detail-block-title">{t.thread}</h2>
-            {ticket.messages.map((m, i) => (
-              <article key={`${m.providerId}-${i}`} style={{ borderLeft: `3px solid ${m.direction === "out" ? "var(--accent)" : "var(--border)"}`, paddingLeft: 12 }}>
-                <p className="quiet" style={{ margin: "0 0 4px", fontSize: "var(--fs-small)" }}>
-                  <b>{m.direction === "out" ? t.fromHelpdesk : t.fromAsker(m.from?.name ?? m.from?.address ?? ticket.asker.name ?? "")}</b> · {formatDate(m.at, language)}
-                  {m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}
-                </p>
-                <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{m.text}</div>
-              </article>
-            ))}
-          </section>
-
           <section className="card detail-block" id="answer">
             <h2 className="detail-block-title">{t.draftHeading}</h2>
             <p className="detail-block-note" style={{ margin: 0 }}>{t.draftIntro}</p>
@@ -122,6 +117,49 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
               </form>
             ) : (
               <article className="answer" style={{ lineHeight: 1.7 }}><FormattedText text={ticket.sentAnswer?.text ?? draftText} /></article>
+            )}
+          </section>
+
+          <section className="card detail-block">
+            <h2 className="detail-block-title">{t.thread}</h2>
+            {newestFirst.length > 1 && (
+              <p className="quiet thread-summary">{t.threadSummary(newestFirst.length, who(newestFirst[0]), formatDate(newestFirst[0].at, language))}</p>
+            )}
+            {newestFirst.map((m, i) => {
+              const cls = `thread-msg${m.direction === "out" ? " thread-msg--out" : ""}`
+              const meta = <><b>{who(m)}</b> · {formatDate(m.at, language)}{m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}</>
+              const body = (
+                <>
+                  <div className="thread-msg-body">{m.text}</div>
+                  {m.quoted && (
+                    <details className="thread-quoted">
+                      <summary className="quiet">{t.quotedHistory}</summary>
+                      <div className="quiet thread-quoted-body">{m.quoted}</div>
+                    </details>
+                  )}
+                </>
+              )
+              if (i === 0) {
+                return (
+                  <article key={`${m.providerId}-${i}`} className={cls}>
+                    <p className="quiet thread-msg-head">{meta}</p>
+                    {body}
+                  </article>
+                )
+              }
+              return (
+                <details key={`${m.providerId}-${i}`} className={cls}>
+                  <summary className="quiet"><span className="thread-msg-meta">{meta}</span><span className="thread-msg-preview">· {preview(m.text)}</span></summary>
+                  {body}
+                </details>
+              )
+            })}
+            {ticket.source === "email" && ticket.threadRef && (
+              <form action={importThreadAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                <input type="hidden" name="id" value={id} />
+                <SubmitButton className="button button--quiet">{t.threadImport}</SubmitButton>
+                <span className="quiet field-hint">{t.threadImportHint}</span>
+              </form>
             )}
           </section>
         </div>

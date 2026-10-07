@@ -43,6 +43,9 @@ export interface MailboxPage {
   more: boolean
 }
 
+/** Sledované priečinky: prijatá pošta a odoslaná (odpovede z Outlooku). */
+export type MailFolder = "inbox" | "sentitems"
+
 export interface MailboxAdapter {
   readonly kind: MailboxKind
   /** Adresa schránky, z ktorej sa čítajú a odosielajú správy. */
@@ -53,7 +56,13 @@ export interface MailboxAdapter {
    * schránky: 15 rokov histórie by inak prvé kolá prechádzali týždne
    * a všetko by zahodili (7. 10. 2026). Vracia stránku a novú značku.
    */
-  listNew(cursor: string | null, since: Date): Promise<MailboxPage>
+  listNew(cursor: string | null, since: Date, folder?: MailFolder): Promise<MailboxPage>
+  /**
+   * Všetky správy jedného vlákna zo schránky (všetky priečinky, bez
+   * konceptov), staršie prvé. Ticket si nimi dotiahne korešpondenciu spred
+   * prvej synchronizácie. Nič sa nikam neukladá.
+   */
+  listThread(threadRef: string, limit?: number): Promise<MailMessage[]>
   /**
    * História na ťažbu FAQ (D165): posledných `limit` správ bez ohľadu na
    * značku, najnovšie prvé. Nič sa nikam neukladá.
@@ -86,12 +95,28 @@ export function htmlToText(html: string): string {
  * riadky s `>`), aby jedna správa niesla len to, čo v nej človek napísal.
  */
 export function stripQuotedHistory(text: string): string {
+  return splitQuotedHistory(text).text
+}
+
+/**
+ * Rozdelí e-mail na nový text a citovanú históriu (od „Od:/From:",
+ * „Pôvodná správa", „On … wrote:" nižšie, plus riadky s `>`). História sa
+ * nezahadzuje: pri odpovedi na korešpondenciu spred prvej synchronizácie
+ * je v nej celá otázka — 7. 10. 2026 ticket ukázal len „Nech sa páči: <adresa>"
+ * a o čo ide, bolo len v citácii.
+ */
+export function splitQuotedHistory(text: string): { text: string; quoted: string } {
   const lines = text.split("\n")
   const cut = lines.findIndex(l =>
     /^\s*(-{2,}\s*)?(Od|From|Von|De):\s.+/i.test(l)
     || /^\s*-{3,}\s*(Pôvodná správa|Original Message|Původní zpráva)\s*-{3,}/i.test(l)
     || /^\s*(On|Dňa|Dne) .+ (wrote|napísal\(a\)|napísal|napsal\(a\)|napsal):\s*$/i.test(l),
   )
-  const kept = (cut >= 0 ? lines.slice(0, cut) : lines).filter(l => !/^\s*>/.test(l))
-  return kept.join("\n").replace(/\n{3,}/g, "\n\n").trim()
+  const head = cut >= 0 ? lines.slice(0, cut) : lines
+  const isQuote = (l: string) => /^\s*>/.test(l)
+  const tidy = (xs: string[]) => xs.join("\n").replace(/\n{3,}/g, "\n\n").trim()
+  return {
+    text: tidy(head.filter(l => !isQuote(l))),
+    quoted: tidy([...head.filter(isQuote), ...(cut >= 0 ? lines.slice(cut) : [])]),
+  }
 }

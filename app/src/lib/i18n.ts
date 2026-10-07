@@ -617,9 +617,7 @@ interface Dictionary {
   nav: {
     ask: string
     dpo: string
-    /** Helpdesk (ADR-028) — len pre rolu `helpdesk`. */
-    helpdesk: string
-    /** Kanály (ADR-028, D169) — widget a portál; správca organizácie. */
+    /** Kanály (ADR-028, D169, D170) — správca organizácie a riešitelia kanálov. */
     channels: string
     /** Modul Vzdelávanie (ADR-018) — len pri zapnutom module. */
     learning: string
@@ -653,7 +651,7 @@ interface Dictionary {
     escCloses: string
     sheetHint: string
     /** Jedna veta pod názvom dlaždice — čo v sekcii je. */
-    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "helpdesk" | "channels" | "learningManage" | "learningTests", string>
+    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "channels" | "learningManage" | "learningTests", string>
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
     toAcknowledge: string
@@ -2115,7 +2113,7 @@ interface Dictionary {
     referenceField: string
     addButton: string
   }
-  /** Obrazovka riešiteľa helpdesku `/helpdesk` (ADR-028 krok 4). */
+  /** Obrazovka riešiteľa — tickety pod Kanálmi `/channels/tickets` (ADR-028 krok 4, D170). */
   helpdesk: {
     heading: string
     intro: string
@@ -2139,6 +2137,11 @@ interface Dictionary {
     take: string
     release: string
     thread: string
+    quotedHistory: string
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => string
+    threadImport: string
+    threadImportHint: string
+    msgThreadImported: (n: number) => string
     fromHelpdesk: string
     fromAsker: (name: string) => string
     attachments: (n: number) => string
@@ -2206,6 +2209,11 @@ interface Dictionary {
     builtIn: string
     builtInAssistant: string
     builtInPortal: string
+    tabsLabel: string
+    tabList: string
+    tabMyTickets: string
+    tabTickets: string
+    tabSettings: string
     agentsNote: string
     back: string
 
@@ -4404,8 +4412,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       people: "Zamestnanci, pracovné vzťahy, roly",
       evaluation: "Odpovede, pri ktorých niekto povedal, že nesedia",
       dpo: "Právne základy predpisov a námietky",
-      helpdesk: "Tickety kanálov, ktorých si riešiteľom",
-      channels: "Widget do cudzej stránky a portál — kam ide obsah organizácie",
+      channels: "Widget a portál; tickety kanálov, ktorých si riešiteľom",
       learningManage: "Kurzy, časti a pridelenie",
       learningTests: "Banka otázok a výsledky pokusov",
     },
@@ -4414,7 +4421,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Pridelené dokumenty",
     evaluation: "Na posúdenie",
     dpo: "Ochrana údajov",
-    helpdesk: "Helpdesk",
     channels: "Kanály",
     learning: "Vzdelávanie",
     learningManage: "Správa kurzov",
@@ -5424,6 +5430,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
     "ticket.notFound": "Taký ticket tu nie je.",
+    "ticket.notEmail": "Ticket nevznikol z e-mailu — nemá vlákno v schránke.",
     "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
     "ticket.emptyAnswer": "Prázdna odpoveď sa odoslať nedá.",
     "ticket.noRecipient": "Ticket nemá komu odpovedať — chýba adresa.",
@@ -6286,6 +6293,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     take: "Prevziať",
     release: "Uvoľniť",
     thread: "Vlákno",
+    quotedHistory: "Predchádzajúca korešpondencia v e-maile",
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} ${n < 5 ? "správy" : "správ"} · posledná: ${lastFrom}, ${lastAt}`,
+    threadImport: "Dotiahnuť históriu vlákna",
+    threadImportHint: "Načíta zo schránky skoršie správy tohto vlákna — prijaté aj odoslané, aj spred spustenia synchronizácie.",
+    msgThreadImported: (n: number) => n ? `Doplnené správy z vlákna: ${n}.` : "Vlákno je úplné — v schránke nie sú ďalšie správy.",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Pýtajúci sa",
     attachments: (n: number) => (n === 1 ? "1 príloha (v schránke)" : `${n} príloh (v schránke)`),
@@ -6352,6 +6364,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     builtIn: "Vstavané",
     builtInAssistant: "Asistent v intranete — otázka a odpoveď nad celou knižnicou pre prihlásených; nenastavuje sa.",
     builtInPortal: "Knižnica v intranete — platné dokumenty pre prihlásených; nenastavuje sa.",
+    tabsLabel: "Časti kanálov",
+    tabList: "Kanály",
+    tabMyTickets: "Moje tickety",
+    tabTickets: "Tickety",
+    tabSettings: "Nastavenie",
     agentsNote: "Riešitelia majú zmysel, keď sú zapnuté tickety.",
     back: "Kanály",
     intro: "Kanál je jedno miesto, kde sa ľudia pýtajú: má vlastný obsah (priečinky knižnice), schránku, riešiteľov a widget. Kanálov môže byť viac — každý pre iný projekt a publikum.",
@@ -8418,8 +8435,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       people: "Zaměstnanci, pracovní vztahy, role",
       evaluation: "Odpovědi, u kterých někdo řekl, že nesedí",
       dpo: "Právní základy předpisů a námitky",
-      helpdesk: "Tickety kanálů, kterých jsi řešitelem",
-      channels: "Widget do cizí stránky a portál — kam jde obsah organizace",
+      channels: "Widget a portál; tickety kanálů, kterých jsi řešitelem",
       learningManage: "Kurzy, části a přidělení",
       learningTests: "Banka otázek a výsledky pokusů",
     },
@@ -8428,7 +8444,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Přidělené dokumenty",
     evaluation: "K posouzení",
     dpo: "Ochrana údajů",
-    helpdesk: "Helpdesk",
     channels: "Kanály",
     learning: "Vzdělávání",
     learningManage: "Správa kurzů",
@@ -9438,6 +9453,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
     "ticket.notFound": "Takový ticket tady není.",
+    "ticket.notEmail": "Ticket nevznikl z e-mailu — nemá vlákno ve schránce.",
     "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
     "ticket.emptyAnswer": "Prázdná odpověď se odeslat nedá.",
     "ticket.noRecipient": "Ticket nemá komu odpovědět — chybí adresa.",
@@ -10298,6 +10314,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     take: "Převzít",
     release: "Uvolnit",
     thread: "Vlákno",
+    quotedHistory: "Předchozí korespondence v e-mailu",
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} ${n < 5 ? "zprávy" : "zpráv"} · poslední: ${lastFrom}, ${lastAt}`,
+    threadImport: "Dotáhnout historii vlákna",
+    threadImportHint: "Načte ze schránky dřívější zprávy tohoto vlákna — přijaté i odeslané, i z doby před spuštěním synchronizace.",
+    msgThreadImported: (n: number) => n ? `Doplněné zprávy z vlákna: ${n}.` : "Vlákno je úplné — ve schránce nejsou další zprávy.",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Tazatel",
     attachments: (n: number) => (n === 1 ? "1 příloha (ve schránce)" : `${n} příloh (ve schránce)`),
@@ -10364,6 +10385,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     builtIn: "Vestavěné",
     builtInAssistant: "Asistent v intranetu — otázka a odpověď nad celou knihovnou pro přihlášené; nenastavuje se.",
     builtInPortal: "Knihovna v intranetu — platné dokumenty pro přihlášené; nenastavuje se.",
+    tabsLabel: "Části kanálů",
+    tabList: "Kanály",
+    tabMyTickets: "Moje tickety",
+    tabTickets: "Tickety",
+    tabSettings: "Nastavení",
     agentsNote: "Řešitelé mají smysl, když jsou zapnuté tickety.",
     back: "Kanály",
     intro: "Kanál je jedno místo, kde se lidé ptají: má vlastní obsah (složky knihovny), schránku, řešitele a widget. Kanálů může být víc — každý pro jiný projekt a publikum.",
@@ -12423,8 +12449,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       people: "Employees, employment relationships, roles",
       evaluation: "Answers someone said were wrong",
       dpo: "Legal bases of regulations and objections",
-      helpdesk: "Tickets of the channels you are an agent of",
-      channels: "Widget for an external page and portal — where the organisation's content goes",
+      channels: "Widget and portal; tickets of the channels you are an agent of",
       learningManage: "Courses, parts and assignment",
       learningTests: "Question bank and attempt results",
     },
@@ -12433,7 +12458,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Assigned documents",
     evaluation: "To evaluate",
     dpo: "Data protection",
-    helpdesk: "Helpdesk",
     channels: "Channels",
     learning: "Learning",
     learningManage: "Course management",
@@ -13441,6 +13465,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noTickets": "The channel has tickets switched off.",
     "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
     "ticket.notFound": "There is no such ticket here.",
+    "ticket.notEmail": "The ticket did not come from an e-mail — it has no thread in the mailbox.",
     "ticket.emptyDraft": "An empty draft cannot be saved.",
     "ticket.emptyAnswer": "An empty answer cannot be sent.",
     "ticket.noRecipient": "The ticket has nobody to answer — the address is missing.",
@@ -14301,6 +14326,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     take: "Take",
     release: "Release",
     thread: "Thread",
+    quotedHistory: "Earlier correspondence quoted in the e-mail",
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} messages · latest: ${lastFrom}, ${lastAt}`,
+    threadImport: "Load thread history",
+    threadImportHint: "Loads earlier messages of this thread from the mailbox — received and sent, including those from before synchronisation started.",
+    msgThreadImported: (n: number) => n ? `Messages added from the thread: ${n}.` : "The thread is complete — there are no more messages in the mailbox.",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Asker",
     attachments: (n: number) => (n === 1 ? "1 attachment (in the mailbox)" : `${n} attachments (in the mailbox)`),
@@ -14367,6 +14397,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     builtIn: "Built in",
     builtInAssistant: "The assistant in the intranet — question and answer over the whole library for signed-in people; not configurable.",
     builtInPortal: "The library in the intranet — documents in force for signed-in people; not configurable.",
+    tabsLabel: "Channel sections",
+    tabList: "Channels",
+    tabMyTickets: "My tickets",
+    tabTickets: "Tickets",
+    tabSettings: "Settings",
     agentsNote: "Agents matter when tickets are on.",
     back: "Channels",
     intro: "A channel is one place where people ask: it has its own content (library folders), mailbox, agents and widget. There can be several channels — one per project and audience.",

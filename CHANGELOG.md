@@ -25,6 +25,46 @@ Podľa návrhu ZAKLAD-lista-ulozenia:
 - **Oprava:** v správe platformy sa pri prihlásení ukazoval stav ako holé
   „set" / „unset".
 
+### Kanály: jedna položka pre správcu aj riešiteľa, Helpdesk zrušený (2026-10-07)
+
+Tickety sú pod kanálom. V menu je len **Kanály** a každý v nich vidí
+kanály, ku ktorým má prístup: správca organizácie všetky a ich
+nastavenie, riešiteľ svoje a ich tickety. Kanál má podmenu Tickety ·
+Nastavenie, sekcia aj **Moje tickety** cez všetky kanály riešiteľa.
+**Správca organizácie obsah ticketov nevidí** (len počty) — kto ich má
+čítať, pridá sa medzi riešiteľov (ADR-028 D170). Staré adresy
+`/helpdesk` presmerujú.
+
+### Helpdesk: odpoveď hore, vlákno od najnovšej správy (2026-10-07)
+
+Na tickete je blok Odpoveď nad vláknom. Vlákno ide od najnovšej správy,
+tá je rozbalená; staršie sú zbalené do riadku s odosielateľom, dátumom
+a začiatkom textu a rozbalia sa kliknutím. Nad vláknom je súhrn (počet,
+posledná správa). Funguje bez JavaScriptu.
+
+### Helpdesk: celé vlákno a odpovede z Outlooku (2026-10-07)
+
+- **Odoslaná pošta sa synchronizuje.** Okrem Doručenej pošty sa sleduje
+  aj priečinok Odoslané. Odpoveď riešiteľa z Outlooku sa pripojí
+  k ticketu a ticket sa označí ako zodpovedaný. Kópia odpovede odoslanej
+  z Continea sa nepridá druhýkrát.
+- **Nový ticket si dotiahne históriu vlákna** zo schránky — skoršie
+  prijaté aj odoslané správy, aj spred spustenia synchronizácie.
+- **Tlačidlo „Dotiahnuť históriu vlákna"** pri tickete z e-mailu urobí to
+  isté ručne (napr. pre ticket založený pred touto zmenou).
+
+Aby boli odpovede z Outlooku vidieť, kópia odoslanej správy musí ostať
+v schránke helpdesku — postup v `docs/NASADENIE_app.md` § 5c.
+
+### Helpdesk: citovaná história e-mailu sa nezahadzuje (2026-10-07)
+
+Ticket z e-mailu ukladá citovanú históriu (od „Od:/From:" nižšie)
+zvlášť a vo vlákne ju ukáže zbalenú pod „Predchádzajúca korešpondencia
+v e-maile". Asistent ju pri návrhu odpovede dostane ako kontext. Bez
+toho odpoveď na korešpondenciu spred prvej synchronizácie ukázala len
+„Nech sa páči: <adresa>" a otázka bola len v citácii. Tickety založené
+pred touto zmenou citáciu nemajú.
+
 ### Úprava kurzu: jedno hlavné tlačidlo, potvrdenia a náhľad ako študent (2026-10-07)
 
 Podľa návrhu MANAGE-COURSE-akcie:

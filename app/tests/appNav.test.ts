@@ -30,6 +30,16 @@ describe("položky navigácie", () => {
     expect(navItems({ isPeopleAdmin: true }).map(o => o.href)).toContain("/people")
   })
 
+  it("Kanály: správca organizácie aj riešiteľ, samostatný Helpdesk už nie je (D170)", () => {
+    expect(navItems({ isPeopleAdmin: true }).map(o => o.href)).toContain("/channels")
+    expect(navItems({ isHelpdesk: true }).map(o => o.href)).toContain("/channels")
+    expect(navItems({ isHr: true }).map(o => o.href)).not.toContain("/channels")
+    const all = navItems({ isPeopleAdmin: true, isHelpdesk: true }, { channels: 6 })
+    expect(all.filter(o => o.href === "/channels")).toHaveLength(1)
+    expect(all.map(o => o.href)).not.toContain("/helpdesk")
+    expect(all.find(o => o.key === "channels")?.count).toBe(6)
+  })
+
   it("cudzia sekcia sa neukáže", () => {
     // Odkaz do sekcie, do ktorej stránka nepustí, hovorí o vnútri systému
     // viac, než ten človek potrebuje vedieť.
@@ -107,7 +117,7 @@ describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
     expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
     expect(groups.map(g => g.items.map(o => o.key))).toEqual([
       ["directory", "library", "learning"],
-      ["assigned", "evidence", "people", "evaluation", "dpo", "helpdesk", "channels", "learningManage", "learningTests"],
+      ["assigned", "evidence", "people", "evaluation", "dpo", "channels", "learningManage", "learningTests"],
     ])
   })
 

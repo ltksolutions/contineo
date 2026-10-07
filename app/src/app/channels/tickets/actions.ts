@@ -1,7 +1,7 @@
 "use server"
 
 /**
- * Akcie riešiteľa helpdesku (ADR-028 krok 4).
+ * Akcie riešiteľa helpdesku (ADR-028 krok 4; pod Kanálmi od D170).
  *
  * Organizácia a kanály idú z `helpdeskContext()`, nikdy z formulára: ticket
  * cudzieho kanála sa nenájde ani s uhádnutým identifikátorom (D32).
@@ -17,7 +17,7 @@ import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { helpdeskContext } from "@/lib/helpdeskAgents"
 import { mailboxFor } from "@/lib/channels"
 import {
-  ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, lastIncoming, faqPrefillFromTicket, TicketError,
+  ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, lastIncoming, faqPrefillFromTicket, importTicketThread, TicketError,
 } from "@/lib/tickets"
 import { draftTicketAnswer } from "@/lib/ticketDraft"
 import { saveFaqEntry, checkEntry } from "@/lib/faq"
@@ -33,8 +33,8 @@ function errorMessage(e: unknown, language: UiLanguage): string {
 }
 
 function back(id: string, message: string, error = false): never {
-  revalidatePath("/helpdesk")
-  redirect(`/helpdesk/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  revalidatePath("/channels/tickets")
+  redirect(`/channels/tickets/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 async function ready() {
@@ -73,6 +73,23 @@ export async function draftWithAiAction(fd: FormData) {
     back(id, errorMessage(e, ctx.person.language), true)
   }
   back(id, ctx.t.msgDrafted)
+}
+
+export async function importThreadAction(fd: FormData) {
+  const ctx = await ready()
+  const id = fieldText(fd, "id")
+  let added = 0
+  try {
+    const ticket = await ticketById(ctx.person.companyCode, ctx.keys, id)
+    const channel = ticket && ctx.channels.find(c => c.key === ticket.channelKey)
+    if (!ticket || !channel) throw new TicketError("ticket.notFound", "Taký ticket tu nie je.")
+    const adapter = mailboxFor(channel)
+    added = await importTicketThread(ctx.person.companyCode, ctx.keys, id, ctx.person.email, ref => adapter.listThread(ref))
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(id, errorMessage(e, ctx.person.language), true)
+  }
+  back(id, ctx.t.msgThreadImported(added))
 }
 
 export async function saveDraftAction(fd: FormData) {

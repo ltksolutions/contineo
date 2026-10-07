@@ -20,6 +20,9 @@ describe("stare cesty", () => {
     // Členenie sa od D160 v organizácii nenastavuje — rozcestník.
     expect(legacyRoute("/organisation/chunking")).toBe("/organisation")
     expect(legacyRoute("/prihlasenie")).toBe("/sign-in")
+    // Helpdesk prešiel pod Kanály (D170, 7. 10. 2026) — fronta aj ticket.
+    expect(legacyRoute("/helpdesk")).toBe("/channels/tickets")
+    expect(legacyRoute("/helpdesk/65f0a1b2c3d4e5f6a7b8c9d0")).toBe("/channels/tickets/65f0a1b2c3d4e5f6a7b8c9d0")
   })
 
   it("dlhsia cesta vyhrava nad kratsou", () => {

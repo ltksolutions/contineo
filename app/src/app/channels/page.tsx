@@ -7,7 +7,10 @@
  * formuláre — dnes len knižnica). Vstavané rozhrania intranetu (asistent,
  * knižnica) sú v zozname ako pevné riadky, aby bol obraz úplný.
  *
- * Spravuje správca organizácie (`orgContext()`), rovnako ako nastavenia.
+ * Jedna položka v menu pre správcu aj riešiteľa (D170, Ján 7. 10. 2026):
+ * správca organizácie vidí všetky kanály, vstavané rozhrania a formulár
+ * nového kanála; riešiteľ len kanály, kde je riešiteľom. Počty ticketov
+ * vidia obaja, obsah ticketov len riešiteľ (`/channels/tickets`).
  */
 
 import { notFound, redirect } from "next/navigation"
@@ -16,8 +19,9 @@ import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import Select from "@/components/Select"
 import SubmitButton from "@/components/SubmitButton"
-import { orgContext } from "@/lib/orgSettings"
-import { listChannels, channelView, CHANNEL_KINDS } from "@/lib/channels"
+import { channelsContext } from "@/lib/helpdeskAgents"
+import { ChannelSectionTabs, channelHref } from "@/components/ChannelTabs"
+import { channelView, CHANNEL_KINDS } from "@/lib/channels"
 import { ticketCounts } from "@/lib/tickets"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -28,7 +32,7 @@ import { saveChannelAction } from "./actions"
 export const dynamic = "force-dynamic"
 
 export default async function ChannelsPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
-  const ctx = await orgContext()
+  const ctx = await channelsContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
@@ -37,7 +41,7 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
   const language = ctx.person.language
   const t = dictionary(language).channels
   const branding = brandingView(ctx.tenant)
-  const channels = (await listChannels(ctx.tenant.companyCode)).map(channelView)
+  const channels = ctx.visible.map(channelView)
   const counts = new Map(await Promise.all(channels.map(async c => [c.key, await ticketCounts(ctx.tenant.companyCode, c.key)] as const)))
 
   return (
@@ -46,8 +50,9 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
       <div className="page-head">
         <h1 className="page-title">{t.heading}</h1>
         <span className="page-head-spacer" />
-        <a className="button" href="#new">{t.newChannel}</a>
+        {ctx.isAdmin && <a className="button" href="#new">{t.newChannel}</a>}
       </div>
+      <ChannelSectionTabs current="/channels" isAgent={ctx.agentChannels.length > 0} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
       <Notice message={error ?? msg} error={Boolean(error)} back="/channels" language={language} />
 
@@ -61,18 +66,23 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
           return (
             <div key={c.key} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
               <span className="tag">{t.kinds[c.kind]}</span>
-              <Link href={`/channels/${encodeURIComponent(c.key)}`}><b>{c.name}</b></Link>
-              <code>{c.key}</code>
+              <Link href={channelHref(c.key)}><b>{c.name}</b></Link>
+              {ctx.isAdmin && <code>{c.key}</code>}
               {c.mailbox && <span className="quiet">{c.mailbox.address}</span>}
               {c.tickets && <span className="quiet">{t.tickets(open, total)}</span>}
             </div>
           )
         })}
-        <h3 className="detail-block-title" style={{ marginTop: 12 }}>{t.builtIn}</h3>
-        <p className="quiet" style={{ margin: 0 }}><span className="tag">{t.kinds.widget}</span> {t.builtInAssistant}</p>
-        <p className="quiet" style={{ margin: 0 }}><span className="tag">{t.kinds.portal}</span> {t.builtInPortal}</p>
+        {ctx.isAdmin && (
+          <>
+            <h3 className="detail-block-title" style={{ marginTop: 12 }}>{t.builtIn}</h3>
+            <p className="quiet" style={{ margin: 0 }}><span className="tag">{t.kinds.widget}</span> {t.builtInAssistant}</p>
+            <p className="quiet" style={{ margin: 0 }}><span className="tag">{t.kinds.portal}</span> {t.builtInPortal}</p>
+          </>
+        )}
       </section>
 
+      {ctx.isAdmin && (
       <form action={saveChannelAction} className="card detail-block" id="new">
         <h2 className="detail-block-title">{t.newChannel}</h2>
         <input type="hidden" name="isNew" value="1" />
@@ -88,6 +98,7 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
         </label>
         <div><SubmitButton className="button button--quiet">{t.save}</SubmitButton></div>
       </form>
+      )}
     </div>
     </AppShell>
   )

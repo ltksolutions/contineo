@@ -35,6 +35,8 @@ const PREFIXES: [string, string][] = [
   ["/organisation/branding", "/organisation/general"],
   // Členenie sa od 5. 10. 2026 v organizácii nenastavuje (D160) — rozcestník.
   ["/organisation/chunking", "/organisation"],
+  // Helpdesk prešiel pod Kanály (D170, 7. 10. 2026): fronta aj ticket.
+  ["/helpdesk", "/channels/tickets"],
   ["/kniznica/trasy", "/hr/tracks"],
   ["/library/tracks", "/hr/tracks"],
   ["/kniznica/nova", "/library/new"],

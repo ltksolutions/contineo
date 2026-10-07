@@ -8105,3 +8105,25 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
 .chunks-compare th, .chunks-compare td { padding: 4px 18px 4px 0; text-align: left; }
 .chunks-compare thead th { font-size: var(--fs-small); color: var(--muted); font-weight: 600; }
 .chunks-compare tbody th { font-weight: 400; color: var(--muted); }
+
+/* ── Vlákno ticketu helpdesku (Ján 7. 10. 2026) ──────────────────────────────
+   Odpoveď je nad vláknom; vlákno ide od najnovšej správy, tá je rozbalená,
+   staršie sú zbalené do riadku — `<details>`, takže to funguje bez skriptu. */
+.thread-summary { margin: 0; font-size: var(--fs-small); }
+.thread-msg { border-left: 3px solid var(--border); padding-left: 12px; min-width: 0; }
+.thread-msg--out { border-left-color: var(--accent); }
+.thread-msg-head { margin: 0 0 4px; font-size: var(--fs-small); }
+.thread-msg-body { white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
+details.thread-msg > summary {
+  list-style: none; cursor: pointer; min-height: 44px;
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  font-size: var(--fs-small);
+}
+details.thread-msg > summary::-webkit-details-marker { display: none; }
+details.thread-msg[open] > summary { margin-bottom: 4px; }
+.thread-msg-meta { flex: none; }
+.thread-msg-preview { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+details.thread-msg[open] .thread-msg-preview { display: none; }
+.thread-quoted { margin-top: 8px; }
+.thread-quoted > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.thread-quoted-body { white-space: pre-wrap; line-height: 1.6; font-size: var(--fs-small); overflow-wrap: anywhere; }

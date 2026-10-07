@@ -4,7 +4,7 @@
  * Človek napíše, čo potrebuje; k tomu ide priebeh rozhovoru (odkazy na
  * záznamy odpovedí, otázky a hodnotenia). E-mail, meno, roly a klub sú
  * z tokenu — človek nič nevypisuje. Ticket pristane vo fronte riešiteľov
- * kanála (`/helpdesk`).
+ * kanála (`/channels/tickets`).
  */
 
 import { NextResponse } from "next/server"
