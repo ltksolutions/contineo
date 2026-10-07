@@ -64,9 +64,15 @@ export interface ChannelMailbox {
   /** Značka synchronizácie (Graph: celý `deltaLink`). */
   cursor: string | null
   /**
-   * Odkedy sa správy stávajú ticketmi. Nastaví sa pri prvej synchronizácii:
-   * prvé kolo delta dotazu vráti celú schránku a z histórie sa tickety
-   * nerobia — tá ide do ťažby FAQ (D165).
+   * Značka vznikla z dotazu zúženého na `syncSince`. Značka bez tohto
+   * príznaku je zo starého, nezúženého dotazu, ktorý prechádzal celú
+   * schránku — synchronizácia ju zahodí a začne zúžene (7. 10. 2026).
+   */
+  cursorSince?: boolean
+  /**
+   * Odkedy sa správy stávajú ticketmi. Nastaví sa pri prvej synchronizácii;
+   * delta dotaz sa pýta len na správy od tejto chvíle. História sa ticketmi
+   * nestáva — ide do ťažby FAQ (D165).
    */
   syncSince: Date | null
   lastSyncAt: Date | null
@@ -224,6 +230,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
       kind, address,
       // Iná schránka = iná história; značka a hranica ticketov začínajú odznova.
       cursor: changedIdentity ? null : mailbox!.cursor,
+      cursorSince: changedIdentity ? false : Boolean(mailbox!.cursorSince),
       syncSince: changedIdentity ? null : mailbox!.syncSince,
       lastSyncAt: changedIdentity ? null : mailbox!.lastSyncAt,
       lastSyncError: changedIdentity ? null : mailbox!.lastSyncError,
@@ -374,11 +381,12 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
   const report: SyncReport = { key, pages: 0, created: 0, appended: 0, skipped: 0, beforeStart: 0, done: false, error: null }
   const since = channel.mailbox.syncSince ?? new Date()
-  let cursor = channel.mailbox.cursor
+  // Značka zo starého, nezúženého dotazu by ďalej prechádzala celú históriu.
+  let cursor = channel.mailbox.cursorSince ? channel.mailbox.cursor : null
   try {
     const adapter = mailboxFor(channel)
     for (; report.pages < maxPages; ) {
-      const page = await adapter.listNew(cursor)
+      const page = await adapter.listNew(cursor, since)
       report.pages += 1
       const fresh = page.messages.filter(m => m.receivedAt >= since)
       report.beforeStart += page.messages.length - fresh.length
@@ -388,7 +396,7 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
       }
       cursor = page.cursor
       // Značka sa ukladá po každej stránke — prerušené kolo nezačne odznova.
-      await col.updateOne({ companyCode: code, key }, { $set: { "mailbox.cursor": cursor, "mailbox.syncSince": since } })
+      await col.updateOne({ companyCode: code, key }, { $set: { "mailbox.cursor": cursor, "mailbox.cursorSince": true, "mailbox.syncSince": since } })
       if (!page.more) { report.done = true; break }
     }
     await col.updateOne(
