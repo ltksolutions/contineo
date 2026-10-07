@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: staršie správy vlákna zbalené (2026-10-07)
+
+Vlákno ticketu ostáva od najstaršej správy (pole na odpoveď je pod ním),
+ale staršie správy sú zbalené do riadku s odosielateľom, dátumom
+a začiatkom textu; rozbalia sa kliknutím. Rozbalená je posledná prijatá
+správa a všetko po nej. Nad vláknom s viac než dvoma správami je súhrn
+(počet, posledná správa). Funguje bez JavaScriptu.
+
 ### Helpdesk: celé vlákno a odpovede z Outlooku (2026-10-07)
 
 - **Odoslaná pošta sa synchronizuje.** Okrem Doručenej pošty sa sleduje

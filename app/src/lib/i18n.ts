@@ -2119,6 +2119,7 @@ interface Dictionary {
     release: string
     thread: string
     quotedHistory: string
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => string
     threadImport: string
     threadImportHint: string
     msgThreadImported: (n: number) => string
@@ -6240,6 +6241,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     release: "Uvoľniť",
     thread: "Vlákno",
     quotedHistory: "Predchádzajúca korešpondencia v e-maile",
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} ${n < 5 ? "správy" : "správ"} · posledná: ${lastFrom}, ${lastAt}`,
     threadImport: "Dotiahnuť históriu vlákna",
     threadImportHint: "Načíta zo schránky skoršie správy tohto vlákna — prijaté aj odoslané, aj spred spustenia synchronizácie.",
     msgThreadImported: (n: number) => n ? `Doplnené správy z vlákna: ${n}.` : "Vlákno je úplné — v schránke nie sú ďalšie správy.",
@@ -10226,6 +10228,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     release: "Uvolnit",
     thread: "Vlákno",
     quotedHistory: "Předchozí korespondence v e-mailu",
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} ${n < 5 ? "zprávy" : "zpráv"} · poslední: ${lastFrom}, ${lastAt}`,
     threadImport: "Dotáhnout historii vlákna",
     threadImportHint: "Načte ze schránky dřívější zprávy tohoto vlákna — přijaté i odeslané, i z doby před spuštěním synchronizace.",
     msgThreadImported: (n: number) => n ? `Doplněné zprávy z vlákna: ${n}.` : "Vlákno je úplné — ve schránce nejsou další zprávy.",
@@ -14203,6 +14206,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     release: "Release",
     thread: "Thread",
     quotedHistory: "Earlier correspondence quoted in the e-mail",
+    threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} messages · latest: ${lastFrom}, ${lastAt}`,
     threadImport: "Load thread history",
     threadImportHint: "Loads earlier messages of this thread from the mailbox — received and sent, including those from before synchronisation started.",
     msgThreadImported: (n: number) => n ? `Messages added from the thread: ${n}.` : "The thread is complete — there are no more messages in the mailbox.",
