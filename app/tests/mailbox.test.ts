@@ -77,3 +77,33 @@ describe("GraphMailbox.verify", () => {
     await expect(box.verify()).rejects.toMatchObject({ code: "mailbox.forbidden" })
   })
 })
+
+describe("GraphMailbox.listNew", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("prve kolo sa pyta len na spravy od zaciatku synchronizacie, nie na celu schranku", async () => {
+    const urls: string[] = []
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      urls.push(url)
+      if (url.includes("/token")) return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      return new Response(JSON.stringify({ value: [], "@odata.deltaLink": "https://graph.microsoft.com/delta?$deltatoken=x" }))
+    }))
+    const box = new GraphMailbox({ address: "helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
+    const page = await box.listNew(null, new Date("2026-10-07T13:40:12.345Z"))
+    const delta = urls.find(u => u.includes("/messages/delta"))!
+    expect(decodeURIComponent(delta)).toContain("$filter=receivedDateTime ge 2026-10-07T13:40:12Z")
+    expect(page).toMatchObject({ messages: [], more: false, cursor: "https://graph.microsoft.com/delta?$deltatoken=x" })
+  })
+
+  it("so znackou ide priamo na nu, filter nesie znacka", async () => {
+    const urls: string[] = []
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      urls.push(url)
+      if (url.includes("/token")) return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      return new Response(JSON.stringify({ value: [] }))
+    }))
+    const box = new GraphMailbox({ address: "helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
+    await box.listNew("https://graph.microsoft.com/delta?$deltatoken=x", new Date())
+    expect(urls.filter(u => u.startsWith("https://graph.microsoft.com"))).toEqual(["https://graph.microsoft.com/delta?$deltatoken=x"])
+  })
+})

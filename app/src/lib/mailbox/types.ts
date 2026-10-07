@@ -49,9 +49,11 @@ export interface MailboxAdapter {
   readonly address: string
   /**
    * Nové a zmenené správy od značky. `cursor: null` začne odznova (prvé
-   * spustenie alebo vypršaná značka). Vracia stránku a novú značku.
+   * spustenie alebo vypršaná značka) — ale len od `since`, nie od začiatku
+   * schránky: 15 rokov histórie by inak prvé kolá prechádzali týždne
+   * a všetko by zahodili (7. 10. 2026). Vracia stránku a novú značku.
    */
-  listNew(cursor: string | null): Promise<MailboxPage>
+  listNew(cursor: string | null, since: Date): Promise<MailboxPage>
   /**
    * História na ťažbu FAQ (D165): posledných `limit` správ bez ohľadu na
    * značku, najnovšie prvé. Nič sa nikam neukladá.

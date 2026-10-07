@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: prvá synchronizácia neprechádza celú históriu schránky (2026-10-07)
+
+Delta dotaz na Microsoft Graph sa pýta len na správy od začiatku
+synchronizácie (`$filter=receivedDateTime ge …`). Predtým prvé kolá
+prechádzali celú schránku — pri 15 rokoch pošty po 1 000 správach na
+beh a všetky zahodili ako staršie. Značka zo starého dotazu sa pri
+ďalšom behu zahodí a synchronizácia začne zúžene; začiatok ostáva.
+
 ### Helpdesk: overenie schránky Microsoft 365 nepotrebuje User.Read.All (2026-10-07)
 
 „Overiť spojenie" čítalo najprv profil používateľa schránky, na ktorý

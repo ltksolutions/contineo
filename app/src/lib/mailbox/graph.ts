@@ -13,9 +13,12 @@
  * vypnuté; IMAP cez OAuth potrebuje tú istú registráciu a nedá delta dotaz,
  * `conversationId` ani odosielanie.
  *
- * Delta dotaz: `/users/{schránka}/mailFolders/inbox/messages/delta`. Značka
- * je celý `@odata.deltaLink`; keď vyprší (`syncStateNotFound`), začne sa
- * odznova — správy, ktoré už ticket má, odfiltruje `internetMessageId`.
+ * Delta dotaz: `/users/{schránka}/mailFolders/inbox/messages/delta`
+ * s `$filter=receivedDateTime ge {since}` — jediný filter, ktorý delta na
+ * správach pozná. Bez neho prvé kolo vráti celú schránku. Značka je celý
+ * `@odata.deltaLink` (filter nesie v sebe); keď vyprší (`syncStateNotFound`),
+ * začne sa odznova od `since` — správy, ktoré už ticket má, odfiltruje
+ * `internetMessageId`.
  */
 
 import { AppError } from "../appError"
@@ -158,14 +161,16 @@ export class GraphMailbox implements MailboxAdapter {
     return { address: this.address, displayName: null }
   }
 
-  async listNew(cursor: string | null): Promise<MailboxPage> {
-    const url = cursor ?? `${this.userPath()}/mailFolders/inbox/messages/delta?$select=${SELECT}`
+  async listNew(cursor: string | null, since: Date): Promise<MailboxPage> {
+    // Graph chce DateTimeOffset bez milisekúnd.
+    const from = since.toISOString().replace(/\.\d{3}Z$/, "Z")
+    const url = cursor ?? `${this.userPath()}/mailFolders/inbox/messages/delta?$select=${SELECT}&$filter=${encodeURIComponent(`receivedDateTime ge ${from}`)}`
     let r: Response
     try {
       r = await this.get(url, "delta")
     } catch (e) {
       // Vypršaná značka: jedno kolo odznova, nie chyba synchronizácie.
-      if (e instanceof MailboxError && e.code === "mailbox.cursorExpired" && cursor) return this.listNew(null)
+      if (e instanceof MailboxError && e.code === "mailbox.cursorExpired" && cursor) return this.listNew(null, since)
       throw e
     }
     const j = await r.json() as { value?: GraphMessage[]; "@odata.nextLink"?: string; "@odata.deltaLink"?: string }
