@@ -54,9 +54,9 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
     m.direction === "out" ? t.fromHelpdesk : t.fromAsker(m.from?.name ?? m.from?.address ?? ticket.asker.name ?? "")
   // Začiatok celého textu, nie prvý riadok — ten býva len „Dobrý deň,".
   const preview = (text: string) => text.replace(/\s+/g, " ").trim().slice(0, 200)
-  // Rozbalená je posledná prijatá správa a všetko po nej; pri krátkom vlákne celé.
-  const lastIn = ticket.messages.map(m => m.direction).lastIndexOf("in")
-  const expandFrom = ticket.messages.length <= 2 ? 0 : lastIn >= 0 ? lastIn : ticket.messages.length - 1
+  // Vlákno pod odpoveďou, najnovšia správa hore a rozbalená, staršie zbalené
+  // (Ján 7. 10. 2026). Kópia poľa — `messages` ostáva od najstaršej.
+  const newestFirst = [...ticket.messages].reverse()
   const isOpen = ticket.state !== "closed"
   const canSend = isOpen && Boolean(channel?.mailbox) && (ticket.asker.email || ticket.messages.some(m => m.direction === "in"))
   const sources = (ticket.draft?.sources ?? []) as { documentId?: string; title?: string; articleRef?: string | null; sourceType?: string }[]
@@ -80,49 +80,6 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
 
       <div className="detail-grid">
         <div className="detail-main">
-          <section className="card detail-block">
-            <h2 className="detail-block-title">{t.thread}</h2>
-            {ticket.messages.length > 2 && (
-              <p className="quiet thread-summary">{t.threadSummary(ticket.messages.length, who(ticket.messages[ticket.messages.length - 1]), formatDate(ticket.messages[ticket.messages.length - 1].at, language))}</p>
-            )}
-            {ticket.messages.map((m, i) => {
-              const cls = `thread-msg${m.direction === "out" ? " thread-msg--out" : ""}`
-              const meta = <><b>{who(m)}</b> · {formatDate(m.at, language)}{m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}</>
-              const body = (
-                <>
-                  <div className="thread-msg-body">{m.text}</div>
-                  {m.quoted && (
-                    <details className="thread-quoted">
-                      <summary className="quiet">{t.quotedHistory}</summary>
-                      <div className="quiet thread-quoted-body">{m.quoted}</div>
-                    </details>
-                  )}
-                </>
-              )
-              if (i >= expandFrom) {
-                return (
-                  <article key={`${m.providerId}-${i}`} className={cls}>
-                    <p className="quiet thread-msg-head">{meta}</p>
-                    {body}
-                  </article>
-                )
-              }
-              return (
-                <details key={`${m.providerId}-${i}`} className={cls}>
-                  <summary className="quiet"><span className="thread-msg-meta">{meta}</span><span className="thread-msg-preview">· {preview(m.text)}</span></summary>
-                  {body}
-                </details>
-              )
-            })}
-            {ticket.source === "email" && ticket.threadRef && (
-              <form action={importThreadAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-                <input type="hidden" name="id" value={id} />
-                <SubmitButton className="button button--quiet">{t.threadImport}</SubmitButton>
-                <span className="quiet field-hint">{t.threadImportHint}</span>
-              </form>
-            )}
-          </section>
-
           <section className="card detail-block" id="answer">
             <h2 className="detail-block-title">{t.draftHeading}</h2>
             <p className="detail-block-note" style={{ margin: 0 }}>{t.draftIntro}</p>
@@ -159,6 +116,49 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
               </form>
             ) : (
               <article className="answer" style={{ lineHeight: 1.7 }}><FormattedText text={ticket.sentAnswer?.text ?? draftText} /></article>
+            )}
+          </section>
+
+          <section className="card detail-block">
+            <h2 className="detail-block-title">{t.thread}</h2>
+            {newestFirst.length > 1 && (
+              <p className="quiet thread-summary">{t.threadSummary(newestFirst.length, who(newestFirst[0]), formatDate(newestFirst[0].at, language))}</p>
+            )}
+            {newestFirst.map((m, i) => {
+              const cls = `thread-msg${m.direction === "out" ? " thread-msg--out" : ""}`
+              const meta = <><b>{who(m)}</b> · {formatDate(m.at, language)}{m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}</>
+              const body = (
+                <>
+                  <div className="thread-msg-body">{m.text}</div>
+                  {m.quoted && (
+                    <details className="thread-quoted">
+                      <summary className="quiet">{t.quotedHistory}</summary>
+                      <div className="quiet thread-quoted-body">{m.quoted}</div>
+                    </details>
+                  )}
+                </>
+              )
+              if (i === 0) {
+                return (
+                  <article key={`${m.providerId}-${i}`} className={cls}>
+                    <p className="quiet thread-msg-head">{meta}</p>
+                    {body}
+                  </article>
+                )
+              }
+              return (
+                <details key={`${m.providerId}-${i}`} className={cls}>
+                  <summary className="quiet"><span className="thread-msg-meta">{meta}</span><span className="thread-msg-preview">· {preview(m.text)}</span></summary>
+                  {body}
+                </details>
+              )
+            })}
+            {ticket.source === "email" && ticket.threadRef && (
+              <form action={importThreadAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                <input type="hidden" name="id" value={id} />
+                <SubmitButton className="button button--quiet">{t.threadImport}</SubmitButton>
+                <span className="quiet field-hint">{t.threadImportHint}</span>
+              </form>
             )}
           </section>
         </div>

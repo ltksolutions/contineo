@@ -8051,10 +8051,8 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
 .chunks-compare tbody th { font-weight: 400; color: var(--muted); }
 
 /* ── Vlákno ticketu helpdesku (Ján 7. 10. 2026) ──────────────────────────────
-   Poradie ostáva od najstaršej: pole na odpoveď je pod vláknom a posledná
-   otázka má byť hneď nad ním. Staršie správy sú zbalené do riadku (ako
-   Gmail) — `<details>`, takže to funguje bez skriptu. Rozbalená je posledná
-   prijatá správa a všetko po nej. */
+   Odpoveď je nad vláknom; vlákno ide od najnovšej správy, tá je rozbalená,
+   staršie sú zbalené do riadku — `<details>`, takže to funguje bez skriptu. */
 .thread-summary { margin: 0; font-size: var(--fs-small); }
 .thread-msg { border-left: 3px solid var(--border); padding-left: 12px; min-width: 0; }
 .thread-msg--out { border-left-color: var(--accent); }

@@ -1,9 +1,8 @@
 /**
  * helpdeskTicketPage.test.ts — vlakno ticketu na obrazovke riesitela (ADR-028).
  *
- * Poradie od najstarsej (pole na odpoved je pod vlaknom), starsie spravy
- * zbalene v <details>, rozbalena posledna prijata a vsetko po nej, suhrn
- * nad dlhsim vlaknom (Jan 7. 10. 2026).
+ * Blok Odpoved nad vlaknom, vlakno od najnovsej spravy, ta je rozbalena,
+ * starsie zbalene v <details>, suhrn nad vlaknom (Jan 7. 10. 2026).
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
@@ -52,28 +51,31 @@ async function render() {
 beforeEach(() => { state.messages = [] })
 
 describe("vlakno ticketu", () => {
-  it("dlhe vlakno: starsie zbalene, posledna otazka a odpoved po nej rozbalene, suhrn hore, poradie od najstarsej", async () => {
+  it("odpoved je nad vlaknom; vlakno od najnovsej, ta rozbalena, starsie zbalene; suhrn hore", async () => {
     state.messages = [
       msg("a", "in", "Žiadam o zmenu priezviska.\nĎalší riadok", 3),
       msg("b", "out", "Kontaktujte matriku.", 6),
       msg("c", "in", "Nech sa páči: jozko@example.sk", 7),
-      msg("d", "out", "Ďakujeme, upravené.", 7),
+      msg("d", "out", "Ďakujeme, upravené.", 8),
     ]
     const html = await render()
+    expect(html.indexOf('id="answer"')).toBeLessThan(html.indexOf("thread-summary"))
     expect(html).toContain("4 správy · posledná: Helpdesk")
-    expect(html.match(/<details class="thread-msg/g)).toHaveLength(2)
-    expect(html.match(/<article class="thread-msg/g)).toHaveLength(2)
+    expect(html.match(/<article class="thread-msg/g)).toHaveLength(1)
+    expect(html.match(/<details class="thread-msg/g)).toHaveLength(3)
+    // najnovšia je rozbalená a prvá
+    expect(html).toMatch(/<article class="thread-msg[^"]*">[\s\S]*?Ďakujeme, upravené\./)
+    expect(html.indexOf("Ďakujeme, upravené.")).toBeLessThan(html.indexOf("Nech sa páči"))
+    expect(html.indexOf("Nech sa páči")).toBeLessThan(html.indexOf("Žiadam o zmenu"))
     // náhľad zbalenej správy je začiatok celého textu, nie len prvý riadok (pozdrav)
     expect(html).toContain("· Žiadam o zmenu priezviska. Ďalší riadok</span>")
-    expect(html.indexOf("Žiadam o zmenu")).toBeLessThan(html.indexOf("Nech sa páči"))
-    expect(html.indexOf("Nech sa páči")).toBeLessThan(html.indexOf("Ďakujeme, upravené."))
   })
 
-  it("kratke vlakno je cele rozbalene a bez suhrnu", async () => {
-    state.messages = [msg("a", "in", "Otázka?", 3), msg("b", "out", "Odpoveď.", 4)]
+  it("jedna sprava: rozbalena, bez suhrnu", async () => {
+    state.messages = [msg("a", "in", "Otázka?", 3)]
     const html = await render()
     expect(html).not.toContain("thread-summary")
     expect(html).not.toContain('<details class="thread-msg')
-    expect(html.match(/<article class="thread-msg/g)).toHaveLength(2)
+    expect(html.match(/<article class="thread-msg/g)).toHaveLength(1)
   })
 })
