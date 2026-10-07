@@ -10,6 +10,41 @@
 
 ---
 
+## 2026-10-07 — úprava kurzu podľa MANAGE-COURSE-akcie
+
+**Čo sa zmenilo:**
+
+- **Karta stavu (`StatusCard`):**
+  - je len na koreni kurzu; na podstránkach je v `.ch-facts` štítok
+    `.mc-stchip`, ktorý vedie na koreň;
+  - stavové tlačidlá ostali v päte karty (Q5), nepresunuli sa do
+    `.page-head`.
+- **Detail časti:**
+  - „Pridať blok ▾" je `<details>` v `.page-head` časti;
+  - `?add=` a `?editBlock=` otvoria formulár nad blokmi a menu skryjú;
+  - zdroj videa je `.choice-row` s `.choice-field--block` (`:has`);
+    `?src=external` už iba predvolí externý zdroj.
+- **Testy časti:** sú jeden formulár s `formaction`. Nová akcia
+  `savePartTestsAction` nahradila `partTestRequiredAction`. Pomocník
+  `withRequired()` zapíše prepínače aj pri odobratí alebo priradení testu.
+- **Potvrdenie (`ConfirmSheet`):** vykreslí ho server podľa
+  `?archive=1` / `?removePart=1`; trieda `.confirm` (pod 640 px plachta,
+  inak okno v strede). Pribudlo plné červené tlačidlo `.button--destructive`.
+- **Náhľad ako študent:** `previewVersion()` v `lib/courseView.ts`.
+  `/learning/[kurz]?preview=N` a časti s tým istým parametrom fungujú len
+  pre `learning-admin`. Bez zápisu a postupu (`NO_FACTS`), bez záznamu
+  pozerania (`recording={false}`), nič sa nezamyká (`sequential: false`),
+  testy a dok časti sa nekreslia.
+
+**Pri čítaní kódu som našiel chybu z R3:** `${self}&editBlock=` viedol na 404.
+Šla samostatne ako hotfix (#296), tu ju prekryla nová podoba riadku.
+
+**Snímky z harnessu:** tmavá téma sa prepína po načítaní a `.button` má
+prechod farby. Bez pauzy (500 ms) boli tlačidlá na snímke biele s bielym
+textom — chyba snímky, nie stránky.
+
+---
+
 ## 2026-10-07 — Vzdelávanie na vlastných adresách (R3)
 
 **Čo sa zmenilo:** `lib/learningPaths.ts` drží všetky adresy častí

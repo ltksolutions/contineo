@@ -264,21 +264,35 @@ export async function assignCourseAction(fd: FormData) {
   go(coursePath(courseKey, "people"), "", tp.assigned(result.created, result.existing))
 }
 
-/** Priradiť hotový test k časti (len `ready`, rám MANAGE-COURSE). */
+/**
+ * Testy časti sú jeden formulár (MANAGE-COURSE-akcie, 7. 10. 2026): prepínač
+ * „Povinný" pri každom teste (`required:<testKey>`), „Odobrať" a „Priradiť
+ * test" sú tlačidlá s `formaction`. Prepínače sa zapíšu pri každom z nich —
+ * kto prepol „Povinný" a potom priradil ďalší test, o prepnutie nepríde.
+ */
+function withRequired(fd: FormData, parts: Part[]): Part[] {
+  const partKey = field(fd, "partKey")
+  const part = parts.find(p => p.key === partKey)
+  if (!part) return parts
+  return part.tests.reduce((acc, t) => setPartTestRequired(acc, partKey, t.testKey, fd.get(`required:${t.testKey}`) === "1"), parts)
+}
+
+export async function savePartTestsAction(fd: FormData) {
+  await editParts(fd, parts => withRequired(fd, parts), partTab)
+}
+
+/** Priradiť hotový test k časti (len `ready`, rám MANAGE-COURSE). Nový je povinný. */
 export async function addPartTestAction(fd: FormData) {
   const ctx = await admin()
-  const testKey = field(fd, "testKey")
+  const testKey = field(fd, "addTestKey") || field(fd, "testKey")
   const ready = await readyTestVersions(ctx.person.companyCode)
   if (!ready.has(testKey)) go(partTab(fd), "", errorText(new AppError("attempt.testNotFound", ""), ctx.person.language), true)
-  await editParts(fd, parts => addPartTest(parts, field(fd, "partKey"), testKey, fd.get("required") === "1"), partTab)
+  await editParts(fd, parts => addPartTest(withRequired(fd, parts), field(fd, "partKey"), testKey, fd.has("addTestKey") || fd.get("required") === "1"), partTab)
 }
 
 export async function removePartTestAction(fd: FormData) {
-  await editParts(fd, parts => removePartTest(parts, field(fd, "partKey"), field(fd, "testKey")), partTab)
-}
-
-export async function partTestRequiredAction(fd: FormData) {
-  await editParts(fd, parts => setPartTestRequired(parts, field(fd, "partKey"), field(fd, "testKey"), fd.get("required") === "1"), partTab)
+  const testKey = field(fd, "removeTestKey") || field(fd, "testKey")
+  await editParts(fd, parts => removePartTest(withRequired(fd, parts), field(fd, "partKey"), testKey), partTab)
 }
 
 /** Odvolať certifikát (CERTIFICATE Q3 ✅): lektor, povinný dôvod, nevratné, audit. */

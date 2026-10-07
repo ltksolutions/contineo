@@ -7199,10 +7199,92 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .mc-side { display: grid; gap: 2px; }
 .mc-side .pp-orow { display: none; }
 .mc-main { display: grid; gap: 16px; min-width: 0; }
-.mc-partform { display: grid; gap: 10px; }
-.mc-blockedit { flex-basis: 100%; padding: 8px 0 4px; }
 .btype { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); border-radius: 5px; padding: 3px 7px; white-space: nowrap; }
 .cmu { display: grid; gap: 8px; }
+
+/* ── Úprava kurzu: akcie (MANAGE-COURSE-akcie, 7. 10. 2026) ─────────────────
+   Jedno plné tlačidlo na obrazovke; otvorená úloha (nový blok, úprava bloku,
+   prideľovanie, potvrdenie) ho prevezme. Riadky častí a blokov sú odkazy na
+   celý riadok (NavigationLink), šípky poradia ostávajú formuláre bez JS. */
+.mc-group { display: grid; gap: 10px; min-width: 0; margin: 0; }
+.mc-group > .form-group-head { float: none; }
+.mc-root { display: grid; gap: 20px; align-items: start; }
+.mc-links { margin: 0; padding: 0; list-style: none; }
+.mc-lrow { position: relative; display: flex; align-items: center; gap: 8px; padding-right: 10px; }
+.mc-lrow + .mc-lrow::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--line); }
+.mc-lrow-link {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 12px;
+  min-height: 52px; padding: 8px 6px 8px 16px; color: var(--ink); text-decoration: none;
+}
+a.mc-lrow-link:hover { background: var(--surface-2); }
+.mc-lrow.is-current { background: var(--accent-soft); }
+.mc-lrow-link .mc-row-main b { font-weight: 600; }
+.mc-chev { flex: none; width: 14px; text-align: center; font-size: 18px; color: var(--muted); }
+.mc-parthead { margin: 0; }
+.mc-parthead .mc-h2 { font-size: 22px; letter-spacing: -0.015em; }
+.mc-stchip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px;
+  border-radius: 999px; font-size: 12.5px; font-weight: 600; text-decoration: none;
+}
+.mc-stchip.is-ok { background: var(--ok-bg); color: var(--ok-fg); }
+.mc-stchip.is-warn { background: var(--warn-bg); color: var(--warn-fg); }
+.mc-foot-note { font-size: var(--fs-small); }
+/* „Pridať blok ▾" — SwiftUI `Menu` v toolbare; `<details>` funguje bez JS. */
+.mc-menu { position: relative; }
+.mc-menu > summary { list-style: none; cursor: pointer; }
+.mc-menu > summary::-webkit-details-marker { display: none; }
+.mc-menu-list {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: 260px; padding: 6px;
+  display: grid; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+}
+.mc-menu-list a {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 8px;
+  color: var(--ink); text-decoration: none; font-size: 15px;
+}
+.mc-menu-list a:hover, .mc-menu-list a:focus-visible { background: var(--accent-soft); }
+.mc-menu-list small { margin-left: auto; font-size: 12px; color: var(--muted); }
+.choice-field--block { display: grid; gap: 10px; align-items: stretch; }
+.choice-field--block .field-input { max-width: none; }
+.mc-addtest { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
+.mc-addtest > :first-child { flex: 1 1 240px; min-width: 0; }
+.mc-toggle-label { font-size: 14px; }
+/* Na telefóne by sa „Povinný" zalomil — ostáva prepínač s `aria-label`. */
+@media (max-width: 639px) { .mc-toggle-label { display: none; } }
+.mc-linkbtn, .form-row-sub .linkish {
+  display: inline; padding: 0; margin: 0; border: 0; background: none; font: inherit;
+  color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+/* Nevratné kroky (Odstrániť blok, Odstrániť časť…) na konci, oddelené. */
+.mc-danger { display: grid; justify-items: start; gap: 6px; padding-top: 16px; border-top: 1px solid var(--line); }
+.button--destructive { background: var(--bad-fg); border-color: var(--bad-fg); color: var(--surface); }
+.button--destructive:hover { filter: brightness(0.94); }
+
+/* Potvrdenie nevratného kroku — `.confirmationDialog` (Q4). Vykreslí ho
+   server podľa adresy; stlmená stránka pod ním je odkaz „Zrušiť". Pod 640 px
+   plachta zdola, od 640 px okno v strede. */
+.confirm { position: fixed; inset: 0; z-index: 100; display: grid; align-items: end; }
+.confirm-scrim { position: absolute; inset: 0; background: rgba(10, 14, 20, 0.42); }
+.confirm-card {
+  position: relative; display: grid; gap: 14px; padding: 10px 16px calc(22px + env(safe-area-inset-bottom));
+  background: var(--surface); border-radius: 16px 16px 0 0; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+}
+.confirm-card h2 { margin: 0; font-size: var(--fs-section); letter-spacing: -0.01em; }
+.confirm-card p { margin: 0; font-size: 14px; color: var(--muted); }
+.confirm-card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.confirm-card .sheet-grip { margin-bottom: 0; }
+.confirm-actions { display: grid; gap: 10px; }
+.confirm-actions .button { min-height: 44px; justify-content: center; }
+@media (min-width: 640px) {
+  .confirm { place-items: center; padding: 16px; }
+  .confirm-card { width: min(480px, 100%); padding: 22px; border-radius: 16px; }
+  .confirm-card .sheet-grip { display: none; }
+  .confirm-actions { display: flex; flex-direction: row-reverse; justify-content: flex-start; }
+}
+@media (min-width: 1024px) {
+  .mc-root { grid-template-columns: minmax(0, 1fr) 380px; }
+  .mc-root > .empty { grid-column: 1; }
+}
 
 @media (max-width: 639px) {
   .mc-arrow { min-width: 40px; min-height: 40px; }
@@ -7214,7 +7296,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .mc-detail { grid-template-columns: 240px minmax(0, 1fr); }
   .mc-side { position: sticky; top: 12px; }
   .mc-side .pp-orow { display: flex; }
-  .mc-back { display: none; }
 }
 
 /* ── Úprava kurzu: nastavenia a vstup smart:tagov (rám MANAGE-COURSE) ─────── */

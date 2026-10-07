@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>MANAGE-COURSE — akcie na úprave kurzu</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:var(--ink)}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8;color:#161b22}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:92ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.sec-w{font-size:13px;color:#5c6675;margin:0 0 14px;max-width:96ch}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+/* rám */
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line)}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.body{padding:22px 28px 32px}
+.wrap{max-width:1180px;display:grid;gap:18px}
+.topic{font-size:var(--fs-micro);font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.ph{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.ph-t{display:grid;gap:2px;min-width:0}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.facts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:var(--fs-small);color:var(--muted)}
+.sp{flex:1}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;cursor:pointer;font-family:inherit}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--danger{background:var(--surface);color:var(--bad-fg);border-color:var(--line-strong)}
+.button--dangerfill{background:var(--bad-fg);border-color:var(--bad-fg);color:#fff}
+.dark .button--dangerfill{color:#0e1116}
+.button[disabled]{opacity:.45;cursor:default}
+.icon-b{width:40px;padding:0}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--warn{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--acc{background:var(--accent-soft);color:var(--accent)}
+a.stchip{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:600;text-decoration:none;background:var(--warn-bg);color:var(--warn-fg)}
+a.stchip.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);font-size:15px}
+.tabs a{padding:8px 0 10px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs a.on{color:var(--accent);border-color:var(--accent);font-weight:600}
+.tabs .c{font-size:12px;color:var(--muted);margin-left:4px;font-weight:400}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.pad{padding:16px 18px;display:grid;gap:12px}
+/* karta stavu */
+.steps{display:flex;gap:0;align-items:center;flex-wrap:wrap}
+.st{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.st i{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700}
+.st.cur{color:var(--ink);font-weight:600}.st.cur i{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.st.done i{background:var(--ok-fg);border-color:var(--ok-fg);color:#fff}
+.st small{font-weight:400;color:var(--muted);font-size:12.5px}
+.st-sep{width:36px;height:1px;background:var(--line-strong);margin:0 10px}
+.checks{display:grid;gap:6px}
+.ck-r{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.ck-r i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;flex:none;margin-top:2px;background:var(--ok-bg);color:var(--ok-fg)}
+.ck-r small{display:block;color:var(--muted);font-size:12.5px}
+.lead{font-size:13.5px;color:var(--muted);margin:0}
+.foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
+/* zoznam */
+.gh{display:flex;align-items:center;gap:10px;padding:0 4px;margin:0 0 8px;font-size:var(--fs-small);font-weight:600}
+.gh .n{color:var(--muted);font-weight:400}
+.gf{font-size:var(--fs-micro);color:var(--muted);padding:0 4px;margin:8px 0 0}
+.list{display:grid;overflow:hidden}
+.row{position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 10px 8px 16px;font-size:15px;line-height:1.35;color:var(--ink);text-decoration:none}
+.row + .row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+a.row:hover,.row .lnk:hover{background:var(--surface-2)}
+.row-main{flex:1;min-width:0;display:grid;gap:2px}
+.row-main b{font-weight:600}
+.row-main small{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.num{width:22px;height:22px;border-radius:50%;background:var(--surface-2);color:var(--muted);display:grid;place-items:center;font-size:11.5px;font-weight:700;flex:none}
+.arr{display:flex;gap:4px;flex:none}
+.arr span{width:36px;height:36px;border-radius:9px;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:14px;color:var(--ink);background:var(--surface)}
+.arr span.off{opacity:.35}
+.chev{color:var(--muted);font-size:18px;flex:none;width:14px;text-align:center}
+.lnk{display:flex;align-items:center;gap:12px;flex:1;min-width:0;align-self:stretch;margin:-8px 0;padding:8px 0;color:inherit;text-decoration:none;border-radius:8px}
+.btype{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--muted);background:var(--surface-2);border-radius:5px;padding:2px 6px;flex:none}
+/* formulárové riadky */
+.fr{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 16px;font-size:15px}
+.fr + .fr::before,.fr + .sub::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.tg{width:46px;height:28px;border-radius:999px;background:rgba(120,128,140,.3);flex:none;position:relative}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.on .tg,.tg.on{background:var(--accent)}
+.on .tg::after,.tg.on::after{left:20px}
+.tick{width:16px;flex:none;color:var(--accent);font-weight:700;text-align:center}
+.fr.on .tick::after{content:"✓"}
+.fi{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%}
+.fi.ph-c{color:var(--muted)}
+.sub{position:relative;padding:2px 16px 12px}
+.zone{border:1.5px dashed var(--line-strong);border-radius:10px;padding:16px;text-align:center;font-size:13.5px;color:var(--muted);display:grid;gap:4px}
+.zone b{color:var(--ink)}
+.flab{font-size:var(--fs-small);font-weight:600;margin:0 0 6px;display:block}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.danger-zone{display:flex;justify-content:flex-start}
+/* menu */
+.mwrap{position:relative}
+.menu{position:absolute;right:0;top:46px;z-index:5;width:250px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.18);padding:6px;display:grid}
+.menu a{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14.5px}
+.menu a:hover,.menu a.hl{background:var(--accent-soft)}
+.menu small{color:var(--muted);margin-left:auto;font-size:12px}
+/* rozloženie detailu */
+.det{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start}
+.side{display:grid;gap:2px}
+.side a{display:flex;gap:10px;align-items:center;min-height:40px;padding:6px 10px;border-radius:9px;color:var(--ink);text-decoration:none;font-size:14px;position:relative}
+.side a.cur{background:var(--accent-soft);font-weight:600}
+.side a.cur::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.main{display:grid;gap:22px;min-width:0}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:12px}
+/* plachta */
+.scrim{position:absolute;inset:0;background:rgba(10,14,20,.42);display:grid;place-items:center;z-index:8}
+.modal{width:min(480px,calc(100% - 32px));background:var(--surface);border-radius:16px;box-shadow:0 30px 60px rgba(0,0,0,.3);display:grid;gap:14px;padding:22px}
+.modal h2{margin:0;font-size:var(--fs-section);letter-spacing:-.01em}
+.modal p{margin:0;font-size:14px;color:var(--muted)}
+.modal ul{margin:0;padding-left:18px;font-size:14px;display:grid;gap:4px}
+.m .scrim{place-items:end stretch}
+.m .modal{width:100%;border-radius:16px 16px 0 0;padding:10px 16px 22px}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--line-strong);justify-self:center}
+/* mobil */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 26px}
+.m .page-title{font-size:22px}
+.m .wrap{gap:16px}
+.m .button{min-height:44px}
+.m .full{width:100%}
+.m .tabs{gap:18px;overflow:hidden}
+.m .arr span{width:40px;height:40px}
+.m .row{font-size:16px}
+.m .ph .button{flex:1}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff}
+.notes{display:grid;gap:6px;max-width:96ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.notes .ann{position:static;flex:none;box-shadow:none}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">MANAGE-COURSE — akcie na úprave kurzu</h1>
+<p class="doc">Úprava kurzu (<code>/learning/manage/[courseKey]</code> a podstránky) má dnes na jednej obrazovke až štyri plné tlačidlá, pilulky vo formulári, „← Všetky časti", štyri ovládače v riadku bloku a archiváciu na jedno kliknutie bez potvrdenia. Návrh uplatňuje pravidlá <code>ZAKLAD-podmenu-a-akcie</code> a <code>ZAKLAD-vyber-a-prepinace</code> na celú úpravu kurzu. Popis, otázky a prompt v <code>MANAGE-COURSE-akcie.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Súpis akcií — dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Obrazovka</th><th>Dnes (page.tsx)</th><th>Návrh</th><th>SwiftUI</th></tr>
+    <tr><td>všetky podstránky</td><td class="old">Karta stavu s plným „Zverejniť" na Častiach, detaile časti, Nastaveniach aj Zapísaných</td><td class="new">Karta stavu len na koreni kurzu (Časti). Inde štítok stavu v hlavičke kurzu, odkaz na koreň (Q1)</td><td>—</td></tr>
+    <tr><td>Časti</td><td class="old">„Pridať časť" plné</td><td class="new">tiché; plné je len to v karte stavu</td><td><code>Form</code> · <code>Button</code></td></tr>
+    <tr><td>Časti</td><td>riadok: ↑ ↓ + odkaz „Upraviť"</td><td class="new">riadok je odkaz s › (názov, štítok, počty); ↑ ↓ ostávajú vpravo</td><td><code>NavigationLink</code></td></tr>
+    <tr><td>Karta stavu</td><td class="old">„Náhľad ako študent" v ráme 27. 9., v kóde chýba</td><td class="new">tiché tlačidlo vedľa „Zverejniť" (Q2)</td><td>—</td></tr>
+    <tr><td>Karta stavu — zverejnený</td><td class="old">„Archivovať" sa vykoná hneď</td><td class="new">otvorí potvrdenie (<code>?archive=1</code>): dôsledky + „Archivovať kurz" (Q4)</td><td><code>.confirmationDialog</code></td></tr>
+    <tr><td>Detail časti</td><td class="old">„← Všetky časti"</td><td class="new">preč; kurz je v ceste</td><td>—</td></tr>
+    <tr><td>Detail časti</td><td class="old">„Uložiť", „Pridať", „Priradiť test" — tri plné</td><td class="new">plné „Pridať blok" v <code>.page-head</code> (ponuka typov); „Uložiť", „Priradiť test" tiché</td><td><code>toolbar</code> · <code>Menu</code></td></tr>
+    <tr><td>Detail časti</td><td class="old">typ bloku = pilulky <code>.lpills</code> vo formulári</td><td class="new">typ sa vyberá v ponuke „Pridať blok"; formulár má v nadpise typ</td><td><code>Menu</code></td></tr>
+    <tr><td>Pridať blok — video</td><td class="old">zdroj = pilulky (odkazy <code>?src=</code>)</td><td class="new"><code>.choice-row</code> (radio), pole zdroja pod zvoleným riadkom; prepína CSS <code>:has()</code>, bez JS</td><td><code>Picker(.inline)</code></td></tr>
+    <tr><td>Riadok bloku</td><td class="old">↑ ↓ · Upraviť · Odstrániť (4 ovládače)</td><td class="new">riadok = odkaz na úpravu s ›; ↑ ↓ ostávajú; „Odstrániť blok" v úprave bloku dole (Q3)</td><td><code>NavigationLink</code> · <code>role: .destructive</code></td></tr>
+    <tr><td>Testy časti</td><td class="old">„✓ Povinný" ako stlačené tlačidlo, uloží hneď</td><td class="new">prepínač v riadku, uloží „Uložiť testy"; „Odobrať" tichý odkaz v riadku</td><td><code>Toggle</code></td></tr>
+    <tr><td>Detail časti</td><td class="old">„Odstrániť časť" tiché hneď pod „Uložiť", bez potvrdenia</td><td class="new">na konci stránky, červený text, potvrdenie s počtom blokov a testov (Q4)</td><td><code>role: .destructive</code></td></tr>
+    <tr><td>Zapísaní</td><td class="old">„Prideliť kurz" plné + vo formulári „Prideliť 19 ľuďom" plné</td><td class="new">kým je otvorený formulár, „Prideliť kurz" v hlavičke nie je — plné prevezme formulár</td><td>—</td></tr>
+    <tr><td>Nastavenia</td><td class="old">„Uložiť" plné + „Zverejniť" v karte stavu</td><td class="new">len „Uložiť" plné (karta stavu tu nie je)</td><td><code>Form</code></td></tr>
+  </table>
+  <p class="sec-w" style="margin-top:10px"><b>Pravidlo pre úlohy:</b> na každej obrazovke je jedno plné tlačidlo. Keď sa otvorí úloha (Pridať blok, Prideliť kurz, potvrdenie), plné tlačidlo má úloha a tlačidlo, ktoré ju otvorilo, zmizne.</p>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — Časti, koncept pripravený na zverejnenie</p>
+  <div class="frame" style="width:1440px" id="f-root"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Jediné plné tlačidlo na obrazovke: stavový krok v päte karty stavu (Zverejniť / Nová verzia / Obnoviť), ako v karte postupu znenia (<code>KNIZNICA-postup-znenia</code>). „Náhľad ako študent" tiché vedľa.</p>
+    <p><span class="ann">2</span>Riadok časti je odkaz (celý riadok, ›). Šípky poradia ostávajú samostatné formuláre bez JS.</p>
+    <p><span class="ann">3</span>„Pridať časť" tiché, pod kartou formulára.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 — Detail časti, otvorená ponuka „Pridať blok"</p>
+  <div class="frame" style="width:1440px" id="f-part"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Hlavička kurzu na podstránke: štítok stavu namiesto karty („Koncept v3 · pripravený" → koreň kurzu). Žiadne „← Všetky časti".</p>
+    <p><span class="ann">2</span>„Pridať blok" = <code>&lt;details&gt;</code> s odkazmi <code>?add=text#add</code> … — ponuka funguje bez JS. Pilulky typu preč.</p>
+    <p><span class="ann">3</span>Riadok bloku: typ · súhrn · ↑ ↓ · ›. Odstránenie je v úprave bloku.</p>
+    <p><span class="ann">4</span>Testy: prepínač „Povinný" v riadku, uloží sa tlačidlom „Uložiť testy". „Odobrať" je <code>&lt;button formaction&gt;</code> v tom istom formulári.</p>
+    <p><span class="ann">5</span>„Odstrániť časť" na konci stránky, červený text, otvorí potvrdenie.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 — Časti</p>
+  <div class="frame" style="width:834px" id="f-834"></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 — Pridať blok: video · Úprava bloku · Archivovať (tmavá)</p>
+  <div class="row-frames">
+    <div><p class="cap">Pridať blok — Video (?add=video)</p><div class="frame m" style="width:390px" id="f-m1"></div></div>
+    <div><p class="cap">Úprava bloku (?editBlock=…)</p><div class="frame m" style="width:390px" id="f-m2"></div></div>
+    <div><p class="cap">Zverejnený → Archivovať (?archive=1), tmavá</p><div class="frame m dark" style="width:390px;height:844px" id="f-m3"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Otvorená úloha: v hlavičke nie je „Pridať blok", plné je „Pridať blok" na konci formulára. „Zrušiť" je tichý odkaz na časť.</p>
+    <p><span class="ann">2</span>Zdroj videa: <code>.choice-row</code>, zóna nahrávania alebo pole URL pod zvoleným riadkom (<code>:has(:checked)</code>). Priebeh nahrávania ostáva modálne okno (rozhodnutie 23. 9.).</p>
+    <p><span class="ann">3</span>Potvrdenie: na telefóne plachta zdola, od 640 px okno v strede. Server ho vykreslí pri <code>?archive=1</code>; „Zrušiť" = odkaz bez parametra.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const CH='<span class="chev">›</span>';
+const hdr=(m)=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=(items)=>`<div class="crumbs">${items.map((t,i)=>i===items.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const tabs=(on)=>`<nav class="tabs">${[["Časti",6],["Nastavenia"],["Zapísaní",42]].map(([t,c])=>`<a href="#" class="${t===on?"on":""}">${t}${c?`<span class="c">${c}</span>`:""}</a>`).join("")}</nav>`;
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const head=(chip,m,right="")=>`<div class="ph"><div class="ph-t"><span class="topic">Bezpečnosť a ochrana zdravia</span><h1 class="page-title">Požiarna ochrana 2026</h1><div class="facts"><code>poziarna-ochrana</code>${chip||""}</div></div>${right?`<span class="sp"></span>${right}`:""}</div>`;
+const status=(m)=>`<section class="card" style="position:relative">${an(1,"right:-8px;bottom:14px")}<div class="pad">
+  <h2 style="margin:0;font-size:var(--fs-section)">Pripravené na zverejnenie</h2>
+  <div class="steps"><span class="st cur"><i>1</i><span>Koncept <small>v3</small></span></span><span class="st-sep"></span><span class="st"><i>2</i><span>Zverejnené <small>v2</small></span></span><span class="st-sep"></span><span class="st"><i>3</i>Archív</span></div>
+  <div class="checks"><div class="ck-r"><i>✓</i><span>Časti a bloky<small>6 častí, každá má aspoň jeden blok</small></span></div><div class="ck-r"><i>✓</i><span>Právny základ<small>oprávnený záujem — školenie BOZP</small></span></div><div class="ck-r"><i>✓</i><span>Téma<small>Bezpečnosť a ochrana zdravia</small></span></div></div>
+  <p class="lead">Verzia 2 zostáva zverejnená, kým nezverejníte túto. Zapísaní vo verzii 2 ju dokončia; noví sa zapíšu do verzie 3.</p></div>
+  <div class="foot"><span class="button${m?" full":""}">Zverejniť verziu 3</span><span class="button button--quiet${m?" full":""}">Náhľad ako študent</span><span class="quiet" style="font-size:var(--fs-small);color:var(--muted);${m?"":"margin-left:auto"}">Uložené 6. 10. 2026 14:10</span></div></section>`;
+const parts=[["Úvod a legislatíva","Povinná","4 bloky · 1 test"],["Hasiace prístroje","Povinná","6 blokov · 1 test"],["Evakuácia budovy","Povinná","5 blokov"],["Prvá pomoc pri popáleninách","Nepovinná","3 bloky"],["Požiarne poplachové smernice","Povinná","2 bloky · 1 test"],["Záverečný test","Povinná","1 blok · 1 test"]];
+const partList=(m)=>`<div style="position:relative">${an(2,"right:-8px;top:40px")}<p class="gh">Časti<span class="n">6</span></p><div class="card list">${parts.map(([t,r,c],i)=>`<div class="row"><a class="lnk" href="#"><span class="num">${i+1}</span><span class="row-main"><b>${t}</b><small><span class="tag${r==="Povinná"?" tag--acc":""}">${r}</span>${c}</small></span>${m?"":CH}</a><span class="arr"><span class="${i===0?"off":""}">↑</span><span class="${i===parts.length-1?"off":""}">↓</span></span>${m?CH:""}</div>`).join("")}</div></div>`;
+const newPart=(m)=>`<div style="position:relative">${an(3,"right:-8px;bottom:6px")}<p class="gh">Nová časť</p><div class="card"><div class="fr"><input class="fi ph-c" value="Názov časti" readonly></div><label class="fr on"><span class="row-main">Povinná</span><i class="tg"></i></label></div><div class="acts" style="margin-top:10px"><span class="button button--quiet${m?" full":""}">Pridať časť</span></div></div>`;
+
+document.getElementById("f-root").innerHTML=hdr()+crumbs(["Prehľad","Vzdelávanie","Správa kurzov","Požiarna ochrana 2026"])+`<div class="body"><div class="wrap">${head()}${status()}${tabs("Časti")}<div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start">${partList()}${newPart()}</div></div></div>`;
+
+document.getElementById("f-834").innerHTML=hdr()+crumbs(["Vzdelávanie","Správa kurzov","Požiarna ochrana 2026"])+`<div class="body"><div class="wrap">${head()}${status()}${tabs("Časti")}${partList()}${newPart()}</div></div>`;
+
+const chipDraft=`<a class="stchip ok" href="#">Koncept v3 · pripravený na zverejnenie ›</a>`;
+const blocks=[["TEXT","Hasiace prístroje sa delia podľa hasiacej látky…"],["OBRÁZOK","Typy hasiacich prístrojov — tabuľka"],["VIDEO","3:42 · povinné dopozeranie"],["DOKUMENT Z KNIŽNICE","Požiarny poriadok pracoviska · znenie od 1. 9. 2026"],["GALÉRIA","4 × Umiestnenie prístrojov v budove"],["TEXT","Kontrola prístroja raz ročne…"]];
+const blockList=(m)=>`<div style="position:relative">${an(3,"right:-8px;top:250px")}<p class="gh">Bloky<span class="n">6</span></p><div class="card list">${blocks.map(([t,s],i)=>`<div class="row"><a class="lnk" href="#"><span class="row-main" style="${m?"":"display:flex;align-items:center;gap:12px"}"><span><span class="btype">${t}</span></span><small style="font-size:${m?13:14}px;color:var(--ink)">${s}</small></span>${m?"":CH}</a><span class="arr"><span class="${i===0?"off":""}">↑</span><span class="${i===blocks.length-1?"off":""}">↓</span></span>${m?CH:""}</div>`).join("")}</div></div>`;
+const tests=`<div style="position:relative">${an(4,"right:-8px;top:40px")}<p class="gh">Testy časti</p><div class="card list">
+  <div class="fr"><span class="row-main"><b>Hasiace prístroje — overenie</b><small>20 otázok · hranica 80 % · 3 pokusy · zodpovedá Marek Kováč · <a href="#">Odobrať</a></small></span><span style="font-size:14px;color:var(--muted)">Povinný</span><i class="tg on"></i></div>
+  <div class="fr"><span class="row-main"><b>Rýchly kvíz — značenie</b><small>8 otázok · hranica 60 % · bez obmedzenia · <a href="#">Odobrať</a></small></span><span style="font-size:14px;color:var(--muted)">Povinný</span><i class="tg"></i></div>
+  <div class="fr" style="gap:10px"><span class="fi ph-c" style="display:flex;align-items:center">Vybrať test z hotových…</span><span class="button button--quiet">Priradiť test</span></div>
+  </div><div class="acts" style="margin-top:10px"><span class="button button--quiet">Uložiť testy</span></div></div>`;
+const partForm=`<div><p class="gh">Časť</p><div class="card"><div class="fr" style="display:grid;gap:4px"><span class="flab" style="margin:0">Názov</span><input class="fi" value="Hasiace prístroje" readonly></div><div class="fr" style="display:grid;gap:4px"><span class="flab" style="margin:0">Zhrnutie</span><input class="fi" value="Typy prístrojov, použitie a kontrola" readonly></div><label class="fr on"><span class="row-main">Povinná</span><i class="tg"></i></label><div class="fr"><span class="row-main">Odhad času</span><input class="fi" value="15 min" readonly style="width:110px;text-align:right"></div></div><div class="acts" style="margin-top:10px"><span class="button button--quiet">Uložiť časť</span></div></div>`;
+const menu=`<div class="menu">${[["Text"],["Obrázok"],["Galéria"],["Dokument z knižnice","znenie"],["Video","MP4 / odkaz"]].map(([t,s],i)=>`<a href="#" class="${i===4?"hl":""}">${t}${s?`<small>${s}</small>`:""}</a>`).join("")}</div>`;
+document.getElementById("f-part").innerHTML=hdr()+crumbs(["Prehľad","Vzdelávanie","Správa kurzov","Požiarna ochrana 2026","Hasiace prístroje"])+`<div class="body"><div class="wrap">
+  <div style="position:relative">${an(1,"left:-12px;top:34px")}${head(chipDraft)}</div>${tabs("Časti")}
+  <div class="det"><nav class="side">${parts.map(([t],i)=>`<a href="#" class="${i===1?"cur":""}"><span class="num">${i+1}</span>${t}</a>`).join("")}</nav>
+  <div class="main"><div class="ph"><h2 style="margin:0;font-size:22px;letter-spacing:-.015em">2 · Hasiace prístroje</h2><span class="sp"></span><div class="mwrap" style="position:relative">${an(2,"left:-30px;top:9px")}<span class="button">Pridať blok <span style="font-size:11px">▾</span></span>${menu}</div></div>
+  ${blockList()}${tests}${partForm}
+  <div class="danger-zone" style="position:relative">${an(5,"left:-30px;top:9px")}<span class="button button--danger">Odstrániť časť…</span></div></div></div></div></div>`;
+
+const mHead=(chip)=>`<div class="ph-t"><span class="topic">Bezpečnosť a ochrana zdravia</span><h1 class="page-title" style="font-size:20px">Požiarna ochrana 2026</h1><div class="facts">${chip}</div></div>`;
+document.getElementById("f-m1").innerHTML=hdr(1)+crumbs(["Požiarna ochrana 2026","Hasiace prístroje"])+`<div class="body"><div class="wrap">${mHead(`<a class="stchip ok" href="#">Koncept v3 · pripravený ›</a>`)}
+  <h2 style="margin:0;font-size:19px">2 · Hasiace prístroje</h2>
+  <div id="add" style="position:relative">${an(2,"right:-6px;top:40px")}<p class="gh" style="font-size:var(--fs-section);font-weight:650">Nový blok · Video</p>
+  <div class="card list"><label class="fr on"><span class="row-main">Nahrať MP4 <small>do 25 MB</small></span><i class="tick"></i></label>
+   <div class="sub"><div class="zone"><b>Vyberte súbor alebo ho sem pretiahnite</b>MP4 alebo WebM</div></div>
+   <label class="fr"><span class="row-main">Externý odkaz <small>YouTube, Vimeo, stream</small></span><i class="tick"></i></label></div></div>
+  <div><div class="card"><label class="fr"><span class="row-main"><span>Povinné dopozeranie</span><small>Pretáčanie dopredu sa vypne; časť sa dá označiť až po pozretí 90 %.</small></span><i class="tg"></i></label></div></div>
+  <div class="acts" style="position:relative;display:grid">${an(1,"right:-6px;top:-10px")}<span class="button full">Pridať blok</span><span class="button button--quiet full">Zrušiť</span></div>
+  </div></div>`;
+
+document.getElementById("f-m2").innerHTML=hdr(1)+crumbs(["Požiarna ochrana 2026","Hasiace prístroje"])+`<div class="body"><div class="wrap">${mHead(`<a class="stchip ok" href="#">Koncept v3 · pripravený ›</a>`)}
+  <h2 style="margin:0;font-size:19px">2 · Hasiace prístroje</h2>
+  <div><p class="gh" style="font-size:var(--fs-section);font-weight:650">Blok 3 · Video</p><div class="card list"><div class="fr"><span class="row-main"><b>hasiace-pristroje.mp4</b><small>3:42 · 18,4 MB</small></span></div><label class="fr on"><span class="row-main"><span>Povinné dopozeranie</span><small>Pretáčanie dopredu sa vypne.</small></span><i class="tg"></i></label></div></div>
+  <div class="acts" style="display:grid"><span class="button full">Uložiť blok</span><span class="button button--quiet full">Zrušiť</span></div>
+  <div style="border-top:1px solid var(--line);padding-top:16px;display:grid;gap:6px"><span class="button button--danger full">Odstrániť blok</span><p class="gf" style="margin:0;text-align:center">Blok zmizne z konceptu v3. Verzia 2 sa nemení.</p></div>
+  </div></div>`;
+
+document.getElementById("f-m3").innerHTML=hdr(1)+crumbs(["Správa kurzov","Požiarna ochrana 2026"])+`<div class="body"><div class="wrap">${mHead(`<span class="tag tag--ok">Zverejnené v2</span>`)}
+  <section class="card"><div class="pad"><div class="steps"><span class="st done"><i>✓</i>Koncept</span><span class="st-sep" style="width:16px"></span><span class="st cur"><i>2</i>Zverejnené</span></div><p class="lead">Zverejnená verzia sa nemení. Zmena = nová verzia (kópia).</p></div><div class="foot" style="display:grid"><span class="button full">Nová verzia</span><span class="button button--quiet full">Náhľad ako študent</span><span class="button button--danger full">Archivovať…</span></div></section>
+  ${tabs("Časti")}</div></div>
+  <div class="scrim">${an(3,"right:12px;bottom:322px")}<div class="modal"><span class="grab"></span><h2>Archivovať kurz Požiarna ochrana 2026?</h2>
+  <ul><li>Nikto nový sa nezapíše, kurz zmizne z ponuky.</li><li>3 rozpracovaní ho dokončia vo verzii 2.</li><li>Certifikáty a výsledky ostávajú.</li></ul>
+  <p>Kurz sa dá neskôr obnoviť ako nová verzia.</p>
+  <div class="acts" style="display:grid"><span class="button button--dangerfill full">Archivovať kurz</span><span class="button button--quiet full">Zrušiť</span></div></div></div>`;
+</script>
+</body></html>

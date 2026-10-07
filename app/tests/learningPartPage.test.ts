@@ -9,7 +9,7 @@ import type { Course, CourseVersion, Part } from "../src/lib/courses"
 import type { Enrollment } from "../src/lib/enrollments"
 import type { ProgressFacts } from "../src/lib/learningProgress"
 
-const db = vi.hoisted(() => ({ course: null as unknown, enrollment: null as unknown, facts: null as unknown, docs: new Map() }))
+const db = vi.hoisted(() => ({ course: null as unknown, enrollment: null as unknown, facts: null as unknown, docs: new Map(), isAdmin: false }))
 
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
@@ -20,7 +20,7 @@ vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: un
 vi.mock("@/components/SubmitButton", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/learning", () => ({
-  learningContext: async () => ({ state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" }, isAdmin: false }),
+  learningContext: async () => ({ state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" }, isAdmin: db.isAdmin }),
 }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => db.course }))
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentFor: async () => db.enrollment }))
@@ -64,12 +64,13 @@ const enrollment: Enrollment = {
 const facts = (over: Partial<ProgressFacts> = {}): ProgressFacts => ({ completions: [{ partKey: "uvod", at }], watches: [], passedTests: [], ...over })
 const watched = (to: number) => ({ partKey: "evakuacia", blockId: "v", watchedRanges: [[0, to]] as [number, number][], durationSec: 720, updatedAt: at })
 
-async function render(partKey = "evakuacia") {
+async function render(partKey = "evakuacia", query: Record<string, string> = {}) {
   const { default: Page } = await import("../src/app/learning/[courseKey]/[partKey]/page")
-  return renderToStaticMarkup(await Page({ params: Promise.resolve({ courseKey: "bozp", partKey }), searchParams: Promise.resolve({}) }))
+  return renderToStaticMarkup(await Page({ params: Promise.resolve({ courseKey: "bozp", partKey }), searchParams: Promise.resolve(query) }))
 }
 
 beforeEach(() => {
+  db.isAdmin = false
   db.course = course
   db.enrollment = enrollment
   db.facts = facts({ watches: [watched(450)] })
@@ -123,5 +124,17 @@ describe("/learning/[courseKey]/[partKey]", () => {
     await expect(render("zaver")).rejects.toThrow("redirect /learning/bozp")
     db.enrollment = null
     await expect(render()).rejects.toThrow("redirect /learning/bozp")
+  })
+
+  it("náhľad ako študent: bez zápisu, bez označenia a testu, odkazy s ?preview", async () => {
+    db.isAdmin = true
+    db.enrollment = null
+    const html = await render("evakuacia", { preview: "2" })
+    expect(html).toContain("Náhľad verzie 2 tak, ako ju uvidí študent.")
+    expect(html).toContain("časť sa nedá označiť ako prejdená")
+    expect(html).not.toContain("Označiť ako prejdené")
+    expect(html).toMatch(/href="\/learning\/bozp\/[a-z-]+\?preview=2"/)
+    db.isAdmin = false
+    await expect(render("evakuacia", { preview: "2" })).rejects.toThrow("redirect /learning/bozp")
   })
 })

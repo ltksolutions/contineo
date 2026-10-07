@@ -9,7 +9,7 @@ import type { Course, CourseVersion, Part } from "../src/lib/courses"
 import type { Enrollment } from "../src/lib/enrollments"
 import type { ProgressFacts } from "../src/lib/learningProgress"
 
-const db = vi.hoisted(() => ({ course: null as unknown, enrollment: null as unknown, facts: null as unknown }))
+const db = vi.hoisted(() => ({ course: null as unknown, enrollment: null as unknown, facts: null as unknown, isAdmin: false }))
 
 vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => null, certificatesForPerson: async () => [], certificatesForCourse: async () => [], certificateForEnrollment: async () => null }))
 vi.mock("next/navigation", () => ({
@@ -20,7 +20,7 @@ vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: un
 vi.mock("@/components/SubmitButton", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/learning", () => ({
-  learningContext: async () => ({ state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" }, isAdmin: false }),
+  learningContext: async () => ({ state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" }, isAdmin: db.isAdmin }),
 }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => db.course }))
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentFor: async () => db.enrollment }))
@@ -61,12 +61,13 @@ const enrollment: Enrollment = {
 }
 const facts = (over: Partial<ProgressFacts> = {}): ProgressFacts => ({ completions: [], watches: [], passedTests: [], ...over })
 
-async function render() {
+async function render(query: Record<string, string> = {}) {
   const { default: Page } = await import("../src/app/learning/[courseKey]/page")
-  return renderToStaticMarkup(await Page({ params: Promise.resolve({ courseKey: "bozp" }), searchParams: Promise.resolve({}) }))
+  return renderToStaticMarkup(await Page({ params: Promise.resolve({ courseKey: "bozp" }), searchParams: Promise.resolve(query) }))
 }
 
 beforeEach(() => {
+  db.isAdmin = false
   db.course = course()
   db.enrollment = enrollment
   db.facts = facts({
@@ -126,5 +127,19 @@ describe("/learning/[courseKey]", () => {
     ;(globalThis as { __passed?: string[] }).__passed = []
     expect(done).toContain("Kurz ste dokončili 18. 9. 2026.")
     expect(done).toContain("prešiel 90 %")
+  })
+
+  it("náhľad ako študent (MANAGE-COURSE-akcie Q2): koncept, bez zápisu, nič nezamknuté", async () => {
+    db.isAdmin = true
+    db.enrollment = null
+    db.course = course({ versions: [version(), version({ versionId: "v3", version: 3, state: "draft", publishedAt: undefined, title: "Koncept v3" })] })
+    const html = await render({ preview: "3" })
+    expect(html).toContain("Náhľad verzie 3 tak, ako ju uvidí študent.")
+    expect(html).toContain("Koncept v3")
+    expect(html).toContain('href="/learning/bozp/zaver?preview=3"')
+    expect(html).not.toContain("Zapísať sa")
+    // Študent bez roly náhľad nedostane — zatvorený kurz ostáva 404.
+    db.isAdmin = false
+    await expect(render({ preview: "3" })).rejects.toThrow("notFound")
   })
 })
