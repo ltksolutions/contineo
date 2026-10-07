@@ -9,6 +9,29 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 Odkaz „Upraviť" pri bloku v detaile časti kurzu po zmene adries (R3)
 viedol na neexistujúcu stránku. Opravené.
 
+### Helpdesk: prvá synchronizácia neprechádza celú históriu schránky (2026-10-07)
+
+Delta dotaz na Microsoft Graph sa pýta len na správy od začiatku
+synchronizácie (`$filter=receivedDateTime ge …`). Predtým prvé kolá
+prechádzali celú schránku — pri 15 rokoch pošty po 1 000 správach na
+beh a všetky zahodili ako staršie. Značka zo starého dotazu sa pri
+ďalšom behu zahodí a synchronizácia začne zúžene; začiatok ostáva.
+
+### Helpdesk: overenie schránky Microsoft 365 nepotrebuje User.Read.All (2026-10-07)
+
+„Overiť spojenie" čítalo najprv profil používateľa schránky, na ktorý
+treba v Entra oprávnenie `User.Read.All`. Aplikácia zúžená cez RBAC for
+Applications ho nemá, takže overenie hlásilo „Schránka odmietla prístup",
+hoci zúženie bolo správne. Overenie teraz číta len priečinok Doručené —
+to isté, čo robí synchronizácia.
+
+### Kanály: „Tajný kľúč" namiesto „Tajomstvo widgetu" (2026-10-07)
+
+V nastaveniach kanála typu widget sa tajomstvo, ktorým cudzí systém
+podpisuje tokeny, volá **Tajný kľúč** (cs Tajný klíč, en Secret key),
+aj v tlačidle, hláškach a v návode pre ISSF. Client secret schránky
+Microsoft 365 ostáva pod pôvodným názvom — je to pojem z Entra.
+
 ### Kanály: kľúč kanála prideľuje systém (2026-10-07)
 
 Pri založení kanála sa kľúč už nezadáva — Contineo pridelí UUID a ukáže

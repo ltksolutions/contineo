@@ -2,7 +2,7 @@
  * widget-test.mjs — skúšobná stránka widgetu bez cudzieho systému (ADR-028, D166).
  *
  * Spustí malý HTTP server na povolenom pôvode kanála, vydá token podpísaný
- * tajomstvom kanála (to isté, čo by urobil ISSF) a vloží skript widgetu
+ * tajným kľúčom kanála (to isté, čo by urobil ISSF) a vloží skript widgetu
  * z Continea. Tak sa dá krok 5 vyskúšať naostro skôr, než token vydáva
  * prevádzkovateľ ISSF.
  *
@@ -10,7 +10,7 @@
  *     --app https://intranet.futbalsfz.sk --email jan@klub.sk --given Ján --family Letko --sub 1234567
  *
  * Kľúč kanála (UUID) je na obrazovke kanála v Kanáloch. Predpoklady: kanál
- * má tajomstvo widgetu a `--origin` je medzi jeho povolenými pôvodmi. Tajomstvo sa číta z databázy
+ * má tajný kľúč a `--origin` je medzi jeho povolenými pôvodmi. Tajomstvo sa číta z databázy
  * a rozšifruje kľúčom `OAUTH_SECRET_ENCRYPTION_KEY` — rovnaký tvar ako
  * `lib/secrets.ts` (`v1.<iv>.<tag>.<cipher>`, AES-256-GCM, base64url).
  * Nič sa nezapisuje.
@@ -48,7 +48,7 @@ await client.connect()
 const channel = await client.db(process.env.MONGODB_DB).collection("channels").findOne({ companyCode: company, key: channelKey })
 await client.close()
 if (!channel) { console.error(`Kanál ${company}/${channelKey} neexistuje.`); process.exit(1) }
-if (!channel.widget?.secretEnc) { console.error("Kanál nemá tajomstvo widgetu — vytvor ho v Kanáloch."); process.exit(1) }
+if (!channel.widget?.secretEnc) { console.error("Kanál nemá tajný kľúč — vytvor ho v Kanáloch."); process.exit(1) }
 if (!(channel.widget.origins ?? []).some(o => o.replace(/\/+$/, "") === origin)) {
   console.error(`Pôvod ${origin} nie je medzi povolenými pôvodmi kanála (${(channel.widget.origins ?? []).join(", ") || "žiadne"}). Pridaj ho v Kanáloch.`)
   process.exit(1)

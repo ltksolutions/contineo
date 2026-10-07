@@ -5,9 +5,9 @@
  * adresy schranky, odstrihnutie citovanej historie, bez obsahu priloh.
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import { htmlToText, stripQuotedHistory } from "../src/lib/mailbox/types"
-import { toMailMessage } from "../src/lib/mailbox/graph"
+import { toMailMessage, GraphMailbox } from "../src/lib/mailbox/graph"
 
 describe("htmlToText", () => {
   it("odstrani znacky, zachova odseky a entity", () => {
@@ -47,5 +47,63 @@ describe("toMailMessage", () => {
   })
   it("bez conversationId je vlaknom sama sprava", () => {
     expect(toMailMessage({ id: "x" }, "h@h.sk").threadRef).toBe("x")
+  })
+})
+
+describe("GraphMailbox.verify", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("cita len priecinok Dorucene, nie profil pouzivatela (zuzena aplikacia nema User.Read.All)", async () => {
+    const urls: string[] = []
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      urls.push(url)
+      if (url.includes("/oauth2/v2.0/token")) return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      if (url.includes("/mailFolders/inbox")) return new Response(JSON.stringify({ id: "inbox", displayName: "Doručená pošta" }))
+      return new Response(JSON.stringify({ error: { code: "Authorization_RequestDenied" } }), { status: 403 })
+    }))
+    const box = new GraphMailbox({ address: "Helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
+    await expect(box.verify()).resolves.toEqual({ address: "helpdesk@futbalsfz.sk", displayName: null })
+    const graph = urls.filter(u => u.startsWith("https://graph.microsoft.com"))
+    expect(graph).toHaveLength(1)
+    expect(graph[0]).toContain("/users/helpdesk%40futbalsfz.sk/mailFolders/inbox")
+  })
+
+  it("403 na schranke je mailbox.forbidden", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => url.includes("/token")
+      ? new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      : new Response(JSON.stringify({ error: { code: "ErrorAccessDenied" } }), { status: 403 })))
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const box = new GraphMailbox({ address: "helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
+    await expect(box.verify()).rejects.toMatchObject({ code: "mailbox.forbidden" })
+  })
+})
+
+describe("GraphMailbox.listNew", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("prve kolo sa pyta len na spravy od zaciatku synchronizacie, nie na celu schranku", async () => {
+    const urls: string[] = []
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      urls.push(url)
+      if (url.includes("/token")) return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      return new Response(JSON.stringify({ value: [], "@odata.deltaLink": "https://graph.microsoft.com/delta?$deltatoken=x" }))
+    }))
+    const box = new GraphMailbox({ address: "helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
+    const page = await box.listNew(null, new Date("2026-10-07T13:40:12.345Z"))
+    const delta = urls.find(u => u.includes("/messages/delta"))!
+    expect(decodeURIComponent(delta)).toContain("$filter=receivedDateTime ge 2026-10-07T13:40:12Z")
+    expect(page).toMatchObject({ messages: [], more: false, cursor: "https://graph.microsoft.com/delta?$deltatoken=x" })
+  })
+
+  it("so znackou ide priamo na nu, filter nesie znacka", async () => {
+    const urls: string[] = []
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      urls.push(url)
+      if (url.includes("/token")) return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      return new Response(JSON.stringify({ value: [] }))
+    }))
+    const box = new GraphMailbox({ address: "helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
+    await box.listNew("https://graph.microsoft.com/delta?$deltatoken=x", new Date())
+    expect(urls.filter(u => u.startsWith("https://graph.microsoft.com"))).toEqual(["https://graph.microsoft.com/delta?$deltatoken=x"])
   })
 })

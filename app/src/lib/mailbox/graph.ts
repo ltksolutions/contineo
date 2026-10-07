@@ -13,9 +13,12 @@
  * vypnuté; IMAP cez OAuth potrebuje tú istú registráciu a nedá delta dotaz,
  * `conversationId` ani odosielanie.
  *
- * Delta dotaz: `/users/{schránka}/mailFolders/inbox/messages/delta`. Značka
- * je celý `@odata.deltaLink`; keď vyprší (`syncStateNotFound`), začne sa
- * odznova — správy, ktoré už ticket má, odfiltruje `internetMessageId`.
+ * Delta dotaz: `/users/{schránka}/mailFolders/inbox/messages/delta`
+ * s `$filter=receivedDateTime ge {since}` — jediný filter, ktorý delta na
+ * správach pozná. Bez neho prvé kolo vráti celú schránku. Značka je celý
+ * `@odata.deltaLink` (filter nesie v sebe); keď vyprší (`syncStateNotFound`),
+ * začne sa odznova od `since` — správy, ktoré už ticket má, odfiltruje
+ * `internetMessageId`.
  */
 
 import { AppError } from "../appError"
@@ -145,22 +148,29 @@ export class GraphMailbox implements MailboxAdapter {
     return `${GRAPH}/users/${encodeURIComponent(this.address)}`
   }
 
+  /**
+   * Overí len to, čo synchronizácia naozaj robí: čítanie priečinka Doručené.
+   * Profil používateľa (`/users/{adresa}`) sa nečíta — potrebuje `User.Read.All`
+   * v Entra, ktoré zúžená aplikácia nemá a mať nemá (RBAC for Applications dáva
+   * len `Mail.Read`/`Mail.Send` na jednu schránku). 7. 10. 2026 overenie
+   * na tom padalo s 403, hoci zúženie bolo správne.
+   */
   async verify(): Promise<{ address: string; displayName: string | null }> {
-    const r = await this.get(`${this.userPath()}?$select=displayName,mail,userPrincipalName`, "overenie používateľa")
-    const u = await r.json() as { displayName?: string; mail?: string; userPrincipalName?: string }
-    // Čítanie schránky overí aj zúženie oprávnení — samotný profil ho nevidí.
-    await this.get(`${this.userPath()}/mailFolders/inbox?$select=id,totalItemCount`, "overenie schránky")
-    return { address: (u.mail ?? u.userPrincipalName ?? this.address).toLowerCase(), displayName: u.displayName ?? null }
+    const r = await this.get(`${this.userPath()}/mailFolders/inbox?$select=id,displayName`, "overenie schránky")
+    await r.json().catch(() => null)
+    return { address: this.address, displayName: null }
   }
 
-  async listNew(cursor: string | null): Promise<MailboxPage> {
-    const url = cursor ?? `${this.userPath()}/mailFolders/inbox/messages/delta?$select=${SELECT}`
+  async listNew(cursor: string | null, since: Date): Promise<MailboxPage> {
+    // Graph chce DateTimeOffset bez milisekúnd.
+    const from = since.toISOString().replace(/\.\d{3}Z$/, "Z")
+    const url = cursor ?? `${this.userPath()}/mailFolders/inbox/messages/delta?$select=${SELECT}&$filter=${encodeURIComponent(`receivedDateTime ge ${from}`)}`
     let r: Response
     try {
       r = await this.get(url, "delta")
     } catch (e) {
       // Vypršaná značka: jedno kolo odznova, nie chyba synchronizácie.
-      if (e instanceof MailboxError && e.code === "mailbox.cursorExpired" && cursor) return this.listNew(null)
+      if (e instanceof MailboxError && e.code === "mailbox.cursorExpired" && cursor) return this.listNew(null, since)
       throw e
     }
     const j = await r.json() as { value?: GraphMessage[]; "@odata.nextLink"?: string; "@odata.deltaLink"?: string }

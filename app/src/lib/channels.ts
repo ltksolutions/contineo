@@ -64,9 +64,15 @@ export interface ChannelMailbox {
   /** Značka synchronizácie (Graph: celý `deltaLink`). */
   cursor: string | null
   /**
-   * Odkedy sa správy stávajú ticketmi. Nastaví sa pri prvej synchronizácii:
-   * prvé kolo delta dotazu vráti celú schránku a z histórie sa tickety
-   * nerobia — tá ide do ťažby FAQ (D165).
+   * Značka vznikla z dotazu zúženého na `syncSince`. Značka bez tohto
+   * príznaku je zo starého, nezúženého dotazu, ktorý prechádzal celú
+   * schránku — synchronizácia ju zahodí a začne zúžene (7. 10. 2026).
+   */
+  cursorSince?: boolean
+  /**
+   * Odkedy sa správy stávajú ticketmi. Nastaví sa pri prvej synchronizácii;
+   * delta dotaz sa pýta len na správy od tejto chvíle. História sa ticketmi
+   * nestáva — ide do ťažby FAQ (D165).
    */
   syncSince: Date | null
   lastSyncAt: Date | null
@@ -224,6 +230,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
       kind, address,
       // Iná schránka = iná história; značka a hranica ticketov začínajú odznova.
       cursor: changedIdentity ? null : mailbox!.cursor,
+      cursorSince: changedIdentity ? false : Boolean(mailbox!.cursorSince),
       syncSince: changedIdentity ? null : mailbox!.syncSince,
       lastSyncAt: changedIdentity ? null : mailbox!.lastSyncAt,
       lastSyncError: changedIdentity ? null : mailbox!.lastSyncError,
@@ -288,7 +295,7 @@ export async function removeChannel(companyCode: string, key: string, actor: str
   if (r) await writeAudit({ companyCode: code, subject: "helpdesk-channel", action: "deleted", actor, targetId: key, targetLabel: r.name })
 }
 
-/** Nové tajomstvo widgetu (D166). Vráti ho v čistom len raz — potom je už len koncovka. */
+/** Nový tajný kľúč widgetu (D166). Vráti ho v čistom len raz — potom je už len koncovka. */
 export async function rotateWidgetSecret(companyCode: string, key: string, actor: string): Promise<string> {
   const code = requireCompanyCode(companyCode, "rotateWidgetSecret")
   if (!encryptionAvailable()) throw new HelpdeskError("tenant.noEncryptionKey", "Šifrovací kľúč nie je nastavený — tajomstvo sa nedá uložiť.")
@@ -304,7 +311,7 @@ export async function rotateWidgetSecret(companyCode: string, key: string, actor
 }
 
 /**
- * Tajomstvo widgetu na jedno zobrazenie po vytvorení. Do adresy nepatrí
+ * Tajný kľúč widgetu na jedno zobrazenie po vytvorení. Do adresy nepatrí
  * (ostalo by v histórii prehliadača a v logoch), tak sa ukáže zo servera
  * a príznak hneď zhasne.
  */
@@ -317,7 +324,7 @@ export async function takeRevealedWidgetSecret(companyCode: string, key: string)
   try { return decrypt(c.widget.secretEnc) } catch { return null }
 }
 
-/** Tajomstvo widgetu v čistom — len pre overenie tokenu (krok 5). */
+/** Tajný kľúč widgetu v čistom — len pre overenie tokenu (krok 5). */
 export function widgetSecret(channel: HelpdeskChannel): string | null {
   if (!channel.widget.secretEnc) return null
   try { return decrypt(channel.widget.secretEnc) } catch { return null }
@@ -374,11 +381,12 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
   const report: SyncReport = { key, pages: 0, created: 0, appended: 0, skipped: 0, beforeStart: 0, done: false, error: null }
   const since = channel.mailbox.syncSince ?? new Date()
-  let cursor = channel.mailbox.cursor
+  // Značka zo starého, nezúženého dotazu by ďalej prechádzala celú históriu.
+  let cursor = channel.mailbox.cursorSince ? channel.mailbox.cursor : null
   try {
     const adapter = mailboxFor(channel)
     for (; report.pages < maxPages; ) {
-      const page = await adapter.listNew(cursor)
+      const page = await adapter.listNew(cursor, since)
       report.pages += 1
       const fresh = page.messages.filter(m => m.receivedAt >= since)
       report.beforeStart += page.messages.length - fresh.length
@@ -388,7 +396,7 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
       }
       cursor = page.cursor
       // Značka sa ukladá po každej stránke — prerušené kolo nezačne odznova.
-      await col.updateOne({ companyCode: code, key }, { $set: { "mailbox.cursor": cursor, "mailbox.syncSince": since } })
+      await col.updateOne({ companyCode: code, key }, { $set: { "mailbox.cursor": cursor, "mailbox.cursorSince": true, "mailbox.syncSince": since } })
       if (!page.more) { report.done = true; break }
     }
     await col.updateOne(
