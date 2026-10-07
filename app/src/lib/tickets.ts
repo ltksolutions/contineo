@@ -98,18 +98,74 @@ export interface IngestResult {
   skipped: number
 }
 
+export interface IngestOptions {
+  /**
+   * Celé vlákno zo schránky — pri založení ticketu sa ním dotiahne
+   * korešpondencia spred prvej synchronizácie (Ján 7. 10. 2026: „to sa môže
+   * stať hocikomu"). Zlyhanie históriu vynechá, ticket aj tak vznikne.
+   */
+  thread?: (threadRef: string) => Promise<MailMessage[]>
+}
+
+const norm = (s: string) => s.replace(/\s+/g, " ").trim()
+
 /**
- * Zapíše správy zo schránky do ticketov podľa vlákna. Odchádzajúca správa
- * (odpoveď helpdesku z Outlooku) sa k ticketu pripojí tiež — riešiteľ vidí
- * celé vlákno — ale nový ticket nezakladá a stav nemení: na otázku, ktorá
- * prišla pred prvou synchronizáciou, nemá systém čo riešiť.
+ * Odpoveď odoslaná z Continea je v tickete zapísaná hneď (`providerId`
+ * `sent:…`, Graph identifikátor nevráti). Jej kópia z Odoslaných príde
+ * synchronizáciou neskôr — nesmie sa pridať druhýkrát, len si vezme
+ * identitu. Zhoda je podľa textu bez citovanej histórie.
+ */
+function adoptableIndex(messages: TicketMessage[], tm: TicketMessage): number {
+  if (tm.direction !== "out") return -1
+  return messages.findIndex(x => x.direction === "out" && x.providerId.startsWith("sent:") && norm(x.text) === norm(tm.text))
+}
+
+function isKnown(messages: TicketMessage[], m: MailMessage): boolean {
+  return messages.some(x => (m.internetMessageId && x.internetMessageId === m.internetMessageId) || x.providerId === m.id)
+}
+
+/**
+ * Doplní do ticketu správy vlákna, ktoré v ňom ešte nie sú, a zoradí ich
+ * podľa času. Stav ticketu nemení — je to história, nie nová udalosť.
+ * Vráti počet pridaných správ.
+ */
+async function mergeIntoTicket(ticketId: ObjectId, mails: MailMessage[]): Promise<number> {
+  const col = await getCollection<TicketWithId>(TICKETS_COLLECTION)
+  const t = await col.findOne({ _id: ticketId })
+  if (!t) return 0
+  const messages = [...t.messages]
+  let added = 0
+  for (const m of mails) {
+    if (isKnown(messages, m)) continue
+    const tm = toTicketMessage(m)
+    const i = adoptableIndex(messages, tm)
+    if (i >= 0) { messages[i] = { ...messages[i], providerId: tm.providerId, internetMessageId: tm.internetMessageId }; continue }
+    messages.push(tm)
+    added += 1
+  }
+  messages.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
+  await col.updateOne({ _id: ticketId }, { $set: { messages, updatedAt: new Date() } })
+  return added
+}
+
+/**
+ * Zapíše správy zo schránky do ticketov podľa vlákna.
+ *
+ *   • prijatá správa k existujúcemu vláknu sa pripojí (zavretý alebo
+ *     zodpovedaný ticket sa znova otvorí), bez vlákna založí ticket
+ *     a dotiahne k nemu históriu (`options.thread`);
+ *   • odoslaná správa (z Odoslaných — odpoveď z Outlooku) sa pripojí
+ *     k existujúcemu ticketu; ak je novšia než posledná otázka, ticket je
+ *     zodpovedaný. Kópia odpovede z Continea sa nepridá druhýkrát.
+ *     Ticket nezakladá — na vlákno bez otázky systém nemá čo riešiť.
  */
 export async function ingestMessages(
   companyCode: string,
   channelKey: string,
   messages: MailMessage[],
+  options: IngestOptions = {},
 ): Promise<IngestResult> {
-  const col = await getCollection<Ticket>(TICKETS_COLLECTION)
+  const col = await getCollection<TicketWithId>(TICKETS_COLLECTION)
   const result: IngestResult = { created: 0, appended: 0, skipped: 0 }
   const now = new Date()
   // Staršie najprv — vlákno má vznikať od prvej správy.
@@ -117,20 +173,36 @@ export async function ingestMessages(
 
   for (const m of ordered) {
     const existing = await col.findOne({ companyCode, channelKey, threadRef: m.threadRef })
-    const already = existing?.messages.some(x =>
-      (m.internetMessageId && x.internetMessageId === m.internetMessageId) || x.providerId === m.id)
-    if (already) { result.skipped += 1; continue }
+    if (existing && isKnown(existing.messages, m)) { result.skipped += 1; continue }
 
     const tm = toTicketMessage(m)
     if (existing) {
+      const adopt = adoptableIndex(existing.messages, tm)
+      if (adopt >= 0) {
+        await col.updateOne({ _id: existing._id }, {
+          $set: { [`messages.${adopt}.providerId`]: tm.providerId, [`messages.${adopt}.internetMessageId`]: tm.internetMessageId },
+        })
+        result.skipped += 1
+        continue
+      }
+      const lastIn = existing.messages.filter(x => x.direction === "in").reduce((t, x) => Math.max(t, new Date(x.at).getTime()), 0)
       const reopen = !m.outgoing && (existing.state === "closed" || existing.state === "sent")
+      const answered = m.outgoing && m.receivedAt.getTime() >= lastIn
+        && (existing.state === "new" || existing.state === "drafted" || existing.state === "reopened")
       await col.updateOne(
-        { companyCode, channelKey, threadRef: m.threadRef },
+        { _id: existing._id },
         {
           $push: { messages: tm },
-          $set: { updatedAt: now, ...(reopen ? { state: "reopened" as TicketState, closedAt: null } : {}) },
+          $set: {
+            updatedAt: now,
+            ...(reopen ? { state: "reopened" as TicketState, closedAt: null } : {}),
+            ...(answered ? { state: "sent" as TicketState, sentAnswer: { text: tm.text, by: m.from?.address ?? "e-mail", at: m.receivedAt, messageId: m.internetMessageId } } : {}),
+          },
         },
       )
+      if (answered) {
+        await writeAudit({ companyCode, subject: "ticket", action: "odpoved-z-postoveho-klienta", actor: m.from?.address ?? "e-mail", targetId: String(existing._id), targetLabel: existing.subject })
+      }
       result.appended += 1
       continue
     }
@@ -144,8 +216,15 @@ export async function ingestMessages(
       state: "new", assigneeId: null, draft: null, sentAnswer: null,
       createdAt: now, updatedAt: now, closedAt: null,
     }
-    await col.insertOne(ticket)
+    const inserted = await col.insertOne(ticket as TicketWithId)
     result.created += 1
+    if (options.thread) {
+      try {
+        result.appended += await mergeIntoTicket(inserted.insertedId, await options.thread(m.threadRef))
+      } catch (e) {
+        console.error(`[helpdesk] históriu vlákna ${m.threadRef} sa nepodarilo dotiahnuť:`, e)
+      }
+    }
   }
 
   if (result.created || result.appended) {
@@ -156,6 +235,25 @@ export async function ingestMessages(
     })
   }
   return result
+}
+
+/**
+ * Riešiteľ dotiahne históriu vlákna ručne (ticket založený pred touto
+ * funkciou, alebo keď sa história pri založení nenačítala). Vráti počet
+ * pridaných správ.
+ */
+export async function importTicketThread(
+  companyCode: string,
+  channelKeys: string[],
+  id: string,
+  actor: string,
+  thread: (threadRef: string) => Promise<MailMessage[]>,
+): Promise<number> {
+  const t = await loadForWrite(companyCode, channelKeys, id)
+  if (t.source !== "email" || !t.threadRef) throw new TicketError("ticket.notEmail", "Ticket nevznikol z e-mailu — nemá vlákno v schránke.")
+  const added = await mergeIntoTicket(t._id, await thread(t.threadRef))
+  await writeAudit({ companyCode, subject: "ticket", action: "historia-vlakna", actor, targetId: id, targetLabel: t.subject, note: `doplnené ${added}` })
+  return added
 }
 
 /** Počty vo fronte kanála — pre nastavenie kanála a neskôr obrazovku riešiteľa. */

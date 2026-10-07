@@ -662,7 +662,18 @@ Doručené) a **Synchronizovať teraz**.
 
 - **Prvá synchronizácia** len označí začiatok (`syncSince`): staršie správy
   sa ticketmi nestanú. História ide do **Ťažby FAQ** (D165), ktorá telá
-  správ neukladá.
+  správ neukladá. Keď príde odpoveď na staršie vlákno, ticket si jeho
+  skoršie správy dotiahne zo schránky sám.
+- **Odpovede z Outlooku.** Synchronizuje sa aj priečinok **Odoslané**
+  schránky helpdesku. Riešiteľ, ktorý odpovedá priamo z Outlooku, musí
+  odosielať **z adresy helpdesku** a kópia odoslanej správy musí ostať
+  v schránke helpdesku. Pri zdieľanej schránke ju Exchange predvolene
+  ukladá do schránky odosielateľa — zapnúť v Exchange Online PowerShell:
+
+  ```powershell
+  Get-Mailbox helpdesk@futbalsfz.sk | Format-List RecipientTypeDetails, MessageCopyForSentAsEnabled, MessageCopyForSendOnBehalfEnabled
+  Set-Mailbox helpdesk@futbalsfz.sk -MessageCopyForSentAsEnabled $true -MessageCopyForSendOnBehalfEnabled $true
+  ```
 - Rozvrh je v `app/vercel.json` (`/api/cron/helpdesk-sync`). Na pláne Hobby
   smie cron bežať raz denne; na Pro sa dá zmeniť na `*/15 * * * *`.
   Tlačidlo „Synchronizovať teraz" rozvrh nepotrebuje.

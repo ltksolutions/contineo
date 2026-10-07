@@ -2119,6 +2119,9 @@ interface Dictionary {
     release: string
     thread: string
     quotedHistory: string
+    threadImport: string
+    threadImportHint: string
+    msgThreadImported: (n: number) => string
     fromHelpdesk: string
     fromAsker: (name: string) => string
     attachments: (n: number) => string
@@ -5384,6 +5387,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
     "ticket.notFound": "Taký ticket tu nie je.",
+    "ticket.notEmail": "Ticket nevznikol z e-mailu — nemá vlákno v schránke.",
     "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
     "ticket.emptyAnswer": "Prázdna odpoveď sa odoslať nedá.",
     "ticket.noRecipient": "Ticket nemá komu odpovedať — chýba adresa.",
@@ -6236,6 +6240,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     release: "Uvoľniť",
     thread: "Vlákno",
     quotedHistory: "Predchádzajúca korešpondencia v e-maile",
+    threadImport: "Dotiahnuť históriu vlákna",
+    threadImportHint: "Načíta zo schránky skoršie správy tohto vlákna — prijaté aj odoslané, aj spred spustenia synchronizácie.",
+    msgThreadImported: (n: number) => n ? `Doplnené správy z vlákna: ${n}.` : "Vlákno je úplné — v schránke nie sú ďalšie správy.",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Pýtajúci sa",
     attachments: (n: number) => (n === 1 ? "1 príloha (v schránke)" : `${n} príloh (v schránke)`),
@@ -9368,6 +9375,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
     "ticket.notFound": "Takový ticket tady není.",
+    "ticket.notEmail": "Ticket nevznikl z e-mailu — nemá vlákno ve schránce.",
     "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
     "ticket.emptyAnswer": "Prázdná odpověď se odeslat nedá.",
     "ticket.noRecipient": "Ticket nemá komu odpovědět — chybí adresa.",
@@ -10218,6 +10226,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     release: "Uvolnit",
     thread: "Vlákno",
     quotedHistory: "Předchozí korespondence v e-mailu",
+    threadImport: "Dotáhnout historii vlákna",
+    threadImportHint: "Načte ze schránky dřívější zprávy tohoto vlákna — přijaté i odeslané, i z doby před spuštěním synchronizace.",
+    msgThreadImported: (n: number) => n ? `Doplněné zprávy z vlákna: ${n}.` : "Vlákno je úplné — ve schránce nejsou další zprávy.",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Tazatel",
     attachments: (n: number) => (n === 1 ? "1 příloha (ve schránce)" : `${n} příloh (ve schránce)`),
@@ -13341,6 +13352,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noTickets": "The channel has tickets switched off.",
     "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
     "ticket.notFound": "There is no such ticket here.",
+    "ticket.notEmail": "The ticket did not come from an e-mail — it has no thread in the mailbox.",
     "ticket.emptyDraft": "An empty draft cannot be saved.",
     "ticket.emptyAnswer": "An empty answer cannot be sent.",
     "ticket.noRecipient": "The ticket has nobody to answer — the address is missing.",
@@ -14191,6 +14203,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     release: "Release",
     thread: "Thread",
     quotedHistory: "Earlier correspondence quoted in the e-mail",
+    threadImport: "Load thread history",
+    threadImportHint: "Loads earlier messages of this thread from the mailbox — received and sent, including those from before synchronisation started.",
+    msgThreadImported: (n: number) => n ? `Messages added from the thread: ${n}.` : "The thread is complete — there are no more messages in the mailbox.",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Asker",
     attachments: (n: number) => (n === 1 ? "1 attachment (in the mailbox)" : `${n} attachments (in the mailbox)`),

@@ -22,7 +22,7 @@
  */
 
 import { AppError } from "../appError"
-import { htmlToText, type MailboxAdapter, type MailboxPage, type MailMessage } from "./types"
+import { htmlToText, type MailboxAdapter, type MailboxPage, type MailMessage, type MailFolder } from "./types"
 
 export class MailboxError extends AppError {}
 
@@ -161,16 +161,16 @@ export class GraphMailbox implements MailboxAdapter {
     return { address: this.address, displayName: null }
   }
 
-  async listNew(cursor: string | null, since: Date): Promise<MailboxPage> {
+  async listNew(cursor: string | null, since: Date, folder: MailFolder = "inbox"): Promise<MailboxPage> {
     // Graph chce DateTimeOffset bez milisekúnd.
     const from = since.toISOString().replace(/\.\d{3}Z$/, "Z")
-    const url = cursor ?? `${this.userPath()}/mailFolders/inbox/messages/delta?$select=${SELECT}&$filter=${encodeURIComponent(`receivedDateTime ge ${from}`)}`
+    const url = cursor ?? `${this.userPath()}/mailFolders/${folder}/messages/delta?$select=${SELECT}&$filter=${encodeURIComponent(`receivedDateTime ge ${from}`)}`
     let r: Response
     try {
       r = await this.get(url, "delta")
     } catch (e) {
       // Vypršaná značka: jedno kolo odznova, nie chyba synchronizácie.
-      if (e instanceof MailboxError && e.code === "mailbox.cursorExpired" && cursor) return this.listNew(null, since)
+      if (e instanceof MailboxError && e.code === "mailbox.cursorExpired" && cursor) return this.listNew(null, since, folder)
       throw e
     }
     const j = await r.json() as { value?: GraphMessage[]; "@odata.nextLink"?: string; "@odata.deltaLink"?: string }
@@ -182,6 +182,21 @@ export class GraphMailbox implements MailboxAdapter {
       cursor: j["@odata.nextLink"] ?? j["@odata.deltaLink"] ?? null,
       more: Boolean(j["@odata.nextLink"]),
     }
+  }
+
+  async listThread(threadRef: string, limit = 50): Promise<MailMessage[]> {
+    // Filter na conversationId ide naprieč priečinkami (prijaté, odoslané,
+    // archív). $orderby sa s ním nekombinuje (InefficientFilter) — triedi sa tu.
+    const filter = encodeURIComponent(`conversationId eq '${threadRef.replace(/'/g, "''")}'`)
+    let url: string | null = `${this.userPath()}/messages?$select=${SELECT}&$filter=${filter}&$top=${Math.min(50, limit)}`
+    const out: MailMessage[] = []
+    while (url && out.length < limit) {
+      const r = await this.get(url, "vlákno")
+      const j = await r.json() as { value?: GraphMessage[]; "@odata.nextLink"?: string }
+      for (const m of j.value ?? []) if (!m.isDraft) out.push(toMailMessage(m, this.address))
+      url = j["@odata.nextLink"] ?? null
+    }
+    return out.slice(0, limit).sort((a, b) => a.receivedAt.getTime() - b.receivedAt.getTime())
   }
 
   async listRecent(limit: number): Promise<MailMessage[]> {

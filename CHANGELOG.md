@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: celé vlákno a odpovede z Outlooku (2026-10-07)
+
+- **Odoslaná pošta sa synchronizuje.** Okrem Doručenej pošty sa sleduje
+  aj priečinok Odoslané. Odpoveď riešiteľa z Outlooku sa pripojí
+  k ticketu a ticket sa označí ako zodpovedaný. Kópia odpovede odoslanej
+  z Continea sa nepridá druhýkrát.
+- **Nový ticket si dotiahne históriu vlákna** zo schránky — skoršie
+  prijaté aj odoslané správy, aj spred spustenia synchronizácie.
+- **Tlačidlo „Dotiahnuť históriu vlákna"** pri tickete z e-mailu urobí to
+  isté ručne (napr. pre ticket založený pred touto zmenou).
+
+Aby boli odpovede z Outlooku vidieť, kópia odoslanej správy musí ostať
+v schránke helpdesku — postup v `docs/NASADENIE_app.md` § 5c.
+
 ### Helpdesk: citovaná história e-mailu sa nezahadzuje (2026-10-07)
 
 Ticket z e-mailu ukladá citovanú históriu (od „Od:/From:" nižšie)

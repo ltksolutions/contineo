@@ -23,7 +23,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { findPerson } from "@/lib/persons"
-import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, ticketToFaqAction } from "../actions"
+import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, ticketToFaqAction, importThreadAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -90,6 +90,13 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
                 )}
               </article>
             ))}
+            {ticket.source === "email" && ticket.threadRef && (
+              <form action={importThreadAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                <input type="hidden" name="id" value={id} />
+                <SubmitButton className="button button--quiet">{t.threadImport}</SubmitButton>
+                <span className="quiet field-hint">{t.threadImportHint}</span>
+              </form>
+            )}
           </section>
 
           <section className="card detail-block" id="answer">
