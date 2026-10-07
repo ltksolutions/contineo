@@ -20,7 +20,7 @@ import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { writeAudit } from "./audit"
 import type { MailMessage } from "./mailbox/types"
-import { stripQuotedHistory } from "./mailbox/types"
+import { splitQuotedHistory } from "./mailbox/types"
 
 export const TICKETS_COLLECTION = "tickets"
 
@@ -35,10 +35,20 @@ export interface TicketMessage {
   direction: "in" | "out"
   from: { address: string; name: string | null } | null
   subject: string
+  /** Nový text správy bez citovanej histórie. */
   text: string
+  /**
+   * Citovaná história z e-mailu (od „Od:" nižšie). Na obrazovke zbalená;
+   * nesie kontext, keď vlákno začalo pred prvou synchronizáciou.
+   * Staršie tickety ho nemajú.
+   */
+  quoted?: string
   at: Date
   attachments: { name: string; bytes: number }[]
 }
+
+/** Strop na citovanú históriu — dlhé vlákna sa opakujú v každej odpovedi. */
+const QUOTED_MAX = 20_000
 
 export interface Ticket {
   companyCode: string
@@ -68,13 +78,15 @@ export interface Ticket {
 }
 
 export function toTicketMessage(m: MailMessage): TicketMessage {
+  const { text, quoted } = splitQuotedHistory(m.text)
   return {
     internetMessageId: m.internetMessageId,
     providerId: m.id,
     direction: m.outgoing ? "out" : "in",
     from: m.from,
     subject: m.subject,
-    text: stripQuotedHistory(m.text),
+    text,
+    ...(quoted ? { quoted: quoted.slice(0, QUOTED_MAX) } : {}),
     at: m.receivedAt,
     attachments: m.attachments,
   }
@@ -231,8 +243,16 @@ export function lastIncoming(t: Ticket): TicketMessage | null {
 
 /** Text otázky pre návrh odpovede: predmet a všetky prichádzajúce správy v poradí. */
 export function questionText(t: Ticket): string {
-  const parts = t.messages.filter(m => m.direction === "in").map(m => m.text.trim()).filter(Boolean)
-  return [t.subject ? `Predmet: ${t.subject}` : "", ...parts].filter(Boolean).join("\n\n")
+  const incoming = t.messages.filter(m => m.direction === "in")
+  const parts = incoming.map(m => m.text.trim()).filter(Boolean)
+  // Citácia prvej správy dáva kontext, keď vlákno začalo pred synchronizáciou
+  // („Nech sa páči: <adresa>" je odpoveď na otázku, ktorá je len v citácii).
+  const context = incoming[0]?.quoted?.trim()
+  return [
+    t.subject ? `Predmet: ${t.subject}` : "",
+    ...parts,
+    context ? `Predchádzajúca korešpondencia (citovaná v e-maile):\n${context}` : "",
+  ].filter(Boolean).join("\n\n")
 }
 
 export async function assignTicket(companyCode: string, channelKeys: string[], id: string, assigneeId: string | null, actor: string): Promise<void> {

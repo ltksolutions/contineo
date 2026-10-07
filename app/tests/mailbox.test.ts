@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest"
-import { htmlToText, stripQuotedHistory } from "../src/lib/mailbox/types"
+import { htmlToText, stripQuotedHistory, splitQuotedHistory } from "../src/lib/mailbox/types"
 import { toMailMessage, GraphMailbox } from "../src/lib/mailbox/graph"
 
 describe("htmlToText", () => {
@@ -21,6 +21,21 @@ describe("stripQuotedHistory", () => {
     expect(stripQuotedHistory("Ďakujem za odpoveď.\n\nOd: Helpdesk SFZ\nOdoslané: pondelok\nPredmet: Re: hráč\n\nText odpovede")).toBe("Ďakujem za odpoveď.")
     expect(stripQuotedHistory("Thanks\n\nOn Mon, Jan 1 2026, Helpdesk wrote:\n> old\n> text")).toBe("Thanks")
     expect(stripQuotedHistory("Áno.\n> citát\nĎalší riadok")).toBe("Áno.\nĎalší riadok")
+  })
+})
+
+describe("splitQuotedHistory", () => {
+  it("historiu necha zvlast — odpoved spred synchronizacie nesie otazku len v citacii", () => {
+    const mail = "Nech sa páči: jozko@example.sk\n\nOd: Helpdesk SFZ\nOdoslané: pondelok\nPredmet: RE: Zmena priezviska\n\nPošlite e-mail hráča.\n\nOd: Ján\nPredmet: Zmena priezviska\n\nAko zmeniť priezvisko hráča?"
+    const r = splitQuotedHistory(mail)
+    expect(r.text).toBe("Nech sa páči: jozko@example.sk")
+    expect(r.quoted).toContain("Pošlite e-mail hráča.")
+    expect(r.quoted).toContain("Ako zmeniť priezvisko hráča?")
+    expect(r.quoted.startsWith("Od: Helpdesk SFZ")).toBe(true)
+  })
+  it("riadky s > idu do citacie, bez historie je citacia prazdna", () => {
+    expect(splitQuotedHistory("Áno.\n> citát\nĎalší riadok")).toEqual({ text: "Áno.\nĎalší riadok", quoted: "> citát" })
+    expect(splitQuotedHistory("Len otázka.")).toEqual({ text: "Len otázka.", quoted: "" })
   })
 })
 
@@ -105,5 +120,30 @@ describe("GraphMailbox.listNew", () => {
     const box = new GraphMailbox({ address: "helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
     await box.listNew("https://graph.microsoft.com/delta?$deltatoken=x", new Date())
     expect(urls.filter(u => u.startsWith("https://graph.microsoft.com"))).toEqual(["https://graph.microsoft.com/delta?$deltatoken=x"])
+  })
+})
+
+describe("ticket — citovana historia", () => {
+  it("toTicketMessage ulozi citaciu zvlast a questionText ju da asistentovi ako kontext", async () => {
+    const { toTicketMessage, questionText } = await import("../src/lib/tickets")
+    const msg = toTicketMessage({
+      id: "AAMk1", internetMessageId: "<a@x>", threadRef: "c1", from: { address: "jan@example.sk", name: "Ján" }, to: [],
+      subject: "Re: Zmena priezviska", text: "Nech sa páči: jozko@example.sk\n\nOd: Helpdesk SFZ\nPredmet: Zmena priezviska\n\nAko zmeniť priezvisko hráča?",
+      receivedAt: new Date("2026-10-07T10:00:00Z"), outgoing: false, attachments: [],
+    })
+    expect(msg.text).toBe("Nech sa páči: jozko@example.sk")
+    expect(msg.quoted).toContain("Ako zmeniť priezvisko hráča?")
+    const q = questionText({ subject: "Re: Zmena priezviska", messages: [msg] } as Parameters<typeof questionText>[0])
+    expect(q).toContain("Nech sa páči: jozko@example.sk")
+    expect(q).toContain("Ako zmeniť priezvisko hráča?")
+  })
+
+  it("bez citacie pole quoted nevznika", async () => {
+    const { toTicketMessage } = await import("../src/lib/tickets")
+    const msg = toTicketMessage({
+      id: "x", internetMessageId: null, threadRef: "x", from: null, to: [], subject: "", text: "Otázka?",
+      receivedAt: new Date(0), outgoing: false, attachments: [],
+    })
+    expect("quoted" in msg).toBe(false)
   })
 })

@@ -82,6 +82,12 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
                   {m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}
                 </p>
                 <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{m.text}</div>
+                {m.quoted && (
+                  <details style={{ marginTop: 8 }}>
+                    <summary className="quiet" style={{ cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center" }}>{t.quotedHistory}</summary>
+                    <div className="quiet" style={{ whiteSpace: "pre-wrap", lineHeight: 1.6, fontSize: "var(--fs-small)" }}>{m.quoted}</div>
+                  </details>
+                )}
               </article>
             ))}
           </section>

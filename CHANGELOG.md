@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: citovaná história e-mailu sa nezahadzuje (2026-10-07)
+
+Ticket z e-mailu ukladá citovanú históriu (od „Od:/From:" nižšie)
+zvlášť a vo vlákne ju ukáže zbalenú pod „Predchádzajúca korešpondencia
+v e-maile". Asistent ju pri návrhu odpovede dostane ako kontext. Bez
+toho odpoveď na korešpondenciu spred prvej synchronizácie ukázala len
+„Nech sa páči: <adresa>" a otázka bola len v citácii. Tickety založené
+pred touto zmenou citáciu nemajú.
+
 ### Helpdesk: prvá synchronizácia neprechádza celú históriu schránky (2026-10-07)
 
 Delta dotaz na Microsoft Graph sa pýta len na správy od začiatku

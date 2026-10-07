@@ -2118,6 +2118,7 @@ interface Dictionary {
     take: string
     release: string
     thread: string
+    quotedHistory: string
     fromHelpdesk: string
     fromAsker: (name: string) => string
     attachments: (n: number) => string
@@ -6200,6 +6201,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     take: "Prevziať",
     release: "Uvoľniť",
     thread: "Vlákno",
+    quotedHistory: "Predchádzajúca korešpondencia v e-maile",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Pýtajúci sa",
     attachments: (n: number) => (n === 1 ? "1 príloha (v schránke)" : `${n} príloh (v schránke)`),
@@ -10147,6 +10149,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     take: "Převzít",
     release: "Uvolnit",
     thread: "Vlákno",
+    quotedHistory: "Předchozí korespondence v e-mailu",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Tazatel",
     attachments: (n: number) => (n === 1 ? "1 příloha (ve schránce)" : `${n} příloh (ve schránce)`),
@@ -14085,6 +14088,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     take: "Take",
     release: "Release",
     thread: "Thread",
+    quotedHistory: "Earlier correspondence quoted in the e-mail",
     fromHelpdesk: "Helpdesk",
     fromAsker: (name: string) => name || "Asker",
     attachments: (n: number) => (n === 1 ? "1 attachment (in the mailbox)" : `${n} attachments (in the mailbox)`),
