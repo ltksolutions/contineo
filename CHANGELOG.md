@@ -14,6 +14,14 @@ a karta prehliadača tiež. Staré odkazy s `?tab=`, `?part=`, `?q=`
 a `?import=` presmerujú. Kurz nemôže mať kľúč `topics` ani `tags`, test nie
 `questions` ani `results`.
 
+### Web contineo.app: kanály sú dva typy — widget a portál (2026-10-06)
+
+V obrázku architektúry je intranet pod **portálom**, nie ako tretí typ
+kanála: „Portál — knižnica · intranet: asistent · potvrdzovanie ·
+vzdelávanie" a sivé „Portál: články a formuláre (pripravujeme)". Sekcia
+na stránke Technológia sa volá „Dva typy kanála" (portál, widget) namiesto
+„Režimy nasadenia". sk, cs, en; PNG pregenerovaná.
+
 ### Test: odpovede ako riadky zoznamu (2026-10-06)
 
 Pri vypĺňaní testu sú textové odpovede riadky zoznamu ako vo formulároch:
