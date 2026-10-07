@@ -9,6 +9,7 @@
 import { trackNames } from "@/lib/tracks"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
+import { coursePath, partPath } from "@/lib/learningPaths"
 import { learningAdminContext } from "@/lib/learning"
 import { archiveCourse, getCourse, publishCourse, saveCourseSettings, saveDraft, startNewVersion } from "@/lib/coursesDb"
 import { findTopic } from "@/lib/learningTopics"
@@ -37,15 +38,15 @@ async function admin() {
   return ctx
 }
 
-function go(courseKey: string, query: string, message?: string, error = false): never {
-  const base = `/learning/manage/${courseKey}`
-  revalidatePath(base)
+/** Návrat na časť kurzu (vlastné adresy, R3 — `lib/learningPaths.ts`). */
+function go(path: string, query: string, message?: string, error = false): never {
+  revalidatePath(path)
   const msg = message ? `${query ? "&" : ""}msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}` : ""
-  redirect(`${base}${query || msg ? "?" : ""}${query}${msg}`)
+  redirect(`${path}${query || msg ? "?" : ""}${query}${msg}`)
 }
 
 /** Úprava častí konceptu: načítať, zmeniť čistou funkciou, zapísať. */
-async function editParts(fd: FormData, change: (parts: Part[]) => Part[], query: (fd: FormData) => string) {
+async function editParts(fd: FormData, change: (parts: Part[]) => Part[], where: (fd: FormData) => string) {
   const ctx = await admin()
   const courseKey = field(fd, "courseKey")
   const course = await getCourse(ctx.person.companyCode, courseKey)
@@ -56,13 +57,13 @@ async function editParts(fd: FormData, change: (parts: Part[]) => Part[], query:
     await saveDraft(ctx.person.companyCode, courseKey, { parts: change(draft.parts) }, ctx.person.email)
   } catch (e) {
     if (!(e instanceof AppError)) console.error("[learning] úprava konceptu zlyhala:", e)
-    go(courseKey, query(fd), errorText(e, ctx.person.language), true)
+    go(where(fd), "", errorText(e, ctx.person.language), true)
   }
-  go(courseKey, query(fd))
+  go(where(fd), "")
 }
 
-const partsTab = () => "tab=parts"
-const partTab = (fd: FormData) => `tab=parts&part=${encodeURIComponent(field(fd, "partKey"))}`
+const partsTab = (fd: FormData) => coursePath(field(fd, "courseKey"))
+const partTab = (fd: FormData) => partPath(field(fd, "courseKey"), field(fd, "partKey"))
 const dir = (fd: FormData): "up" | "down" => (field(fd, "dir") === "up" ? "up" : "down")
 
 export async function addPartAction(fd: FormData) {
@@ -145,7 +146,7 @@ export async function addBlockAction(fd: FormData) {
   try {
     block = await blockFrom(fd, ctx.person.companyCode)
   } catch (e) {
-    go(field(fd, "courseKey"), `${partTab(fd)}&add=${encodeURIComponent(field(fd, "type"))}`, errorText(e, ctx.person.language), true)
+    go(partTab(fd), `add=${encodeURIComponent(field(fd, "type"))}`, errorText(e, ctx.person.language), true)
   }
   await editParts(fd, parts => addBlock(parts, field(fd, "partKey"), block), partTab)
 }
@@ -166,7 +167,7 @@ export async function publishAction(fd: FormData) {
   const t = dictionary(ctx.person.language).learning.edit
   // Zmrazia sa verzie testov v stave `ready` (D118); iný test zverejnenie zastaví.
   const r = await publishCourse(ctx.person.companyCode, courseKey, ctx.person.email, await readyTestVersions(ctx.person.companyCode))
-  go(courseKey, "", r.ok ? t.published(r.version.version) : t.cannotPublish, !r.ok)
+  go(coursePath(courseKey), "", r.ok ? t.published(r.version.version) : t.cannotPublish, !r.ok)
 }
 
 export async function newVersionAction(fd: FormData) {
@@ -177,9 +178,9 @@ export async function newVersionAction(fd: FormData) {
   try {
     version = (await startNewVersion(ctx.person.companyCode, courseKey, ctx.person.email)).version
   } catch (e) {
-    go(courseKey, "", errorText(e, ctx.person.language), true)
+    go(coursePath(courseKey), "", errorText(e, ctx.person.language), true)
   }
-  go(courseKey, "tab=parts", t.newVersionStarted(version))
+  go(coursePath(courseKey), "", t.newVersionStarted(version))
 }
 
 export async function archiveAction(fd: FormData) {
@@ -188,9 +189,9 @@ export async function archiveAction(fd: FormData) {
   try {
     await archiveCourse(ctx.person.companyCode, courseKey, ctx.person.email)
   } catch (e) {
-    go(courseKey, "", errorText(e, ctx.person.language), true)
+    go(coursePath(courseKey), "", errorText(e, ctx.person.language), true)
   }
-  go(courseKey, "", dictionary(ctx.person.language).learning.edit.archived)
+  go(coursePath(courseKey), "", dictionary(ctx.person.language).learning.edit.archived)
 }
 
 /**
@@ -233,9 +234,9 @@ export async function saveSettingsAction(fd: FormData) {
     }, ctx.person.email)
   } catch (e) {
     if (!(e instanceof AppError)) console.error("[learning] uloženie nastavení zlyhalo:", e)
-    go(courseKey, "tab=settings", errorText(e, ctx.person.language), true)
+    go(coursePath(courseKey, "settings"), "", errorText(e, ctx.person.language), true)
   }
-  go(courseKey, "tab=settings", te.settingsSaved)
+  go(coursePath(courseKey, "settings"), "", te.settingsSaved)
 }
 
 /**
@@ -258,9 +259,9 @@ export async function assignCourseAction(fd: FormData) {
     result = await assignCourse(ctx.person.companyCode, courseKey, audiences, { email: ctx.person.email, fullName: ctx.person.fullName })
   } catch (e) {
     if (!(e instanceof AppError)) console.error("[learning] pridelenie kurzu zlyhalo:", e)
-    go(courseKey, "tab=people&assign=1", errorText(e, ctx.person.language), true)
+    go(coursePath(courseKey, "people"), "assign=1", errorText(e, ctx.person.language), true)
   }
-  go(courseKey, "tab=people", tp.assigned(result.created, result.existing))
+  go(coursePath(courseKey, "people"), "", tp.assigned(result.created, result.existing))
 }
 
 /** Priradiť hotový test k časti (len `ready`, rám MANAGE-COURSE). */
@@ -268,7 +269,7 @@ export async function addPartTestAction(fd: FormData) {
   const ctx = await admin()
   const testKey = field(fd, "testKey")
   const ready = await readyTestVersions(ctx.person.companyCode)
-  if (!ready.has(testKey)) go(field(fd, "courseKey"), partTab(fd), errorText(new AppError("attempt.testNotFound", ""), ctx.person.language), true)
+  if (!ready.has(testKey)) go(partTab(fd), "", errorText(new AppError("attempt.testNotFound", ""), ctx.person.language), true)
   await editParts(fd, parts => addPartTest(parts, field(fd, "partKey"), testKey, fd.get("required") === "1"), partTab)
 }
 
@@ -287,7 +288,7 @@ export async function revokeCertificateAction(fd: FormData) {
   try {
     await revokeCertificate(ctx.person.companyCode, field(fd, "enrollmentId"), field(fd, "reason"), ctx.person.email)
   } catch (e) {
-    go(courseKey, `tab=people&revoke=${encodeURIComponent(field(fd, "enrollmentId"))}`, errorText(e, ctx.person.language), true)
+    go(coursePath(courseKey, "people"), `revoke=${encodeURIComponent(field(fd, "enrollmentId"))}`, errorText(e, ctx.person.language), true)
   }
-  go(courseKey, "tab=people", dictionary(ctx.person.language).learning.cert.revokedMsg)
+  go(coursePath(courseKey, "people"), "", dictionary(ctx.person.language).learning.cert.revokedMsg)
 }

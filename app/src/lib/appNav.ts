@@ -119,7 +119,7 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     ...(flags.learning && flags.isLearningAdmin ? [{ href: "/learning/manage", key: "learningManage" as const }] : []),
     // Testy: lektor celú obrazovku, zodpovedná osoba testu len svoje výsledky.
     ...(flags.learning && (flags.isLearningAdmin || flags.isTestResponsible)
-      ? [{ href: flags.isLearningAdmin ? "/learning/tests" : "/learning/tests?tab=results", key: "learningTests" as const }]
+      ? [{ href: flags.isLearningAdmin ? "/learning/tests" : "/learning/tests/results", key: "learningTests" as const }]
       : []),
   ]
 
@@ -370,7 +370,7 @@ export function menuColumns(
  * Kde sekcia býva — **bez ohľadu na rolu**. Cesta sa skladá z adresy, nie
  * z toho, čo človek smie: kto na stránku prišiel, tomu ju stránka pustila
  * a jej sekcia je jej sekcia. Testy majú pre zodpovednú osobu inú adresu
- * v `navItems()` (`?tab=results`), cesta ukazuje koreň sekcie.
+ * v `navItems()` (`/learning/tests/results`), cesta ukazuje koreň sekcie.
  */
 const SECTION_HREF: Record<NavKey, string> = {
   overview: "/",

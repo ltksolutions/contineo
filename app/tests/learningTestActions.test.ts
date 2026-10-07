@@ -42,7 +42,7 @@ describe("saveTestAction", () => {
 
 describe("saveQuestionAction", () => {
   it("viac správnych: vyplnené odpovede a správne podľa indexov", async () => {
-    await expect(saveQuestionAction(form({ type: "multiple", text: "Čo platí?", answer_0: "A", answer_1: "B", answer_2: "C", answer_3: "", correct: ["0", "2"], smartTags: "K: V", weight: "2" }))).rejects.toThrow(/q=q1/)
+    await expect(saveQuestionAction(form({ type: "multiple", text: "Čo platí?", answer_0: "A", answer_1: "B", answer_2: "C", answer_3: "", correct: ["0", "2"], smartTags: "K: V", weight: "2" }))).rejects.toThrow(/\/learning\/tests\/questions\/q1\?msg=/)
     const input = (s.saveQ.mock.calls[0] as unknown[])[2] as { answers: { text: string; correct: boolean }[]; weight: number }
     expect(input.answers.map(a => [a.text, a.correct])).toEqual([["A", true], ["B", false], ["C", true]])
     expect(input.weight).toBe(2)

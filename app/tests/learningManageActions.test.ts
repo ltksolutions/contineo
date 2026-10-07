@@ -37,7 +37,7 @@ describe("renameTagAction", () => {
     expect(s.rename).not.toHaveBeenCalled()
   })
   it("s potvrdením zapíše", async () => {
-    await expect(renameTagAction(form({ from: "bezpecnost:lift", to: "Bezpečnosť: Výťah", confirm: "1" }))).rejects.toThrow(/tab=tags&msg=/)
+    await expect(renameTagAction(form({ from: "bezpecnost:lift", to: "Bezpečnosť: Výťah", confirm: "1" }))).rejects.toThrow(/\/learning\/manage\/tags\?msg=/)
     expect(s.rename).toHaveBeenCalledWith("SFZ", { key: "bezpecnost", value: "lift" }, "Bezpečnosť: Výťah", "jan@sfz.sk")
   })
   it("na nový zápis rovno", async () => {

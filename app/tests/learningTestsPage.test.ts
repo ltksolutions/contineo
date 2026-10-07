@@ -85,7 +85,7 @@ describe("/learning/tests", () => {
     expect(form).toContain("Táto otázka má viac správnych odpovedí")
     expect(form).toContain('type="checkbox" name="correct"')
     // Formulár otvorený — „Nová otázka" v hlavičke sa nekreslí (P10).
-    expect(form).not.toContain('href="/learning/tests?tab=questions&amp;new=1"')
+    expect(form).not.toContain('href="/learning/tests/questions/new"')
     const edit = await renderList({ tab: "questions", q: "a" })
     expect(edit).toContain("Použitá v 2 testoch · 41 pokusov ju cituje snímkou")
   })
@@ -129,5 +129,19 @@ describe("/learning/tests", () => {
   it("výsledky: kto nezodpovedá za žiadny test, dostane 404", async () => {
     s.person = "nikto"
     await expect(renderList({ tab: "results" })).rejects.toThrow("notFound")
+  })
+
+  it("vlastné adresy (R3): otázka, nová otázka; neznámy kľúč otázky je 404", async () => {
+    const { default: QuestionPage } = await import("../src/app/learning/tests/questions/[questionKey]/page")
+    const edit = renderToStaticMarkup(await QuestionPage({ params: Promise.resolve({ questionKey: "a" }), searchParams: Promise.resolve({}) }))
+    expect(edit).toContain("Použitá v 2 testoch")
+    expect(edit).toContain('href="/learning/tests/questions/a?type=multiple"')
+    await expect(QuestionPage({ params: Promise.resolve({ questionKey: "zz" }), searchParams: Promise.resolve({}) })).rejects.toThrow("notFound")
+    const { default: NewPage } = await import("../src/app/learning/tests/questions/new/page")
+    const fresh = renderToStaticMarkup(await NewPage({ searchParams: Promise.resolve({ type: "multiple" }) }))
+    expect(fresh).toContain("Táto otázka má viac správnych odpovedí")
+    const list = await renderList({ tab: "questions" })
+    expect(list).toContain('href="/learning/tests/questions/a"')
+    expect(list).not.toContain("tab=")
   })
 })

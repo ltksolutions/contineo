@@ -59,7 +59,7 @@ describe("modul Vzdelávanie (ADR-018)", () => {
 
   it("zodpovedná osoba testu bez roly vidí Testy — rovno na výsledky (D121)", () => {
     const items = navItems({ learning: true, isTestResponsible: true })
-    expect(items.find(o => o.key === "learningTests")?.href).toBe("/learning/tests?tab=results")
+    expect(items.find(o => o.key === "learningTests")?.href).toBe("/learning/tests/results")
     expect(items.some(o => o.key === "learningManage")).toBe(false)
   })
 

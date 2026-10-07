@@ -17,6 +17,11 @@
  * záznam zostal v prehliadačoch ľudí a odvolať sa nedá.
  */
 
+import {
+  coursePath, importPath, MANAGE_PATH, managePath, NEW_QUESTION_PATH, partPath, questionPath,
+  RESERVED_COURSE_KEYS, TESTS_PATH, testsPath,
+} from "./learningPaths"
+
 /**
  * Predpony, nie celé cesty. `/kniznica/abc/text` má prejsť na
  * `/library/abc/text` bez toho, aby sa každá podstránka vypisovala zvlášť.
@@ -77,8 +82,14 @@ export function legacyRoute(pathname: string): string | null {
  * - `/library/<id>?edit=document` → `/library/<id>/edit`
  * - `/organisation/ai?view=usage` → `/organisation/ai/usage` (R5; ADR-026
  *   zapísal `?view=`, poznámka o zmene je v ňom)
+ * - Vzdelávanie (R3, 7. 10. 2026): `/learning/manage?tab=topics|tags`,
+ *   `/learning/manage/<kurz>?tab=settings|people` a `?part=<časť>`,
+ *   `/learning/tests?tab=questions` (aj `&q=`, `&new=1`, `&import=`)
+ *   a `?tab=results` — viď `learningQueryRoute`.
  */
 export function legacyQueryRoute(pathname: string, search: URLSearchParams): string | null {
+  const learning = learningQueryRoute(pathname, search)
+  if (learning) return learning
   const doc = /^\/library\/([^/]+)$/.exec(pathname)
   if (doc && search.get("edit") === "document" && doc[1] !== "new") {
     const rest = new URLSearchParams(search)
@@ -91,6 +102,49 @@ export function legacyQueryRoute(pathname: string, search: URLSearchParams): str
     rest.delete("view")
     const q = rest.toString()
     return `/organisation/ai/usage${q ? `?${q}` : ""}`
+  }
+  return null
+}
+
+/** Cesta s ostatnými parametrami bez tých, ktoré sa stali úsekom cesty. */
+function withRest(path: string, search: URLSearchParams, consumed: string[]): string {
+  const rest = new URLSearchParams(search)
+  for (const k of consumed) rest.delete(k)
+  const q = rest.toString()
+  return `${path}${q ? `?${q}` : ""}`
+}
+
+/**
+ * Staré tvary Vzdelávania (DESIGN_ODCHYLKY R3). `?tab=` so základnou časťou
+ * (`courses`, `parts`, `tests`) len zmizne; neznáma hodnota ostane — stránka
+ * ju aj doteraz ignorovala.
+ */
+function learningQueryRoute(pathname: string, search: URLSearchParams): string | null {
+  const tab = search.get("tab")
+  if (pathname === MANAGE_PATH) {
+    if (tab === "topics" || tab === "tags") return withRest(managePath(tab), search, ["tab"])
+    if (tab === "courses") return withRest(MANAGE_PATH, search, ["tab"])
+    return null
+  }
+  const course = /^\/learning\/manage\/([^/]+)$/.exec(pathname)
+  if (course && !RESERVED_COURSE_KEYS.includes(course[1])) {
+    const key = decodeURIComponent(course[1])
+    const part = search.get("part")
+    if (part && (!tab || tab === "parts")) return withRest(partPath(key, part), search, ["tab", "part"])
+    if (tab === "settings" || tab === "people") return withRest(coursePath(key, tab), search, ["tab", "part"])
+    if (tab === "parts") return withRest(coursePath(key), search, ["tab"])
+    return null
+  }
+  if (pathname === TESTS_PATH) {
+    if (tab === "results") return withRest(testsPath("results"), search, ["tab"])
+    if (tab === "tests") return withRest(TESTS_PATH, search, ["tab"])
+    if (tab !== "questions") return null
+    const imp = search.get("import")
+    if (imp) return withRest(imp === "1" ? importPath() : importPath(imp), search, ["tab", "import", "q", "new"])
+    if (search.get("new") === "1") return withRest(NEW_QUESTION_PATH, search, ["tab", "new", "q"])
+    const q = search.get("q")
+    if (q) return withRest(questionPath(q), search, ["tab", "q"])
+    return withRest(testsPath("questions"), search, ["tab"])
   }
   return null
 }
