@@ -4,6 +4,11 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Oprava: „Upraviť" blok v časti kurzu (2026-10-07)
+
+Odkaz „Upraviť" pri bloku v detaile časti kurzu po zmene adries (R3)
+viedol na neexistujúcu stránku. Opravené.
+
 ### Helpdesk: prvá synchronizácia neprechádza celú históriu schránky (2026-10-07)
 
 Delta dotaz na Microsoft Graph sa pýta len na správy od začiatku
