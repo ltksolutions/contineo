@@ -2194,7 +2194,6 @@ interface Dictionary {
     empty: string
     newChannel: string
     edit: string
-    key: string
     keyHint: string
     name: string
     audience: string
@@ -5334,7 +5333,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ai.keyRejected": "Anthropic kľúč odmietol — skontrolujte, či je celý a platný.",
     "ai.keyUnverified": "Kľúč sa nepodarilo overiť — Anthropic neodpovedá. Skúste to o chvíľu.",
     "ai.unknownModel": "Model „{value}“ nie je v ponuke.",
-    "helpdesk.keyShape": "Kľúč kanála smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
     "helpdesk.nameRequired": "Názov kanála je povinný.",
     "helpdesk.notFound": "Taký kanál tu nie je.",
     "helpdesk.mailboxKind": "Neznámy druh schránky.",
@@ -6273,8 +6271,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "Zatiaľ žiadny kanál.",
     newChannel: "Nový kanál",
     edit: "upraviť",
-    key: "Kľúč",
-    keyHint: "Identita kanála v adrese a v tokene widgetu. Po založení sa nemení.",
+    keyHint: "Kľúč kanála, pridelený pri založení. Je v adrese skriptu widgetu a v claime aud tokenu; nemení sa.",
     name: "Názov",
     audience: "Publikum",
     audienceHint: "Komu kanál slúži — klubové manažérky, rozhodcovia, rodičia…",
@@ -9283,7 +9280,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ai.keyRejected": "Anthropic klíč odmítl — zkontrolujte, zda je celý a platný.",
     "ai.keyUnverified": "Klíč se nepodařilo ověřit — Anthropic neodpovídá. Zkuste to za chvíli.",
     "ai.unknownModel": "Model „{value}“ není v nabídce.",
-    "helpdesk.keyShape": "Klíč kanálu smí mít jen malá písmena bez diakritiky, číslice a podtržítka.",
     "helpdesk.nameRequired": "Název kanálu je povinný.",
     "helpdesk.notFound": "Takový kanál tady není.",
     "helpdesk.mailboxKind": "Neznámý druh schránky.",
@@ -10220,8 +10216,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "Zatím žádný kanál.",
     newChannel: "Nový kanál",
     edit: "upravit",
-    key: "Klíč",
-    keyHint: "Identita kanálu v adrese a v tokenu widgetu. Po založení se nemění.",
+    keyHint: "Klíč kanálu, přidělený při založení. Je v adrese skriptu widgetu a v claimu aud tokenu; nemění se.",
     name: "Název",
     audience: "Publikum",
     audienceHint: "Komu kanál slouží — klubové manažerky, rozhodčí, rodiče…",
@@ -13221,7 +13216,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "ai.keyRejected": "Anthropic rejected the key — check that it is complete and valid.",
     "ai.keyUnverified": "The key could not be verified — Anthropic is not responding. Try again in a moment.",
     "ai.unknownModel": "The model “{value}” is not on offer.",
-    "helpdesk.keyShape": "The channel key may contain only lowercase letters without diacritics, digits and underscores.",
     "helpdesk.nameRequired": "The channel name is required.",
     "helpdesk.notFound": "There is no such channel here.",
     "helpdesk.mailboxKind": "Unknown mailbox type.",
@@ -14158,8 +14152,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "No channels yet.",
     newChannel: "New channel",
     edit: "edit",
-    key: "Key",
-    keyHint: "The channel's identity in the address and in the widget token. It does not change after creation.",
+    keyHint: "The channel key, assigned at creation. It is in the widget script address and in the token's aud claim; it never changes.",
     name: "Name",
     audience: "Audience",
     audienceHint: "Who the channel serves — club managers, referees, parents…",

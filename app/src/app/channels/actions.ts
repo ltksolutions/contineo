@@ -44,12 +44,13 @@ async function ready() {
 
 export async function saveChannelAction(fd: FormData) {
   const ctx = await ready()
-  const key = fieldText(fd, "key").toLowerCase()
   const isNew = fieldText(fd, "isNew") === "1"
+  // Nový kanál kľúč nemá — pridelí ho saveChannel (UUID); upravovaný ho nesie v skrytom poli.
+  let key = isNew ? "" : fieldText(fd, "key").toLowerCase()
   try {
     const mailboxKind = fieldText(fd, "mailboxKind")
-    await saveChannel(ctx.person.companyCode, {
-      key,
+    const saved = await saveChannel(ctx.person.companyCode, {
+      key: key || undefined,
       kind: fieldText(fd, "kind") || undefined,
       tickets: fieldText(fd, "tickets") === "on",
       name: fieldText(fd, "name"),
@@ -63,10 +64,11 @@ export async function saveChannelAction(fd: FormData) {
         ? { kind: mailboxKind, address: fieldText(fd, "address"), tenantId: fieldText(fd, "tenantId"), clientId: fieldText(fd, "clientId"), clientSecret: fieldText(fd, "clientSecret") }
         : null,
     }, ctx.person.email)
+    key = saved.key
   } catch (e) {
     if (isRedirect(e)) throw e
     if (isNew) {
-      const q = new URLSearchParams({ error: errorMessage(e, ctx.language), key, name: fieldText(fd, "name"), kind: fieldText(fd, "kind") })
+      const q = new URLSearchParams({ error: errorMessage(e, ctx.language), name: fieldText(fd, "name"), kind: fieldText(fd, "kind") })
       redirect(`/channels?${q.toString()}#new`)
     }
     back(key, errorMessage(e, ctx.language), true)

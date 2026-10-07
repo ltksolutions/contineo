@@ -26,13 +26,12 @@
  * Schránka je za adaptérom (`mailbox/`, D162): tu sa rozhoduje len, ktorý.
  */
 
-import { randomBytes } from "node:crypto"
+import { randomBytes, randomUUID } from "node:crypto"
 import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { requireCompanyCode } from "./tenantScope"
-import { KEY_PATTERN } from "./codelists"
 import { isUiLanguage, type UiLanguage } from "./i18n"
 import { GraphMailbox } from "./mailbox/graph"
 import type { MailboxAdapter, MailboxKind } from "./mailbox/types"
@@ -157,7 +156,8 @@ export async function channelByKey(companyCode: string, key: string): Promise<He
 }
 
 export interface ChannelInput {
-  key: string
+  /** Prázdne = nový kanál; kľúč pridelí `saveChannel`. Pri úprave povinný. */
+  key?: string
   /** Pri založení povinný; pri úprave sa ignoruje (typ sa nemení). */
   kind?: string
   tickets?: boolean
@@ -183,20 +183,26 @@ function tidyList(xs: string[] | undefined): string[] {
 }
 
 /**
- * Založí alebo upraví kanál. Kľúč je identita — po založení sa nemení
- * (odkazujú naň tickety aj widget). Validácia a audit tu, nie v akcii.
+ * Založí alebo upraví kanál. Kľúč je identita — bez kľúča vzniká nový kanál
+ * s UUID, s kľúčom sa upravuje existujúci (odkazujú naň tickety aj widget).
+ * Validácia a audit tu, nie v akcii.
  */
 export async function saveChannel(companyCode: string, input: ChannelInput, actor: string): Promise<HelpdeskChannel> {
   const code = requireCompanyCode(companyCode, "saveChannel")
-  const key = input.key.trim().toLowerCase()
-  if (!KEY_PATTERN.test(key)) {
-    throw new HelpdeskError("helpdesk.keyShape", "Kľúč kanála smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.", { key })
-  }
+  const given = (input.key ?? "").trim().toLowerCase()
+  const key = given || randomUUID()
   const name = input.name.replace(/\s+/g, " ").trim()
   if (!name) throw new HelpdeskError("helpdesk.nameRequired", "Názov kanála je povinný.")
 
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
   const existing = await col.findOne({ companyCode: code, key })
+  // Kľúč je UUID pridelené tu, pri založení (Ján 7. 10. 2026). Človek ho
+  // nevymýšľa: nemá sa s čím zraziť a nenesie názov projektu, ktorý sa
+  // o rok zmení — je v adrese skriptu, v `aud` tokenu a v
+  // `externalRef.widget.<kľúč>` osôb, takže sa nemení. Zadaný kľúč preto
+  // znamená úpravu existujúceho kanála; tvar sa neoveruje, aby kanál
+  // založený pred UUID ostal upraviteľný so svojím pôvodným kľúčom.
+  if (given && !existing) throw new HelpdeskError("helpdesk.notFound", "Taký kanál tu nie je.", { key })
   const now = new Date()
 
   // Typ sa určuje raz, pri založení (D169).

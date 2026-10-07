@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kanály: kľúč kanála prideľuje systém (2026-10-07)
+
+Pri založení kanála sa kľúč už nezadáva — Contineo pridelí UUID a ukáže
+ho na obrazovke kanála. Kľúč je v adrese skriptu widgetu, v claime `aud`
+tokenu a v odkazoch osôb na kanál, preto sa nemení a nenesie názov
+projektu. Skúšobná stránka `npm run widget:test` berie kľúč cez
+`--channel` a číta kolekciu `channels`; návod pre ISSF uvádza, kde kľúč
+nájsť.
+
 ### Web contineo.app: kanály sú dva typy — widget a portál (2026-10-06)
 
 V obrázku architektúry je intranet pod **portálom**, nie ako tretí typ
