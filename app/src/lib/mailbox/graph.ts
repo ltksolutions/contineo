@@ -145,12 +145,17 @@ export class GraphMailbox implements MailboxAdapter {
     return `${GRAPH}/users/${encodeURIComponent(this.address)}`
   }
 
+  /**
+   * Overí len to, čo synchronizácia naozaj robí: čítanie priečinka Doručené.
+   * Profil používateľa (`/users/{adresa}`) sa nečíta — potrebuje `User.Read.All`
+   * v Entra, ktoré zúžená aplikácia nemá a mať nemá (RBAC for Applications dáva
+   * len `Mail.Read`/`Mail.Send` na jednu schránku). 7. 10. 2026 overenie
+   * na tom padalo s 403, hoci zúženie bolo správne.
+   */
   async verify(): Promise<{ address: string; displayName: string | null }> {
-    const r = await this.get(`${this.userPath()}?$select=displayName,mail,userPrincipalName`, "overenie používateľa")
-    const u = await r.json() as { displayName?: string; mail?: string; userPrincipalName?: string }
-    // Čítanie schránky overí aj zúženie oprávnení — samotný profil ho nevidí.
-    await this.get(`${this.userPath()}/mailFolders/inbox?$select=id,totalItemCount`, "overenie schránky")
-    return { address: (u.mail ?? u.userPrincipalName ?? this.address).toLowerCase(), displayName: u.displayName ?? null }
+    const r = await this.get(`${this.userPath()}/mailFolders/inbox?$select=id,displayName`, "overenie schránky")
+    await r.json().catch(() => null)
+    return { address: this.address, displayName: null }
   }
 
   async listNew(cursor: string | null): Promise<MailboxPage> {
