@@ -33,7 +33,7 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
   }
-  const { msg, error, key, name, kind } = normalizeQuery<{ msg?: string; error?: string; key?: string; name?: string; kind?: string }>(await searchParams)
+  const { msg, error, name, kind } = normalizeQuery<{ msg?: string; error?: string; name?: string; kind?: string }>(await searchParams)
   const language = ctx.person.language
   const t = dictionary(language).channels
   const branding = brandingView(ctx.tenant)
@@ -82,11 +82,6 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
             options={CHANNEL_KINDS.map(k => ({ value: k, label: t.kinds[k] }))} />
           <span className="quiet field-hint">{t.kindHints.widget} · {t.kindHints.portal}</span>
         </div>
-        <label className="field">
-          <span className="field-label">{t.key}</span>
-          <input className="field-input" name="key" required pattern="[a-z0-9][a-z0-9_]{1,60}" autoCapitalize="none" autoCorrect="off" defaultValue={key ?? ""} />
-          <span className="quiet field-hint">{t.keyHint}</span>
-        </label>
         <label className="field">
           <span className="field-label">{t.name}</span>
           <input className="field-input" name="name" required maxLength={120} defaultValue={name ?? ""} />

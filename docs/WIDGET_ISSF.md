@@ -25,6 +25,10 @@
 
 Kanály (menu, správca organizácie) → kanál typu **widget**:
 
+- **Kľúč kanála** pridelí Contineo pri založení (UUID, napr.
+  `6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b`); je na obrazovke kanála.
+  Odovzdať prevádzkovateľovi ISSF spolu s tajomstvom — ide do `aud`
+  tokenu a do adresy skriptu.
 - **Povolené pôvody**: `https://issf.futbalsfz.sk` (presný pôvod stránky,
   bez cesty). Z iného pôvodu API odpovie 403.
 - **Tajomstvo widgetu**: „Vytvoriť nové tajomstvo" — ukáže sa **raz**;
@@ -49,7 +53,7 @@ aj overí; preto nemajú vlastné názvy (rozhodnutie Jána 6. 10. 2026).
 | claim | význam v ISSF |
 |---|---|
 | `iss` | **kto token vydal** — pôvod stránky ISSF, napr. `https://issf.futbalsfz.sk`. Musí byť medzi povolenými pôvodmi kanála v Contineu. |
-| `aud` | **pre koho je** — kľúč kanála v Contineu, napr. `issf`. |
+| `aud` | **pre koho je** — kľúč kanála v Contineu (UUID z obrazovky kanála), napr. `6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b`. |
 | `sub` | **jedinečný identifikátor osoby v ISSF** — registračné číslo. Podľa neho sa osoba pri ďalšej otázke spozná a riešiteľ ju podľa neho nájde v ISSF. (Iný systém by sem dal svoj identifikátor, napr. platforma Sportnet `sportnetID`.) |
 | `email` | e-mail účtu — sem príde odpoveď helpdesku. Musí byť v ISSF overený. |
 | `given_name` | meno |
@@ -67,12 +71,13 @@ Príklad (Node):
 
 ```js
 const { createHmac } = require("node:crypto")
+const CHANNEL_KEY = "6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b" // kľúč kanála z Continea
 const b64 = s => Buffer.from(s).toString("base64url")
 function issueToken(user, secret) {
   const iat = Math.floor(Date.now() / 1000)
   const header = b64(JSON.stringify({ alg: "HS256", typ: "JWT" }))
   const payload = b64(JSON.stringify({
-    iss: "https://issf.futbalsfz.sk", aud: "issf", sub: user.registrationNumber,
+    iss: "https://issf.futbalsfz.sk", aud: CHANNEL_KEY, sub: user.registrationNumber,
     email: user.email, given_name: user.firstName, family_name: user.lastName,
     roles: user.roles, club: user.club, lang: "sk",
     iat, exp: iat + 15 * 60,
@@ -92,7 +97,7 @@ Widget ho zavolá sám, keď API odpovie 401.
 ### 3. Vloženie skriptu
 
 ```html
-<script src="https://intranet.futbalsfz.sk/api/widget/issf/script"
+<script src="https://intranet.futbalsfz.sk/api/widget/6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b/script"
         data-token="<token vydaný pri načítaní stránky>"
         data-token-url="/api/contineo-token" defer></script>
 ```
@@ -106,11 +111,11 @@ Kým ISSF token nevydáva, krok 5 sa dá vyskúšať lokálnou stránkou, ktorá
 token podpíše tajomstvom kanála sama (to isté, čo urobí ISSF):
 
 ```bash
-cd app && npm run widget:test -- --company SFZ --channel issf --origin http://localhost:4567 --app https://intranet.futbalsfz.sk --email jan@klub.sk --given Ján --family Letko --sub 1234567
+cd app && npm run widget:test -- --company SFZ --channel 6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b --origin http://localhost:4567 --app https://intranet.futbalsfz.sk --email jan@klub.sk --given Ján --family Letko --sub 1234567
 ```
 
-Predtým v Kanáloch pridať `http://localhost:4567` medzi povolené pôvody
-kanála. Stránka beží na tom pôvode, vloží skript widgetu
+`--channel` je kľúč kanála z jeho obrazovky. Predtým v Kanáloch pridať
+`http://localhost:4567` medzi povolené pôvody kanála. Stránka beží na tom pôvode, vloží skript widgetu
 z aplikácie a pri 401 si vyžiada nový token z `/token`. Po skúške pôvod
 z kanála odobrať.
 

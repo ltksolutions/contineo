@@ -73,7 +73,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
         <input type="hidden" name="isNew" value="0" />
         <input type="hidden" name="key" value={c.key} />
         <section className="set-sec">
-          <div className="set-sec-head"><h2>{c.name}</h2><p><code>{c.key}</code></p></div>
+          <div className="set-sec-head"><h2>{c.name}</h2><p><code>{c.key}</code></p><p className="quiet">{t.keyHint}</p></div>
           <div className="set-sec-body">
             <label className="field">
               <span className="field-label">{t.name}</span>
