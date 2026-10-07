@@ -10,6 +10,28 @@
 
 ---
 
+## 2026-10-07 — Vzdelávanie na vlastných adresách (R3)
+
+**Čo sa zmenilo:** `lib/learningPaths.ts` drží všetky adresy častí
+(`managePath`, `coursePath`, `partPath`, `testsPath`, `questionPath`,
+`importPath`) aj vyhradené kľúče. Podstránky sú tenké ako pri R4/R5 —
+zavolajú pôvodnú stránku s vloženým `tab`/`part`/`q`/`new`/`import`.
+Akcie presmerujú na cesty (`back(tab, query…)`, `go(path, query…)`).
+`legacyQueryRoute()` prekladá staré tvary; `?new=1`, `?add=`, `?assign=1`,
+`?filter=`, `?revoke=` ostali parametrami — miesto sa nimi nemení.
+
+**Rozhodnutie mimo návrhu:** neznáma časť kurzu a neznámy kľúč otázky na
+vlastnej adrese sú 404 (predtým sa ticho ukázal zoznam). Otázka z CSV
+s ID `new`/`import` dostane kľúč `q_new`/`q_import` — stále rovnaký, takže
+opakovaný import ju aktualizuje, nezdvojí. Vyhradené slová idú aj do
+`usedKeys` formulára, takže kolíziu ukáže už pri písaní.
+
+**Čo overiť naživo:** starý odkaz z e-mailu (napr. `?tab=people&assign=1`)
+skončí na novej adrese; v produkčných dátach nie je kurz s kľúčom `topics`
+/`tags` ani test `questions`/`results` (inak by ho zatienila časť správy).
+
+---
+
 ## 2026-10-06 — odpovede v teste ako riadky (R7)
 
 **Čo sa zmenilo:** v pokuse o test sú textové odpovede `.form-row` v

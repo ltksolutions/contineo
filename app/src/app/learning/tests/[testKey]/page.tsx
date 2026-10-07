@@ -9,6 +9,7 @@
  */
 
 import Link from "next/link"
+import { testsPath } from "@/lib/learningPaths"
 import { notFound, redirect } from "next/navigation"
 import { learningAdminContext } from "@/lib/learning"
 import { getTest } from "@/lib/testsDb"
@@ -62,7 +63,7 @@ export default async function TestEditorPage({ params, searchParams }: { params:
     const v = [...c.versions].sort((a, b) => b.version - a.version)[0]
     return (v?.parts ?? []).flatMap(p => p.tests.filter(x => x.testKey === key).map(x => ({ course: c.title, courseKey: c.key, part: p.title, required: x.required, version: x.testVersion })))
   })
-  const bankHref = (filter: { key: string; value: string }[]) => `/learning/tests?tab=questions${filter.map(f => `&tag=${encodeURIComponent(tagId(f))}`).join("")}`
+  const bankHref = (filter: { key: string; value: string }[]) => `${testsPath("questions")}${filter.length ? "?" : ""}${filter.map(f => `tag=${encodeURIComponent(tagId(f))}`).join("&")}`
   const showLabel = { never: tt.showNever, after_submit: tt.showAfterSubmit, after_pass: tt.showAfterPass, after_last_attempt: tt.showAfterLast }
 
   return (

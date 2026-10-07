@@ -1,7 +1,8 @@
 /**
  * /learning/manage — správa kurzov (rám `docs/design/MANAGE-sprava-kurzov.md`).
  *
- * Záložky `?tab=courses | topics | tags` ako v `/organisation`. Len rola
+ * Časti Kurzy | Témy | Tagy majú vlastné adresy (`/learning/manage/topics`,
+ * `/tags` — R3, `lib/learningPaths.ts`), ako v `/organisation`. Len rola
  * `learning-admin`; pri vypnutom module stránka neexistuje (D123).
  *
  * - Kurzy: stav verzie (dve pilulky, keď zverejnený má rozpracovaný
@@ -32,6 +33,7 @@ import KeyFromLabel from "@/components/KeyFromLabel"
 import Select from "@/components/Select"
 import MergeSelectionBar from "@/components/MergeSelectionBar"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { MANAGE_PATH, managePath, RESERVED_COURSE_KEYS } from "@/lib/learningPaths"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
   addTopicAction, createCourseAction, mergeTagsAction, renameKeyAction, renameTagAction,
@@ -61,7 +63,7 @@ export default async function LearningManagePage({ searchParams }: { searchParam
   const t = dictionary(language).learning
   const tm = t.manage
   const tab: Tab = (TABS as readonly string[]).includes(q.tab ?? "") ? (q.tab as Tab) : "courses"
-  const back = `/learning/manage?tab=${tab}`
+  const back = managePath(tab)
   // Záložky sa načítajú tu, nie ako asynchrónne komponenty — nech sa
   // stránka dá vykresliť aj v teste (`renderToStaticMarkup`).
   const body = tab === "courses" ? await CoursesTab({ ctx, q, language })
@@ -76,13 +78,13 @@ export default async function LearningManagePage({ searchParams }: { searchParam
         <div className="page-head">
           <h1 className="page-title">{t.manageHeading}</h1>
           <span className="page-head-spacer" aria-hidden="true" />
-          {tab === "courses" && q.new !== "1" && <Link className="button" href="/learning/manage?tab=courses&new=1">{tm.newCourse}</Link>}
+          {tab === "courses" && q.new !== "1" && <Link className="button" href={`${MANAGE_PATH}?new=1`}>{tm.newCourse}</Link>}
         </div>
         <Notice language={language} message={q.msg} error={q.error === "1"} back={back} />
         <nav className="tabs" aria-label={tm.tabsLabel}>
           <TabsBar>
             {TABS.map(k => (
-              <TabLink key={k} href={`/learning/manage?tab=${k}`} active={k === tab}>
+              <TabLink key={k} href={managePath(k)} active={k === tab}>
                 {{ courses: tm.tabCourses, topics: tm.tabTopics, tags: tm.tabTags }[k]}
               </TabLink>
             ))}
@@ -137,13 +139,13 @@ async function CoursesTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLa
         <section className="card mg-new">
           <h2>{tm.newCourse}</h2>
           {topics.length === 0 ? (
-            <p className="quiet" style={{ margin: 0 }}>{tm.topicNone} <Link className="linkish" href="/learning/manage?tab=topics">{tm.tabTopics}</Link></p>
+            <p className="quiet" style={{ margin: 0 }}>{tm.topicNone} <Link className="linkish" href={managePath("topics")}>{tm.tabTopics}</Link></p>
           ) : (
             <form action={createCourseAction} className="mg-form">
               <KeyFromLabel
                 layout="fields" labelName="title" separator="-"
                 initialLabel={q.title ?? ""} initialKey={q.key ?? ""}
-                usedKeys={courses.map(c => c.key)} hint={tm.keyHint}
+                usedKeys={[...courses.map(c => c.key), ...RESERVED_COURSE_KEYS]} hint={tm.keyHint}
                 labels={{ label: tm.courseTitle, labelPlaceholder: "", key: tm.courseKey, keyPlaceholder: "bezpecnost-v-sidle", taken: tm.keyTaken }}
               />
               <label className="field">
@@ -152,7 +154,7 @@ async function CoursesTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLa
               </label>
               <div className="mg-actions">
                 <SubmitButton className="button">{tm.create}</SubmitButton>
-                <Link className="button button--quiet" href="/learning/manage?tab=courses">{tm.cancel}</Link>
+                <Link className="button button--quiet" href={MANAGE_PATH}>{tm.cancel}</Link>
               </div>
             </form>
           )}
@@ -164,7 +166,7 @@ async function CoursesTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLa
           <div className="empty-title">{t.manageEmpty}</div>
           <div className="empty-text">{tm.emptyText}</div>
           {/* Plné „Nový kurz" je v hlavičke; tu tiché (DESIGN_ODCHYLKY P10). */}
-          {q.new !== "1" && <div className="empty-action"><Link className="button button--quiet" href="/learning/manage?tab=courses&new=1">{tm.newCourse}</Link></div>}
+          {q.new !== "1" && <div className="empty-action"><Link className="button button--quiet" href={`${MANAGE_PATH}?new=1`}>{tm.newCourse}</Link></div>}
         </div>
       ) : (
         <>
@@ -173,7 +175,7 @@ async function CoursesTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLa
           <nav className="view-switch view-switch--fit" aria-label={t.statusFilter}>
             {STATUSES.map(s => (
               <Link key={s} className={`view-switch-item${s === status ? " is-on" : ""}`} aria-current={s === status ? "true" : undefined}
-                    href={`/learning/manage?tab=courses${s === "all" ? "" : `&status=${s}`}`}>
+                    href={`${MANAGE_PATH}${s === "all" ? "" : `?status=${s}`}`}>
                 {labelOf[s]} <span className="view-switch-count">{count(s)}</span>
               </Link>
             ))}
@@ -237,7 +239,7 @@ async function TopicsTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLan
                 <input type="hidden" name="key" value={x.key} />
                 <input className="field-input" name="label" defaultValue={x.label} aria-label={tm.topicName} required />
                 <SubmitButton className="button">{tm.save}</SubmitButton>
-                <Link className="button button--quiet" href="/learning/manage?tab=topics">{tm.cancel}</Link>
+                <Link className="button button--quiet" href={managePath("topics")}>{tm.cancel}</Link>
               </form>
             ) : (
               <>
@@ -246,7 +248,7 @@ async function TopicsTab({ ctx, q, language }: { ctx: Ctx; q: Q; language: UiLan
                   {x.retiredAt && <span className="tag tag--archived">{tm.retired}</span>}
                 </span>
                 <span className="quiet">{tm.topicCourses(courses.filter(c => c.topicKey === x.key).length)}</span>
-                <Link className="lc-link" href={`/learning/manage?tab=topics&renameTopic=${encodeURIComponent(x.key)}`}>{tm.rename}</Link>
+                <Link className="lc-link" href={`${managePath("topics")}?renameTopic=${encodeURIComponent(x.key)}`}>{tm.rename}</Link>
                 <form action={x.retiredAt ? restoreTopicAction : retireTopicAction}>
                   <input type="hidden" name="key" value={x.key} />
                   <SubmitButton className="button button--quiet">{x.retiredAt ? tm.restore : tm.retire}</SubmitButton>
@@ -319,26 +321,25 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
             <p className="mg-impact">{tm.impact(mergeImpact.courses, mergeImpact.questions, mergeImpact.tests)} {most && tm.mergeResult(most.label)}</p>
             <div className="mg-actions">
               <SubmitButton className="button">{tm.mergeButton}</SubmitButton>
-              <Link className="button button--quiet" href="/learning/manage?tab=tags">{tm.cancel}</Link>
+              <Link className="button button--quiet" href={managePath("tags")}>{tm.cancel}</Link>
             </div>
           </form>
         </section>
       )}
 
-      <form id="tag-select" method="get" action="/learning/manage" className="mg-tags">
-        <input type="hidden" name="tab" value="tags" />
+      <form id="tag-select" method="get" action={managePath("tags")} className="mg-tags">
         {[...byKey.entries()].map(([key, values]) => (
           <section key={key} className="card tgk">
             <div className="tgk-head">
               <b>{keyLabel(key)}</b>
               <span className="quiet">{tm.usage(values.reduce((n, v) => n + v.courses, 0), values.reduce((n, v) => n + v.questions, 0), values.reduce((n, v) => n + v.tests, 0))}</span>
-              <Link className="lc-link" href={`/learning/manage?tab=tags&renameKey=${encodeURIComponent(key)}`}>{tm.renameKey}</Link>
+              <Link className="lc-link" href={`${managePath("tags")}?renameKey=${encodeURIComponent(key)}`}>{tm.renameKey}</Link>
             </div>
             {q.renameKey === key && (
               <div className="tgv-form">
                 <input className="field-input" name="to" form="rename-key" defaultValue={keyLabel(key)} aria-label={tm.keyLabel} required />
                 <SubmitButton form="rename-key" className="button">{tm.rename}</SubmitButton>
-                <Link className="button button--quiet" href="/learning/manage?tab=tags">{tm.cancel}</Link>
+                <Link className="button button--quiet" href={managePath("tags")}>{tm.cancel}</Link>
               </div>
             )}
             {values.map(v => {
@@ -351,7 +352,7 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
                     <Stag label={v.label} />
                   </label>
                   <span className="quiet tgv-usage">{tm.usage(v.courses, v.questions, v.tests)}</span>
-                  <Link className="lc-link" href={`/learning/manage?tab=tags&rename=${encodeURIComponent(id)}`}>{tm.rename}</Link>
+                  <Link className="lc-link" href={`${managePath("tags")}?rename=${encodeURIComponent(id)}`}>{tm.rename}</Link>
                   {renaming && tagId(renaming) === id && renameImpact && (
                     <div className="tgv-form">
                       <input className="field-input" name="to" form="rename-tag" defaultValue={q.to ?? v.label} aria-label={tm.newValue} required />
@@ -360,7 +361,7 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
                         {tm.impact(renameImpact.courses, renameImpact.questions, renameImpact.tests)}
                       </p>
                       <SubmitButton form="rename-tag" className="button">{q.exists === "1" ? tm.mergeButton : tm.rename}</SubmitButton>
-                      <Link className="button button--quiet" href="/learning/manage?tab=tags">{tm.cancel}</Link>
+                      <Link className="button button--quiet" href={managePath("tags")}>{tm.cancel}</Link>
                     </div>
                   )}
                 </div>

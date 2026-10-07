@@ -163,4 +163,16 @@ describe("/learning/manage/[courseKey]", () => {
   it("prideliť koncept bez zverejnenej verzie sa nedá", async () => {
     expect(await render({ tab: "people", assign: "1" })).toContain("Prideliť sa dá len zverejnený kurz.")
   })
+
+  it("vlastné adresy (R3): časť, nastavenia a zapísaní; neznáma časť je 404", async () => {
+    const { default: PartPage } = await import("../src/app/learning/manage/[courseKey]/parts/[partKey]/page")
+    const part = renderToStaticMarkup(await PartPage({ params: Promise.resolve({ courseKey: "bozp", partKey: "uvod" }), searchParams: Promise.resolve({}) }))
+    expect(part).toContain('href="/learning/manage/bozp/parts/uvod?add=video#add"')
+    expect(part).not.toContain("tab=")
+    await expect(PartPage({ params: Promise.resolve({ courseKey: "bozp", partKey: "nie-je" }), searchParams: Promise.resolve({}) })).rejects.toThrow("notFound")
+    const { default: PeoplePage } = await import("../src/app/learning/manage/[courseKey]/people/page")
+    const people = renderToStaticMarkup(await PeoplePage({ params: Promise.resolve({ courseKey: "bozp" }), searchParams: Promise.resolve({ assign: "1" }) }))
+    expect(people).toContain("Prideliť sa dá len zverejnený kurz.")
+    expect(people).toContain('href="/learning/manage/bozp/people?filter=done"')
+  })
 })

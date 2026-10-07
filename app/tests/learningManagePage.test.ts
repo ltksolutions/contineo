@@ -71,7 +71,7 @@ describe("/learning/manage", () => {
     expect(html).not.toContain(">Staré témy<")
     // Pri otvorenom formulári je plné len „Vytvoriť" — hlavička „Nový kurz"
     // nekreslí (DESIGN_ODCHYLKY P10).
-    expect(html).not.toContain('href="/learning/manage?tab=courses&amp;new=1"')
+    expect(html).not.toContain('href="/learning/manage?new=1"')
     expect(await render({})).toContain('<div class="page-head"><h1 class="page-title">')
   })
 

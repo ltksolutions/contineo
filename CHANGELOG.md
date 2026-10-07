@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Vzdelávanie: časti majú vlastné adresy (2026-10-07)
+
+Témy a tagy v správe kurzov, nastavenia, zapísaní a časti kurzu, banka
+otázok (aj nová otázka, úprava a import) a výsledky testov sú na vlastných
+adresách, napr. `/learning/manage/topics`, `/learning/manage/<kurz>/people`,
+`/learning/tests/questions/<otázka>`. Cesta pod hlavičkou ich pomenuje
+a karta prehliadača tiež. Staré odkazy s `?tab=`, `?part=`, `?q=`
+a `?import=` presmerujú. Kurz nemôže mať kľúč `topics` ani `tags`, test nie
+`questions` ani `results`.
+
 ### Test: odpovede ako riadky zoznamu (2026-10-06)
 
 Pri vypĺňaní testu sú textové odpovede riadky zoznamu ako vo formulároch:

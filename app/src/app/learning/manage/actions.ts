@@ -15,6 +15,7 @@ import { parseSmartTag, tagId } from "@/lib/smartTags"
 import { slugifyTrackKey } from "@/lib/slug"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
+import { managePath, type ManageTab } from "@/lib/learningPaths"
 
 const BASE = "/learning/manage"
 
@@ -29,10 +30,11 @@ function field(fd: FormData, name: string): string {
   return typeof v === "string" ? v.trim() : ""
 }
 
-function back(query: string, message: string, error = false): never {
+/** Návrat na časť správy kurzov (vlastné adresy, R3) s hlásením. */
+function back(tab: ManageTab, query: string, message: string, error = false): never {
   revalidatePath(BASE)
   const sep = query ? "&" : ""
-  redirect(`${BASE}?${query}${sep}msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  redirect(`${managePath(tab)}?${query}${sep}msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** „Kľúč:hodnota" z adresy alebo formulára → identita tagu. */
@@ -58,7 +60,7 @@ export async function createCourseAction(fd: FormData) {
     created = true
   } catch (e) {
     if (!(e instanceof AppError)) console.error("[learning] založenie kurzu zlyhalo:", e)
-    back(`tab=courses&new=1&title=${encodeURIComponent(title)}&key=${encodeURIComponent(key)}`, errorText(e, ctx.person.language), true)
+    back("courses", `new=1&title=${encodeURIComponent(title)}&key=${encodeURIComponent(key)}`, errorText(e, ctx.person.language), true)
   }
   if (created) redirect(`${BASE}/${key}`)
 }
@@ -69,9 +71,9 @@ export async function addTopicAction(fd: FormData) {
   try {
     await addTopic({ companyCode: ctx.person.companyCode, label: field(fd, "label"), key: field(fd, "key") || undefined, actor: ctx.person.email })
   } catch (e) {
-    back("tab=topics", errorText(e, ctx.person.language), true)
+    back("topics", "", errorText(e, ctx.person.language), true)
   }
-  back("tab=topics", t.topicAdded)
+  back("topics", "", t.topicAdded)
 }
 
 export async function renameTopicAction(fd: FormData) {
@@ -80,21 +82,21 @@ export async function renameTopicAction(fd: FormData) {
   try {
     await renameTopic(ctx.person.companyCode, field(fd, "key"), field(fd, "label"), ctx.person.email)
   } catch (e) {
-    back("tab=topics", errorText(e, ctx.person.language), true)
+    back("topics", "", errorText(e, ctx.person.language), true)
   }
-  back("tab=topics", t.topicRenamed)
+  back("topics", "", t.topicRenamed)
 }
 
 export async function retireTopicAction(fd: FormData) {
   const ctx = await admin()
   await retireTopic(ctx.person.companyCode, field(fd, "key"), ctx.person.email)
-  back("tab=topics", dictionary(ctx.person.language).learning.manage.topicRetired)
+  back("topics", "", dictionary(ctx.person.language).learning.manage.topicRetired)
 }
 
 export async function restoreTopicAction(fd: FormData) {
   const ctx = await admin()
   await restoreTopic(ctx.person.companyCode, field(fd, "key"), ctx.person.email)
-  back("tab=topics", dictionary(ctx.person.language).learning.manage.topicRestored)
+  back("topics", "", dictionary(ctx.person.language).learning.manage.topicRestored)
 }
 
 /**
@@ -107,17 +109,17 @@ export async function renameTagAction(fd: FormData) {
   const from = tagRef(field(fd, "from"))
   const toLabel = field(fd, "to")
   const to = parseSmartTag(toLabel)
-  const again = `tab=tags&rename=${encodeURIComponent(field(fd, "from"))}&to=${encodeURIComponent(toLabel)}`
-  if (!from) back("tab=tags", errorText(new AppError("learning.tagShape", "", { value: field(fd, "from") }), ctx.person.language), true)
-  if (!to) back(again, errorText(new AppError("learning.tagShape", "", { value: toLabel }), ctx.person.language), true)
+  const again = `rename=${encodeURIComponent(field(fd, "from"))}&to=${encodeURIComponent(toLabel)}`
+  if (!from) back("tags", "", errorText(new AppError("learning.tagShape", "", { value: field(fd, "from") }), ctx.person.language), true)
+  if (!to) back("tags", again, errorText(new AppError("learning.tagShape", "", { value: toLabel }), ctx.person.language), true)
   const exists = tagId(to) !== tagId(from) && (await smartTagUsage(ctx.person.companyCode)).some(u => tagId(u) === tagId(to))
-  if (exists && field(fd, "confirm") !== "1") redirect(`${BASE}?${again}&exists=1`)
+  if (exists && field(fd, "confirm") !== "1") redirect(`${managePath("tags")}?${again}&exists=1`)
   try {
     await renameSmartTag(ctx.person.companyCode, from, toLabel, ctx.person.email)
   } catch (e) {
-    back(again, errorText(e, ctx.person.language), true)
+    back("tags", again, errorText(e, ctx.person.language), true)
   }
-  back("tab=tags", t.renamed(to.label))
+  back("tags", "", t.renamed(to.label))
 }
 
 export async function renameKeyAction(fd: FormData) {
@@ -127,9 +129,9 @@ export async function renameKeyAction(fd: FormData) {
   try {
     await renameSmartTagKey(ctx.person.companyCode, field(fd, "from"), label, ctx.person.email)
   } catch (e) {
-    back(`tab=tags&renameKey=${encodeURIComponent(field(fd, "from"))}`, errorText(e, ctx.person.language), true)
+    back("tags", `renameKey=${encodeURIComponent(field(fd, "from"))}`, errorText(e, ctx.person.language), true)
   }
-  back("tab=tags", t.renamed(label))
+  back("tags", "", t.renamed(label))
 }
 
 /** Zlúčenie (krok 2 → výsledok). Cieľ je jeden z vybraných alebo nový zápis. */
@@ -140,11 +142,11 @@ export async function mergeTagsAction(fd: FormData) {
   const choice = field(fd, "target")
   const usage = await smartTagUsage(ctx.person.companyCode)
   const targetLabel = choice === "__new" ? field(fd, "newLabel") : usage.find(u => tagId(u) === choice)?.label ?? ""
-  const again = `tab=tags&merge=${encodeURIComponent(sources.map(tagId).join(","))}`
+  const again = `merge=${encodeURIComponent(sources.map(tagId).join(","))}`
   try {
     await mergeSmartTags(ctx.person.companyCode, sources, targetLabel, ctx.person.email)
   } catch (e) {
-    back(again, errorText(e, ctx.person.language), true)
+    back("tags", again, errorText(e, ctx.person.language), true)
   }
-  back("tab=tags", t.merged(sources.length, parseSmartTag(targetLabel)?.label ?? targetLabel))
+  back("tags", "", t.merged(sources.length, parseSmartTag(targetLabel)?.label ?? targetLabel))
 }

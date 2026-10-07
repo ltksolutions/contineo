@@ -30,7 +30,7 @@ beforeEach(() => { s.draft.mockClear(); s.settings.mockClear(); s.hasDraft = tru
 
 describe("saveSettingsAction", () => {
   it("koncept: verzia a kurz, vydavateľ len s certifikátom", async () => {
-    await expect(saveSettingsAction(form({ ...base, issuesCertificate: "1", sequential: "1" }))).rejects.toThrow(/tab=settings&msg=/)
+    await expect(saveSettingsAction(form({ ...base, issuesCertificate: "1", sequential: "1" }))).rejects.toThrow(/\/learning\/manage\/k\/settings\?msg=/)
     const patch = (s.draft.mock.calls[0] as unknown[])[2] as Record<string, unknown>
     expect(patch).toMatchObject({ title: "BOZP", sequential: true, issuesCertificate: true, subtitle: null, issuer: { kind: "tenant", name: "Slovenský futbalový zväz" } })
     const settings = (s.settings.mock.calls[0] as unknown[])[2] as { smartTags: { label: string }[]; language: string; openEnrollment: boolean }
