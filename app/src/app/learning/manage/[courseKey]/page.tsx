@@ -10,6 +10,11 @@
  * Záložka Nastavenia: polia verzie, téma, smart:tagy (`SmartTagInput`),
  * priebeh a právny základ. Záložka Zapísaní: stav bez skóre (D121),
  * prideľovanie adresátom ako pri norme a export CSV.
+ *
+ * Akcie podľa `docs/design/MANAGE-COURSE-akcie.md` (7. 10. 2026): jedno plné
+ * tlačidlo na obrazovke — otvorená úloha (`?add=`, `?editBlock=`,
+ * `?assign=1`, `?archive=1`, `?removePart=1`) ho prevezme; karta stavu len
+ * na koreni kurzu, inde štítok stavu.
  */
 
 import Link from "next/link"
@@ -51,13 +56,14 @@ import { coursePath, partPath } from "@/lib/learningPaths"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
   addBlockAction, addPartAction, archiveAction, moveBlockAction, movePartAction, newVersionAction,
-  addPartTestAction, assignCourseAction, revokeCertificateAction, partTestRequiredAction, publishAction, removePartTestAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
+  addPartTestAction, assignCourseAction, revokeCertificateAction, savePartTestsAction, publishAction, removePartTestAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
 } from "./actions"
 
 export const dynamic = "force-dynamic"
 
 type Q = {
   tab?: string; part?: string; add?: string; src?: string; editBlock?: string; msg?: string; error?: string
+  archive?: string; removePart?: string
   filter?: string; assign?: string; preview?: string; all?: string; audience?: string | string[]; revoke?: string
 }
 type Edit = ReturnType<typeof dictionary>["learning"]["edit"]
@@ -96,6 +102,13 @@ export default async function ManageCoursePage({ params, searchParams }: {
   // kurzom (R3); na koreni kurzu je posledným krokom kurz.
   const pageName = part ? part.title : tab === "settings" ? te.tabSettings : tab === "people" ? te.tabPeople : null
 
+  // Karta stavu len na koreni kurzu; na podstránkach štítok v hlavičke
+  // (MANAGE-COURSE-akcie Q1, 7. 10. 2026) — inak by nad Nastaveniami
+  // a časťou viselo druhé plné tlačidlo a pol obrazovky kontrol.
+  const root = tab === "parts" && !part
+  const archiving = root && q.archive === "1" && Boolean(published) && !draft
+  const removingPart = Boolean(part && draft && q.removePart === "1")
+
   return (
     <AppShell language={language} title={pageName ?? shown.title} trail={pageName ? { [base]: shown.title } : undefined}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
@@ -103,10 +116,13 @@ export default async function ManageCoursePage({ params, searchParams }: {
         <header className="ch">
           <span className="ch-topic">{course.topicLabel}</span>
           <h1 className="page-title">{shown.title}</h1>
-          <div className="ch-facts"><code>{course.key}</code></div>
+          <div className="ch-facts">
+            <code>{course.key}</code>
+            {!root && <StatusChip href={base} draft={draft} published={published} te={te} />}
+          </div>
         </header>
 
-        <StatusCard course={course} draft={draft} published={published} latest={latest} inProgress={stats.enrolled - stats.completed} te={te} language={language} />
+        {root && <StatusCard course={course} draft={draft} published={published} latest={latest} inProgress={stats.enrolled - stats.completed} te={te} language={language} />}
 
         <nav className="tabs" aria-label={t.manage.tabsLabel}>
           <TabsBar>
@@ -130,6 +146,24 @@ export default async function ManageCoursePage({ params, searchParams }: {
             </>
           )}
         </div>
+
+        {archiving && published && (
+          <ConfirmSheet title={te.archiveTitle(shown.title)} cancel={base} cancelLabel={te.cancel}
+                        action={archiveAction} values={{ courseKey: course.key }} confirm={te.archiveButton}>
+            <ul>
+              <li>{te.archiveNoNew}</li>
+              {stats.enrolled - stats.completed > 0 && <li>{te.archiveInProgress(stats.enrolled - stats.completed, published.version)}</li>}
+              <li>{te.archiveKeeps}</li>
+            </ul>
+            <p>{te.archiveRestoreNote}</p>
+          </ConfirmSheet>
+        )}
+        {removingPart && part && draft && (
+          <ConfirmSheet title={te.removePartTitle(part.title, part.blocks.length, part.tests.length)} cancel={partPath(course.key, part.key)} cancelLabel={te.cancel}
+                        action={removePartAction} values={{ courseKey: course.key, partKey: part.key }} confirm={te.removePartButton}>
+            <p>{te.removePartNote(draft.version)}</p>
+          </ConfirmSheet>
+        )}
       </div>
     </AppShell>
   )
@@ -137,6 +171,52 @@ export default async function ManageCoursePage({ params, searchParams }: {
 
 function Hidden({ values }: { values: Record<string, string> }) {
   return <>{Object.entries(values).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}</>
+}
+
+/**
+ * Potvrdenie nevratného kroku (MANAGE-COURSE-akcie Q4, 7. 10. 2026) —
+ * SwiftUI `.confirmationDialog`. Vykreslí ho server podľa adresy
+ * (`?archive=1`, `?removePart=1`), takže funguje bez JavaScriptu; „Zrušiť"
+ * aj stlmená stránka pod ním sú odkaz bez parametra. Pod 640 px plachta
+ * zdola, od 640 px okno v strede.
+ */
+function ConfirmSheet({ title, cancel, cancelLabel, action, values, confirm, children }: {
+  title: string
+  cancel: string
+  cancelLabel: string
+  action: (fd: FormData) => Promise<void>
+  values: Record<string, string>
+  confirm: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <Link className="confirm-scrim" href={cancel} aria-label={cancelLabel} tabIndex={-1} />
+      <div className="confirm-card">
+        <span className="sheet-grip" aria-hidden="true" />
+        <h2 id="confirm-title">{title}</h2>
+        {children}
+        <form action={action} className="confirm-actions">
+          <Hidden values={values} />
+          <SubmitButton className="button button--destructive">{confirm}</SubmitButton>
+          <Link className="button button--quiet" href={cancel}>{cancelLabel}</Link>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/** Štítok stavu verzie na podstránke — odkaz na kartu stavu na koreni kurzu (Q1). */
+function StatusChip({ href, draft, published, te }: { href: string; draft: CourseVersion | null; published: CourseVersion | null; te: Edit }) {
+  if (draft) {
+    const missing = publishProblems(draft).length
+    return (
+      <Link className={`mc-stchip ${missing ? "is-warn" : "is-ok"}`} href={href} aria-label={te.statusLabel}>
+        {missing ? te.statusDraftMissing(draft.version, missing) : te.statusDraftReady(draft.version)} <span aria-hidden="true">›</span>
+      </Link>
+    )
+  }
+  return <span className={`tag ${published ? "tag--published" : "tag--archived"}`}>{published ? te.statusPublished(published.version) : te.statusArchived}</span>
 }
 
 function StatusCard({ course, draft, published, latest, inProgress, te, language }: {
@@ -149,6 +229,9 @@ function StatusCard({ course, draft, published, latest, inProgress, te, language
   language: UiLanguage
 }) {
   const key = { courseKey: course.key }
+  const base = coursePath(course.key)
+  // Náhľad ako študent (Q2): verzia, ktorú správca práve vidí, len na čítanie.
+  const preview = (v: CourseVersion) => <Link className="button button--quiet" href={`/learning/${encodeURIComponent(course.key)}?preview=${v.version}`}>{te.previewAsStudent}</Link>
   if (draft) {
     const problems = publishProblems(draft)
     const partProblems = problems.filter(p => !["noLegalBasis", "noIssuer"].includes(p.code))
@@ -168,6 +251,8 @@ function StatusCard({ course, draft, published, latest, inProgress, te, language
           </div>
           {published && <p className="flow-lead">{te.keepPublished(published.version, draft.version)}</p>}
         </div>
+        {/* Stavový krok ostáva v päte karty, nie v `.page-head` (Q5) — pri
+            vypnutom „Zverejniť" je vedľa neho vidno, čo chýba. */}
         <div className="flow-foot mc-foot">
           <form action={publishAction}>
             <Hidden values={key} />
@@ -175,7 +260,8 @@ function StatusCard({ course, draft, published, latest, inProgress, te, language
               ? <button type="button" className="button" disabled aria-disabled="true">{te.publishButton(draft.version)}</button>
               : <SubmitButton className="button">{te.publishButton(draft.version)}</SubmitButton>}
           </form>
-          <span className="quiet">{problems.length ? te.publishDisabledNote : te.savedAt(formatDate(draft.updatedAt ?? draft.createdAt, language))}</span>
+          {preview(draft)}
+          <span className="quiet mc-foot-note">{problems.length ? te.publishDisabledNote : te.savedAt(formatDate(draft.updatedAt ?? draft.createdAt, language))}</span>
         </div>
       </section>
     )
@@ -187,7 +273,9 @@ function StatusCard({ course, draft, published, latest, inProgress, te, language
         <div className="flow-body"><p className="flow-lead">{te.publishedLead}</p></div>
         <div className="flow-foot mc-foot">
           <form action={newVersionAction}><Hidden values={key} /><SubmitButton className="button">{te.newVersion}</SubmitButton></form>
-          <form action={archiveAction}><Hidden values={key} /><SubmitButton className="button button--quiet">{te.archive}</SubmitButton></form>
+          {preview(published)}
+          {/* Archivácia zastaví zápis všetkým — najprv potvrdenie (Q4). */}
+          <Link className="button button--danger" href={`${base}?archive=1`}>{te.archiveOpen}</Link>
         </div>
       </section>
     )
@@ -217,47 +305,56 @@ function CheckRow({ ok, title, notes }: { ok: boolean; title: string; notes: str
 
 function PartList({ course, version, editable, te }: { course: Course; version: CourseVersion; editable: boolean; te: Edit }) {
   return (
-    <>
+    <div className="mc-root">
       {version.parts.length === 0 ? (
         <div className="empty"><div className="empty-title">{te.noParts}</div></div>
       ) : (
-        <section className="card mc-list">
-          <div className="parts-head"><h2>{te.partsHeading}</h2></div>
-          <ol className="pr-list">
+        <section className="mc-group">
+          <h2 className="form-group-head">{te.partsHeading} <span className="quiet">{version.parts.length}</span></h2>
+          {/* Riadok časti je odkaz na celý riadok (NavigationLink); šípky
+              poradia ostávajú samostatné formuláre bez JS (MANAGE-COURSE-akcie). */}
+          <ol className="card mc-list mc-links">
             {version.parts.map((p, i) => (
-              <li key={p.key} className="mc-row">
-                <span className="pr-mark pr-mark--sm" aria-hidden="true">{i + 1}</span>
-                <span className="mc-row-main">
-                  <b>{p.title}</b>
-                  <span className="mc-row-meta">
-                    <span className={p.required ? "tag" : "tag tag--archived"}>{p.required ? te.required : te.optional}</span>
-                    {te.blocksTests(p.blocks.length, p.tests.length)}
+              <li key={p.key} className="mc-lrow">
+                <Link className="mc-lrow-link" href={partPath(course.key, p.key)}>
+                  <span className="pr-mark pr-mark--sm" aria-hidden="true">{i + 1}</span>
+                  <span className="mc-row-main">
+                    <b>{p.title}</b>
+                    <span className="mc-row-meta">
+                      <span className={p.required ? "tag" : "tag tag--archived"}>{p.required ? te.required : te.optional}</span>
+                      {te.blocksTests(p.blocks.length, p.tests.length)}
+                    </span>
                   </span>
-                </span>
+                  <span className="mc-chev" aria-hidden="true">›</span>
+                </Link>
                 {editable && (
                   <span className="mc-arrows">
                     <MoveButton action={movePartAction} values={{ courseKey: course.key, partKey: p.key, dir: "up" }} label={te.up} disabled={i === 0} glyph="↑" />
                     <MoveButton action={movePartAction} values={{ courseKey: course.key, partKey: p.key, dir: "down" }} label={te.down} disabled={i === version.parts.length - 1} glyph="↓" />
                   </span>
                 )}
-                <Link className="lc-link" href={partPath(course.key, p.key)}>{editable ? te.editPart : te.view}</Link>
               </li>
             ))}
           </ol>
         </section>
       )}
       {editable && (
-        <section className="card mg-new">
-          <h2>{te.newPart}</h2>
-          <form action={addPartAction} className="mc-inline">
-            <Hidden values={{ courseKey: course.key }} />
-            <input className="field-input" name="title" aria-label={te.partTitle} placeholder={te.partTitle} required />
-            <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked /><span className="form-row-main">{te.required}</span></label>
-            <SubmitButton className="button">{te.addPart}</SubmitButton>
-          </form>
-        </section>
+        <form action={addPartAction} className="mc-group">
+          <Hidden values={{ courseKey: course.key }} />
+          <fieldset className="form-group">
+            <legend className="form-group-head">{te.newPart}</legend>
+            <div className="card form-group-body form-group-body--rows">
+              <div><input className="field-input" name="title" aria-label={te.partTitle} placeholder={te.partTitle} required /></div>
+              <div className="form-list">
+                <label className="form-row"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked /><span className="form-row-main">{te.required}</span></label>
+              </div>
+            </div>
+          </fieldset>
+          {/* Tiché — plné je stavový krok v karte stavu (jedno plné). */}
+          <div className="mg-actions"><SubmitButton className="button button--quiet">{te.addPart}</SubmitButton></div>
+        </form>
       )}
-    </>
+    </div>
   )
 }
 
@@ -288,6 +385,15 @@ function blockSummary(b: ContentBlock, te: Edit): string {
   }
 }
 
+function blockLabel(b: ContentBlock, te: Edit): string {
+  return b.type === "video" && b.source.kind === "external" ? te.blockTypes.videoExternal : te.blockTypes[b.type]
+}
+
+/** Typy, pri ktorých má úprava polia; pri ostatných ponúka len odstránenie. */
+function editableBlock(b: ContentBlock): boolean {
+  return b.type === "text" || b.type === "image" || (b.type === "video" && b.source.kind !== "external")
+}
+
 function PartDetail({ course, version, part, editable, q, docs, tests, te, language }: {
   course: Course
   version: CourseVersion
@@ -300,163 +406,281 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
   language: UiLanguage
 }) {
   const ta = dictionary(language).learning.attempt
-  const base = coursePath(course.key)
   const self = partPath(course.key, part.key)
   const ids = { courseKey: course.key, partKey: part.key }
-  const add = (BLOCK_TYPES as readonly string[]).includes(q.add ?? "") ? q.add! : "text"
+  const index = version.parts.findIndex(p => p.key === part.key)
+  const add = editable && (BLOCK_TYPES as readonly string[]).includes(q.add ?? "") ? (q.add as (typeof BLOCK_TYPES)[number]) : null
+  const editing = editable ? part.blocks.find(b => b.id === q.editBlock) ?? null : null
+  // Pred 7. 10. 2026 sa zdroj videa volil odkazom `?src=external`; starý
+  // odkaz ešte predvolí externý zdroj.
   const external = q.src === "external"
   const mediaLabels = (kind: "image" | "video") => ({
     title: kind === "video" ? te.mediaVideo : te.mediaImage, note: te.mediaNote, progressTitle: te.progressTitle,
     uploading: te.uploading, failed: te.uploadFailed, tooLarge: te.tooLarge,
   })
+  const published = publishedVersion(course)
 
   return (
     <div className="mc-detail">
+      {/* „← Všetky časti" preč — kurz je v ceste pod hlavičkou (R3,
+          MANAGE-COURSE-akcie). Bočný zoznam ostáva od 1024 px. */}
       <aside className="mc-side">
-        <Link className="lc-link mc-back" href={base}>{te.allParts}</Link>
         {version.parts.map((p, i) => (
-          <Link key={p.key} className={`pp-orow${p.key === part.key ? " is-current" : ""}`} href={partPath(course.key, p.key)}>
+          <Link key={p.key} className={`pp-orow${p.key === part.key ? " is-current" : ""}`} href={partPath(course.key, p.key)} aria-current={p.key === part.key ? "page" : undefined}>
             <span className="pr-mark pr-mark--sm" aria-hidden="true">{i + 1}</span><span>{p.title}</span>
           </Link>
         ))}
       </aside>
 
       <div className="mc-main">
-        {editable ? (
-          <section className="card mg-new mc-partform">
-            <form action={updatePartAction} className="mc-form">
-              <Hidden values={ids} />
-              <label className="field"><span className="field-label">{te.partTitle}</span><input className="field-input" name="title" defaultValue={part.title} required /></label>
-              <label className="field"><span className="field-label">{te.summary}</span><input className="field-input" name="summary" defaultValue={part.summary ?? ""} /></label>
-              <div className="mc-inline">
-                <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked={part.required} /><span className="form-row-main">{te.required}</span></label>
-                <label className="field mc-minutes"><span className="field-label">{te.minutes}</span><input className="field-input" name="estimatedMinutes" type="number" min="1" defaultValue={part.estimatedMinutes ?? ""} /></label>
+        {/* Hlavná akcia časti v toolbare: „Pridať blok ▾" (SwiftUI `Menu`,
+            `<details>` bez JS). Pri otvorenej úlohe (nový blok, úprava bloku)
+            ju prevezme úloha a tu sa nekreslí. */}
+        <div className="page-head mc-parthead">
+          <h2 className="mc-h2">{index + 1} · {part.title}</h2>
+          <span className="page-head-spacer" aria-hidden="true" />
+          {editable && !add && !editing && (
+            <details className="mc-menu">
+              <summary className="button">{te.addBlock} <span aria-hidden="true">▾</span></summary>
+              <div className="mc-menu-list">
+                {BLOCK_TYPES.map(k => (
+                  <Link key={k} href={`${self}?add=${k}#add`}>
+                    {te.blockTypes[k]}
+                    {(k === "document" || k === "video") && <small>{te.blockMenuNote[k]}</small>}
+                  </Link>
+                ))}
               </div>
-              <div className="mg-actions"><SubmitButton className="button">{te.save}</SubmitButton></div>
-            </form>
-            <form action={removePartAction}><Hidden values={ids} /><SubmitButton className="button button--quiet">{te.removePart}</SubmitButton></form>
-          </section>
-        ) : (
-          <h2 className="mc-h2">{part.title}</h2>
+            </details>
+          )}
+        </div>
+
+        {add && (
+          <form action={addBlockAction} className="mc-group" id="add">
+            <Hidden values={{ ...ids, type: add }} />
+            <fieldset className="form-group">
+              <legend className="form-group-head form-group-head--step">{te.newBlockHeading(te.blockTypes[add])}</legend>
+              {add === "video" ? (
+                // Zdroj videa: Picker(.inline) — dva riadky s fajkou, pole pod
+                // zvoleným (`:has`, bez JS). Bez `:has` sú vidno obe a server
+                // číta len to, ktoré patrí k zvolenému `source`.
+                <div className="card form-group-body form-group-body--rows">
+                  <div className="form-list">
+                    <label className="form-row choice-row"><input type="radio" name="source" value="upload" defaultChecked={!external} />
+                      <span className="form-row-main">{te.sourceUpload}</span></label>
+                    <div className="choice-field choice-field--block">
+                      <CourseMediaUpload kind="video" accept=".mp4,.webm" maxBytes={MAX_BYTES} labels={mediaLabels("video")} />
+                    </div>
+                    <label className="form-row choice-row"><input type="radio" name="source" value="external" defaultChecked={external} />
+                      <span className="form-row-main"><span>{te.sourceExternal}</span><span className="form-row-sub">{te.sourceExternalSub}</span></span></label>
+                    <div className="choice-field choice-field--block">
+                      <label className="field"><span className="field-label">{te.url}</span><input className="field-input" name="url" type="url" /></label>
+                      <div className="lnote lnote--warn"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{te.externalWarn}</span></div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="card form-group-body">
+                  {add === "text" && <textarea className="field-input" name="markdown" rows={8} aria-label={te.markdown} required />}
+                  {(add === "image" || add === "gallery") && (
+                    <>
+                      <CourseMediaUpload kind={add} accept=".jpg,.jpeg,.png,.webp,.gif" maxBytes={MAX_BYTES} labels={mediaLabels("image")} />
+                      <label className="field"><span className="field-label">{add === "gallery" ? te.altGallery : te.alt}</span><input className="field-input" name="alt" required /></label>
+                      {add === "image" && <label className="field"><span className="field-label">{te.caption}</span><input className="field-input" name="caption" /></label>}
+                    </>
+                  )}
+                  {add === "document" && (docs.length
+                    ? <label className="field"><span className="field-label">{te.document}</span><Select name="document" required searchable options={docs.map(d => ({ value: `${d.documentId}|${d.versionId}`, label: d.title, path: d.label }))} fieldLabel={te.document} language={language} /></label>
+                    : <p className="quiet">{te.noDocuments}</p>)}
+                </div>
+              )}
+            </fieldset>
+            {add === "video" && (
+              <fieldset className="form-group">
+                <div className="card form-group-body form-group-body--rows">
+                  <div className="form-list">
+                    <label className="form-row"><input type="checkbox" role="switch" className="toggle" name="mustWatch" value="1" />
+                      <span className="form-row-main"><span>{te.mustWatch}</span><span className="form-row-sub">{te.mustWatchNote}</span></span></label>
+                  </div>
+                </div>
+              </fieldset>
+            )}
+            {/* Otvorená úloha prevezme plné tlačidlo (MANAGE-COURSE-akcie). */}
+            <div className="mg-actions">
+              <SubmitButton className="button">{te.addBlock}</SubmitButton>
+              <Link className="button button--quiet" href={self}>{te.cancel}</Link>
+            </div>
+          </form>
         )}
 
-        <section className="card mc-list">
-          <div className="parts-head"><h2>{te.blocksHeading}</h2></div>
-          {part.blocks.length === 0 && <p className="quiet mc-row">{te.noBlocks}</p>}
-          {part.blocks.map((b, i) => (
-            <div key={b.id} className="mc-row">
-              <span className="btype">{b.type === "video" && b.source.kind === "external" ? te.blockTypes.videoExternal : te.blockTypes[b.type]}</span>
-              <span className="mc-row-main"><span className="mc-row-meta">{blockSummary(b, te)}</span></span>
-              {editable && (
-                <>
+        {editing && (
+          <div className="mc-group" id="edit">
+            <form action={updateBlockAction} className="mc-group">
+              <Hidden values={{ ...ids, blockId: editing.id }} />
+              <fieldset className="form-group">
+                <legend className="form-group-head form-group-head--step">{te.blockHeading(part.blocks.indexOf(editing) + 1, blockLabel(editing, te))}</legend>
+                {editing.type === "video" ? (
+                  <div className="card form-group-body form-group-body--rows">
+                    <div className="form-list">
+                      <label className="form-row"><input type="checkbox" role="switch" className="toggle" name="mustWatch" value="1" defaultChecked={editing.mustWatch} />
+                        <span className="form-row-main"><span>{te.mustWatch}</span><span className="form-row-sub">{te.mustWatchNote}</span></span></label>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="card form-group-body">
+                    {editing.type === "text" && <textarea className="field-input" name="markdown" rows={8} defaultValue={editing.markdown} aria-label={te.markdown} />}
+                    {editing.type === "image" && (
+                      <>
+                        <label className="field"><span className="field-label">{te.alt}</span><input className="field-input" name="alt" defaultValue={editing.alt} required /></label>
+                        <label className="field"><span className="field-label">{te.caption}</span><input className="field-input" name="caption" defaultValue={editing.caption ?? ""} /></label>
+                      </>
+                    )}
+                    {!editableBlock(editing) && <p className="quiet" style={{ margin: 0 }}>{blockSummary(editing, te)} — {te.noEditBlock}</p>}
+                  </div>
+                )}
+              </fieldset>
+              <div className="mg-actions">
+                {editableBlock(editing) && <SubmitButton className="button">{te.saveBlock}</SubmitButton>}
+                <Link className="button button--quiet" href={self}>{te.cancel}</Link>
+              </div>
+            </form>
+            {/* Odstránenie je zámerný krok v úprave, nie v riadku (Q3). */}
+            <form action={removeBlockAction} className="mc-danger">
+              <Hidden values={{ ...ids, blockId: editing.id }} />
+              <SubmitButton className="button button--danger">{te.removeBlockButton}</SubmitButton>
+              <p className="quiet mc-note">{te.removeBlockNote(version.version, published?.version ?? null)}</p>
+            </form>
+          </div>
+        )}
+
+        <section className="mc-group">
+          <h3 className="form-group-head">{te.blocksHeading} <span className="quiet">{part.blocks.length}</span></h3>
+          <div className="card mc-list mc-links">
+            {part.blocks.length === 0 && <p className="quiet mc-row">{te.noBlocks}</p>}
+            {part.blocks.map((b, i) => (
+              <div key={b.id} className={`mc-lrow${editing?.id === b.id ? " is-current" : ""}`}>
+                {editable ? (
+                  <Link className="mc-lrow-link" href={`${self}?editBlock=${encodeURIComponent(b.id)}#edit`}>
+                    <span className="btype">{blockLabel(b, te)}</span>
+                    <span className="mc-row-main"><span className="mc-row-meta">{blockSummary(b, te)}</span></span>
+                    <span className="mc-chev" aria-hidden="true">›</span>
+                  </Link>
+                ) : (
+                  <span className="mc-lrow-link">
+                    <span className="btype">{blockLabel(b, te)}</span>
+                    <span className="mc-row-main"><span className="mc-row-meta">{blockSummary(b, te)}</span></span>
+                  </span>
+                )}
+                {editable && (
                   <span className="mc-arrows">
                     <MoveButton action={moveBlockAction} values={{ ...ids, blockId: b.id, dir: "up" }} label={te.up} disabled={i === 0} glyph="↑" />
                     <MoveButton action={moveBlockAction} values={{ ...ids, blockId: b.id, dir: "down" }} label={te.down} disabled={i === part.blocks.length - 1} glyph="↓" />
                   </span>
-                  {["text", "image", "video"].includes(b.type) && !(b.type === "video" && b.source.kind === "external") && (
-                    <Link className="lc-link" href={`${self}&editBlock=${b.id}`}>{te.editBlock}</Link>
-                  )}
-                  <form action={removeBlockAction}><Hidden values={{ ...ids, blockId: b.id }} /><SubmitButton className="button button--quiet">{te.removeBlock}</SubmitButton></form>
-                </>
-              )}
-              {editable && q.editBlock === b.id && (
-                <form action={updateBlockAction} className="mc-form mc-blockedit">
-                  <Hidden values={{ ...ids, blockId: b.id }} />
-                  {b.type === "text" && <textarea className="field-input" name="markdown" rows={8} defaultValue={b.markdown} aria-label={te.markdown} />}
-                  {b.type === "image" && (
-                    <>
-                      <label className="field"><span className="field-label">{te.alt}</span><input className="field-input" name="alt" defaultValue={b.alt} required /></label>
-                      <label className="field"><span className="field-label">{te.caption}</span><input className="field-input" name="caption" defaultValue={b.caption ?? ""} /></label>
-                    </>
-                  )}
-                  {b.type === "video" && <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="mustWatch" value="1" defaultChecked={b.mustWatch} /><span className="form-row-main">{te.mustWatch}</span></label>}
-                  <div className="mg-actions"><SubmitButton className="button">{te.save}</SubmitButton><Link className="button button--quiet" href={self}>{te.cancel}</Link></div>
-                </form>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            ))}
+          </div>
         </section>
+
+        <PartTests part={part} tests={tests} ids={ids} editable={editable} te={te} ta={ta} language={language} />
 
         {editable && (
-          <section className="card mg-new" id="add">
-            <h2>{te.addBlock}</h2>
-            <nav className="lpills" aria-label={te.blockType}>
-              {BLOCK_TYPES.map(k => (
-                <Link key={k} className={`pill${k === add ? " is-on" : ""}`} href={`${self}?add=${k}#add`}>{te.blockTypes[k]}</Link>
-              ))}
-            </nav>
-            <form action={addBlockAction} className="mc-form">
-              <Hidden values={{ ...ids, type: add, ...(add === "video" ? { source: external ? "external" : "upload" } : {}) }} />
-              {add === "text" && <textarea className="field-input" name="markdown" rows={8} aria-label={te.markdown} required />}
-              {(add === "image" || add === "gallery") && (
-                <>
-                  <CourseMediaUpload kind={add} accept=".jpg,.jpeg,.png,.webp,.gif" maxBytes={MAX_BYTES} labels={mediaLabels("image")} />
-                  <label className="field"><span className="field-label">{add === "gallery" ? te.altGallery : te.alt}</span><input className="field-input" name="alt" required /></label>
-                  {add === "image" && <label className="field"><span className="field-label">{te.caption}</span><input className="field-input" name="caption" /></label>}
-                </>
-              )}
-              {add === "document" && (docs.length
-                ? <label className="field"><span className="field-label">{te.document}</span><Select name="document" required searchable options={docs.map(d => ({ value: `${d.documentId}|${d.versionId}`, label: d.title, path: d.label }))} fieldLabel={te.document} language={language} /></label>
-                : <p className="quiet">{te.noDocuments}</p>)}
-              {add === "video" && (
-                <>
-                  <nav className="lpills" aria-label={te.videoSource}>
-                    <Link className={`pill${!external ? " is-on" : ""}`} href={`${self}?add=video#add`}>{te.sourceUpload}</Link>
-                    <Link className={`pill${external ? " is-on" : ""}`} href={`${self}?add=video&src=external#add`}>{te.sourceExternal}</Link>
-                  </nav>
-                  {external ? (
-                    <>
-                      <label className="field"><span className="field-label">{te.url}</span><input className="field-input" name="url" type="url" required /></label>
-                      <div className="lnote lnote--warn"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{te.externalWarn}</span></div>
-                    </>
-                  ) : (
-                    <>
-                      <CourseMediaUpload kind="video" accept=".mp4,.webm" maxBytes={MAX_BYTES} labels={mediaLabels("video")} />
-                      <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="mustWatch" value="1" /><span className="form-row-main">{te.mustWatch}</span></label>
-                      <p className="quiet mc-note">{te.mustWatchNote}</p>
-                    </>
-                  )}
-                </>
-              )}
-              <div className="mg-actions"><SubmitButton className="button">{te.add}</SubmitButton></div>
-            </form>
-          </section>
+          <form action={updatePartAction} className="mc-group">
+            <Hidden values={ids} />
+            <fieldset className="form-group">
+              <legend className="form-group-head">{te.partGroup}</legend>
+              <div className="card form-group-body form-group-body--rows">
+                <label className="field"><span className="field-label">{te.partTitle}</span><input className="field-input" name="title" defaultValue={part.title} required /></label>
+                <label className="field"><span className="field-label">{te.summary}</span><input className="field-input" name="summary" defaultValue={part.summary ?? ""} /></label>
+                <label className="field mc-minutes"><span className="field-label">{te.minutes}</span><input className="field-input" name="estimatedMinutes" type="number" min="1" defaultValue={part.estimatedMinutes ?? ""} /></label>
+                <div className="form-list">
+                  <label className="form-row"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked={part.required} /><span className="form-row-main">{te.required}</span></label>
+                </div>
+              </div>
+            </fieldset>
+            <div className="mg-actions"><SubmitButton className="button button--quiet">{te.savePart}</SubmitButton></div>
+          </form>
         )}
 
-        <section className="card mc-list">
-          <div className="parts-head"><h2>{te.testsHeading}</h2></div>
-          {part.tests.map(pt => {
-            const t = tests.find(x => x.key === pt.testKey)
-            return (
-              <div key={pt.testKey} className="mc-row">
-                <span className="mc-row-main">
-                  <Link className="mg-title" href={`/learning/tests/${pt.testKey}`}>{t?.title ?? pt.testKey}</Link>
-                  {t && <span className="mc-row-meta">{ta.testMeta(questionCount(t), t.rules.passingPercent, t.rules.maxAttempts, t.responsible.map(r => r.fullName).join(", "))}</span>}
-                </span>
-                {editable ? (
-                  <>
-                    <form action={partTestRequiredAction}><Hidden values={{ ...ids, testKey: pt.testKey, required: pt.required ? "0" : "1" }} />
-                      <SubmitButton className="button button--quiet" ariaPressed={pt.required}>{pt.required ? `✓ ${ta.testRequired}` : ta.testRequired}</SubmitButton></form>
-                    <form action={removePartTestAction}><Hidden values={{ ...ids, testKey: pt.testKey }} /><SubmitButton className="button button--quiet">{ta.removeTest}</SubmitButton></form>
-                  </>
-                ) : <span className="quiet">{pt.required ? ta.testRequired : ""}{pt.testVersion ? ` · v${pt.testVersion}` : ""}</span>}
-              </div>
-            )
-          })}
-          {editable && (() => {
-            const offer = tests.filter(t => t.status === "ready" && !part.tests.some(x => x.testKey === t.key))
-            return offer.length ? (
-              <form action={addPartTestAction} className="mc-row mc-inline">
-                <Hidden values={ids} />
-                <Select name="testKey" searchable options={offer.map(t => ({ value: t.key, label: t.title }))} fieldLabel={ta.assignTest} language={language} />
-                <label className="form-row form-row--bare"><input type="checkbox" role="switch" className="toggle" name="required" value="1" defaultChecked /><span className="form-row-main">{ta.testRequired}</span></label>
-                <SubmitButton className="button">{ta.assignTest}</SubmitButton>
-              </form>
-            ) : <p className="quiet mc-row">{ta.noReadyTests}</p>
-          })()}
-        </section>
+        {editable && (
+          <div className="mc-danger">
+            <Link className="button button--danger" href={`${self}?removePart=1`}>{te.removePartOpen}</Link>
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+/**
+ * Testy časti ako jeden formulár (MANAGE-COURSE-akcie, 7. 10. 2026): prepínač
+ * „Povinný" pri každom teste, „Odobrať" a „Priradiť test" cez `formaction`,
+ * prepínače zapíše „Uložiť testy" (Toggle sa ukladá tlačidlom, nie hneď).
+ */
+function PartTests({ part, tests, ids, editable, te, ta, language }: {
+  part: Part
+  tests: Test[]
+  ids: { courseKey: string; partKey: string }
+  editable: boolean
+  te: Edit
+  ta: ReturnType<typeof dictionary>["learning"]["attempt"]
+  language: UiLanguage
+}) {
+  const offer = tests.filter(t => t.status === "ready" && !part.tests.some(x => x.testKey === t.key))
+  const meta = (key: string) => {
+    const t = tests.find(x => x.key === key)
+    return t ? ta.testMeta(questionCount(t), t.rules.passingPercent, t.rules.maxAttempts, t.responsible.map(r => r.fullName).join(", ")) : ""
+  }
+  const title = (key: string) => tests.find(x => x.key === key)?.title ?? key
+
+  if (!editable) {
+    return (
+      <section className="mc-group">
+        <h3 className="form-group-head">{te.testsHeading}</h3>
+        <div className="card mc-list">
+          {part.tests.length === 0 && <p className="quiet mc-row">{ta.noReadyTests}</p>}
+          {part.tests.map(pt => (
+            <div key={pt.testKey} className="mc-row">
+              <span className="mc-row-main"><Link className="mg-title" href={`/learning/tests/${pt.testKey}`}>{title(pt.testKey)}</Link><span className="mc-row-meta">{meta(pt.testKey)}</span></span>
+              <span className="quiet">{pt.required ? ta.testRequired : ""}{pt.testVersion ? ` · v${pt.testVersion}` : ""}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+  return (
+    <form action={savePartTestsAction} className="mc-group">
+      <Hidden values={ids} />
+      <fieldset className="form-group">
+        <legend className="form-group-head">{te.testsHeading}</legend>
+        <div className="card form-group-body form-group-body--rows">
+          {part.tests.length > 0 && (
+            <div className="form-list">
+              {part.tests.map(pt => (
+                <label key={pt.testKey} className="form-row">
+                  <input type="checkbox" role="switch" className="toggle" name={`required:${pt.testKey}`} value="1" defaultChecked={pt.required} aria-label={`${ta.testRequired}: ${title(pt.testKey)}`} />
+                  <span className="form-row-main">
+                    <span><Link className="mg-title" href={`/learning/tests/${pt.testKey}`}>{title(pt.testKey)}</Link></span>
+                    <span className="form-row-sub">
+                      {meta(pt.testKey)}{" · "}
+                      <SubmitButton className="linkish" formAction={removePartTestAction} name="removeTestKey" value={pt.testKey}>{ta.removeTest}</SubmitButton>
+                    </span>
+                  </span>
+                  <span className="quiet mc-toggle-label" aria-hidden="true">{ta.testRequired}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          {offer.length ? (
+            <div className="mc-addtest">
+              <Select name="addTestKey" searchable options={offer.map(t => ({ value: t.key, label: t.title }))} fieldLabel={ta.assignTest} language={language} />
+              <SubmitButton className="button button--quiet" formAction={addPartTestAction}>{ta.assignTest}</SubmitButton>
+            </div>
+          ) : <p className="quiet mc-foot-note">{ta.noReadyTests}</p>}
+        </div>
+      </fieldset>
+      {part.tests.length > 0 && <div className="mg-actions"><SubmitButton className="button button--quiet">{te.saveTests}</SubmitButton></div>}
+    </form>
   )
 }
 
@@ -674,7 +898,9 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
           ))}
         </nav>
         <div className="mg-actions">
-          <Link className="button" href={`${people}?assign=1`}>{tp.assign}</Link>
+          {/* Otvorená úloha (prideľovanie, odvolanie) prevezme plné tlačidlo
+              a tlačidlo, ktoré ju otvorilo, zmizne (MANAGE-COURSE-akcie). */}
+          {q.assign !== "1" && !revoking && <Link className="button" href={`${people}?assign=1`}>{tp.assign}</Link>}
           <a className="button button--quiet" href={`/api/learning/courses/${course.key}/people`}>{tp.exportCsv}</a>
         </div>
       </div>

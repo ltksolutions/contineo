@@ -7,6 +7,9 @@
  * je samostatná podmienka hotovej časti (D119).
  *
  * Len pre zapísaného. Zamknutá časť (postupný kurz) vráti na prehľad kurzu.
+ * Výnimka: `?preview=<verzia>` pre `learning-admin` (MANAGE-COURSE-akcie Q2)
+ * — obsah bez zápisu, postupu a záznamu pozerania, nič sa nezamyká, test sa
+ * nespúšťa a časť sa nedá označiť.
  */
 
 import Link from "next/link"
@@ -18,9 +21,9 @@ import { progressFacts } from "@/lib/learningProgressDb"
 import { courseDocInfo } from "@/lib/courseDocs"
 import { partTestRows, type PartTestRow } from "@/lib/testAttemptsDb"
 import { testRowView } from "@/lib/testView"
-import { mustWatchPercent } from "@/lib/courseView"
+import { mustWatchPercent, previewVersion } from "@/lib/courseView"
 import { versionById } from "@/lib/courses"
-import { courseProgress, type PartProgress } from "@/lib/learningProgress"
+import { courseProgress, NO_FACTS, type PartProgress } from "@/lib/learningProgress"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
@@ -37,7 +40,7 @@ export default async function PartPage({ params, searchParams }: {
   params: Promise<{ courseKey: string; partKey: string }>
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string; preview?: string }>(await searchParams)
   const ctx = await learningContext()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
   if (ctx.state !== "ready") notFound()
@@ -48,18 +51,21 @@ export default async function PartPage({ params, searchParams }: {
   const companyCode = ctx.person.companyCode
   const course = await getCourse(companyCode, courseKey)
   if (!course) notFound()
-  const enrollment = await enrollmentFor(companyCode, ctx.person.id, courseKey)
+  const preview = previewVersion(course, q.preview, ctx.isAdmin)
+  const enrollment = preview ? null : await enrollmentFor(companyCode, ctx.person.id, courseKey)
   // Nezapísaný časti nevidí — na prehľade kurzu sa môže zapísať.
-  if (!enrollment || enrollment.cancelledAt) redirect(`/learning/${course.key}`)
-  const version = versionById(course, enrollment.versionId)
+  if (!preview && (!enrollment || enrollment.cancelledAt)) redirect(`/learning/${course.key}`)
+  const version = preview ?? (enrollment ? versionById(course, enrollment.versionId) : null)
   const index = version?.parts.findIndex(x => x.key === partKey) ?? -1
   if (!version || index < 0) notFound()
 
-  const facts = await progressFacts(companyCode, enrollment.id)
-  const progress = courseProgress(version, facts)
+  const facts = enrollment ? await progressFacts(companyCode, enrollment.id) : NO_FACTS
+  // V náhľade sa nič nezamyká — správca má prejsť všetky časti.
+  const progress = courseProgress(preview ? { ...version, sequential: false } : version, facts)
   const current = progress.parts[index]
   if (current.state === "locked") redirect(`/learning/${course.key}`)
-  const [docs, testRows] = await Promise.all([courseDocInfo(companyCode, current.part), partTestRows(enrollment, current.part)])
+  const [docs, testRows] = await Promise.all([courseDocInfo(companyCode, current.part), enrollment ? partTestRows(enrollment, current.part) : Promise.resolve([] as PartTestRow[])])
+  const keep = preview ? `?preview=${preview.version}` : ""
 
   const language = ctx.person.language
   const t = dictionary(language).learning
@@ -79,7 +85,7 @@ export default async function PartPage({ params, searchParams }: {
         <nav className="pnav">
           <span className="pos">{tp.partOf(index + 1, version.parts.length)}</span>
           {nextPart && !nextOff
-            ? <Link href={`${base}/${nextPart.key}`}>{tp.nextPart} →</Link>
+            ? <Link href={`${base}/${nextPart.key}${keep}`}>{tp.nextPart} →</Link>
             : <span className="pnav-off" aria-disabled="true">{tp.nextPart} →</span>}
         </nav>
 
@@ -87,7 +93,7 @@ export default async function PartPage({ params, searchParams }: {
           <aside className="pp-outline" aria-label={t.course.partsHeading}>
             <h2>{t.course.partsHeading}</h2>
             {progress.parts.map((x, i) => (
-              <OutlineRow key={x.part.key} p={x} n={i + 1} href={`${base}/${x.part.key}`} current={i === index} />
+              <OutlineRow key={x.part.key} p={x} n={i + 1} href={`${base}/${x.part.key}${keep}`} current={i === index} />
             ))}
           </aside>
 
@@ -101,17 +107,20 @@ export default async function PartPage({ params, searchParams }: {
               </div>
             </header>
 
-            <ContentBlocks part={current.part} courseKey={course.key} facts={facts} docs={docs} recording language={language} />
+            {preview && (
+              <div className="lnote lnote--info"><span className="lnote-mark" aria-hidden="true">i</span><span className="lnote-text">{t.course.previewNotice(preview.version)} <Link href={`/learning/manage/${encodeURIComponent(course.key)}`}>{t.course.previewEdit}</Link></span></div>
+            )}
+            <ContentBlocks part={current.part} courseKey={course.key} facts={facts} docs={docs} recording={!preview} language={language} />
 
-            {current.part.tests.length > 0 && (
+            {current.part.tests.length > 0 && !preview && (
               <section id="tests" className="card ptests ptests--flow">
                 <h2>{tp.testsHeading}</h2>
                 <TestRows rows={testRows} base={self} language={language} />
               </section>
             )}
 
-            <PartDock p={current} courseKey={course.key} base={self} nextHref={nextPart ? `${base}/${nextPart.key}` : null}
-                      percent={mustWatchPercent(current.part, facts) ?? 0} rows={testRows} language={language} />
+            {preview ? <p className="quiet">{tp.previewDock}</p> : <PartDock p={current} courseKey={course.key} base={self} nextHref={nextPart ? `${base}/${nextPart.key}` : null}
+                      percent={mustWatchPercent(current.part, facts) ?? 0} rows={testRows} language={language} />}
           </div>
         </div>
       </div>

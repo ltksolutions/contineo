@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Úprava kurzu: jedno hlavné tlačidlo, potvrdenia a náhľad ako študent (2026-10-07)
+
+Podľa návrhu MANAGE-COURSE-akcie:
+- **Jedno hlavné tlačidlo:**
+  - na obrazovke kurzu je plné len jedno tlačidlo; ostatné akcie sú tiché;
+  - karta stavu verzie je len na prehľade kurzu, na Nastaveniach, Zapísaných
+    a v časti je v hlavičke štítok stavu.
+- **Časti a bloky:**
+  - riadky častí a blokov sa otvárajú celým riadkom;
+  - blok sa pridáva z ponuky „Pridať blok ▾" a zdroj videa sa vyberá ako
+    voľba v zozname;
+  - odstrániť blok sa dá len v jeho úprave;
+  - testy časti sa ukladajú jedným tlačidlom.
+- **Potvrdenia:** archivácia kurzu a odstránenie časti si pýtajú potvrdenie.
+- **Nové — náhľad ako študent:** správca vidí ľubovoľnú verziu kurzu
+  (aj koncept) tak, ako ju uvidí študent; nič sa nezapisuje a test sa
+  nespúšťa.
+
 ### Vzdelávanie: časti majú vlastné adresy (2026-10-07)
 
 Témy a tagy v správe kurzov, nastavenia, zapísaní a časti kurzu, banka

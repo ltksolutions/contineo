@@ -5,6 +5,11 @@
  * z udalostí (D119). Nezapísaný vidí otvorený zverejnený kurz so zoznamom
  * častí **bez odkazov** a so „Zapísať sa" (COURSE Q1 ✅). Kurz, ktorý nie je
  * otvorený a človek doň nie je zapísaný, neexistuje (404) — neprezrádza sa.
+ *
+ * `?preview=<verzia>` — náhľad ako študent pre `learning-admin`
+ * (MANAGE-COURSE-akcie Q2, 7. 10. 2026): ľubovoľná verzia vrátane konceptu,
+ * len na čítanie, bez zápisu a postupu; časti sú odkazy s tým istým
+ * parametrom, test sa nespúšťa.
  */
 
 import Link from "next/link"
@@ -15,7 +20,7 @@ import { enrollmentFor } from "@/lib/enrollmentsDb"
 import { progressFacts } from "@/lib/learningProgressDb"
 import { estimatedMinutes, isArchived, publishedVersion, versionById } from "@/lib/courses"
 import { courseProgress, NO_FACTS, type PartProgress, type ProgressFacts } from "@/lib/learningProgress"
-import { mustWatchPercent, partSummary, unlocksAfter } from "@/lib/courseView"
+import { mustWatchPercent, partSummary, previewVersion, unlocksAfter } from "@/lib/courseView"
 import { partTestRows, type PartTestRow } from "@/lib/testAttemptsDb"
 import { testRowView } from "@/lib/testView"
 import { ensureCertificate } from "@/lib/certificatesDb"
@@ -36,7 +41,7 @@ export default async function CoursePage({ params, searchParams }: {
   params: Promise<{ courseKey: string }>
   searchParams: Promise<RawQuery>
 }) {
-  const q = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string; preview?: string }>(await searchParams)
   const ctx = await learningContext()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
   if (ctx.state !== "ready") notFound()
@@ -47,16 +52,18 @@ export default async function CoursePage({ params, searchParams }: {
   const course = await getCourse(companyCode, key)
   if (!course) notFound()
 
-  const found = await enrollmentFor(companyCode, ctx.person.id, key)
+  const preview = previewVersion(course, q.preview, ctx.isAdmin)
+  const found = preview ? null : await enrollmentFor(companyCode, ctx.person.id, key)
   const enrollment = found && !found.cancelledAt ? found : null
   const published = publishedVersion(course)
   // Nezapísaný smie vidieť len otvorený zverejnený kurz.
-  if (!enrollment && !(course.openEnrollment && published)) notFound()
-  const version = enrollment ? versionById(course, enrollment.versionId) : published
+  if (!preview && !enrollment && !(course.openEnrollment && published)) notFound()
+  const version = preview ?? (enrollment ? versionById(course, enrollment.versionId) : published)
   if (!version) notFound()
 
   const facts: ProgressFacts = enrollment ? await progressFacts(companyCode, enrollment.id) : NO_FACTS
-  const progress = courseProgress(version, facts)
+  // V náhľade sa nič nezamyká — správca má prejsť všetky časti.
+  const progress = courseProgress(preview ? { ...version, sequential: false } : version, facts)
   // Dokončený kurz, ktorému certifikát ešte nikto nevydal (napr. zlyhalo
   // vydanie pri označení) — vydá sa tu; `ensureCertificate` overí dokončenie.
   const cert = enrollment && progress.done && version.issuesCertificate
@@ -80,6 +87,9 @@ export default async function CoursePage({ params, searchParams }: {
 
   const notices = (
     <>
+      {preview && (
+        <div className="lnote lnote--info"><span className="lnote-mark" aria-hidden="true">i</span><span className="lnote-text">{tc.previewNotice(preview.version)} <Link href={`/learning/manage/${encodeURIComponent(course.key)}`}>{tc.previewEdit}</Link></span></div>
+      )}
       {enrollment && progress.done && progress.completedAt && (
         <div className="lnote"><span className="lnote-mark" aria-hidden="true">✓</span><span className="lnote-text">{tc.noticeDone(formatDate(progress.completedAt, language))}
           {cert && !cert.revokedAt && <> <code>{cert.registrationNumber}</code> — <Link href={`${base}/certificate`}>{t.cert.show}</Link>.</>}</span></div>
@@ -108,6 +118,8 @@ export default async function CoursePage({ params, searchParams }: {
             </>
           )}
         </>
+      ) : preview ? (
+        <p className="prog-next">{tc.previewSide}</p>
       ) : (
         <>
           <form action={enrolAction}>
@@ -177,7 +189,7 @@ export default async function CoursePage({ params, searchParams }: {
               <ol className="pr-list">
                 {progress.parts.map((p, i) => (
                   <PartRow key={p.part.key} p={p} index={i} parts={progress.parts} facts={facts} rows={testRows.get(p.part.key) ?? []}
-                           href={enrollment ? `${base}/${p.part.key}` : null}
+                           href={enrollment ? `${base}/${p.part.key}` : preview ? `${base}/${p.part.key}?preview=${preview.version}` : null}
                            isNext={Boolean(next && next.key === p.part.key)} language={language} started={progress.started} />
                 ))}
               </ol>

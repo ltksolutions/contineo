@@ -3277,6 +3277,9 @@ interface Dictionary {
       versionN: (n: number) => string
       enrolledSince: (date: string) => string
       notEnrolledNote: string
+      previewNotice: (v: number) => string
+      previewEdit: string
+      previewSide: string
     }
     /** Časť kurzu (rám PART). */
     part: {
@@ -3302,6 +3305,7 @@ interface Dictionary {
       markDone: string
       markReady: string
       nextPartLink: string
+      previewDock: string
       optionalTestNote: string
       testsJump: string
       marked: string
@@ -3457,6 +3461,36 @@ interface Dictionary {
       blocksTests: (blocks: number, tests: number) => string
       readOnly: (n: number) => string
       savedAt: (date: string) => string
+      statusDraftReady: (v: number) => string
+      statusDraftMissing: (v: number, n: number) => string
+      statusPublished: (v: number) => string
+      statusArchived: string
+      statusLabel: string
+      previewAsStudent: string
+      archiveOpen: string
+      archiveTitle: (title: string) => string
+      archiveNoNew: string
+      archiveInProgress: (n: number, v: number) => string
+      archiveKeeps: string
+      archiveRestoreNote: string
+      archiveButton: string
+      removePartOpen: string
+      removePartTitle: (title: string, blocks: number, tests: number) => string
+      removePartNote: (v: number) => string
+      removePartButton: string
+      blockMenuNote: { document: string; video: string }
+      newBlockHeading: (type: string) => string
+      blockHeading: (n: number, type: string) => string
+      saveBlock: string
+      removeBlockButton: string
+      removeBlockNote: (draft: number, published: number | null) => string
+      noEditBlock: string
+      sourceExternalSub: string
+      partGroup: string
+      savePart: string
+      saveTests: string
+      testsSaved: string
+      partSaved: string
     }
     /** Nastavenia kurzu (rám MANAGE-COURSE, ?tab=settings). */
     settings: {
@@ -7249,6 +7283,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       versionN: n => `verzia ${n}`,
       enrolledSince: date => `zapísaný od ${date}`,
       notEnrolledNote: "Kurz je otvorený — zapísať sa môže ktokoľvek v organizácii. Časti sa sprístupnia po zapísaní.",
+      previewNotice: v => `Náhľad verzie ${v} tak, ako ju uvidí študent. Nič sa nezapisuje a test sa nedá spustiť.`,
+      previewEdit: "Upraviť kurz",
+      previewSide: "Náhľad — zápis a postup sa v ňom nevedú.",
     },
     part: {
       nextPart: "Ďalšia",
@@ -7273,6 +7310,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       markDone: "Označiť ako prejdené",
       markReady: "Po označení je časť hotová.",
       nextPartLink: "Ďalšia časť →",
+      previewDock: "Náhľad — časť sa nedá označiť ako prejdená a test sa nespúšťa.",
       optionalTestNote: "Nepovinný test môžete spraviť kedykoľvek.",
       testsJump: "Testy ↓",
       marked: "Časť je označená ako prejdená.",
@@ -7442,6 +7480,36 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       blocksTests: (b, t) => `${b} ${b === 1 ? "blok" : b >= 2 && b <= 4 ? "bloky" : "blokov"}${t ? ` · ${t} ${t === 1 ? "test" : t <= 4 ? "testy" : "testov"}` : ""}`,
       readOnly: n => `Verzia ${n} je zverejnená — časti a bloky sú len na čítanie. Zmeny: Nová verzia.`,
       savedAt: date => `Uložené ${date}`,
+      statusDraftReady: v => `Koncept v${v} · pripravený na zverejnenie`,
+      statusDraftMissing: (v, n) => `Koncept v${v} · ${n === 1 ? "1 vec chýba" : n <= 4 ? `${n} veci chýbajú` : `${n} vecí chýba`}`,
+      statusPublished: v => `Zverejnené v${v}`,
+      statusArchived: "Archív",
+      statusLabel: "Stav verzie — prehľad kurzu",
+      previewAsStudent: "Náhľad ako študent",
+      archiveOpen: "Archivovať…",
+      archiveTitle: t => `Archivovať kurz ${t}?`,
+      archiveNoNew: "Nikto nový sa nezapíše, kurz zmizne z ponuky.",
+      archiveInProgress: (n, v) => `${n} ${n === 1 ? "rozpracovaný ho dokončí" : "rozpracovaní ho dokončia"} vo verzii ${v}.`,
+      archiveKeeps: "Certifikáty a výsledky ostávajú.",
+      archiveRestoreNote: "Kurz sa dá neskôr obnoviť ako nová verzia.",
+      archiveButton: "Archivovať kurz",
+      removePartOpen: "Odstrániť časť…",
+      removePartTitle: (t, b, n) => `Odstrániť časť „${t}“${b || n ? ` s ${[b ? `${b} ${b === 1 ? "blokom" : "blokmi"}` : "", n ? `${n} ${n === 1 ? "testom" : "testami"}` : ""].filter(Boolean).join(" a ")}` : ""}?`,
+      removePartNote: v => `Časť zmizne z konceptu v${v}. Zverejnené verzie sa nemenia.`,
+      removePartButton: "Odstrániť časť",
+      blockMenuNote: { document: "znenie", video: "MP4 / odkaz" },
+      newBlockHeading: t => `Nový blok · ${t}`,
+      blockHeading: (n, t) => `Blok ${n} · ${t}`,
+      saveBlock: "Uložiť blok",
+      removeBlockButton: "Odstrániť blok",
+      removeBlockNote: (d, p) => `Blok zmizne z konceptu v${d}.${p ? ` Verzia ${p} sa nemení.` : ""}`,
+      noEditBlock: "Tento typ bloku sa nedá upraviť — odstráňte ho a pridajte nový.",
+      sourceExternalSub: "YouTube, Vimeo, stream",
+      partGroup: "Časť",
+      savePart: "Uložiť časť",
+      saveTests: "Uložiť testy",
+      testsSaved: "Testy časti sú uložené.",
+      partSaved: "Časť je uložená.",
     },
     settings: {
       title: "Názov kurzu",
@@ -11197,6 +11265,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       versionN: n => `verze ${n}`,
       enrolledSince: date => `zapsán od ${date}`,
       notEnrolledNote: "Kurz je otevřený — zapsat se může kdokoli v organizaci. Části se zpřístupní po zapsání.",
+      previewNotice: v => `Náhled verze ${v} tak, jak ji uvidí student. Nic se nezapisuje a test nelze spustit.`,
+      previewEdit: "Upravit kurz",
+      previewSide: "Náhled — zápis a postup se v něm nevedou.",
     },
     part: {
       nextPart: "Další",
@@ -11221,6 +11292,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       markDone: "Označit jako prošlé",
       markReady: "Po označení je část hotová.",
       nextPartLink: "Další část →",
+      previewDock: "Náhled — část nelze označit jako prošlou a test se nespouští.",
       optionalTestNote: "Nepovinný test můžete udělat kdykoli.",
       testsJump: "Testy ↓",
       marked: "Část je označená jako prošlá.",
@@ -11390,6 +11462,36 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       blocksTests: (b, t) => `${b} ${b === 1 ? "blok" : b >= 2 && b <= 4 ? "bloky" : "bloků"}${t ? ` · ${t} ${t === 1 ? "test" : t <= 4 ? "testy" : "testů"}` : ""}`,
       readOnly: n => `Verze ${n} je zveřejněná — části a bloky jsou jen ke čtení. Změny: Nová verze.`,
       savedAt: date => `Uloženo ${date}`,
+      statusDraftReady: v => `Koncept v${v} · připravený ke zveřejnění`,
+      statusDraftMissing: (v, n) => `Koncept v${v} · ${n === 1 ? "chybí 1 věc" : n <= 4 ? `chybí ${n} věci` : `chybí ${n} věcí`}`,
+      statusPublished: v => `Zveřejněno v${v}`,
+      statusArchived: "Archiv",
+      statusLabel: "Stav verze — přehled kurzu",
+      previewAsStudent: "Náhled jako student",
+      archiveOpen: "Archivovat…",
+      archiveTitle: t => `Archivovat kurz ${t}?`,
+      archiveNoNew: "Nikdo nový se nezapíše, kurz zmizí z nabídky.",
+      archiveInProgress: (n, v) => `${n} ${n === 1 ? "rozpracovaný ho dokončí" : "rozpracovaní ho dokončí"} ve verzi ${v}.`,
+      archiveKeeps: "Certifikáty a výsledky zůstávají.",
+      archiveRestoreNote: "Kurz lze později obnovit jako novou verzi.",
+      archiveButton: "Archivovat kurz",
+      removePartOpen: "Odstranit část…",
+      removePartTitle: (t, b, n) => `Odstranit část „${t}“${b || n ? ` s ${[b ? `${b} ${b === 1 ? "blokem" : "bloky"}` : "", n ? `${n} ${n === 1 ? "testem" : "testy"}` : ""].filter(Boolean).join(" a ")}` : ""}?`,
+      removePartNote: v => `Část zmizí z konceptu v${v}. Zveřejněné verze se nemění.`,
+      removePartButton: "Odstranit část",
+      blockMenuNote: { document: "znění", video: "MP4 / odkaz" },
+      newBlockHeading: t => `Nový blok · ${t}`,
+      blockHeading: (n, t) => `Blok ${n} · ${t}`,
+      saveBlock: "Uložit blok",
+      removeBlockButton: "Odstranit blok",
+      removeBlockNote: (d, p) => `Blok zmizí z konceptu v${d}.${p ? ` Verze ${p} se nemění.` : ""}`,
+      noEditBlock: "Tento typ bloku nelze upravit — odstraňte ho a přidejte nový.",
+      sourceExternalSub: "YouTube, Vimeo, stream",
+      partGroup: "Část",
+      savePart: "Uložit část",
+      saveTests: "Uložit testy",
+      testsSaved: "Testy části jsou uloženy.",
+      partSaved: "Část je uložena.",
     },
     settings: {
       title: "Název kurzu",
@@ -15130,6 +15232,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       versionN: n => `version ${n}`,
       enrolledSince: date => `enrolled ${date}`,
       notEnrolledNote: "The course is open — anyone in the organisation can enrol. The parts open after you enrol.",
+      previewNotice: v => `Preview of version ${v} as a learner sees it. Nothing is recorded and tests cannot be started.`,
+      previewEdit: "Edit course",
+      previewSide: "Preview — no enrolment or progress is kept.",
     },
     part: {
       nextPart: "Next",
@@ -15154,6 +15259,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       markDone: "Mark as done",
       markReady: "Once marked, the part is done.",
       nextPartLink: "Next part →",
+      previewDock: "Preview — the part cannot be marked done and tests do not start.",
       optionalTestNote: "You can take the optional test any time.",
       testsJump: "Tests ↓",
       marked: "The part is marked as done.",
@@ -15323,6 +15429,36 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       blocksTests: (b, t) => `${b} block${b === 1 ? "" : "s"}${t ? ` · ${t} test${t === 1 ? "" : "s"}` : ""}`,
       readOnly: n => `Version ${n} is published — parts and blocks are read-only. To change them: New version.`,
       savedAt: date => `Saved ${date}`,
+      statusDraftReady: v => `Draft v${v} · ready to publish`,
+      statusDraftMissing: (v, n) => `Draft v${v} · ${n === 1 ? "1 thing missing" : `${n} things missing`}`,
+      statusPublished: v => `Published v${v}`,
+      statusArchived: "Archive",
+      statusLabel: "Version status — course overview",
+      previewAsStudent: "Preview as learner",
+      archiveOpen: "Archive…",
+      archiveTitle: t => `Archive the course ${t}?`,
+      archiveNoNew: "Nobody new can enrol; the course leaves the catalogue.",
+      archiveInProgress: (n, v) => `${n} ${n === 1 ? "learner in progress finishes" : "learners in progress finish"} it in version ${v}.`,
+      archiveKeeps: "Certificates and results stay.",
+      archiveRestoreNote: "The course can later be restored as a new version.",
+      archiveButton: "Archive course",
+      removePartOpen: "Delete part…",
+      removePartTitle: (t, b, n) => `Delete the part “${t}”${b || n ? ` with ${[b ? `${b} ${b === 1 ? "block" : "blocks"}` : "", n ? `${n} ${n === 1 ? "test" : "tests"}` : ""].filter(Boolean).join(" and ")}` : ""}?`,
+      removePartNote: v => `The part disappears from draft v${v}. Published versions do not change.`,
+      removePartButton: "Delete part",
+      blockMenuNote: { document: "version", video: "MP4 / link" },
+      newBlockHeading: t => `New block · ${t}`,
+      blockHeading: (n, t) => `Block ${n} · ${t}`,
+      saveBlock: "Save block",
+      removeBlockButton: "Delete block",
+      removeBlockNote: (d, p) => `The block disappears from draft v${d}.${p ? ` Version ${p} does not change.` : ""}`,
+      noEditBlock: "This block type cannot be edited — delete it and add a new one.",
+      sourceExternalSub: "YouTube, Vimeo, stream",
+      partGroup: "Part",
+      savePart: "Save part",
+      saveTests: "Save tests",
+      testsSaved: "Part tests saved.",
+      partSaved: "Part saved.",
     },
     settings: {
       title: "Course title",

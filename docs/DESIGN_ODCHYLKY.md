@@ -229,12 +229,12 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   (P10); filter stavu z `.pill` (P4); zlúčenie tém `mg-choices`/`mg-choice` →
   `.form-group` + `.choice-row` + `.choice-field`; výber tagov na zlúčenie
   (`tgv-main`) → `.select-row` (návrh); `.mg-table` (P5).
-- **learning/manage/[courseKey]** — ~~`?tab=` a `?part=` (R3)~~ ✓, „← Všetky časti"
-  na telefóne odíde s vlastnou cestou časti; plné „Zverejniť", „Pridať časť",
-  „Uložiť", „Pridať", „Priradiť test", „Prideliť" naraz → „Zverejniť" do
-  `.page-head`, ostatné tiché (návrh); áno/nie `.mc-check` (P6); typ bloku a
-  zdroj videa ako `.pill` odkazy vo formulári (rozhodnúť pri návrhu — bez JS
-  menia polia formulára).
+- **learning/manage/[courseKey]** — ✓ 7. 10. 2026 podľa návrhu
+  `MANAGE-COURSE-akcie` (vlastné cesty R3, jedno plné tlačidlo, karta stavu
+  len na koreni, „Pridať blok ▾", zdroj videa `.choice-row`, potvrdenie
+  archivácie a odstránenia časti, náhľad ako študent). Pôvodne: „← Všetky
+  časti", plné „Zverejniť", „Pridať časť", „Uložiť", „Pridať", „Priradiť
+  test", „Prideliť" naraz; typ bloku a zdroj videa ako `.pill`.
 - **learning/tests** — ~~`?tab=` (R3)~~ ✓; dve plné pri novom teste, otázke, importe
   (P10); typ otázky ako `.pill` (ako vyššie); správna odpoveď `.mc-check` v
   riadku odpovede (návrh); áno/nie `.tf-opt` → `.choice-row`; filter stavu
@@ -267,5 +267,5 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 4. ~~**Vzdelávanie: cesty** (R3)~~ ✓ 7. 10. 2026.
 5. **Knižnica: úprava dokumentu** (R4) a **AI spotreba** (R5).
 6. **Návrhy v Claude Design:** `TagSelect` (P8), lišta uloženia pre stránky
-   s viacerými formulármi (P9), správa kurzu, karta osoby bez karty v karte,
+   s viacerými formulármi (P9), ~~správa kurzu~~ ✓ 7. 10. 2026, karta osoby bez karty v karte,
    `Rating`.
