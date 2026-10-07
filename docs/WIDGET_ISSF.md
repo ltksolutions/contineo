@@ -27,13 +27,14 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
 
 - **Kľúč kanála** pridelí Contineo pri založení (UUID, napr.
   `6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b`); je na obrazovke kanála.
-  Odovzdať prevádzkovateľovi ISSF spolu s tajomstvom — ide do `aud`
+  Odovzdať prevádzkovateľovi ISSF spolu s tajným kľúčom — ide do `aud`
   tokenu a do adresy skriptu.
 - **Povolené pôvody**: `https://issf.futbalsfz.sk` (presný pôvod stránky,
   bez cesty). Z iného pôvodu API odpovie 403.
-- **Tajomstvo widgetu**: „Vytvoriť nové tajomstvo" — ukáže sa **raz**;
-  odovzdať prevádzkovateľovi ISSF bezpečným kanálom. Každé ďalšie vytvorenie staré
-  zneplatní.
+- **Tajný kľúč**: „Vytvoriť nový tajný kľúč" — ukáže sa **raz**;
+  odovzdať prevádzkovateľovi ISSF bezpečným kanálom. Každé ďalšie vytvorenie
+  starý zneplatní. Kľúč kanála je verejný (je v adrese skriptu), tajný kľúč
+  nie — podpisuje ním tokeny len server ISSF.
 - **Obsah kanála** (priečinky knižnice) a **jazyky** — prvý jazyk je jazyk
   textov widgetu, keď token jazyk nenesie.
 - **Strop otázok na osobu a hodinu** (predvolene 60).
@@ -43,7 +44,7 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
 ### 1. Vydávanie tokenu
 
 Na strane servera ISSF, pre prihláseného používateľa, JWT **HS256**
-podpísaný tajomstvom kanála:
+podpísaný tajným kľúčom kanála:
 
 Názvy `iss`, `aud`, `sub`, `iat`, `exp` sú **štandardné claimy JWT**
 a `given_name`, `family_name`, `email` štandardné claimy OIDC (rovnaké
@@ -108,7 +109,7 @@ do hodiny bez zásahu v ISSF.
 ## Skúška bez ISSF
 
 Kým ISSF token nevydáva, krok 5 sa dá vyskúšať lokálnou stránkou, ktorá
-token podpíše tajomstvom kanála sama (to isté, čo urobí ISSF):
+token podpíše tajným kľúčom kanála sama (to isté, čo urobí ISSF):
 
 ```bash
 cd app && npm run widget:test -- --company SFZ --channel 6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b --origin http://localhost:4567 --app https://intranet.futbalsfz.sk --email jan@klub.sk --given Ján --family Letko --sub 1234567
