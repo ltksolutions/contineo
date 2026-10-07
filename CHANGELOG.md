@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kanály: jedna položka pre správcu aj riešiteľa, Helpdesk zrušený (2026-10-07)
+
+Tickety sú pod kanálom. V menu je len **Kanály** a každý v nich vidí
+kanály, ku ktorým má prístup: správca organizácie všetky a ich
+nastavenie, riešiteľ svoje a ich tickety. Kanál má podmenu Tickety ·
+Nastavenie, sekcia aj **Moje tickety** cez všetky kanály riešiteľa.
+**Správca organizácie obsah ticketov nevidí** (len počty) — kto ich má
+čítať, pridá sa medzi riešiteľov (ADR-028 D170). Staré adresy
+`/helpdesk` presmerujú.
+
 ### Helpdesk: odpoveď hore, vlákno od najnovšej správy (2026-10-07)
 
 Na tickete je blok Odpoveď nad vláknom. Vlákno ide od najnovšej správy,

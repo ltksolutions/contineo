@@ -34,7 +34,7 @@ function back(key: string | null, message: string, error = false): never {
   revalidatePath("/channels")
   const q = new URLSearchParams({ msg: message })
   if (error) q.set("error", "1")
-  redirect(`${key ? `/channels/${encodeURIComponent(key)}` : "/channels"}?${q.toString()}`)
+  redirect(`${key ? `/channels/${encodeURIComponent(key)}/settings` : "/channels"}?${q.toString()}`)
 }
 async function ready() {
   const ctx = await orgContext()

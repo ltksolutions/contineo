@@ -1,7 +1,7 @@
 "use server"
 
 /**
- * Akcie riešiteľa helpdesku (ADR-028 krok 4).
+ * Akcie riešiteľa helpdesku (ADR-028 krok 4; pod Kanálmi od D170).
  *
  * Organizácia a kanály idú z `helpdeskContext()`, nikdy z formulára: ticket
  * cudzieho kanála sa nenájde ani s uhádnutým identifikátorom (D32).
@@ -33,8 +33,8 @@ function errorMessage(e: unknown, language: UiLanguage): string {
 }
 
 function back(id: string, message: string, error = false): never {
-  revalidatePath("/helpdesk")
-  redirect(`/helpdesk/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  revalidatePath("/channels/tickets")
+  redirect(`/channels/tickets/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 async function ready() {

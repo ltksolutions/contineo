@@ -18,7 +18,7 @@
    založí alebo spáruje (bez prístupu do intranetu), odpovie z predpisov
    a FAQ kanála — **len verejný obsah** — a odpoveď zapíše na hodnotenie.
 4. Palec dole dvakrát v rozhovore → widget ponúkne **napísať helpdesku**.
-   Ticket pristane vo fronte riešiteľov kanála (`/helpdesk`), riešiteľ
+   Ticket pristane vo fronte riešiteľov kanála (Kanály → Tickety), riešiteľ
    odpovie e-mailom na adresu z tokenu.
 
 ## Čo urobí správca kanála (Contineo)
