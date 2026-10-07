@@ -13,7 +13,8 @@
 import { tabValue } from "./urlParams"
 
 export const ORG_SECTION_GROUPS = [
-  { key: "org", sections: ["general", "departments", "codelists", "ai"] },
+  // Konektory (ADR-029): pripojenia organizácie k cudzím MCP serverom.
+  { key: "org", sections: ["general", "departments", "codelists", "ai", "connectors"] },
   { key: "access", sections: ["domains", "signin"] },
   // Členenie (`chunking`) tu do 5. 10. 2026 bolo; od D160 sa nenastavuje
   // v organizácii — stará adresa vedie na rozcestník (`legacyRoutes.ts`).

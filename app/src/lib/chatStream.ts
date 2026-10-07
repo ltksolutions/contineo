@@ -28,6 +28,8 @@ import { getTenantProfile }   from "./tenantProfile"
 import { getProviders }       from "./providers/factory"
 import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "./embeddingGuard"
 import { dictionary } from "./i18n"
+import { liveSearch } from "./liveSources"
+import type { CallContext } from "./mcp/client"
 
 export interface ChatStreamInput {
   companyCode: string
@@ -40,8 +42,21 @@ export interface ChatStreamInput {
   usageActor: UsageActor
   useLLMClassifier?: boolean
   usePreprocessing?: boolean
-  /** Zúženie rozsahu na priečinky knižnice — kanál helpdesku (D161). */
-  narrow?: { folderIds?: string[] }
+  /**
+   * Zúženie rozsahu — kanál helpdesku: priečinky knižnice (D161) a rozsahy
+   * živých zdrojov (`<connectorId>:<scopeKey>`, ADR-029 D175). Bez `narrow`
+   * je to portál: celá knižnica a všetky rozsahy zapnutých konektorov.
+   */
+  narrow?: { folderIds?: string[]; connectorScopes?: string[] }
+  /**
+   * Rozsah z piluliek (ADR-029): `"library"` a/alebo id konektorov. Prázdne
+   * alebo chýbajúce = všetko, na čo má človek právo.
+   */
+  only?: string[]
+  /** Adresa návratu pre OAuth konektora (`connectorCallbackUrl()`); prázdna mimo požiadavky. */
+  callbackUrl?: string
+  /** Kanál, z ktorého otázka prišla — do stopy volania konektora (D177). */
+  channelKey?: string | null
 }
 
 export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
@@ -148,14 +163,42 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
 
         // 6b. Podotázky z prepisu (najviac 3) bežia súbežne s hlavným
         //     hľadaním, nie po ňom (čas po prvý token, fáza 2).
-        let chunks = await searchWithSubQueries(
-          () =>
-            searchMode === "fulltext" ? fulltextSearch(collection, searchOpts) :
-            searchMode === "vector"   ? vectorSearch  (collection, searchOpts) :
-                                        hybridSearch  (collection, searchOpts),
-          processed.subQueries,
-          sq => hybridSearch(collection, { ...searchOpts, query: sq, rerankLimit: 3 }),
-        )
+        //     Živé zdroje (ADR-029, použitie A) bežia v tom istom čase:
+        //     cudzí server má vlastnú latenciu a nemá o čo predĺžiť tú našu.
+        //     Pilulky (`only`) vedia knižnicu vypnúť — vtedy sa v nej nehľadá.
+        const only = input.only?.length ? input.only : null
+        const askLibrary = !only || only.includes("library")
+        // Portál bez `narrow` nemá rozsahy kanála → každý zapnutý konektor
+        // so všetkými rozsahmi. Kanál s prázdnym zoznamom živé zdroje nemá.
+        const liveScopes = narrow ? (narrow.connectorScopes ?? []) : undefined
+        const askLive = liveScopes === undefined || liveScopes.length > 0
+        const callCtx: CallContext = {
+          actor: { personId: usageActor.personId, personName: usageActor.personName },
+          channelKey: input.channelKey ?? null,
+        }
+        const [libraryChunks, live] = await Promise.all([
+          askLibrary
+            ? searchWithSubQueries(
+                () =>
+                  searchMode === "fulltext" ? fulltextSearch(collection, searchOpts) :
+                  searchMode === "vector"   ? vectorSearch  (collection, searchOpts) :
+                                              hybridSearch  (collection, searchOpts),
+                processed.subQueries,
+                sq => hybridSearch(collection, { ...searchOpts, query: sq, rerankLimit: 3 }),
+              )
+            : Promise.resolve([]),
+          askLive
+            ? liveSearch({
+                companyCode, query: searchQuery, accessLevel, scopeRefs: liveScopes,
+                redirectUrl: input.callbackUrl ?? "", ctx: callCtx,
+                only: only ? only.filter(x => x !== "library") : undefined,
+              })
+            : Promise.resolve({ chunks: [], failed: [], asked: [] }),
+        ])
+        // Živé úseky za knižnicou: v cloude beží rerank v pipeline a tieto
+        // v nej neboli, takže ich poradie je poradie servera (D174). Model
+        // dostane oboje; citácia povie, čo je odkiaľ.
+        let chunks = [...libraryChunks, ...live.chunks]
 
         // Pozor na pomenovanie: pri `atlas-stage` je $rerank stupňom agregačnej
         // pipeline, takže sa počíta TU, nie v kroku 6c. Kľúč to musí povedať,
@@ -226,6 +269,8 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
           comparison: comparisonMeta,
           preprocessed: shouldPreprocess,
           chunks: chunks.length,
+          // Konektor, ktorý nestihol alebo zlyhal — odpoveď je bez neho (D174).
+          liveFailed: live.failed.length ? live.failed.map(f => f.name) : undefined,
         })
 
         // 6d. Strážca vektorového priestoru (ADR-001, sekcia 4).

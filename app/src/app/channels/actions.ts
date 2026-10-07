@@ -56,6 +56,7 @@ export async function saveChannelAction(fd: FormData) {
       name: fieldText(fd, "name"),
       audience: fieldText(fd, "audience"),
       folderIds: all(fd, "folderIds"),
+      connectorScopes: all(fd, "connectorScopes"),
       assigneeIds: all(fd, "assigneeIds"),
       languages: all(fd, "languages"),
       widgetOrigins: lines(fd, "widgetOrigins"),

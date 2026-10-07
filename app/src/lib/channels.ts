@@ -104,6 +104,12 @@ export interface HelpdeskChannel {
   audience: string
   folderIds: string[]
   /**
+   * Rozsahy MCP konektorov (`<connectorId>:<scopeKey>`, ADR-029 D175) —
+   * živé zdroje, v ktorých asistent kanála hľadá popri knižnici. Prázdne
+   * = kanál živé zdroje nepoužíva. Starý záznam pole nemá.
+   */
+  connectorScopes?: string[]
+  /**
    * Tickety zapnuté (len `widget`): eskalácia z chatu po dvoch negatívnych
    * hodnoteniach a e-maily zo schránky, ak je. Bez ticketov je kanál len
    * asistent — odpovedá a nič neeviduje.
@@ -175,6 +181,7 @@ export interface ChannelInput {
   name: string
   audience?: string
   folderIds?: string[]
+  connectorScopes?: string[]
   assigneeIds?: string[]
   languages?: string[]
   widgetOrigins?: string[]
@@ -272,6 +279,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
     companyCode: code, key, kind, name,
     audience: (input.audience ?? "").trim(),
     folderIds: tidyList(input.folderIds),
+    connectorScopes: input.connectorScopes === undefined ? (existing?.connectorScopes ?? []) : tidyList(input.connectorScopes),
     tickets,
     mailbox,
     assigneeIds: tidyList(input.assigneeIds),

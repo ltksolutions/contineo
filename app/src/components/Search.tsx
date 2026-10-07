@@ -36,6 +36,7 @@ export default function Search({
   canEvaluate: canEvaluate,
   organisation,
   language,
+  liveSources,
 }: {
   /**
    * Otázka z adresy — položená v hlavičke. Číta sa len pri pripojení
@@ -51,9 +52,17 @@ export default function Search({
   canEvaluate?: boolean
   /** Jazyk prostredia. Bez neho slovenčina. */
   language?: UiLanguage
+  /**
+   * Živé zdroje, ktoré sa pri otázke volajú popri knižnici (ADR-029).
+   * Pilulky rozsahu sa kreslia, len keď je čo prepínať — s prázdnym
+   * zoznamom je vstup jediný a štyri tlačidlá by nič nemenili.
+   */
+  liveSources?: { id: string; name: string }[]
 }) {
   const t = dictionary(language).ask
   const [state, setState] = useState<AnswerState>(EMPTY)
+  /** Rozsah z piluliek: `"library"` a id konektorov; prázdne = všetko. */
+  const [only, setOnly] = useState<string[]>([])
   /** Kedy sa beh spustil — „Opýtali ste sa o 10:42". Len v prehliadači. */
   const [askedAt, setAskedAt] = useState<Date | null>(null)
   const [recordId, setRecordId] = useState<string | null>(null)
@@ -104,9 +113,9 @@ export default function Search({
     }
   }
 
-  async function send(text: string) {
+  async function send(text: string, scope: string[] = only) {
     const q = text.trim()
-    if (!q || state.running) return
+    if (!q) return
 
     abort.current?.abort()
     const ctrl = new AbortController()
@@ -120,7 +129,7 @@ export default function Search({
       const v = await askQuestion(
         q,
         p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase, time: p.time, comparison: p.comparison })),
-        { signal: ctrl.signal, language }
+        { signal: ctrl.signal, language, only: scope.length ? scope : undefined }
       )
       setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time, comparison: v.comparison })
       if (!v.error && v.text) void record(q, v)
@@ -151,6 +160,21 @@ export default function Search({
   })
 
   const time = askedAt?.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })
+
+  /*
+   * Pilulky rozsahu (ADR-029): knižnica a každý živý zdroj zvlášť. Prepnutie
+   * položí otázku znova v novom rozsahu — iný rozsah je iná odpoveď, nie
+   * filter nad tou istou. Aspoň jedna ostáva zapnutá.
+   */
+  const scopeIds = ["library", ...(liveSources ?? []).map(l => l.id)]
+  const isOn = (id: string) => only.length === 0 || only.includes(id)
+  const toggleScope = (id: string) => {
+    const next = scopeIds.filter(x => (x === id ? !isOn(x) : isOn(x)))
+    if (next.length === 0) return
+    const scope = next.length === scopeIds.length ? [] : next
+    setOnly(scope)
+    void send(preset, scope)
+  }
 
   /*
    * Prepojenie značiek `[n]` v texte s citáciami (ASK-odpoved-dva-stlpce).
@@ -221,6 +245,22 @@ export default function Search({
           </label>
           {time && <span className="quiet">{t.askedAt(time)}</span>}
         </div>
+        {liveSources && liveSources.length > 0 && (
+          <nav className="view-switch ask-scope" aria-label={t.scopeLabel}>
+            {[{ id: "library", name: t.scopeLibrary }, ...liveSources].map(l => (
+              <button
+                key={l.id}
+                type="button"
+                className={`view-switch-item${isOn(l.id) ? " is-on" : ""}`}
+                aria-pressed={isOn(l.id)}
+                disabled={state.running}
+                onClick={() => toggleScope(l.id)}
+              >
+                {l.name}
+              </button>
+            ))}
+          </nav>
+        )}
       </div>
 
       {/*
