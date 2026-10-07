@@ -3,7 +3,7 @@
  * kurzu a udalosťami postupu. Nič sa neukladá (D119).
  */
 
-import type { Part } from "./courses"
+import type { Course, CourseVersion, Part } from "./courses"
 import { watchedShare, type PartProgress, type ProgressFacts } from "./learningProgress"
 
 export type SummaryType = "image" | "gallery" | "document" | "video" | "videoExternal"
@@ -83,4 +83,14 @@ export function embedUrl(provider: "youtube" | "vimeo" | "stream", url: string):
     return id && /^\d+$/.test(id) ? `https://player.vimeo.com/video/${id}` : null
   }
   return u.toString()
+}
+
+/**
+ * Verzia na náhľad ako študent (`?preview=<verzia>`, MANAGE-COURSE-akcie Q2,
+ * 7. 10. 2026) — len pre `learning-admin` a len existujúca verzia, aj
+ * koncept. Inak `null` a stránka sa správa ako pre študenta.
+ */
+export function previewVersion(course: Course, raw: string | undefined, isAdmin: boolean): CourseVersion | null {
+  if (!isAdmin || !raw || !/^\d+$/.test(raw)) return null
+  return course.versions.find(v => v.version === Number(raw)) ?? null
 }

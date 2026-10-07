@@ -43,7 +43,7 @@ vi.mock("@/lib/testsDb", () => ({ listTests: async () => [{ key: "evak", title: 
 vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [{ key: "uroven", value: "1", label: "Úroveň: 1", courses: 2, questions: 0, tests: 0 }] }))
 vi.mock("@/lib/courseDocs", () => ({ documentChoices: async () => [{ documentId: "sfz:bozp", versionId: "v1", title: "Smernica BOZP", label: "úplné znenie od 1. 3. 2026" }] }))
 vi.mock("../src/app/learning/manage/[courseKey]/actions", () => Object.fromEntries(
-  ["revokeCertificateAction","addPartTestAction","removePartTestAction","partTestRequiredAction","assignCourseAction","saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
+  ["revokeCertificateAction","addPartTestAction","removePartTestAction","savePartTestsAction","assignCourseAction","saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
 
 const at = new Date("2026-09-20T00:00:00Z")
 const part = (key: string, blocks: Part["blocks"] = [{ id: "t", type: "text", markdown: "Vitajte v kurze." }]): Part => ({ key, title: `Časť ${key}`, required: true, tests: [], blocks })
@@ -91,7 +91,8 @@ describe("/learning/manage/[courseKey]", () => {
     expect(html).toContain("Archivovať")
     expect(html).toContain("len na čítanie")
     expect(html).not.toContain("Posunúť vyššie")
-    expect(html).toContain("Zobraziť")
+    // Riadok časti je odkaz na celý riadok (MANAGE-COURSE-akcie).
+    expect(html).toContain('<a class="mc-lrow-link" href="/learning/manage/bozp/parts/uvod">')
   })
 
   it("archív: rozpracovaní a Obnoviť ako novú verziu", async () => {
@@ -105,7 +106,8 @@ describe("/learning/manage/[courseKey]", () => {
     const ext = await render({ tab: "parts", part: "uvod", add: "video", src: "external" })
     expect(ext).toContain("Vitajte v kurze.")
     expect(ext).toContain("Pri externom videu sa dopozeranie neoverí.")
-    expect(ext).toContain('name="source" value="external"')
+    // Zdroj videa ako `.choice-row`; starý `?src=external` predvolí externý.
+    expect(ext).toContain('name="source" checked="" value="external"')
     const up = await render({ tab: "parts", part: "uvod", add: "video" })
     expect(up).toContain('data-media="video"')
     expect(up).toContain("Povinné dopozeranie")
@@ -121,7 +123,7 @@ describe("/learning/manage/[courseKey]", () => {
     expect(html).toContain('name="markdown"')
     expect(html).toContain("Vitajte v kurze.</textarea>")
     // Odkaz „Upraviť" je parameter na adrese časti (R3), nie `&` za cestou.
-    expect(await render({ tab: "parts", part: "uvod" })).toContain('href="/learning/manage/bozp/parts/uvod?editBlock=t"')
+    expect(await render({ tab: "parts", part: "uvod" })).toContain('href="/learning/manage/bozp/parts/uvod?editBlock=t#edit"')
   })
 
   it("nastavenia: formulár s tagmi (bez JS textarea), podpisujúci z organizácie, právny základ", async () => {
@@ -176,5 +178,48 @@ describe("/learning/manage/[courseKey]", () => {
     const people = renderToStaticMarkup(await PeoplePage({ params: Promise.resolve({ courseKey: "bozp" }), searchParams: Promise.resolve({ assign: "1" }) }))
     expect(people).toContain("Prideliť sa dá len zverejnený kurz.")
     expect(people).toContain('href="/learning/manage/bozp/people?filter=done"')
+  })
+
+  it("akcie (MANAGE-COURSE-akcie): karta stavu len na koreni, inde štítok; náhľad", async () => {
+    const root = await render()
+    expect(root).toContain('href="/learning/bozp?preview=1"')
+    expect(root).not.toContain("mc-stchip")
+    const settings = await render({ tab: "settings" })
+    expect(settings).not.toContain("mc-status")
+    expect(settings).toContain('class="mc-stchip is-ok" aria-label="Stav verzie — prehľad kurzu" href="/learning/manage/bozp"')
+    // Na detaile časti je plné len „Pridať blok ▾"; Uložiť časť je tiché.
+    const detail = await render({ tab: "parts", part: "uvod" })
+    expect(detail).toContain('<summary class="button">Pridať blok')
+    expect(detail).toContain('href="/learning/manage/bozp/parts/uvod?add=video#add"')
+    expect(detail).not.toContain("Všetky časti")
+    expect(detail).toContain('href="/learning/manage/bozp/parts/uvod?removePart=1"')
+  })
+
+  it("úprava bloku: Uložiť blok a Odstrániť blok pod čiarou; menu sa nekreslí", async () => {
+    const html = await render({ tab: "parts", part: "uvod", editBlock: "t" })
+    expect(html).toContain("Blok 1 · Text")
+    expect(html).toContain("Uložiť blok")
+    expect(html).toContain("Odstrániť blok")
+    expect(html).toContain("Blok zmizne z konceptu v1.")
+    expect(html).not.toContain("<summary")
+  })
+
+  it("potvrdenia: archivácia zverejneného a odstránenie časti", async () => {
+    s.course = course([v(2, "published")])
+    const archive = await render({ archive: "1" })
+    expect(archive).toContain('role="dialog"')
+    expect(archive).toContain("Archivovať kurz Bezpečnosť v sídle?")
+    expect(archive).toContain("3 rozpracovaní ho dokončia vo verzii 2.")
+    expect(archive).toContain('href="/learning/manage/bozp">Zrušiť</a>')
+    s.course = course([v(1, "draft")])
+    expect(await render({ archive: "1" })).not.toContain('role="dialog"')
+    const remove = await render({ tab: "parts", part: "uvod", removePart: "1" })
+    expect(remove).toContain("Odstrániť časť „Časť uvod“ s 1 blokom?")
+  })
+
+  it("zapísaní: pri otvorenom prideľovaní sa tlačidlo Prideliť kurz v hlavičke nekreslí", async () => {
+    s.course = course([v(2, "published")])
+    expect(await render({ tab: "people" })).toContain('href="/learning/manage/bozp/people?assign=1"')
+    expect(await render({ tab: "people", assign: "1" })).not.toContain('href="/learning/manage/bozp/people?assign=1"')
   })
 })
