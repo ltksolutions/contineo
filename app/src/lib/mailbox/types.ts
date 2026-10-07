@@ -86,12 +86,28 @@ export function htmlToText(html: string): string {
  * riadky s `>`), aby jedna správa niesla len to, čo v nej človek napísal.
  */
 export function stripQuotedHistory(text: string): string {
+  return splitQuotedHistory(text).text
+}
+
+/**
+ * Rozdelí e-mail na nový text a citovanú históriu (od „Od:/From:",
+ * „Pôvodná správa", „On … wrote:" nižšie, plus riadky s `>`). História sa
+ * nezahadzuje: pri odpovedi na korešpondenciu spred prvej synchronizácie
+ * je v nej celá otázka — 7. 10. 2026 ticket ukázal len „Nech sa páči: <adresa>"
+ * a o čo ide, bolo len v citácii.
+ */
+export function splitQuotedHistory(text: string): { text: string; quoted: string } {
   const lines = text.split("\n")
   const cut = lines.findIndex(l =>
     /^\s*(-{2,}\s*)?(Od|From|Von|De):\s.+/i.test(l)
     || /^\s*-{3,}\s*(Pôvodná správa|Original Message|Původní zpráva)\s*-{3,}/i.test(l)
     || /^\s*(On|Dňa|Dne) .+ (wrote|napísal\(a\)|napísal|napsal\(a\)|napsal):\s*$/i.test(l),
   )
-  const kept = (cut >= 0 ? lines.slice(0, cut) : lines).filter(l => !/^\s*>/.test(l))
-  return kept.join("\n").replace(/\n{3,}/g, "\n\n").trim()
+  const head = cut >= 0 ? lines.slice(0, cut) : lines
+  const isQuote = (l: string) => /^\s*>/.test(l)
+  const tidy = (xs: string[]) => xs.join("\n").replace(/\n{3,}/g, "\n\n").trim()
+  return {
+    text: tidy(head.filter(l => !isQuote(l))),
+    quoted: tidy([...head.filter(isQuote), ...(cut >= 0 ? lines.slice(cut) : [])]),
+  }
 }
