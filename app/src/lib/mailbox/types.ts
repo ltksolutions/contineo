@@ -43,6 +43,9 @@ export interface MailboxPage {
   more: boolean
 }
 
+/** Sledované priečinky: prijatá pošta a odoslaná (odpovede z Outlooku). */
+export type MailFolder = "inbox" | "sentitems"
+
 export interface MailboxAdapter {
   readonly kind: MailboxKind
   /** Adresa schránky, z ktorej sa čítajú a odosielajú správy. */
@@ -53,7 +56,13 @@ export interface MailboxAdapter {
    * schránky: 15 rokov histórie by inak prvé kolá prechádzali týždne
    * a všetko by zahodili (7. 10. 2026). Vracia stránku a novú značku.
    */
-  listNew(cursor: string | null, since: Date): Promise<MailboxPage>
+  listNew(cursor: string | null, since: Date, folder?: MailFolder): Promise<MailboxPage>
+  /**
+   * Všetky správy jedného vlákna zo schránky (všetky priečinky, bez
+   * konceptov), staršie prvé. Ticket si nimi dotiahne korešpondenciu spred
+   * prvej synchronizácie. Nič sa nikam neukladá.
+   */
+  listThread(threadRef: string, limit?: number): Promise<MailMessage[]>
   /**
    * História na ťažbu FAQ (D165): posledných `limit` správ bez ohľadu na
    * značku, najnovšie prvé. Nič sa nikam neukladá.

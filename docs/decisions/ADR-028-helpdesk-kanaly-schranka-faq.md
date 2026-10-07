@@ -151,6 +151,21 @@ zavretie je stav.
 Prílohy došlých správ sa neukladajú (len názov a veľkosť) — môžu byť
 doklady maloletých; riešiteľ ich otvorí v schránke.
 
+**Doplnenie 7. 10. 2026 (prvé nasadenie, schránka s 15 rokmi pošty):**
+
+- **Vlákno spred synchronizácie sa dotiahne.** Nový ticket si zo schránky
+  načíta skoršie správy toho istého `conversationId` (všetky priečinky,
+  prijaté aj odoslané); riešiteľ to môže zopakovať tlačidlom „Dotiahnuť
+  históriu vlákna". Citovaná história e-mailu sa ukladá zvlášť (`quoted`),
+  nezahadzuje sa. Stav ticketu história nemení.
+- **Odpovede z poštového klienta sa synchronizujú.** Okrem Doručenej pošty
+  sa sleduje aj priečinok Odoslané (vlastná značka `sentCursor`). Odpoveď
+  z Outlooku sa pripojí k ticketu a ak je novšia než posledná otázka,
+  ticket je zodpovedaný (`sentAnswer` = jej text, `by` = adresa
+  odosielateľa). Kópia odpovede odoslanej z Continea sa nepridá druhýkrát —
+  rozpozná sa podľa textu a prevezme identitu správy. Odoslaná správa
+  ticket nezakladá.
+
 ### D164 — FAQ je druh dokumentu v knižnici
 
 Nový druh dokumentu **FAQ** (číselník Druhy dokumentov), prvý druh, ktorý

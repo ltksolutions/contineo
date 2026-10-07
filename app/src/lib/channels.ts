@@ -34,7 +34,7 @@ import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { requireCompanyCode } from "./tenantScope"
 import { isUiLanguage, type UiLanguage } from "./i18n"
 import { GraphMailbox } from "./mailbox/graph"
-import type { MailboxAdapter, MailboxKind } from "./mailbox/types"
+import type { MailboxAdapter, MailboxKind, MailFolder } from "./mailbox/types"
 import { ingestMessages, TICKETS_COLLECTION } from "./tickets"
 
 export const CHANNELS_COLLECTION = "channels"
@@ -69,6 +69,11 @@ export interface ChannelMailbox {
    * schránku — synchronizácia ju zahodí a začne zúžene (7. 10. 2026).
    */
   cursorSince?: boolean
+  /**
+   * Značka priečinka Odoslané — odpovede riešiteľov z Outlooku (7. 10. 2026).
+   * Vždy zúžená na `syncSince`; chýbajúca = začať od `syncSince`.
+   */
+  sentCursor?: string | null
   /**
    * Odkedy sa správy stávajú ticketmi. Nastaví sa pri prvej synchronizácii;
    * delta dotaz sa pýta len na správy od tejto chvíle. História sa ticketmi
@@ -231,6 +236,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
       // Iná schránka = iná história; značka a hranica ticketov začínajú odznova.
       cursor: changedIdentity ? null : mailbox!.cursor,
       cursorSince: changedIdentity ? false : Boolean(mailbox!.cursorSince),
+      sentCursor: changedIdentity ? null : mailbox!.sentCursor ?? null,
       syncSince: changedIdentity ? null : mailbox!.syncSince,
       lastSyncAt: changedIdentity ? null : mailbox!.lastSyncAt,
       lastSyncError: changedIdentity ? null : mailbox!.lastSyncError,
@@ -381,24 +387,38 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
   const report: SyncReport = { key, pages: 0, created: 0, appended: 0, skipped: 0, beforeStart: 0, done: false, error: null }
   const since = channel.mailbox.syncSince ?? new Date()
-  // Značka zo starého, nezúženého dotazu by ďalej prechádzala celú históriu.
-  let cursor = channel.mailbox.cursorSince ? channel.mailbox.cursor : null
   try {
     const adapter = mailboxFor(channel)
-    for (; report.pages < maxPages; ) {
-      const page = await adapter.listNew(cursor, since)
-      report.pages += 1
-      const fresh = page.messages.filter(m => m.receivedAt >= since)
-      report.beforeStart += page.messages.length - fresh.length
-      if (fresh.length) {
-        const r = await ingestMessages(code, key, fresh)
-        report.created += r.created; report.appended += r.appended; report.skipped += r.skipped
+    const thread = (ref: string) => adapter.listThread(ref)
+    /**
+     * Jeden priečinok delta dotazom až po koniec alebo `maxPages`. Najprv
+     * Doručené (vznikajú tickety), potom Odoslané (odpovede z Outlooku sa
+     * pripájajú k ticketom, ktoré už existujú).
+     */
+    const runFolder = async (folder: MailFolder, start: string | null, save: (cursor: string | null) => Record<string, unknown>) => {
+      let cursor = start
+      for (let pages = 0; pages < maxPages; pages++) {
+        const page = await adapter.listNew(cursor, since, folder)
+        report.pages += 1
+        const fresh = page.messages.filter(m => m.receivedAt >= since)
+        report.beforeStart += page.messages.length - fresh.length
+        if (fresh.length) {
+          const r = await ingestMessages(code, key, fresh, { thread })
+          report.created += r.created; report.appended += r.appended; report.skipped += r.skipped
+        }
+        cursor = page.cursor
+        // Značka sa ukladá po každej stránke — prerušené kolo nezačne odznova.
+        await col.updateOne({ companyCode: code, key }, { $set: { ...save(cursor), "mailbox.syncSince": since } })
+        if (!page.more) return true
       }
-      cursor = page.cursor
-      // Značka sa ukladá po každej stránke — prerušené kolo nezačne odznova.
-      await col.updateOne({ companyCode: code, key }, { $set: { "mailbox.cursor": cursor, "mailbox.cursorSince": true, "mailbox.syncSince": since } })
-      if (!page.more) { report.done = true; break }
+      return false
     }
+    // Značka zo starého, nezúženého dotazu by ďalej prechádzala celú históriu.
+    const inboxDone = await runFolder("inbox", channel.mailbox.cursorSince ? channel.mailbox.cursor : null,
+      cursor => ({ "mailbox.cursor": cursor, "mailbox.cursorSince": true }))
+    const sentDone = await runFolder("sentitems", channel.mailbox.sentCursor ?? null,
+      cursor => ({ "mailbox.sentCursor": cursor }))
+    report.done = inboxDone && sentDone
     await col.updateOne(
       { companyCode: code, key },
       { $set: { "mailbox.lastSyncAt": new Date(), "mailbox.lastSyncError": null, "mailbox.lastSyncCounts": { created: report.created, appended: report.appended, skipped: report.skipped } } },
