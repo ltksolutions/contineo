@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kanály: „Tajný kľúč" namiesto „Tajomstvo widgetu" (2026-10-07)
+
+V nastaveniach kanála typu widget sa tajomstvo, ktorým cudzí systém
+podpisuje tokeny, volá **Tajný kľúč** (cs Tajný klíč, en Secret key),
+aj v tlačidle, hláškach a v návode pre ISSF. Client secret schránky
+Microsoft 365 ostáva pod pôvodným názvom — je to pojem z Entra.
+
 ### Kanály: kľúč kanála prideľuje systém (2026-10-07)
 
 Pri založení kanála sa kľúč už nezadáva — Contineo pridelí UUID a ukáže

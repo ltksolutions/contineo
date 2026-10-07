@@ -288,7 +288,7 @@ export async function removeChannel(companyCode: string, key: string, actor: str
   if (r) await writeAudit({ companyCode: code, subject: "helpdesk-channel", action: "deleted", actor, targetId: key, targetLabel: r.name })
 }
 
-/** Nové tajomstvo widgetu (D166). Vráti ho v čistom len raz — potom je už len koncovka. */
+/** Nový tajný kľúč widgetu (D166). Vráti ho v čistom len raz — potom je už len koncovka. */
 export async function rotateWidgetSecret(companyCode: string, key: string, actor: string): Promise<string> {
   const code = requireCompanyCode(companyCode, "rotateWidgetSecret")
   if (!encryptionAvailable()) throw new HelpdeskError("tenant.noEncryptionKey", "Šifrovací kľúč nie je nastavený — tajomstvo sa nedá uložiť.")
@@ -304,7 +304,7 @@ export async function rotateWidgetSecret(companyCode: string, key: string, actor
 }
 
 /**
- * Tajomstvo widgetu na jedno zobrazenie po vytvorení. Do adresy nepatrí
+ * Tajný kľúč widgetu na jedno zobrazenie po vytvorení. Do adresy nepatrí
  * (ostalo by v histórii prehliadača a v logoch), tak sa ukáže zo servera
  * a príznak hneď zhasne.
  */
@@ -317,7 +317,7 @@ export async function takeRevealedWidgetSecret(companyCode: string, key: string)
   try { return decrypt(c.widget.secretEnc) } catch { return null }
 }
 
-/** Tajomstvo widgetu v čistom — len pre overenie tokenu (krok 5). */
+/** Tajný kľúč widgetu v čistom — len pre overenie tokenu (krok 5). */
 export function widgetSecret(channel: HelpdeskChannel): string | null {
   if (!channel.widget.secretEnc) return null
   try { return decrypt(channel.widget.secretEnc) } catch { return null }
