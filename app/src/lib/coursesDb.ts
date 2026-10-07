@@ -7,6 +7,7 @@
  * aj súbežné zverejnenie nemôže skončiť úpravou toho, čo už ľudia vidia.
  */
 
+import { RESERVED_COURSE_KEYS } from "./learningPaths"
 import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
@@ -47,6 +48,10 @@ export async function createCourse(input: NewCourse): Promise<Course> {
   const key = input.key.trim().toLowerCase()
   if (!COURSE_KEY.test(key)) {
     throw new CourseError("learning.courseKeyShape", `Kľúč kurzu „${key}" nemá správny tvar.`, { key })
+  }
+  // `/learning/manage/topics` by zatienil kurz s kľúčom `topics` (R3).
+  if (RESERVED_COURSE_KEYS.includes(key)) {
+    throw new CourseError("learning.courseKeyReserved", `Kľúč kurzu „${key}" je vyhradený.`, { key })
   }
   const title = input.title.trim()
   if (!title) throw new CourseError("learning.titleRequired", "Názov kurzu je povinný.")

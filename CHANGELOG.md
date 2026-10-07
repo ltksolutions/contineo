@@ -13,6 +13,16 @@ projektu. Skúšobná stránka `npm run widget:test` berie kľúč cez
 `--channel` a číta kolekciu `channels`; návod pre ISSF uvádza, kde kľúč
 nájsť.
 
+### Vzdelávanie: časti majú vlastné adresy (2026-10-07)
+
+Témy a tagy v správe kurzov, nastavenia, zapísaní a časti kurzu, banka
+otázok (aj nová otázka, úprava a import) a výsledky testov sú na vlastných
+adresách, napr. `/learning/manage/topics`, `/learning/manage/<kurz>/people`,
+`/learning/tests/questions/<otázka>`. Cesta pod hlavičkou ich pomenuje
+a karta prehliadača tiež. Staré odkazy s `?tab=`, `?part=`, `?q=`
+a `?import=` presmerujú. Kurz nemôže mať kľúč `topics` ani `tags`, test nie
+`questions` ani `results`.
+
 ### Web contineo.app: kanály sú dva typy — widget a portál (2026-10-06)
 
 V obrázku architektúry je intranet pod **portálom**, nie ako tretí typ

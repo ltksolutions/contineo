@@ -47,7 +47,7 @@ Plné „Odoslať" je na konci stránky, nie v `.page-head`.
   prečítaní náhľadu, nie hneď po otvorení stránky.
 - B: presunúť do `.page-head`.
 
-**R3 — Vzdelávanie: časti sekcie cez `?tab=`** (`/learning/manage`,
+**R3 — Vzdelávanie: časti sekcie cez `?tab=`** (✓ hotové 7. 10. 2026, `lib/learningPaths.ts`) (`/learning/manage`,
 `/learning/manage/[courseKey]`, `/learning/tests`; aj `?part=`, `?q=`, `?import=`).
 Pravidlo chce vlastné adresy. Prekážka: `/learning/manage/topics` sa bije
 s kurzom s kľúčom `topics`.
@@ -225,17 +225,17 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 - **…/result** — „Všetky / Len chybné" z `.pill` (P4).
 - **certificate** — bez nálezov. **certificate/print** — odkaz „Späť na kurz"
   vedie na certifikát → opraviť text (P11).
-- **learning/manage** — `?tab=` (R3); hlavička (P1); dve plné pri `?new=1`
+- **learning/manage** — ~~`?tab=` (R3)~~ ✓; hlavička (P1); dve plné pri `?new=1`
   (P10); filter stavu z `.pill` (P4); zlúčenie tém `mg-choices`/`mg-choice` →
   `.form-group` + `.choice-row` + `.choice-field`; výber tagov na zlúčenie
   (`tgv-main`) → `.select-row` (návrh); `.mg-table` (P5).
-- **learning/manage/[courseKey]** — `?tab=` a `?part=` (R3), „← Všetky časti"
+- **learning/manage/[courseKey]** — ~~`?tab=` a `?part=` (R3)~~ ✓, „← Všetky časti"
   na telefóne odíde s vlastnou cestou časti; plné „Zverejniť", „Pridať časť",
   „Uložiť", „Pridať", „Priradiť test", „Prideliť" naraz → „Zverejniť" do
   `.page-head`, ostatné tiché (návrh); áno/nie `.mc-check` (P6); typ bloku a
   zdroj videa ako `.pill` odkazy vo formulári (rozhodnúť pri návrhu — bez JS
   menia polia formulára).
-- **learning/tests** — `?tab=` (R3); dve plné pri novom teste, otázke, importe
+- **learning/tests** — ~~`?tab=` (R3)~~ ✓; dve plné pri novom teste, otázke, importe
   (P10); typ otázky ako `.pill` (ako vyššie); správna odpoveď `.mc-check` v
   riadku odpovede (návrh); áno/nie `.tf-opt` → `.choice-row`; filter stavu
   (P4); tabuľka chýb importu bez kariet.
@@ -264,7 +264,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
    stránky, preto samostatne.
 3. **Formulárové kroky:** P7 + zvyšné výbery (`/hr/tracks/[key]`, `/dpo` po R9,
    `/admin/tenants`).
-4. **Vzdelávanie: cesty** (R3) — samostatne, mení adresy.
+4. ~~**Vzdelávanie: cesty** (R3)~~ ✓ 7. 10. 2026.
 5. **Knižnica: úprava dokumentu** (R4) a **AI spotreba** (R5).
 6. **Návrhy v Claude Design:** `TagSelect` (P8), lišta uloženia pre stránky
    s viacerými formulármi (P9), správa kurzu, karta osoby bez karty v karte,

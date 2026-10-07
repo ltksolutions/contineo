@@ -14,6 +14,7 @@
 import type { VideoSource } from "./courses"
 import { normalizeSmartTags, tagId, type SmartTag } from "./smartTags"
 import { slugifyKey } from "./slug"
+import { RESERVED_QUESTION_KEYS } from "./learningPaths"
 
 export const QUESTIONS_COLLECTION = "questions"
 
@@ -118,6 +119,9 @@ export function shortTextMatches(answer: string, expected: string[]): boolean {
 /** Kľúč otázky: z `id` v CSV, inak náhodný (otázka nemá názov). */
 export function questionKeyFrom(id: string | undefined): string {
   const k = slugifyKey(id ?? "")
+  // `new` a `import` sú kroky banky (`/learning/tests/questions/new`, R3) —
+  // otázka s takým ID z CSV dostane predponu, stále rovnakú pre opakovaný import.
+  if (RESERVED_QUESTION_KEYS.includes(k)) return `q_${k}`
   return k || `q_${crypto.randomUUID().slice(0, 8)}`
 }
 

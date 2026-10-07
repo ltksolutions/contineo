@@ -1,8 +1,10 @@
 /**
  * /learning/tests — testy a banka otázok (rám `docs/design/TESTS-testy-a-banka.md`).
  *
- * Záložky `?tab=tests | questions` pre rolu `learning-admin`;
- * `?tab=results` **len pre zodpovednú osobu testu** a len jej testy —
+ * Časti Testy | Banka otázok (`/learning/tests/questions`) pre rolu
+ * `learning-admin`; Výsledky (`/learning/tests/results`) **len pre
+ * zodpovednú osobu testu** a len jej testy — vlastné adresy od 7. 10. 2026
+ * (R3, `lib/learningPaths.ts`; obsah ostáva tu, podstránky ho len zapnú) —
  * lektor ani HR ju samy osebe nemajú (D121). Kto nie je zodpovedný za
  * žiadny test, záložku nevidí (404).
  *
@@ -40,6 +42,7 @@ import KeyFromLabel from "@/components/KeyFromLabel"
 import SmartTagInput from "@/components/SmartTagInput"
 import CourseMediaUpload from "@/components/CourseMediaUpload"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { importPath, NEW_QUESTION_PATH, questionPath, RESERVED_TEST_KEYS, TESTS_PATH, testsPath } from "@/lib/learningPaths"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { createTestAction, previewImportAction, questionStatusAction, resetAttemptsAction, runImportAction, saveQuestionAction } from "./actions"
 
@@ -61,12 +64,23 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
   const tt = dictionary(language).learning.tests
   const tab = q.tab === "questions" ? "questions" : "tests"
   const [tests, bank, mine] = await Promise.all([listTests(ctx.person.companyCode), listQuestions(ctx.person.companyCode), testsResponsibleFor(ctx.person.companyCode, ctx.person.id)])
+  // Otázka na vlastnej adrese (R3): neznámy kľúč je 404, nie zoznam banky.
+  const editing = tab === "questions" && q.q ? bank.find(x => x.key === q.q) ?? null : null
+  if (tab === "questions" && q.q && !editing) notFound()
+  // Krok cesty pod sekciou Testy (R3): Banka otázok › otázka / nová / import.
+  const questions = testsPath("questions")
+  const title = tab !== "questions" ? undefined
+    : q.import ? tt.importHeading
+    : q.new === "1" ? tt.newQuestion
+    : editing ? shortText(editing.text) || tt.tabQuestions
+    : tt.tabQuestions
+  const trail = tab === "questions" && title !== tt.tabQuestions ? { [questions]: tt.tabQuestions } : undefined
   const body = tab === "tests"
     ? <TestsTab tests={tests} bank={bank} q={q} tt={tt} filterLabel={dictionary(language).learning.statusFilter} />
     : await QuestionsTab({ companyCode: ctx.person.companyCode, actor: ctx.person.email, bank, q, tt, language })
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={title} trail={trail}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
         {/* Hlavička s akciami vpravo (DESIGN_ODCHYLKY P1). Pri otvorenom
             formulári (nový test, otázka, import) sa akcie nekreslia — plné
@@ -75,21 +89,27 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
           <h1 className="page-title">{dictionary(language).learning.testsHeading}</h1>
           <span className="page-head-spacer" aria-hidden="true" />
           {tab === "tests"
-            ? q.new !== "1" && <Link className="button" href="/learning/tests?tab=tests&new=1">{tt.newTest}</Link>
-            : q.new !== "1" && !q.q && !q.import && <span className="mg-actions"><Link className="button" href="/learning/tests?tab=questions&new=1">{tt.newQuestion}</Link><Link className="button button--quiet" href="/learning/tests?tab=questions&import=1">{tt.importCsv}</Link></span>}
+            ? q.new !== "1" && <Link className="button" href={`${TESTS_PATH}?new=1`}>{tt.newTest}</Link>
+            : q.new !== "1" && !q.q && !q.import && <span className="mg-actions"><Link className="button" href={NEW_QUESTION_PATH}>{tt.newQuestion}</Link><Link className="button button--quiet" href={importPath()}>{tt.importCsv}</Link></span>}
         </div>
-        <Notice language={language} message={q.msg} error={q.error === "1"} back={`/learning/tests?tab=${tab}`} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={testsPath(tab)} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
           <TabsBar>
-            <TabLink href="/learning/tests?tab=tests" active={tab === "tests"}>{tt.tabTests}</TabLink>
-            <TabLink href="/learning/tests?tab=questions" active={tab === "questions"}>{tt.tabQuestions}</TabLink>
-            {mine.length > 0 && <TabLink href="/learning/tests?tab=results" active={false}>{tt.tabResults}</TabLink>}
+            <TabLink href={TESTS_PATH} active={tab === "tests"}>{tt.tabTests}</TabLink>
+            <TabLink href={testsPath("questions")} active={tab === "questions"}>{tt.tabQuestions}</TabLink>
+            {mine.length > 0 && <TabLink href={testsPath("results")} active={false}>{tt.tabResults}</TabLink>}
           </TabsBar>
         </nav>
         <div className="mg-body">{body}</div>
       </div>
     </AppShell>
   )
+}
+
+/** Začiatok znenia otázky ako názov kroku v ceste. */
+function shortText(text: string | undefined): string {
+  const t = (text ?? "").replace(/\s+/g, " ").trim()
+  return t.length > 60 ? `${t.slice(0, 59)}…` : t
 }
 
 function initials(name: string): string {
@@ -109,7 +129,7 @@ function TestsTab({ tests, bank, q, tt, filterLabel }: { tests: Test[]; bank: Qu
         <section className="card mg-new">
           <h2>{tt.newTest}</h2>
           <form action={createTestAction} className="mg-form">
-            <KeyFromLabel layout="fields" labelName="title" separator="-" usedKeys={tests.map(t => t.key)}
+            <KeyFromLabel layout="fields" labelName="title" separator="-" usedKeys={[...tests.map(t => t.key), ...RESERVED_TEST_KEYS]}
               labels={{ label: tt.testTitle, labelPlaceholder: "", key: tt.testKey, keyPlaceholder: "bezpecnost-vytah", taken: tt.keyTaken }} />
             <div className="mg-actions"><SubmitButton className="button">{tt.create}</SubmitButton><Link className="button button--quiet" href="/learning/tests">{tt.cancel}</Link></div>
           </form>
@@ -124,7 +144,7 @@ function TestsTab({ tests, bank, q, tt, filterLabel }: { tests: Test[]; bank: Qu
           <nav className="view-switch view-switch--fit" aria-label={filterLabel}>
             {filters.map(f => (
               <Link key={f} className={`view-switch-item${f === status ? " is-on" : ""}`} aria-current={f === status ? "true" : undefined}
-                    href={`/learning/tests?tab=tests${f === "all" ? "" : `&status=${f}`}`}>
+                    href={`${TESTS_PATH}${f === "all" ? "" : `?status=${f}`}`}>
                 {label[f]} <span className="view-switch-count">{rows.filter(r => inFilter(r.s, f)).length}</span>
               </Link>
             ))}
@@ -164,7 +184,7 @@ function TestsTab({ tests, bank, q, tt, filterLabel }: { tests: Test[]; bank: Qu
 }
 
 function questionHref(q: Q, change: Record<string, string | null>): string {
-  const p = new URLSearchParams({ tab: "questions" })
+  const p = new URLSearchParams()
   const tags = Array.isArray(q.tag) ? q.tag : q.tag ? [q.tag] : []
   for (const x of tags) p.append("tag", x)
   if (q.qtype) p.set("qtype", q.qtype)
@@ -174,7 +194,8 @@ function questionHref(q: Q, change: Record<string, string | null>): string {
     else if (v === null) p.delete(k)
     else p.set(k, v)
   }
-  return `/learning/tests?${p.toString()}`
+  const query = p.toString()
+  return `${testsPath("questions")}${query ? `?${query}` : ""}`
 }
 
 async function QuestionsTab({ companyCode, actor, bank, q, tt, language }: {
@@ -245,7 +266,7 @@ async function QuestionsTab({ companyCode, actor, bank, q, tt, language }: {
         {filter.length > 0 && (
           <div className="lchips">
             {filter.map(f => <Link key={tagId(f)} className="library-chip" href={questionHref(q, { tag: tagId(f) })}>{keys.get(f.key)?.values.get(f.value)?.label ?? tagId(f)} <span className="library-chip-x" aria-hidden="true">×</span></Link>)}
-            <Link className="linkish" href="/learning/tests?tab=questions">{tt.clearFilters}</Link>
+            <Link className="linkish" href={testsPath("questions")}>{tt.clearFilters}</Link>
           </div>
         )}
         <div className="mg-actions" style={{ margin: "0 0 10px" }}><a className="button button--quiet" href="/api/learning/questions/export">{tt.exportCsv}</a></div>
@@ -253,14 +274,14 @@ async function QuestionsTab({ companyCode, actor, bank, q, tt, language }: {
           {shown.map(x => (
             <div key={x.key} className={`mc-row${x.status === "retired" ? " is-retired" : ""}`}>
               <span className="mc-row-main">
-                <Link className="mg-title" href={`/learning/tests?tab=questions&q=${x.key}`}>{(x.text ?? "").slice(0, 140) || "—"}</Link>
+                <Link className="mg-title" href={questionPath(x.key)}>{(x.text ?? "").slice(0, 140) || "—"}</Link>
                 <span className="mc-row-meta">
                   {x.smartTags.map(t => <span key={tagId(t)} className="stag"><span className="stag-k">{t.label.slice(0, t.label.indexOf(":") + 1)}</span>{t.label.slice(t.label.indexOf(":") + 1).trim()}</span>)}
                 </span>
               </span>
               <span className="quiet">{tt.types[x.type]} · {tt.weight} {x.weight}</span>
               {x.status === "retired" && <span className="tag tag--archived">{tt.statusRetiredQ}</span>}
-              <Link className="lc-link" href={`/learning/tests?tab=questions&q=${x.key}`}>{tt.edit}</Link>
+              <Link className="lc-link" href={questionPath(x.key)}>{tt.edit}</Link>
             </div>
           ))}
         </section>
@@ -277,7 +298,7 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
   const tagUsage = await smartTagUsage(companyCode)
   const tm = dictionary(language).learning.manage
   const ts = dictionary(language).learning.settings
-  const base = question ? `/learning/tests?tab=questions&q=${question.key}` : "/learning/tests?tab=questions&new=1"
+  const base = question ? questionPath(question.key) : NEW_QUESTION_PATH
   const rows = type === "single" || type === "multiple" ? Math.max(type === "single" ? 4 : 5, (question?.type === type ? question.answers.length : 0) + 1) : 0
   const prevAnswers = question?.type === type ? question.answers : []
   return (
@@ -285,7 +306,7 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
       {question && <input type="hidden" name="questionKey" value={question.key} />}
       <input type="hidden" name="type" value={type} />
       <nav className="lpills" aria-label={tt.filterType}>
-        {QUESTION_TYPES.map(ty => <Link key={ty} className={`pill${ty === type ? " is-on" : ""}`} href={`${base}&type=${ty}`}>{tt.types[ty]}</Link>)}
+        {QUESTION_TYPES.map(ty => <Link key={ty} className={`pill${ty === type ? " is-on" : ""}`} href={`${base}?type=${ty}`}>{tt.types[ty]}</Link>)}
       </nav>
       {usage && <p className="quiet mc-note">{tt.usage(usage.tests, usage.attempts)}</p>}
       <label className="field"><span className="field-label">{tt.questionText}</span><textarea className="field-input" name="text" rows={4} defaultValue={question?.text ?? ""} /></label>
@@ -355,7 +376,7 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
       </div>
       <div className="mg-actions">
         <SubmitButton className="button">{tt.saveQuestion}</SubmitButton>
-        <Link className="button button--quiet" href="/learning/tests?tab=questions">{tt.cancel}</Link>
+        <Link className="button button--quiet" href={testsPath("questions")}>{tt.cancel}</Link>
       </div>
       {question && (
         <div className="mg-actions">
@@ -377,7 +398,7 @@ async function ImportPanel({ companyCode, actor, bank, q, tt, language }: { comp
         <p className="quiet mc-note">{tt.importNote} <a className="linkish" href="/api/learning/questions/export?template=1">{tt.templateLink}</a></p>
         <form action={previewImportAction} className="mg-form">
           <label className="field"><span className="field-label">{tt.importFile}</span><input className="field-input" type="file" name="csv" accept=".csv,text/csv" required /></label>
-          <div className="mg-actions"><SubmitButton className="button">{tt.importUpload}</SubmitButton><Link className="button button--quiet" href="/learning/tests?tab=questions">{tt.cancel}</Link></div>
+          <div className="mg-actions"><SubmitButton className="button">{tt.importUpload}</SubmitButton><Link className="button button--quiet" href={testsPath("questions")}>{tt.cancel}</Link></div>
         </form>
       </section>
     )
@@ -404,13 +425,13 @@ async function ImportPanel({ companyCode, actor, bank, q, tt, language }: { comp
               <tbody>{r.errors.map((e, i) => <tr key={i}><td>{e.line}</td><td><code>{e.column}</code></td><td>{errorsText[e.code] ?? e.code}{e.value ? ` („${e.value}“)` : ""}</td></tr>)}</tbody>
             </table>
           </div>
-          <div className="mg-actions"><Link className="button" href="/learning/tests?tab=questions&import=1">{tt.importUpload}</Link></div>
+          <div className="mg-actions"><Link className="button" href={importPath()}>{tt.importUpload}</Link></div>
         </>
       ) : (
         <form action={runImportAction} className="mg-actions">
           <input type="hidden" name="importId" value={q.import} />
           <SubmitButton className="button">{tt.importRun(r.questions.length)}</SubmitButton>
-          <Link className="button button--quiet" href="/learning/tests?tab=questions">{tt.cancel}</Link>
+          <Link className="button button--quiet" href={testsPath("questions")}>{tt.cancel}</Link>
         </form>
       )}
     </section>
@@ -436,26 +457,25 @@ async function ResultsPage(q: Q) {
   const test = mine.find(t => t.key === q.test) ?? mine[0]
   const attempts = await attemptsOfTest(companyCode, test.key)
   const others = test.responsible.filter(r => r.personId !== ctx.person.id).map(r => r.fullName).join(", ")
-  const self = `/learning/tests?tab=results&test=${encodeURIComponent(test.key)}`
+  const self = `${testsPath("results")}?test=${encodeURIComponent(test.key)}`
   const rows = resultRows(attempts, test)
   const resetting = q.reset ? rows.find(r => r.a.personId === q.reset) : null
 
   return (
-    <AppShell language={language}>
+    <AppShell language={language} title={tt.tabResults}>
       <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
         <div className="page-head"><h1 className="page-title">{d.testsHeading}</h1></div>
         <Notice language={language} message={q.msg} error={q.error === "1"} back={self} />
         <nav className="tabs" aria-label={tt.tabsLabel}>
           <TabsBar>
-            {ctx.isAdmin && <TabLink href="/learning/tests?tab=tests" active={false}>{tt.tabTests}</TabLink>}
-            {ctx.isAdmin && <TabLink href="/learning/tests?tab=questions" active={false}>{tt.tabQuestions}</TabLink>}
-            <TabLink href="/learning/tests?tab=results" active>{tt.tabResults}</TabLink>
+            {ctx.isAdmin && <TabLink href={TESTS_PATH} active={false}>{tt.tabTests}</TabLink>}
+            {ctx.isAdmin && <TabLink href={testsPath("questions")} active={false}>{tt.tabQuestions}</TabLink>}
+            <TabLink href={testsPath("results")} active>{tt.tabResults}</TabLink>
           </TabsBar>
         </nav>
         <div className="mg-body">
           <div className="mc-people-head">
-            <form method="get" action="/learning/tests" className="mc-inline">
-              <input type="hidden" name="tab" value="results" />
+            <form method="get" action={testsPath("results")} className="mc-inline">
               <Select name="test" initial={test.key} searchable={mine.length >= 8} options={mine.map(t => ({ value: t.key, label: t.title }))} fieldLabel={tr.selectTest} language={language} />
               <button type="submit" className="button button--quiet">{tr.show}</button>
             </form>

@@ -31,7 +31,7 @@ export interface MenuLabels {
   close: string
 }
 
-/** Adresa bez dotazu — testy zodpovednej osoby majú `?tab=results`. */
+/** Adresa bez dotazu — položka menu ho môže niesť, aktívnosť sa určuje podľa cesty. */
 const bare = (href: string) => href.split("?")[0]
 
 /** Stĺpce menu — spoločné pre plachtu v hlavičke aj spodnú plachtu. */

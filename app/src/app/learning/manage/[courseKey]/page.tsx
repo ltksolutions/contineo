@@ -47,6 +47,7 @@ import { listTests } from "@/lib/testsDb"
 import { certificatesForCourse } from "@/lib/certificatesDb"
 import { questionCount, type Test } from "@/lib/tests"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { coursePath, partPath } from "@/lib/learningPaths"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
   addBlockAction, addPartAction, archiveAction, moveBlockAction, movePartAction, newVersionAction,
@@ -82,18 +83,23 @@ export default async function ManageCoursePage({ params, searchParams }: {
   const published = publishedVersion(course)
   const latest = [...course.versions].sort((a, b) => b.version - a.version)[0]
   const shown = draft ?? published ?? latest
-  const base = `/learning/manage/${course.key}`
+  const base = coursePath(course.key)
   const stats = (await courseStats(ctx.person.companyCode, [course])).get(course.key) ?? { enrolled: 0, completed: 0 }
   const part = q.part ? shown.parts.find(p => p.key === q.part) ?? null : null
+  // Neznáma časť na vlastnej adrese (R3) je 404, nie zoznam častí.
+  if (q.part && !part) notFound()
   const docs = part && draft && q.add === "document" ? await documentChoices(ctx.person.companyCode) : []
   const allTests = part ? await listTests(ctx.person.companyCode) : []
   const tab = q.tab === "settings" ? "settings" : q.tab === "people" ? "people" : "parts"
   const usage = tab === "settings" ? await smartTagUsage(ctx.person.companyCode) : []
+  // Podstránka (časť, Nastavenia, Zapísaní) má v ceste vlastný krok pod
+  // kurzom (R3); na koreni kurzu je posledným krokom kurz.
+  const pageName = part ? part.title : tab === "settings" ? te.tabSettings : tab === "people" ? te.tabPeople : null
 
   return (
-    <AppShell language={language} title={shown.title}>
+    <AppShell language={language} title={pageName ?? shown.title} trail={pageName ? { [base]: shown.title } : undefined}>
       <div className="mc" style={tenantStyle(brandingView(ctx.tenant))}>
-        <Notice language={language} message={q.msg} error={q.error === "1"} back={`${base}${part ? `?tab=parts&part=${part.key}` : ""}`} />
+        <Notice language={language} message={q.msg} error={q.error === "1"} back={part ? partPath(course.key, part.key) : coursePath(course.key, tab)} />
         <header className="ch">
           <span className="ch-topic">{course.topicLabel}</span>
           <h1 className="page-title">{shown.title}</h1>
@@ -104,9 +110,9 @@ export default async function ManageCoursePage({ params, searchParams }: {
 
         <nav className="tabs" aria-label={t.manage.tabsLabel}>
           <TabsBar>
-            <TabLink href={`${base}?tab=parts`} active={tab === "parts"}>{te.tabParts}</TabLink>
-            <TabLink href={`${base}?tab=settings`} active={tab === "settings"}>{te.tabSettings}</TabLink>
-            <TabLink href={`${base}?tab=people`} active={tab === "people"}>{te.tabPeople}</TabLink>
+            <TabLink href={base} active={tab === "parts"}>{te.tabParts}</TabLink>
+            <TabLink href={coursePath(course.key, "settings")} active={tab === "settings"}>{te.tabSettings}</TabLink>
+            <TabLink href={coursePath(course.key, "people")} active={tab === "people"}>{te.tabPeople}</TabLink>
           </TabsBar>
         </nav>
 
@@ -210,7 +216,6 @@ function CheckRow({ ok, title, notes }: { ok: boolean; title: string; notes: str
 }
 
 function PartList({ course, version, editable, te }: { course: Course; version: CourseVersion; editable: boolean; te: Edit }) {
-  const base = `/learning/manage/${course.key}`
   return (
     <>
       {version.parts.length === 0 ? (
@@ -235,7 +240,7 @@ function PartList({ course, version, editable, te }: { course: Course; version: 
                     <MoveButton action={movePartAction} values={{ courseKey: course.key, partKey: p.key, dir: "down" }} label={te.down} disabled={i === version.parts.length - 1} glyph="↓" />
                   </span>
                 )}
-                <Link className="lc-link" href={`${base}?tab=parts&part=${p.key}`}>{editable ? te.editPart : te.view}</Link>
+                <Link className="lc-link" href={partPath(course.key, p.key)}>{editable ? te.editPart : te.view}</Link>
               </li>
             ))}
           </ol>
@@ -295,8 +300,8 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
   language: UiLanguage
 }) {
   const ta = dictionary(language).learning.attempt
-  const base = `/learning/manage/${course.key}`
-  const self = `${base}?tab=parts&part=${part.key}`
+  const base = coursePath(course.key)
+  const self = partPath(course.key, part.key)
   const ids = { courseKey: course.key, partKey: part.key }
   const add = (BLOCK_TYPES as readonly string[]).includes(q.add ?? "") ? q.add! : "text"
   const external = q.src === "external"
@@ -308,9 +313,9 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
   return (
     <div className="mc-detail">
       <aside className="mc-side">
-        <Link className="lc-link mc-back" href={`${base}?tab=parts`}>{te.allParts}</Link>
+        <Link className="lc-link mc-back" href={base}>{te.allParts}</Link>
         {version.parts.map((p, i) => (
-          <Link key={p.key} className={`pp-orow${p.key === part.key ? " is-current" : ""}`} href={`${base}?tab=parts&part=${p.key}`}>
+          <Link key={p.key} className={`pp-orow${p.key === part.key ? " is-current" : ""}`} href={partPath(course.key, p.key)}>
             <span className="pr-mark pr-mark--sm" aria-hidden="true">{i + 1}</span><span>{p.title}</span>
           </Link>
         ))}
@@ -377,7 +382,7 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
             <h2>{te.addBlock}</h2>
             <nav className="lpills" aria-label={te.blockType}>
               {BLOCK_TYPES.map(k => (
-                <Link key={k} className={`pill${k === add ? " is-on" : ""}`} href={`${self}&add=${k}#add`}>{te.blockTypes[k]}</Link>
+                <Link key={k} className={`pill${k === add ? " is-on" : ""}`} href={`${self}?add=${k}#add`}>{te.blockTypes[k]}</Link>
               ))}
             </nav>
             <form action={addBlockAction} className="mc-form">
@@ -396,8 +401,8 @@ function PartDetail({ course, version, part, editable, q, docs, tests, te, langu
               {add === "video" && (
                 <>
                   <nav className="lpills" aria-label={te.videoSource}>
-                    <Link className={`pill${!external ? " is-on" : ""}`} href={`${self}&add=video#add`}>{te.sourceUpload}</Link>
-                    <Link className={`pill${external ? " is-on" : ""}`} href={`${self}&add=video&src=external#add`}>{te.sourceExternal}</Link>
+                    <Link className={`pill${!external ? " is-on" : ""}`} href={`${self}?add=video#add`}>{te.sourceUpload}</Link>
+                    <Link className={`pill${external ? " is-on" : ""}`} href={`${self}?add=video&src=external#add`}>{te.sourceExternal}</Link>
                   </nav>
                   {external ? (
                     <>
@@ -568,7 +573,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
   const d = dictionary(language)
   const tp = d.learning.people
   const tc = d.learning.course
-  const base = `/learning/manage/${course.key}`
+  const people = coursePath(course.key, "people")
   const [roster, certs] = await Promise.all([courseRoster(companyCode, course), certificatesForCourse(companyCode, course.key)])
   const tcert = d.learning.cert
   const certOf = (enrollmentId: string) => certs.find(c => c.enrollmentId === enrollmentId) ?? null
@@ -601,8 +606,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
       assign = (
         <section className="card mg-new">
           <h2>{tp.assignHeading}</h2>
-          <form method="get" action={base} className="mc-form">
-            <input type="hidden" name="tab" value="people" />
+          <form method="get" action={people} className="mc-form">
             <input type="hidden" name="assign" value="1" />
             <input type="hidden" name="preview" value="1" />
             {/* „Všetkým" ako prepínač, ako na /hr/assign (ZAKLAD-vyber-a-prepinace, Q2). */}
@@ -641,7 +645,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
                 <p className="form-group-foot quiet">{tp.tracksNote}</p>
               </fieldset>
             )}
-            <div className="mg-actions"><button type="submit" className="button button--quiet">{tp.check}</button><Link className="button button--quiet" href={`${base}?tab=people`}>{tp.cancel}</Link></div>
+            <div className="mg-actions"><button type="submit" className="button button--quiet">{tp.check}</button><Link className="button button--quiet" href={people}>{tp.cancel}</Link></div>
           </form>
           {impact && (
             <form action={assignCourseAction} className="mc-form mc-impact">
@@ -664,13 +668,13 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
         <nav className="view-switch view-switch--fit" aria-label={d.learning.statusFilter}>
           {filters.map(f => (
             <Link key={f} className={`view-switch-item${f === filter ? " is-on" : ""}`} aria-current={f === filter ? "true" : undefined}
-                  href={`${base}?tab=people${f === "all" ? "" : `&filter=${f}`}`}>
+                  href={`${people}${f === "all" ? "" : `?filter=${f}`}`}>
               {label[f]} <span className="view-switch-count">{f === "all" ? roster.length : roster.filter(r => r.state === f).length}</span>
             </Link>
           ))}
         </nav>
         <div className="mg-actions">
-          <Link className="button" href={`${base}?tab=people&assign=1`}>{tp.assign}</Link>
+          <Link className="button" href={`${people}?assign=1`}>{tp.assign}</Link>
           <a className="button button--quiet" href={`/api/learning/courses/${course.key}/people`}>{tp.exportCsv}</a>
         </div>
       </div>
@@ -682,7 +686,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
           <h2>{tcert.revokeTitle(revoking.enrollment.fullName)}</h2>
           <p className="quiet mc-note">{tcert.revokeText}</p>
           <label className="field"><span className="field-label">{tcert.revokeReason}</span><textarea className="field-input" name="reason" rows={2} required /></label>
-          <div className="mg-actions"><SubmitButton className="button">{tcert.revokeButton}</SubmitButton><Link className="button button--quiet" href={`${base}?tab=people`}>{tcert.cancel}</Link></div>
+          <div className="mg-actions"><SubmitButton className="button">{tcert.revokeButton}</SubmitButton><Link className="button button--quiet" href={people}>{tcert.cancel}</Link></div>
         </form>
       )}
       {roster.length === 0 ? (
@@ -700,7 +704,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
                     <td>{tc.enrolledVia[r.enrollment.source]}</td>
                     <td>{stateText(r)}</td>
                     <td>{formatDate(r.lastActivity, language)}</td>
-                    <td><CertCell c={certOf(r.enrollment.id)} href={`${base}?tab=people&revoke=${r.enrollment.id}`} t={tcert} /></td>
+                    <td><CertCell c={certOf(r.enrollment.id)} href={`${people}?revoke=${r.enrollment.id}`} t={tcert} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -712,7 +716,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
                 <span className="mg-title">{r.enrollment.fullName}</span>
                 <span className="mg-sub">{[r.department, tc.enrolledVia[r.enrollment.source]].filter(Boolean).join(" · ")}</span>
                 <span className="mg-sub">{stateText(r)} · {formatDate(r.lastActivity, language)}</span>
-                <CertCell c={certOf(r.enrollment.id)} href={`${base}?tab=people&revoke=${r.enrollment.id}`} t={tcert} />
+                <CertCell c={certOf(r.enrollment.id)} href={`${people}?revoke=${r.enrollment.id}`} t={tcert} />
               </div>
             ))}
           </div>

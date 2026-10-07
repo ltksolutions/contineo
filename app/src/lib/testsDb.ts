@@ -9,6 +9,7 @@ import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import { COURSE_KEY } from "./courses"
+import { RESERVED_TEST_KEYS } from "./learningPaths"
 import { listQuestions } from "./questionsDb"
 import { sectionAvailability } from "./testAttempts"
 import {
@@ -38,6 +39,8 @@ export async function testsResponsibleFor(companyCode: string, personId: string)
 export async function createTest(companyCode: string, key: string, title: string, actor: string): Promise<Test> {
   const k = key.trim().toLowerCase()
   if (!COURSE_KEY.test(k)) throw new TestError("test.keyShape", `Kľúč testu „${k}" nemá správny tvar.`, { key: k })
+  // `/learning/tests/questions` by zatienil test s kľúčom `questions` (R3).
+  if (RESERVED_TEST_KEYS.includes(k)) throw new TestError("test.keyReserved", `Kľúč testu „${k}" je vyhradený.`, { key: k })
   if (!title.trim()) throw new TestError("test.noTitle", "Názov testu je povinný.")
   const at = new Date()
   const t: Test = {

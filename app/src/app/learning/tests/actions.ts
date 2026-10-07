@@ -7,6 +7,7 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
+import { importPath, NEW_QUESTION_PATH, questionPath, TESTS_PATH, testsPath } from "@/lib/learningPaths"
 import { learningAdminContext, learningContext } from "@/lib/learning"
 import { resetAttempts } from "@/lib/testAttemptsDb"
 import { createTest, getTest, saveTest, setTestRetired, testsResponsibleFor } from "@/lib/testsDb"
@@ -50,9 +51,9 @@ export async function createTestAction(fd: FormData) {
   try {
     await createTest(ctx.person.companyCode, key, title, ctx.person.email)
   } catch (e) {
-    go(`/learning/tests?tab=tests&new=1`, errorText(e, ctx.person.language), true)
+    go(`${TESTS_PATH}?new=1`, errorText(e, ctx.person.language), true)
   }
-  go(`/learning/tests/${key}`)
+  go(`${TESTS_PATH}/${key}`)
 }
 
 /**
@@ -120,7 +121,7 @@ export async function retireTestAction(fd: FormData) {
   const ctx = await admin()
   const key = field(fd, "testKey")
   await setTestRetired(ctx.person.companyCode, key, field(fd, "retire") === "1", ctx.person.email)
-  go(`/learning/tests/${key}`)
+  go(`${TESTS_PATH}/${key}`)
 }
 
 /** Médiá otázky: ponechané z existujúcich + nahraté (druh podľa prípony). */
@@ -146,7 +147,7 @@ export async function saveQuestionAction(fd: FormData) {
   const key = field(fd, "questionKey") || null
   const type = (QUESTION_TYPES as readonly string[]).includes(field(fd, "type")) ? (field(fd, "type") as QuestionType) : "single"
   const before = key ? await getQuestion(ctx.person.companyCode, key) : null
-  const back = key ? `/learning/tests?tab=questions&q=${key}` : `/learning/tests?tab=questions&new=1&type=${type}`
+  const back = key ? questionPath(key) : `${NEW_QUESTION_PATH}?type=${type}`
   const correct = new Set(fd.getAll("correct").map(String))
   const answers: Answer[] = []
   if (type === "single" || type === "multiple") {
@@ -176,24 +177,24 @@ export async function saveQuestionAction(fd: FormData) {
   } catch (e) {
     go(back, errorText(e, ctx.person.language), true)
   }
-  go(`/learning/tests?tab=questions&q=${saved}`, t.questionSaved)
+  go(questionPath(saved ?? ""), t.questionSaved)
 }
 
 export async function questionStatusAction(fd: FormData) {
   const ctx = await admin()
   const key = field(fd, "questionKey")
   await setQuestionStatus(ctx.person.companyCode, key, field(fd, "retire") === "1" ? "retired" : "active", ctx.person.email)
-  go(`/learning/tests?tab=questions&q=${key}`)
+  go(questionPath(key))
 }
 
 /** Import 1/2: súbor → dočasný záznam → náhľad. Nič sa ešte neimportuje. */
 export async function previewImportAction(fd: FormData) {
   const ctx = await admin()
   const file = fd.get("csv")
-  if (!(file instanceof File) || file.size === 0) go("/learning/tests?tab=questions&import=1", errorText(new AppError("learning.fileRequired", ""), ctx.person.language), true)
-  if (file.size > MAX_IMPORT_BYTES) go("/learning/tests?tab=questions&import=1", errorText(new AppError("file.tooLarge", "", { mb: Math.ceil(file.size / 1048576), maxMb: 2 }), ctx.person.language), true)
+  if (!(file instanceof File) || file.size === 0) go(importPath(), errorText(new AppError("learning.fileRequired", ""), ctx.person.language), true)
+  if (file.size > MAX_IMPORT_BYTES) go(importPath(), errorText(new AppError("file.tooLarge", "", { mb: Math.ceil(file.size / 1048576), maxMb: 2 }), ctx.person.language), true)
   const id = await storeImport(ctx.person.companyCode, ctx.person.email, file.name, await file.text())
-  go(`/learning/tests?tab=questions&import=${id}`)
+  go(importPath(id))
 }
 
 /** Import 2/2: znova skontrolovať a zapísať — pri chybe nič (rám TESTS). */
@@ -202,12 +203,12 @@ export async function runImportAction(fd: FormData) {
   const t = dictionary(ctx.person.language).learning.tests
   const id = field(fd, "importId")
   const stored = await loadImport(ctx.person.companyCode, ctx.person.email, id)
-  if (!stored) go("/learning/tests?tab=questions&import=1", t.importExpired, true)
+  if (!stored) go(importPath(), t.importExpired, true)
   const parsed = importQuestionsCsv(stored.csv)
-  if (parsed.errors.length) go(`/learning/tests?tab=questions&import=${id}`)
+  if (parsed.errors.length) go(importPath(id))
   const r = await importQuestions(ctx.person.companyCode, parsed.questions, ctx.person.email)
   await dropImport(ctx.person.companyCode, ctx.person.email, id)
-  go("/learning/tests?tab=questions", t.imported(r.created, r.updated))
+  go(testsPath("questions"), t.imported(r.created, r.updated))
 }
 
 /**
@@ -220,9 +221,9 @@ export async function resetAttemptsAction(fd: FormData) {
   if (ctx.state !== "ready") redirect("/")
   const testKey = field(fd, "testKey")
   const personId = field(fd, "personId")
-  const back = `/learning/tests?tab=results&test=${encodeURIComponent(testKey)}`
+  const back = `${testsPath("results")}?test=${encodeURIComponent(testKey)}`
   const mine = await testsResponsibleFor(ctx.person.companyCode, ctx.person.id)
-  if (!mine.some(t => t.key === testKey)) go("/learning/tests?tab=results")
+  if (!mine.some(t => t.key === testKey)) go(testsPath("results"))
   let n = 0
   try {
     n = await resetAttempts(ctx.person.companyCode, testKey, personId, field(fd, "reason"), ctx.person.email)

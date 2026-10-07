@@ -49,6 +49,13 @@ export function pageTitle(pathname: string | null | undefined, organisation: str
       "/organisation": t.org.heading,
       ...Object.fromEntries(ORG_SECTIONS.map(s => [`/organisation/${s}`, t.org.tabs[s] ?? t.org.heading])),
       "/organisation/ai/usage": t.org.aiUsage.tabUsage,
+      // Časti Vzdelávania na vlastných adresách (R3, 7. 10. 2026).
+      "/learning/manage/topics": t.learning.manage.tabTopics,
+      "/learning/manage/tags": t.learning.manage.tabTags,
+      "/learning/tests/questions": t.learning.tests.tabQuestions,
+      "/learning/tests/questions/new": t.learning.tests.newQuestion,
+      "/learning/tests/questions/import": t.learning.tests.importHeading,
+      "/learning/tests/results": t.learning.tests.tabResults,
       "/admin": t.admin.list.heading,
       "/admin/new": t.admin.create.heading,
     },

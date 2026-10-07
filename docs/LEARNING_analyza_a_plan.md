@@ -85,9 +85,9 @@ na `/learning*`.
 | `/learning/[courseKey]/[partKey]` | zapísaný | Časť: bloky obsahu, prehrávač, „označiť ako prejdené", testy časti |
 | `/learning/[courseKey]/[partKey]/test/[testKey]` | zapísaný | Pokus o test (L2) |
 | `/learning/[courseKey]/certificate` | zapísaný | Môj certifikát (L3) |
-| `/learning/manage` | `learning-admin` | Kurzy organizácie (`?tab=courses`), **Témy** (`?tab=topics`), **smart:tagy** (`?tab=tags`) |
-| `/learning/manage/[courseKey]` | `learning-admin` | Časti a bloky (`?tab=parts`), nastavenia, zverejnenie / nová verzia, zapísaní (`?tab=people`) |
-| `/learning/tests` | `learning-admin`, zodpovedná osoba | **Testy** (`?tab=tests`) a **Banka otázok** (`?tab=questions`); výsledky testov, za ktoré človek zodpovedá (`?tab=results`) |
+| `/learning/manage` | `learning-admin` | Kurzy organizácie, **Témy** (`/learning/manage/topics`), **smart:tagy** (`/learning/manage/tags`) — vlastné adresy od 7. 10. 2026 (R3), predtým `?tab=` |
+| `/learning/manage/[courseKey]` | `learning-admin` | Časti a bloky (časť na `/parts/[partKey]`), nastavenia (`/settings`), zverejnenie / nová verzia, zapísaní (`/people`) |
+| `/learning/tests` | `learning-admin`, zodpovedná osoba | **Testy** a **Banka otázok** (`/learning/tests/questions`, otázka `/[questionKey]`, `/new`, `/import`); výsledky testov, za ktoré človek zodpovedá (`/learning/tests/results`) |
 | `/verify/[registrationNumber]?h=` | verejná | Overenie certifikátu (L3) |
 
 Všetko pod `/learning` — jeden podstrom, jeden príznak, minimum konfliktov
@@ -101,7 +101,7 @@ sú znovupoužiteľné mimo kurzu; kým sa nepoužijú v trase, bývajú pod mod
 |---|---|
 | bežná osoba | vlastné kurzy, vlastné pokusy a skóre, vlastné certifikáty |
 | `learning-admin` | kurzy, témy, smart:tagy, banka otázok, testy; zápisy; **výsledky testov, za ktoré je zodpovedný** (rola sama osebe výsledky cudzích testov neotvára) |
-| zodpovedná osoba testu (`test.responsiblePersons[]`) | výsledky a pokusy **toho testu**, reset pokusu s dôvodom (audit); bez roly `learning-admin` vidí len `/learning/tests?tab=results` |
+| zodpovedná osoba testu (`test.responsiblePersons[]`) | výsledky a pokusy **toho testu**, reset pokusu s dôvodom (audit); bez roly `learning-admin` vidí len `/learning/tests/results` |
 | `hr` | prideľuje kurz adresátom; **skóre nevidí** (e) |
 | `dpo` | výkaz právnych základov testov (ADR-012 D104) |
 
