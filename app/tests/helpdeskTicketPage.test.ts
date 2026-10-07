@@ -34,7 +34,7 @@ vi.mock("@/lib/tickets", async importOriginal => ({
     draft: null, sentAnswer: null, createdAt: new Date(), updatedAt: new Date(), closedAt: null,
   }),
 }))
-vi.mock("../src/app/helpdesk/actions", () => stubs([
+vi.mock("../src/app/channels/tickets/actions", () => stubs([
   "takeTicketAction", "draftWithAiAction", "saveDraftAction", "sendAnswerAction", "closeTicketAction", "ticketToFaqAction", "importThreadAction",
 ]))
 
@@ -44,7 +44,7 @@ const msg = (providerId: string, direction: "in" | "out", text: string, day: num
 })
 
 async function render() {
-  const { default: Page } = await import("../src/app/helpdesk/[id]/page")
+  const { default: Page } = await import("../src/app/channels/tickets/[id]/page")
   return renderToStaticMarkup(await Page({ params: Promise.resolve({ id: "t1" }), searchParams: Promise.resolve({}) }))
 }
 

@@ -27,7 +27,9 @@
 > `lib/helpdeskAgents.ts` (brána roly a kanálov), `lib/ticketDraft.ts` (návrh
 > odpovede tou istou cestou ako `/api/chat`, bez streamu, len verejný obsah),
 > práca s ticketom v `lib/tickets.ts`, položka Helpdesk v navigácii s počtom
-> otvorených ticketov.
+> otvorených ticketov. **7. 10. 2026 (D170):** Helpdesk je pod Kanálmi —
+> `/channels/tickets`, `/channels/[key]/tickets`, `/channels/[key]/settings`,
+> brána `channelsContext()`.
 > Krok 5 (widget a token) 6. 10. 2026: `lib/widgetToken.ts` (HS256, ≤ 15 min),
 > `lib/widgetPersons.ts` (osoba z tokenu, `widgetOnly`), `lib/widgetApi.ts`
 > (pôvod, CORS, strop, zápis odpovede zo streamu), `lib/chatStream.ts`
@@ -268,6 +270,28 @@ Vstavané rozhrania intranetu (asistent, knižnica) sú v zozname ako pevné
 riadky. Kolekcia sa volá `channels` (ako na obrázku architektúry), typ je
 `kind`, tickety `tickets`. Žiadna migrácia — kanál dovtedy neexistoval.
 Implementácia: `lib/channels.ts`, `/channels`, `/channels/[key]`.
+
+### D170 — Kanály sú jedna položka aj pre riešiteľa; správca tickety nečíta
+
+Rozhodnutie Jána 7. 10. 2026. Samostatná položka **Helpdesk** v menu sa
+ruší — tickety patria ku kanálu. Položka **Kanály** je jedna pre správcu
+organizácie aj pre riešiteľa a každý v nej vidí len kanály, ku ktorým má
+prístup (`channelsContext()`):
+
+- **správca organizácie** — všetky kanály, vstavané rozhrania, nový kanál
+  a **Nastavenie** kanála; počty ticketov áno, **obsah ticketov nie**.
+  Tickety nesú osobné údaje zvonku (aj maloletých) a správa nastavení na
+  ich čítanie dôvod nedáva. Kto ich má čítať, pridá sa medzi riešiteľov;
+- **riešiteľ** (rola `helpdesk`, D167, a priradený ku kanálu) — svoje
+  kanály a ich **Tickety**; podmenu sekcie má aj **Moje tickety** (fronta
+  cez všetky jeho kanály).
+
+Adresy: `/channels` (zoznam), `/channels/tickets` (moje tickety),
+`/channels/tickets/[id]` (ticket), `/channels/[key]` (rozcestník: riešiteľ
+na tickety, správca na nastavenie), `/channels/[key]/tickets`,
+`/channels/[key]/settings`. Staré `/helpdesk` a `/helpdesk/[id]`
+presmerujú (`legacyRoutes.ts`). Počet otvorených ticketov je na položke
+Kanály len riešiteľovi.
 
 ### D167 — Rola `helpdesk` je oddelená od správcu obsahu
 

@@ -67,7 +67,7 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
   let helpdesk: Awaited<ReturnType<typeof helpdeskContext>> | null = null
   try {
     helpdesk = await helpdeskContext()
-    flags.isHelpdesk = helpdesk.state === "ready"
+    flags.isHelpdesk = helpdesk.state === "ready" && helpdesk.channels.length > 0
   } catch (e) {
     console.error("[shell] rolu helpdesku sa nepodarilo overiť:", e)
   }
@@ -100,9 +100,11 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
       // Počíta sa len tomu, kto frontu vôbec vidí — cudzie čakajúce
       // odpovede nikomu inému nič nehovoria a je to dotaz navyše.
       if (flags.isEvaluator) counts.evaluation = await queueCount(person.companyCode)
-      // Otvorené tickety kanálov riešiteľa (ADR-028) — tá istá fronta ako `/helpdesk`.
+      // Otvorené tickety kanálov riešiteľa (ADR-028, D170) — tá istá fronta
+      // ako „Moje tickety" na `/channels/tickets`. Správcovi bez riešiteľstva
+      // sa nepočíta: nie je to jeho práca.
       if (helpdesk?.state === "ready" && helpdesk.channels.length) {
-        counts.helpdesk = (await listTickets(person.companyCode, helpdesk.channels.map(c => c.key), "open")).length
+        counts.channels = (await listTickets(person.companyCode, helpdesk.channels.map(c => c.key), "open")).length
       }
     }
   } catch (e) {

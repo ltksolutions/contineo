@@ -1,5 +1,6 @@
 /**
- * /helpdesk/[id] — ticket (ADR-028 krok 4).
+ * /channels/tickets/[id] — ticket (ADR-028 krok 4; pod Kanálmi od D170,
+ * predtým `/helpdesk/[id]`). Len riešiteľ kanála ticketu — správca nie (D170).
  *
  * Vľavo vlákno správ, pod ním návrh odpovede a odoslanie; vpravo (od 1024 px)
  * kto rieši, zdroje návrhu a „Pridať do FAQ". Všetko sú formuláre — bez
@@ -42,7 +43,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const language = ctx.person.language
   const t = dictionary(language).helpdesk
   const branding = brandingView(ctx.tenant)
-  const base = `/helpdesk/${encodeURIComponent(id)}`
+  const base = `/channels/tickets/${encodeURIComponent(id)}`
   const assignee = ticket.assigneeId ? await findPerson(ctx.tenant.companyCode, ticket.assigneeId).catch(() => null) : null
   const faqDocs = (await (await getCollection(DOCUMENTS_COLLECTION))
     .find({ companyCode: ctx.tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1 } })
@@ -62,7 +63,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const sources = (ticket.draft?.sources ?? []) as { documentId?: string; title?: string; articleRef?: string | null; sourceType?: string }[]
 
   return (
-    <AppShell language={language} title={ticket.subject || t.heading}>
+    <AppShell language={language} title={ticket.subject || t.heading} trail={{ "/channels/tickets": dictionary(language).channels.tabMyTickets }}>
     <div className="detail-page" style={{ maxWidth: 1100, ...tenantStyle(branding) }}>
       <div className="page-head">
         <h1 className="page-title">{ticket.subject || "—"}</h1>
