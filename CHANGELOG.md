@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: overenie schránky Microsoft 365 nepotrebuje User.Read.All (2026-10-07)
+
+„Overiť spojenie" čítalo najprv profil používateľa schránky, na ktorý
+treba v Entra oprávnenie `User.Read.All`. Aplikácia zúžená cez RBAC for
+Applications ho nemá, takže overenie hlásilo „Schránka odmietla prístup",
+hoci zúženie bolo správne. Overenie teraz číta len priečinok Doručené —
+to isté, čo robí synchronizácia.
+
 ### Kanály: „Tajný kľúč" namiesto „Tajomstvo widgetu" (2026-10-07)
 
 V nastaveniach kanála typu widget sa tajomstvo, ktorým cudzí systém
