@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: odpoveď hore, vlákno od najnovšej správy (2026-10-07)
+
+Na tickete je blok Odpoveď nad vláknom. Vlákno ide od najnovšej správy,
+tá je rozbalená; staršie sú zbalené do riadku s odosielateľom, dátumom
+a začiatkom textu a rozbalia sa kliknutím. Nad vláknom je súhrn (počet,
+posledná správa). Funguje bez JavaScriptu.
+
 ### Helpdesk: celé vlákno a odpovede z Outlooku (2026-10-07)
 
 - **Odoslaná pošta sa synchronizuje.** Okrem Doručenej pošty sa sleduje
