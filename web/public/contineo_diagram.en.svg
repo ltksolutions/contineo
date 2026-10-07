@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1520 1010" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1520 1010" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L7,3 L0,6 Z" fill="#5f6368"/>
@@ -24,116 +24,116 @@
   <!-- CMS ako vrstva nad kanálmi a workerom -->
   <rect x="26" y="170" width="586" height="524" rx="18"
         fill="#F7F9FE" stroke="#1A73E8" stroke-width="1.6" stroke-dasharray="8 5"/>
-  <text x="46" y="196" font-size="15" font-weight="700" fill="#174EA6">CMS — CONTENT MANAGEMENT</text>
-  <text x="46" y="215" font-size="11" fill="#5f6368">the single source of truth for content — library, versions, tags, review</text>
+  <text x="46" y="196" font-size="15" font-weight="700" fill="#174EA6" textLength="245" lengthAdjust="spacingAndGlyphs">CMS — CONTENT MANAGEMENT</text>
+  <text x="46" y="215" font-size="11" fill="#5f6368" textLength="337" lengthAdjust="spacingAndGlyphs">the single source of truth for content — library, versions, tags, review</text>
 
   <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
-  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6">SOURCES</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368">today: files, FAQ, mailbox (Graph)</text>
+  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6" textLength="74" lengthAdjust="spacingAndGlyphs">SOURCES</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="165" lengthAdjust="spacingAndGlyphs">today: files, FAQ, mailbox (Graph)</text>
   <g font-size="12.5" fill="#202124">
-    <text x="60" y="316">• Uploaded files — PDF + Word/Excel</text>
-    <text x="60" y="342" fill="#9aa0a6">• RSS / web (in preparation)</text>
-    <text x="60" y="368">• FAQ (document type) · verified answers</text>
-    <text x="60" y="394">• Helpdesk mailbox (Graph) ⇅</text>
-    <text x="60" y="420" fill="#9aa0a6">• MCP connectors (in preparation)</text>
-    <text x="74" y="440" font-size="11" fill="#9aa0a6" font-style="italic">Drive · SharePoint · Confluence</text>
-    <text x="74" y="457" font-size="11" fill="#9aa0a6" font-style="italic">Notion · Slack …</text>
+    <text x="60" y="316" textLength="210" lengthAdjust="spacingAndGlyphs">• Uploaded files — PDF + Word/Excel</text>
+    <text x="60" y="342" fill="#9aa0a6" textLength="154" lengthAdjust="spacingAndGlyphs">• RSS / web (in preparation)</text>
+    <text x="60" y="368">• FAQ · verified answers</text>
+    <text x="60" y="394" textLength="169" lengthAdjust="spacingAndGlyphs">• Helpdesk mailbox (Graph) ⇅</text>
+    <text x="60" y="420" fill="#9aa0a6" textLength="189" lengthAdjust="spacingAndGlyphs">• MCP connectors (in preparation)</text>
+    <text x="74" y="440" font-size="11" fill="#9aa0a6" font-style="italic" textLength="153" lengthAdjust="spacingAndGlyphs">Drive · SharePoint · Confluence</text>
+    <text x="74" y="457" font-size="11" fill="#9aa0a6" font-style="italic" textLength="82" lengthAdjust="spacingAndGlyphs">Notion · Slack …</text>
   </g>
-  <text x="60" y="496" font-size="11" fill="#1A73E8">⇅ the mailbox is an output channel too</text>
+  <text x="60" y="496" font-size="11" fill="#1A73E8" textLength="193" lengthAdjust="spacingAndGlyphs">⇅ the mailbox is an output channel too</text>
 
   <!-- WORKER -->
   <rect x="333" y="236" width="264" height="372" rx="14" fill="#FEF3E0" stroke="#E8920C" stroke-width="1.5"/>
-  <text x="353" y="266" font-size="15" font-weight="700" fill="#B05A00">WORKER</text>
-  <text x="353" y="285" font-size="11" fill="#5f6368">processing outside the DB · no language model</text>
+  <text x="353" y="266" font-size="15" font-weight="700" fill="#B05A00" textLength="68" lengthAdjust="spacingAndGlyphs">WORKER</text>
+  <text x="353" y="285" font-size="11" fill="#5f6368" textLength="230" lengthAdjust="spacingAndGlyphs">processing outside the DB · no language model</text>
   <g font-size="12.5" fill="#202124">
-    <text x="353" y="316">• File conversion</text>
-    <text x="367" y="334" font-size="10.5" fill="#5f6368">the PDF is approved · text from Word/Excel</text>
-    <text x="367" y="349" font-size="10.5" fill="#5f6368">scan → manual transcription by the model</text>
-    <text x="353" y="377">• Splitting by article / §</text>
-    <text x="367" y="395" font-size="10.5" fill="#5f6368">the analyser proposes a profile from signals</text>
-    <text x="367" y="410" font-size="10.5" fill="#5f6368">FAQ by entry · a person confirms</text>
-    <text x="353" y="438">• Chunk metadata</text>
-    <text x="367" y="456" font-size="10.5" fill="#5f6368">companyCode · accessLevel · language</text>
-    <text x="367" y="471" font-size="10.5" fill="#5f6368">versionId · articleRef · type from a code list</text>
-    <text x="353" y="499">• Embedding</text>
-    <text x="367" y="517" font-size="10.5" fill="#5f6368">cloud: computed by the database in the index</text>
-    <text x="367" y="532" font-size="10.5" fill="#5f6368">on-prem: Infinity / TEI adapter</text>
-    <text x="353" y="560">• Versions</text>
-    <text x="367" y="578" font-size="10.5" fill="#5f6368">the effective date sits on the document</text>
-    <text x="367" y="593" font-size="10.5" fill="#5f6368">old split: superseded, never deleted</text>
+    <text x="353" y="316" textLength="92" lengthAdjust="spacingAndGlyphs">• File conversion</text>
+    <text x="367" y="334" font-size="10.5" fill="#5f6368" textLength="203" lengthAdjust="spacingAndGlyphs">the PDF is approved · text from Word/Excel</text>
+    <text x="367" y="349" font-size="10.5" fill="#5f6368" textLength="199" lengthAdjust="spacingAndGlyphs">scan → manual transcription by the model</text>
+    <text x="353" y="377" textLength="126" lengthAdjust="spacingAndGlyphs">• Splitting by article / §</text>
+    <text x="367" y="395" font-size="10.5" fill="#5f6368" textLength="204" lengthAdjust="spacingAndGlyphs">the analyser proposes a profile from signals</text>
+    <text x="367" y="410" font-size="10.5" fill="#5f6368" textLength="154" lengthAdjust="spacingAndGlyphs">FAQ by entry · a person confirms</text>
+    <text x="353" y="438" textLength="100" lengthAdjust="spacingAndGlyphs">• Chunk metadata</text>
+    <text x="367" y="456" font-size="10.5" fill="#5f6368" textLength="187" lengthAdjust="spacingAndGlyphs">companyCode · accessLevel · language</text>
+    <text x="367" y="471" font-size="10.5" fill="#5f6368" textLength="201" lengthAdjust="spacingAndGlyphs">versionId · articleRef · type from a code list</text>
+    <text x="353" y="499" textLength="72" lengthAdjust="spacingAndGlyphs">• Embedding</text>
+    <text x="367" y="517" font-size="10.5" fill="#5f6368" textLength="216" lengthAdjust="spacingAndGlyphs">cloud: computed by the database in the index</text>
+    <text x="367" y="532" font-size="10.5" fill="#5f6368" textLength="140" lengthAdjust="spacingAndGlyphs">on-prem: Infinity / TEI adapter</text>
+    <text x="353" y="560" textLength="55" lengthAdjust="spacingAndGlyphs">• Versions</text>
+    <text x="367" y="578" font-size="10.5" fill="#5f6368" textLength="183" lengthAdjust="spacingAndGlyphs">the effective date sits on the document</text>
+    <text x="367" y="593" font-size="10.5" fill="#5f6368" textLength="168" lengthAdjust="spacingAndGlyphs">old split: superseded, never deleted</text>
   </g>
 
   <!-- KURÁTORSKÁ BRÁNA (v rámci CMS) -->
   <rect x="40" y="622" width="557" height="58" rx="10" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
-  <text x="58" y="645" font-size="13.5" font-weight="700" fill="#174EA6">CURATOR — the gate before publishing</text>
-  <text x="58" y="666" font-size="11.5" fill="#3c4043">tags from a controlled list → review → publish · a channel may only pre-fill; a human publishes</text>
+  <text x="58" y="645" font-size="13.5" font-weight="700" fill="#174EA6" textLength="255" lengthAdjust="spacingAndGlyphs">CURATOR — the gate before publishing</text>
+  <text x="58" y="666" font-size="11.5" fill="#3c4043" textLength="484" lengthAdjust="spacingAndGlyphs">tags from a controlled list → review → publish · a channel may only pre-fill; a human publishes</text>
 
   <!-- MongoDB JADRO -->
   <rect x="626" y="236" width="264" height="372" rx="14" fill="#E6F4EA" stroke="#137333" stroke-width="2"/>
-  <text x="646" y="266" font-size="15" font-weight="700" fill="#0B6E2E">MongoDB — CORE</text>
-  <text x="646" y="285" font-size="11" fill="#5f6368">same queries in cloud and on-prem</text>
+  <text x="646" y="266" font-size="15" font-weight="700" fill="#0B6E2E" textLength="138" lengthAdjust="spacingAndGlyphs">MongoDB — CORE</text>
+  <text x="646" y="285" font-size="11" fill="#5f6368" textLength="174" lengthAdjust="spacingAndGlyphs">same queries in cloud and on-prem</text>
   <g font-size="12.5" fill="#202124">
-    <text x="646" y="316">• $vectorSearch + $search</text>
-    <text x="646" y="342">• $rankFusion — hybrid</text>
-    <text x="660" y="360" font-size="10.5" fill="#5f6368">vector 60 % + fulltext 40 %</text>
-    <text x="646" y="388">• Filter before the LLM</text>
-    <text x="660" y="406" font-size="10.5" fill="#5f6368">companyCode — always first, no exceptions</text>
-    <text x="660" y="421" font-size="10.5" fill="#5f6368">versionId ∈ versions in force on the day</text>
-    <text x="660" y="436" font-size="10.5" fill="#5f6368">superseded: false · accessLevel</text>
+    <text x="646" y="316" textLength="148" lengthAdjust="spacingAndGlyphs">• $vectorSearch + $search</text>
+    <text x="646" y="342" textLength="131" lengthAdjust="spacingAndGlyphs">• $rankFusion — hybrid</text>
+    <text x="660" y="360" font-size="10.5" fill="#5f6368" textLength="129" lengthAdjust="spacingAndGlyphs">vector 60 % + fulltext 40 %</text>
+    <text x="646" y="388" textLength="124" lengthAdjust="spacingAndGlyphs">• Filter before the LLM</text>
+    <text x="660" y="406" font-size="10.5" fill="#5f6368" textLength="210" lengthAdjust="spacingAndGlyphs">companyCode — always first, no exceptions</text>
+    <text x="660" y="421" font-size="10.5" fill="#5f6368" textLength="184" lengthAdjust="spacingAndGlyphs">versionId ∈ versions in force on the day</text>
+    <text x="660" y="436" font-size="10.5" fill="#5f6368" textLength="150" lengthAdjust="spacingAndGlyphs">superseded: false · accessLevel</text>
   </g>
   <line x1="646" y1="448" x2="870" y2="448" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="465" font-size="11.5" fill="#0B6E2E" font-weight="600">Collections:</text>
-  <text x="646" y="479" font-size="10" fill="#3c4043">Content: documents · document_chunks</text>
-  <text x="646" y="492.5" font-size="10" fill="#3c4043">Approval: approval_rounds · cms_folders</text>
-  <text x="646" y="506" font-size="10" fill="#3c4043">People: persons · departments</text>
-  <text x="646" y="519.5" font-size="10" fill="#3c4043">Assignment: onboarding_tracks · assignments</text>
-  <text x="646" y="533" font-size="10" fill="#3c4043">Acknowledgement: acknowledgements</text>
-  <text x="646" y="546.5" font-size="10" fill="#3c4043">Helpdesk: helpdesk_channels · tickets</text>
-  <text x="646" y="560" font-size="10" fill="#3c4043">Training: courses · tests · certificates</text>
-  <text x="646" y="573.5" font-size="10" fill="#3c4043">Oversight: audit · evaluations · ai_usage</text>
+  <text x="646" y="465" font-size="11.5" fill="#0B6E2E" font-weight="600" textLength="65" lengthAdjust="spacingAndGlyphs">Collections:</text>
+  <text x="646" y="479" font-size="10" fill="#3c4043" textLength="182" lengthAdjust="spacingAndGlyphs">Content: documents · document_chunks</text>
+  <text x="646" y="492.5" font-size="10" fill="#3c4043" textLength="183" lengthAdjust="spacingAndGlyphs">Approval: approval_rounds · cms_folders</text>
+  <text x="646" y="506" font-size="10" fill="#3c4043" textLength="138" lengthAdjust="spacingAndGlyphs">People: persons · departments</text>
+  <text x="646" y="519.5" font-size="10" fill="#3c4043" textLength="206" lengthAdjust="spacingAndGlyphs">Assignment: onboarding_tracks · assignments</text>
+  <text x="646" y="533" font-size="10" fill="#3c4043" textLength="176" lengthAdjust="spacingAndGlyphs">Acknowledgement: acknowledgements</text>
+  <text x="646" y="546.5" font-size="10" fill="#3c4043" textLength="171" lengthAdjust="spacingAndGlyphs">Helpdesk: helpdesk_channels · tickets</text>
+  <text x="646" y="560" font-size="10" fill="#3c4043" textLength="163" lengthAdjust="spacingAndGlyphs">Training: courses · tests · certificates</text>
+  <text x="646" y="573.5" font-size="10" fill="#3c4043" textLength="178" lengthAdjust="spacingAndGlyphs">Oversight: audit · evaluations · ai_usage</text>
   <line x1="646" y1="583" x2="870" y2="583" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="596" font-size="10" fill="#0B6E2E">Evidence records are never changed (D24)</text>
-  <text x="646" y="606" font-size="9.5" fill="#5f6368">correction = new record · revocation = revokedAt</text>
+  <text x="646" y="596" font-size="10" fill="#0B6E2E" textLength="189" lengthAdjust="spacingAndGlyphs">Evidence records are never changed (D24)</text>
+  <text x="646" y="606" font-size="9.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">correction = new record · revocation = revokedAt</text>
 
   <!-- AI VRSTVA -->
   <rect x="919" y="236" width="264" height="372" rx="14" fill="#E0F7FA" stroke="#00838F" stroke-width="2"/>
-  <text x="939" y="266" font-size="15" font-weight="700" fill="#006064">AI LAYER — ADAPTERS</text>
-  <text x="939" y="285" font-size="11" fill="#5f6368">chosen by tenant profile, not by code</text>
-  <text x="939" y="315" font-size="11.5" font-weight="700" fill="#006064">EMBEDDING</text>
-  <text x="939" y="333" font-size="10.5" fill="#1A73E8">cloud · Atlas auto-embed (voyage-4)</text>
-  <text x="939" y="349" font-size="10.5" fill="#137333">on-prem · Infinity / TEI</text>
-  <text x="939" y="381" font-size="11.5" font-weight="700" fill="#006064">RERANK</text>
-  <text x="939" y="399" font-size="10.5" fill="#1A73E8">cloud · $rerank (rerank-2)</text>
-  <text x="939" y="415" font-size="10.5" fill="#137333">on-prem · Infinity (BGE-v2-m3)</text>
-  <text x="939" y="447" font-size="11.5" font-weight="700" fill="#006064">GENERATION</text>
-  <text x="939" y="465" font-size="10.5" fill="#1A73E8">cloud · Claude (Citations API)</text>
-  <text x="939" y="481" font-size="10.5" fill="#137333">on-prem · vLLM (Qwen3 / EuroLLM)</text>
+  <text x="939" y="266" font-size="15" font-weight="700" fill="#006064" textLength="172" lengthAdjust="spacingAndGlyphs">AI LAYER — ADAPTERS</text>
+  <text x="939" y="285" font-size="11" fill="#5f6368" textLength="183" lengthAdjust="spacingAndGlyphs">chosen by tenant profile, not by code</text>
+  <text x="939" y="315" font-size="11.5" font-weight="700" fill="#006064" textLength="71" lengthAdjust="spacingAndGlyphs">EMBEDDING</text>
+  <text x="939" y="333" font-size="10.5" fill="#1A73E8" textLength="171" lengthAdjust="spacingAndGlyphs">cloud · Atlas auto-embed (voyage-4)</text>
+  <text x="939" y="349" font-size="10.5" fill="#137333" textLength="104" lengthAdjust="spacingAndGlyphs">on-prem · Infinity / TEI</text>
+  <text x="939" y="381" font-size="11.5" font-weight="700" fill="#006064" textLength="49" lengthAdjust="spacingAndGlyphs">RERANK</text>
+  <text x="939" y="399" font-size="10.5" fill="#1A73E8" textLength="118" lengthAdjust="spacingAndGlyphs">cloud · $rerank (rerank-2)</text>
+  <text x="939" y="415" font-size="10.5" fill="#137333" textLength="144" lengthAdjust="spacingAndGlyphs">on-prem · Infinity (BGE-v2-m3)</text>
+  <text x="939" y="447" font-size="11.5" font-weight="700" fill="#006064" textLength="75" lengthAdjust="spacingAndGlyphs">GENERATION</text>
+  <text x="939" y="465" font-size="10.5" fill="#1A73E8" textLength="137" lengthAdjust="spacingAndGlyphs">cloud · Claude (Citations API)</text>
+  <text x="939" y="481" font-size="10.5" fill="#137333" textLength="168" lengthAdjust="spacingAndGlyphs">on-prem · vLLM (Qwen3 / EuroLLM)</text>
   <line x1="939" y1="500" x2="1163" y2="500" stroke="#80DEEA" stroke-width="1"/>
-  <text x="939" y="520" font-size="10.5" fill="#5f6368">Rerank runs on the result of</text>
-  <text x="939" y="536" font-size="10.5" fill="#5f6368">$rankFusion — in the pipeline (cloud)</text>
-  <text x="939" y="552" font-size="10.5" fill="#5f6368">or in the application (on-prem).</text>
+  <text x="939" y="520" font-size="10.5" fill="#5f6368" textLength="130" lengthAdjust="spacingAndGlyphs">Rerank runs on the result of</text>
+  <text x="939" y="536" font-size="10.5" fill="#5f6368" textLength="174" lengthAdjust="spacingAndGlyphs">$rankFusion — in the pipeline (cloud)</text>
+  <text x="939" y="552" font-size="10.5" fill="#5f6368" textLength="144" lengthAdjust="spacingAndGlyphs">or in the application (on-prem).</text>
 
   <!-- KANÁLY -->
   <rect x="1212" y="236" width="264" height="372" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
-  <text x="1232" y="266" font-size="15" font-weight="700" fill="#54309E">CHANNELS</text>
-  <text x="1232" y="285" font-size="11" fill="#5f6368">two kinds · every answer cited with its version</text>
-  <text x="1232" y="316" font-size="12" font-weight="700" fill="#54309E">WIDGET</text>
-  <text x="1232" y="332" font-size="10.5" fill="#5f6368">into an external page instead of search</text>
-  <text x="1240" y="354" font-size="12" fill="#202124">• Assistant — question and answer</text>
-  <text x="1254" y="369" font-size="10.5" fill="#5f6368">always · signed identity (ISSF)</text>
-  <text x="1240" y="390" font-size="12" fill="#202124">• Tickets (optional)</text>
-  <text x="1254" y="405" font-size="10.5" fill="#5f6368">escalation from chat · agent queue · into FAQ</text>
-  <text x="1240" y="426" font-size="12" fill="#202124">• Helpdesk mailbox ⇅ (optional)</text>
-  <text x="1254" y="441" font-size="10.5" fill="#5f6368">e-mail = ticket · reply by e-mail (Graph)</text>
+  <text x="1232" y="266" font-size="15" font-weight="700" fill="#54309E" textLength="83" lengthAdjust="spacingAndGlyphs">CHANNELS</text>
+  <text x="1232" y="285" font-size="11" fill="#5f6368" textLength="225" lengthAdjust="spacingAndGlyphs">two kinds · every answer cited with its version</text>
+  <text x="1232" y="316" font-size="12" font-weight="700" fill="#54309E" textLength="48" lengthAdjust="spacingAndGlyphs">WIDGET</text>
+  <text x="1232" y="332" font-size="10.5" fill="#5f6368" textLength="182" lengthAdjust="spacingAndGlyphs">into an external page instead of search</text>
+  <text x="1240" y="354" font-size="12" fill="#202124" textLength="187" lengthAdjust="spacingAndGlyphs">• Assistant — question and answer</text>
+  <text x="1254" y="369" font-size="10.5" fill="#5f6368" textLength="140" lengthAdjust="spacingAndGlyphs">always · signed identity (ISSF)</text>
+  <text x="1240" y="390" font-size="12" fill="#202124" textLength="99" lengthAdjust="spacingAndGlyphs">• Tickets (optional)</text>
+  <text x="1254" y="405" font-size="10.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">escalation from chat · agent queue · into FAQ</text>
+  <text x="1240" y="426" font-size="12" fill="#202124" textLength="172" lengthAdjust="spacingAndGlyphs">• Helpdesk mailbox ⇅ (optional)</text>
+  <text x="1254" y="441" font-size="10.5" fill="#5f6368" textLength="182" lengthAdjust="spacingAndGlyphs">e-mail = ticket · reply by e-mail (Graph)</text>
   <line x1="1232" y1="458" x2="1456" y2="458" stroke="#D7CCF0" stroke-width="1"/>
-  <text x="1232" y="480" font-size="12" font-weight="700" fill="#54309E">PORTAL</text>
-  <text x="1232" y="496" font-size="10.5" fill="#5f6368">the organisation's intranet, behind sign-in</text>
-  <text x="1240" y="518" font-size="12" fill="#202124">• Library</text>
-  <text x="1254" y="533" font-size="10.5" fill="#5f6368">assistant · acknowledgement · learning</text>
-  <text x="1240" y="554" font-size="12" fill="#9aa0a6">• Articles (in preparation)</text>
-  <text x="1254" y="569" font-size="10.5" fill="#9aa0a6" font-style="italic">KB articles · notices</text>
-  <text x="1240" y="590" font-size="12" fill="#9aa0a6">• Forms (in preparation)</text>
+  <text x="1232" y="480" font-size="12" font-weight="700" fill="#54309E" textLength="47" lengthAdjust="spacingAndGlyphs">PORTAL</text>
+  <text x="1232" y="496" font-size="10.5" fill="#5f6368" textLength="194" lengthAdjust="spacingAndGlyphs">the organisation's intranet, behind sign-in</text>
+  <text x="1240" y="518" font-size="12" fill="#202124" textLength="44" lengthAdjust="spacingAndGlyphs">• Library</text>
+  <text x="1254" y="533" font-size="10.5" fill="#5f6368" textLength="183" lengthAdjust="spacingAndGlyphs">assistant · acknowledgement · learning</text>
+  <text x="1240" y="554" font-size="12" fill="#9aa0a6" textLength="131" lengthAdjust="spacingAndGlyphs">• Articles (in preparation)</text>
+  <text x="1254" y="569" font-size="10.5" fill="#9aa0a6" font-style="italic" textLength="93" lengthAdjust="spacingAndGlyphs">KB articles · notices</text>
+  <text x="1240" y="590" font-size="12" fill="#9aa0a6" textLength="125" lengthAdjust="spacingAndGlyphs">• Forms (in preparation)</text>
 
   <path d="M304,422 L331,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
   <path d="M597,422 L624,422" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
@@ -150,14 +150,14 @@
   <text x="66" y="797" font-size="12.5" fill="#B31412"><tspan font-weight="700">② ticket</tspan> — escalation from chat or the widget, reply by e-mail; with the conversation context</text>
 
   <rect x="40" y="820" width="700" height="88" rx="12" fill="#E0F2F1" stroke="#00897B" stroke-width="1.5"/>
-  <text x="60" y="848" font-size="15" font-weight="700" fill="#00695C">① CURATION — quality control</text>
-  <text x="60" y="872" font-size="12.5" fill="#3c4043">An evaluator prepares the wording, a content admin publishes it → a sourceType qa chunk in the index.</text>
-  <text x="60" y="892" font-size="12" fill="#5f6368">This is not machine „learning“, but human curation of content.</text>
+  <text x="60" y="848" font-size="15" font-weight="700" fill="#00695C" textLength="223" lengthAdjust="spacingAndGlyphs">① CURATION — quality control</text>
+  <text x="60" y="872" font-size="12.5" fill="#3c4043" textLength="577" lengthAdjust="spacingAndGlyphs">An evaluator prepares the wording, a content admin publishes it → a sourceType qa chunk in the index.</text>
+  <text x="60" y="892" font-size="12" fill="#5f6368" textLength="332" lengthAdjust="spacingAndGlyphs">This is not machine „learning“, but human curation of content.</text>
 
   <rect x="776" y="820" width="700" height="88" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
-  <text x="796" y="848" font-size="15" font-weight="700" fill="#B31412">② ESCALATION — to a ticket</text>
-  <text x="796" y="872" font-size="12.5" fill="#3c4043">After two negative ratings the assistant offers a ticket; an e-mail to the channel mailbox is a ticket too.</text>
-  <text x="796" y="892" font-size="12.5" fill="#3c4043">The agent gets a draft reply, edits it, sends it by e-mail and can add it to the FAQ.</text>
+  <text x="796" y="848" font-size="15" font-weight="700" fill="#B31412" textLength="209" lengthAdjust="spacingAndGlyphs">② ESCALATION — to a ticket</text>
+  <text x="796" y="872" font-size="12.5" fill="#3c4043" textLength="567" lengthAdjust="spacingAndGlyphs">After two negative ratings the assistant offers a ticket; an e-mail to the channel mailbox is a ticket too.</text>
+  <text x="796" y="892" font-size="12.5" fill="#3c4043" textLength="453" lengthAdjust="spacingAndGlyphs">The agent gets a draft reply, edits it, sends it by e-mail and can add it to the FAQ.</text>
 
   <text x="40" y="944" font-size="11.5" fill="#9aa0a6">Cloud: MongoDB Atlas EU · Voyage voyage-4 + rerank-2 · Claude API (Citations)  │  On-prem: MongoDB Community 8.2 · Infinity / TEI · vLLM (Qwen3 / EuroLLM)</text>
   <text x="40" y="964" font-size="11.5" fill="#9aa0a6">The core is identical in both modes — $rankFusion runs self-hosted too. Only three adapters differ: embedding, rerank, generation (ADR-001).</text>
