@@ -17,7 +17,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { auth, UnauthorizedError, type OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js"
 import type { OAuthClientInformationMixed, OAuthClientMetadata, OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js"
 import {
-  ConnectorError, connectorByPendingState, markConnectorError, readClientInfo, readPending, readTokens,
+  ConnectorError, connectorById, connectorByPendingState, markConnectorError, readClientInfo, readPending, readTokens,
   saveCapabilities, saveClientInfo, savePending, saveTokens, type Connector,
 } from "../connectors"
 import { getCollection } from "../mongodb"
@@ -104,8 +104,13 @@ function providerFor(c: Connector, redirectUrl: string, actor?: string): OAuthCl
 
 // ── Prihlásenie ─────────────────────────────────────────────────────────────
 
-/** Krok 1: adresa, kam poslať človeka. Stav prihlásenia sa uloží do konektora. */
-export async function startAuthorization(c: Connector, redirectUrl: string): Promise<URL> {
+/**
+ * Krok 1: adresa, kam poslať človeka. Stav prihlásenia sa uloží do konektora.
+ * Keď tokeny ešte platia (prípadne sa obnovili), človek nikam nejde — vráti
+ * sa `null` a nanovo sa načíta zoznam nástrojov; „Pripojiť znova" tak nikdy
+ * nie je chyba, len kontrola.
+ */
+export async function startAuthorization(c: Connector, redirectUrl: string): Promise<URL | null> {
   const provider = providerFor(c, redirectUrl)
   let result: "AUTHORIZED" | "REDIRECT"
   try {
@@ -113,9 +118,28 @@ export async function startAuthorization(c: Connector, redirectUrl: string): Pro
   } catch (e) {
     throw new ConnectorError("connector.authStart", "Server nedovolil začať prihlásenie.", { detail: String((e as Error)?.message ?? e) })
   }
-  if (result === "AUTHORIZED") throw new ConnectorError("connector.alreadyConnected", "Konektor je už pripojený.")
+  if (result === "AUTHORIZED") {
+    await discoverTools(c, redirectUrl, c.auth.connectedBy ?? null)
+    return null
+  }
   if (!provider.authorizationUrl) throw new ConnectorError("connector.authStart", "Server nedal adresu na prihlásenie.")
   return provider.authorizationUrl
+}
+
+/** Čo server ponúka — zapíše sa pri pripojení, obrazovka to ukáže. Zlyhanie sa len zaloguje. */
+async function discoverTools(c: Connector, redirectUrl: string, actor: string | null): Promise<void> {
+  // Záznam nanovo z databázy: po výmene kódu `c` tokeny ešte nenesie.
+  const fresh = await connectorById(c.companyCode, c.id)
+  if (!fresh) return
+  try {
+    const tools = await withClient({ ...fresh, status: "connected" }, redirectUrl, async client => {
+      const r = await client.listTools()
+      return r.tools.map(t => ({ name: t.name, description: (t.description ?? "").slice(0, 300) }))
+    }, { actor: { personId: null, personName: actor } }, "tools/list")
+    await saveCapabilities(c.companyCode, c.id, tools)
+  } catch (e) {
+    console.error("[connector] zoznam nástrojov sa nepodarilo načítať:", e)
+  }
 }
 
 /**
@@ -134,17 +158,8 @@ export async function finishAuthorization(state: string, code: string, redirectU
     await markConnectorError(c.companyCode, c.id, msg)
     throw new ConnectorError("connector.authFinish", "Výmena kódu za token zlyhala.", { detail: msg })
   }
-  // Čo server ponúka — zapíše sa raz pri pripojení, obrazovka to ukáže.
-  try {
-    const tools = await withClient({ ...c, status: "connected" }, redirectUrl, async client => {
-      const r = await client.listTools()
-      return r.tools.map(t => ({ name: t.name, description: (t.description ?? "").slice(0, 300) }))
-    }, { actor: { personId: null, personName: actor } }, "tools/list")
-    await saveCapabilities(c.companyCode, c.id, tools)
-  } catch (e) {
-    console.error("[connector] zoznam nástrojov sa nepodarilo načítať:", e)
-  }
-  return c
+  await discoverTools(c, redirectUrl, actor)
+  return (await connectorById(c.companyCode, c.id)) ?? c
 }
 
 // ── Volanie ─────────────────────────────────────────────────────────────────

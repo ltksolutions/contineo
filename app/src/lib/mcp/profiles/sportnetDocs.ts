@@ -20,7 +20,8 @@ export function stripSessionContext(text: string): string {
   return text.replace(PREAMBLE, "").trimStart()
 }
 
-const PROJECT_HEAD = /^# (\S+)\s+—\s+(.+?)\s+\((\d+) articles? · best score [\d.]+\)\s*$/
+// Názov projektu za pomlčkou je voliteľný — `crm` ho nemá (`# crm   (3 articles · best score 0.61)`).
+const PROJECT_HEAD = /^# (\S+)(?:\s+—\s+(.+?))?\s+\((\d+) articles? · best score [\d.]+\)\s*$/
 const ARTICLE_HEAD = /^## (.+?)\s+·\s+(\S+\.md)\s+·\s+score ([\d.]+)\s*$/
 
 /** Rozklad výsledku hľadania na články. Exportované kvôli testom. */

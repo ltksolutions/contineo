@@ -645,14 +645,19 @@ export async function disconnectConnectorAction(fd: FormData) {
 export async function connectConnectorAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
-  let url: string
+  let url: URL | null
   try {
     const c = await connectorById(self.companyCode, fieldText(fd, "id"))
     if (!c) throw new AppError("connector.notFound", "Taký konektor tu nie je.")
-    url = (await startAuthorization(c, await connectorCallbackUrl())).toString()
+    url = await startAuthorization(c, await connectorCallbackUrl())
   } catch (e) {
     if (isRedirect(e)) throw e
     back(fd, errorMessage(e, self.language), true)
   }
-  redirect(url)
+  // Tokeny platia — nikam sa nejde, len sa obnovil zoznam nástrojov.
+  if (!url) {
+    revalidatePath("/organisation", "layout")
+    back(fd, dictionary(self.language).org.connectors.connected)
+  }
+  redirect(url.toString())
 }
