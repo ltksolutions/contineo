@@ -48,9 +48,9 @@ vi.mock("@/lib/departments", async importOriginal => ({
   counts: async () => new Map([["it", { direct: 1, withDescendants: 1 }]]),
 }))
 vi.mock("../src/app/hr/tracks/actions", () => ({
-  renameTrackAction: async () => {}, addStepAction: async () => {}, removeStepAction: async () => {},
+  saveTrackSettingsAction: async () => {}, addStepAction: async () => {}, removeStepAction: async () => {},
   moveStepAction: async () => {}, setTrackActiveAction: async () => {},
-  addMembersAction: async () => {}, removeMemberAction: async () => {}, setTrackDueAction: async () => {},
+  addMembersAction: async () => {}, removeMemberAction: async () => {},
 }))
 
 describe("stránka trasy", () => {
@@ -60,7 +60,8 @@ describe("stránka trasy", () => {
       params: Promise.resolve({ key: "novy-zamestnanec" }),
       searchParams: Promise.resolve({}),
     }))
-    const edit = html.indexOf("Upraviť názov")
+    // Nastavenia trasy — jeden zbalený `<details>` (ZAKLAD-lista-ulozenia).
+    const edit = html.indexOf("Nastavenia trasy")
     expect(edit).toBeGreaterThan(-1)
     expect(edit).toBeLessThan(html.indexOf("Kroky"))
     expect(html).toMatch(/name="title"[^>]*value="Nový zamestnanec"|value="Nový zamestnanec"[^>]*name="title"/)
@@ -78,12 +79,21 @@ describe("stránka trasy", () => {
     expect(html).toContain("Eva Nová")
     expect(html).toContain("vyradená")
     expect(html).toMatch(/name="personId"[^>]*value="p1"|value="p1"[^>]*name="personId"/)
-    expect(html).toContain("Pridať osoby")
-    expect(html).toContain("Oddelenie IT")
-    // Na výber je len ten, kto na trase ešte nie je a nie je vyradený.
-    expect(html).toContain("Anna Malá")
+    // „Pridať osoby" je plné v hlavičke a otvorí úlohu `?add=people`.
+    expect(html).toContain('<a class="button" href="/hr/tracks/novy-zamestnanec?add=people">Pridať osoby</a>')
+    expect(html).not.toContain('name="department"')
     // Stav pri človeku a „Dať vedieť", keď niekomu niečo chýba.
     expect(html).toContain("1 / 2")
     expect(html).toContain('href="/hr/tracks/novy-zamestnanec/notify"')
+    // Úloha: oddelenia a ľudia na výber, plné „Pridať na trasu", tlačidlo v hlavičke zmizne.
+    const task = renderToStaticMarkup(await Page({
+      params: Promise.resolve({ key: "novy-zamestnanec" }),
+      searchParams: Promise.resolve({ add: "people" }),
+    }))
+    expect(task).toContain('name="department"')
+    // Na výber je len ten, kto na trase ešte nie je a nie je vyradený.
+    expect(task).toContain("Anna Malá")
+    expect(task).toContain("Pridať na trasu")
+    expect(task).not.toContain("?add=people\">Pridať osoby")
   })
 })

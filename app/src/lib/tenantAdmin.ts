@@ -543,6 +543,55 @@ export async function saveOAuth(
   invalidateTenants()
 }
 
+/** Vstup jedného poskytovateľa z formulára (`saveOAuth`). */
+export interface OAuthInput {
+  clientId?: string
+  clientSecret?: string
+  tenantMode?: string
+  allowedTenantIds?: string[]
+  hostedDomain?: string
+}
+
+/**
+ * Ktorých poskytovateľov má spoločné uloženie zapísať — a kontrola **pred**
+ * prvým zápisom (ZAKLAD-lista-ulozenia Q6, 7. 10. 2026). Stránka s jednou
+ * lištou ukladá oboch naraz; keď jeden neprejde, nezapíše sa nič, inak by
+ * človek nevedel, čo z „Uložiť" platí.
+ *
+ * Poskytovateľ bez vlastného nastavenia, ktorého polia prišli prázdne, sa
+ * preskočí — nikto ho nezakladal, len odoslal stránku s druhým.
+ */
+export async function plannedOAuth(
+  companyCode: string,
+  inputs: Partial<Record<OAuthProviderName, OAuthInput>>,
+): Promise<OAuthProviderName[]> {
+  const code = normalizeCompanyCode(companyCode)
+  const existing = await (await getCollection<TenantDoc>(TENANTS_COLLECTION)).findOne({ companyCode: code })
+  if (!existing) throw new TenantValidationError("tenant.notFound", `Organizácia ${code} neexistuje.`, { code })
+  const out: OAuthProviderName[] = []
+  for (const provider of Object.keys(inputs) as OAuthProviderName[]) {
+    const input = inputs[provider]!
+    const clientId = input.clientId?.trim()
+    const secret = input.clientSecret?.trim()
+    const stored = existing.oauth?.[provider]
+    if (!clientId && !secret && !stored?.clientId) continue
+    if (secret && !encryptionAvailable()) {
+      throw new TenantValidationError(
+        "tenant.noEncryptionKey",
+        "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY.",
+      )
+    }
+    if (!(clientId || stored?.clientId) || !(secret || stored?.clientSecretEnc)) {
+      throw new TenantValidationError(
+        "tenant.needsBothCredentials",
+        "Treba aj `clientId`, aj tajomstvo — jedno bez druhého sa nedá použiť.",
+      )
+    }
+    out.push(provider)
+  }
+  return out
+}
+
 /** Odstráni údaje poskytovateľa. Tlačidlo prihlásenia tým zmizne. */
 export async function deleteOAuth(
   companyCode: string,

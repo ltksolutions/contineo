@@ -75,32 +75,12 @@ export async function createTrackAction(fd: FormData) {
   }
 }
 
-export async function renameTrackAction(fd: FormData) {
-  const self = await actor()
-  if (!self) redirect("/")
-
-  const key = text(fd, "key")
-  const to = `/hr/tracks/${encodeURIComponent(key)}`
-  try {
-    await renameTrack(
-      self.companyCode, key,
-      { title: text(fd, "title"), description: text(fd, "description") || undefined },
-      self.email,
-    )
-    revalidatePath(to)
-    back(to, { msg: say(self.language).renamed })
-  } catch (e) {
-    if (isRedirect(e)) throw e
-    back(to, { error: message(e, self.language) })
-  }
-}
-
 /**
- * Termín trasy (3. 10. 2026): bez termínu, alebo počet dní od pridania.
- * Voľba je výslovná ako pri prideľovaní (`due.ts`) — prázdne pole by nevedelo
- * povedať, či „bez termínu", alebo „zabudol som vyplniť".
+ * Nastavenia trasy jedným uložením (ZAKLAD-lista-ulozenia, 7. 10. 2026):
+ * názov, popis a termín. Termín sa skontroluje skôr, než sa niečo zapíše —
+ * keď je zlý, neuloží sa ani názov (Q6, „všetko alebo nič").
  */
-export async function setTrackDueAction(fd: FormData) {
+export async function saveTrackSettingsAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
 
@@ -108,11 +88,18 @@ export async function setTrackDueAction(fd: FormData) {
   const to = `/hr/tracks/${encodeURIComponent(key)}`
   try {
     const days = text(fd, "dueMode") === "days" ? Number(text(fd, "dueDays")) : null
-    if (days !== null && !Number.isFinite(days)) throw new TrackError("track.badDueDays", "Počet dní musí byť od 1 do 365.")
+    if (days !== null && (!Number.isInteger(days) || days < 1 || days > 365)) {
+      throw new TrackError("track.badDueDays", "Počet dní musí byť od 1 do 365.")
+    }
+    await renameTrack(
+      self.companyCode, key,
+      { title: text(fd, "title"), description: text(fd, "description") || undefined },
+      self.email,
+    )
     await setTrackDue(self.companyCode, key, days, self.email)
     revalidatePath(to)
     revalidatePath("/hr")
-    back(to, { msg: say(self.language).dueSaved })
+    back(to, { msg: say(self.language).settingsSaved })
   } catch (e) {
     if (isRedirect(e)) throw e
     back(to, { error: message(e, self.language) })
@@ -245,7 +232,8 @@ export async function addMembersAction(fd: FormData) {
     back(to, { msg: added })
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(to, { error: message(e, self.language) })
+    // Úloha ostane otvorená (`?add=people`), aby človek videl, čo opraviť.
+    back(to, { add: "people", error: message(e, self.language) })
   }
 }
 

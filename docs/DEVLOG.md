@@ -10,6 +10,36 @@
 
 ---
 
+## 2026-10-07 — lišta uloženia (ZAKLAD-lista-ulozenia, P9)
+
+**Čo sa zmenilo:** nové spájajúce akcie
+- `saveSignInPageAction` (organizácia),
+- `saveTenantPageAction` (admin),
+- `saveGdprPageAction` (DPO),
+- `saveTrackSettingsAction` (trasy).
+
+Staré jednotlivé akcie zmizli (prihlásenie, automatické zakladanie,
+kontakt GDPR, lehoty, doplnok, premenovanie a termín trasy).
+
+**Atomicita (Q6):**
+- `plannedOAuth()` v `lib/tenantAdmin.ts` skontroluje oboch poskytovateľov
+  pred prvým zápisom a preskočí toho, kto nie je založený a prišiel prázdny;
+- GDPR je jeden `saveTenant`;
+- pri trase sa termín overí pred premenovaním.
+
+Plná transakcia to nie je — `saveTenant` a `saveOAuth` sú dva zápisy.
+Kontrola vopred však pokrýva chyby, ktoré človek vie spôsobiť.
+
+**Odchýlka:** „vyplnené polia ostanú" pri chybe (Q6) sa bez JavaScriptu
+nedá; po chybe sa formulár načíta z uložených hodnôt. Tajomstvá sa do
+adresy dávať nebudú.
+
+**Popri tom:** `admin.signIn.state` má kľúče `nastavene`…, ale
+`providerStatus()` vracia `set`/`unset` — štítok v admine ukazoval anglický
+kľúč. Opravené mapovaním v stránke.
+
+---
+
 ## 2026-10-07 — úprava kurzu podľa MANAGE-COURSE-akcie
 
 **Čo sa zmenilo:**

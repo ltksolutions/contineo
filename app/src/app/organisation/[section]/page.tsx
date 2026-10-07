@@ -27,7 +27,7 @@ import FormPendingSignal from "@/components/FormPendingSignal"
 import { treeOptions } from "@/lib/treeOptions"
 import { orgPageContext } from "@/lib/orgSettings"
 import { retentionSettings, RETENTION_LIMITS } from "@/lib/retention"
-import { saveGdprContactAction, saveRetentionAction, saveExtraAction } from "@/app/dpo/actions"
+import { saveGdprPageAction } from "@/app/dpo/actions"
 import { domainRequests, domainInstruction } from "@/lib/customerDomains"
 import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
 import { brandingView, tenantByCompanyCode } from "@/lib/tenants"
@@ -45,7 +45,7 @@ import { AI_MODELS, aiSettingsView } from "@/lib/aiSettings"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { ratesForDate, formatUsd } from "@/lib/pricing"
 
-import { saveBrandingAction, saveAutoProvisionAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "../actions"
+import { saveBrandingAction, deleteLogoAction, saveSignInPageAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "../actions"
 import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "../actions"
 import { addCodelistItemAction, removeCodelistItemAction, saveAcknowledgementAction } from "../actions"
 import { overdueDaysFor } from "@/lib/reminders"
@@ -74,7 +74,15 @@ export const dynamic = "force-dynamic"
 /** Koľko riadkov spotreby ukáže obrazovka; export berie celé obdobie. */
 const USAGE_SCREEN_LIMIT = 500
 
-function ProviderRow({
+/**
+ * Sekcia jedného poskytovateľa v spoločnom formulári Prihlásenia
+ * (ZAKLAD-lista-ulozenia, 7. 10. 2026). Polia nesú predponu poskytovateľa
+ * (`microsoft.clientId`) — uloží ich jedna lišta spolu s druhým
+ * poskytovateľom aj doménami automatického zakladania.
+ *
+ * **Tajomstvo sa nikdy nevypisuje;** prázdne pole znamená „nemeň" (D43).
+ */
+function ProviderSection({
   tenant, provider, domain, language,
 }: {
   tenant: Tenant
@@ -86,94 +94,98 @@ function ProviderRow({
   const name = PROVIDER_LABEL[provider]
   const s = providerStatus(tenant, provider)
   const back = `https://${domain ?? "<…>"}/api/auth/callback/${PROVIDER_ID[provider]}`
+  const f = (field: string) => `${provider}.${field}`
 
   return (
-    <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
-        <span className={s.state === "unreadable" ? "tag tag--warn" : "tag"}>
-          {s.state === "set" ? t.stateOn
-            : s.state === "from-environment" ? t.stateFromSupplier
-            : s.state === "unreadable" ? t.stateUnreadable : t.stateOff}
-        </span>
+    <section className="set-sec" id={`signin-${provider}`}>
+      <div className="set-sec-head">
+        <h2>
+          {t.heading(name)}{" "}
+          <span className={s.state === "unreadable" ? "tag tag--warn" : s.state === "set" ? "tag tag--published" : "tag"}>
+            {s.state === "set" ? t.stateOn
+              : s.state === "from-environment" ? t.stateFromSupplier
+              : s.state === "unreadable" ? t.stateUnreadable : t.stateOff}
+          </span>
+        </h2>
+        <p>{t.introBefore}<strong>{t.introHighlight(name)}</strong>{t.introAfter}</p>
       </div>
-
-      <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)", lineHeight: 1.6 }}>
-        {t.introBefore}<strong>{t.introHighlight(name)}</strong>{t.introAfter}
-      </p>
-
-      <div>
-        <div className="quiet field-hint">
-          {t.callback}
+      <div className="set-sec-body">
+        <div className="set-callback">
+          <span className="quiet field-hint">{t.callback}</span>
+          <code>{back}</code>
         </div>
-        <code style={{ fontSize: "var(--fs-small)", overflowWrap: "anywhere" }}>{back}</code>
-      </div>
-
-      <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
-        <input type="hidden" name="provider" value={provider} />
-        <input type="hidden" name="tab" value="signin" />
-
         <label className="field">
           <span className="field-label">{t.clientId}</span>
-          <input className="field-input" name="clientId" defaultValue={s.source === "tenant" ? s.clientId : ""} />
+          <input className="field-input" name={f("clientId")} defaultValue={s.source === "tenant" ? s.clientId : ""} />
         </label>
-
         <label className="field">
           <span className="field-label">{t.clientSecret}</span>
-          <input className="field-input" name="clientSecret" type="password" />
+          <input className="field-input" name={f("clientSecret")} type="password" autoComplete="off" />
           <span className="quiet field-hint">{t.clientSecretNote}</span>
         </label>
-
         {provider === "microsoft" ? (
           <>
             <label className="field">
               <span className="field-label">{t.tenantMode}</span>
-              <input
-                className="field-input"
-                name="tenantMode"
-                defaultValue={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
-              />
-              <span className="quiet field-hint">
-                {t.tenantModeBefore}<strong>{t.tenantModeHighlight}</strong>{t.tenantModeAfter}
-              </span>
+              <input className="field-input" name={f("tenantMode")} defaultValue={tenant.oauth?.microsoft?.tenantMode ?? "organizations"} />
+              <span className="quiet field-hint">{t.tenantModeBefore}<strong>{t.tenantModeHighlight}</strong>{t.tenantModeAfter}</span>
             </label>
             <label className="field">
               <span className="field-label">{t.allowedTenantIds}</span>
-              <input
-                className="field-input"
-                name="allowedTenantIds"
-                defaultValue={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
-              />
+              <input className="field-input" name={f("allowedTenantIds")} defaultValue={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")} />
               <span className="quiet field-hint">{t.allowedTenantIdsNote}</span>
             </label>
           </>
         ) : (
           <label className="field">
             <span className="field-label">{t.hostedDomain}</span>
-            <input
-              className="field-input"
-              name="hostedDomain"
-              defaultValue={tenant.oauth?.google?.hostedDomain ?? ""}
-            />
+            <input className="field-input" name={f("hostedDomain")} defaultValue={tenant.oauth?.google?.hostedDomain ?? ""} />
           </label>
         )}
+      </div>
+    </section>
+  )
+}
 
-        <div><SubmitButton className="button">{t.save}</SubmitButton></div>
-      </form>
-
-      {s.source === "tenant" && (
-        <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+/**
+ * Riadok „Odstrániť vlastné prihlásenie" v karte Ďalšie akcie. Potvrdenie
+ * kódom organizácie sa otvorí až po kliknutí (`?remove=<poskytovateľ>`,
+ * ZAKLAD-lista-ulozenia Q1) — stále viditeľné pole kódu vyzeralo ako
+ * súčasť nastavenia a v spoločnom formulári by sa odoslalo s „Uložiť".
+ */
+function RemoveSignInRow({ tenant, provider, open, language }: {
+  tenant: Tenant
+  provider: OAuthProviderName
+  open: boolean
+  language?: UiLanguage
+}) {
+  const t = dictionary(language).org.signIn
+  const here = orgSectionHref("signin")
+  return (
+    <>
+      <div className="more-row">
+        <div className="more-main">
+          <b>{t.removeOwnTitle(PROVIDER_LABEL[provider])}</b>
+          <span>{t.removeOwnNote}</span>
+        </div>
+        {!open && <Link className="button button--danger" href={`${here}?remove=${provider}#remove-${provider}`}>{t.removeOpen}</Link>}
+      </div>
+      {open && (
+        <form action={deleteSignInAction} className="more-confirm" id={`remove-${provider}`}>
           <input type="hidden" name="provider" value={provider} />
           <input type="hidden" name="tab" value="signin" />
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.deleteNote}</p>
+          <p>{t.deleteNote}</p>
           <label className="field">
             <span className="field-label">{t.confirmLabel(tenant.companyCode)}</span>
-            <input className="field-input" name="confirmation" autoCapitalize="characters" autoCorrect="off" />
+            <input className="field-input" name="confirmation" autoCapitalize="characters" autoCorrect="off" required />
           </label>
-          <div><SubmitButton className="button button--quiet">{t.deleteSubmit}</SubmitButton></div>
+          <div className="more-acts">
+            <SubmitButton className="button button--danger">{t.deleteSubmit}</SubmitButton>
+            <Link className="button button--quiet" href={here}>{t.cancel}</Link>
+          </div>
         </form>
       )}
-    </section>
+    </>
   )
 }
 
@@ -190,7 +202,7 @@ export default async function OrganisationSectionPage({
     notFound()
   }
 
-  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string; remove?: string; request?: string }>(await searchParams)
   const { msg: message, error, search, list: listParam } = query
   const { section } = await params
   // Neznáma časť je 404 — adresa je zmluva, nie návrh. DPO bez roly
@@ -642,116 +654,154 @@ export default async function OrganisationSectionPage({
       </div>
       )}
 
+      {/*
+        Domény (ZAKLAD-lista-ulozenia, 7. 10. 2026): zoznam s akciami
+        v riadkoch, bez lišty. Jediné plné tlačidlo „Požiadať o doménu" je
+        v hlavičke časti a otvorí úlohu `?request=1`, ktorá ho prevezme (Q3).
+        „Overiť" je kontrola, preto tiché. Odstránenie fungujúcej domény ide
+        cez potvrdenie `?remove=<doména>` (Q4).
+      */}
       {now === "domains" && (
-      <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
+      <>
+        <div className="page-head page-head--section">
+          <h2>{t.tabs.domains}</h2>
+          <span className="page-head-spacer" aria-hidden="true" />
+          {query.request !== "1" && <Link className="button" href={`${orgSectionHref("domains")}?request=1#request`}>{t.domains.requestOpen}</Link>}
+        </div>
 
-        <ul className="admin-domains">
-          {tenant.hostnames.map(h => (
-            <li key={h} className="card" style={{ padding: "10px 14px", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <span style={{ fontWeight: 600 }}>{h}</span>
-              <span className="tag tag--published">{t.domains.works}</span>
-              {tenant.hostnames.length > 1 && (
-                <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
-                  <input type="hidden" name="host" value={h} />
-                  <input type="hidden" name="tab" value="domains" />
-                  <SubmitButton className="button button--quiet" style={{ padding: "5px 10px", fontSize: "var(--fs-small)" }}>
-                    {t.domains.remove}
-                  </SubmitButton>
-                </form>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {pending.length > 0 && (
-          <ul className="admin-domains">
-            {pending.map(z => {
-              const p = domainInstruction(z.host)
-              return (
-                <li key={z.host} className="card" style={{ padding: "12px 14px", display: "grid", gap: 8 }}>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 600 }}>{z.host}</span>
-                    <span className="tag tag--warn">
-                      {t.domains.waitingDns}
-                    </span>
-                    <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
-                      {t.domains.since(formatDate(z.requestedAt, language))}
-                    </span>
-                  </div>
-
-                  {p && (
-                    <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)", overflowWrap: "anywhere" }}>
-                      {t.domains.dnsBefore}<strong>{p.type}</strong>{t.domains.dnsMiddle}
-                      <code>{p.name}</code> → <code>{p.value}</code>
-                    </p>
-                  )}
-
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <form action={verifyDomainAction}>
-                      <input type="hidden" name="host" value={z.host} />
-                      <input type="hidden" name="tab" value="domains" />
-                      <SubmitButton className="button" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
-                        {t.domains.verify}
-                      </SubmitButton>
-                    </form>
-                    <form action={cancelDomainAction}>
-                      <input type="hidden" name="host" value={z.host} />
-                      <input type="hidden" name="tab" value="domains" />
-                      <SubmitButton className="button button--quiet" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
-                        {t.domains.cancelRequest}
-                      </SubmitButton>
-                    </form>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+        {query.request === "1" && (
+          <form action={requestDomainAction} className="card task-card" id="request">
+            <input type="hidden" name="tab" value="domains" />
+            <h2>{t.domains.requestOpen}</h2>
+            <label className="field">
+              <span className="field-label">{t.domains.add}</span>
+              <input className="field-input" name="host" placeholder={t.domains.hostPlaceholder} autoCapitalize="none" autoCorrect="off" required />
+              <span className="quiet field-hint">{t.domains.addNote}</span>
+            </label>
+            <div className="task-acts">
+              <SubmitButton className="button">{t.domains.request}</SubmitButton>
+              <Link className="button button--quiet" href={orgSectionHref("domains")}>{t.domains.cancel}</Link>
+            </div>
+          </form>
         )}
 
-        <form action={requestDomainAction} style={{ display: "grid", gap: 10 }}>
-          <input type="hidden" name="tab" value="domains" />
-          <label className="field">
-            <span className="field-label">{t.domains.add}</span>
-            <input className="field-input" name="host" placeholder={t.domains.hostPlaceholder} autoCapitalize="none" autoCorrect="off" />
-            <span className="quiet field-hint">{t.domains.addNote}</span>
-          </label>
-          <div><SubmitButton className="button button--quiet">{t.domains.request}</SubmitButton></div>
-        </form>
-      </section>
+        <div className="card form-list domain-list">
+          {tenant.hostnames.map(h => (
+            <div key={h} className="domain-row">
+              <div className="domain-head">
+                <b>{h}</b>
+                <span className="tag tag--published">{t.domains.works}</span>
+                {tenant.hostnames.length > 1 && query.remove !== h && (
+                  <Link className="button button--danger button--sm domain-end" href={`${orgSectionHref("domains")}?remove=${encodeURIComponent(h)}#remove`}>{t.domains.removeOpen}</Link>
+                )}
+              </div>
+              {tenant.hostnames.length > 1 && query.remove === h && (
+                <form action={cancelDomainAction} className="more-confirm domain-confirm" id="remove">
+                  <input type="hidden" name="host" value={h} />
+                  <input type="hidden" name="tab" value="domains" />
+                  <p>{t.domains.removeConfirm(h)}</p>
+                  <div className="more-acts">
+                    <SubmitButton className="button button--danger">{t.domains.remove}</SubmitButton>
+                    <Link className="button button--quiet" href={orgSectionHref("domains")}>{t.domains.cancel}</Link>
+                  </div>
+                </form>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {pending.length > 0 && (
+          <section className="form-group">
+            <h2 className="form-group-head">{t.domains.pendingHeading(pending.length)}</h2>
+            <div className="card form-list domain-list">
+              {pending.map(z => {
+                const p = domainInstruction(z.host)
+                return (
+                  <div key={z.host} className="domain-row">
+                    <div className="domain-head">
+                      <b>{z.host}</b>
+                      <span className="tag tag--warn">{t.domains.waitingDns}</span>
+                      <span className="quiet domain-end">{t.domains.since(formatDate(z.requestedAt, language))}</span>
+                    </div>
+                    {p && (
+                      <p className="quiet domain-dns">
+                        {t.domains.dnsBefore}<strong>{p.type}</strong>{t.domains.dnsMiddle}
+                        <code>{p.name}</code> → <code>{p.value}</code>
+                      </p>
+                    )}
+                    <div className="more-acts">
+                      <form action={verifyDomainAction}>
+                        <input type="hidden" name="host" value={z.host} />
+                        <input type="hidden" name="tab" value="domains" />
+                        <SubmitButton className="button button--quiet button--sm">{t.domains.verify}</SubmitButton>
+                      </form>
+                      <form action={cancelDomainAction}>
+                        <input type="hidden" name="host" value={z.host} />
+                        <input type="hidden" name="tab" value="domains" />
+                        <SubmitButton className="button button--quiet button--sm">{t.domains.cancelRequest}</SubmitButton>
+                      </form>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="form-group-foot quiet">{t.domains.pendingNote}</p>
+          </section>
+        )}
+      </>
       )}
 
+      {/*
+        Prihlásenie jedným formulárom a jednou lištou (ZAKLAD-lista-ulozenia,
+        7. 10. 2026): Microsoft, Google a automatické zakladanie. Odstránenie
+        vlastného prihlásenia je v „Ďalšie akcie" pod formulárom.
+      */}
       {now === "signin" && (
-      <div style={{ display: "grid", gap: 16 }}>
-        <ProviderRow tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} language={language} />
-        <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} language={language} />
-
-        {/*
-          Automatické založenie patrí k prihlasovaniu, nie k vzhľadu (Ján
-          25. 9. 2026). Sú to **e-mailové domény pracovných kont**, nie webové
-          adresy portálu zo záložky Domény — preto to veta hovorí nahlas.
-        */}
-        <form action={saveAutoProvisionAction} className="card" style={{ padding: "18px 20px", display: "grid", gap: 12 }}>
+      <>
+        <form action={saveSignInPageAction} className="card set-form">
           <input type="hidden" name="tab" value="signin" />
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.branding.secAutoProvision}</h2>
-          <label className="field">
-            <span className="field-label">{t.branding.autoProvision}</span>
-            <textarea
-              className="field-input"
-              name="autoProvisionDomains"
-              rows={2}
-              defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-              placeholder={dictionary(language).common.domainsPlaceholder}
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-            <span className="quiet field-hint">
-              {t.branding.autoProvisionBefore}<strong>{t.branding.autoProvisionHighlight}</strong>{t.branding.autoProvisionAfter}
-            </span>
-            <span className="quiet field-hint">{t.branding.autoProvisionNotHosts}</span>
-          </label>
-          <div><SubmitButton className="button">{t.branding.save}</SubmitButton></div>
+          <ProviderSection tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} language={language} />
+          <ProviderSection tenant={tenant} provider="google" domain={tenant.hostnames[0]} language={language} />
+          {/*
+            Automatické založenie patrí k prihlasovaniu, nie k vzhľadu (Ján
+            25. 9. 2026). Sú to **e-mailové domény pracovných kont**, nie webové
+            adresy portálu zo záložky Domény — preto to veta hovorí nahlas.
+          */}
+          <section className="set-sec" id="auto-provision">
+            <div className="set-sec-head"><h2>{t.branding.secAutoProvision}</h2></div>
+            <div className="set-sec-body">
+              <label className="field">
+                <span className="field-label">{t.branding.autoProvision}</span>
+                <textarea
+                  className="field-input"
+                  name="autoProvisionDomains"
+                  rows={2}
+                  defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
+                  placeholder={dictionary(language).common.domainsPlaceholder}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+                <span className="quiet field-hint">
+                  {t.branding.autoProvisionBefore}<strong>{t.branding.autoProvisionHighlight}</strong>{t.branding.autoProvisionAfter}
+                </span>
+                <span className="quiet field-hint">{t.branding.autoProvisionNotHosts}</span>
+              </label>
+            </div>
+          </section>
+          <div className="set-savebar">
+            <SubmitButton className="button">{t.branding.save}</SubmitButton>
+            <span className="quiet">{dictionary(language).common.saveBarNote}</span>
+          </div>
         </form>
-      </div>
+        {(["microsoft", "google"] as const).some(p => providerStatus(tenant, p).source === "tenant") && (
+          <section className="card more">
+            <div className="more-head"><h2>{dictionary(language).common.moreActions}</h2></div>
+            {(["microsoft", "google"] as const).filter(p => providerStatus(tenant, p).source === "tenant").map(p => (
+              <RemoveSignInRow key={p} tenant={tenant} provider={p} open={query.remove === p} language={language} />
+            ))}
+          </section>
+        )}
+      </>
       )}
 
       {now === "codelists" && (
@@ -1226,10 +1276,12 @@ export default async function OrganisationSectionPage({
         Akcie sú v `dpo/actions.ts` a strážia ich `dpoContext()`.
       */}
       {now === "gdpr" && (
-      <div style={{ display: "grid", gap: 16 }}>
-        {!ctx.canEditGdpr && <p className="quiet" style={{ margin: 0 }}>{t.gdpr.readOnly}</p>}
+      <>
+        {!ctx.canEditGdpr && <p className="quiet org-note">{t.gdpr.readOnly}</p>}
 
-        <form action={saveGdprContactAction} className="card set-form">
+        {/* Jeden formulár a jedna lišta (ZAKLAD-lista-ulozenia, 7. 10. 2026);
+            kto nie je DPO, má polia len na čítanie a lištu nevidí. */}
+        <form action={saveGdprPageAction} className="card set-form">
           <fieldset disabled={!ctx.canEditGdpr} className="set-fieldset">
             <section className="set-sec" id="contact">
               <div className="set-sec-head">
@@ -1250,15 +1302,11 @@ export default async function OrganisationSectionPage({
                     <span className="quiet field-hint">{t.branding.gdprEmailNote}</span>
                   </label>
                 </div>
-                {ctx.canEditGdpr && <div><SubmitButton className="button">{t.gdpr.saveContact}</SubmitButton></div>}
               </div>
             </section>
-          </fieldset>
-        </form>
 
-        {/* Lehoty (D136) — tie isté čísla číta mazacia dávka aj `/privacy`. */}
-        <form action={saveRetentionAction} className="card set-form">
-          <fieldset disabled={!ctx.canEditGdpr} className="set-fieldset">
+            {/* Lehoty (D136) — tie isté čísla číta mazacia dávka aj `/privacy`.
+                Zapíšu sa len pri zmene (Q2). */}
             <section className="set-sec" id="retention">
               <div className="set-sec-head">
                 <h2>{tt.heading}</h2>
@@ -1273,27 +1321,19 @@ export default async function OrganisationSectionPage({
                 ] as const).map(([name, label, note]) => (
                   <label key={name} className="field">
                     <span className="field-label">{label}</span>
-                    <input className="field-input" type="number" name={name} required inputMode="numeric"
-                           min={RETENTION_LIMITS[name][0]} max={RETENTION_LIMITS[name][1]} defaultValue={retention[name]}
-                           style={{ maxWidth: 140 }} />
+                    <input className="field-input field-input--num" type="number" name={name} required inputMode="numeric"
+                           min={RETENTION_LIMITS[name][0]} max={RETENTION_LIMITS[name][1]} defaultValue={retention[name]} />
                     <span className="quiet field-hint">{note}</span>
                   </label>
                 ))}
-                <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tt.fixed}</p>
+                <p className="quiet field-hint">{tt.fixed}</p>
                 {ctx.canEditGdpr && (
-                  <>
-                    <div className="lnote lnote--bad"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{tt.warning}</span></div>
-                    <div><SubmitButton className="button">{tt.save}</SubmitButton></div>
-                  </>
+                  <div className="lnote lnote--bad"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{tt.warning}</span></div>
                 )}
               </div>
             </section>
-          </fieldset>
-        </form>
 
-        {/* Doplnok na /privacy (D137) — v jazykoch organizácie. */}
-        <form action={saveExtraAction} className="card set-form">
-          <fieldset disabled={!ctx.canEditGdpr} className="set-fieldset">
+            {/* Doplnok na /privacy (D137) — v jazykoch organizácie. */}
             <section className="set-sec" id="privacy-extra">
               <div className="set-sec-head">
                 <h2>{d.dpo.extra.heading}</h2>
@@ -1307,12 +1347,17 @@ export default async function OrganisationSectionPage({
                               defaultValue={tenant.privacy?.extra?.[l] ?? ""} />
                   </label>
                 ))}
-                {ctx.canEditGdpr && <div><SubmitButton className="button">{d.dpo.extra.save}</SubmitButton></div>}
               </div>
             </section>
           </fieldset>
+          {ctx.canEditGdpr && (
+            <div className="set-savebar">
+              <SubmitButton className="button">{t.branding.save}</SubmitButton>
+              <span className="quiet">{d.common.saveBarNote}</span>
+            </div>
+          )}
         </form>
-      </div>
+      </>
       )}
       </div>
       </div>

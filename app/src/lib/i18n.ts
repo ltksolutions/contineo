@@ -104,6 +104,8 @@ interface Dictionary {
 
   /** Spoločné texty prierezových komponentov (ZAKLAD). */
   common: {
+    saveBarNote: string
+    moreActions: string
     /** Príklad zoznamu domén (jedna na riadok) — neutrálny. */
     domainsPlaceholder: string
     /** Potvrdenie oznamu (Notice). */
@@ -1412,6 +1414,11 @@ interface Dictionary {
       disableNote: string
       confirmLabel: (code: string) => string
       confirmHint: string
+      domainsSection: string
+      sendTitle: string
+      disableOpen: string
+      enableNote: string
+      cancel: string
       disable: string
       enable: string
       auditHeading: string
@@ -1435,6 +1442,10 @@ interface Dictionary {
       deleteNote: string
       confirmLabel: (code: string) => string
       deleteSubmit: string
+      removeOwnTitle: (provider: string) => string
+      removeOwnNote: string
+      removeOpen: string
+      cancel: string
     }
     actions: {
       failed: string
@@ -1489,7 +1500,7 @@ interface Dictionary {
     /** Skupiny častí v zozname (ZAKLAD-zalozky, Q1). */
     groups: Record<"org" | "access" | "documents" | "oversight", string>
     /** Záložka GDPR (D154) — upravuje len DPO. */
-    gdpr: { readOnly: string; saveContact: string; contactSaved: string }
+    gdpr: { readOnly: string; saveContact: string; contactSaved: string; saved: string }
     ai: {
       intro: string
       secProvider: string
@@ -1633,6 +1644,12 @@ interface Dictionary {
       dnsMiddle: string
       verify: string
       cancelRequest: string
+      requestOpen: string
+      cancel: string
+      pendingHeading: (n: number) => string
+      pendingNote: string
+      removeOpen: string
+      removeConfirm: (host: string) => string
       add: string
       hostPlaceholder: string
       addNote: string
@@ -1662,6 +1679,10 @@ interface Dictionary {
       deleteNote: string
       confirmLabel: (code: string) => string
       deleteSubmit: string
+      removeOwnTitle: (provider: string) => string
+      removeOwnNote: string
+      removeOpen: string
+      cancel: string
     }
     codelists: {
       /** Tlačidlo výberu bez JavaScriptu. */
@@ -2687,7 +2708,16 @@ interface Dictionary {
       dueDaysUnit: string
       dueNote: string
       dueSave: string
+      settingsHeading: string
+      saveSettings: string
+      addHeading: string
+      cancel: string
+      deactivateTitle: string
+      deactivateNote: string
+      activateTitle: string
+      activateNote: string
       dueSaved: string
+      settingsSaved: string
       dueCurrent: (days: number | null) => string
       /** Ľudia na trase (2. 10. 2026). */
       members: (n: number) => string
@@ -3904,6 +3934,8 @@ const daysEn = (n: number) => (n === 1 ? "1 day" : `${n} days`)
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   sk: {
   common: {
+    saveBarNote: "Uloží všetky sekcie na tejto stránke.",
+    moreActions: "Ďalšie akcie",
     domainsPlaceholder: "organizacia.sk\nmarketing.organizacia.sk",
     noticeConfirm: "Rozumiem",
     empty: {
@@ -5076,6 +5108,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disableNote: "Po vypnutí sa nikto z tejto organizácie neprihlási — okamžite. Záznamy potvrdení zostávajú, tenant sa nemaže.",
       confirmLabel: (code) => `Napíš ${code} na potvrdenie`,
       confirmHint: "Zámerne to nie je obyčajné „naozaj?“ — to sa odklikne skôr, než sa prečíta.",
+      domainsSection: "Domény a zakladanie",
+      sendTitle: "Poslať pokyny k doméne",
+      disableOpen: "Vypnúť…",
+      enableNote: "Ľudia z organizácie sa budú môcť znova prihlásiť.",
+      cancel: "Zrušiť",
       disable: "Vypnúť",
       enable: "Zapnúť",
       auditHeading: "Audit",
@@ -5109,6 +5146,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteNote: "Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta, ktorú poznajú.",
       confirmLabel: (code) => `Napíš ${code} na potvrdenie`,
       deleteSubmit: "Odstrániť",
+      removeOwnTitle: p => `Odstrániť vlastné prihlásenie cez ${p}`,
+      removeOwnNote: "Prihlásenie sa vráti na nastavenie od dodávateľa, ak ho má; inak tlačidlo z prihlasovacej obrazovky zmizne.",
+      removeOpen: "Odstrániť…",
+      cancel: "Zrušiť",
     },
     actions: {
       failed: "Zmenu sa nepodarilo uložiť. Skús to znova.",
@@ -5605,6 +5646,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       readOnly: "Tieto nastavenia upravuje zodpovedná osoba (DPO). Vidíte ich len na čítanie.",
       saveContact: "Uložiť kontakt",
       contactSaved: "Kontakt GDPR je uložený.",
+      saved: "Nastavenia GDPR sú uložené.",
     },
     ai: {
       intro: "Asistent, úprava otázok a prepis skenov používajú model Claude od spoločnosti Anthropic. Tu nastavíte, cez aký kľúč sa platí a ktoré modely sa použijú.",
@@ -5754,6 +5796,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dnsMiddle: " záznam ",
       verify: "Overiť a zapnúť",
       cancelRequest: "Zrušiť žiadosť",
+      requestOpen: "Požiadať o doménu",
+      cancel: "Zrušiť",
+      pendingHeading: n => `Čakajú na overenie · ${n}`,
+      pendingNote: "Overenie sa dá spustiť, keď je záznam DNS nastavený. Zmena DNS sa môže prejaviť až po niekoľkých hodinách.",
+      removeOpen: "Odstrániť…",
+      removeConfirm: h => `Odstrániť doménu ${h}? Ľudia, ktorí na portál chodia cez túto adresu, sa naň nedostanú.`,
       add: "Pridať vlastnú doménu",
       hostPlaceholder: "intranet.vasaorganizacia.sk",
       addNote: "Doména sa zapne až vtedy, keď na nás začne smerovať DNS. Nastaviť to vie len ten, kto ju naozaj ovláda — a je to jediný dôkaz, ktorý existuje. Bez neho by si ktokoľvek mohol pripísať cudziu doménu.",
@@ -5783,6 +5831,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteNote: "Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta, ktorú poznajú.",
       confirmLabel: (code) => `Napíšte ${code} na potvrdenie`,
       deleteSubmit: "Odstrániť",
+      removeOwnTitle: p => `Odstrániť vlastné prihlásenie cez ${p}`,
+      removeOwnNote: "Prihlásenie sa vráti na nastavenie od dodávateľa, ak ho má; inak tlačidlo z prihlasovacej obrazovky zmizne.",
+      removeOpen: "Odstrániť…",
+      cancel: "Zrušiť",
     },
     codelists: {
       show: "Zobraziť",
@@ -6735,7 +6787,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dueDaysUnit: "dní od pridania",
       dueNote: "Každému beží od dňa, keď ho na trasu pridali, takže kto príde neskôr, má rovnakú lehotu. S termínom ľuďom chodia pripomienky, keď sa blíži aj keď je po ňom. Platí aj pre tých, ktorí už na trase sú — kto je na nej dlhšie, môže byť hneď po termíne.",
       dueSave: "Uložiť termín",
+      settingsHeading: "Nastavenia trasy",
+      saveSettings: "Uložiť nastavenia",
+      addHeading: "Pridať osoby na trasu",
+      cancel: "Zrušiť",
+      deactivateTitle: "Deaktivovať trasu",
+      deactivateNote: "Nikto nový nepribudne a pripomienky sa zastavia. Potvrdenia ostávajú.",
+      activateTitle: "Aktivovať trasu",
+      activateNote: "Trasa sa znova ponúkne pri pridávaní ľudí a pripomienky sa obnovia.",
       dueSaved: "Termín trasy je uložený.",
+      settingsSaved: "Nastavenia trasy sú uložené.",
       dueCurrent: days => (days === null ? "Bez termínu" : days === 1 ? "Do 1 dňa od pridania na trasu" : `Do ${days} dní od pridania na trasu`),
       members: n => `Osoby na trase (${n})`,
       noMembers: "Na trase zatiaľ nie je nikto.",
@@ -7896,6 +7957,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
   cs: {
   common: {
+    saveBarNote: "Uloží všechny sekce na této stránce.",
+    moreActions: "Další akce",
     domainsPlaceholder: "organizace.cz\nmarketing.organizace.cz",
     noticeConfirm: "Rozumím",
     empty: {
@@ -9068,6 +9131,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disableNote: "Po vypnutí se nikdo z této organizace nepřihlásí — okamžitě. Záznamy potvrzení zůstávají, tenant se nemaže.",
       confirmLabel: (code) => `Napiš ${code} pro potvrzení`,
       confirmHint: "Záměrně to není obyčejné „opravdu?“ — to se odklikne dřív, než se přečte.",
+      domainsSection: "Domény a zakládání",
+      sendTitle: "Poslat pokyny k doméně",
+      disableOpen: "Vypnout…",
+      enableNote: "Lidé z organizace se budou moci znovu přihlásit.",
+      cancel: "Zrušit",
       disable: "Vypnout",
       enable: "Zapnout",
       auditHeading: "Audit",
@@ -9101,6 +9169,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteNote: "Odstraněním zmizí tlačítko z přihlašovací obrazovky. Lidem, kteří se přihlašují pracovním účtem, tím přestane fungovat jediná cesta, kterou znají.",
       confirmLabel: (code) => `Napiš ${code} pro potvrzení`,
       deleteSubmit: "Odstranit",
+      removeOwnTitle: p => `Odstranit vlastní přihlášení přes ${p}`,
+      removeOwnNote: "Přihlášení se vrátí na nastavení od dodavatele, pokud ho má; jinak tlačítko z přihlašovací obrazovky zmizí.",
+      removeOpen: "Odstranit…",
+      cancel: "Zrušit",
     },
     actions: {
       failed: "Změnu se nepodařilo uložit. Zkus to znovu.",
@@ -9597,6 +9669,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       readOnly: "Tato nastavení upravuje pověřenec (DPO). Vidíte je jen pro čtení.",
       saveContact: "Uložit kontakt",
       contactSaved: "Kontakt GDPR je uložen.",
+      saved: "Nastavení GDPR jsou uložena.",
     },
     ai: {
       intro: "Asistent, úprava dotazů a přepis skenů používají model Claude od společnosti Anthropic. Zde nastavíte, přes jaký klíč se platí a které modely se použijí.",
@@ -9746,6 +9819,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dnsMiddle: " záznam ",
       verify: "Ověřit a zapnout",
       cancelRequest: "Zrušit žádost",
+      requestOpen: "Požádat o doménu",
+      cancel: "Zrušit",
+      pendingHeading: n => `Čekají na ověření · ${n}`,
+      pendingNote: "Ověření lze spustit, když je záznam DNS nastavený. Změna DNS se může projevit až po několika hodinách.",
+      removeOpen: "Odstranit…",
+      removeConfirm: h => `Odstranit doménu ${h}? Lidé, kteří na portál chodí přes tuto adresu, se na něj nedostanou.`,
       add: "Přidat vlastní doménu",
       hostPlaceholder: "intranet.vaseorganizace.cz",
       addNote: "Doména se zapne až tehdy, když na nás začne směrovat DNS. Nastavit to umí jen ten, kdo ji opravdu ovládá — a je to jediný důkaz, který existuje. Bez něj by si kdokoli mohl připsat cizí doménu.",
@@ -9775,6 +9854,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteNote: "Odstraněním zmizí tlačítko z přihlašovací obrazovky. Lidem, kteří se přihlašují pracovním účtem, tím přestane fungovat jediná cesta, kterou znají.",
       confirmLabel: (code) => `Napište ${code} pro potvrzení`,
       deleteSubmit: "Odstranit",
+      removeOwnTitle: p => `Odstranit vlastní přihlášení přes ${p}`,
+      removeOwnNote: "Přihlášení se vrátí na nastavení od dodavatele, pokud ho má; jinak tlačítko z přihlašovací obrazovky zmizí.",
+      removeOpen: "Odstranit…",
+      cancel: "Zrušit",
     },
     codelists: {
       show: "Zobrazit",
@@ -10724,7 +10807,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dueDaysUnit: "dnů od přidání",
       dueNote: "Každému běží ode dne, kdy ho na trasu přidali, takže kdo přijde později, má stejnou lhůtu. S termínem lidem chodí připomínky, když se blíží i když je po něm. Platí i pro ty, kdo už na trase jsou — kdo je na ní déle, může být hned po termínu.",
       dueSave: "Uložit termín",
+      settingsHeading: "Nastavení trasy",
+      saveSettings: "Uložit nastavení",
+      addHeading: "Přidat osoby na trasu",
+      cancel: "Zrušit",
+      deactivateTitle: "Deaktivovat trasu",
+      deactivateNote: "Nikdo nový nepřibude a připomínky se zastaví. Potvrzení zůstávají.",
+      activateTitle: "Aktivovat trasu",
+      activateNote: "Trasa se znovu nabídne při přidávání lidí a připomínky se obnoví.",
       dueSaved: "Termín trasy je uložen.",
+      settingsSaved: "Nastavení trasy jsou uložena.",
       dueCurrent: days => (days === null ? "Bez termínu" : days === 1 ? "Do 1 dne od přidání na trasu" : `Do ${days} dnů od přidání na trasu`),
       members: n => `Osoby na trase (${n})`,
       noMembers: "Na trase zatím nikdo není.",
@@ -11885,6 +11977,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
   en: {
   common: {
+    saveBarNote: "Saves every section on this page.",
+    moreActions: "More actions",
     domainsPlaceholder: "example.com\nmarketing.example.com",
     noticeConfirm: "OK",
     empty: {
@@ -13049,6 +13143,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disableNote: "Once disabled, nobody from this organisation can sign in — immediately. The acknowledgement records remain and the tenant is not deleted.",
       confirmLabel: (code) => `Type ${code} to confirm`,
       confirmHint: "Deliberately not a plain “are you sure?” — that gets clicked away before it is read.",
+      domainsSection: "Domains and provisioning",
+      sendTitle: "Send domain instructions",
+      disableOpen: "Disable…",
+      enableNote: "People from the organisation can sign in again.",
+      cancel: "Cancel",
       disable: "Disable",
       enable: "Enable",
       auditHeading: "Audit",
@@ -13082,6 +13181,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteNote: "Removing it makes the button disappear from the sign-in screen. For people who sign in with a work account, the only route they know stops working.",
       confirmLabel: (code) => `Type ${code} to confirm`,
       deleteSubmit: "Remove",
+      removeOwnTitle: p => `Remove your own ${p} sign-in`,
+      removeOwnNote: "Sign-in falls back to the supplier's setup if there is one; otherwise the button disappears from the sign-in screen.",
+      removeOpen: "Remove…",
+      cancel: "Cancel",
     },
     actions: {
       failed: "The change could not be saved. Try again.",
@@ -13578,6 +13681,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       readOnly: "These settings are managed by the data protection officer (DPO). You can only view them.",
       saveContact: "Save contact",
       contactSaved: "The GDPR contact has been saved.",
+      saved: "GDPR settings saved.",
     },
     ai: {
       intro: "The assistant, question rewriting and scan transcription use Anthropic's Claude model. Here you set which key pays for it and which models are used.",
@@ -13727,6 +13831,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dnsMiddle: " record ",
       verify: "Verify and enable",
       cancelRequest: "Cancel the request",
+      requestOpen: "Request a domain",
+      cancel: "Cancel",
+      pendingHeading: n => `Waiting for verification · ${n}`,
+      pendingNote: "Verification works once the DNS record is set. A DNS change can take a few hours to show.",
+      removeOpen: "Remove…",
+      removeConfirm: h => `Remove the domain ${h}? People who reach the portal through this address will no longer get in.`,
       add: "Add your own domain",
       hostPlaceholder: "intranet.yourorganisation.com",
       addNote: "The domain is enabled only once its DNS starts pointing at us. Only someone who actually controls it can set that up — and it is the only proof there is. Without it, anyone could claim someone else's domain.",
@@ -13756,6 +13866,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       deleteNote: "Removing it makes the button disappear from the sign-in screen. For people who sign in with a work account, the only route they know stops working.",
       confirmLabel: (code) => `Type ${code} to confirm`,
       deleteSubmit: "Remove",
+      removeOwnTitle: p => `Remove your own ${p} sign-in`,
+      removeOwnNote: "Sign-in falls back to the supplier's setup if there is one; otherwise the button disappears from the sign-in screen.",
+      removeOpen: "Remove…",
+      cancel: "Cancel",
     },
     codelists: {
       show: "Show",
@@ -14699,7 +14813,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dueDaysUnit: "days after being added",
       dueNote: "It runs for each person from the day they were added to the track, so whoever joins later gets the same time. With a deadline, people get reminders as it approaches and after it passes. It also applies to people already on the track — anyone who has been on it longer may be past the deadline straight away.",
       dueSave: "Save deadline",
+      settingsHeading: "Track settings",
+      saveSettings: "Save settings",
+      addHeading: "Add people to the track",
+      cancel: "Cancel",
+      deactivateTitle: "Deactivate the track",
+      deactivateNote: "Nobody new is added and reminders stop. Acknowledgements stay.",
+      activateTitle: "Activate the track",
+      activateNote: "The track is offered again when adding people and reminders resume.",
       dueSaved: "The track deadline is saved.",
+      settingsSaved: "Track settings saved.",
       dueCurrent: days => (days === null ? "No deadline" : days === 1 ? "Within 1 day of being added to the track" : `Within ${days} days of being added to the track`),
       members: n => `People on the track (${n})`,
       noMembers: "Nobody is on the track yet.",

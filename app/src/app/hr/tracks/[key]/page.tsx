@@ -26,8 +26,8 @@ import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import {
-  renameTrackAction, addStepAction, removeStepAction, moveStepAction, setTrackActiveAction,
-  addMembersAction, removeMemberAction, setTrackDueAction,
+  addStepAction, removeStepAction, moveStepAction, setTrackActiveAction,
+  addMembersAction, removeMemberAction, saveTrackSettingsAction,
 } from "../actions"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
@@ -48,7 +48,7 @@ export default async function TrackDetailPage({
   }
 
   const { key } = await params
-  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const { msg: message, error, add } = normalizeQuery<{ msg?: string; error?: string; add?: string }>(await searchParams)
 
   const t = dictionary(ctx.person.language).library.tracks
   const branding = brandingView(ctx.tenant)
@@ -61,6 +61,7 @@ export default async function TrackDetailPage({
   const steps = track.steps.filter(s => s.documentId)
 
   const here = `/hr/tracks/${encodeURIComponent(track.key)}`
+  const adding = add === "people"
 
   /*
     Ľudia na trase (2. 10. 2026) — z `persons.tracks`, jediného zdroja (D27).
@@ -120,25 +121,95 @@ export default async function TrackDetailPage({
 
 
       {/* Hlavička stránky (DESIGN_ODCHYLKY P1). */}
+      {/* Jediné plné tlačidlo je „Pridať osoby" — otvorí úlohu `?add=people`,
+          ktorá ho prevezme (ZAKLAD-lista-ulozenia, 7. 10. 2026). */}
       <div className="page-head">
         <h1 className="page-title">{track.title}</h1>
         {/* Tie isté štítky ako v zozname trás. */}
         <span className={track.isActive ? "tag tag--published" : "tag tag--archived"}>
           {track.isActive ? t.active : t.inactive}
         </span>
+        <span className="page-head-spacer" aria-hidden="true" />
+        {!adding && <Link className="button" href={`${here}?add=people`}>{t.addMembers}</Link>}
       </div>
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 12px" }}>
         {t.stepCount(steps.length)}
       </p>
 
+      {adding && (
+        <section className="card task-card" aria-labelledby="add-people">
+          <h2 id="add-people">{t.addHeading}</h2>
+          <p className="quiet field-hint">{t.addMembersNote}</p>
+          {/* Oddelenia a ľudia ako skupiny s nadpisom nad kartou, ako „Komu"
+              na /hr/assign (DESIGN_ODCHYLKY P7). */}
+          <form action={addMembersAction} className="task-form">
+            <input type="hidden" name="key" value={track.key} />
+            {departmentOptions.length > 0 && (
+              <fieldset className="form-group">
+                <legend className="form-group-head">{t.departments}</legend>
+                <div className="card form-group-body">
+                <MultiSelect
+                  name="department"
+                  emit="repeat"
+                  caseSensitive
+                  noscript="checkboxes"
+                  language={ctx.person.language}
+                  selected={[]}
+                  options={departmentOptions}
+                />
+                </div>
+              </fieldset>
+            )}
+            {choices.length > 0 && (
+              <fieldset className="form-group">
+                <legend className="form-group-head">{t.people}</legend>
+                <div className="card form-group-body form-group-body--rows">
+                <PeopleSearch
+                  people={choices}
+                  name="person"
+                  language={ctx.person.language}
+                  multiple
+                  listLabel={t.people}
+                  missing="people"
+                />
+                </div>
+              </fieldset>
+            )}
+            {/* Predvolene zapnuté (Ján, 3. 10. 2026) — kto na trasu pribudne, má
+                sa to dozvedieť hneď, nie až z pripomienky pred termínom. */}
+            {track.isActive && (
+              <div className="card form-group-body form-group-body--rows">
+                <div className="form-list">
+                  <label className="form-row">
+                    <input type="checkbox" role="switch" className="toggle" name="notify" value="1" defaultChecked />
+                    <span className="form-row-main">
+                      <span>{t.notifyAdded}</span>
+                      <span className="form-row-sub">{t.notifyAddedHint}</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+            <div className="task-acts">
+              <SubmitButton className="button" pendingLabel={dictionary(ctx.person.language).common.pending.adding}>{t.addSubmit}</SubmitButton>
+              <Link className="button button--quiet" href={here}>{t.cancel}</Link>
+            </div>
+          </form>
+        </section>
+      )}
+
       {/*
-        Názov a popis — hore pri názve, nie pod krokmi. Na konci stránky bez
-        nadpisu ho Ján nenašiel (2. 10. 2026). `<details>`, takže bez
-        JavaScriptu; zbalené, lebo sa mení zriedka.
+        Nastavenia trasy — názov, popis a termín v jednom formulári
+        (ZAKLAD-lista-ulozenia, 7. 10. 2026; predtým dva `<details>`). Hore pri
+        názve a zbalené (Ján 2. 10. 2026) — mení sa zriedka; súhrn ukazuje
+        termín aj bez rozbalenia. Termín len v dňoch od pridania (3. 10. 2026).
       */}
-      <details className="track-edit" style={{ margin: "0 0 24px" }}>
-        <summary className="button button--quiet">{t.edit}</summary>
-        <form action={renameTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16, marginTop: 12 }}>
+      <details className="card track-settings">
+        <summary>
+          <span>{t.settingsHeading}</span>
+          <span className="quiet">{t.dueHeading}: {t.dueCurrent(track.due?.days ?? null)}</span>
+        </summary>
+        <form action={saveTrackSettingsAction} className="track-settings-body">
           <input type="hidden" name="key" value={track.key} />
           <label className="field">
             <span className="field-label">{t.title}</span>
@@ -148,44 +219,31 @@ export default async function TrackDetailPage({
             <span className="field-label">{t.description}</span>
             <input className="field-input" name="description" defaultValue={track.description ?? ""} />
           </label>
-          <p style={{ margin: 0 }}>
-            <SubmitButton className="button">{t.rename}</SubmitButton>
-          </p>
-        </form>
-      </details>
-
-      {/*
-        Termín potvrdenia (3. 10. 2026) — len dni od pridania na trasu; pevný
-        dátum by neskôr pridaným nechal len zvyšok lehoty. Zbalené ako názov,
-        zhrnutie je vidieť aj bez rozbalenia.
-      */}
-      <details className="track-edit" style={{ margin: "0 0 24px" }}>
-        <summary className="button button--quiet">{t.dueHeading}: {t.dueCurrent(track.due?.days ?? null)}</summary>
-        {/* Dve voľby s fajkou vpravo a pole dní pod svojou voľbou — ten istý
-            tvar ako termín na /hr/assign (ZAKLAD-vyber-a-prepinace, P7).
-            Meno `dueMode` a hodnoty bez zmeny. */}
-        <form action={setTrackDueAction} className="card form-group-body form-group-body--rows" style={{ marginTop: 12 }}>
-          <input type="hidden" name="key" value={track.key} />
-          <div className="form-list">
-            <label className="form-row choice-row">
-              <input type="radio" name="dueMode" value="none" defaultChecked={!track.due} />
-              <span className="form-row-main">{t.dueNone}</span>
-            </label>
-            <label className="form-row choice-row">
-              <input type="radio" name="dueMode" value="days" defaultChecked={Boolean(track.due)} />
-              <span className="form-row-main">{t.dueDays}</span>
-            </label>
-            <div className="choice-field">
-              <input className="field-input" type="number" min={1} max={365} name="dueDays"
-                     defaultValue={track.due?.days ?? 14} aria-label={t.dueDaysUnit} />
-              <span className="quiet">{t.dueDaysUnit}</span>
+          {/* Dve voľby s fajkou vpravo a pole dní pod svojou voľbou — ten istý
+              tvar ako termín na /hr/assign (ZAKLAD-vyber-a-prepinace, P7).
+              Meno `dueMode` a hodnoty bez zmeny. */}
+          <fieldset className="form-group">
+            <legend className="form-group-head">{t.dueHeading}</legend>
+            <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
+                <label className="form-row choice-row">
+                  <input type="radio" name="dueMode" value="none" defaultChecked={!track.due} />
+                  <span className="form-row-main">{t.dueNone}</span>
+                </label>
+                <label className="form-row choice-row">
+                  <input type="radio" name="dueMode" value="days" defaultChecked={Boolean(track.due)} />
+                  <span className="form-row-main">{t.dueDays}</span>
+                </label>
+                <div className="choice-field">
+                  <input className="field-input" type="number" min={1} max={365} name="dueDays"
+                         defaultValue={track.due?.days ?? 14} aria-label={t.dueDaysUnit} />
+                  <span className="quiet">{t.dueDaysUnit}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <span className="quiet field-hint">{t.dueNote}</span>
-          {/* Bez inline okraja — odstup v karte s riadkami dáva `.form-group-body--rows`. */}
-          <p>
-            <SubmitButton className="button">{t.dueSave}</SubmitButton>
-          </p>
+            <p className="form-group-foot quiet">{t.dueNote}</p>
+          </fieldset>
+          <div><SubmitButton className="button button--quiet">{t.saveSettings}</SubmitButton></div>
         </form>
       </details>
 
@@ -258,7 +316,7 @@ export default async function TrackDetailPage({
           </label>
 
           <p style={{ margin: 0 }}>
-            <SubmitButton className="button">{t.addStep}</SubmitButton>
+            <SubmitButton className="button button--quiet">{t.addStep}</SubmitButton>
           </p>
         </form>
       )}
@@ -299,72 +357,25 @@ export default async function TrackDetailPage({
         </ul>
       )}
 
-      <details className="track-edit" style={{ margin: "0 0 32px" }}>
-        <summary className="button">{t.addMembers}</summary>
-        {/* Oddelenia a ľudia ako skupiny s nadpisom nad kartou, ako „Komu"
-            na /hr/assign (DESIGN_ODCHYLKY P7). Formulár sám kartou nie je —
-            inak by bola karta v karte. */}
-        <form action={addMembersAction} style={{ display: "grid", gap: 16, marginTop: 12 }}>
-          <input type="hidden" name="key" value={track.key} />
-          <p className="quiet field-hint" style={{ margin: 0 }}>{t.addMembersNote}</p>
-          {departmentOptions.length > 0 && (
-            <fieldset className="form-group">
-              <legend className="form-group-head">{t.departments}</legend>
-              <div className="card form-group-body">
-              <MultiSelect
-                name="department"
-                emit="repeat"
-                caseSensitive
-                noscript="checkboxes"
-                language={ctx.person.language}
-                selected={[]}
-                options={departmentOptions}
-              />
-              </div>
-            </fieldset>
-          )}
-          {choices.length > 0 && (
-            <fieldset className="form-group">
-              <legend className="form-group-head">{t.people}</legend>
-              <div className="card form-group-body form-group-body--rows">
-              <PeopleSearch
-                people={choices}
-                name="person"
-                language={ctx.person.language}
-                multiple
-                listLabel={t.people}
-                missing="people"
-              />
-              </div>
-            </fieldset>
-          )}
-          {/* Predvolene zaškrtnuté (Ján, 3. 10. 2026) — kto na trasu pribudne, má
-              sa to dozvedieť hneď, nie až z pripomienky pred termínom. Odškrtnúť
-              sa dá, takže e-mail ostáva rozhodnutím personalistu. */}
-          {track.isActive && (
-            <label className="form-row form-row--bare">
-              <input type="checkbox" role="switch" className="toggle" name="notify" value="1" defaultChecked />
-              <span className="form-row-main">
-                <span>{t.notifyAdded}</span>
-                <span className="form-row-sub">{t.notifyAddedHint}</span>
-              </span>
-            </label>
-          )}
-          <p style={{ margin: 0 }}>
-            <SubmitButton className="button" pendingLabel={dictionary(ctx.person.language).common.pending.adding}>{t.addSubmit}</SubmitButton>
-          </p>
-        </form>
-      </details>
-
       {/* ── zapnutie ── */}
 
-      <form action={setTrackActiveAction} style={{ margin: "0 0 32px" }}>
-        <input type="hidden" name="key" value={track.key} />
-        <input type="hidden" name="isActive" value={track.isActive ? "0" : "1"} />
-        <SubmitButton className="button button--quiet">
-          {track.isActive ? t.disable : t.enable}
-        </SubmitButton>
-      </form>
+      {/* Vratné — tiché, nie `--danger` (ZAKLAD-lista-ulozenia). */}
+      <section className="card more track-more">
+        <div className="more-head"><h2>{dictionary(ctx.person.language).common.moreActions}</h2></div>
+        <div className="more-row">
+          <div className="more-main">
+            <b>{track.isActive ? t.deactivateTitle : t.activateTitle}</b>
+            <span>{track.isActive ? t.deactivateNote : t.activateNote}</span>
+          </div>
+          <form action={setTrackActiveAction}>
+            <input type="hidden" name="key" value={track.key} />
+            <input type="hidden" name="isActive" value={track.isActive ? "0" : "1"} />
+            <SubmitButton className="button button--quiet">
+              {track.isActive ? t.disable : t.enable}
+            </SubmitButton>
+          </form>
+        </div>
+      </section>
 
     </div>
     </AppShell>

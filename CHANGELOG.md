@@ -4,6 +4,27 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nastavenia: jedno Uložiť na stránke a „Ďalšie akcie" (2026-10-07)
+
+Podľa návrhu ZAKLAD-lista-ulozenia:
+- **Prihlásenie, GDPR a úprava organizácie v správe platformy** majú jeden
+  formulár a jednu lištu „Uložiť", ktorá uloží všetky sekcie naraz. Keď jedna
+  sekcia neprejde kontrolou, neuloží sa nič.
+- **Lehoty uchovávania v GDPR** sa zapíšu len vtedy, keď sa zmenili.
+- **Odstrániť vlastné prihlásenie, vypnúť organizáciu a poslať pokyny
+  k doméne** sú v karte „Ďalšie akcie" pod formulárom. Nevratné kroky si
+  pýtajú potvrdenie kódom organizácie až po kliknutí.
+- **Domény:**
+  - „Požiadať o doménu" je hlavné tlačidlo a otvorí formulár;
+  - „Overiť" je tiché;
+  - odstránenie fungujúcej domény si pýta potvrdenie.
+- **Trasy:**
+  - „Pridať osoby" je hlavné tlačidlo a otvorí formulár na pridanie ľudí;
+  - názov, popis a termín sú jedny zbalené „Nastavenia trasy";
+  - zapnutie a vypnutie trasy je v „Ďalšie akcie".
+- **Oprava:** v správe platformy sa pri prihlásení ukazoval stav ako holé
+  „set" / „unset".
+
 ### Kanály: jedna položka pre správcu aj riešiteľa, Helpdesk zrušený (2026-10-07)
 
 Tickety sú pod kanálom. V menu je len **Kanály** a každý v nich vidí
