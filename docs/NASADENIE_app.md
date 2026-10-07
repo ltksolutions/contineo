@@ -611,6 +611,24 @@ organizácie.
 RBAC for Applications nahrádza staršie Application Access Policy. Potrebný je
 člen skupiny Organization Management.
 
+**Príprava (raz na stroji).** PowerShell 7 (`pwsh`, na macOS
+`brew install powershell`) a modul Exchange Online — bez neho ani po
+pripojení `New-ServicePrincipal` neexistuje:
+
+```powershell
+Install-Module ExchangeOnlineManagement -Scope CurrentUser
+Import-Module ExchangeOnlineManagement
+Connect-ExchangeOnline          # otvorí prehliadač na prihlásenie
+Get-Command New-ServicePrincipal, New-ManagementScope, New-ManagementRoleAssignment
+```
+
+Keď `Get-Command` po pripojení niektorý príkaz nenájde, účet **nemá rolu
+Organization Management** — Exchange načíta do relácie len príkazy, na ktoré
+má účet právo, ostatné hlási ako „is not recognized". Exchange admin center →
+Roles → Admin roles → Organization Management → pridať účet; potom
+`Disconnect-ExchangeOnline` a znova `Connect-ExchangeOnline` (rola sa
+prejaví do niekoľkých minút až hodiny).
+
 ```powershell
 Connect-ExchangeOnline
 

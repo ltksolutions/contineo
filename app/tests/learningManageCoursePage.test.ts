@@ -122,6 +122,8 @@ describe("/learning/manage/[courseKey]", () => {
     const html = await render({ tab: "parts", part: "uvod", editBlock: "t" })
     expect(html).toContain('name="markdown"')
     expect(html).toContain("Vitajte v kurze.</textarea>")
+    // Odkaz „Upraviť" je parameter na adrese časti (R3), nie `&` za cestou.
+    expect(await render({ tab: "parts", part: "uvod" })).toContain('href="/learning/manage/bozp/parts/uvod?editBlock=t#edit"')
   })
 
   it("nastavenia: formulár s tagmi (bez JS textarea), podpisujúci z organizácie, právny základ", async () => {

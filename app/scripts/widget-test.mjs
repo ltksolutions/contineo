@@ -2,15 +2,15 @@
  * widget-test.mjs — skúšobná stránka widgetu bez cudzieho systému (ADR-028, D166).
  *
  * Spustí malý HTTP server na povolenom pôvode kanála, vydá token podpísaný
- * tajomstvom kanála (to isté, čo by urobil ISSF) a vloží skript widgetu
+ * tajným kľúčom kanála (to isté, čo by urobil ISSF) a vloží skript widgetu
  * z Continea. Tak sa dá krok 5 vyskúšať naostro skôr, než token vydáva
  * prevádzkovateľ ISSF.
  *
- *   npm run widget:test -- --company SFZ --channel issf --origin http://localhost:4567 \
+ *   npm run widget:test -- --company SFZ --channel <kľúč kanála> --origin http://localhost:4567 \
  *     --app https://intranet.futbalsfz.sk --email jan@klub.sk --given Ján --family Letko --sub 1234567
  *
- * Predpoklady: kanál má tajomstvo widgetu a `--origin` je medzi jeho
- * povolenými pôvodmi (Organizácia → Helpdesk). Tajomstvo sa číta z databázy
+ * Kľúč kanála (UUID) je na obrazovke kanála v Kanáloch. Predpoklady: kanál
+ * má tajný kľúč a `--origin` je medzi jeho povolenými pôvodmi. Tajomstvo sa číta z databázy
  * a rozšifruje kľúčom `OAUTH_SECRET_ENCRYPTION_KEY` — rovnaký tvar ako
  * `lib/secrets.ts` (`v1.<iv>.<tag>.<cipher>`, AES-256-GCM, base64url).
  * Nič sa nezapisuje.
@@ -22,7 +22,8 @@ import { MongoClient } from "mongodb"
 
 const args = Object.fromEntries(process.argv.slice(2).map((a, i, all) => (a.startsWith("--") ? [a.slice(2), all[i + 1] ?? ""] : [])).filter(x => x.length))
 const company = args.company ?? "SFZ"
-const channelKey = args.channel ?? "issf"
+const channelKey = args.channel
+if (!channelKey) { console.error("Chýba --channel <kľúč kanála> (UUID z obrazovky kanála v Kanáloch)."); process.exit(1) }
 const origin = (args.origin ?? "http://localhost:4567").replace(/\/+$/, "")
 const app = (args.app ?? "https://intranet.futbalsfz.sk").replace(/\/+$/, "")
 const person = { sub: args.sub ?? "1234567", email: args.email ?? "test@example.com", given: args.given ?? "Test", family: args.family ?? "Osoba", roles: (args.roles ?? "klubový manažér").split(",").map(s => s.trim()).filter(Boolean), club: args.club ?? "FK Test", lang: args.lang ?? "sk" }
@@ -44,12 +45,12 @@ function sign(secret) {
 
 const client = new MongoClient(process.env.MONGODB_URI)
 await client.connect()
-const channel = await client.db(process.env.MONGODB_DB).collection("helpdesk_channels").findOne({ companyCode: company, key: channelKey })
+const channel = await client.db(process.env.MONGODB_DB).collection("channels").findOne({ companyCode: company, key: channelKey })
 await client.close()
 if (!channel) { console.error(`Kanál ${company}/${channelKey} neexistuje.`); process.exit(1) }
-if (!channel.widget?.secretEnc) { console.error("Kanál nemá tajomstvo widgetu — vytvor ho v Organizácia → Helpdesk."); process.exit(1) }
+if (!channel.widget?.secretEnc) { console.error("Kanál nemá tajný kľúč — vytvor ho v Kanáloch."); process.exit(1) }
 if (!(channel.widget.origins ?? []).some(o => o.replace(/\/+$/, "") === origin)) {
-  console.error(`Pôvod ${origin} nie je medzi povolenými pôvodmi kanála (${(channel.widget.origins ?? []).join(", ") || "žiadne"}). Pridaj ho v Organizácia → Helpdesk.`)
+  console.error(`Pôvod ${origin} nie je medzi povolenými pôvodmi kanála (${(channel.widget.origins ?? []).join(", ") || "žiadne"}). Pridaj ho v Kanáloch.`)
   process.exit(1)
 }
 const secret = decrypt(channel.widget.secretEnc, process.env.OAUTH_SECRET_ENCRYPTION_KEY ?? "")

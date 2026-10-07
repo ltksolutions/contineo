@@ -72,10 +72,13 @@ publikum, iný pridelený obsah. Preto nič z tohto rozhodnutia nie je
 
 ### D161 — Kanál helpdesku je entita organizácie
 
-Kolekcia `helpdesk_channels`. Jeden kanál má:
+Kolekcia `channels` (pôvodne `helpdesk_channels`, premenovaná s D169).
+Jeden kanál má:
 
-- `companyCode`, `key` (stabilný, v adrese a v tokene widgetu), názov,
-  popis publika;
+- `companyCode`, `key` — UUID pridelené pri založení, nie zadané človekom
+  (Ján 7. 10. 2026): je v adrese skriptu widgetu, v `aud` tokenu
+  a v `externalRef.widget.<key>` osôb, preto sa nemení a nenesie názov;
+  názov, popis publika;
 - **rozsah obsahu:** zoznam priečinkov knižnice (`folderIds`); do hľadania
   idú platné znenia dokumentov, ktorých `folderPath` niektorý z nich
   obsahuje — zúženie `searchScope()`, nie nový index. Kanál bez priečinkov

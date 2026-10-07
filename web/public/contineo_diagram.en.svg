@@ -83,18 +83,18 @@
     <text x="660" y="436" font-size="10.5" fill="#5f6368" textLength="150" lengthAdjust="spacingAndGlyphs">superseded: false · accessLevel</text>
   </g>
   <line x1="646" y1="448" x2="870" y2="448" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="465" font-size="11.5" fill="#0B6E2E" font-weight="600" textLength="65" lengthAdjust="spacingAndGlyphs">Collections:</text>
-  <text x="646" y="479" font-size="10" fill="#3c4043" textLength="182" lengthAdjust="spacingAndGlyphs">Content: documents · document_chunks</text>
-  <text x="646" y="492.5" font-size="10" fill="#3c4043" textLength="183" lengthAdjust="spacingAndGlyphs">Approval: approval_rounds · cms_folders</text>
-  <text x="646" y="506" font-size="10" fill="#3c4043" textLength="138" lengthAdjust="spacingAndGlyphs">People: persons · departments</text>
-  <text x="646" y="519.5" font-size="10" fill="#3c4043" textLength="206" lengthAdjust="spacingAndGlyphs">Assignment: onboarding_tracks · assignments</text>
-  <text x="646" y="533" font-size="10" fill="#3c4043" textLength="176" lengthAdjust="spacingAndGlyphs">Acknowledgement: acknowledgements</text>
-  <text x="646" y="546.5" font-size="10" fill="#3c4043" textLength="171" lengthAdjust="spacingAndGlyphs">Helpdesk: helpdesk_channels · tickets</text>
-  <text x="646" y="560" font-size="10" fill="#3c4043" textLength="163" lengthAdjust="spacingAndGlyphs">Training: courses · tests · certificates</text>
-  <text x="646" y="573.5" font-size="10" fill="#3c4043" textLength="178" lengthAdjust="spacingAndGlyphs">Oversight: audit · evaluations · ai_usage</text>
-  <line x1="646" y1="583" x2="870" y2="583" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="596" font-size="10" fill="#0B6E2E" textLength="189" lengthAdjust="spacingAndGlyphs">Evidence records are never changed (D24)</text>
-  <text x="646" y="606" font-size="9.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">correction = new record · revocation = revokedAt</text>
+  <text x="646" y="461" font-size="11.5" fill="#0B6E2E" font-weight="600" textLength="65" lengthAdjust="spacingAndGlyphs">Collections:</text>
+  <text x="646" y="474" font-size="10" fill="#3c4043" textLength="182" lengthAdjust="spacingAndGlyphs">Content: documents · document_chunks</text>
+  <text x="646" y="487" font-size="10" fill="#3c4043" textLength="183" lengthAdjust="spacingAndGlyphs">Approval: approval_rounds · cms_folders</text>
+  <text x="646" y="500" font-size="10" fill="#3c4043" textLength="138" lengthAdjust="spacingAndGlyphs">People: persons · departments</text>
+  <text x="646" y="513" font-size="10" fill="#3c4043" textLength="206" lengthAdjust="spacingAndGlyphs">Assignment: onboarding_tracks · assignments</text>
+  <text x="646" y="526" font-size="10" fill="#3c4043" textLength="176" lengthAdjust="spacingAndGlyphs">Acknowledgement: acknowledgements</text>
+  <text x="646" y="539" font-size="10" fill="#3c4043" textLength="171" lengthAdjust="spacingAndGlyphs">Helpdesk: helpdesk_channels · tickets</text>
+  <text x="646" y="552" font-size="10" fill="#3c4043" textLength="163" lengthAdjust="spacingAndGlyphs">Training: courses · tests · certificates</text>
+  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="178" lengthAdjust="spacingAndGlyphs">Oversight: audit · evaluations · ai_usage</text>
+  <line x1="646" y1="574" x2="870" y2="574" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="646" y="586" font-size="10" fill="#0B6E2E" textLength="189" lengthAdjust="spacingAndGlyphs">Evidence records are never changed (D24)</text>
+  <text x="646" y="598" font-size="9.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">correction = new record · revocation = revokedAt</text>
 
   <!-- AI VRSTVA -->
   <rect x="919" y="236" width="264" height="372" rx="14" fill="#E0F7FA" stroke="#00838F" stroke-width="2"/>
