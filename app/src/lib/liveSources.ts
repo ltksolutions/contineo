@@ -13,7 +13,7 @@
  */
 
 import type { ChunkResult } from "./mongoSearch"
-import { listConnectors, parseScopeRef, type Connector, type ConnectorScope, type ReductionPolicy } from "./connectors"
+import { listConnectors, parseScopeRef, connectorAllowed, type Connector, type ConnectorScope, type ReductionPolicy } from "./connectors"
 import { withClient, toolCaller, type CallContext } from "./mcp/client"
 import { profileFor, type LiveArticle } from "./mcp/profiles"
 
@@ -141,11 +141,15 @@ function scopesToAsk(c: Connector, refs: string[] | undefined): ConnectorScope[]
 export async function liveConnectorsFor(companyCode: string, accessLevel: "public" | "internal", scopeRefs?: string[]): Promise<Connector[]> {
   const all = await listConnectors(companyCode)
   const refIds = scopeRefs?.length ? new Set(scopeRefs.map(parseScopeRef).filter(Boolean).map(r => r!.connectorId)) : null
-  return all.filter(c =>
+  const usable = all.filter(c =>
     c.uses.retrieval.enabled && c.status === "connected" && profileFor(c.profile).search
     && (accessLevel === "internal" || c.uses.retrieval.accessLevel === "public")
     && (!refIds || refIds.has(c.id)),
   )
+  // Konektor, ktorý režim organizácie nepripúšťa, sa neponúkne ani pilulkou —
+  // inak by človek klikol a dostal len poznámku, že zdroj nestihol.
+  const allowed = await Promise.all(usable.map(c => connectorAllowed(companyCode, c.endpoint)))
+  return usable.filter((_, i) => allowed[i])
 }
 
 export async function liveSearch(input: LiveSearchInput): Promise<LiveSearchResult> {

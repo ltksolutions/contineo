@@ -28,7 +28,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary, formatDate } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { listConnectors, scopeRef } from "@/lib/connectors"
+import { listConnectors, scopeRef, connectorAllowed } from "@/lib/connectors"
 import { saveChannelAction, removeChannelAction, verifyMailboxAction, syncChannelAction, rotateWidgetSecretAction, mineFaqAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
@@ -64,8 +64,11 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   // Rozsahy živých zdrojov (ADR-029, D175): len konektory so zapnutým živým
   // zdrojom; konektor bez rozsahov ponúka jeden celý. Widget je verejný,
   // preto vidí len verejné konektory — interný by sa aj tak nevolal.
+  // Konektor, ktorý režim organizácie nepripúšťa, sa neponúka (ADR-002).
+  const allowedIds = new Set((await Promise.all(connectors.map(async k =>
+    (await connectorAllowed(ctx.tenant.companyCode, k.endpoint)) ? k.id : null))).filter(Boolean))
   const scopeOptions = connectors
-    .filter(k => k.uses.retrieval.enabled && (!isWidget || k.uses.retrieval.accessLevel === "public"))
+    .filter(k => allowedIds.has(k.id) && k.uses.retrieval.enabled && (!isWidget || k.uses.retrieval.accessLevel === "public"))
     .flatMap(k => (k.scopes.length ? k.scopes : [{ key: "", label: "" }]).map(s => ({
       value: scopeRef(k.id, s.key), label: s.key ? `${k.name} — ${s.label}` : k.name,
     })))
