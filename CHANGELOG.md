@@ -6,6 +6,10 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ### Helpdesk: synchronizácia každých 5 minút, interval pri kanáli (2026-10-08)
 
+Pri schránke kanála je **Interval synchronizácie** — 5, 15, 30, 60 minút
+alebo raz denne, predvolene 5. Vercel cron beží každých 5 minút (plán
+Pro) a synchronizuje len kanál, ktorému interval uplynul.
+
 ### MCP konektory: import článkov do knižnice (2026-10-08)
 
 Druhé použitie konektora (ADR-029 B). Konektor má prepínač **Povoliť import
@@ -38,9 +42,48 @@ Podľa návrhu ZAKLAD-vyber-skupin-a-znaciek:
 
 ### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
 
-Pri schránke kanála je **Interval synchronizácie** — 5, 15, 30, 60 minút
-alebo raz denne, predvolene 5. Vercel cron beží každých 5 minút (plán
-Pro) a synchronizuje len kanál, ktorému interval uplynul.
+**ADR-029.** Organizácia sa vie pripojiť k cudziemu MCP serveru (prvý je
+`mcp.sportnet.online`, dokumentácia Sportnetu a ISSF) a používať ho viacerými
+spôsobmi; v prvej fáze ako **živý zdroj**:
+- **Organizácia → Konektory:** adresa servera, profil, prihlásenie cez OAuth
+  (Pripojiť / Pripojiť znova / Odpojiť), zoznam nástrojov servera, rozsahy
+  a redukcia. Tokeny sú šifrované ako ostatné tajomstvá; na obrazovke je len
+  stav a kto pripojil.
+- **Asistent hľadá aj na serveri** súbežne s knižnicou. Citácia zo servera má
+  štítok **Živý zdroj** a vetu „neoverené kurátorom"; keď server nestihne,
+  odpoveď príde bez neho a pod zdrojmi je o tom poznámka.
+- **Prístupová úroveň je vlastnosť konektora** (predvolene interná): interný
+  konektor sa nedostane do návrhov odpovedí na tickety ani do widgetu.
+- **Rozsahy per kanál:** v nastavení kanála sa vyberá, ktoré výseky servera
+  (napr. ISSF) sa v kanáli používajú; filter posiela server.
+- **Pilulky rozsahu** na `/ask` (Knižnica / názov konektora), len keď je čo
+  prepínať.
+- **Redukcia:** zahodené sekcie, nahradené vzory a vynechané cesty — zúženie
+  pre interných čitateľov, nie záruka pre verejnosť.
+- Každé volanie servera má stopu (`connector_calls`), bez znenia otázky.
+- Profil `sportnet-docs` zahadzuje blok s profilom osoby a pokynmi pre
+  model, ktorý server vkladá pred každú odpoveď.
+
+### Nastavenia: jedno Uložiť na stránke a „Ďalšie akcie" (2026-10-07)
+
+Podľa návrhu ZAKLAD-lista-ulozenia:
+- **Prihlásenie, GDPR a úprava organizácie v správe platformy** majú jeden
+  formulár a jednu lištu „Uložiť", ktorá uloží všetky sekcie naraz. Keď jedna
+  sekcia neprejde kontrolou, neuloží sa nič.
+- **Lehoty uchovávania v GDPR** sa zapíšu len vtedy, keď sa zmenili.
+- **Odstrániť vlastné prihlásenie, vypnúť organizáciu a poslať pokyny
+  k doméne** sú v karte „Ďalšie akcie" pod formulárom. Nevratné kroky si
+  pýtajú potvrdenie kódom organizácie až po kliknutí.
+- **Domény:**
+  - „Požiadať o doménu" je hlavné tlačidlo a otvorí formulár;
+  - „Overiť" je tiché;
+  - odstránenie fungujúcej domény si pýta potvrdenie.
+- **Trasy:**
+  - „Pridať osoby" je hlavné tlačidlo a otvorí formulár na pridanie ľudí;
+  - názov, popis a termín sú jedny zbalené „Nastavenia trasy";
+  - zapnutie a vypnutie trasy je v „Ďalšie akcie".
+- **Oprava:** v správe platformy sa pri prihlásení ukazoval stav ako holé
+  „set" / „unset".
 
 ### Kanály: jedna položka pre správcu aj riešiteľa, Helpdesk zrušený (2026-10-07)
 
