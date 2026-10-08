@@ -14,6 +14,7 @@
 
 import { normalizeMeta, parseDate, metaCanonical, documentDraftIdentity, type VersionMeta } from "@/lib/versionMeta"
 import { redirect } from "next/navigation"
+import { tagsFromForm } from "@/lib/tagValues"
 import { revalidatePath } from "next/cache"
 import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
@@ -48,6 +49,8 @@ import { archiveDocument, restoreDocument, ArchiveError } from "@/lib/documentAr
 import { AppError } from "@/lib/appError"
 import { assignHref, summarize, type BulkOutcome } from "@/lib/libraryBulk"
 import { submitForApproval, cancelRound, markNotified } from "@/lib/approvalsDb"
+import { importArticles, resyncDocument } from "@/lib/connectorImport"
+import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { approvalEmail, send } from "@/lib/ecomail"
 import { requestHostname, currentTenant } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
@@ -179,6 +182,9 @@ export async function uploadAction(fd: FormData) {
 
   try {
     const files = await filesFromForm(fd)
+    // Zaškrtnuté + nové značky (ZAKLAD-vyber-skupin-a-znaciek); podobná nová
+    // sa nepridá a hlásenie to povie (Q3).
+    const tagged = await tagsFromForm(fd, self.companyCode, self.email, self.extras)
 
     // Organizácia je z prihláseného človeka, nie z formulára.
     const meta = checkMetadata({
@@ -191,7 +197,7 @@ export async function uploadAction(fd: FormData) {
       accessLevel: fieldText(fd, "accessLevel"),
       language: fieldText(fd, "language"),
       category: fieldText(fd, "category") || undefined,
-      tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
+      tags: tagged.tags,
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       internalNumber: fieldText(fd, "internalNumber") || undefined,
     }, self.extras)
@@ -204,11 +210,13 @@ export async function uploadAction(fd: FormData) {
     revalidatePath("/library")
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
     // a hľadať dokument v zozname je zbytočný krok.
-    redirect(`/library/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(
+    const skipped = tagged.similar.map(x => dictionary(self.language).valueSelect.similarSkipped(x.value, x.like))
+    redirect(`/library/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent([
       v.warnings.length
         ? say(self.language).convertedWithWarnings(v.warnings.join(" "))
         : say(self.language).converted,
-    )}`)
+      ...skipped,
+    ].join(" "))}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
     if (isRedirect(e)) throw e
@@ -831,14 +839,17 @@ export async function saveDocumentMetadataAction(fd: FormData) {
   const id = fieldText(fd, "documentId")
   let message = say(self.language).saved
   let error = false
+  let similar: { value: string; like: string }[] = []
   try {
+    const tagged = await tagsFromForm(fd, self.companyCode, self.email, self.extras)
+    similar = tagged.similar
     await saveMetadata(self.companyCode, id, {
       title: fieldText(fd, "title"),
       scope: fieldText(fd, "scope"),
       accessLevel: fieldText(fd, "accessLevel"),
       language: fieldText(fd, "language"),
       category: fieldText(fd, "category") || undefined,
-      tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
+      tags: tagged.tags,
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       internalNumber: fieldText(fd, "internalNumber") || undefined,
     }, self.email, self.extras)
@@ -855,6 +866,10 @@ export async function saveDocumentMetadataAction(fd: FormData) {
 
   revalidatePath("/library")
   revalidatePath(`/library/${id}`)
+  // Podobná nová značka sa nezaložila — úprava ukáže varovanie s voľbou (Q3).
+  if (!error && similar[0]) {
+    redirect(`/library/${encodeURIComponent(id)}/edit?msg=${encodeURIComponent(message)}&similar=${encodeURIComponent(similar[0].value)}&like=${encodeURIComponent(similar[0].like)}#tags`)
+  }
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
@@ -1566,6 +1581,7 @@ export async function createFaqAction(fd: FormData) {
   if (!self) redirect("/")
   const { createFaqDocument } = await import("@/lib/faq")
   try {
+    const tagged = await tagsFromForm(fd, self.companyCode, self.email, self.extras)
     const meta = checkMetadata({
       title: fieldText(fd, "title"),
       documentKey: fieldText(fd, "documentKey"),
@@ -1575,12 +1591,13 @@ export async function createFaqAction(fd: FormData) {
       accessLevel: fieldText(fd, "accessLevel"),
       language: fieldText(fd, "language"),
       category: "faq",
-      tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
+      tags: tagged.tags,
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
     }, self.extras)
     const r = await createFaqDocument(meta, self.email)
     revalidatePath("/library")
-    redirect(`/library/${encodeURIComponent(r.documentId)}/faq?msg=${encodeURIComponent(dictionary(self.language).library.faq.created)}`)
+    const skipped = tagged.similar.map(x => dictionary(self.language).valueSelect.similarSkipped(x.value, x.like))
+    redirect(`/library/${encodeURIComponent(r.documentId)}/faq?msg=${encodeURIComponent([dictionary(self.language).library.faq.created, ...skipped].join(" "))}`)
   } catch (e) {
     if (isRedirect(e)) throw e
     const q = new URLSearchParams({ error: errorMessage(e, self.language), title: fieldText(fd, "title"), documentKey: fieldText(fd, "documentKey") })
@@ -1633,4 +1650,64 @@ export async function removeFaqEntryAction(fd: FormData) {
     if (isRedirect(e)) throw e
     redirect(`${base}?error=${encodeURIComponent(errorMessage(e, self.language))}`)
   }
+}
+
+// ── Import z MCP konektora (ADR-029, použitie B) ────────────────────────────
+
+export async function importConnectorArticlesAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).library.connectorImport
+  const back = fieldText(fd, "back") || "/library/new/connector"
+  let message: string
+  try {
+    const out = await importArticles(self.companyCode, {
+      connectorId: fieldText(fd, "connectorId"),
+      externalIds: fd.getAll("externalId").filter((x): x is string => typeof x === "string"),
+      folderId: fieldText(fd, "folderId") || null,
+      category: fieldText(fd, "category"),
+      accessLevel: fieldText(fd, "accessLevel") || "internal",
+      language: fieldText(fd, "language") || "sk",
+      scope: fieldText(fd, "scope") || "company",
+      ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
+      tags: fd.getAll("tags").filter((x): x is string => typeof x === "string"),
+    }, self.email, self.language, self.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
+    const n = (r: string) => out.filter(o => o.result === r).length
+    message = t.done(n("created"), n("version"), n("unchanged"), n("failed"))
+    const failed = out.filter(o => o.result === "failed")
+    if (failed.length) message += " " + failed.map(o => `${o.title}: ${o.error ?? ""}`).join("; ")
+    revalidatePath("/library")
+    // Jeden nový dokument → rovno naň; viac → späť na výber so správou.
+    const created = out.filter(o => o.result !== "failed" && o.documentId)
+    if (created.length === 1 && out.length === 1) {
+      redirect(`/library/${encodeURIComponent(created[0].documentId!)}?msg=${encodeURIComponent(message)}`)
+    }
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    const sep = back.includes("?") ? "&" : "?"
+    redirect(`${back}${sep}error=${encodeURIComponent(errorMessage(e, self.language))}`)
+  }
+  const sep = back.includes("?") ? "&" : "?"
+  redirect(`${back}${sep}msg=${encodeURIComponent(message)}`)
+}
+
+export async function resyncConnectorDocumentAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).library.connectorImport
+  const id = fieldText(fd, "documentId")
+  let message: string
+  let failed = false
+  try {
+    const r = await resyncDocument(self.companyCode, id, self.email, self.language, self.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
+    if (r.result === "failed") { message = `${t.errorBefore}${r.error ?? ""}`; failed = true }
+    else message = r.result === "unchanged" ? t.resyncUnchanged : t.resyncVersion
+    revalidatePath("/library")
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, self.language); failed = true
+  }
+  const q = new URLSearchParams({ msg: message })
+  if (failed) q.set("error", "1")
+  redirect(`/library/${encodeURIComponent(id)}?${q.toString()}`)
 }

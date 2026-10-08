@@ -37,6 +37,18 @@ export const LEARNING_DETAIL_MONTHS = 12
  * nastaví v Ochrane údajov.
  */
 export const ANSWERS_MONTHS = 12
+/**
+ * Tickety helpdesku (ADR-028, D178) — mesiace od **zavretia**, potom sa ticket
+ * zmaže celý. Nie je to dôkazný záznam (D24): dokazuje prácu helpdesku, nie
+ * oboznámenie s predpisom. Organizácia si lehotu nastaví v Ochrane údajov.
+ */
+export const TICKET_MONTHS = 24
+/**
+ * Osoba z widgetu (druh `external`, D166, D168) bez aktivity tak dlho sa
+ * zmaže, ak nemá otvorený ticket (D178). Do intranetu nepatrí, takže by
+ * inak ostávala navždy.
+ */
+export const EXTERNAL_INACTIVE_MONTHS = 24
 /** `retention_log` — dlhšie než najdlhšia plánovaná retencia záloh (D102). */
 export const RETENTION_LOG_DAYS = 395
 
@@ -54,6 +66,8 @@ export interface RetentionSettings {
   learningDetailMonths: number
   /** Mesiace od otázky, potom sa záznam o otázke a odpovedi zmaže (H2). */
   answersMonths: number
+  /** Mesiace od zavretia ticketu, potom sa ticket zmaže (D178). */
+  ticketMonths: number
 }
 
 export const DEFAULT_RETENTION: RetentionSettings = {
@@ -61,6 +75,7 @@ export const DEFAULT_RETENTION: RetentionSettings = {
   capYears: CAP_YEARS,
   learningDetailMonths: LEARNING_DETAIL_MONTHS,
   answersMonths: ANSWERS_MONTHS,
+  ticketMonths: TICKET_MONTHS,
 }
 
 /** Rozsahy, ktoré obrazovka pustí — nula by znamenala „zmazať hneď". */
@@ -69,6 +84,7 @@ export const RETENTION_LIMITS = {
   capYears: [1, 15],
   learningDetailMonths: [1, 60],
   answersMonths: [1, 60],
+  ticketMonths: [1, 120],
 } as const
 
 const clampInt = (v: unknown, [min, max]: readonly [number, number], fallback: number) => {
@@ -87,6 +103,7 @@ export function retentionSettings(saved?: Partial<RetentionSettings> | null): Re
     capYears: Math.max(evidenceYears, clampInt(saved?.capYears, RETENTION_LIMITS.capYears, DEFAULT_RETENTION.capYears)),
     learningDetailMonths: clampInt(saved?.learningDetailMonths, RETENTION_LIMITS.learningDetailMonths, DEFAULT_RETENTION.learningDetailMonths),
     answersMonths: clampInt(saved?.answersMonths, RETENTION_LIMITS.answersMonths, DEFAULT_RETENTION.answersMonths),
+    ticketMonths: clampInt(saved?.ticketMonths, RETENTION_LIMITS.ticketMonths, DEFAULT_RETENTION.ticketMonths),
   }
 }
 

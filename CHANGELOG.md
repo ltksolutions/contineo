@@ -4,16 +4,97 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
-### Web contineo.app: MCP konektory ako živý zdroj (2026-10-08, ADR-029)
+### Helpdesk na stránke ochrany údajov a lehota ticketov (2026-10-08, D178)
 
-Obrázok architektúry má nový blok **Konektory (MCP) — živý zdroj, mimo
-knižnice** nad AI vrstvou: pri otázke sa hľadá súbežne s knižnicou,
-výsledky idú do reranku a citácia nesie štítok „živý zdroj, neoverené".
-V Zdrojoch namiesto „MCP konektory (pripravujeme)" ostáva len import
-z konektora do knižnice ako pripravovaný. Stránka Technológia (integrácie,
-stack, pilier Zdroje obsahu, bezpečnosť), Pripravujeme, Bezpečnosť
-(tabuľka dátových tokov) a blok GDPR spomínajú konektor, jeho prístupovú
-úroveň a stopu volaní. sk, cs, en; PNG pregenerovaná, kópia v docs rovnaká.
+- Stránka **Ochrana osobných údajov** opisuje helpdesk: na čo slúži, aké
+  údaje z e-mailu a z okna pomoci sa ukladajú, právny základ (oprávnený
+  záujem), lehoty a kto tickety číta. Len pri organizácii, ktorá má aspoň
+  jeden kanál.
+- **Zavretý ticket sa zmaže 24 mesiacov po zavretí**; lehotu si organizácia
+  zmení v Ochrane údajov pri ostatných lehotách. Otvorený ticket sa nemaže.
+- **Osoba z okna pomoci** sa zmaže po 24 mesiacoch bez otázky, ak nemá
+  otvorený ticket.
+- Obe mazania idú v nočnej dávke len pri zapnutom ostrom mazaní.
+
+### Karta osoby: sekcie, lišta uloženia, Ďalšie akcie (2026-10-08)
+
+- `/people/<id>` je formulár so sekciami **Osoba · Kontakt · Zaradenie ·
+  Jazyk a oslovenie · Skupiny a trasy · Roly** (nadpis vľavo, polia vpravo
+  od 1024 px). Skupiny, trasy a roly sú riadky priamo v sekcii — bez karty
+  v karte.
+- **Uložiť** je v lište prilepenej dole („Uloží všetky sekcie na tejto
+  stránke.") — na telefóne netreba posúvať na koniec.
+- „Prístup a členstvo" nahradila karta **Ďalšie akcie**: pozvánka, Vyradiť…
+  (potvrdenie sa otvorí až po kliknutí, `?exclude=1`), dátum skončenia
+  vzťahu a Vrátiť.
+- Pod hlavičkou ostal jeden riadok (e-mail · naposledy …); predošlé adresy
+  a „prihlasuje sa cez" sú poznámka pod e-mailom.
+- Reťaz dôkazov: riadok = dokument · stav · posledný krok, celá časová os
+  sa rozbalí v riadku.
+
+### Opýtať sa: predvolene len knižnica (2026-10-08)
+
+- Pri otázke sa **predvolene hľadá len v knižnici**. Pripojený konektor
+  (napr. Sportnet) si človek zapne pilulkou pod otázkou — vidieť to ešte pred
+  odpoveďou — alebo ho správca nastaví na **Používať predvolene pri otázke**.
+- Voľba piluliek je v adrese (`?src=`), takže prežije obnovenie aj odkaz.
+- Kanály sa nemenia — rozsah v nich vyberá správca kanála.
+
+### Skupiny a značky: jedno pole „Hľadať alebo pridať" (2026-10-08)
+
+Navrchu zoznamu skupín a značiek je vždy jedno pole „Hľadať alebo pridať".
+Písanie zoznam filtruje. Keď napísaná hodnota neexistuje, pod zoznamom sa
+ponúkne „+ Pridať „…"" a ťuknutím alebo Enterom sa hodnota pridá ako
+zaškrtnutý riadok. Pri presnej zhode Enter zaškrtne existujúcu. Bez
+JavaScriptu sa napísaný text uloží ako nová hodnota. Riadok „Nová skupina"
+na konci zoznamu zmizol.
+
+### Helpdesk: synchronizácia každých 5 minút, interval pri kanáli (2026-10-08)
+
+Pri schránke kanála je **Interval synchronizácie** — 5, 15, 30, 60 minút
+alebo raz denne, predvolene 5. Vercel cron beží každých 5 minút (plán
+Pro) a synchronizuje len kanál, ktorému interval uplynul.
+
+### MCP konektory: import článkov do knižnice (2026-10-08)
+
+Druhé použitie konektora (ADR-029 B). Konektor má prepínač **Povoliť import
+do knižnice**; kurátor potom v **Knižnica → Nahrať → Import zo servera**
+vyhľadá články a vybrané uloží ako koncepty dokumentov:
+- z každého článku vznikne koncept s textom a PDF vysádzaným aplikáciou —
+  ďalej ide bežnou cestou (metadáta, schválenie, zverejnenie);
+- zoznam ukáže, čo z tej istej cesty v knižnici už je a či sa článok na
+  serveri odvtedy zmenil;
+- dokument nesie **Zdroj** (konektor, cesta na serveri, kedy stiahnuté);
+  tlačidlo *Skontrolovať zmeny na serveri* stiahne článok znova a pri zmene
+  pripraví koncept nového znenia — zverejnené sa nemení;
+- redukcia konektora platí aj pre kópiu; prístupová úroveň je predvolene
+  interná.
+
+### Skupiny a značky ako zoznam namiesto pilulky (2026-10-08)
+
+Podľa návrhu ZAKLAD-vyber-skupin-a-znaciek:
+- **Zoznam:** skupiny osoby a značky dokumentu sa vyberajú v zozname
+  s krúžkom vľavo. Vpravo je počet ľudí alebo dokumentov.
+- **Nová hodnota:** jej pole je posledný riadok zoznamu a uloží sa spolu
+  s formulárom; tlačidlo „Pridať" netreba. Všetko funguje aj bez
+  JavaScriptu.
+- **Nová značka** pribudne do číselníka organizácie aj s názvom.
+- **Podobný názov:** nová hodnota, ktorá sa podobá na existujúcu (napr.
+  „rozhodcova" a „rozhodcovia"), sa neuloží a stránka ponúkne použiť
+  existujúcu alebo predsa len založiť novú.
+- **Hodnota, ktorú má len táto osoba alebo dokument,** je označená „len tu".
+- **Hľadanie:** pri 12 a viac možnostiach je nad zoznamom pole „Hľadať".
+### Web contineo.app: MCP konektory — živý zdroj a import (2026-10-08, ADR-029)
+
+Obrázok architektúry má blok **Konektory (MCP) — živý zdroj, mimo
+knižnice** nad AI vrstvou: zapína sa pilulkou pri otázke alebo predvolene,
+úseky zo servera idú popri knižnici a citácia nesie štítok „živý zdroj,
+neoverené". V Zdrojoch je **import z konektora** (článok ako koncept s PDF
+→ schválenie, kontrola zmien na serveri) ako hotový. Stránka Technológia
+(integrácie, stack, pilier Zdroje obsahu, bezpečnosť), Pripravujeme,
+Bezpečnosť (tabuľka dátových tokov) a blok GDPR spomínajú konektor, stopu
+volaní a lehotu ticketov helpdesku (D178). sk, cs, en; PNG pregenerovaná,
+kópia v docs rovnaká.
 
 ### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
 
@@ -164,6 +245,15 @@ adresách, napr. `/learning/manage/topics`, `/learning/manage/<kurz>/people`,
 a karta prehliadača tiež. Staré odkazy s `?tab=`, `?part=`, `?q=`
 a `?import=` presmerujú. Kurz nemôže mať kľúč `topics` ani `tags`, test nie
 `questions` ani `results`.
+
+### Tlačidlá ukazujú, že akcia beží (2026-10-06)
+
+Každé tlačidlo, ktoré niečo ukladá alebo odosiela, po kliknutí ukáže
+krúžok a zablokuje sa, kým akcia nedobehne — aj tlačidlá ostatné
+v tom istom formulári, takže sa nedá kliknúť dvakrát. Krúžok je len na
+tom, na ktoré sa kliklo. Dlhé akcie menia text: „Pridávam…" pri pridaní
+na trasu, „Posielam e-maily…" pri oznámeniach, pripomienkach a
+pozvánkach. Filtre a hľadanie sa nemenia — tie len načítajú stránku.
 
 ### Web contineo.app: kanály sú dva typy — widget a portál (2026-10-06)
 
@@ -331,6 +421,42 @@ posúdenie, detail a príprava dokumentu, schvaľovanie, zodpovedná osoba,
 právny základ, úprava kurzu a testu, otázka v banke. Na **Prideliť
 dokumenty** sú Dôvod a Termín dve samostatné skupiny vedľa seba a súhrn
 s tlačidlami má vlastnú kartu pod nimi. Mená a hodnoty polí sa nezmenili.
+
+### Pomocný editor členenia pri dokumente (2026-10-05, ADR-027)
+
+Dokument má stránku **Členenie** (`/library/<dokument>/chunks`): ako je
+narezaný na úseky, varovania (jeden blok, málo článkov, priveľké úseky,
+zlomky), skúšobný rez s inými parametrami, výber alebo uloženie
+pomenovaného profilu a **návrh od AI**, ktorý dostane len štruktúru
+dokumentu, nie celý text. Správca obsahu ho smie používať. Záložka
+Členenie v nastaveniach organizácie zmizla; preindexovanie celej knižnice
+je `npm run chunking:reindex`.
+
+Chunker pozná tučné nadpisy z Wordu (`# **Článok 1 – …**`) a časti
+v zápise „Časť I –". Smernice SFZ sa po oprave delia na 18 úsekov namiesto
+1–2; osem noriem bolo preindexovaných, znenia ani potvrdenia sa nezmenili.
+
+### Umelá inteligencia v nastaveniach organizácie (2026-10-05, ADR-026)
+
+Organizácia si zadá **vlastný kľúč Anthropic** (uložený šifrovane, pri
+uložení sa overí) a vyberie model pre odpovede, úpravu otázky a prepis
+skenov. Bez kľúča sa použije kľúč prevádzkovateľa. **Spotreba** ukazuje
+osobu, dátum, model, na čo a prečo sa volanie použilo, tokeny a sumu,
+s filtrom obdobia a exportom do CSV a Excelu. Text otázky sa neukladá,
+záznamy sa mažú po 25 mesiacoch; ochrana osobných údajov to opisuje vo
+všetkých troch jazykoch.
+
+### Telefón ako krajina a číslo (2026-10-05)
+
+Pri osobe sa telefón zadáva výberom krajiny s predvoľbou a číslom, ktoré
+sa overí podľa formátu zvolenej krajiny. Predvoľba v nastaveniach
+organizácie je výber krajiny namiesto voľného textu a slúži ako
+predvolená krajina pri osobe. Na telefóne sú obe polia pod sebou.
+
+### Reťaz dôkazov od najnovšieho (2026-10-05)
+
+Pridelené dokumenty → Reťaz dôkazov sú zoradené podľa dátumu, najnovšie
+navrchu.
 
 ### Web contineo.app: stránka Potvrdzovanie a GDPR na Bezpečnosti (2026-10-05)
 

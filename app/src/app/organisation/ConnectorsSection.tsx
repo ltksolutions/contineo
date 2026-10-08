@@ -45,12 +45,27 @@ function ConnectorForm({ c, language }: { c: ConnectorView | null; language: UiL
             <input type="checkbox" className="toggle" role="switch" name="retrievalEnabled" defaultChecked={r?.enabled ?? true} />
             <span>{t.retrievalOn}</span>
           </label>
+          <label className="form-row form-row--bare">
+            <input type="checkbox" className="toggle" role="switch" name="retrievalDefaultOn" defaultChecked={r?.defaultOn ?? false} />
+            <span>{t.defaultOn}</span>
+          </label>
+          <span className="quiet field-hint">{t.defaultOnNote}</span>
           <div className="field">
             <span className="field-label">{t.accessLevel}</span>
             <Select language={language} name="accessLevel" fieldLabel={t.accessLevel} initial={r?.accessLevel ?? "internal"}
               options={[{ value: "internal", label: t.accessInternal }, { value: "public", label: t.accessPublic }]} />
             <span className="quiet field-hint">{t.accessHint}</span>
           </div>
+        </div>
+      </section>
+
+      <section className="set-sec">
+        <div className="set-sec-head"><h2>{t.ingestOn}</h2><p>{t.ingestNote}</p></div>
+        <div className="set-sec-body">
+          <label className="form-row form-row--bare">
+            <input type="checkbox" className="toggle" role="switch" name="ingestEnabled" defaultChecked={c?.uses.ingest.enabled ?? false} />
+            <span>{t.ingestOn}</span>
+          </label>
         </div>
       </section>
 

@@ -12,6 +12,7 @@
  */
 
 import { redirect } from "next/navigation"
+import { readValues, splitSimilar } from "@/lib/valueSelect"
 import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
 import { peopleContext, savePerson, invitePerson, setPersonStatus, setPersonEndedAt, neverSignedIn, loadPersonById, markInvitationSent } from "@/lib/people"
@@ -74,7 +75,7 @@ import type { ImportSettings } from "@/lib/personsImport"
 import { tenantByCompanyCode } from "@/lib/tenants"
 import { allTracks } from "@/lib/tracks"
 import { availableOptions } from "@/lib/codelistsTenant"
-import { previewImport, upsertPersons } from "@/lib/persons"
+import { audiencesInOrg, previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType, RowPlan } from "@/lib/persons"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
@@ -101,10 +102,6 @@ function fieldText(fd: FormData, actorName: string): string {
   return typeof v === "string" ? v.trim() : ""
 }
 
-function listField(fd: FormData, actorName: string): string[] {
-  return fieldText(fd, actorName).split(/[,;\n]/).map(x => x.trim()).filter(Boolean)
-}
-
 function errorMessage(e: unknown, language: UiLanguage): string {
   if (!(e instanceof AppError)) console.error("[osoby] akcia zlyhala:", e)
   return errorText(e, language)
@@ -117,6 +114,9 @@ export async function savePersonAction(fd: FormData) {
   const id = fieldText(fd, "id")
   let message = ""
   let error = false
+  const groupValues = readValues(fd, "groups")
+  const known = (await audiencesInOrg(actor.companyCode)).groups.map(g => g.value)
+  const { keep: groupsKept, similar } = splitSimilar(groupValues.fresh, known, groupValues.forced)
   try {
     await savePerson(actor.companyCode, id, {
       email: fieldText(fd, "email"),
@@ -140,7 +140,9 @@ export async function savePersonAction(fd: FormData) {
       // Trasy zo zaškrtávacích políčok podľa názvu (2. 10. 2026); neprítomná
       // hodnota znamená „odobrať", ako pri rolách.
       tracks: fd.getAll("track").filter((v): v is string => typeof v === "string"),
-      groups: listField(fd, "groups"),
+      // Zaškrtnuté + nové z poľa „Nová skupina" (ZAKLAD-vyber-skupin-a-znaciek);
+      // podobné nové sa neuložia (Q3) — viď `similar` nižšie.
+      groups: [...groupValues.picked, ...groupsKept],
       // Zaškrtávacie políčka: neprítomná hodnota znamená „odobrať".
       roles: fd.getAll("roles").filter((r): r is string => typeof r === "string"),
     }, actor.email)
@@ -151,7 +153,9 @@ export async function savePersonAction(fd: FormData) {
   }
 
   revalidatePath("/people")
-  redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  // Podobná nová skupina sa neuložila — stránka ukáže varovanie s voľbou (Q3).
+  const warn = !error && similar[0] ? `&similar=${encodeURIComponent(similar[0].value)}&like=${encodeURIComponent(similar[0].like)}#groups` : ""
+  redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}${warn}`)
 }
 
 /**
@@ -283,7 +287,10 @@ export async function togglePersonStatusAction(fd: FormData) {
   }
 
   revalidatePath("/people")
-  redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  // Chyba vyradenia (zlá adresa na potvrdenie) nechá kartu vyradenia otvorenú
+  // (OSOBY-karta-osoby Q1, 8. 10. 2026).
+  const reopen = error && toStatus === "inactive" ? "&exclude=1#more" : ""
+  redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}${reopen}`)
 }
 
 /**

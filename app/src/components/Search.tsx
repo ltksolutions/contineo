@@ -37,6 +37,7 @@ export default function Search({
   organisation,
   language,
   liveSources,
+  initialScope,
 }: {
   /**
    * Otázka z adresy — položená v hlavičke. Číta sa len pri pripojení
@@ -57,12 +58,20 @@ export default function Search({
    * Pilulky rozsahu sa kreslia, len keď je čo prepínať — s prázdnym
    * zoznamom je vstup jediný a štyri tlačidlá by nič nemenili.
    */
-  liveSources?: { id: string; name: string }[]
+  liveSources?: { id: string; name: string; defaultOn?: boolean }[]
+  /** Rozsah z adresy (`?src=`); prázdny = knižnica a zdroje s „používať predvolene". */
+  initialScope?: string[]
 }) {
   const t = dictionary(language).ask
   const [state, setState] = useState<AnswerState>(EMPTY)
-  /** Rozsah z piluliek: `"library"` a id konektorov; prázdne = všetko. */
-  const [only, setOnly] = useState<string[]>([])
+  /**
+   * Rozsah z piluliek: `"library"` a id konektorov — vždy výslovný zoznam.
+   * Predvolene len knižnica a konektory s „používať predvolene" (Ján
+   * 8. 10. 2026); čo sa hľadá, má byť vidieť ešte pred odpoveďou.
+   */
+  const [only, setOnly] = useState<string[]>(() =>
+    initialScope?.length ? initialScope : ["library", ...(liveSources ?? []).filter(l => l.defaultOn).map(l => l.id)],
+  )
   /** Kedy sa beh spustil — „Opýtali ste sa o 10:42". Len v prehliadači. */
   const [askedAt, setAskedAt] = useState<Date | null>(null)
   const [recordId, setRecordId] = useState<string | null>(null)
@@ -129,7 +138,7 @@ export default function Search({
       const v = await askQuestion(
         q,
         p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase, time: p.time, comparison: p.comparison })),
-        { signal: ctrl.signal, language, only: scope.length ? scope : undefined }
+        { signal: ctrl.signal, language, only: scope }
       )
       setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time, comparison: v.comparison })
       if (!v.error && v.text) void record(q, v)
@@ -167,12 +176,19 @@ export default function Search({
    * filter nad tou istou. Aspoň jedna ostáva zapnutá.
    */
   const scopeIds = ["library", ...(liveSources ?? []).map(l => l.id)]
-  const isOn = (id: string) => only.length === 0 || only.includes(id)
+  const isOn = (id: string) => only.includes(id)
   const toggleScope = (id: string) => {
-    const next = scopeIds.filter(x => (x === id ? !isOn(x) : isOn(x)))
-    if (next.length === 0) return
-    const scope = next.length === scopeIds.length ? [] : next
+    const scope = scopeIds.filter(x => (x === id ? !isOn(x) : isOn(x)))
+    if (scope.length === 0) return
     setOnly(scope)
+    // Voľba do adresy, aby prežila obnovenie a dala sa poslať odkazom.
+    try {
+      const u = new URL(window.location.href)
+      u.pathname = "/ask"
+      u.searchParams.set("q", preset)
+      u.searchParams.set("src", scope.join(","))
+      window.history.replaceState(null, "", u.toString())
+    } catch { /* bez adresy sa dá žiť — rozsah je v stave */ }
     void send(preset, scope)
   }
 
@@ -284,7 +300,8 @@ export default function Search({
         </div>
       )}
 
-      <AnswerBody state={state} organisation={organisation} language={language} />
+      <AnswerBody state={state} organisation={organisation} language={language}
+                  scope={{ library: only.includes("library"), live: (liveSources ?? []).filter(l => only.includes(l.id)).map(l => l.name) }} />
       </div>
 
       {/* Vpravo od karty (≥ 1180 px), inak pod ňou — poradie určuje CSS mriežka. */}

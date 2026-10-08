@@ -348,6 +348,17 @@ interface Dictionary {
       automated: string
       rights: string
     }
+    /**
+     * Časti o helpdesku (ADR-028, D178) — len keď má organizácia aspoň jeden
+     * kanál. `{tickets}` doplní stránka z lehôt organizácie.
+     */
+    helpdesk: {
+      purpose: string
+      data: [string, string][]
+      basis: string
+      retention: [string, string][]
+      recipients: string
+    }
     rightsHeading: string
     rights: string
     objection: string
@@ -514,6 +525,8 @@ interface Dictionary {
       learningDetailMonthsNote: string
       answersMonths: string
       answersMonthsNote: string
+      ticketMonths: string
+      ticketMonthsNote: string
       fixed: string
       warning: string
       save: string
@@ -805,6 +818,10 @@ interface Dictionary {
     askedAt: (time: string) => string
     /** Hlavička karty odpovede so skratkou organizácie. */
     answerKicker: (organisation: string) => string
+    /** Hlavička, keď sa hľadalo len v živých zdrojoch (ADR-029). */
+    answerKickerLive: (names: string, count: number) => string
+    /** Hlavička, keď sa hľadalo v knižnici aj v živých zdrojoch. */
+    answerKickerBoth: (organisation: string, names: string, count: number) => string
     /** Tretí stav obrazovky (ASK, úloha 1): na otázku sa z dokumentov nedá odpovedať. */
     none: {
       kicker: string; text: string; link: string
@@ -1123,9 +1140,23 @@ interface Dictionary {
     hint: string
   }
 
-  tags: {
-    empty: string
-    add: string
+  /** Výber skupín a značiek (`ValueSelect`, ZAKLAD-vyber-skupin-a-znaciek). */
+  valueSelect: {
+    onlyHere: string
+    notInCodelist: string
+    searchOf: (shown: number, total: number) => string
+    groups: { count: (n: number) => string; combo: string; addOnly: string; addSub: string; foot: string; emptyFoot: string }
+    tags: { count: (n: number) => string; combo: string; addOnly: string; addSub: string; foot: string; emptyFoot: string }
+    /** Riadok „+ Pridať „…“ pod zoznamom (Q6). */
+    addValue: (value: string) => string
+    /** Varovanie pri podobnom názve (Q3). */
+    similar: (value: string, like: string) => string
+    similarGroupNote: string
+    similarTagNote: string
+    pickLike: (like: string) => string
+    createAnyway: (value: string) => string
+    /** Nový dokument: podobná značka sa nepridala. */
+    similarSkipped: (value: string, like: string) => string
   }
 
   /**
@@ -1529,6 +1560,10 @@ interface Dictionary {
       secRetrieval: string
       secRetrievalNote: string
       retrievalOn: string
+      defaultOn: string
+      defaultOnNote: string
+      ingestOn: string
+      ingestNote: string
       accessLevel: string
       accessInternal: string
       accessPublic: string
@@ -1963,6 +1998,17 @@ interface Dictionary {
       save: string
       /** Súhrn `<details>` „Prístup a členstvo" (OSOBY.md, úloha 3). */
       accessSummary: string
+      sectionPerson: string
+      sectionContact: string
+      sectionPlacement: string
+      sectionLanguage: string
+      sectionGroups: string
+      sectionRoles: string
+      excludeOpen: string
+      excludeRowNote: string
+      excludeConfirmTitle: (name: string) => string
+      cancel: string
+      dutyTimeline: string
       /** Prázdne dôkazy na karte osoby (OSOBY.md, úloha 4). */
       evidenceEmptyTitle: string
       evidenceEmptyText: string
@@ -2312,6 +2358,9 @@ interface Dictionary {
     syncError: (code: string) => string
     syncCounts: (created: number, appended: number, skipped: number) => string
     syncSinceHint: string
+    syncInterval: string
+    syncIntervalHint: string
+    syncIntervalOption: (minutes: number) => string
     syncDone: (created: number, appended: number, beforeStart: number) => string
     verify: string
     verified: (address: string, name: string) => string
@@ -3149,6 +3198,44 @@ interface Dictionary {
       failed: string
     }
     /** FAQ ako druh dokumentu (ADR-028, D164): založenie, editor záznamov, texty znenia a indexu. */
+    /** Import článkov z MCP konektora (ADR-029, použitie B). */
+    connectorImport: {
+      heading: string
+      intro: string
+      /** Odkaz z nahrávania. */
+      newLink: string
+      noConnector: string
+      noConnectorLink: string
+      connector: string
+      scope: string
+      query: string
+      queryPlaceholder: string
+      queryHint: string
+      search: string
+      nothingFound: string
+      errorBefore: string
+      pick: (n: number) => string
+      alreadySame: string
+      alreadyChanged: string
+      open: string
+      metaNote: string
+      folder: string
+      folderNone: string
+      accessHint: string
+      import: string
+      afterNote: string
+      done: (created: number, versions: number, unchanged: number, failed: number) => string
+      /** Riadok pod názvom v PDF: odkiaľ článok je. */
+      pdfOrigin: (connector: string, path: string) => string
+      /** Detail dokumentu: blok „Zdroj". */
+      sourceHeading: string
+      sourceLine: (connector: string, group: string | null, date: string) => string
+      sourcePath: string
+      resync: string
+      resyncHint: string
+      resyncUnchanged: string
+      resyncVersion: string
+    }
     faq: {
       newHeading: string
       newIntro: string
@@ -4212,6 +4299,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         automated: "Test vyhodnocuje systém automaticky podľa vopred určených správnych odpovedí. Ak s výsledkom nesúhlasíte, obráťte sa na zodpovednú osobu za test — výsledok preverí a pokus môže zrušiť, aby ste ho mohli zopakovať. O nič iné sa automatizovane nerozhoduje.",
         rights: "Výmaz vydaného certifikátu nie je možný — uchováva sa na účely archivácie a ako doklad, ktorý môžete potrebovať aj vy.",
       },
+      helpdesk: {
+        purpose: "Organizácia cez neho vybavuje aj otázky, ktoré jej ľudia pošlú e-mailom do schránky helpdesku alebo položia v okne pomoci (widget) na webe či v inom systéme organizácie.",
+        data: [
+          ["e-mail do schránky helpdesku: meno a adresa odosielateľa, predmet, text správ vo vlákne vrátane citovanej predchádzajúcej korešpondencie; pri prílohách len názov a veľkosť", "aby sa otázka dala vybaviť a odpoveď prišla v tom istom vlákne"],
+          ["otázka v okne pomoci: meno, e-mail, identifikátor v systéme, z ktorého prichádzate (napríklad registračné číslo v ISSF), roly a klub", "aby odpoveď vychádzala z obsahu určeného pre vás a riešiteľ vedel, komu odpovedá; do intranetu vás to neprihlási"],
+          ["odpoveď helpdesku: text, kto ju poslal a kedy", "doklad o vybavení otázky"],
+        ],
+        basis: "Otázky v helpdesku sa spracúvajú na základe oprávneného záujmu (čl. 6 ods. 1 písm. f) GDPR) — vybaviť otázku, ktorú ste sami položili.",
+        retention: [
+          ["ticket helpdesku so správami", "{tickets} od jeho zavretia; otvorený ticket sa nemaže"],
+          ["záznam o osobe z okna pomoci", "24 mesiacov od poslednej otázky, ak nemá otvorený ticket"],
+        ],
+        recipients: "Tickety čítajú len riešitelia kanála, ktorému sú určené; správca organizácie vidí len ich počet. Odpoveď navrhne umelá inteligencia a pred odoslaním ju vždy prečíta a schváli človek. E-maily ostávajú aj v schránke organizácie u jej poskytovateľa pošty (napríklad Microsoft 365). Z histórie schránky môže umelá inteligencia navrhnúť všeobecné otázky a odpovede (FAQ); osobné údaje sa z textu pred spracovaním odstraňujú a e-maily sa pritom neukladajú.",
+      },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
       objection: "Pri predpisoch s oprávneným záujmom máte právo namietať. Námietku posúdi zodpovedná osoba jednotlivo a doklad sa do jej rozhodnutia nemaže. Výmaz dokladu o oboznámení pred uplynutím lehoty nie je možný, kým je potrebný na preukázanie, uplatnenie alebo obhajobu právnych nárokov.",
@@ -4375,7 +4476,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       learningDetailMonthsNote: "Potom sa z testov zmažú odpovede a zo sledovania videa pozreté úseky. Výsledok a dokončenie zostávajú.",
       answersMonths: "Mesiace pre otázky a odpovede",
       answersMonthsNote: "Potom sa otázky, odpovede a ich hodnotenie zmažú. Záznamy, z ktorých vznikla overená odpoveď, ostanú bez mena toho, kto sa pýtal.",
-      fixed: "Pevné pre celú platformu (riadi ich databáza): čas strávený nad znením 12 mesiacov, pripomienky 90 dní, audit 24 mesiacov, spotreba umelej inteligencie 25 mesiacov. Certifikáty sa nemažú.",
+      ticketMonths: "Mesiace pre tickety helpdesku",
+      ticketMonthsNote: "Plynú od zavretia ticketu; potom sa ticket zmaže celý aj so správami. Otvorený ticket sa nemaže.",
+      fixed: "Pevné pre celú platformu (riadi ich databáza): čas strávený nad znením 12 mesiacov, pripomienky 90 dní, audit 24 mesiacov, spotreba umelej inteligencie 25 mesiacov. Certifikáty sa nemažú. Osoba z widgetu sa zmaže po 24 mesiacoch bez aktivity, ak nemá otvorený ticket.",
       warning: "Skrátenie lehoty môže pri zapnutom ostrom mazaní zmazať záznamy hneď v najbližšej nočnej dávke.",
       save: "Uložiť lehoty",
       saved: "Lehoty uložené.",
@@ -4620,6 +4723,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     edit: "Upraviť otázku",
     askedAt: time => `Opýtali ste sa o ${time}`,
     answerKicker: org => `Odpoveď z dokumentov ${org}`,
+    answerKickerLive: (names, count) => `Odpoveď ${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
+    answerKickerBoth: (org, names, count) => `Odpoveď z dokumentov ${org} a ${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
     none: {
       kicker: "V dokumentoch organizácie sa k tomu nič nenašlo",
       text: "Skúste otázku inak, alebo hľadajte v knižnici — nie všetko je v predpisoch.",
@@ -4897,9 +5002,33 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     hint: "Poradie sa zapíše až tlačidlom.",
   },
 
-  tags: {
-    empty: "Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.",
-    add: "Pridať",
+  valueSelect: {
+    onlyHere: "len tu",
+    notInCodelist: "nie je v číselníku",
+    searchOf: (shown, total) => `${shown} z ${total}`,
+    addValue: v => `Pridať „${v}“`,
+    groups: {
+      count: n => n === 1 ? "1 človek" : n >= 2 && n <= 4 ? `${n} ľudia` : `${n} ľudí`,
+      combo: "Hľadať alebo pridať skupinu",
+      addOnly: "Pridať skupinu",
+      addSub: "nová skupina",
+      foot: "Nová skupina vznikne uložením osoby. Viac skupín oddeľte čiarkou.",
+      emptyFoot: "Zatiaľ žiadna skupina — vznikne prvou, ktorú napíšete.",
+    },
+    tags: {
+      count: n => n === 1 ? "1 dokument" : n >= 2 && n <= 4 ? `${n} dokumenty` : `${n} dokumentov`,
+      combo: "Hľadať alebo pridať značku",
+      addOnly: "Pridať značku",
+      addSub: "nová značka",
+      foot: "Nová značka vznikne uložením dokumentu a pribudne do číselníka organizácie. Viac značiek oddeľte čiarkou.",
+      emptyFoot: "Zatiaľ žiadna značka — vznikne prvou, ktorú napíšete.",
+    },
+    similar: (v, like) => `„${v}“ sme neuložili: podobá sa na existujúcu „${like}“.`,
+    similarGroupNote: "Ostatné údaje osoby sú uložené. Vyberte, čo platí, a uložte znova.",
+    similarTagNote: "Ostatné údaje dokumentu sú uložené. Vyberte, čo platí, a uložte znova.",
+    pickLike: like => `Použiť „${like}“`,
+    createAnyway: v => `Založiť „${v}“`,
+    similarSkipped: (v, like) => `Značku „${v}“ sme nepridali — podobá sa na „${like}“. Pridajte ju v úprave dokumentu.`,
   },
   multiSelect: {
     searchHint: "hľadať…",
@@ -5502,8 +5631,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.notConnected": "Konektor nie je pripojený.",
     "connector.timeout": "Server neodpovedal včas.",
     "connector.unauthorized": "Prihlásenie ku konektoru vypršalo — pripojte ho znova.",
+    "connector.ingestOff": "Konektor nemá zapnutý import do knižnice.",
+    "connector.noImportProfile": "Profil tohto servera import nepodporuje.",
+    "connector.nothingSelected": "Nie je vybraný žiadny článok.",
+    "library.notFromConnector": "Tento dokument nevznikol z konektora.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
     "helpdesk.kind": "Neznámy typ kanála.",
+    "helpdesk.syncInterval": "Neznámy interval synchronizácie.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
     "ticket.notFound": "Taký ticket tu nie je.",
@@ -5745,6 +5879,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Živý zdroj",
       secRetrievalNote: "Pri otázke sa popri knižnici zavolá aj server. Výsledok obišiel kurátora, preto je v citácii označený ako neoverený.",
       retrievalOn: "Používať ako živý zdroj",
+      defaultOn: "Používať predvolene pri otázke",
+      defaultOnNote: "Vypnuté: na portáli sa predvolene hľadá len v knižnici a tento zdroj si človek zapne pilulkou pod otázkou. Kanálov sa to netýka — tam rozsah vyberá správca kanála.",
+      ingestOn: "Povoliť import do knižnice",
+      ingestNote: "Kurátor môže články zo servera uložiť ako koncepty dokumentov (Knižnica → Nahrať → Import zo servera).",
       accessLevel: "Prístupová úroveň",
       accessInternal: "Interná — len prihlásení na portáli",
       accessPublic: "Verejná — aj widget a návrhy odpovedí na tickety",
@@ -6214,6 +6352,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evidenceEmptyTitle: "Žiadne pridelené dokumenty",
       evidenceEmptyText: "Tejto osobe zatiaľ nikto nepridelil normu na potvrdenie.",
       accessSummary: "Prístup a členstvo",
+      sectionPerson: "Osoba",
+      sectionContact: "Kontakt",
+      sectionPlacement: "Zaradenie",
+      sectionLanguage: "Jazyk a oslovenie",
+      sectionGroups: "Skupiny a trasy",
+      sectionRoles: "Roly",
+      excludeOpen: "Vyradiť…",
+      excludeRowNote: "Neprihlási sa a nedostane nové povinnosti. Potvrdenia ostávajú.",
+      excludeConfirmTitle: n => `Vyradiť ${n}?`,
+      cancel: "Zrušiť",
+      dutyTimeline: "Časová os",
       returnHeading: "Vrátiť osobu",
       excludeHeading: "Vyradiť osobu",
       inviteHeading: "Pozvánka",
@@ -6533,6 +6682,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncError: (code: string) => `posledná chyba: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplnené ${appended} · preskočené ${skipped}`,
     syncSinceHint: "Prvé spustenie len označí začiatok: staršie správy sa ticketmi nestanú, história ide do ťažby FAQ.",
+    syncInterval: "Interval synchronizácie",
+    syncIntervalHint: "Ako často sa schránka kontroluje automaticky. Synchronizovať teraz funguje kedykoľvek.",
+    syncIntervalOption: (m: number) => (m >= 1440 ? "raz denne" : m >= 60 ? "každú hodinu" : `každých ${m} minút`),
     syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizácia prebehla: nové tickety ${created}, doplnené ${appended}, správ z histórie preskočených ${beforeStart}.`,
     verify: "Overiť spojenie",
     verified: (address: string, name: string) => `Spojenie funguje: ${address}${name ? ` (${name})` : ""}.`,
@@ -7280,6 +7432,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Príprava je uložená.",
       carryOverFailed: "Znenie je zverejnené, prenos pridelení sa ale nepodaril:",
       failed: "Nepodarilo sa to. Skús to znova.",
+    },
+    connectorImport: {
+      heading: "Import zo servera",
+      intro: "Vyhľadaj články na pripojenom MCP serveri a vybrané ulož ako koncepty dokumentov. Ďalej idú bežnou cestou: metadáta, schválenie, zverejnenie. Server nemá zoznam súborov — vyberá sa z výsledkov hľadania.",
+      newLink: "Články z pripojeného servera (napr. Sportnet) sa importujú tu →",
+      noConnector: "Žiadny pripojený konektor nemá zapnutý import do knižnice.",
+      noConnectorLink: "Konektory organizácie",
+      connector: "Konektor",
+      scope: "Rozsah",
+      query: "Čo hľadať",
+      queryPlaceholder: "zmena hesla, registrácia hráča…",
+      queryHint: "Jedna otázka alebo téma; server vráti najviac 10 článkov.",
+      search: "Hľadať",
+      nothingFound: "Server nič nenašiel.",
+      errorBefore: "Hľadanie zlyhalo: ",
+      pick: n => `Vybrať články (${n})`,
+      alreadySame: "V knižnici už je, bez zmeny na serveri.",
+      alreadyChanged: "V knižnici už je — na serveri sa odvtedy zmenil; import založí koncept nového znenia.",
+      open: "Otvoriť",
+      metaNote: "Platí pre všetky nové dokumenty z tohto výberu; pri existujúcich sa metadáta nemenia.",
+      folder: "Priečinok",
+      folderNone: "Bez priečinka",
+      accessHint: "Článok z vývojárskej dokumentácie je interný, kým ho kurátor neprepíše pre verejnosť.",
+      import: "Importovať vybrané",
+      afterNote: "Z každého článku vznikne koncept s PDF a textom; otvor ho, uprav a pošli na schválenie.",
+      done: (created, versions, unchanged, failed) => `Import hotový: ${created} nových, ${versions} nových znení, ${unchanged} bez zmeny, ${failed} zlyhalo.`,
+      pdfOrigin: (connector, path) => `Zdroj: ${connector} · ${path}`,
+      sourceHeading: "Zdroj",
+      sourceLine: (connector, group, date) => `Z konektora ${connector}${group ? ` (${group})` : ""}, stiahnuté ${date}.`,
+      sourcePath: "Cesta na serveri",
+      resync: "Skontrolovať zmeny na serveri",
+      resyncHint: "Článok sa stiahne znova; keď sa zmenil, vznikne koncept nového znenia. Zverejnené sa nemení.",
+      resyncUnchanged: "Na serveri sa nič nezmenilo.",
+      resyncVersion: "Článok sa zmenil — koncept nového znenia je pripravený.",
     },
     faq: {
       newHeading: "Nové FAQ – časté otázky",
@@ -8303,6 +8489,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         automated: "Test vyhodnocuje systém automaticky podle předem určených správných odpovědí. Pokud s výsledkem nesouhlasíte, obraťte se na odpovědnou osobu za test — výsledek prověří a pokus může zrušit, abyste ho mohli zopakovat. O ničem jiném se automatizovaně nerozhoduje.",
         rights: "Výmaz vydaného certifikátu není možný — uchovává se pro účely archivace a jako doklad, který můžete potřebovat i vy.",
       },
+      helpdesk: {
+        purpose: "Organizace jeho prostřednictvím vyřizuje i dotazy, které jí lidé pošlou e-mailem do schránky helpdesku nebo položí v okně nápovědy (widget) na webu či v jiném systému organizace.",
+        data: [
+          ["e-mail do schránky helpdesku: jméno a adresa odesílatele, předmět, text zpráv ve vlákně včetně citované předchozí korespondence; u příloh jen název a velikost", "aby se dotaz dal vyřídit a odpověď přišla ve stejném vlákně"],
+          ["dotaz v okně nápovědy: jméno, e-mail, identifikátor v systému, ze kterého přicházíte (například registrační číslo v ISSF), role a klub", "aby odpověď vycházela z obsahu určeného pro vás a řešitel věděl, komu odpovídá; do intranetu vás to nepřihlásí"],
+          ["odpověď helpdesku: text, kdo ji poslal a kdy", "doklad o vyřízení dotazu"],
+        ],
+        basis: "Dotazy v helpdesku se zpracovávají na základě oprávněného zájmu (čl. 6 odst. 1 písm. f) GDPR) — vyřídit dotaz, který jste sami položili.",
+        retention: [
+          ["tiket helpdesku se zprávami", "{tickets} od jeho uzavření; otevřený tiket se nemaže"],
+          ["záznam o osobě z okna nápovědy", "24 měsíců od posledního dotazu, pokud nemá otevřený tiket"],
+        ],
+        recipients: "Tikety čtou jen řešitelé kanálu, kterému jsou určeny; správce organizace vidí jen jejich počet. Odpověď navrhne umělá inteligence a před odesláním ji vždy přečte a schválí člověk. E-maily zůstávají i ve schránce organizace u jejího poskytovatele pošty (například Microsoft 365). Z historie schránky může umělá inteligence navrhnout obecné otázky a odpovědi (FAQ); osobní údaje se z textu před zpracováním odstraňují a e-maily se přitom neukládají.",
+      },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
       objection: "U předpisů s oprávněným zájmem máte právo vznést námitku. Námitku posoudí pověřenec jednotlivě a doklad se do jeho rozhodnutí nemaže. Výmaz dokladu o seznámení před uplynutím lhůty není možný, dokud je potřebný k prokázání, uplatnění nebo obhajobě právních nároků.",
@@ -8466,7 +8666,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       learningDetailMonthsNote: "Potom se z testů smažou odpovědi a ze sledování videa zhlédnuté úseky. Výsledek a dokončení zůstávají.",
       answersMonths: "Měsíce pro otázky a odpovědi",
       answersMonthsNote: "Potom se otázky, odpovědi a jejich hodnocení smažou. Záznamy, ze kterých vznikla ověřená odpověď, zůstanou bez jména toho, kdo se ptal.",
-      fixed: "Pevné pro celou platformu (řídí je databáze): čas strávený nad zněním 12 měsíců, připomínky 90 dní, audit 24 měsíců, spotřeba umělé inteligence 25 měsíců. Certifikáty se nemažou.",
+      ticketMonths: "Měsíce pro tikety helpdesku",
+      ticketMonthsNote: "Běží od uzavření tiketu; potom se tiket smaže celý i se zprávami. Otevřený tiket se nemaže.",
+      fixed: "Pevné pro celou platformu (řídí je databáze): čas strávený nad zněním 12 měsíců, připomínky 90 dní, audit 24 měsíců, spotřeba umělé inteligence 25 měsíců. Certifikáty se nemažou. Osoba z widgetu se smaže po 24 měsících bez aktivity, pokud nemá otevřený tiket.",
       warning: "Zkrácení lhůty může při zapnutém ostrém mazání smazat záznamy hned v nejbližší noční dávce.",
       save: "Uložit lhůty",
       saved: "Lhůty uloženy.",
@@ -8711,6 +8913,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     edit: "Upravit otázku",
     askedAt: time => `Zeptali jste se v ${time}`,
     answerKicker: org => `Odpověď z dokumentů ${org}`,
+    answerKickerLive: (names, count) => `Odpověď ${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
+    answerKickerBoth: (org, names, count) => `Odpověď z dokumentů ${org} a ${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
     none: {
       kicker: "V dokumentech organizace se k tomu nic nenašlo",
       text: "Zkuste otázku jinak, nebo hledejte v knihovně — ne všechno je v předpisech.",
@@ -8988,9 +9192,33 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     hint: "Pořadí se zapíše až tlačítkem.",
   },
 
-  tags: {
-    empty: "Zatím tu žádné nejsou. První vytvoříš dole.",
-    add: "Přidat",
+  valueSelect: {
+    onlyHere: "jen zde",
+    notInCodelist: "není v číselníku",
+    searchOf: (shown, total) => `${shown} z ${total}`,
+    addValue: v => `Přidat „${v}“`,
+    groups: {
+      count: n => n === 1 ? "1 člověk" : n >= 2 && n <= 4 ? `${n} lidé` : `${n} lidí`,
+      combo: "Hledat nebo přidat skupinu",
+      addOnly: "Přidat skupinu",
+      addSub: "nová skupina",
+      foot: "Nová skupina vznikne uložením osoby. Více skupin oddělte čárkou.",
+      emptyFoot: "Zatím žádná skupina — vznikne první, kterou napíšete.",
+    },
+    tags: {
+      count: n => n === 1 ? "1 dokument" : n >= 2 && n <= 4 ? `${n} dokumenty` : `${n} dokumentů`,
+      combo: "Hledat nebo přidat značku",
+      addOnly: "Přidat značku",
+      addSub: "nová značka",
+      foot: "Nová značka vznikne uložením dokumentu a přibude do číselníku organizace. Více značek oddělte čárkou.",
+      emptyFoot: "Zatím žádná značka — vznikne první, kterou napíšete.",
+    },
+    similar: (v, like) => `„${v}“ jsme neuložili: podobá se existující „${like}“.`,
+    similarGroupNote: "Ostatní údaje osoby jsou uložené. Vyberte, co platí, a uložte znovu.",
+    similarTagNote: "Ostatní údaje dokumentu jsou uložené. Vyberte, co platí, a uložte znovu.",
+    pickLike: like => `Použít „${like}“`,
+    createAnyway: v => `Založit „${v}“`,
+    similarSkipped: (v, like) => `Značku „${v}“ jsme nepřidali — podobá se „${like}“. Přidejte ji v úpravě dokumentu.`,
   },
   multiSelect: {
     searchHint: "hledat…",
@@ -9593,8 +9821,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.notConnected": "Konektor není připojen.",
     "connector.timeout": "Server neodpověděl včas.",
     "connector.unauthorized": "Přihlášení ke konektoru vypršelo — připojte ho znovu.",
+    "connector.ingestOff": "Konektor nemá zapnutý import do knihovny.",
+    "connector.noImportProfile": "Profil tohoto serveru import nepodporuje.",
+    "connector.nothingSelected": "Není vybrán žádný článek.",
+    "library.notFromConnector": "Tento dokument nevznikl z konektoru.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
     "helpdesk.kind": "Neznámý typ kanálu.",
+    "helpdesk.syncInterval": "Neznámý interval synchronizace.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
     "ticket.notFound": "Takový ticket tady není.",
@@ -9836,6 +10069,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Živý zdroj",
       secRetrievalNote: "Při dotazu se vedle knihovny zavolá i server. Výsledek obešel kurátora, proto je v citaci označen jako neověřený.",
       retrievalOn: "Používat jako živý zdroj",
+      defaultOn: "Používat výchozím způsobem při dotazu",
+      defaultOnNote: "Vypnuto: na portálu se výchozím způsobem hledá jen v knihovně a tento zdroj si člověk zapne pilulkou pod dotazem. Kanálů se to netýká — tam rozsah vybírá správce kanálu.",
+      ingestOn: "Povolit import do knihovny",
+      ingestNote: "Kurátor může články ze serveru uložit jako koncepty dokumentů (Knihovna → Nahrát → Import ze serveru).",
       accessLevel: "Přístupová úroveň",
       accessInternal: "Interní — jen přihlášení na portálu",
       accessPublic: "Veřejná — i widget a návrhy odpovědí na tickety",
@@ -10305,6 +10542,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evidenceEmptyTitle: "Žádné přidělené dokumenty",
       evidenceEmptyText: "Této osobě zatím nikdo nepřidělil předpis k potvrzení.",
       accessSummary: "Přístup a členství",
+      sectionPerson: "Osoba",
+      sectionContact: "Kontakt",
+      sectionPlacement: "Zařazení",
+      sectionLanguage: "Jazyk a oslovení",
+      sectionGroups: "Skupiny a trasy",
+      sectionRoles: "Role",
+      excludeOpen: "Vyřadit…",
+      excludeRowNote: "Nepřihlásí se a nedostane nové povinnosti. Potvrzení zůstávají.",
+      excludeConfirmTitle: n => `Vyřadit ${n}?`,
+      cancel: "Zrušit",
+      dutyTimeline: "Časová osa",
       returnHeading: "Vrátit osobu",
       excludeHeading: "Vyřadit osobu",
       inviteHeading: "Pozvánka",
@@ -10622,6 +10870,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncError: (code: string) => `poslední chyba: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplněné ${appended} · přeskočené ${skipped}`,
     syncSinceHint: "První spuštění jen označí začátek: starší zprávy se tickety nestanou, historie jde do těžby FAQ.",
+    syncInterval: "Interval synchronizace",
+    syncIntervalHint: "Jak často se schránka kontroluje automaticky. Synchronizovat teď funguje kdykoli.",
+    syncIntervalOption: (m: number) => (m >= 1440 ? "jednou denně" : m >= 60 ? "každou hodinu" : `každých ${m} minut`),
     syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizace proběhla: nové tickety ${created}, doplněné ${appended}, zpráv z historie přeskočeno ${beforeStart}.`,
     verify: "Ověřit spojení",
     verified: (address: string, name: string) => `Spojení funguje: ${address}${name ? ` (${name})` : ""}.`,
@@ -11368,6 +11619,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Příprava je uložena.",
       carryOverFailed: "Znění je zveřejněno, přenos přidělení se ale nepodařil:",
       failed: "Nepodařilo se to. Zkus to znovu.",
+    },
+    connectorImport: {
+      heading: "Import ze serveru",
+      intro: "Vyhledej články na připojeném MCP serveru a vybrané ulož jako koncepty dokumentů. Dál jdou běžnou cestou: metadata, schválení, zveřejnění. Server nemá seznam souborů — vybírá se z výsledků hledání.",
+      newLink: "Články z připojeného serveru (např. Sportnet) se importují zde →",
+      noConnector: "Žádný připojený konektor nemá zapnutý import do knihovny.",
+      noConnectorLink: "Konektory organizace",
+      connector: "Konektor",
+      scope: "Rozsah",
+      query: "Co hledat",
+      queryPlaceholder: "změna hesla, registrace hráče…",
+      queryHint: "Jedna otázka nebo téma; server vrátí nejvýše 10 článků.",
+      search: "Hledat",
+      nothingFound: "Server nic nenašel.",
+      errorBefore: "Hledání selhalo: ",
+      pick: n => `Vybrat články (${n})`,
+      alreadySame: "V knihovně už je, beze změny na serveru.",
+      alreadyChanged: "V knihovně už je — na serveru se od té doby změnil; import založí koncept nového znění.",
+      open: "Otevřít",
+      metaNote: "Platí pro všechny nové dokumenty z tohoto výběru; u existujících se metadata nemění.",
+      folder: "Složka",
+      folderNone: "Bez složky",
+      accessHint: "Článek z vývojářské dokumentace je interní, dokud ho kurátor nepřepíše pro veřejnost.",
+      import: "Importovat vybrané",
+      afterNote: "Z každého článku vznikne koncept s PDF a textem; otevři ho, uprav a pošli ke schválení.",
+      done: (created, versions, unchanged, failed) => `Import hotov: ${created} nových, ${versions} nových znění, ${unchanged} beze změny, ${failed} selhalo.`,
+      pdfOrigin: (connector, path) => `Zdroj: ${connector} · ${path}`,
+      sourceHeading: "Zdroj",
+      sourceLine: (connector, group, date) => `Z konektoru ${connector}${group ? ` (${group})` : ""}, staženo ${date}.`,
+      sourcePath: "Cesta na serveru",
+      resync: "Zkontrolovat změny na serveru",
+      resyncHint: "Článek se stáhne znovu; když se změnil, vznikne koncept nového znění. Zveřejněné se nemění.",
+      resyncUnchanged: "Na serveru se nic nezměnilo.",
+      resyncVersion: "Článek se změnil — koncept nového znění je připraven.",
     },
     faq: {
       newHeading: "Nové FAQ – časté otázky",
@@ -12385,6 +12670,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         automated: "Tests are scored automatically against answers set in advance. If you disagree with a result, contact the person responsible for the test — they will review it and can cancel the attempt so that you can take it again. No other decisions are made by automated means.",
         rights: "An issued certificate cannot be erased — it is kept for archiving and as proof you may need yourself.",
       },
+      helpdesk: {
+        purpose: "The organisation also uses it to handle questions people send by e-mail to the helpdesk mailbox or ask in the help window (widget) on the website or in another of the organisation's systems.",
+        data: [
+          ["e-mail to the helpdesk mailbox: sender's name and address, subject, the text of the messages in the thread including quoted earlier correspondence; for attachments only the name and size", "so the question can be handled and the answer arrives in the same thread"],
+          ["question in the help window: name, e-mail, identifier in the system you come from (for example your ISSF registration number), roles and club", "so the answer draws on the content meant for you and the agent knows who they are answering; it does not sign you in to the intranet"],
+          ["helpdesk answer: text, who sent it and when", "a record that the question was handled"],
+        ],
+        basis: "Helpdesk questions are processed on the basis of legitimate interest (Art. 6(1)(f) GDPR) — to answer a question you asked yourself.",
+        retention: [
+          ["helpdesk ticket with its messages", "{tickets} after it is closed; an open ticket is never deleted"],
+          ["record of a person from the help window", "24 months after their last question, unless they have an open ticket"],
+        ],
+        recipients: "Tickets are read only by the agents of the channel they are meant for; the organisation's administrator sees only how many there are. Artificial intelligence drafts the answer, and a person always reads and approves it before it is sent. E-mails also remain in the organisation's mailbox with its e-mail provider (for example Microsoft 365). Artificial intelligence may suggest general questions and answers (FAQ) from the mailbox history; personal data is removed from the text before processing and the e-mails are not stored.",
+      },
       rightsHeading: "Your rights",
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
       objection: "For documents based on legitimate interest you have the right to object. The data protection officer assesses each objection individually and the evidence is not deleted before the decision. Evidence of having read a document cannot be deleted before the end of the period while it is needed to establish, exercise or defend legal claims.",
@@ -12548,7 +12847,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       learningDetailMonthsNote: "After that, answers are removed from tests and watched segments from video tracking. The result and completion remain.",
       answersMonths: "Months for questions and answers",
       answersMonthsNote: "Then questions, answers and their ratings are deleted. Records that became a verified answer stay, without the name of the person who asked.",
-      fixed: "Fixed for the whole platform (enforced by the database): time spent on a version 12 months, reminders 90 days, audit 24 months, artificial intelligence usage 25 months. Certificates are never deleted.",
+      ticketMonths: "Months for helpdesk tickets",
+      ticketMonthsNote: "Counted from when the ticket is closed; then the whole ticket including its messages is deleted. An open ticket is never deleted.",
+      fixed: "Fixed for the whole platform (enforced by the database): time spent on a version 12 months, reminders 90 days, audit 24 months, artificial intelligence usage 25 months. Certificates are never deleted. A person from the widget is deleted after 24 months without activity unless they have an open ticket.",
       warning: "Shortening a period may delete records in the very next nightly run when real deletion is switched on.",
       save: "Save periods",
       saved: "Periods saved.",
@@ -12793,6 +13094,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     edit: "Edit question",
     askedAt: time => `Asked at ${time}`,
     answerKicker: org => `Answer from ${org} documents`,
+    answerKickerLive: names => `Answer from ${names}`,
+    answerKickerBoth: (org, names) => `Answer from ${org} documents and ${names}`,
     none: {
       kicker: "Nothing on this was found in the organisation's documents",
       text: "Try rephrasing the question, or search the library — not everything is in the regulations.",
@@ -13068,9 +13371,33 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     hint: "The order is written only when you press the button.",
   },
 
-  tags: {
-    empty: "There are none yet. Create the first one below.",
-    add: "Add",
+  valueSelect: {
+    onlyHere: "only here",
+    notInCodelist: "not in the code list",
+    searchOf: (shown, total) => `${shown} of ${total}`,
+    addValue: v => `Add “${v}”`,
+    groups: {
+      count: n => n === 1 ? "1 person" : `${n} people`,
+      combo: "Search or add a group",
+      addOnly: "Add a group",
+      addSub: "new group",
+      foot: "A new group is created when the person is saved. Separate several groups with commas.",
+      emptyFoot: "No group yet — the first one you type creates it.",
+    },
+    tags: {
+      count: n => n === 1 ? "1 document" : `${n} documents`,
+      combo: "Search or add a tag",
+      addOnly: "Add a tag",
+      addSub: "new tag",
+      foot: "A new tag is created when the document is saved and joins the organisation's code list. Separate several tags with commas.",
+      emptyFoot: "No tag yet — the first one you type creates it.",
+    },
+    similar: (v, like) => `We did not save “${v}”: it looks like the existing “${like}”.`,
+    similarGroupNote: "The rest of the person is saved. Choose which applies and save again.",
+    similarTagNote: "The rest of the document is saved. Choose which applies and save again.",
+    pickLike: like => `Use “${like}”`,
+    createAnyway: v => `Create “${v}”`,
+    similarSkipped: (v, like) => `We did not add the tag “${v}” — it looks like “${like}”. Add it when editing the document.`,
   },
   multiSelect: {
     searchHint: "search…",
@@ -13673,8 +14000,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.notConnected": "The connector is not connected.",
     "connector.timeout": "The server did not answer in time.",
     "connector.unauthorized": "The connector sign-in has expired — connect it again.",
+    "connector.ingestOff": "The connector has library import switched off.",
+    "connector.noImportProfile": "This server profile does not support import.",
+    "connector.nothingSelected": "No article is selected.",
+    "library.notFromConnector": "This document did not come from a connector.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
     "helpdesk.kind": "Unknown channel type.",
+    "helpdesk.syncInterval": "Unknown sync interval.",
     "helpdesk.noTickets": "The channel has tickets switched off.",
     "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
     "ticket.notFound": "There is no such ticket here.",
@@ -13916,6 +14248,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Live source",
       secRetrievalNote: "When asked, the server is called alongside the library. The result bypassed the curator, so the citation marks it as unreviewed.",
       retrievalOn: "Use as a live source",
+      defaultOn: "Use by default when asking",
+      defaultOnNote: "Off: on the portal the library is searched by default and a person switches this source on with the pill under the question. Channels are unaffected — their scope is chosen by the channel admin.",
+      ingestOn: "Allow import into the library",
+      ingestNote: "A curator can save articles from the server as document drafts (Library → Upload → Import from a server).",
       accessLevel: "Access level",
       accessInternal: "Internal — signed-in portal users only",
       accessPublic: "Public — also the widget and ticket draft answers",
@@ -14385,6 +14721,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evidenceEmptyTitle: "No documents assigned",
       evidenceEmptyText: "Nobody has assigned this person a document to acknowledge yet.",
       accessSummary: "Access and membership",
+      sectionPerson: "Person",
+      sectionContact: "Contact",
+      sectionPlacement: "Placement",
+      sectionLanguage: "Language and address",
+      sectionGroups: "Groups and tracks",
+      sectionRoles: "Roles",
+      excludeOpen: "Deactivate…",
+      excludeRowNote: "They can no longer sign in or receive new duties. Acknowledgements stay.",
+      excludeConfirmTitle: n => `Deactivate ${n}?`,
+      cancel: "Cancel",
+      dutyTimeline: "Timeline",
       returnHeading: "Reinstate the person",
       excludeHeading: "Exclude the person",
       inviteHeading: "Invitation",
@@ -14702,6 +15049,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncError: (code: string) => `last error: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `new tickets ${created} · appended ${appended} · skipped ${skipped}`,
     syncSinceHint: "The first run only marks the start: older messages do not become tickets, history goes to FAQ mining.",
+    syncInterval: "Sync interval",
+    syncIntervalHint: "How often the mailbox is checked automatically. Sync now works at any time.",
+    syncIntervalOption: (m: number) => (m >= 1440 ? "once a day" : m >= 60 ? "every hour" : `every ${m} minutes`),
     syncDone: (created: number, appended: number, beforeStart: number) => `Synchronisation finished: new tickets ${created}, appended ${appended}, history messages skipped ${beforeStart}.`,
     verify: "Verify connection",
     verified: (address: string, name: string) => `The connection works: ${address}${name ? ` (${name})` : ""}.`,
@@ -15442,6 +15792,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Preparation saved.",
       carryOverFailed: "The version is published, but carrying over assignments failed:",
       failed: "That did not work. Try again.",
+    },
+    connectorImport: {
+      heading: "Import from a server",
+      intro: "Search articles on a connected MCP server and save the selected ones as document drafts. From there they take the usual path: metadata, approval, publication. The server has no file list — you pick from search results.",
+      newLink: "Articles from a connected server (e.g. Sportnet) are imported here →",
+      noConnector: "No connected connector has library import enabled.",
+      noConnectorLink: "Organisation connectors",
+      connector: "Connector",
+      scope: "Scope",
+      query: "What to search for",
+      queryPlaceholder: "password change, player registration…",
+      queryHint: "One question or topic; the server returns at most 10 articles.",
+      search: "Search",
+      nothingFound: "The server found nothing.",
+      errorBefore: "Search failed: ",
+      pick: n => `Select articles (${n})`,
+      alreadySame: "Already in the library, unchanged on the server.",
+      alreadyChanged: "Already in the library — changed on the server since; import creates a draft of a new version.",
+      open: "Open",
+      metaNote: "Applies to all new documents from this selection; existing ones keep their metadata.",
+      folder: "Folder",
+      folderNone: "No folder",
+      accessHint: "An article from developer documentation is internal until a curator rewrites it for the public.",
+      import: "Import selected",
+      afterNote: "Each article becomes a draft with a PDF and text; open it, edit and send for approval.",
+      done: (created, versions, unchanged, failed) => `Import finished: ${created} new, ${versions} new versions, ${unchanged} unchanged, ${failed} failed.`,
+      pdfOrigin: (connector, path) => `Source: ${connector} · ${path}`,
+      sourceHeading: "Source",
+      sourceLine: (connector, group, date) => `From connector ${connector}${group ? ` (${group})` : ""}, fetched ${date}.`,
+      sourcePath: "Path on the server",
+      resync: "Check for changes on the server",
+      resyncHint: "The article is fetched again; if it changed, a draft of a new version is created. Published versions stay as they are.",
+      resyncUnchanged: "Nothing changed on the server.",
+      resyncVersion: "The article changed — a draft of a new version is ready.",
     },
     faq: {
       newHeading: "New FAQ",

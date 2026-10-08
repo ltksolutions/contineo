@@ -10,6 +10,93 @@
 
 ---
 
+## 2026-10-08 — karta osoby (OSOBY-karta-osoby)
+
+**Čo sa zmenilo:**
+- `/people/[id]` prešla na `.set-form` so šiestimi `.set-sec` a `.set-savebar`.
+  Mená polí a `savePersonAction` ostali, takže server sa nemenil.
+- `ValueSelect` dostal `variant="rows"`: `fieldset.sec-rows` bez vlastnej
+  karty. Trasy a roly majú rovnaký tvar napísaný priamo v stránke.
+- `<details>` „Prístup a členstvo" → `section.more#more`. Potvrdenie
+  vyradenia je až pri `?exclude=1`; chyba pri vyradení vracia späť na
+  `?exclude=1#more`, aby človek nestratil rozpísané.
+- Zmazané nepoužité triedy `.ex*` a `.evidence-head`.
+
+**Čo stálo čas:** riadky `.sec-rows` siahajú cez odsadenie sekcie
+(`margin: 0 -22px`). Od 1024 px by tak vliezli do ľavého stĺpca s nadpisom,
+preto tam majú zápor len vpravo. A `legend` s `sec-rows-head` aj `sr-only`
+naraz pretiekla o 265 px — pri rolách ostala len `sr-only`.
+
+---
+
+## 2026-10-08 — „Hľadať alebo pridať" (ZAKLAD-vyber-skupin-a-znaciek Q6)
+
+**Čo sa zmenilo:**
+- **Komponent:** `ValueSearch` (od 12 možností) a riadok `.form-row--new`
+  nahradil klientsky ostrov `ValueCombo`. Je to pole `${name}New` navrchu
+  karty pri každom počte.
+- **Pridané hodnoty:** ostrov ich vkladá cez portál do `.sel-added` ako
+  zaškrtnuté checkboxy `${name}New`, nie `${name}`. Server ich teda berie
+  ako nové a pri značkách z nich urobí kľúč a skontroluje podobnosť.
+- **Overenie interakcie** v Chromiu na stránke zbalenej cez esbuild
+  (filtrovanie, Enter pri presnej zhode, „+ Pridať", Enter neodošle
+  formulár). Jsdom v projekte nie je.
+
+**Rozhodnutie podľa `.md`, nie rámu:** „+ Pridať" sa ponúkne, keď sa text
+**presne** nezhoduje so žiadnou hodnotou (aj pri „ko", kde sú čiastočné
+zhody). Rám to pri „ko" nekreslí, popis v `.md` hovorí o presnej zhode.
+---
+
+## 2026-10-08 — výber skupín a značiek (ZAKLAD-vyber-skupin-a-znaciek, P8)
+
+**Čo sa zmenilo:**
+- **Komponenty:** `TagSelect` zmizol, nahradil ho serverový `ValueSelect`
+  (natívne checkboxy, pole `${name}New`). Hľadanie rieši klientsky ostrov
+  `ValueSearch`, ktorý sa bez JS nevykreslí.
+- **Čisté funkcie** sú v `lib/valueSelect.ts` (`readValues`,
+  `similarValue`, `splitSimilar`).
+- **Značky** spracuje `lib/tagValues.ts` (`tagsFromForm`): z novej hodnoty
+  urobí kľúč cez `slugifyKey` a položku založí v číselníku cez
+  `addCodelistItem`.
+- **`tagOptions`** vracia `{ value, label, count }` jednou agregáciou.
+
+**Odchýlka:** voľby pri podobnom názve sú odkazy, ktoré formulár pripravia
+(`pick=like` zaškrtne existujúcu, `pick=new` vyplní novú so skrytým
+`…Force`). Uloží ich hlavné tlačidlo, nie samostatné malé formuláre.
+Samostatný zápis jednej skupiny alebo značky by potreboval novú zapisovaciu
+cestu popri `savePerson` / `saveMetadata`, vrátane kópie značiek v chunkoch.
+
+Pri novom dokumente a FAQ sa podobná značka len vynechá a hlásenie to
+povie — formulár s nahratým súborom sa vrátiť nedá.
+
+**Popri tom:** `TagSelect` posielal značky ako jedno pole „a, b"
+a `checkValue` ho pre čiarku odmietal. `readValues` rozdelí aj tento starý
+tvar.
+
+---
+
+## 2026-10-08 — MCP konektory, fáza 2: import s pôvodom
+
+**Ráno:** PR #307 zlúčený, nasadený, pripojené naostro — a hneď dva nálezy
+z prvej otázky: citácia zo živého zdroja mala „Otvoriť v knižnici" (404)
+a odpoveď prepustila názvy tried z kódu (`ObnovaHeslaPage`). Prvé opravené
+v `main`, druhé vzorom v redukcii konektora (`\b[A-Z][a-z]+(?:[A-Z][a-z0-9]+)+\b`).
+Druhá otázka už bola čistá. Poučenie: redukcia sa ladí na živých otázkach,
+nie na jednom článku.
+
+**Fáza 2 (PR #311):** import je **použitie**, nie samostatný adaptér —
+`uploadDocument()` dostane Markdown a PDF, ďalej je to bežný dokument.
+Otázka Jána: *sú PDF pre MCP zdroje nutné?* Odpoveď: áno, ale automaticky —
+ADR-011 drží schvaľovanie aj potvrdenie na PDF a výnimka pre jeden zdroj by
+bola druhá vetva cez celú cestu. `markdownPdf.ts` sádže z Markdownu
+deterministicky (pevný čas v metadátach), takže odtlačok znenia sedí.
+
+**Čo nevyšlo:** import sa lokálne overiť nedal — token konektora je po
+produkčnom „Pripojiť znova" pod produkčným kľúčom a lokálna relácia
+medzitým vypršala. Overenie ide na produkciu.
+
+---
+
 ## 2026-10-07 — MCP konektory: prvý skutočný server prekonal júnový návrh (ADR-029)
 
 **Zadanie znelo** „pridať ďalší zdroj, `mcp.sportnet.online`" a jediný zápis
@@ -138,6 +225,43 @@ opakovaný import ju aktualizuje, nezdvojí. Vyhradené slová idú aj do
 **Čo overiť naživo:** starý odkaz z e-mailu (napr. `?tab=people&assign=1`)
 skončí na novej adrese; v produkčných dátach nie je kurz s kľúčom `topics`
 /`tags` ani test `questions`/`results` (inak by ho zatienila časť správy).
+
+---
+
+## 2026-10-06 — tlačidlá ukazujú, že akcia beží (PR #269–#271)
+
+**Podnet:** Ján pridával ľudí na trasu cez výber oddelenia a po „Pridať na
+trasu" sa dlho nedialo nič. Akcia nebola pomalá v databáze (jeden
+`updateMany`), ale v e-mailoch: rozposiela ich po päť naraz a pri väčšom
+oddelení to trvá desiatky sekúnd. Tlačidlo bolo obyčajné `<button>`.
+
+**Čo sa zmenilo:** najprv personalistika a pozvánky (#269, `pendingLabel`
+„Pridávam…" / „Posielam e-maily…"), na Jánovo „nech majú jednotné
+správanie" všetky odosielacie tlačidlá serverových akcií (#270, 73 tlačidiel
+v 24 súboroch) a nakoniec tých päť, ktoré stoja mimo svojho formulára cez
+`form="…"` (#271). `SubmitButton` teraz zablokuje **všetky** tlačidlá
+formulára, ale krúžok ukáže len na tom, na ktoré sa kliklo — inak by pri
+„Schváliť" / „Vrátiť" točili obe.
+
+**Čo nevyšlo hneď:**
+- Hromadná zámena regulárnym výrazom preskočila tri tlačidlá: skryté
+  `<button … />` pre Enter sa zhltlo až po nasledujúce `</button>`. Nič sa
+  nepokazilo (zhltnutý kus sa preskočil celý), len chýbali; dorobené ručne.
+- `aria-pressed` na `SubmitButton` prešlo cez `tsc` bez chyby a ticho sa
+  zahodilo — TypeScript atribúty s pomlčkou na komponente nekontroluje.
+  Pribudol `ariaPressed`. Pri ďalšej podobnej zámene grepnúť `aria-|data-`.
+- Reset stavu v `useEffect` zhodil eslint (`set-state-in-effect`); stav
+  odvodený z predchádzajúceho sa upravuje počas vykresľovania.
+- `useFormStatus()` vidí len formulár, v ktorom komponent v Reacte naozaj
+  je — tlačidlo s `form="…"` nikdy. Riešenie `FormPendingSignal` v cieľovom
+  formulári a mapa v `lib/formPending.ts` čítaná cez `useSyncExternalStore`.
+
+**Overenie naostro:** Uložiť názov trasy (krúžok, „Názov je uložený."),
+„Skontrolovať dopad" pri prideľovaní (krúžok len na ňom, „Prideliť" len
+zablokované; neplatný formulár nenechá visieť stav), „Odstrániť kľúč" pri
+AI s požiadavkou zablokovanou v prehliadači — kľúč ostal. Simulované
+ťahanie v strome oddelení nebolo spoľahlivé, ostatné štyri tlačidlá mimo
+formulára sú overené len testami.
 
 ---
 
@@ -372,6 +496,47 @@ ResponsiblePicker, LegalBasisForm, schvaľovatelia v príprave znenia
 a kategória právneho základu v organizácii mali legendu v čiare tiež.
 Podľa promptu návrhu prešli na nový vzor aj ony. Skupina v skupine
 (zodpovedné osoby v „Základ" testu) kartu nekreslí — rám v ráme.
+
+---
+
+## 2026-10-05 — telefón, AI organizácie a editor členenia
+
+**Telefón (PR #250, #252):** pole „Predvoľba telefónu" v nastaveniach bolo
+mätúce — Ján doň napísal celé číslo. Teraz je v nastaveniach výber krajiny
+a pri osobe krajina s predvoľbou a číslo, ktoré sa overí podľa zvolenej
+krajiny (`libphonenumber-js`).
+
+**Reťaz dôkazov (PR #251):** od najnovšieho.
+
+**AI v organizácii (ADR-026, D157–D159, PR #253–#256):** vlastný kľúč
+Anthropic (šifrovaný) a model pre každú úlohu; prehľad spotreby s filtrom,
+CSV a Excelom. Rozhodnuté s Jánom: text otázky sa neukladá, bez kľúča sa
+padá na kľúč prevádzkovateľa, spotreba 25 mesiacov (TTL 761 dní). Ján
+vložil vlastný kľúč a otázka sa zapísala ako „kľúč organizácie". GDPR text
+doplnený vo všetkých troch jazykoch (`PRIVACY_NOTICE_VERSION` 2026-10-05).
+
+**Členenie (ADR-027, D160):** záložka Členenie v nastaveniach organizácie
+zmizla (PR #257). Namiesto nej pomocný editor pri dokumente
+`/library/[id]/chunks` podľa Jánovho návrhu: A — ako je dokument narezaný
+a varovania (PR #258), B — skúšobný rez a pomenovaný profil (PR #262),
+C — návrh od AI zo **štruktúry**, nie z celého textu (PR #263, #265, #267).
+Cestou dve opravy chunkera: tučné nadpisy z Wordu (#259, smernice z 1–2
+úsekov na 18) a „Časť I –" (#261).
+
+**Čo nevyšlo hneď:**
+- Návrh AI sa uťal uprostred zdôvodnenia: v zadaní boli „…" s rovnými
+  koncovými úvodzovkami a model ich prebral do JSON reťazca (#265).
+- AI ponúkala uložiť nový profil, ktorý režeme rovnako ako predvolený
+  („PRÍLOHA" verzus „PRÍLOHA č."). Zadanie teraz nesie dnešné hodnoty
+  a rovnaký rez formulár na nový profil skryje (#267).
+- Nasadenie #263 Vercel vynechal a moja čakacia slučka po vypršaní aj tak
+  zmazala vetvu. Odvtedy sa čaká presne na kontext „Vercel – contineo-app".
+
+**Preindexovanie:** po oprave chunkera zostalo 8 noriem neaktuálnych;
+`npm run chunking:reindex -- --company SFZ --naozaj` — 8 preindexovaných,
+`chunking:status` 0 z 13, `npm run check` bez rozporov. Otázka na lehotu
+odvolania odpovedala z čl. 84 Disciplinárneho poriadku. Znenia ani
+potvrdenia sa nemenili (D57).
 
 ---
 

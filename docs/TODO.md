@@ -80,7 +80,7 @@
 - [ ] Editor: Markdown + náhľad, neskôr WYSIWYG vrstva — **D-CMS-2**
 - [ ] **Overené odpovede → publikovaný FAQ** (zatváranie slučky); norma na webe len ako kanonický odkaz — **D-CMS-4**. Pár už existuje (úsek so `sourceType: "qa"`, 2026-09-15); **FAQ ako druh dokumentu v knižnici je hotové 2026-10-06 (ADR-028 D164)** — otvorené ostáva len zverejnenie na verejnom webe a zlúčenie kurácie z `/evaluation` do „pridať záznam do FAQ“ (odporúčanie v ADR-028). Kolekcia `qa_pairs` nevznikne (D11 revidované)
 - [ ] **Kanály:** kolekcie `channels` + `channel_runs`, admin CRUD, test `discover`, review fronta, monitoring behov; bez auto-publish (**D-CMS-6**)
-- [x] Helpdesk: **web widget** (`tickets`) aj **e-mailový kanál** ✅ 2026-10-06 (ADR-028, PR #273/#276/#278): kanály, schránka cez Graph, tickety, `/helpdesk`, widget pre ISSF. **Naostro neoverené** — čaká na Entra registráciu a prvý kanál (`NEXT.md`). Zostáva: upozornenie riešiteľom na nový ticket (`notify()` nový druh), tickety v „čo čaká na mňa“ (`pending.ts`, zatiaľ by sa pripočítali k „Na potvrdenie“), IMAP adaptér (s prvým zákazníkom), cron `helpdesk-sync` častejšie než denne (až na pláne Pro), text účelu „helpdesk“ na `/privacy` (DPO, ADR-022), skupiny `rozhodcovia`/`funkcionari` bez členov (D168) — **D-CMS-3**
+- [x] Helpdesk: **web widget** (`tickets`) aj **e-mailový kanál** ✅ 2026-10-06 (ADR-028, PR #273/#276/#278): kanály, schránka cez Graph, tickety, `/helpdesk`, widget pre ISSF. **Naostro od 7. 10.** (schránka SFZ cez Graph, D169, D170). Zostáva: upozornenie riešiteľom na nový ticket (`notify()` nový druh), tickety v „čo čaká na mňa“ (`pending.ts`, zatiaľ by sa pripočítali k „Na potvrdenie“), IMAP adaptér (s prvým zákazníkom), skupiny `rozhodcovia`/`funkcionari` bez členov (D168) — **D-CMS-3**. ✅ 2026-10-08 cron `helpdesk-sync` každých 5 minút (plán Pro), interval pri kanáli. ✅ 2026-10-08 helpdesk na `/privacy` a lehoty ticketov a osôb z widgetu v mazacej dávke (D178).
 - [ ] Preniesť D-CMS-1..6 do `OPEN_DECISIONS.md` (D16+) pri revízii backlogu
 
 #### Intranet — dizajnový handoff (`design_handoff_contineo_intranet`, od 2026-09-07)
@@ -237,7 +237,8 @@
 - [ ] ~~Adaptéry: MCP / API~~ → **MCP konektor nie je adaptér zdroja, ale pripojenie s použitiami (ADR-029, 2026-10-07).** Fáza 1 (živý zdroj) je v `main`; import do knižnice je použitie B (nižšie). API/DB zostáva otvorené.
 
 ### E2. MCP konektory — ďalšie fázy (ADR-029)
-- [ ] **Použitie B — import do knižnice:** výber článkov cez hľadanie konektora (server nemá zoznam súborov), `fetch` → `uploadDocument()` s `source.{type:"mcp",connector,externalId,fetchedAt,contentHash}`, `accessLevel: internal` ako návrh, bežné schvaľovanie; re-sync len cez `contentHash` (server nedáva dátum zmeny).
+- [x] ~~**Použitie B — import do knižnice**~~ ✅ 2026-10-08 (PR #311): Knižnica → Nahrať → Import zo servera; výber z výsledkov hľadania, `uploadDocument()` s Markdownom a PDF vysádzaným u nás (`markdownPdf.ts`), `documents.source.*`, blok Zdroj na detaile s kontrolou zmien cez `contentHash` (nové znenie ako koncept). PDF ostáva povinné aj pre MCP (rozhodnutie Jána 8. 10.: automatické, nie výnimka z ADR-011).
+- [ ] **Po importe:** otvorené — hromadný import celého rozsahu (server nemá zoznam súborov; šlo by cez viac hľadaní), pravidelný re-sync cronom (dnes tlačidlo na detaile), redukcia článkov do jazyka používateľa modelom ako *návrh* pre kurátora (D176 hovorí, že je to zúženie, nie brána).
 - [ ] **Použitie C — nástroje asistenta:** až keď generačný adaptér vie tool-use (Claude áno, vLLM/Qwen neisto); `uses.agentTools.allowed` už v schéme.
 - [ ] **Servisný účet Sportnetu:** vyžiadať aplikáciu s `client_credentials` (ako `issfconnector`); dnes pilot pod osobným účtom Jána — mení sa len `auth` na konektore.
 - [ ] **Rerank živých úsekov v cloude:** `$rerank` beží v pipeline a živé úseky v nej nie sú — idú za knižnicou v poradí servera. Keď to bude prekážať, aplikačný rerank nad zlúčeným zoznamom.
@@ -424,10 +425,10 @@
 - [x] **Import 153 osôb SFZ z licenčného zoznamu M365** ✅ 2026-09-27 — CSV `sfz-osoby-import.csv` (Meno, Priezvisko, Email, Pozicia = Title + Department); oddelenie zámerne nie (číselník, zaradí sa ručne). Vylúčené technické kontá a `@naraznicek.sk`. Náhľad 150 nových + 3 doplnené, zápis prešiel.
 - [x] **ADR-019 — existujúcim import dopĺňa len prázdne polia; prepis je prepínač** ✅ 2026-09-27 (D124–D126). Opravené: `department`/`startDate` išli do `$set` ako `undefined` → `null`. Skript `persons:import` opravený (staré názvy po premenovaní), `--org=KOD`, `--prepisat`.
 - [x] **Náhľad importu ako tabuľka + hľadanie** ✅ 2026-09-27 (PR #148, #151) — `planChanges()` je jedna funkcia pre náhľad aj zápis; existujúci jedným `$in`. Zápis na obrazovke až bez chybných riadkov.
-- [ ] **Zaradiť 153 osôb do oddelení** (strom `/organisation`) — ručne; import `departmentId` nechytá (D49). Textové `department` sa neimportovalo, zdroj je stĺpec Department v Exceli (60 rôznych zápisov, často funkcia namiesto oddelenia).
+- [x] **Zaradiť 153 osôb do oddelení a doplniť pohlavie** ✅ 2026-10-08 — prebieha priebežne v bežnej prevádzke, Ján to považuje za vybavené (už nie úloha pred ostrou prevádzkou)
 - [ ] **Rozhodnúť `@sfzmarketing.sk` (22 osôb)** — dnes v tenante SFZ ako `employee`; alternatíva vlastný tenant / typ `external`. Zmena typu je ručná alebo importom s prepínačom.
 - [ ] **Chýbajúci ľudia mimo Basic/Standard licencií** (napr. Ján) — export ich nemal; buď doplniť ručne, alebo druhý export z M365 s ostatnými typmi licencií.
-- [ ] **Pracoviská v číselníku SFZ sú prázdne** (od D85) a `Tenant.phonePrefix` nemá obrazovku — bez toho import pracovisko ani mobil nevyplní.
+- [ ] **Pracoviská v číselníku SFZ sú prázdne** (od D85) — bez toho import pracovisko nevyplní. *(Predvoľba telefónu má od 5. 10. obrazovku: výber krajiny v nastaveniach organizácie.)*
 
 **I3. Brána pred ostrou prevádzkou**
 
@@ -682,7 +683,7 @@ Overené na `sfz:test_znenia` (pridelenie osobe, Oddeleniu IT, trase `test-2026`
 **Rozsah C — až keď existujú ďalšie zdroje**
 
 - [ ] kurácia (dokumenty čakajúce na kurátora, otvorený rozpor s D25)
-- [ ] helpdesk (Fáza 4b) — tickety existujú (ADR-028, 2026-10-06), do registra `pending.ts` zatiaľ nejdú: pripočítali by sa k „Na potvrdenie“; majú vlastný počet pri položke Helpdesk v menu
+- [ ] helpdesk (Fáza 4b) — tickety existujú (ADR-028, 2026-10-06), do registra `pending.ts` zatiaľ nejdú: pripočítali by sa k „Na potvrdenie“; majú vlastný počet pri položke Kanály v menu (D170)
 - [ ] prípadné jednorazové hlásenia podľa D40
 
 ---
@@ -766,6 +767,8 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 - [x] **Členenie zrušené v Nastaveniach organizácie** ✅ 2026-10-05 (ADR-027, D160) — technické parametre (slovo článku, tokeny) správca nemá dôvod meniť; preindexovanie celej knižnice je `npm run chunking:reindex -- --company SFZ [--naozaj]`
 - [x] **Tučné nadpisy z Wordu** ✅ 2026-10-05 — `# **Článok 1 – …**` chunker ani analyzátor nepoznali; obe smernice SFZ boli v 1–2 úsekoch, po oprave 18 (17 s článkom). Ostatné dokumenty majú odtlačok rovnaký (overené pred a po)
 - [x] ✅ 2026-10-05 **Časť v zápise „Časť I –"** — chunker pozná „PRVÁ ČASŤ", nie „Časť I – Základné ustanovenia" (Pracovný poriadok, obe smernice); cesta úseku je preto bez úrovne časti. Oprava zmení odtlačok týchto troch dokumentov → preindexovať
+- [x] **Pomocný editor členenia pri dokumente** ✅ 2026-10-05 (ADR-027 § 4, PR #258, #262, #263, #265, #267) — `/library/[id]/chunks`: rez a varovania, skúšobný rez a pomenovaný profil (D79), návrh AI zo štruktúry; smie ho správca obsahu
+- [x] **Preindexovaných 8 noriem** ✅ 2026-10-05 — po opravách chunkera `chunking:status` 0 neaktuálnych z 13, `npm run check` bez rozporov, znenia a potvrdenia bez zmeny (D57)
 - [ ] **Spôsob členenia podľa druhu dokumentu** (ADR-027, D160) — **s prvým manuálom, zmluvou alebo zápisnicou**, nie skôr (bez skutočného textu sa nedá overiť):
       - v Číselníky → Druhy dokumentov voľba pri každom druhu: po článkoch („Článok"), po paragrafoch („§"), po bodoch, podľa nadpisov;
       - stratégia „podľa nadpisov" = `chunkerPlain.mjs` (krok D1 plánu D79, ~1,5 d); `chunker.mjs` sa nemení;

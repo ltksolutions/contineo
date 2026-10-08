@@ -68,7 +68,11 @@ export default async function AskPage({
   // Živé zdroje (ADR-029): len tie, ktoré sa pri otázke naozaj zavolajú —
   // s úrovňou pýtajúceho sa a bez volania servera.
   const liveSources = (await liveConnectorsFor(ctx.tenant.companyCode, accessLevelFor(ctx)))
-    .map(c => ({ id: c.id, name: c.name }))
+    .map(c => ({ id: c.id, name: c.name, defaultOn: Boolean(c.uses.retrieval.defaultOn) }))
+  // Rozsah z adresy (`?src=library,<id>`): voľba z piluliek prežije obnovenie
+  // stránky aj odkaz. Bez nej knižnica a konektory s „používať predvolene".
+  const srcRaw = Array.isArray(q?.src) ? q?.src[0] : q?.src
+  const initialScope = (srcRaw ?? "").split(",").map(x => x.trim()).filter(x => x === "library" || liveSources.some(l => l.id === x))
 
   return (
     <AppShell language={person?.language}>
@@ -83,6 +87,7 @@ export default async function AskPage({
             language={person?.language}
             canEvaluate={canEvaluate}
             liveSources={liveSources}
+            initialScope={initialScope}
           />
         ) : (
           <>

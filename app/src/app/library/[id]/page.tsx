@@ -21,6 +21,7 @@ import { AppError } from "@/lib/appError"
 import Notice from "@/components/Notice"
 import {
   publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction, reindexVersionAction, loadTextForFixAction,
+  resyncConnectorDocumentAction,
   fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction, archiveDocumentAction, restoreDocumentAction,
 } from "../actions"
@@ -34,7 +35,7 @@ import { carryOverCandidates, audienceRef, audienceLabel } from "@/lib/assignmen
 import { codelistOptions, chunkingStrategyFor } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
-import TagSelect from "@/components/TagSelect"
+import ValueSelect, { SimilarWarning, withCodelistNote } from "@/components/ValueSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { documentProgress } from "@/lib/libraryProgress"
 import AppShell from "@/components/AppShell"
@@ -99,7 +100,7 @@ export default async function DocumentDetailPage({
     notFound()
   }
 
-  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string; similar?: string; like?: string; pick?: string }>(await searchParams)
   const { msg: message, error } = query
   const openPanel = PANELS.includes(query.open as Panel) ? (query.open as Panel) : null
   const editDocument = query.edit === "document"
@@ -112,7 +113,10 @@ export default async function DocumentDetailPage({
   const t = dictionary(language).library.detail
   const tf = dictionary(language).library.fields
   const tflow = dictionary(language).library.flow
+  const tci = dictionary(language).library.connectorImport
   const extras = tenantExtras(ctx.tenant)
+  // Značky s počtami len pre úpravu dokumentu — inde sa nekreslia.
+  const tagChoices = editDocument ? await tagOptions(ctx.tenant.companyCode, extras) : []
   const folders = await allFolders(ctx.tenant.companyCode)
   const folderTree = flattenTree(folders)
   const departments = await allDepartments(ctx.tenant.companyCode)
@@ -904,14 +908,23 @@ export default async function DocumentDetailPage({
                     <Select language={language} name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
                   </div>
 
-                  <div className="field upload-wide">
-                    <span className="field-label">{t.tags}</span>
-                    <TagSelect
+                  {/* Značky ako riadky s kruhom a pole novej značky (ZAKLAD-vyber-skupin-
+                      a-znaciek, 8. 10. 2026). Podobnú novú server nezaloží
+                      a vráti `?similar=&like=` (Q3). */}
+                  <div className="upload-wide" id="tags">
+                    <ValueSelect
+                      kind="tags"
                       name="tags"
-                      options={await tagOptions(ctx.tenant.companyCode, extras)}
-                      selected={d.tags}
-                      newLabel={t.newTag}
+                      legend={t.tags}
+                      options={withCodelistNote(tagChoices, language)}
+                      selected={query.pick === "like" && query.like ? [...d.tags, query.like] : d.tags}
+                      prefillNew={query.pick === "new" ? query.similar : undefined}
+                      forced={query.pick === "new" ? query.similar : undefined}
                       language={language}
+                      warning={query.pick ? undefined : (
+                        <SimilarWarning href={`/library/${encodeURIComponent(d.documentId)}/edit`} anchor="tags" kind="tags" language={language}
+                                        similar={query.similar} like={query.like} likeLabel={tagChoices.find(o => o.value === query.like)?.label} />
+                      )}
                     />
                   </div>
                 </div>
@@ -1499,6 +1512,19 @@ export default async function DocumentDetailPage({
               <div><SubmitButton className="button button--danger">{tflow.archive.submit}</SubmitButton></div>
             </form>
           )}
+        </section>
+      )}
+      {/* Pôvod z MCP konektora (ADR-029, použitie B): odkiaľ článok je a kontrola zmien. */}
+      {d.source && d.source.type === "mcp" && (
+        <section className="card detail-block" id="source">
+          <h2 className="detail-block-title">{tci.sourceHeading}</h2>
+          <p className="detail-block-note" style={{ margin: 0 }}>{tci.sourceLine(d.source.connectorName, d.source.group, formatDate(new Date(d.source.fetchedAt), language))}</p>
+          <p className="detail-block-small" style={{ margin: 0 }}>{tci.sourcePath}: <code>{d.source.externalId}</code></p>
+          <form action={resyncConnectorDocumentAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <SubmitButton className="button button--quiet">{tci.resync}</SubmitButton>
+            <span className="quiet field-hint">{tci.resyncHint}</span>
+          </form>
         </section>
       )}
       <section className="card detail-block">

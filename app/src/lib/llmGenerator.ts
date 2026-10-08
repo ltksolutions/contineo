@@ -69,6 +69,7 @@ export function buildSystemPrompt(
 Odpovedáš VÝLUČNE na základe poskytnutého kontextu.
 Ak odpoveď nie je v kontexte, povedz to úprimne.
 Jazyk: slovenčina. Tón: profesionálny, stručný.
+Celú odpoveď píš po slovensky, aj keď je zdroj v inom jazyku (napr. v angličtine): obsah prelož vlastnými slovami a nevkladaj do textu cudzojazyčné vety ani ich doslovné citácie. Odkaz na zdroj pri tvrdení ponechaj.
 ${role === "internal" ? "Máš prístup aj k interným normám a dokumentom." : ""}
 ${supportsCitations
   ? "Zdroje sú pripojené ako dokumenty — cituj z nich priamo."

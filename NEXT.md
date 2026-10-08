@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-08 ráno** (MCP konektory ADR-029, fáza 1 — živý zdroj zo Sportnetu, PR #307, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
+Posledná aktualizácia: **2026-10-08** (doplnené 5.–6. 10.: AI organizácie ADR-026, editor členenia ADR-027, stav tlačidiel PR #269–#271; MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
 
 ---
 
@@ -19,33 +19,32 @@ nesie štítok „Živý zdroj — neoverené kurátorom", prístupová úroveň
 vlastnosť konektora (interný sa do e-mailov nedostane), rozsahy per kanál,
 pilulky Knižnica / Sportnet na `/ask`, stopa volaní v `connector_calls`.
 Prvý server `mcp.sportnet.online` je **založený a pripojený v SFZ** pod
-Jánovým účtom (zapísaná odchýlka od servisného účtu). **Čaká na Jána po
-nasadení:** „Pripojiť znova" (lokálny token je pod iným šifrovacím kľúčom),
-rozsah ISSF na kanáli ISSF a prvá otázka so živým zdrojom — generovanie
-odpovede sa lokálne overiť nedalo. Fázy 2 (import do knižnice) a 3
-(nástroje asistenta) sú v `docs/TODO.md` E2. Júnový zápis
+Jánovým účtom (zapísaná odchýlka od servisného účtu). **Overené naostro 8. 10.:** pripojené,
+otázka „Ako si zmením heslo v ISSF?" odpovedala z 5 citácií zo Sportnetu so
+štítkom Živý zdroj. **Fáza 2 — import** (PR #311): Knižnica → Nahrať →
+Import zo servera, koncept s PDF a pôvodom `source.*`, blok Zdroj s kontrolou
+zmien. Kanál ISSF (widget, verejný) živý zdroj nedostane — podľa D176 ide
+von len to, čo kurátor importuje a schváli. Fáza 3 (nástroje asistenta)
+a servisný účet Sportnetu sú v `docs/TODO.md` E2. Júnový zápis
 `INGESTION_zdroje_reconciliation.md` kap. 2.2 je prekonaný.
 
-**Helpdesk (ADR-028, 6. 10.) je celý v `main`, naostro neoverený.** Päť
-krokov: FAQ ako druh dokumentu (D164), kanály so schránkou cez Microsoft
-Graph a ťažba histórie do FAQ (D161, D162, D165), e-mail je ticket (D163),
-obrazovka riešiteľa `/helpdesk` (rola `helpdesk`, D167), widget s tokenom pre
-ISSF (D166), druh osoby `internal`/`employee`/`external` (D168) a **Kanály
-ako sekcia v menu s typom widget / portál (D169, PR #285)**. Čaká na
-ľudí mimo kódu: registrácia aplikácie v Entra a zúženie na schránku
-(`docs/NASADENIE_app.md` § 5, správca M365), prvý kanál v sekcii Kanály (typ widget, D169) a rola `helpdesk`, tajomstvo widgetu pre prevádzkovateľa ISSF
-(`docs/WIDGET_ISSF.md`). Poradie overenia: FAQ → kanál a Overiť spojenie →
-Synchronizovať → ťažba FAQ → ticket a odpoveď → widget
-(`npm run widget:test` bez ISSF). Otvorené po nasadení: upozornenie
-riešiteľom na nový ticket, tickety v „čo čaká na mňa“, IMAP adaptér, cron
-častejšie než denne (Pro), text účelu „helpdesk“ na `/privacy` (DPO).
+**Helpdesk (ADR-028) beží naostro od 7. 10.; rozhodnutia doplnili D169,
+D170 a ADR-029.** Schránka SFZ je pripojená cez Microsoft Graph (aplikácia
+v Entra zúžená na schránku), synchronizácia Doručenej aj Odoslanej pošty
+beží každých 5 minút (Vercel cron, interval pri kanáli), e-mail je ticket
+s celým vláknom a odpovede z Outlooku sa k nemu pripoja. **Kanály** sú
+sekcia s typom widget / portál (D169) a jediná položka v menu aj pre
+riešiteľa — Helpdesk ako samostatná časť zanikol, správca obsah ticketov
+nečíta (D170). Živý zdroj z konektora do verejného kanála nejde (ADR-029,
+D176). Otvorené (`docs/TODO.md`): widget pre ISSF u prevádzkovateľa ISSF
+(`docs/WIDGET_ISSF.md`), upozornenie riešiteľom na nový ticket, tickety
+v „čo čaká na mňa", IMAP adaptér, text účelu „helpdesk" na `/privacy` (DPO).
 
 Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
 a `docs/DEVLOG.md`. **Od 27. 9. pracujú v repe dve sessions naraz** —
 každá vo vlastnom `git worktree` (ADR-020); rozrobené vetvy druhej session
-vidno v `git branch -a`, nie v tomto súbore. Zvyšok z 29. 9.: worktree
-`.claude/worktrees/worktree-parallel-design-2a590b` (odpojený) — odstrániť, keď ho Ján pustí.
+vidno v `git branch -a`, nie v tomto súbore.
 
 **Potvrdzovanie je overené naostro (30. 9. – 1. 10., PR #196–#208)** na
 `sfz:test_znenia`: pridelenie osobe, oddeleniu, trase aj krok trasy dajú
@@ -61,8 +60,8 @@ správcu tam vidí len ju. **D152:** formulka podľa rodu (`persons.gender`,
 nevyplnené „oboznámil(a)"). Zvyšky v `docs/TODO.md`, „Test potvrdzovania naostro".
 
 **Osoby SFZ sú v systéme (27. 9.):** 153 osôb z licenčného zoznamu M365
-(150 nových + 3 doplnené), bez technických kont. Zaradenie do oddelení je
-ručné a čaká (`docs/TODO.md`, I4). **ADR-019:** import existujúcim dopĺňa
+(150 nových + 3 doplnené), bez technických kont. Do oddelení sa zaraďujú
+a pohlavie dopĺňa priebežne v bežnej prevádzke (Ján 8. 10.). **ADR-019:** import existujúcim dopĺňa
 len prázdne polia; prepis je prepínač „Aktualizovať existujúcich".
 Náhľad importu je tabuľka s rozdielom „dnes → po" a hľadaním.
 **Pozvánky odišli 28. 9.** (146 hromadne + 1); stav osoby je „Nová", kým
@@ -196,10 +195,6 @@ Vzdelávania (ADR-021).
 
 ## Najbližšie kroky
 
-0. **Zaradiť 153 osôb do oddelení** v `/organisation` — bez toho sa im
-   normy podľa oddelenia nepridelia (D49). Pri tom istom importe doplniť
-   **pohlavie** (stĺpec `pohlavie`) — vyplnené má 3 zo 154, ostatní
-   potvrdzujú „oboznámil(a)" (D152).
 0. **Prvý kurz naostro:** Ján zverejní kurz, prejde ho sám s testom
    a stiahne certifikát aj PDF — overiť `/verify` z QR na telefóne.
 1. **Prvé ostré nové znenie cez kartu** — samotné kolo je overené; pri ňom
@@ -211,7 +206,8 @@ Vzdelávania (ADR-021).
    hodnotenia už majú časy fáz aj tokeny). Pár dní zbierať hodnotenia,
    potom `node --env-file=.env.local scripts/ratings_overview.mjs`
    a rozhodnúť o hlavnom modeli — ten (2,8–6,2 s po prvý token) je
-   najväčšia položka, prah D9 je p95 pod 2 s.
+   najväčšia položka, prah D9 je p95 pod 2 s. Model sa od 5. 10. vyberá
+   v Organizácia → Umelá inteligencia (ADR-026), bez nasadenia.
 3. **Dátum skončenia na karte osoby** — overiť pri prvom skutočnom odchode
    (zadáva sa pri vyradení; zvyšok `/dpo` je overený, `docs/TODO.md`).
 
