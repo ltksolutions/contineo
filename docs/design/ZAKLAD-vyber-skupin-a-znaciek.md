@@ -1,6 +1,6 @@
 # ZAKLAD — výber skupín a značiek (DESIGN_ODCHYLKY P8)
 
-> **Stav: rozhodnuté 8. 10. 2026** — Q1–Q5 podľa odporúčania, pripravené na implementáciu.
+> **Stav: rozhodnuté 8. 10. 2026** — Q1–Q6 podľa odporúčania (Q6 = jedno pole „Hľadať alebo pridať"), pripravené na implementáciu.
 
 Referencia: `ZAKLAD-vyber-skupin-a-znaciek.html`. Základ: `ZAKLAD.md`, `ZAKLAD-vyber-a-prepinace.md` (`.select-row`, pilulky preč z formulárov), `HR-pridelit-nadpis-karty.md` (`.form-group`), `KOMPONENT-hladanie-osob.md` (hľadanie nad riadkami). Zdroj: `components/TagSelect.tsx`, `people/[id]/page.tsx`, `library/[id]/page.tsx`, `library/new/page.tsx`, `library/new/faq/page.tsx`, `lib/codelists.ts`, `lib/libraryRead.ts` (`tagOptions`), `lib/persons.ts` (`normalizeKeys`, `audiencesInOrg`).
 
@@ -16,8 +16,9 @@ Je to **rozdiel oproti existujúcim obrazovkám**. Mená polí (`groups`, `tags`
 | Počet | tlmený text vpravo: „14 ľudí", „6 dokumentov" (iOS `List` detail) |
 | Len táto osoba / dokument | zaškrtnutá, namiesto počtu `span.form-row-detail.is-only` „len tu" (`--warn-fg`) |
 | Hodnota mimo číselníka (značky) | podnadpis `form-row-sub` „nie je v číselníku", zobrazí sa kľúč |
-| Nová hodnota | posledný riadok `label.form-row.form-row--new`: prerušovaný kruh + `input name="groupsNew"` / `"tagsNew"`, viac hodnôt čiarkou, bez tlačidla |
-| Hľadanie | od **12** možností `.sel-search` nad riadkami (s JS filtruje bez diakritiky a bez ohľadu na veľkosť písmen, zaškrtnuté ostávajú; bez JS sa nič neskrýva) |
+| Hľadať alebo pridať | **jedno pole** `.sel-combo` navrchu karty, `input type=search name="groupsNew"` / `"tagsNew"`, placeholder „Hľadať alebo pridať skupinu" (prázdny zoznam: „Pridať skupinu"); pri každom počte možností (Q6) |
+| S JS | písanie filtruje riadky (bez diakritiky, case-insensitive, zaškrtnuté ostávajú). Keď sa text presne nezhoduje so žiadnou hodnotou, pod riadkami pribudne `label.form-row.select-row.is-add` „+ Pridať „komisari"" · `form-row-sub` „nová skupina". Ťuknutie alebo Enter: ostrovček vloží zaškrtnutý `checkbox name="groups" value="komisari"` medzi riadky a pole vyprázdni. Pri presnej zhode Enter zaškrtne existujúci riadok |
+| Bez JS | vidno všetky riadky; napísaný text (viac hodnôt čiarkou) sa odošle s formulárom ako nová hodnota a server ho porovná s existujúcimi (podobný názov nižšie) |
 | Poradie | zaškrtnuté hore, potom abecedne (Q4) |
 | Prázdne | len riadok s poľom; pätička „Zatiaľ žiadna skupina — vznikne prvou, ktorú napíšete." |
 | Podobný názov | `.sel-warn` v karte pod riadkami (pozri nižšie) |
@@ -36,11 +37,11 @@ Obe tlačidlá sú tiché, každé je malý formulár (`addGroupAction` s `value
 ```css
 .form-row-detail { color: var(--muted); font-size: 14px; white-space: nowrap; }
 .form-row-detail.is-only { color: var(--warn-fg); }
-.form-row--new .form-row-input { flex: 1; border: 0; background: transparent; font: inherit; min-height: 26px; }
-.form-row--new::after { /* prerušovaný kruh 22 px na mieste checkboxu */ }
-.sel-search { display: flex; align-items: center; gap: 9px; height: 40px; margin: 10px 12px 6px; padding: 0 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.form-row.is-add .form-row-main > span { color: var(--accent); font-weight: 600; }
+.form-row.is-add::before { /* prerušovaný kruh 22 px s „+" na mieste checkboxu */ }
+.sel-combo { display: flex; align-items: center; gap: 9px; height: 40px; margin: 10px 12px 6px; padding: 0 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
 .sel-warn { display: grid; gap: 10px; padding: 12px 16px 14px; background: var(--warn-bg); border-top: 1px solid rgba(180,83,9,.25); }
-@media (max-width: 639px) { .sel-search { height: 44px; } }
+@media (max-width: 639px) { .sel-combo { height: 44px; } }
 ```
 
 ## Kde
@@ -80,8 +81,7 @@ Na `/people/[id]` sa skupina presúva z `div.field` medzi poliami do `fieldset.f
 | --- | --- |
 | `List(selection:)` + `Section` | `.form-group` + `.select-row` |
 | `LabeledContent` / detail text | `.form-row-detail` (počet, „len tu") |
-| `.searchable` | `.sel-search` od 12 možností |
-| `TextField` ako posledný riadok sekcie | `.form-row--new` |
+| `.searchable` + `searchSuggestions` | `.sel-combo` „Hľadať alebo pridať" + riadok „+ Pridať" |
 
 ## Údaje, ktoré v modeli neexistujú
 
@@ -95,7 +95,8 @@ Na `/people/[id]` sa skupina presúva z `div.field` medzi poliami do `fieldset.f
 - **Q2** Nová značka: server z názvu urobí kľúč (ako `KeyFromLabel`) a založí položku v číselníku organizácie s názvom.
 - **Q3** Podobný názov: neuloží sa len nová hodnota, zvyšok áno; varovanie `?similar=&like=` s dvoma tichými voľbami.
 - **Q4** Poradie: zaškrtnuté hore, ostatné abecedne.
-- **Q5** Hľadanie od 12 možností.
+- **Q5** ~~Hľadanie od 12 možností~~ — nahradené Q6.
+- **Q6** Hľadanie a nová hodnota v jednom poli „Hľadať alebo pridať" navrchu karty, pri každom počte možností. Vzor `.searchable(text:tokens:suggestedTokens:)` / `searchSuggestions`; žetóny (pilulky) sa nekreslia, vybrané hodnoty sú zaškrtnuté riadky.
 
 ## Otázky
 
@@ -124,12 +125,16 @@ Vetva design/vyber-skupin-a-znaciek z main. DESIGN_ODCHYLKY P8.
 1. components/ValueSelect.tsx (server): fieldset.form-group > legend > card
    form-group-body--rows > .form-list; riadky label.form-row.select-row s natívnym
    checkboxom name={name} value={key}; vpravo .form-row-detail (počet / „len tu");
-   posledný riadok .form-row--new s input name={`${name}New`}; .form-group-foot.
+   navrchu karty jedno pole .sel-combo input type=search name={`${name}New`}
+   („Hľadať alebo pridať …"); .form-group-foot.
    Zaškrtnuté hore, ostatné abecedne. Hodnota, ktorú má len táto položka
    (count ≤ 1 a vybraná) alebo ktorá nie je v ponuke, je vždy v zozname a zaškrtnutá.
-2. Od 12 možností .sel-search nad riadkami; malý klientsky ostrovček filtruje
-   (bez diakritiky, case-insensitive), zaškrtnuté neskrýva. Bez JS nič neskrýva.
-3. globals.css: .form-row-detail, .is-only, .form-row--new, .sel-search, .sel-warn
+2. Ostrovček (pri každom počte): písanie filtruje riadky (bez diakritiky,
+   case-insensitive, zaškrtnuté neskrýva); bez presnej zhody riadok .is-add
+   „+ Pridať „…"" — ťuknutie/Enter vloží zaškrtnutý checkbox name={name} a pole
+   vyprázdni; pri presnej zhode Enter zaškrtne existujúci. Bez JS nič neskrýva
+   a text sa odošle ako {name}New.
+3. globals.css: .form-row-detail, .is-only, .is-add, .sel-combo, .sel-warn
    (svetlá aj tmavá, 44 px na <640).
 4. Server: groups = getAll("groups") ∪ split(groupsNew) → normalizeKeys; prijať aj
    starý tvar "a, b". Rovnako tags / tagsNew. similarValue() (bez diakritiky,

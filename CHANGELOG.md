@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Skupiny a značky: jedno pole „Hľadať alebo pridať" (2026-10-08)
+
+Navrchu zoznamu skupín a značiek je vždy jedno pole „Hľadať alebo pridať".
+Písanie zoznam filtruje. Keď napísaná hodnota neexistuje, pod zoznamom sa
+ponúkne „+ Pridať „…"" a ťuknutím alebo Enterom sa hodnota pridá ako
+zaškrtnutý riadok. Pri presnej zhode Enter zaškrtne existujúcu. Bez
+JavaScriptu sa napísaný text uloží ako nová hodnota. Riadok „Nová skupina"
+na konci zoznamu zmizol.
+
 ### Helpdesk: synchronizácia každých 5 minút, interval pri kanáli (2026-10-08)
 
 Pri schránke kanála je **Interval synchronizácie** — 5, 15, 30, 60 minút

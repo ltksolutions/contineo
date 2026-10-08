@@ -73,6 +73,11 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--su
 .form-row-input.ph{color:var(--muted)}
 .sel-search{display:flex;align-items:center;gap:9px;height:40px;margin:10px 12px 6px;padding:0 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
 .sel-search b{color:var(--ink);font-weight:400}
+.sel-search .ph{color:var(--muted)}
+.sel-search .n{margin-left:auto;font-size:12.5px}
+.card > .sel-search:last-child{margin-bottom:12px}
+.form-row.is-add .form-row-main > span{color:var(--accent);font-weight:600}
+.m .sel-search{height:44px}
 .sel-sep{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:10px 16px 4px;border-top:1px solid var(--line)}
 .sel-warn{display:grid;gap:10px;padding:12px 16px 14px;background:var(--warn-bg);border-top:1px solid var(--warn-line)}
 .sel-warn p{margin:0;font-size:14px;color:var(--ink)}
@@ -99,7 +104,7 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--su
 </style></head>
 <body><div class="sheet">
 <h1 class="doc">ZAKLAD — výber skupín a značiek (DESIGN_ODCHYLKY P8)</h1>
-<p class="doc"><code>TagSelect</code> (pilulky <code>.tag--choice</code> s „+"/„✓", prepína JS, bez JS holé textové pole s čiarkami) sa nahradí tvarom, ktorý už majú Trasy a Roly na karte osoby: <code>.form-group</code> s kartou riadkov <code>.form-row.select-row</code>. Posledný riadok karty je pole na novú hodnotu. Všetko je natívny formulár, takže funguje aj bez JavaScriptu. Mená polí (<code>groups</code>, <code>tags</code>) a ich význam ostávajú. Popis je v <code>ZAKLAD-vyber-skupin-a-znaciek.md</code>.</p>
+<p class="doc"><code>TagSelect</code> (pilulky <code>.tag--choice</code> s „+"/„✓", prepína JS, bez JS holé textové pole s čiarkami) sa nahradí tvarom, ktorý už majú Trasy a Roly na karte osoby: <code>.form-group</code> s kartou riadkov <code>.form-row.select-row</code>. Navrchu karty je jedno pole „Hľadať alebo pridať“ (vzor <code>.searchable</code> so <code>searchSuggestions</code>): filtruje riadky a pri hodnote, ktorá neexistuje, ponúkne „+ Pridať“. Všetko je natívny formulár, takže funguje aj bez JavaScriptu. Mená polí (<code>groups</code>, <code>tags</code>) a ich význam ostávajú. Popis je v <code>ZAKLAD-vyber-skupin-a-znaciek.md</code>.</p>
 
 <div class="sec">
   <p class="sec-h">Dnes → návrh</p>
@@ -107,10 +112,10 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--su
     <tr><th></th><th>Dnes (TagSelect)</th><th>Návrh</th></tr>
     <tr><td>Výber</td><td class="old">pilulky <code>button aria-pressed</code>, stav v Reacte, odošle sa skryté pole <code>groups="a, b"</code></td><td class="new">natívne <code>input type=checkbox name=groups value=…</code> v <code>.select-row</code>, celý riadok terč 44 px</td></tr>
     <tr><td>Počet</td><td>číslo v pilulke (len skupiny)</td><td class="new">vpravo v riadku tlmene „14 ľudí" / „6 dokumentov" (detail ako v iOS <code>List</code>)</td></tr>
-    <tr><td>Nová hodnota</td><td class="old">pole + „Pridať" (JS), Enter zablokovaný</td><td class="new">posledný riadok karty: pole <code>groupsNew</code> / <code>tagsNew</code>, viac hodnôt čiarkou, uloží sa s formulárom</td></tr>
+    <tr><td>Nová hodnota</td><td class="old">pole + „Pridať" (JS), Enter zablokovaný</td><td class="new">pole „Hľadať alebo pridať“ navrchu karty (<code>groupsNew</code> / <code>tagsNew</code>); s JS pri zhode nič, bez zhody riadok „+ Pridať „…““, ťuknutím zaškrtnutý; uloží sa s formulárom</td></tr>
     <tr><td>Bez JS</td><td class="old">holé pole <code>„rozhodcovia, delegati"</code></td><td class="new">ten istý vzhľad; hľadanie sa len neskryje</td></tr>
     <tr><td>Hodnota len tejto osoby</td><td>ostáva vybraná, bez počtu</td><td class="new">zaškrtnutá, vpravo „len tu" (<code>--warn-fg</code>) — odškrtnutím zanikne</td></tr>
-    <tr><td>Veľa hodnôt</td><td class="old">všetky pilulky v rade</td><td class="new">od 12 možností pole „Hľadať…" nad riadkami (s JS filtruje), zaškrtnuté hore</td></tr>
+    <tr><td>Veľa hodnôt</td><td class="old">všetky pilulky v rade</td><td class="new">to isté pole pri každom počte; s JS filtruje, zaškrtnuté ostávajú hore; bez JS sú vidno všetky</td></tr>
     <tr><td>Podobný názov</td><td class="old">nič — vznikne druhá skupina</td><td class="new">server novú hodnotu neuloží (zvyšok áno) a ukáže varovanie s návrhom existujúcej</td></tr>
     <tr><td>Značky</td><td class="old">zobrazuje kľúč (<code>start_hraca</code>)</td><td class="new">zobrazuje názov z číselníka (Štart hráča), hodnota ostáva kľúč</td></tr>
   </table>
@@ -124,18 +129,18 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--su
   <div class="notes">
     <p><span class="ann">1</span>Riadok: kruh · názov z číselníka · vpravo počet dokumentov. Hodnota checkboxu je kľúč (<code>stanovy</code>).</p>
     <p><span class="ann">2</span><code>disciplina</code> je na dokumente, ale v číselníku nie je a nikto iný ju nemá: je zaškrtnutá a má „len tu". Zobrazuje sa kľúč, lebo názov neexistuje.</p>
-    <p><span class="ann">3</span>Posledný riadok je pole „Nová značka" (<code>tagsNew</code>). Server z názvu urobí kľúč a založí položku v číselníku organizácie (Q2).</p>
+    <p><span class="ann">3</span>Pole „Hľadať alebo pridať značku“ (<code>tagsNew</code>) je navrchu karty. Napísaná nová značka sa uloží s dokumentom; server z názvu urobí kľúč a založí položku v číselníku organizácie (Q2).</p>
   </div>
 </div>
 
 <div class="sec">
-  <p class="sec-h">1440 svetlá — /people/&lt;id&gt;, 14 skupín s hľadaním · varovanie pri podobnom názve</p>
+  <p class="sec-h">1440 svetlá — /people/&lt;id&gt;, 14 skupín, napísané „ko“ · varovanie pri podobnom názve</p>
   <div class="row-frames">
     <div><p class="cap">14 skupín, s JS napísané „ko"</p><div class="frame" style="width:700px" id="f-many"></div></div>
     <div><p class="cap">Po uložení: „rozhodcova" ≈ „rozhodcovia"</p><div class="frame" style="width:700px" id="f-warn"></div></div>
   </div>
   <div class="notes">
-    <p><span class="ann">1</span>Od 12 možností je nad riadkami pole „Hľadať skupinu". S JS skryje nezhodné riadky, bez diakritiky a bez ohľadu na veľkosť písmen (ako <code>PeopleSearch</code>). Bez JS sú vidno všetky. Zaškrtnuté sú vždy vidno.</p>
+    <p><span class="ann">1</span>Jedno pole „Hľadať alebo pridať skupinu“. S JS skryje nezhodné riadky, bez diakritiky a bez ohľadu na veľkosť písmen (ako <code>PeopleSearch</code>). Zaškrtnuté sú vždy vidno. „ko“ sa zhoduje s existujúcimi, preto sa „+ Pridať“ neponúka. Bez JS sú vidno všetky a text sa odošle ako nová hodnota.</p>
     <p><span class="ann">2</span>Poradie: zaškrtnuté hore, potom ostatné podľa abecedy (Q4).</p>
     <p><span class="ann">3</span>Varovanie: server uložil všetko okrem podobnej novej hodnoty a vrátil <code>?similar=rozhodcova</code>. V karte je návrh (zaškrtnúť existujúcu) a druhá možnosť (založiť napriek tomu). Obe sú tiché formuláre (Q3).</p>
   </div>
@@ -144,14 +149,14 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--su
 <div class="sec">
   <p class="sec-h">390 tmavá — /people/&lt;id&gt; · /library/new krok Údaje · prázdny zoznam</p>
   <div class="row-frames">
-    <div><p class="cap">Osoba — 2 skupiny, 1 zaškrtnutá, vyplnená nová</p><div class="frame m dark" style="width:390px" id="f-p390"></div></div>
+    <div><p class="cap">Osoba — 2 skupiny, 1 zaškrtnutá, napísaná nová „komisari“</p><div class="frame m dark" style="width:390px" id="f-p390"></div></div>
     <div><p class="cap">Nový dokument — Údaje, 5 značiek, 2 zaškrtnuté</p><div class="frame m dark" style="width:390px" id="f-n390"></div></div>
     <div><p class="cap">Prázdny zoznam (žiadna skupina)</p><div class="frame m dark" style="width:390px" id="f-e390"></div></div>
   </div>
   <div class="notes">
-    <p><span class="ann">1</span>Pole novej hodnoty je riadok karty s prerušovaným kruhom. Na telefóne má 44 px a vyplnené sa uloží s osobou.</p>
+    <p><span class="ann">1</span>„komisari“ sa nezhoduje so žiadnou skupinou, preto pod riadkami pribudne „+ Pridať „komisari““. Ťuknutím sa zaškrtne, pole sa vyprázdni a skupina sa uloží s osobou. Pole aj riadky majú na telefóne 44 px.</p>
     <p><span class="ann">2</span>Pod kartou je <code>.form-group-foot</code> „Nová skupina vznikne uložením osoby." (pri dokumente „…uložením dokumentu.").</p>
-    <p><span class="ann">3</span>Prázdny zoznam: karta má len riadok s poľom a pätička hovorí, ako skupina vznikne.</p>
+    <p><span class="ann">3</span>Prázdny zoznam: karta má len pole a pätička hovorí, ako skupina vznikne.</p>
   </div>
 </div>
 </div>
@@ -162,15 +167,16 @@ const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"
 const crumbs=a=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
 const F=(l,v,h,ph)=>`<label class="field"><span class="field-label">${l}</span><input class="field-input${ph?" ph":""}" value="${v}" readonly>${h?`<span class="field-hint">${h}</span>`:""}</label>`;
 const row=([t,d,on,only,sub])=>`<label class="form-row select-row"><i class="ck${on?" on":""}"></i><span class="form-row-main"><span>${t}</span>${sub?`<small>${sub}</small>`:""}</span><span class="form-row-detail${only?" only":""}">${only?"len tu":d}</span></label>`;
-const newRow=(ph,val)=>`<label class="form-row plain"><i class="plus">+</i><input class="form-row-input${val?"":" ph"}" value="${val||ph}" readonly></label>`;
-const group=(head,n,rows,newPh,val,foot,extra="",search="")=>`<fieldset class="form-group" style="border:0;padding:0;margin:0"><legend class="form-group-head">${head}${n?`<span class="n">${n}</span>`:""}</legend><div class="card">${search}<div class="form-list">${rows.map(row).join("")}${newRow(newPh,val)}</div>${extra}</div>${foot?`<p class="form-group-foot">${foot}</p>`:""}</fieldset>`;
+const combo=(ph,typed,count)=>`<div class="sel-search">⌕ ${typed?`<b>${typed}</b>`:`<span class="ph">${ph}</span>`}${count?`<span class="n">${count}</span>`:""}</div>`;
+const addRow=(v,kind)=>`<label class="form-row select-row is-add"><i class="plus">+</i><span class="form-row-main"><span>Pridať „${v}“</span><small>${kind}</small></span></label>`;
+const group=(head,n,rows,ph,typed,foot,extra="",count="",add="")=>`<fieldset class="form-group" style="border:0;padding:0;margin:0"><legend class="form-group-head">${head}${n?`<span class="n">${n}</span>`:""}</legend><div class="card">${combo(ph,typed,count)}${rows.length||add?`<div class="form-list" style="border-top:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius)">${rows.map(row).join("")}${add}</div>`:""}${extra}</div>${foot?`<p class="form-group-foot">${foot}</p>`:""}</fieldset>`;
 const tags=[["Stanovy","1 dokument",1],["disciplina","",1,1,"nie je v číselníku"],["Poriadok","12 dokumentov",0],["Registrácia","4 dokumenty",0],["Štart hráča","6 dokumentov",0]];
 
 document.getElementById("f-edit").innerHTML=hdr()+crumbs(["Prehľad","Knižnica","Stanovy SFZ","Upraviť údaje"])+`<div class="body"><div class="wide">
 <div class="page-head"><h1 class="page-title">Upraviť údaje</h1></div>
 <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start">
 <div class="card pad">${F("Názov","Stanovy Slovenského futbalového zväzu")}<div class="two">${F("Druh","Stanovy")}${F("Oddelenie","Sekretariát")}</div>${F("Jazyk","Slovenčina")}<div class="acts"><span class="button">Uložiť</span></div></div>
-<div class="rel">${an(1,"right:-11px;top:44px")}${an(2,"right:-11px;top:96px")}${an(3,"right:-11px;bottom:46px")}${group("Značky","",tags,"Nová značka","","Nová značka vznikne uložením dokumentu a pribudne do číselníka organizácie. Viac značiek oddeľte čiarkou.")}</div>
+<div class="rel">${an(1,"right:-11px;top:96px")}${an(2,"right:-11px;top:148px")}${an(3,"right:-11px;top:2px")}${group("Značky","",tags,"Hľadať alebo pridať značku","","Nová značka vznikne uložením dokumentu a pribudne do číselníka organizácie.")}</div>
 </div></div></div>`;
 
 const many=["rozhodcovia","delegati","komisari","komisia_mladeze","koordinatori","asistenti_rozhodcov","pozorovatelia","treneri_licencia_a","treneri_licencia_b","zdravotnici","usporiadatelia","media","dobrovolnici","vykonny_vybor"];
@@ -178,22 +184,22 @@ const cnt={rozhodcovia:14,delegati:6,komisari:9,komisia_mladeze:5,koordinatori:3
 const ppl=n=>n===1?"1 človek":n<5?`${n} ľudia`:`${n} ľudí`;
 const checked=["delegati","komisari"];
 const shown=[...checked,...many.filter(g=>!checked.includes(g)).sort().filter(g=>/ko/.test(g))];
-const search=`<div class="sel-search">⌕ <b>ko</b><span style="margin-left:auto;font-size:12.5px">5 z 14</span></div>`;
+
 document.getElementById("f-many").innerHTML=hdr()+crumbs(["Osoby","Marek Kováč"])+`<div class="body"><div class="narrow">
-<div class="rel">${an(1,"left:-11px;top:40px")}${an(2,"left:-11px;top:130px")}${group("Skupiny","14",shown.map(g=>[g,ppl(cnt[g]),checked.includes(g)]),"Nová skupina","","Nová skupina vznikne uložením osoby. Viac skupín oddeľte čiarkou.","",search)}</div>
+<div class="rel">${an(1,"left:-11px;top:40px")}${an(2,"left:-11px;top:130px")}${group("Skupiny","14",shown.map(g=>[g,ppl(cnt[g]),checked.includes(g)]),"Hľadať alebo pridať skupinu","ko","Nová skupina vznikne uložením osoby.","","5 z 14")}</div>
 </div></div>`;
 
 const warn=`<div class="sel-warn"><p>Skupinu <b>„rozhodcova"</b> sme neuložili: podobá sa na existujúcu <b>„rozhodcovia"</b> (14 ľudí). Ostatné údaje osoby sú uložené.</p><div class="acts"><span class="button button--quiet button--sm">Pridať do „rozhodcovia"</span><span class="button button--quiet button--sm">Založiť „rozhodcova"</span></div></div>`;
 document.getElementById("f-warn").innerHTML=hdr()+crumbs(["Osoby","Marek Kováč"])+`<div class="body"><div class="narrow">
 <div class="notice">✓ Osoba uložená.</div>
-<div class="rel">${an(3,"right:-11px;bottom:60px")}${group("Skupiny","3",[["delegati","6 ľudí",1],["komisari","9 ľudí",1],["rozhodcovia","14 ľudí",0]],"Nová skupina","","Nová skupina vznikne uložením osoby.",warn)}</div>
+<div class="rel">${an(3,"right:-11px;bottom:60px")}${group("Skupiny","3",[["delegati","6 ľudí",1],["komisari","9 ľudí",1],["rozhodcovia","14 ľudí",0]],"Hľadať alebo pridať skupinu","","Nová skupina vznikne uložením osoby.",warn)}</div>
 </div></div>`;
 
 const tracks=`<fieldset class="form-group" style="border:0;padding:0;margin:0"><legend class="form-group-head">Trasy</legend><div class="card"><div class="form-list">${[["Nástup 2026",0],["Rozhodcovia 2026",1]].map(([t,o])=>`<label class="form-row select-row"><i class="ck${o?" on":""}"></i><span class="form-row-main">${t}</span></label>`).join("")}</div></div></fieldset>`;
 document.getElementById("f-p390").innerHTML=hdr(1)+crumbs(["Osoby","Marek Kováč"])+`<div class="body" style="display:grid;gap:16px">
 <div class="page-head"><h1 class="page-title">Marek Kováč</h1><span class="tag tag--ok">aktívny</span></div>
 <div class="card pad">${F("Funkcia","Rozhodca")}${F("Oddelenie","Úsek rozhodcov")}</div>
-<div class="rel">${an(1,"right:-6px;top:126px")}${an(2,"right:-6px;bottom:-4px")}${group("Skupiny","",[["rozhodcovia","14 ľudí",1],["delegati","6 ľudí",0]],"Nová skupina","komisari","Nová skupina vznikne uložením osoby.")}</div>
+<div class="rel">${an(1,"right:-6px;top:132px")}${an(2,"right:-6px;bottom:-4px")}${group("Skupiny","",[["rozhodcovia","14 ľudí",1]],"Hľadať alebo pridať skupinu","komisari","Nová skupina vznikne uložením osoby.","","",addRow("komisari","nová skupina"))}</div>
 ${tracks}
 <span class="button full">Uložiť</span></div>`;
 
@@ -202,13 +208,13 @@ document.getElementById("f-n390").innerHTML=hdr(1)+crumbs(["Knižnica","Nový do
 <div class="page-head"><h1 class="page-title">Nový dokument</h1></div>
 <div class="steps"><span>1 Súbor</span><span class="on">2 Údaje</span><span>3 Kontrola</span></div>
 <div class="card pad">${F("Názov","Súťažný poriadok futbalu")}${F("Druh","Poriadok")}</div>
-${group("Značky","",ntags,"Nová značka","","Nová značka vznikne uložením dokumentu.")}
+${group("Značky","",ntags,"Hľadať alebo pridať značku","","Nová značka vznikne uložením dokumentu.")}
 <span class="button full">Pokračovať</span></div>`;
 
 document.getElementById("f-e390").innerHTML=hdr(1)+crumbs(["Osoby","Jana Nová"])+`<div class="body" style="display:grid;gap:16px">
 <div class="page-head"><h1 class="page-title">Jana Nová</h1><span class="tag">pozvaná</span></div>
-<div class="rel">${an(3,"right:-6px;top:30px")}${group("Skupiny","",[],"Nová skupina","","Zatiaľ žiadna skupina — vznikne prvou, ktorú napíšete.")}</div>
-${group("Značky (dokument)","",[],"Nová značka","","Zatiaľ žiadna značka — vznikne prvou, ktorú napíšete, alebo ju pridajte v Nastavení organizácie → Číselníky.")}
+<div class="rel">${an(3,"right:-6px;top:30px")}${group("Skupiny","",[],"Pridať skupinu","","Zatiaľ žiadna skupina — vznikne prvou, ktorú napíšete.")}</div>
+${group("Značky (dokument)","",[],"Pridať značku","","Zatiaľ žiadna značka — vznikne prvou, ktorú napíšete, alebo ju pridajte v Nastavení organizácie → Číselníky.")}
 </div>`;
 </script>
 </body></html>
