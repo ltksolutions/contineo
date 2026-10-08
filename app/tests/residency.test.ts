@@ -6,7 +6,7 @@
  * NEOVERENÁ lokalita sa v prísnom režime správa ako zakázaná.
  */
 import {
-  checkResidency, locationOverview, checkIsolation, isolationOverview,
+  checkResidency, locationOverview, checkIsolation, isolationOverview, checkConnector,
 } from "../src/lib/residency"
 import { validateProfile } from "../src/lib/tenantProfile"
 import type { TenantProfile } from "../src/lib/providers/types"
@@ -221,3 +221,21 @@ t("validateProfile prepustí T3 s air-gapom a vlastnou trojicou", (() => {
   catch { return false }
 })())
 
+// ── MCP konektory (ADR-029) — rovnaké pravidlá ako adaptéry ─────────────────
+
+const PUBLIC_MCP = "https://mcp.sportnet.online/mcp"
+const OWN_MCP = "https://mcp-docs:8443/mcp"
+
+t("konektor: global a eu-data prepustia verejný server",
+  checkConnector({ dataResidency: "global", tier: "T1" }, PUBLIC_MCP) === null
+  && checkConnector({ dataResidency: "eu-data", tier: "T1" }, PUBLIC_MCP) === null)
+t("konektor: eu-full odmietne server s neoverenou lokalitou",
+  checkConnector({ dataResidency: "eu-full", tier: "T1" }, PUBLIC_MCP)?.axis === "residency")
+t("konektor: on-prem a air-gap odmietnu verejný server",
+  checkConnector({ dataResidency: "on-prem", tier: "T1" }, PUBLIC_MCP)?.limit === "on-prem"
+  && checkConnector({ dataResidency: "air-gap", tier: "T3" }, PUBLIC_MCP)?.limit === "air-gap")
+t("konektor: server na vlastnej infraštruktúre prejde aj v air-gap a T3",
+  checkConnector({ dataResidency: "air-gap", tier: "T3" }, OWN_MCP) === null,
+  JSON.stringify(checkConnector({ dataResidency: "air-gap", tier: "T3" }, OWN_MCP)))
+t("konektor: T2 odmietne cudzí server aj v režime global — nevieme, či je vyhradený",
+  checkConnector({ dataResidency: "global", tier: "T2" }, PUBLIC_MCP)?.axis === "isolation")

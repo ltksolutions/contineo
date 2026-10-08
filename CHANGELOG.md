@@ -20,6 +20,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - Stránka zodpovednej osoby má bežnú hlavičku; pri viacerých úlohách sú
   tlačidlá „Uložiť" tiché.
 
+### MCP konektory v kontrole dátovej rezidencie (2026-10-08, ADR-002 × ADR-029)
+
+- Konektor sa posudzuje tými istými pravidlami ako adaptéry profilu. V
+  režimoch **eu-full, on-prem a air-gap** a pri izolácii **T2 a T3** sa dá
+  použiť len MCP server na vlastnej infraštruktúre; server, ktorého
+  lokalitu nepoznáme, sa odmietne.
+- Kontrola platí pri uložení konektora, pri pripojení aj **pred každým
+  volaním servera** — keď sa režim organizácie sprísni, existujúci konektor
+  sa prestane volať. Nepovolený konektor sa neponúka pilulkou pri otázke
+  ani v rozsahoch kanála.
+- Organizácie v režime global a eu-data sa to netýka (SFZ beží v eu-data,
+  Sportnet konektor funguje ako doteraz).
+- Web contineo.app: riadok o konektore v tabuľke dátových tokov hovorí,
+  čo kontrola robí, namiesto „režim ho zatiaľ nekontroluje".
+
 ### Posudok odpovede: voľby v riadku, fronta bez karty v karte (2026-10-08)
 
 - Hodnotiteľ odpovedá na „Je odpoveď vecne správna?" a „Tvrdí niečo, čo

@@ -216,8 +216,16 @@ nad zlúčeným zoznamom (`docs/TODO.md` E2).
 
 **Otvorené** (`docs/TODO.md` E2): fáza 3 — nástroje asistenta; identita
 `person`; servisný účet Sportnetu namiesto osobného účtu Jána; hromadný
-import a pravidelná synchronizácia; Contineo ako MCP server. Konektor
-zatiaľ **nie je v kontrole režimu** (`residency.ts`, ADR-002) — v režimoch
-`eu-full`, `on-prem` a `air-gap` ho nič neblokuje; § 4 („on-prem bez
-prístupu von beží bez neho") dnes platí len preto, že ho tam nikto
-nezapne. Verejný web to v tabuľke dátových tokov hovorí otvorene.
+import a pravidelná synchronizácia; Contineo ako MCP server.
+
+**Doplnené 2026-10-08 — konektor v kontrole režimu.** `checkConnector()`
+v `residency.ts` posudzuje konektor tými istými tabuľkami ako adaptéry
+profilu: server na vlastnej infraštruktúre (podľa adresy, ako pri
+`openai`) je `vlastna` / `dedikovana`, každý iný `neznama`. V režimoch
+`eu-full`, `on-prem` a `air-gap` a pri tieroch T2 a T3 sa teda dá použiť
+len server na vlastnej infraštruktúre. Kontrola sa vynúti pri uložení
+konektora, pred prihlásením a **pred každým volaním servera**
+(`withClient`) — profil sa mohol sprísniť, kým konektor existoval;
+nepovolený konektor sa neponúka ani pilulkou na `/ask`, ani v rozsahoch
+kanála. Cudzí server v EÚ pre `eu-full` bude vyžadovať deklarovanú
+lokalitu na konektore s dôkazom — kým to nikto nepotrebuje, nerobí sa.
