@@ -27,6 +27,12 @@ dá a predpis tým znova platí — Ján rozhodol podľa ADR, tlačidlo ostáva.
 **Navyše oproti návrhu:** karta úlohy „Určiť právny základ" na detaile
 správcu má tiché „Uložiť" — inak by vedľa „Nové znenie" boli dve plné.
 
+**Naostro (po #319):** na šírke 640–1023 px sú nástroje pod nadpisom
+a „Stiahnuť" je prvý zľava — ponuka ukotvená vpravo vyšla mimo obrazovky.
+Harness to nevidel, lebo snímky boli len 1440 a 390. Oprava #320 (ukotvenie
+zľava), overené na 1440, 800 a 390. **Nabudúce:** ponuky a plachty skúšať
+aj na šírke tabletu, nielen v dvoch rámoch návrhu.
+
 ---
 
 ## 2026-10-08 — posudok (EVAL-posudok)

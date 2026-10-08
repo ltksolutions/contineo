@@ -265,7 +265,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 3. **Formulárové kroky:** P7 + zvyšné výbery (`/hr/tracks/[key]`, `/dpo` po R9,
    `/admin/tenants`).
 4. ~~**Vzdelávanie: cesty** (R3)~~ ✓ 7. 10. 2026.
-5. **Knižnica: úprava dokumentu** (R4) a **AI spotreba** (R5).
+5. ~~**Knižnica: úprava dokumentu** (R4) a **AI spotreba** (R5)~~ ✓ 6. 10. 2026.
 6. **Návrhy v Claude Design:** ~~`TagSelect` (P8)~~ ✓ 8. 10. 2026, lišta uloženia pre stránky
    ~~s viacerými formulármi (P9)~~ ✓ 7. 10. 2026, ~~správa kurzu~~ ✓ 7. 10. 2026, ~~karta osoby bez karty v karte~~ ✓ 8. 10. 2026,
    ~~`Rating`~~ ✓ 8. 10. 2026.
