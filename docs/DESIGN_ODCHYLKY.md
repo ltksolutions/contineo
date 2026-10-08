@@ -151,110 +151,148 @@ všade; najviac organisation/[section] (59), library/[id] (45), hr/tracks/[key]
 Poradie podľa toho, kto stránku vidí najčastejšie. Pri každej sekcii: čo
 je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 
+> **Overené proti kódu 8. 10. 2026** (`main` po #320). Pri každom náleze
+> **ok** = už neplatí, **otvorené** = v kóde stále je (súbor:riadok k tomuto
+> dátumu). Súhrn otvorených je na konci sekcie.
+
 ### 1. Potvrdzovanie a prehľad — každý zamestnanec
 - **documents** — plné tlačidlo pri každom ďalšom kroku trasy a „Otvoriť" pri
-  každej položke (R1); stav „nie je v organizácii" je `p.card`, nie `.empty`.
-- **documents/[documentId]**, **/**, **prehlad**, **more**, **guide**, **directory** — bez nálezov (directory: „nič sa nenašlo" by mohlo byť `.empty`).
-- **acknowledgements** — „Stiahnuť" pod úvodom, nie v `.page-head` (P1);
-  prázdny stav `p.card` → `.empty`; citácia celá v inline štýle → trieda.
-- **notifications** — „Označiť všetko ako prečítané" plné pod nadpisom →
-  `.page-head`, tiché (P1).
+  každej položke (R1) — ok; stav „nie je v organizácii" je `p.card`, nie
+  `.empty` — **otvorené** (`documents/page.tsx:50`).
+- **documents/[documentId]**, **/**, **prehlad**, **more**, **guide** — bez
+  nálezov. **directory** — „nič sa nenašlo" by mohlo byť `.empty` —
+  **otvorené** (`directory/page.tsx:74`, tichý riadok s počtom).
+- **acknowledgements** — „Stiahnuť" v `.page-head` (P1) — ok; prázdny stav
+  `.empty` — ok; citácia celá v inline štýle → trieda — **otvorené**
+  (`acknowledgements/page.tsx:107`).
+- **notifications** — „Označiť všetko ako prečítané" v `.page-head`, tiché
+  (P1) — ok.
 - **approvals** — bez nálezov.
 
 ### 2. Knižnica — správcovia obsahu
-- **library** — v prázdnej knižnici dve plné „Nahrať dokument" (P10).
-- **library/[id]** — ~~akcie dokumentu v `.detail-actions` pod štítkami, nie
-  v `.page-head`; „Nové znenie" je plné naraz s „Uložiť základ", panelom
-  schvaľovania a „Prideliť vybraným" (r. 965, 993, 1299)~~ ✓ 8. 10. 2026
-  (KNIZNICA-akcie-dokumentu: `.page-tools`, Ďalšie akcie, `?archive=1`); úprava na
-  `?edit=document` (R4); kroky úpravy `upload-step` a podnadpis
-  `flow-section-title` (P7); značky cez `TagSelect` (P8); farby `diffStyle`
-  (P13); pohľad zodpovednej osoby — plné tlačidlo v každej karte úlohy (R1).
-- **library/new** — kroky `upload-step` (P7), `TagSelect` (P8).
-- **library/[id]/text** — keď čaká návrh, plné „Použiť ako koncept" aj
-  „Uložiť text"; nadpis mimo `.page-head`.
-- **library/curation** — plné „Zverejniť" na každej karte (R1); hlavička
-  (P1).
-- **library/folders** — hlavička (P1).
+- **library** — v prázdnej knižnici dve plné „Nahrať dokument" (P10) — ok.
+- **library/[id]** — akcie dokumentu v `.page-head` a jedno plné tlačidlo —
+  ok (8. 10., KNIZNICA-akcie-dokumentu); úprava na `/library/[id]/edit` (R4)
+  — ok; kroky úpravy `.form-group--lg` (P7) — ok; značky cez `ValueSelect`
+  (P8) — ok; farby `diffStyle` (P13) — ok; pohľad zodpovednej osoby, tiché
+  „Uložiť" pri viacerých kartách (R1) — ok.
+- **library/new** — kroky (P7) — ok; `TagSelect` (P8) — ok.
+- **library/[id]/text** — „Uložiť text" tiché, keď čaká návrh — ok; nadpis
+  v `.page-head` — ok.
+- **library/curation** — tiché „Zverejniť" na kartách (R1) — ok; hlavička
+  (P1) — ok.
+- **library/folders** — hlavička (P1) — ok.
 - **library/[id]/chunks**, **library/[id]/version** — bez nálezov.
+- Zvyšky mimo pôvodných nálezov (P7): `flow-section-title` v karte postupu
+  znenia (zámer jej rámu), `upload-step-opt` pri „nepovinné" a
+  `upload-section` v `library/new/faq` a `library/new/connector`.
 
 ### 3. Pridelené dokumenty
-- **hr** — texty natvrdo (P11).
-- **hr/[id]** — „Dať vedieť e-mailom" je odkaz pri h2; nadpis mimo `.page-head`.
-- **hr/[id]/notify**, **hr/reminders**, **hr/tracks/[key]/notify** — odoslanie
-  na konci (R2); chyba ako karta (P2).
-- **hr/evidence** — „Použiť" pri filtri je plné, hoci nie je hlavná akcia → tiché.
-- **hr/overview** — CSV pri prepínači, nie v `.page-head` (na `/hr/evidence`
-  je v hlavičke) → zjednotiť.
-- **hr/tracks** — „Nová trasa" ako `h2` s inline štýlom → `.form-group` (P7).
-- **hr/tracks/[key]** — termín v neexistujúcej triede `.check-row` →
-  `.choice-row` + `.choice-field` ako na `/hr/assign`; dva holé checkboxy (P6);
-  `.hr-subtitle` (P7); viac plných tlačidiel naraz (P9); stav cez inline (P3).
-- **hr/assign** — chyba ako karta (P2); `npm run person` (P12).
+- **hr** — texty natvrdo (P11) — ok.
+- **hr/[id]** — „Dať vedieť e-mailom" ako tlačidlo v `.page-head` — ok;
+  nadpis v `.page-head` — ok.
+- **hr/[id]/notify**, **hr/reminders**, **hr/tracks/[key]/notify** —
+  odoslanie na konci (R2) — ok; chyba cez `Notice` (P2) — ok.
+- **hr/evidence** — tiché „Použiť" pri filtri — ok.
+- **hr/overview** — CSV pri prepínači, nie v `.page-head` — ok ako
+  rozhodnutie (ZAKLAD-segmented-control nechal CSV pod prepínačom;
+  `/hr/evidence` ho má v hlavičke).
+- **hr/tracks** — „Nová trasa" ako `.form-group` (P7) — ok.
+- **hr/tracks/[key]** — termín `.choice-row` + `.choice-field` — ok; dva
+  prepínače `.toggle` (P6) — ok; `.hr-subtitle` (P7) — ok; jedno plné
+  tlačidlo (P9) — ok; stav cez `tag--*` (P3) — ok.
+- **hr/assign** — chyba cez `Notice` (P2) — ok; `npm run person` (P12) —
+  **otvorené** (`hr/assign/page.tsx:253`, typ návrh).
 - **hr/[id]/revoke** — bez nálezov.
 
 ### 4. Osoby a organizácia
-- **people** — v zozname sa ukazuje surový kľúč roly (P11); karty aj na
-  počítači (R10).
-- **people/[id]** — ~~skupiny cez `TagSelect` (P8); karta v karte; nadpis
-  mimo `.page-head`~~ ✓ 8. 10. 2026 (OSOBY-karta-osoby: `.set-sec`,
-  `.set-savebar`, Ďalšie akcie).
-- **people/import** — „Aktualizovať existujúcich" (P6); tabuľka na karty pod
-  640 px; chyba ako karta (P2).
-- **people/invite** — odoslanie na konci (R2). **people/new** — chyba ako karta (P2).
+- **people** — názov roly namiesto kľúča (P11) — ok; karty aj na počítači
+  (R10) — ok (rozhodnutie A).
+- **people/import** — „Aktualizovať existujúcich" (P6) — ok; tabuľka na
+  karty pod 640 px — ok; chyba náhľadu ako `.lnote--warn` (P2) — ok, ale
+  výsledok importu (aj chybový) je stále holá `p.card` — **otvorené**
+  (`components/PeopleImport.tsx:153`).
+- **people/invite** — odoslanie na konci (R2) — ok. **people/new** — chyba
+  cez `Notice` (P2) — ok.
 - **organisation** — bez nálezov.
-- **organisation/[section]** — AI `?view=usage` (R5); číselníky `?list=` (R6);
-  prihlásenie, GDPR a domény majú po tri a viac plných „Uložiť"/„Overiť"
-  naraz (P9), tlačidlá domén s inline rozmermi; stav cez inline (P3); filter
-  spotreby „Použiť" plné; placeholder s doménami SFZ (P11).
-- **admin** — „Nová organizácia" v odseku pod úvodom → `.page-head` (P1);
-  `npm run domains` (P12).
-- **admin/new** — správa ako holá `.card` (P2).
-- **admin/tenants/[code]** — jazyky ako pilulky s checkboxom → `.select-row`
-  ako na `/organisation/general`, s názvom jazyka namiesto kódu; viac plných
-  naraz (P9); stav a farby inline (P3).
+- **organisation/[section]** — spotreba AI na vlastnej ceste (R5) — ok;
+  číselníky `?list=` (R6) — ok; prihlásenie, GDPR a domény s jedným plným
+  tlačidlom (P9) — ok; tlačidlá domén `button--sm` bez inline rozmerov —
+  ok; stav cez `tag--*` (P3) — ok; tiché „Použiť" pri spotrebe — ok;
+  placeholder bez domén SFZ (P11) — ok.
+- **admin** — „Nová organizácia" v `.page-head` (P1) — ok; `npm run
+  domains` (P12) — **otvorené** (`admin/page.tsx:137`; stránka
+  prevádzkovateľa, typ návrh).
+- **admin/new** — správa cez `Notice` (P2) — ok.
+- **admin/tenants/[code]** — jazyky ako `.select-row` s názvom — ok; jedno
+  plné v `.set-savebar` (P9) — ok; stav domén inline farbami (P3) —
+  **otvorené** (`admin/tenants/[code]/page.tsx:116, 126, 136`).
 
 ### 5. Vzdelávanie
-- **learning** — plné „Pokračovať/Začať" na každej karte kurzu (R1); hlavička
-  `.lp-head` (P1).
-- **learning/[courseKey]** — plné tlačidlo v bočnej karte aj v riadku ďalšej
-  časti naraz → riadok tichý (R8).
-- **learning/[courseKey]/[partKey]** — pri teste na opakovanie plné tlačidlo
-  testu aj „Označiť ako prejdené" → test tichý.
-- **…/test/[testKey]** — „Spustiť test" v karte úvodu (R2).
-- **…/[attemptId]** — odpovede `.opt` (R7).
-- **…/result** — „Všetky / Len chybné" z `.pill` (P4).
-- **certificate** — bez nálezov. **certificate/print** — odkaz „Späť na kurz"
-  vedie na certifikát → opraviť text (P11).
-- **learning/manage** — ~~`?tab=` (R3)~~ ✓; hlavička (P1); dve plné pri `?new=1`
-  (P10); filter stavu z `.pill` (P4); zlúčenie tém `mg-choices`/`mg-choice` →
-  `.form-group` + `.choice-row` + `.choice-field`; výber tagov na zlúčenie
-  (`tgv-main`) → `.select-row` (návrh); `.mg-table` (P5).
+- **learning** — tiché „Pokračovať/Začať" na kartách (R1) — ok; hlavička
+  (P1) — ok.
+- **learning/[courseKey]** — riadok ďalšej časti tichý (R8) — ok.
+- **learning/[courseKey]/[partKey]** — test na opakovanie tichý — ok.
+- **…/test/[testKey]** — „Spustiť test" ako posledný prvok (R2) — ok.
+- **…/[attemptId]** — textové odpovede `.choice-row` / `.select-row` (R7)
+  — ok (obrázkové dlaždice ostávajú `.opt`, ako R7 dovoľuje).
+- **…/result** — „Všetky / Len chybné" `.view-switch` (P4) — ok.
+- **certificate** — bez nálezov. **certificate/print** — „Späť na
+  certifikát" (P11) — ok.
+- **learning/manage** — `?tab=` (R3) — ok; hlavička (P1) — ok; jedno plné
+  pri `?new=1` (P10) — ok; filter stavu `.view-switch` (P4) — ok;
+  `.mg-table` na karty pod 1024 px (P5) — ok; zlúčenie značiek (nie tém)
+  `mg-choices`/`mg-choice` → `.form-group` + `.choice-row` +
+  `.choice-field` — **otvorené** (`learning/manage/page.tsx:307`); výber
+  značiek na zlúčenie `tgv-main` → `.select-row` (návrh) — **otvorené**
+  (`learning/manage/page.tsx:350`).
 - **learning/manage/[courseKey]** — ✓ 7. 10. 2026 podľa návrhu
   `MANAGE-COURSE-akcie` (vlastné cesty R3, jedno plné tlačidlo, karta stavu
   len na koreni, „Pridať blok ▾", zdroj videa `.choice-row`, potvrdenie
-  archivácie a odstránenia časti, náhľad ako študent). Pôvodne: „← Všetky
-  časti", plné „Zverejniť", „Pridať časť", „Uložiť", „Pridať", „Priradiť
-  test", „Prideliť" naraz; typ bloku a zdroj videa ako `.pill`.
-- **learning/tests** — ~~`?tab=` (R3)~~ ✓; dve plné pri novom teste, otázke, importe
-  (P10); typ otázky ako `.pill` (ako vyššie); správna odpoveď `.mc-check` v
-  riadku odpovede (návrh); áno/nie `.tf-opt` → `.choice-row`; filter stavu
-  (P4); tabuľka chýb importu bez kariet.
+  archivácie a odstránenia časti, náhľad ako študent) — ok.
+- **learning/tests** — `?tab=` (R3) — ok; hlavičkové tlačidlá skryté pri
+  novom teste, otázke a importe (P10) — ok; filter stavu (P4) — ok; typ
+  otázky ako `.lpills`/`.pill` — **otvorené** (`learning/tests/page.tsx:308`);
+  správna odpoveď `.mc-check` v riadku odpovede (návrh) — **otvorené**
+  (`:342`); áno/nie `.tf-opt` → `.choice-row` — **otvorené** (`:348`);
+  tabuľka chýb importu bez kariet — **otvorené** (`:422`).
 - **learning/tests/[testKey]** — bez nálezov.
 
 ### 6. Ostatné
-- **ask**, **ask/a/[id]** — `Answer.tsx`: stavy na `.tag` cez inline farby (P3),
-  blok „useknutá odpoveď" inline → `.lnote--warn`, texty natvrdo a
-  `toLocaleString("sk")` bez jazyka (P11).
-- **ask/history** — hlavička (P1); vlastné pole hľadania → `SearchStrip`.
-- **evaluation** — plné „Uložiť" v každej položke (R1); hlavička (P1);
-  ~~Áno/Nie v `Rating` vlastné tlačidlá s inline farbami; podnadpisy (P7);
-  `fieldStyle`~~ ✓ 8. 10. 2026 (EVAL-posudok: `.seg`, sekcia karty položky).
-- **dpo** — rozhodnutie o námietke dlaždicami `hr-choice--tile` (R9); plné
-  „Rozhodnúť" v páse hore aj pri námietke → v páse tiché (skok na kotvu).
-- **sign-in** — veľkosti písma natvrdo, chyba inline (P2), texty (P11).
-- **verify/[registrationNumber]** — „IČO" natvrdo (P11).
+- **ask**, **ask/a/[id]** — `Answer.tsx`: stavy cez `tag--*` (P3) — ok;
+  texty a dátumy cez `i18n` s jazykom (P11) — ok; blok „useknutá odpoveď"
+  inline → `.lnote--warn` — **otvorené** (`components/Answer.tsx:188`).
+- **ask/history** — hlavička (P1) — ok; vlastné pole hľadania →
+  `SearchStrip` — **otvorené** (`ask/history/page.tsx:118`).
+- **evaluation** — tiché „Uložiť" pri príprave odpovede (R1) — ok;
+  hlavička (P1) — ok; posudok bez inline štýlov — ok (8. 10., EVAL-posudok).
+- **dpo** — rozhodnutie o námietke `.choice-row` (R9) — ok; „Rozhodnúť"
+  v páse tiché — ok.
+- **sign-in** — chyba ako `.lnote--bad` (P2) — ok; texty (P11) — ok;
+  veľkosti písma natvrdo — **otvorené** (`components/SignIn.tsx:88, 121, 127`).
+- **verify/[registrationNumber]** — „IČO" (P11) — ok.
 - **privacy** — bez nálezov (karty pod 640 px sú zámer rámu PRIVACY-citatelnost).
+
+### Otvorené k 8. 10. 2026
+
+Mechanické (vzor existuje, jeden PR):
+
+1. `documents` — „nie je v organizácii" → `.empty`.
+2. `directory` — „nič sa nenašlo" → `.empty`.
+3. `acknowledgements` — citácia z inline štýlu do triedy.
+4. `PeopleImport` — výsledok importu → `Notice` / `.lnote` namiesto `p.card`.
+5. `admin/tenants/[code]` — stav domén cez `tag--*` / triedy namiesto
+   inline farieb (P3).
+6. `learning/manage` — zlúčenie značiek `mg-choice` → `.choice-row`.
+7. `learning/tests` — typ otázky `.pill` → `.view-switch`; áno/nie
+   `.tf-opt` → `.choice-row`; chyby importu ako karty pod 1024 px.
+8. `Answer.tsx` — useknutá odpoveď → `.lnote--warn`.
+9. `ask/history` — pole hľadania → `SearchStrip`.
+10. `SignIn` — veľkosti písma z tokenov.
+
+Návrh: `tgv-main` → `.select-row` (learning/manage), `.mc-check` v riadku
+odpovede (learning/tests), P12 (`npm run person` na `/hr/assign`,
+`npm run domains` na `/admin`).
 
 ## Navrhované poradie PR
 
