@@ -28,6 +28,7 @@ export default function LegalBasisForm({
   language,
   back,
   draft = false,
+  quiet = false,
 }: {
   documentId: string
   /** Pri pripravovanom znení (`draft`) sa nevypĺňa. */
@@ -41,6 +42,11 @@ export default function LegalBasisForm({
   back: "library" | "document"
   /** Základ pripravovaného znenia (ADR-023) — uloží sa na koncept. */
   draft?: boolean
+  /**
+   * Tiché „Uložiť", keď je na obrazovke viac kariet úloh alebo iná hlavná
+   * akcia — plné tlačidlo je najviac jedno (R1; KNIZNICA-akcie-dokumentu Q4).
+   */
+  quiet?: boolean
 }) {
   const t = dictionary(language).responsibility
   return (
@@ -85,7 +91,7 @@ export default function LegalBasisForm({
         </label>
       )}
 
-      <div><SubmitButton className="button">{t.saveBasis}</SubmitButton></div>
+      <div><SubmitButton className={quiet ? "button button--quiet" : "button"}>{t.saveBasis}</SubmitButton></div>
     </form>
   )
 }

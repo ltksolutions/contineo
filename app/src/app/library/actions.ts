@@ -1468,7 +1468,8 @@ export async function archiveDocumentAction(fd: FormData) {
   }
   revalidatePath(`/library/${id}`)
   revalidatePath("/library")
-  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  // Pri chybe späť do otvoreného potvrdenia (KNIZNICA-akcie-dokumentu).
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1&archive=1#more" : ""}`)
 }
 
 /** Obnoví platnosť archivovaného predpisu (omyl). Pridelenia sa neobnovujú. */

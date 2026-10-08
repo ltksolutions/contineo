@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>KNIZNICA — akcie dokumentu</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:96ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+.notes{display:grid;gap:6px;max-width:96ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:20;box-shadow:0 0 0 3px #fff}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line)}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.body{padding:24px 28px 36px}
+.page{display:grid;gap:18px;max-width:1240px}
+.page-narrow{display:grid;gap:18px;max-width:760px}
+.page-head{display:flex;align-items:flex-start;gap:10px 12px;flex-wrap:wrap}
+.page-head-main{display:grid;gap:6px;min-width:0;flex:1 1 420px}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-lead{font-size:14px;color:var(--muted);margin:0;display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center}
+.page-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--danger{background:var(--surface);color:var(--bad-fg);border-color:var(--bad-fg)}
+.button--dangerfill{background:var(--bad-fg);border-color:var(--bad-fg);color:#fff}
+.dark .button--dangerfill{color:#0e1116}
+.button--icon{width:44px;padding:0;font-size:18px}
+.chev{font-size:14px;line-height:1}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--archived{background:var(--surface-2);color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+/* menu */
+.menu-wrap{position:relative}
+.menu{position:absolute;right:0;top:46px;z-index:15;width:280px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.18);padding:6px;display:grid}
+.menu a{display:grid;gap:1px;min-height:44px;padding:7px 12px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14.5px}
+.menu a:hover,.menu a.hl{background:var(--accent-soft)}
+.menu small{color:var(--muted);font-size:12px}
+/* obsah */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+.main{display:grid;gap:18px;min-width:0}
+.side{display:grid;gap:14px}
+.stub{padding:18px 20px;display:grid;gap:10px}
+.stub h2{margin:0;font-size:var(--fs-section)}
+.stub p{margin:0;font-size:14px;color:var(--muted)}
+.steps{display:flex;gap:0;align-items:center;flex-wrap:wrap}
+.st{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.st i{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700}
+.st.cur{color:var(--ink);font-weight:600}.st.cur i{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.st.done i{background:var(--ok-fg);border-color:var(--ok-fg);color:#fff}
+.st-sep{width:28px;height:1px;background:var(--line-strong);margin:0 8px}
+.foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 20px;border-top:1px solid var(--line)}
+.side .card{padding:16px 18px;display:grid;gap:8px}
+.side h2{margin:0;font-size:15px}
+.meta{display:grid;gap:6px;margin:0;font-size:13.5px}
+.meta div{display:flex;justify-content:space-between;gap:10px}
+.meta dt{color:var(--muted)} .meta dd{margin:0;text-align:right}
+.bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent)}
+/* ďalšie akcie */
+.more-head{padding:16px 22px 4px}
+.more-head h2{margin:0;font-size:var(--fs-section)}
+.more-row{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line)}
+.more-head + .more-row{border-top:0}
+.more-main{flex:1 1 280px;display:grid;gap:2px;min-width:0}
+.more-main b{font-weight:600;font-size:15px}
+.more-main span{font-size:13px;color:var(--muted)}
+.more-acts{display:flex;gap:8px;flex-wrap:wrap}
+.more-confirm{display:grid;gap:14px;padding:16px 22px 18px;border-top:1px solid var(--line);background:var(--bad-bg)}
+.more-confirm h3{margin:0;font-size:15px}
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%}
+.field-input.date{max-width:200px}
+.field-input.ta{min-height:64px}
+.field-input.ph{color:var(--muted)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* hláška */
+.lnote{display:flex;gap:12px;padding:12px 14px;border-radius:10px;font-size:14px;align-items:flex-start;flex-wrap:wrap}
+.lnote b.ico{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;color:#fff}
+.lnote--warn{background:var(--warn-bg);color:var(--ink)} .lnote--warn b.ico{background:var(--warn-fg)}
+.lnote--bad{background:var(--bad-bg);color:var(--ink)} .lnote--bad b.ico{background:var(--bad-fg)}
+.lnote-main{flex:1 1 260px;display:grid;gap:3px}
+.lnote-main strong{font-size:15px}
+.lnote-main span{font-size:13px;color:var(--muted)}
+/* úloha zodpovednej osoby */
+.task{padding:18px 20px;display:grid;gap:12px}
+.task-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.task h2{margin:0;font-size:var(--fs-section)}
+.form-list{display:grid;border-top:1px solid var(--line);margin:0 -20px}
+.choice-row{display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 20px;font-size:15px;border-bottom:1px solid var(--line)}
+.choice-row .main{flex:1}
+.choice-row.on .tick::after{content:"✓";color:var(--accent);font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* mobil */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px}
+.m .page-title{font-size:22px}
+.m .button{min-height:44px}
+.m .grid{grid-template-columns:1fr}
+.m .page-tools{flex:1 1 100%;display:grid;grid-template-columns:1fr 44px 44px}
+.m .more-row,.m .more-head,.m .more-confirm{padding-left:14px;padding-right:14px}
+.m .more-row .button{width:100%}
+.m .task{padding:16px 14px}
+.m .form-list{margin:0 -14px}
+.m .choice-row{padding-left:14px;padding-right:14px;font-size:16px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">KNIZNICA — akcie dokumentu (<code>/library/[id]</code>)</h1>
+<p class="doc">Hlavička detailu dokumentu sa mení na <code>.page-head</code> s nástrojmi vpravo: plné „Nové znenie", tiché „Upraviť" a „Stiahnuť ▾". Zošedené tlačidlo počas prípravy znenia nahradí odkaz „Pokračovať v príprave". <code>&lt;details&gt;</code> „Správa" sa mení na kartu „Ďalšie akcie" a pás archivácie na hlášku <code>.lnote</code>. Karta postupu znenia, znenia, pravý panel a serverové akcie ostávajú. Popis je v <code>KNIZNICA-akcie-dokumentu.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Časť</th><th>Dnes</th><th>Návrh</th></tr>
+    <tr><td>Hlavička</td><td class="old">štítky nad nadpisom, „documentId · priečinok · platí od" pod ním, <code>.detail-actions</code> so 4 tlačidlami pod tým</td><td class="new"><code>.page-head</code>: vľavo nadpis, <code>p.page-lead</code> (štítky · documentId · priečinok · platí od); vpravo nástroje</td></tr>
+    <tr><td>Stiahnuť</td><td class="old">dve tiché tlačidlá „Stiahnuť PDF", „Stiahnuť zdrojový súbor"</td><td class="new">„Stiahnuť ▾" = <code>&lt;details&gt;</code> ponuka (PDF · zdrojový súbor s typom a veľkosťou); pri jedinom súbore obyčajné tiché „Stiahnuť PDF" (Q1)</td></tr>
+    <tr><td>Nové znenie počas prípravy</td><td class="old"><code>span.button.is-disabled</code> s <code>title</code> — na dotyk sa dôvod nedá prečítať</td><td class="new">tiché <code>a.button--quiet</code> „Pokračovať v príprave" → <code>#flow</code>; plné je v karte postupu (R2)</td></tr>
+    <tr><td>FAQ</td><td>plné „Upraviť záznamy"</td><td class="new">bez zmeny, len vpravo v <code>.page-head</code></td></tr>
+    <tr><td>Správa</td><td class="old"><code>&lt;details&gt;</code> na konci: 4 karty (archivácia, pôvod, text, preindexovanie)</td><td class="new"><code>section.card.more#more</code> „Ďalšie akcie": Text dokumentu · Skontrolovať zmeny zo zdroja · Preindexovať · Archivovať predpis</td></tr>
+    <tr><td>Archivovať</td><td class="old">formulár s dátumom a dôvodom stále otvorený v „Správe"</td><td class="new">riadok + danger „Archivovať…" → <code>?archive=1#more</code> → <code>.more-confirm</code>; ak sa archivovať nedá, namiesto tlačidla dôvod (Q2)</td></tr>
+    <tr><td>Archivovaný predpis</td><td class="old"><code>section.card.archive-banner</code> s inline štýlmi</td><td class="new"><code>.lnote--warn</code> (naplánované) / <code>.lnote--bad</code> (archivované) pod hlavičkou: kedy, dôvod, kto · tiché „Obnoviť"</td></tr>
+    <tr><td>Zodpovedná osoba</td><td class="old"><code>h1</code> mimo <code>.page-head</code>, inline <code>maxWidth: 760</code></td><td class="new"><code>.page-narrow</code> + <code>.page-head</code> + <code>p.page-lead</code> (veta úlohy · „Čítať dokument"); karty úloh bez zmeny</td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — platný dokument, ponuka Stiahnuť otvorená</p>
+  <div class="frame" style="width:1440px" id="f-valid"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>V <code>.page-lead</code> sú štítky (stav, spracovanie, kategória) a pod nimi fakty. Štítky už nie sú nad nadpisom, takže nadpis je prvé, čo človek číta.</p>
+    <p><span class="ann">2</span>Nástroje vpravo v poradí od najmenej dôležitého: „Stiahnuť ▾", „Upraviť", „Nové znenie" (plné, posledné, ako <code>toolbar</code> v macOS).</p>
+    <p><span class="ann">3</span>Ponuka je <code>&lt;details&gt;</code> s odkazmi. Funguje bez JS a zatvorí sa výberom alebo kliknutím na <code>summary</code>. Pri každom súbore je uvedený typ a veľkosť.</p>
+    <p><span class="ann">4</span>„Ďalšie akcie" sú na konci hlavného stĺpca. Riadky s tichými tlačidlami a archivácia ako jediné <code>.button--danger</code>.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — schvaľovanie beží (krok 2) · Ďalšie akcie s ?archive=1</p>
+  <div class="row-frames">
+    <div><p class="cap">Krok 2 — „Pokračovať v príprave"</p><div class="frame" style="width:900px" id="f-flow"></div></div>
+    <div><p class="cap">/library/&lt;id&gt;?archive=1#more</p><div class="frame" style="width:700px" id="f-arch"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Kým sa pripravuje znenie, v hlavičke nie je plné tlačidlo. Tiché „Pokračovať v príprave" vedie na <code>#flow</code> a dôvod je napísaný v karte postupu, kde je aj krok, ktorý treba urobiť.</p>
+    <p><span class="ann">2</span>V kroku 2 nie je plné tlačidlo nikde: čaká sa na schvaľovateľov. Krok 1 a 3 majú plné tlačidlo v päte karty postupu (R2).</p>
+    <p><span class="ann">3</span>Pri <code>?archive=1</code> sa „Archivovať…" skryje a pod riadkom sa otvorí potvrdenie: dátum (aj budúci), dôvod, plné červené „Archivovať predpis" a „Zrušiť" (odkaz bez parametra). Chyba presmeruje späť na <code>?archive=1#more</code>.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — hlavička s nástrojmi · archivovaný predpis · zodpovedná osoba</p>
+  <div class="row-frames">
+    <div><p class="cap">Hlavička s nástrojmi</p><div class="frame m dark" style="width:390px" id="f-m1"></div></div>
+    <div><p class="cap">Archivovaný predpis</p><div class="frame m dark" style="width:390px" id="f-m2"></div></div>
+    <div><p class="cap">Zodpovedná osoba — jedna úloha</p><div class="frame m dark" style="width:390px" id="f-m3"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Na telefóne je „Nové znenie" cez celú šírku a za ním dve tlačidlá s ikonou, každé 44 px: Upraviť (✎) a Stiahnuť (↓). Majú <code>aria-label</code> a <code>title</code>. Ponuka Stiahnuť sa otvorí ako plachta zdola.</p>
+    <p><span class="ann">2</span>Archivovaný predpis: <code>.lnote--bad</code> hneď pod hlavičkou s dátumom, dôvodom a menom a tichým „Obnoviť". „Nové znenie" sa nekreslí, kým predpis nie je obnovený (Q3). Naplánovaná archivácia má <code>.lnote--warn</code> a „Nové znenie" ostáva.</p>
+    <p><span class="ann">3</span>Zodpovedná osoba (bez roly správcu): v <code>.page-head</code> je nadpis dokumentu, v <code>p.page-lead</code> veta úlohy a odkaz „Čítať dokument". Karta úlohy „Určiť právny základ" sa nemení.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=a=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const F=(l,v,h,cls)=>`<label class="field"><span class="field-label">${l}</span><span class="field-input ${cls||""}">${v}</span>${h?`<span class="field-hint">${h}</span>`:""}</label>`;
+const TITLE="Súťažný poriadok futbalu";
+const lead=(tags)=>`<p class="page-lead">${tags} <span>SP-2026 · Súťaže · platí od 24. 6. 2026</span></p>`;
+const tagsOk=`<span class="tag tag--published">Platné</span><span class="tag">Spracované</span><span class="tag">Poriadok</span>`;
+const menu=`<div class="menu">${an(3,"left:-32px;top:10px")}<a href="#" class="hl">PDF<small>znenie 1.0 · 1,8 MB</small></a><a href="#">Zdrojový súbor<small>DOCX · 412 kB</small></a></div>`;
+const tools=(primary,open,m)=> m
+ ? `<div class="page-tools">${primary}<span class="button button--quiet button--icon" title="Upraviť dokument" aria-label="Upraviť dokument">✎</span><span class="button button--quiet button--icon" title="Stiahnuť" aria-label="Stiahnuť">↓</span></div>`
+ : `<div class="page-tools"><div class="menu-wrap"><span class="button button--quiet">Stiahnuť <span class="chev">▾</span></span>${open?menu:""}</div><span class="button button--quiet">Upraviť</span>${primary}</div>`;
+const head=(tags,primary,open,m,a)=>`<div class="page-head rel">${a||""}<div class="page-head-main"><h1 class="page-title">${TITLE}</h1>${lead(tags)}</div>${tools(primary,open,m)}</div>`;
+const NV=`<span class="button">Nové znenie</span>`;
+const flowPub=`<section class="card"><div class="stub"><h2>Zverejnené znenie platí od 24. 6. 2026</h2><div class="steps"><span class="st done"><i>✓</i>Príprava</span><span class="st-sep"></span><span class="st done"><i>✓</i>Schválenie</span><span class="st-sep"></span><span class="st done"><i>✓</i>Zverejnenie</span><span class="st-sep"></span><span class="st cur"><i>4</i>Pridelenie</span></div><p>Karta postupu znenia — bez zmeny.</p></div></section>`;
+const current=`<section class="card"><div class="stub"><h2>Platné znenie · 1.0</h2><p>Platné a staršie znenia, zodpovedná osoba, právny základ — bez zmeny.</p></div></section>`;
+const side=`<aside class="side"><div class="card"><h2>Potvrdenia</h2><div class="bar"><span style="width:72%"></span></div><span class="quiet" style="font-size:13px">72 % · 108 zo 150 ľudí</span></div><div class="card"><h2>Údaje</h2><dl class="meta"><div><dt>Kategória</dt><dd>Poriadok</dd></div><div><dt>Priečinok</dt><dd>Súťaže</dd></div><div><dt>Vlastník</dt><dd>Úsek súťaží</dd></div></dl></div></aside>`;
+const more=(arch)=>`<section class="card rel" id="more"><div class="more-head"><h2>Ďalšie akcie</h2></div>
+<div class="more-row"><div class="more-main"><b>Text dokumentu</b><span>Text, z ktorého čerpá asistent, a jeho členenie. Opravu textu schvaľuje schvaľovateľ.</span></div><div class="more-acts"><span class="button button--quiet">Otvoriť editor</span><span class="button button--quiet">Členenie pre asistenta</span></div></div>
+<div class="more-row"><div class="more-main"><b>Skontrolovať zmeny zo zdroja</b><span>Prevzaté z konektora SharePoint SFZ · Predpisy, naposledy 2. 10. 2026.</span></div><span class="button button--quiet">Skontrolovať</span></div>
+<div class="more-row"><div class="more-main"><b>Preindexovať</b><span>Znova pripraví text pre vyhľadávanie. Potvrdenia sa nemenia.</span></div><span class="button button--quiet">Preindexovať</span></div>
+${arch?`<div class="more-row"><div class="more-main"><b>Archivovať predpis</b><span>Prestane platiť a zmizne z ponuky. Potvrdenia a znenia ostávajú.</span></div></div>
+<div class="more-confirm"><h3>Archivovať ${TITLE}?</h3>${F("Platí do","30. 6. 2027","Môže byť aj v budúcnosti — do vtedy predpis platí a archivácia je naplánovaná.","date")}${F("Dôvod","Nahradený Súťažným poriadkom 2027/28.","Uvidia ho čitatelia v pásiku nad dokumentom.","ta")}<div class="acts"><span class="button button--dangerfill">Archivovať predpis</span><span class="button button--quiet">Zrušiť</span></div></div>`
+:`<div class="more-row"><div class="more-main"><b>Archivovať predpis</b><span>Prestane platiť a zmizne z ponuky. Potvrdenia a znenia ostávajú.</span></div><span class="button button--danger">Archivovať…</span></div>`}
+</section>`;
+
+document.getElementById("f-valid").innerHTML=hdr()+crumbs(["Prehľad","Knižnica","Súťaže",TITLE])+`<div class="body"><div class="page">
+${head(tagsOk,NV,1,0,an(1,"left:-34px;top:44px")+an(2,"right:-11px;top:-14px"))}
+<div class="grid"><div class="main">${flowPub}${current}<div class="rel">${an(4,"left:-11px;top:16px")}${more(0)}</div></div>${side}</div>
+</div></div>`;
+
+const flowRun=`<section class="card rel" id="flow">${an(2,"left:-11px;top:18px")}<div class="stub"><h2>Nové znenie od 1. 1. 2027</h2><span class="quiet" style="font-size:13px">Na schválení od 5. 10. 2026 · predložil Peter Novák</span><div class="steps"><span class="st done"><i>✓</i>Príprava</span><span class="st-sep"></span><span class="st cur"><i>2</i>Schválenie</span><span class="st-sep"></span><span class="st"><i>3</i>Zverejnenie</span><span class="st-sep"></span><span class="st"><i>4</i>Pridelenie</span></div><p>Rozhodli 1 z 3 schvaľovateľov. Kým sa znenie pripravuje, nové sa začať nedá.</p></div><div class="foot"><span class="quiet" style="font-size:13px">Stiahnuť z posudzovania · tiché, bez zmeny</span></div></section>`;
+document.getElementById("f-flow").innerHTML=hdr()+crumbs(["Knižnica","Súťaže",TITLE])+`<div class="body"><div class="page">
+${head(`<span class="tag tag--published">Platné</span><span class="tag tag--draft">Nové znenie na schválení</span>`,`<a class="button button--quiet" href="#flow">Pokračovať v príprave</a>`,0,0,an(1,"right:-11px;top:-14px"))}
+${flowRun}${current}
+</div></div>`;
+
+document.getElementById("f-arch").innerHTML=hdr()+crumbs(["Knižnica",TITLE])+`<div class="body"><div class="page"><div class="rel">${an(3,"right:-11px;top:330px")}${more(1)}</div></div></div>`;
+
+document.getElementById("f-m1").innerHTML=hdr(1)+crumbs(["Knižnica",TITLE])+`<div class="body"><div class="page">
+${head(tagsOk,`<span class="button">Nové znenie</span>`,0,1,an(1,"right:-6px;bottom:-4px"))}
+${flowPub}
+</div></div>`;
+
+document.getElementById("f-m2").innerHTML=hdr(1)+crumbs(["Knižnica","Pravidlá 2024/25"])+`<div class="body"><div class="page">
+<div class="page-head"><div class="page-head-main"><h1 class="page-title">Pravidlá futsalu 2024/25</h1><p class="page-lead"><span class="tag tag--archived">Archivované</span><span>PF-2024 · Futsal · platilo do 30. 6. 2025</span></p></div><div class="page-tools" style="grid-template-columns:1fr"><span class="button button--quiet">Stiahnuť <span class="chev">▾</span></span></div></div>
+<div class="lnote lnote--bad rel">${an(2,"right:-6px;top:-10px")}<b class="ico">!</b><div class="lnote-main"><strong>Archivované od 1. 7. 2025</strong><span>Nahradené Pravidlami futsalu 2025/26.</span><span>Archivovala Jana Hrubá 20. 6. 2025</span></div><span class="button button--quiet" style="width:100%">Obnoviť</span></div>
+${current}
+</div></div>`;
+
+document.getElementById("f-m3").innerHTML=hdr(1)+crumbs(["Knižnica",TITLE])+`<div class="body"><div class="page-narrow">
+<div class="page-head rel">${an(3,"right:-6px;top:0")}<div class="page-head-main"><h1 class="page-title">${TITLE}</h1><p class="page-lead"><span>Ste zodpovedná osoba pre znenie 1.1. Určte jeho právny základ.</span><a href="#">Čítať dokument</a></p></div></div>
+<section class="card task"><div class="task-head"><h2>Určiť právny základ</h2><span class="tag tag--draft">čaká</span></div><p class="quiet" style="margin:0;font-size:14px">Znenie 1.1 od 1. 1. 2027 · pridelil Peter Novák 5. 10. 2026</p>
+<div class="form-list">${[["Plnenie zákonnej povinnosti",1],["Oprávnený záujem",0],["Plnenie zmluvy",0]].map(([t,o])=>`<label class="choice-row${o?" on":""}"><span class="main">${t}</span><i class="tick"></i></label>`).join("")}</div>
+${F("Odkaz na predpis","Zákon č. 440/2015 Z. z. o športe, § 16")}
+<div class="acts"><span class="button" style="width:100%">Uložiť právny základ</span></div><p class="quiet" style="margin:0;font-size:12.5px">Karta úlohy — bez zmeny.</p></section>
+</div></div>`;
+</script>
+</body></html>

@@ -2491,6 +2491,15 @@ interface Dictionary {
       downloadPdf: string
       downloadSource: string
       editDocument: string
+      continuePrep: string
+      download: string
+      downloadPdfItem: string
+      downloadSourceItem: string
+      uploadFirst: string
+      textRowNote: string
+      openTextEditor: string
+      openChunks: string
+      openFaqEntries: string
       currentHeading: string
       /** Zverejnená novela, ktorá ešte neplatí (ADR-023 D143) — karta vedľa platného znenia. */
       upcomingHeading: string
@@ -2540,6 +2549,8 @@ interface Dictionary {
         bannerMeta: (who: string, at: string) => string
         restore: string
         restoreHint: string
+        open: string
+        confirmHeading: (title: string) => string
         restored: string
       }
       uploadNext: string
@@ -6811,6 +6822,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       downloadPdf: "Stiahnuť PDF",
       downloadSource: "Stiahnuť zdrojový súbor",
       editDocument: "Upraviť dokument",
+      continuePrep: "Pokračovať v príprave",
+      download: "Stiahnuť",
+      downloadPdfItem: "PDF",
+      downloadSourceItem: "Zdrojový súbor",
+      uploadFirst: "Nahrať prvé znenie",
+      textRowNote: "Text, z ktorého čerpá asistent, a jeho členenie.",
+      openTextEditor: "Otvoriť editor",
+      openChunks: "Členenie pre asistenta",
+      openFaqEntries: "Záznamy FAQ",
       currentHeading: "Platné znenie",
       upcomingHeading: "Pripravované znenie",
       upcomingNote: d => `Zverejnené, platiť začne ${d}. Dovtedy ľudia čítajú a potvrdzujú platné znenie vyššie.`,
@@ -6853,6 +6873,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         bannerMeta: (who, at) => `Archivoval(a) ${who}, ${at}`,
         restore: "Obnoviť platnosť",
         restoreHint: "Pri omyle. Odvolané pridelenia sa neobnovia — prideliť sa dá znova.",
+        open: "Archivovať…",
+        confirmHeading: title => `Archivovať ${title}?`,
         restored: "Platnosť predpisu je obnovená.",
       },
       uploadNext: "Potom na detaile skontroluješ text, vyberieš schvaľovateľov a zodpovednú osobu a predložíš.",
@@ -11001,6 +11023,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       downloadPdf: "Stáhnout PDF",
       downloadSource: "Stáhnout zdrojový soubor",
       editDocument: "Upravit dokument",
+      continuePrep: "Pokračovat v přípravě",
+      download: "Stáhnout",
+      downloadPdfItem: "PDF",
+      downloadSourceItem: "Zdrojový soubor",
+      uploadFirst: "Nahrát první znění",
+      textRowNote: "Text, ze kterého čerpá asistent, a jeho členění.",
+      openTextEditor: "Otevřít editor",
+      openChunks: "Členění pro asistenta",
+      openFaqEntries: "Záznamy FAQ",
       currentHeading: "Platné znění",
       upcomingHeading: "Připravované znění",
       upcomingNote: d => `Zveřejněné, platit začne ${d}. Do té doby lidé čtou a potvrzují platné znění výše.`,
@@ -11043,6 +11074,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         bannerMeta: (who, at) => `Archivoval(a) ${who}, ${at}`,
         restore: "Obnovit platnost",
         restoreHint: "Při omylu. Odvolaná přidělení se neobnoví — přidělit jde znovu.",
+        open: "Archivovat…",
+        confirmHeading: title => `Archivovat ${title}?`,
         restored: "Platnost předpisu je obnovena.",
       },
       uploadNext: "Potom na detailu zkontroluješ text, vybereš schvalovatele a odpovědnou osobu a předložíš.",
@@ -15182,6 +15215,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       downloadPdf: "Download PDF",
       downloadSource: "Download source file",
       editDocument: "Edit document",
+      continuePrep: "Continue preparing",
+      download: "Download",
+      downloadPdfItem: "PDF",
+      downloadSourceItem: "Source file",
+      uploadFirst: "Upload the first version",
+      textRowNote: "The text the assistant draws on, and how it is split.",
+      openTextEditor: "Open editor",
+      openChunks: "Split for the assistant",
+      openFaqEntries: "FAQ entries",
       currentHeading: "Current version",
       upcomingHeading: "Upcoming version",
       upcomingNote: d => `Published; it comes into force on ${d}. Until then people read and confirm the current version above.`,
@@ -15224,6 +15266,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         bannerMeta: (who, at) => `Archived by ${who}, ${at}`,
         restore: "Restore validity",
         restoreHint: "If it was a mistake. Revoked assignments are not restored — you can assign it again.",
+        open: "Archive…",
+        confirmHeading: title => `Archive ${title}?`,
         restored: "The document's validity has been restored.",
       },
       uploadNext: "Then, on the detail page, you check the text, choose approvers and the responsible person, and submit.",

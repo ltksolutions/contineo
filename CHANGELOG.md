@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Detail dokumentu: akcie v hlavičke, Ďalšie akcie (2026-10-08)
+
+- Na `/library/<id>` sú akcie vpravo vedľa názvu: **Stiahnuť** (ponuka PDF
+  a zdrojový súbor, pri jedinom súbore priamo PDF), **Upraviť dokument**
+  a hlavná akcia **Nové znenie**. Na telefóne je hlavná akcia cez celú šírku
+  a ďalšie dve ako ikony.
+- Kým sa znenie pripravuje, namiesto zošedeného „Nové znenie" je odkaz
+  **Pokračovať v príprave** na kartu postupu, kde je aj dôvod.
+- „Správa" je karta **Ďalšie akcie**: text dokumentu, kontrola zmien zo
+  zdroja, preindexovanie a archivácia. Formulár archivácie sa otvorí až po
+  kliknutí na „Archivovať…"; keď sa archivovať nedá, riadok povie prečo.
+- Archivovaný predpis má hlášku hneď pod názvom s tichým „Obnoviť
+  platnosť". Nové znenie sa dá pripraviť aj pri archivovanom predpise.
+- Stránka zodpovednej osoby má bežnú hlavičku; pri viacerých úlohách sú
+  tlačidlá „Uložiť" tiché.
+
 ### Posudok odpovede: voľby v riadku, fronta bez karty v karte (2026-10-08)
 
 - Hodnotiteľ odpovedá na „Je odpoveď vecne správna?" a „Tvrdí niečo, čo

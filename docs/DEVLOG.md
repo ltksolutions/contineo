@@ -10,6 +10,25 @@
 
 ---
 
+## 2026-10-08 — akcie detailu dokumentu (KNIZNICA-akcie-dokumentu)
+
+**Čo sa zmenilo:** `.detail-chips` + `.detail-actions` → `.page-head`
+s `.page-tools` (Stiahnuť ▾ ako `<details>` so vzorom `.mc-menu`, Upraviť,
+hlavná akcia posledná). `<details class="detail-tools">` → `section.more#more`;
+archivácia cez `?archive=1#more`, chyba akcie sa vracia do otvoreného
+potvrdenia. Pás archivácie je `.lnote`. Oprava textu (`#fix`) ostala
+rozbaľovacia, len v karte Ďalšie akcie. `LegalBasisForm` dostal `quiet`.
+Dve nové ikony (`edit`, `download`) pre telefón.
+
+**Rozhodnutie:** návrh pri archivovanom predpise „Nové znenie" skrýval
+(Q3). ADR-025 hovorí, že nové znenie archivovaného predpisu sa zverejniť
+dá a predpis tým znova platí — Ján rozhodol podľa ADR, tlačidlo ostáva.
+
+**Navyše oproti návrhu:** karta úlohy „Určiť právny základ" na detaile
+správcu má tiché „Uložiť" — inak by vedľa „Nové znenie" boli dve plné.
+
+---
+
 ## 2026-10-08 — posudok (EVAL-posudok)
 
 **Čo sa zmenilo:**
