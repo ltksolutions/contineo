@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-08** (doplnené 5.–6. 10.: AI organizácie ADR-026, editor členenia ADR-027, stav tlačidiel PR #269–#271; MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
+Posledná aktualizácia: **2026-10-08** (helpdesk na `/privacy` a lehota ticketov D178, PR #315; karta osoby PR #314; doplnené 5.–6. 10.: AI organizácie ADR-026, editor členenia ADR-027, stav tlačidiel PR #269–#271; MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
 
 ---
 
@@ -38,7 +38,8 @@ riešiteľa — Helpdesk ako samostatná časť zanikol, správca obsah ticketov
 nečíta (D170). Živý zdroj z konektora do verejného kanála nejde (ADR-029,
 D176). Otvorené (`docs/TODO.md`): widget pre ISSF u prevádzkovateľa ISSF
 (`docs/WIDGET_ISSF.md`), upozornenie riešiteľom na nový ticket, tickety
-v „čo čaká na mňa", IMAP adaptér, text účelu „helpdesk" na `/privacy` (DPO).
+v „čo čaká na mňa", IMAP adaptér. Helpdesk je na `/privacy` od 8. 10.
+(D178); tickety a osoby z widgetu maže dávka, keď sa zapne ostré mazanie.
 
 Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
@@ -188,7 +189,8 @@ vektory (skóre pred a po sú zhodné — nasvedčuje, že nie).
 
 **Zapnúť ostré mazanie** — `RETENTION_MODE=delete` po kontrole výkazu
 `retention` v odpovedi cronu; tá istá premenná zapína aj retenciu
-Vzdelávania (ADR-021).
+Vzdelávania (ADR-021) a od 8. 10. aj tickety a osoby z widgetu (D178,
+počty v `retention[].helpdesk`).
 
 **Automatický prevod `.docx` → PDF** (Graph, povolenia v Entra ID) a **D93**
 (`docs/D93_plan_vyber_podla_filtra.md`) čakajú ako doteraz.
