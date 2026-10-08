@@ -84,6 +84,17 @@ Podľa návrhu ZAKLAD-vyber-skupin-a-znaciek:
   existujúcu alebo predsa len založiť novú.
 - **Hodnota, ktorú má len táto osoba alebo dokument,** je označená „len tu".
 - **Hľadanie:** pri 12 a viac možnostiach je nad zoznamom pole „Hľadať".
+### Web contineo.app: MCP konektory — živý zdroj a import (2026-10-08, ADR-029)
+
+Obrázok architektúry má blok **Konektory (MCP) — živý zdroj, mimo
+knižnice** nad AI vrstvou: zapína sa pilulkou pri otázke alebo predvolene,
+úseky zo servera idú popri knižnici a citácia nesie štítok „živý zdroj,
+neoverené". V Zdrojoch je **import z konektora** (článok ako koncept s PDF
+→ schválenie, kontrola zmien na serveri) ako hotový. Stránka Technológia
+(integrácie, stack, pilier Zdroje obsahu, bezpečnosť), Pripravujeme,
+Bezpečnosť (tabuľka dátových tokov) a blok GDPR spomínajú konektor, stopu
+volaní a lehotu ticketov helpdesku (D178). sk, cs, en; PNG pregenerovaná,
+kópia v docs rovnaká.
 
 ### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
 

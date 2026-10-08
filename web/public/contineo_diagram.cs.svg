@@ -12,14 +12,23 @@
     <marker id="arrowGray" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0a6"/>
     </marker>
+    <marker id="arrowPink" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#AD1457"/>
+    </marker>
   </defs>
 
   <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektura a datový tok</text>
   <text x="40" y="74" font-size="14" fill="#5f6368">Zdroje · zpracování · review → MongoDB (jádro) → AI adaptéry → kanály. Adaptéry se vybírají konfigurací tenanta, ne kódem.</text>
 
-  <rect x="470" y="96" width="580" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
-  <text x="760" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, role) · auto-zakládání uživatelů</text>
+  <rect x="300" y="96" width="600" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
+  <text x="600" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, role) · auto-zakládání uživatelů</text>
   <path d="M760,130 L760,228" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
+
+  <!-- KONEKTORY (ADR-029) — živý zdroj pri otázke, nejde cez CMS -->
+  <rect x="919" y="88" width="557" height="54" rx="14" fill="#FCE4EC" stroke="#AD1457" stroke-width="1.5"/>
+  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="293" lengthAdjust="spacingAndGlyphs">KONEKTORY (MCP) — živý zdroj, mimo knihovnu</text>
+  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="375" lengthAdjust="spacingAndGlyphs">zapíná se pilulkou nebo výchozí · vedle knihovny · citace „živý zdroj, neověřeno“</text>
+  <path d="M1051,142 L1051,228" stroke="#AD1457" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowPink)"/>
 
   <!-- CMS ako vrstva nad kanálmi a workerom -->
   <rect x="26" y="170" width="586" height="524" rx="18"
@@ -30,15 +39,15 @@
   <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
   <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6" textLength="61" lengthAdjust="spacingAndGlyphs">ZDROJE</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="187" lengthAdjust="spacingAndGlyphs">dnes: soubory, FAQ, schránka (Graph)</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="197" lengthAdjust="spacingAndGlyphs">dnes: soubory, FAQ, schránka, konektor</text>
   <g font-size="12.5" fill="#202124">
     <text x="60" y="316" textLength="226" lengthAdjust="spacingAndGlyphs">• Nahrané soubory — PDF + Word/Excel</text>
     <text x="60" y="342" fill="#9aa0a6" textLength="150" lengthAdjust="spacingAndGlyphs">• RSS / web (připravujeme)</text>
-    <text x="60" y="368">• FAQ · ověřené odpovědi</text>
+    <text x="60" y="368" textLength="143" lengthAdjust="spacingAndGlyphs">• FAQ · ověřené odpovědi</text>
     <text x="60" y="394" textLength="182" lengthAdjust="spacingAndGlyphs">• Schránka helpdesku (Graph) ⇅</text>
-    <text x="60" y="420" fill="#9aa0a6" textLength="177" lengthAdjust="spacingAndGlyphs">• MCP konektory (připravujeme)</text>
-    <text x="74" y="440" font-size="11" fill="#9aa0a6" font-style="italic" textLength="153" lengthAdjust="spacingAndGlyphs">Drive · SharePoint · Confluence</text>
-    <text x="74" y="457" font-size="11" fill="#9aa0a6" font-style="italic" textLength="82" lengthAdjust="spacingAndGlyphs">Notion · Slack …</text>
+    <text x="60" y="420" textLength="113" lengthAdjust="spacingAndGlyphs">• Import z konektoru</text>
+    <text x="74" y="440" font-size="11" fill="#5f6368" textLength="194" lengthAdjust="spacingAndGlyphs">článek jako koncept s PDF → schválení</text>
+    <text x="74" y="457" font-size="11" fill="#5f6368" textLength="124" lengthAdjust="spacingAndGlyphs">kontrola změn na serveru</text>
   </g>
   <text x="60" y="496" font-size="11" fill="#1A73E8" textLength="149" lengthAdjust="spacingAndGlyphs">⇅ schránka je i výstupní kanál</text>
 
