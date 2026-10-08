@@ -20,7 +20,8 @@ import { versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
 import UploadSubmit from "@/components/UploadSubmit"
 import FlowSteps from "@/components/FlowSteps"
 import { libraryContext } from "@/lib/library"
-import { codelistOptions, CODELISTS } from "@/lib/codelists"
+import { codelistOptions } from "@/lib/codelists"
+import { isFaqCategory } from "@/lib/faq"
 import { allDepartments, flattenTree } from "@/lib/departments"
 import { MAX_INTERNAL_NUMBER } from "@/lib/libraryWrite"
 import { tenantExtras } from "@/lib/codelistsTenant"
@@ -84,14 +85,30 @@ export default async function NewDocumentPage({
       <p className="quiet page-lead" style={{ margin: "0 0 8px" }}>
         {t.intro}
       </p>
-      {/* FAQ sa nenahráva ako súbor — píše sa v aplikácii (ADR-028, D164). */}
-      <p className="quiet" style={{ margin: "0 0 20px" }}>
-        <Link href="/library/new/faq">{dictionary(ctx.person.language).library.faq.newLink}</Link>
-      </p>
-      {/* Články z MCP konektora sa importujú, nie nahrávajú (ADR-029). */}
-      <p className="quiet" style={{ margin: "0 0 20px" }}>
-        <Link href="/library/new/connector">{dictionary(ctx.person.language).library.connectorImport.newLink}</Link>
-      </p>
+      {/*
+        Rozcestník (D179, 8. 10. 2026): dva základné spôsoby, ako dokument
+        vzniká — zo súboru a ako FAQ (ADR-028, D164) — a import zo servera
+        (ADR-029). Formulár na súbor ostáva pod ním na tej istej adrese,
+        takže bežné nahratie nestojí ani klik navyše. Odkazy, nie tlačidlá:
+        každá voľba je iná stránka.
+      */}
+      <section className="new-kinds" aria-labelledby="new-kinds-heading">
+        <h2 id="new-kinds-heading" className="form-group-head">{t.kinds.heading}</h2>
+        <p className="quiet new-kinds-intro">{t.kinds.intro}</p>
+        <div className="new-kinds-grid">
+          {([
+            ["#upload-form", t.kinds.file],
+            ["/library/new/faq", t.kinds.faq],
+            ["/library/new/connector", t.kinds.connector],
+          ] as const).map(([href, k]) => (
+            <Link key={href} href={href} className="card new-kind">
+              <span className="new-kind-title">{k.title}</span>
+              <span className="new-kind-text">{k.text}</span>
+              <span className="new-kind-cta">{k.cta}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/*
         Chyba sa musí dať prežiť (NAHRAVANIE, úloha 1): hláška povie, čo
@@ -137,7 +154,7 @@ export default async function NewDocumentPage({
         po prečítaní prevedeného textu. Tretí krok by tu stále nikam neviedol,
         len z iného dôvodu než vtedy.
       */}
-      <form action={upload} className="upload-form">
+      <form action={upload} className="upload-form" id="upload-form">
         <section className="form-group form-group--lg">
           <h2 className="form-group-head form-group-head--step"><span className="assign-step" aria-hidden="true">1</span>{t.sectionFile}</h2>
         <div className="card form-group-body">
@@ -208,11 +225,10 @@ export default async function NewDocumentPage({
             required
             searchable
             fieldLabel={tl.category}
-            options={codelistOptions("category", extras)}
+            // FAQ nie je súbor — má vlastnú cestu (rozcestník vyššie, D179).
+            options={codelistOptions("category", extras).filter(o => !isFaqCategory(o.value))}
           />
-          <span className="quiet field-hint">
-            {t.categoryNote}{CODELISTS.category.items.slice(0, 8).map(p => p.key).join(", ")}.
-          </span>
+          <span className="quiet field-hint">{t.categoryNote}</span>
         </label>
         <div className="field">
           <span className="field-label">{t.accessLevel}</span>
@@ -266,6 +282,7 @@ export default async function NewDocumentPage({
         <div className="upload-wide">
           <ValueSelect kind="tags" name="tags" legend={t.tags} selected={[]} language={ctx.person.language}
                        options={withCodelistNote(await tagOptions(ctx.tenant.companyCode, extras), ctx.person.language)} />
+          <span className="quiet field-hint">{t.tagsNote}</span>
         </div>
         <div className="field">
           <span className="field-label">{t.scope}</span>
