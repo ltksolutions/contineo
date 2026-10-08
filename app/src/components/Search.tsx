@@ -300,7 +300,8 @@ export default function Search({
         </div>
       )}
 
-      <AnswerBody state={state} organisation={organisation} language={language} />
+      <AnswerBody state={state} organisation={organisation} language={language}
+                  scope={{ library: only.includes("library"), live: (liveSources ?? []).filter(l => only.includes(l.id)).map(l => l.name) }} />
       </div>
 
       {/* Vpravo od karty (≥ 1180 px), inak pod ňou — poradie určuje CSS mriežka. */}

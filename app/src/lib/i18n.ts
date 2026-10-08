@@ -805,6 +805,10 @@ interface Dictionary {
     askedAt: (time: string) => string
     /** Hlavička karty odpovede so skratkou organizácie. */
     answerKicker: (organisation: string) => string
+    /** Hlavička, keď sa hľadalo len v živých zdrojoch (ADR-029). */
+    answerKickerLive: (names: string, count: number) => string
+    /** Hlavička, keď sa hľadalo v knižnici aj v živých zdrojoch. */
+    answerKickerBoth: (organisation: string, names: string, count: number) => string
     /** Tretí stav obrazovky (ASK, úloha 1): na otázku sa z dokumentov nedá odpovedať. */
     none: {
       kicker: string; text: string; link: string
@@ -4690,6 +4694,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     edit: "Upraviť otázku",
     askedAt: time => `Opýtali ste sa o ${time}`,
     answerKicker: org => `Odpoveď z dokumentov ${org}`,
+    answerKickerLive: (names, count) => `Odpoveď ${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
+    answerKickerBoth: (org, names, count) => `Odpoveď z dokumentov ${org} a ${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
     none: {
       kicker: "V dokumentoch organizácie sa k tomu nič nenašlo",
       text: "Skúste otázku inak, alebo hľadajte v knižnici — nie všetko je v predpisoch.",
@@ -8862,6 +8868,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     edit: "Upravit otázku",
     askedAt: time => `Zeptali jste se v ${time}`,
     answerKicker: org => `Odpověď z dokumentů ${org}`,
+    answerKickerLive: (names, count) => `Odpověď ${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
+    answerKickerBoth: (org, names, count) => `Odpověď z dokumentů ${org} a ${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
     none: {
       kicker: "V dokumentech organizace se k tomu nic nenašlo",
       text: "Zkuste otázku jinak, nebo hledejte v knihovně — ne všechno je v předpisech.",
@@ -13025,6 +13033,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     edit: "Edit question",
     askedAt: time => `Asked at ${time}`,
     answerKicker: org => `Answer from ${org} documents`,
+    answerKickerLive: names => `Answer from ${names}`,
+    answerKickerBoth: (org, names) => `Answer from ${org} documents and ${names}`,
     none: {
       kicker: "Nothing on this was found in the organisation's documents",
       text: "Try rephrasing the question, or search the library — not everything is in the regulations.",

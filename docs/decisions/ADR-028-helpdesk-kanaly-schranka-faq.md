@@ -1,6 +1,10 @@
 # ADR-028 — Helpdesk: kanály, schránka cez adaptér, e-mail ako ticket, FAQ ako druh dokumentu
 
 > **Stav:** prijaté · **Dátum:** 2026-10-06
+> **Doplnené:** D169 (Kanály ako sekcia s typom widget / portál), D170
+> (Helpdesk pod Kanálmi, správca tickety nečíta) — obe 7. 10. 2026 v tomto
+> ADR; ADR-029 D176 (živý zdroj konektora nejde do verejného kanála).
+> Naostro od 7. 10. 2026 (schránka SFZ cez Graph, synchronizácia každých 5 min).
 > **Rozhodol:** Ján Letko (2026-10-06) — k šiestim bodom návrhu „1 áno aj
 > IMAP aj Graph, 2 áno e-maily sa stávajú ticketmi, 3–6 ok" a dodatok:
 > „takýchto helpdesk kanálov bude viac aj pre iné projekty s iným

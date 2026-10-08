@@ -15,6 +15,7 @@ import type { QueryTime } from "@/lib/queryTime"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
+import { answerKicker, scopeFromSources, type KickerScope } from "@/lib/answerKicker"
 import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18n"
 import { isAutoVersionLabel } from "@/lib/versionLabel"
 import { SkeletonText } from "./Skeleton"
@@ -64,11 +65,17 @@ export function AnswerBody({
   state: state,
   organisation,
   language,
+  scope,
 }: {
   state: AnswerState
   /** Skratka organizácie — „Odpoveď z dokumentov SFZ". Bez nej všeobecná veta. */
   organisation?: string
   language?: UiLanguage
+  /**
+   * Kde sa hľadalo (pilulky na `/ask`). Bez neho sa zdroje odvodia z obsahu
+   * odpovede — uložená odpoveď výber piluliek nepozná.
+   */
+  scope?: KickerScope
 }) {
   const t = dictionary(language).answer
   const tAsk = dictionary(language).ask
@@ -136,7 +143,7 @@ export function AnswerBody({
         {!error && (
           <div className="answer-head">
             <span className="answer-mark" aria-hidden="true" />
-            <span className="answer-kicker">{organisation ? tAsk.answerKicker(organisation) : t.fromDocuments}</span>
+            <span className="answer-kicker">{answerKicker(scope ?? scopeFromSources(done?.sources ?? []), organisation, language)}</span>
             {timeLabel && (
               <span className={time?.kind === "today" ? "answer-time" : "answer-time answer-time--other"}>
                 {timeLabel}

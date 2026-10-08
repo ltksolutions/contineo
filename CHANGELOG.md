@@ -223,6 +223,15 @@ a karta prehliadača tiež. Staré odkazy s `?tab=`, `?part=`, `?q=`
 a `?import=` presmerujú. Kurz nemôže mať kľúč `topics` ani `tags`, test nie
 `questions` ani `results`.
 
+### Tlačidlá ukazujú, že akcia beží (2026-10-06)
+
+Každé tlačidlo, ktoré niečo ukladá alebo odosiela, po kliknutí ukáže
+krúžok a zablokuje sa, kým akcia nedobehne — aj tlačidlá ostatné
+v tom istom formulári, takže sa nedá kliknúť dvakrát. Krúžok je len na
+tom, na ktoré sa kliklo. Dlhé akcie menia text: „Pridávam…" pri pridaní
+na trasu, „Posielam e-maily…" pri oznámeniach, pripomienkach a
+pozvánkach. Filtre a hľadanie sa nemenia — tie len načítajú stránku.
+
 ### Web contineo.app: kanály sú dva typy — widget a portál (2026-10-06)
 
 V obrázku architektúry je intranet pod **portálom**, nie ako tretí typ
@@ -389,6 +398,42 @@ posúdenie, detail a príprava dokumentu, schvaľovanie, zodpovedná osoba,
 právny základ, úprava kurzu a testu, otázka v banke. Na **Prideliť
 dokumenty** sú Dôvod a Termín dve samostatné skupiny vedľa seba a súhrn
 s tlačidlami má vlastnú kartu pod nimi. Mená a hodnoty polí sa nezmenili.
+
+### Pomocný editor členenia pri dokumente (2026-10-05, ADR-027)
+
+Dokument má stránku **Členenie** (`/library/<dokument>/chunks`): ako je
+narezaný na úseky, varovania (jeden blok, málo článkov, priveľké úseky,
+zlomky), skúšobný rez s inými parametrami, výber alebo uloženie
+pomenovaného profilu a **návrh od AI**, ktorý dostane len štruktúru
+dokumentu, nie celý text. Správca obsahu ho smie používať. Záložka
+Členenie v nastaveniach organizácie zmizla; preindexovanie celej knižnice
+je `npm run chunking:reindex`.
+
+Chunker pozná tučné nadpisy z Wordu (`# **Článok 1 – …**`) a časti
+v zápise „Časť I –". Smernice SFZ sa po oprave delia na 18 úsekov namiesto
+1–2; osem noriem bolo preindexovaných, znenia ani potvrdenia sa nezmenili.
+
+### Umelá inteligencia v nastaveniach organizácie (2026-10-05, ADR-026)
+
+Organizácia si zadá **vlastný kľúč Anthropic** (uložený šifrovane, pri
+uložení sa overí) a vyberie model pre odpovede, úpravu otázky a prepis
+skenov. Bez kľúča sa použije kľúč prevádzkovateľa. **Spotreba** ukazuje
+osobu, dátum, model, na čo a prečo sa volanie použilo, tokeny a sumu,
+s filtrom obdobia a exportom do CSV a Excelu. Text otázky sa neukladá,
+záznamy sa mažú po 25 mesiacoch; ochrana osobných údajov to opisuje vo
+všetkých troch jazykoch.
+
+### Telefón ako krajina a číslo (2026-10-05)
+
+Pri osobe sa telefón zadáva výberom krajiny s predvoľbou a číslom, ktoré
+sa overí podľa formátu zvolenej krajiny. Predvoľba v nastaveniach
+organizácie je výber krajiny namiesto voľného textu a slúži ako
+predvolená krajina pri osobe. Na telefóne sú obe polia pod sebou.
+
+### Reťaz dôkazov od najnovšieho (2026-10-05)
+
+Pridelené dokumenty → Reťaz dôkazov sú zoradené podľa dátumu, najnovšie
+navrchu.
 
 ### Web contineo.app: stránka Potvrdzovanie a GDPR na Bezpečnosti (2026-10-05)
 
