@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: MCP konektory ako živý zdroj (2026-10-08, ADR-029)
+
+Obrázok architektúry má nový blok **Konektory (MCP) — živý zdroj, mimo
+knižnice** nad AI vrstvou: pri otázke sa hľadá súbežne s knižnicou,
+výsledky idú do reranku a citácia nesie štítok „živý zdroj, neoverené".
+V Zdrojoch namiesto „MCP konektory (pripravujeme)" ostáva len import
+z konektora do knižnice ako pripravovaný. Stránka Technológia (integrácie,
+stack, pilier Zdroje obsahu, bezpečnosť), Pripravujeme, Bezpečnosť
+(tabuľka dátových tokov) a blok GDPR spomínajú konektor, jeho prístupovú
+úroveň a stopu volaní. sk, cs, en; PNG pregenerovaná, kópia v docs rovnaká.
+
 ### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
 
 **ADR-029.** Organizácia sa vie pripojiť k cudziemu MCP serveru (prvý je
