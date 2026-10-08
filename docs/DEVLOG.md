@@ -33,6 +33,35 @@ a `.ev-date` už patria výkazu potvrdení. Citát nesie existujúci
 
 ---
 
+## 2026-10-08 — helpdesk na `/privacy` a lehota ticketov (D178, PR #315)
+
+**Podnet:** pri „Zorientuj sa" Ján upozornil, že NEXT.md o helpdesku klame
+(„naostro neoverený", čaká na Entra), hoci schránka SFZ beží od 7. 10. —
+opravené v NEXT, ADR-028 dostal hlavičku „Doplnené" (D169, D170, ADR-029).
+Z otvorených bodov si vybral text účelu „helpdesk" na `/privacy`.
+
+**Čo sa ukázalo:** text sa nedal napísať poctivo. D165 sľúbil lehotu
+ticketu podľa ADR-022, ale mazacia dávka tickety ani osoby z widgetu
+nepoznala — nemazali sa nikdy. Pred textom teda prišli štyri rozhodnutia
+(D178, všetky podľa odporúčania): zavretý ticket 24 mesiacov po zavretí
+(`ticketMonths` v lehotách organizácie), osoba `external` po 24 mesiacoch
+bez aktivity, ak nemá otvorený ticket ani potvrdenie, oprávnený záujem,
+časť na `/privacy` len pri organizácii s kanálom (vzor Vzdelávania).
+
+**Ako:** `purgeTickets` a `purgeExternalPersons` v `runRetention`, tickety
+pred osobami, aby osoba so zavretým ticketom po lehote mohla odísť v tom
+istom behu. Testy nad tou istou náhradou Monga ako mazanie otázok —
+vyhodnocuje filtre, takže overujú, **čo** sa zmaže, nie že sa zavolal
+`deleteMany`. Pridanie poľa do `DeletionCounts` zhodilo dva testy, ktoré
+porovnávajú celý objekt; to je ich účel.
+
+**Overenie naostro:** `/privacy` na intranete ukazuje časť o helpdesku
+s lehotou 24 mesiacov a verziou 8. 10. 2026; Organizácia → GDPR má pole
+„Mesiace pre tickety helpdesku" (24, 1–120). Mazanie sa naostro nespustí,
+kým je `RETENTION_MODE=report` — dávka tickety a osoby len spočíta.
+
+---
+
 ## 2026-10-08 — karta osoby (OSOBY-karta-osoby)
 
 **Čo sa zmenilo:**

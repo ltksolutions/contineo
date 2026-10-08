@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 
-const s = vi.hoisted(() => ({ learning: false, language: "sk", country: undefined as string | undefined, generation: "anthropic", privacy: undefined as unknown, person: null as null | Record<string, unknown>, pending: null as null | Record<string, unknown> }))
+const s = vi.hoisted(() => ({ learning: false, language: "sk", country: undefined as string | undefined, generation: "anthropic", privacy: undefined as unknown, person: null as null | Record<string, unknown>, pending: null as null | Record<string, unknown>, channels: false }))
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") } }))
 vi.mock("@/lib/session", () => ({
   currentTenant: async () => ({ companyCode: "SFZ", defaultLanguage: "sk", branding: { displayName: "SFZ" }, controller: { legalName: "Slovenský futbalový zväz", country: s.country }, modules: { learning: s.learning }, privacy: s.privacy }),
@@ -14,6 +14,7 @@ vi.mock("@/lib/session", () => ({
 vi.mock("@/lib/objectionsDb", () => ({ pendingObjectionOf: async () => s.pending }))
 vi.mock("../src/app/privacy/actions", () => ({ submitObjectionAction: async () => {} }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({ displayName: "SFZ" }) }))
+vi.mock("@/lib/channels", () => ({ listChannels: async () => (s.channels ? [{ key: "issf" }] : []) }))
 vi.mock("@/components/TenantHeader", () => ({ tenantStyle: () => ({}) }))
 vi.mock("@/lib/privacy", async (orig) => ({ ...(await orig<typeof import("../src/lib/privacy")>()), dpoContacts: async () => [], PRIVACY_NOTICE_VERSION: new Date("2026-09-28T00:00:00Z") }))
 vi.mock("@/lib/tenantProfile", () => {
@@ -25,7 +26,7 @@ async function render() {
   const { default: Page } = await import("../src/app/privacy/page")
   return renderToStaticMarkup(await Page())
 }
-beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic"; s.privacy = undefined; s.person = null; s.pending = null })
+beforeEach(() => { s.learning = false; s.language = "sk"; s.country = undefined; s.generation = "anthropic"; s.privacy = undefined; s.person = null; s.pending = null; s.channels = false })
 
 describe("/privacy — kontakt GDPR (D153)", () => {
   it("vyplnený kontakt: meno a adresa v karte aj v rámčeku námietky, nie osoby s rolou DPO", async () => {
@@ -129,5 +130,28 @@ describe("/privacy", () => {
     expect(html).toContain("Druhý &lt;b&gt;odsek&lt;/b&gt;.")
     s.language = "en"
     expect(await render()).toContain("Prvý odsek.")
+  })
+})
+
+describe("/privacy — helpdesk (ADR-028, D178)", () => {
+  it("bez kanála: o helpdesku ani slovo", async () => {
+    const html = await render()
+    expect(html).not.toContain("helpdesk")
+  })
+  it("s kanálom: účel, údaje, oprávnený záujem, lehota ticketov z nastavení a riešitelia", async () => {
+    s.channels = true
+    s.privacy = { retention: { ticketMonths: 18 } }
+    const html = await render()
+    expect(html).toContain("schránky helpdesku")
+    expect(html).toContain("registračné číslo v ISSF")
+    expect(html).toContain("Otázky v helpdesku sa spracúvajú na základe oprávneného záujmu")
+    expect(html).toContain("18 mesiacov od jeho zavretia")
+    expect(html).toContain("Tickety čítajú len riešitelia kanála")
+  })
+  it("po anglicky s predvolenou lehotou 24 mesiacov", async () => {
+    s.channels = true
+    s.language = "en"
+    const html = await render()
+    expect(html).toContain("24 months after it is closed")
   })
 })

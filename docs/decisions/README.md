@@ -40,7 +40,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-026](ADR-026-ai-nastavenie-a-spotreba.md) | Umelá inteligencia ako nastavenie organizácie (kľúč, modely) a prehľad spotreby bez znenia otázok | ✅ prijaté |
 | [ADR-027](ADR-027-clenenie-podla-druhu-dokumentu.md) | Členenie sa nenastavuje v organizácii; spôsob členenia podľa druhu dokumentu (s prvým manuálom či zmluvou) | ✅ prijaté |
 | [ADR-028](ADR-028-helpdesk-kanaly-schranka-faq.md) | Helpdesk: kanály s prideleným obsahom, schránka cez adaptér (IMAP, Microsoft Graph), e-mail ako ticket, FAQ ako druh dokumentu, identita z ISSF tokenom | ✅ prijaté · doplnené D169, D170 a [ADR-029](ADR-029-mcp-konektory.md) |
-| [ADR-029](ADR-029-mcp-konektory.md) | MCP konektory: pripojenie organizácie s viacerými použitiami (živý zdroj, import, nástroje), profil servera, rozsah per kanál, redukcia len pre interných | ✅ prijaté |
+| [ADR-029](ADR-029-mcp-konektory.md) | MCP konektory: pripojenie organizácie s viacerými použitiami (živý zdroj, import, nástroje), profil servera, rozsah per kanál, redukcia len pre interných | ✅ prijaté · fázy 1 a 2 v `main`, dodatok § 5 |
 
 ## Čo sem nepatrí
 
