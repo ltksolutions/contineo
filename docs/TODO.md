@@ -223,7 +223,7 @@
 
 - [x] ~~**Facet a stĺpec „Oddelenie"**~~ ✅ hotové — zápis bol zastaraný (spred PR 7/8 knižnice). Dokument oddelenie **nesie** (`ownerDepartmentId` v `documents`), knižnica má facet aj stĺpec a filtruje sa bez spájania kolekcií. Overené 2026-09-22.
 - [x] ~~**Stĺpec „Potvrdenia %"**~~ ✅ hotové — zápis bol zastaraný. Percento kreslí `.ack-bar` v tabuľke aj na karte (KNIZNICA úloha 2, spoločný `<AckBar>` od PR 10). Menovateľ sú **pridelení**, nie celá organizácia (rozhodnutie Jána 2026-09-22): 80 % znamená, že potvrdilo 80 % tých, ktorým bola norma pridelená.
-- [ ] **Rozsah hľadania** („Hľadať len v: Knižnica / …") — **čaká na druhý vstupný kanál**, nie na kód. Dnes je vstup jediný (knižnica), takže pilulky by boli štyri tlačidlá, ktoré nič nemenia. Rozsahy sú **vstupné kanály** podľa plánu na contineo.app/sk/technologia (RSS, FAQ a ďalšie zdroje) — filter vznikne spolu s druhým z nich a oprie sa o provenienciu z etapy ingescie, nie o `accessLevel`. Rozhodnuté s Jánom 2026-09-22.
+- [x] ~~**Rozsah hľadania**~~ ✅ 2026-10-07 — druhý vstupný kanál prišiel s MCP konektormi (ADR-029): pilulky Knižnica / názov konektora na `/ask`, len keď je čo prepínať. Pôvodný zápis: **čaká na druhý vstupný kanál**, nie na kód. Dnes je vstup jediný (knižnica), takže pilulky by boli štyri tlačidlá, ktoré nič nemenia. Rozsahy sú **vstupné kanály** podľa plánu na contineo.app/sk/technologia (RSS, FAQ a ďalšie zdroje) — filter vznikne spolu s druhým z nich a oprie sa o provenienciu z etapy ingescie, nie o `accessLevel`. Rozhodnuté s Jánom 2026-09-22.
 - [x] ~~**Skóre zhody pri zdroji**~~ ✅ 2026-09-22 — surové číslo sa neukazuje (pri `$rankFusion`/`$rerank` nie je v rozsahu 0–1 ani porovnateľné medzi režimami). Namiesto neho **tri stupne** („vysoká / stredná / slabá zhoda") počítané **relatívne k najlepšiemu zdroju tej istej odpovede** — `matchLevel()` v `llmGenerator.ts`, testy v `matchLevel.test.ts`. Bez skóre sa nekreslí nič.
 - [x] ~~**Stav „Na schválenie"**~~ ✅ 2026-09-10 — schvaľovací workflow existuje (ADR-006) a facet `Stav` má tretiu hodnotu. Zápis nižšie tvrdil, že workflow neexistuje; bol zastaraný. Dokumentácia je indícia, kód je pravda.
 - [x] ~~**Stav „Expirovaný"**~~ ✅ 2026-09-22 — **štvrtá hodnota filtra stavu**, nie stĺpec (rozhodnutie Jána 2026-09-22, výber spomedzi dvoch). Odvodená (D27): `expiredCondition()` v `libraryRead.ts` hľadá publikovaný dokument, ktorý dnes nemá platné znenie, hoci aspoň jedno už mal. Stav dokumentu zostáva `published`; facet nesie vlastný počet.
@@ -234,7 +234,16 @@
 - [ ] Rozhranie `SourceAdapter` + refaktor existujúceho file (PDF/MD) adaptéra
 - [ ] Provenance polia v `documents` (`source.{type,connector,externalId,url,fetchedAt,contentHash,adapterVersion}`)
 - [ ] Adaptér: web link (jednorazové URL → MD)
-- [ ] Adaptéry: MCP / API (poradie zatiaľ neurčené — odložené)
+- [ ] ~~Adaptéry: MCP / API~~ → **MCP konektor nie je adaptér zdroja, ale pripojenie s použitiami (ADR-029, 2026-10-07).** Fáza 1 (živý zdroj) je v `main`; import do knižnice je použitie B (nižšie). API/DB zostáva otvorené.
+
+### E2. MCP konektory — ďalšie fázy (ADR-029)
+- [ ] **Použitie B — import do knižnice:** výber článkov cez hľadanie konektora (server nemá zoznam súborov), `fetch` → `uploadDocument()` s `source.{type:"mcp",connector,externalId,fetchedAt,contentHash}`, `accessLevel: internal` ako návrh, bežné schvaľovanie; re-sync len cez `contentHash` (server nedáva dátum zmeny).
+- [ ] **Použitie C — nástroje asistenta:** až keď generačný adaptér vie tool-use (Claude áno, vLLM/Qwen neisto); `uses.agentTools.allowed` už v schéme.
+- [ ] **Servisný účet Sportnetu:** vyžiadať aplikáciu s `client_credentials` (ako `issfconnector`); dnes pilot pod osobným účtom Jána — mení sa len `auth` na konektore.
+- [ ] **Rerank živých úsekov v cloude:** `$rerank` beží v pipeline a živé úseky v nej nie sú — idú za knižnicou v poradí servera. Keď to bude prekážať, aplikačný rerank nad zlúčeným zoznamom.
+- [ ] **Identita `person`** (každý si pripojí vlastný účet) — nutné pre C pri nástrojoch typu „moje členstvá"; schéma to nesie, kód nie.
+- [ ] **Po nasadení:** v Organizácia → Konektory „Pripojiť znova" (lokálny token je pod iným kľúčom), na kanáli ISSF vybrať rozsah ISSF, overiť generovanie odpovede so živým zdrojom (lokálne nešlo — kľúč AI organizácie je pod produkčným kľúčom).
+- [ ] **Contineo ako MCP server** (`search_library`, `get_document` pre cudzích asistentov) — rovnaká vrstva, otočená. Nie teraz.
 
 ### F. Reconciliation (Fáza 4b)
 - [ ] Kolekcia `codelist_change_requests` + preview (plný zoznam dotknutých dokumentov)

@@ -1,5 +1,7 @@
 # Multi-zdrojová ingescia + reconciliation číselníkov — návrh
 
+> **2026-10-07, ADR-029:** kapitola 2.2 (MCP ako *adaptér zdroja do CMS*) a rozhodnutie o servisnom účte sú **prekonané**. MCP konektor je pripojenie organizácie s viacerými použitiami (živý zdroj, import, nástroje); obsah tejto kapitoly — provenance, `contentHash`, servisný účet ako cieľ — sa uplatní vo fáze 2 ako opis *použitia B (import)*. Viď `docs/decisions/ADR-029-mcp-konektory.md`.
+
 > **Stav:** návrh. **Súborový adaptér (2.1) je hotový a v prevádzke od 2026-08-30** (D53). V živom kóde nie sú adaptéry MCP, web a API/DB, provenance `source.*` v plnom rozsahu ani reconciliation.
 > **Cieľ:** pridávať obsah do RAG z viacerých zdrojov (PDF/MD, **MCP konektory**, **web linky**, **API/DB**) tak, že tagovanie z číselníkov a filtre fungujú **rovnako pre každý zdroj**; a keď sa číselník zmení, vedieť **požiadať o úpravu už uložených dát** v RAG.
 > **Súvisiace:** `docs/CISELNIKY_governance.md` (číselníky, validácia), `docs/rag-architecture.md` (indexy, tok), `docs/DATA_MODEL_konzistencia.md` (Model B).

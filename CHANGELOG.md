@@ -4,6 +4,30 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
+
+**ADR-029.** Organizácia sa vie pripojiť k cudziemu MCP serveru (prvý je
+`mcp.sportnet.online`, dokumentácia Sportnetu a ISSF) a používať ho viacerými
+spôsobmi; v prvej fáze ako **živý zdroj**:
+- **Organizácia → Konektory:** adresa servera, profil, prihlásenie cez OAuth
+  (Pripojiť / Pripojiť znova / Odpojiť), zoznam nástrojov servera, rozsahy
+  a redukcia. Tokeny sú šifrované ako ostatné tajomstvá; na obrazovke je len
+  stav a kto pripojil.
+- **Asistent hľadá aj na serveri** súbežne s knižnicou. Citácia zo servera má
+  štítok **Živý zdroj** a vetu „neoverené kurátorom"; keď server nestihne,
+  odpoveď príde bez neho a pod zdrojmi je o tom poznámka.
+- **Prístupová úroveň je vlastnosť konektora** (predvolene interná): interný
+  konektor sa nedostane do návrhov odpovedí na tickety ani do widgetu.
+- **Rozsahy per kanál:** v nastavení kanála sa vyberá, ktoré výseky servera
+  (napr. ISSF) sa v kanáli používajú; filter posiela server.
+- **Pilulky rozsahu** na `/ask` (Knižnica / názov konektora), len keď je čo
+  prepínať.
+- **Redukcia:** zahodené sekcie, nahradené vzory a vynechané cesty — zúženie
+  pre interných čitateľov, nie záruka pre verejnosť.
+- Každé volanie servera má stopu (`connector_calls`), bez znenia otázky.
+- Profil `sportnet-docs` zahadzuje blok s profilom osoby a pokynmi pre
+  model, ktorý server vkladá pred každú odpoveď.
+
 ### Nastavenia: jedno Uložiť na stránke a „Ďalšie akcie" (2026-10-07)
 
 Podľa návrhu ZAKLAD-lista-ulozenia:
