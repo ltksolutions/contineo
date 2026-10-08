@@ -702,19 +702,23 @@ export async function versionMetaSuggestions(companyCode: string): Promise<{ aut
 
 
 /**
- * Ponuka značiek pri dokumente: číselník (globálny aj organizácie, D55)
- * **a značky, ktoré dokumenty organizácie už majú**.
- *
- * Číselník značiek je otvorený — novú značku sa dá napísať priamo pri
- * dokumente a uloží sa. Ponuka ju však nevidela, takže pri ďalšom dokumente
- * akoby neexistovala a človek ju písal znova (24. 9. 2026, „smernica").
- * Do číselníka organizácie sa sama nepridáva: ten spravuje správca vedome.
+ * Značky na výber (`ValueSelect`, ZAKLAD-vyber-skupin-a-znaciek): položky
+ * číselníka organizácie s názvom a k nim kľúče, ktoré dokumenty používajú,
+ * hoci v číselníku nie sú (bez `label`). `count` = koľko dokumentov
+ * organizácie značku má — jedna agregácia.
  */
-export async function tagOptions(companyCode: string, extras?: CodelistExtras): Promise<{ value: string }[]> {
-  const fromCodelist = codelistOptions("tags", extras).map(o => o.value)
-  const used = (await (await getCollection(DOCUMENTS_COLLECTION)).distinct("tags", { companyCode }) as unknown[])
-    .filter((t): t is string => typeof t === "string" && t.trim() !== "")
-    .map(t => t.trim().toLowerCase())
-  const extra = [...new Set(used)].filter(t => !fromCodelist.includes(t)).sort((a, b) => a.localeCompare(b, "sk"))
-  return [...fromCodelist, ...extra].map(value => ({ value }))
+export async function tagOptions(companyCode: string, extras?: CodelistExtras): Promise<{ value: string; label?: string; count: number }[]> {
+  const fromCodelist = codelistOptions("tags", extras)
+  const rows = await (await getCollection(DOCUMENTS_COLLECTION)).aggregate<{ _id: unknown; n: number }>([
+    { $match: { companyCode } },
+    { $unwind: "$tags" },
+    { $group: { _id: { $toLower: { $trim: { input: { $toString: "$tags" } } } }, n: { $sum: 1 } } },
+  ]).toArray()
+  const counts = new Map(rows.filter(r => typeof r._id === "string" && r._id !== "").map(r => [r._id as string, r.n]))
+  const keys = new Set(fromCodelist.map(o => o.value))
+  const extra = [...counts.keys()].filter(t => !keys.has(t)).sort((a, b) => a.localeCompare(b, "sk"))
+  return [
+    ...fromCodelist.map(o => ({ value: o.value, label: o.label, count: counts.get(o.value) ?? 0 })),
+    ...extra.map(value => ({ value, count: counts.get(value) ?? 0 })),
+  ]
 }

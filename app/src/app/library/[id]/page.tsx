@@ -34,7 +34,7 @@ import { carryOverCandidates, audienceRef, audienceLabel } from "@/lib/assignmen
 import { codelistOptions, chunkingStrategyFor } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
-import TagSelect from "@/components/TagSelect"
+import ValueSelect, { SimilarWarning, withCodelistNote } from "@/components/ValueSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { documentProgress } from "@/lib/libraryProgress"
 import AppShell from "@/components/AppShell"
@@ -99,7 +99,7 @@ export default async function DocumentDetailPage({
     notFound()
   }
 
-  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string; similar?: string; like?: string; pick?: string }>(await searchParams)
   const { msg: message, error } = query
   const openPanel = PANELS.includes(query.open as Panel) ? (query.open as Panel) : null
   const editDocument = query.edit === "document"
@@ -113,6 +113,8 @@ export default async function DocumentDetailPage({
   const tf = dictionary(language).library.fields
   const tflow = dictionary(language).library.flow
   const extras = tenantExtras(ctx.tenant)
+  // Značky s počtami len pre úpravu dokumentu — inde sa nekreslia.
+  const tagChoices = editDocument ? await tagOptions(ctx.tenant.companyCode, extras) : []
   const folders = await allFolders(ctx.tenant.companyCode)
   const folderTree = flattenTree(folders)
   const departments = await allDepartments(ctx.tenant.companyCode)
@@ -904,14 +906,23 @@ export default async function DocumentDetailPage({
                     <Select language={language} name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
                   </div>
 
-                  <div className="field upload-wide">
-                    <span className="field-label">{t.tags}</span>
-                    <TagSelect
+                  {/* Značky ako riadky s kruhom a pole novej značky (ZAKLAD-vyber-skupin-
+                      a-znaciek, 8. 10. 2026). Podobnú novú server nezaloží
+                      a vráti `?similar=&like=` (Q3). */}
+                  <div className="upload-wide" id="tags">
+                    <ValueSelect
+                      kind="tags"
                       name="tags"
-                      options={await tagOptions(ctx.tenant.companyCode, extras)}
-                      selected={d.tags}
-                      newLabel={t.newTag}
+                      legend={t.tags}
+                      options={withCodelistNote(tagChoices, language)}
+                      selected={query.pick === "like" && query.like ? [...d.tags, query.like] : d.tags}
+                      prefillNew={query.pick === "new" ? query.similar : undefined}
+                      forced={query.pick === "new" ? query.similar : undefined}
                       language={language}
+                      warning={query.pick ? undefined : (
+                        <SimilarWarning href={`/library/${encodeURIComponent(d.documentId)}/edit`} anchor="tags" kind="tags" language={language}
+                                        similar={query.similar} like={query.like} likeLabel={tagChoices.find(o => o.value === query.like)?.label} />
+                      )}
                     />
                   </div>
                 </div>

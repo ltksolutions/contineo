@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ZAKLAD — výber skupín a značiek (P8)</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--warn-line:rgba(180,83,9,.25);--bad-fg:#b91c1c;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--warn-line:rgba(251,191,36,.3)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:96ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.sec-w{font-size:13px;color:#5c6675;margin:0 0 14px;max-width:96ch}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+.notes{display:grid;gap:6px;max-width:96ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+/* rám */
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line)}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.body{padding:22px 28px 32px}
+.narrow{max-width:680px;display:grid;gap:18px}
+.wide{max-width:1180px;display:grid;gap:18px}
+.page-head{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-lead{font-size:14px;color:var(--muted);margin:0}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--ok{background:var(--ok-bg);color:var(--ok-fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.pad{padding:18px 20px;display:grid;gap:16px}
+.field{display:grid;gap:5px}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%}
+.field-input.ph{color:var(--muted)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* form-group */
+.form-group{display:grid;gap:10px;min-width:0}
+.form-group-head{font-size:var(--fs-small);font-weight:600;padding:0 4px;margin:0;display:flex;gap:8px;align-items:center}
+.form-group-head .n{color:var(--muted);font-weight:400}
+.form-group-foot{font-size:var(--fs-micro);color:var(--muted);padding:0 4px;margin:0}
+.form-list{display:grid;overflow:hidden;border-radius:var(--radius)}
+.form-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 16px;font-size:15px;line-height:1.35}
+.form-row + .form-row::before{content:"";position:absolute;top:0;left:50px;right:0;border-top:1px solid var(--line)}
+.form-row.plain + .form-row::before,.form-row + .form-row.plain::before{left:16px}
+.form-row-main{flex:1;min-width:0;display:grid;gap:1px}
+.form-row-main small{font-size:12.5px;color:var(--muted)}
+.form-row-detail{color:var(--muted);font-size:14px;white-space:nowrap}
+.form-row-detail.only{font-style:normal;color:var(--warn-fg)}
+.ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none;position:relative}
+.ck.on{background:var(--accent);border-color:var(--accent)}
+.ck.on::after{content:"";position:absolute;left:6.5px;top:2.5px;width:6px;height:11px;border:solid var(--on-accent);border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.plus{width:22px;height:22px;border-radius:50%;border:1.5px dashed var(--line-strong);flex:none;display:grid;place-items:center;color:var(--muted);font-size:15px;line-height:1}
+.form-row-input{flex:1;font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;padding:0;min-height:26px}
+.form-row-input.ph{color:var(--muted)}
+.sel-search{display:flex;align-items:center;gap:9px;height:40px;margin:10px 12px 6px;padding:0 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
+.sel-search b{color:var(--ink);font-weight:400}
+.sel-sep{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:10px 16px 4px;border-top:1px solid var(--line)}
+.sel-warn{display:grid;gap:10px;padding:12px 16px 14px;background:var(--warn-bg);border-top:1px solid var(--warn-line)}
+.sel-warn p{margin:0;font-size:14px;color:var(--ink)}
+.sel-warn p b{color:var(--warn-fg)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.notice{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:10px;background:var(--ok-bg);color:var(--ok-fg);font-size:14px}
+/* mobil */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px}
+.m .page-title{font-size:22px}
+.m .button{min-height:44px}
+.m .full{width:100%}
+.m .two{grid-template-columns:1fr}
+.m .form-row{font-size:16px}
+.m .pad{padding:16px 14px}
+.steps{display:flex;gap:6px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.steps span{padding:4px 10px;border-radius:999px;background:var(--surface-2)}
+.steps span.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.legacy{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pill-old{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line-strong);font-size:13px;background:#fff}
+.pill-old.on{background:rgba(36,67,196,.09);border-color:#2443c4;color:#2443c4}
+.pill-old i{font-style:normal;font-size:11px;color:#5c6675}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ZAKLAD — výber skupín a značiek (DESIGN_ODCHYLKY P8)</h1>
+<p class="doc"><code>TagSelect</code> (pilulky <code>.tag--choice</code> s „+"/„✓", prepína JS, bez JS holé textové pole s čiarkami) sa nahradí tvarom, ktorý už majú Trasy a Roly na karte osoby: <code>.form-group</code> s kartou riadkov <code>.form-row.select-row</code>. Posledný riadok karty je pole na novú hodnotu. Všetko je natívny formulár, takže funguje aj bez JavaScriptu. Mená polí (<code>groups</code>, <code>tags</code>) a ich význam ostávajú. Popis je v <code>ZAKLAD-vyber-skupin-a-znaciek.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <table class="spec">
+    <tr><th></th><th>Dnes (TagSelect)</th><th>Návrh</th></tr>
+    <tr><td>Výber</td><td class="old">pilulky <code>button aria-pressed</code>, stav v Reacte, odošle sa skryté pole <code>groups="a, b"</code></td><td class="new">natívne <code>input type=checkbox name=groups value=…</code> v <code>.select-row</code>, celý riadok terč 44 px</td></tr>
+    <tr><td>Počet</td><td>číslo v pilulke (len skupiny)</td><td class="new">vpravo v riadku tlmene „14 ľudí" / „6 dokumentov" (detail ako v iOS <code>List</code>)</td></tr>
+    <tr><td>Nová hodnota</td><td class="old">pole + „Pridať" (JS), Enter zablokovaný</td><td class="new">posledný riadok karty: pole <code>groupsNew</code> / <code>tagsNew</code>, viac hodnôt čiarkou, uloží sa s formulárom</td></tr>
+    <tr><td>Bez JS</td><td class="old">holé pole <code>„rozhodcovia, delegati"</code></td><td class="new">ten istý vzhľad; hľadanie sa len neskryje</td></tr>
+    <tr><td>Hodnota len tejto osoby</td><td>ostáva vybraná, bez počtu</td><td class="new">zaškrtnutá, vpravo „len tu" (<code>--warn-fg</code>) — odškrtnutím zanikne</td></tr>
+    <tr><td>Veľa hodnôt</td><td class="old">všetky pilulky v rade</td><td class="new">od 12 možností pole „Hľadať…" nad riadkami (s JS filtruje), zaškrtnuté hore</td></tr>
+    <tr><td>Podobný názov</td><td class="old">nič — vznikne druhá skupina</td><td class="new">server novú hodnotu neuloží (zvyšok áno) a ukáže varovanie s návrhom existujúcej</td></tr>
+    <tr><td>Značky</td><td class="old">zobrazuje kľúč (<code>start_hraca</code>)</td><td class="new">zobrazuje názov z číselníka (Štart hráča), hodnota ostáva kľúč</td></tr>
+  </table>
+  <p class="sec-w" style="margin-top:12px">Dnes, na porovnanie:</p>
+  <div class="legacy"><span class="pill-old on">✓ rozhodcovia <i>14</i></span><span class="pill-old">+ delegati <i>6</i></span><span class="pill-old" style="border-style:dashed;color:#5c6675">Nová skupina</span><span class="pill-old">Pridať</span></div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — /library/&lt;id&gt;/edit (5 značiek)</p>
+  <div class="frame" style="width:1440px" id="f-edit"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Riadok: kruh · názov z číselníka · vpravo počet dokumentov. Hodnota checkboxu je kľúč (<code>stanovy</code>).</p>
+    <p><span class="ann">2</span><code>disciplina</code> je na dokumente, ale v číselníku nie je a nikto iný ju nemá: je zaškrtnutá a má „len tu". Zobrazuje sa kľúč, lebo názov neexistuje.</p>
+    <p><span class="ann">3</span>Posledný riadok je pole „Nová značka" (<code>tagsNew</code>). Server z názvu urobí kľúč a založí položku v číselníku organizácie (Q2).</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — /people/&lt;id&gt;, 14 skupín s hľadaním · varovanie pri podobnom názve</p>
+  <div class="row-frames">
+    <div><p class="cap">14 skupín, s JS napísané „ko"</p><div class="frame" style="width:700px" id="f-many"></div></div>
+    <div><p class="cap">Po uložení: „rozhodcova" ≈ „rozhodcovia"</p><div class="frame" style="width:700px" id="f-warn"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Od 12 možností je nad riadkami pole „Hľadať skupinu". S JS skryje nezhodné riadky, bez diakritiky a bez ohľadu na veľkosť písmen (ako <code>PeopleSearch</code>). Bez JS sú vidno všetky. Zaškrtnuté sú vždy vidno.</p>
+    <p><span class="ann">2</span>Poradie: zaškrtnuté hore, potom ostatné podľa abecedy (Q4).</p>
+    <p><span class="ann">3</span>Varovanie: server uložil všetko okrem podobnej novej hodnoty a vrátil <code>?similar=rozhodcova</code>. V karte je návrh (zaškrtnúť existujúcu) a druhá možnosť (založiť napriek tomu). Obe sú tiché formuláre (Q3).</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — /people/&lt;id&gt; · /library/new krok Údaje · prázdny zoznam</p>
+  <div class="row-frames">
+    <div><p class="cap">Osoba — 2 skupiny, 1 zaškrtnutá, vyplnená nová</p><div class="frame m dark" style="width:390px" id="f-p390"></div></div>
+    <div><p class="cap">Nový dokument — Údaje, 5 značiek, 2 zaškrtnuté</p><div class="frame m dark" style="width:390px" id="f-n390"></div></div>
+    <div><p class="cap">Prázdny zoznam (žiadna skupina)</p><div class="frame m dark" style="width:390px" id="f-e390"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Pole novej hodnoty je riadok karty s prerušovaným kruhom. Na telefóne má 44 px a vyplnené sa uloží s osobou.</p>
+    <p><span class="ann">2</span>Pod kartou je <code>.form-group-foot</code> „Nová skupina vznikne uložením osoby." (pri dokumente „…uložením dokumentu.").</p>
+    <p><span class="ann">3</span>Prázdny zoznam: karta má len riadok s poľom a pätička hovorí, ako skupina vznikne.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=a=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const F=(l,v,h,ph)=>`<label class="field"><span class="field-label">${l}</span><input class="field-input${ph?" ph":""}" value="${v}" readonly>${h?`<span class="field-hint">${h}</span>`:""}</label>`;
+const row=([t,d,on,only,sub])=>`<label class="form-row select-row"><i class="ck${on?" on":""}"></i><span class="form-row-main"><span>${t}</span>${sub?`<small>${sub}</small>`:""}</span><span class="form-row-detail${only?" only":""}">${only?"len tu":d}</span></label>`;
+const newRow=(ph,val)=>`<label class="form-row plain"><i class="plus">+</i><input class="form-row-input${val?"":" ph"}" value="${val||ph}" readonly></label>`;
+const group=(head,n,rows,newPh,val,foot,extra="",search="")=>`<fieldset class="form-group" style="border:0;padding:0;margin:0"><legend class="form-group-head">${head}${n?`<span class="n">${n}</span>`:""}</legend><div class="card">${search}<div class="form-list">${rows.map(row).join("")}${newRow(newPh,val)}</div>${extra}</div>${foot?`<p class="form-group-foot">${foot}</p>`:""}</fieldset>`;
+const tags=[["Stanovy","1 dokument",1],["disciplina","",1,1,"nie je v číselníku"],["Poriadok","12 dokumentov",0],["Registrácia","4 dokumenty",0],["Štart hráča","6 dokumentov",0]];
+
+document.getElementById("f-edit").innerHTML=hdr()+crumbs(["Prehľad","Knižnica","Stanovy SFZ","Upraviť údaje"])+`<div class="body"><div class="wide">
+<div class="page-head"><h1 class="page-title">Upraviť údaje</h1></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start">
+<div class="card pad">${F("Názov","Stanovy Slovenského futbalového zväzu")}<div class="two">${F("Druh","Stanovy")}${F("Oddelenie","Sekretariát")}</div>${F("Jazyk","Slovenčina")}<div class="acts"><span class="button">Uložiť</span></div></div>
+<div class="rel">${an(1,"right:-11px;top:44px")}${an(2,"right:-11px;top:96px")}${an(3,"right:-11px;bottom:46px")}${group("Značky","",tags,"Nová značka","","Nová značka vznikne uložením dokumentu a pribudne do číselníka organizácie. Viac značiek oddeľte čiarkou.")}</div>
+</div></div></div>`;
+
+const many=["rozhodcovia","delegati","komisari","komisia_mladeze","koordinatori","asistenti_rozhodcov","pozorovatelia","treneri_licencia_a","treneri_licencia_b","zdravotnici","usporiadatelia","media","dobrovolnici","vykonny_vybor"];
+const cnt={rozhodcovia:14,delegati:6,komisari:9,komisia_mladeze:5,koordinatori:3,asistenti_rozhodcov:22,pozorovatelia:4,treneri_licencia_a:11,treneri_licencia_b:17,zdravotnici:2,usporiadatelia:30,media:3,dobrovolnici:8,vykonny_vybor:1};
+const ppl=n=>n===1?"1 človek":n<5?`${n} ľudia`:`${n} ľudí`;
+const checked=["delegati","komisari"];
+const shown=[...checked,...many.filter(g=>!checked.includes(g)).sort().filter(g=>/ko/.test(g))];
+const search=`<div class="sel-search">⌕ <b>ko</b><span style="margin-left:auto;font-size:12.5px">5 z 14</span></div>`;
+document.getElementById("f-many").innerHTML=hdr()+crumbs(["Osoby","Marek Kováč"])+`<div class="body"><div class="narrow">
+<div class="rel">${an(1,"left:-11px;top:40px")}${an(2,"left:-11px;top:130px")}${group("Skupiny","14",shown.map(g=>[g,ppl(cnt[g]),checked.includes(g)]),"Nová skupina","","Nová skupina vznikne uložením osoby. Viac skupín oddeľte čiarkou.","",search)}</div>
+</div></div>`;
+
+const warn=`<div class="sel-warn"><p>Skupinu <b>„rozhodcova"</b> sme neuložili: podobá sa na existujúcu <b>„rozhodcovia"</b> (14 ľudí). Ostatné údaje osoby sú uložené.</p><div class="acts"><span class="button button--quiet button--sm">Pridať do „rozhodcovia"</span><span class="button button--quiet button--sm">Založiť „rozhodcova"</span></div></div>`;
+document.getElementById("f-warn").innerHTML=hdr()+crumbs(["Osoby","Marek Kováč"])+`<div class="body"><div class="narrow">
+<div class="notice">✓ Osoba uložená.</div>
+<div class="rel">${an(3,"right:-11px;bottom:60px")}${group("Skupiny","3",[["delegati","6 ľudí",1],["komisari","9 ľudí",1],["rozhodcovia","14 ľudí",0]],"Nová skupina","","Nová skupina vznikne uložením osoby.",warn)}</div>
+</div></div>`;
+
+const tracks=`<fieldset class="form-group" style="border:0;padding:0;margin:0"><legend class="form-group-head">Trasy</legend><div class="card"><div class="form-list">${[["Nástup 2026",0],["Rozhodcovia 2026",1]].map(([t,o])=>`<label class="form-row select-row"><i class="ck${o?" on":""}"></i><span class="form-row-main">${t}</span></label>`).join("")}</div></div></fieldset>`;
+document.getElementById("f-p390").innerHTML=hdr(1)+crumbs(["Osoby","Marek Kováč"])+`<div class="body" style="display:grid;gap:16px">
+<div class="page-head"><h1 class="page-title">Marek Kováč</h1><span class="tag tag--ok">aktívny</span></div>
+<div class="card pad">${F("Funkcia","Rozhodca")}${F("Oddelenie","Úsek rozhodcov")}</div>
+<div class="rel">${an(1,"right:-6px;top:126px")}${an(2,"right:-6px;bottom:-4px")}${group("Skupiny","",[["rozhodcovia","14 ľudí",1],["delegati","6 ľudí",0]],"Nová skupina","komisari","Nová skupina vznikne uložením osoby.")}</div>
+${tracks}
+<span class="button full">Uložiť</span></div>`;
+
+const ntags=[["Poriadok","12 dokumentov",1],["Registrácia","4 dokumenty",1],["Stanovy","1 dokument",0],["Štart hráča","6 dokumentov",0],["disciplina","1 dokument",0,0,"nie je v číselníku"]];
+document.getElementById("f-n390").innerHTML=hdr(1)+crumbs(["Knižnica","Nový dokument"])+`<div class="body" style="display:grid;gap:16px">
+<div class="page-head"><h1 class="page-title">Nový dokument</h1></div>
+<div class="steps"><span>1 Súbor</span><span class="on">2 Údaje</span><span>3 Kontrola</span></div>
+<div class="card pad">${F("Názov","Súťažný poriadok futbalu")}${F("Druh","Poriadok")}</div>
+${group("Značky","",ntags,"Nová značka","","Nová značka vznikne uložením dokumentu.")}
+<span class="button full">Pokračovať</span></div>`;
+
+document.getElementById("f-e390").innerHTML=hdr(1)+crumbs(["Osoby","Jana Nová"])+`<div class="body" style="display:grid;gap:16px">
+<div class="page-head"><h1 class="page-title">Jana Nová</h1><span class="tag">pozvaná</span></div>
+<div class="rel">${an(3,"right:-6px;top:30px")}${group("Skupiny","",[],"Nová skupina","","Zatiaľ žiadna skupina — vznikne prvou, ktorú napíšete.")}</div>
+${group("Značky (dokument)","",[],"Nová značka","","Zatiaľ žiadna značka — vznikne prvou, ktorú napíšete, alebo ju pridajte v Nastavení organizácie → Číselníky.")}
+</div>`;
+</script>
+</body></html>

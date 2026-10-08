@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Skupiny a značky ako zoznam namiesto pilulky (2026-10-08)
+
+Podľa návrhu ZAKLAD-vyber-skupin-a-znaciek:
+- **Zoznam:** skupiny osoby a značky dokumentu sa vyberajú v zozname
+  s krúžkom vľavo. Vpravo je počet ľudí alebo dokumentov.
+- **Nová hodnota:** jej pole je posledný riadok zoznamu a uloží sa spolu
+  s formulárom; tlačidlo „Pridať" netreba. Všetko funguje aj bez
+  JavaScriptu.
+- **Nová značka** pribudne do číselníka organizácie aj s názvom.
+- **Podobný názov:** nová hodnota, ktorá sa podobá na existujúcu (napr.
+  „rozhodcova" a „rozhodcovia"), sa neuloží a stránka ponúkne použiť
+  existujúcu alebo predsa len založiť novú.
+- **Hodnota, ktorú má len táto osoba alebo dokument,** je označená „len tu".
+- **Hľadanie:** pri 12 a viac možnostiach je nad zoznamom pole „Hľadať".
+
 ### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
 
 **ADR-029.** Organizácia sa vie pripojiť k cudziemu MCP serveru (prvý je

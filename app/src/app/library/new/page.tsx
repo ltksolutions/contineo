@@ -27,7 +27,7 @@ import { tenantExtras } from "@/lib/codelistsTenant"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import Select from "@/components/Select"
-import TagSelect from "@/components/TagSelect"
+import ValueSelect, { withCodelistNote } from "@/components/ValueSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { getCollection } from "@/lib/mongodb"
@@ -257,15 +257,11 @@ export default async function NewDocumentPage({
                  autoCapitalize="none" autoCorrect="off" />
           <span className="quiet field-hint">{tf.internalNumberNote}</span>
         </label>
-        <div className="field upload-wide">
-          <span className="field-label">{t.tags}</span>
-          <TagSelect
-            name="tags"
-            options={await tagOptions(ctx.tenant.companyCode, extras)}
-            selected={[]}
-            newLabel={t.newTag}
-            language={ctx.person.language}
-          />
+        {/* Značky ako riadky s kruhom a pole novej značky
+            (ZAKLAD-vyber-skupin-a-znaciek, 8. 10. 2026). */}
+        <div className="upload-wide">
+          <ValueSelect kind="tags" name="tags" legend={t.tags} selected={[]} language={ctx.person.language}
+                       options={withCodelistNote(await tagOptions(ctx.tenant.companyCode, extras), ctx.person.language)} />
         </div>
         <div className="field">
           <span className="field-label">{t.scope}</span>

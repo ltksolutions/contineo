@@ -10,6 +10,34 @@
 
 ---
 
+## 2026-10-08 — výber skupín a značiek (ZAKLAD-vyber-skupin-a-znaciek, P8)
+
+**Čo sa zmenilo:**
+- **Komponenty:** `TagSelect` zmizol, nahradil ho serverový `ValueSelect`
+  (natívne checkboxy, pole `${name}New`). Hľadanie rieši klientsky ostrov
+  `ValueSearch`, ktorý sa bez JS nevykreslí.
+- **Čisté funkcie** sú v `lib/valueSelect.ts` (`readValues`,
+  `similarValue`, `splitSimilar`).
+- **Značky** spracuje `lib/tagValues.ts` (`tagsFromForm`): z novej hodnoty
+  urobí kľúč cez `slugifyKey` a položku založí v číselníku cez
+  `addCodelistItem`.
+- **`tagOptions`** vracia `{ value, label, count }` jednou agregáciou.
+
+**Odchýlka:** voľby pri podobnom názve sú odkazy, ktoré formulár pripravia
+(`pick=like` zaškrtne existujúcu, `pick=new` vyplní novú so skrytým
+`…Force`). Uloží ich hlavné tlačidlo, nie samostatné malé formuláre.
+Samostatný zápis jednej skupiny alebo značky by potreboval novú zapisovaciu
+cestu popri `savePerson` / `saveMetadata`, vrátane kópie značiek v chunkoch.
+
+Pri novom dokumente a FAQ sa podobná značka len vynechá a hlásenie to
+povie — formulár s nahratým súborom sa vrátiť nedá.
+
+**Popri tom:** `TagSelect` posielal značky ako jedno pole „a, b"
+a `checkValue` ho pre čiarku odmietal. `readValues` rozdelí aj tento starý
+tvar.
+
+---
+
 ## 2026-10-07 — MCP konektory: prvý skutočný server prekonal júnový návrh (ADR-029)
 
 **Zadanie znelo** „pridať ďalší zdroj, `mcp.sportnet.online`" a jediný zápis
