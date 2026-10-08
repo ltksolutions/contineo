@@ -425,10 +425,10 @@
 - [x] **Import 153 osôb SFZ z licenčného zoznamu M365** ✅ 2026-09-27 — CSV `sfz-osoby-import.csv` (Meno, Priezvisko, Email, Pozicia = Title + Department); oddelenie zámerne nie (číselník, zaradí sa ručne). Vylúčené technické kontá a `@naraznicek.sk`. Náhľad 150 nových + 3 doplnené, zápis prešiel.
 - [x] **ADR-019 — existujúcim import dopĺňa len prázdne polia; prepis je prepínač** ✅ 2026-09-27 (D124–D126). Opravené: `department`/`startDate` išli do `$set` ako `undefined` → `null`. Skript `persons:import` opravený (staré názvy po premenovaní), `--org=KOD`, `--prepisat`.
 - [x] **Náhľad importu ako tabuľka + hľadanie** ✅ 2026-09-27 (PR #148, #151) — `planChanges()` je jedna funkcia pre náhľad aj zápis; existujúci jedným `$in`. Zápis na obrazovke až bez chybných riadkov.
-- [ ] **Zaradiť 153 osôb do oddelení** (strom `/organisation`) — ručne; import `departmentId` nechytá (D49). Textové `department` sa neimportovalo, zdroj je stĺpec Department v Exceli (60 rôznych zápisov, často funkcia namiesto oddelenia).
+- [x] **Zaradiť 153 osôb do oddelení a doplniť pohlavie** ✅ 2026-10-08 — prebieha priebežne v bežnej prevádzke, Ján to považuje za vybavené (už nie úloha pred ostrou prevádzkou)
 - [ ] **Rozhodnúť `@sfzmarketing.sk` (22 osôb)** — dnes v tenante SFZ ako `employee`; alternatíva vlastný tenant / typ `external`. Zmena typu je ručná alebo importom s prepínačom.
 - [ ] **Chýbajúci ľudia mimo Basic/Standard licencií** (napr. Ján) — export ich nemal; buď doplniť ručne, alebo druhý export z M365 s ostatnými typmi licencií.
-- [ ] **Pracoviská v číselníku SFZ sú prázdne** (od D85) a `Tenant.phonePrefix` nemá obrazovku — bez toho import pracovisko ani mobil nevyplní.
+- [ ] **Pracoviská v číselníku SFZ sú prázdne** (od D85) — bez toho import pracovisko nevyplní. *(Predvoľba telefónu má od 5. 10. obrazovku: výber krajiny v nastaveniach organizácie.)*
 
 **I3. Brána pred ostrou prevádzkou**
 

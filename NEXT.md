@@ -46,8 +46,7 @@ Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
 a `docs/DEVLOG.md`. **Od 27. 9. pracujú v repe dve sessions naraz** —
 každá vo vlastnom `git worktree` (ADR-020); rozrobené vetvy druhej session
-vidno v `git branch -a`, nie v tomto súbore. Zvyšok z 29. 9.: worktree
-`.claude/worktrees/worktree-parallel-design-2a590b` (odpojený) — odstrániť, keď ho Ján pustí.
+vidno v `git branch -a`, nie v tomto súbore.
 
 **Potvrdzovanie je overené naostro (30. 9. – 1. 10., PR #196–#208)** na
 `sfz:test_znenia`: pridelenie osobe, oddeleniu, trase aj krok trasy dajú
@@ -63,8 +62,8 @@ správcu tam vidí len ju. **D152:** formulka podľa rodu (`persons.gender`,
 nevyplnené „oboznámil(a)"). Zvyšky v `docs/TODO.md`, „Test potvrdzovania naostro".
 
 **Osoby SFZ sú v systéme (27. 9.):** 153 osôb z licenčného zoznamu M365
-(150 nových + 3 doplnené), bez technických kont. Zaradenie do oddelení je
-ručné a čaká (`docs/TODO.md`, I4). **ADR-019:** import existujúcim dopĺňa
+(150 nových + 3 doplnené), bez technických kont. Do oddelení sa zaraďujú
+a pohlavie dopĺňa priebežne v bežnej prevádzke (Ján 8. 10.). **ADR-019:** import existujúcim dopĺňa
 len prázdne polia; prepis je prepínač „Aktualizovať existujúcich".
 Náhľad importu je tabuľka s rozdielom „dnes → po" a hľadaním.
 **Pozvánky odišli 28. 9.** (146 hromadne + 1); stav osoby je „Nová", kým
@@ -198,10 +197,6 @@ Vzdelávania (ADR-021).
 
 ## Najbližšie kroky
 
-0. **Zaradiť 153 osôb do oddelení** v `/organisation` — bez toho sa im
-   normy podľa oddelenia nepridelia (D49). Pri tom istom importe doplniť
-   **pohlavie** (stĺpec `pohlavie`) — vyplnené má 3 zo 154, ostatní
-   potvrdzujú „oboznámil(a)" (D152).
 0. **Prvý kurz naostro:** Ján zverejní kurz, prejde ho sám s testom
    a stiahne certifikát aj PDF — overiť `/verify` z QR na telefóne.
 1. **Prvé ostré nové znenie cez kartu** — samotné kolo je overené; pri ňom
