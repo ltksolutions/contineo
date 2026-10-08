@@ -34,6 +34,21 @@ describe("kód na vloženie", () => {
   })
 })
 
+describe("popis v kóde", () => {
+  it("komentár nad kódom s parametrami a tokenom, bez `--` vnútri", () => {
+    const code = widgetEmbedCode({ ...base, contact: "a@b.sk", doc: {
+      title: "Pomocník", params: [{ name: "src", text: "adresa -- nemeniť" }, { name: "data-token", text: "token" }],
+      tokenHeading: "Token", token: "iss, aud",
+    } })
+    expect(code.startsWith("<!-- Pomocník")).toBe(true)
+    expect(code).toContain("     src         adresa — nemeniť")
+    expect(code).toContain("Token: iss, aud")
+    const comment = code.slice(4, code.indexOf("-->"))
+    expect(comment).not.toContain("--")
+    expect(code.indexOf("-->")).toBeLessThan(code.indexOf("<div"))
+  })
+})
+
 describe("kontakt pri výpadku", () => {
   it("kanál má prednosť, inak kontaktná adresa organizácie", () => {
     expect(widgetFallbackContact({ widget: { origins: [], rateLimitPerHour: 60, fallbackEmail: "kanal@x.sk" } }, "org@x.sk")).toBe("kanal@x.sk")
