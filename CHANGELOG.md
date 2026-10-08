@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nahrať dokument: dva spôsoby vzniku, druh a značky (2026-10-08, D179)
+
+- **Nahrať dokument** začína rozcestníkom: **dokument zo súboru** (predpis,
+  smernica, zákon, manuál…), **časté otázky (FAQ)** bez súboru a **import zo
+  servera** — pri každom dve-tri vety, čo sa s dokumentom deje. Formulár na
+  súbor je hneď pod ním.
+- **Druh je typ dokumentu**: nápoveda to hovorí namiesto zoznamu kľúčov
+  a vo výbere pri súbore nie je FAQ. Pri značkách pribudla veta, že sú to
+  témy a typ do nich nepatrí.
+- Návod (časť 1) popisuje oba spôsoby a rozdiel druhu a značiek.
+
 ### Prehľad kanálov: zoznam, nový kanál ako úloha, stav schránky (2026-10-08)
 
 - `/channels`: každý kanál je jeden riadok — ikona typu, názov, pod ním typ,
