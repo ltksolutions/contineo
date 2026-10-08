@@ -120,9 +120,11 @@ export default async function ConnectorImportPage({ searchParams }: { searchPara
                 <input type="hidden" name="back" value={self} />
                 <section className="form-group form-group--lg">
                   <h2 className="form-group-head form-group-head--step"><span className="assign-step" aria-hidden="true">1</span>{t.pick(candidates.length)}</h2>
-                  <div className="card form-group-body" style={{ display: "grid", gap: 10 }}>
+                  {/* Riadky s kruhom vľavo ako v zoznamoch (`.select-row`) — holý
+                      `.form-row` kreslí políčko len s triedou riadku, inak je neviditeľné. */}
+                  <div className="card form-group-body form-group-body--rows form-list">
                     {candidates.map(c => (
-                      <label key={c.externalId} className="form-row form-row--bare" style={{ alignItems: "flex-start", gap: 10 }}>
+                      <label key={c.externalId} className="form-row select-row" style={{ alignItems: "flex-start" }}>
                         <input type="checkbox" name="externalId" value={c.externalId} defaultChecked={!c.existingDocumentId || c.changed} />
                         <span style={{ display: "grid", gap: 2 }}>
                           <span style={{ fontWeight: 600 }}>{c.title}{c.group ? <span className="quiet"> · {c.group}</span> : null}</span>

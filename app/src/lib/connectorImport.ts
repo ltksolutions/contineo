@@ -83,7 +83,10 @@ export async function searchForImport(
   const articles = await withClient(c, redirectUrl, client => profile.search!(toolCaller(client), query, filter, IMPORT_SEARCH_LIMIT), ctx, "search", 15_000)
   const known = await importedByPath(companyCode, connectorId)
   const policy = c.uses.retrieval.reduction
-  return articles.map(a => {
+  // Vynechané cesty (D176) platia aj pre import — čo sa nemá dostať živo,
+  // nemá sa dostať ani kópiou.
+  const skip = (id: string) => policy.skipPaths.some(p => { try { return new RegExp(p).test(id) } catch { return false } })
+  return articles.filter(a => !skip(a.externalId)).map(a => {
     const text = reduceArticle(a.text, policy)
     const existing = known.get(a.externalId) ?? null
     return {
