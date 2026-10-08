@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kanály: náhľad obsahu, kód na vloženie widgetu, správy o nedoručení (2026-10-08)
+
+- V nastavení kanála je blok **„Čo asistent kanála vidí"**: dokumenty, ktoré
+  padnú do odpovedí, počet overených odpovedí a zbalený zoznam vynechaných
+  s dôvodom (len koncept, bez platného znenia, interný).
+- Úroveň obsahu je vlastnosť typu kanála: widget je verejný vždy, portál pre
+  prihlásených „len verejné" alebo „verejné aj interné" (predvolene verejné).
+- Widget má na konci nastavenia **hotový kód na vloženie** s popisom
+  parametrov (aj v HTML komentári pre vývojára cudzej stránky) a tlačidlom
+  Kopírovať. **Kontakt pri výpadku** sa ukáže, keď skript nenabehne alebo
+  zlyhá; prázdny = kontaktná adresa organizácie.
+- Schránka kanála **nezakladá tickety zo správ o nedoručení** (prepínač pri
+  e-maile, predvolene zapnutý).
+- Pri živých zdrojoch kanála veta povie, že interné konektory sa do
+  verejného widgetu nedostanú (D174).
+
 ### Posledné odchýlky: značky, správna odpoveď, bez príkazov (2026-10-08)
 
 - Značky na zlúčenie (Vzdelávanie → Správa → smart:tagy): riadky s kruhom

@@ -10,6 +10,18 @@
 
 ---
 
+## 2026-10-08 večer — kanály a widget (druhá session, doplnené pri „Poupratuj")
+
+Päť commitov priamo do `main` (fc4176a, 5b8636f, 27d2092, d650862, c315726):
+náhľad obsahu kanála a úroveň ako vlastnosť typu kanála, kód na vloženie
+widgetu s kontaktom pri výpadku, správy o nedoručení v schránke kanála.
+Zápis podľa správ commitov; podrobnosti sú v nich, CHANGELOG doplnený.
+Pozorovanie: priamy push do `main` hneď po zlúčení PR spôsobil, že Vercel
+nasadil až ten neskorší commit — zlúčenie PR samo stav nasadenia nedostalo
+(#321). Kontrola nasadenia preto sleduje aj najnovší commit `main`.
+
+---
+
 ## 2026-10-08 — zvyšné odchýlky (ZAKLAD-zvysne-odchylky)
 
 **Čo sa zmenilo:** značky na zlúčenie ako `.select-row` (`.tag-row`

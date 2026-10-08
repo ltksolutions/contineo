@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-08** (návrhy z Claude Design dokončené: lišta uloženia #306, výber skupín a značiek #308/#312, karta osoby #314, posudok #317, akcie detailu dokumentu #319/#320; helpdesk na `/privacy` a lehota ticketov D178, PR #315; karta osoby PR #314; doplnené 5.–6. 10.: AI organizácie ADR-026, editor členenia ADR-027, stav tlačidiel PR #269–#271; MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
+Posledná aktualizácia: **2026-10-08** (súpis DESIGN_ODCHYLKY vybavený celý: mechanické #321, posledné návrhy #322; kanály: náhľad obsahu, kód na vloženie widgetu, nedoručené správy; návrhy z Claude Design dokončené: lišta uloženia #306, výber skupín a značiek #308/#312, karta osoby #314, posudok #317, akcie detailu dokumentu #319/#320; helpdesk na `/privacy` a lehota ticketov D178, PR #315; karta osoby PR #314; doplnené 5.–6. 10.: AI organizácie ADR-026, editor členenia ADR-027, stav tlačidiel PR #269–#271; MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
 
 ---
 
@@ -74,7 +74,10 @@ pozvánka neodíde, potom „Pozvaná". Portál sa volá **Intranet SFZ**.
 zapracované všetky (7.–8. 10.):** lišta uloženia (#306), výber skupín
 a značiek s poľom „Hľadať alebo pridať" (#308, #312), správa kurzu (#298),
 karta osoby so sekciami a Ďalšími akciami (#314), posudok odpovede (#317)
-a akcie na detaile dokumentu (#319, oprava ponuky #320). Postup: Ján napíše
+a akcie na detaile dokumentu (#319, oprava ponuky #320). **Súpis
+`docs/DESIGN_ODCHYLKY.md` je vybavený celý** — mechanické odchýlky #321,
+posledné štyri na návrh (značky, správna odpoveď v teste, príkazy pre
+vývojára na `/hr/assign` a `/admin`) #322. Postup: Ján napíše
 **„priprav podklad"** (zadanie `docs/design/<NÁZOV>-zadanie.md` s promptom),
 návrh vznikne v Claude Design, **„stiahni design — <NÁZOV>"** ho stiahne
 cez DesignSync do `docs/design/` a implementuje sa vo vlastnom worktree,
@@ -229,8 +232,9 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (8. 10.): **0 errors, 41 warnings,
-2549 testov v 215 súboroch.** Pri paralelnej session pred zlúčením PR
+Baseline, proti ktorej sa porovnáva (8. 10. večer): **0 errors, 41 warnings,
+2565 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
+na 390 px — #321 prešiel štyrmi brzdami a typ otázky aj tak pretekal o 65 px. Pri paralelnej session pred zlúčením PR
 zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
 `main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže
 `npx vitest run --maxWorkers=3` (inak niektoré testy stránok padajú na 5 s). Nová chyba alebo nové varovanie znamená regresiu, nie šum.
