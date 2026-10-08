@@ -88,6 +88,10 @@ export default async function NewDocumentPage({
       <p className="quiet" style={{ margin: "0 0 20px" }}>
         <Link href="/library/new/faq">{dictionary(ctx.person.language).library.faq.newLink}</Link>
       </p>
+      {/* Články z MCP konektora sa importujú, nie nahrávajú (ADR-029). */}
+      <p className="quiet" style={{ margin: "0 0 20px" }}>
+        <Link href="/library/new/connector">{dictionary(ctx.person.language).library.connectorImport.newLink}</Link>
+      </p>
 
       {/*
         Chyba sa musí dať prežiť (NAHRAVANIE, úloha 1): hláška povie, čo

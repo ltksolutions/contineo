@@ -48,6 +48,8 @@ import { archiveDocument, restoreDocument, ArchiveError } from "@/lib/documentAr
 import { AppError } from "@/lib/appError"
 import { assignHref, summarize, type BulkOutcome } from "@/lib/libraryBulk"
 import { submitForApproval, cancelRound, markNotified } from "@/lib/approvalsDb"
+import { importArticles, resyncDocument } from "@/lib/connectorImport"
+import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { approvalEmail, send } from "@/lib/ecomail"
 import { requestHostname, currentTenant } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
@@ -1633,4 +1635,64 @@ export async function removeFaqEntryAction(fd: FormData) {
     if (isRedirect(e)) throw e
     redirect(`${base}?error=${encodeURIComponent(errorMessage(e, self.language))}`)
   }
+}
+
+// ── Import z MCP konektora (ADR-029, použitie B) ────────────────────────────
+
+export async function importConnectorArticlesAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).library.connectorImport
+  const back = fieldText(fd, "back") || "/library/new/connector"
+  let message: string
+  try {
+    const out = await importArticles(self.companyCode, {
+      connectorId: fieldText(fd, "connectorId"),
+      externalIds: fd.getAll("externalId").filter((x): x is string => typeof x === "string"),
+      folderId: fieldText(fd, "folderId") || null,
+      category: fieldText(fd, "category"),
+      accessLevel: fieldText(fd, "accessLevel") || "internal",
+      language: fieldText(fd, "language") || "sk",
+      scope: fieldText(fd, "scope") || "company",
+      ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
+      tags: fd.getAll("tags").filter((x): x is string => typeof x === "string"),
+    }, self.email, self.language, self.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
+    const n = (r: string) => out.filter(o => o.result === r).length
+    message = t.done(n("created"), n("version"), n("unchanged"), n("failed"))
+    const failed = out.filter(o => o.result === "failed")
+    if (failed.length) message += " " + failed.map(o => `${o.title}: ${o.error ?? ""}`).join("; ")
+    revalidatePath("/library")
+    // Jeden nový dokument → rovno naň; viac → späť na výber so správou.
+    const created = out.filter(o => o.result !== "failed" && o.documentId)
+    if (created.length === 1 && out.length === 1) {
+      redirect(`/library/${encodeURIComponent(created[0].documentId!)}?msg=${encodeURIComponent(message)}`)
+    }
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    const sep = back.includes("?") ? "&" : "?"
+    redirect(`${back}${sep}error=${encodeURIComponent(errorMessage(e, self.language))}`)
+  }
+  const sep = back.includes("?") ? "&" : "?"
+  redirect(`${back}${sep}msg=${encodeURIComponent(message)}`)
+}
+
+export async function resyncConnectorDocumentAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).library.connectorImport
+  const id = fieldText(fd, "documentId")
+  let message: string
+  let failed = false
+  try {
+    const r = await resyncDocument(self.companyCode, id, self.email, self.language, self.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
+    if (r.result === "failed") { message = `${t.errorBefore}${r.error ?? ""}`; failed = true }
+    else message = r.result === "unchanged" ? t.resyncUnchanged : t.resyncVersion
+    revalidatePath("/library")
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, self.language); failed = true
+  }
+  const q = new URLSearchParams({ msg: message })
+  if (failed) q.set("error", "1")
+  redirect(`/library/${encodeURIComponent(id)}?${q.toString()}`)
 }

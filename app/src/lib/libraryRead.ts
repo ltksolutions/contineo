@@ -13,7 +13,7 @@ import { normalizeMeta, suggestMetaFromMarkdown, type VersionMeta } from "./vers
 import { getCollection } from "./mongodb"
 import { allFolders, pathTo } from "./folders"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type VersionFile } from "./documents"
-import type { Version } from "./documents"
+import type { Version, DocumentSource } from "./documents"
 import type { ResponsiblePerson, DraftLegalBasis } from "./versionResponsibility"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
@@ -114,6 +114,8 @@ export interface LibraryRow {
   ownerDepartmentId?: string | null
   /** Interné číslo predpisu. Nie každý ho má. */
   internalNumber?: string
+  /** Pôvod z konektora (ADR-029) — na detaile „Zdroj" a re-sync. */
+  source?: DocumentSource
 }
 
 export interface LibraryDetail extends LibraryRow {
@@ -227,6 +229,7 @@ function toRow(d: RawRow): LibraryRow {
     updatedBy: d.updatedBy ? String(d.updatedBy) : undefined,
     ownerDepartmentId: (d.ownerDepartmentId as string | null | undefined) ?? null,
     internalNumber: d.internalNumber ? String(d.internalNumber) : undefined,
+    source: (d.source as DocumentSource | undefined) ?? undefined,
   }
 }
 
@@ -602,7 +605,7 @@ export async function libraryList(
         documentId: 1, title: 1, category: 1, language: 1, accessLevel: 1,
         tags: 1, status: 1, processingStatus: 1, draftMarkdown: 1, originalFile: 1,
         folderId: 1, folderPath: 1, updatedAt: 1, updatedBy: 1,
-        ownerDepartmentId: 1, internalNumber: 1,
+        ownerDepartmentId: 1, internalNumber: 1, source: 1,
         // Z verzií len to, čo treba na „ktoré znenie platí" — samotné texty
         // znení sú veľké a v zozname by sa ťahali zbytočne.
         "versions.versionId": 1, "versions.label": 1, "versions.isActive": 1,

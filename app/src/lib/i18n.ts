@@ -1529,6 +1529,8 @@ interface Dictionary {
       secRetrieval: string
       secRetrievalNote: string
       retrievalOn: string
+      ingestOn: string
+      ingestNote: string
       accessLevel: string
       accessInternal: string
       accessPublic: string
@@ -3149,6 +3151,44 @@ interface Dictionary {
       failed: string
     }
     /** FAQ ako druh dokumentu (ADR-028, D164): založenie, editor záznamov, texty znenia a indexu. */
+    /** Import článkov z MCP konektora (ADR-029, použitie B). */
+    connectorImport: {
+      heading: string
+      intro: string
+      /** Odkaz z nahrávania. */
+      newLink: string
+      noConnector: string
+      noConnectorLink: string
+      connector: string
+      scope: string
+      query: string
+      queryPlaceholder: string
+      queryHint: string
+      search: string
+      nothingFound: string
+      errorBefore: string
+      pick: (n: number) => string
+      alreadySame: string
+      alreadyChanged: string
+      open: string
+      metaNote: string
+      folder: string
+      folderNone: string
+      accessHint: string
+      import: string
+      afterNote: string
+      done: (created: number, versions: number, unchanged: number, failed: number) => string
+      /** Riadok pod názvom v PDF: odkiaľ článok je. */
+      pdfOrigin: (connector: string, path: string) => string
+      /** Detail dokumentu: blok „Zdroj". */
+      sourceHeading: string
+      sourceLine: (connector: string, group: string | null, date: string) => string
+      sourcePath: string
+      resync: string
+      resyncHint: string
+      resyncUnchanged: string
+      resyncVersion: string
+    }
     faq: {
       newHeading: string
       newIntro: string
@@ -5502,6 +5542,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.notConnected": "Konektor nie je pripojený.",
     "connector.timeout": "Server neodpovedal včas.",
     "connector.unauthorized": "Prihlásenie ku konektoru vypršalo — pripojte ho znova.",
+    "connector.ingestOff": "Konektor nemá zapnutý import do knižnice.",
+    "connector.noImportProfile": "Profil tohto servera import nepodporuje.",
+    "connector.nothingSelected": "Nie je vybraný žiadny článok.",
+    "library.notFromConnector": "Tento dokument nevznikol z konektora.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
     "helpdesk.kind": "Neznámy typ kanála.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
@@ -5745,6 +5789,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Živý zdroj",
       secRetrievalNote: "Pri otázke sa popri knižnici zavolá aj server. Výsledok obišiel kurátora, preto je v citácii označený ako neoverený.",
       retrievalOn: "Používať ako živý zdroj",
+      ingestOn: "Povoliť import do knižnice",
+      ingestNote: "Kurátor môže články zo servera uložiť ako koncepty dokumentov (Knižnica → Nahrať → Import zo servera).",
       accessLevel: "Prístupová úroveň",
       accessInternal: "Interná — len prihlásení na portáli",
       accessPublic: "Verejná — aj widget a návrhy odpovedí na tickety",
@@ -7280,6 +7326,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Príprava je uložená.",
       carryOverFailed: "Znenie je zverejnené, prenos pridelení sa ale nepodaril:",
       failed: "Nepodarilo sa to. Skús to znova.",
+    },
+    connectorImport: {
+      heading: "Import zo servera",
+      intro: "Vyhľadaj články na pripojenom MCP serveri a vybrané ulož ako koncepty dokumentov. Ďalej idú bežnou cestou: metadáta, schválenie, zverejnenie. Server nemá zoznam súborov — vyberá sa z výsledkov hľadania.",
+      newLink: "Články z pripojeného servera (napr. Sportnet) sa importujú tu →",
+      noConnector: "Žiadny pripojený konektor nemá zapnutý import do knižnice.",
+      noConnectorLink: "Konektory organizácie",
+      connector: "Konektor",
+      scope: "Rozsah",
+      query: "Čo hľadať",
+      queryPlaceholder: "zmena hesla, registrácia hráča…",
+      queryHint: "Jedna otázka alebo téma; server vráti najviac 10 článkov.",
+      search: "Hľadať",
+      nothingFound: "Server nič nenašiel.",
+      errorBefore: "Hľadanie zlyhalo: ",
+      pick: n => `Vybrať články (${n})`,
+      alreadySame: "V knižnici už je, bez zmeny na serveri.",
+      alreadyChanged: "V knižnici už je — na serveri sa odvtedy zmenil; import založí koncept nového znenia.",
+      open: "Otvoriť",
+      metaNote: "Platí pre všetky nové dokumenty z tohto výberu; pri existujúcich sa metadáta nemenia.",
+      folder: "Priečinok",
+      folderNone: "Bez priečinka",
+      accessHint: "Článok z vývojárskej dokumentácie je interný, kým ho kurátor neprepíše pre verejnosť.",
+      import: "Importovať vybrané",
+      afterNote: "Z každého článku vznikne koncept s PDF a textom; otvor ho, uprav a pošli na schválenie.",
+      done: (created, versions, unchanged, failed) => `Import hotový: ${created} nových, ${versions} nových znení, ${unchanged} bez zmeny, ${failed} zlyhalo.`,
+      pdfOrigin: (connector, path) => `Zdroj: ${connector} · ${path}`,
+      sourceHeading: "Zdroj",
+      sourceLine: (connector, group, date) => `Z konektora ${connector}${group ? ` (${group})` : ""}, stiahnuté ${date}.`,
+      sourcePath: "Cesta na serveri",
+      resync: "Skontrolovať zmeny na serveri",
+      resyncHint: "Článok sa stiahne znova; keď sa zmenil, vznikne koncept nového znenia. Zverejnené sa nemení.",
+      resyncUnchanged: "Na serveri sa nič nezmenilo.",
+      resyncVersion: "Článok sa zmenil — koncept nového znenia je pripravený.",
     },
     faq: {
       newHeading: "Nové FAQ – časté otázky",
@@ -9593,6 +9673,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.notConnected": "Konektor není připojen.",
     "connector.timeout": "Server neodpověděl včas.",
     "connector.unauthorized": "Přihlášení ke konektoru vypršelo — připojte ho znovu.",
+    "connector.ingestOff": "Konektor nemá zapnutý import do knihovny.",
+    "connector.noImportProfile": "Profil tohoto serveru import nepodporuje.",
+    "connector.nothingSelected": "Není vybrán žádný článek.",
+    "library.notFromConnector": "Tento dokument nevznikl z konektoru.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
     "helpdesk.kind": "Neznámý typ kanálu.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
@@ -9836,6 +9920,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Živý zdroj",
       secRetrievalNote: "Při dotazu se vedle knihovny zavolá i server. Výsledek obešel kurátora, proto je v citaci označen jako neověřený.",
       retrievalOn: "Používat jako živý zdroj",
+      ingestOn: "Povolit import do knihovny",
+      ingestNote: "Kurátor může články ze serveru uložit jako koncepty dokumentů (Knihovna → Nahrát → Import ze serveru).",
       accessLevel: "Přístupová úroveň",
       accessInternal: "Interní — jen přihlášení na portálu",
       accessPublic: "Veřejná — i widget a návrhy odpovědí na tickety",
@@ -11368,6 +11454,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Příprava je uložena.",
       carryOverFailed: "Znění je zveřejněno, přenos přidělení se ale nepodařil:",
       failed: "Nepodařilo se to. Zkus to znovu.",
+    },
+    connectorImport: {
+      heading: "Import ze serveru",
+      intro: "Vyhledej články na připojeném MCP serveru a vybrané ulož jako koncepty dokumentů. Dál jdou běžnou cestou: metadata, schválení, zveřejnění. Server nemá seznam souborů — vybírá se z výsledků hledání.",
+      newLink: "Články z připojeného serveru (např. Sportnet) se importují zde →",
+      noConnector: "Žádný připojený konektor nemá zapnutý import do knihovny.",
+      noConnectorLink: "Konektory organizace",
+      connector: "Konektor",
+      scope: "Rozsah",
+      query: "Co hledat",
+      queryPlaceholder: "změna hesla, registrace hráče…",
+      queryHint: "Jedna otázka nebo téma; server vrátí nejvýše 10 článků.",
+      search: "Hledat",
+      nothingFound: "Server nic nenašel.",
+      errorBefore: "Hledání selhalo: ",
+      pick: n => `Vybrat články (${n})`,
+      alreadySame: "V knihovně už je, beze změny na serveru.",
+      alreadyChanged: "V knihovně už je — na serveru se od té doby změnil; import založí koncept nového znění.",
+      open: "Otevřít",
+      metaNote: "Platí pro všechny nové dokumenty z tohoto výběru; u existujících se metadata nemění.",
+      folder: "Složka",
+      folderNone: "Bez složky",
+      accessHint: "Článek z vývojářské dokumentace je interní, dokud ho kurátor nepřepíše pro veřejnost.",
+      import: "Importovat vybrané",
+      afterNote: "Z každého článku vznikne koncept s PDF a textem; otevři ho, uprav a pošli ke schválení.",
+      done: (created, versions, unchanged, failed) => `Import hotov: ${created} nových, ${versions} nových znění, ${unchanged} beze změny, ${failed} selhalo.`,
+      pdfOrigin: (connector, path) => `Zdroj: ${connector} · ${path}`,
+      sourceHeading: "Zdroj",
+      sourceLine: (connector, group, date) => `Z konektoru ${connector}${group ? ` (${group})` : ""}, staženo ${date}.`,
+      sourcePath: "Cesta na serveru",
+      resync: "Zkontrolovat změny na serveru",
+      resyncHint: "Článek se stáhne znovu; když se změnil, vznikne koncept nového znění. Zveřejněné se nemění.",
+      resyncUnchanged: "Na serveru se nic nezměnilo.",
+      resyncVersion: "Článek se změnil — koncept nového znění je připraven.",
     },
     faq: {
       newHeading: "Nové FAQ – časté otázky",
@@ -13673,6 +13793,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.notConnected": "The connector is not connected.",
     "connector.timeout": "The server did not answer in time.",
     "connector.unauthorized": "The connector sign-in has expired — connect it again.",
+    "connector.ingestOff": "The connector has library import switched off.",
+    "connector.noImportProfile": "This server profile does not support import.",
+    "connector.nothingSelected": "No article is selected.",
+    "library.notFromConnector": "This document did not come from a connector.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
     "helpdesk.kind": "Unknown channel type.",
     "helpdesk.noTickets": "The channel has tickets switched off.",
@@ -13916,6 +14040,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Live source",
       secRetrievalNote: "When asked, the server is called alongside the library. The result bypassed the curator, so the citation marks it as unreviewed.",
       retrievalOn: "Use as a live source",
+      ingestOn: "Allow import into the library",
+      ingestNote: "A curator can save articles from the server as document drafts (Library → Upload → Import from a server).",
       accessLevel: "Access level",
       accessInternal: "Internal — signed-in portal users only",
       accessPublic: "Public — also the widget and ticket draft answers",
@@ -15442,6 +15568,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Preparation saved.",
       carryOverFailed: "The version is published, but carrying over assignments failed:",
       failed: "That did not work. Try again.",
+    },
+    connectorImport: {
+      heading: "Import from a server",
+      intro: "Search articles on a connected MCP server and save the selected ones as document drafts. From there they take the usual path: metadata, approval, publication. The server has no file list — you pick from search results.",
+      newLink: "Articles from a connected server (e.g. Sportnet) are imported here →",
+      noConnector: "No connected connector has library import enabled.",
+      noConnectorLink: "Organisation connectors",
+      connector: "Connector",
+      scope: "Scope",
+      query: "What to search for",
+      queryPlaceholder: "password change, player registration…",
+      queryHint: "One question or topic; the server returns at most 10 articles.",
+      search: "Search",
+      nothingFound: "The server found nothing.",
+      errorBefore: "Search failed: ",
+      pick: n => `Select articles (${n})`,
+      alreadySame: "Already in the library, unchanged on the server.",
+      alreadyChanged: "Already in the library — changed on the server since; import creates a draft of a new version.",
+      open: "Open",
+      metaNote: "Applies to all new documents from this selection; existing ones keep their metadata.",
+      folder: "Folder",
+      folderNone: "No folder",
+      accessHint: "An article from developer documentation is internal until a curator rewrites it for the public.",
+      import: "Import selected",
+      afterNote: "Each article becomes a draft with a PDF and text; open it, edit and send for approval.",
+      done: (created, versions, unchanged, failed) => `Import finished: ${created} new, ${versions} new versions, ${unchanged} unchanged, ${failed} failed.`,
+      pdfOrigin: (connector, path) => `Source: ${connector} · ${path}`,
+      sourceHeading: "Source",
+      sourceLine: (connector, group, date) => `From connector ${connector}${group ? ` (${group})` : ""}, fetched ${date}.`,
+      sourcePath: "Path on the server",
+      resync: "Check for changes on the server",
+      resyncHint: "The article is fetched again; if it changed, a draft of a new version is created. Published versions stay as they are.",
+      resyncUnchanged: "Nothing changed on the server.",
+      resyncVersion: "The article changed — a draft of a new version is ready.",
     },
     faq: {
       newHeading: "New FAQ",

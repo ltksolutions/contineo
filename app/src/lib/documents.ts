@@ -208,9 +208,29 @@ export interface Version {
 }
 
 /** Len tá časť `documents`, ktorú potrebuje onboarding. */
+/**
+ * Pôvod obsahu, ktorý neprišiel ako súbor (ADR-029, použitie B). `externalId`
+ * je cesta na serveri — na opätovné stiahnutie; `contentHash` odtlačok textu
+ * po redukcii — server nedáva dátum zmeny, takže „zmenilo sa to?" povie len
+ * hash. Názov konektora je **kópia**: konektor sa dá premenovať aj odstrániť
+ * a dokument má o rok povedať, odkiaľ bol.
+ */
+export interface DocumentSource {
+  type: "mcp"
+  connector: string
+  connectorName: string
+  externalId: string
+  group: string | null
+  fetchedAt: Date
+  contentHash: string
+  adapterVersion: string
+}
+
 export interface DocumentRecord {
   documentId: string
   title: string
+  /** Odkiaľ obsah je, keď neprišiel ako súbor (ADR-029). */
+  source?: DocumentSource
   /**
    * Identita dokumentu v rámci organizácie (D80) — z nej sa skladá
    * `documentId`. Dokumentom spred D80 chýba a vtedy platí `sectionKey`.
