@@ -1325,6 +1325,7 @@ export default async function OrganisationSectionPage({
                   ["capYears", tt.capYears, tt.capYearsNote],
                   ["learningDetailMonths", tt.learningDetailMonths, tt.learningDetailMonthsNote],
                   ["answersMonths", tt.answersMonths, tt.answersMonthsNote],
+                  ["ticketMonths", tt.ticketMonths, tt.ticketMonthsNote],
                 ] as const).map(([name, label, note]) => (
                   <label key={name} className="field">
                     <span className="field-label">{label}</span>

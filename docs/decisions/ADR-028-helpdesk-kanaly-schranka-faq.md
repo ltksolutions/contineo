@@ -3,7 +3,8 @@
 > **Stav:** prijaté · **Dátum:** 2026-10-06
 > **Doplnené:** D169 (Kanály ako sekcia s typom widget / portál), D170
 > (Helpdesk pod Kanálmi, správca tickety nečíta) — obe 7. 10. 2026 v tomto
-> ADR; ADR-029 D176 (živý zdroj konektora nejde do verejného kanála).
+> ADR; ADR-029 D176 (živý zdroj konektora nejde do verejného kanála); D178
+> (lehoty ticketov a osôb z widgetu, `/privacy`) 8. 10. 2026.
 > Naostro od 7. 10. 2026 (schránka SFZ cez Graph, synchronizácia každých 5 min).
 > **Rozhodol:** Ján Letko (2026-10-06) — k šiestim bodom návrhu „1 áno aj
 > IMAP aj Graph, 2 áno e-maily sa stávajú ticketmi, 3–6 ok" a dodatok:
@@ -303,6 +304,29 @@ Odpovedá iný človek, než kto schvaľuje normy. `helpdesk` vidí frontu a
 tickety svojich kanálov, odosiela odpovede a navrhuje záznamy do FAQ;
 schvaľuje ich správca obsahu (`content-admin`). Pridáva sa do
 `ASSIGNABLE_ROLES`.
+
+### D178 — Lehota ticketov a osôb z widgetu; helpdesk na stránke ochrany údajov
+
+Rozhodnutie Jána 8. 10. 2026 (štyri body „áno, všetky štyri"). D165 sľúbil
+lehotu ticketu, mazacia dávka ju však nepoznala — ticket ani osoba z widgetu
+sa nemazali nikdy, takže `/privacy` by musel písať „natrvalo".
+
+- **Ticket:** zavretý ticket sa zmaže celý **24 mesiacov od `closedAt`**;
+  lehotu si organizácia zmení v Ochrane údajov (`ticketMonths`, 1–120).
+  Otvorený alebo znova otvorený sa nemaže. Ticket nie je dôkazný záznam
+  (D24) — dokazuje prácu helpdesku, nie oboznámenie s predpisom.
+- **Osoba z widgetu** (`external`, D168) sa zmaže po **24 mesiacoch bez
+  aktivity** (posledná otázka, inak založenie), ak nemá otvorený ticket ani
+  žiadne potvrdenie. Lehota je pevná.
+- Obe idú v dennej mazacej dávke (`runRetention`) a rovnako ako ostatné len
+  pri `RETENTION_MODE=delete`; záznam do `retention_log` (`tickets`,
+  `external`).
+- **Právny základ:** oprávnený záujem (čl. 6 ods. 1 písm. f) GDPR) — vybaviť
+  otázku, ktorú človek sám položil. Súhlas nie: bez spracúvania sa na otázku
+  odpovedať nedá.
+- **`/privacy`** má časť o helpdesku (účel, údaje, základ, lehoty, kto
+  tickety číta) **len pri organizácii s aspoň jedným kanálom** — ten istý
+  vzor ako Vzdelávanie. `PRIVACY_NOTICE_VERSION` 2026-10-08.
 
 ## 3. Zamietnuté
 

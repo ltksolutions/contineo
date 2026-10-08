@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk na stránke ochrany údajov a lehota ticketov (2026-10-08, D178)
+
+- Stránka **Ochrana osobných údajov** opisuje helpdesk: na čo slúži, aké
+  údaje z e-mailu a z okna pomoci sa ukladajú, právny základ (oprávnený
+  záujem), lehoty a kto tickety číta. Len pri organizácii, ktorá má aspoň
+  jeden kanál.
+- **Zavretý ticket sa zmaže 24 mesiacov po zavretí**; lehotu si organizácia
+  zmení v Ochrane údajov pri ostatných lehotách. Otvorený ticket sa nemaže.
+- **Osoba z okna pomoci** sa zmaže po 24 mesiacoch bez otázky, ak nemá
+  otvorený ticket.
+- Obe mazania idú v nočnej dávke len pri zapnutom ostrom mazaní.
+
 ### Karta osoby: sekcie, lišta uloženia, Ďalšie akcie (2026-10-08)
 
 - `/people/<id>` je formulár so sekciami **Osoba · Kontakt · Zaradenie ·
