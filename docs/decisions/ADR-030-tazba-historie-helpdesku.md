@@ -11,6 +11,8 @@
 > znenia), ADR-022 (lehoty podľa organizácie), D27 (stav sa odvodzuje).
 > **Spresňuje:** D165 — postup pri veľkej histórii, zoskupenie pred modelom,
 > zaobchádzanie s protirečivými odpoveďami a poradie pre kurátora.
+> **Doplnené 9. 10. 2026:** odpovede DPO (`docs/DPO_tazba_historie_helpdesku.md`)
+> — namiesto pilota celé obdobie, DPIA netreba; D183–D186 nižšie.
 > **Implementácia:** krok 1 (analýza bez zápisu) — `lib/historyAnalysis.ts`,
 > `GraphMailbox.listHeaders()`, `/api/cron/helpdesk-history`, obrazovka
 > `/channels/[key]/history`. Kroky 2 a 3 sú otvorené v `docs/TODO.md`.
@@ -136,6 +138,59 @@ Návrhy z krokov 2 a 3 nepristanú naraz do konceptu FAQ dokumentu, ale do
 
 Tvar fronty (nová kolekcia alebo stav záznamu v koncepte) sa rozhodne
 s krokom 2, keď budú čísla z kroku 1.
+
+### D183 — Namiesto pilota celé obdobie (odpovede DPO 9. 10. 2026)
+
+DPO (Ján Letko) odpovedal na otázku 2 „komplet analýza s anonymizáciou
+osobných údajov", spresnil „pseudonymizácia podľa kap. 2" a na otázku 6
+„DPIA netreba". Kroky 2 a 3 z D179 sa preto spájajú do **úplnej ťažby**
+nad celými 36 mesiacmi analýzy. Pravidlá D181 (protirečivé odpovede
+s príznakom, návrh článku normy) a D182 (fronta kurátora) platia.
+Pseudonymizácia: pravidlá `scrubPersonalData` (od 9. 10. aj čísla od
+6 číslic), pokyn modelu bez mien a klubov, kurátor pred zverejnením.
+
+### D184 — Témy priraďuje model, nie vektory; text sa neukladá
+
+D181 počítal so zoskupením cez embeddingy (Voyage). Vektory sa u nás
+počítajú **Atlas Automated Embedding** z textového poľa v kolekcii — na
+zoskupenie by sa teda musel **uložiť text otázky**, čo D165 aj podklad pre
+DPO vylučujú. Namiesto toho:
+
+1. **Zber po mesiacoch** (rovnako ako analýza, cron): vlákna, ktoré začal
+   človek zvonku (nie kolega, nie vylúčená adresa, nie návrat) a ktoré
+   dostali odpoveď. Prvá otázka sa očistí a skráti a v dávkach ide modelu
+   spolu so **zoznamom doterajších tém**; model priradí existujúcu tému
+   alebo navrhne novú (názov a jedna veta, bez osobných údajov).
+   **Uloží sa len kľúč témy, mesiac, čas otázky a poslednej odpovede
+   a identifikátory vlákna a správ** — text nie.
+2. **Zlúčenie tém** jedným volaním nad zoznamom tém (bez e-mailov).
+3. **Návrh za tému:** pre tému s aspoň 3 vláknami sa zo schránky znova
+   prečíta najviac 6 najnovších a 2 najstaršie vlákna, očistia sa a model
+   z nich napíše 1–3 záznamy FAQ z najnovšej odpovede s príznakom, keď sa
+   odpovede v čase menili, a s článkom normy z knižnice kanála (rovnaké
+   vyhľadávanie ako návrh odpovede ticketu, len verejný obsah).
+
+Voyage AI sa pri ťažbe **nepoužije**, hoci ho DPO schválil — menej
+spracúvania, nie viac. Spotreba modelu ide pod účel `faq-mining` (D158).
+
+### D185 — Fronta kurátora: kolekcia `faq_proposals`
+
+Návrh je samostatný dokument (otázka, varianty, odpoveď, adresáti, téma,
+počet vlákien, prvá a posledná otázka, príznaky, navrhnutý článok normy,
+pôvod). Kurátor (správca obsahu) ho na `/channels/[key]/proposals`
+**schváli** (záznam ide do konceptu vybraného FAQ dokumentu a ďalej
+postupom znenia), **opraví** a schváli, **zlúči** s iným návrhom (varianty
+sa prenesú) alebo **zamietne**. Pri každom rozhodnutí sa **pôvod zmaže**
+(identifikátory vlákien a správ, odpoveď DPO 5); ostáva počet vlákien
+a obdobie. Poradie fronty: počet vlákien, potom čerstvosť.
+
+### D186 — Námietka vylučuje adresu odtlačkom
+
+Kto namietne (odpoveď DPO 10), toho e-maily sa z ťažby vylúčia. Správca
+kanála zapíše adresu do zoznamu vylúčených; uloží sa **odtlačok** adresy
+(SHA-256 z adresy malými písmenami), nie adresa. Zber vlákna s takým
+odosielateľom preskočí; návrhy, ktoré už z jeho vlákien vznikli, preverí
+kurátor (fronta ich označí, kým majú pôvod).
 
 ## 3. Dôsledky
 

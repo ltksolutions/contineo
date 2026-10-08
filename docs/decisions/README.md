@@ -41,7 +41,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-027](ADR-027-clenenie-podla-druhu-dokumentu.md) | Členenie sa nenastavuje v organizácii; spôsob členenia podľa druhu dokumentu (s prvým manuálom či zmluvou); D179 druh je typ dokumentu, značky sú témy | ✅ prijaté |
 | [ADR-028](ADR-028-helpdesk-kanaly-schranka-faq.md) | Helpdesk: kanály s prideleným obsahom, schránka cez adaptér (IMAP, Microsoft Graph), e-mail ako ticket, FAQ ako druh dokumentu, identita z ISSF tokenom | ✅ prijaté · doplnené D169, D170 a [ADR-029](ADR-029-mcp-konektory.md) |
 | [ADR-029](ADR-029-mcp-konektory.md) | MCP konektory: pripojenie organizácie s viacerými použitiami (živý zdroj, import, nástroje), profil servera, rozsah per kanál, redukcia len pre interných | ✅ prijaté · fázy 1 a 2 v `main`, dodatok § 5 |
-| [ADR-030](ADR-030-tazba-historie-helpdesku.md) | Ťažba histórie helpdesku v troch krokoch: analýza bez zápisu (len hlavičky, mesačný súhrn), pilot so zoskupením a súhlasom DPO, archív po témach; fronta kurátora | ✅ prijaté · krok 1 rozpracovaný |
+| [ADR-030](ADR-030-tazba-historie-helpdesku.md) | Ťažba histórie helpdesku v troch krokoch: analýza bez zápisu (len hlavičky, mesačný súhrn), pilot so zoskupením a súhlasom DPO, archív po témach; fronta kurátora · doplnené D183–D186 (DPO: celé obdobie, témy modelom bez ukladania textu) | ✅ prijaté · krok 1 v `main`, úplná ťažba rozpracovaná |
 
 ## Čo sem nepatrí
 

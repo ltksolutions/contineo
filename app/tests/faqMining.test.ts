@@ -43,6 +43,9 @@ describe("scrubPersonalData", () => {
     expect(out).not.toContain("https://")
     expect(out).toContain("Ján Novák") // mena pravidlo nechyti — o tie sa stara pokyn a schvalenie
   })
+  it("cislo od 6 cislic (registracne cislo, faktura) nahradi, rok a clanok nie", () => {
+    expect(scrubPersonalData("Reg. č. 1234567, faktúra 2026001234, rok 2026, čl. 12")).toBe("Reg. č. [číslo], faktúra [číslo], rok 2026, čl. 12")
+  })
   it("kratke cisla (clanok 12, rok 2026) necha", () => {
     expect(scrubPersonalData("čl. 12 ods. 3, sezóna 2026/2027")).toBe("čl. 12 ods. 3, sezóna 2026/2027")
   })
