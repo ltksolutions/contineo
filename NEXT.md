@@ -14,7 +14,9 @@ Posledná aktualizácia: **2026-10-08** (helpdesk na `/privacy` a lehota ticketo
 
 **MCP konektory (ADR-029, 7.–8. 10., PR #307) sú v `main`.** Konektor je
 pripojenie organizácie k cudziemu MCP serveru s viacerými použitiami; fáza 1
-je **živý zdroj**: asistent hľadá súbežne v knižnici aj na serveri, citácia
+je **živý zdroj**: pri otázke sa predvolene hľadá len v knižnici, konektor
+sa zapína pilulkou alebo nastavením *Používať predvolene* (PR #313); vtedy
+sa hľadá súbežne v knižnici aj na serveri, citácia
 nesie štítok „Živý zdroj — neoverené kurátorom", prístupová úroveň je
 vlastnosť konektora (interný sa do e-mailov nedostane), rozsahy per kanál,
 pilulky Knižnica / Sportnet na `/ask`, stopa volaní v `connector_calls`.

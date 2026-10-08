@@ -15,8 +15,9 @@
 > **Prekonáva:** `docs/INGESTION_zdroje_reconciliation.md` kap. 2.2 (MCP ako
 > *adaptér zdroja do CMS*) a rozhodnutie z 2026-06-26, že import beží pod
 > servisným účtom — viď D172 a § 4.
-> **Implementácia:** fáza 1 v tejto vetve (`feat/mcp-connectors`); ostatné
-> fázy podľa § 3.
+> **Implementácia:** fáza 1 (živý zdroj) PR #307, fáza 2 (import do
+> knižnice) PR #311, predvolene len knižnica PR #313 — všetko v `main`
+> od 2026-10-08; fáza 3 a ďalšie otvorené body v § 5 a `docs/TODO.md` E2.
 
 ---
 
@@ -116,7 +117,7 @@ je generické; nový server = nový profil, nie nová vrstva.
   konektor sa do návrhu e-mailu nedostane; verejný widget ho nevidí.
 - Server vracia celé články; delia sa za behu existujúcim `chunkText()`
   a idú do reranku spolu s úsekmi z knižnice. Von idú najlepšie, nie
-  všetko.
+  všetko. *(Stav 2026-10-08: v cloude sa to zatiaľ nedeje — viď § 5.)*
 - Časový limit volania; keď server nestíha alebo zlyhá, odpoveď ide bez
   neho a človek sa to dozvie. Konektor nikdy nesmie zhodiť odpoveď
   z knižnice.
@@ -187,3 +188,36 @@ spotreby AI (ADR-026). Záznamy sa nemenia (D24).
   a odpoveď bez neho, nie čakanie.
 - Keď Sportnet poskytne servisnú aplikáciu, zmení sa len `auth` na
   konektore; nič v použitiach.
+
+## 5. Dodatok (2026-10-08) — stav implementácie a dve odchýlky
+
+**V `main`:** fáza 1 — živý zdroj, rozsahy per kanál, pilulky na `/ask`,
+stopa volaní `connector_calls` (PR #307); fáza 2 — import do knižnice:
+Knižnica → Nahrať → Import zo servera, koncept s Markdownom a PDF
+vysádzaným u nás, `documents.source.*`, kontrola zmien cez `contentHash`
+(PR #311). Overené naostro 8. 10. na `mcp.sportnet.online` v SFZ.
+
+**Odchýlka 1 — predvolene len knižnica (PR #313).** § 3 a D174 počítali
+s tým, že živý zdroj sa pri otázke volá vždy, keď je zapnutý. Po
+nasadení sa pri otázke **predvolene hľadá len v knižnici**; konektor si
+človek zapne pilulkou pod otázkou (voľba je v adrese, `?src=`) alebo ho
+správca nastaví na *Používať predvolene pri otázke*
+(`uses.retrieval.defaultOn`). Rozsah v kanáloch sa nemení — vyberá ho
+správca kanála (D175). Rozhodol Ján 8. 10. 2026; rozsah hľadania je
+vždy výslovný zoznam (knižnica + zapnuté konektory) a človek ho vidí
+ešte pred odpoveďou.
+
+**Odchýlka 2 — živé úseky nejdú do reranku.** D174 hovorí, že úseky zo
+servera idú do reranku spolu s úsekmi z knižnice. V cloude beží rerank
+ako `$rerank` stage v pipeline nad `document_chunks` a živé úseky v ňom
+nie sú; `chatStream.ts` ich **pripojí za úseky z knižnice v poradí
+servera**. Kým to neprekáža, ostáva to tak; náprava je aplikačný rerank
+nad zlúčeným zoznamom (`docs/TODO.md` E2).
+
+**Otvorené** (`docs/TODO.md` E2): fáza 3 — nástroje asistenta; identita
+`person`; servisný účet Sportnetu namiesto osobného účtu Jána; hromadný
+import a pravidelná synchronizácia; Contineo ako MCP server. Konektor
+zatiaľ **nie je v kontrole režimu** (`residency.ts`, ADR-002) — v režimoch
+`eu-full`, `on-prem` a `air-gap` ho nič neblokuje; § 4 („on-prem bez
+prístupu von beží bez neho") dnes platí len preto, že ho tam nikto
+nezapne. Verejný web to v tabuľke dátových tokov hovorí otvorene.
