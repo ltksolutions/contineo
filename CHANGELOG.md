@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Opýtať sa: predvolene len knižnica (2026-10-08)
+
+- Pri otázke sa **predvolene hľadá len v knižnici**. Pripojený konektor
+  (napr. Sportnet) si človek zapne pilulkou pod otázkou — vidieť to ešte pred
+  odpoveďou — alebo ho správca nastaví na **Používať predvolene pri otázke**.
+- Voľba piluliek je v adrese (`?src=`), takže prežije obnovenie aj odkaz.
+- Kanály sa nemenia — rozsah v nich vyberá správca kanála.
+
 ### Skupiny a značky: jedno pole „Hľadať alebo pridať" (2026-10-08)
 
 Navrchu zoznamu skupín a značiek je vždy jedno pole „Hľadať alebo pridať".
