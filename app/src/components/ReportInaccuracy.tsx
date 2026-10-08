@@ -78,12 +78,12 @@ export default function ReportInaccuracy({
   }
 
   if (state === "sent") {
-    return <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>{t.thanks}</p>
+    return <p className="quiet reader-thanks">{t.thanks}</p>
   }
 
   return (
-    <form onSubmit={send} style={{ display: "grid", gap: 8, maxWidth: 560 }}>
-      <label className="field" style={{ margin: 0 }}>
+    <form onSubmit={send} className="reader-form">
+      <label className="field">
         <span className="field-label">{t.whatIsWrong}</span>
         <textarea
           className="field-input"
@@ -96,9 +96,12 @@ export default function ReportInaccuracy({
         />
         <span className="quiet field-hint">{t.note}</span>
       </label>
-      {error && <p style={{ color: "var(--bad-fg)", fontSize: "var(--fs-small)", margin: 0 }}>{error}</p>}
+      {error && (
+        <div className="lnote lnote--bad" role="alert"><span className="lnote-mark" aria-hidden="true">!</span><span className="lnote-text">{error}</span></div>
+      )}
+      {/* Tiché: plné tlačidlo na obrazovke patrí otázke (EVAL-posudok Q2). */}
       <div>
-        <button className="button" type="submit" disabled={state === "sending" || !note.trim()}>
+        <button className="button button--quiet" type="submit" disabled={state === "sending" || !note.trim()}>
           {state === "sending" ? t.sending : t.submit}
         </button>
       </div>

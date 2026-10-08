@@ -57,13 +57,15 @@ export default async function EvaluationPage({
 
   return (
     <AppShell language={language}>
-    <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
+    {/* EVAL-posudok (8. 10. 2026): položka fronty je jedna karta, posudok
+        jej sekcia; bez inline štýlov. */}
+    <div className="page-narrow page-narrow--wide" style={tenantStyle(branding)}>
       {/* Hlavička stránky (DESIGN_ODCHYLKY P1); počet čakajúcich ako štítok vedľa. */}
       <div className="page-head">
         <h1 className="page-title">{t.heading}</h1>
         {queue.length > 0 && <span className="tag">{t.waiting(queue.length)}</span>}
       </div>
-      <p className="quiet page-lead" style={{ margin: "0 0 24px", maxWidth: 660 }}>{t.intro}</p>
+      <p className="quiet page-lead eval-lead">{t.intro}</p>
 
       <Notice language={language} message={message} error={error === "1"} back="/evaluation" />
 
@@ -74,74 +76,52 @@ export default async function EvaluationPage({
         </div>
       )}
 
-      <div style={{ display: "grid", gap: 20 }}>
-        {queue.map(item => (
-          <div key={item.id} className="card">
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
-              {item.readerVerdict === 0 && (
-                <span className="tag tag--expired" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
-                  {t.saidDoesNotFit}
-                </span>
-              )}
-              {item.readerNote && (
-                <span className="tag" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>{t.reported}</span>
-              )}
-              <span className="quiet" style={{ fontSize: "var(--fs-micro)", marginLeft: "auto" }}>
-                {t.askedAt} {formatDate(item.askedAt, language)}
-              </span>
+      {queue.map(item => (
+        <article key={item.id} className="card eval-item">
+          <div className="eval-main">
+            <div className="eval-head">
+              {item.readerVerdict === 0 && <span className="tag tag--expired">{t.saidDoesNotFit}</span>}
+              {item.readerNote && <span className="tag">{t.reported}</span>}
+              <span className="eval-date">{t.askedAt} {formatDate(item.askedAt, language)}</span>
             </div>
 
-            <p style={{ margin: "0 0 12px", fontSize: "var(--fs-section)", fontWeight: 600, lineHeight: 1.45 }}>
-              {item.question}
-            </p>
+            <p className="eval-q">{item.question}</p>
 
             {/*
               Slová čitateľa sa vypisujú **doslovne a celé**. Je to jediná
               veta, kvôli ktorej sa niekto namáhal niečo napísať, a zhrnúť
               sa nedá bez toho, aby sa stratilo práve to, čo mu vadilo.
+              Citát, nie `.lnote` — hláška aplikácie by slovám čitateľa
+              dodala váhu systémového varovania (EVAL-posudok Q5).
             */}
             {item.readerNote && (
-              <div
-                style={{
-                  background: "var(--surface-2)",
-                  borderLeft: "3px solid var(--bad-fg)",
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  marginBottom: 14,
-                }}
-              >
-                <div className="quiet" style={{ fontSize: "var(--fs-micro)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
-                  {t.reader}
-                </div>
-                <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                  {item.readerNote}
-                </div>
-              </div>
+              <blockquote className="quote">
+                <span className="quote-who">{t.reader}</span>
+                <span className="quote-text">{item.readerNote}</span>
+              </blockquote>
             )}
 
             {/* Odpoveď je zabalená: hodnotiteľ často vie z otázky a poznámky,
                 o čo ide, a rozbalená odpoveď by z karty spravila stranu. */}
-            <details style={{ marginBottom: 14 }}>
-              <summary className="quiet" style={{ cursor: "pointer", fontSize: "var(--fs-small)" }}>
+            <details className="eval-ans">
+              <summary>
                 {t.showAnswer}
                 {item.sources.length > 0 && ` · ${t.sources(item.sources.length)}`}
               </summary>
-              <div style={{ marginTop: 10, fontSize: "var(--fs-body)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
-                {item.answer}
-              </div>
+              <div className="eval-ans-body">{item.answer}</div>
               {item.sources.length > 0 && (
-                <ul className="quiet" style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: "var(--fs-small)" }}>
+                <ul className="eval-ans-sources quiet">
                   {item.sources.map((s, i) => (
                     <li key={i}>{[s.title, s.articleRef].filter(Boolean).join(" · ")}</li>
                   ))}
                 </ul>
               )}
             </details>
-
-            <Rating recordId={item.id} canEvaluate language={language} />
           </div>
-        ))}
-      </div>
+
+          <Rating recordId={item.id} canEvaluate as="section" language={language} />
+        </article>
+      ))}
 
       {/*
         Druhá časť obrazovky: z posúdenej odpovede sa robí **overená
@@ -152,86 +132,73 @@ export default async function EvaluationPage({
         Zverejňuje **správca obsahu**, nie hodnotiteľ. Preto je tlačidlo
         „Pripraviť pár", nie „Zverejniť".
       */}
-      <div style={{ marginTop: 44 }}>
-        <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 6px" }}>
-          {tc.prepareHeading}
-        </h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 18px", maxWidth: 660 }}>
-          {tc.prepareIntro}
-        </p>
+      <section className="form-group form-group--lg eval-prepare">
+        <h2 className="form-group-head form-group-head--step">{tc.prepareHeading}</h2>
+        <p className="form-group-lead quiet">{tc.prepareIntro}</p>
 
-        {toPrepare.length === 0 && (
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{tc.prepareEmpty}</p>
-        )}
+        {toPrepare.length === 0 && <p className="quiet form-group-lead">{tc.prepareEmpty}</p>}
 
-        <div style={{ display: "grid", gap: 18 }}>
-          {toPrepare.map(item => (
-            <form key={item.id} action={prepareCurationAction} className="card">
-              <input type="hidden" name="id" value={item.id} />
+        {toPrepare.map(item => (
+          <form key={item.id} action={prepareCurationAction} className="card prep">
+            <input type="hidden" name="id" value={item.id} />
 
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
-                {item.draft && (
-                  <span className="tag" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>{tc.draftBadge}</span>
-                )}
-                <span className="quiet" style={{ fontSize: "var(--fs-micro)", marginLeft: "auto" }}>
-                  {formatDate(item.evaluatedAt, language)}
-                </span>
-              </div>
+            <div className="eval-head">
+              {item.draft && <span className="tag">{tc.draftBadge}</span>}
+              <span className="eval-date">{formatDate(item.evaluatedAt, language)}</span>
+            </div>
 
-              <label className="field">
-                <span className="field-label">{tc.questionLabel}</span>
-                <textarea className="field-input" name="question" rows={2}
-                          defaultValue={item.draft?.question ?? item.question} required />
-                <span className="quiet field-hint">{tc.questionHint}</span>
-              </label>
+            <label className="field">
+              <span className="field-label">{tc.questionLabel}</span>
+              <textarea className="field-input" name="question" rows={2}
+                        defaultValue={item.draft?.question ?? item.question} required />
+              <span className="quiet field-hint">{tc.questionHint}</span>
+            </label>
 
-              <label className="field">
-                <span className="field-label">{tc.answerLabel}</span>
-                <textarea className="field-input" name="answer" rows={5}
-                          defaultValue={item.draft?.answer ?? item.verifiedAnswer} required />
-              </label>
+            <label className="field">
+              <span className="field-label">{tc.answerLabel}</span>
+              <textarea className="field-input" name="answer" rows={5}
+                        defaultValue={item.draft?.answer ?? item.verifiedAnswer} required />
+            </label>
 
-              <fieldset className="form-group">
-                <legend className="form-group-head">{tc.sourcesLabel}</legend>
-                <div className="card form-group-body form-group-body--rows">
-                {item.sources.length === 0 ? (
-                  <p className="quiet" style={{ fontSize: "var(--fs-small)" }}>{tc.noSources}</p>
-                ) : (
-                  // Riadky s kruhom vľavo (ZAKLAD-vyber-a-prepinace, 6. 10. 2026).
-                  <div className="form-list">
-                    {item.sources.map(src => (
-                      <label key={src.chunkId} className="form-row select-row">
-                        <input type="checkbox" name="chunkIds" value={src.chunkId}
-                               defaultChecked={item.draft?.chunkIds?.includes(src.chunkId) ?? true} />
-                        <span className="form-row-main">{[src.title, src.articleRef].filter(Boolean).join(" · ")}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+            {/* Zdroje ako riadky priamo v karte — bez karty v karte
+                (EVAL-posudok Q4, rovnako ako karta osoby). */}
+            <fieldset className="sec-rows">
+              <legend className="sec-rows-head">{tc.sourcesLabel}</legend>
+              <div className="sec-rows-body">
+              {item.sources.length === 0 ? (
+                <p className="quiet sec-rows-empty">{tc.noSources}</p>
+              ) : (
+                // Riadky s kruhom vľavo (ZAKLAD-vyber-a-prepinace, 6. 10. 2026).
+                <div className="form-list">
+                  {item.sources.map(src => (
+                    <label key={src.chunkId} className="form-row select-row">
+                      <input type="checkbox" name="chunkIds" value={src.chunkId}
+                             defaultChecked={item.draft?.chunkIds?.includes(src.chunkId) ?? true} />
+                      <span className="form-row-main">{[src.title, src.articleRef].filter(Boolean).join(" · ")}</span>
+                    </label>
+                  ))}
                 </div>
-                <p className="form-group-foot quiet">{tc.sourcesHint}</p>
-              </fieldset>
-
-              {item.correctSources && (
-                <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>
-                  § {item.correctSources}
-                </p>
               )}
+              </div>
+              <p className="sec-rows-foot quiet">
+                {tc.sourcesHint}
+                {item.correctSources && <> {tc.evaluatorSources(item.correctSources)}</>}
+              </p>
+            </fieldset>
 
-              {item.sources.length > 0 && (
-                <p style={{ margin: "14px 0 0" }}>
-                  {/* Každá položka má vlastné uloženie — tiché (R1, 6. 10. 2026). */}
-                  <SubmitButton className="button button--quiet">{tc.save}</SubmitButton>
-                </p>
-              )}
-            </form>
-          ))}
-        </div>
+            {item.sources.length > 0 && (
+              <div>
+                {/* Každá položka má vlastné uloženie — tiché (R1, 6. 10. 2026). */}
+                <SubmitButton className="button button--quiet">{tc.save}</SubmitButton>
+              </div>
+            )}
+          </form>
+        ))}
 
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 18 }}>
-          <Link href="/library/curation">{tc.open} →</Link>
+        <p className="form-group-foot">
+          <Link href="/library/curation">{tc.open}</Link>
         </p>
-      </div>
+      </section>
     </div>
     </AppShell>
   )

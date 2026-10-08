@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>EVAL — posudok</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:96ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+.notes{display:grid;gap:6px;max-width:96ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+/* rám */
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line)}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.body{padding:24px 28px 36px}
+.page{max-width:860px;display:grid;gap:18px}
+.page-head{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-lead{font-size:14px;color:var(--muted);margin:-8px 0 0;max-width:66ch}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.button.is-bad{border-color:var(--bad-fg);color:var(--bad-fg);background:var(--bad-bg)}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--expired{background:var(--bad-bg);color:var(--bad-fg)}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%;line-height:1.5}
+.field-input.ph{color:var(--muted)}
+.field-input.ta{min-height:84px}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.lnote{display:flex;gap:10px;padding:10px 12px;border-radius:10px;font-size:13.5px}
+.lnote--bad{background:var(--bad-bg);color:var(--bad-fg)}
+.lnote b{flex:none}
+/* odpoveď na Opýtať sa */
+.answer-card{padding:18px 20px;display:grid;gap:10px}
+.answer-head{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.answer-mark{width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.answer-text{font-size:15px;line-height:1.65;margin:0}
+.answer-text sup{color:var(--accent);font-weight:700}
+/* položka fronty */
+.ev-item{display:grid}
+.ev-main{padding:18px 20px;display:grid;gap:12px}
+.ev-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ev-date{margin-left:auto;font-size:var(--fs-micro);color:var(--muted)}
+.ev-q{margin:0;font-size:var(--fs-section);font-weight:600;line-height:1.45}
+.quote{margin:0;padding:10px 14px;border-radius:10px;background:var(--surface-2);display:grid;gap:3px}
+.quote-who{font-size:var(--fs-micro);color:var(--muted);font-weight:600}
+.quote-text{font-size:14.5px;line-height:1.6;white-space:pre-wrap}
+.ev-ans summary{font-size:var(--fs-small);color:var(--accent);cursor:pointer;min-height:32px;display:inline-flex;align-items:center}
+.ev-ans-body{font-size:14.5px;line-height:1.65;margin:6px 0 0;white-space:pre-wrap}
+.ev-ans ul{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+/* posudok — sekcia */
+.rating{border-top:1px solid var(--line);padding:14px 20px 16px;display:grid;gap:8px}
+.card > .rating:first-child{border-top:0}
+.rating-head{display:flex;align-items:center;gap:10px}
+.rating-head h3{margin:0;font-size:15px;font-weight:650}
+.rating-status{margin-left:auto;font-size:var(--fs-small);color:var(--muted);display:flex;gap:6px;align-items:center}
+.rating-status.ok{color:var(--ok-fg)}
+.rating-status.bad{color:var(--bad-fg);font-weight:600}
+.rating-q{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 16px;min-width:0;padding:6px 0;border-bottom:1px solid var(--line)}
+.rating-q .rq-label{font-size:15px}
+.rating-q .lnote{grid-column:1/-1}
+.seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:2px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
+.seg-opt{display:flex;align-items:center;justify-content:center;min-height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;color:var(--ink);cursor:pointer}
+.seg-opt.on-ok{background:var(--ok-bg);color:var(--ok-fg);font-weight:600;box-shadow:inset 0 0 0 1px var(--ok-fg)}
+.seg-opt.on-bad{background:var(--bad-bg);color:var(--bad-fg);font-weight:600;box-shadow:inset 0 0 0 1px var(--bad-fg)}
+.seg-opt.on-ok span::before,.seg-opt.on-bad span::before{content:"✓ "}
+.m .rating-q{grid-template-columns:1fr;padding:4px 0 12px}
+.m .seg{display:grid}
+.m .seg-opt{min-height:40px;font-size:15px;white-space:normal;text-align:center}
+.rating-more summary{font-size:var(--fs-small);color:var(--accent);cursor:pointer;min-height:36px;display:inline-flex;align-items:center}
+.rating-more-body{display:grid;gap:12px;margin-top:6px}
+/* čitateľ */
+.reader{display:grid;gap:12px;padding:2px 2px 0}
+.reader-row{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.reader-row .q{font-size:var(--fs-small);color:var(--muted);margin-right:4px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* pripraviť */
+.form-group{display:grid;gap:10px}
+.form-group-head{font-size:var(--fs-section);font-weight:650;margin:0;padding:0 4px}
+.form-group-lead{font-size:14px;color:var(--muted);margin:-4px 0 4px;padding:0 4px;max-width:66ch}
+.prep{padding:18px 20px;display:grid;gap:14px}
+.sec-rows{display:grid;margin:0 -20px}
+.sec-rows-head{font-size:var(--fs-small);font-weight:600;padding:0 20px 6px}
+.sec-rows-foot{font-size:var(--fs-micro);color:var(--muted);padding:6px 20px 0;margin:0}
+.form-row{display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 20px;font-size:15px;border-top:1px solid var(--line)}
+.form-row:last-of-type{border-bottom:1px solid var(--line)}
+.ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none;position:relative}
+.ck.on{background:var(--accent);border-color:var(--accent)}
+.ck.on::after{content:"";position:absolute;left:6.5px;top:2.5px;width:6px;height:11px;border:solid var(--on-accent);border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+/* mobil */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px}
+.m .page-title{font-size:22px}
+.m .button{min-height:44px}
+.m .ev-main,.m .rating,.m .answer-card{padding-left:14px;padding-right:14px}
+.m .reader-row .q{flex:1 1 100%}
+.m .reader-row .button{flex:1}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">EVAL — posudok (<code>Rating.tsx</code>, <code>/evaluation</code>)</h1>
+<p class="doc">Úprava panela posudku pod odpoveďou na „Opýtať sa" a vo fronte <code>/evaluation</code>. Každá otázka je jeden riadok s dvojdielnym segmentom (natívne rádiá) a farbu dostane až zvolená voľba. Doplnenie je v <code>&lt;details&gt;</code>. Položka fronty je jedna karta, v ktorej je posudok len sekcia oddelená čiarou. Texty (<code>rating.*</code>, <code>evaluation.*</code>, <code>report.*</code>, <code>curation.*</code>), <code>PATCH /api/rating</code> a uloženie na zmenu ostávajú. Popis je v <code>EVAL-posudok.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Časť</th><th>Dnes</th><th>Návrh</th></tr>
+    <tr><td>Voľby hodnotiteľa</td><td class="old"><code>Choice</code> = <code>button aria-pressed</code>, zelená/červená výplň natvrdo, inline štýl</td><td class="new">jeden riadok na otázku: otázka vľavo, vpravo <code>.seg</code> — dve natívne rádiá v tvare segmentu (<code>Picker(.segmented)</code> v riadku <code>Form</code>). Farba a fajka len na zvolenom segmente; na telefóne otázka nad segmentom cez celú šírku</td></tr>
+    <tr><td>Nadpis panela</td><td class="old"><code>h3</code> veľkými písmenami, 13 px, inline</td><td class="new"><code>.rating-head h3</code> „Posudok" (15 px, bežné písmo), vpravo <code>.rating-status</code> (<code>aria-live</code>)</td></tr>
+    <tr><td>Doplnenie</td><td class="old">tlačidlo-odkaz s podčiarknutím a stav v Reacte</td><td class="new"><code>&lt;details class="rating-more"&gt;</code> „Doplniť správnu odpoveď a §"</td></tr>
+    <tr><td>Polia</td><td class="old"><code>fieldStyle</code> inline, popisky <code>.quiet</code></td><td class="new"><code>label.field</code> + <code>.field-label</code> + <code>.field-input</code></td></tr>
+    <tr><td>Panel pod odpoveďou</td><td class="old"><code>.card</code> s <code>--teal-100</code> a <code>--surface-2</code></td><td class="new">bežná <code>.card</code> pod kartou odpovede (súrodenec, nie vnorená)</td></tr>
+    <tr><td>Panel vo fronte</td><td class="old">karta v karte</td><td class="new">sekcia <code>.rating</code> tej istej karty, oddelená čiarou</td></tr>
+    <tr><td>Čitateľ</td><td class="old">farebné <code>Choice</code>, plné „Odoslať"</td><td class="new">tiché <code>.button--quiet.button--sm</code> Sedí / Nesedí; po „Nesedí" pole a tiché „Odoslať"</td></tr>
+    <tr><td>Citát čitateľa</td><td class="old">inline <code>borderLeft: 3px</code> (ľavý pruh) + kicker veľkými</td><td class="new"><code>blockquote.quote</code>: „Čitateľ napísal" + text doslovne, <code>pre-wrap</code></td></tr>
+    <tr><td>Pripraviť ako overenú odpoveď</td><td class="old">inline nadpis, zdroje ako <code>.form-group</code> s vlastnou kartou v karte formulára</td><td class="new"><code>.form-group--lg</code>; položka = <code>form.card</code>, zdroje <code>.sec-rows</code> bez vlastnej karty, tiché „Uložiť"</td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — /evaluation: neposúdená · posúdená s doplnením „uložené" · Pripraviť ako overenú odpoveď</p>
+  <div class="frame" style="width:1440px" id="f-queue"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Na stránke nie je plné tlačidlo. Počet čakajúcich je štítok vedľa nadpisu.</p>
+    <p><span class="ann">2</span>Položka je jedna karta. V hlavičke sú štítky (Nesedí, Nahlásené) a dátum, pod ňou otázka a citát čitateľa doslovne a celý. Odpoveď je zbalená.</p>
+    <p><span class="ann">3</span>Posudok je sekcia tej istej karty pod čiarou. Každá otázka zaberá jeden riadok: text vľavo, segment s dvoma voľbami vpravo, rovnako ako dnes. Nezvolený segment je sivý.</p>
+    <p><span class="ann">4</span>Zvolený segment dostane farbu a fajku podľa významu: „Áno" pri správnosti je zelený, „Áno, vymyslel si" pri halucinácii je červený. Druhá voľba ostáva sivá.</p>
+    <p><span class="ann">5</span>Stav uloženia je vpravo v hlavičke sekcie. Text sa uloží po opustení poľa.</p>
+    <p><span class="ann">6</span>Pri položke „Pripraviť ako overenú odpoveď" sú zdroje riadky bez vlastnej karty a „Uložiť" je tiché (R1, 6. 10. 2026).</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — čitateľ po „Nesedí" · hodnotiteľ pod odpoveďou · položka fronty „neuložilo sa"</p>
+  <div class="row-frames">
+    <div><p class="cap">Čitateľ pod odpoveďou, po „Nesedí"</p><div class="frame m dark" style="width:390px" id="f-reader"></div></div>
+    <div><p class="cap">Hodnotiteľ pod odpoveďou</p><div class="frame m dark" style="width:390px" id="f-eval"></div></div>
+    <div><p class="cap">/evaluation — položka, „neuložilo sa"</p><div class="frame m dark" style="width:390px" id="f-fail"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>„Nesedí" ostane označené (červený obrys, <code>aria-pressed</code>) a posudok sa uloží hneď, ako dnes. Pod tlačidlami je pole a tiché „Odoslať", text čitateľ posiela vedome.</p>
+    <p><span class="ann">2</span>Pod odpoveďou je posudok samostatná bežná karta, nie vnorená. Farbu karty odpovede neberie.</p>
+    <p><span class="ann">3</span>„Neuložilo sa": stav v hlavičke je červený a pod otázkou, ktorej zmena neprešla, je <code>.lnote--bad</code> s návodom (Q3). Voľba ostane zvolená, aby sa dala odoslať znova.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=a=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const F=(l,v,ta,ph)=>`<label class="field"><span class="field-label">${l}</span><span class="field-input${ta?" ta":""}${ph?" ph":""}">${v}</span></label>`;
+const q=(legend,opts,pick,fail)=>`<div class="rating-q" role="radiogroup"><span class="rq-label">${legend}</span><div class="seg">${opts.map(([t,tone],i)=>`<label class="seg-opt${pick===i?` on-${tone}`:""}"><span>${t}</span></label>`).join("")}</div>${fail?`<div class="lnote lnote--bad"><b>!</b><span>Táto voľba sa neuložila. Kliknite na ňu znova; ak sa to opakuje, obnovte stránku.</span></div>`:""}</div>`;
+const Q1=p=>q("Je odpoveď vecne správna?",[["Áno","ok"],["Nie","bad"]],p);
+const Q2=(p,f)=>q("Tvrdí niečo, čo v zdrojoch nie je?",[["Áno, vymyslel si","bad"],["Nie, všetko má oporu","ok"]],p,f);
+const status=s=>s==="saved"?`<span class="rating-status ok">✓ uložené</span>`:s==="fail"?`<span class="rating-status bad">neuložilo sa</span>`:s==="saving"?`<span class="rating-status">ukladám…</span>`:`<span class="rating-status"></span>`;
+const more=(open)=>`<details class="rating-more"${open?" open":""}><summary>Doplniť správnu odpoveď a §</summary>${open?`<div class="rating-more-body">${F("Ako mala odpoveď znieť?","Prestup amatérskeho hráča do 18 rokov schvaľuje matrika zväzu; súhlas materského klubu je potrebný, ak hráč za klub odohral aspoň jeden súťažný zápas v ostatných 12 mesiacoch.",1)}${F("Ktoré predpisy a §?","Registračný a prestupový poriadok SFZ, čl. 17 ods. 2 a čl. 18")}${F("Poznámka","Odpoveď zamenila hosťovanie a prestup.",1)}</div>`:""}</details>`;
+const rating=(c,h,s,open,a5,f)=>`<section class="rating rel">${a5||""}<div class="rating-head"><h3>Posudok</h3>${status(s)}</div>${Q1(c)}${Q2(h,f)}${more(open)}</section>`;
+
+const item=({tags,date,question,note,src,body})=>`<div class="ev-main"><div class="ev-head">${tags.map(([t,c])=>`<span class="tag ${c}">${t}</span>`).join("")}<span class="ev-date">Opýtané ${date}</span></div><p class="ev-q">${question}</p>${note?`<blockquote class="quote"><span class="quote-who">Čitateľ napísal</span><span class="quote-text">${note}</span></blockquote>`:""}<details class="ev-ans"><summary>Zobraziť odpoveď · ${src} zdroje</summary></details></div>${body}`;
+
+const it1={tags:[["Nesedí","tag--expired"]],date:"7. 10. 2026",question:"Koľko žltých kariet vedie k zastaveniu činnosti v súťažiach mládeže?",note:"",src:3};
+const it2={tags:[["Nesedí","tag--expired"],["Nahlásené",""]],date:"6. 10. 2026",question:"Potrebuje 17-ročný hráč pri prestupe súhlas materského klubu?",note:"Odpoveď hovorí o hosťovaní, ale ja som sa pýtal na prestup. Podľa poriadku je to iné — súhlas treba len vtedy, keď za klub hral v posledných 12 mesiacoch.",src:4};
+
+const prep=`<div class="form-group rel">${an(6,"left:-11px;top:2px")}<p class="form-group-head">Pripraviť ako overenú odpoveď</p><p class="form-group-lead">Z posúdenej odpovede pripravíte pár otázka a odpoveď do znalostí. Zverejňuje správca obsahu.</p>
+<form class="card prep"><div class="ev-head"><span class="tag">Rozpracované</span><span class="ev-date">6. 10. 2026</span></div>
+<label class="field"><span class="field-label">Otázka</span><span class="field-input ta" style="min-height:60px">Potrebuje 17-ročný hráč pri prestupe súhlas materského klubu?</span><span class="field-hint">Tak, ako by sa pýtal človek.</span></label>
+${F("Odpoveď","Prestup amatérskeho hráča do 18 rokov schvaľuje matrika zväzu; súhlas materského klubu je potrebný, ak hráč za klub odohral aspoň jeden súťažný zápas v ostatných 12 mesiacoch.",1)}
+<div class="sec-rows"><div class="sec-rows-head">Zdroje</div>${[["Registračný a prestupový poriadok SFZ · čl. 17",1],["Registračný a prestupový poriadok SFZ · čl. 18",1],["Smernica o hosťovaní · čl. 4",0]].map(([t,o])=>`<label class="form-row"><i class="ck${o?" on":""}"></i><span>${t}</span></label>`).join("")}<p class="sec-rows-foot">Zaškrtnuté časti sa pripoja ako opora odpovede. § podľa hodnotiteľa: čl. 17 ods. 2 a čl. 18.</p></div>
+<div class="acts"><span class="button button--quiet">Uložiť</span></div></form>
+<p class="quiet" style="font-size:13px;margin:0;padding:0 4px"><a href="#">Otvoriť kuráciu</a></p></div>`;
+
+document.getElementById("f-queue").innerHTML=hdr()+crumbs(["Prehľad","Hodnotenie odpovedí"])+`<div class="body"><div class="page">
+<div class="page-head rel">${an(1,"left:-34px;top:4px")}<h1 class="page-title">Hodnotenie odpovedí</h1><span class="tag">2 čakajú</span></div>
+<p class="page-lead">Odpovede, pri ktorých niekto povedal, že nesedia. Posudok sa uloží hneď po kliknutí.</p>
+<div class="card ev-item rel">${an(2,"left:-11px;top:18px")}${item({...it1,body:rating(null,null,"",0,an(3,"left:-11px;top:14px"))})}</div>
+<div class="card ev-item rel">${item({...it2,body:rating(1,0,"saved",1,an(4,"left:-11px;top:96px")+an(5,"right:-11px;top:14px"))}).replace("Nie</span><i class=\"tick\"></i>","Nie</span><i class=\"tick\"></i>")}</div>
+${prep}
+</div></div>`;
+/* v 2. položke: správnosť = Nie (bad), halucinácia = Nie, všetko má oporu (ok) */
+(()=>{const f=document.getElementById("f-queue");const items=f.querySelectorAll(".ev-item");const rows=items[1].querySelectorAll(".rating-q")[0].querySelectorAll(".seg-opt");rows[0].className="seg-opt";rows[1].className="seg-opt on-bad";const r2=items[1].querySelectorAll(".rating-q")[1].querySelectorAll(".seg-opt");r2[0].className="seg-opt";r2[1].className="seg-opt on-ok"})();
+
+const answer=`<div class="card answer-card"><div class="answer-head"><span class="answer-mark"></span>Podľa predpisov SFZ</div><p class="answer-text">Pri hosťovaní hráča do 18 rokov je potrebný písomný súhlas materského klubu a zákonného zástupcu.<sup>1</sup> Hosťovanie sa schvaľuje najviac na jeden súťažný ročník.<sup>2</sup></p></div>`;
+document.getElementById("f-reader").innerHTML=hdr(1)+crumbs(["Opýtať sa"])+`<div class="body" style="display:grid;gap:14px">
+<p class="ev-q" style="font-size:18px">Potrebuje 17-ročný hráč pri prestupe súhlas materského klubu?</p>
+${answer}
+<div class="reader rel">${an(1,"right:-6px;top:30px")}<div class="reader-row"><span class="q">Sedí táto odpoveď?</span><span class="button button--quiet button--sm">Sedí</span><span class="button button--quiet button--sm is-bad">Nesedí</span></div>
+<label class="field"><span class="field-label">Čo je na odpovedi zle?</span><span class="field-input ta">Odpoveď hovorí o hosťovaní, ale ja som sa pýtal na prestup.</span><span class="field-hint">Napíšte vlastnými slovami. Uvidí to hodnotiteľ.</span></label>
+<div class="acts"><span class="button button--quiet" style="width:100%">Odoslať</span></div></div>
+</div>`;
+
+document.getElementById("f-eval").innerHTML=hdr(1)+crumbs(["Opýtať sa"])+`<div class="body" style="display:grid;gap:14px">
+<p class="ev-q" style="font-size:18px">Potrebuje 17-ročný hráč pri prestupe súhlas materského klubu?</p>
+${answer}
+<div class="card rel">${an(2,"right:-6px;top:14px")}${rating(1,null,"saving",0)}</div>
+</div>`;
+(()=>{const r=document.getElementById("f-eval").querySelectorAll(".rating-q")[0].querySelectorAll(".seg-opt");r[0].className="seg-opt";r[1].className="seg-opt on-bad"})();
+
+document.getElementById("f-fail").innerHTML=hdr(1)+crumbs(["Hodnotenie odpovedí"])+`<div class="body" style="display:grid;gap:14px">
+<div class="page-head"><h1 class="page-title">Hodnotenie odpovedí</h1><span class="tag">2 čakajú</span></div>
+<div class="card ev-item rel">${an(3,"right:-6px;top:300px")}${item({...it2,body:rating(1,0,"fail",0,"",1)})}</div>
+</div>`;
+(()=>{const f=document.getElementById("f-fail");const qs=f.querySelectorAll(".rating-q");const a=qs[0].querySelectorAll(".seg-opt");a[0].className="seg-opt";a[1].className="seg-opt on-bad";const b=qs[1].querySelectorAll(".seg-opt");b[0].className="seg-opt on-bad";b[1].className="seg-opt"})();
+</script>
+</body></html>

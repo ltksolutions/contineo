@@ -1303,6 +1303,8 @@ interface Dictionary {
     sourcesLabel: string
     sourcesHint: string
     noSources: string
+    /** § z posudku pod zdrojmi pri príprave páru (EVAL-posudok). */
+    evaluatorSources: (sources: string) => string
     save: string
     draftBadge: string
     publishHeading: string
@@ -1360,7 +1362,9 @@ interface Dictionary {
     yesInvented: string
     noGrounded: string
     showDetail: string
-    hideDetail: string
+    /** Hláška pri voľbe / poli, ktorého zmena sa neuložila (EVAL-posudok Q3). */
+    saveFailedHint: string
+    saveFailedFieldHint: string
     expectedAnswer: string
     sources: string
     note: string
@@ -5168,6 +5172,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourcesLabel: "Z ktorých úsekov predpisu odpoveď vznikla",
     sourcesHint: "Podľa nich sa určí, kto smie pár vidieť, a podľa nich sa archivuje, keď sa norma zmení. Stačí jeden interný úsek a pár je interný.",
     noSources: "Táto odpoveď nemá pri zdrojoch identifikátory úsekov, takže sa z nej pár pripraviť nedá. Týka sa to odpovedí spred 15. 9. 2026.",
+    evaluatorSources: s => `§ podľa hodnotiteľa: ${s}`,
     save: "Pripraviť pár",
     draftBadge: "pripravené",
     publishHeading: "Overené odpovede na zverejnenie",
@@ -5191,7 +5196,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyNote: "Sem sa dostane odpoveď až vtedy, keď na ňu niekto klikne „Nesedí“ alebo napíše, čo je na nej zle. Správne odpovede vás nezdržujú.",
     saidDoesNotFit: "nesedí",
     reported: "nahlásené",
-    reader: "od čitateľa",
+    reader: "Čitateľ napísal",
     answerLabel: "Odpoveď systému",
     showAnswer: "Zobraziť odpoveď",
     hideAnswer: "Skryť odpoveď",
@@ -5215,7 +5220,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     yesInvented: "Áno, vymyslel si",
     noGrounded: "Nie, všetko má oporu",
     showDetail: "Doplniť správnu odpoveď a §",
-    hideDetail: "Skryť doplnenie",
+    saveFailedHint: "Táto voľba sa neuložila. Kliknite na ňu znova; ak sa to opakuje, obnovte stránku.",
+    saveFailedFieldHint: "Text sa neuložil. Kliknite do poľa a znova ho opustite.",
     expectedAnswer: "Ako mala odpoveď znieť?",
     sources: "Ktoré predpisy a § to upravujú? Napríklad „SP čl. 78, DP čl. 37“.",
     note: "Poznámka — čo bolo na odpovedi zavádzajúce alebo neúplné?",
@@ -9358,6 +9364,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourcesLabel: "Ze kterých úseků předpisu odpověď vznikla",
     sourcesHint: "Podle nich se určí, kdo smí pár vidět, a podle nich se archivuje, když se norma změní. Stačí jeden interní úsek a pár je interní.",
     noSources: "Tato odpověď nemá u zdrojů identifikátory úseků, takže z ní pár připravit nelze. Týká se to odpovědí před 15. 9. 2026.",
+    evaluatorSources: s => `§ podle hodnotitele: ${s}`,
     save: "Připravit pár",
     draftBadge: "připraveno",
     publishHeading: "Ověřené odpovědi ke zveřejnění",
@@ -9381,7 +9388,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyNote: "Sem se odpověď dostane až tehdy, když na ni někdo klikne „Nesedí“ nebo napíše, co je na ní špatně. Správné odpovědi vás nezdržují.",
     saidDoesNotFit: "nesedí",
     reported: "nahlášeno",
-    reader: "od čtenáře",
+    reader: "Čtenář napsal",
     answerLabel: "Odpověď systému",
     showAnswer: "Zobrazit odpověď",
     hideAnswer: "Skrýt odpověď",
@@ -9405,7 +9412,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     yesInvented: "Ano, vymyslel si",
     noGrounded: "Ne, všechno má oporu",
     showDetail: "Doplnit správnou odpověď a §",
-    hideDetail: "Skrýt doplnění",
+    saveFailedHint: "Tato volba se neuložila. Klikněte na ni znovu; pokud se to opakuje, obnovte stránku.",
+    saveFailedFieldHint: "Text se neuložil. Klikněte do pole a znovu ho opusťte.",
     expectedAnswer: "Jak měla odpověď znít?",
     sources: "Které předpisy a § to upravují? Například „SP čl. 78, DP čl. 37“.",
     note: "Poznámka — co bylo na odpovědi zavádějící nebo neúplné?",
@@ -13537,6 +13545,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourcesLabel: "Which passages the answer came from",
     sourcesHint: "They decide who may see the pair, and they decide when it is archived as the document changes. One internal passage makes the whole pair internal.",
     noSources: "This answer has no passage identifiers on its sources, so no pair can be prepared from it. This applies to answers from before 15 September 2026.",
+    evaluatorSources: s => `§ according to the evaluator: ${s}`,
     save: "Prepare the pair",
     draftBadge: "prepared",
     publishHeading: "Verified answers to publish",
@@ -13560,7 +13569,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyNote: "An answer lands here only when somebody clicks „It is not“ or writes what was wrong with it. Correct answers do not take your time.",
     saidDoesNotFit: "wrong",
     reported: "reported",
-    reader: "from the reader",
+    reader: "The reader wrote",
     answerLabel: "The system's answer",
     showAnswer: "Show the answer",
     hideAnswer: "Hide the answer",
@@ -13584,7 +13593,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     yesInvented: "Yes, it made something up",
     noGrounded: "No, everything is grounded",
     showDetail: "Add the correct answer and the provisions",
-    hideDetail: "Hide the additions",
+    saveFailedHint: "This choice was not saved. Click it again; if it keeps happening, reload the page.",
+    saveFailedFieldHint: "The text was not saved. Click into the field and leave it again.",
     expectedAnswer: "How should the answer have read?",
     sources: "Which regulations and provisions govern this? For example “SP Art. 78, DP Art. 37”.",
     note: "A note — what was misleading or incomplete about the answer?",
