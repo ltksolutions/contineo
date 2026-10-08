@@ -2358,6 +2358,8 @@ interface Dictionary {
     kindImap: string
     address: string
     addressHint: string
+    skipBounces: string
+    skipBouncesHint: string
     tenantId: string
     clientId: string
     clientSecret: string
@@ -6705,6 +6707,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     kindImap: "IMAP (zatiaľ nedostupné)",
     address: "Adresa schránky",
     addressHint: "napr. helpdesk@futbalsfz.sk — číta sa z nej aj odpovedá",
+    skipBounces: "Nezakladať tickety zo správ o nedoručení",
+    skipBouncesHint: "Návrat od poštového servera (mailer-daemon, „Undelivered Mail Returned to Sender“, „Nedoručiteľné: …“) nie je otázka človeka. Rozpoznáva sa podľa odosielateľa a predmetu.",
     tenantId: "Tenant (Directory ID)",
     clientId: "Client ID aplikácie",
     clientSecret: "Tajomstvo aplikácie (client secret)",
@@ -10916,6 +10920,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     kindImap: "IMAP (zatím nedostupné)",
     address: "Adresa schránky",
     addressHint: "např. helpdesk@futbalsfz.sk — čte se z ní i odpovídá",
+    skipBounces: "Nezakládat tickety ze zpráv o nedoručení",
+    skipBouncesHint: "Návrat od poštovního serveru (mailer-daemon, „Undelivered Mail Returned to Sender“, „Nedoručitelné: …“) není dotaz člověka. Rozpoznává se podle odesílatele a předmětu.",
     tenantId: "Tenant (Directory ID)",
     clientId: "Client ID aplikace",
     clientSecret: "Tajemství aplikace (client secret)",
@@ -15118,6 +15124,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     kindImap: "IMAP (not available yet)",
     address: "Mailbox address",
     addressHint: "e.g. helpdesk@futbalsfz.sk — read from and replied from",
+    skipBounces: "Do not create tickets from delivery failure notices",
+    skipBouncesHint: "A bounce from a mail server (mailer-daemon, “Undelivered Mail Returned to Sender”) is not a person's question. It is recognised by sender and subject.",
     tenantId: "Tenant (Directory ID)",
     clientId: "Application client ID",
     clientSecret: "Application secret (client secret)",

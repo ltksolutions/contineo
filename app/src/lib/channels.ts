@@ -30,6 +30,7 @@ import { randomBytes, randomUUID } from "node:crypto"
 import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
+import { isBounce } from "./mailbox/bounce"
 import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { requireCompanyCode } from "./tenantScope"
 import { isUiLanguage, type UiLanguage } from "./i18n"
@@ -101,7 +102,12 @@ export interface ChannelMailbox {
   syncIntervalMinutes?: number
   lastSyncAt: Date | null
   lastSyncError: string | null
-  lastSyncCounts: { created: number; appended: number; skipped: number } | null
+  lastSyncCounts: { created: number; appended: number; skipped: number; bounces?: number } | null
+  /**
+   * Nezakladať tickety zo správ o nedoručení (Ján 8. 10. 2026). Chýbajúce
+   * = áno — návrat od poštového servera nie je otázka človeka.
+   */
+  skipBounces?: boolean
 }
 
 export interface ChannelWidget {
@@ -214,6 +220,8 @@ export interface ChannelInput {
     clientSecret?: string
     /** Minúty zo `SYNC_INTERVALS`; prázdne = predošlý alebo predvolený. */
     syncIntervalMinutes?: number | string
+    /** Nezakladať tickety zo správ o nedoručení. */
+    skipBounces?: boolean
   } | null
 }
 
@@ -275,6 +283,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
       lastSyncAt: changedIdentity ? null : mailbox!.lastSyncAt,
       lastSyncError: changedIdentity ? null : mailbox!.lastSyncError,
       lastSyncCounts: changedIdentity ? null : mailbox!.lastSyncCounts,
+      skipBounces: input.mailbox.skipBounces ?? mailbox?.skipBounces ?? true,
     }
     if (kind === "graph") {
       const tenantId = (input.mailbox.tenantId ?? "").trim()
@@ -406,6 +415,8 @@ export interface SyncReport {
   skipped: number
   /** Správy spred `syncSince` — história, nie tickety. */
   beforeStart: number
+  /** Správy o nedoručení, z ktorých ticket nevznikol (`skipBounces`). */
+  bounces?: number
   done: boolean
   error: string | null
 }
@@ -420,7 +431,7 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
   const channel = await channelByKey(code, key)
   if (!channel?.mailbox) throw new HelpdeskError("helpdesk.noMailbox", "Kanál nemá schránku.")
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
-  const report: SyncReport = { key, pages: 0, created: 0, appended: 0, skipped: 0, beforeStart: 0, done: false, error: null }
+  const report: SyncReport = { key, pages: 0, created: 0, appended: 0, skipped: 0, beforeStart: 0, bounces: 0, done: false, error: null }
   const since = channel.mailbox.syncSince ?? new Date()
   try {
     const adapter = mailboxFor(channel)
@@ -435,8 +446,11 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
       for (let pages = 0; pages < maxPages; pages++) {
         const page = await adapter.listNew(cursor, since, folder)
         report.pages += 1
-        const fresh = page.messages.filter(m => m.receivedAt >= since)
-        report.beforeStart += page.messages.length - fresh.length
+        const recent = page.messages.filter(m => m.receivedAt >= since)
+        report.beforeStart += page.messages.length - recent.length
+        // Návraty od poštového servera ticketmi nie sú (nastavenie kanála).
+        const fresh = channel.mailbox!.skipBounces === false ? recent : recent.filter(m => !isBounce(m))
+        report.bounces = (report.bounces ?? 0) + recent.length - fresh.length
         if (fresh.length) {
           const r = await ingestMessages(code, key, fresh, { thread })
           report.created += r.created; report.appended += r.appended; report.skipped += r.skipped
@@ -456,7 +470,7 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
     report.done = inboxDone && sentDone
     await col.updateOne(
       { companyCode: code, key },
-      { $set: { "mailbox.lastSyncAt": new Date(), "mailbox.lastSyncError": null, "mailbox.lastSyncCounts": { created: report.created, appended: report.appended, skipped: report.skipped } } },
+      { $set: { "mailbox.lastSyncAt": new Date(), "mailbox.lastSyncError": null, "mailbox.lastSyncCounts": { created: report.created, appended: report.appended, skipped: report.skipped, bounces: report.bounces ?? 0 } } },
     )
   } catch (e) {
     report.error = e instanceof AppError ? e.code : "mailbox.failed"

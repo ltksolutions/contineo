@@ -163,6 +163,11 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
               <input className="field-input" name="address" type="email" defaultValue={c.mailbox?.address ?? ""} autoCapitalize="none" />
               <span className="quiet field-hint">{t.addressHint}</span>
             </label>
+            <label className="form-row form-row--bare">
+              <input type="checkbox" className="toggle" role="switch" name="skipBounces" defaultChecked={c.mailbox?.skipBounces !== false} />
+              <span>{t.skipBounces}</span>
+            </label>
+            <span className="quiet field-hint">{t.skipBouncesHint}</span>
             <label className="field">
               <span className="field-label">{t.tenantId}</span>
               <input className="field-input" name="tenantId" defaultValue={c.mailbox?.graph?.tenantId ?? ""} autoCapitalize="none" spellCheck={false} />
