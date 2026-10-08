@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prehľad kanálov: zoznam, nový kanál ako úloha, stav schránky (2026-10-08)
+
+- `/channels`: každý kanál je jeden riadok — ikona typu, názov, pod ním typ,
+  adresa schránky a úroveň (verejný / interný); celý riadok vedie do kanála.
+  Kľúč kanála sa v prehľade už nezobrazuje.
+- Správca vidí pri kanáli štítok „6 otvorených" (pri nule nič), riešiteľ
+  počet otvorených ticketov ako hlavný údaj.
+- Keď schránka kanála hlási chybu alebo dlhšie nesynchronizovala (trojnásobok
+  intervalu, najmenej 30 min), riadok má štítok **„Schránka nesynchronizuje"**.
+- **Nový kanál** sa otvorí ako karta navrchu; typ sa vyberá z dvoch riadkov
+  s vysvetlením. Formulár už nie je stále otvorený na konci stránky.
+- Vstavané rozhrania (Asistent a Knižnica v intranete) sú samostatná skupina.
+
 ### Kanály: náhľad obsahu, kód na vloženie widgetu, správy o nedoručení (2026-10-08)
 
 - V nastavení kanála je blok **„Čo asistent kanála vidí"**: dokumenty, ktoré

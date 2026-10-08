@@ -9,7 +9,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
-import { channelView, mailboxFor, HELPDESK_ROLE, CHANNEL_KINDS, type HelpdeskChannel } from "../src/lib/channels"
+import { channelView, mailboxFor, mailboxStalled, HELPDESK_ROLE, CHANNEL_KINDS, type HelpdeskChannel } from "../src/lib/channels"
 import { ASSIGNABLE_ROLES } from "../src/lib/people"
 
 const now = new Date("2026-10-06T10:00:00Z")
@@ -63,5 +63,24 @@ describe("typy kanalov (D169)", () => {
 describe("rola helpdesk", () => {
   it("je priradovatelna (D167)", () => {
     expect(ASSIGNABLE_ROLES).toContain(HELPDESK_ROLE)
+  })
+})
+
+describe("mailboxStalled (KANALY-prehlad Q1)", () => {
+  const now = new Date("2026-10-08T12:00:00Z")
+  const ago = (min: number) => new Date(now.getTime() - min * 60_000)
+  it("chyba posledného behu je porucha hneď", () => {
+    expect(mailboxStalled({ lastSyncAt: ago(1), lastSyncError: "graph.401", syncIntervalMinutes: 5 }, now)).toBe(true)
+  })
+  it("bez prvého behu nie — čaká na cron", () => {
+    expect(mailboxStalled({ lastSyncAt: null, lastSyncError: null, syncIntervalMinutes: 5 }, now)).toBe(false)
+  })
+  it("pri 5 min intervale hranica 30 min, nie 15", () => {
+    expect(mailboxStalled({ lastSyncAt: ago(20), lastSyncError: null, syncIntervalMinutes: 5 }, now)).toBe(false)
+    expect(mailboxStalled({ lastSyncAt: ago(31), lastSyncError: null, syncIntervalMinutes: 5 }, now)).toBe(true)
+  })
+  it("pri hodinovom intervale trojnásobok", () => {
+    expect(mailboxStalled({ lastSyncAt: ago(170), lastSyncError: null, syncIntervalMinutes: 60 }, now)).toBe(false)
+    expect(mailboxStalled({ lastSyncAt: ago(181), lastSyncError: null, syncIntervalMinutes: 60 }, now)).toBe(true)
   })
 })

@@ -65,6 +65,19 @@ export function isSyncDue(mailbox: Pick<ChannelMailbox, "lastSyncAt" | "syncInte
   return now.getTime() - new Date(mailbox.lastSyncAt).getTime() >= minutes * 60_000 - SYNC_SLACK_MS
 }
 
+/**
+ * Schránka, ktorá nesynchronizuje (KANALY-prehlad Q1, Ján 8. 10. 2026):
+ * posledný beh skončil chybou, alebo je starší než trojnásobok intervalu
+ * (najmenej 30 min). Jeden vynechaný beh cronu ešte nie je porucha. Schránka
+ * bez prvého behu čaká na cron — to tiež nie je porucha.
+ */
+export function mailboxStalled(mailbox: Pick<ChannelMailbox, "lastSyncAt" | "lastSyncError" | "syncIntervalMinutes">, now = new Date()): boolean {
+  if (mailbox.lastSyncError) return true
+  if (!mailbox.lastSyncAt) return false
+  const minutes = Math.max(3 * (mailbox.syncIntervalMinutes ?? DEFAULT_SYNC_INTERVAL), 30)
+  return now.getTime() - new Date(mailbox.lastSyncAt).getTime() > minutes * 60_000
+}
+
 export class HelpdeskError extends AppError {}
 
 export interface ChannelMailbox {

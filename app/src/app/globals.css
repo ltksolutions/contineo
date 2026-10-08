@@ -8331,3 +8331,37 @@ section.rating { border-top: 1px solid var(--line); }
   .tag-rename > .field-input { grid-column: 1 / -1; }
   .tag-rename .button { min-height: 44px; }
 }
+
+/* ── Prehľad kanálov (KANALY-prehlad, 8. 10. 2026) ─────────────────────────────
+   Kanál je riadok `List` s odkazom na rozcestník: ikona typu, názov,
+   podnadpis (typ · schránka · úroveň), štítky vpravo a ›. Na telefóne sú
+   štítky pod podnadpisom — jeden DOM, prepína ich CSS. */
+.channels-lead { margin: -8px 0 0; }
+a.form-row.channel-row { color: var(--ink); text-decoration: none; }
+a.form-row.channel-row:hover { background: var(--surface-2); }
+.channel-row { min-height: 56px; }
+.channel-row + .channel-row::before { left: 60px; }
+.channel-row .form-row-main { display: grid; gap: 1px; min-width: 0; flex: 1 1 auto; }
+.channel-row .form-row-main > b { font-weight: 600; font-size: 15px; }
+.channel-ico {
+  flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.channel-ico.is-off { background: var(--surface-2); color: var(--muted); }
+.channel-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.channel-tags:empty { display: none; }
+.channel-tags--end { justify-content: flex-end; }
+.channel-tags--below { display: none; }
+.channel-count { display: grid; justify-items: end; line-height: 1.1; flex: none; }
+.channel-count b { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.channel-count span { font-size: var(--fs-micro); color: var(--muted); }
+.channel-count.is-zero b { color: var(--muted); }
+.channel-chev { flex: none; color: var(--line-strong); font-size: 20px; line-height: 1; }
+.channel-fixed { flex: none; font-size: var(--fs-small); }
+@media (max-width: 639px) {
+  .channel-row { align-items: flex-start; }
+  .channel-row .channel-ico, .channel-row .channel-chev { margin-top: 2px; }
+  .channel-tags--end { display: none; }
+  .channel-tags--below { display: flex; margin-top: 4px; }
+  .channel-tags--below:empty { display: none; }
+}
