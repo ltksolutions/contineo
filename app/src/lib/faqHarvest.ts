@@ -55,8 +55,12 @@ export const HARVEST_EXCLUSIONS_COLLECTION = "faq_harvest_exclusions"
 /** Téma s menej vláknami návrh nedostane — je to jednotlivý prípad, nie FAQ. */
 export const MIN_THREADS = 3
 export const CLASSIFY_BATCH = 60
-/** Dávky triedenia jedného mesiaca bežia súbežne po toľkých. */
-export const CLASSIFY_PARALLEL = 3
+/**
+ * Dávky triedenia idú za sebou (9. 10. 2026): pri 3 súbežných každá dávka
+ * zakladala vlastné nové témy a september dal 75 tém na 112 otázok,
+ * 59 z nich s jedinou otázkou. Ďalšia dávka musí vidieť témy predošlej.
+ */
+export const CLASSIFY_PARALLEL = 1
 export const QUESTION_CHARS = 800
 export const DRAFT_NEWEST = 6
 export const DRAFT_OLDEST = 2
@@ -198,9 +202,10 @@ export function harvestItems(messages: MailMessage[], key: string, mailboxAddres
 
 export const CLASSIFY_SYSTEM = [
   "Triediš otázky, ktoré ľudia poslali do e-mailovej schránky helpdesku športového zväzu (najčastejšie k systému ISSF).",
-  "Každej otázke priraď tému. Téma je jeden typ problému, na ktorý stačí jeden až tri záznamy FAQ (napríklad „Obnova zabudnutého hesla do ISSF“, „Predĺženie platnosti registračného preukazu“).",
+  "Každej otázke priraď tému. Téma je **široký typ problému s jedným postupom odpovede**, na ktorý stačí jeden až tri záznamy FAQ — napríklad „Obnova hesla a prihlásenie do ISSF“, „Predĺženie platnosti registračného preukazu“, „Prestup hráča“, „Úhrada členského poplatku“. Nie konkrétny prípad, jeho okolnosti ani to, kto sa pýta.",
   "Pravidlá:",
-  "– Ak sedí niektorá z existujúcich tém, použi jej kľúč. Novú tému navrhni, len keď žiadna nesedí.",
+  "– Najprv hľadaj medzi existujúcimi témami (sú zoradené od najčastejšej). Použi existujúcu tému aj vtedy, keď sedí len približne.",
+  "– Novú tému navrhni, len keď by odpoveď na otázku bola naozaj iná ako pri všetkých existujúcich témach.",
   "– Názov a opis novej témy sú všeobecné: nikdy v nich neuvádzaj mená, kluby, čísla ani iné údaje konkrétnej osoby.",
   "– Správa, ktorá nie je otázka ani žiadosť (spam, poďakovanie, reklama, automatická správa), dostane kľúč „_none“.",
   "– Píš po slovensky. V textoch používaj úvodzovky „…“, nikdy znak \".",
@@ -229,9 +234,10 @@ export const CLASSIFY_SCHEMA = {
   required: ["assignments"],
 } as const
 
-export function classifyPrompt(topics: Pick<HarvestTopic, "key" | "label" | "description">[], items: HarvestItem[]): string {
-  const known = topics.length
-    ? `Existujúce témy (kľúč — názov: opis):\n${topics.map(t => `${t.key} — ${t.label}: ${t.description}`).join("\n")}`
+export function classifyPrompt(topics: (Pick<HarvestTopic, "key" | "label" | "description"> & { threads?: number })[], items: HarvestItem[]): string {
+  const sorted = topics.slice().sort((a, b) => (b.threads ?? 0) - (a.threads ?? 0))
+  const known = sorted.length
+    ? `Existujúce témy (kľúč — názov: opis; v zátvorke počet doterajších otázok):\n${sorted.map(t => `${t.key} — ${t.label}: ${t.description}${t.threads ? ` (${t.threads})` : ""}`).join("\n")}`
     : "Existujúce témy: zatiaľ žiadne."
   const list = items.map((it, i) => `### Otázka ${i + 1}\nPredmet: ${it.subject || "—"}\n${it.question || "—"}`).join("\n\n")
   return `${known}\n\n${list}`
@@ -593,16 +599,16 @@ async function collectMonth(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<
   // Výber a čistenie robí `harvestItems` nad textom; počty vynechaných sú z hlavičiek.
   const { items } = harvestItems(messages, key, adapter.address, excluded)
 
-  const topics = doc.topics.map(t => ({ key: t.key, label: t.label, description: t.description }))
+  const topics = doc.topics.map(t => ({ key: t.key, label: t.label, description: t.description, threads: t.threads }))
   let seq = doc.topics.length
   const newKey = () => `t${String(++seq).padStart(4, "0")}`
   const topicOf = new Map<string, string>()
-  const created: { key: string; label: string; description: string }[] = []
+  const created: { key: string; label: string; description: string; threads?: number }[] = []
   const batches: HarvestItem[][] = []
   for (let i = 0; i < items.length; i += CLASSIFY_BATCH) batches.push(items.slice(i, i + CLASSIFY_BATCH))
   for (let i = 0; i < batches.length; i += CLASSIFY_PARALLEL) {
-    // Súbežné dávky vidia rovnaký zoznam tém; duplicitné nové témy zlúči etapa `merge`.
-    const known = [...topics, ...created]
+    // Počty v tomto mesiaci sa pripočítajú, aby model videl, ktoré témy sú časté.
+    const known = [...topics, ...created].map(t => ({ ...t, threads: (t.threads ?? 0) + [...topicOf.values()].filter(k => k === t.key).length }))
     const results = await Promise.all(batches.slice(i, i + CLASSIFY_PARALLEL).map(b =>
       callJson(ctx.client, ctx.utilityModel, CLASSIFY_SYSTEM, classifyPrompt(known, b), CLASSIFY_SCHEMA, 6000, usageFor(ctx, ctx.utilityModel, `témy ${key}`))
         .then(raw => ({ b, raw }))))
@@ -645,26 +651,54 @@ async function collectMonth(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<
   console.info(`[faq-harvest] ${ctx.code}/${ctx.channel.key} ${key}: ${headers.length} hlavičiek, ${refs.length} vlákien na čítanie, ${items.length} do tém, ${created.length} nových tém`)
 }
 
-/** Etapa `merge`: zlúčenie duplicitných tém, prečíslovanie vlákien. */
+/** Toľko tém ide modelu v jednom volaní zlučovania; k nim kotvy (najväčšie témy). */
+export const MERGE_CHUNK = 300
+export const MERGE_ANCHORS = 60
+
+/**
+ * Kúsky zlučovania: témy od najväčšej, po `MERGE_CHUNK`; každý ďalší kúsok
+ * dostane aj `MERGE_ANCHORS` najväčších tém, aby sa k nim mohli pripojiť aj
+ * malé témy z konca zoznamu.
+ */
+export function mergeChunks(topics: HarvestTopic[]): HarvestTopic[][] {
+  const sorted = topics.slice().sort((a, b) => b.threads - a.threads)
+  const anchors = sorted.slice(0, MERGE_ANCHORS)
+  const out: HarvestTopic[][] = []
+  for (let i = 0; i < sorted.length; i += MERGE_CHUNK) {
+    const chunk = sorted.slice(i, i + MERGE_CHUNK)
+    out.push(i === 0 ? chunk : [...anchors, ...chunk])
+  }
+  return out
+}
+
+/** Etapa `merge`: zlúčenie duplicitných tém po kúskoch, prečíslovanie vlákien. */
 async function mergeTopics(ctx: RunCtx, doc: FaqHarvest): Promise<void> {
-  const real = doc.topics.filter(t => t.threads > 0)
-  let merged = real
-  if (real.length > 1) {
-    const prompt = real.map(t => `${t.key} (${t.threads}) — ${t.label}: ${t.description}`).join("\n")
-    const raw = await callJson(ctx.client, ctx.answerModel, MERGE_SYSTEM, prompt, MERGE_SCHEMA, 16000, usageFor(ctx, ctx.answerModel, "zlúčenie tém"), "medium")
-    const r = applyMerge(raw, real)
-    merged = r.merged
-    const col = await threadsCol()
-    for (const [from, to] of r.mapping) {
-      if (from !== to) await col.updateMany({ companyCode: ctx.code, channelKey: ctx.channel.key, topicKey: from }, { $set: { topicKey: to } })
+  let merged = doc.topics.filter(t => t.threads > 0)
+  const col = await threadsCol()
+  if (merged.length > 1) {
+    for (const chunk of mergeChunks(merged)) {
+      // Kotvy mohli byť zlúčené v predošlom kúsku — berie sa ich aktuálny stav.
+      const live = new Map(merged.map(t => [t.key, t]))
+      const part = [...new Map(chunk.filter(t => live.has(t.key)).map(t => [t.key, live.get(t.key)!])).values()]
+      if (part.length < 2) continue
+      const prompt = part.map(t => `${t.key} (${t.threads}) — ${t.label}: ${t.description}`).join("\n")
+      const raw = await callJson(ctx.client, ctx.answerModel, MERGE_SYSTEM, prompt, MERGE_SCHEMA, 16000, usageFor(ctx, ctx.answerModel, "zlúčenie tém"), "medium")
+      const r = applyMerge(raw, part)
+      for (const [from, to] of r.mapping) {
+        if (from !== to) await col.updateMany({ companyCode: ctx.code, channelKey: ctx.channel.key, topicKey: from }, { $set: { topicKey: to } })
+      }
+      const partKeys = new Set(part.map(t => t.key))
+      merged = [...merged.filter(t => !partKeys.has(t.key)), ...r.merged]
     }
-    // Prvý a posledný mesiac zlúčenej témy z vlákien, nie z pôvodných tém.
+    // Prvý a posledný mesiac a počet zlúčenej témy z vlákien, nie z pôvodných tém.
     const spans = await col.aggregate<{ _id: string; first: string; last: string; n: number }>([
       { $match: { companyCode: ctx.code, channelKey: ctx.channel.key } },
       { $group: { _id: "$topicKey", first: { $min: "$month" }, last: { $max: "$month" }, n: { $sum: 1 } } },
     ]).toArray()
     const span = new Map(spans.map(s => [s._id, s]))
-    merged = merged.map(t => ({ ...t, threads: span.get(t.key)?.n ?? t.threads, firstMonth: span.get(t.key)?.first ?? t.firstMonth, lastMonth: span.get(t.key)?.last ?? t.lastMonth }))
+    merged = merged
+      .map(t => ({ ...t, threads: span.get(t.key)?.n ?? t.threads, firstMonth: span.get(t.key)?.first ?? t.firstMonth, lastMonth: span.get(t.key)?.last ?? t.lastMonth }))
+      .sort((a, b) => b.threads - a.threads)
   }
   const draftPending = merged.filter(t => t.threads >= MIN_THREADS).map(t => t.key)
   await (await harvests()).updateOne(
