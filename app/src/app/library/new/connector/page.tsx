@@ -14,7 +14,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import Notice from "@/components/Notice"
 import Select from "@/components/Select"
-import TagSelect from "@/components/TagSelect"
+import ValueSelect, { withCodelistNote } from "@/components/ValueSelect"
 import SubmitButton from "@/components/SubmitButton"
 import SearchStrip from "@/components/SearchStrip"
 import AppShell from "@/components/AppShell"
@@ -167,9 +167,9 @@ export default async function ConnectorImportPage({ searchParams }: { searchPara
                         <Select language={language} name="ownerDepartmentId" initial="" fieldLabel={tf.ownerDepartment}
                           options={[{ value: "", label: tf.ownerDepartmentNone }, ...treeOptions(departmentRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level })))]} />
                       </div>
-                      <div className="field upload-wide">
-                        <span className="field-label">{tu.tags}</span>
-                        <TagSelect name="tags" options={tags} selected={[]} newLabel={tu.newTag} language={language} />
+                      <div className="upload-wide">
+                        <ValueSelect kind="tags" name="tags" legend={tu.tags} selected={[]} language={language}
+                                     options={withCodelistNote(tags, language)} />
                       </div>
                     </div>
                   </div>
