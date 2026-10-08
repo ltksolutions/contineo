@@ -3330,6 +3330,30 @@ interface Dictionary {
       intro: string
       empty: string
       addHeading: string
+      /** Pomocník pri písaní záznamu: hľadanie podkladu (faqAssist.ts). */
+      assist: {
+        heading: string
+        hint: string
+        query: string
+        sources: string
+        library: string
+        search: string
+        noSource: string
+        none: string
+        failed: (source: string) => string
+        useSource: string
+        insert: string
+        import: string
+        imported: string
+        internal: string
+        article: (ref: string) => string
+      }
+      /** Hľadanie v záznamoch tohto FAQ (filterEntries). */
+      find: string
+      findButton: string
+      findClear: string
+      findCount: (shown: number, total: number) => string
+      findNone: string
       editHeading: (n: number) => string
       question: string
       questionHint: string
@@ -7678,6 +7702,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Jeden záznam je jedna otázka a odpoveď. Asistent z každého záznamu urobí jeden úsek; prístup k záznamu je najprísnejší z prístupu tohto FAQ a jeho zdrojov.",
       empty: "Zatiaľ žiadny záznam.",
       addHeading: "Nový záznam",
+      assist: {
+        heading: "Hľadať podklad",
+        hint: "Nájdi odpoveď v knižnici alebo na pripojenom serveri a vlož ju do záznamu. To, čo máš rozpísané, sa pri hľadaní nestratí.",
+        query: "Čo hľadáš",
+        sources: "Kde hľadať",
+        library: "Knižnica",
+        search: "Hľadať",
+        noSource: "Vyber aspoň jedno miesto, kde hľadať.",
+        none: "Nič sa nenašlo.",
+        failed: source => `${source}: hľadanie sa nepodarilo.`,
+        useSource: "Použiť ako zdroj",
+        insert: "Vložiť do odpovede",
+        import: "Importovať článok →",
+        imported: "už v knižnici",
+        internal: "interný",
+        article: ref => `čl. ${ref}`,
+      },
+      find: "Hľadať v záznamoch",
+      findButton: "Hľadať",
+      findClear: "Zrušiť",
+      findCount: (shown, total) => `Zobrazené ${shown} z ${total}`,
+      findNone: "Žiadny záznam nevyhovuje.",
       editHeading: (n: number) => `Záznam ${n}`,
       question: "Otázka",
       questionHint: "Tak, ako ju ľudia kladú — jedna veta.",
@@ -11978,6 +12024,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Jeden záznam je jedna otázka a odpověď. Asistent z každého záznamu udělá jeden úsek; přístup k záznamu je nejpřísnější z přístupu tohoto FAQ a jeho zdrojů.",
       empty: "Zatím žádný záznam.",
       addHeading: "Nový záznam",
+      assist: {
+        heading: "Hledat podklad",
+        hint: "Najdi odpověď v knihovně nebo na připojeném serveru a vlož ji do záznamu. Co máš rozepsané, se při hledání neztratí.",
+        query: "Co hledáš",
+        sources: "Kde hledat",
+        library: "Knihovna",
+        search: "Hledat",
+        noSource: "Vyber alespoň jedno místo, kde hledat.",
+        none: "Nic se nenašlo.",
+        failed: source => `${source}: hledání se nepodařilo.`,
+        useSource: "Použít jako zdroj",
+        insert: "Vložit do odpovědi",
+        import: "Importovat článek →",
+        imported: "už v knihovně",
+        internal: "interní",
+        article: ref => `čl. ${ref}`,
+      },
+      find: "Hledat v záznamech",
+      findButton: "Hledat",
+      findClear: "Zrušit",
+      findCount: (shown, total) => `Zobrazeno ${shown} z ${total}`,
+      findNone: "Žádný záznam nevyhovuje.",
       editHeading: (n: number) => `Záznam ${n}`,
       question: "Otázka",
       questionHint: "Tak, jak ji lidé kladou — jedna věta.",
@@ -16264,6 +16332,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "One entry is one question and answer. The assistant turns each entry into one chunk; access to an entry is the strictest of this FAQ's access and its sources.",
       empty: "No entries yet.",
       addHeading: "New entry",
+      assist: {
+        heading: "Find source material",
+        hint: "Find the answer in the library or on a connected server and put it into the entry. What you have written so far is kept while you search.",
+        query: "What are you looking for",
+        sources: "Where to search",
+        library: "Library",
+        search: "Search",
+        noSource: "Choose at least one place to search.",
+        none: "Nothing found.",
+        failed: source => `${source}: the search failed.`,
+        useSource: "Use as source",
+        insert: "Insert into answer",
+        import: "Import article →",
+        imported: "already in the library",
+        internal: "internal",
+        article: ref => `Art. ${ref}`,
+      },
+      find: "Search entries",
+      findButton: "Search",
+      findClear: "Clear",
+      findCount: (shown, total) => `Showing ${shown} of ${total}`,
+      findNone: "No entry matches.",
       editHeading: (n: number) => `Entry ${n}`,
       question: "Question",
       questionHint: "The way people actually ask it — one sentence.",
