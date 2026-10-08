@@ -38,9 +38,14 @@ s celým vláknom a odpovede z Outlooku sa k nemu pripoja. **Kanály** sú
 sekcia s typom widget / portál (D169) a jediná položka v menu aj pre
 riešiteľa — Helpdesk ako samostatná časť zanikol, správca obsah ticketov
 nečíta (D170). Živý zdroj z konektora do verejného kanála nejde (ADR-029,
-D176). Otvorené (`docs/TODO.md`): widget pre ISSF u prevádzkovateľa ISSF
-(`docs/WIDGET_ISSF.md`), upozornenie riešiteľom na nový ticket, tickety
-v „čo čaká na mňa", IMAP adaptér. Helpdesk je na `/privacy` od 8. 10.
+D176). Od 8. 10. večer: hromadné akcie nad ticketmi, návraty od poštového servera
+sa nezakladajú ako tickety, nastavenie kanála ukazuje, čo asistent vidí,
+a má hotový kód na vloženie widgetu so vzorom tokenu a kontaktom pri výpadku
+(`helpdesk@futbalsfz.sk`). **Čaká na Jána:** zavrieť 56 starých návratov
+(zoznam ticketov → Vybrať všetky → Zavrieť vybrané, bez piatich skutočných
+otázok). Otvorené (`docs/TODO.md`): widget pre ISSF u prevádzkovateľa ISSF
+(kód na vloženie z nastavenia kanála), upozornenie riešiteľom na nový ticket,
+tickety v „čo čaká na mňa", IMAP adaptér. Helpdesk je na `/privacy` od 8. 10.
 (D178); tickety a osoby z widgetu maže dávka, keď sa zapne ostré mazanie.
 
 Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash

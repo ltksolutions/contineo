@@ -10,15 +10,42 @@
 
 ---
 
-## 2026-10-08 večer — kanály a widget (druhá session, doplnené pri „Poupratuj")
+## 2026-10-08 popoludnie a večer — odpovede, tickety, kanály a widget
 
-Päť commitov priamo do `main` (fc4176a, 5b8636f, 27d2092, d650862, c315726):
-náhľad obsahu kanála a úroveň ako vlastnosť typu kanála, kód na vloženie
-widgetu s kontaktom pri výpadku, správy o nedoručení v schránke kanála.
-Zápis podľa správ commitov; podrobnosti sú v nich, CHANGELOG doplnený.
-Pozorovanie: priamy push do `main` hneď po zlúčení PR spôsobil, že Vercel
-nasadil až ten neskorší commit — zlúčenie PR samo stav nasadenia nedostalo
-(#321). Kontrola nasadenia preto sleduje aj najnovší commit `main`.
+**Opýtať sa.** Predvolene sa hľadá len v knižnici (PR #313), konektor sa
+zapína pilulkou alebo nastavením. Potom dve veci, ktoré ukázala prvá otázka
+naostro: model vkladal do slovenskej odpovede anglické vety z dokumentácie
+Sportnetu (pokyn v prompte pre každý zdroj, nielen živý), a hlavička
+„Odpoveď z dokumentov SFZ" klamala, keď sa hľadalo len v Sportnete. Mená
+zdrojov v hlavičke sa spájajú vlastnou funkciou, nie `Intl.ListFormat` —
+ten vkladá nedeliteľné medzery podľa verzie ICU a server s prehliadačom by
+vykreslili iný text; chytil to test, nie oko.
+
+**Tickety.** Zavretie vráti na zoznam; hromadné akcie cez obyčajný formulár
+s atribútom `form` na riadkoch, aby fungovali aj bez skriptu. Test
+`clientLabels` správne odmietol funkciu ako prop klientskeho komponentu —
+počet vybraných ide šablónou `{n}`. Overené naostro: dva tickety zavreté
+a znova otvorené. Pri tom vyšlo, že **56 zo 61 otvorených ticketov sú
+návraty od `mailer-daemon`** — schránka ich odteraz nezakladá (prepínač
+pri e-maile, predvolene zapnutý); tie, čo už vznikli, zavrie Ján hromadne.
+
+**Kanály.** Náhľad „Čo asistent kanála vidí" používa tú istú podmienku ako
+hľadanie — na ISSF Helpdesku ukázal 9 dokumentov a 5 vynechaných (štyri
+interné, importovaný P52 ako koncept). Úroveň obsahu je vlastnosť typu
+kanála (Ján): widget verejný vždy, portál voliteľne, predvolene verejný.
+Kód na vloženie dostal popis v HTML komentári, kontakt pri výpadku
+(`onerror` náhradného bloku + kontakt v samotnom widgete) a nakoniec vzor
+obsahu tokenu, aby ho naplnil aj slabší programátor; povinné údaje stráži
+test proti `verifyWidgetToken`.
+
+**Čo stálo čas:** dvakrát `main` pokročil medzi vetvou a pushom (#312
+v i18n, #321 v `globals.css`) — rebase a build znova pred pushom, ako hovorí
+pamäť z rána. Kotva `#embed` nescrolluje, lebo stránka má vlastný
+posuvný kontajner; overovalo sa skriptom.
+
+Pozorovanie druhej session platí ďalej: priamy push do `main` hneď po
+zlúčení PR spôsobí, že Vercel nasadí až neskorší commit — kontrola nasadenia
+preto sleduje najnovší commit `main`, nie commit zlúčenia.
 
 ---
 

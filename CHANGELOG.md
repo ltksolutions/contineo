@@ -19,6 +19,27 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
   e-maile, predvolene zapnutý).
 - Pri živých zdrojoch kanála veta povie, že interné konektory sa do
   verejného widgetu nedostanú (D174).
+- Kód na vloženie nesie aj **vzor obsahu tokenu**: každý údaj na riadku
+  s označením POVINNÉ / odporúčané / nepovinné, príkladom a vysvetlením;
+  `iss` a `aud` sú vyplnené za kanál. Pod ním hlavička, podpis tajným kľúčom
+  a odporúčanie hotovej knižnice.
+- Kontakt pri výpadku je na kanáli ISSF Helpdesk nastavený na
+  `helpdesk@futbalsfz.sk`.
+
+### Tickety: hromadné akcie a návrat na zoznam (2026-10-08)
+
+- V zozname ticketov sa dajú tickety **vybrať** (aj „Vybrať všetky")
+  a hromadne **prevziať, zavrieť** alebo v Zavretých **otvoriť znova**.
+  Každý prejde tou istou kontrolou ako jednotlivo; najviac 200 naraz.
+- **Zavrieť ticket** vráti riešiteľa na zoznam ticketov s hláškou.
+
+### Opýtať sa: hlavička podľa zdrojov, odpoveď len po slovensky (2026-10-08)
+
+- Hlavička odpovede hovorí, odkiaľ odpoveď je: „z dokumentov SFZ",
+  „z dokumentov SFZ a zo zdroja Sportnet dokumentácia" alebo len „zo zdroja
+  Sportnet dokumentácia". Uložená odpoveď si zdroje odvodí z obsahu.
+- Asistent odpovedá **celý po slovensky**, aj keď je zdroj v inom jazyku —
+  cudzojazyčný obsah preloží; doslovné citácie ostávajú v jazyku zdroja.
 
 ### Posledné odchýlky: značky, správna odpoveď, bez príkazov (2026-10-08)
 
