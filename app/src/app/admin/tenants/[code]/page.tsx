@@ -286,7 +286,7 @@ export default async function TenantDetailPage({
           </div>
         </section>
 
-        <section className="set-sec">
+        <section className="set-sec" id="domains">
           <div className="set-sec-head"><h2>{t.domainsSection}</h2></div>
           <div className="set-sec-body">
             <label className="field">

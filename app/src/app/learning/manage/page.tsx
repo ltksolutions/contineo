@@ -335,46 +335,62 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
       )}
 
       <form id="tag-select" method="get" action={managePath("tags")} className="mg-tags">
+        {/*
+          Kľúč ako `.form-group` (nadpis nad kartou), hodnota ako riadok
+          `.select-row` s kruhom vľavo; „Premenovať" mimo `<label>`, aby
+          klik naň riadok nezaškrtol. Vybraný riadok len plným kruhom
+          (ZAKLAD-zvysne-odchylky, 8. 10. 2026).
+        */}
         {[...byKey.entries()].map(([key, values]) => (
-          <section key={key} className="card tgk">
-            <div className="tgk-head">
-              <b>{keyLabel(key)}</b>
-              <span className="quiet">{tm.usage(values.reduce((n, v) => n + v.courses, 0), values.reduce((n, v) => n + v.questions, 0), values.reduce((n, v) => n + v.tests, 0))}</span>
-              <Link className="lc-link" href={`${managePath("tags")}?renameKey=${encodeURIComponent(key)}`}>{tm.renameKey}</Link>
-            </div>
+          <fieldset key={key} className="form-group tag-group">
+            <legend className="form-group-head">
+              <span>{keyLabel(key)}</span>
+              <span className="quiet tag-group-usage">{tm.usage(values.reduce((n, v) => n + v.courses, 0), values.reduce((n, v) => n + v.questions, 0), values.reduce((n, v) => n + v.tests, 0))}</span>
+              <Link className="tag-group-link" href={`${managePath("tags")}?renameKey=${encodeURIComponent(key)}`}>{tm.renameKey}</Link>
+            </legend>
             {q.renameKey === key && (
-              <div className="tgv-form">
+              <div className="tag-rename">
                 <input className="field-input" name="to" form="rename-key" defaultValue={keyLabel(key)} aria-label={tm.keyLabel} required />
-                <SubmitButton form="rename-key" className="button">{tm.rename}</SubmitButton>
-                <Link className="button button--quiet" href={managePath("tags")}>{tm.cancel}</Link>
+                <SubmitButton form="rename-key" className="button button--quiet button--sm">{tm.rename}</SubmitButton>
+                <Link className="button button--quiet button--sm" href={managePath("tags")}>{tm.cancel}</Link>
               </div>
             )}
-            {values.map(v => {
-              const id = tagId(v)
-              const on = selected.includes(id)
-              return (
-                <div key={id} className={`tgv${on ? " is-on" : ""}`}>
-                  <label className="tgv-main">
-                    <input type="checkbox" name="sel" value={id} defaultChecked={on} aria-label={`${tm.selectTag}: ${v.label}`} />
-                    <Stag label={v.label} />
-                  </label>
-                  <span className="quiet tgv-usage">{tm.usage(v.courses, v.questions, v.tests)}</span>
-                  <Link className="lc-link" href={`${managePath("tags")}?rename=${encodeURIComponent(id)}`}>{tm.rename}</Link>
-                  {renaming && tagId(renaming) === id && renameImpact && (
-                    <div className="tgv-form">
-                      <input className="field-input" name="to" form="rename-tag" defaultValue={q.to ?? v.label} aria-label={tm.newValue} required />
-                      <p className={q.exists === "1" ? "mg-warn" : "mg-impact"}>
-                        {q.exists === "1" && renameTo ? `${tm.exists(renameTo.label)} ` : ""}
-                        {tm.impact(renameImpact.courses, renameImpact.questions, renameImpact.tests)}
-                      </p>
-                      <SubmitButton form="rename-tag" className="button">{q.exists === "1" ? tm.mergeButton : tm.rename}</SubmitButton>
-                      <Link className="button button--quiet" href={managePath("tags")}>{tm.cancel}</Link>
+            <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
+                {values.map(v => {
+                  const id = tagId(v)
+                  const on = selected.includes(id)
+                  if (renaming && tagId(renaming) === id && renameImpact) {
+                    return (
+                      <div key={id} className="tag-row tag-row--edit">
+                        <div className="tag-rename">
+                          <input className="field-input" name="to" form="rename-tag" defaultValue={q.to ?? v.label} aria-label={tm.newValue} required />
+                          <SubmitButton form="rename-tag" className="button button--quiet button--sm">{q.exists === "1" ? tm.mergeButton : tm.rename}</SubmitButton>
+                          <Link className="button button--quiet button--sm" href={managePath("tags")}>{tm.cancel}</Link>
+                        </div>
+                        <p className={q.exists === "1" ? "mg-warn" : "mg-impact"}>
+                          {q.exists === "1" && renameTo ? `${tm.exists(renameTo.label)} ` : ""}
+                          {tm.impact(renameImpact.courses, renameImpact.questions, renameImpact.tests)}
+                        </p>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div key={id} className="tag-row">
+                      <label className="form-row select-row">
+                        <input type="checkbox" name="sel" value={id} defaultChecked={on} aria-label={`${tm.selectTag}: ${v.label}`} />
+                        <span className="form-row-main">
+                          <Stag label={v.label} />
+                          <span className="form-row-sub">{tm.usage(v.courses, v.questions, v.tests)}</span>
+                        </span>
+                      </label>
+                      <Link className="tag-row-link" href={`${managePath("tags")}?rename=${encodeURIComponent(id)}`}>{tm.rename}</Link>
                     </div>
-                  )}
-                </div>
-              )
-            })}
-          </section>
+                  )
+                })}
+              </div>
+            </div>
+          </fieldset>
         ))}
         <MergeSelectionBar formId="tag-select" labels={{ selected: tm.selected(999).replace("999", "{n}"), mergeInto: tm.mergeInto, clear: tm.clearSelection, mergeSelected: tm.mergeSelected }} />
       </form>

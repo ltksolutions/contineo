@@ -1034,7 +1034,11 @@ interface Dictionary {
       departmentNoteBefore: string
       departmentNoteHighlight: string
       departmentNoteAfter: string
-      noGroupsOrTracks: string
+      noAudiencesTitle: string
+      noAudiencesText: string
+      linkPeople: string
+      linkImport: string
+      linkTracks: string
       addresses: string
       addressesNote: string
       reason: string
@@ -1378,6 +1382,7 @@ interface Dictionary {
       disabled: string
       /** Bez domény sa do organizácie nedá prihlásiť (ADMIN, úloha 1.5). */
       noDomainWarning: string
+      noDomainTag: string
       /** Prázdny stav (ADMIN, úloha 1.3). */
       emptyTitle: string
       emptyText: string
@@ -1390,8 +1395,6 @@ interface Dictionary {
       acknowledgements: string
       withoutVersion: string
       instructionsSent: (when: string, to: string) => string
-      domainsNoteBefore: string
-      domainsNoteAfter: string
     }
     create: {
       heading: string
@@ -3890,6 +3893,10 @@ interface Dictionary {
       mediaAlt: string
       answers: string
       correct: string
+      markCorrectSingle: string
+      markCorrectMultiple: string
+      answerCorrect: (n: number) => string
+      emptyRowsNote: string
       multipleNote: string
       trueLabel: string
       falseLabel: string
@@ -4970,7 +4977,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departmentNoteBefore: "Pridelenie oddelenia platí ",
       departmentNoteHighlight: "aj pre všetky podriadené",
       departmentNoteAfter: ". Číslo je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.",
-      noGroupsOrTracks: "V organizácii zatiaľ nie sú skupiny ani trasy. Skupiny sa zadávajú pri importe osôb (stĺpec „skupiny“) alebo príkazom",
+      noAudiencesTitle: "Zatiaľ žiadne skupiny ani trasy",
+      noAudiencesText: "Skupina vznikne, keď ju niekto dostane na karte osoby alebo v importe. Trasu založíte v časti Trasy.",
+      linkPeople: "Osoby",
+      linkImport: "Import osôb",
+      linkTracks: "Trasy",
       addresses: "Jednotlivé adresy",
       addressesNote: "Nepovinné. Oddeľ čiarkou alebo novým riadkom.",
       reason: "Dôvod",
@@ -5291,6 +5302,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTenant: "Nová organizácia",
       disabled: "vypnutý",
       noDomainWarning: "Do organizácie sa nedá prihlásiť — prihlásenie je viazané na domény. Doplňte aspoň jednu.",
+      noDomainTag: "Bez domény ›",
       emptyTitle: "Žiadne organizácie",
       emptyText: "Prvú pridáte tlačidlom vyššie.",
       people: "Osoby",
@@ -5301,8 +5313,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       acknowledgements: "Potvrdenia",
       withoutVersion: "bez platného znenia",
       instructionsSent: (when, to) => `Pokyny k doméne poslané ${when} na ${to}`,
-      domainsNoteBefore: "Stav domén vo Verceli ukáže ",
-      domainsNoteAfter: "; do obrazovky pribudne v rozsahu C spolu so zakladaním tenantov.",
     },
     create: {
       heading: "Nová organizácia",
@@ -8175,6 +8185,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       mediaAlt: "Popis obrázka (pre nové obrázky)",
       answers: "Odpovede",
       correct: "správna",
+      markCorrectSingle: "Označte správnu odpoveď.",
+      markCorrectMultiple: "Označte správne odpovede.",
+      answerCorrect: n => `Odpoveď ${n}, správna`,
+      emptyRowsNote: "Prázdne riadky sa neuložia.",
       multipleNote: "Študent uvidí vetu „Táto otázka má viac správnych odpovedí“.",
       trueLabel: "Pravda",
       falseLabel: "Nepravda",
@@ -9224,7 +9238,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departmentNoteBefore: "Přidělení oddělení platí ",
       departmentNoteHighlight: "i pro všechna podřízená",
       departmentNoteAfter: ". Číslo je počet lidí včetně nich — to je to, koho se to opravdu týká.",
-      noGroupsOrTracks: "V organizaci zatím nejsou skupiny ani trasy. Skupiny se zadávají při importu osob (sloupec „skupiny“) nebo příkazem",
+      noAudiencesTitle: "Zatím žádné skupiny ani trasy",
+      noAudiencesText: "Skupina vznikne, když ji někdo dostane na kartě osoby nebo v importu. Trasu založíte v části Trasy.",
+      linkPeople: "Osoby",
+      linkImport: "Import osob",
+      linkTracks: "Trasy",
       addresses: "Jednotlivé adresy",
       addressesNote: "Nepovinné. Odděl čárkou nebo novým řádkem.",
       reason: "Důvod",
@@ -9545,6 +9563,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTenant: "Nová organizace",
       disabled: "vypnutý",
       noDomainWarning: "Do organizace se nedá přihlásit — přihlášení je vázané na domény. Doplňte aspoň jednu.",
+      noDomainTag: "Bez domény ›",
       emptyTitle: "Žádné organizace",
       emptyText: "První přidáte tlačítkem výše.",
       people: "Osoby",
@@ -9555,8 +9574,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       acknowledgements: "Potvrzení",
       withoutVersion: "bez platného znění",
       instructionsSent: (when, to) => `Pokyny k doméně poslány ${when} na ${to}`,
-      domainsNoteBefore: "Stav domén ve Vercelu ukáže ",
-      domainsNoteAfter: "; do obrazovky přibude v rozsahu C spolu se zakládáním tenantů.",
     },
     create: {
       heading: "Nová organizace",
@@ -12426,6 +12443,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       mediaAlt: "Popis obrázku (pro nové obrázky)",
       answers: "Odpovědi",
       correct: "správná",
+      markCorrectSingle: "Označte správnou odpověď.",
+      markCorrectMultiple: "Označte správné odpovědi.",
+      answerCorrect: n => `Odpověď ${n}, správná`,
+      emptyRowsNote: "Prázdné řádky se neuloží.",
       multipleNote: "Student uvidí větu „Tato otázka má více správných odpovědí“.",
       trueLabel: "Pravda",
       falseLabel: "Nepravda",
@@ -13468,7 +13489,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       departmentNoteBefore: "Assigning to a department also applies ",
       departmentNoteHighlight: "to every department below it",
       departmentNoteAfter: ". The number counts those people too — that is who it actually reaches.",
-      noGroupsOrTracks: "The organisation has no groups or tracks yet. Groups are set when importing people (the “groups” column) or with the command",
+      noAudiencesTitle: "No groups or tracks yet",
+      noAudiencesText: "A group is created when someone gets it on their person card or in an import. Tracks are created under Tracks.",
+      linkPeople: "People",
+      linkImport: "Import people",
+      linkTracks: "Tracks",
       addresses: "Individual addresses",
       addressesNote: "Optional. Separate with a comma or a new line.",
       reason: "Reason",
@@ -13788,6 +13813,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTenant: "New organisation",
       disabled: "disabled",
       noDomainWarning: "Nobody can sign in to this organisation — signing in is tied to domains. Add at least one.",
+      noDomainTag: "No domain ›",
       emptyTitle: "No organisations",
       emptyText: "Add the first one with the button above.",
       people: "People",
@@ -13798,8 +13824,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       acknowledgements: "Acknowledgements",
       withoutVersion: "no effective version",
       instructionsSent: (when, to) => `Domain instructions sent ${when} to ${to}`,
-      domainsNoteBefore: "The state of the domains in Vercel is shown by ",
-      domainsNoteAfter: "; it will appear on this screen in scope C, together with tenant creation.",
     },
     create: {
       heading: "New organisation",
@@ -16662,6 +16686,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       mediaAlt: "Image description (for new images)",
       answers: "Answers",
       correct: "correct",
+      markCorrectSingle: "Mark the correct answer.",
+      markCorrectMultiple: "Mark the correct answers.",
+      answerCorrect: n => `Answer ${n}, correct`,
+      emptyRowsNote: "Empty rows are not saved.",
       multipleNote: "The student will see “This question has more than one correct answer”.",
       trueLabel: "True",
       falseLabel: "False",

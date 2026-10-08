@@ -138,7 +138,7 @@ na 12 stránkach mimo sekcií menu.
 | P9 | ✓ 7. 10. 2026 (ZAKLAD-lista-ulozenia) Stránky s viacerými samostatnými formulármi, každý s plným „Uložiť" → jedna lišta na uloženie (`.set-savebar`, ako `/organisation/general`) alebo tiché tlačidlá | organisation/signin, /gdpr, /domains, admin/tenants/[code], hr/tracks/[key] | návrh |
 | P10 | ✓ Formulár otvorený cez `?new=1` / `?assign=1` pridá plné tlačidlo vedľa plného v hlavičke → pri otvorenom formulári hlavičkové tlačidlo skryť; v prázdnom stave `.empty-action` tiché | learning/manage, learning/tests, library (prázdna knižnica) | mechanicky |
 | P11 | ✓ Texty natvrdo mimo `i18n.ts` (navyše „Rozumiem" v `Notice`; predpona „v" verzie ostala — medzinárodná skratka) | Answer.tsx (model, tokeny, cache), hr (dnes, verzia, pridelil), hr/tracks/[key]/notify, people (surový kľúč roly), admin/tenants (kód jazyka), SignIn („alebo", placeholder s doménou SFZ), verify (IČO), organisation/admin (placeholder `futbalsfz.sk`), learning (predpona „v" verzie), certificate/print (text odkazu) | mechanicky |
-| P12 | Používateľovi sa ukazuje vývojársky príkaz (`npm run person`, `npm run domains`) | hr/assign, admin | návrh (čo ukázať namiesto) |
+| P12 | ✓ 8. 10. 2026 (ZAKLAD-zvysne-odchylky) Používateľovi sa ukazuje vývojársky príkaz (`npm run person`, `npm run domains`) | hr/assign, admin | návrh (čo ukázať namiesto) |
 | P13 | ✓ Natvrdo farby v `diffStyle` → `var(--ok-bg)` / `var(--bad-bg)` (tmavá téma ich dnes nemení) | library/[id] r. 384–390 | mechanicky |
 
 Inline `style={{}}` bez natvrdo farieb (rozmery, `margin: 0`, `fontSize`) je
@@ -201,7 +201,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   prepínače `.toggle` (P6) — ok; `.hr-subtitle` (P7) — ok; jedno plné
   tlačidlo (P9) — ok; stav cez `tag--*` (P3) — ok.
 - **hr/assign** — chyba cez `Notice` (P2) — ok; `npm run person` (P12) —
-  **otvorené** (`hr/assign/page.tsx:253`, typ návrh).
+  ok (8. 10., `.empty` s odkazmi, ZAKLAD-zvysne-odchylky).
 - **hr/[id]/revoke** — bez nálezov.
 
 ### 4. Osoby a organizácia
@@ -219,8 +219,8 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   ok; stav cez `tag--*` (P3) — ok; tiché „Použiť" pri spotrebe — ok;
   placeholder bez domén SFZ (P11) — ok.
 - **admin** — „Nová organizácia" v `.page-head` (P1) — ok; `npm run
-  domains` (P12) — **otvorené** (`admin/page.tsx:137`; stránka
-  prevádzkovateľa, typ návrh).
+  domains` (P12) — ok (8. 10., veta zmazaná, štítok „Bez domény",
+  ZAKLAD-zvysne-odchylky).
 - **admin/new** — správa cez `Notice` (P2) — ok.
 - **admin/tenants/[code]** — jazyky ako `.select-row` s názvom — ok; jedno
   plné v `.set-savebar` (P9) — ok; stav domén inline farbami (P3) —
@@ -242,8 +242,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   `.mg-table` na karty pod 1024 px (P5) — ok; zlúčenie značiek (nie tém)
   `mg-choices`/`mg-choice` → `.form-group` + `.choice-row` +
   `.choice-field` — ok (8. 10.); výber
-  značiek na zlúčenie `tgv-main` → `.select-row` (návrh) — **otvorené**
-  (`learning/manage/page.tsx:350`).
+  značiek na zlúčenie `.select-row` — ok (8. 10., ZAKLAD-zvysne-odchylky).
 - **learning/manage/[courseKey]** — ✓ 7. 10. 2026 podľa návrhu
   `MANAGE-COURSE-akcie` (vlastné cesty R3, jedno plné tlačidlo, karta stavu
   len na koreni, „Pridať blok ▾", zdroj videa `.choice-row`, potvrdenie
@@ -251,8 +250,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 - **learning/tests** — `?tab=` (R3) — ok; hlavičkové tlačidlá skryté pri
   novom teste, otázke a importe (P10) — ok; filter stavu (P4) — ok; typ
   otázky `.view-switch` — ok (8. 10.);
-  správna odpoveď `.mc-check` v riadku odpovede (návrh) — **otvorené**
-  (`:342`); áno/nie `.choice-row` — ok (8. 10.);
+  správna odpoveď kruh/fajka vľavo — ok (8. 10., ZAKLAD-zvysne-odchylky); áno/nie `.choice-row` — ok (8. 10.);
   chyby importu ako karty pod 1024 px — ok (8. 10.).
 - **learning/tests/[testKey]** — bez nálezov.
 
@@ -281,9 +279,9 @@ zlúčenie značiek `.choice-row` + `.choice-field`, v testoch typ otázky
 useknutá odpoveď `.lnote--warn`, `ask/history` so `SearchStrip`, nadpisy
 prihlásenia v triedach.
 
-Ostáva na návrh: `tgv-main` → `.select-row` (learning/manage), `.mc-check`
-v riadku odpovede (learning/tests), P12 (`npm run person` na `/hr/assign`,
-`npm run domains` na `/admin`).
+Body na návrh sú ✓ 8. 10. 2026 (ZAKLAD-zvysne-odchylky): výber značiek
+`.select-row`, správna odpoveď vľavo pred poľom, P12 na `/hr/assign`
+a `/admin`. **Súpis je k 8. 10. 2026 vybavený celý.**
 
 ## Navrhované poradie PR
 

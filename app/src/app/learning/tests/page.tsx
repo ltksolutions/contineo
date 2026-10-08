@@ -338,16 +338,34 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
         <legend className="form-group-head">{tt.answers}</legend>
         <div className="card form-group-body">
         {type === "multiple" && <p className="quiet mc-note">{tt.multipleNote}</p>}
-        {(type === "single" || type === "multiple") && Array.from({ length: Math.min(rows, MAX_ANSWERS) }, (_, i) => {
-          const a = prevAnswers[i]
-          return (
-            <div key={i} className="ansr">
-              {a && <input type="hidden" name={`answer_${i}_id`} value={a.id} />}
-              <input className="field-input" name={`answer_${i}`} defaultValue={a?.text ?? ""} aria-label={tt.answer(i + 1)} placeholder={tt.answer(i + 1)} />
-              <label className="mc-check"><input type={type === "single" ? "radio" : "checkbox"} name="correct" value={String(i)} defaultChecked={a?.correct} /> {tt.correct}</label>
+        {/*
+          Správna odpoveď je vlastnosť riadku: značka vľavo pred poľom —
+          viac správnych kruh ako `.select-row`, jedna správna fajka ako
+          `.choice-row` s prerušovaným krúžkom pri nezvolenej
+          (ZAKLAD-zvysne-odchylky, 8. 10. 2026). Slovo „správna" nesie
+          `aria-label` pre čítačku.
+        */}
+        {(type === "single" || type === "multiple") && (
+          <>
+            <p className="form-group-hint quiet">{type === "single" ? tt.markCorrectSingle : tt.markCorrectMultiple}</p>
+            <div className="ans-list">
+              {Array.from({ length: Math.min(rows, MAX_ANSWERS) }, (_, i) => {
+                const a = prevAnswers[i]
+                return (
+                  <div key={i} className="ans">
+                    {a && <input type="hidden" name={`answer_${i}_id`} value={a.id} />}
+                    <label className={`ans-mark ans-mark--${type}`}>
+                      <input type={type === "single" ? "radio" : "checkbox"} name="correct" value={String(i)} defaultChecked={a?.correct}
+                             aria-label={tt.answerCorrect(i + 1)} />
+                    </label>
+                    <input className="field-input" name={`answer_${i}`} defaultValue={a?.text ?? ""} aria-label={tt.answer(i + 1)} placeholder={tt.answer(i + 1)} />
+                  </div>
+                )
+              })}
             </div>
-          )
-        })}
+            <p className="form-group-foot quiet">{tt.emptyRowsNote}</p>
+          </>
+        )}
         {type === "true_false" && (
           // Jedna z dvoch: Picker(.inline), riadky s fajkou (ZAKLAD-vyber-a-prepinace).
           <div className="form-list tf-list">
