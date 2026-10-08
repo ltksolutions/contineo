@@ -8358,6 +8358,10 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 .channel-count.is-zero b { color: var(--muted); }
 .channel-chev { flex: none; color: var(--line-strong); font-size: 20px; line-height: 1; }
 .channel-fixed { flex: none; font-size: var(--fs-small); }
+/* Vstavané rozhrania nie sú odkazy — bez kurzora a podfarbenia pod myšou,
+   ktoré `.form-row` dáva riadkom na kliknutie (zistené naostro 8. 10.). */
+.channel-row--fixed { cursor: default; }
+.channel-row--fixed:hover { background: none; }
 @media (max-width: 639px) {
   .channel-row { align-items: flex-start; }
   .channel-row .channel-ico, .channel-row .channel-chev { margin-top: 2px; }

@@ -15,7 +15,8 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
   intervalu, najmenej 30 min), riadok má štítok **„Schránka nesynchronizuje"**.
 - **Nový kanál** sa otvorí ako karta navrchu; typ sa vyberá z dvoch riadkov
   s vysvetlením. Formulár už nie je stále otvorený na konci stránky.
-- Vstavané rozhrania (Asistent a Knižnica v intranete) sú samostatná skupina.
+- Vstavané rozhrania sú samostatná skupina **„Vstavané kanály"** (Asistent, Knižnica)
+  bez odkazu a bez reakcie na myš.
 
 ### Kanály: náhľad obsahu, kód na vloženie widgetu, správy o nedoručení (2026-10-08)
 

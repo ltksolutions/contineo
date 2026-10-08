@@ -50,7 +50,7 @@ describe("/channels — KANALY-prehlad", () => {
     expect(html).toContain("Widget · helpdesk@futbalsfz.sk · verejný")
     expect(html).toContain("Portál · interný")
     expect(html).toContain('<span class="tag tag--draft">6 otvorených</span>')
-    expect(html).toContain("Vstavané v intranete")
+    expect(html).toContain("Vstavané kanály")
     expect(html).toContain("nenastavuje sa")
     expect(html).toContain('href="/channels?new=1"')
     expect(html).not.toContain('name="isNew"')
@@ -74,7 +74,7 @@ describe("/channels — KANALY-prehlad", () => {
     state.ctx = { ...admin([issf], true), isAdmin: false }
     const html = await render()
     expect(html).toContain('<span class="channel-count"><b>6</b><span>otvorených</span></span>')
-    expect(html).not.toContain("Vstavané v intranete")
+    expect(html).not.toContain("Vstavané kanály")
     expect(html).not.toContain("Nový kanál")
     expect(html).toContain("Kanály, v ktorých odpovedáte na tickety.")
   })
