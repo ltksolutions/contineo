@@ -116,7 +116,11 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
                   <span className="quiet field-hint">{t.connectorScopesHint}</span>
                 </>
               ) : (
-                <span className="quiet field-hint">{t.connectorScopesNone}</span>
+                // Konektor so živým zdrojom môže existovať, len interný — verejný
+                // widget ho nedostane (D174); veta to má povedať, nie tvrdiť, že nie je.
+                <span className="quiet field-hint">
+                  {isWidget && connectors.some(k => k.uses.retrieval.enabled) ? t.connectorScopesInternalOnly : t.connectorScopesNone}
+                </span>
               )}
             </div>
             <div className="field">
