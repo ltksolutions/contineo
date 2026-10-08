@@ -333,3 +333,63 @@ export function locationOverview(p: TenantProfile): Record<string, DataLocation>
   if (p.providers.utility) v.utility = generationLocation(p.providers.utility)
   return v
 }
+
+// ── MCP konektory (ADR-029) ──────────────────────────────────────────────────
+//
+// Konektor nie je adaptér profilu — žije v kolekcii `connectors` a zapína ho
+// správca organizácie. Volá ale cudzí server s textom otázky (živý zdroj)
+// alebo z neho sťahuje články (import), takže rezidencia aj izolácia preň
+// platia rovnako. Bez tejto kontroly by tenant v režime `on-prem` mohol
+// jedným formulárom poslať otázky na verejný server a profil by to nevidel.
+//
+// Lokalitu servera nepoznáme: konektor ju nedeklaruje a dodávateľ MCP
+// servera ju spravidla neuvádza. Vlastná infraštruktúra sa pozná podľa
+// adresy rovnako ako pri `openai`; všetko ostatné je "neznama" — v prísnom
+// režime sa teda nepovolí (nevedomosť nie je súhlas). Keď raz bude treba
+// cudzí server v EÚ v režime `eu-full`, pribudne deklarovaná lokalita
+// na konektore s dôkazom, nie výnimka tu.
+
+export function connectorLocation(endpoint: string): DataLocation {
+  return isSelfHostedUrl(endpoint) === true ? "vlastna" : "neznama"
+}
+
+export function connectorIsolation(endpoint: string): Isolation {
+  return isSelfHostedUrl(endpoint) === true ? "dedikovana" : "neznama"
+}
+
+export interface ConnectorViolation {
+  axis: "residency" | "isolation"
+  /** Režim alebo tier, ktorý konektor porušuje — do textu chyby. */
+  limit: string
+  message: string
+}
+
+/**
+ * Smie organizácia s týmto profilom volať server na `endpoint`? `null` =
+ * smie. Prvé porušenie stačí — konektor sa aj tak nepoužije.
+ */
+export function checkConnector(
+  p: Pick<TenantProfile, "dataResidency" | "tier">, endpoint: string,
+): ConnectorViolation | null {
+  const residency = (p.dataResidency ?? "global") as DataResidency
+  const location = connectorLocation(endpoint)
+  const allowedLocations = ALLOWED[residency]
+  if (!allowedLocations || !allowedLocations.includes(location)) {
+    return {
+      axis: "residency", limit: residency,
+      message: `konektor ${endpoint} (${location}) je v rozpore s rezidenciou "${residency}" ` +
+        `(${RESIDENCY_LABEL[residency] ?? "neznáma hodnota"}): lokalita spracovania servera nie je overená`,
+    }
+  }
+  const tier = (p.tier ?? "T1") as Tier
+  const isolation = connectorIsolation(endpoint)
+  const allowedIsolation = ALLOWED_ISOLATION[tier]
+  if (!allowedIsolation || !allowedIsolation.includes(isolation)) {
+    return {
+      axis: "isolation", limit: tier,
+      message: `konektor ${endpoint} (${isolation}) je v rozpore s tierom "${tier}" ` +
+        `(${TIER_LABEL[tier] ?? "neznáma hodnota"}): nevieme, či server beží len pre tohto tenanta`,
+    }
+  }
+  return null
+}

@@ -23,6 +23,8 @@ import { AppError } from "./appError"
 import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { writeAudit } from "./audit"
 import { PROFILES, isProfileKey, type ProfileKey } from "./mcp/profiles"
+import { checkConnector } from "./residency"
+import { getTenantProfile } from "./tenantProfile"
 
 export const CONNECTORS_COLLECTION = "connectors"
 
@@ -126,6 +128,27 @@ export function parseScopeRef(ref: string): { connectorId: string; scopeKey: str
   return { connectorId: ref.slice(0, i), scopeKey: ref.slice(i + 1) }
 }
 
+/**
+ * Brána rezidencie a izolácie (ADR-002 × ADR-029): vyhodí chybu, keď režim
+ * organizácie konektor na tejto adrese nepripúšťa. Volá sa pri uložení aj
+ * pred každým volaním servera — profil sa mohol sprísniť, kým konektor
+ * existoval, a vtedy sa nesmie volať, nie len neukladať.
+ */
+export async function assertConnectorAllowed(companyCode: string, endpoint: string): Promise<void> {
+  const profile = await getTenantProfile(companyCode)
+  const v = checkConnector(profile, endpoint)
+  if (!v) return
+  if (v.axis === "residency") {
+    throw new ConnectorError("connector.residency", `Konektor sa v režime „${v.limit}" nedá použiť: ${v.message}`, { mode: v.limit })
+  }
+  throw new ConnectorError("connector.isolation", `Konektor sa pri úrovni izolácie ${v.limit} nedá použiť: ${v.message}`, { tier: v.limit })
+}
+
+/** To isté bez výnimky — na filtrovanie zoznamov (pilulky, rozsahy kanála). */
+export async function connectorAllowed(companyCode: string, endpoint: string): Promise<boolean> {
+  try { await assertConnectorAllowed(companyCode, endpoint); return true } catch { return false }
+}
+
 export const EMPTY_REDUCTION: ReductionPolicy = { dropSections: [], scrubPatterns: [], skipPaths: [] }
 
 export async function listConnectors(companyCode: string): Promise<Connector[]> {
@@ -179,6 +202,7 @@ export async function saveConnector(companyCode: string, input: ConnectorInput, 
     throw new ConnectorError("connector.endpoint", "Adresa servera musí byť úplná a začínať https://.")
   }
   if (!isProfileKey(input.profile)) throw new ConnectorError("connector.profile", "Neznámy profil servera.", { profile: input.profile })
+  await assertConnectorAllowed(code, endpoint)
   const accessLevel: ConnectorAccessLevel = input.retrievalAccessLevel === "public" ? "public" : "internal"
   const scrub = tidyLines(input.reduction?.scrubPatterns)
   const bad = scrub.find(p => !validRegex(p)) ?? tidyLines(input.reduction?.skipPaths).find(p => !validRegex(p))

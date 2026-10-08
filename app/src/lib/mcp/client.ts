@@ -18,7 +18,7 @@ import { auth, UnauthorizedError, type OAuthClientProvider } from "@modelcontext
 import type { OAuthClientInformationMixed, OAuthClientMetadata, OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js"
 import {
   ConnectorError, connectorById, connectorByPendingState, markConnectorError, readClientInfo, readPending, readTokens,
-  saveCapabilities, saveClientInfo, savePending, saveTokens, type Connector,
+  saveCapabilities, saveClientInfo, savePending, saveTokens, assertConnectorAllowed, type Connector,
 } from "../connectors"
 import { getCollection } from "../mongodb"
 import type { McpToolCaller } from "./profiles/types"
@@ -111,6 +111,7 @@ function providerFor(c: Connector, redirectUrl: string, actor?: string): OAuthCl
  * nie je chyba, len kontrola.
  */
 export async function startAuthorization(c: Connector, redirectUrl: string): Promise<URL | null> {
+  await assertConnectorAllowed(c.companyCode, c.endpoint)
   const provider = providerFor(c, redirectUrl)
   let result: "AUTHORIZED" | "REDIRECT"
   try {
@@ -149,6 +150,7 @@ async function discoverTools(c: Connector, redirectUrl: string, actor: string | 
 export async function finishAuthorization(state: string, code: string, redirectUrl: string, actor: string): Promise<Connector> {
   const c = await connectorByPendingState(state)
   if (!c) throw new ConnectorError("connector.noPending", "Prihlásenie nebolo začaté alebo už vypršalo — skúste znova.")
+  await assertConnectorAllowed(c.companyCode, c.endpoint)
   const provider = providerFor(c, redirectUrl, actor)
   try {
     const result = await auth(provider, { serverUrl: c.endpoint, authorizationCode: code, scope: "docs.read" })
@@ -183,6 +185,9 @@ export async function withClient<T>(
   if (c.status !== "connected" || !c.auth.tokensEnc && !readTokens(c)) {
     throw new ConnectorError("connector.notConnected", "Konektor nie je pripojený.")
   }
+  // Rezidencia sa kontroluje pri každom volaní, nie len pri uložení — profil
+  // organizácie sa mohol medzitým sprísniť (ADR-002 × ADR-029).
+  await assertConnectorAllowed(c.companyCode, c.endpoint)
   const started = Date.now()
   const provider = providerFor(c, redirectUrl)
   const transport = new StreamableHTTPClientTransport(new URL(c.endpoint), { authProvider: provider })
