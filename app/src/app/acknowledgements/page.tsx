@@ -104,13 +104,7 @@ export default async function MyAcknowledgementsPage() {
                       {t.revokedStatement}
                     </p>
                   )}
-                  <blockquote
-                    style={{
-                      margin: "6px 0 0", padding: "10px 14px",
-                      borderLeft: "3px solid var(--line)",
-                      fontSize: "var(--fs-body)", lineHeight: 1.6,
-                    }}
-                  >
+                  <blockquote className="ack-statement">
                     {r.statementText}
                   </blockquote>
 

@@ -186,17 +186,9 @@ export function AnswerBody({
             zhrnutie, ktoré si čitateľ odnesie — a keď chýba, nemá ako vedieť,
             že mu chýba. */}
         {truncated && (
-          <div
-            style={{
-              display: "flex", gap: 9, alignItems: "flex-start",
-              marginTop: 14, padding: "10px 13px",
-              background: "var(--warn-bg)", color: "var(--warn-fg)",
-              border: "1px solid var(--line)", borderRadius: 9,
-              fontSize: "var(--fs-small)", lineHeight: 1.55,
-            }}
-          >
-            <span aria-hidden="true" style={{ fontWeight: 700 }}>▲</span>
-            <span>
+          <div className="lnote lnote--warn answer-truncated" role="note">
+            <span className="lnote-mark" aria-hidden="true">!</span>
+            <span className="lnote-text">
               <strong>{t.incompleteHeading}</strong>{" "}
               {t.incompleteNote}
             </span>

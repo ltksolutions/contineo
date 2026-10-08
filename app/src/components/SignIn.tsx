@@ -85,7 +85,7 @@ export default function SignIn({
   if (done) {
     return (
       <div className="card" style={{ textAlign: "center" }}>
-        <h1 style={{ fontSize: 20, margin: "0 0 12px" }}>{t.checkEmail}</h1>
+        <h1 className="signin-title signin-title--check">{t.checkEmail}</h1>
         <p className="quiet" style={{ fontSize: "var(--fs-lead)", lineHeight: 1.65, margin: 0 }}>
           {t.sent}
         </p>
@@ -118,13 +118,13 @@ export default function SignIn({
             kresba s lupou, zatiaľ čo zvyšok aplikácie už mal bublinu.
           */}
           <ContineoMark size={30} />
-          <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
+          <span className="signin-brand">
             Contineo
           </span>
         </div>
       )}
 
-      <h1 style={{ fontSize: 21, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+      <h1 className="signin-title">
         {t.heading}
       </h1>
       <p className="quiet" style={{ fontSize: "var(--fs-body)", lineHeight: 1.65, margin: "0 0 22px" }}>

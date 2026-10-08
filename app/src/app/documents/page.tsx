@@ -47,12 +47,15 @@ export default async function DocumentsPage({
         <h1 className="page-title" style={{ margin: "0 0 8px" }}>
           {dictionary(ctx.tenant.defaultLanguage).onboarding.listHeading}
         </h1>
-        <p className="card" style={{ padding: 20 }}>
-          {dictionary(ctx.tenant.defaultLanguage).documents.notInOrganisation(
-            ctx.email ?? "",
-            ctx.tenant.branding.displayName,
-          )}
-        </p>
+        {/* Prázdny stav, nie karta s vetou (DESIGN_ODCHYLKY, 8. 10. 2026). */}
+        <div className="empty">
+          <div className="empty-text">
+            {dictionary(ctx.tenant.defaultLanguage).documents.notInOrganisation(
+              ctx.email ?? "",
+              ctx.tenant.branding.displayName,
+            )}
+          </div>
+        </div>
       </div>
     )
   }

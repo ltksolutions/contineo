@@ -158,13 +158,12 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 ### 1. Potvrdzovanie a prehľad — každý zamestnanec
 - **documents** — plné tlačidlo pri každom ďalšom kroku trasy a „Otvoriť" pri
   každej položke (R1) — ok; stav „nie je v organizácii" je `p.card`, nie
-  `.empty` — **otvorené** (`documents/page.tsx:50`).
+  `.empty` — ok (8. 10.).
 - **documents/[documentId]**, **/**, **prehlad**, **more**, **guide** — bez
   nálezov. **directory** — „nič sa nenašlo" by mohlo byť `.empty` —
-  **otvorené** (`directory/page.tsx:74`, tichý riadok s počtom).
+  ok (8. 10.).
 - **acknowledgements** — „Stiahnuť" v `.page-head` (P1) — ok; prázdny stav
-  `.empty` — ok; citácia celá v inline štýle → trieda — **otvorené**
-  (`acknowledgements/page.tsx:107`).
+  `.empty` — ok; citácia celá v inline štýle → trieda — ok (8. 10.).
 - **notifications** — „Označiť všetko ako prečítané" v `.page-head`, tiché
   (P1) — ok.
 - **approvals** — bez nálezov.
@@ -210,8 +209,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   (R10) — ok (rozhodnutie A).
 - **people/import** — „Aktualizovať existujúcich" (P6) — ok; tabuľka na
   karty pod 640 px — ok; chyba náhľadu ako `.lnote--warn` (P2) — ok, ale
-  výsledok importu (aj chybový) je stále holá `p.card` — **otvorené**
-  (`components/PeopleImport.tsx:153`).
+  výsledok importu (aj chybový) je stále holá `p.card` — ok (8. 10.).
 - **people/invite** — odoslanie na konci (R2) — ok. **people/new** — chyba
   cez `Notice` (P2) — ok.
 - **organisation** — bez nálezov.
@@ -226,7 +224,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 - **admin/new** — správa cez `Notice` (P2) — ok.
 - **admin/tenants/[code]** — jazyky ako `.select-row` s názvom — ok; jedno
   plné v `.set-savebar` (P9) — ok; stav domén inline farbami (P3) —
-  **otvorené** (`admin/tenants/[code]/page.tsx:116, 126, 136`).
+  ok (8. 10.).
 
 ### 5. Vzdelávanie
 - **learning** — tiché „Pokračovať/Začať" na kartách (R1) — ok; hlavička
@@ -243,7 +241,7 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   pri `?new=1` (P10) — ok; filter stavu `.view-switch` (P4) — ok;
   `.mg-table` na karty pod 1024 px (P5) — ok; zlúčenie značiek (nie tém)
   `mg-choices`/`mg-choice` → `.form-group` + `.choice-row` +
-  `.choice-field` — **otvorené** (`learning/manage/page.tsx:307`); výber
+  `.choice-field` — ok (8. 10.); výber
   značiek na zlúčenie `tgv-main` → `.select-row` (návrh) — **otvorené**
   (`learning/manage/page.tsx:350`).
 - **learning/manage/[courseKey]** — ✓ 7. 10. 2026 podľa návrhu
@@ -252,46 +250,39 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   archivácie a odstránenia časti, náhľad ako študent) — ok.
 - **learning/tests** — `?tab=` (R3) — ok; hlavičkové tlačidlá skryté pri
   novom teste, otázke a importe (P10) — ok; filter stavu (P4) — ok; typ
-  otázky ako `.lpills`/`.pill` — **otvorené** (`learning/tests/page.tsx:308`);
+  otázky `.view-switch` — ok (8. 10.);
   správna odpoveď `.mc-check` v riadku odpovede (návrh) — **otvorené**
-  (`:342`); áno/nie `.tf-opt` → `.choice-row` — **otvorené** (`:348`);
-  tabuľka chýb importu bez kariet — **otvorené** (`:422`).
+  (`:342`); áno/nie `.choice-row` — ok (8. 10.);
+  chyby importu ako karty pod 1024 px — ok (8. 10.).
 - **learning/tests/[testKey]** — bez nálezov.
 
 ### 6. Ostatné
 - **ask**, **ask/a/[id]** — `Answer.tsx`: stavy cez `tag--*` (P3) — ok;
   texty a dátumy cez `i18n` s jazykom (P11) — ok; blok „useknutá odpoveď"
-  inline → `.lnote--warn` — **otvorené** (`components/Answer.tsx:188`).
+  `.lnote--warn` — ok (8. 10.).
 - **ask/history** — hlavička (P1) — ok; vlastné pole hľadania →
-  `SearchStrip` — **otvorené** (`ask/history/page.tsx:118`).
+  `SearchStrip` — ok (8. 10.).
 - **evaluation** — tiché „Uložiť" pri príprave odpovede (R1) — ok;
   hlavička (P1) — ok; posudok bez inline štýlov — ok (8. 10., EVAL-posudok).
 - **dpo** — rozhodnutie o námietke `.choice-row` (R9) — ok; „Rozhodnúť"
   v páse tiché — ok.
 - **sign-in** — chyba ako `.lnote--bad` (P2) — ok; texty (P11) — ok;
-  veľkosti písma natvrdo — **otvorené** (`components/SignIn.tsx:88, 121, 127`).
+  veľkosti písma v triedach — ok (8. 10.).
 - **verify/[registrationNumber]** — „IČO" (P11) — ok.
 - **privacy** — bez nálezov (karty pod 640 px sú zámer rámu PRIVACY-citatelnost).
 
 ### Otvorené k 8. 10. 2026
 
-Mechanické (vzor existuje, jeden PR):
+Mechanické body 1–10 sú ✓ 8. 10. 2026 (PR „Mechanické odchýlky"):
+`documents` a `directory` `.empty`, citácia v potvrdeniach `.ack-statement`,
+výsledok importu osôb `.lnote`, stav domén v `admin/tenants/[code]` triedami,
+zlúčenie značiek `.choice-row` + `.choice-field`, v testoch typ otázky
+`.view-switch`, pravda/nepravda `.choice-row` a chyby importu ako karty,
+useknutá odpoveď `.lnote--warn`, `ask/history` so `SearchStrip`, nadpisy
+prihlásenia v triedach.
 
-1. `documents` — „nie je v organizácii" → `.empty`.
-2. `directory` — „nič sa nenašlo" → `.empty`.
-3. `acknowledgements` — citácia z inline štýlu do triedy.
-4. `PeopleImport` — výsledok importu → `Notice` / `.lnote` namiesto `p.card`.
-5. `admin/tenants/[code]` — stav domén cez `tag--*` / triedy namiesto
-   inline farieb (P3).
-6. `learning/manage` — zlúčenie značiek `mg-choice` → `.choice-row`.
-7. `learning/tests` — typ otázky `.pill` → `.view-switch`; áno/nie
-   `.tf-opt` → `.choice-row`; chyby importu ako karty pod 1024 px.
-8. `Answer.tsx` — useknutá odpoveď → `.lnote--warn`.
-9. `ask/history` — pole hľadania → `SearchStrip`.
-10. `SignIn` — veľkosti písma z tokenov.
-
-Návrh: `tgv-main` → `.select-row` (learning/manage), `.mc-check` v riadku
-odpovede (learning/tests), P12 (`npm run person` na `/hr/assign`,
+Ostáva na návrh: `tgv-main` → `.select-row` (learning/manage), `.mc-check`
+v riadku odpovede (learning/tests), P12 (`npm run person` na `/hr/assign`,
 `npm run domains` na `/admin`).
 
 ## Navrhované poradie PR

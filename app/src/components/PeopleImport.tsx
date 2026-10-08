@@ -50,7 +50,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
   const [name, setName] = useState("")
   const [preview, setPreview] = useState<Preview | null>(null)
   const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<string | null>(null)
+  const [result, setResult] = useState<{ text: string; ok: boolean } | null>(null)
   // Prepis existujúcich je výslovná voľba, predvolene vypnutá (ADR-019).
   const [overwrite, setOverwrite] = useState(false)
   // Filter tabuľky podľa stavu; `null` = všetko.
@@ -92,7 +92,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
     setBusy(true)
     try {
       const v = await runImportAction(text, overwrite)
-      setResult(v.message)
+      setResult({ text: v.message, ok: v.ok })
       if (v.ok) {
         setPreview(null)
         setText("")
@@ -150,9 +150,12 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
       {busy && <p className="quiet">{t.reading}</p>}
 
       {result && (
-        <p className="card" style={{ padding: "12px 16px", fontSize: "var(--fs-body)", margin: 0 }}>
-          {result}
-        </p>
+        // Výsledok v riadku cez spoločnú triedu — chyba červeno, úspech
+        // zelený (DESIGN_ODCHYLKY P2, 8. 10. 2026).
+        <div className={`lnote${result.ok ? "" : " lnote--bad"}`} role={result.ok ? "status" : "alert"}>
+          <span className="lnote-mark" aria-hidden="true">{result.ok ? "✓" : "!"}</span>
+          <span className="lnote-text">{result.text}</span>
+        </div>
       )}
 
       {preview && !preview.ok && (

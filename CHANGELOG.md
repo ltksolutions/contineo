@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Drobné úpravy rozhrania podľa súpisu odchýlok (2026-10-08)
+
+- Prázdne stavy namiesto kariet s vetou: „nie ste v organizácii" na
+  Dokumentoch a „nič sa nenašlo" v Adresári.
+- Výsledok importu osôb je hláška v riadku — chyba červená, úspech zelený.
+- História otázok má rovnaké pole hľadania ako Adresár.
+- Upozornenie na useknutú odpoveď má tvar ostatných hlášok.
+- Testy: typ otázky sa prepína prepínačom, pravda/nepravda sú riadky
+  s fajkou, chyby importu sú na telefóne karty.
+- Zlúčenie značiek vo Vzdelávaní: „čo ostane" sú riadky s fajkou, pole
+  nového názvu sa ukáže pod zvoleným riadkom.
+- Inline štýly a farby presunuté do tried (citácia v potvrdeniach, stav
+  domén v správe organizácií, nadpisy prihlásenia).
+
 ### Detail dokumentu: akcie v hlavičke, Ďalšie akcie (2026-10-08)
 
 - Na `/library/<id>` sú akcie vpravo vedľa názvu: **Stiahnuť** (ponuka PDF

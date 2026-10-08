@@ -10,6 +10,7 @@
  * (`answersMonths`, H2) — tá istá, podľa ktorej maže retencia.
  */
 
+import SearchStrip from "@/components/SearchStrip"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
@@ -116,8 +117,9 @@ export default async function AskHistoryPage({ searchParams }: { searchParams: P
         )}
 
         <form className="ask-history-filter" method="get" action="/ask/history" role="search">
-          <input className="field-input" type="search" name="q" defaultValue={query} placeholder={t.filter} aria-label={t.filter} />
-          <button className="button button--quiet" type="submit">{t.filterSubmit}</button>
+          {/* Spoločné pole hľadania v zozname (`SearchStrip`, ako adresár;
+              DESIGN_ODCHYLKY, 8. 10. 2026). Odosiela sa Enterom. */}
+          <SearchStrip name="q" defaultValue={query} placeholder={t.filter} label={t.filter} submitLabel={t.filterSubmit} />
         </form>
 
         {items.length === 0 && (

@@ -113,7 +113,7 @@ function DomainRow({ s, language }: { s: DomainStatus; language?: UiLanguage }) 
   if (!s.inProject) {
     return (
       <li>
-        <strong>{s.host}</strong> — <span style={{ color: "var(--bad-fg)" }}>{t.notInVercel}</span>
+        <strong>{s.host}</strong> — <span className="domain-state is-bad">{t.notInVercel}</span>
       </li>
     )
   }
@@ -123,7 +123,7 @@ function DomainRow({ s, language }: { s: DomainStatus; language?: UiLanguage }) 
         <strong>{s.host}</strong> — {t.waitingForCustomer}{" "}
         <code>{cnameInstruction(s.host, s.cname)}</code>
         {s.conflicts.length > 0 && (
-          <div style={{ color: "var(--bad-fg)", fontSize: "var(--fs-small)" }}>
+          <div className="domain-state is-bad domain-conflicts">
             {t.conflicts(s.conflicts.join(", "))}
           </div>
         )}
@@ -133,7 +133,7 @@ function DomainRow({ s, language }: { s: DomainStatus; language?: UiLanguage }) 
   return (
     <li>
       <strong>{s.host}</strong> — {t.configuredVia(s.configuredBy)}
-      {!s.verified && <span style={{ color: "var(--warn-fg)" }}>{t.unverified}</span>}
+      {!s.verified && <span className="domain-state is-warn">{t.unverified}</span>}
     </li>
   )
 }
