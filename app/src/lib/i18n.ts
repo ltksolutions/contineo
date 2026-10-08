@@ -5992,7 +5992,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavenia GDPR sú uložené.",
     },
     connectors: {
-      intro: "Pripojenie k cudziemu MCP serveru s viacerými použitiami. Živý zdroj: asistent pri otázke hľadá aj na serveri a výsledok cituje ako neoverený. Import do knižnice a nástroje asistenta pribudnú.",
+      intro: "Pripojenie k cudziemu MCP serveru s viacerými použitiami. Živý zdroj: asistent pri otázke hľadá aj na serveri a výsledok cituje ako neoverený. Import do knižnice: články zo servera sa prevezmú ako dokumenty (Knižnica → Nahrať dokument → Import zo servera) a ďalej prejdú schválením. Rozsahy sú pomenované výseky obsahu servera — kanál si vyberá, ktoré smie použiť. Nástroje asistenta pribudnú.",
       none: "Zatiaľ žiadny konektor.",
       add: "Pridať konektor",
       edit: "Upraviť",
@@ -10316,7 +10316,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavení GDPR jsou uložena.",
     },
     connectors: {
-      intro: "Připojení k cizímu MCP serveru s více použitími. Živý zdroj: asistent při dotazu hledá i na serveru a výsledek cituje jako neověřený. Import do knihovny a nástroje asistenta přibudou.",
+      intro: "Připojení k cizímu MCP serveru s více použitími. Živý zdroj: asistent při dotazu hledá i na serveru a výsledek cituje jako neověřený. Import do knihovny: články ze serveru se převezmou jako dokumenty (Knihovna → Nahrát dokument → Import ze serveru) a dále projdou schválením. Rozsahy jsou pojmenované výseky obsahu serveru — kanál si vybírá, které smí použít. Nástroje asistenta přibudou.",
       none: "Zatím žádný konektor.",
       add: "Přidat konektor",
       edit: "Upravit",
@@ -14629,7 +14629,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "GDPR settings saved.",
     },
     connectors: {
-      intro: "A connection to an external MCP server with several uses. Live source: the assistant also searches the server when asked and cites the result as unreviewed. Import into the library and assistant tools come later.",
+      intro: "A connection to an external MCP server with several uses. Live source: the assistant also searches the server when asked and cites the result as unreviewed. Import into the library: articles from the server are taken over as documents (Library → Upload document → Import from a server) and then go through approval. Scopes are named slices of the server's content — a channel chooses which it may use. Assistant tools come later.",
       none: "No connector yet.",
       add: "Add connector",
       edit: "Edit",
