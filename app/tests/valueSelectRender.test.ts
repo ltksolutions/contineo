@@ -25,14 +25,17 @@ describe("ValueSelect", () => {
     expect(order).toEqual(["komisari", "vlastna", "delegati", "rozhodcovia"])
     expect(html).toContain("14 ľudí")
     expect(html.match(/len tu/g)).toHaveLength(2)
+    // Jedno pole „Hľadať alebo pridať" navrchu karty pri každom počte (Q6).
+    expect(html).toContain('<div class="sel-combo">')
+    expect(html).toContain('placeholder="Hľadať alebo pridať skupinu"')
     expect(html).toContain('name="groupsNew"')
-    expect(html).not.toContain("sel-search")
     expect(html).toContain("Nová skupina vznikne uložením osoby.")
   })
 
   it("prázdny zoznam: len pole novej hodnoty a veta, ako skupina vznikne", () => {
     const html = render({})
     expect(html).not.toContain('type="checkbox"')
+    expect(html).toContain('placeholder="Pridať skupinu"')
     expect(html).toContain("Zatiaľ žiadna skupina")
   })
 

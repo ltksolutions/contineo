@@ -1128,8 +1128,10 @@ interface Dictionary {
     onlyHere: string
     notInCodelist: string
     searchOf: (shown: number, total: number) => string
-    groups: { count: (n: number) => string; newPlaceholder: string; foot: string; emptyFoot: string; search: string }
-    tags: { count: (n: number) => string; newPlaceholder: string; foot: string; emptyFoot: string; search: string }
+    groups: { count: (n: number) => string; combo: string; addOnly: string; addSub: string; foot: string; emptyFoot: string }
+    tags: { count: (n: number) => string; combo: string; addOnly: string; addSub: string; foot: string; emptyFoot: string }
+    /** Riadok „+ Pridať „…“ pod zoznamom (Q6). */
+    addValue: (value: string) => string
     /** Varovanie pri podobnom názve (Q3). */
     similar: (value: string, like: string) => string
     similarGroupNote: string
@@ -4953,19 +4955,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     onlyHere: "len tu",
     notInCodelist: "nie je v číselníku",
     searchOf: (shown, total) => `${shown} z ${total}`,
+    addValue: v => `Pridať „${v}“`,
     groups: {
       count: n => n === 1 ? "1 človek" : n >= 2 && n <= 4 ? `${n} ľudia` : `${n} ľudí`,
-      newPlaceholder: "Nová skupina",
+      combo: "Hľadať alebo pridať skupinu",
+      addOnly: "Pridať skupinu",
+      addSub: "nová skupina",
       foot: "Nová skupina vznikne uložením osoby. Viac skupín oddeľte čiarkou.",
       emptyFoot: "Zatiaľ žiadna skupina — vznikne prvou, ktorú napíšete.",
-      search: "Hľadať skupinu",
     },
     tags: {
       count: n => n === 1 ? "1 dokument" : n >= 2 && n <= 4 ? `${n} dokumenty` : `${n} dokumentov`,
-      newPlaceholder: "Nová značka",
+      combo: "Hľadať alebo pridať značku",
+      addOnly: "Pridať značku",
+      addSub: "nová značka",
       foot: "Nová značka vznikne uložením dokumentu a pribudne do číselníka organizácie. Viac značiek oddeľte čiarkou.",
       emptyFoot: "Zatiaľ žiadna značka — vznikne prvou, ktorú napíšete.",
-      search: "Hľadať značku",
     },
     similar: (v, like) => `„${v}“ sme neuložili: podobá sa na existujúcu „${like}“.`,
     similarGroupNote: "Ostatné údaje osoby sú uložené. Vyberte, čo platí, a uložte znova.",
@@ -9105,19 +9110,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     onlyHere: "jen zde",
     notInCodelist: "není v číselníku",
     searchOf: (shown, total) => `${shown} z ${total}`,
+    addValue: v => `Přidat „${v}“`,
     groups: {
       count: n => n === 1 ? "1 člověk" : n >= 2 && n <= 4 ? `${n} lidé` : `${n} lidí`,
-      newPlaceholder: "Nová skupina",
+      combo: "Hledat nebo přidat skupinu",
+      addOnly: "Přidat skupinu",
+      addSub: "nová skupina",
       foot: "Nová skupina vznikne uložením osoby. Více skupin oddělte čárkou.",
       emptyFoot: "Zatím žádná skupina — vznikne první, kterou napíšete.",
-      search: "Hledat skupinu",
     },
     tags: {
       count: n => n === 1 ? "1 dokument" : n >= 2 && n <= 4 ? `${n} dokumenty` : `${n} dokumentů`,
-      newPlaceholder: "Nová značka",
+      combo: "Hledat nebo přidat značku",
+      addOnly: "Přidat značku",
+      addSub: "nová značka",
       foot: "Nová značka vznikne uložením dokumentu a přibude do číselníku organizace. Více značek oddělte čárkou.",
       emptyFoot: "Zatím žádná značka — vznikne první, kterou napíšete.",
-      search: "Hledat značku",
     },
     similar: (v, like) => `„${v}“ jsme neuložili: podobá se existující „${like}“.`,
     similarGroupNote: "Ostatní údaje osoby jsou uložené. Vyberte, co platí, a uložte znovu.",
@@ -13246,19 +13254,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     onlyHere: "only here",
     notInCodelist: "not in the code list",
     searchOf: (shown, total) => `${shown} of ${total}`,
+    addValue: v => `Add “${v}”`,
     groups: {
       count: n => n === 1 ? "1 person" : `${n} people`,
-      newPlaceholder: "New group",
+      combo: "Search or add a group",
+      addOnly: "Add a group",
+      addSub: "new group",
       foot: "A new group is created when the person is saved. Separate several groups with commas.",
       emptyFoot: "No group yet — the first one you type creates it.",
-      search: "Search groups",
     },
     tags: {
       count: n => n === 1 ? "1 document" : `${n} documents`,
-      newPlaceholder: "New tag",
+      combo: "Search or add a tag",
+      addOnly: "Add a tag",
+      addSub: "new tag",
       foot: "A new tag is created when the document is saved and joins the organisation's code list. Separate several tags with commas.",
       emptyFoot: "No tag yet — the first one you type creates it.",
-      search: "Search tags",
     },
     similar: (v, like) => `We did not save “${v}”: it looks like the existing “${like}”.`,
     similarGroupNote: "The rest of the person is saved. Choose which applies and save again.",

@@ -10,6 +10,24 @@
 
 ---
 
+## 2026-10-08 — „Hľadať alebo pridať" (ZAKLAD-vyber-skupin-a-znaciek Q6)
+
+**Čo sa zmenilo:**
+- **Komponent:** `ValueSearch` (od 12 možností) a riadok `.form-row--new`
+  nahradil klientsky ostrov `ValueCombo`. Je to pole `${name}New` navrchu
+  karty pri každom počte.
+- **Pridané hodnoty:** ostrov ich vkladá cez portál do `.sel-added` ako
+  zaškrtnuté checkboxy `${name}New`, nie `${name}`. Server ich teda berie
+  ako nové a pri značkách z nich urobí kľúč a skontroluje podobnosť.
+- **Overenie interakcie** v Chromiu na stránke zbalenej cez esbuild
+  (filtrovanie, Enter pri presnej zhode, „+ Pridať", Enter neodošle
+  formulár). Jsdom v projekte nie je.
+
+**Rozhodnutie podľa `.md`, nie rámu:** „+ Pridať" sa ponúkne, keď sa text
+**presne** nezhoduje so žiadnou hodnotou (aj pri „ko", kde sú čiastočné
+zhody). Rám to pri „ko" nekreslí, popis v `.md` hovorí o presnej zhode.
+---
+
 ## 2026-10-08 — výber skupín a značiek (ZAKLAD-vyber-skupin-a-znaciek, P8)
 
 **Čo sa zmenilo:**

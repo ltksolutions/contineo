@@ -4,18 +4,18 @@
  *
  * `List(selection:)` + `Section`: `.form-group` s kartou riadkov
  * `.select-row` (natívny checkbox, celý riadok terč 44 px), vpravo tlmený
- * počet. Posledný riadok je pole novej hodnoty (`${name}New`, viac hodnôt
- * čiarkou) — uloží sa s formulárom, bez tlačidla a bez JavaScriptu.
+ * počet. Navrchu karty jedno pole „Hľadať alebo pridať" (`ValueCombo`, Q6,
+ * pri každom počte) — bez JS je to pole novej hodnoty (`${name}New`, viac
+ * hodnôt čiarkou), s JS filtruje riadky a ponúkne „+ Pridať".
  *
  * - Hodnota, ktorú má len táto osoba / dokument, je vždy v zozname
  *   a zaškrtnutá s „len tu" — uložením sa nesmie ticho stratiť.
  * - Poradie: zaškrtnuté hore, ostatné abecedne (Q4).
- * - Od 12 možností pole hľadania (Q5, `ValueSearch`, len s JS).
  */
 
 import type { ReactNode } from "react"
 import Link from "next/link"
-import ValueSearch from "@/components/ValueSearch"
+import ValueCombo from "@/components/ValueCombo"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 export interface ValueOption {
@@ -27,8 +27,6 @@ export interface ValueOption {
   /** Podnadpis pod názvom (napr. „nie je v číselníku"). */
   sub?: string
 }
-
-export const SEARCH_FROM = 12
 
 export default function ValueSelect({
   kind, name, legend, options, selected, language, prefillNew, forced, warning,
@@ -65,13 +63,13 @@ export default function ValueSelect({
     <fieldset className="form-group">
       <legend className="form-group-head">{legend}</legend>
       <div className="card form-group-body form-group-body--rows">
-        {sorted.length >= SEARCH_FROM && <ValueSearch label={labels.search} language={language} />}
+        <ValueCombo name={name} kind={kind} empty={sorted.length === 0} language={language} />
         <div className="form-list">
           {sorted.map(o => {
             const on = chosen.has(key(o.value))
             const only = on && (o.count ?? 0) <= 1
             return (
-              <label key={o.value} className="form-row select-row" data-value={`${name_(o)} ${o.value}`}>
+              <label key={o.value} className="form-row select-row" data-value={`${name_(o)}\u0000${o.value}`}>
                 <input type="checkbox" name={name} value={o.value} defaultChecked={on} />
                 <span className="form-row-main">
                   <span>{name_(o)}</span>
@@ -83,12 +81,18 @@ export default function ValueSelect({
               </label>
             )
           })}
-          <label className="form-row form-row--new">
-            <span className="form-row-plus" aria-hidden="true">+</span>
-            <input className="form-row-input" name={`${name}New`} placeholder={labels.newPlaceholder} aria-label={labels.newPlaceholder}
-                   defaultValue={prefillNew ?? ""} autoCapitalize="none" autoCorrect="off" />
-          </label>
+          {/* Sem `ValueCombo` vloží pridané hodnoty a riadok „+ Pridať". */}
+          <div className="sel-added" />
         </div>
+        {/* „Založiť napriek tomu" (Q3): nová hodnota je zaškrtnutý riadok. */}
+        {prefillNew && (
+          <div className="form-list">
+            <label className="form-row select-row">
+              <input type="checkbox" name={`${name}New`} value={prefillNew} defaultChecked />
+              <span className="form-row-main"><span>{prefillNew}</span><span className="form-row-sub">{labels.addSub}</span></span>
+            </label>
+          </div>
+        )}
         {forced && <input type="hidden" name={`${name}Force`} value={forced} />}
         {warning}
       </div>
