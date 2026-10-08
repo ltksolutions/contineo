@@ -149,8 +149,11 @@ export async function liveConnectorsFor(companyCode: string, accessLevel: "publi
 }
 
 export async function liveSearch(input: LiveSearchInput): Promise<LiveSearchResult> {
+  // Portál bez výslovného výberu (pilulky): len konektory s „používať
+  // predvolene" — predvolene sa hľadá v knižnici (Ján 8. 10. 2026). Kanál
+  // (`scopeRefs`) má rozsah od správcu a predvoľba sa ho netýka.
   const connectors = (await liveConnectorsFor(input.companyCode, input.accessLevel, input.scopeRefs))
-    .filter(c => !input.only?.length || input.only.includes(c.id))
+    .filter(c => input.only?.length ? input.only.includes(c.id) : (input.scopeRefs !== undefined || c.uses.retrieval.defaultOn))
   // Rozsah kanála, ktorý sa odkazuje na konektor bez tohto rozsahu, sa nevolá:
   // kanál by videl viac, než mu správca vybral.
   const jobs = connectors.flatMap(c => scopesToAsk(c, input.scopeRefs).map(s => ({ c, s })))

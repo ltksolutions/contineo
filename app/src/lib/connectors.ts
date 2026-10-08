@@ -69,7 +69,17 @@ export interface ConnectorAuth {
 }
 
 export interface ConnectorUses {
-  retrieval: { enabled: boolean; accessLevel: ConnectorAccessLevel; reduction: ReductionPolicy }
+  retrieval: {
+    enabled: boolean
+    accessLevel: ConnectorAccessLevel
+    reduction: ReductionPolicy
+    /**
+     * Volať aj bez toho, aby si človek konektor zapol pilulkou (Ján 8. 10. 2026:
+     * predvolene sa hľadá len v knižnici). Kanálov sa netýka — tam rozsah
+     * vyberá správca kanálu (D175).
+     */
+    defaultOn?: boolean
+  }
   ingest: { enabled: boolean }
   agentTools: { allowed: string[] }
 }
@@ -137,6 +147,8 @@ export interface ConnectorInput {
   profile: string
   retrievalEnabled: boolean
   retrievalAccessLevel: string
+  /** Hľadať v konektore aj bez zapnutia pilulkou (len portál). */
+  retrievalDefaultOn?: boolean
   /** Použitie B (import do knižnice). Nezadané = bez zmeny. */
   ingestEnabled?: boolean
   reduction?: Partial<ReductionPolicy>
@@ -198,7 +210,7 @@ export async function saveConnector(companyCode: string, input: ConnectorInput, 
     auth,
     scopes,
     uses: {
-      retrieval: { enabled: Boolean(input.retrievalEnabled), accessLevel, reduction },
+      retrieval: { enabled: Boolean(input.retrievalEnabled), accessLevel, reduction, defaultOn: Boolean(input.retrievalDefaultOn) },
       ingest: { enabled: input.ingestEnabled ?? existing?.uses.ingest.enabled ?? false },
       agentTools: existing?.uses.agentTools ?? { allowed: [] },
     },
