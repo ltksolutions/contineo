@@ -335,6 +335,16 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
         </section>
         )}
 
+        {/* Analýza histórie bez zápisu (ADR-030, D180) — krok pred ťažbou. */}
+        {isWidget && c.mailbox && (
+        <section className="set-sec">
+          <div className="set-sec-head"><h2>{t.history}</h2><p>{t.historyIntro}</p></div>
+          <div className="set-sec-body">
+            <div><Link className="button button--quiet" href={`${channelHref(c.key)}/history`}>{t.historyOpen}</Link></div>
+          </div>
+        </section>
+        )}
+
         {isWidget && c.mailbox && (
         <section className="set-sec">
           <div className="set-sec-head"><h2>{t.mining}</h2><p>{t.miningIntro}</p></div>
