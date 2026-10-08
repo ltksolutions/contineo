@@ -6,11 +6,25 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-06 večer** (helpdesk ADR-028: FAQ, kanály a schránka, tickety, `/helpdesk`, widget pre ISSF; Kanály ako sekcia s typom; PR #273, #276, #278, #285; D161–D169)
+Posledná aktualizácia: **2026-10-08 ráno** (MCP konektory ADR-029, fáza 1 — živý zdroj zo Sportnetu, PR #307, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
 
 ---
 
 ## Kde sme teraz
+
+**MCP konektory (ADR-029, 7.–8. 10., PR #307) sú v `main`.** Konektor je
+pripojenie organizácie k cudziemu MCP serveru s viacerými použitiami; fáza 1
+je **živý zdroj**: asistent hľadá súbežne v knižnici aj na serveri, citácia
+nesie štítok „Živý zdroj — neoverené kurátorom", prístupová úroveň je
+vlastnosť konektora (interný sa do e-mailov nedostane), rozsahy per kanál,
+pilulky Knižnica / Sportnet na `/ask`, stopa volaní v `connector_calls`.
+Prvý server `mcp.sportnet.online` je **založený a pripojený v SFZ** pod
+Jánovým účtom (zapísaná odchýlka od servisného účtu). **Čaká na Jána po
+nasadení:** „Pripojiť znova" (lokálny token je pod iným šifrovacím kľúčom),
+rozsah ISSF na kanáli ISSF a prvá otázka so živým zdrojom — generovanie
+odpovede sa lokálne overiť nedalo. Fázy 2 (import do knižnice) a 3
+(nástroje asistenta) sú v `docs/TODO.md` E2. Júnový zápis
+`INGESTION_zdroje_reconciliation.md` kap. 2.2 je prekonaný.
 
 **Helpdesk (ADR-028, 6. 10.) je celý v `main`, naostro neoverený.** Päť
 krokov: FAQ ako druh dokumentu (D164), kanály so schránkou cez Microsoft

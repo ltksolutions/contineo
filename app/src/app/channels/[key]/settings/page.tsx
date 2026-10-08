@@ -28,6 +28,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary, formatDate } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { listConnectors, scopeRef } from "@/lib/connectors"
 import { saveChannelAction, removeChannelAction, verifyMailboxAction, syncChannelAction, rotateWidgetSecretAction, mineFaqAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
@@ -51,14 +52,23 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   // Podmenu Tickety len riešiteľovi tohto kanála — správca ich nevidí (D170).
   const canTickets = isWidget && c.tickets && isHelpdeskAgent(ctx.person) && raw.assigneeIds.includes(ctx.person.id)
 
-  const [folders, people, faqDocs, revealed] = await Promise.all([
+  const [folders, people, faqDocs, revealed, connectors] = await Promise.all([
     allFolders(ctx.tenant.companyCode),
     listPeople(ctx.tenant.companyCode),
     (await getCollection(DOCUMENTS_COLLECTION))
       .find({ companyCode: ctx.tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1 } })
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string }[]>,
     isWidget && c.widget.revealOnce ? takeRevealedWidgetSecret(ctx.tenant.companyCode, c.key) : Promise.resolve(null),
+    listConnectors(ctx.tenant.companyCode),
   ])
+  // Rozsahy živých zdrojov (ADR-029, D175): len konektory so zapnutým živým
+  // zdrojom; konektor bez rozsahov ponúka jeden celý. Widget je verejný,
+  // preto vidí len verejné konektory — interný by sa aj tak nevolal.
+  const scopeOptions = connectors
+    .filter(k => k.uses.retrieval.enabled && (!isWidget || k.uses.retrieval.accessLevel === "public"))
+    .flatMap(k => (k.scopes.length ? k.scopes : [{ key: "", label: "" }]).map(s => ({
+      value: scopeRef(k.id, s.key), label: s.key ? `${k.name} — ${s.label}` : k.name,
+    })))
   const folderOptions = treeOptions(flattenTree(folders).map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level })))
   const agentOptions = people.filter(p => p.roles.includes(HELPDESK_ROLE)).map(p => ({ value: p.id, label: `${p.fullName} (${p.email})` }))
   const faqOptions = faqDocs.map(x => ({ value: x.documentId, label: String(x.title ?? x.documentId) }))
@@ -94,6 +104,17 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
               <span className="field-label">{t.folders}</span>
               <MultiSelect name="folderIds" options={folderOptions} selected={c.folderIds} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
               <span className="quiet field-hint">{t.foldersHint}</span>
+            </div>
+            <div className="field">
+              <span className="field-label">{t.connectorScopes}</span>
+              {scopeOptions.length ? (
+                <>
+                  <MultiSelect name="connectorScopes" options={scopeOptions} selected={c.connectorScopes ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+                  <span className="quiet field-hint">{t.connectorScopesHint}</span>
+                </>
+              ) : (
+                <span className="quiet field-hint">{t.connectorScopesNone}</span>
+              )}
             </div>
             <div className="field">
               <span className="field-label">{t.languages}</span>

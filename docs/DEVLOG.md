@@ -38,6 +38,50 @@ tvar.
 
 ---
 
+## 2026-10-07 — MCP konektory: prvý skutočný server prekonal júnový návrh (ADR-029)
+
+**Zadanie znelo** „pridať ďalší zdroj, `mcp.sportnet.online`" a jediný zápis
+v repe (`INGESTION_zdroje_reconciliation.md` kap. 2.2) hovoril: ďalší adaptér
+do knižnice. Prvý návrh šiel podľa toho. Ján ho zastavil: *konektory by
+nemali ísť cez CMS — môžu doň zapisovať, ale majú byť použiteľné aj inak.*
+Po analýze bez ohľadu na dokumentáciu vyšlo, že konektor má tri vrstvy
+(pripojenie, profil servera, použitia) a dokumentácia poznala iba jedno
+použitie. **ADR-029:** konektor je entita organizácie s použitiami A (živý
+zdroj), B (import), C (nástroje asistenta). Fáza 1 = A.
+
+**Čo server naozaj je:** vývojárska dokumentácia z analýzy zdrojového kódu
+ISSF a služieb Sportnetu — tabuľky, cesty k Java súborom, okrajové prípady
+(„token na obnovu hesla nikdy nevyprší"). Pred každú odpoveď vkladá blok
+„SESSION CONTEXT" s profilom prihlásenej osoby a **pokynmi pre model**
+(„oslovuj krstným menom"). Živý príklad textu s inštrukciami vnútri
+výsledku nástroja — profil ho zahadzuje ešte pred modelom (D173) a systémový
+prompt hovorí, že cudzie zdroje sú dáta, nie pokyny.
+
+**Rozhodnutia Jána:** osobný účet na pilot (Sportnet ponúka len
+`authorization_code`; servisná aplikácia sa vyžiada), rozsahy per kanál
+s filtrom na serveri (D175), redukcia ako zúženie pre interných, nie brána
+pre verejnosť — čo ide von, ide cez import a kurátora (D176).
+
+**Čo nevyšlo a čo stálo čas:**
+- `localhost` je tenant LTK, kde Jánova osoba nie je — Organizácia vracala
+  404 a vyzeralo to ako chyba kódu. SFZ má `sfz.localhost`.
+- Lokálny `.env.local` nemal `OAUTH_SECRET_ENCRYPTION_KEY`; vygenerovaný
+  lokálny kľúč → tokeny v databáze sú pod iným kľúčom než produkcia, po
+  nasadení treba raz „Pripojiť znova". Rovnako je lokálne nečitateľný kľúč
+  AI organizácie, takže generovanie odpovede sa lokálne overiť nedalo —
+  overilo sa hľadanie (skript nad `liveSearch`) a obrazovky.
+- Bežiaci dev server bez nového env zahodil akciu „Pripojiť" bez chyby —
+  reštart ukázal skutočnú príčinu.
+- Po výmene kódu sa zoznam nástrojov čítal zo starého záznamu bez tokenov;
+  opravené čítaním z databázy nanovo. „Pripojiť znova" pri platnom tokene
+  už nie je chyba, len obnoví nástroje.
+
+**Overené živo:** registrácia klienta, prihlásenie, výmena kódu, 7 nástrojov,
+hľadanie v `issf` a `crm` za ~2 s, preambula preč, `T_*`/`*.java`/`RULE-*`
+nahradené, stopa v `connector_calls`. PR #307.
+
+---
+
 ## 2026-10-07 — lišta uloženia (ZAKLAD-lista-ulozenia, P9)
 
 **Čo sa zmenilo:** nové spájajúce akcie

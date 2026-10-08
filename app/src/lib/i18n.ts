@@ -743,6 +743,9 @@ interface Dictionary {
     examplesLabel: string
     examples: string[]
     unknownError: string
+    /** Pilulky rozsahu hľadania — len keď je okrem knižnice aj živý zdroj (ADR-029). */
+    scopeLabel: string
+    scopeLibrary: string
     /** Bez JavaScriptu odpovedanie nefunguje — SSE sa formulárom nenahradí. */
     noScript: string
     noScriptLink: string
@@ -843,6 +846,11 @@ interface Dictionary {
     /** Štítok pri zdroji, ktorý je overenou odpoveďou, nie článkom normy (D11). */
     verified: string
     verifiedNote: string
+    /** Zdroj z MCP konektora (ADR-029, D174): obišiel kurátora, čitateľ to má vedieť. */
+    live: string
+    liveNote: (connector: string, group: string | null) => string
+    /** Pod odpoveďou: konektor nestihol alebo zlyhal — odpoveď je bez neho. */
+    liveFailed: (names: string) => string
     /**
      * Znenie zdroja pod odpoveďou (plán „znenia v indexe", krok 5). Dátumy
      * prichádzajú už naformátované; koniec účinnosti len keď je známy.
@@ -1513,6 +1521,53 @@ interface Dictionary {
     groups: Record<"org" | "access" | "documents" | "oversight", string>
     /** Záložka GDPR (D154) — upravuje len DPO. */
     gdpr: { readOnly: string; saveContact: string; contactSaved: string; saved: string }
+    /** MCP konektory organizácie (ADR-029). */
+    connectors: {
+      intro: string
+      none: string
+      add: string
+      edit: string
+      name: string
+      endpoint: string
+      endpointHint: string
+      profile: string
+      status: Record<"new" | "connected" | "disconnected" | "error", string>
+      connectedBy: (by: string, date: string) => string
+      connect: string
+      reconnect: string
+      disconnect: string
+      remove: string
+      removeConfirm: string
+      secRetrieval: string
+      secRetrievalNote: string
+      retrievalOn: string
+      accessLevel: string
+      accessInternal: string
+      accessPublic: string
+      accessHint: string
+      secScopes: string
+      secScopesNote: string
+      scopesField: string
+      scopesHint: (fields: string) => string
+      secReduction: string
+      secReductionNote: string
+      dropSections: string
+      dropSectionsHint: string
+      scrubPatterns: string
+      scrubPatternsHint: string
+      skipPaths: string
+      skipPathsHint: string
+      tools: string
+      toolsNone: string
+      save: string
+      saved: string
+      created: string
+      removed: string
+      connected: string
+      disconnected: string
+      lastError: string
+      personalAccountNote: string
+    }
     ai: {
       intro: string
       secProvider: string
@@ -2241,6 +2296,10 @@ interface Dictionary {
     audienceHint: string
     folders: string
     foldersHint: string
+    /** Rozsahy MCP konektorov pre kanál (ADR-029, D175). */
+    connectorScopes: string
+    connectorScopesHint: string
+    connectorScopesNone: string
     assignees: string
     assigneesHint: string
     languages: string
@@ -4520,6 +4579,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Koľko žltých kariet znamená zastavenie činnosti?",
     ],
     unknownError: "Neznáma chyba",
+    scopeLabel: "Hľadať v",
+    scopeLibrary: "Knižnica",
     noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
     noScriptLink: "prejsť na dokumenty",
     history: {
@@ -4607,6 +4668,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interné",
     verified: "overená odpoveď",
     verifiedNote: "znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu",
+    live: "Živý zdroj",
+    liveNote: (connector, group) => `priamo zo zdroja ${connector}${group ? ` (${group})` : ""} — neoverené kurátorom`,
+    liveFailed: names => `Živý zdroj neodpovedal (${names}) — odpoveď je bez neho.`,
     sourceVersion: (label, from, to) =>
       [label && `znenie ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `podľa znení platných dnes, ${d}`,
@@ -5458,6 +5522,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noSecret": "Schránka nemá uložené tajomstvo aplikácie.",
     "helpdesk.secretUnreadable": "Tajomstvo schránky sa nedá rozšifrovať — zadaj ho znova.",
     "helpdesk.imapNotYet": "IMAP schránka ešte nie je k dispozícii — zatiaľ len Microsoft 365.",
+    "connector.nameRequired": "Názov konektora je povinný.",
+    "connector.endpoint": "Adresa servera musí byť úplná a začínať https://.",
+    "connector.profile": "Neznámy profil servera.",
+    "connector.badPattern": "Vzor „{pattern}“ sa nedá použiť ako regulárny výraz.",
+    "connector.scopeDuplicate": "Dva rozsahy majú rovnaký kľúč.",
+    "connector.notFound": "Taký konektor tu nie je.",
+    "connector.noPending": "Prihlásenie nebolo začaté alebo už vypršalo — skúste znova.",
+    "connector.authStart": "Server nedovolil začať prihlásenie ({detail}).",
+    "connector.alreadyConnected": "Konektor je už pripojený.",
+    "connector.authFinish": "Výmena kódu za token zlyhala ({detail}).",
+    "connector.notConnected": "Konektor nie je pripojený.",
+    "connector.timeout": "Server neodpovedal včas.",
+    "connector.unauthorized": "Prihlásenie ku konektoru vypršalo — pripojte ho znova.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
     "helpdesk.kind": "Neznámy typ kanála.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
@@ -5671,6 +5748,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Prihlasovanie",
       codelists: "Číselníky",
       ai: "Umelá inteligencia",
+      connectors: "Konektory",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
       gdpr: "GDPR",
@@ -5680,6 +5758,52 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saveContact: "Uložiť kontakt",
       contactSaved: "Kontakt GDPR je uložený.",
       saved: "Nastavenia GDPR sú uložené.",
+    },
+    connectors: {
+      intro: "Pripojenie k cudziemu MCP serveru s viacerými použitiami. Živý zdroj: asistent pri otázke hľadá aj na serveri a výsledok cituje ako neoverený. Import do knižnice a nástroje asistenta pribudnú.",
+      none: "Zatiaľ žiadny konektor.",
+      add: "Pridať konektor",
+      edit: "Upraviť",
+      name: "Názov",
+      endpoint: "Adresa servera",
+      endpointHint: "Úplná adresa MCP servera, napr. https://mcp.sportnet.online/mcp.",
+      profile: "Profil servera",
+      status: { new: "Nepripojený", connected: "Pripojený", disconnected: "Odpojený", error: "Chyba" },
+      connectedBy: (by, date) => `Pripojil ${by} (${date}).`,
+      connect: "Pripojiť",
+      reconnect: "Pripojiť znova",
+      disconnect: "Odpojiť",
+      remove: "Odstrániť",
+      removeConfirm: "Odstrániť konektor? Kanály, ktoré sa naň odkazujú, prídu o jeho rozsahy.",
+      secRetrieval: "Živý zdroj",
+      secRetrievalNote: "Pri otázke sa popri knižnici zavolá aj server. Výsledok obišiel kurátora, preto je v citácii označený ako neoverený.",
+      retrievalOn: "Používať ako živý zdroj",
+      accessLevel: "Prístupová úroveň",
+      accessInternal: "Interná — len prihlásení na portáli",
+      accessPublic: "Verejná — aj widget a návrhy odpovedí na tickety",
+      accessHint: "Server dáva účtu všetko a verejné od interného nerozlíši — úroveň je vlastnosť konektora. Interný konektor sa do e-mailov nedostane.",
+      secScopes: "Rozsahy",
+      secScopesNote: "Pomenované výseky servera, ktoré si vyberajú kanály. Filter posiela server pred hľadaním.",
+      scopesField: "Rozsahy",
+      scopesHint: fields => `Jeden rozsah na riadok: kľúč | názov | ${fields}. Napríklad: issf | ISSF | project=issf`,
+      secReduction: "Redukcia",
+      secReductionNote: "Zúženie pre interných čitateľov, nie brána pre verejnosť. Všetko deterministické; prázdne polia nič nerežú.",
+      dropSections: "Zahodiť sekcie",
+      dropSectionsHint: "Nadpisy sekcií, jeden na riadok (napr. Key files, Data).",
+      scrubPatterns: "Vzory v texte",
+      scrubPatternsHint: "Regulárne výrazy, jeden na riadok; zhody sa nahradia […] (napr. T_[A-Z_]+).",
+      skipPaths: "Vynechať cesty",
+      skipPathsHint: "Regulárne výrazy nad cestou článku na serveri, jeden na riadok (napr. -rules-).",
+      tools: "Nástroje servera",
+      toolsNone: "Zoznam nástrojov sa načíta pri pripojení.",
+      save: "Uložiť",
+      saved: "Konektor je uložený.",
+      created: "Konektor je založený — teraz ho pripojte.",
+      removed: "Konektor je odstránený.",
+      connected: "Konektor je pripojený.",
+      disconnected: "Konektor je odpojený.",
+      lastError: "Posledná chyba",
+      personalAccountNote: "Pripojenie beží pod účtom toho, kto ho pripojil — server vidí to, čo ten účet. Keď server ponúkne servisný prístup, pripojí sa ním (ADR-029).",
     },
     ai: {
       intro: "Asistent, úprava otázok a prepis skenov používajú model Claude od spoločnosti Anthropic. Tu nastavíte, cez aký kľúč sa platí a ktoré modely sa použijú.",
@@ -6415,6 +6539,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     audienceHint: "Komu kanál slúži — klubové manažérky, rozhodcovia, rodičia…",
     folders: "Obsah kanála",
     foldersHint: "Priečinky knižnice, z ktorých asistent odpovedá. Bez výberu vidí celú knižnicu organizácie.",
+    connectorScopes: "Živé zdroje",
+    connectorScopesHint: "Rozsahy pripojených konektorov, v ktorých asistent hľadá popri knižnici. Bez výberu sa živé zdroje v tomto kanáli nepoužijú.",
+    connectorScopesNone: "Organizácia nemá pripojený žiadny konektor so živým zdrojom.",
     assignees: "Riešitelia",
     assigneesHint: "Osoby s rolou helpdesk, ktoré vidia tickety tohto kanála.",
     languages: "Jazyky kanála",
@@ -8564,6 +8691,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Kolik žlutých karet znamená zastavení činnosti?",
     ],
     unknownError: "Neznámá chyba",
+    scopeLabel: "Hledat v",
+    scopeLibrary: "Knihovna",
     noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
     noScriptLink: "přejít na dokumenty",
     history: {
@@ -8651,6 +8780,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interní",
     verified: "ověřená odpověď",
     verifiedNote: "znění, které někdo ověřil nad předpisem — nikoli samotné znění předpisu",
+    live: "Živý zdroj",
+    liveNote: (connector, group) => `přímo ze zdroje ${connector}${group ? ` (${group})` : ""} — neověřeno kurátorem`,
+    liveFailed: names => `Živý zdroj neodpověděl (${names}) — odpověď je bez něj.`,
     sourceVersion: (label, from, to) =>
       [label && `znění ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `podle znění platných dnes, ${d}`,
@@ -9502,6 +9634,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noSecret": "Schránka nemá uložené tajemství aplikace.",
     "helpdesk.secretUnreadable": "Tajemství schránky se nedá rozšifrovat — zadej ho znovu.",
     "helpdesk.imapNotYet": "IMAP schránka ještě není k dispozici — zatím jen Microsoft 365.",
+    "connector.nameRequired": "Název konektoru je povinný.",
+    "connector.endpoint": "Adresa serveru musí být úplná a začínat https://.",
+    "connector.profile": "Neznámý profil serveru.",
+    "connector.badPattern": "Vzor „{pattern}“ nelze použít jako regulární výraz.",
+    "connector.scopeDuplicate": "Dva rozsahy mají stejný klíč.",
+    "connector.notFound": "Takový konektor tu není.",
+    "connector.noPending": "Přihlášení nebylo zahájeno nebo už vypršelo — zkuste znovu.",
+    "connector.authStart": "Server nedovolil zahájit přihlášení ({detail}).",
+    "connector.alreadyConnected": "Konektor je už připojen.",
+    "connector.authFinish": "Výměna kódu za token selhala ({detail}).",
+    "connector.notConnected": "Konektor není připojen.",
+    "connector.timeout": "Server neodpověděl včas.",
+    "connector.unauthorized": "Přihlášení ke konektoru vypršelo — připojte ho znovu.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
     "helpdesk.kind": "Neznámý typ kanálu.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
@@ -9715,6 +9860,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Přihlašování",
       codelists: "Číselníky",
       ai: "Umělá inteligence",
+      connectors: "Konektory",
       acknowledgements: "Potvrzování",
       audit: "Audit",
       gdpr: "GDPR",
@@ -9724,6 +9870,52 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saveContact: "Uložit kontakt",
       contactSaved: "Kontakt GDPR je uložen.",
       saved: "Nastavení GDPR jsou uložena.",
+    },
+    connectors: {
+      intro: "Připojení k cizímu MCP serveru s více použitími. Živý zdroj: asistent při dotazu hledá i na serveru a výsledek cituje jako neověřený. Import do knihovny a nástroje asistenta přibudou.",
+      none: "Zatím žádný konektor.",
+      add: "Přidat konektor",
+      edit: "Upravit",
+      name: "Název",
+      endpoint: "Adresa serveru",
+      endpointHint: "Úplná adresa MCP serveru, např. https://mcp.sportnet.online/mcp.",
+      profile: "Profil serveru",
+      status: { new: "Nepřipojený", connected: "Připojený", disconnected: "Odpojený", error: "Chyba" },
+      connectedBy: (by, date) => `Připojil ${by} (${date}).`,
+      connect: "Připojit",
+      reconnect: "Připojit znovu",
+      disconnect: "Odpojit",
+      remove: "Odstranit",
+      removeConfirm: "Odstranit konektor? Kanály, které se na něj odkazují, přijdou o jeho rozsahy.",
+      secRetrieval: "Živý zdroj",
+      secRetrievalNote: "Při dotazu se vedle knihovny zavolá i server. Výsledek obešel kurátora, proto je v citaci označen jako neověřený.",
+      retrievalOn: "Používat jako živý zdroj",
+      accessLevel: "Přístupová úroveň",
+      accessInternal: "Interní — jen přihlášení na portálu",
+      accessPublic: "Veřejná — i widget a návrhy odpovědí na tickety",
+      accessHint: "Server dává účtu vše a veřejné od interního nerozliší — úroveň je vlastnost konektoru. Interní konektor se do e-mailů nedostane.",
+      secScopes: "Rozsahy",
+      secScopesNote: "Pojmenované výseky serveru, které si vybírají kanály. Filtr posílá server před hledáním.",
+      scopesField: "Rozsahy",
+      scopesHint: fields => `Jeden rozsah na řádek: klíč | název | ${fields}. Například: issf | ISSF | project=issf`,
+      secReduction: "Redukce",
+      secReductionNote: "Zúžení pro interní čtenáře, ne brána pro veřejnost. Vše deterministické; prázdná pole nic neřežou.",
+      dropSections: "Zahodit sekce",
+      dropSectionsHint: "Nadpisy sekcí, jeden na řádek (např. Key files, Data).",
+      scrubPatterns: "Vzory v textu",
+      scrubPatternsHint: "Regulární výrazy, jeden na řádek; shody se nahradí […] (např. T_[A-Z_]+).",
+      skipPaths: "Vynechat cesty",
+      skipPathsHint: "Regulární výrazy nad cestou článku na serveru, jeden na řádek (např. -rules-).",
+      tools: "Nástroje serveru",
+      toolsNone: "Seznam nástrojů se načte při připojení.",
+      save: "Uložit",
+      saved: "Konektor je uložen.",
+      created: "Konektor je založen — nyní ho připojte.",
+      removed: "Konektor je odstraněn.",
+      connected: "Konektor je připojen.",
+      disconnected: "Konektor je odpojen.",
+      lastError: "Poslední chyba",
+      personalAccountNote: "Připojení běží pod účtem toho, kdo ho připojil — server vidí to, co ten účet. Až server nabídne servisní přístup, připojí se jím (ADR-029).",
     },
     ai: {
       intro: "Asistent, úprava dotazů a přepis skenů používají model Claude od společnosti Anthropic. Zde nastavíte, přes jaký klíč se platí a které modely se použijí.",
@@ -10457,6 +10649,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     audienceHint: "Komu kanál slouží — klubové manažerky, rozhodčí, rodiče…",
     folders: "Obsah kanálu",
     foldersHint: "Složky knihovny, ze kterých asistent odpovídá. Bez výběru vidí celou knihovnu organizace.",
+    connectorScopes: "Živé zdroje",
+    connectorScopesHint: "Rozsahy připojených konektorů, ve kterých asistent hledá vedle knihovny. Bez výběru se živé zdroje v tomto kanálu nepoužijí.",
+    connectorScopesNone: "Organizace nemá připojený žádný konektor se živým zdrojem.",
     assignees: "Řešitelé",
     assigneesHint: "Osoby s rolí helpdesk, které vidí tickety tohoto kanálu.",
     languages: "Jazyky kanálu",
@@ -12599,6 +12794,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "How many yellow cards lead to a suspension?",
     ],
     unknownError: "Unknown error",
+    scopeLabel: "Search in",
+    scopeLibrary: "Library",
     noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
     noScriptLink: "go to documents",
     history: {
@@ -12686,6 +12883,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "internal",
     verified: "verified answer",
     verifiedNote: "wording someone verified against the document — not the document itself",
+    live: "Live source",
+    liveNote: (connector, group) => `straight from ${connector}${group ? ` (${group})` : ""} — not reviewed by a curator`,
+    liveFailed: names => `A live source did not answer (${names}) — the answer is without it.`,
     sourceVersion: (label, from, to) =>
       [label && `version ${label}`, from && `in force from ${from}${to ? ` until ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `per versions in force today, ${d}`,
@@ -13535,6 +13735,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.noSecret": "The mailbox has no stored application secret.",
     "helpdesk.secretUnreadable": "The mailbox secret cannot be decrypted — enter it again.",
     "helpdesk.imapNotYet": "IMAP mailboxes are not available yet — Microsoft 365 only for now.",
+    "connector.nameRequired": "The connector name is required.",
+    "connector.endpoint": "The server address must be complete and start with https://.",
+    "connector.profile": "Unknown server profile.",
+    "connector.badPattern": "The pattern “{pattern}” is not a valid regular expression.",
+    "connector.scopeDuplicate": "Two scopes share the same key.",
+    "connector.notFound": "No such connector here.",
+    "connector.noPending": "Sign-in was not started or has expired — try again.",
+    "connector.authStart": "The server did not allow sign-in to start ({detail}).",
+    "connector.alreadyConnected": "The connector is already connected.",
+    "connector.authFinish": "Exchanging the code for a token failed ({detail}).",
+    "connector.notConnected": "The connector is not connected.",
+    "connector.timeout": "The server did not answer in time.",
+    "connector.unauthorized": "The connector sign-in has expired — connect it again.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
     "helpdesk.kind": "Unknown channel type.",
     "helpdesk.noTickets": "The channel has tickets switched off.",
@@ -13748,6 +13961,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signin: "Sign-in",
       codelists: "Code lists",
       ai: "Artificial intelligence",
+      connectors: "Connectors",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
       gdpr: "GDPR",
@@ -13757,6 +13971,52 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saveContact: "Save contact",
       contactSaved: "The GDPR contact has been saved.",
       saved: "GDPR settings saved.",
+    },
+    connectors: {
+      intro: "A connection to an external MCP server with several uses. Live source: the assistant also searches the server when asked and cites the result as unreviewed. Import into the library and assistant tools come later.",
+      none: "No connector yet.",
+      add: "Add connector",
+      edit: "Edit",
+      name: "Name",
+      endpoint: "Server address",
+      endpointHint: "Full address of the MCP server, e.g. https://mcp.sportnet.online/mcp.",
+      profile: "Server profile",
+      status: { new: "Not connected", connected: "Connected", disconnected: "Disconnected", error: "Error" },
+      connectedBy: (by, date) => `Connected by ${by} (${date}).`,
+      connect: "Connect",
+      reconnect: "Connect again",
+      disconnect: "Disconnect",
+      remove: "Remove",
+      removeConfirm: "Remove the connector? Channels referring to it lose its scopes.",
+      secRetrieval: "Live source",
+      secRetrievalNote: "When asked, the server is called alongside the library. The result bypassed the curator, so the citation marks it as unreviewed.",
+      retrievalOn: "Use as a live source",
+      accessLevel: "Access level",
+      accessInternal: "Internal — signed-in portal users only",
+      accessPublic: "Public — also the widget and ticket draft answers",
+      accessHint: "The server gives the account everything and cannot tell public from internal — the level belongs to the connector. An internal connector never reaches e-mails.",
+      secScopes: "Scopes",
+      secScopesNote: "Named slices of the server that channels pick from. The server applies the filter before searching.",
+      scopesField: "Scopes",
+      scopesHint: fields => `One scope per line: key | label | ${fields}. For example: issf | ISSF | project=issf`,
+      secReduction: "Reduction",
+      secReductionNote: "A narrowing for internal readers, not a gate for the public. All deterministic; empty fields cut nothing.",
+      dropSections: "Drop sections",
+      dropSectionsHint: "Section headings, one per line (e.g. Key files, Data).",
+      scrubPatterns: "Patterns in text",
+      scrubPatternsHint: "Regular expressions, one per line; matches become […] (e.g. T_[A-Z_]+).",
+      skipPaths: "Skip paths",
+      skipPathsHint: "Regular expressions over the article path on the server, one per line (e.g. -rules-).",
+      tools: "Server tools",
+      toolsNone: "The tool list loads on connect.",
+      save: "Save",
+      saved: "Connector saved.",
+      created: "Connector created — now connect it.",
+      removed: "Connector removed.",
+      connected: "Connector connected.",
+      disconnected: "Connector disconnected.",
+      lastError: "Last error",
+      personalAccountNote: "The connection runs under the account of whoever connected it — the server shows what that account sees. Once the server offers service access, it will connect with that (ADR-029).",
     },
     ai: {
       intro: "The assistant, question rewriting and scan transcription use Anthropic's Claude model. Here you set which key pays for it and which models are used.",
@@ -14490,6 +14750,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     audienceHint: "Who the channel serves — club managers, referees, parents…",
     folders: "Channel content",
     foldersHint: "Library folders the assistant answers from. With none selected it sees the whole library of the organisation.",
+    connectorScopes: "Live sources",
+    connectorScopesHint: "Scopes of connected connectors the assistant searches alongside the library. With none selected, live sources are not used in this channel.",
+    connectorScopesNone: "The organisation has no connected connector with a live source.",
     assignees: "Agents",
     assigneesHint: "People with the helpdesk role who see this channel's tickets.",
     languages: "Channel languages",

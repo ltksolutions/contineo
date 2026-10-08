@@ -133,6 +133,12 @@ export interface ChunkResult {
     sourceUrl?: string
     category: string
   }
+  /**
+   * Úsek zo **živého zdroja** (ADR-029, D174) — konektor MCP, nie knižnica.
+   * Obišiel kurátora, preto to citácia musí povedať; `externalId` je cesta
+   * na serveri, podľa ktorej sa dá článok neskôr importovať (fáza 2).
+   */
+  live?: { connectorId: string; connectorName: string; externalId: string; group?: string }
 }
 
 // ── Shared $lookup + $project appended to every pipeline ─────────────────────

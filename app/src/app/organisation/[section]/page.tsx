@@ -42,6 +42,8 @@ import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
 import { saveAiSettingsAction, deleteAiKeyAction } from "../actions"
 import { AI_MODELS, aiSettingsView } from "@/lib/aiSettings"
+import ConnectorsSection from "../ConnectorsSection"
+import { listConnectors, connectorView } from "@/lib/connectors"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { ratesForDate, formatUsd } from "@/lib/pricing"
 
@@ -1070,6 +1072,11 @@ export default async function OrganisationSectionPage({
           <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 14 }}>{t.auditTab.capped}</p>
         )}
       </div>
+      )}
+
+      {/* Konektory (ADR-029): pripojenia k cudzím MCP serverom a ich použitia. */}
+      {now === "connectors" && (
+        <ConnectorsSection connectors={(await listConnectors(tenant.companyCode)).map(connectorView)} language={language} />
       )}
 
       {/*

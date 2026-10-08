@@ -263,8 +263,9 @@ export function AnswerAside({
                       ].filter(Boolean).join(" · ") || t.sourceMissing}
                     </div>
                     {/* Do knižnice, teda na znenie v aplikácii — nie na `url`,
-                        to je originál mimo nej (`sourceUrl`). */}
-                    {source?.documentId && (
+                        to je originál mimo nej (`sourceUrl`). Živý zdroj
+                        (ADR-029) v knižnici nie je — odkaz by viedol na 404. */}
+                    {source?.documentId && !source.live && (
                       <Link className="answer-citation-open" href={`/documents/${encodeURIComponent(source.documentId)}`}>
                         {t.openInLibrary}
                       </Link>
@@ -329,7 +330,16 @@ export function AnswerAside({
                     {z.sourceType === "qa" && (
                       <span className="quiet answer-source-meta">{t.verifiedNote}</span>
                     )}
+                    {/* Živý zdroj (ADR-029, D174): obišiel kurátora — čitateľ to má vedieť. */}
+                    {z.live && (
+                      <span className="quiet answer-source-meta">{t.liveNote(z.live.connectorName, z.live.group ?? null)}</span>
+                    )}
                   </span>
+                  {z.live && (
+                    <span className="tag tag--warn" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
+                      {t.live}
+                    </span>
+                  )}
                   {z.sourceType === "qa" && (
                     <span className="tag tag--published" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
                       {t.verified}
@@ -364,6 +374,9 @@ export function AnswerAside({
               )
             })}
           </div>
+          {done.liveFailed && done.liveFailed.length > 0 && (
+            <p className="quiet answer-source-meta" style={{ margin: "8px 0 0" }}>{t.liveFailed(done.liveFailed.join(", "))}</p>
+          )}
         </details>
       )}
 

@@ -34,6 +34,9 @@ import { AppError } from "@/lib/appError"
 import { addLegalBasis, retireLegalBasis, setStandardLegalBasisHidden } from "@/lib/legalBasesDb"
 import { prefixForCountry } from "@/lib/phoneCountries"
 import { saveAiSettings, deleteAiKey } from "@/lib/aiSettings"
+import { saveConnector, removeConnector, disconnectConnector, connectorById, type ConnectorScope } from "@/lib/connectors"
+import { startAuthorization } from "@/lib/mcp/client"
+import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -554,4 +557,107 @@ export async function deleteAiKeyAction(fd: FormData) {
   }
   revalidatePath("/organisation", "layout")
   back(fd, dictionary(self.language).org.ai.keyDeleted)
+}
+
+// ── Konektory (ADR-029) ──────────────────────────────────────────────────────
+
+function fieldLines(fd: FormData, name: string): string[] {
+  return fieldText(fd, name).split(/\r?\n/).map(x => x.trim()).filter(Boolean)
+}
+
+/**
+ * Rozsahy z textového poľa: `kľúč | názov | project=issf, category=manuals`.
+ * Jeden riadok = jeden rozsah; filter sú dvojice `pole=hodnota` oddelené
+ * čiarkou. Textové pole, nie opakované riadky formulára — rozsahov je
+ * zopár a správca ich píše raz.
+ */
+export async function parseScopeLines(lines: string[]): Promise<ConnectorScope[]> {
+  return lines.map(line => {
+    const [key = "", label = "", rest = ""] = line.split("|").map(x => x.trim())
+    const filter: Record<string, string> = {}
+    for (const pair of rest.split(",")) {
+      const i = pair.indexOf("=")
+      if (i > 0) filter[pair.slice(0, i).trim()] = pair.slice(i + 1).trim()
+    }
+    return { key, label: label || key, filter }
+  }).filter(s => s.key)
+}
+
+export async function saveConnectorAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).org.connectors
+  const id = fieldText(fd, "id")
+  try {
+    await saveConnector(self.companyCode, {
+      id: id || undefined,
+      name: fieldText(fd, "name"),
+      endpoint: fieldText(fd, "endpoint"),
+      profile: fieldText(fd, "profile"),
+      retrievalEnabled: fieldText(fd, "retrievalEnabled") === "on",
+      retrievalAccessLevel: fieldText(fd, "accessLevel"),
+      scopes: await parseScopeLines(fieldLines(fd, "scopes")),
+      reduction: {
+        dropSections: fieldLines(fd, "dropSections"),
+        scrubPatterns: fieldLines(fd, "scrubPatterns"),
+        skipPaths: fieldLines(fd, "skipPaths"),
+      },
+    }, self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  revalidatePath("/organisation", "layout")
+  back(fd, id ? t.saved : t.created)
+}
+
+export async function removeConnectorAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await removeConnector(self.companyCode, fieldText(fd, "id"), self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  revalidatePath("/organisation", "layout")
+  back(fd, dictionary(self.language).org.connectors.removed)
+}
+
+export async function disconnectConnectorAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await disconnectConnector(self.companyCode, fieldText(fd, "id"), self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  revalidatePath("/organisation", "layout")
+  back(fd, dictionary(self.language).org.connectors.disconnected)
+}
+
+/**
+ * Prihlásenie ku konektoru: človek odíde na server, vráti sa na
+ * `/api/connectors/callback` s kódom (D172). `redirect()` na cudziu adresu
+ * je mimo `try` — vyhadzuje výnimku a `catch` by ju ohlásil ako chybu.
+ */
+export async function connectConnectorAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  let url: URL | null
+  try {
+    const c = await connectorById(self.companyCode, fieldText(fd, "id"))
+    if (!c) throw new AppError("connector.notFound", "Taký konektor tu nie je.")
+    url = await startAuthorization(c, await connectorCallbackUrl())
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  // Tokeny platia — nikam sa nejde, len sa obnovil zoznam nástrojov.
+  if (!url) {
+    revalidatePath("/organisation", "layout")
+    back(fd, dictionary(self.language).org.connectors.connected)
+  }
+  redirect(url.toString())
 }

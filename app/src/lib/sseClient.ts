@@ -48,6 +48,8 @@ export interface AnswerSource {
    * overenej odpovedi a pri odpovediach spred kroku 5 „znení v indexe".
    */
   version?: { label: string; effectiveFrom: string | null; effectiveTo: string | null }
+  /** Zdroj z MCP konektora (ADR-029, D174) — obišiel kurátora; štítok to povie. */
+  live?: { connectorId: string; connectorName: string; externalId: string; group?: string }
 }
 
 export interface Citation {
@@ -81,6 +83,8 @@ export interface Completion {
   time?: QueryTime
   /** K tomuto dňu nemá organizácia žiadne platné znenie — iná veta než „nič sa nenašlo". */
   noVersions?: boolean
+  /** Živé zdroje, ktoré nestihli alebo zlyhali (ADR-029) — odpoveď je bez nich. */
+  liveFailed?: string[]
 }
 
 /**
@@ -97,7 +101,7 @@ export type SseEvent =
   | { type: "citation"; citation: Citation }
   | { type: "phase"; phase: AnswerPhase }
   /** Ladiace údaje, ktoré boli do 2026-09-16 hlavičkami odpovede. */
-  | { type: "meta"; searchMode?: string; preprocessed?: boolean; chunks?: number; time?: QueryTime; comparison?: ComparisonInfo }
+  | { type: "meta"; searchMode?: string; preprocessed?: boolean; chunks?: number; time?: QueryTime; comparison?: ComparisonInfo; liveFailed?: string[] }
   | ({ type: "done" } & Partial<Completion>)
   | { type: "error"; message: string }
 
@@ -225,6 +229,8 @@ export interface AskResult extends AskProgress {
   error?: string
   /** K tomuto dňu nemá organizácia žiadne platné znenie (krok 6). */
   noVersions?: boolean
+  /** Živé zdroje, ktoré nestihli alebo zlyhali (ADR-029). */
+  liveFailed?: string[]
 }
 
 /**
@@ -240,7 +246,7 @@ export async function askQuestion(
    * odpovede**, nie chybová hláška — skladá ju ten, kto odpoveď tvorí.
    * Cesta `/api/chat` prihláseného človeka nepozná, tak si jazyk povieme.
    */
-  init?: { signal?: AbortSignal; url?: string; language?: string }
+  init?: { signal?: AbortSignal; url?: string; language?: string; only?: string[] }
 ): Promise<AskResult> {
   const start = Date.now()
   let ttftMs: number | null = null
@@ -248,6 +254,7 @@ export async function askQuestion(
   let phase: AnswerPhase | undefined
   let time: QueryTime | undefined
   let comparison: ComparisonInfo | undefined
+  let liveFailed: string[] | undefined
   const citations: Citation[] = []
 
   const done = (extra: Partial<AskResult> = {}): AskResult => ({
@@ -260,7 +267,8 @@ export async function askQuestion(
   const answer = await fetch(init?.url ?? "/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query: question, language: init?.language }),
+    // `only`: rozsah hľadania z piluliek (ADR-029) — prázdne = knižnica aj živé zdroje.
+    body: JSON.stringify({ query: question, language: init?.language, only: init?.only }),
     signal: init?.signal,
   })
 
@@ -284,6 +292,7 @@ export async function askQuestion(
     } else if (u.type === "meta") {
       if (u.time) time = u.time
       if (u.comparison) comparison = u.comparison
+      if (u.liveFailed?.length) liveFailed = u.liveFailed
       onChange({ text, citations: citations, phase: phase, time, comparison })
     } else if (u.type === "error") {
       return done({ error: u.message })
@@ -310,6 +319,7 @@ export async function askQuestion(
         cost: u.cost,
         time: u.time ?? time,
         noVersions: u.noVersions,
+        liveFailed,
       })
     }
   }
