@@ -30,7 +30,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary, formatDate } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { channelContentPreview } from "@/lib/channelContent"
-import { widgetEmbedCode } from "@/lib/widgetEmbed"
+import { widgetEmbedCode, tokenPayloadLines, type TokenDoc } from "@/lib/widgetEmbed"
 import { requestHostname } from "@/lib/session"
 import CopyLink from "@/components/CopyLink"
 import { codelistOptions } from "@/lib/codelists"
@@ -89,10 +89,15 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   // Kód na vloženie (Ján 8. 10. 2026) — len widget; hostiteľ je doména,
   // na ktorej je nastavenie otvorené, teda doména organizácie.
   const fallbackContact = isWidget ? widgetFallbackContact(raw, ctx.tenant.branding?.supportEmail) : null
+  // Vzor obsahu tokenu s naozajstnými hodnotami kanála (Ján 8. 10. 2026).
+  const tokenDoc: TokenDoc = {
+    heading: t.embedTokenHeading, iss: c.widget.origins[0] ?? t.embedIssPlaceholder, aud: c.key,
+    levels: t.embedClaimLevels, claims: t.embedClaims, signing: t.embedSigning,
+  }
   const embedCode = isWidget
     ? widgetEmbedCode({
         host: await requestHostname(), channelKey: c.key, fallbackText: t.embedFallbackText, contact: fallbackContact,
-        doc: { title: t.embedCommentTitle(c.name), params: t.embedParams, tokenHeading: t.embedTokenHeading, token: t.embedToken },
+        doc: { title: t.embedCommentTitle(c.name), params: t.embedParams, token: tokenDoc },
       })
     : ""
 
@@ -378,7 +383,11 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
             ))}
           </dl>
           <h3 className="embed-sub">{t.embedTokenHeading}</h3>
-          <p className="quiet" style={{ margin: 0 }}>{t.embedToken}</p>
+          <p className="quiet" style={{ margin: 0 }}>{t.embedTokenIntro}</p>
+          <pre className="embed-code"><code>{tokenPayloadLines(tokenDoc).join("\n")}</code></pre>
+          <ul className="quiet" style={{ margin: 0, paddingLeft: 18 }}>
+            {t.embedSigning.map(l => <li key={l}>{l}</li>)}
+          </ul>
         </section>
       )}
     </div>

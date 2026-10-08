@@ -2423,7 +2423,11 @@ interface Dictionary {
     embedParamsHeading: string
     embedParams: { name: string; text: string }[]
     embedTokenHeading: string
-    embedToken: string
+    embedTokenIntro: string
+    embedIssPlaceholder: string
+    embedClaimLevels: Record<"required" | "recommended" | "optional", string>
+    embedClaims: Record<string, string>
+    embedSigning: string[]
     rateLimit: string
     rateLimitHint: string
     widgetSecret: string
@@ -6819,7 +6823,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       { name: "#contineo-helpdesk-fallback", text: "Náhradný blok s kontaktom; je skrytý (hidden), kým skript nezlyhá. Text a vzhľad si môžete upraviť, id ponechajte." },
     ],
     embedTokenHeading: "Čo nesie token",
-    embedToken: "iss = pôvod vašej stránky (musí byť medzi povolenými), aud = kľúč kanála, sub = identifikátor osoby (v ISSF registračné číslo), email, given_name, family_name, voliteľne roles, club, lang; iat a exp najviac 15 minút od seba.",
+    embedTokenIntro: "Token vytvára váš server pre prihláseného človeka a vloží ho do data-token. Obsah (payload) — iss a aud sú už vyplnené za tento kanál, ostatné nahraďte údajmi človeka:",
+    embedIssPlaceholder: "https://vasa-stranka.sk",
+    embedClaimLevels: { required: "POVINNÉ", recommended: "odporúčané", optional: "nepovinné" },
+    embedClaims: {
+      iss: "pôvod vašej stránky, presne ako v Povolených pôvodoch kanála (bez lomky na konci)",
+      aud: "kľúč tohto kanála — skopírujte bez zmeny",
+      sub: "stály identifikátor osoby vo vašom systéme (v ISSF registračné číslo); podľa neho ju spoznáme znova",
+      email: "overený e-mail osoby — sem príde odpoveď helpdesku",
+      given_name: "meno — riešiteľ ho vidí pri tickete",
+      family_name: "priezvisko",
+      name: "celé meno, len ak meno a priezvisko nemáte zvlášť",
+      roles: "zoznam rolí osoby; vyberá časté otázky pre publikum",
+      club: "klub osoby",
+      lang: "jazyk pomocníka: sk, cs alebo en",
+      iat: "čas vydania — počet sekúnd od 1. 1. 1970 (Unix čas), teda „teraz“",
+      exp: "koniec platnosti — najviac iat + 900 (15 minút)",
+    },
+    embedSigning: [
+      "Hlavička tokenu: {\"alg\":\"HS256\",\"typ\":\"JWT\"}.",
+      "Podpis HMAC-SHA256 tajným kľúčom kanála (Nastavenie kanála → Tajný kľúč; ukáže sa len raz). Kľúč patrí len na váš server, nikdy nie do stránky.",
+      "Hotová knižnica (napr. jsonwebtoken v Node, firebase/php-jwt v PHP) urobí hlavičku aj podpis sama — stačí jej dať obsah a kľúč.",
+    ],
     rateLimit: "Strop požiadaviek na osobu a hodinu",
     rateLimitHint: "Ochrana pred zneužitím (D14).",
     widgetSecret: "Tajný kľúč",
@@ -11079,7 +11104,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       { name: "#contineo-helpdesk-fallback", text: "Náhradní blok s kontaktem; je skrytý (hidden), dokud skript neselže. Text a vzhled si můžete upravit, id ponechte." },
     ],
     embedTokenHeading: "Co nese token",
-    embedToken: "iss = původ vaší stránky (musí být mezi povolenými), aud = klíč kanálu, sub = identifikátor osoby (v ISSF registrační číslo), email, given_name, family_name, volitelně roles, club, lang; iat a exp nejvýše 15 minut od sebe.",
+    embedTokenIntro: "Token vytváří váš server pro přihlášeného člověka a vloží ho do data-token. Obsah (payload) — iss a aud jsou už vyplněné za tento kanál, ostatní nahraďte údaji člověka:",
+    embedIssPlaceholder: "https://vase-stranka.cz",
+    embedClaimLevels: { required: "POVINNÉ", recommended: "doporučené", optional: "nepovinné" },
+    embedClaims: {
+      iss: "původ vaší stránky, přesně jako v Povolených původech kanálu (bez lomítka na konci)",
+      aud: "klíč tohoto kanálu — zkopírujte beze změny",
+      sub: "stálý identifikátor osoby ve vašem systému (v ISSF registrační číslo); podle něj ji poznáme znovu",
+      email: "ověřený e-mail osoby — sem přijde odpověď helpdesku",
+      given_name: "jméno — řešitel ho vidí u ticketu",
+      family_name: "příjmení",
+      name: "celé jméno, jen pokud jméno a příjmení nemáte zvlášť",
+      roles: "seznam rolí osoby; vybírá časté dotazy pro publikum",
+      club: "klub osoby",
+      lang: "jazyk pomocníka: sk, cs nebo en",
+      iat: "čas vydání — počet sekund od 1. 1. 1970 (Unix čas), tedy „teď“",
+      exp: "konec platnosti — nejvýše iat + 900 (15 minut)",
+    },
+    embedSigning: [
+      "Hlavička tokenu: {\"alg\":\"HS256\",\"typ\":\"JWT\"}.",
+      "Podpis HMAC-SHA256 tajným klíčem kanálu (Nastavení kanálu → Tajný klíč; ukáže se jen jednou). Klíč patří jen na váš server, nikdy ne do stránky.",
+      "Hotová knihovna (např. jsonwebtoken v Node, firebase/php-jwt v PHP) udělá hlavičku i podpis sama — stačí jí dát obsah a klíč.",
+    ],
     rateLimit: "Strop požadavků na osobu a hodinu",
     rateLimitHint: "Ochrana před zneužitím (D14).",
     widgetSecret: "Tajný klíč",
@@ -15330,7 +15376,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       { name: "#contineo-helpdesk-fallback", text: "Fallback block with the contact; hidden until the script fails. You may change its text and look, keep the id." },
     ],
     embedTokenHeading: "What the token carries",
-    embedToken: "iss = your page's origin (must be allowed), aud = channel key, sub = person identifier (ISSF registration number), email, given_name, family_name, optionally roles, club, lang; iat and exp at most 15 minutes apart.",
+    embedTokenIntro: "Your server creates the token for the signed-in person and puts it into data-token. Content (payload) — iss and aud are already filled in for this channel, replace the rest with the person's data:",
+    embedIssPlaceholder: "https://your-site.example",
+    embedClaimLevels: { required: "REQUIRED", recommended: "recommended", optional: "optional" },
+    embedClaims: {
+      iss: "your page's origin, exactly as in the channel's Allowed origins (no trailing slash)",
+      aud: "this channel's key — copy unchanged",
+      sub: "stable person identifier in your system (ISSF registration number); used to recognise them again",
+      email: "the person's verified e-mail — the helpdesk replies here",
+      given_name: "first name — the agent sees it on the ticket",
+      family_name: "last name",
+      name: "full name, only if you don't have first and last name separately",
+      roles: "list of the person's roles; picks FAQ for the audience",
+      club: "the person's club",
+      lang: "assistant language: sk, cs or en",
+      iat: "issued at — seconds since 1 Jan 1970 (Unix time), i.e. “now”",
+      exp: "expiry — at most iat + 900 (15 minutes)",
+    },
+    embedSigning: [
+      "Token header: {\"alg\":\"HS256\",\"typ\":\"JWT\"}.",
+      "Signature HMAC-SHA256 with the channel secret (Channel settings → Secret; shown only once). The secret belongs on your server only, never in the page.",
+      "A ready library (e.g. jsonwebtoken for Node, firebase/php-jwt for PHP) builds the header and signature itself — give it the content and the secret.",
+    ],
     rateLimit: "Request limit per person and hour",
     rateLimitHint: "Protection against abuse (D14).",
     widgetSecret: "Secret key",

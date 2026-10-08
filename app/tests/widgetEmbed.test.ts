@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { widgetEmbedCode, FALLBACK_ELEMENT_ID } from "../src/lib/widgetEmbed"
+import { widgetEmbedCode, FALLBACK_ELEMENT_ID, tokenPayloadLines, TOKEN_CLAIMS } from "../src/lib/widgetEmbed"
 import { widgetFallbackContact } from "../src/lib/channels"
 import { widgetScript } from "../src/lib/widgetScript"
 
@@ -38,14 +38,30 @@ describe("popis v kóde", () => {
   it("komentár nad kódom s parametrami a tokenom, bez `--` vnútri", () => {
     const code = widgetEmbedCode({ ...base, contact: "a@b.sk", doc: {
       title: "Pomocník", params: [{ name: "src", text: "adresa -- nemeniť" }, { name: "data-token", text: "token" }],
-      tokenHeading: "Token", token: "iss, aud",
+      token: { heading: "Token", iss: "https://issf.futbalsfz.sk", aud: "kluc", levels: { required: "POVINNÉ", recommended: "odporúčané", optional: "nepovinné" }, claims: { iss: "pôvod" }, signing: ["HS256"] },
     } })
     expect(code.startsWith("<!-- Pomocník")).toBe(true)
     expect(code).toContain("     src         adresa — nemeniť")
-    expect(code).toContain("Token: iss, aud")
+    expect(code).toContain('"iss": "https://issf.futbalsfz.sk",')
+    expect(code).toContain("// POVINNÉ — pôvod")
+    expect(code).toContain("HS256")
     const comment = code.slice(4, code.indexOf("-->"))
     expect(comment).not.toContain("--")
     expect(code.indexOf("-->")).toBeLessThan(code.indexOf("<div"))
+  })
+})
+
+describe("vzor tokenu", () => {
+  const doc = { heading: "Token", iss: "https://issf.futbalsfz.sk", aud: "d958", levels: { required: "POVINNÉ", recommended: "odporúčané", optional: "nepovinné" } as const, claims: {}, signing: [] }
+  it("je platný JSON po odstránení komentárov a nesie iss a aud kanála", () => {
+    const json = tokenPayloadLines(doc).map(l => l.replace(/\s{2,}\/\/ .*$/, "")).join("\n")
+    const payload = JSON.parse(json)
+    expect(payload.iss).toBe("https://issf.futbalsfz.sk")
+    expect(payload.aud).toBe("d958")
+    expect(payload.exp - payload.iat).toBeLessThanOrEqual(900)
+  })
+  it("povinné sú presne tie, ktoré server vyžaduje", () => {
+    expect(TOKEN_CLAIMS.filter(c => c.level === "required").map(c => c.name).sort()).toEqual(["aud", "email", "exp", "iat", "iss", "sub"])
   })
 })
 
