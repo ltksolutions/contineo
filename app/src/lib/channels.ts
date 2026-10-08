@@ -129,6 +129,13 @@ export interface HelpdeskChannel {
   audience: string
   folderIds: string[]
   /**
+   * Úroveň obsahu, z ktorého asistent kanála odpovedá (Ján 8. 10. 2026) —
+   * vlastnosť typu kanála, nie prepínač: widget je verejný vždy (D9, D166),
+   * portál pre prihlásených smie aj interný. Chýbajúce = verejný. Čítať
+   * cez `channelAccessLevel()`, nie priamo.
+   */
+  accessLevel?: "public" | "internal"
+  /**
    * Rozsahy MCP konektorov (`<connectorId>:<scopeKey>`, ADR-029 D175) —
    * živé zdroje, v ktorých asistent kanála hľadá popri knižnici. Prázdne
    * = kanál živé zdroje nepoužíva. Starý záznam pole nemá.
@@ -156,6 +163,15 @@ export interface HelpdeskChannel {
 export type ChannelView = Omit<HelpdeskChannel, "mailbox" | "widget"> & {
   mailbox: (Omit<ChannelMailbox, "graph"> & { graph?: { tenantId: string; clientId: string; clientSecretHint?: string; secretSetAt?: Date; secretSetBy?: string; hasSecret: boolean } }) | null
   widget: Omit<ChannelWidget, "secretEnc"> & { hasSecret: boolean }
+}
+
+/**
+ * Úroveň obsahu kanála (Ján 8. 10. 2026). Widget je verejný vždy — aj keby
+ * v zázname stálo niečo iné; portál podľa nastavenia, predvolene verejný.
+ */
+export function channelAccessLevel(c: Pick<HelpdeskChannel, "kind" | "accessLevel">): "public" | "internal" {
+  if (c.kind === "widget") return "public"
+  return c.accessLevel === "internal" ? "internal" : "public"
 }
 
 export function channelView(c: HelpdeskChannel): ChannelView {
@@ -206,6 +222,8 @@ export interface ChannelInput {
   name: string
   audience?: string
   folderIds?: string[]
+  /** Len portál; widget je verejný vždy. Prázdne = bez zmeny (nový = verejný). */
+  accessLevel?: string
   connectorScopes?: string[]
   assigneeIds?: string[]
   languages?: string[]
@@ -315,6 +333,9 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
     companyCode: code, key, kind, name,
     audience: (input.audience ?? "").trim(),
     folderIds: tidyList(input.folderIds),
+    accessLevel: kind === "widget" ? "public"
+      : input.accessLevel === "internal" || input.accessLevel === "public" ? input.accessLevel
+      : (existing?.accessLevel ?? "public"),
     connectorScopes: input.connectorScopes === undefined ? (existing?.connectorScopes ?? []) : tidyList(input.connectorScopes),
     tickets,
     mailbox,
@@ -328,7 +349,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
   await writeAudit({
     companyCode: code, subject: "helpdesk-channel", action: existing ? "changed" : "created", actor,
     targetId: key, targetLabel: name,
-    note: `${kind}${tickets ? " · tickety" : ""}${mailbox ? ` · schránka ${mailbox.kind} · ${mailbox.address}` : ""}`,
+    note: `${kind} · ${kind === "widget" ? "public" : channel.accessLevel}${tickets ? " · tickety" : ""}${mailbox ? ` · schránka ${mailbox.kind} · ${mailbox.address}` : ""}`,
   })
   return channel
 }

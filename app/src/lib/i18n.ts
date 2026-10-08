@@ -2343,6 +2343,24 @@ interface Dictionary {
     audienceHint: string
     folders: string
     foldersHint: string
+    /** Úroveň obsahu kanála — vlastnosť typu (Ján 8. 10. 2026). */
+    accessLevel: string
+    accessPublic: string
+    accessInternal: string
+    accessPortalHint: string
+    accessWidgetFact: string
+    /** Náhľad: čo asistent kanála vidí. */
+    previewHeading: string
+    previewLevelPublic: string
+    previewLevelInternal: string
+    previewSaved: string
+    previewIncluded: (n: number) => string
+    previewVerified: (n: number) => string
+    previewVersion: (label: string) => string
+    previewNone: string
+    previewMore: (n: number) => string
+    previewExcluded: (n: number) => string
+    previewReason: Record<"draft" | "notEffective" | "internal", string>
     /** Rozsahy MCP konektorov pre kanál (ADR-029, D175). */
     connectorScopes: string
     connectorScopesHint: string
@@ -6695,6 +6713,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     audienceHint: "Komu kanál slúži — klubové manažérky, rozhodcovia, rodičia…",
     folders: "Obsah kanála",
     foldersHint: "Priečinky knižnice, z ktorých asistent odpovedá. Bez výberu vidí celú knižnicu organizácie.",
+    accessLevel: "Úroveň obsahu",
+    accessPublic: "Len verejné dokumenty",
+    accessInternal: "Verejné aj interné dokumenty",
+    accessPortalHint: "Portál je pre prihlásených, preto smie odpovedať aj z interného obsahu. Predvolene len verejný.",
+    accessWidgetFact: "Widget odpovedá len z verejných dokumentov — je dostupný ľuďom mimo organizácie, preto to nie je voľba.",
+    previewHeading: "Čo asistent kanála vidí",
+    previewLevelPublic: "Odpovedá len z verejných dokumentov s dnes platným znením vo vybraných priečinkoch.",
+    previewLevelInternal: "Odpovedá z verejných aj interných dokumentov s dnes platným znením vo vybraných priečinkoch.",
+    previewSaved: "Zoznam je podľa uloženého nastavenia — po zmene priečinkov ho najprv ulož.",
+    previewIncluded: n => `Do odpovedí padne ${n} ${n === 1 ? "dokument" : n >= 2 && n <= 4 ? "dokumenty" : "dokumentov"}`,
+    previewVerified: n => `a ${n} ${n === 1 ? "overená odpoveď" : n >= 2 && n <= 4 ? "overené odpovede" : "overených odpovedí"}`,
+    previewVersion: label => `znenie ${label}`,
+    previewNone: "Žiadny dokument — asistent nebude mať z čoho odpovedať.",
+    previewMore: n => `… a ďalších ${n}.`,
+    previewExcluded: n => `V priečinkoch, ale vynechané (${n})`,
+    previewReason: { draft: "len koncept", notEffective: "bez platného znenia", internal: "interný" },
     connectorScopes: "Živé zdroje",
     connectorScopesHint: "Rozsahy pripojených konektorov, v ktorých asistent hľadá popri knižnici. Bez výberu sa živé zdroje v tomto kanáli nepoužijú.",
     connectorScopesNone: "Organizácia nemá pripojený žiadny konektor so živým zdrojom.",
@@ -10909,6 +10943,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     audienceHint: "Komu kanál slouží — klubové manažerky, rozhodčí, rodiče…",
     folders: "Obsah kanálu",
     foldersHint: "Složky knihovny, ze kterých asistent odpovídá. Bez výběru vidí celou knihovnu organizace.",
+    accessLevel: "Úroveň obsahu",
+    accessPublic: "Jen veřejné dokumenty",
+    accessInternal: "Veřejné i interní dokumenty",
+    accessPortalHint: "Portál je pro přihlášené, proto smí odpovídat i z interního obsahu. Výchozí je jen veřejný.",
+    accessWidgetFact: "Widget odpovídá jen z veřejných dokumentů — je dostupný lidem mimo organizaci, proto to není volba.",
+    previewHeading: "Co asistent kanálu vidí",
+    previewLevelPublic: "Odpovídá jen z veřejných dokumentů s dnes platným zněním ve vybraných složkách.",
+    previewLevelInternal: "Odpovídá z veřejných i interních dokumentů s dnes platným zněním ve vybraných složkách.",
+    previewSaved: "Seznam odpovídá uloženému nastavení — po změně složek ho nejprve ulož.",
+    previewIncluded: n => `Do odpovědí se dostane ${n} ${n === 1 ? "dokument" : n >= 2 && n <= 4 ? "dokumenty" : "dokumentů"}`,
+    previewVerified: n => `a ${n} ${n === 1 ? "ověřená odpověď" : n >= 2 && n <= 4 ? "ověřené odpovědi" : "ověřených odpovědí"}`,
+    previewVersion: label => `znění ${label}`,
+    previewNone: "Žádný dokument — asistent nebude mít z čeho odpovídat.",
+    previewMore: n => `… a dalších ${n}.`,
+    previewExcluded: n => `Ve složkách, ale vynechané (${n})`,
+    previewReason: { draft: "jen koncept", notEffective: "bez platného znění", internal: "interní" },
     connectorScopes: "Živé zdroje",
     connectorScopesHint: "Rozsahy připojených konektorů, ve kterých asistent hledá vedle knihovny. Bez výběru se živé zdroje v tomto kanálu nepoužijí.",
     connectorScopesNone: "Organizace nemá připojený žádný konektor se živým zdrojem.",
@@ -15114,6 +15164,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     audienceHint: "Who the channel serves — club managers, referees, parents…",
     folders: "Channel content",
     foldersHint: "Library folders the assistant answers from. With none selected it sees the whole library of the organisation.",
+    accessLevel: "Content level",
+    accessPublic: "Public documents only",
+    accessInternal: "Public and internal documents",
+    accessPortalHint: "The portal is for signed-in people, so it may answer from internal content too. Public only by default.",
+    accessWidgetFact: "The widget answers from public documents only — it is available to people outside the organisation, so this is not an option.",
+    previewHeading: "What the channel assistant sees",
+    previewLevelPublic: "It answers only from public documents with a version in effect today in the selected folders.",
+    previewLevelInternal: "It answers from public and internal documents with a version in effect today in the selected folders.",
+    previewSaved: "The list reflects the saved settings — save first after changing folders.",
+    previewIncluded: n => `${n} ${n === 1 ? "document" : "documents"} go into answers`,
+    previewVerified: n => `and ${n} verified ${n === 1 ? "answer" : "answers"}`,
+    previewVersion: label => `version ${label}`,
+    previewNone: "No document — the assistant will have nothing to answer from.",
+    previewMore: n => `… and ${n} more.`,
+    previewExcluded: n => `In the folders but left out (${n})`,
+    previewReason: { draft: "draft only", notEffective: "no version in effect", internal: "internal" },
     connectorScopes: "Live sources",
     connectorScopesHint: "Scopes of connected connectors the assistant searches alongside the library. With none selected, live sources are not used in this channel.",
     connectorScopesNone: "The organisation has no connected connector with a live source.",

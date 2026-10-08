@@ -9,6 +9,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import Select from "@/components/Select"
@@ -17,7 +18,7 @@ import SubmitButton from "@/components/SubmitButton"
 import { orgContext } from "@/lib/orgSettings"
 import { isHelpdeskAgent } from "@/lib/helpdeskAgents"
 import { ChannelPartTabs, channelHref } from "@/components/ChannelTabs"
-import { channelByKey, channelView, takeRevealedWidgetSecret, HELPDESK_ROLE, DEFAULT_RATE_LIMIT, SYNC_INTERVALS, DEFAULT_SYNC_INTERVAL } from "@/lib/channels"
+import { channelAccessLevel, channelByKey, channelView, takeRevealedWidgetSecret, HELPDESK_ROLE, DEFAULT_RATE_LIMIT, SYNC_INTERVALS, DEFAULT_SYNC_INTERVAL } from "@/lib/channels"
 import { allFolders, flattenTree } from "@/lib/folders"
 import { listPeople } from "@/lib/people"
 import { treeOptions } from "@/lib/treeOptions"
@@ -28,6 +29,9 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary, formatDate } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { channelContentPreview } from "@/lib/channelContent"
+import { codelistOptions } from "@/lib/codelists"
+import { tenantExtras } from "@/lib/codelistsTenant"
 import { listConnectors, scopeRef, connectorAllowed } from "@/lib/connectors"
 import { saveChannelAction, removeChannelAction, verifyMailboxAction, syncChannelAction, rotateWidgetSecretAction, mineFaqAction } from "../../actions"
 
@@ -52,7 +56,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   // Podmenu Tickety len riešiteľovi tohto kanála — správca ich nevidí (D170).
   const canTickets = isWidget && c.tickets && isHelpdeskAgent(ctx.person) && raw.assigneeIds.includes(ctx.person.id)
 
-  const [folders, people, faqDocs, revealed, connectors] = await Promise.all([
+  const [folders, people, faqDocs, revealed, connectors, preview] = await Promise.all([
     allFolders(ctx.tenant.companyCode),
     listPeople(ctx.tenant.companyCode),
     (await getCollection(DOCUMENTS_COLLECTION))
@@ -60,6 +64,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string }[]>,
     isWidget && c.widget.revealOnce ? takeRevealedWidgetSecret(ctx.tenant.companyCode, c.key) : Promise.resolve(null),
     listConnectors(ctx.tenant.companyCode),
+    channelContentPreview(ctx.tenant.companyCode, raw),
   ])
   // Rozsahy živých zdrojov (ADR-029, D175): len konektory so zapnutým živým
   // zdrojom; konektor bez rozsahov ponúka jeden celý. Widget je verejný,
@@ -72,6 +77,8 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
     .flatMap(k => (k.scopes.length ? k.scopes : [{ key: "", label: "" }]).map(s => ({
       value: scopeRef(k.id, s.key), label: s.key ? `${k.name} — ${s.label}` : k.name,
     })))
+  // Druh dokumentu v náhľade názvom z číselníka, nie kľúčom.
+  const categoryLabel = new Map(codelistOptions("category", tenantExtras(ctx.tenant)).map(o => [o.value, o.label]))
   const folderOptions = treeOptions(flattenTree(folders).map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level })))
   const agentOptions = people.filter(p => p.roles.includes(HELPDESK_ROLE)).map(p => ({ value: p.id, label: `${p.fullName} (${p.email})` }))
   const faqOptions = faqDocs.map(x => ({ value: x.documentId, label: String(x.title ?? x.documentId) }))
@@ -108,6 +115,18 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
               <MultiSelect name="folderIds" options={folderOptions} selected={c.folderIds} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
               <span className="quiet field-hint">{t.foldersHint}</span>
             </div>
+            {/* Úroveň je vlastnosť typu kanála (Ján 8. 10. 2026): widget je
+                verejný vždy, portál pre prihlásených smie aj interný. */}
+            {isWidget ? (
+              <p className="quiet field-hint" style={{ margin: 0 }}>{t.accessWidgetFact}</p>
+            ) : (
+              <div className="field">
+                <span className="field-label">{t.accessLevel}</span>
+                <Select language={language} name="accessLevel" fieldLabel={t.accessLevel} initial={channelAccessLevel(raw)}
+                  options={[{ value: "public", label: t.accessPublic }, { value: "internal", label: t.accessInternal }]} />
+                <span className="quiet field-hint">{t.accessPortalHint}</span>
+              </div>
+            )}
             <div className="field">
               <span className="field-label">{t.connectorScopes}</span>
               {scopeOptions.length ? (
@@ -220,6 +239,43 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
 
         <div className="set-savebar"><SubmitButton className="button">{t.save}</SubmitButton></div>
       </form>
+
+      {/* Čo asistent kanála vidí (Ján 8. 10. 2026) — tá istá podmienka ako
+          hľadanie: priečinky, platné znenie, úroveň kanála. Podľa uloženého
+          nastavenia; po zmene priečinkov treba najprv uložiť. */}
+      <section className="card detail-block" id="content-preview" style={{ marginTop: 16 }}>
+        <h2 className="detail-block-title">{t.previewHeading}</h2>
+        <p className="detail-block-note" style={{ margin: 0 }}>
+          {preview.accessLevel === "public" ? t.previewLevelPublic : t.previewLevelInternal}
+          {" "}{t.previewSaved}
+        </p>
+        <p style={{ margin: 0 }}><b>{t.previewIncluded(preview.includedTotal)}</b>{preview.verifiedAnswers > 0 && <span className="quiet"> · {t.previewVerified(preview.verifiedAnswers)}</span>}</p>
+        {preview.included.length > 0 ? (
+          <ul className="preview-list">
+            {preview.included.map(r => (
+              <li key={r.documentId}>
+                <Link href={`/library/${encodeURIComponent(r.documentId)}`}>{r.title}</Link>
+                <span className="quiet">{[r.category && (categoryLabel.get(r.category) ?? r.category), r.versionLabel && t.previewVersion(r.versionLabel)].filter(Boolean).join(" · ")}</span>
+              </li>
+            ))}
+          </ul>
+        ) : <p className="quiet" style={{ margin: 0 }}>{t.previewNone}</p>}
+        {preview.includedTotal > preview.included.length && <p className="quiet" style={{ margin: 0 }}>{t.previewMore(preview.includedTotal - preview.included.length)}</p>}
+        {preview.excludedTotal > 0 && (
+          <details>
+            <summary>{t.previewExcluded(preview.excludedTotal)}</summary>
+            <ul className="preview-list">
+              {preview.excluded.map(r => (
+                <li key={r.documentId}>
+                  <Link href={`/library/${encodeURIComponent(r.documentId)}`}>{r.title}</Link>
+                  <span className="tag">{t.previewReason[r.reason!]}</span>
+                </li>
+              ))}
+            </ul>
+            {preview.excludedTotal > preview.excluded.length && <p className="quiet" style={{ margin: 0 }}>{t.previewMore(preview.excludedTotal - preview.excluded.length)}</p>}
+          </details>
+        )}
+      </section>
 
       <section className="card set-form">
         {isWidget && c.mailbox && (

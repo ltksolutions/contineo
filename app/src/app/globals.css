@@ -8284,3 +8284,9 @@ section.rating { border-top: 1px solid var(--line); }
 .signin-title { margin: 0 0 8px; font-size: 21px; letter-spacing: -0.02em; }
 .signin-title--check { margin-bottom: 12px; }
 .signin-brand { font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+
+/* Náhľad obsahu kanála (Ján 8. 10. 2026): názov vľavo, údaje vpravo,
+   pod 640 px pod sebou. */
+.preview-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.preview-list li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--line); }
+.preview-list li:first-child { border-top: 0; }
