@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### MCP konektory: import článkov do knižnice (2026-10-08)
+
+Druhé použitie konektora (ADR-029 B). Konektor má prepínač **Povoliť import
+do knižnice**; kurátor potom v **Knižnica → Nahrať → Import zo servera**
+vyhľadá články a vybrané uloží ako koncepty dokumentov:
+- z každého článku vznikne koncept s textom a PDF vysádzaným aplikáciou —
+  ďalej ide bežnou cestou (metadáta, schválenie, zverejnenie);
+- zoznam ukáže, čo z tej istej cesty v knižnici už je a či sa článok na
+  serveri odvtedy zmenil;
+- dokument nesie **Zdroj** (konektor, cesta na serveri, kedy stiahnuté);
+  tlačidlo *Skontrolovať zmeny na serveri* stiahne článok znova a pri zmene
+  pripraví koncept nového znenia — zverejnené sa nemení;
+- redukcia konektora platí aj pre kópiu; prístupová úroveň je predvolene
+  interná.
+
 ### Skupiny a značky ako zoznam namiesto pilulky (2026-10-08)
 
 Podľa návrhu ZAKLAD-vyber-skupin-a-znaciek:

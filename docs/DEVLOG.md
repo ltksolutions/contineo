@@ -38,6 +38,28 @@ tvar.
 
 ---
 
+## 2026-10-08 — MCP konektory, fáza 2: import s pôvodom
+
+**Ráno:** PR #307 zlúčený, nasadený, pripojené naostro — a hneď dva nálezy
+z prvej otázky: citácia zo živého zdroja mala „Otvoriť v knižnici" (404)
+a odpoveď prepustila názvy tried z kódu (`ObnovaHeslaPage`). Prvé opravené
+v `main`, druhé vzorom v redukcii konektora (`\b[A-Z][a-z]+(?:[A-Z][a-z0-9]+)+\b`).
+Druhá otázka už bola čistá. Poučenie: redukcia sa ladí na živých otázkach,
+nie na jednom článku.
+
+**Fáza 2 (PR #311):** import je **použitie**, nie samostatný adaptér —
+`uploadDocument()` dostane Markdown a PDF, ďalej je to bežný dokument.
+Otázka Jána: *sú PDF pre MCP zdroje nutné?* Odpoveď: áno, ale automaticky —
+ADR-011 drží schvaľovanie aj potvrdenie na PDF a výnimka pre jeden zdroj by
+bola druhá vetva cez celú cestu. `markdownPdf.ts` sádže z Markdownu
+deterministicky (pevný čas v metadátach), takže odtlačok znenia sedí.
+
+**Čo nevyšlo:** import sa lokálne overiť nedal — token konektora je po
+produkčnom „Pripojiť znova" pod produkčným kľúčom a lokálna relácia
+medzitým vypršala. Overenie ide na produkciu.
+
+---
+
 ## 2026-10-07 — MCP konektory: prvý skutočný server prekonal júnový návrh (ADR-029)
 
 **Zadanie znelo** „pridať ďalší zdroj, `mcp.sportnet.online`" a jediný zápis
