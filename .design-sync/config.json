@@ -22,7 +22,7 @@
     "SubmitButton": "src/components/SubmitButton.tsx"
   },
   "dtsPropsFor": {
-    "Icon": "/** Názov ikony zo spoločnej sady (ťah 1,5 px na mriežke 18). */ name: \"overview\" | \"ask\" | \"toAcknowledge\" | \"toApprove\" | \"directory\" | \"library\" | \"assigned\" | \"evidence\" | \"evaluation\" | \"dpo\" | \"people\" | \"notifications\" | \"search\" | \"filters\" | \"mail\" | \"grid\" | \"learning\" | \"learningManage\" | \"learningTests\" | \"play\" | \"pause\" | \"volume\" | \"muted\" | \"fullscreen\" | \"more\"; /** Veľkosť v px, predvolene 17. */ size?: number;",
+    "Icon": "/** Názov ikony zo spoločnej sady (ťah 1,5 px na mriežke 18). */ name: \"overview\" | \"ask\" | \"toAcknowledge\" | \"toApprove\" | \"directory\" | \"library\" | \"assigned\" | \"evidence\" | \"evaluation\" | \"dpo\" | \"channels\" | \"helpdesk\" | \"people\" | \"notifications\" | \"search\" | \"filters\" | \"mail\" | \"grid\" | \"learning\" | \"learningManage\" | \"learningTests\" | \"play\" | \"pause\" | \"volume\" | \"muted\" | \"edit\" | \"download\" | \"fullscreen\" | \"more\"; /** Veľkosť v px, predvolene 17. */ size?: number;",
     "ContineoMark": "/** Veľkosť značky v px, predvolene 26. Farba je `currentColor`. */ size?: number;",
     "SearchStrip": "/** Názov poľa vo formulári (napr. \"q\"). */ name: string; defaultValue?: string; placeholder: string; /** Meno poľa pre čítačku — viditeľný popis lišta nemá. */ label: string; /** Neviditeľné tlačidlo na odoslanie pre čítačku. */ submitLabel?: string; className?: string; autoCapitalize?: string; autoCorrect?: string;",
     "Select": "name: string; options: { value: string; label: string; /** Cesta v strome nad položkou. */ path?: string }[]; initial?: string; fieldLabel?: string; form?: string; /** Hľadanie v zozname; predvolene od 8 možností. */ searchable?: boolean; required?: boolean; searchPlaceholder?: string; emptyText?: string; language?: \"sk\" | \"cs\" | \"en\";",
@@ -33,7 +33,7 @@
     "Fact": "label: string; value: string; /** Tlmená hodnota (napr. „—“). */ muted?: boolean;",
     "TabsBar": "/** Položky podmenu: odkazy s triedou `tab` (vybraná `tab is-active`). */ children: React.ReactNode;",
     "CopyLink": "/** Text, ktorý sa skopíruje. */ value: string; label: string; /** Text po skopírovaní. */ done: string;",
-    "SubmitButton": "/** Predvolene `button`; tiché tlačidlo `button button--quiet`. Počas odosielania formulára dostane `is-pending`, točiaci sa kruh a je neaktívne. */ className?: string; children: React.ReactNode; name?: string; value?: string; style?: React.CSSProperties; ariaLabel?: string;"
+    "SubmitButton": "/** Predvolene `button`; tiché tlačidlo `button button--quiet`. Počas odosielania formulára sú zablokované všetky jeho tlačidlá; krúžok (`is-pending`) a `pendingLabel` ukáže len to, na ktoré sa kliklo. */ className?: string; children: React.ReactNode; name?: string; value?: string; style?: React.CSSProperties; ariaLabel?: string; title?: string; /** Prepínač (zapnuté/vypnuté) — čítačka ohlási stav. */ ariaPressed?: boolean; disabled?: boolean; /** Text počas dlhšie trvajúcej akcie (napr. rozosielanie e-mailov). */ pendingLabel?: React.ReactNode; /** Iná serverová akcia než formulárová — druhé tlačidlo v tom istom formulári. */ formAction?: (formData: FormData) => void | Promise<void>; /** `id` formulára, keď tlačidlo v ňom nestojí. */ form?: string;"
   },
   "readmeHeader": ".design-sync/conventions.md"
 }

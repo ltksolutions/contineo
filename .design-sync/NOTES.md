@@ -41,3 +41,12 @@ k návrhovému projektu „Contineo.app responzivny design".
   triedy treba overiť (`grep` proti `ds-bundle/_ds_bundle.css`).
 - React v `_vendor/` je z `app/node_modules` — pri zmene verzie Reactu v aplikácii sa celý balík nahrá znova.
 - Zoznam ikon v `dtsPropsFor.Icon` je kópia kľúčov `PATHS` v `Icon.tsx`.
+  Pri synchronizácii 8. 10. 2026 zastaral (chýbali `channels`, `helpdesk`,
+  `edit`, `download`) aj `dtsPropsFor.SubmitButton` (chýbali `title`,
+  `ariaPressed`, `disabled`, `pendingLabel`, `formAction`, `form`). Pred
+  každou synchronizáciou porovnať s `git log --since=<posledná> -- <súbory
+  z componentSrcMap>`; driver to nevidí, lebo náhľady sa nezmenili.
+- `SubmitButton` importuje `@/lib/formPending` — ak by tam pribudla závislosť
+  od Nextu alebo DB, balík pre Claude Design sa nezostaví.
+- `conventions.md` od 8. 10. nesie aj `.set-savebar`, `.more`, `.lnote`,
+  `.page-tools` a `.seg` — pri ich premenovaní v `globals.css` ju upraviť.

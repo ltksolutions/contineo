@@ -63,6 +63,22 @@ sú len doplnok. Texty sú po slovensky.
 </fieldset>
 ```
 
+## Uloženie, ďalšie akcie, hlášky (od 7. 10.)
+- Dlhý formulár: jeden `form.card.set-form` so sekciami `section.set-sec`; na konci
+  `div.set-savebar` (prilepená dole) s jediným plným `.button` „Uložiť" a vetou `.quiet`.
+- Zriedkavé a nevratné úkony pod formulárom: `section.card.more` > `.more-head` (`h2`
+  „Ďalšie akcie") + riadky `.more-row` > `.more-main` (`b` názov, `span` vysvetlenie) +
+  tlačidlo; vratné `.button--quiet`, nevratné `.button--danger`. Nevratné sa potvrdzuje
+  **adresou** (`?archive=1#more`) — pod riadkom `form.more-confirm` s poľami, `.button--danger`
+  a odkazom „Zrušiť". Žiadne modálne okno.
+- Hláška v obsahu: `div.lnote` (+ `.lnote--warn` / `.lnote--bad`) > `span.lnote-mark` („!", „✓")
+  + `span.lnote-text`. Nie `.notice` (to je modálne okno).
+- Nástroje v hlavičke: `.page-head` > `.page-head-main` (`h1.page-title` + `p.page-lead`)
+  + `.page-tools` (tiché tlačidlá, hlavná akcia posledná).
+- Jediná výnimka z „`.view-switch` do formulára nepatrí": áno/nie s významom v posudku je
+  `.seg` > dva `label.seg-opt` s natívnym `input type="radio"`; zvolený dostane `.is-ok`
+  alebo `.is-bad`. Inde vo formulári ostáva `.choice-row`.
+
 ## Príklad
 ```jsx
 <div>
