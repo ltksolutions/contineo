@@ -12,7 +12,7 @@
 > **Spresňuje:** D165 — postup pri veľkej histórii, zoskupenie pred modelom,
 > zaobchádzanie s protirečivými odpoveďami a poradie pre kurátora.
 > **Doplnené 9. 10. 2026:** odpovede DPO (`docs/DPO_tazba_historie_helpdesku.md`)
-> — namiesto pilota celé obdobie, DPIA netreba; D183–D186 nižšie.
+> — namiesto pilota zvolené obdobie (36 mesiacov), DPIA netreba; D183–D186 nižšie.
 > **Implementácia:** krok 1 (analýza bez zápisu) — `lib/historyAnalysis.ts`,
 > `GraphMailbox.listHeaders()`, `/api/cron/helpdesk-history`, obrazovka
 > `/channels/[key]/history`. Kroky 2 a 3 sú otvorené v `docs/TODO.md`.
@@ -139,12 +139,14 @@ Návrhy z krokov 2 a 3 nepristanú naraz do konceptu FAQ dokumentu, ale do
 Tvar fronty (nová kolekcia alebo stav záznamu v koncepte) sa rozhodne
 s krokom 2, keď budú čísla z kroku 1.
 
-### D183 — Namiesto pilota celé obdobie (odpovede DPO 9. 10. 2026)
+### D183 — Namiesto pilota zvolené obdobie (odpovede DPO 9. 10. 2026)
 
 DPO (Ján Letko) odpovedal na otázku 2 „komplet analýza s anonymizáciou
 osobných údajov", spresnil „pseudonymizácia podľa kap. 2" a na otázku 6
-„DPIA netreba". Kroky 2 a 3 z D179 sa preto spájajú do **úplnej ťažby**
-nad celými 36 mesiacmi analýzy. Pravidlá D181 (protirečivé odpovede
+„DPIA netreba". Kroky 2 a 3 z D179 sa preto spájajú do **úplnej ťažby
+nad obdobím zvoleným pri spustení** — 12, 24 alebo 36 celých mesiacov ako
+pri analýze, nie celá história schránky (Ján 9. 10. 2026: „nie z celej
+histórie, ale z nastaveného obdobia, v tomto prípade 36 mesiacov"). Pravidlá D181 (protirečivé odpovede
 s príznakom, návrh článku normy) a D182 (fronta kurátora) platia.
 Pseudonymizácia: pravidlá `scrubPersonalData` (od 9. 10. aj čísla od
 6 číslic), pokyn modelu bez mien a klubov, kurátor pred zverejnením.

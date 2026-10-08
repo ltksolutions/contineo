@@ -16,6 +16,7 @@ import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { saveChannel, removeChannel, verifyMailbox, syncChannel, rotateWidgetSecret } from "@/lib/channels"
 import { mineFaqDrafts } from "@/lib/faqMining"
 import { startAnalysis, continueAnalysis } from "@/lib/historyAnalysis"
+import { startHarvest, continueHarvest, addExclusions } from "@/lib/faqHarvest"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -177,4 +178,46 @@ export async function startHistoryAnalysisAction(fd: FormData) {
   const q = new URLSearchParams({ msg: message })
   if (failed) q.set("error", "1")
   redirect(`${page}?${q.toString()}`)
+}
+
+function backToHistory(key: string, message: string, error = false): never {
+  const q = new URLSearchParams({ msg: message })
+  if (error) q.set("error", "1")
+  redirect(`/channels/${encodeURIComponent(key)}/history?${q.toString()}`)
+}
+
+/**
+ * Ťažba FAQ z histórie (ADR-030, D183): nový beh nad zvoleným obdobím
+ * a prvý kúsok hneď; zvyšok cron `/api/cron/helpdesk-harvest`.
+ */
+export async function startHarvestAction(fd: FormData) {
+  const ctx = await ready()
+  const key = fieldText(fd, "key")
+  let message = ctx.t.harvestStarted
+  let failed = false
+  try {
+    await startHarvest(ctx.person.companyCode, key, Number(fieldText(fd, "months")), ctx.person.email)
+    await continueHarvest(ctx.person.companyCode, key, { budgetMs: 1, hardMs: 90_000 },
+      { companyCode: ctx.person.companyCode, personId: ctx.person.id, personName: ctx.person.fullName, email: ctx.person.email })
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, ctx.language)
+    failed = true
+  }
+  backToHistory(key, message, failed)
+}
+
+/** Námietka (D186): adresy sa uložia len ako odtlačky. */
+export async function addHarvestExclusionsAction(fd: FormData) {
+  const ctx = await ready()
+  const key = fieldText(fd, "key")
+  let message: string
+  try {
+    const n = await addExclusions(ctx.person.companyCode, key, lines(fd, "addresses"), ctx.person.email)
+    message = ctx.t.harvestExclusionsAdded(n)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    backToHistory(key, errorMessage(e, ctx.language), true)
+  }
+  backToHistory(key, message)
 }

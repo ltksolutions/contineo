@@ -23,7 +23,7 @@ Odpovede zapísal do dokumentu **Ján Letko, ktorý je zodpovednou osobou
 | # | Odpoveď | Čo s tým systém robí |
 |---|---|---|
 | 1 | 1 — oprávnený záujem s testom zlučiteľnosti účelu (čl. 6 ods. 4) | test zlučiteľnosti spíše DPO; podklady sú v kap. 3 |
-| 2 | **„komplet analýza s anonymizáciou osobných údajov"** — namiesto pilota celé obdobie; spresnené: **pseudonymizácia podľa kap. 2** (pravidlá + pokyn modelu + kurátor) | ťažba ide nad celými 36 mesiacmi (ADR-030 D183); pilot sa vynecháva |
+| 2 | **„komplet analýza s anonymizáciou osobných údajov"** — namiesto pilota zvolené obdobie (36 mesiacov); spresnené: **pseudonymizácia podľa kap. 2** (pravidlá + pokyn modelu + kurátor) | ťažba ide nad obdobím zvoleným pri spustení — pre SFZ 36 mesiacov, nie celá história schránky (ADR-030 D183); pilot sa vynecháva |
 | 3 | 1 — Anthropic za rovnakých podmienok ako odpovede asistenta | záruky pre prenos sa doplnia v C4 |
 | 4 | 1 — Voyage AI smie | **nepoužije sa** — témy priraďuje model bez ukladania textu (ADR-030 D184), teda menej spracúvania, než bolo schválené |
 | 5 | 1 — pôvod návrhu držať do rozhodnutia kurátora, potom zmazať | pri schválení, zlúčení aj zamietnutí sa zmažú identifikátory vlákien a správ; ostáva počet a obdobie (D185) |
@@ -35,7 +35,7 @@ Odpovede zapísal do dokumentu **Ján Letko, ktorý je zodpovednou osobou
 
 **Poznámka k otázke 2:** v kap. 3 sa celý archív označoval ako rozsiahle
 spracúvanie, o ktorom sa rozhodne po pilote. Odpoveďou 2 a 6 DPO rozhodol
-hneď o celom archíve bez DPIA.
+hneď o zvolenom období (36 mesiacov) bez DPIA.
 
 ---
 
