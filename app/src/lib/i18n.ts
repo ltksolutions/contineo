@@ -3346,7 +3346,6 @@ interface Dictionary {
         import: string
         imported: string
         internal: string
-        article: (ref: string) => string
       }
       /** Hľadanie v záznamoch tohto FAQ (filterEntries). */
       find: string
@@ -7717,7 +7716,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         import: "Importovať článok →",
         imported: "už v knižnici",
         internal: "interný",
-        article: ref => `čl. ${ref}`,
       },
       find: "Hľadať v záznamoch",
       findButton: "Hľadať",
@@ -12039,7 +12037,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         import: "Importovat článek →",
         imported: "už v knihovně",
         internal: "interní",
-        article: ref => `čl. ${ref}`,
       },
       find: "Hledat v záznamech",
       findButton: "Hledat",
@@ -16347,7 +16344,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         import: "Import article →",
         imported: "already in the library",
         internal: "internal",
-        article: ref => `Art. ${ref}`,
       },
       find: "Search entries",
       findButton: "Search",

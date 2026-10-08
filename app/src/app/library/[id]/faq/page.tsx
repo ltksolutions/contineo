@@ -219,7 +219,8 @@ export default async function FaqEditorPage({ params, searchParams }: { params: 
                 <li key={`${h.documentId}-${i}`} className="faq-assist-hit">
                   <div className="faq-assist-hit-head">
                     <strong>{h.title}</strong>
-                    {h.articleRef && <span className="quiet">{ta.article(h.articleRef)}</span>}
+                    {/* articleRef už nesie predponu z chunkera (čl. 18a) */}
+                    {h.articleRef && <span className="quiet">{h.articleRef}</span>}
                     {h.accessLevel !== "public" && <span className="tag">{ta.internal}</span>}
                   </div>
                   <p className="faq-assist-excerpt">{h.excerpt}</p>
