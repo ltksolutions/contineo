@@ -3405,8 +3405,21 @@ interface Dictionary {
        */
       keyTaken: string
       keysTaken: string
-      /** Nápoveda pri Druhu — hodnoty z `CODELISTS.category` (úloha 5). */
+      /** Nápoveda pri Druhu: druh je typ dokumentu (D179), témy patria do značiek. */
       categoryNote: string
+      /** Pod značkami: značky sú témy, nie typ dokumentu (D179). */
+      tagsNote: string
+      /**
+       * Rozcestník nad formulárom (D179): dva základné spôsoby, ako dokument
+       * vzniká, a import zo servera ako tretí zdroj.
+       */
+      kinds: {
+        heading: string
+        intro: string
+        file: { title: string; text: string; cta: string }
+        faq: { title: string; text: string; cta: string }
+        connector: { title: string; text: string; cta: string }
+      }
       /** Nadpis rozbaľovacej skupiny nepovinných polí (úloha 6). */
       moreFields: string
       scope: string
@@ -7727,7 +7740,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyManualNote: "Kľúč vzniká raz a nikdy sa nemení — žije v potvrdeniach, audite a exportoch. Premenovanie dokumentu ho nemení.",
       keyTaken: "Identifikátor {id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.",
       keysTaken: "Obsadené kľúče v tejto organizácii: ",
-      categoryNote: "Zoskupuje dokumenty v knižnici a vo filtroch. Existujúce: ",
+      categoryNote: "Typ dokumentu — práve jeden. Podľa neho sa dokument zoskupuje v knižnici a vo filtroch a podľa neho sa bude riadiť aj členenie textu. Témy (napríklad Registrácia, ISSF) patria do značiek.",
+      tagsNote: "Značky sú témy — dokument ich môže mať viac a nič nespúšťajú. Typ dokumentu (smernica, zákon, manuál…) sa určuje Druhom, nie značkou.",
+      kinds: {
+        heading: "Ako dokument vznikne",
+        intro: "Dokumenty v knižnici vznikajú dvoma spôsobmi. Vyber ten, ktorý sedí na to, čo pridávaš.",
+        file: { title: "Dokument zo súboru", text: "Predpis, smernica, zákon, manuál, zmluva… Nahráš PDF (schvaľuje a potvrdzuje sa) a upraviteľný zdroj (Word); z neho vznikne text, ktorý sa podľa druhu dokumentu rozdelí na úseky pre vyhľadávanie.", cta: "Nahrať súbor ↓" },
+        faq: { title: "Časté otázky (FAQ)", text: "Bez súboru: záznamy otázka a odpoveď píšeš priamo tu. Každý záznam je jedna hotová odpoveď pre asistenta, môže odkazovať na predpisy a pri ich novom znení sa označí na kontrolu. PDF sa zloží samo.", cta: "Založiť FAQ →" },
+        connector: { title: "Import zo servera", text: "Články z pripojeného servera (napríklad Sportnet) sa prevezmú aj s pôvodom a ďalej sa s nimi zaobchádza ako s dokumentom zo súboru.", cta: "Importovať →" },
+      },
       moreFields: "Ďalšie údaje",
       scope: "Pôsobnosť",
       accessLevel: "Prístupnosť",
@@ -12019,7 +12040,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyManualNote: "Klíč vzniká jednou a nikdy se nemění — žije v potvrzeních, auditu a exportech. Přejmenování dokumentu ho nemění.",
       keyTaken: "Identifikátor {id} je obsazený. Upravte název, nebo zadejte klíč ručně.",
       keysTaken: "Obsazené klíče v této organizaci: ",
-      categoryNote: "Seskupuje dokumenty v knihovně a ve filtrech. Existující: ",
+      categoryNote: "Typ dokumentu — právě jeden. Podle něj se dokument seskupuje v knihovně a ve filtrech a podle něj se bude řídit i členění textu. Témata (například Registrace, ISSF) patří do štítků.",
+      tagsNote: "Štítky jsou témata — dokument jich může mít více a nic nespouštějí. Typ dokumentu (směrnice, zákon, manuál…) se určuje Druhem, ne štítkem.",
+      kinds: {
+        heading: "Jak dokument vznikne",
+        intro: "Dokumenty v knihovně vznikají dvěma způsoby. Vyber ten, který odpovídá tomu, co přidáváš.",
+        file: { title: "Dokument ze souboru", text: "Předpis, směrnice, zákon, manuál, smlouva… Nahraješ PDF (schvaluje a potvrzuje se) a upravitelný zdroj (Word); z něj vznikne text, který se podle druhu dokumentu rozdělí na úseky pro vyhledávání.", cta: "Nahrát soubor ↓" },
+        faq: { title: "Časté otázky (FAQ)", text: "Bez souboru: záznamy otázka a odpověď píšeš přímo zde. Každý záznam je jedna hotová odpověď pro asistenta, může odkazovat na předpisy a při jejich novém znění se označí ke kontrole. PDF se složí samo.", cta: "Založit FAQ →" },
+        connector: { title: "Import ze serveru", text: "Články z připojeného serveru (například Sportnet) se převezmou i s původem a dále se s nimi zachází jako s dokumentem ze souboru.", cta: "Importovat →" },
+      },
       moreFields: "Další údaje",
       scope: "Působnost",
       accessLevel: "Přístupnost",
@@ -16297,7 +16326,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyManualNote: "The key is created once and never changes — it lives in acknowledgements, the audit trail and exports. Renaming the document does not change it.",
       keyTaken: "The identifier {id} is already taken. Change the title, or enter the key manually.",
       keysTaken: "Keys already taken in this organisation: ",
-      categoryNote: "Groups documents in the library and in filters. Existing: ",
+      categoryNote: "The document type — exactly one. It groups the document in the library and in filters, and it will also decide how the text is split. Topics (for example Registration, ISSF) belong in tags.",
+      tagsNote: "Tags are topics — a document can have several and they trigger nothing. The document type (directive, law, manual…) is set by Kind, not by a tag.",
+      kinds: {
+        heading: "How a document is created",
+        intro: "Documents in the library are created in two ways. Pick the one that fits what you are adding.",
+        file: { title: "Document from a file", text: "Regulation, directive, law, manual, contract… You upload the PDF (that is what gets approved and acknowledged) and an editable source (Word); it becomes the text, split into sections for search according to the kind of document.", cta: "Upload a file ↓" },
+        faq: { title: "Frequently asked questions (FAQ)", text: "No file: you write question-and-answer entries right here. Each entry is one ready answer for the assistant, can refer to regulations and is flagged for review when they get a new version. The PDF is put together automatically.", cta: "Create FAQ →" },
+        connector: { title: "Import from a server", text: "Articles from a connected server (for example Sportnet) are taken over with their origin and then treated like a document from a file.", cta: "Import →" },
+      },
       moreFields: "More details",
       scope: "Scope",
       accessLevel: "Access level",

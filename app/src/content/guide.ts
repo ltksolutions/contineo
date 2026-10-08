@@ -26,9 +26,13 @@ Tento návod hovorí, ako sa dokument dostane do systému a čo sa s ním po ces
 
 ## 1. Odporúčaný postup od nahratia dokumentu
 
+**Dokument vzniká dvoma spôsobmi.** Väčšina je **dokument zo súboru** — predpis, smernica, zákon, manuál, zmluva: nahrá sa PDF a upraviteľný zdroj a text sa rozdelí na úseky pre vyhľadávanie. Druhý spôsob sú **časté otázky (FAQ)**: nenahráva sa nič, záznamy otázka a odpoveď sa píšu priamo v aplikácii a každý je jedna hotová odpoveď pre asistenta. Oba spôsoby ponúka [Nahrať dokument](/library/new); tam je aj import článkov z pripojeného servera.
+
+**Druh je typ dokumentu, značky sú témy.** Druh (norma, smernica, zákon, manuál…) má dokument práve jeden a riadi sa podľa neho, ako sa s dokumentom zaobchádza. Značiek môže mať viac (napríklad Registrácia, ISSF) a slúžia len na hľadanie a filtre — typ do nich nepatrí.
+
 **Nový dokument a nové znenie sú dve rôzne veci.** Nový Súťažný poriadok sa nestane novou verziou existujúceho Súťažného poriadku tým, že sa nahrá — musíte povedať, čo z toho robíte. Systém preto nahratie na obsadený kľúč odmietne a ukáže, ktorý dokument ten kľúč už má.
 
-1. **Nový dokument** sa zakladá v [Knižnici](/library) tlačidlom Nahrať dokument. Vyplní sa názov, zaradenie a kľúč dokumentu; súbor môže byť DOCX, PDF, XLSX, Markdown, TXT alebo CSV.
+1. **Nový dokument** sa zakladá v [Knižnici](/library) tlačidlom Nahrať dokument. Vyplní sa názov, druh a kľúč dokumentu; schvaľuje sa PDF a upraviteľný zdroj môže byť DOCX, XLSX, Markdown, TXT alebo CSV.
 2. **Nové znenie už existujúceho dokumentu** sa nahráva na detaile toho dokumentu, nie cez nahratie nového. Systém vám hneď povie, či sa text líši od platného znenia a o koľko riadkov, a rozdiel po riadkoch si viete pozrieť ešte pred zverejnením.
 3. **Prevod do textu.** Zo súboru sa urobí čistý text — knižnicou, doslovne, **bez jazykového modelu**. Skenované PDF bez textovej vrstvy prevod odmietne; vtedy ho viete dať v editore prepísať jazykovému modelu a výsledok príde ako **návrh vedľa textu**, ktorý si prečítate a prevezmete — sám sa nezapíše nikdy. Prevedený text vždy prečítajte; originálny súbor zostáva uložený a dá sa stiahnuť.
 4. **Metadáta.** Označenie znenia (napríklad „účinné od 1. 1. 2027“), dátum účinnosti a **zdroj toho dátumu** — odkiaľ viete, že platí práve odvtedy. Zdroj je povinný, lebo bez neho sa o rok nedá povedať, či dátum niekto opísal z dokumentu alebo odhadol.

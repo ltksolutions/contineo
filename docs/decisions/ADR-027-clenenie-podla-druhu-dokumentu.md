@@ -59,3 +59,25 @@ Rozhodnutie Jána: úpravy cez **pomenované profily** (D79 ostáva), AI dostane
   posledný návrh sa ukladá pri dokumente (`documents.chunkingAdvice`) a
   spotreba ide pod účel „Analýza členenia". Pracovný poriadok: ~12,7 tis.
   tokenov vstupu, ~$0,03, ~13 s.
+
+---
+
+## Dodatok 1 — D179: druh je typ dokumentu, značky sú témy (2026-10-08)
+
+**Rozhodol:** Ján Letko, 8. 10. 2026 („áno, súhlasím, začni") — na otázku,
+či zaviesť „typ" dokumentu alebo použiť značky.
+
+- **Typ dokumentu je Druh** (`category`), nové pole sa nezavádza. Druh má
+  dokument práve jeden a riadi sa podľa neho správanie: FAQ má záznamy namiesto
+  súboru (`chunking: "entries"`, ADR-028 D164) a podľa § 2 tohto ADR sa podľa
+  neho bude riadiť aj spôsob členenia.
+- **Značky sú témy** — žiadna, jedna aj päť, nič nespúšťajú. Typ do nich
+  nepatrí; nápoveda pri značkách to hovorí.
+- **Dva základné spôsoby vzniku** — dokument zo súboru a FAQ — ukazuje
+  rozcestník na `/library/new` (tretí zdroj je import zo servera, ADR-029).
+  Vo výbere Druhu pri nahratí súboru FAQ nie je; má vlastnú cestu.
+- Druh ostáva **povinný vo formulári, nepovinný na serveri** (rozhodnutie
+  z 21. 9. 2026: import, seed a staré dokumenty bez druhu sa nerozbijú).
+- Značky „Poriadok" a „Smernica" v SFZ duplikujú druh; odstránia sa
+  samostatne po kontrole, že dotknuté dokumenty majú druh vyplnený.
+
