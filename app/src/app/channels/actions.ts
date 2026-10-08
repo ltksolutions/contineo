@@ -167,7 +167,8 @@ export async function startHistoryAnalysisAction(fd: FormData) {
   let failed = false
   try {
     await startAnalysis(ctx.person.companyCode, key, Number(fieldText(fd, "months")), ctx.person.email)
-    await continueAnalysis(ctx.person.companyCode, key, 20_000)
+    // Jeden mesiac hneď, aby stránka nebola prázdna; zvyšok cron (D180).
+    await continueAnalysis(ctx.person.companyCode, key, { budgetMs: 1, hardMs: 90_000 })
   } catch (e) {
     if (isRedirect(e)) throw e
     message = errorMessage(e, ctx.language)

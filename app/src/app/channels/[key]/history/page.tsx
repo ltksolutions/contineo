@@ -24,6 +24,8 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { startHistoryAnalysisAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
+// Akcia „Spustiť analýzu" číta prvý mesiac zo schránky (do 90 s, viď akciu).
+export const maxDuration = 120
 
 function percent(part: number, whole: number): number {
   return whole ? Math.round((part / whole) * 100) : 0
@@ -135,7 +137,7 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
             ) : (
               <div className="mg-list" style={{ margin: "0 -18px -18px", borderTop: "1px solid var(--line)" }}>
                 {summary.terms.map(x => {
-                  const dir = trend(x.older, x.newer)
+                  const dir = summary.trendReady ? trend(x.older, x.newer) : null
                   return (
                     <p key={x.term} className="mg-row">
                       <span className="mg-row-main"><b>{x.term}</b></span>

@@ -6,11 +6,18 @@
  * pre caste slova) a suhrn obdobia s trendom.
  */
 
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 
-vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
+const col = { findOne: vi.fn(), updateOne: vi.fn() }
+const adapter = { address: "helpdesk@futbalsfz.sk", listHeaders: vi.fn() }
+vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async () => col) }))
+vi.mock("../src/lib/channels", () => ({
+  channelByKey: vi.fn(async () => ({ key: "k", mailbox: { kind: "graph" } })),
+  mailboxFor: vi.fn(() => adapter),
+}))
 
-import { monthsBack, monthRange, normalizeSubject, subjectTerms, summarizeMonth, summarizeAnalysis, type MonthStats } from "../src/lib/historyAnalysis"
+import { monthsBack, monthRange, normalizeSubject, subjectTerms, summarizeMonth, summarizeAnalysis, continueAnalysis, MAX_FAILURES, type MonthStats } from "../src/lib/historyAnalysis"
+import { MailboxError } from "../src/lib/mailbox/graph"
 import type { MailHeader } from "../src/lib/mailbox/types"
 
 const BOX = "helpdesk@futbalsfz.sk"
@@ -120,5 +127,54 @@ describe("summarizeAnalysis", () => {
     expect(s.medianReplyHours).toBe(15)
     expect(s.terms[0]).toEqual({ term: "prestup", threads: 14, months: 2, older: 0, newer: 14 })
     expect(s.terms[1]).toMatchObject({ term: "licencia", older: 7, newer: 0 })
+    // Tri mesiace na porovnanie polovíc nestačia — trend sa neukazuje.
+    expect(s.trendReady).toBe(false)
+  })
+
+  it("trend je pripraveny od 6 spracovanych mesiacov", () => {
+    const keys = ["2026-06", "2026-05", "2026-04", "2026-03", "2026-02", "2026-01"]
+    const s = summarizeAnalysis({ months: keys, stats: Object.fromEntries(keys.map(k => [k, month(k, 1, [])])) })
+    expect(s.trendReady).toBe(true)
+  })
+})
+
+describe("continueAnalysis", () => {
+  const doc = (over: object = {}) => ({ companyCode: "SFZ", channelKey: "k", pending: ["2026-09", "2026-08"], failures: 0, ...over })
+  beforeEach(() => {
+    col.findOne.mockReset()
+    col.updateOne.mockReset().mockResolvedValue({})
+    adapter.listHeaders.mockReset()
+  })
+
+  it("pokus zapise pred citanim schranky, aby ho zratal aj beh zruseny casovym limitom", async () => {
+    col.findOne.mockResolvedValue(doc())
+    adapter.listHeaders.mockImplementation(async () => {
+      // V čase čítania už musí byť pokus v databáze.
+      expect(col.updateOne).toHaveBeenCalledWith({ companyCode: "SFZ", channelKey: "k" }, expect.objectContaining({ $inc: { failures: 1 } }))
+      throw new MailboxError("mailbox.slow", "pomaly")
+    })
+    expect(await continueAnalysis("SFZ", "k", { budgetMs: 1000, hardMs: 2000 })).toBe(0)
+    const last = col.updateOne.mock.calls.at(-1)![1]
+    expect(last.$set.error).toBe("mailbox.slow")
+    // Chyba pokus znova nepripočíta — už je zarátaný.
+    expect(last.$inc).toBeUndefined()
+  })
+
+  it("prvy mesiac sa spracuje aj s minimalnym rozpoctom, uspech vynuluje pokusy", async () => {
+    col.findOne.mockResolvedValue(doc({ failures: 2 }))
+    // Čítanie trvá dlhšie než rozpočet — druhý mesiac sa už nezačne.
+    adapter.listHeaders.mockImplementation(() => new Promise(r => setTimeout(() => r([]), 5)))
+    expect(await continueAnalysis("SFZ", "k", { budgetMs: 1, hardMs: 90_000 })).toBe(1)
+    const saved = col.updateOne.mock.calls.find(c => c[1].$pull)![1]
+    expect(saved.$pull).toEqual({ pending: "2026-09" })
+    expect(saved.$set.failures).toBe(0)
+    expect(adapter.listHeaders).toHaveBeenCalledTimes(1)
+  })
+
+  it("po MAX_FAILURES pokusoch sa analyza dalej neskusa", async () => {
+    col.findOne.mockResolvedValue(doc({ failures: MAX_FAILURES }))
+    expect(await continueAnalysis("SFZ", "k", { budgetMs: 1000, hardMs: 2000 })).toBe(0)
+    expect(adapter.listHeaders).not.toHaveBeenCalled()
+    expect(col.updateOne).not.toHaveBeenCalled()
   })
 })
