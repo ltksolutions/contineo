@@ -8259,3 +8259,19 @@ section.rating { border-top: 1px solid var(--line); }
   .more-sub { padding: 0 14px 14px; }
   .doc-more .more-row > .button, .doc-more .more-acts .button { flex: 1 1 auto; }
 }
+
+/* Hromadné akcie nad zoznamom ticketov (Ján 8. 10. 2026). Políčko je
+   natívne a viditeľné — `.form-row` ho skrýva, preto vlastná trieda. */
+.ticket-pick { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); flex: none; cursor: pointer; }
+.ticket-pick-col { width: 44px; }
+.ticket-bulk-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+}
+.ticket-bulk-all { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.ticket-bulk-count { font-size: 14px; }
+.ticket-bulk-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto; }
+@media (max-width: 639px) {
+  .ticket-bulk-actions { margin-left: 0; width: 100%; }
+  .ticket-bulk-actions .button { flex: 1 1 auto; }
+}

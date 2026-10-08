@@ -2279,6 +2279,15 @@ interface Dictionary {
     msgTaken: string
     msgReleased: string
     msgClosed: string
+    /** Hromadné akcie v zozname ticketov (Ján 8. 10. 2026). */
+    bulkSelectAll: string
+    bulkSelected: (n: number) => string
+    bulkNone: string
+    bulkPick: (subject: string) => string
+    bulkTake: string
+    bulkClose: string
+    bulkReopen: string
+    bulkDone: (op: "close" | "take" | "reopen", ok: number, failed: number) => string
     msgReopened: string
     aiFailed: string
   }
@@ -6622,6 +6631,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgTaken: "Ticket je tvoj.",
     msgReleased: "Ticket je uvoľnený.",
     msgClosed: "Ticket je zavretý.",
+    bulkSelectAll: "Vybrať všetky",
+    bulkSelected: n => `Vybraté: ${n}`,
+    bulkNone: "Nie je vybraný žiadny ticket.",
+    bulkPick: subject => `Vybrať ticket ${subject}`,
+    bulkTake: "Prevziať vybrané",
+    bulkClose: "Zavrieť vybrané",
+    bulkReopen: "Otvoriť vybrané znova",
+    bulkDone: (op, ok, failed) => `${op === "close" ? "Zavreté" : op === "take" ? "Prevzaté" : "Znovu otvorené"}: ${ok}${failed ? ` · nepodarilo sa: ${failed}` : ""}.`,
     msgReopened: "Ticket je znovu otvorený.",
     aiFailed: "Asistent návrh nepripravil — skús to o chvíľu alebo napíš odpoveď sám.",
   },
@@ -10825,6 +10842,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgTaken: "Ticket je tvůj.",
     msgReleased: "Ticket je uvolněn.",
     msgClosed: "Ticket je zavřen.",
+    bulkSelectAll: "Vybrat vše",
+    bulkSelected: n => `Vybráno: ${n}`,
+    bulkNone: "Není vybrán žádný ticket.",
+    bulkPick: subject => `Vybrat ticket ${subject}`,
+    bulkTake: "Převzít vybrané",
+    bulkClose: "Zavřít vybrané",
+    bulkReopen: "Znovu otevřít vybrané",
+    bulkDone: (op, ok, failed) => `${op === "close" ? "Zavřeno" : op === "take" ? "Převzato" : "Znovu otevřeno"}: ${ok}${failed ? ` · nepodařilo se: ${failed}` : ""}.`,
     msgReopened: "Ticket je znovu otevřen.",
     aiFailed: "Asistent návrh nepřipravil — zkus to za chvíli nebo napiš odpověď sám.",
   },
@@ -15019,6 +15044,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgTaken: "The ticket is yours.",
     msgReleased: "The ticket is released.",
     msgClosed: "The ticket is closed.",
+    bulkSelectAll: "Select all",
+    bulkSelected: n => `Selected: ${n}`,
+    bulkNone: "No ticket is selected.",
+    bulkPick: subject => `Select ticket ${subject}`,
+    bulkTake: "Take selected",
+    bulkClose: "Close selected",
+    bulkReopen: "Reopen selected",
+    bulkDone: (op, ok, failed) => `${op === "close" ? "Closed" : op === "take" ? "Taken" : "Reopened"}: ${ok}${failed ? ` · failed: ${failed}` : ""}.`,
     msgReopened: "The ticket is reopened.",
     aiFailed: "The assistant did not produce a draft — try again in a moment or write the answer yourself.",
   },

@@ -11,6 +11,9 @@
 import Link from "next/link"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import type { TicketListItem } from "@/lib/tickets"
+import SubmitButton from "./SubmitButton"
+import TicketBulkBar, { TICKET_BULK_FORM } from "./TicketBulkBar"
+import { bulkTicketsAction } from "@/app/channels/tickets/actions"
 
 export const TICKET_VIEWS = ["open", "sent", "closed", "all"] as const
 export type TicketView = (typeof TICKET_VIEWS)[number]
@@ -48,10 +51,27 @@ export default function TicketList({ tickets, view, base, channelName, showChann
 
       {tickets.length === 0 && <p className="quiet" style={{ marginTop: 16 }}>{t.empty}</p>}
 
+      {/* Hromadné akcie (Ján 8. 10. 2026): políčka v riadkoch patria tomuto
+          formuláru cez atribút `form`, takže výber funguje aj bez skriptu. */}
+      {tickets.length > 0 && (
+        <form id={TICKET_BULK_FORM} action={bulkTicketsAction} style={{ marginTop: 16 }}>
+          <input type="hidden" name="back" value={view === "open" ? base : `${base}?view=${view}`} />
+          <TicketBulkBar labels={{ selectAll: t.bulkSelectAll, selected: t.bulkSelected(-1).replace("-1", "{n}"), none: t.bulkNone }}>
+            {view !== "closed" && <SubmitButton className="button button--quiet" name="op" value="take">{t.bulkTake}</SubmitButton>}
+            {view === "closed"
+              ? <SubmitButton className="button button--quiet" name="op" value="reopen">{t.bulkReopen}</SubmitButton>
+              : <SubmitButton className="button button--quiet" name="op" value="close">{t.bulkClose}</SubmitButton>}
+          </TicketBulkBar>
+        </form>
+      )}
+
       <ul className="doc-cards doc-view-auto" style={{ marginTop: 16 }}>
         {tickets.map(x => (
           <li key={x.id} className="card" style={{ display: "grid", gap: 6 }}>
-            <Link href={href(x.id)}><b>{x.subject || "—"}</b></Link>
+            <span style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <input type="checkbox" className="ticket-pick" name="ids" value={x.id} form={TICKET_BULK_FORM} aria-label={t.bulkPick(x.subject || "—")} />
+              <Link href={href(x.id)}><b>{x.subject || "—"}</b></Link>
+            </span>
             <span className="quiet">{x.askerName ?? x.askerEmail ?? "—"}{showChannel && <> · {channelName.get(x.channelKey) ?? x.channelKey}</>} · {t.source[x.source]}</span>
             <span className="quiet">
               {stateTag(x.state)}
@@ -67,6 +87,7 @@ export default function TicketList({ tickets, view, base, channelName, showChann
           <table className="doc-table">
             <thead>
               <tr>
+                <th className="ticket-pick-col"><span className="sr-only">{t.bulkSelectAll}</span></th>
                 <th className="doc-col-title">{t.colSubject}</th>
                 <th>{t.colAsker}</th>
                 {showChannel && <th>{t.colChannel}</th>}
@@ -78,6 +99,9 @@ export default function TicketList({ tickets, view, base, channelName, showChann
             <tbody>
               {tickets.map(x => (
                 <tr key={x.id}>
+                  <td className="ticket-pick-col">
+                    <input type="checkbox" className="ticket-pick" name="ids" value={x.id} form={TICKET_BULK_FORM} aria-label={t.bulkPick(x.subject || "—")} />
+                  </td>
                   <td className="doc-col-title"><Link href={href(x.id)}>{x.subject || "—"}</Link>{x.assigneeId === personId && <span className="quiet"> · {t.mine}</span>}</td>
                   <td>{x.askerName ?? x.askerEmail ?? "—"}{!showChannel && <span className="quiet"> · {t.source[x.source]}</span>}</td>
                   {showChannel && <td>{channelName.get(x.channelKey) ?? x.channelKey} <span className="quiet">· {t.source[x.source]}</span></td>}

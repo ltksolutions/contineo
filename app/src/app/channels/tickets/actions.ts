@@ -176,3 +176,42 @@ export async function ticketToFaqAction(fd: FormData) {
   revalidatePath("/library")
   back(id, ctx.t.toFaqDone)
 }
+
+/** Najviac ticketov v jednej hromadnej akcii — zoznam ich aj tak viac neukáže. */
+const BULK_MAX = 200
+
+/**
+ * Hromadná akcia nad vybranými ticketmi (Ján 8. 10. 2026): prevziať, zavrieť,
+ * otvoriť znova. Každý ticket ide cez tú istú funkciu ako jednotlivo — aj
+ * s bránou kanálov riešiteľa (`ctx.keys`) a auditom; cudzí ticket zlyhá
+ * sám za seba a ostatné prejdú.
+ */
+export async function bulkTicketsAction(fd: FormData) {
+  const ctx = await ready()
+  const op = fieldText(fd, "op")
+  const raw = fieldText(fd, "back")
+  const target = raw.startsWith("/channels/") && !raw.startsWith("//") ? raw : "/channels/tickets"
+  const ids = [...new Set(fd.getAll("ids").filter((x): x is string => typeof x === "string" && x.length > 0))].slice(0, BULK_MAX)
+  const go = (message: string, error = false) => {
+    revalidatePath("/channels/tickets")
+    const sep = target.includes("?") ? "&" : "?"
+    redirect(`${target}${sep}msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  }
+  if (!ids.length) go(ctx.t.bulkNone, true)
+  if (op !== "close" && op !== "take" && op !== "reopen") go(ctx.t.bulkNone, true)
+  let ok = 0
+  let failed = 0
+  for (const id of ids) {
+    try {
+      if (op === "close") await closeTicket(ctx.person.companyCode, ctx.keys, id, ctx.person.email)
+      else if (op === "reopen") await reopenTicket(ctx.person.companyCode, ctx.keys, id, ctx.person.email)
+      else await assignTicket(ctx.person.companyCode, ctx.keys, id, ctx.person.id, ctx.person.email)
+      ok++
+    } catch (e) {
+      if (isRedirect(e)) throw e
+      if (!(e instanceof AppError)) console.error("[helpdesk] hromadná akcia zlyhala:", e)
+      failed++
+    }
+  }
+  go(ctx.t.bulkDone(op as "close" | "take" | "reopen", ok, failed), failed > 0 && ok === 0)
+}
