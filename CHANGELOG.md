@@ -13,6 +13,12 @@ zaškrtnutý riadok. Pri presnej zhode Enter zaškrtne existujúcu. Bez
 JavaScriptu sa napísaný text uloží ako nová hodnota. Riadok „Nová skupina"
 na konci zoznamu zmizol.
 
+### Helpdesk: synchronizácia každých 5 minút, interval pri kanáli (2026-10-08)
+
+Pri schránke kanála je **Interval synchronizácie** — 5, 15, 30, 60 minút
+alebo raz denne, predvolene 5. Vercel cron beží každých 5 minút (plán
+Pro) a synchronizuje len kanál, ktorému interval uplynul.
+
 ### MCP konektory: import článkov do knižnice (2026-10-08)
 
 Druhé použitie konektora (ADR-029 B). Konektor má prepínač **Povoliť import

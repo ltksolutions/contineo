@@ -674,8 +674,12 @@ Doručené) a **Synchronizovať teraz**.
   Get-Mailbox helpdesk@futbalsfz.sk | Format-List RecipientTypeDetails, MessageCopyForSentAsEnabled, MessageCopyForSendOnBehalfEnabled
   Set-Mailbox helpdesk@futbalsfz.sk -MessageCopyForSentAsEnabled $true -MessageCopyForSendOnBehalfEnabled $true
   ```
-- Rozvrh je v `app/vercel.json` (`/api/cron/helpdesk-sync`). Na pláne Hobby
-  smie cron bežať raz denne; na Pro sa dá zmeniť na `*/15 * * * *`.
+- **Rozvrh synchronizácie.** Vercel cron každých 5 minút (`app/vercel.json`,
+  `/api/cron/helpdesk-sync`; projekt je na pláne Pro). Ako často sa ktorá
+  schránka naozaj synchronizuje, nastaví správca pri kanáli (**Interval
+  synchronizácie**: 5, 15, 30, 60 minút alebo raz denne, predvolene 5) —
+  cron berie len kanály, ktorým interval uplynul; v odpovedi je `notDue`.
+  Behy sú vidieť vo Verceli: Project → Settings → Cron Jobs.
   Tlačidlo „Synchronizovať teraz" rozvrh nepotrebuje.
 - Chyby synchronizácie sú pri kanáli (`lastSyncError`): `mailbox.auth` =
   tajomstvo alebo ID; `mailbox.forbidden` = chýba alebo nedobehlo zúženie

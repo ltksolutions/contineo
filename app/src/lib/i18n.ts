@@ -2328,6 +2328,9 @@ interface Dictionary {
     syncError: (code: string) => string
     syncCounts: (created: number, appended: number, skipped: number) => string
     syncSinceHint: string
+    syncInterval: string
+    syncIntervalHint: string
+    syncIntervalOption: (minutes: number) => string
     syncDone: (created: number, appended: number, beforeStart: number) => string
     verify: string
     verified: (address: string, name: string) => string
@@ -5586,6 +5589,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.notFromConnector": "Tento dokument nevznikol z konektora.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
     "helpdesk.kind": "Neznámy typ kanála.",
+    "helpdesk.syncInterval": "Neznámy interval synchronizácie.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
     "ticket.notFound": "Taký ticket tu nie je.",
@@ -6617,6 +6621,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncError: (code: string) => `posledná chyba: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplnené ${appended} · preskočené ${skipped}`,
     syncSinceHint: "Prvé spustenie len označí začiatok: staršie správy sa ticketmi nestanú, história ide do ťažby FAQ.",
+    syncInterval: "Interval synchronizácie",
+    syncIntervalHint: "Ako často sa schránka kontroluje automaticky. Synchronizovať teraz funguje kedykoľvek.",
+    syncIntervalOption: (m: number) => (m >= 1440 ? "raz denne" : m >= 60 ? "každú hodinu" : `každých ${m} minút`),
     syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizácia prebehla: nové tickety ${created}, doplnené ${appended}, správ z histórie preskočených ${beforeStart}.`,
     verify: "Overiť spojenie",
     verified: (address: string, name: string) => `Spojenie funguje: ${address}${name ? ` (${name})` : ""}.`,
@@ -9741,6 +9748,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.notFromConnector": "Tento dokument nevznikl z konektoru.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
     "helpdesk.kind": "Neznámý typ kanálu.",
+    "helpdesk.syncInterval": "Neznámý interval synchronizace.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
     "ticket.notFound": "Takový ticket tady není.",
@@ -10770,6 +10778,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncError: (code: string) => `poslední chyba: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplněné ${appended} · přeskočené ${skipped}`,
     syncSinceHint: "První spuštění jen označí začátek: starší zprávy se tickety nestanou, historie jde do těžby FAQ.",
+    syncInterval: "Interval synchronizace",
+    syncIntervalHint: "Jak často se schránka kontroluje automaticky. Synchronizovat teď funguje kdykoli.",
+    syncIntervalOption: (m: number) => (m >= 1440 ? "jednou denně" : m >= 60 ? "každou hodinu" : `každých ${m} minut`),
     syncDone: (created: number, appended: number, beforeStart: number) => `Synchronizace proběhla: nové tickety ${created}, doplněné ${appended}, zpráv z historie přeskočeno ${beforeStart}.`,
     verify: "Ověřit spojení",
     verified: (address: string, name: string) => `Spojení funguje: ${address}${name ? ` (${name})` : ""}.`,
@@ -13885,6 +13896,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.notFromConnector": "This document did not come from a connector.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
     "helpdesk.kind": "Unknown channel type.",
+    "helpdesk.syncInterval": "Unknown sync interval.",
     "helpdesk.noTickets": "The channel has tickets switched off.",
     "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
     "ticket.notFound": "There is no such ticket here.",
@@ -14914,6 +14926,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncError: (code: string) => `last error: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `new tickets ${created} · appended ${appended} · skipped ${skipped}`,
     syncSinceHint: "The first run only marks the start: older messages do not become tickets, history goes to FAQ mining.",
+    syncInterval: "Sync interval",
+    syncIntervalHint: "How often the mailbox is checked automatically. Sync now works at any time.",
+    syncIntervalOption: (m: number) => (m >= 1440 ? "once a day" : m >= 60 ? "every hour" : `every ${m} minutes`),
     syncDone: (created: number, appended: number, beforeStart: number) => `Synchronisation finished: new tickets ${created}, appended ${appended}, history messages skipped ${beforeStart}.`,
     verify: "Verify connection",
     verified: (address: string, name: string) => `The connection works: ${address}${name ? ` (${name})` : ""}.`,
