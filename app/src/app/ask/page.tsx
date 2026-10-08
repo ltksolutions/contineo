@@ -25,6 +25,8 @@ import { brandingView } from "@/lib/tenants"
 import { dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
 import { evaluationContext } from "@/lib/evaluation"
+import { liveConnectorsFor } from "@/lib/liveSources"
+import { accessLevelFor } from "@/lib/accessLevel"
 
 // Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
@@ -63,6 +65,10 @@ export default async function AskPage({
    * odmietne (D32).
    */
   const canEvaluate = (await evaluationContext()).state === "ready"
+  // Živé zdroje (ADR-029): len tie, ktoré sa pri otázke naozaj zavolajú —
+  // s úrovňou pýtajúceho sa a bez volania servera.
+  const liveSources = (await liveConnectorsFor(ctx.tenant.companyCode, accessLevelFor(ctx)))
+    .map(c => ({ id: c.id, name: c.name }))
 
   return (
     <AppShell language={person?.language}>
@@ -76,6 +82,7 @@ export default async function AskPage({
             organisation={short}
             language={person?.language}
             canEvaluate={canEvaluate}
+            liveSources={liveSources}
           />
         ) : (
           <>

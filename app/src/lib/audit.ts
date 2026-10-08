@@ -65,6 +65,8 @@ export type AuditSubject =
   // Helpdesk (ADR-028): ticket a kanál
   | "ticket"
   | "helpdesk-channel"
+  /** MCP konektor organizácie (ADR-029). */
+  | "connector"
 
 export interface AuditRecord {
   _id?: ObjectId

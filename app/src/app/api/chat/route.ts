@@ -48,6 +48,7 @@ import type { UsageActor } from "@/lib/aiUsage"
 import { onboardingContext }  from "@/lib/session"
 import { sameOrigin } from "@/lib/sameOrigin"
 import { accessLevelFor } from "@/lib/accessLevel"
+import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 
 // ── Typy ────────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,8 @@ interface ChatRequest {
   language?:          string
   useLLMClassifier?:  boolean   // default: false (heuristika)
   usePreprocessing?:  boolean   // default: true pre vector/hybrid
+  /** Rozsah z piluliek (ADR-029): `"library"` a/alebo id konektorov. */
+  only?:              string[]
 }
 
 // ── Handler ──────────────────────────────────────────────────────────────────
@@ -112,7 +115,11 @@ export async function POST(req: NextRequest) {
    * `error`; pred streamom zostalo len to, čo rozhoduje o prístupe
    * (organizácia, osoba) a o platnosti otázky.
    */
-  const stream = chatStream({ companyCode, query, language, accessLevel: userRole, usageActor, useLLMClassifier, usePreprocessing })
+  const only = Array.isArray(body.only) ? body.only.filter((x): x is string => typeof x === "string").slice(0, 20) : undefined
+  const stream = chatStream({
+    companyCode, query, language, accessLevel: userRole, usageActor, useLLMClassifier, usePreprocessing,
+    only, callbackUrl: await connectorCallbackUrl(),
+  })
   return sseResponse(stream)
 }
 // ── SSE Response helper ──────────────────────────────────────────────────────

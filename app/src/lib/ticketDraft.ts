@@ -25,6 +25,8 @@ import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
 import { AppError } from "./appError"
 import type { HelpdeskChannel } from "./channels"
 import { questionText, type Ticket } from "./tickets"
+import { liveSearch } from "./liveSources"
+import { connectorCallbackUrl } from "./mcp/callbackUrl"
 
 export class TicketDraftError extends AppError {}
 
@@ -33,6 +35,8 @@ export interface DraftSource {
   title: string
   articleRef: string | null
   sourceType?: string
+  /** Živý zdroj (ADR-029) — bez odkazu do knižnice, s názvom konektora. */
+  live?: { connectorId: string; connectorName: string; externalId: string; group?: string }
 }
 
 export interface TicketDraftResult {
@@ -66,9 +70,21 @@ export async function draftTicketAnswer(ticket: Ticket, channel: HelpdeskChannel
     versionIds: scope.versionIds,
     verifiedAnswers: scope.verifiedAnswers,
   }
-  let chunks = scope.versionIds.length || scope.verifiedAnswers
-    ? await hybridSearch(await getCollection("document_chunks"), opts)
-    : []
+  // Živé zdroje kanála (ADR-029) s úrovňou `public` — interný konektor sa
+  // do návrhu e-mailu nedostane, bez výnimky v kóde (D174).
+  const [libraryChunks, live] = await Promise.all([
+    scope.versionIds.length || scope.verifiedAnswers
+      ? hybridSearch(await getCollection("document_chunks"), opts)
+      : Promise.resolve([]),
+    channel.connectorScopes?.length
+      ? liveSearch({
+          companyCode, query: question.slice(0, 2000), accessLevel: "public", scopeRefs: channel.connectorScopes,
+          redirectUrl: await connectorCallbackUrl(),
+          ctx: { actor: { personId: actor.personId, personName: actor.personName }, channelKey: channel.key },
+        })
+      : Promise.resolve({ chunks: [], failed: [], asked: [] }),
+  ])
+  let chunks = [...libraryChunks, ...live.chunks]
   if (chunks.length && !providers.rerank.isPipelineStage) {
     const topK = profile.providers.rerank.topK ?? 8
     try { chunks = await providers.rerank.rerank(question, chunks, topK) } catch { chunks = chunks.slice(0, topK) }
@@ -77,7 +93,7 @@ export async function draftTicketAnswer(ticket: Ticket, channel: HelpdeskChannel
   if (!chunks.length) return { text: "", sources: [], model, noSources: true }
 
   const answerChunks = attachVersions(chunks, scope.versions)
-  const system = buildSystemPrompt("public", providers.generation.supportsCitations, now)
+  const system = buildSystemPrompt("public", providers.generation.supportsCitations, now, undefined, answerChunks.some(c => c.live))
   const query = `${question}\n\n(Odpoveď formuluj ako e-mail helpdesku pýtajúcemu sa: úplne, vecne, bez pozdravu a podpisu.)`
 
   let text = ""
@@ -101,7 +117,7 @@ export async function draftTicketAnswer(ticket: Ticket, channel: HelpdeskChannel
   }
 
   const sources: DraftSource[] = buildSources(answerChunks).map(s => ({
-    documentId: s.documentId, title: s.title, articleRef: s.articleRef ?? null, sourceType: s.sourceType,
+    documentId: s.documentId, title: s.title, articleRef: s.articleRef ?? null, sourceType: s.sourceType, live: s.live,
   }))
   // Jeden dokument raz — e-mail nepotrebuje zoznam úsekov, ale čo citovať.
   const unique = [...new Map(sources.map(s => [`${s.documentId}|${s.articleRef ?? ""}`, s])).values()].slice(0, 8)

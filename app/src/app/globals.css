@@ -4347,6 +4347,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   gap: 4px 14px;
   font-size: 13px;
 }
+/* Pilulky rozsahu hľadania (ADR-029) — segmentový prepínač z tlačidiel, nie odkazov:
+   prepnutie položí otázku znova, nie je to adresa. */
+.ask-scope { margin-top: 10px; }
+button.view-switch-item { border: 0; background: transparent; font: inherit; cursor: pointer; }
+button.view-switch-item.is-on { background: var(--seg-thumb); }
+button.view-switch-item:disabled { cursor: default; opacity: .7; }
 /* „Upraviť otázku" je `<label>` poľa v hlavičke — vyzerá ako odkaz. */
 .ask-edit {
   display: inline-flex;

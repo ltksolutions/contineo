@@ -60,7 +60,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const newestFirst = [...ticket.messages].reverse()
   const isOpen = ticket.state !== "closed"
   const canSend = isOpen && Boolean(channel?.mailbox) && (ticket.asker.email || ticket.messages.some(m => m.direction === "in"))
-  const sources = (ticket.draft?.sources ?? []) as { documentId?: string; title?: string; articleRef?: string | null; sourceType?: string }[]
+  const sources = (ticket.draft?.sources ?? []) as { documentId?: string; title?: string; articleRef?: string | null; sourceType?: string; live?: { connectorName: string; group?: string } }[]
 
   return (
     <AppShell language={language} title={ticket.subject || t.heading} trail={{ "/channels/tickets": dictionary(language).channels.tabMyTickets }}>
@@ -190,8 +190,10 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
               <ul style={{ margin: 0, paddingLeft: 18 }}>
                 {sources.map((s, i) => (
                   <li key={i}>
-                    {s.documentId ? <Link href={`/documents/${encodeURIComponent(s.documentId)}`}>{s.title ?? s.documentId}</Link> : s.title}
+                    {/* Živý zdroj (ADR-029) nie je v knižnici — odkaz by viedol na 404. */}
+                    {s.documentId && !s.live ? <Link href={`/documents/${encodeURIComponent(s.documentId)}`}>{s.title ?? s.documentId}</Link> : s.title}
                     {s.articleRef ? ` (${s.articleRef})` : ""}{s.sourceType === "qa" ? " · FAQ" : ""}
+                    {s.live ? ` · ${s.live.connectorName}${s.live.group ? ` (${s.live.group})` : ""}` : ""}
                   </li>
                 ))}
               </ul>
