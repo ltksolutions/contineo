@@ -7686,27 +7686,29 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
    výber skupín a značiek (ZAKLAD-vyber-skupin-a-znaciek, 8. 10. 2026). */
 .form-row-detail { flex: none; color: var(--muted); font-size: 14px; white-space: nowrap; }
 .form-row-detail.is-only { color: var(--warn-fg); }
-.form-row--new { cursor: text; }
-.select-row + .form-row--new::before { left: 50px; }
+/* Jedno pole „Hľadať alebo pridať" navrchu karty (Q6, `ValueCombo`). */
+.sel-combo { display: flex; align-items: center; gap: 9px; height: 40px; padding: 0 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
+.sel-combo input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 15px; color: var(--ink); }
+.sel-combo input:focus { outline: none; }
+.sel-combo:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sel-combo-count { font-size: 12.5px; white-space: nowrap; }
+/* Pridané hodnoty a „+ Pridať" vkladá `ValueCombo` na koniec zoznamu. */
+.sel-added { display: contents; }
+.sel-added > .form-row::before { content: ""; position: absolute; top: 0; left: 50px; right: 0; border-top: 1px solid var(--line); }
+.form-row.is-add { width: 100%; border: 0; background: none; font: inherit; text-align: left; }
+.form-row.is-add .form-row-main > span:first-child { color: var(--accent); font-weight: 600; }
 .form-row-plus {
   flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
   border: 1.5px dashed var(--control-line); color: var(--muted); font-size: 15px; line-height: 1;
 }
-.form-row-input { flex: 1; min-width: 0; min-height: 26px; padding: 0; border: 0; background: transparent; font: inherit; color: var(--ink); }
-.form-row-input:focus { outline: none; }
-.form-row--new:has(.form-row-input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
-.sel-search { display: flex; align-items: center; gap: 9px; height: 40px; margin: 10px 12px 6px; padding: 0 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
-.sel-search input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 15px; color: var(--ink); }
-.sel-search input:focus { outline: none; }
-.sel-search:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
-.sel-search-count { font-size: 12.5px; white-space: nowrap; }
 .sel-warn { display: grid; gap: 10px; padding: 12px 16px 14px; background: var(--warn-bg); border-top: 1px solid var(--line); }
 .sel-warn p { margin: 0; font-size: 14px; }
-/* Pod riadkami po okraj karty — prebije všeobecný odstup obsahu karty
+/* Pole navrchu a varovanie dole — prebije všeobecný odstup obsahu karty
    s riadkami (`.form-group-body--rows > :not(…)`). */
-.form-group-body.form-group-body--rows > .sel-search.sel-search { margin: 10px 12px 6px; }
+.form-group-body.form-group-body--rows > .sel-combo.sel-combo { margin: 10px 12px 8px; }
 .form-group-body.form-group-body--rows > .sel-warn.sel-warn { margin: 0; }
-@media (max-width: 639px) { .sel-search { height: 44px; } }
+.sel-combo + .form-list { border-top: 1px solid var(--line); }
+@media (max-width: 639px) { .sel-combo { height: 44px; } }
 
 /* Kruh vľavo; vybraný plný farby organizácie s fajkou (Q1 — variant A). */
 .select-row > input {
