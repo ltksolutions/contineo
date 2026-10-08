@@ -10,12 +10,14 @@
  * CRON_SECRET`, inak 401. Cesta `/api/cron/` je verejná a bez kontroly
  * hostiteľa (`publicRoutes.ts`) — organizácia je na kanáli, nie v adrese.
  *
- * Rozvrh je v `vercel.json`. Tlačidlo „Synchronizovať teraz" v nastavení
- * kanála volá to isté bez čakania na rozvrh.
+ * Spúšťač: Vercel cron každých 5 minút (`vercel.json`, plán Pro). Synchronizuje
+ * sa len kanál, ktorému uplynul jeho interval (`isSyncDue()`, nastavenie
+ * kanála). Tlačidlo „Synchronizovať teraz" v nastavení kanála interval
+ * nepozerá.
  */
 
 import { NextResponse } from "next/server"
-import { channelsWithMailbox, syncChannel, type SyncReport } from "@/lib/channels"
+import { channelsWithMailbox, syncChannel, isSyncDue, type SyncReport } from "@/lib/channels"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -26,7 +28,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false }, { status: 401 })
   }
   const reports: (SyncReport & { companyCode: string })[] = []
+  const now = new Date()
+  let notDue = 0
   for (const channel of await channelsWithMailbox()) {
+    if (channel.mailbox && !isSyncDue(channel.mailbox, now)) { notDue += 1; continue }
     try {
       const r = await syncChannel(channel.companyCode, channel.key)
       reports.push({ companyCode: channel.companyCode, ...r })
@@ -35,5 +40,5 @@ export async function GET(request: Request) {
       reports.push({ companyCode: channel.companyCode, key: channel.key, pages: 0, created: 0, appended: 0, skipped: 0, beforeStart: 0, done: false, error: "failed" })
     }
   }
-  return NextResponse.json({ ok: true, channels: reports })
+  return NextResponse.json({ ok: true, channels: reports, notDue })
 }
