@@ -282,23 +282,6 @@ export class GraphMailbox implements MailboxAdapter {
     return out
   }
 
-  /**
-   * Správy s textom v intervale (ADR-030, D184) — po 50, telá sú veľké.
-   * Nevyžiadaná a odstránená pošta sa vynechá rovno tu.
-   */
-  async listMessages(from: Date, to: Date, stopAt?: number): Promise<MailMessage[]> {
-    const { junk, deleted } = await this.skippedFolders()
-    const out: MailMessage[] = []
-    for await (const page of this.rangePages(`${SELECT},parentFolderId`, from, to, 50, stopAt)) {
-      for (const m of page) {
-        if (m.isDraft) continue
-        if (m.parentFolderId && (m.parentFolderId === junk || m.parentFolderId === deleted)) continue
-        out.push(toMailMessage(m, this.address))
-      }
-    }
-    return out
-  }
-
   async reply(messageId: string, text: string): Promise<{ messageId: string | null }> {
     const token = await this.accessToken()
     const r = await withTimeout(signal => fetch(`${this.userPath()}/messages/${encodeURIComponent(messageId)}/reply`, {

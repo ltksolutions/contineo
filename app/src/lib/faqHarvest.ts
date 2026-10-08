@@ -6,9 +6,9 @@
  * z nastaveného obdobia"), všetko po kúskoch v cron behoch, každý kúsok sa
  * hneď uloží:
  *
- *   1. `collect` — mesiac po mesiaci sa zo schránky prečítajú správy
- *      s textom; vlákno, ktoré začal človek zvonku a ktoré dostalo odpoveď,
- *      sa očistí (`scrubPersonalData`) a v dávkach ide modelu so zoznamom
+ *   1. `collect` — mesiac po mesiaci sa zo schránky prečítajú hlavičky
+ *      a text len vlákien, ktoré začal človek zvonku a ktoré dostali
+ *      odpoveď (`harvestCandidates`); otázka sa očistí (`scrubPersonalData`) a v dávkach ide modelu so zoznamom
  *      doterajších tém. Model priradí tému alebo navrhne novú. **Uloží sa
  *      len kľúč témy, mesiac, časy a `threadRef`** — text nie (D184).
  *   2. `merge`   — jedno volanie nad zoznamom tém zlúči duplicitné témy.
@@ -35,7 +35,7 @@ import { aiForCompany } from "./aiSettings"
 import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
 import { channelByKey, mailboxFor, type HelpdeskChannel } from "./channels"
 import { isBounce } from "./mailbox/bounce"
-import { stripQuotedHistory, type MailMessage } from "./mailbox/types"
+import { stripQuotedHistory, type MailMessage, type MailHeader } from "./mailbox/types"
 import { scrubPersonalData } from "./faqMining"
 import { monthsBack, monthRange, normalizeSubject, MARGIN_DAYS, ANALYSIS_PERIODS, DEFAULT_ANALYSIS_MONTHS, MAX_FAILURES } from "./historyAnalysis"
 import { saveProposals, removeOpenProposals, type NewProposal } from "./faqProposals"
@@ -123,6 +123,40 @@ export interface HarvestItem {
 }
 
 export interface HarvestSkips { colleague: number; excluded: number; unanswered: number }
+
+/** Súbežné čítanie vlákien zo schránky pri zbere. */
+export const THREAD_FETCH_PARALLEL = 6
+
+/**
+ * Hlavičky okna → vlákna, ktorých text treba prečítať (9. 10. 2026). Okno
+ * mesiaca má v schránke SFZ okolo 17 000 správ — väčšinou automatické
+ * upozornenia ISSF odoslané z adresy helpdesku; čítať ich všetky s telom sa
+ * nestihne ani za 260 s. Text sa preto číta len pre vlákna, ktoré začal
+ * človek zvonku v danom mesiaci a ktoré dostali odpoveď.
+ */
+export function harvestCandidates(headers: MailHeader[], key: string, mailboxAddress: string, excluded: Set<string>): { refs: string[]; skips: HarvestSkips } {
+  const { start, end } = monthRange(key)
+  const ownDomain = mailboxAddress.toLowerCase().split("@")[1] ?? ""
+  const byThread = new Map<string, MailHeader[]>()
+  for (const h of headers) {
+    if (h.folder !== "other") continue
+    if (isBounce({ from: h.fromAddress ? { address: h.fromAddress, name: null } : null, subject: h.subject, outgoing: h.outgoing })) continue
+    byThread.set(h.threadRef, [...(byThread.get(h.threadRef) ?? []), h])
+  }
+  const refs: string[] = []
+  const skips: HarvestSkips = { colleague: 0, excluded: 0, unanswered: 0 }
+  for (const [ref, list] of byThread) {
+    const ordered = list.slice().sort((a, b) => a.receivedAt.getTime() - b.receivedAt.getTime())
+    const first = ordered[0]
+    if (first.outgoing || first.receivedAt < start || first.receivedAt >= end) continue
+    const from = first.fromAddress ?? ""
+    if (ownDomain && from.endsWith(`@${ownDomain}`)) { skips.colleague += 1; continue }
+    if (from && excluded.has(addressHash(from))) { skips.excluded += 1; continue }
+    if (!ordered.some(h => h.outgoing && h.receivedAt > first.receivedAt)) { skips.unanswered += 1; continue }
+    refs.push(ref)
+  }
+  return { refs, skips }
+}
 
 /**
  * Správy okna (mesiac + presah) → vlákna mesiaca na triedenie. Vlákno patrí
@@ -544,8 +578,16 @@ function usageFor(ctx: RunCtx, model: string, subject: string) {
 async function collectMonth(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<void> {
   const adapter = mailboxFor(ctx.channel)
   const { start, end } = monthRange(key)
-  const messages = await adapter.listMessages(new Date(start.getTime() - MARGIN_DAYS * DAY), new Date(end.getTime() + MARGIN_DAYS * DAY), ctx.hardStop)
-  const { items, skips } = harvestItems(messages, key, adapter.address, await excludedHashes(ctx.code, ctx.channel.key))
+  const excluded = await excludedHashes(ctx.code, ctx.channel.key)
+  const headers = await adapter.listHeaders(new Date(start.getTime() - MARGIN_DAYS * DAY), new Date(end.getTime() + MARGIN_DAYS * DAY), ctx.hardStop)
+  const { refs, skips } = harvestCandidates(headers, key, adapter.address, excluded)
+  const messages: MailMessage[] = []
+  for (let i = 0; i < refs.length; i += THREAD_FETCH_PARALLEL) {
+    if (Date.now() > ctx.hardStop) throw new FaqHarvestError("mailbox.slow", "Schránka odpovedá pomaly — mesiac sa nestihol prečítať.", { read: i })
+    for (const list of await Promise.all(refs.slice(i, i + THREAD_FETCH_PARALLEL).map(r => adapter.listThread(r)))) messages.push(...list)
+  }
+  // Výber a čistenie robí `harvestItems` nad textom; počty vynechaných sú z hlavičiek.
+  const { items } = harvestItems(messages, key, adapter.address, excluded)
 
   const topics = doc.topics.map(t => ({ key: t.key, label: t.label, description: t.description }))
   let seq = doc.topics.length
@@ -596,7 +638,7 @@ async function collectMonth(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<
   )
   doc.topics = nextTopics
   doc.pending = doc.pending.filter(k => k !== key)
-  console.info(`[faq-harvest] ${ctx.code}/${ctx.channel.key} ${key}: ${messages.length} správ, ${items.length} vlákien, ${created.length} nových tém`)
+  console.info(`[faq-harvest] ${ctx.code}/${ctx.channel.key} ${key}: ${headers.length} hlavičiek, ${refs.length} vlákien na čítanie, ${items.length} do tém, ${created.length} nových tém`)
 }
 
 /** Etapa `merge`: zlúčenie duplicitných tém, prečíslovanie vlákien. */

@@ -11,10 +11,10 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
 import {
-  harvestItems, addressHash, applyClassification, applyMerge, pickThreads, parseDraft, draftThread, classifyPrompt,
+  harvestItems, harvestCandidates, addressHash, applyClassification, applyMerge, pickThreads, parseDraft, draftThread, classifyPrompt,
   NO_TOPIC, type HarvestItem, type HarvestTopic,
 } from "../src/lib/faqHarvest"
-import type { MailMessage } from "../src/lib/mailbox/types"
+import type { MailMessage, MailHeader } from "../src/lib/mailbox/types"
 
 const BOX = "helpdesk@futbalsfz.sk"
 const msg = (over: Partial<MailMessage>): MailMessage => ({
@@ -38,6 +38,26 @@ describe("harvestItems", () => {
     expect(items.map(i => i.threadRef)).toEqual(["ok"])
     expect(items[0].question).toContain("[číslo]")
     expect(items[0].question).not.toContain("1234567")
+    expect(skips).toEqual({ colleague: 1, excluded: 1, unanswered: 1 })
+  })
+})
+
+describe("harvestCandidates", () => {
+  const h = (over: Partial<MailHeader>): MailHeader => ({
+    threadRef: "t1", fromAddress: "a@klub.sk", subject: "Obnova hesla", receivedAt: new Date("2026-03-10T08:00:00Z"), outgoing: false, folder: "other", ...over,
+  })
+  const reply = (threadRef: string, at = "2026-03-11T08:00:00Z") => h({ threadRef, fromAddress: BOX, outgoing: true, receivedAt: new Date(at) })
+  it("z hlaviciek vyberie len vlakna zvonku s odpovedou; automaticke upozornenia helpdesku nie", () => {
+    const { refs, skips } = harvestCandidates([
+      h({ threadRef: "ok" }), reply("ok", "2026-04-02T08:00:00Z"),
+      // tisíce upozornení ISSF odoslaných z adresy helpdesku — vlákno začal helpdesk
+      ...Array.from({ length: 50 }, (_, i) => h({ threadRef: `issf${i}`, fromAddress: BOX, outgoing: true })),
+      h({ threadRef: "kolega", fromAddress: "x@futbalsfz.sk" }), reply("kolega"),
+      h({ threadRef: "bez" }),
+      h({ threadRef: "spam", folder: "junk" }), reply("spam"),
+      h({ threadRef: "namietka", fromAddress: "namietka@klub.sk" }), reply("namietka"),
+    ], "2026-03", BOX, new Set([addressHash("namietka@klub.sk")]))
+    expect(refs).toEqual(["ok"])
     expect(skips).toEqual({ colleague: 1, excluded: 1, unanswered: 1 })
   })
 })
