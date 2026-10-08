@@ -89,12 +89,6 @@ export interface MailboxAdapter {
    * `mailbox.slow` — chyba sa zapíše skôr, než funkciu zruší časový limit.
    */
   listHeaders(from: Date, to: Date, stopAt?: number): Promise<MailHeader[]>
-  /**
-   * Správy s textom prijaté v `[from, to)` zo všetkých priečinkov okrem
-   * nevyžiadanej a odstránenej pošty, bez konceptov — pre ťažbu FAQ
-   * (ADR-030, D184). Nič sa nikam neukladá. `stopAt` ako pri `listHeaders`.
-   */
-  listMessages(from: Date, to: Date, stopAt?: number): Promise<MailMessage[]>
   /** Odpoveď vo vlákne z adresy schránky. Vracia `internetMessageId` odoslanej správy, ak ho poskytovateľ vráti. */
   reply(messageId: string, text: string): Promise<{ messageId: string | null }>
   /** Nová správa z adresy schránky — pre ticket z chatu, ktorý vlákno v schránke nemá (D163). */
