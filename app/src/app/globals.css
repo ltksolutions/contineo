@@ -8219,7 +8219,9 @@ section.rating { border-top: 1px solid var(--line); }
 .doc-tool > svg { display: none; }
 .doc-menu > summary { list-style: none; }
 .doc-menu > summary::-webkit-details-marker { display: none; }
-.doc-menu .mc-menu-list { width: 280px; }
+/* Ukotvená zľava: „Stiahnuť" je prvý nástroj, takže ponuka vľavo by na
+   šírke 640–1023 px (nástroje pod nadpisom) vyšla mimo obrazovky. */
+.doc-menu .mc-menu-list { width: 280px; left: 0; right: auto; }
 /* Položka ponuky: názov a pod ním znenie, typ a veľkosť. */
 .doc-menu .mc-menu-list a { display: grid; gap: 1px; align-content: center; padding: 7px 12px; }
 .doc-menu .mc-menu-list small { margin-left: 0; }
