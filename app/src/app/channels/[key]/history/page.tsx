@@ -21,7 +21,10 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { startHistoryAnalysisAction } from "../../actions"
+import Link from "next/link"
+import { harvestFor, exclusionCount, MIN_THREADS } from "@/lib/faqHarvest"
+import { proposalCounts } from "@/lib/faqProposals"
+import { startHistoryAnalysisAction, startHarvestAction, addHarvestExclusionsAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
 // Akcia „Spustiť analýzu" číta prvý mesiac zo schránky (do 90 s, viď akciu).
@@ -55,7 +58,12 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
   const base = `${channelHref(c.key)}/history`
   const canTickets = c.kind === "widget" && c.tickets && isHelpdeskAgent(ctx.person) && raw.assigneeIds.includes(ctx.person.id)
 
-  const analysis = await analysisFor(ctx.tenant.companyCode, c.key)
+  const [analysis, harvest, excluded, pCounts] = await Promise.all([
+    analysisFor(ctx.tenant.companyCode, c.key),
+    harvestFor(ctx.tenant.companyCode, c.key),
+    exclusionCount(ctx.tenant.companyCode, c.key),
+    proposalCounts(ctx.tenant.companyCode, c.key),
+  ])
   const summary = analysis ? summarizeAnalysis(analysis) : null
   const doneMonths = analysis ? analysis.months.length - analysis.pending.length : 0
   const n = (x: number) => formatNumber(x, language)
@@ -65,6 +73,10 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
     return `${t.historyMonthNames[d.getUTCMonth()]} ${d.getUTCFullYear()}`
   }
   const periodOptions = ANALYSIS_PERIODS.map(m => ({ value: String(m), label: t.historyPeriodOption(m) }))
+  const bigTopics = harvest ? harvest.topics.filter(x => x.threads >= MIN_THREADS) : []
+  const smallTopics = harvest ? harvest.topics.filter(x => x.threads > 0 && x.threads < MIN_THREADS) : []
+  const draftTotal = bigTopics.length
+  const draftDone = harvest ? draftTotal - harvest.draftPending.length : 0
 
   return (
     <AppShell language={language} title={t.history} trail={{ [channelHref(c.key)]: c.name, [channelHref(c.key, "settings")]: t.tabSettings }}>
@@ -190,6 +202,77 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
           </div>
         </>
       )}
+
+      {/* Ťažba FAQ nad zvoleným obdobím (ADR-030, D183–D186). */}
+      <section className="card detail-block" id="harvest" style={{ marginTop: 24 }}>
+        <h2 className="detail-block-title">{t.harvest}</h2>
+        <p className="detail-block-note" style={{ margin: 0 }}>{t.harvestIntro}</p>
+        {harvest ? (
+          <>
+            <p style={{ margin: 0 }}>
+              <b>{t.harvestStages[harvest.stage]}</b>{" · "}
+              {harvest.failures >= MAX_FAILURES
+                ? <span className="bad-fg">{t.harvestStopped}</span>
+                : harvest.stage === "collect"
+                  ? t.harvestCollectProgress(harvest.months.length - harvest.pending.length, harvest.months.length)
+                  : harvest.stage === "draft"
+                    ? t.harvestDraftProgress(draftDone, draftTotal)
+                    : harvest.stage === "done" ? t.historyDone(formatDate(harvest.finishedAt ?? harvest.updatedAt, language)) : ""}
+            </p>
+            <p className="quiet" style={{ margin: 0 }}>
+              {t.harvestCounts(n(harvest.counts.threads), n(harvest.counts.colleague), n(harvest.counts.unanswered), n(harvest.counts.excluded), n(harvest.counts.noTopic))}
+            </p>
+            <p className="quiet" style={{ margin: 0 }}>{t.historyStartedBy(harvest.startedBy, formatDate(harvest.startedAt, language))} · {t.historyPeriodOption(harvest.months.length)}</p>
+          </>
+        ) : (
+          <p className="quiet" style={{ margin: 0 }}>{t.harvestNone}</p>
+        )}
+        <form action={startHarvestAction} className="mg-inline" style={{ alignItems: "flex-end" }}>
+          <input type="hidden" name="key" value={c.key} />
+          <div className="field" style={{ margin: 0 }}>
+            <span className="field-label">{t.historyPeriod}</span>
+            <Select language={language} name="months" fieldLabel={t.historyPeriod} options={periodOptions}
+              initial={String(harvest?.months.length ?? analysis?.months.length ?? DEFAULT_ANALYSIS_MONTHS)} />
+          </div>
+          <div><SubmitButton className={analysis || harvest ? "button button--quiet" : "button"}>{harvest ? t.harvestRestart : t.harvestStart}</SubmitButton></div>
+        </form>
+        {pCounts.open + pCounts.approved + pCounts.merged + pCounts.rejected > 0 && (
+          <div><Link className="button button--quiet" href={`${channelHref(c.key)}/proposals`}>{t.harvestOpenProposals(pCounts.open)}</Link></div>
+        )}
+      </section>
+
+      {harvest && bigTopics.length > 0 && (
+        <section className="card detail-block" style={{ marginTop: 16 }}>
+          <h2 className="detail-block-title">{t.harvestTopics}</h2>
+          <p className="detail-block-note" style={{ margin: 0 }}>{t.harvestTopicsIntro(MIN_THREADS)}</p>
+          <div className="mg-list" style={{ margin: "0 -18px", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+            {bigTopics.map(x => (
+              <div key={x.key} className="mg-row">
+                <span className="mg-row-main"><b>{x.label}</b></span>
+                <span className="mg-sub">{t.harvestTopicMeta(n(x.threads), x.firstMonth ? monthLabel(x.firstMonth) : "—", x.lastMonth ? monthLabel(x.lastMonth) : "—")}</span>
+                {x.proposals !== null && <span className="tag">{t.harvestTopicProposals(x.proposals)}</span>}
+              </div>
+            ))}
+          </div>
+          {smallTopics.length > 0 && (
+            <p className="quiet" style={{ margin: 0 }}>{t.harvestTopicsSmall(smallTopics.length, n(smallTopics.reduce((a, x) => a + x.threads, 0)))}</p>
+          )}
+        </section>
+      )}
+
+      <section className="card detail-block" style={{ marginTop: 16 }}>
+        <h2 className="detail-block-title">{t.harvestExclusions}</h2>
+        <p className="detail-block-note" style={{ margin: 0 }}>{t.harvestExclusionsIntro}</p>
+        <p className="quiet" style={{ margin: 0 }}>{t.harvestExclusionsCount(excluded)}</p>
+        <form action={addHarvestExclusionsAction} style={{ display: "grid", gap: 10 }}>
+          <input type="hidden" name="key" value={c.key} />
+          <label className="field" style={{ margin: 0 }}>
+            <span className="field-label">{t.harvestExclusionsField}</span>
+            <textarea className="field-input" name="addresses" rows={3} autoComplete="off" />
+          </label>
+          <div><SubmitButton className="button button--quiet">{t.harvestExclusionsSave}</SubmitButton></div>
+        </form>
+      </section>
     </div>
     </AppShell>
   )

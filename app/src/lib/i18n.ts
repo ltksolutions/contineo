@@ -2492,6 +2492,58 @@ interface Dictionary {
     historyColJunk: string
     historyMonthCard: (incoming: string, threads: string, answered: string) => string
     historyMonthNames: string[]
+    harvest: string
+    harvestIntro: string
+    harvestStart: string
+    harvestRestart: string
+    harvestStarted: string
+    harvestNone: string
+    harvestStages: Record<"collect" | "merge" | "draft" | "done", string>
+    harvestCollectProgress: (done: number, total: number) => string
+    harvestDraftProgress: (done: number, total: number) => string
+    harvestStopped: string
+    harvestCounts: (threads: string, colleague: string, unanswered: string, excluded: string, noTopic: string) => string
+    harvestTopics: string
+    harvestTopicsIntro: (min: number) => string
+    harvestTopicMeta: (threads: string, first: string, last: string) => string
+    harvestTopicProposals: (n: number) => string
+    harvestTopicsSmall: (topics: number, threads: string) => string
+    harvestOpenProposals: (n: number) => string
+    harvestExclusions: string
+    harvestExclusionsIntro: string
+    harvestExclusionsField: string
+    harvestExclusionsSave: string
+    harvestExclusionsCount: (n: number) => string
+    harvestExclusionsAdded: (n: number) => string
+    proposals: string
+    proposalsIntro: string
+    proposalsViewOpen: string
+    proposalsViewDecided: string
+    proposalsEmpty: string
+    proposalsNoFaq: string
+    proposalTopic: string
+    proposalThreads: (threads: string, first: string, last: string) => string
+    proposalChanged: string
+    proposalNormConflict: string
+    proposalNote: string
+    proposalSources: string
+    proposalQuestion: string
+    proposalVariants: string
+    proposalVariantsHint: string
+    proposalAnswer: string
+    proposalAudience: string
+    proposalAudienceHint: string
+    proposalDocument: string
+    proposalApprove: string
+    proposalReject: string
+    proposalMergeInto: string
+    proposalMerge: string
+    proposalApproved: string
+    proposalRejected: string
+    proposalMerged: string
+    proposalStatus: Record<"approved" | "merged" | "rejected", string>
+    proposalDecidedBy: (who: string, when: string) => string
+    proposalsMore: (n: number) => string
     save: string
     saved: string
     created: string
@@ -4471,7 +4523,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["ticket helpdesku so správami", "{tickets} od jeho zavretia; otvorený ticket sa nemaže"],
           ["záznam o osobe z okna pomoci", "24 mesiacov od poslednej otázky, ak nemá otvorený ticket"],
         ],
-        recipients: "Tickety čítajú len riešitelia kanála, ktorému sú určené; správca organizácie vidí len ich počet. Odpoveď navrhne umelá inteligencia a pred odoslaním ju vždy prečíta a schváli človek. E-maily ostávajú aj v schránke organizácie u jej poskytovateľa pošty (napríklad Microsoft 365). Z histórie schránky môže umelá inteligencia navrhnúť všeobecné otázky a odpovede (FAQ); osobné údaje sa z textu pred spracovaním odstraňujú a e-maily sa pritom neukladajú.",
+        recipients: "Tickety čítajú len riešitelia kanála, ktorému sú určené; správca organizácie vidí len ich počet. Odpoveď navrhne umelá inteligencia a pred odoslaním ju vždy prečíta a schváli človek. E-maily ostávajú aj v schránke organizácie u jej poskytovateľa pošty (napríklad Microsoft 365). Z histórie schránky môže umelá inteligencia navrhnúť všeobecné otázky a odpovede (FAQ). E-mailové adresy, telefónne a iné čísla sa z textu odstraňujú ešte pred spracovaním, mená a ďalšie údaje o konkrétnej osobe pri tvorbe návrhu; každý návrh pred zverejnením prečíta a schváli správca obsahu. E-maily sa pritom neukladajú; odkaz na e-maily, z ktorých návrh vznikol, sa drží len do rozhodnutia správcu obsahu. Ak nechcete, aby sa vaše e-maily na to použili, môžete namietať.",
       },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
@@ -5808,6 +5860,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.syncInterval": "Neznámy interval synchronizácie.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
+    "proposal.notFound": "Taký návrh tu nie je.",
+    "proposal.decided": "O návrhu už niekto rozhodol.",
+    "proposal.mergeSelf": "Návrh sa nedá zlúčiť sám so sebou.",
+    "mailbox.slow": "Schránka odpovedá pomaly — časť sa nestihla prečítať, ďalší beh v nej pokračuje.",
     "ticket.notFound": "Taký ticket tu nie je.",
     "ticket.notEmail": "Ticket nevznikol z e-mailu — nemá vlákno v schránke.",
     "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
@@ -6994,6 +7050,58 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     historyColJunk: "Nevyžiadané",
     historyMonthCard: (incoming: string, threads: string, answered: string) => `prijaté ${incoming} · otázky ${threads} · s odpoveďou ${answered}`,
     historyMonthNames: ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"],
+    harvest: "Ťažba FAQ z histórie",
+    harvestIntro: "Zo schránky za zvolené obdobie sa prečítajú otázky zvonku, ktoré dostali odpoveď; adresy, telefónne a iné čísla sa pred spracovaním odstránia. Umelá inteligencia ich roztriedi do tém a pre každú tému s aspoň 3 otázkami navrhne záznamy FAQ z najnovšej odpovede helpdesku a článok normy. Text e-mailov sa neukladá; návrhy schvaľuje správca obsahu (ADR-030, odpovede DPO 9. 10. 2026).",
+    harvestStart: "Spustiť ťažbu FAQ",
+    harvestRestart: "Spustiť ťažbu znova",
+    harvestStarted: "Ťažba beží. Mesiace sa spracúvajú automaticky každých 5 minút — stránku stačí neskôr obnoviť.",
+    harvestNone: "Ťažba ešte neprebehla.",
+    harvestStages: { collect: "Triedenie otázok do tém", merge: "Zlučovanie podobných tém", draft: "Písanie návrhov FAQ", done: "Hotovo" },
+    harvestCollectProgress: (done: number, total: number) => `Roztriedené ${done} z ${total} mesiacov.`,
+    harvestDraftProgress: (done: number, total: number) => `Návrhy pre ${done} z ${total} tém.`,
+    harvestStopped: "Ťažba sa po opakovaných chybách zastavila. Skontroluj spojenie so schránkou a nastavenie umelej inteligencie a spusti ju znova.",
+    harvestCounts: (threads: string, colleague: string, unanswered: string, excluded: string, noTopic: string) => `Otázok s odpoveďou: ${threads} · vynechané: od kolegov ${colleague}, bez odpovede ${unanswered}, po námietke ${excluded}, nie otázka ${noTopic}`,
+    harvestTopics: "Témy",
+    harvestTopicsIntro: (min: number) => `Návrh FAQ dostane téma s aspoň ${min} otázkami. Menšie témy sú jednotlivé prípady.`,
+    harvestTopicMeta: (threads: string, first: string, last: string) => `${threads} otázok · ${first} – ${last}`,
+    harvestTopicProposals: (n: number) => `návrhov: ${n}`,
+    harvestTopicsSmall: (topics: number, threads: string) => `Ďalších ${topics} malých tém (spolu ${threads} otázok) návrh nedostane.`,
+    harvestOpenProposals: (n: number) => `Otvoriť návrhy FAQ (${n})`,
+    harvestExclusions: "Vylúčené adresy",
+    harvestExclusionsIntro: "Kto namietne proti použitiu svojich e-mailov na FAQ, toho adresu sem zapíšte; ťažba jeho e-maily preskočí. Ukladá sa len odtlačok adresy, nie adresa.",
+    harvestExclusionsField: "Adresy, každá na samostatnom riadku",
+    harvestExclusionsSave: "Vylúčiť adresy",
+    harvestExclusionsCount: (n: number) => `Vylúčených adries: ${n}.`,
+    harvestExclusionsAdded: (n: number) => `Pridaných vylúčených adries: ${n}.`,
+    proposals: "Návrhy FAQ z helpdesku",
+    proposalsIntro: "Návrhy vznikli z odpovedí helpdesku za obdobie zvolené pri ťažbe. Pred schválením skontrolujte, že odpoveď neobsahuje meno ani iný údaj konkrétnej osoby a že platí dnes. Schválený záznam ide do konceptu vybraného FAQ dokumentu a zverejní sa až jeho schválením. Odkaz na e-maily sa po rozhodnutí zmaže.",
+    proposalsViewOpen: "Na rozhodnutie",
+    proposalsViewDecided: "Rozhodnuté",
+    proposalsEmpty: "Žiadne návrhy na rozhodnutie.",
+    proposalsNoFaq: "V knižnici kanála nie je FAQ dokument — založte ho v Knižnici → Nový dokument → FAQ.",
+    proposalTopic: "Téma",
+    proposalThreads: (threads: string, first: string, last: string) => `${threads} otázok v histórii · ${first} – ${last}`,
+    proposalChanged: "odpoveď sa v čase menila",
+    proposalNormConflict: "rozchádza sa s normou",
+    proposalNote: "Poznámka pre kurátora",
+    proposalSources: "Navrhnuté zdroje",
+    proposalQuestion: "Otázka",
+    proposalVariants: "Iné znenia otázky",
+    proposalVariantsHint: "Každé na samostatnom riadku.",
+    proposalAnswer: "Odpoveď",
+    proposalAudience: "Komu je určená",
+    proposalAudienceHint: "Oddeľte čiarkou.",
+    proposalDocument: "Do FAQ dokumentu",
+    proposalApprove: "Schváliť do konceptu FAQ",
+    proposalReject: "Zamietnuť",
+    proposalMergeInto: "Zlúčiť s návrhom",
+    proposalMerge: "Zlúčiť",
+    proposalApproved: "Návrh je v koncepte FAQ.",
+    proposalRejected: "Návrh je zamietnutý.",
+    proposalMerged: "Návrh je zlúčený; jeho otázka pribudla k iným zneniam.",
+    proposalStatus: { approved: "schválený", merged: "zlúčený", rejected: "zamietnutý" },
+    proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
+    proposalsMore: (n: number) => `Ďalších ${n} návrhov sa ukáže po rozhodnutí o týchto.`,
     save: "Uložiť kanál",
     saved: "Kanál je uložený.",
     created: "Kanál je založený.",
@@ -8832,7 +8940,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["tiket helpdesku se zprávami", "{tickets} od jeho uzavření; otevřený tiket se nemaže"],
           ["záznam o osobě z okna nápovědy", "24 měsíců od posledního dotazu, pokud nemá otevřený tiket"],
         ],
-        recipients: "Tikety čtou jen řešitelé kanálu, kterému jsou určeny; správce organizace vidí jen jejich počet. Odpověď navrhne umělá inteligence a před odesláním ji vždy přečte a schválí člověk. E-maily zůstávají i ve schránce organizace u jejího poskytovatele pošty (například Microsoft 365). Z historie schránky může umělá inteligence navrhnout obecné otázky a odpovědi (FAQ); osobní údaje se z textu před zpracováním odstraňují a e-maily se přitom neukládají.",
+        recipients: "Tikety čtou jen řešitelé kanálu, kterému jsou určeny; správce organizace vidí jen jejich počet. Odpověď navrhne umělá inteligence a před odesláním ji vždy přečte a schválí člověk. E-maily zůstávají i ve schránce organizace u jejího poskytovatele pošty (například Microsoft 365). Z historie schránky může umělá inteligence navrhnout obecné otázky a odpovědi (FAQ). E-mailové adresy, telefonní a jiná čísla se z textu odstraňují ještě před zpracováním, jména a další údaje o konkrétní osobě při tvorbě návrhu; každý návrh před zveřejněním přečte a schválí správce obsahu. E-maily se přitom neukládají; odkaz na e-maily, ze kterých návrh vznikl, se drží jen do rozhodnutí správce obsahu. Pokud nechcete, aby se vaše e-maily k tomu použily, můžete vznést námitku.",
       },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
@@ -10169,6 +10277,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.syncInterval": "Neznámý interval synchronizace.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
     "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
+    "proposal.notFound": "Takový návrh tu není.",
+    "proposal.decided": "O návrhu už někdo rozhodl.",
+    "proposal.mergeSelf": "Návrh nelze sloučit sám se sebou.",
+    "mailbox.slow": "Schránka odpovídá pomalu — část se nestihla přečíst, další běh v ní pokračuje.",
     "ticket.notFound": "Takový ticket tady není.",
     "ticket.notEmail": "Ticket nevznikl z e-mailu — nemá vlákno ve schránce.",
     "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
@@ -11353,6 +11465,58 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     historyColJunk: "Nevyžádané",
     historyMonthCard: (incoming: string, threads: string, answered: string) => `přijaté ${incoming} · otázky ${threads} · s odpovědí ${answered}`,
     historyMonthNames: ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"],
+    harvest: "Těžba FAQ z historie",
+    harvestIntro: "Ze schránky za zvolené období se přečtou otázky zvenku, které dostaly odpověď; adresy, telefonní a jiná čísla se před zpracováním odstraní. Umělá inteligence je roztřídí do témat a pro každé téma s alespoň 3 otázkami navrhne záznamy FAQ z nejnovější odpovědi helpdesku a článek normy. Text e-mailů se neukládá; návrhy schvaluje správce obsahu (ADR-030, odpovědi DPO 9. 10. 2026).",
+    harvestStart: "Spustit těžbu FAQ",
+    harvestRestart: "Spustit těžbu znovu",
+    harvestStarted: "Těžba běží. Měsíce se zpracovávají automaticky každých 5 minut — stránku stačí později obnovit.",
+    harvestNone: "Těžba ještě neproběhla.",
+    harvestStages: { collect: "Třídění otázek do témat", merge: "Slučování podobných témat", draft: "Psaní návrhů FAQ", done: "Hotovo" },
+    harvestCollectProgress: (done: number, total: number) => `Roztříděno ${done} z ${total} měsíců.`,
+    harvestDraftProgress: (done: number, total: number) => `Návrhy pro ${done} z ${total} témat.`,
+    harvestStopped: "Těžba se po opakovaných chybách zastavila. Zkontroluj spojení se schránkou a nastavení umělé inteligence a spusť ji znovu.",
+    harvestCounts: (threads: string, colleague: string, unanswered: string, excluded: string, noTopic: string) => `Otázek s odpovědí: ${threads} · vynechané: od kolegů ${colleague}, bez odpovědi ${unanswered}, po námitce ${excluded}, není otázka ${noTopic}`,
+    harvestTopics: "Témata",
+    harvestTopicsIntro: (min: number) => `Návrh FAQ dostane téma s alespoň ${min} otázkami. Menší témata jsou jednotlivé případy.`,
+    harvestTopicMeta: (threads: string, first: string, last: string) => `${threads} otázek · ${first} – ${last}`,
+    harvestTopicProposals: (n: number) => `návrhů: ${n}`,
+    harvestTopicsSmall: (topics: number, threads: string) => `Dalších ${topics} malých témat (celkem ${threads} otázek) návrh nedostane.`,
+    harvestOpenProposals: (n: number) => `Otevřít návrhy FAQ (${n})`,
+    harvestExclusions: "Vyloučené adresy",
+    harvestExclusionsIntro: "Kdo vznese námitku proti použití svých e-mailů pro FAQ, toho adresu sem zapište; těžba jeho e-maily přeskočí. Ukládá se jen otisk adresy, ne adresa.",
+    harvestExclusionsField: "Adresy, každá na samostatném řádku",
+    harvestExclusionsSave: "Vyloučit adresy",
+    harvestExclusionsCount: (n: number) => `Vyloučených adres: ${n}.`,
+    harvestExclusionsAdded: (n: number) => `Přidaných vyloučených adres: ${n}.`,
+    proposals: "Návrhy FAQ z helpdesku",
+    proposalsIntro: "Návrhy vznikly z odpovědí helpdesku za období zvolené při těžbě. Před schválením zkontrolujte, že odpověď neobsahuje jméno ani jiný údaj konkrétní osoby a že platí dnes. Schválený záznam jde do konceptu vybraného FAQ dokumentu a zveřejní se až jeho schválením. Odkaz na e-maily se po rozhodnutí smaže.",
+    proposalsViewOpen: "K rozhodnutí",
+    proposalsViewDecided: "Rozhodnuté",
+    proposalsEmpty: "Žádné návrhy k rozhodnutí.",
+    proposalsNoFaq: "V knihovně kanálu není FAQ dokument — založte ho v Knihovně → Nový dokument → FAQ.",
+    proposalTopic: "Téma",
+    proposalThreads: (threads: string, first: string, last: string) => `${threads} otázek v historii · ${first} – ${last}`,
+    proposalChanged: "odpověď se v čase měnila",
+    proposalNormConflict: "rozchází se s normou",
+    proposalNote: "Poznámka pro kurátora",
+    proposalSources: "Navržené zdroje",
+    proposalQuestion: "Otázka",
+    proposalVariants: "Jiná znění otázky",
+    proposalVariantsHint: "Každé na samostatném řádku.",
+    proposalAnswer: "Odpověď",
+    proposalAudience: "Komu je určena",
+    proposalAudienceHint: "Oddělte čárkou.",
+    proposalDocument: "Do FAQ dokumentu",
+    proposalApprove: "Schválit do konceptu FAQ",
+    proposalReject: "Zamítnout",
+    proposalMergeInto: "Sloučit s návrhem",
+    proposalMerge: "Sloučit",
+    proposalApproved: "Návrh je v konceptu FAQ.",
+    proposalRejected: "Návrh je zamítnutý.",
+    proposalMerged: "Návrh je sloučený; jeho otázka přibyla k jiným zněním.",
+    proposalStatus: { approved: "schválený", merged: "sloučený", rejected: "zamítnutý" },
+    proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
+    proposalsMore: (n: number) => `Dalších ${n} návrhů se ukáže po rozhodnutí o těchto.`,
     save: "Uložit kanál",
     saved: "Kanál je uložen.",
     created: "Kanál je založen.",
@@ -13184,7 +13348,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["helpdesk ticket with its messages", "{tickets} after it is closed; an open ticket is never deleted"],
           ["record of a person from the help window", "24 months after their last question, unless they have an open ticket"],
         ],
-        recipients: "Tickets are read only by the agents of the channel they are meant for; the organisation's administrator sees only how many there are. Artificial intelligence drafts the answer, and a person always reads and approves it before it is sent. E-mails also remain in the organisation's mailbox with its e-mail provider (for example Microsoft 365). Artificial intelligence may suggest general questions and answers (FAQ) from the mailbox history; personal data is removed from the text before processing and the e-mails are not stored.",
+        recipients: "Tickets are read only by the agents of the channel they are meant for; the organisation's administrator sees only how many there are. Artificial intelligence drafts the answer, and a person always reads and approves it before it is sent. E-mails also remain in the organisation's mailbox with its e-mail provider (for example Microsoft 365). Artificial intelligence may suggest general questions and answers (FAQ) from the mailbox history. E-mail addresses, phone and other numbers are removed from the text before processing, names and other details about a specific person when the proposal is written; the content manager reads and approves every proposal before it is published. The e-mails are not stored; the reference to the e-mails a proposal came from is kept only until the content manager decides on it. If you do not want your e-mails to be used for this, you can object.",
       },
       rightsHeading: "Your rights",
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
@@ -14519,6 +14683,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.syncInterval": "Unknown sync interval.",
     "helpdesk.noTickets": "The channel has tickets switched off.",
     "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
+    "proposal.notFound": "There is no such proposal.",
+    "proposal.decided": "Someone has already decided on this proposal.",
+    "proposal.mergeSelf": "A proposal cannot be merged with itself.",
+    "mailbox.slow": "The mailbox is responding slowly — part of it was not read in time; the next run continues.",
     "ticket.notFound": "There is no such ticket here.",
     "ticket.notEmail": "The ticket did not come from an e-mail — it has no thread in the mailbox.",
     "ticket.emptyDraft": "An empty draft cannot be saved.",
@@ -15703,6 +15871,58 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     historyColJunk: "Junk",
     historyMonthCard: (incoming: string, threads: string, answered: string) => `received ${incoming} · questions ${threads} · answered ${answered}`,
     historyMonthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    harvest: "FAQ mining from history",
+    harvestIntro: "For the chosen period, questions from outside that got an answer are read from the mailbox; addresses, phone and other numbers are removed before processing. Artificial intelligence sorts them into topics and, for every topic with at least 3 questions, proposes FAQ entries from the latest helpdesk answer together with an article of the rules. E-mail text is not stored; the content manager approves the proposals (ADR-030, DPO answers of 9 Oct 2026).",
+    harvestStart: "Run FAQ mining",
+    harvestRestart: "Run mining again",
+    harvestStarted: "Mining is running. Months are processed automatically every 5 minutes — just reload the page later.",
+    harvestNone: "No mining has run yet.",
+    harvestStages: { collect: "Sorting questions into topics", merge: "Merging similar topics", draft: "Writing FAQ proposals", done: "Done" },
+    harvestCollectProgress: (done: number, total: number) => `${done} of ${total} months sorted.`,
+    harvestDraftProgress: (done: number, total: number) => `Proposals for ${done} of ${total} topics.`,
+    harvestStopped: "Mining stopped after repeated errors. Check the mailbox connection and the AI settings and run it again.",
+    harvestCounts: (threads: string, colleague: string, unanswered: string, excluded: string, noTopic: string) => `Answered questions: ${threads} · skipped: from colleagues ${colleague}, unanswered ${unanswered}, after objection ${excluded}, not a question ${noTopic}`,
+    harvestTopics: "Topics",
+    harvestTopicsIntro: (min: number) => `A topic with at least ${min} questions gets an FAQ proposal. Smaller topics are one-off cases.`,
+    harvestTopicMeta: (threads: string, first: string, last: string) => `${threads} questions · ${first} – ${last}`,
+    harvestTopicProposals: (n: number) => `proposals: ${n}`,
+    harvestTopicsSmall: (topics: number, threads: string) => `Another ${topics} small topics (${threads} questions in total) get no proposal.`,
+    harvestOpenProposals: (n: number) => `Open FAQ proposals (${n})`,
+    harvestExclusions: "Excluded addresses",
+    harvestExclusionsIntro: "Enter the address of anyone who objects to their e-mails being used for the FAQ; mining will skip their e-mails. Only a fingerprint of the address is stored, not the address.",
+    harvestExclusionsField: "Addresses, one per line",
+    harvestExclusionsSave: "Exclude addresses",
+    harvestExclusionsCount: (n: number) => `Excluded addresses: ${n}.`,
+    harvestExclusionsAdded: (n: number) => `Excluded addresses added: ${n}.`,
+    proposals: "FAQ proposals from the helpdesk",
+    proposalsIntro: "The proposals come from helpdesk answers over the period chosen for mining. Before approving, check that the answer contains no name or other detail of a specific person and that it is still valid today. An approved entry goes to the draft of the selected FAQ document and is published only when that draft is approved. The reference to the e-mails is deleted after your decision.",
+    proposalsViewOpen: "To decide",
+    proposalsViewDecided: "Decided",
+    proposalsEmpty: "No proposals to decide.",
+    proposalsNoFaq: "The channel library has no FAQ document — create one in Library → New document → FAQ.",
+    proposalTopic: "Topic",
+    proposalThreads: (threads: string, first: string, last: string) => `${threads} questions in history · ${first} – ${last}`,
+    proposalChanged: "the answer changed over time",
+    proposalNormConflict: "differs from the rules",
+    proposalNote: "Note for the curator",
+    proposalSources: "Suggested sources",
+    proposalQuestion: "Question",
+    proposalVariants: "Other wordings of the question",
+    proposalVariantsHint: "One per line.",
+    proposalAnswer: "Answer",
+    proposalAudience: "Intended for",
+    proposalAudienceHint: "Separate with commas.",
+    proposalDocument: "Into FAQ document",
+    proposalApprove: "Approve into FAQ draft",
+    proposalReject: "Reject",
+    proposalMergeInto: "Merge with proposal",
+    proposalMerge: "Merge",
+    proposalApproved: "The proposal is in the FAQ draft.",
+    proposalRejected: "The proposal was rejected.",
+    proposalMerged: "The proposal was merged; its question was added to the other wordings.",
+    proposalStatus: { approved: "approved", merged: "merged", rejected: "rejected" },
+    proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
+    proposalsMore: (n: number) => `Another ${n} proposals will show once these are decided.`,
     save: "Save channel",
     saved: "The channel is saved.",
     created: "The channel is created.",

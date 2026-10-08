@@ -30,6 +30,9 @@ import type { ReactNode } from "react"
 import { errorText } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { listConnectors } from "@/lib/connectors"
+import Link from "next/link"
+import { openProposalsByChannel } from "@/lib/faqProposals"
+import { channelByKey } from "@/lib/channels"
 import { profileFor } from "@/lib/mcp/profiles"
 import {
   parseAssist, parseConnectorSource, connectorSource, filterEntries, LIBRARY_SOURCE, type AssistDraft,
@@ -261,6 +264,12 @@ export default async function FaqEditorPage({ params, searchParams }: { params: 
     </fieldset>
   )
 
+  // Návrhy z histórie helpdesku čakajú na kurátora (ADR-030, D185) — on sa
+  // k nim inak nedostane, nastavenie kanála vidí len správca organizácie.
+  const proposalLinks = (await Promise.all((await openProposalsByChannel(ctx.tenant.companyCode).catch(() => []))
+    .map(async r => ({ ...r, name: (await channelByKey(ctx.tenant.companyCode, r.channelKey))?.name ?? r.channelKey }))))
+  const tc = dictionary(language).channels
+
   return (
     <AppShell language={language} title={`${t.heading} · ${d.title}`}>
     <div className="detail-page" style={{ maxWidth: 880, ...tenantStyle(branding) }}>
@@ -271,6 +280,13 @@ export default async function FaqEditorPage({ params, searchParams }: { params: 
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 12px" }}>{t.intro}</p>
       <p className="quiet field-hint" style={{ margin: "0 0 20px" }}>{t.publishNote} {t.pdfNote}</p>
+      {proposalLinks.length > 0 && (
+        <div className="mg-actions" style={{ margin: "0 0 20px" }}>
+          {proposalLinks.map(r => (
+            <Link key={r.channelKey} className="button button--quiet" href={`/channels/${encodeURIComponent(r.channelKey)}/proposals`}>{r.name}: {tc.harvestOpenProposals(r.open)}</Link>
+          ))}
+        </div>
+      )}
       <Notice message={msg} back={`${base}/faq`} language={language} />
       <Notice message={error} error back={`${base}/faq`} language={language} />
 

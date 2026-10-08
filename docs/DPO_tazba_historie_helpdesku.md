@@ -13,6 +13,32 @@
 
 ---
 
+## Odpovede DPO (prijaté 9. 10. 2026)
+
+Odpovede zapísal do dokumentu **Ján Letko, ktorý je zodpovednou osobou
+(DPO) zväzu** a zároveň za IT pripravil tento podklad; doplnil v chate
+9. 10. 2026: „ja som ich zapísal, ja som tiež DPO", k otázke 2
+„pseudonymizácia podľa kap. 2".
+
+| # | Odpoveď | Čo s tým systém robí |
+|---|---|---|
+| 1 | 1 — oprávnený záujem s testom zlučiteľnosti účelu (čl. 6 ods. 4) | test zlučiteľnosti spíše DPO; podklady sú v kap. 3 |
+| 2 | **„komplet analýza s anonymizáciou osobných údajov"** — namiesto pilota zvolené obdobie (36 mesiacov); spresnené: **pseudonymizácia podľa kap. 2** (pravidlá + pokyn modelu + kurátor) | ťažba ide nad obdobím zvoleným pri spustení — pre SFZ 36 mesiacov, nie celá história schránky (ADR-030 D183); pilot sa vynecháva |
+| 3 | 1 — Anthropic za rovnakých podmienok ako odpovede asistenta | záruky pre prenos sa doplnia v C4 |
+| 4 | 1 — Voyage AI smie | **nepoužije sa** — témy priraďuje model bez ukladania textu (ADR-030 D184), teda menej spracúvania, než bolo schválené |
+| 5 | 1 — pôvod návrhu držať do rozhodnutia kurátora, potom zmazať | pri schválení, zlúčení aj zamietnutí sa zmažú identifikátory vlákien a správ; ostáva počet a obdobie (D185) |
+| 6 | **3 — DPIA netreba** | C3 sa nemení |
+| 7 | 1 — veta na `/privacy` | doplnené 9. 10. 2026 (verzia textu 9. 10. 2026) |
+| 8 | 1 — činnosť 5 „Helpdesk" v C2, text pripraví IT | doplnené v C2 9. 10. 2026 |
+| 9 | 1 — opatrenia z kap. 2 pri maloletých | bez ďalšieho vylúčenia |
+| 10 | 1 — kto namietne, jeho e-maily sa z ťažby vylúčia | zoznam vylúčených adries pri kanáli (odtlačok adresy, nie adresa), D186 |
+
+**Poznámka k otázke 2:** v kap. 3 sa celý archív označoval ako rozsiahle
+spracúvanie, o ktorom sa rozhodne po pilote. Odpoveďou 2 a 6 DPO rozhodol
+hneď o zvolenom období (36 mesiacov) bez DPIA.
+
+---
+
 ## 1. O čo ide
 
 Helpdesk zväzu odpovedá e-mailom na otázky klubov, hráčov, rodičov,

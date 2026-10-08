@@ -76,6 +76,22 @@ Spoločné pre všetky štyri činnosti:
 | Právny základ uchovania certifikátu | čl. 6 ods. 1 písm. c) + zákon č. 395/2002 Z. z. o archívoch a registratúrach (registratúrny záznam); pri ostatných kurzoch písm. f) |
 | Lehota výmazu | ako doklady o oboznámení: 3 roky od skončenia vzťahu, poistka od vyradenia, strop 5 rokov (D130); odpovede v teste a sledovanie videa **12 mesiacov po dokončení kurzu** (D131); **vydaný certifikát sa nemaže ani neanonymizuje** — lehota uloženia podľa registratúrneho plánu zväzu (**DPO doplní**, D132) |
 
+### Činnosť 5 — Helpdesk: tickety a FAQ z histórie schránky (ADR-028, ADR-030)
+
+*Doplnené 9. 10. 2026 na základe odpovede DPO 8 (`docs/DPO_tazba_historie_helpdesku.md`).*
+
+| Položka | Obsah |
+|---|---|
+| Účel | (a) vybavenie otázok, ktoré ľudia pošlú e-mailom do schránky helpdesku alebo položia v okne pomoci; (b) príprava všeobecných otázok a odpovedí (FAQ) z histórie schránky |
+| Právny základ | čl. 6 ods. 1 písm. f) — oprávnený záujem; pri (b) s testom zlučiteľnosti účelu podľa čl. 6 ods. 4 (spíše DPO) |
+| Dotknuté osoby | odosielatelia e-mailov do schránky helpdesku (kluby, hráči vrátane maloletých a ich rodičia, rozhodcovia, funkcionári, verejnosť); používatelia okna pomoci; riešitelia helpdesku |
+| Kategórie údajov | (a) meno a adresa odosielateľa, predmet, text správ vo vlákne vrátane citovanej korešpondencie, pri prílohách len názov a veľkosť; pri okne pomoci meno, e-mail, identifikátor v systéme organizácie (napr. registračné číslo ISSF), roly a klub; odpoveď helpdesku (text, kto, kedy); (b) **neukladá sa text e-mailov** — len mesačný súhrn bez adries a mien, téma vlákna, časy, identifikátory vlákna a správ do rozhodnutia kurátora; návrh FAQ bez osobných údajov |
+| Pseudonymizácia pri (b) | pred odoslaním modelu sa odstránia e-mailové adresy, telefónne čísla, čísla od 6 číslic, rodné čísla, IBAN a odkazy; mená odstraňuje model podľa pokynu a každý návrh pred zverejnením kontroluje správca obsahu |
+| Príjemcovia | riešitelia kanála (tickety); správca obsahu (návrhy FAQ); správca organizácie vidí len počty; schválené FAQ je verejné (okno pomoci v ISSF); sprostredkovatelia podľa kap. 3 (Anthropic — návrh odpovede, témy a záznamy FAQ) |
+| Lehota výmazu | zavretý ticket **24 mesiacov** od zavretia (D178); osoba z okna pomoci 24 mesiacov od poslednej otázky, ak nemá otvorený ticket; pôvod návrhu FAQ do rozhodnutia správcu obsahu; mesačný súhrn analýzy sa prepíše ďalším behom; e-maily ostávajú v schránke zväzu v Microsoft 365 podľa pravidiel zväzu |
+| Námietka | adresa toho, kto namietne, sa z ťažby FAQ vylúči (odtlačok adresy, D186) |
+| DPIA | podľa DPO netreba (odpoveď 6, 9. 10. 2026) |
+
 ### Pohlavie osoby (D133)
 
 Údaj pri osobe, ktorý využívajú činnosti 1 a 4.
@@ -95,7 +111,7 @@ Spoločné pre všetky štyri činnosti:
 |---|---|
 | Sprostredkovateľ | dodávateľ systému Contineo |
 | Prevádzkovateľ | Slovenský futbalový zväz (a každý ďalší zväz podľa samostatnej zmluvy) |
-| Kategórie spracúvania | uchovávanie a zobrazovanie údajov z činností 1–4; odosielanie e-mailov; tvorba odpovedí na otázky; tvorba PDF certifikátu |
+| Kategórie spracúvania | uchovávanie a zobrazovanie údajov z činností 1–5; odosielanie e-mailov; tvorba odpovedí na otázky; tvorba PDF certifikátu |
 | Ďalší sprostredkovatelia | MongoDB Atlas (databáza, EÚ), Vercel (hosting, EÚ), Anthropic (tvorba odpovedí), Voyage AI cez MongoDB (vyhľadávanie v texte), Ecomail (e-maily, EÚ) |
 | Prenos do tretích krajín | kap. 4 |
 | Bezpečnostné opatrenia | kap. 5 |

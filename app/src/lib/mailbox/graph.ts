@@ -224,8 +224,8 @@ export class GraphMailbox implements MailboxAdapter {
    * pri `listRecent` — odpovede ležia v odoslaných a helpdesk si poštu
    * triedi do podpriečinkov; nevyžiadanú a odstránenú poštu len označí.
    */
-  async listHeaders(from: Date, to: Date, stopAt?: number): Promise<MailHeader[]> {
-    const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z")
+  /** Id nevyžiadanej a odstránenej pošty; priečinok, ktorý schránka nemá, je `null`. */
+  private async skippedFolders(): Promise<{ junk: string | null; deleted: string | null }> {
     const [junk, deleted] = await Promise.all(["junkemail", "deleteditems"].map(async name => {
       try {
         const r = await this.get(`${this.userPath()}/mailFolders/${name}?$select=id`, "priečinok")
@@ -235,16 +235,38 @@ export class GraphMailbox implements MailboxAdapter {
         return null
       }
     }))
+    return { junk, deleted }
+  }
+
+  /** Stránky `/messages` v intervale; po `stopAt` chyba `mailbox.slow`. */
+  private async *rangePages(select: string, from: Date, to: Date, pageSize: number, stopAt?: number) {
+    const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z")
     const filter = encodeURIComponent(`receivedDateTime ge ${iso(from)} and receivedDateTime lt ${iso(to)}`)
-    let url: string | null = `${this.userPath()}/messages?$select=${HEADER_SELECT}&$filter=${filter}&$top=500`
-    const out: MailHeader[] = []
+    let url: string | null = `${this.userPath()}/messages?$select=${select}&$filter=${filter}&$top=${pageSize}`
+    let read = 0
     while (url) {
       if (stopAt !== undefined && Date.now() > stopAt) {
-        throw new MailboxError("mailbox.slow", "Schránka odpovedá pomaly — mesiac sa nestihol prečítať.", { read: out.length })
+        throw new MailboxError("mailbox.slow", "Schránka odpovedá pomaly — mesiac sa nestihol prečítať.", { read })
       }
-      const r = await this.get(url, "hlavičky", 500)
+      const r = await this.get(url, "obdobie", pageSize)
       const j = await r.json() as { value?: (GraphMessage & { parentFolderId?: string })[]; "@odata.nextLink"?: string }
-      for (const m of j.value ?? []) {
+      const value = j.value ?? []
+      read += value.length
+      yield value
+      url = j["@odata.nextLink"] ?? null
+    }
+  }
+
+  /**
+   * Hlavičky bez tela po stránkach po 500 (ADR-030, D180). Celá schránka ako
+   * pri `listRecent` — odpovede ležia v odoslaných a helpdesk si poštu
+   * triedi do podpriečinkov; nevyžiadanú a odstránenú poštu len označí.
+   */
+  async listHeaders(from: Date, to: Date, stopAt?: number): Promise<MailHeader[]> {
+    const { junk, deleted } = await this.skippedFolders()
+    const out: MailHeader[] = []
+    for await (const page of this.rangePages(HEADER_SELECT, from, to, 500, stopAt)) {
+      for (const m of page) {
         if (m.isDraft) continue
         const fromAddress = m.from?.emailAddress?.address?.toLowerCase() ?? null
         out.push({
@@ -256,7 +278,23 @@ export class GraphMailbox implements MailboxAdapter {
           folder: m.parentFolderId && m.parentFolderId === junk ? "junk" : m.parentFolderId && m.parentFolderId === deleted ? "deleted" : "other",
         })
       }
-      url = j["@odata.nextLink"] ?? null
+    }
+    return out
+  }
+
+  /**
+   * Správy s textom v intervale (ADR-030, D184) — po 50, telá sú veľké.
+   * Nevyžiadaná a odstránená pošta sa vynechá rovno tu.
+   */
+  async listMessages(from: Date, to: Date, stopAt?: number): Promise<MailMessage[]> {
+    const { junk, deleted } = await this.skippedFolders()
+    const out: MailMessage[] = []
+    for await (const page of this.rangePages(`${SELECT},parentFolderId`, from, to, 50, stopAt)) {
+      for (const m of page) {
+        if (m.isDraft) continue
+        if (m.parentFolderId && (m.parentFolderId === junk || m.parentFolderId === deleted)) continue
+        out.push(toMailMessage(m, this.address))
+      }
     }
     return out
   }
