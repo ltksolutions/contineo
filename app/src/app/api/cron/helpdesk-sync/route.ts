@@ -10,11 +10,10 @@
  * CRON_SECRET`, inak 401. Cesta `/api/cron/` je verejná a bez kontroly
  * hostiteľa (`publicRoutes.ts`) — organizácia je na kanáli, nie v adrese.
  *
- * Spúšťač: GitHub Actions každých 5 minút (`.github/workflows/helpdesk-sync.yml`,
- * plán Hobby na Verceli cron častejšie než raz denne nedovolí) a denný cron
- * vo `vercel.json` ako záloha. Synchronizuje sa len kanál, ktorému uplynul
- * jeho interval (`isSyncDue()`, nastavenie kanála). Tlačidlo „Synchronizovať
- * teraz" v nastavení kanála interval nepozerá.
+ * Spúšťač: Vercel cron každých 5 minút (`vercel.json`, plán Pro). Synchronizuje
+ * sa len kanál, ktorému uplynul jeho interval (`isSyncDue()`, nastavenie
+ * kanála). Tlačidlo „Synchronizovať teraz" v nastavení kanála interval
+ * nepozerá.
  */
 
 import { NextResponse } from "next/server"

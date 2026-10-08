@@ -48,10 +48,9 @@ export const SYNC_MAX_PAGES = 20
 export const DEFAULT_RATE_LIMIT = 60
 /**
  * Ako často sa schránka kanála synchronizuje, v minútach (Ján 8. 10. 2026:
- * „každých 5 minút, interval si nastaví každý sám"). Spúšťač beží každých
- * 5 minút (GitHub Actions, `.github/workflows/helpdesk-sync.yml`) a berie
- * len kanály, ktorým interval uplynul (`isSyncDue()`); kratší interval než
- * spúšťač nemá zmysel. 1440 = raz denne.
+ * „každých 5 minút, interval si nastaví každý sám"). Vercel cron beží každých
+ * 5 minút (`vercel.json`) a berie len kanály, ktorým interval uplynul
+ * (`isSyncDue()`); kratší interval než cron nemá zmysel. 1440 = raz denne.
  */
 export const SYNC_INTERVALS = [5, 15, 30, 60, 1440] as const
 export const DEFAULT_SYNC_INTERVAL = 5
