@@ -24,11 +24,32 @@ export interface EmbedInput {
   fallbackText: string
   /** Kontakt pri výpadku; bez neho sa náhradný blok nevloží. */
   contact: string | null
+  /**
+   * Popis do HTML komentára nad kódom — kód sa kopíruje k vývojárovi cudzej
+   * stránky a obrazovku nastavenia on neuvidí (Ján 8. 10. 2026).
+   */
+  doc?: { title: string; params: { name: string; text: string }[]; tokenHeading: string; token: string }
+}
+
+/** `--` v HTML komentári komentár ukončí; nahradí sa pomlčkou. */
+function commentSafe(s: string): string {
+  return s.replace(/--+/g, "—").replace(/>/g, "›")
+}
+
+function docComment(d: NonNullable<EmbedInput["doc"]>): string[] {
+  const pad = Math.max(...d.params.map(p => p.name.length)) + 2
+  return [
+    `<!-- ${commentSafe(d.title)}`,
+    ...d.params.map(p => `     ${p.name.padEnd(pad)}${commentSafe(p.text)}`),
+    ``,
+    `     ${commentSafe(d.tokenHeading)}: ${commentSafe(d.token)}`,
+    `-->`,
+  ]
 }
 
 export function widgetEmbedCode(i: EmbedInput): string {
   const src = `https://${i.host}/api/widget/${encodeURIComponent(i.channelKey)}/script`
-  const lines: string[] = []
+  const lines: string[] = i.doc ? docComment(i.doc) : []
   if (i.contact) {
     lines.push(
       `<div id="${FALLBACK_ELEMENT_ID}" hidden>`,

@@ -2409,6 +2409,8 @@ interface Dictionary {
     widgetFallback: string
     widgetFallbackHint: (orgContact: string | null) => string
     embedHeading: string
+    /** Prvý riadok komentára v kóde na vloženie. */
+    embedCommentTitle: (channel: string) => string
     embedIntro: string
     embedNoOrigins: string
     embedNoContact: string
@@ -6790,6 +6792,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetFallback: "Kontakt pri výpadku",
     widgetFallbackHint: org => org ? `Komu sa ozvať, keď widget na cudzej stránke nenabehne alebo neodpovedá. Prázdne = Kontaktná adresa organizácie (${org}).` : "Komu sa ozvať, keď widget na cudzej stránke nenabehne alebo neodpovedá. Prázdne = Kontaktná adresa organizácie — tá zatiaľ nie je nastavená (Organizácia → Všeobecné).",
     embedHeading: "Kód na vloženie",
+    embedCommentTitle: ch => `Contineo — pomocník kanála „${ch}“. Parametre:`,
     embedIntro: "Vložte do stránky, na ktorej má byť pomocník — najlepšie pred koniec <body>. Token vydáva váš server pre prihláseného človeka (návod: docs/WIDGET_ISSF.md).",
     embedNoOrigins: "Kanál zatiaľ nemá povolený pôvod — skript sa nenačíta, kým ho vyššie nepridáte.",
     embedNoContact: "Bez kontaktu pri výpadku sa náhradný blok nevloží — človek pri výpadku neuvidí nič.",
@@ -11042,6 +11045,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetFallback: "Kontakt při výpadku",
     widgetFallbackHint: org => org ? `Komu se ozvat, když widget na cizí stránce nenaběhne nebo neodpovídá. Prázdné = Kontaktní adresa organizace (${org}).` : "Komu se ozvat, když widget na cizí stránce nenaběhne nebo neodpovídá. Prázdné = Kontaktní adresa organizace — ta zatím není nastavena (Organizace → Obecné).",
     embedHeading: "Kód pro vložení",
+    embedCommentTitle: ch => `Contineo — pomocník kanálu „${ch}“. Parametry:`,
     embedIntro: "Vložte do stránky, kde má být pomocník — nejlépe před konec <body>. Token vydává váš server pro přihlášeného člověka (návod: docs/WIDGET_ISSF.md).",
     embedNoOrigins: "Kanál zatím nemá povolený původ — skript se nenačte, dokud ho výše nepřidáte.",
     embedNoContact: "Bez kontaktu při výpadku se náhradní blok nevloží — člověk při výpadku neuvidí nic.",
@@ -15285,6 +15289,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetFallback: "Contact during an outage",
     widgetFallbackHint: org => org ? `Who to contact when the widget does not load or answer on the external page. Empty = the organisation's contact address (${org}).` : "Who to contact when the widget does not load or answer on the external page. Empty = the organisation's contact address — not set yet (Organisation → General).",
     embedHeading: "Embed code",
+    embedCommentTitle: ch => `Contineo — assistant of channel “${ch}”. Parameters:`,
     embedIntro: "Put it on the page where the assistant should appear — ideally just before </body>. Your server issues the token for the signed-in person (guide: docs/WIDGET_ISSF.md).",
     embedNoOrigins: "The channel has no allowed origin yet — the script will not load until you add one above.",
     embedNoContact: "Without an outage contact no fallback block is added — people see nothing during an outage.",

@@ -90,7 +90,10 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   // na ktorej je nastavenie otvorené, teda doména organizácie.
   const fallbackContact = isWidget ? widgetFallbackContact(raw, ctx.tenant.branding?.supportEmail) : null
   const embedCode = isWidget
-    ? widgetEmbedCode({ host: await requestHostname(), channelKey: c.key, fallbackText: t.embedFallbackText, contact: fallbackContact })
+    ? widgetEmbedCode({
+        host: await requestHostname(), channelKey: c.key, fallbackText: t.embedFallbackText, contact: fallbackContact,
+        doc: { title: t.embedCommentTitle(c.name), params: t.embedParams, tokenHeading: t.embedTokenHeading, token: t.embedToken },
+      })
     : ""
 
   return (
