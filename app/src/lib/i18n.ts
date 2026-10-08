@@ -2455,6 +2455,43 @@ interface Dictionary {
     miningRun: string
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => string
     noFaqDocuments: string
+    history: string
+    historyIntro: string
+    historyOpen: string
+    historyPeriod: string
+    historyPeriodOption: (months: number) => string
+    historyStart: string
+    historyRestart: string
+    historyStarted: string
+    historyNone: string
+    historyProgress: (done: number, total: number) => string
+    historyDone: (when: string) => string
+    historyStopped: string
+    historyStartedBy: (who: string, when: string) => string
+    historyThreads: string
+    historyThreadsNote: (internal: string) => string
+    historyAnswered: string
+    historyAnsweredNote: (percent: number) => string
+    historyWithin24h: string
+    historyMedianReply: string
+    historyMedianNote: string
+    historyHours: (hours: string) => string
+    historyTerms: string
+    historyTermsIntro: string
+    historyTermsNone: string
+    historyTermMeta: (threads: string, months: number) => string
+    historyTrendUp: string
+    historyTrendDown: string
+    historyMonths: string
+    historyColMonth: string
+    historyColIncoming: string
+    historyColThreads: string
+    historyColAnswered: string
+    historyColMedian: string
+    historyColBounces: string
+    historyColJunk: string
+    historyMonthCard: (incoming: string, threads: string, answered: string) => string
+    historyMonthNames: string[]
     save: string
     saved: string
     created: string
@@ -6920,6 +6957,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     miningRun: "Navrhnúť záznamy FAQ",
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Ťažba prebehla: vlákien ${threads}, návrhov ${proposed}, uložených do konceptu ${saved}, duplicitných ${duplicates}.`,
     noFaqDocuments: "V knižnici ešte nie je FAQ dokument — založ ho v Knižnici → Nový dokument → FAQ.",
+    history: "Analýza histórie",
+    historyIntro: "Prehľad schránky za zvolené obdobie: koľko otázok prišlo, koľko dostalo odpoveď, ako rýchlo a o čom zhruba boli. Číta sa len hlavička správ (dátum, vlákno, odosielateľ, predmet) — telá sa nečítajú, umelej inteligencii nič neodchádza a do FAQ ani ticketov sa nič nezapíše. Ukladá sa len mesačný súhrn bez adries a mien.",
+    historyOpen: "Otvoriť analýzu",
+    historyPeriod: "Obdobie",
+    historyPeriodOption: (months: number) => `posledných ${months} mesiacov`,
+    historyStart: "Spustiť analýzu",
+    historyRestart: "Spustiť znova",
+    historyStarted: "Analýza beží. Prvé mesiace sú spracované, ďalšie sa dopĺňajú automaticky každých 5 minút.",
+    historyNone: "Analýza ešte neprebehla.",
+    historyProgress: (done: number, total: number) => `Spracované ${done} z ${total} mesiacov. Ďalšie sa dopĺňajú automaticky každých 5 minút — stránku stačí neskôr obnoviť.`,
+    historyDone: (when: string) => `Analýza je hotová (${when}).`,
+    historyStopped: "Analýza sa po opakovaných chybách zastavila. Skontroluj spojenie so schránkou (Overiť spojenie) a spusti ju znova.",
+    historyStartedBy: (who: string, when: string) => `Spustené ${when}, ${who}.`,
+    historyThreads: "Otázky zvonku",
+    historyThreadsNote: (internal: string) => `z toho ${internal} od kolegov`,
+    historyAnswered: "S odpoveďou",
+    historyAnsweredNote: (percent: number) => `${percent} % otázok`,
+    historyWithin24h: "Do 24 hodín",
+    historyMedianReply: "Čas do odpovede",
+    historyMedianNote: "medián mesiacov",
+    historyHours: (hours: string) => `${hours} h`,
+    historyTerms: "Časté slová v predmetoch",
+    historyTermsIntro: "Slová a dvojice slov, ktoré sa v mesiaci opakovali aspoň v 5 otázkach od aspoň 3 rôznych ľudí. Predmet „Otázka“ alebo „RE: info“ o téme nepovie nič — presné témy podľa obsahu dá až pilot.",
+    historyTermsNone: "Zatiaľ žiadne slovo neprešlo prahom.",
+    historyTermMeta: (threads: string, months: number) => `${threads} otázok · ${months} mes.`,
+    historyTrendUp: "pribúda",
+    historyTrendDown: "ubúda",
+    historyMonths: "Po mesiacoch",
+    historyColMonth: "Mesiac",
+    historyColIncoming: "Prijaté",
+    historyColThreads: "Otázky",
+    historyColAnswered: "S odpoveďou",
+    historyColMedian: "Čas do odpovede",
+    historyColBounces: "Návraty",
+    historyColJunk: "Nevyžiadané",
+    historyMonthCard: (incoming: string, threads: string, answered: string) => `prijaté ${incoming} · otázky ${threads} · s odpoveďou ${answered}`,
+    historyMonthNames: ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"],
     save: "Uložiť kanál",
     saved: "Kanál je uložený.",
     created: "Kanál je založený.",
@@ -11242,6 +11316,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     miningRun: "Navrhnout záznamy FAQ",
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Těžba proběhla: vláken ${threads}, návrhů ${proposed}, uložených do konceptu ${saved}, duplicitních ${duplicates}.`,
     noFaqDocuments: "V knihovně ještě není FAQ dokument — založ ho v Knihovně → Nový dokument → FAQ.",
+    history: "Analýza historie",
+    historyIntro: "Přehled schránky za zvolené období: kolik otázek přišlo, kolik dostalo odpověď, jak rychle a o čem zhruba byly. Čte se jen hlavička zpráv (datum, vlákno, odesílatel, předmět) — těla se nečtou, umělé inteligenci nic neodchází a do FAQ ani ticketů se nic nezapíše. Ukládá se jen měsíční souhrn bez adres a jmen.",
+    historyOpen: "Otevřít analýzu",
+    historyPeriod: "Období",
+    historyPeriodOption: (months: number) => `posledních ${months} měsíců`,
+    historyStart: "Spustit analýzu",
+    historyRestart: "Spustit znovu",
+    historyStarted: "Analýza běží. První měsíce jsou zpracované, další se doplňují automaticky každých 5 minut.",
+    historyNone: "Analýza ještě neproběhla.",
+    historyProgress: (done: number, total: number) => `Zpracováno ${done} z ${total} měsíců. Další se doplňují automaticky každých 5 minut — stránku stačí později obnovit.`,
+    historyDone: (when: string) => `Analýza je hotová (${when}).`,
+    historyStopped: "Analýza se po opakovaných chybách zastavila. Zkontroluj spojení se schránkou (Ověřit spojení) a spusť ji znovu.",
+    historyStartedBy: (who: string, when: string) => `Spuštěno ${when}, ${who}.`,
+    historyThreads: "Otázky zvenku",
+    historyThreadsNote: (internal: string) => `z toho ${internal} od kolegů`,
+    historyAnswered: "S odpovědí",
+    historyAnsweredNote: (percent: number) => `${percent} % otázek`,
+    historyWithin24h: "Do 24 hodin",
+    historyMedianReply: "Čas do odpovědi",
+    historyMedianNote: "medián měsíců",
+    historyHours: (hours: string) => `${hours} h`,
+    historyTerms: "Častá slova v předmětech",
+    historyTermsIntro: "Slova a dvojice slov, které se v měsíci opakovaly alespoň v 5 otázkách od alespoň 3 různých lidí. Předmět „Otázka“ nebo „RE: info“ o tématu neřekne nic — přesná témata podle obsahu dá až pilot.",
+    historyTermsNone: "Zatím žádné slovo neprošlo prahem.",
+    historyTermMeta: (threads: string, months: number) => `${threads} otázek · ${months} měs.`,
+    historyTrendUp: "přibývá",
+    historyTrendDown: "ubývá",
+    historyMonths: "Po měsících",
+    historyColMonth: "Měsíc",
+    historyColIncoming: "Přijaté",
+    historyColThreads: "Otázky",
+    historyColAnswered: "S odpovědí",
+    historyColMedian: "Čas do odpovědi",
+    historyColBounces: "Vrácené",
+    historyColJunk: "Nevyžádané",
+    historyMonthCard: (incoming: string, threads: string, answered: string) => `přijaté ${incoming} · otázky ${threads} · s odpovědí ${answered}`,
+    historyMonthNames: ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"],
     save: "Uložit kanál",
     saved: "Kanál je uložen.",
     created: "Kanál je založen.",
@@ -15555,6 +15666,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     miningRun: "Propose FAQ entries",
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Mining finished: threads ${threads}, proposals ${proposed}, saved to the draft ${saved}, duplicates ${duplicates}.`,
     noFaqDocuments: "There is no FAQ document in the library yet — create one in Library → New document → FAQ.",
+    history: "History analysis",
+    historyIntro: "An overview of the mailbox for the chosen period: how many questions came in, how many got an answer, how fast, and roughly what they were about. Only message headers are read (date, thread, sender, subject) — bodies are not read, nothing is sent to the AI and nothing is written to the FAQ or tickets. Only a monthly summary without addresses or names is stored.",
+    historyOpen: "Open analysis",
+    historyPeriod: "Period",
+    historyPeriodOption: (months: number) => `last ${months} months`,
+    historyStart: "Run analysis",
+    historyRestart: "Run again",
+    historyStarted: "The analysis is running. The first months are done; the rest is filled in automatically every 5 minutes.",
+    historyNone: "No analysis has run yet.",
+    historyProgress: (done: number, total: number) => `${done} of ${total} months processed. The rest is filled in automatically every 5 minutes — just reload the page later.`,
+    historyDone: (when: string) => `The analysis is complete (${when}).`,
+    historyStopped: "The analysis stopped after repeated errors. Check the mailbox connection (Verify connection) and run it again.",
+    historyStartedBy: (who: string, when: string) => `Started ${when} by ${who}.`,
+    historyThreads: "Questions from outside",
+    historyThreadsNote: (internal: string) => `of which ${internal} from colleagues`,
+    historyAnswered: "Answered",
+    historyAnsweredNote: (percent: number) => `${percent} % of questions`,
+    historyWithin24h: "Within 24 hours",
+    historyMedianReply: "Time to answer",
+    historyMedianNote: "median of months",
+    historyHours: (hours: string) => `${hours} h`,
+    historyTerms: "Frequent words in subjects",
+    historyTermsIntro: "Words and word pairs that recurred in a month in at least 5 questions from at least 3 different people. A subject like “Question” or “RE: info” says nothing about the topic — precise topics by content come with the pilot.",
+    historyTermsNone: "No word has passed the threshold yet.",
+    historyTermMeta: (threads: string, months: number) => `${threads} questions · ${months} mo.`,
+    historyTrendUp: "rising",
+    historyTrendDown: "falling",
+    historyMonths: "By month",
+    historyColMonth: "Month",
+    historyColIncoming: "Received",
+    historyColThreads: "Questions",
+    historyColAnswered: "Answered",
+    historyColMedian: "Time to answer",
+    historyColBounces: "Bounces",
+    historyColJunk: "Junk",
+    historyMonthCard: (incoming: string, threads: string, answered: string) => `received ${incoming} · questions ${threads} · answered ${answered}`,
+    historyMonthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     save: "Save channel",
     saved: "The channel is saved.",
     created: "The channel is created.",

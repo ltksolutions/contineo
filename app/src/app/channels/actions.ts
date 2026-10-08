@@ -15,6 +15,7 @@ import { AppError } from "@/lib/appError"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { saveChannel, removeChannel, verifyMailbox, syncChannel, rotateWidgetSecret } from "@/lib/channels"
 import { mineFaqDrafts } from "@/lib/faqMining"
+import { startAnalysis, continueAnalysis } from "@/lib/historyAnalysis"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -152,4 +153,27 @@ export async function mineFaqAction(fd: FormData) {
   }
   revalidatePath("/library")
   back(key, message)
+}
+
+/**
+ * Analýza histórie schránky (ADR-030, D180): nový beh a prvé mesiace hneď,
+ * aby správca nevidel prázdnu stránku; zvyšok dopĺňa cron.
+ */
+export async function startHistoryAnalysisAction(fd: FormData) {
+  const ctx = await ready()
+  const key = fieldText(fd, "key")
+  const page = `/channels/${encodeURIComponent(key)}/history`
+  let message = ctx.t.historyStarted
+  let failed = false
+  try {
+    await startAnalysis(ctx.person.companyCode, key, Number(fieldText(fd, "months")), ctx.person.email)
+    await continueAnalysis(ctx.person.companyCode, key, 20_000)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, ctx.language)
+    failed = true
+  }
+  const q = new URLSearchParams({ msg: message })
+  if (failed) q.set("error", "1")
+  redirect(`${page}?${q.toString()}`)
 }

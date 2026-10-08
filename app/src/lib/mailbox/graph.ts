@@ -22,7 +22,7 @@
  */
 
 import { AppError } from "../appError"
-import { htmlToText, type MailboxAdapter, type MailboxPage, type MailMessage, type MailFolder } from "./types"
+import { htmlToText, type MailboxAdapter, type MailboxPage, type MailMessage, type MailFolder, type MailHeader } from "./types"
 
 export class MailboxError extends AppError {}
 
@@ -37,6 +37,8 @@ export interface GraphMailboxConfig {
 const GRAPH = "https://graph.microsoft.com/v1.0"
 const TIMEOUT_MS = 15000
 const SELECT = "id,internetMessageId,conversationId,from,toRecipients,subject,body,receivedDateTime,hasAttachments,isDraft"
+/** Analýza histórie (ADR-030, D180): bez tela, adresátov a príloh. */
+const HEADER_SELECT = "id,conversationId,from,subject,receivedDateTime,parentFolderId,isDraft"
 
 type GraphRecipient = { emailAddress?: { address?: string; name?: string } }
 type GraphMessage = {
@@ -134,10 +136,10 @@ export class GraphMailbox implements MailboxAdapter {
     return j.access_token
   }
 
-  private async get(url: string, what: string): Promise<Response> {
+  private async get(url: string, what: string, pageSize = 50): Promise<Response> {
     const token = await this.accessToken()
     const r = await withTimeout(signal => fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, Prefer: 'outlook.body-content-type="text", odata.maxpagesize=50' },
+      headers: { Authorization: `Bearer ${token}`, Prefer: `outlook.body-content-type="text", odata.maxpagesize=${pageSize}` },
       signal, cache: "no-store",
     }))
     if (!r.ok) throw await graphError(r, what)
@@ -211,6 +213,45 @@ export class GraphMailbox implements MailboxAdapter {
         if (m.isDraft) continue
         out.push(toMailMessage(m, this.address))
         if (out.length >= limit) break
+      }
+      url = j["@odata.nextLink"] ?? null
+    }
+    return out
+  }
+
+  /**
+   * Hlavičky bez tela po stránkach po 500 (ADR-030, D180). Celá schránka ako
+   * pri `listRecent` — odpovede ležia v odoslaných a helpdesk si poštu
+   * triedi do podpriečinkov; nevyžiadanú a odstránenú poštu len označí.
+   */
+  async listHeaders(from: Date, to: Date): Promise<MailHeader[]> {
+    const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z")
+    const [junk, deleted] = await Promise.all(["junkemail", "deleteditems"].map(async name => {
+      try {
+        const r = await this.get(`${this.userPath()}/mailFolders/${name}?$select=id`, "priečinok")
+        return ((await r.json()) as { id?: string }).id ?? null
+      } catch {
+        // Schránka bez priečinka (iný jazyk, zmazaný) — nič sa neoznačí.
+        return null
+      }
+    }))
+    const filter = encodeURIComponent(`receivedDateTime ge ${iso(from)} and receivedDateTime lt ${iso(to)}`)
+    let url: string | null = `${this.userPath()}/messages?$select=${HEADER_SELECT}&$filter=${filter}&$top=500`
+    const out: MailHeader[] = []
+    while (url) {
+      const r = await this.get(url, "hlavičky", 500)
+      const j = await r.json() as { value?: (GraphMessage & { parentFolderId?: string })[]; "@odata.nextLink"?: string }
+      for (const m of j.value ?? []) {
+        if (m.isDraft) continue
+        const fromAddress = m.from?.emailAddress?.address?.toLowerCase() ?? null
+        out.push({
+          threadRef: m.conversationId ?? m.id,
+          fromAddress,
+          subject: m.subject ?? "",
+          receivedAt: m.receivedDateTime ? new Date(m.receivedDateTime) : new Date(0),
+          outgoing: fromAddress === this.address,
+          folder: m.parentFolderId && m.parentFolderId === junk ? "junk" : m.parentFolderId && m.parentFolderId === deleted ? "deleted" : "other",
+        })
       }
       url = j["@odata.nextLink"] ?? null
     }

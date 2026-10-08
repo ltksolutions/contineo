@@ -35,6 +35,20 @@ export interface MailMessage {
   attachments: { name: string; bytes: number }[]
 }
 
+/**
+ * Hlavička správy bez tela — pre analýzu histórie (ADR-030, D180). Nesie len
+ * to, z čoho sa počíta súhrn; adresa odosielateľa sa nikam neukladá.
+ */
+export interface MailHeader {
+  threadRef: string
+  fromAddress: string | null
+  subject: string
+  receivedAt: Date
+  outgoing: boolean
+  /** Nevyžiadaná a odstránená pošta sa do vlákien nepočíta. */
+  folder: "junk" | "deleted" | "other"
+}
+
 export interface MailboxPage {
   messages: MailMessage[]
   /** Značka pre ďalšie volanie; ukladá sa na kanáli. */
@@ -68,6 +82,11 @@ export interface MailboxAdapter {
    * značku, najnovšie prvé. Nič sa nikam neukladá.
    */
   listRecent(limit: number): Promise<MailMessage[]>
+  /**
+   * Hlavičky všetkých správ schránky (všetky priečinky, bez konceptov)
+   * prijatých v intervale `[from, to)`. Telá sa nečítajú (ADR-030, D180).
+   */
+  listHeaders(from: Date, to: Date): Promise<MailHeader[]>
   /** Odpoveď vo vlákne z adresy schránky. Vracia `internetMessageId` odoslanej správy, ak ho poskytovateľ vráti. */
   reply(messageId: string, text: string): Promise<{ messageId: string | null }>
   /** Nová správa z adresy schránky — pre ticket z chatu, ktorý vlákno v schránke nemá (D163). */
