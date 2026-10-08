@@ -105,6 +105,16 @@ export function toMailMessage(m: GraphMessage, mailboxAddress: string): MailMess
   }
 }
 
+const THROTTLE_RETRIES = 4
+const THROTTLE_MAX_WAIT_S = 10
+
+/** Čakanie po 429/503: `Retry-After` v sekundách, inak 1, 2, 4… s; strop 10 s. */
+export function throttleDelayMs(retryAfter: string | null, attempt: number): number {
+  const s = Number(retryAfter)
+  const wait = Number.isFinite(s) && s > 0 ? s : 2 ** attempt
+  return Math.min(wait, THROTTLE_MAX_WAIT_S) * 1000
+}
+
 export class GraphMailbox implements MailboxAdapter {
   readonly kind = "graph" as const
   readonly address: string
@@ -136,14 +146,28 @@ export class GraphMailbox implements MailboxAdapter {
     return j.access_token
   }
 
+  /**
+   * GET s opakovaním pri obmedzení (9. 10. 2026): Graph dovolí aplikácii
+   * najviac 4 súbežné požiadavky na schránku (`MailboxConcurrency`) a pri
+   * prekročení vráti 429 s `Retry-After`. Synchronizácia ticketov a ťažba
+   * FAQ bežia nad tou istou schránkou naraz, takže sa to stane aj pri
+   * slušnej súbežnosti. Čaká sa najviac `THROTTLE_MAX_WAIT_S` na pokus.
+   */
   private async get(url: string, what: string, pageSize = 50): Promise<Response> {
-    const token = await this.accessToken()
-    const r = await withTimeout(signal => fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, Prefer: `outlook.body-content-type="text", odata.maxpagesize=${pageSize}` },
-      signal, cache: "no-store",
-    }))
-    if (!r.ok) throw await graphError(r, what)
-    return r
+    for (let attempt = 0; ; attempt++) {
+      const token = await this.accessToken()
+      const r = await withTimeout(signal => fetch(url, {
+        headers: { Authorization: `Bearer ${token}`, Prefer: `outlook.body-content-type="text", odata.maxpagesize=${pageSize}` },
+        signal, cache: "no-store",
+      }))
+      if (r.ok) return r
+      if ((r.status === 429 || r.status === 503) && attempt < THROTTLE_RETRIES) {
+        await r.body?.cancel().catch(() => undefined)
+        await new Promise(res => setTimeout(res, throttleDelayMs(r.headers.get("retry-after"), attempt)))
+        continue
+      }
+      throw await graphError(r, what)
+    }
   }
 
   private userPath(): string {

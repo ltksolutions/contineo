@@ -124,8 +124,12 @@ export interface HarvestItem {
 
 export interface HarvestSkips { colleague: number; excluded: number; unanswered: number }
 
-/** Súbežné čítanie vlákien zo schránky pri zbere. */
-export const THREAD_FETCH_PARALLEL = 6
+/**
+ * Súbežné čítanie vlákien zo schránky pri zbere. Graph dovolí aplikácii
+ * 4 súbežné požiadavky na schránku a synchronizácia ticketov beží popri
+ * tom — 6 skončilo 9. 10. 2026 chybou 429 `MailboxConcurrency`.
+ */
+export const THREAD_FETCH_PARALLEL = 3
 
 /**
  * Hlavičky okna → vlákna, ktorých text treba prečítať (9. 10. 2026). Okno
