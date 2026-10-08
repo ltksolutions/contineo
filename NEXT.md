@@ -28,19 +28,17 @@ von len to, čo kurátor importuje a schváli. Fáza 3 (nástroje asistenta)
 a servisný účet Sportnetu sú v `docs/TODO.md` E2. Júnový zápis
 `INGESTION_zdroje_reconciliation.md` kap. 2.2 je prekonaný.
 
-**Helpdesk (ADR-028, 6. 10.) je celý v `main`, naostro neoverený.** Päť
-krokov: FAQ ako druh dokumentu (D164), kanály so schránkou cez Microsoft
-Graph a ťažba histórie do FAQ (D161, D162, D165), e-mail je ticket (D163),
-obrazovka riešiteľa `/helpdesk` (rola `helpdesk`, D167), widget s tokenom pre
-ISSF (D166), druh osoby `internal`/`employee`/`external` (D168) a **Kanály
-ako sekcia v menu s typom widget / portál (D169, PR #285)**. Čaká na
-ľudí mimo kódu: registrácia aplikácie v Entra a zúženie na schránku
-(`docs/NASADENIE_app.md` § 5, správca M365), prvý kanál v sekcii Kanály (typ widget, D169) a rola `helpdesk`, tajomstvo widgetu pre prevádzkovateľa ISSF
-(`docs/WIDGET_ISSF.md`). Poradie overenia: FAQ → kanál a Overiť spojenie →
-Synchronizovať → ťažba FAQ → ticket a odpoveď → widget
-(`npm run widget:test` bez ISSF). Otvorené po nasadení: upozornenie
-riešiteľom na nový ticket, tickety v „čo čaká na mňa“, IMAP adaptér, cron
-častejšie než denne (Pro), text účelu „helpdesk“ na `/privacy` (DPO).
+**Helpdesk (ADR-028) beží naostro od 7. 10.; rozhodnutia doplnili D169,
+D170 a ADR-029.** Schránka SFZ je pripojená cez Microsoft Graph (aplikácia
+v Entra zúžená na schránku), synchronizácia Doručenej aj Odoslanej pošty
+beží každých 5 minút (Vercel cron, interval pri kanáli), e-mail je ticket
+s celým vláknom a odpovede z Outlooku sa k nemu pripoja. **Kanály** sú
+sekcia s typom widget / portál (D169) a jediná položka v menu aj pre
+riešiteľa — Helpdesk ako samostatná časť zanikol, správca obsah ticketov
+nečíta (D170). Živý zdroj z konektora do verejného kanála nejde (ADR-029,
+D176). Otvorené (`docs/TODO.md`): widget pre ISSF u prevádzkovateľa ISSF
+(`docs/WIDGET_ISSF.md`), upozornenie riešiteľom na nový ticket, tickety
+v „čo čaká na mňa", IMAP adaptér, text účelu „helpdesk" na `/privacy` (DPO).
 
 Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
 nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`

@@ -683,7 +683,7 @@ Overené na `sfz:test_znenia` (pridelenie osobe, Oddeleniu IT, trase `test-2026`
 **Rozsah C — až keď existujú ďalšie zdroje**
 
 - [ ] kurácia (dokumenty čakajúce na kurátora, otvorený rozpor s D25)
-- [ ] helpdesk (Fáza 4b) — tickety existujú (ADR-028, 2026-10-06), do registra `pending.ts` zatiaľ nejdú: pripočítali by sa k „Na potvrdenie“; majú vlastný počet pri položke Helpdesk v menu
+- [ ] helpdesk (Fáza 4b) — tickety existujú (ADR-028, 2026-10-06), do registra `pending.ts` zatiaľ nejdú: pripočítali by sa k „Na potvrdenie“; majú vlastný počet pri položke Kanály v menu (D170)
 - [ ] prípadné jednorazové hlásenia podľa D40
 
 ---
