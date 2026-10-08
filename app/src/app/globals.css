@@ -6655,11 +6655,11 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 @media (min-width: 1024px) {
   /* Sekcia v dvoch stĺpcoch: riadky začínajú pri poliach, siahajú po pravý
      okraj karty. */
-  .sec-rows { margin: 0 -22px 0 0; }
-  .sec-rows-head, .sec-rows-foot, .sec-rows-empty { padding-left: 0; }
-  .sec-rows-body > .form-list > .form-row { padding-left: 0; }
-  .sec-rows-body > .form-list > .select-row + .select-row::before { left: 34px; }
-  .sec-rows-body > .sel-combo { margin-left: 0; }
+  .set-sec .sec-rows { margin: 0 -22px 0 0; }
+  .set-sec .sec-rows-head, .set-sec .sec-rows-foot, .set-sec .sec-rows-empty { padding-left: 0; }
+  .set-sec .sec-rows-body > .form-list > .form-row { padding-left: 0; }
+  .set-sec .sec-rows-body > .form-list > .select-row + .select-row::before { left: 34px; }
+  .set-sec .sec-rows-body > .sel-combo { margin-left: 0; }
 }
 .person-more, .person-duties { margin: 0; }
 .more-row--stack { display: grid; gap: 14px; }
@@ -8163,3 +8163,78 @@ details.thread-msg[open] .thread-msg-preview { display: none; }
 .thread-quoted { margin-top: 8px; }
 .thread-quoted > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
 .thread-quoted-body { white-space: pre-wrap; line-height: 1.6; font-size: var(--fs-small); overflow-wrap: anywhere; }
+
+/* ── Posudok a fronta hodnotiteľa (EVAL-posudok, 8. 10. 2026) ───────────────
+   Áno/Nie hodnotiteľa je `.seg` — dve natívne rádiá v tvare segmentu. Je to
+   ovládač formulára, nie `.view-switch`: nezvolený je sivý, farbu a fajku
+   dostane až zvolená voľba podľa významu (výnimka z ZAKLAD-vyber-a-prepinace,
+   schválená Jánom 8. 10. 2026). */
+.page-narrow--wide { max-width: 860px; }
+.eval-lead { margin: -12px 0 0; max-width: 66ch; }
+.rating { display: grid; gap: 8px; min-width: 0; padding: 14px 20px 16px; }
+section.rating { border-top: 1px solid var(--line); }
+.rating-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rating-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
+.rating-status { margin-left: auto; font-size: var(--fs-small); color: var(--muted); }
+.rating-status.is-ok { color: var(--ok-fg); }
+.rating-status.is-bad { color: var(--bad-fg); font-weight: 600; }
+.rating-q {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
+  gap: 8px 16px; min-width: 0; padding: 6px 0; border-bottom: 1px solid var(--line);
+}
+.rq-label { font-size: 15px; }
+.rating-q > .lnote { grid-column: 1 / -1; }
+.seg {
+  display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 2px;
+  border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line);
+}
+.seg-opt {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 0 14px; border-radius: 8px;
+  font-size: 14px; color: var(--ink); white-space: nowrap; cursor: pointer;
+}
+/* Rádio je skryté vizuálne, nie pre čítačku a klávesnicu. */
+.seg-opt input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.seg-opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg-opt.is-ok { background: var(--ok-bg); color: var(--ok-fg); font-weight: 600; box-shadow: inset 0 0 0 1px var(--ok-fg); }
+.seg-opt.is-bad { background: var(--bad-bg); color: var(--bad-fg); font-weight: 600; box-shadow: inset 0 0 0 1px var(--bad-fg); }
+.seg-opt.is-ok span::before, .seg-opt.is-bad span::before { content: "✓ "; }
+.rating-more summary {
+  display: inline-flex; align-items: center; min-height: 36px;
+  font-size: var(--fs-small); color: var(--accent); cursor: pointer;
+}
+.rating-more-body { display: grid; gap: 12px; margin-top: 6px; }
+.reader { display: grid; gap: 12px; min-width: 0; }
+.reader-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.reader-q { margin-right: 4px; font-size: var(--fs-small); color: var(--muted); }
+.reader-form { display: grid; gap: 10px; max-width: 560px; }
+.reader-thanks { margin: 0; font-size: var(--fs-small); }
+.button.is-bad { border-color: var(--bad-fg); color: var(--bad-fg); background: var(--bad-bg); }
+.eval-item { display: grid; padding: 0; overflow: hidden; }
+.eval-main { display: grid; gap: 12px; min-width: 0; padding: 18px 20px; }
+.eval-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.eval-date { margin-left: auto; font-size: var(--fs-micro); color: var(--muted); }
+.eval-q { margin: 0; font-size: var(--fs-section); font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+.quote { display: grid; gap: 3px; margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--surface-2); }
+.quote-who { font-size: var(--fs-micro); font-weight: 600; color: var(--muted); }
+.quote-text { font-size: 14.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.eval-ans summary {
+  display: inline-flex; align-items: center; min-height: 32px;
+  font-size: var(--fs-small); color: var(--accent); cursor: pointer;
+}
+.eval-ans-body { margin: 6px 0 0; font-size: 14.5px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.eval-ans-sources { margin: 8px 0 0; padding-left: 18px; font-size: var(--fs-small); }
+.eval-prepare { margin-top: 26px; }
+.form-group-lead { margin: -4px 0 4px; padding: 0 4px; max-width: 66ch; font-size: var(--fs-body); }
+.prep { display: grid; gap: 14px; padding: 18px 22px; }
+.prep .sec-rows-foot { padding-top: 4px; }
+@media (max-width: 639px) {
+  .rating, .eval-main { padding-left: 14px; padding-right: 14px; }
+  .prep { padding: 14px; }
+  .rating-q { grid-template-columns: minmax(0, 1fr); padding: 4px 0 12px; }
+  .seg { display: grid; }
+  .seg-opt { min-height: 44px; font-size: 15px; white-space: normal; text-align: center; }
+  .rating-more summary, .eval-ans summary { min-height: 44px; }
+  .reader-q { flex: 1 1 100%; }
+  .reader-row .button { flex: 1 1 0; }
+}

@@ -10,6 +10,29 @@
 
 ---
 
+## 2026-10-08 — posudok (EVAL-posudok)
+
+**Čo sa zmenilo:**
+- `Rating.tsx` bez inline štýlov: áno/nie ako `.seg` (dve natívne rádiá),
+  prop `as="card" | "section"`, doplnenie v `<details>`, hláška
+  `.lnote--bad` pri poli, ktorého uloženie zlyhalo. Po zlyhaní sa to isté
+  smie poslať znova — predtým by ho odtlačok posledného odoslania zahodil.
+- `/evaluation`: `article.card.eval-item` s posudkom ako sekciou, citát
+  `.quote`, zdroje pri príprave páru `.sec-rows`.
+- Desktopové pravidlá `.sec-rows` (riadky od stĺpca polí) sú teraz len
+  v `.set-sec` — v karte `.prep` by inak riadky začínali na okraji.
+
+**Rozhodnutie:** návrh dal áno/nie do segmentu, hoci
+ZAKLAD-vyber-a-prepinace hovorí „segmented sa do formulára nedáva". Ján
+schválil úzku výnimku (posudok sú dve kliknutia opakované desiatky ráz,
+farba po voľbe ho odlíši od `.view-switch`); zapísané v ZAKLAD.
+
+**Odchýlka od návrhu:** triedy `eval-*` namiesto `ev-*` — `.ev-head`
+a `.ev-date` už patria výkazu potvrdení. Citát nesie existujúci
+`evaluation.reader` (text zmenený na „Čitateľ napísal"), nie nový kľúč.
+
+---
+
 ## 2026-10-08 — karta osoby (OSOBY-karta-osoby)
 
 **Čo sa zmenilo:**

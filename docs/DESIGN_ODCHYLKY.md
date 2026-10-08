@@ -122,7 +122,7 @@ karty úloh zodpovednej osoby idú s úpravou knižnice.
 úpravy dokumentu, nová trasa, oddelenia a ľudia na trase), termín trasy
 ako voľba s fajkou, R9 v `/dpo`, jazyky v správe organizácií. Nechané:
 nadpisy `flow-section-title` v karte priebehu znenia (súčasť jej rámu) a
-`Rating` v posúdení (čaká na návrh). Navyše: názov v karte prehliadača
+`Rating` v posúdení (✓ 8. 10. 2026, EVAL-posudok). Navyše: názov v karte prehliadača
 na 12 stránkach mimo sekcií menu.
 
 | # | Čo | Kde | Typ |
@@ -247,9 +247,8 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
   `toLocaleString("sk")` bez jazyka (P11).
 - **ask/history** — hlavička (P1); vlastné pole hľadania → `SearchStrip`.
 - **evaluation** — plné „Uložiť" v každej položke (R1); hlavička (P1);
-  Áno/Nie v `Rating` sú vlastné tlačidlá s inline farbami → `.choice-row`
-  s rádiom, ukladanie na zmenu ostáva (návrh); podnadpisy (P7); `fieldStyle`
-  namiesto `.field-input`.
+  ~~Áno/Nie v `Rating` vlastné tlačidlá s inline farbami; podnadpisy (P7);
+  `fieldStyle`~~ ✓ 8. 10. 2026 (EVAL-posudok: `.seg`, sekcia karty položky).
 - **dpo** — rozhodnutie o námietke dlaždicami `hr-choice--tile` (R9); plné
   „Rozhodnúť" v páse hore aj pri námietke → v páse tiché (skok na kotvu).
 - **sign-in** — veľkosti písma natvrdo, chyba inline (P2), texty (P11).
@@ -268,4 +267,4 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 5. **Knižnica: úprava dokumentu** (R4) a **AI spotreba** (R5).
 6. **Návrhy v Claude Design:** ~~`TagSelect` (P8)~~ ✓ 8. 10. 2026, lišta uloženia pre stránky
    ~~s viacerými formulármi (P9)~~ ✓ 7. 10. 2026, ~~správa kurzu~~ ✓ 7. 10. 2026, ~~karta osoby bez karty v karte~~ ✓ 8. 10. 2026,
-   `Rating`.
+   ~~`Rating`~~ ✓ 8. 10. 2026.

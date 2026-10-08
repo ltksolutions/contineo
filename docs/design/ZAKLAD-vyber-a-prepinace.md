@@ -13,6 +13,7 @@ Zaškrtávacie políčka a krúžky v predvolenom vzhľade prehliadača sa nahra
 | jedna z 2–5 | `Picker(.inline)` | `input type=radio` + `.choice-row`: fajka `--accent` vpravo; pole voľby (dátum, dni) pod zvoleným riadkom |
 | jedna z mnohých | `Picker(.menu)` | natívny `<select>` v riadku, hodnota vpravo s ⌃⌄ |
 | pohľad | `Picker(.segmented)` | `.view-switch` — len pohľad, nie vo formulári (bez zmeny) |
+| áno/nie s významom (posudok) | `LabeledContent` + `Picker(.segmented)` | `.seg` — dve natívne rádiá v riadku vedľa otázky; nezvolený sivý, zvolený farba a fajka podľa významu. Nie `.view-switch` (EVAL-posudok, výnimka schválená Jánom 8. 10. 2026) |
 
 **Riadok** (`.form-row`, ako `List` row): celý riadok je `<label>`, min. 44 px, `padding: 9px 16px`, oddeľovač `--line` odsadený zľava (pri kruhu 50 px), hover `--surface-2`, `:focus-visible` obrys `--accent` na riadku. Riadky sú v `.form-group-body` bez vnútorného odstupu.
 
@@ -32,7 +33,7 @@ Jeden vzhľad pre tri rôzne veci (zapnúť nastavenie, vybrať položky, zvoli�
 
 - `hr/assign/page.tsx` (hlavička): „zaškrtávacie políčka, nie `select multiple`" — **dodržané**, ostávajú natívne checkboxy, mení sa len vzhľad.
 - Formulár bez JavaScriptu — dodržané, všetko je CSS nad `input`.
-- `.view-switch` len pre pohľad (ZAKLAD-podmenu-a-akcie) — segmented sa do formulára nedáva.
+- `.view-switch` len pre pohľad (ZAKLAD-podmenu-a-akcie) — segmented sa do formulára nedáva. **Výnimka 8. 10. 2026:** `.seg` pri áno/nie s významom v posudku (`Rating`) — farba po voľbe ho odlišuje od `.view-switch`.
 
 ## Rámy
 

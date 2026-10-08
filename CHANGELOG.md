@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Posudok odpovede: voľby v riadku, fronta bez karty v karte (2026-10-08)
+
+- Hodnotiteľ odpovedá na „Je odpoveď vecne správna?" a „Tvrdí niečo, čo
+  v zdrojoch nie je?" **dvojdielnym prepínačom v riadku** (rádiá — dajú sa
+  ovládať šípkami). Farbu a fajku dostane až zvolená voľba. Posudok sa
+  ukladá hneď po kliknutí ako doteraz.
+- Keď sa voľba alebo text neuloží, pri danom mieste sa ukáže hláška, čo
+  urobiť — nielen slovo v rohu.
+- „Doplniť správnu odpoveď a §" je rozbaľovací blok.
+- Čitateľ pod odpoveďou má Sedí / Nesedí a „Odoslať" ako tiché tlačidlá.
+- `/evaluation`: položka je jedna karta, posudok jej časť; slová čitateľa
+  sú citát „Čitateľ napísal". Pri príprave overenej odpovede sú zdroje
+  riadky priamo v karte a pod nimi § podľa hodnotiteľa.
+
 ### Karta osoby: sekcie, lišta uloženia, Ďalšie akcie (2026-10-08)
 
 - `/people/<id>` je formulár so sekciami **Osoba · Kontakt · Zaradenie ·
