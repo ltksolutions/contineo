@@ -2311,6 +2311,8 @@ interface Dictionary {
     error: string
     expired: string
     poweredBy: string
+    /** Pred adresou správcu, keď widget nefunguje (Ján 8. 10. 2026). */
+    contact: string
   }
   /** Kanály (ADR-028, D161, D169): widget a portál — obsah, schránka, riešitelia, ťažba FAQ. */
   channels: {
@@ -2403,6 +2405,20 @@ interface Dictionary {
     widgetIntro: string
     widgetOrigins: string
     widgetOriginsHint: string
+    /** Kontakt pri výpadku widgetu a kód na vloženie (Ján 8. 10. 2026). */
+    widgetFallback: string
+    widgetFallbackHint: (orgContact: string | null) => string
+    embedHeading: string
+    embedIntro: string
+    embedNoOrigins: string
+    embedNoContact: string
+    embedCopy: string
+    embedCopied: string
+    embedFallbackText: string
+    embedParamsHeading: string
+    embedParams: { name: string; text: string }[]
+    embedTokenHeading: string
+    embedToken: string
     rateLimit: string
     rateLimitHint: string
     widgetSecret: string
@@ -5661,6 +5677,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.notFound": "Taký kanál tu nie je.",
     "helpdesk.mailboxKind": "Neznámy druh schránky.",
     "helpdesk.mailboxAddress": "Adresa schránky nie je e-mailová adresa.",
+    "helpdesk.fallbackEmail": "Kontakt pri výpadku nie je e-mailová adresa.",
     "helpdesk.graphIds": "Pri Microsoft 365 je povinný tenant a client id aplikácie.",
     "helpdesk.noMailbox": "Kanál nemá schránku.",
     "helpdesk.noSecret": "Schránka nemá uložené tajomstvo aplikácie.",
@@ -6683,6 +6700,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     error: "Niečo sa pokazilo. Skús to o chvíľu.",
     expired: "Prihlásenie vypršalo — obnov stránku.",
     poweredBy: "Contineo",
+    contact: "Ak to nepôjde ani neskôr, napíš správcovi:",
   },
   channels: {
     heading: "Kanály",
@@ -6769,6 +6787,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetIntro: "Cudzí systém (ISSF) vydá po prihlásení podpísaný token s identitou osoby; widget ho pošle s otázkou. Tajný kľúč sa ukáže len raz, hneď po vytvorení.",
     widgetOrigins: "Povolené pôvody",
     widgetOriginsHint: "Adresy, z ktorých smie widget volať, každá na nový riadok: https://issf.futbalsfz.sk",
+    widgetFallback: "Kontakt pri výpadku",
+    widgetFallbackHint: org => org ? `Komu sa ozvať, keď widget na cudzej stránke nenabehne alebo neodpovedá. Prázdne = Kontaktná adresa organizácie (${org}).` : "Komu sa ozvať, keď widget na cudzej stránke nenabehne alebo neodpovedá. Prázdne = Kontaktná adresa organizácie — tá zatiaľ nie je nastavená (Organizácia → Všeobecné).",
+    embedHeading: "Kód na vloženie",
+    embedIntro: "Vložte do stránky, na ktorej má byť pomocník — najlepšie pred koniec <body>. Token vydáva váš server pre prihláseného človeka (návod: docs/WIDGET_ISSF.md).",
+    embedNoOrigins: "Kanál zatiaľ nemá povolený pôvod — skript sa nenačíta, kým ho vyššie nepridáte.",
+    embedNoContact: "Bez kontaktu pri výpadku sa náhradný blok nevloží — človek pri výpadku neuvidí nič.",
+    embedCopy: "Kopírovať kód",
+    embedCopied: "Skopírované",
+    embedFallbackText: "Pomocníka sa teraz nepodarilo načítať. Napíšte na",
+    embedParamsHeading: "Parametre",
+    embedParams: [
+      { name: "src", text: "Adresa skriptu: doména organizácie a kľúč kanála. Nemeňte." },
+      { name: "data-token", text: "Token prihláseného človeka (JWT HS256, podpísaný tajným kľúčom kanála, platnosť najviac 15 minút). Vkladá ho váš server pri vykreslení stránky." },
+      { name: "data-token-url", text: "Adresa na vašom serveri (rovnaký pôvod ako stránka), ktorá vráti nový token, keď starý vyprší. Nepovinné — bez nej po 15 minútach treba obnoviť stránku." },
+      { name: "onerror", text: "Keď sa skript nenačíta (výpadok, vypnutý kanál), ukáže sa skrytý blok s kontaktom pri výpadku." },
+      { name: "defer", text: "Skript sa spustí až po načítaní stránky a nespomalí ju." },
+      { name: "#contineo-helpdesk-fallback", text: "Náhradný blok s kontaktom; je skrytý (hidden), kým skript nezlyhá. Text a vzhľad si môžete upraviť, id ponechajte." },
+    ],
+    embedTokenHeading: "Čo nesie token",
+    embedToken: "iss = pôvod vašej stránky (musí byť medzi povolenými), aud = kľúč kanála, sub = identifikátor osoby (v ISSF registračné číslo), email, given_name, family_name, voliteľne roles, club, lang; iat a exp najviac 15 minút od seba.",
     rateLimit: "Strop požiadaviek na osobu a hodinu",
     rateLimitHint: "Ochrana pred zneužitím (D14).",
     widgetSecret: "Tajný kľúč",
@@ -9893,6 +9931,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.notFound": "Takový kanál tady není.",
     "helpdesk.mailboxKind": "Neznámý druh schránky.",
     "helpdesk.mailboxAddress": "Adresa schránky není e-mailová adresa.",
+    "helpdesk.fallbackEmail": "Kontakt při výpadku není e-mailová adresa.",
     "helpdesk.graphIds": "U Microsoft 365 je povinný tenant a client id aplikace.",
     "helpdesk.noMailbox": "Kanál nemá schránku.",
     "helpdesk.noSecret": "Schránka nemá uložené tajemství aplikace.",
@@ -10913,6 +10952,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     error: "Něco se pokazilo. Zkus to za chvíli.",
     expired: "Přihlášení vypršelo — obnov stránku.",
     poweredBy: "Contineo",
+    contact: "Pokud to nepůjde ani později, napiš správci:",
   },
   channels: {
     heading: "Kanály",
@@ -10999,6 +11039,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetIntro: "Cizí systém (ISSF) vydá po přihlášení podepsaný token s identitou osoby; widget ho pošle s otázkou. Tajný klíč se ukáže jen jednou, hned po vytvoření.",
     widgetOrigins: "Povolené původy",
     widgetOriginsHint: "Adresy, ze kterých smí widget volat, každá na nový řádek: https://issf.futbalsfz.sk",
+    widgetFallback: "Kontakt při výpadku",
+    widgetFallbackHint: org => org ? `Komu se ozvat, když widget na cizí stránce nenaběhne nebo neodpovídá. Prázdné = Kontaktní adresa organizace (${org}).` : "Komu se ozvat, když widget na cizí stránce nenaběhne nebo neodpovídá. Prázdné = Kontaktní adresa organizace — ta zatím není nastavena (Organizace → Obecné).",
+    embedHeading: "Kód pro vložení",
+    embedIntro: "Vložte do stránky, kde má být pomocník — nejlépe před konec <body>. Token vydává váš server pro přihlášeného člověka (návod: docs/WIDGET_ISSF.md).",
+    embedNoOrigins: "Kanál zatím nemá povolený původ — skript se nenačte, dokud ho výše nepřidáte.",
+    embedNoContact: "Bez kontaktu při výpadku se náhradní blok nevloží — člověk při výpadku neuvidí nic.",
+    embedCopy: "Kopírovat kód",
+    embedCopied: "Zkopírováno",
+    embedFallbackText: "Pomocníka se teď nepodařilo načíst. Napište na",
+    embedParamsHeading: "Parametry",
+    embedParams: [
+      { name: "src", text: "Adresa skriptu: doména organizace a klíč kanálu. Neměňte." },
+      { name: "data-token", text: "Token přihlášeného člověka (JWT HS256, podepsaný tajným klíčem kanálu, platnost nejvýše 15 minut). Vkládá ho váš server při vykreslení stránky." },
+      { name: "data-token-url", text: "Adresa na vašem serveru (stejný původ jako stránka), která vrátí nový token, když starý vyprší. Nepovinné — bez ní je po 15 minutách nutné obnovit stránku." },
+      { name: "onerror", text: "Když se skript nenačte (výpadek, vypnutý kanál), ukáže se skrytý blok s kontaktem při výpadku." },
+      { name: "defer", text: "Skript se spustí až po načtení stránky a nezpomalí ji." },
+      { name: "#contineo-helpdesk-fallback", text: "Náhradní blok s kontaktem; je skrytý (hidden), dokud skript neselže. Text a vzhled si můžete upravit, id ponechte." },
+    ],
+    embedTokenHeading: "Co nese token",
+    embedToken: "iss = původ vaší stránky (musí být mezi povolenými), aud = klíč kanálu, sub = identifikátor osoby (v ISSF registrační číslo), email, given_name, family_name, volitelně roles, club, lang; iat a exp nejvýše 15 minut od sebe.",
     rateLimit: "Strop požadavků na osobu a hodinu",
     rateLimitHint: "Ochrana před zneužitím (D14).",
     widgetSecret: "Tajný klíč",
@@ -14114,6 +14174,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.notFound": "There is no such channel here.",
     "helpdesk.mailboxKind": "Unknown mailbox type.",
     "helpdesk.mailboxAddress": "The mailbox address is not an e-mail address.",
+    "helpdesk.fallbackEmail": "The outage contact is not an e-mail address.",
     "helpdesk.graphIds": "For Microsoft 365 the tenant and the application client id are required.",
     "helpdesk.noMailbox": "The channel has no mailbox.",
     "helpdesk.noSecret": "The mailbox has no stored application secret.",
@@ -15134,6 +15195,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     error: "Something went wrong. Try again in a moment.",
     expired: "Your session expired — reload the page.",
     poweredBy: "Contineo",
+    contact: "If it still does not work later, write to the administrator:",
   },
   channels: {
     heading: "Channels",
@@ -15220,6 +15282,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetIntro: "The external system (ISSF) issues a signed token with the person's identity after sign-in; the widget sends it with the question. The secret key is shown only once, right after creation.",
     widgetOrigins: "Allowed origins",
     widgetOriginsHint: "Addresses the widget may call from, one per line: https://issf.futbalsfz.sk",
+    widgetFallback: "Contact during an outage",
+    widgetFallbackHint: org => org ? `Who to contact when the widget does not load or answer on the external page. Empty = the organisation's contact address (${org}).` : "Who to contact when the widget does not load or answer on the external page. Empty = the organisation's contact address — not set yet (Organisation → General).",
+    embedHeading: "Embed code",
+    embedIntro: "Put it on the page where the assistant should appear — ideally just before </body>. Your server issues the token for the signed-in person (guide: docs/WIDGET_ISSF.md).",
+    embedNoOrigins: "The channel has no allowed origin yet — the script will not load until you add one above.",
+    embedNoContact: "Without an outage contact no fallback block is added — people see nothing during an outage.",
+    embedCopy: "Copy code",
+    embedCopied: "Copied",
+    embedFallbackText: "The assistant could not be loaded right now. Write to",
+    embedParamsHeading: "Parameters",
+    embedParams: [
+      { name: "src", text: "Script address: the organisation's domain and the channel key. Do not change." },
+      { name: "data-token", text: "Token of the signed-in person (JWT HS256 signed with the channel secret, valid at most 15 minutes). Your server inserts it when rendering the page." },
+      { name: "data-token-url", text: "An address on your server (same origin as the page) returning a new token when the old one expires. Optional — without it the page must be reloaded after 15 minutes." },
+      { name: "onerror", text: "If the script does not load (outage, channel switched off), the hidden block with the outage contact is shown." },
+      { name: "defer", text: "The script runs after the page has loaded and does not slow it down." },
+      { name: "#contineo-helpdesk-fallback", text: "Fallback block with the contact; hidden until the script fails. You may change its text and look, keep the id." },
+    ],
+    embedTokenHeading: "What the token carries",
+    embedToken: "iss = your page's origin (must be allowed), aud = channel key, sub = person identifier (ISSF registration number), email, given_name, family_name, optionally roles, club, lang; iat and exp at most 15 minutes apart.",
     rateLimit: "Request limit per person and hour",
     rateLimitHint: "Protection against abuse (D14).",
     widgetSecret: "Secret key",

@@ -8290,3 +8290,13 @@ section.rating { border-top: 1px solid var(--line); }
 .preview-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .preview-list li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--line); }
 .preview-list li:first-child { border-top: 0; }
+
+/* Kód na vloženie widgetu (Ján 8. 10. 2026). */
+.embed-code { margin: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); font-size: 12.5px; line-height: 1.5; overflow-x: auto; white-space: pre; }
+.embed-code code { user-select: all; }
+.embed-sub { margin: 8px 0 0; font-size: var(--fs-body); }
+.embed-params { margin: 0; display: grid; gap: 8px; }
+.embed-params > div { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 4px 16px; }
+.embed-params dt { margin: 0; overflow-wrap: anywhere; }
+.embed-params dd { margin: 0; color: var(--muted); }
+@media (max-width: 639px) { .embed-params > div { grid-template-columns: minmax(0, 1fr); } }

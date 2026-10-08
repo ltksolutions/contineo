@@ -61,6 +61,7 @@ export async function saveChannelAction(fd: FormData) {
       assigneeIds: all(fd, "assigneeIds"),
       languages: all(fd, "languages"),
       widgetOrigins: lines(fd, "widgetOrigins"),
+      widgetFallbackEmail: fd.has("widgetFallbackEmail") ? fieldText(fd, "widgetFallbackEmail") : undefined,
       rateLimitPerHour: fieldText(fd, "rateLimitPerHour"),
       mailbox: mailboxKind
         ? { kind: mailboxKind, address: fieldText(fd, "address"), tenantId: fieldText(fd, "tenantId"), clientId: fieldText(fd, "clientId"), clientSecret: fieldText(fd, "clientSecret"), syncIntervalMinutes: fieldText(fd, "syncInterval"), skipBounces: fieldText(fd, "skipBounces") === "on" }

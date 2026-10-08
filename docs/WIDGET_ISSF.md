@@ -97,11 +97,24 @@ Widget ho zavolá sám, keď API odpovie 401.
 
 ### 3. Vloženie skriptu
 
+Hotový kód aj s popisom parametrov je na konci nastavenia kanála
+(**Kód na vloženie**, 8. 10. 2026). Tvar:
+
 ```html
+<div id="contineo-helpdesk-fallback" hidden>
+  Pomocníka sa teraz nepodarilo načítať. Napíšte na <a href="mailto:helpdesk@futbalsfz.sk">helpdesk@futbalsfz.sk</a>
+</div>
 <script src="https://intranet.futbalsfz.sk/api/widget/6f1d2c3a-9b4e-4c7d-8a2f-1e5b7c9d0a3b/script"
         data-token="<token vydaný pri načítaní stránky>"
-        data-token-url="/api/contineo-token" defer></script>
+        data-token-url="/api/contineo-token"
+        onerror="document.getElementById('contineo-helpdesk-fallback').hidden=false"
+        defer></script>
 ```
+
+**Kontakt pri výpadku** je nastavenie kanála; prázdne = Kontaktná adresa
+organizácie (Organizácia → Všeobecné). Keď skript vôbec nenabehne (výpadok,
+vypnutý kanál), `onerror` ukáže náhradný blok. Keď nabehne, ale zlyhá
+volanie API, kontakt ukáže sám widget pod chybovou hláškou.
 
 Skript sa cachuje hodinu; zmena textov alebo farby v Contineu sa prejaví
 do hodiny bez zásahu v ISSF.

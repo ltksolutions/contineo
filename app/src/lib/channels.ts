@@ -118,6 +118,11 @@ export interface ChannelWidget {
   revealOnce?: boolean
   origins: string[]
   rateLimitPerHour: number
+  /**
+   * Komu sa ozvať, keď widget na cudzej stránke nefunguje (Ján 8. 10. 2026).
+   * Prázdne = Kontaktná adresa organizácie (`branding.supportEmail`).
+   */
+  fallbackEmail?: string
 }
 
 export interface HelpdeskChannel {
@@ -174,6 +179,14 @@ export function channelAccessLevel(c: Pick<HelpdeskChannel, "kind" | "accessLeve
   return c.accessLevel === "internal" ? "internal" : "public"
 }
 
+/**
+ * Kontakt pri výpadku widgetu: nastavený na kanáli, inak Kontaktná adresa
+ * organizácie; `null`, keď nie je ani jedno.
+ */
+export function widgetFallbackContact(c: Pick<HelpdeskChannel, "widget">, supportEmail: string | undefined | null): string | null {
+  return c.widget.fallbackEmail?.trim() || supportEmail?.trim() || null
+}
+
 export function channelView(c: HelpdeskChannel): ChannelView {
   const { mailbox, widget, ...rest } = c
   return {
@@ -190,7 +203,7 @@ export function channelView(c: HelpdeskChannel): ChannelView {
             : undefined,
         }
       : null,
-    widget: { origins: widget.origins, rateLimitPerHour: widget.rateLimitPerHour, secretHint: widget.secretHint, secretSetAt: widget.secretSetAt, revealOnce: widget.revealOnce, hasSecret: Boolean(widget.secretEnc) },
+    widget: { origins: widget.origins, rateLimitPerHour: widget.rateLimitPerHour, fallbackEmail: widget.fallbackEmail, secretHint: widget.secretHint, secretSetAt: widget.secretSetAt, revealOnce: widget.revealOnce, hasSecret: Boolean(widget.secretEnc) },
   }
 }
 
@@ -228,6 +241,8 @@ export interface ChannelInput {
   assigneeIds?: string[]
   languages?: string[]
   widgetOrigins?: string[]
+  /** Kontakt pri výpadku widgetu; prázdne = kontaktná adresa organizácie. */
+  widgetFallbackEmail?: string
   rateLimitPerHour?: number | string
   mailbox?: {
     kind: string
@@ -326,6 +341,11 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
   const widget: ChannelWidget = {
     ...(existing?.widget ?? { origins: [], rateLimitPerHour: DEFAULT_RATE_LIMIT }),
     origins: tidyList(input.widgetOrigins).map(o => o.replace(/\/+$/, "")),
+    fallbackEmail: (() => {
+      const v = (input.widgetFallbackEmail ?? existing?.widget.fallbackEmail ?? "").trim().toLowerCase()
+      if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) throw new HelpdeskError("helpdesk.fallbackEmail", "Kontakt pri výpadku nie je e-mailová adresa.")
+      return v || undefined
+    })(),
     rateLimitPerHour: Number.isFinite(rate) && rate > 0 ? Math.min(Math.round(rate), 10_000) : DEFAULT_RATE_LIMIT,
   }
 

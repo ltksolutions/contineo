@@ -20,6 +20,8 @@ export interface WidgetScriptConfig {
   accent: string
   texts: Record<string, string>
   language: string
+  /** Komu sa ozvať, keď widget nefunguje (kanál, inak kontakt organizácie). */
+  contact: string | null
 }
 
 export function widgetScript(cfg: WidgetScriptConfig): string {
@@ -60,7 +62,8 @@ style.textContent=[
 '.btn{min-height:44px;padding:0 14px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}.btn:disabled{opacity:.6}',
 '.btn.quiet{background:#fff;color:var(--accent);border:1px solid var(--accent)}',
 '.esc{padding:12px;border-top:1px solid #e5e7eb;background:#fff;display:none;flex-direction:column;gap:8px}.esc.is-open{display:flex}',
-'.foot{font-size:11px;color:#9ca3af;text-align:center;padding:4px}'
+'.foot{font-size:11px;color:#9ca3af;text-align:center;padding:4px}',
+'.msg.sys a{color:var(--accent)}'
 ].join('');
 root.appendChild(style);
 
@@ -79,6 +82,8 @@ fab.addEventListener('click',function(){panel.classList.toggle('is-open');if(pan
 close.addEventListener('click',function(){panel.classList.remove('is-open')});
 
 function sys(text){var m=el('div','msg sys',text);log.appendChild(m);log.scrollTop=log.scrollHeight;return m}
+var contactShown=false;
+function contact(){if(contactShown||!CFG.contact)return;contactShown=true;var m=el('div','msg sys');m.appendChild(document.createTextNode(T.contact+' '));var a=el('a',null,CFG.contact);a.href='mailto:'+CFG.contact;m.appendChild(a);log.appendChild(m);log.scrollTop=log.scrollHeight}
 
 function refreshToken(){
   if(!tokenUrl)return Promise.resolve(false);
@@ -132,12 +137,12 @@ function ask(q){
     if(sources.length){var s=el('div','src',T.sources);var ul=el('ul');var seen={};sources.forEach(function(x){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;var li=el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':''));ul.appendChild(li)});s.appendChild(ul);a.appendChild(s)}
     conversation.push({recordId:recordId,question:q,verdict:null});
     if(recordId)rateButtons(recordId,a);
-  }).catch(function(e){thinking.remove();body.textContent=e&&e.message==='expired'?T.expired:(e&&e.message==='rate'?(T.rateLimited||T.error):T.error)}).then(function(){busy=false;send.disabled=false;log.scrollTop=log.scrollHeight});
+  }).catch(function(e){thinking.remove();body.textContent=e&&e.message==='expired'?T.expired:(e&&e.message==='rate'?(T.rateLimited||T.error):T.error);if(!e||e.message!=='rate')contact()}).then(function(){busy=false;send.disabled=false;log.scrollTop=log.scrollHeight});
 }
 
 form.addEventListener('submit',function(ev){ev.preventDefault();var q=ta.value.trim();if(!q||busy)return;ta.value='';ask(q)});
 ta.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();form.dispatchEvent(new Event('submit',{cancelable:true}))}});
 escBtn.addEventListener('click',function(){var m=escTa.value.trim();if(!m)return;escBtn.disabled=true;
-  api('ticket',{message:m,conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.classList.remove('is-open');escTa.value='';sys(T.escalated);negatives=0}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error)}).then(function(){escBtn.disabled=false})});
+  api('ticket',{message:m,conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.classList.remove('is-open');escTa.value='';sys(T.escalated);negatives=0}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
 })();`
 }

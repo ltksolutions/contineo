@@ -9,7 +9,7 @@
 
 import { NextResponse } from "next/server"
 import { currentTenant, requestHostname } from "@/lib/session"
-import { channelByKey } from "@/lib/channels"
+import { channelByKey, widgetFallbackContact } from "@/lib/channels"
 import { dictionary } from "@/lib/i18n"
 import { brandingView } from "@/lib/tenants"
 import { widgetScript } from "@/lib/widgetScript"
@@ -30,6 +30,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ channel
     accent: brandingView(tenant).accentColor ?? "#1f6feb",
     texts: { ...dictionary(language).widget, rateLimited: dictionary(language).errors["widget.rateLimited"] ?? "" } as Record<string, string>,
     language,
+    contact: widgetFallbackContact(channel, tenant.branding?.supportEmail),
   })
   return new NextResponse(js, {
     headers: {

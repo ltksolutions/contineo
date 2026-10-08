@@ -18,7 +18,7 @@ import SubmitButton from "@/components/SubmitButton"
 import { orgContext } from "@/lib/orgSettings"
 import { isHelpdeskAgent } from "@/lib/helpdeskAgents"
 import { ChannelPartTabs, channelHref } from "@/components/ChannelTabs"
-import { channelAccessLevel, channelByKey, channelView, takeRevealedWidgetSecret, HELPDESK_ROLE, DEFAULT_RATE_LIMIT, SYNC_INTERVALS, DEFAULT_SYNC_INTERVAL } from "@/lib/channels"
+import { widgetFallbackContact, channelAccessLevel, channelByKey, channelView, takeRevealedWidgetSecret, HELPDESK_ROLE, DEFAULT_RATE_LIMIT, SYNC_INTERVALS, DEFAULT_SYNC_INTERVAL } from "@/lib/channels"
 import { allFolders, flattenTree } from "@/lib/folders"
 import { listPeople } from "@/lib/people"
 import { treeOptions } from "@/lib/treeOptions"
@@ -30,6 +30,9 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary, formatDate } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { channelContentPreview } from "@/lib/channelContent"
+import { widgetEmbedCode } from "@/lib/widgetEmbed"
+import { requestHostname } from "@/lib/session"
+import CopyLink from "@/components/CopyLink"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import { listConnectors, scopeRef, connectorAllowed } from "@/lib/connectors"
@@ -82,6 +85,13 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   const folderOptions = treeOptions(flattenTree(folders).map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level })))
   const agentOptions = people.filter(p => p.roles.includes(HELPDESK_ROLE)).map(p => ({ value: p.id, label: `${p.fullName} (${p.email})` }))
   const faqOptions = faqDocs.map(x => ({ value: x.documentId, label: String(x.title ?? x.documentId) }))
+
+  // Kód na vloženie (Ján 8. 10. 2026) — len widget; hostiteľ je doména,
+  // na ktorej je nastavenie otvorené, teda doména organizácie.
+  const fallbackContact = isWidget ? widgetFallbackContact(raw, ctx.tenant.branding?.supportEmail) : null
+  const embedCode = isWidget
+    ? widgetEmbedCode({ host: await requestHostname(), channelKey: c.key, fallbackText: t.embedFallbackText, contact: fallbackContact })
+    : ""
 
   return (
     <AppShell language={language} title={t.tabSettings} trail={{ [channelHref(c.key)]: c.name }}>
@@ -232,6 +242,12 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
               <input className="field-input" name="rateLimitPerHour" type="number" min={1} max={10000} defaultValue={c.widget.rateLimitPerHour ?? DEFAULT_RATE_LIMIT} style={{ maxWidth: 160 }} />
               <span className="quiet field-hint">{t.rateLimitHint}</span>
             </label>
+            <label className="field">
+              <span className="field-label">{t.widgetFallback}</span>
+              <input className="field-input" name="widgetFallbackEmail" type="email" autoCapitalize="none" spellCheck={false}
+                     defaultValue={c.widget.fallbackEmail ?? ""} placeholder={ctx.tenant.branding?.supportEmail ?? ""} />
+              <span className="quiet field-hint">{t.widgetFallbackHint(ctx.tenant.branding?.supportEmail ?? null)}</span>
+            </label>
           </div>
         </section>
         </>
@@ -342,6 +358,26 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
           </div>
         </section>
       </section>
+
+      {/* Kód na vloženie do cudzej stránky s popisom parametrov (Ján 8. 10. 2026). */}
+      {isWidget && (
+        <section className="card detail-block" id="embed" style={{ marginTop: 16 }}>
+          <h2 className="detail-block-title">{t.embedHeading}</h2>
+          <p className="detail-block-note" style={{ margin: 0 }}>{t.embedIntro}</p>
+          {c.widget.origins.length === 0 && <p className="tag tag--warn" style={{ margin: 0, justifySelf: "start" }}>{t.embedNoOrigins}</p>}
+          {!fallbackContact && <p className="quiet" style={{ margin: 0 }}>{t.embedNoContact}</p>}
+          <pre className="embed-code"><code>{embedCode}</code></pre>
+          <div><CopyLink value={embedCode} label={t.embedCopy} done={t.embedCopied} /></div>
+          <h3 className="embed-sub">{t.embedParamsHeading}</h3>
+          <dl className="embed-params">
+            {t.embedParams.map(p => (
+              <div key={p.name}><dt><code>{p.name}</code></dt><dd>{p.text}</dd></div>
+            ))}
+          </dl>
+          <h3 className="embed-sub">{t.embedTokenHeading}</h3>
+          <p className="quiet" style={{ margin: 0 }}>{t.embedToken}</p>
+        </section>
+      )}
     </div>
     </AppShell>
   )
