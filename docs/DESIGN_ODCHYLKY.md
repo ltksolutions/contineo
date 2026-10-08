@@ -195,9 +195,9 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 ### 4. Osoby a organizácia
 - **people** — v zozname sa ukazuje surový kľúč roly (P11); karty aj na
   počítači (R10).
-- **people/[id]** — skupiny cez `TagSelect` (P8); karta v karte (formulár je
-  `.card` a skupiny majú vlastnú `.card`) → formulár bez `.card` alebo
-  všeobecné polia do vlastnej skupiny (návrh); nadpis mimo `.page-head`.
+- **people/[id]** — ~~skupiny cez `TagSelect` (P8); karta v karte; nadpis
+  mimo `.page-head`~~ ✓ 8. 10. 2026 (OSOBY-karta-osoby: `.set-sec`,
+  `.set-savebar`, Ďalšie akcie).
 - **people/import** — „Aktualizovať existujúcich" (P6); tabuľka na karty pod
   640 px; chyba ako karta (P2).
 - **people/invite** — odoslanie na konci (R2). **people/new** — chyba ako karta (P2).
@@ -267,5 +267,5 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 4. ~~**Vzdelávanie: cesty** (R3)~~ ✓ 7. 10. 2026.
 5. **Knižnica: úprava dokumentu** (R4) a **AI spotreba** (R5).
 6. **Návrhy v Claude Design:** ~~`TagSelect` (P8)~~ ✓ 8. 10. 2026, lišta uloženia pre stránky
-   ~~s viacerými formulármi (P9)~~ ✓ 7. 10. 2026, ~~správa kurzu~~ ✓ 7. 10. 2026, karta osoby bez karty v karte,
+   ~~s viacerými formulármi (P9)~~ ✓ 7. 10. 2026, ~~správa kurzu~~ ✓ 7. 10. 2026, ~~karta osoby bez karty v karte~~ ✓ 8. 10. 2026,
    `Rating`.

@@ -10,6 +10,25 @@
 
 ---
 
+## 2026-10-08 — karta osoby (OSOBY-karta-osoby)
+
+**Čo sa zmenilo:**
+- `/people/[id]` prešla na `.set-form` so šiestimi `.set-sec` a `.set-savebar`.
+  Mená polí a `savePersonAction` ostali, takže server sa nemenil.
+- `ValueSelect` dostal `variant="rows"`: `fieldset.sec-rows` bez vlastnej
+  karty. Trasy a roly majú rovnaký tvar napísaný priamo v stránke.
+- `<details>` „Prístup a členstvo" → `section.more#more`. Potvrdenie
+  vyradenia je až pri `?exclude=1`; chyba pri vyradení vracia späť na
+  `?exclude=1#more`, aby človek nestratil rozpísané.
+- Zmazané nepoužité triedy `.ex*` a `.evidence-head`.
+
+**Čo stálo čas:** riadky `.sec-rows` siahajú cez odsadenie sekcie
+(`margin: 0 -22px`). Od 1024 px by tak vliezli do ľavého stĺpca s nadpisom,
+preto tam majú zápor len vpravo. A `legend` s `sec-rows-head` aj `sr-only`
+naraz pretiekla o 265 px — pri rolách ostala len `sr-only`.
+
+---
+
 ## 2026-10-08 — „Hľadať alebo pridať" (ZAKLAD-vyber-skupin-a-znaciek Q6)
 
 **Čo sa zmenilo:**

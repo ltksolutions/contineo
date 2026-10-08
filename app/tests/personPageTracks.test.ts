@@ -64,14 +64,23 @@ describe("karta osoby — trasy", () => {
     expect(html).toContain("neznáma trasa")
   })
 
-  it("trasy a roly: nadpis nad kartou, nápoveda pod ňou (HR-pridelit-nadpis-karty)", async () => {
+  it("karta osoby (OSOBY-karta-osoby): sekcie, výbery bez karty v karte, lišta, Ďalšie akcie", async () => {
     const { default: Page } = await import("../src/app/people/[id]/page")
     const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ id: "p1" }), searchParams: Promise.resolve({}) }))
 
-    expect(html).toMatch(/<fieldset class="form-group"><legend class="form-group-head">Trasy<\/legend><div class="card form-group-body form-group-body--rows">/)
-    // Riadky s kruhom vľavo (ZAKLAD-vyber-a-prepinace), nie zoznam `<ul>`.
+    expect(html).toContain('<form class="card set-form"')
+    expect(html.match(/<section class="set-sec">/g)).toHaveLength(6)
+    // Trasy ako riadky priamo v sekcii — žiadna karta v karte formulára.
+    expect(html).toMatch(/<fieldset class="sec-rows"><legend class="sec-rows-head">Trasy<\/legend><div class="sec-rows-body">/)
     expect(html).toMatch(/<label class="form-row select-row"><input type="checkbox" name="track"/)
-    expect(html).toMatch(/<\/div><p class="form-group-foot quiet">[^<]+<\/p><\/fieldset>/)
-    expect(html).not.toContain("hr-group")
+    expect(html).not.toContain("form-group-body--rows")
+    expect(html).toContain('class="set-savebar"')
+    // Vyradenie len ako riadok; karta s potvrdením až pri ?exclude=1.
+    expect(html).toContain('href="/people/p1?exclude=1#more"')
+    expect(html).not.toContain('name="confirmation"')
+    expect(html).not.toContain("<details class=\"detail-tools\"")
+    const excl = renderToStaticMarkup(await Page({ params: Promise.resolve({ id: "p1" }), searchParams: Promise.resolve({ exclude: "1" }) }))
+    expect(excl).toContain('name="confirmation"')
+    expect(excl).not.toContain('href="/people/p1?exclude=1#more"')
   })
 })

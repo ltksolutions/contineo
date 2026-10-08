@@ -5182,7 +5182,6 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .evidence-reason { font-size: 13px; font-style: italic; }
 .evidence-step--absent .evidence-what { color: var(--muted); }
 
-.evidence-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 
 /*
  * Rozbaľovacia karta („widget").
@@ -6631,16 +6630,58 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
    päta so sivým pozadím, „Vyradiť" s červeným obrysom. */
 .button--danger { background: var(--surface); color: var(--bad-fg); border: 1px solid var(--bad-fg); }
 .button--danger:hover { background: var(--bad-bg); }
-.ex { padding: 0; overflow: hidden; }
-.ex-head { display: flex; gap: 10px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
-.ex-head h2 { font-size: var(--fs-section); margin: 0; }
 .ex-ico {
   display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
   background: var(--bad-bg); color: var(--bad-fg); font-weight: 800; font-size: 13px; flex: 0 0 auto;
 }
-.ex-body { padding: 16px 18px; display: grid; gap: 16px; }
 .ex-note { margin: 0; font-size: var(--fs-body); line-height: 1.55; }
-.ex-foot { padding: 14px 18px; border-top: 1px solid var(--line); background: var(--bg); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* Karta osoby (OSOBY-karta-osoby, 8. 10. 2026): jeden `.set-form`
+   so sekciami, výbery `.sec-rows` priamo v sekcii (bez karty v karte),
+   „Ďalšie akcie" a povinnosti so zbalenou osou. */
+.page-narrow { max-width: 760px; display: grid; gap: 18px; }
+.page-narrow > .page-head { margin: 0; }
+.person-lead { margin: -12px 0 0; font-size: var(--fs-body); overflow-wrap: anywhere; }
+.sec-rows { display: grid; gap: 6px; min-width: 0; margin: 0 -22px; padding: 0; border: 0; }
+.sec-rows-head { float: left; width: 100%; padding: 0 22px; margin: 0; font-size: var(--fs-small); font-weight: 600; }
+.sec-rows-body { display: grid; min-width: 0; }
+.sec-rows-body > .form-list { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.sec-rows-body > .form-list > .form-row { padding-left: 22px; padding-right: 22px; }
+.sec-rows-body > .form-list > .select-row + .select-row::before { left: 56px; }
+.sec-rows-body > .sel-combo { margin: 0 22px 10px; }
+.sec-rows-body > .sel-warn { margin: 0; }
+.sec-rows-empty { margin: 0; padding: 0 22px; }
+.sec-rows-foot { margin: 0; padding: 0 22px; font-size: var(--fs-micro); }
+.sec-rows + .sec-rows { margin-top: 10px; }
+@media (min-width: 1024px) {
+  /* Sekcia v dvoch stĺpcoch: riadky začínajú pri poliach, siahajú po pravý
+     okraj karty. */
+  .sec-rows { margin: 0 -22px 0 0; }
+  .sec-rows-head, .sec-rows-foot, .sec-rows-empty { padding-left: 0; }
+  .sec-rows-body > .form-list > .form-row { padding-left: 0; }
+  .sec-rows-body > .form-list > .select-row + .select-row::before { left: 34px; }
+  .sec-rows-body > .sel-combo { margin-left: 0; }
+}
+.person-more, .person-duties { margin: 0; }
+.more-row--stack { display: grid; gap: 14px; }
+.ex-confirm-title { display: flex; gap: 8px; align-items: center; margin: 0; font-size: 15px; }
+.duty { display: grid; padding: 0; overflow: hidden; }
+.duty-row { position: relative; display: grid; gap: 4px; padding: 12px 16px; }
+.duty-row + .duty-row { border-top: 1px solid var(--line); }
+.duty-top { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.duty-top b { font-weight: 600; font-size: 15px; }
+.duty-top .tag { margin-left: auto; }
+.duty-sub { font-size: 12.5px; color: var(--muted); }
+.duty-tl summary { display: inline-flex; align-items: center; min-height: 32px; color: var(--accent); cursor: pointer; font-size: 13px; }
+.duty-all { margin-left: auto; font-size: 13px; font-weight: 400; }
+@media (max-width: 639px) {
+  .sec-rows { margin: 0 -14px; }
+  .sec-rows-head, .sec-rows-foot, .sec-rows-empty { padding-left: 14px; padding-right: 14px; }
+  .sec-rows-body > .form-list > .form-row { padding-left: 14px; padding-right: 14px; }
+  .sec-rows-body > .form-list > .select-row + .select-row::before { left: 48px; }
+  .sec-rows-body > .sel-combo { margin: 0 14px 10px; }
+  .duty-sub, .duty-tl summary { min-height: 0; }
+  .duty-tl summary { min-height: 44px; }
+}
 .ex-copy { user-select: all; font-size: 13px; overflow-wrap: anywhere; }
 .ex-facts { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
 
@@ -6658,8 +6699,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .ex-tl-step.is-end .ex-tl-dot { border-color: var(--ink); }
 .ex-tl-step b { font-weight: 650; }
 .ex-tl-step span:last-child { color: var(--muted); padding-right: 8px; }
-.ex-return { padding: 14px 18px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-.ex-return p { margin: 0; flex: 1 1 260px; font-size: var(--fs-body); }
 @media (max-width: 639px) {
   .ex-head, .ex-body, .ex-foot { padding-left: 14px; padding-right: 14px; }
   .ex-foot > .button, .ex-return > .button { width: 100%; min-height: 44px; flex-basis: auto; }
