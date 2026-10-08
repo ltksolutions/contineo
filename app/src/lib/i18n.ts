@@ -1541,6 +1541,8 @@ interface Dictionary {
       secRetrieval: string
       secRetrievalNote: string
       retrievalOn: string
+      defaultOn: string
+      defaultOnNote: string
       ingestOn: string
       ingestNote: string
       accessLevel: string
@@ -5826,6 +5828,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Živý zdroj",
       secRetrievalNote: "Pri otázke sa popri knižnici zavolá aj server. Výsledok obišiel kurátora, preto je v citácii označený ako neoverený.",
       retrievalOn: "Používať ako živý zdroj",
+      defaultOn: "Používať predvolene pri otázke",
+      defaultOnNote: "Vypnuté: na portáli sa predvolene hľadá len v knižnici a tento zdroj si človek zapne pilulkou pod otázkou. Kanálov sa to netýka — tam rozsah vyberá správca kanála.",
       ingestOn: "Povoliť import do knižnice",
       ingestNote: "Kurátor môže články zo servera uložiť ako koncepty dokumentov (Knižnica → Nahrať → Import zo servera).",
       accessLevel: "Prístupová úroveň",
@@ -9982,6 +9986,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Živý zdroj",
       secRetrievalNote: "Při dotazu se vedle knihovny zavolá i server. Výsledek obešel kurátora, proto je v citaci označen jako neověřený.",
       retrievalOn: "Používat jako živý zdroj",
+      defaultOn: "Používat výchozím způsobem při dotazu",
+      defaultOnNote: "Vypnuto: na portálu se výchozím způsobem hledá jen v knihovně a tento zdroj si člověk zapne pilulkou pod dotazem. Kanálů se to netýká — tam rozsah vybírá správce kanálu.",
       ingestOn: "Povolit import do knihovny",
       ingestNote: "Kurátor může články ze serveru uložit jako koncepty dokumentů (Knihovna → Nahrát → Import ze serveru).",
       accessLevel: "Přístupová úroveň",
@@ -14127,6 +14133,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       secRetrieval: "Live source",
       secRetrievalNote: "When asked, the server is called alongside the library. The result bypassed the curator, so the citation marks it as unreviewed.",
       retrievalOn: "Use as a live source",
+      defaultOn: "Use by default when asking",
+      defaultOnNote: "Off: on the portal the library is searched by default and a person switches this source on with the pill under the question. Channels are unaffected — their scope is chosen by the channel admin.",
       ingestOn: "Allow import into the library",
       ingestNote: "A curator can save articles from the server as document drafts (Library → Upload → Import from a server).",
       accessLevel: "Access level",
