@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-10-08 — mechanické odchýlky (DESIGN_ODCHYLKY, overenie)
+
+**Ako:** súpis z 6. 10. sa prešiel nález po náleze proti kódu (dve
+kontroly naraz, každá s dôkazom súbor:riadok, otvorené body ešte raz
+overené ručne). Z ~78 nálezov ostalo 13 otvorených; desať mechanických je
+v tomto PR, tri čakajú na návrh.
+
+**Rozhodnutie cestou:** typ otázky v editore testu je `.view-switch`, hoci
+je vo formulári — sú to odkazy, ktoré menia tvar formulára (iný pohľad na
+ten istý editor), nie hodnota, ktorá sa odosiela. Zapísané v PR.
+
+---
+
 ## 2026-10-08 — akcie detailu dokumentu (KNIZNICA-akcie-dokumentu)
 
 **Čo sa zmenilo:** `.detail-chips` + `.detail-actions` → `.page-head`

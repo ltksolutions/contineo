@@ -4322,8 +4322,7 @@ button.view-switch-item:disabled { cursor: default; opacity: .7; }
 
 /* ── história otázok (ASK-historia-otazok) ──────────────────────────────── */
 .ask-history { max-width: 900px; display: grid; gap: 16px; }
-.ask-history-filter { display: flex; gap: 8px; }
-.ask-history-filter .field-input { flex: 1 1 auto; min-width: 0; }
+.ask-history-filter { display: block; }
 .ask-history-confirm { display: grid; gap: 12px; padding: 16px; }
 .ask-history-confirm p { margin: 0; }
 .ask-history-day { display: grid; gap: 8px; }
@@ -7158,9 +7157,8 @@ span.domain-end { font-size: 12.5px; }
 .mg-error { margin: 0; color: var(--bad-fg); font-size: 13.5px; }
 .mg-warn { margin: 0; color: var(--warn-fg); font-size: 13px; flex-basis: 100%; }
 .mg-impact { margin: 0; color: var(--muted); font-size: 13px; flex-basis: 100%; }
-.mg-choices { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
-.mg-choice { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; }
-.mg-choice .field-input { flex: 1 1 200px; }
+/* Zlúčenie značiek: riadky `.choice-row` v karte zlúčenia siahajú po jej okraj. */
+.mg-merge .form-list { margin: 0 -18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .mg-tags { display: grid; gap: 12px; }
 .tgk { padding: 0; overflow: hidden; }
 .tgk-head { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--line); }
@@ -7365,9 +7363,8 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
 .sec2-avail { margin: 0; font-size: 13px; }
 .ansr { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
 .ansr .field-input { flex: 1 1 240px; }
-.tf { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.tf-opt { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 1px solid var(--line); border-radius: var(--radius); font-weight: 600; cursor: pointer; }
-.tf-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+/* Pravda / nepravda v editore otázky: riadky `.choice-row` v rámčeku. */
+.tf-list { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .mc-row.is-retired .mg-title { color: var(--muted); }
 
 @media (min-width: 1024px) {
@@ -8275,3 +8272,15 @@ section.rating { border-top: 1px solid var(--line); }
   .ticket-bulk-actions { margin-left: 0; width: 100%; }
   .ticket-bulk-actions .button { flex: 1 1 auto; }
 }
+
+/* ── Mechanické odchýlky (DESIGN_ODCHYLKY, overené 8. 10. 2026) ───────────────
+   Inline štýly a farby natvrdo presunuté do tried. */
+.directory-count { margin: 0 0 10px; font-size: var(--fs-small); }
+.ack-statement { margin: 6px 0 0; padding: 10px 14px; border-left: 3px solid var(--line); font-size: var(--fs-body); line-height: 1.6; }
+.domain-state.is-bad { color: var(--bad-fg); }
+.domain-state.is-warn { color: var(--warn-fg); }
+.domain-conflicts { font-size: var(--fs-small); }
+.answer-truncated { margin-top: 14px; }
+.signin-title { margin: 0 0 8px; font-size: 21px; letter-spacing: -0.02em; }
+.signin-title--check { margin-bottom: 12px; }
+.signin-brand { font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }

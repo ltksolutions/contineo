@@ -71,9 +71,12 @@ export default async function DirectoryPage({
         />
       </LiveFilter>
 
-      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>
-        {people.length === 0 ? t.nothingFound : t.count(people.length)}
-      </p>
+      {/* Bez zhody prázdny stav, inak počet (DESIGN_ODCHYLKY, 8. 10. 2026). */}
+      {people.length === 0 ? (
+        <div className="empty"><div className="empty-title">{t.nothingFound}</div></div>
+      ) : (
+        <p className="quiet directory-count">{t.count(people.length)}</p>
+      )}
 
       <ul className="directory-grid">
         {people.map(o => {

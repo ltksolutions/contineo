@@ -305,8 +305,13 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
     <form action={saveQuestionAction} className="card mc-settings">
       {question && <input type="hidden" name="questionKey" value={question.key} />}
       <input type="hidden" name="type" value={type} />
-      <nav className="lpills" aria-label={tt.filterType}>
-        {QUESTION_TYPES.map(ty => <Link key={ty} className={`pill${ty === type ? " is-on" : ""}`} href={`${base}?type=${ty}`}>{tt.types[ty]}</Link>)}
+      {/* Typ otázky mení tvar formulára — prepínač ako pri filtri stavu,
+          nie pilulky (DESIGN_ODCHYLKY, 8. 10. 2026). */}
+      <nav className="view-switch view-switch--fit" aria-label={tt.filterType}>
+        {QUESTION_TYPES.map(ty => (
+          <Link key={ty} className={`view-switch-item${ty === type ? " is-on" : ""}`} aria-current={ty === type ? "true" : undefined}
+                href={`${base}?type=${ty}`}>{tt.types[ty]}</Link>
+        ))}
       </nav>
       {usage && <p className="quiet mc-note">{tt.usage(usage.tests, usage.attempts)}</p>}
       <label className="field"><span className="field-label">{tt.questionText}</span><textarea className="field-input" name="text" rows={4} defaultValue={question?.text ?? ""} /></label>
@@ -344,9 +349,12 @@ async function QuestionForm({ companyCode, question, q, tt, language }: {
           )
         })}
         {type === "true_false" && (
-          <div className="tf">
-            <label className="tf-opt"><input type="radio" name="correctTrue" value="true" defaultChecked={question?.correctTrue === true} /> {tt.trueLabel}</label>
-            <label className="tf-opt"><input type="radio" name="correctTrue" value="false" defaultChecked={question?.correctTrue === false} /> {tt.falseLabel}</label>
+          // Jedna z dvoch: Picker(.inline), riadky s fajkou (ZAKLAD-vyber-a-prepinace).
+          <div className="form-list tf-list">
+            <label className="form-row choice-row"><input type="radio" name="correctTrue" value="true" defaultChecked={question?.correctTrue === true} />
+              <span className="form-row-main">{tt.trueLabel}</span></label>
+            <label className="form-row choice-row"><input type="radio" name="correctTrue" value="false" defaultChecked={question?.correctTrue === false} />
+              <span className="form-row-main">{tt.falseLabel}</span></label>
           </div>
         )}
         {type === "short_text" && (
@@ -419,11 +427,20 @@ async function ImportPanel({ companyCode, actor, bank, q, tt, language }: { comp
       {r.errors.length > 0 ? (
         <>
           <p className="mg-error">{tt.importErrorsNote}</p>
-          <div className="doc-table-wrap">
+          {/* Tabuľka od 1024 px, pod ňou karty — ako zoznamy správy (P5). */}
+          <div className="doc-table-wrap mg-table">
             <table className="doc-table">
               <thead><tr><th>{tt.colLine}</th><th>{tt.colColumn}</th><th>{tt.colProblem}</th></tr></thead>
               <tbody>{r.errors.map((e, i) => <tr key={i}><td>{e.line}</td><td><code>{e.column}</code></td><td>{errorsText[e.code] ?? e.code}{e.value ? ` („${e.value}“)` : ""}</td></tr>)}</tbody>
             </table>
+          </div>
+          <div className="mg-cards">
+            {r.errors.map((e, i) => (
+              <div key={i} className="card mg-card">
+                <span className="mg-sub">{tt.colLine} {e.line} · {tt.colColumn} <code>{e.column}</code></span>
+                <span>{errorsText[e.code] ?? e.code}{e.value ? ` („${e.value}“)` : ""}</span>
+              </div>
+            ))}
           </div>
           <div className="mg-actions"><Link className="button" href={importPath()}>{tt.importUpload}</Link></div>
         </>

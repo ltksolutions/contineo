@@ -304,19 +304,26 @@ async function TagsTab({ companyCode, q, language }: { companyCode: string; q: Q
           <h2>{tm.mergeTitle(mergeTags.length)}</h2>
           <form action={mergeTagsAction} className="mg-form">
             {mergeTags.map(u => <input key={tagId(u)} type="hidden" name="tag" value={tagId(u)} />)}
-            <fieldset className="mg-choices">
-              <legend className="field-label">{tm.whatStays}</legend>
-              {mergeTags.map(u => (
-                <label key={tagId(u)} className="mg-choice">
-                  <input type="radio" name="target" value={tagId(u)} defaultChecked={u === most} />
-                  <Stag label={u.label} /> <span className="quiet">{tm.usage(u.courses, u.questions, u.tests)}</span>
+            {/* Čo ostane: Picker(.inline) — riadky s fajkou, pole nového
+                názvu pod zvoleným riadkom (ZAKLAD-vyber-a-prepinace;
+                DESIGN_ODCHYLKY, 8. 10. 2026). */}
+            <fieldset className="form-group mg-merge">
+              <legend className="form-group-head">{tm.whatStays}</legend>
+              <div className="form-list">
+                {mergeTags.map(u => (
+                  <label key={tagId(u)} className="form-row choice-row">
+                    <input type="radio" name="target" value={tagId(u)} defaultChecked={u === most} />
+                    <span className="form-row-main"><Stag label={u.label} /> <span className="quiet">{tm.usage(u.courses, u.questions, u.tests)}</span></span>
+                  </label>
+                ))}
+                <label className="form-row choice-row">
+                  <input type="radio" name="target" value="__new" />
+                  <span className="form-row-main">{tm.newEntry}</span>
                 </label>
-              ))}
-              <label className="mg-choice">
-                <input type="radio" name="target" value="__new" />
-                <span>{tm.newEntry}</span>
-                <input className="field-input" name="newLabel" placeholder={tm.tagPlaceholder} aria-label={tm.newEntry} />
-              </label>
+                <div className="choice-field choice-field--block">
+                  <input className="field-input" name="newLabel" placeholder={tm.tagPlaceholder} aria-label={tm.newEntry} />
+                </div>
+              </div>
             </fieldset>
             <p className="mg-impact">{tm.impact(mergeImpact.courses, mergeImpact.questions, mergeImpact.tests)} {most && tm.mergeResult(most.label)}</p>
             <div className="mg-actions">
