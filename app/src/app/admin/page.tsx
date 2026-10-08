@@ -61,24 +61,26 @@ export default async function TenantAdminPage() {
               {/* Variant zo ZAKLADU, nie inline farba (ADMIN, úloha 1.1):
                   jantárová znamená „rozrobené, niečo chýba" — presne to. */}
               {tenant.status !== "active" && <span className="tag tag--draft">{t.disabled}</span>}
+              {/*
+                Bez domény sa do organizácie **nedá prihlásiť** (ADMIN, úloha
+                1.5) — porucha, preto štítok pri názve s odkazom na nápravu
+                (ZAKLAD-zvysne-odchylky, 8. 10. 2026). Len z uložených údajov,
+                zoznam nevolá Vercel (D27).
+              */}
+              {tenant.hostnames.length === 0 && (
+                <Link className="tag tag--draft" title={t.noDomainWarning}
+                      href={`/admin/tenants/${encodeURIComponent(tenant.companyCode)}#domains`}>
+                  {t.noDomainTag}
+                </Link>
+              )}
               <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
                 {tenant.languages.join(" · ")}
               </span>
             </div>
 
-            {/*
-              Bez domény sa do organizácie **nedá prihlásiť** (ADMIN, úloha
-              1.5) — to nie je poznámka medzi ostatnými, ale porucha. Inline
-              blok ako chyba vyhľadávania; `.notice` je modálne okno a na
-              stav v karte sa nehodí.
-            */}
-            {tenant.hostnames.length > 0 ? (
+            {tenant.hostnames.length > 0 && (
               <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0", overflowWrap: "anywhere" }}>
                 {tenant.hostnames.join(", ")}
-              </p>
-            ) : (
-              <p className="ask-error" style={{ margin: "10px 0 0" }} role="alert">
-                {t.noDomainWarning}
               </p>
             )}
 
@@ -133,9 +135,6 @@ export default async function TenantAdminPage() {
         ))}
       </ul>
 
-      <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 20 }}>
-        {t.domainsNoteBefore}<code>npm run domains</code>{t.domainsNoteAfter}
-      </p>
     </div>
     </AppShell>
   )

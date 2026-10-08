@@ -86,7 +86,11 @@ describe("/learning/manage", () => {
     const html = await render({ tab: "tags", rename: "bezpecnost:lift", to: "Bezpečnosť: Výťah", exists: "1" })
     expect(html).toContain("už existuje — zlúčia sa")
     expect(html).toContain("Zmení sa všade — na 23 miestach (4 kurzy, 17 otázok, 2 testy)")
-    expect(html).toMatch(/form="rename-tag" class="button">Zlúčiť</)
+    // Tiché — plné tlačidlo patrí lište výberu (ZAKLAD-zvysne-odchylky Q2).
+    expect(html).toMatch(/form="rename-tag" class="button button--quiet button--sm">Zlúčiť</)
+    // Hodnota ako `.select-row`, „Premenovať" mimo `<label>`.
+    expect(html).toContain('<label class="form-row select-row"><input type="checkbox"')
+    expect(html).not.toContain("tgv")
   })
 
   it("smart:tagy: krok zlúčenia s predvolenou najpoužívanejšou a chyba pri jednom", async () => {

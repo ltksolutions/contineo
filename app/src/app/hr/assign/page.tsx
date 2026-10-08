@@ -19,6 +19,7 @@
  * potvrdiť znova.
  */
 
+import Link from "next/link"
 import { Fragment } from "react"
 import { notFound, redirect } from "next/navigation"
 import MultiSelect from "@/components/MultiSelect"
@@ -248,10 +249,17 @@ export default async function AssignPage({
             )}
 
             {audiences.groups.length === 0 && audiences.tracks.length === 0 ? (
-              <p className="form-group-foot quiet">
-                {t.noGroupsOrTracks}
-                <code> npm run person</code>.
-              </p>
+              // Bez príkazu pre vývojára: kde v aplikácii skupina a trasa
+              // vznikne (D38; ZAKLAD-zvysne-odchylky, 8. 10. 2026).
+              <div className="card empty assign-empty">
+                <div className="empty-title">{t.noAudiencesTitle}</div>
+                <div className="empty-text">{t.noAudiencesText}</div>
+                <div className="empty-links">
+                  <Link href="/people">{t.linkPeople}</Link>
+                  <Link href="/people/import">{t.linkImport}</Link>
+                  <Link href="/hr/tracks">{t.linkTracks}</Link>
+                </div>
+              </div>
             ) : (
               <>
                 {/* Skupiny a trasy ako riadky s kruhom vľavo, nie pilulky

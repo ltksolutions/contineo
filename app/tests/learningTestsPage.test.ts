@@ -83,7 +83,10 @@ describe("/learning/tests", () => {
     expect(html).not.toContain("Otázka a<")
     const form = await renderList({ tab: "questions", new: "1", type: "multiple" })
     expect(form).toContain("Táto otázka má viac správnych odpovedí")
-    expect(form).toContain('type="checkbox" name="correct"')
+    // Správna odpoveď ako kruh vľavo pred poľom (ZAKLAD-zvysne-odchylky).
+    expect(form).toContain('<label class="ans-mark ans-mark--multiple"><input type="checkbox" aria-label="Odpoveď 1, správna" name="correct"')
+    expect(form).toContain("Označte správne odpovede.")
+    expect(form).not.toContain("mc-check")
     // Formulár otvorený — „Nová otázka" v hlavičke sa nekreslí (P10).
     expect(form).not.toContain('href="/learning/tests/questions/new"')
     const edit = await renderList({ tab: "questions", q: "a" })

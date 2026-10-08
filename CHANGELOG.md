@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Posledné odchýlky: značky, správna odpoveď, bez príkazov (2026-10-08)
+
+- Značky na zlúčenie (Vzdelávanie → Správa → smart:tagy): riadky s kruhom
+  vľavo, „Premenovať" vedľa riadku; premenovanie má tiché tlačidlá.
+- Editor otázky: správna odpoveď sa označuje kruhom (viac správnych) alebo
+  fajkou (jedna správna) vľavo pred odpoveďou, s nápovedou nad zoznamom.
+- Prideliť bez skupín a trás ukáže, kde v aplikácii vzniknú (Osoby, Import
+  osôb, Trasy) — bez príkazu pre vývojára.
+- Správa platformy: organizácia bez domény má štítok „Bez domény" s odkazom
+  na nápravu; veta s príkazom pod zoznamom zmizla.
+- Typ otázky na telefóne už nepretečie — dlhšie voľby sa zalomia.
+
 ### Drobné úpravy rozhrania podľa súpisu odchýlok (2026-10-08)
 
 - Prázdne stavy namiesto kariet s vetou: „nie ste v organizácii" na

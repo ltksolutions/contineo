@@ -10,6 +10,26 @@
 
 ---
 
+## 2026-10-08 — zvyšné odchýlky (ZAKLAD-zvysne-odchylky)
+
+**Čo sa zmenilo:** značky na zlúčenie ako `.select-row` (`.tag-row`
+obaľuje riadok a odkaz „Premenovať", aby klik naň riadok nezaškrtol),
+správna odpoveď `.ans-mark` pred poľom, `/hr/assign` `.empty` s odkazmi,
+`/admin` štítok „Bez domény" (kotva `#domains` v detaile). Súpis
+DESIGN_ODCHYLKY je tým vybavený celý.
+
+**Odchýlky od návrhu:** adresy premenovania ostali `?rename=` a
+`?renameKey=` (návrh písal `?edit=`/`?editKey=`; kľúče v adrese sú zmluva).
+Riadok odpovede nie je `.form-row` — pravidlo `.form-row > input` by
+zrušilo vzhľad textového poľa, ktoré je jeho priamym dieťaťom.
+
+**Nájdené cestou:** prepínač typu otázky z #321 na 390 px pretekal o 65 px
+(štyri voľby bez zalomenia). Opravené pre všetky `.view-switch--fit` na
+telefóne — voľby sa zalomia do dvoch riadkov. Snímky #321 sa nerobili;
+**nabudúce aj pri „mechanických" zmenách aspoň jedna snímka 390.**
+
+---
+
 ## 2026-10-08 — mechanické odchýlky (DESIGN_ODCHYLKY, overenie)
 
 **Ako:** súpis z 6. 10. sa prešiel nález po náleze proti kódu (dve
