@@ -11,7 +11,7 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
 import {
-  harvestItems, harvestCandidates, addressHash, applyClassification, applyMerge, pickThreads, parseDraft, draftThread, classifyPrompt,
+  harvestItems, harvestCandidates, addressHash, applyClassification, applyMerge, mergeChunks, MERGE_CHUNK, MERGE_ANCHORS, pickThreads, parseDraft, draftThread, classifyPrompt,
   NO_TOPIC, type HarvestItem, type HarvestTopic,
 } from "../src/lib/faqHarvest"
 import type { MailMessage, MailHeader } from "../src/lib/mailbox/types"
@@ -99,6 +99,23 @@ describe("applyMerge", () => {
   })
   it("necitatelna odpoved necha temy tak, ako su", () => {
     expect(applyMerge(null, [topic("a", 1)]).merged.map(t => t.key)).toEqual(["a"])
+  })
+})
+
+describe("triedenie a zlucovanie vo velkom", () => {
+  const topic = (key: string, threads: number): HarvestTopic => ({ key, label: key, description: "", threads, firstMonth: null, lastMonth: null, proposals: null })
+  it("prompt radi temy od najcastejsej a ukazuje pocet", () => {
+    const p = classifyPrompt([{ key: "a", label: "Malá", description: "", threads: 1 }, { key: "b", label: "Veľká", description: "", threads: 40 }], [])
+    expect(p.indexOf("Veľká")).toBeLessThan(p.indexOf("Malá"))
+    expect(p).toContain("b — Veľká:  (40)")
+  })
+  it("mergeChunks: kusky od najvacsej temy, dalsie s kotvami", () => {
+    const topics = Array.from({ length: MERGE_CHUNK + 10 }, (_, i) => topic(`t${i}`, 1000 - i))
+    const chunks = mergeChunks(topics)
+    expect(chunks).toHaveLength(2)
+    expect(chunks[0][0].key).toBe("t0")
+    expect(chunks[1].slice(0, MERGE_ANCHORS).map(t => t.key)).toEqual(topics.slice(0, MERGE_ANCHORS).map(t => t.key))
+    expect(chunks[1]).toHaveLength(MERGE_ANCHORS + 10)
   })
 })
 
