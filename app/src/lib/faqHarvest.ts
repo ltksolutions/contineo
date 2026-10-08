@@ -26,7 +26,7 @@
  * bez odpovede a vlákno od vylúčenej adresy (námietka, D186) sa nečíta.
  */
 
-import { createHash } from "node:crypto"
+import { createHash, randomBytes } from "node:crypto"
 import Anthropic from "@anthropic-ai/sdk"
 import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
@@ -87,6 +87,15 @@ export interface HarvestTopic {
 export interface FaqHarvest {
   companyCode: string
   channelKey: string
+  /**
+   * Identita behu (9. 10. 2026). Nový beh dostane nový `runId` a každý
+   * zápis behu ho má v podmienke — kúsok starého behu, ktorý práve dobieha
+   * v crone, tak po reštarte nič neprepíše. Pred zavedením to urobil:
+   * reštart počas behu dal témy s 1 148 otázkami po jedinom mesiaci.
+   */
+  runId: string
+  /** Zámok kúska: kým neuplynie, ďalší cron ani akcia nad behom nepracuje. */
+  leaseUntil: Date | null
   stage: HarvestStage
   months: string[]
   pending: string[]
@@ -105,6 +114,7 @@ export interface FaqHarvest {
 interface HarvestThread {
   companyCode: string
   channelKey: string
+  runId: string
   threadRef: string
   month: string
   topicKey: string
@@ -556,7 +566,8 @@ export async function startHarvest(companyCode: string, channelKey: string, mont
   await (await harvests()).replaceOne(
     { companyCode: code, channelKey },
     {
-      companyCode: code, channelKey, stage: "collect", months: plan, pending: plan, topics: [], draftPending: [],
+      companyCode: code, channelKey, runId: randomBytes(8).toString("hex"), leaseUntil: null,
+      stage: "collect", months: plan, pending: plan, topics: [], draftPending: [],
       counts: { threads: 0, colleague: 0, excluded: 0, unanswered: 0, noTopic: 0 },
       startedAt: now, startedBy: actorEmail, updatedAt: now, finishedAt: null, error: null, failures: 0,
     },
@@ -568,6 +579,7 @@ export interface HarvestBudget { budgetMs: number; hardMs: number }
 
 interface RunCtx {
   code: string
+  runId: string
   channel: HelpdeskChannel
   client: Anthropic
   utilityModel: string
@@ -575,6 +587,11 @@ interface RunCtx {
   keySource: Awaited<ReturnType<typeof aiForCompany>>["keySource"]
   actor: UsageActor
   hardStop: number
+}
+
+/** Podmienka zápisov behu: organizácia, kanál a **tento** beh. */
+function runFilter(ctx: RunCtx) {
+  return { companyCode: ctx.code, channelKey: ctx.channel.key, runId: ctx.runId }
 }
 
 function usageFor(ctx: RunCtx, model: string, subject: string) {
@@ -622,8 +639,8 @@ async function collectMonth(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<
   const col = await threadsCol()
   for (const it of items) {
     await col.updateOne(
-      { companyCode: ctx.code, channelKey: ctx.channel.key, threadRef: it.threadRef },
-      { $set: { companyCode: ctx.code, channelKey: ctx.channel.key, threadRef: it.threadRef, month: key, topicKey: topicOf.get(it.threadRef) ?? NO_TOPIC, askedAt: it.askedAt, lastAnswerAt: it.lastAnswerAt } },
+      { ...runFilter(ctx), threadRef: it.threadRef },
+      { $set: { ...runFilter(ctx), threadRef: it.threadRef, month: key, topicKey: topicOf.get(it.threadRef) ?? NO_TOPIC, askedAt: it.askedAt, lastAnswerAt: it.lastAnswerAt } },
       { upsert: true },
     )
   }
@@ -639,7 +656,7 @@ async function collectMonth(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<
     ...created.map(c => ({ ...c, threads: counts.get(c.key) ?? 0, firstMonth: key, lastMonth: key, proposals: null })),
   ]
   await (await harvests()).updateOne(
-    { companyCode: ctx.code, channelKey: ctx.channel.key },
+    runFilter(ctx),
     {
       $set: { topics: nextTopics, updatedAt: new Date(), error: null, failures: 0 },
       $inc: { "counts.threads": items.length - noTopic, "counts.noTopic": noTopic, "counts.colleague": skips.colleague, "counts.excluded": skips.excluded, "counts.unanswered": skips.unanswered },
@@ -685,14 +702,14 @@ async function mergeTopics(ctx: RunCtx, doc: FaqHarvest): Promise<void> {
       const raw = await callJson(ctx.client, ctx.answerModel, MERGE_SYSTEM, prompt, MERGE_SCHEMA, 16000, usageFor(ctx, ctx.answerModel, "zlúčenie tém"), "medium")
       const r = applyMerge(raw, part)
       for (const [from, to] of r.mapping) {
-        if (from !== to) await col.updateMany({ companyCode: ctx.code, channelKey: ctx.channel.key, topicKey: from }, { $set: { topicKey: to } })
+        if (from !== to) await col.updateMany({ ...runFilter(ctx), topicKey: from }, { $set: { topicKey: to } })
       }
       const partKeys = new Set(part.map(t => t.key))
       merged = [...merged.filter(t => !partKeys.has(t.key)), ...r.merged]
     }
     // Prvý a posledný mesiac a počet zlúčenej témy z vlákien, nie z pôvodných tém.
     const spans = await col.aggregate<{ _id: string; first: string; last: string; n: number }>([
-      { $match: { companyCode: ctx.code, channelKey: ctx.channel.key } },
+      { $match: runFilter(ctx) },
       { $group: { _id: "$topicKey", first: { $min: "$month" }, last: { $max: "$month" }, n: { $sum: 1 } } },
     ]).toArray()
     const span = new Map(spans.map(s => [s._id, s]))
@@ -702,7 +719,7 @@ async function mergeTopics(ctx: RunCtx, doc: FaqHarvest): Promise<void> {
   }
   const draftPending = merged.filter(t => t.threads >= MIN_THREADS).map(t => t.key)
   await (await harvests()).updateOne(
-    { companyCode: ctx.code, channelKey: ctx.channel.key },
+    runFilter(ctx),
     { $set: { topics: merged, draftPending, stage: draftPending.length ? "draft" : "done", updatedAt: new Date(), error: null, failures: 0, ...(draftPending.length ? {} : { finishedAt: new Date() }) } },
   )
   doc.topics = merged
@@ -737,7 +754,7 @@ async function draftTopic(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<vo
   const col = await threadsCol()
   let made = 0
   if (topic) {
-    const all = await col.find({ companyCode: ctx.code, channelKey: ctx.channel.key, topicKey: key }, { projection: { _id: 0, threadRef: 1, askedAt: 1 } }).toArray()
+    const all = await col.find({ ...runFilter(ctx), topicKey: key }, { projection: { _id: 0, threadRef: 1, askedAt: 1 } }).toArray()
     const adapter = mailboxFor(ctx.channel)
     const threads: DraftThread[] = []
     for (const t of pickThreads(all)) {
@@ -757,18 +774,24 @@ async function draftTopic(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<vo
         flags: { changedOverTime: e.changedOverTime, normConflict: e.normConflict }, note: e.note,
         origin: { threadRefs: all.map(t => t.threadRef) }, model: ctx.answerModel,
       }))
+      // Beh mohol byť medzitým nahradený novým — jeho návrhy by boli duplicitné.
+      if (!(await (await harvests()).findOne(runFilter(ctx), { projection: { _id: 1 } }))) {
+        throw new FaqHarvestError("harvest.superseded", "Ťažbu medzitým niekto spustil znova.")
+      }
       made = await saveProposals(ctx.code, ctx.channel.key, proposals)
     }
   }
   const last = doc.draftPending.length === 1
   const topics = doc.topics.map(t => (t.key === key ? { ...t, proposals: made } : t))
   await (await harvests()).updateOne(
-    { companyCode: ctx.code, channelKey: ctx.channel.key },
+    runFilter(ctx),
     { $set: { topics, updatedAt: new Date(), error: null, failures: 0, ...(last ? { stage: "done", finishedAt: new Date() } : {}) }, $pull: { draftPending: key } },
   )
   if (last) {
     // Pôvod nesú už návrhy; záznamy vlákien nie sú potrebné (minimalizácia).
-    await col.deleteMany({ companyCode: ctx.code, channelKey: ctx.channel.key })
+    // Len tohto behu — dobiehajúci starý beh nesmie zmazať vlákna nového.
+    // Pár vlákien, ktoré starý beh zapíše po reštarte, zmaže ďalší štart.
+    await col.deleteMany(runFilter(ctx))
   }
   doc.topics = topics
   doc.draftPending = doc.draftPending.filter(k => k !== key)
@@ -783,29 +806,43 @@ async function draftTopic(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<vo
 export async function continueHarvest(companyCode: string, channelKey: string, budget: HarvestBudget, actor?: UsageActor): Promise<number> {
   const code = requireCompanyCode(companyCode, "continueHarvest")
   const col = await harvests()
-  const doc = await col.findOne({ companyCode: code, channelKey })
-  if (!doc || doc.stage === "done" || doc.failures >= MAX_FAILURES) return 0
+  const now = new Date()
+  // Zámok kúska: cron každých 5 minút môže dobehnúť predošlý (až 300 s)
+  // a akcia „Spustiť" ide popri crone. Kúsok berie len ten, kto zámok získa.
+  const doc = await col.findOneAndUpdate(
+    {
+      companyCode: code, channelKey, stage: { $ne: "done" }, failures: { $lt: MAX_FAILURES },
+      $or: [{ leaseUntil: null }, { leaseUntil: { $exists: false } }, { leaseUntil: { $lt: now } }],
+    },
+    { $set: { leaseUntil: new Date(now.getTime() + budget.hardMs + 60_000) } },
+    { returnDocument: "after" },
+  )
+  if (!doc) return 0
   const channel = await channelByKey(code, channelKey)
-  if (!channel?.mailbox) return 0
   const ai = await aiForCompany(code)
-  if (!ai.apiKey) return 0
+  if (!channel?.mailbox || !ai.apiKey) {
+    await col.updateOne({ companyCode: code, channelKey, runId: doc.runId }, { $set: { leaseUntil: null } })
+    return 0
+  }
   const began = Date.now()
   const ctx: RunCtx = {
-    code, channel,
+    code, runId: doc.runId, channel,
     client: new Anthropic({ apiKey: ai.apiKey, maxRetries: 1, timeout: 180_000 }),
     utilityModel: ai.models.utility, answerModel: ai.models.answer, keySource: ai.keySource,
     actor: actor ?? { companyCode: code, personId: null, personName: "Ťažba FAQ (cron)", email: doc.startedBy },
     hardStop: began + budget.hardMs,
   }
+  const mine = runFilter(ctx)
   let done = 0
   try {
     while ((doc.stage as HarvestStage) !== "done") {
       if (done > 0 && Date.now() > began + budget.budgetMs) break
-      await col.updateOne({ companyCode: code, channelKey }, { $inc: { failures: 1 }, $set: { updatedAt: new Date() } })
+      const r = await col.updateOne(mine, { $inc: { failures: 1 }, $set: { updatedAt: new Date() } })
+      if (!r.matchedCount) break // beh nahradil nový
       if (doc.stage === "collect") {
         const key = doc.pending[0]
         if (!key) {
-          await col.updateOne({ companyCode: code, channelKey }, { $set: { stage: "merge", failures: 0 } })
+          await col.updateOne(mine, { $set: { stage: "merge", failures: 0 } })
           doc.stage = "merge"
           continue
         }
@@ -815,7 +852,7 @@ export async function continueHarvest(companyCode: string, channelKey: string, b
       } else if (doc.stage === "draft") {
         const key = doc.draftPending[0]
         if (!key) {
-          await col.updateOne({ companyCode: code, channelKey }, { $set: { stage: "done", finishedAt: new Date(), failures: 0 } })
+          await col.updateOne(mine, { $set: { stage: "done", finishedAt: new Date(), failures: 0 } })
           break
         }
         await draftTopic(ctx, doc, key)
@@ -824,7 +861,9 @@ export async function continueHarvest(companyCode: string, channelKey: string, b
     }
   } catch (e) {
     console.error(`[faq-harvest] ${code}/${channelKey} zlyhala:`, e)
-    await col.updateOne({ companyCode: code, channelKey }, { $set: { error: e instanceof AppError ? e.code : "failed", updatedAt: new Date() } })
+    await col.updateOne(mine, { $set: { error: e instanceof AppError ? e.code : "failed", updatedAt: new Date() } })
+  } finally {
+    await col.updateOne(mine, { $set: { leaseUntil: null } })
   }
   return done
 }
