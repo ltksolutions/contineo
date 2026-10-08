@@ -83,7 +83,7 @@ textu (D158).
 ## 3. Prečo si myslíme, že je to v poriadku — a kde sú riziká
 
 - **Nový účel.** Text na `/privacy` uvádza ako účel helpdesku „vybaviť
-  otázku, ktorú ste sami položili". FAQ je iný účel — preto je potrebný
+  otázku, ktorú ste sami položili“. FAQ je iný účel — preto je potrebný
   test zlučiteľnosti (čl. 6 ods. 4 GDPR). Argumenty za: úzka súvislosť
   (ide o tie isté otázky, z ktorých má osoh ďalší člen s rovnakým
   problémom), rozumné očakávanie (zväz sa učí z vlastnej podpory), výsledok
