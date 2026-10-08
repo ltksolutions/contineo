@@ -237,7 +237,8 @@
 - [ ] ~~Adaptéry: MCP / API~~ → **MCP konektor nie je adaptér zdroja, ale pripojenie s použitiami (ADR-029, 2026-10-07).** Fáza 1 (živý zdroj) je v `main`; import do knižnice je použitie B (nižšie). API/DB zostáva otvorené.
 
 ### E2. MCP konektory — ďalšie fázy (ADR-029)
-- [ ] **Použitie B — import do knižnice:** výber článkov cez hľadanie konektora (server nemá zoznam súborov), `fetch` → `uploadDocument()` s `source.{type:"mcp",connector,externalId,fetchedAt,contentHash}`, `accessLevel: internal` ako návrh, bežné schvaľovanie; re-sync len cez `contentHash` (server nedáva dátum zmeny).
+- [x] ~~**Použitie B — import do knižnice**~~ ✅ 2026-10-08 (PR #311): Knižnica → Nahrať → Import zo servera; výber z výsledkov hľadania, `uploadDocument()` s Markdownom a PDF vysádzaným u nás (`markdownPdf.ts`), `documents.source.*`, blok Zdroj na detaile s kontrolou zmien cez `contentHash` (nové znenie ako koncept). PDF ostáva povinné aj pre MCP (rozhodnutie Jána 8. 10.: automatické, nie výnimka z ADR-011).
+- [ ] **Po importe:** otvorené — hromadný import celého rozsahu (server nemá zoznam súborov; šlo by cez viac hľadaní), pravidelný re-sync cronom (dnes tlačidlo na detaile), redukcia článkov do jazyka používateľa modelom ako *návrh* pre kurátora (D176 hovorí, že je to zúženie, nie brána).
 - [ ] **Použitie C — nástroje asistenta:** až keď generačný adaptér vie tool-use (Claude áno, vLLM/Qwen neisto); `uses.agentTools.allowed` už v schéme.
 - [ ] **Servisný účet Sportnetu:** vyžiadať aplikáciu s `client_credentials` (ako `issfconnector`); dnes pilot pod osobným účtom Jána — mení sa len `auth` na konektore.
 - [ ] **Rerank živých úsekov v cloude:** `$rerank` beží v pipeline a živé úseky v nej nie sú — idú za knižnicou v poradí servera. Keď to bude prekážať, aplikačný rerank nad zlúčeným zoznamom.

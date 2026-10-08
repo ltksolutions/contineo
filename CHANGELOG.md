@@ -6,6 +6,38 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ### Helpdesk: synchronizácia každých 5 minút, interval pri kanáli (2026-10-08)
 
+### MCP konektory: import článkov do knižnice (2026-10-08)
+
+Druhé použitie konektora (ADR-029 B). Konektor má prepínač **Povoliť import
+do knižnice**; kurátor potom v **Knižnica → Nahrať → Import zo servera**
+vyhľadá články a vybrané uloží ako koncepty dokumentov:
+- z každého článku vznikne koncept s textom a PDF vysádzaným aplikáciou —
+  ďalej ide bežnou cestou (metadáta, schválenie, zverejnenie);
+- zoznam ukáže, čo z tej istej cesty v knižnici už je a či sa článok na
+  serveri odvtedy zmenil;
+- dokument nesie **Zdroj** (konektor, cesta na serveri, kedy stiahnuté);
+  tlačidlo *Skontrolovať zmeny na serveri* stiahne článok znova a pri zmene
+  pripraví koncept nového znenia — zverejnené sa nemení;
+- redukcia konektora platí aj pre kópiu; prístupová úroveň je predvolene
+  interná.
+
+### Skupiny a značky ako zoznam namiesto pilulky (2026-10-08)
+
+Podľa návrhu ZAKLAD-vyber-skupin-a-znaciek:
+- **Zoznam:** skupiny osoby a značky dokumentu sa vyberajú v zozname
+  s krúžkom vľavo. Vpravo je počet ľudí alebo dokumentov.
+- **Nová hodnota:** jej pole je posledný riadok zoznamu a uloží sa spolu
+  s formulárom; tlačidlo „Pridať" netreba. Všetko funguje aj bez
+  JavaScriptu.
+- **Nová značka** pribudne do číselníka organizácie aj s názvom.
+- **Podobný názov:** nová hodnota, ktorá sa podobá na existujúcu (napr.
+  „rozhodcova" a „rozhodcovia"), sa neuloží a stránka ponúkne použiť
+  existujúcu alebo predsa len založiť novú.
+- **Hodnota, ktorú má len táto osoba alebo dokument,** je označená „len tu".
+- **Hľadanie:** pri 12 a viac možnostiach je nad zoznamom pole „Hľadať".
+
+### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
+
 Pri schránke kanála je **Interval synchronizácie** — 5, 15, 30, 60 minút
 alebo raz denne, predvolene 5. Vercel cron beží každých 5 minút (plán
 Pro) a synchronizuje len kanál, ktorému interval uplynul.

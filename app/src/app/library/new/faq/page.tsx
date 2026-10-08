@@ -12,7 +12,7 @@ import Link from "next/link"
 import Notice from "@/components/Notice"
 import KeyPreview from "@/components/KeyPreview"
 import Select from "@/components/Select"
-import TagSelect from "@/components/TagSelect"
+import ValueSelect, { withCodelistNote } from "@/components/ValueSelect"
 import AppShell from "@/components/AppShell"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions } from "@/lib/codelists"
@@ -89,9 +89,9 @@ export default async function NewFaqPage({ searchParams }: { searchParams: Promi
                   ...treeOptions(departmentRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level }))),
                 ]} />
             </div>
-            <div className="field upload-wide">
-              <span className="field-label">{tu.tags}</span>
-              <TagSelect name="tags" options={await tagOptions(ctx.tenant.companyCode, extras)} selected={[]} newLabel={tu.newTag} language={language} />
+            <div className="upload-wide">
+              <ValueSelect kind="tags" name="tags" legend={tu.tags} selected={[]} language={language}
+                           options={withCodelistNote(await tagOptions(ctx.tenant.companyCode, extras), language)} />
             </div>
           </div>
         </section>

@@ -10,6 +10,56 @@
 
 ---
 
+## 2026-10-08 — výber skupín a značiek (ZAKLAD-vyber-skupin-a-znaciek, P8)
+
+**Čo sa zmenilo:**
+- **Komponenty:** `TagSelect` zmizol, nahradil ho serverový `ValueSelect`
+  (natívne checkboxy, pole `${name}New`). Hľadanie rieši klientsky ostrov
+  `ValueSearch`, ktorý sa bez JS nevykreslí.
+- **Čisté funkcie** sú v `lib/valueSelect.ts` (`readValues`,
+  `similarValue`, `splitSimilar`).
+- **Značky** spracuje `lib/tagValues.ts` (`tagsFromForm`): z novej hodnoty
+  urobí kľúč cez `slugifyKey` a položku založí v číselníku cez
+  `addCodelistItem`.
+- **`tagOptions`** vracia `{ value, label, count }` jednou agregáciou.
+
+**Odchýlka:** voľby pri podobnom názve sú odkazy, ktoré formulár pripravia
+(`pick=like` zaškrtne existujúcu, `pick=new` vyplní novú so skrytým
+`…Force`). Uloží ich hlavné tlačidlo, nie samostatné malé formuláre.
+Samostatný zápis jednej skupiny alebo značky by potreboval novú zapisovaciu
+cestu popri `savePerson` / `saveMetadata`, vrátane kópie značiek v chunkoch.
+
+Pri novom dokumente a FAQ sa podobná značka len vynechá a hlásenie to
+povie — formulár s nahratým súborom sa vrátiť nedá.
+
+**Popri tom:** `TagSelect` posielal značky ako jedno pole „a, b"
+a `checkValue` ho pre čiarku odmietal. `readValues` rozdelí aj tento starý
+tvar.
+
+---
+
+## 2026-10-08 — MCP konektory, fáza 2: import s pôvodom
+
+**Ráno:** PR #307 zlúčený, nasadený, pripojené naostro — a hneď dva nálezy
+z prvej otázky: citácia zo živého zdroja mala „Otvoriť v knižnici" (404)
+a odpoveď prepustila názvy tried z kódu (`ObnovaHeslaPage`). Prvé opravené
+v `main`, druhé vzorom v redukcii konektora (`\b[A-Z][a-z]+(?:[A-Z][a-z0-9]+)+\b`).
+Druhá otázka už bola čistá. Poučenie: redukcia sa ladí na živých otázkach,
+nie na jednom článku.
+
+**Fáza 2 (PR #311):** import je **použitie**, nie samostatný adaptér —
+`uploadDocument()` dostane Markdown a PDF, ďalej je to bežný dokument.
+Otázka Jána: *sú PDF pre MCP zdroje nutné?* Odpoveď: áno, ale automaticky —
+ADR-011 drží schvaľovanie aj potvrdenie na PDF a výnimka pre jeden zdroj by
+bola druhá vetva cez celú cestu. `markdownPdf.ts` sádže z Markdownu
+deterministicky (pevný čas v metadátach), takže odtlačok znenia sedí.
+
+**Čo nevyšlo:** import sa lokálne overiť nedal — token konektora je po
+produkčnom „Pripojiť znova" pod produkčným kľúčom a lokálna relácia
+medzitým vypršala. Overenie ide na produkciu.
+
+---
+
 ## 2026-10-07 — MCP konektory: prvý skutočný server prekonal júnový návrh (ADR-029)
 
 **Zadanie znelo** „pridať ďalší zdroj, `mcp.sportnet.online`" a jediný zápis

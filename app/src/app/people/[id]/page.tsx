@@ -23,7 +23,7 @@ import { displayName, needsInvitation } from "@/lib/personFields"
 import { allDepartments, flattenTree } from "@/lib/departments"
 import Select from "@/components/Select"
 import PhoneField from "@/components/PhoneField"
-import TagSelect from "@/components/TagSelect"
+import ValueSelect, { SimilarWarning } from "@/components/ValueSelect"
 import Notice from "@/components/Notice"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -50,7 +50,7 @@ export default async function PersonDetailPage({
   }
 
   const { id } = await params
-  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const { msg: message, error, similar, like, pick } = normalizeQuery<{ msg?: string; error?: string; similar?: string; like?: string; pick?: string }>(await searchParams)
   const o = await loadPersonById(ctx.person.companyCode, id)
   // Neexistuje vs. patrí inej organizácii je zámerne tá istá odpoveď (D32).
   if (!o) notFound()
@@ -73,6 +73,7 @@ export default async function PersonDetailPage({
   const language = ctx.person.language
   const d = dictionary(language).people
   const t = d.detail
+  const here = `/people/${encodeURIComponent(id)}`
   const tl = d.list
   const te = dictionary(language).evidence
   const tds = dictionary(language).hr.dutyState
@@ -280,16 +281,22 @@ export default async function PersonDetailPage({
           <span className="quiet field-hint">{t.genderNote}</span>
         </div>
 
-        <div className="field">
-          <span className="field-label">{t.groups}</span>
-          <TagSelect
-            name="groups"
-            options={audiences.groups}
-            selected={o.groups}
-            newLabel={t.newGroup}
-            language={language}
-          />
-          <span className="quiet field-hint">{t.groupsNote}</span>
+        {/* Skupiny ako riadky s kruhom vľavo a pole novej skupiny ako posledný
+            riadok (ZAKLAD-vyber-skupin-a-znaciek, 8. 10. 2026). Podobný názov
+            server neuloží a vráti `?similar=&like=` (Q3); voľba pripraví
+            formulár a uloží sa znova. */}
+        <div id="groups">
+        <ValueSelect
+          kind="groups"
+          name="groups"
+          legend={t.groups}
+          options={audiences.groups}
+          selected={pick === "like" && like ? [...o.groups, like] : o.groups}
+          prefillNew={pick === "new" ? similar : undefined}
+          forced={pick === "new" ? similar : undefined}
+          language={language}
+          warning={pick ? undefined : <SimilarWarning href={here} anchor="groups" kind="groups" similar={similar} like={like} language={language} />}
+        />
         </div>
 
         {/* Nadpis nad kartou (HR-pridelit-nadpis-karty), riadky s kruhom
