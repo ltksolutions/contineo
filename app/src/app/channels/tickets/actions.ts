@@ -143,7 +143,11 @@ export async function closeTicketAction(fd: FormData) {
     if (isRedirect(e)) throw e
     back(id, errorMessage(e, ctx.person.language), true)
   }
-  back(id, reopen ? ctx.t.msgReopened : ctx.t.msgClosed)
+  if (reopen) back(id, ctx.t.msgReopened)
+  // Zavretý ticket je vybavený — riešiteľ ide na zoznam po ďalší, nie späť
+  // na ticket, s ktorým už nič nerobí (Ján 8. 10. 2026).
+  revalidatePath("/channels/tickets")
+  redirect(`/channels/tickets?msg=${encodeURIComponent(ctx.t.msgClosed)}`)
 }
 
 /** Záznam do konceptu FAQ z odpovede (D164, D167) — schváli správca obsahu postupom znenia. */
