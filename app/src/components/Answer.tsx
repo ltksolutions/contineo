@@ -263,8 +263,9 @@ export function AnswerAside({
                       ].filter(Boolean).join(" · ") || t.sourceMissing}
                     </div>
                     {/* Do knižnice, teda na znenie v aplikácii — nie na `url`,
-                        to je originál mimo nej (`sourceUrl`). */}
-                    {source?.documentId && (
+                        to je originál mimo nej (`sourceUrl`). Živý zdroj
+                        (ADR-029) v knižnici nie je — odkaz by viedol na 404. */}
+                    {source?.documentId && !source.live && (
                       <Link className="answer-citation-open" href={`/documents/${encodeURIComponent(source.documentId)}`}>
                         {t.openInLibrary}
                       </Link>
