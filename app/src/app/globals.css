@@ -3472,10 +3472,16 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  /* Bez `min-width: 0` by dlhé označenie znenia (voľný text) roztiahlo
+     riadok aj kartu cez okraj — názov dokumentu potom pretiekol s ním
+     (Ján 8. 10. 2026, Smernica o pracovných cestách…). */
+  min-width: 0;
 }
 
 .doc-card-kind { flex: 1 1 auto; min-width: 0; font-size: 12.5px; }
-.doc-card-version { margin-left: auto; font-size: 12px; white-space: nowrap; }
+/* Označenie znenia je voľný text (`Version.label`) — skráti sa elipsou,
+   celé je v `title`, ako v stĺpci tabuľky. */
+.doc-card-version { margin-left: auto; font-size: 12px; white-space: nowrap; max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .doc-card-where { font-size: 12px; }
 
 .doc-card-title {

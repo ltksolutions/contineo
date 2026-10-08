@@ -1124,7 +1124,7 @@ export default async function LibraryPage({
                     )}
                     {r.category && <span className="quiet doc-card-kind">{categoryLabel(r.category)}</span>}
                     {/* Verzia vpravo — čo platí, na jeden pohľad. */}
-                    <span className="quiet doc-card-version">{r.effectiveLabel}</span>
+                    <span className="quiet doc-card-version" title={r.effectiveLabel}>{r.effectiveLabel}</span>
                   </div>
 
                   <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-card-title">
