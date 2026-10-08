@@ -2875,13 +2875,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .detail-grid { grid-template-columns: minmax(0, 1fr) 280px; }
 }
 
-.detail-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin: 0 0 10px;
-}
-
 /* Bloky detailu (DETAIL, úloha 3) — inline štýly do tried. Šírka 1180 px
    je vec obsahu (dva stĺpce), preto trieda stránky. */
 .detail-page { max-width: 1180px; }
@@ -2892,11 +2885,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .detail-lead { margin: 0 0 18px; font-size: var(--fs-body); }
 .detail-section-title { font-size: var(--fs-section); margin: 0 0 10px; }
 .detail-block { padding: 18px; display: grid; gap: 12px; margin: 0 0 18px; }
-/* Archivovaný predpis (ADR-025): pás nad zneniami. Varovná farba len keď už platí. */
-.archive-banner { border-left: 3px solid var(--warn-fg); }
-.archive-banner.is-archived { background: var(--warn-bg); }
-/* V nástrojoch rozostupy drží mriežka, nie okraj bloku. */
-.detail-tools-body > .detail-block { margin: 0; }
 /* Formulár priečinka je riadok, nie mriežka (`.tree-form`). */
 .detail-block.tree-form { display: flex; }
 .detail-block.tree-form > .field { flex: 1 1 260px; margin: 0; }
@@ -2906,22 +2894,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .detail-block-small { font-size: var(--fs-small); color: var(--muted); margin: 0; }
 
 .detail-card { padding: 14px 16px; }
-
-/* Ostatné akcie detailu za jedným súhrnným nadpisom (DETAIL, úloha 1).
-   Zatvorené je správny predvolený stav — kto prišiel dokument zverejniť,
-   nechce vidieť formulár na preindexovanie. Funguje bez JavaScriptu. */
-.detail-tools { margin: 0 0 18px; }
-.detail-tools > summary {
-  font-size: var(--fs-section);
-  font-weight: 650;
-  padding: 14px 18px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-.detail-tools[open] > summary { border-radius: var(--radius) var(--radius) 0 0; }
-.detail-tools-body { display: grid; gap: 14px; padding: 14px 0 0; }
 
 .detail-card-title {
   margin: 0 0 10px;
@@ -6256,10 +6228,6 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .flow-foot > .button { width: 100%; min-height: 48px; }
 }
 
-/* Hlavička detailu: akcie vedľa názvu (bod 1 rámu). Neaktívne „Nové
-   znenie" je `span` s `aria-disabled`, nie tlačidlo — nikam nevedie. */
-.detail-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: -6px 0 18px; }
-.detail-actions .is-disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Platné znenie ako súhrn (bod 3) a staršie znenia po riadku (bod 4). */
 .cur { padding: 16px 18px; display: grid; gap: 12px; margin: 0 0 18px; }
@@ -8237,4 +8205,55 @@ section.rating { border-top: 1px solid var(--line); }
   .rating-more summary, .eval-ans summary { min-height: 44px; }
   .reader-q { flex: 1 1 100%; }
   .reader-row .button { flex: 1 1 0; }
+}
+
+/* ── Akcie detailu dokumentu (KNIZNICA-akcie-dokumentu, 8. 10. 2026) ──────────
+   Hlavička je `.page-head` s nástrojmi vpravo (SwiftUI `toolbar`, hlavná
+   akcia posledná). Na telefóne plné tlačidlo cez šírku a Upraviť a Stiahnuť
+   ako ikony 44 px s `aria-label`. Zriedkavé úkony sú v „Ďalších akciách". */
+.doc-head { align-items: flex-start; gap: 10px 12px; margin: 0 0 18px; }
+.page-head-main { display: grid; gap: 6px; min-width: 0; flex: 1 1 420px; }
+.doc-lead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0; font-size: var(--fs-body); overflow-wrap: anywhere; }
+.page-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.doc-tool { gap: 6px; }
+.doc-tool > svg { display: none; }
+.doc-menu > summary { list-style: none; }
+.doc-menu > summary::-webkit-details-marker { display: none; }
+.doc-menu .mc-menu-list { width: 280px; }
+/* Položka ponuky: názov a pod ním znenie, typ a veľkosť. */
+.doc-menu .mc-menu-list a { display: grid; gap: 1px; align-content: center; padding: 7px 12px; }
+.doc-menu .mc-menu-list small { margin-left: 0; }
+.doc-archive { align-items: flex-start; flex-wrap: wrap; margin: 0 0 18px; }
+.doc-archive-text { display: grid; gap: 3px; flex: 1 1 260px; min-width: 0; }
+.doc-archive-text strong { font-size: 15px; }
+.doc-archive-meta { opacity: 0.8; font-size: var(--fs-small); }
+.doc-archive-act { margin: 0; }
+.doc-more { margin: 0 0 18px; }
+.doc-more .more-main > span a { overflow-wrap: anywhere; }
+.doc-warnings { margin: 2px 0 0; padding-left: 18px; font-size: var(--fs-small); color: var(--muted); }
+.more-sub { padding: 0 22px 14px; }
+.more-sub > summary { cursor: pointer; min-height: 36px; display: inline-flex; align-items: center; font-size: var(--fs-small); color: var(--accent); }
+.more-sub-body { display: grid; gap: 12px; margin-top: 8px; }
+.doc-diff-head { margin: 0 0 6px; }
+.doc-diff-note { margin: 0 0 6px; font-size: var(--fs-small); }
+.doc-diff {
+  padding: 10px; max-height: 320px; overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-micro);
+  line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+}
+.doc-fix-form { display: grid; gap: 12px; }
+.doc-archive-confirm h3 { margin: 0; font-size: 15px; }
+.field-input--date { max-width: 200px; }
+@media (max-width: 639px) {
+  .doc-head .page-tools { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-flow: column; grid-auto-columns: 44px; gap: 8px; }
+  .doc-head .page-tools > .doc-primary { order: -1; min-height: 44px; }
+  .doc-tool, .doc-menu > summary { width: 44px; min-height: 44px; padding: 0; }
+  .doc-tool > svg { display: block; }
+  .doc-tool-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Ponuka ako plachta zdola. */
+  .doc-menu .mc-menu-list { position: fixed; left: 8px; right: 8px; top: auto; bottom: 8px; width: auto; }
+  .doc-archive-act { flex: 1 1 100%; }
+  .doc-archive-act .button { width: 100%; }
+  .more-sub { padding: 0 14px 14px; }
+  .doc-more .more-row > .button, .doc-more .more-acts .button { flex: 1 1 auto; }
 }

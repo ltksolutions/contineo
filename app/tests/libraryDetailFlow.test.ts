@@ -127,8 +127,10 @@ describe("detail — postup znenia", () => {
     expect(html).toContain("Uložiť a predložiť na schválenie")
     expect(html).toContain("Len uložiť")
     expect(html).toMatch(/value="p-marek" checked=""|checked="" value="p-marek"/)
-    // Tlačidlo v hlavičke je počas prípravy neaktívne.
-    expect(html).toContain('aria-disabled="true"')
+    // Počas prípravy namiesto zošedeného tlačidla odkaz na kartu postupu
+    // (KNIZNICA-akcie-dokumentu, 8. 10. 2026).
+    expect(html).not.toContain('aria-disabled="true"')
+    expect(html).toContain('<a class="button button--quiet doc-primary" href="#flow">Pokračovať v príprave</a>')
   })
 
   it("krok 1 po zamietnutí ukáže dôvod doslova", async () => {
@@ -444,12 +446,16 @@ describe("detail — oprava textu platného alebo pripravovaného znenia (fáza 
 })
 
 describe("detail — archivácia predpisu (ADR-025, D156)", () => {
-  it("platné znenie bez prípravy: v Správe formulár s dátumom a dôvodom", async () => {
+  it("platné znenie bez prípravy: v Ďalších akciách Archivovať…, formulár až pri ?archive=1", async () => {
     state.detail = detail({ draftMarkdown: effective.markdown, draftPdf: effective.pdf, draftMeta: null })
     const html = await render()
     expect(html).toContain("Archivovať predpis")
-    expect(html).toContain('name="until"')
-    expect(html).toContain('name="reason"')
+    expect(html).toContain('href="/library/sfz%3App?archive=1#more"')
+    expect(html).not.toContain('name="until"')
+    const open = await render({ archive: "1" })
+    expect(open).toContain('name="until"')
+    expect(open).toContain('name="reason"')
+    expect(open).not.toContain('?archive=1#more"')
   })
 
   it("počas prípravy nového znenia formulár nie je — karta povie prečo", async () => {

@@ -115,8 +115,8 @@ s výnimkami zapísanými pri riadku.
 **Hotové 6. 10. 2026** (PR „Hlavičky"): P1 a P10, R1 na zoznamoch kariet
 (Úlohy, kurzy, kurátorstvo, posúdenie, `/dpo`), filtre „Použiť" tiché.
 Výnimky: `/hr/overview` necháva CSV pod prepínačom (rozhodnutie rámu
-ZAKLAD-segmented-control); akcie detailu dokumentu (`.detail-actions`) a
-karty úloh zodpovednej osoby idú s úpravou knižnice.
+ZAKLAD-segmented-control); ~~akcie detailu dokumentu (`.detail-actions`) a
+karty úloh zodpovednej osoby~~ ✓ 8. 10. 2026 (KNIZNICA-akcie-dokumentu).
 
 **Hotové 6. 10. 2026** (PR „Formulárové kroky"): P7 (kroky nahrávania a
 úpravy dokumentu, nová trasa, oddelenia a ľudia na trase), termín trasy
@@ -163,9 +163,10 @@ je mechanické (jeden PR), čo čaká na rozhodnutie alebo návrh.
 
 ### 2. Knižnica — správcovia obsahu
 - **library** — v prázdnej knižnici dve plné „Nahrať dokument" (P10).
-- **library/[id]** — akcie dokumentu v `.detail-actions` pod štítkami, nie
+- **library/[id]** — ~~akcie dokumentu v `.detail-actions` pod štítkami, nie
   v `.page-head`; „Nové znenie" je plné naraz s „Uložiť základ", panelom
-  schvaľovania a „Prideliť vybraným" (r. 965, 993, 1299); úprava na
+  schvaľovania a „Prideliť vybraným" (r. 965, 993, 1299)~~ ✓ 8. 10. 2026
+  (KNIZNICA-akcie-dokumentu: `.page-tools`, Ďalšie akcie, `?archive=1`); úprava na
   `?edit=document` (R4); kroky úpravy `upload-step` a podnadpis
   `flow-section-title` (P7); značky cez `TagSelect` (P8); farby `diffStyle`
   (P13); pohľad zodpovednej osoby — plné tlačidlo v každej karte úlohy (R1).

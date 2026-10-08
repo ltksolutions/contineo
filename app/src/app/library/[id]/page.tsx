@@ -68,6 +68,7 @@ import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { archiveState, type ArchiveEntry } from "@/lib/documentArchiveState"
 import { draftBasisTaskFor } from "@/lib/versionResponsibilityDb"
 import SubmitButton from "@/components/SubmitButton"
+import Icon from "@/components/Icon"
 
 export const dynamic = "force-dynamic"
 
@@ -100,7 +101,7 @@ export default async function DocumentDetailPage({
     notFound()
   }
 
-  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string; similar?: string; like?: string; pick?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string; older?: string; fixTarget?: string; similar?: string; like?: string; pick?: string; archive?: string }>(await searchParams)
   const { msg: message, error } = query
   const openPanel = PANELS.includes(query.open as Panel) ? (query.open as Panel) : null
   const editDocument = query.edit === "document"
@@ -315,6 +316,8 @@ export default async function DocumentDetailPage({
     : hasChangesToPublish ? "draft"
     : running ? "round-open"
     : null
+  // Potvrdenie archivácie sa otvorí adresou (KNIZNICA-akcie-dokumentu, 8. 10. 2026).
+  const archiving = query.archive === "1"
   const approvedRound = [...draftRounds].reverse().find(r => r.outcome === "approved") ?? null
   // Meno namiesto adresy tam, kde kolo nesie len adresu predkladateľa.
   const nameOf = (email: string) => people.find(p => p.email.toLowerCase() === email.toLowerCase())?.fullName ?? email
@@ -965,22 +968,103 @@ export default async function DocumentDetailPage({
         Technické spracovanie sa ukazuje len keď niečo hovorí: hotový stav
         sa nekreslí, zlyhanie je červené (rovnako ako v zozname).
       */}
-      <div className="detail-chips">
-        <span className={statusTagClass(headerStatus)}>{statusPill(headerStatus)}</span>
-        {d.processingState !== "indexed" && (
-          <span className={d.processingState === "failed" ? "tag tag--expired" : "tag"}>
-            {tl.processing[d.processingState] ?? d.processingState}
-          </span>
-        )}
-        {d.category && <span className="tag quiet">{d.category}</span>}
+      {/*
+        Hlavička s nástrojmi vpravo (KNIZNICA-akcie-dokumentu, 8. 10. 2026;
+        SwiftUI `toolbar`). Štítky stavu sú v riadku pod nadpisom, aby nadpis
+        bol prvé, čo človek číta. Stav dokumentu farebne, tou istou funkciou
+        ako v zozname (DETAIL, úloha 2); technické spracovanie len keď niečo
+        hovorí: hotový stav sa nekreslí, zlyhanie je červené.
+      */}
+      <div className="page-head doc-head">
+        <div className="page-head-main">
+          <h1 className="page-title">{d.title}</h1>
+          <p className="page-lead doc-lead">
+            <span className={statusTagClass(headerStatus)}>{statusPill(headerStatus)}</span>
+            {d.processingState !== "indexed" && (
+              <span className={d.processingState === "failed" ? "tag tag--expired" : "tag"}>
+                {tl.processing[d.processingState] ?? d.processingState}
+              </span>
+            )}
+            {d.category && <span className="tag quiet">{d.category}</span>}
+            <span>
+              {d.documentId}
+              {` · ${folderName}`}
+              {current?.effectiveFrom && ` · ${t.effectiveFromOn(date(current.effectiveFrom))}`}
+            </span>
+          </p>
+        </div>
+        <div className="page-tools">
+          {/* Upraviteľný zdroj platného znenia (.docx a pod.) — predloha pre ďalšie znenie (ADR-011).
+              Ponuka len pri dvoch súboroch; pri jedinom priamy odkaz (Q1). */}
+          {shown?.pdf && shown.source ? (
+            <details className="mc-menu doc-menu">
+              <summary className="button button--quiet doc-tool" aria-label={tflow.download} title={tflow.download}>
+                <Icon name="download" size={18} /><span className="doc-tool-text">{tflow.download} <span aria-hidden="true">▾</span></span>
+              </summary>
+              <div className="mc-menu-list">
+                <a href={`/api/library/file/${encodeURIComponent(shown.pdf.id)}`} target="_blank" rel="noreferrer">
+                  {tflow.downloadPdfItem}
+                  <small>{[shown.label, shown.pdf.bytes ? formatSize(shown.pdf.bytes) : ""].filter(Boolean).join(" · ")}</small>
+                </a>
+                <a href={`/api/library/file/${encodeURIComponent(shown.source.id)}?download=1`} download={shown.source.name}>
+                  {tflow.downloadSourceItem}
+                  <small>{[fileExtension(shown.source.name), shown.source.bytes ? formatSize(shown.source.bytes) : ""].filter(Boolean).join(" · ")}</small>
+                </a>
+              </div>
+            </details>
+          ) : shown?.pdf ? (
+            <a className="button button--quiet doc-tool" href={`/api/library/file/${encodeURIComponent(shown.pdf.id)}`}
+               target="_blank" rel="noreferrer" aria-label={tflow.downloadPdf} title={tflow.downloadPdf}>
+              <Icon name="download" size={18} /><span className="doc-tool-text">{tflow.downloadPdf}</span>
+            </a>
+          ) : null}
+          <Link className="button button--quiet doc-tool" href={`${base}/edit`} aria-label={tflow.editDocument} title={tflow.editDocument}>
+            <Icon name="edit" size={18} /><span className="doc-tool-text">{tflow.editDocument}</span>
+          </Link>
+          {/*
+            Hlavná akcia, posledná ako v `toolbar`. Kým sa jedno znenie
+            pripravuje, nové sa začať nedá — namiesto zošedeného tlačidla
+            (dôvod v `title` sa na dotyk nedá prečítať) je odkaz na kartu
+            postupu, kde je dôvod aj ďalší krok; plné tlačidlo kroku je tam
+            (R2). FAQ (ADR-028) má editor záznamov, dostupný vždy. Archivovaný
+            predpis nové znenie mať môže — zverejnením znova platí (ADR-025;
+            rozhodnutie Jána 8. 10. 2026, návrh ho skrýval).
+          */}
+          {isFaq ? (
+            <Link className="button doc-primary" href={`${base}/faq`}>{tfaq.editEntries}</Link>
+          ) : newVersionBlocked ? (
+            <Link className="button button--quiet doc-primary" href="#flow">{tflow.continuePrep}</Link>
+          ) : (
+            <Link className="button doc-primary" href={newVersionHref}>{latest ? tflow.newVersion : tflow.uploadFirst}</Link>
+          )}
+        </div>
       </div>
 
-      <h1 className="page-title">{d.title}</h1>
-      <p className="quiet detail-lead">
-        {d.documentId}
-        {` · ${folderName}`}
-        {current?.effectiveFrom && ` · ${t.effectiveFromOn(date(current.effectiveFrom))}`}
-      </p>
+      {/*
+        Archivovaný predpis (ADR-025) — stav dokumentu ako hláška hneď pod
+        hlavičkou, nie ďalšia karta (KNIZNICA-akcie-dokumentu): naplánované
+        varovne, platné červeno. Obnovenie je tichá akcia v hláške.
+      */}
+      {archive.archived && (
+        <div className={`lnote doc-archive ${archive.inEffect ? "lnote--bad" : "lnote--warn"}`} id="archive" role="note">
+          <span className="lnote-mark" aria-hidden="true">!</span>
+          <div className="lnote-text doc-archive-text">
+            <strong>
+              {archive.inEffect
+                ? tflow.archive.bannerInEffect(date(archive.entry.effectiveTo))
+                : tflow.archive.bannerScheduled(date(new Date(archive.entry.effectiveTo.getTime() - 86_400_000)))}
+            </strong>
+            <span>{(archive.entry as ArchiveEntry).reason}</span>
+            <span className="doc-archive-meta">{tflow.archive.bannerMeta(nameOf(archive.entry.by), date(archive.entry.at))}</span>
+          </div>
+          <form action={restoreDocumentAction} className="doc-archive-act">
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <SubmitButton className="button button--quiet button--sm" title={tflow.archive.restoreHint}>
+              {tflow.archive.restore}<span className="sr-only"> — {tflow.archive.restoreHint}</span>
+            </SubmitButton>
+          </form>
+        </div>
+      )}
 
       {/*
         Úloha správcu, ktorý je **sám** zodpovednou osobou znenia a základ ešte
@@ -991,38 +1075,8 @@ export default async function DocumentDetailPage({
         .filter(task => !task.version.legalBasis)
         .map(task => (
           <VersionBasisCard key={task.version.versionId} documentId={d.documentId} version={task.version}
-                            upcoming={task.upcoming} options={basisOptions} language={language} />
+                            upcoming={task.upcoming} options={basisOptions} language={language} quiet />
         ))}
-
-      {/*
-        Akcie v hlavičke (bod 1 rámu). „Nové znenie" je hlavné tlačidlo, nie
-        formulár schovaný v správe. Kým sa jedno znenie pripravuje, je
-        neaktívne a `title` povie prečo — súbory sa vtedy vymieňajú v príprave.
-      */}
-      <div className="detail-actions">
-        {shown?.pdf && (
-          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(shown.pdf.id)}`} target="_blank" rel="noreferrer">
-            {tflow.downloadPdf}
-          </a>
-        )}
-        {/* Upraviteľný zdroj platného znenia (.docx a pod.) — predloha pre ďalšie znenie (ADR-011). */}
-        {shown?.source && (
-          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(shown.source.id)}?download=1`}
-             download={shown.source.name}>
-            {tflow.downloadSource}
-          </a>
-        )}
-        <Link className="button button--quiet" href={`${base}/edit`}>{tflow.editDocument}</Link>
-        {isFaq ? (
-          <Link className="button" href={`${base}/faq`}>{tfaq.editEntries}</Link>
-        ) : newVersionBlocked ? (
-          <span className="button is-disabled" aria-disabled="true" title={latest ? tflow.newVersionBusy : tflow.newVersionFirst}>
-            {tflow.newVersion}
-          </span>
-        ) : (
-          <Link className="button" href={newVersionHref}>{tflow.newVersion}</Link>
-        )}
-      </div>
 
       <div className="detail-grid">
         <div className="detail-main">
@@ -1375,24 +1429,6 @@ export default async function DocumentDetailPage({
       </section>
       )}
 
-      {/* Archivovaný predpis (ADR-025) — pás nad zneniami, s kým, kedy a prečo. */}
-      {archive.archived && (
-        <section className={`card detail-block archive-banner${archive.inEffect ? " is-archived" : ""}`} id="archive">
-          <h2 className="detail-block-title">
-            {archive.inEffect
-              ? tflow.archive.bannerInEffect(date(archive.entry.effectiveTo))
-              : tflow.archive.bannerScheduled(date(new Date(archive.entry.effectiveTo.getTime() - 86_400_000)))}
-          </h2>
-          <p className="detail-block-note" style={{ margin: 0 }}>{(archive.entry as ArchiveEntry).reason}</p>
-          <p className="detail-block-small" style={{ margin: 0 }}>{tflow.archive.bannerMeta(nameOf(archive.entry.by), date(archive.entry.at))}</p>
-          <form action={restoreDocumentAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-            <input type="hidden" name="documentId" value={d.documentId} />
-            <SubmitButton className="button button--quiet">{tflow.archive.restore}</SubmitButton>
-            <span className="quiet field-hint">{tflow.archive.restoreHint}</span>
-          </form>
-        </section>
-      )}
-
       {/* ── Platné znenie ako súhrn (bod 3 rámu) a zverejnená novela, ktorá ešte neplatí ── */}
       {current && versionCard(current, "current", tflow.currentHeading)}
       {upcoming && versionCard(upcoming, `v-${upcoming.versionId}`, tflow.upcomingHeading, tflow.upcomingNote(date(upcoming.effectiveFrom)))}
@@ -1479,110 +1515,60 @@ export default async function DocumentDetailPage({
       )}
 
       {/*
-        Správa — vzácne úkony za jedným nadpisom (DETAIL, úloha 1): údaje
-        o dokumente, text a pôvodný súbor, priečinok, oprava textu,
-        preindexovanie. Zatvorené je správny predvolený stav; „Upraviť
-        dokument" ju otvorí adresou (`/library/[id]/edit`), bez JavaScriptu.
+        Ďalšie akcie — zriedkavé úkony v riadkoch (KNIZNICA-akcie-dokumentu,
+        8. 10. 2026; predtým `<details>` „Správa", DETAIL úloha 1). Vratné
+        tiché, archivácia jediná `.button--danger` a jej formulár sa otvorí
+        až adresou `?archive=1` — bez JavaScriptu, ako karta osoby.
       */}
-      <details className="detail-tools">
-        <summary>{tflow.manage}</summary>
-        <div className="detail-tools-body">
-      {/* Archivácia predpisu (ADR-025, D156) — dátum môže byť aj v budúcnosti. */}
-      {!archive.archived && d.versions.length > 0 && (
-        <section className="card detail-block" id="archive-form">
-          <h2 className="detail-block-title">{tflow.archive.heading}</h2>
-          <p className="detail-block-note" style={{ margin: 0 }}>{tflow.archive.intro}</p>
-          {archiveBlocked ? (
-            <p className="detail-block-small" style={{ margin: 0 }}>
-              {tflow.archive.blocked} {errorText(new AppError(`archive.${archiveBlocked}`, archiveBlocked), language)}
-            </p>
-          ) : (
-            <form action={archiveDocumentAction} style={{ display: "grid", gap: 12 }}>
-              <input type="hidden" name="documentId" value={d.documentId} />
-              <label className="field">
-                <span className="field-label">{tflow.archive.until}</span>
-                <input className="field-input" type="date" name="until" required style={{ maxWidth: 200 }}
-                       defaultValue={new Date().toISOString().slice(0, 10)} />
-                <span className="quiet field-hint">{tflow.archive.untilHint}</span>
-              </label>
-              <label className="field">
-                <span className="field-label">{tflow.archive.reason}</span>
-                <textarea className="field-input" name="reason" rows={2} required maxLength={500} placeholder={tflow.archive.reasonHint} />
-              </label>
-              <div><SubmitButton className="button button--danger">{tflow.archive.submit}</SubmitButton></div>
-            </form>
-          )}
-        </section>
-      )}
-      {/* Pôvod z MCP konektora (ADR-029, použitie B): odkiaľ článok je a kontrola zmien. */}
-      {d.source && d.source.type === "mcp" && (
-        <section className="card detail-block" id="source">
-          <h2 className="detail-block-title">{tci.sourceHeading}</h2>
-          <p className="detail-block-note" style={{ margin: 0 }}>{tci.sourceLine(d.source.connectorName, d.source.group, formatDate(new Date(d.source.fetchedAt), language))}</p>
-          <p className="detail-block-small" style={{ margin: 0 }}>{tci.sourcePath}: <code>{d.source.externalId}</code></p>
-          <form action={resyncConnectorDocumentAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-            <input type="hidden" name="documentId" value={d.documentId} />
-            <SubmitButton className="button button--quiet">{tci.resync}</SubmitButton>
-            <span className="quiet field-hint">{tci.resyncHint}</span>
-          </form>
-        </section>
-      )}
-      <section className="card detail-block">
-        <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-          <h2 className="detail-block-title">{t.text}</h2>
-          {isFaq ? (
-            // Text FAQ sa skladá zo záznamov — editor textu by ho prepísal naprázdno.
-            <Link href={`${base}/faq`}>{tfaq.openEntries}</Link>
-          ) : (
-            <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
-          )}
-          {/* Ako je text narezaný pre asistenta (ADR-027, krok A). */}
-          <Link href={`/library/${encodeURIComponent(documentId)}/chunks`}>{dictionary(language).library.chunks.openLink}</Link>
+      <section className="card more doc-more" id="more">
+        <div className="more-head"><h2>{dictionary(language).common.moreActions}</h2></div>
+
+        {/* Text dokumentu: editor, členenie pre asistenta (ADR-027), pôvodný súbor a koncept. */}
+        <div className="more-row">
+          <div className="more-main">
+            <b>{t.text}</b>
+            <span>{tflow.textRowNote}</span>
+            <span>
+              {d.originalFile ? (
+                <>
+                  {t.originalFile}{" "}
+                  <a href={`/api/library/file/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
+                    {d.originalFile.name}
+                  </a>{" "}
+                  · {t.uploadedBy(d.originalFile.uploadedBy, formatDate(d.originalFile.uploadedAt, language))}
+                  {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
+                </>
+              ) : t.noOriginal}
+            </span>
+            {/* PDF a zdroj konceptu (ADR-011). PDF je to, čo sa schvaľuje. */}
+            {d.draftPdf ? (
+              <span>
+                {t.draftPdf} <FileLink file={d.draftPdf} />
+                {d.draftSource && <> · {t.draftSource} <FileLink file={d.draftSource} download /></>}
+              </span>
+            ) : d.draftMarkdown && <span>{t.noDraftPdf}</span>}
+            {d.conversion?.warnings?.length ? (
+              <ul className="doc-warnings">
+                {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
+              </ul>
+            ) : null}
+            <span>{hasChangesToPublish ? t.draftDiffers : draft || published ? t.draftSame : t.draftEmpty}</span>
+          </div>
+          <div className="more-acts">
+            {isFaq ? (
+              // Text FAQ sa skladá zo záznamov — editor textu by ho prepísal naprázdno.
+              <Link className="button button--quiet" href={`${base}/faq`}>{tflow.openFaqEntries}</Link>
+            ) : (
+              <Link className="button button--quiet" href={`${base}/text`}>{tflow.openTextEditor}</Link>
+            )}
+            <Link className="button button--quiet" href={`${base}/chunks`}>{tflow.openChunks}</Link>
+          </div>
         </div>
-
-        {d.originalFile ? (
-          <p className="detail-block-note">
-            {t.originalFile}{" "}
-            <a href={`/api/library/file/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
-              {d.originalFile.name}
-            </a>{" "}
-            · {t.uploadedBy(d.originalFile.uploadedBy, formatDate(d.originalFile.uploadedAt, language))}
-            {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
-          </p>
-        ) : (
-          <p className="detail-block-note">
-            {t.noOriginal}
-          </p>
-        )}
-        {/* PDF a zdroj konceptu (ADR-011). PDF je to, čo sa schvaľuje. */}
-        {d.draftPdf ? (
-          <p className="detail-block-note">
-            {t.draftPdf} <FileLink file={d.draftPdf} />
-            {d.draftSource && <> · {t.draftSource} <FileLink file={d.draftSource} download /></>}
-          </p>
-        ) : d.draftMarkdown && (
-          <p className="detail-block-note">{t.noDraftPdf}</p>
-        )}
-
-        {d.conversion?.warnings?.length ? (
-          <ul className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0, paddingLeft: 18 }}>
-            {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
-          </ul>
-        ) : null}
-
-        <p className="detail-block-small">
-          {hasChangesToPublish
-            ? t.draftDiffers
-            : draft || published
-              ? t.draftSame
-              : t.draftEmpty}
-        </p>
-      </section>
             {fixTarget && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
-              <details className="card detail-block" id="fix" open={Boolean(query.fixTarget)}>
+              <details className="more-sub" id="fix" open={Boolean(query.fixTarget)}>
                 <summary>{t.textFixHeading}</summary>
 
-                <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+                <div className="more-sub-body">
                   <p className="detail-block-note">{t.textFixIntro}</p>
                   <p className="detail-block-small">
                     <strong>{t.textFixTarget(fixTarget.label)}</strong>
@@ -1592,29 +1578,17 @@ export default async function DocumentDetailPage({
                   </p>
 
                   <div>
-                    <h4 className="field-label" style={{ margin: "0 0 6px" }}>
+                    <h4 className="field-label doc-diff-head">
                       {`${t.textFixDiffHeading} · ${t.textFixDiffStat(draftDiff.added, draftDiff.removed)}`}
                     </h4>
                     {draftDiff.coarse && (
-                      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 6px" }}>{t.textFixCoarse}</p>
+                      <p className="quiet doc-diff-note">{t.textFixCoarse}</p>
                     )}
                     {/*
                       Riadky sa zalamujú, nerolujú do strany: na telefóne je
                       vodorovné rolovanie v texte predpisu neprečítateľné.
                     */}
-                    <div
-                      className="card"
-                      style={{
-                        padding: 10,
-                        maxHeight: 320,
-                        overflowY: "auto",
-                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-                        fontSize: "var(--fs-micro)",
-                        lineHeight: 1.55,
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                      }}
-                    >
+                    <div className="card doc-diff">
                       {draftDiff.lines.map((line, i) => (
                         <div key={i} style={diffStyle(line.kind)}>
                           {line.kind === "gap"
@@ -1627,7 +1601,7 @@ export default async function DocumentDetailPage({
 
                   <p className="detail-block-small">{t.textFixApprovalNote}</p>
 
-                  <form action={fixTextAction} style={{ display: "grid", gap: 12 }}>
+                  <form action={fixTextAction} className="doc-fix-form">
                     <input type="hidden" name="documentId" value={d.documentId} />
                     {/*
                       Odtlačok toho, čo je práve na obrazovke. Server overí, že sa
@@ -1649,16 +1623,71 @@ export default async function DocumentDetailPage({
                 </div>
               </details>
             )}
-      <form action={reindexDocumentAction} className="card detail-block">
-        <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 className="detail-block-title">{t.reindexHeading}</h2>
-        <p className="detail-block-note">
-          {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
-        </p>
-        <div><SubmitButton className="button button--quiet">{t.reindex}</SubmitButton></div>
-      </form>
-        </div>
-      </details>
+
+        {/* Pôvod z MCP konektora (ADR-029, použitie B): odkiaľ článok je a kontrola zmien. */}
+        {d.source && d.source.type === "mcp" && (
+          <form action={resyncConnectorDocumentAction} className="more-row" id="source">
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <div className="more-main">
+              <b>{tci.sourceHeading}</b>
+              <span>{tci.sourceLine(d.source.connectorName, d.source.group, formatDate(new Date(d.source.fetchedAt), language))}</span>
+              <span>{tci.sourcePath}: <code>{d.source.externalId}</code> · {tci.resyncHint}</span>
+            </div>
+            <SubmitButton className="button button--quiet">{tci.resync}</SubmitButton>
+          </form>
+        )}
+
+        <form action={reindexDocumentAction} className="more-row">
+          <input type="hidden" name="documentId" value={d.documentId} />
+          <div className="more-main">
+            <b>{t.reindexHeading}</b>
+            <span>{t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}</span>
+          </div>
+          <SubmitButton className="button button--quiet">{t.reindex}</SubmitButton>
+        </form>
+
+        {/*
+          Archivácia predpisu (ADR-025, D156) — dátum môže byť aj v budúcnosti.
+          Keď sa nedá, riadok povie prečo namiesto zošedeného tlačidla (Q2);
+          server to overí znova (`archiveProblem()`).
+        */}
+        {!archive.archived && d.versions.length > 0 && (
+          <>
+            <div className="more-row" id="archive-form">
+              <div className="more-main">
+                <b>{tflow.archive.heading}</b>
+                <span>{tflow.archive.intro}</span>
+                {archiveBlocked && (
+                  <span>{tflow.archive.blocked} {errorText(new AppError(`archive.${archiveBlocked}`, archiveBlocked), language)}</span>
+                )}
+              </div>
+              {!archiveBlocked && !archiving && (
+                <Link className="button button--danger" href={`${base}?archive=1#more`}>{tflow.archive.open}</Link>
+              )}
+            </div>
+            {!archiveBlocked && archiving && (
+              <form action={archiveDocumentAction} className="more-confirm doc-archive-confirm">
+                <input type="hidden" name="documentId" value={d.documentId} />
+                <h3>{tflow.archive.confirmHeading(d.title)}</h3>
+                <label className="field">
+                  <span className="field-label">{tflow.archive.until}</span>
+                  <input className="field-input field-input--date" type="date" name="until" required
+                         defaultValue={new Date().toISOString().slice(0, 10)} />
+                  <span className="quiet field-hint">{tflow.archive.untilHint}</span>
+                </label>
+                <label className="field">
+                  <span className="field-label">{tflow.archive.reason}</span>
+                  <textarea className="field-input" name="reason" rows={2} required maxLength={500} placeholder={tflow.archive.reasonHint} />
+                </label>
+                <div className="more-acts">
+                  <SubmitButton className="button button--danger">{tflow.archive.submit}</SubmitButton>
+                  <Link className="button button--quiet" href={`${base}#more`}>{tflow.cancel}</Link>
+                </div>
+              </form>
+            )}
+          </>
+        )}
+      </section>
         </div>
 
         {/*
@@ -1755,6 +1784,12 @@ function FileLink({ file, download = false, label, className }: { file: VersionF
 }
 
 /** Veľkosť súboru pre človeka — „1,3 MB". */
+/** Typ súboru z názvu pre ponuku Stiahnuť („DOCX"); bez prípony nič. */
+function fileExtension(name: string): string {
+  const m = /\.([a-z0-9]{1,6})$/i.exec(name)
+  return m ? m[1].toUpperCase() : ""
+}
+
 function formatSize(bytes: number): string {
   const mb = bytes / 1024 / 1024
   return mb >= 0.1 ? `${mb.toFixed(1).replace(".", ",")} MB` : `${Math.max(1, Math.round(bytes / 1024))} kB`
@@ -1877,20 +1912,27 @@ async function responsibleBasisPage(documentId: string, raw: RawQuery) {
   const tr = dictionary(language).responsibility
   const options = legalBasisOptions(ctx.tenant)
   const title = doc?.title ?? draftTask!.title
+  const many = tasks.length + (draftTask ? 1 : 0) > 1
   return (
     <AppShell language={language} title={title}>
-      <div style={{ maxWidth: 760, ...tenantStyle(brandingView(ctx.tenant)) }}>
+      {/* KNIZNICA-akcie-dokumentu (8. 10. 2026): `.page-head` a `.page-narrow`
+          namiesto inline šírky. Pri viacerých kartách tiché uloženie (R1, Q4). */}
+      <div className="page-narrow" style={tenantStyle(brandingView(ctx.tenant))}>
         <Notice language={language} message={query.msg} error={query.error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
-        <h1 className="page-title">{title}</h1>
-        <p className="quiet detail-lead">
-          {tr.basisPageLead}
-          {doc && <> · <Link href={`/documents/${encodeURIComponent(documentId)}`}>{tr.basisPageRead}</Link></>}
-        </p>
+        <div className="page-head">
+          <div className="page-head-main">
+            <h1 className="page-title">{title}</h1>
+            <p className="page-lead doc-lead">
+              <span>{tr.basisPageLead}</span>
+              {doc && <Link href={`/documents/${encodeURIComponent(documentId)}`}>{tr.basisPageRead}</Link>}
+            </p>
+          </div>
+        </div>
         {tasks.map(task => (
           <VersionBasisCard key={task.version.versionId} documentId={documentId} version={task.version}
-                            upcoming={task.upcoming} options={options} language={language} />
+                            upcoming={task.upcoming} options={options} language={language} quiet={many} />
         ))}
-        {draftTask && <DraftBasisCard task={draftTask} options={options} language={language} />}
+        {draftTask && <DraftBasisCard task={draftTask} options={options} language={language} quiet={many} />}
       </div>
     </AppShell>
   )

@@ -254,6 +254,9 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="m12 7 4 4M16 7l-4 4" />
     </>
   ),
+  // Nástroje detailu dokumentu na telefóne (KNIZNICA-akcie-dokumentu, 8. 10. 2026).
+  edit: <path d="M11.8 3.2l3 3L6.4 14.6l-3.6.6.6-3.6zM10.4 4.6l3 3" />,
+  download: <path d="M9 2.8v8.4M5.4 7.8 9 11.4l3.6-3.6M3 14.6h12" />,
   fullscreen: <path d="M2.8 6.4V2.8h3.6M11.6 2.8h3.6v3.6M15.2 11.6v3.6h-3.6M6.4 15.2H2.8v-3.6" />,
   more: (
     <>

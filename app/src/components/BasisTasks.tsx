@@ -75,13 +75,15 @@ function BasisPdfLink({ href, name, bytes, label }: { href: string; name: string
 
 /** Zverejnené znenie — dnes platné alebo vopred zverejnená novela. */
 export function VersionBasisCard({
-  documentId, version, upcoming, options, language,
+  documentId, version, upcoming, options, language, quiet = false,
 }: {
   documentId: string
   version: Version
   upcoming: boolean
   options: Options
   language: UiLanguage
+  /** Tiché uloženie — viac kariet alebo iná hlavná akcia na obrazovke (R1). */
+  quiet?: boolean
 }) {
   const t = dictionary(language)
   const tr = t.responsibility
@@ -108,6 +110,7 @@ export function VersionBasisCard({
         options={options}
         language={language}
         back="library"
+        quiet={quiet}
       />
     </BasisTask>
   )
@@ -115,11 +118,13 @@ export function VersionBasisCard({
 
 /** Pripravované znenie pre jeho zodpovednú osobu (ADR-023, D139). */
 export function DraftBasisCard({
-  task, options, language,
+  task, options, language, quiet = false,
 }: {
   task: DraftBasisTask
   options: Options
   language: UiLanguage
+  /** Tiché uloženie — viac kariet na obrazovke (R1). */
+  quiet?: boolean
 }) {
   const t = dictionary(language)
   const tr = t.responsibility
@@ -156,6 +161,7 @@ export function DraftBasisCard({
         options={options}
         language={language}
         back="library"
+        quiet={quiet}
       />
     </BasisTask>
   )
