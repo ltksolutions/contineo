@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Editor FAQ: hľadanie podkladu a hľadanie v záznamoch (2026-10-08)
+
+- Pri **Novom zázname** je **Hľadať podklad**: otázka a prepínače, kde hľadať
+  — **Knižnica** (predvolene) a každý pripojený konektor s rozsahom.
+  Výsledky z knižnice majú **Použiť ako zdroj** (doplní dokument a článok)
+  a **Vložiť do odpovede**; z konektora **Vložiť do odpovede** a **Importovať
+  článok** (alebo Použiť ako zdroj, keď už v knižnici je). Rozpísaný záznam
+  sa pri hľadaní nestratí; funguje bez JavaScriptu.
+- Nad zoznamom záznamov je **Hľadať v záznamoch** — bez diakritiky, v otázke,
+  ďalších zneniach, odpovedi aj „pre koho"; čísla záznamov sa nemenia.
+
 ### Nahrať dokument: dva spôsoby vzniku, druh a značky (2026-10-08, D179)
 
 - **Nahrať dokument** začína rozcestníkom: **dokument zo súboru** (predpis,

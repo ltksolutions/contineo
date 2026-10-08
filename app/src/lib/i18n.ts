@@ -3367,6 +3367,29 @@ interface Dictionary {
       intro: string
       empty: string
       addHeading: string
+      /** Pomocník pri písaní záznamu: hľadanie podkladu (faqAssist.ts). */
+      assist: {
+        heading: string
+        hint: string
+        query: string
+        sources: string
+        library: string
+        search: string
+        noSource: string
+        none: string
+        failed: (source: string) => string
+        useSource: string
+        insert: string
+        import: string
+        imported: string
+        internal: string
+      }
+      /** Hľadanie v záznamoch tohto FAQ (filterEntries). */
+      find: string
+      findButton: string
+      findClear: string
+      findCount: (shown: number, total: number) => string
+      findNone: string
       editHeading: (n: number) => string
       question: string
       questionHint: string
@@ -6006,7 +6029,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavenia GDPR sú uložené.",
     },
     connectors: {
-      intro: "Pripojenie k cudziemu MCP serveru s viacerými použitiami. Živý zdroj: asistent pri otázke hľadá aj na serveri a výsledok cituje ako neoverený. Import do knižnice a nástroje asistenta pribudnú.",
+      intro: "Pripojenie k cudziemu MCP serveru s viacerými použitiami. Živý zdroj: asistent pri otázke hľadá aj na serveri a výsledok cituje ako neoverený. Import do knižnice: články zo servera sa prevezmú ako dokumenty (Knižnica → Nahrať dokument → Import zo servera) a ďalej prejdú schválením. Rozsahy sú pomenované výseky obsahu servera — kanál si vyberá, ktoré smie použiť. Nástroje asistenta pribudnú.",
       none: "Zatiaľ žiadny konektor.",
       add: "Pridať konektor",
       edit: "Upraviť",
@@ -7752,6 +7775,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Jeden záznam je jedna otázka a odpoveď. Asistent z každého záznamu urobí jeden úsek; prístup k záznamu je najprísnejší z prístupu tohto FAQ a jeho zdrojov.",
       empty: "Zatiaľ žiadny záznam.",
       addHeading: "Nový záznam",
+      assist: {
+        heading: "Hľadať podklad",
+        hint: "Nájdi odpoveď v knižnici alebo na pripojenom serveri a vlož ju do záznamu. To, čo máš rozpísané, sa pri hľadaní nestratí.",
+        query: "Čo hľadáš",
+        sources: "Kde hľadať",
+        library: "Knižnica",
+        search: "Hľadať",
+        noSource: "Vyber aspoň jedno miesto, kde hľadať.",
+        none: "Nič sa nenašlo.",
+        failed: source => `${source}: hľadanie sa nepodarilo.`,
+        useSource: "Použiť ako zdroj",
+        insert: "Vložiť do odpovede",
+        import: "Importovať článok →",
+        imported: "už v knižnici",
+        internal: "interný",
+      },
+      find: "Hľadať v záznamoch",
+      findButton: "Hľadať",
+      findClear: "Zrušiť",
+      findCount: (shown, total) => `Zobrazené ${shown} z ${total}`,
+      findNone: "Žiadny záznam nevyhovuje.",
       editHeading: (n: number) => `Záznam ${n}`,
       question: "Otázka",
       questionHint: "Tak, ako ju ľudia kladú — jedna veta.",
@@ -10346,7 +10390,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavení GDPR jsou uložena.",
     },
     connectors: {
-      intro: "Připojení k cizímu MCP serveru s více použitími. Živý zdroj: asistent při dotazu hledá i na serveru a výsledek cituje jako neověřený. Import do knihovny a nástroje asistenta přibudou.",
+      intro: "Připojení k cizímu MCP serveru s více použitími. Živý zdroj: asistent při dotazu hledá i na serveru a výsledek cituje jako neověřený. Import do knihovny: články ze serveru se převezmou jako dokumenty (Knihovna → Nahrát dokument → Import ze serveru) a dále projdou schválením. Rozsahy jsou pojmenované výseky obsahu serveru — kanál si vybírá, které smí použít. Nástroje asistenta přibudou.",
       none: "Zatím žádný konektor.",
       add: "Přidat konektor",
       edit: "Upravit",
@@ -12089,6 +12133,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Jeden záznam je jedna otázka a odpověď. Asistent z každého záznamu udělá jeden úsek; přístup k záznamu je nejpřísnější z přístupu tohoto FAQ a jeho zdrojů.",
       empty: "Zatím žádný záznam.",
       addHeading: "Nový záznam",
+      assist: {
+        heading: "Hledat podklad",
+        hint: "Najdi odpověď v knihovně nebo na připojeném serveru a vlož ji do záznamu. Co máš rozepsané, se při hledání neztratí.",
+        query: "Co hledáš",
+        sources: "Kde hledat",
+        library: "Knihovna",
+        search: "Hledat",
+        noSource: "Vyber alespoň jedno místo, kde hledat.",
+        none: "Nic se nenašlo.",
+        failed: source => `${source}: hledání se nepodařilo.`,
+        useSource: "Použít jako zdroj",
+        insert: "Vložit do odpovědi",
+        import: "Importovat článek →",
+        imported: "už v knihovně",
+        internal: "interní",
+      },
+      find: "Hledat v záznamech",
+      findButton: "Hledat",
+      findClear: "Zrušit",
+      findCount: (shown, total) => `Zobrazeno ${shown} z ${total}`,
+      findNone: "Žádný záznam nevyhovuje.",
       editHeading: (n: number) => `Záznam ${n}`,
       question: "Otázka",
       questionHint: "Tak, jak ji lidé kladou — jedna věta.",
@@ -14675,7 +14740,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "GDPR settings saved.",
     },
     connectors: {
-      intro: "A connection to an external MCP server with several uses. Live source: the assistant also searches the server when asked and cites the result as unreviewed. Import into the library and assistant tools come later.",
+      intro: "A connection to an external MCP server with several uses. Live source: the assistant also searches the server when asked and cites the result as unreviewed. Import into the library: articles from the server are taken over as documents (Library → Upload document → Import from a server) and then go through approval. Scopes are named slices of the server's content — a channel chooses which it may use. Assistant tools come later.",
       none: "No connector yet.",
       add: "Add connector",
       edit: "Edit",
@@ -16412,6 +16477,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "One entry is one question and answer. The assistant turns each entry into one chunk; access to an entry is the strictest of this FAQ's access and its sources.",
       empty: "No entries yet.",
       addHeading: "New entry",
+      assist: {
+        heading: "Find source material",
+        hint: "Find the answer in the library or on a connected server and put it into the entry. What you have written so far is kept while you search.",
+        query: "What are you looking for",
+        sources: "Where to search",
+        library: "Library",
+        search: "Search",
+        noSource: "Choose at least one place to search.",
+        none: "Nothing found.",
+        failed: source => `${source}: the search failed.`,
+        useSource: "Use as source",
+        insert: "Insert into answer",
+        import: "Import article →",
+        imported: "already in the library",
+        internal: "internal",
+      },
+      find: "Search entries",
+      findButton: "Search",
+      findClear: "Clear",
+      findCount: (shown, total) => `Showing ${shown} of ${total}`,
+      findNone: "No entry matches.",
       editHeading: (n: number) => `Entry ${n}`,
       question: "Question",
       questionHint: "The way people actually ask it — one sentence.",
