@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-08** (MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
+Posledná aktualizácia: **2026-10-08** (doplnené 5.–6. 10.: AI organizácie ADR-026, editor členenia ADR-027, stav tlačidiel PR #269–#271; MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
 
 ---
 
@@ -213,7 +213,8 @@ Vzdelávania (ADR-021).
    hodnotenia už majú časy fáz aj tokeny). Pár dní zbierať hodnotenia,
    potom `node --env-file=.env.local scripts/ratings_overview.mjs`
    a rozhodnúť o hlavnom modeli — ten (2,8–6,2 s po prvý token) je
-   najväčšia položka, prah D9 je p95 pod 2 s.
+   najväčšia položka, prah D9 je p95 pod 2 s. Model sa od 5. 10. vyberá
+   v Organizácia → Umelá inteligencia (ADR-026), bez nasadenia.
 3. **Dátum skončenia na karte osoby** — overiť pri prvom skutočnom odchode
    (zadáva sa pri vyradení; zvyšok `/dpo` je overený, `docs/TODO.md`).
 

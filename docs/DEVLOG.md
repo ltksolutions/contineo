@@ -209,6 +209,43 @@ skončí na novej adrese; v produkčných dátach nie je kurz s kľúčom `topic
 
 ---
 
+## 2026-10-06 — tlačidlá ukazujú, že akcia beží (PR #269–#271)
+
+**Podnet:** Ján pridával ľudí na trasu cez výber oddelenia a po „Pridať na
+trasu" sa dlho nedialo nič. Akcia nebola pomalá v databáze (jeden
+`updateMany`), ale v e-mailoch: rozposiela ich po päť naraz a pri väčšom
+oddelení to trvá desiatky sekúnd. Tlačidlo bolo obyčajné `<button>`.
+
+**Čo sa zmenilo:** najprv personalistika a pozvánky (#269, `pendingLabel`
+„Pridávam…" / „Posielam e-maily…"), na Jánovo „nech majú jednotné
+správanie" všetky odosielacie tlačidlá serverových akcií (#270, 73 tlačidiel
+v 24 súboroch) a nakoniec tých päť, ktoré stoja mimo svojho formulára cez
+`form="…"` (#271). `SubmitButton` teraz zablokuje **všetky** tlačidlá
+formulára, ale krúžok ukáže len na tom, na ktoré sa kliklo — inak by pri
+„Schváliť" / „Vrátiť" točili obe.
+
+**Čo nevyšlo hneď:**
+- Hromadná zámena regulárnym výrazom preskočila tri tlačidlá: skryté
+  `<button … />` pre Enter sa zhltlo až po nasledujúce `</button>`. Nič sa
+  nepokazilo (zhltnutý kus sa preskočil celý), len chýbali; dorobené ručne.
+- `aria-pressed` na `SubmitButton` prešlo cez `tsc` bez chyby a ticho sa
+  zahodilo — TypeScript atribúty s pomlčkou na komponente nekontroluje.
+  Pribudol `ariaPressed`. Pri ďalšej podobnej zámene grepnúť `aria-|data-`.
+- Reset stavu v `useEffect` zhodil eslint (`set-state-in-effect`); stav
+  odvodený z predchádzajúceho sa upravuje počas vykresľovania.
+- `useFormStatus()` vidí len formulár, v ktorom komponent v Reacte naozaj
+  je — tlačidlo s `form="…"` nikdy. Riešenie `FormPendingSignal` v cieľovom
+  formulári a mapa v `lib/formPending.ts` čítaná cez `useSyncExternalStore`.
+
+**Overenie naostro:** Uložiť názov trasy (krúžok, „Názov je uložený."),
+„Skontrolovať dopad" pri prideľovaní (krúžok len na ňom, „Prideliť" len
+zablokované; neplatný formulár nenechá visieť stav), „Odstrániť kľúč" pri
+AI s požiadavkou zablokovanou v prehliadači — kľúč ostal. Simulované
+ťahanie v strome oddelení nebolo spoľahlivé, ostatné štyri tlačidlá mimo
+formulára sú overené len testami.
+
+---
+
 ## 2026-10-06 — odpovede v teste ako riadky (R7)
 
 **Čo sa zmenilo:** v pokuse o test sú textové odpovede `.form-row` v
@@ -440,6 +477,47 @@ ResponsiblePicker, LegalBasisForm, schvaľovatelia v príprave znenia
 a kategória právneho základu v organizácii mali legendu v čiare tiež.
 Podľa promptu návrhu prešli na nový vzor aj ony. Skupina v skupine
 (zodpovedné osoby v „Základ" testu) kartu nekreslí — rám v ráme.
+
+---
+
+## 2026-10-05 — telefón, AI organizácie a editor členenia
+
+**Telefón (PR #250, #252):** pole „Predvoľba telefónu" v nastaveniach bolo
+mätúce — Ján doň napísal celé číslo. Teraz je v nastaveniach výber krajiny
+a pri osobe krajina s predvoľbou a číslo, ktoré sa overí podľa zvolenej
+krajiny (`libphonenumber-js`).
+
+**Reťaz dôkazov (PR #251):** od najnovšieho.
+
+**AI v organizácii (ADR-026, D157–D159, PR #253–#256):** vlastný kľúč
+Anthropic (šifrovaný) a model pre každú úlohu; prehľad spotreby s filtrom,
+CSV a Excelom. Rozhodnuté s Jánom: text otázky sa neukladá, bez kľúča sa
+padá na kľúč prevádzkovateľa, spotreba 25 mesiacov (TTL 761 dní). Ján
+vložil vlastný kľúč a otázka sa zapísala ako „kľúč organizácie". GDPR text
+doplnený vo všetkých troch jazykoch (`PRIVACY_NOTICE_VERSION` 2026-10-05).
+
+**Členenie (ADR-027, D160):** záložka Členenie v nastaveniach organizácie
+zmizla (PR #257). Namiesto nej pomocný editor pri dokumente
+`/library/[id]/chunks` podľa Jánovho návrhu: A — ako je dokument narezaný
+a varovania (PR #258), B — skúšobný rez a pomenovaný profil (PR #262),
+C — návrh od AI zo **štruktúry**, nie z celého textu (PR #263, #265, #267).
+Cestou dve opravy chunkera: tučné nadpisy z Wordu (#259, smernice z 1–2
+úsekov na 18) a „Časť I –" (#261).
+
+**Čo nevyšlo hneď:**
+- Návrh AI sa uťal uprostred zdôvodnenia: v zadaní boli „…" s rovnými
+  koncovými úvodzovkami a model ich prebral do JSON reťazca (#265).
+- AI ponúkala uložiť nový profil, ktorý režeme rovnako ako predvolený
+  („PRÍLOHA" verzus „PRÍLOHA č."). Zadanie teraz nesie dnešné hodnoty
+  a rovnaký rez formulár na nový profil skryje (#267).
+- Nasadenie #263 Vercel vynechal a moja čakacia slučka po vypršaní aj tak
+  zmazala vetvu. Odvtedy sa čaká presne na kontext „Vercel – contineo-app".
+
+**Preindexovanie:** po oprave chunkera zostalo 8 noriem neaktuálnych;
+`npm run chunking:reindex -- --company SFZ --naozaj` — 8 preindexovaných,
+`chunking:status` 0 z 13, `npm run check` bez rozporov. Otázka na lehotu
+odvolania odpovedala z čl. 84 Disciplinárneho poriadku. Znenia ani
+potvrdenia sa nemenili (D57).
 
 ---
 
