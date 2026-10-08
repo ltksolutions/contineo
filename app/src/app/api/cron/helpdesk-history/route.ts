@@ -14,10 +14,13 @@ import { NextResponse } from "next/server"
 import { analysesInProgress, continueAnalysis } from "@/lib/historyAnalysis"
 
 export const dynamic = "force-dynamic"
-export const maxDuration = 60
+// Plán Pro dovolí 300 s. Pri 60 s sa za kolo stihol jeden mesiac (~40 s)
+// a väčší mesiac by sa nestihol vôbec (8. 10. 2026).
+export const maxDuration = 300
 
-/** Rezerva pod `maxDuration` na posledné volanie Graphu a zápis. */
-const BUDGET_MS = 35_000
+/** Nový mesiac sa začne do 200 s; rozčítaný sa preruší najneskôr v 260 s. */
+const BUDGET_MS = 200_000
+const HARD_MS = 260_000
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
@@ -27,9 +30,12 @@ export async function GET(request: Request) {
   const running = await analysesInProgress()
   const reports: { companyCode: string; channelKey: string; months: number }[] = []
   // Čas sa delí medzi rozbehnuté analýzy; zvyčajne je jedna.
-  const budget = running.length ? Math.max(5_000, Math.floor(BUDGET_MS / running.length)) : 0
+  const began = Date.now()
+  const share = running.length ? Math.floor(BUDGET_MS / running.length) : 0
   for (const a of running) {
-    const months = await continueAnalysis(a.companyCode, a.channelKey, budget)
+    const left = HARD_MS - (Date.now() - began)
+    if (left < 30_000) break
+    const months = await continueAnalysis(a.companyCode, a.channelKey, { budgetMs: Math.min(share, left - 60_000), hardMs: left })
     reports.push({ ...a, months })
   }
   return NextResponse.json({ ok: true, analyses: reports })

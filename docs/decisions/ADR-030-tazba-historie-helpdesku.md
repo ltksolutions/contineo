@@ -89,9 +89,19 @@ prepíše.
 Analýza beží **po mesiacoch, od najnovšieho**, a mesiac sa číta s presahom
 14 dní na obe strany, aby sa odpoveď na otázku z konca mesiaca našla
 a vlákno začaté v predchádzajúcom mesiaci sa nepočítalo ako nové. Spustí
-ju správca organizácie v nastavení kanála; ďalšie mesiace dopĺňa cron
-`/api/cron/helpdesk-history` každých 5 minút, kým nie je hotová. Stav behu
-(ďalší mesiac, chyba) je na tom istom dokumente.
+ju správca organizácie v nastavení kanála a akcia hneď spracuje prvý
+mesiac; ďalšie dopĺňa cron `/api/cron/helpdesk-history` každých 5 minút,
+kým nie je hotová. Stav behu (ďalší mesiac, chyba) je na tom istom
+dokumente.
+
+*Spresnenie z prevádzky (8. 10. 2026, PR po #328):* mesiac septembra 2026
+sa čítal asi 40 s, takže cron s limitom 60 s stihol jeden mesiac na kolo
+a väčší mesiac by nestihol vôbec. Cron má preto `maxDuration` 300 s
+a čítanie mesiaca sa po tvrdej hranici preruší chybou `mailbox.slow`.
+**Pokus sa započíta pred čítaním schránky**, nie až v `catch` — beh,
+ktorý zruší časový limit Vercelu, by sa inak skúšal donekonečna; po
+5 pokusoch za sebou sa analýza zastaví. Trend (pribúda / ubúda) sa
+ukazuje až od 6 spracovaných mesiacov.
 
 ### D181 — Pilot (krok 2): zoskupiť pred modelom, rozpor označiť, nevynechať
 

@@ -12,7 +12,7 @@
  * vláknach od aspoň `TERM_MIN_SENDERS` rôznych odosielateľov: priezvisko
  * z predmetu („Prestup — Novák") ten prah neprejde.
  *
- * Beh ide po mesiacoch od najnovšieho; prvé mesiace spracuje akcia
+ * Beh ide po mesiacoch od najnovšieho; prvý mesiac spracuje akcia
  * správcu, zvyšok cron `/api/cron/helpdesk-history`. Mesiac sa číta
  * s presahom `MARGIN_DAYS` na obe strany — odpoveď na otázku z 30. dňa
  * príde až v ďalšom mesiaci a vlákno začaté skôr nie je nové.
@@ -39,6 +39,12 @@ export const TERM_MIN_THREADS = 5
 export const TERM_MIN_SENDERS = 3
 /** Koľko častých slov mesiaca sa uloží. */
 export const TERMS_PER_MONTH = 40
+/**
+ * Trend (pribúda / ubúda) má zmysel, až keď majú dáta obe polovice obdobia.
+ * Beh ide od najnovšieho mesiaca, takže na začiatku je staršia polovica
+ * prázdna a „pribúda" by svietilo pri každom slove.
+ */
+export const TREND_MIN_MONTHS = 6
 /** Po toľkých zlyhaniach za sebou cron analýzu nechá a čaká na správcu. */
 export const MAX_FAILURES = 5
 
@@ -229,6 +235,8 @@ export interface AnalysisSummary {
   answeredWithin24h: number
   /** Medián mesačných mediánov — presný medián by potreboval uložiť všetky časy. */
   medianReplyHours: number | null
+  /** Je spracovaných dosť mesiacov na porovnanie polovíc (`TREND_MIN_MONTHS`)? */
+  trendReady: boolean
   /** Témy cez celé obdobie; `older`/`newer` = súčet v staršej a novšej polovici. */
   terms: { term: string; threads: number; months: number; older: number; newer: number }[]
 }
@@ -259,6 +267,7 @@ export function summarizeAnalysis(a: Pick<MailboxAnalysis, "months" | "stats">, 
     answered: sum(s => s.answered),
     answeredWithin24h: sum(s => s.answeredWithin24h),
     medianReplyHours: median(months.map(s => s.medianReplyHours).filter((x): x is number => x !== null)),
+    trendReady: months.length >= TREND_MIN_MONTHS,
     terms: [...terms.entries()]
       .map(([term, x]) => ({ term, ...x }))
       .sort((p, q) => q.threads - p.threads || p.term.localeCompare(q.term))
@@ -295,26 +304,49 @@ export async function startAnalysis(companyCode: string, channelKey: string, mon
   )
 }
 
+export interface AnalysisBudget {
+  /** Ďalší mesiac sa začne, len kým neuplynie tento čas (prvý vždy). */
+  budgetMs: number
+  /**
+   * Tvrdá hranica celého kola: rozčítaný mesiac sa po nej preruší chybou
+   * `mailbox.slow`. Musí byť pod `maxDuration` funkcie aj s rezervou na
+   * jednu stránku Graphu (15 s) a zápis.
+   */
+  hardMs: number
+}
+
 /**
- * Spracuje ďalšie mesiace, kým neuplynie `budgetMs`. Každý mesiac sa uloží
- * hneď — prerušený beh (časový limit funkcie) nepríde o hotové mesiace.
- * Vracia počet spracovaných mesiacov v tomto kole.
+ * Spracuje ďalšie mesiace v rámci `budget`. Každý mesiac sa uloží hneď —
+ * prerušený beh nepríde o hotové mesiace. Vracia počet spracovaných
+ * mesiacov v tomto kole.
+ *
+ * **Pokus sa počíta pred prácou, nie po chybe** (8. 10. 2026): keď mesiac
+ * nestihne ani tvrdá hranica a funkciu zruší časový limit Vercelu, `catch`
+ * sa nevykoná. Pri počítaní až v `catch` by cron ten istý mesiac skúšal
+ * donekonečna; takto po `MAX_FAILURES` pokusoch za sebou prestane a na
+ * obrazovke je „zastavila sa". Úspešný mesiac počítadlo vynuluje.
  */
-export async function continueAnalysis(companyCode: string, channelKey: string, budgetMs: number): Promise<number> {
+export async function continueAnalysis(companyCode: string, channelKey: string, budget: AnalysisBudget): Promise<number> {
   const code = requireCompanyCode(companyCode, "continueAnalysis")
   const col = await analyses()
   const doc = await col.findOne({ companyCode: code, channelKey })
-  if (!doc || !doc.pending.length) return 0
+  if (!doc || !doc.pending.length || doc.failures >= MAX_FAILURES) return 0
   const channel = await channelByKey(code, channelKey)
   if (!channel?.mailbox) return 0
-  const deadline = Date.now() + budgetMs
+  const began = Date.now()
+  const softStop = began + budget.budgetMs
+  const hardStop = began + budget.hardMs
   let done = 0
   try {
     const adapter = mailboxFor(channel)
     for (const key of doc.pending) {
-      if (Date.now() > deadline) break
+      // Prvý mesiac kola sa začne vždy — inak by akcia s malým rozpočtom
+      // neurobila nič; ďalší len v rámci rozpočtu.
+      if (done > 0 && Date.now() > softStop) break
+      await col.updateOne({ companyCode: code, channelKey }, { $inc: { failures: 1 }, $set: { updatedAt: new Date() } })
+      const t0 = Date.now()
       const { start, end } = monthRange(key)
-      const headers = await adapter.listHeaders(new Date(start.getTime() - MARGIN_DAYS * DAY), new Date(end.getTime() + MARGIN_DAYS * DAY))
+      const headers = await adapter.listHeaders(new Date(start.getTime() - MARGIN_DAYS * DAY), new Date(end.getTime() + MARGIN_DAYS * DAY), hardStop)
       const stats = summarizeMonth(headers, key, adapter.address)
       const last = doc.pending.length === done + 1
       await col.updateOne(
@@ -324,13 +356,15 @@ export async function continueAnalysis(companyCode: string, channelKey: string, 
           $pull: { pending: key },
         },
       )
+      // Čas a počet hlavičiek do logu — podľa toho sa ladí rozpočet kola.
+      console.info(`[history-analysis] ${code}/${channelKey} ${key}: ${headers.length} hlavičiek, ${Date.now() - t0} ms`)
       done += 1
     }
   } catch (e) {
     console.error(`[history-analysis] ${code}/${channelKey} zlyhala:`, e)
     await col.updateOne(
       { companyCode: code, channelKey },
-      { $set: { error: e instanceof AppError ? e.code : "failed", updatedAt: new Date() }, $inc: { failures: 1 } },
+      { $set: { error: e instanceof AppError ? e.code : "failed", updatedAt: new Date() } },
     )
   }
   return done
