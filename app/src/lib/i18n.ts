@@ -348,6 +348,17 @@ interface Dictionary {
       automated: string
       rights: string
     }
+    /**
+     * Časti o helpdesku (ADR-028, D178) — len keď má organizácia aspoň jeden
+     * kanál. `{tickets}` doplní stránka z lehôt organizácie.
+     */
+    helpdesk: {
+      purpose: string
+      data: [string, string][]
+      basis: string
+      retention: [string, string][]
+      recipients: string
+    }
     rightsHeading: string
     rights: string
     objection: string
@@ -514,6 +525,8 @@ interface Dictionary {
       learningDetailMonthsNote: string
       answersMonths: string
       answersMonthsNote: string
+      ticketMonths: string
+      ticketMonthsNote: string
       fixed: string
       warning: string
       save: string
@@ -4286,6 +4299,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         automated: "Test vyhodnocuje systém automaticky podľa vopred určených správnych odpovedí. Ak s výsledkom nesúhlasíte, obráťte sa na zodpovednú osobu za test — výsledok preverí a pokus môže zrušiť, aby ste ho mohli zopakovať. O nič iné sa automatizovane nerozhoduje.",
         rights: "Výmaz vydaného certifikátu nie je možný — uchováva sa na účely archivácie a ako doklad, ktorý môžete potrebovať aj vy.",
       },
+      helpdesk: {
+        purpose: "Organizácia cez neho vybavuje aj otázky, ktoré jej ľudia pošlú e-mailom do schránky helpdesku alebo položia v okne pomoci (widget) na webe či v inom systéme organizácie.",
+        data: [
+          ["e-mail do schránky helpdesku: meno a adresa odosielateľa, predmet, text správ vo vlákne vrátane citovanej predchádzajúcej korešpondencie; pri prílohách len názov a veľkosť", "aby sa otázka dala vybaviť a odpoveď prišla v tom istom vlákne"],
+          ["otázka v okne pomoci: meno, e-mail, identifikátor v systéme, z ktorého prichádzate (napríklad registračné číslo v ISSF), roly a klub", "aby odpoveď vychádzala z obsahu určeného pre vás a riešiteľ vedel, komu odpovedá; do intranetu vás to neprihlási"],
+          ["odpoveď helpdesku: text, kto ju poslal a kedy", "doklad o vybavení otázky"],
+        ],
+        basis: "Otázky v helpdesku sa spracúvajú na základe oprávneného záujmu (čl. 6 ods. 1 písm. f) GDPR) — vybaviť otázku, ktorú ste sami položili.",
+        retention: [
+          ["ticket helpdesku so správami", "{tickets} od jeho zavretia; otvorený ticket sa nemaže"],
+          ["záznam o osobe z okna pomoci", "24 mesiacov od poslednej otázky, ak nemá otvorený ticket"],
+        ],
+        recipients: "Tickety čítajú len riešitelia kanála, ktorému sú určené; správca organizácie vidí len ich počet. Odpoveď navrhne umelá inteligencia a pred odoslaním ju vždy prečíta a schváli človek. E-maily ostávajú aj v schránke organizácie u jej poskytovateľa pošty (napríklad Microsoft 365). Z histórie schránky môže umelá inteligencia navrhnúť všeobecné otázky a odpovede (FAQ); osobné údaje sa z textu pred spracovaním odstraňujú a e-maily sa pritom neukladajú.",
+      },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
       objection: "Pri predpisoch s oprávneným záujmom máte právo namietať. Námietku posúdi zodpovedná osoba jednotlivo a doklad sa do jej rozhodnutia nemaže. Výmaz dokladu o oboznámení pred uplynutím lehoty nie je možný, kým je potrebný na preukázanie, uplatnenie alebo obhajobu právnych nárokov.",
@@ -4449,7 +4476,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       learningDetailMonthsNote: "Potom sa z testov zmažú odpovede a zo sledovania videa pozreté úseky. Výsledok a dokončenie zostávajú.",
       answersMonths: "Mesiace pre otázky a odpovede",
       answersMonthsNote: "Potom sa otázky, odpovede a ich hodnotenie zmažú. Záznamy, z ktorých vznikla overená odpoveď, ostanú bez mena toho, kto sa pýtal.",
-      fixed: "Pevné pre celú platformu (riadi ich databáza): čas strávený nad znením 12 mesiacov, pripomienky 90 dní, audit 24 mesiacov, spotreba umelej inteligencie 25 mesiacov. Certifikáty sa nemažú.",
+      ticketMonths: "Mesiace pre tickety helpdesku",
+      ticketMonthsNote: "Plynú od zavretia ticketu; potom sa ticket zmaže celý aj so správami. Otvorený ticket sa nemaže.",
+      fixed: "Pevné pre celú platformu (riadi ich databáza): čas strávený nad znením 12 mesiacov, pripomienky 90 dní, audit 24 mesiacov, spotreba umelej inteligencie 25 mesiacov. Certifikáty sa nemažú. Osoba z widgetu sa zmaže po 24 mesiacoch bez aktivity, ak nemá otvorený ticket.",
       warning: "Skrátenie lehoty môže pri zapnutom ostrom mazaní zmazať záznamy hneď v najbližšej nočnej dávke.",
       save: "Uložiť lehoty",
       saved: "Lehoty uložené.",
@@ -8460,6 +8489,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         automated: "Test vyhodnocuje systém automaticky podle předem určených správných odpovědí. Pokud s výsledkem nesouhlasíte, obraťte se na odpovědnou osobu za test — výsledek prověří a pokus může zrušit, abyste ho mohli zopakovat. O ničem jiném se automatizovaně nerozhoduje.",
         rights: "Výmaz vydaného certifikátu není možný — uchovává se pro účely archivace a jako doklad, který můžete potřebovat i vy.",
       },
+      helpdesk: {
+        purpose: "Organizace jeho prostřednictvím vyřizuje i dotazy, které jí lidé pošlou e-mailem do schránky helpdesku nebo položí v okně nápovědy (widget) na webu či v jiném systému organizace.",
+        data: [
+          ["e-mail do schránky helpdesku: jméno a adresa odesílatele, předmět, text zpráv ve vlákně včetně citované předchozí korespondence; u příloh jen název a velikost", "aby se dotaz dal vyřídit a odpověď přišla ve stejném vlákně"],
+          ["dotaz v okně nápovědy: jméno, e-mail, identifikátor v systému, ze kterého přicházíte (například registrační číslo v ISSF), role a klub", "aby odpověď vycházela z obsahu určeného pro vás a řešitel věděl, komu odpovídá; do intranetu vás to nepřihlásí"],
+          ["odpověď helpdesku: text, kdo ji poslal a kdy", "doklad o vyřízení dotazu"],
+        ],
+        basis: "Dotazy v helpdesku se zpracovávají na základě oprávněného zájmu (čl. 6 odst. 1 písm. f) GDPR) — vyřídit dotaz, který jste sami položili.",
+        retention: [
+          ["tiket helpdesku se zprávami", "{tickets} od jeho uzavření; otevřený tiket se nemaže"],
+          ["záznam o osobě z okna nápovědy", "24 měsíců od posledního dotazu, pokud nemá otevřený tiket"],
+        ],
+        recipients: "Tikety čtou jen řešitelé kanálu, kterému jsou určeny; správce organizace vidí jen jejich počet. Odpověď navrhne umělá inteligence a před odesláním ji vždy přečte a schválí člověk. E-maily zůstávají i ve schránce organizace u jejího poskytovatele pošty (například Microsoft 365). Z historie schránky může umělá inteligence navrhnout obecné otázky a odpovědi (FAQ); osobní údaje se z textu před zpracováním odstraňují a e-maily se přitom neukládají.",
+      },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
       objection: "U předpisů s oprávněným zájmem máte právo vznést námitku. Námitku posoudí pověřenec jednotlivě a doklad se do jeho rozhodnutí nemaže. Výmaz dokladu o seznámení před uplynutím lhůty není možný, dokud je potřebný k prokázání, uplatnění nebo obhajobě právních nároků.",
@@ -8623,7 +8666,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       learningDetailMonthsNote: "Potom se z testů smažou odpovědi a ze sledování videa zhlédnuté úseky. Výsledek a dokončení zůstávají.",
       answersMonths: "Měsíce pro otázky a odpovědi",
       answersMonthsNote: "Potom se otázky, odpovědi a jejich hodnocení smažou. Záznamy, ze kterých vznikla ověřená odpověď, zůstanou bez jména toho, kdo se ptal.",
-      fixed: "Pevné pro celou platformu (řídí je databáze): čas strávený nad zněním 12 měsíců, připomínky 90 dní, audit 24 měsíců, spotřeba umělé inteligence 25 měsíců. Certifikáty se nemažou.",
+      ticketMonths: "Měsíce pro tikety helpdesku",
+      ticketMonthsNote: "Běží od uzavření tiketu; potom se tiket smaže celý i se zprávami. Otevřený tiket se nemaže.",
+      fixed: "Pevné pro celou platformu (řídí je databáze): čas strávený nad zněním 12 měsíců, připomínky 90 dní, audit 24 měsíců, spotřeba umělé inteligence 25 měsíců. Certifikáty se nemažou. Osoba z widgetu se smaže po 24 měsících bez aktivity, pokud nemá otevřený tiket.",
       warning: "Zkrácení lhůty může při zapnutém ostrém mazání smazat záznamy hned v nejbližší noční dávce.",
       save: "Uložit lhůty",
       saved: "Lhůty uloženy.",
@@ -12625,6 +12670,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         automated: "Tests are scored automatically against answers set in advance. If you disagree with a result, contact the person responsible for the test — they will review it and can cancel the attempt so that you can take it again. No other decisions are made by automated means.",
         rights: "An issued certificate cannot be erased — it is kept for archiving and as proof you may need yourself.",
       },
+      helpdesk: {
+        purpose: "The organisation also uses it to handle questions people send by e-mail to the helpdesk mailbox or ask in the help window (widget) on the website or in another of the organisation's systems.",
+        data: [
+          ["e-mail to the helpdesk mailbox: sender's name and address, subject, the text of the messages in the thread including quoted earlier correspondence; for attachments only the name and size", "so the question can be handled and the answer arrives in the same thread"],
+          ["question in the help window: name, e-mail, identifier in the system you come from (for example your ISSF registration number), roles and club", "so the answer draws on the content meant for you and the agent knows who they are answering; it does not sign you in to the intranet"],
+          ["helpdesk answer: text, who sent it and when", "a record that the question was handled"],
+        ],
+        basis: "Helpdesk questions are processed on the basis of legitimate interest (Art. 6(1)(f) GDPR) — to answer a question you asked yourself.",
+        retention: [
+          ["helpdesk ticket with its messages", "{tickets} after it is closed; an open ticket is never deleted"],
+          ["record of a person from the help window", "24 months after their last question, unless they have an open ticket"],
+        ],
+        recipients: "Tickets are read only by the agents of the channel they are meant for; the organisation's administrator sees only how many there are. Artificial intelligence drafts the answer, and a person always reads and approves it before it is sent. E-mails also remain in the organisation's mailbox with its e-mail provider (for example Microsoft 365). Artificial intelligence may suggest general questions and answers (FAQ) from the mailbox history; personal data is removed from the text before processing and the e-mails are not stored.",
+      },
       rightsHeading: "Your rights",
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
       objection: "For documents based on legitimate interest you have the right to object. The data protection officer assesses each objection individually and the evidence is not deleted before the decision. Evidence of having read a document cannot be deleted before the end of the period while it is needed to establish, exercise or defend legal claims.",
@@ -12788,7 +12847,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       learningDetailMonthsNote: "After that, answers are removed from tests and watched segments from video tracking. The result and completion remain.",
       answersMonths: "Months for questions and answers",
       answersMonthsNote: "Then questions, answers and their ratings are deleted. Records that became a verified answer stay, without the name of the person who asked.",
-      fixed: "Fixed for the whole platform (enforced by the database): time spent on a version 12 months, reminders 90 days, audit 24 months, artificial intelligence usage 25 months. Certificates are never deleted.",
+      ticketMonths: "Months for helpdesk tickets",
+      ticketMonthsNote: "Counted from when the ticket is closed; then the whole ticket including its messages is deleted. An open ticket is never deleted.",
+      fixed: "Fixed for the whole platform (enforced by the database): time spent on a version 12 months, reminders 90 days, audit 24 months, artificial intelligence usage 25 months. Certificates are never deleted. A person from the widget is deleted after 24 months without activity unless they have an open ticket.",
       warning: "Shortening a period may delete records in the very next nightly run when real deletion is switched on.",
       save: "Save periods",
       saved: "Periods saved.",

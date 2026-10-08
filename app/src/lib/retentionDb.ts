@@ -28,15 +28,18 @@ import { COURSES_COLLECTION, versionById, type Course } from "./courses"
 import { progressFactsMany } from "./learningProgressDb"
 import { tenantByCompanyCode } from "./tenants"
 import { RATINGS_COLLECTION } from "./ratings"
+import { TICKETS_COLLECTION } from "./tickets"
 import {
   retentionDecision, isStaleActive, learningDetailsDue, addMonths, retentionSettings, RETENTION_LOG_DAYS, LEARNING_DETAIL_MONTHS, ANSWERS_MONTHS,
+  TICKET_MONTHS, EXTERNAL_INACTIVE_MONTHS,
   type RetentionBasis, type RetentionMode,
 } from "./retention"
 
 export const RETENTION_LOG_COLLECTION = "retention_log"
 
 /** `details` = orezanie podrobností vzdelávania po roku (ADR-021, D131). */
-export type DeletionReason = RetentionBasis | "objection" | "details" | "answers"
+/** `tickets` a `external` = helpdesk (ADR-028, D178). */
+export type DeletionReason = RetentionBasis | "objection" | "details" | "answers" | "tickets" | "external"
 
 export interface DeletionCounts {
   acknowledgements: number
@@ -54,12 +57,17 @@ export interface DeletionCounts {
   testAttempts: number
   /** Otázky a odpovede (`evaluations`) po lehote — nie osoby, ale organizácie (H2). */
   answers: number
+  /** Zavreté tickety helpdesku po lehote (D178). */
+  tickets: number
+  /** Osoby z widgetu bez aktivity (D178). */
+  externalPersons: number
 }
 
 const ZERO: DeletionCounts = {
   acknowledgements: 0, documentOpens: 0, readingTimes: 0,
   assignments: 0, approvalRounds: 0, responsibleCleared: 0, objections: 0,
   enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0, answers: 0,
+  tickets: 0, externalPersons: 0,
 }
 
 /** Kolekcie vzdelávania osoby, ktoré maže lehota (D130). */
@@ -328,6 +336,13 @@ export interface RetentionRun {
   learningDetails: LearningDetailsCounts
   /** Otázky a odpovede po lehote (ASK-historia-otazok, H2). */
   answers: AnswersCounts
+  /** Helpdesk po lehote (D178): zavreté tickety a osoby z widgetu bez aktivity. */
+  helpdesk: HelpdeskCounts
+}
+
+export interface HelpdeskCounts {
+  tickets: number
+  externalPersons: number
 }
 
 export interface AnswersCounts {
@@ -371,6 +386,62 @@ export async function purgeAnswers(
     await logDeletion(companyCode, null, "answers", { ...ZERO, answers: counts.deleted + counts.detached }, now)
   }
   return counts
+}
+
+/**
+ * Tickety helpdesku po lehote (ADR-028, D178): **zavreté** tickety, ktorým od
+ * `closedAt` uplynulo `ticketMonths`, sa zmažú celé aj so správami. Otvorený
+ * alebo znova otvorený ticket sa nemaže nikdy. Ticket nie je dôkazný záznam
+ * (D24) — dokazuje prácu helpdesku, nie oboznámenie s predpisom.
+ */
+export async function purgeTickets(
+  companyCode: string, mode: RetentionMode, now: Date = new Date(), months: number = TICKET_MONTHS,
+): Promise<number> {
+  const col = await getCollection(TICKETS_COLLECTION)
+  const filter = { companyCode, state: "closed", closedAt: { $lt: addMonths(now, -months) } }
+  const count = await col.countDocuments(filter)
+  if (mode !== "delete" || !count) return count
+  await col.deleteMany(filter)
+  await logDeletion(companyCode, null, "tickets", { ...ZERO, tickets: count }, now)
+  return count
+}
+
+/**
+ * Osoby z widgetu (druh `external`, D166, D168) bez aktivity
+ * `EXTERNAL_INACTIVE_MONTHS` sa zmažú (D178). Aktivita je posledná otázka
+ * cez widget (`lastLoginAt`), inak založenie. **Nezmaže sa**, kto má
+ * otvorený ticket — riešiteľ by stratil, komu odpovedá — ani kto má
+ * akékoľvek potvrdenie: to by bol dôkaz (D24) a o ňom rozhoduje lehota
+ * reťaze dôkazov, nie táto.
+ */
+export async function purgeExternalPersons(
+  companyCode: string, mode: RetentionMode, now: Date = new Date(), months: number = EXTERNAL_INACTIVE_MONTHS,
+): Promise<number> {
+  const cutoff = addMonths(now, -months).getTime()
+  const persons = await getCollection<Person>(PERSONS_COLLECTION)
+  const external = await persons.find({ companyCode, personType: "external" } as never).toArray()
+  const idle = external
+    .filter(p => {
+      const at = p.lastLoginAt ?? p.createdAt
+      return at instanceof Date && at.getTime() < cutoff
+    })
+    .map(p => p.id)
+  if (!idle.length) return 0
+
+  const tickets = await getCollection(TICKETS_COLLECTION)
+  const acks = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
+  const keep = new Set<string>()
+  for (const t of await tickets.find({ companyCode, "asker.personId": { $in: idle }, state: { $ne: "closed" } }).toArray()) {
+    keep.add((t as { asker?: { personId?: string } }).asker?.personId ?? "")
+  }
+  for (const a of await acks.find({ companyCode, personId: { $in: idle } }).toArray()) {
+    keep.add((a as { personId?: string }).personId ?? "")
+  }
+  const due = idle.filter(id => !keep.has(id))
+  if (mode !== "delete" || !due.length) return due.length
+  await persons.deleteMany({ companyCode, personType: "external", id: { $in: due } } as never)
+  await logDeletion(companyCode, null, "external", { ...ZERO, externalPersons: due.length }, now)
+  return due.length
 }
 
 /**
@@ -455,6 +526,7 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
     companyCode, mode, persons: [], staleActive: 0,
     learningDetails: { enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 },
     answers: { deleted: 0, detached: 0 },
+    helpdesk: { tickets: 0, externalPersons: 0 },
   }
   const last = await lastEvents(companyCode, people)
   for (const p of people) {
@@ -470,5 +542,11 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
   // Po výmaze osôb — ich zápisy už nie sú, nerátajú sa dvakrát.
   run.learningDetails = await trimLearningDetails(companyCode, mode, now, settings.learningDetailMonths)
   run.answers = await purgeAnswers(companyCode, mode, now, settings.answersMonths)
+  // Tickety skôr než osoby — osoba so zavretým ticketom po lehote tak môže
+  // odísť v tom istom behu.
+  run.helpdesk = {
+    tickets: await purgeTickets(companyCode, mode, now, settings.ticketMonths),
+    externalPersons: await purgeExternalPersons(companyCode, mode, now),
+  }
   return run
 }

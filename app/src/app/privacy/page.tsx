@@ -21,6 +21,7 @@ import Notice from "@/components/Notice"
 import { submitObjectionAction } from "./actions"
 import SubmitButton from "@/components/SubmitButton"
 import { publicPageTitle } from "@/lib/publicPageTitle"
+import { listChannels } from "@/lib/channels"
 
 export const dynamic = "force-dynamic"
 
@@ -84,6 +85,10 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
   // Vzdelávanie len organizácii, ktorá ho má zapnuté (ADR-018, D123) —
   // inak by text sľuboval spracúvanie, ktoré sa nedeje.
   const learning = tenant.modules?.learning ? t.learning : null
+  // Helpdesk len organizácii, ktorá má aspoň jeden kanál (ADR-028, D178) —
+  // z toho istého dôvodu ako Vzdelávanie.
+  const hasChannels = (await listChannels(tenant.companyCode).catch(() => [])).length > 0
+  const helpdesk = hasChannels ? t.helpdesk : null
   // Úrad a zákony podľa krajiny sídla prevádzkovateľa, nie podľa jazyka (ADR-022).
   const country = tenant.controller?.country ?? "SK"
   const profile = await getTenantProfile(tenant.companyCode).catch(() => defaultProfile(tenant.companyCode))
@@ -93,7 +98,8 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
     .replace("{evidence}", t.years(r.evidenceYears))
     .replace("{cap}", t.years(r.capYears))
     .replace("{months}", t.months(r.learningDetailMonths))
-    .replace("{answers}", t.months(r.answersMonths))] as [string, string])
+    .replace("{answers}", t.months(r.answersMonths))
+    .replace("{tickets}", t.months(r.ticketMonths))] as [string, string])
   // Verzia textu: neskoršia zo spoločného textu a nastavení organizácie (D138).
   const updated = tenant.privacy?.updatedAt ? new Date(tenant.privacy.updatedAt) : null
   const version = updated && updated > PRIVACY_NOTICE_VERSION ? updated : PRIVACY_NOTICE_VERSION
@@ -158,10 +164,10 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
         </div>
 
         <h2 id="purpose">{t.purposeHeading}</h2>
-        <p>{t.purpose}{learning && <> {learning.purpose}</>}</p>
+        <p>{t.purpose}{learning && <> {learning.purpose}</>}{helpdesk && <> {helpdesk.purpose}</>}</p>
 
         <h2 id="data">{t.dataHeading}</h2>
-        <Table columns={t.dataColumns} rows={learning ? [...t.data, ...learning.data] : t.data} />
+        <Table columns={t.dataColumns} rows={[...t.data, ...(learning?.data ?? []), ...(helpdesk?.data ?? [])]} />
         <p>{t.hrNote}</p>
         <p>{t.responsibleNote}</p>
 
@@ -173,14 +179,16 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
         </ul>
         <p>{t.basisDirectory}</p>
         {learning && <p>{learning.basis(t.archiveLaw[country])}</p>}
+        {helpdesk && <p>{helpdesk.basis}</p>}
 
         <h2 id="retention">{t.retentionHeading}</h2>
-        <Table columns={t.retentionColumns} rows={period(learning ? [...t.retention, ...learning.retention] : t.retention)} />
+        <Table columns={t.retentionColumns} rows={period([...t.retention, ...(learning?.retention ?? []), ...(helpdesk?.retention ?? [])])} />
         <p>{t.retentionDelete}{learning && <> {learning.retentionNote}</>}</p>
 
         <h2 id="recipients">{t.recipientsHeading}</h2>
         <p>{t.recipients}</p>
         {learning && <p>{learning.recipients}</p>}
+        {helpdesk && <p>{helpdesk.recipients}</p>}
         <Table columns={t.processorsColumns} rows={processors} />
         <p>{t.noSale} {learning ? learning.automated : t.automated}</p>
 
