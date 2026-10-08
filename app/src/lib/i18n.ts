@@ -2347,6 +2347,8 @@ interface Dictionary {
     connectorScopes: string
     connectorScopesHint: string
     connectorScopesNone: string
+    /** Widget: konektory sú, ale len interné — verejný kanál ich nepoužije. */
+    connectorScopesInternalOnly: string
     assignees: string
     assigneesHint: string
     languages: string
@@ -6696,6 +6698,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     connectorScopes: "Živé zdroje",
     connectorScopesHint: "Rozsahy pripojených konektorov, v ktorých asistent hľadá popri knižnici. Bez výberu sa živé zdroje v tomto kanáli nepoužijú.",
     connectorScopesNone: "Organizácia nemá pripojený žiadny konektor so živým zdrojom.",
+    connectorScopesInternalOnly: "Žiadny konektor nie je verejný — interný sa vo widgete nepoužije.",
     assignees: "Riešitelia",
     assigneesHint: "Osoby s rolou helpdesk, ktoré vidia tickety tohto kanála.",
     languages: "Jazyky kanála",
@@ -10909,6 +10912,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     connectorScopes: "Živé zdroje",
     connectorScopesHint: "Rozsahy připojených konektorů, ve kterých asistent hledá vedle knihovny. Bez výběru se živé zdroje v tomto kanálu nepoužijí.",
     connectorScopesNone: "Organizace nemá připojený žádný konektor se živým zdrojem.",
+    connectorScopesInternalOnly: "Žádný konektor není veřejný — interní se ve widgetu nepoužije.",
     assignees: "Řešitelé",
     assigneesHint: "Osoby s rolí helpdesk, které vidí tickety tohoto kanálu.",
     languages: "Jazyky kanálu",
@@ -15113,6 +15117,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     connectorScopes: "Live sources",
     connectorScopesHint: "Scopes of connected connectors the assistant searches alongside the library. With none selected, live sources are not used in this channel.",
     connectorScopesNone: "The organisation has no connected connector with a live source.",
+    connectorScopesInternalOnly: "No connector is public — an internal one is not used in the widget.",
     assignees: "Agents",
     assigneesHint: "People with the helpdesk role who see this channel's tickets.",
     languages: "Channel languages",
