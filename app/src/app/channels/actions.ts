@@ -72,7 +72,9 @@ export async function saveChannelAction(fd: FormData) {
     if (isRedirect(e)) throw e
     if (isNew) {
       const q = new URLSearchParams({ error: errorMessage(e, ctx.language), name: fieldText(fd, "name"), kind: fieldText(fd, "kind") })
-      redirect(`/channels?${q.toString()}#new`)
+      // Späť do otvorenej úlohy s hodnotami (KANALY-prehlad, 8. 10. 2026).
+      q.set("new", "1")
+      redirect(`/channels?${q.toString()}`)
     }
     back(key, errorMessage(e, ctx.language), true)
   }

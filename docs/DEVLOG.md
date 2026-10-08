@@ -10,6 +10,24 @@
 
 ---
 
+## 2026-10-08 — prehľad kanálov (KANALY-prehlad)
+
+**Čo sa zmenilo:** `/channels` podľa návrhu — `a.form-row.channel-row` na
+rozcestník kanála (bez UUID), štítky v jednom DOM a CSS ich na telefóne
+presunie pod podnadpis; `mailboxStalled()` v `lib/channels.ts` (chyba alebo
+beh starší než max(3 × interval, 30 min); bez prvého behu nie je porucha)
+s testom; nový kanál len pri `?new=1` ako `.task-card` s `.choice-row`
+namiesto `Select`, chyba sa vracia do otvorenej úlohy. Nový test vykreslenia
+`tests/channelsPage.test.ts`.
+
+**Odchýlky od návrhu:** vstavané rozhrania majú v podnadpise okrem typu aj
+krátky opis (bol v dnešnom texte, inak by sa stratil). Ikony typu sú
+existujúce `ask` (widget) a `library` (portál). Nadpisy skupín sú
+`h2.form-group-head` v `section`, nie `fieldset`/`legend` — nie sú to
+formuláre.
+
+---
+
 ## 2026-10-08 popoludnie a večer — odpovede, tickety, kanály a widget
 
 **Opýtať sa.** Predvolene sa hľadá len v knižnici (PR #313), konektor sa

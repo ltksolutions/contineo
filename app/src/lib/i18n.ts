@@ -2339,8 +2339,21 @@ interface Dictionary {
     heading: string
     intro: string
     list: string
-    empty: string
     newChannel: string
+    introAgent: string
+    levels: { public: string; internal: string }
+    openCount: (n: number) => string
+    openLabel: (n: number) => string
+    mailboxStalled: string
+    builtInFixed: string
+    builtInAssistantSub: string
+    builtInPortalSub: string
+    emptyTitle: string
+    emptyText: string
+    newIntro: string
+    nameHint: string
+    create: string
+    cancelNew: string
     edit: string
     keyHint: string
     name: string
@@ -2442,7 +2455,6 @@ interface Dictionary {
     miningRun: string
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => string
     noFaqDocuments: string
-    tickets: (open: number, total: number) => string
     save: string
     saved: string
     created: string
@@ -6726,9 +6738,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     ticketsOn: "Tickety",
     ticketsHint: "Po dvoch negatívnych hodnoteniach môže človek napísať helpdesku; e-maily zo schránky sa stávajú ticketmi. Bez ticketov je kanál len asistent.",
     portalNote: "Portál zatiaľ nesie len rozsah obsahu a jazyky — knižnica ich použije pri verejnom čítaní, články a formuláre pripravujeme.",
-    builtIn: "Vstavané",
-    builtInAssistant: "Asistent v intranete — otázka a odpoveď nad celou knižnicou pre prihlásených; nenastavuje sa.",
-    builtInPortal: "Knižnica v intranete — platné dokumenty pre prihlásených; nenastavuje sa.",
+    builtIn: "Vstavané v intranete",
+    builtInAssistant: "Asistent v intranete",
+    builtInPortal: "Knižnica v intranete",
     tabsLabel: "Časti kanálov",
     tabList: "Kanály",
     tabMyTickets: "Moje tickety",
@@ -6738,8 +6750,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     back: "Kanály",
     intro: "Kanál je jedno miesto, kde sa ľudia pýtajú: má vlastný obsah (priečinky knižnice), schránku, riešiteľov a widget. Kanálov môže byť viac — každý pre iný projekt a publikum.",
     list: "Kanály",
-    empty: "Zatiaľ žiadny kanál.",
     newChannel: "Nový kanál",
+    introAgent: "Kanály, v ktorých odpovedáte na tickety.",
+    levels: { public: "verejný", internal: "interný" },
+    openCount: n => `${n} ${n === 1 ? "otvorený" : n >= 2 && n <= 4 ? "otvorené" : "otvorených"}`,
+    openLabel: n => (n === 1 ? "otvorený" : n >= 2 && n <= 4 ? "otvorené" : "otvorených"),
+    mailboxStalled: "Schránka nesynchronizuje",
+    builtInFixed: "nenastavuje sa",
+    builtInAssistantSub: "otázka a odpoveď nad celou knižnicou pre prihlásených",
+    builtInPortalSub: "platné dokumenty pre prihlásených",
+    emptyTitle: "Zatiaľ žiadny kanál",
+    emptyText: "Widget vložíte do cudzej stránky, portál otvorí knižnicu ďalším ľuďom. Kanál založíte tlačidlom hore.",
+    newIntro: "Názov a typ. Typ sa po vytvorení nemení; ostatné nastavíte v kanáli.",
+    nameHint: "Vidia ho ľudia v hlavičke widgetu alebo portálu.",
+    create: "Vytvoriť kanál",
+    cancelNew: "Zrušiť",
     edit: "upraviť",
     keyHint: "Kľúč kanála, pridelený pri založení. Je v adrese skriptu widgetu a v claime aud tokenu; nemení sa.",
     name: "Názov",
@@ -6859,7 +6884,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     miningRun: "Navrhnúť záznamy FAQ",
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Ťažba prebehla: vlákien ${threads}, návrhov ${proposed}, uložených do konceptu ${saved}, duplicitných ${duplicates}.`,
     noFaqDocuments: "V knižnici ešte nie je FAQ dokument — založ ho v Knižnici → Nový dokument → FAQ.",
-    tickets: (open: number, total: number) => `tickety: ${open} otvorených z ${total}`,
     save: "Uložiť kanál",
     saved: "Kanál je uložený.",
     created: "Kanál je založený.",
@@ -11007,9 +11031,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     ticketsOn: "Tickety",
     ticketsHint: "Po dvou negativních hodnoceních může člověk napsat helpdesku; e-maily ze schránky se stávají tickety. Bez ticketů je kanál jen asistent.",
     portalNote: "Portál zatím nese jen rozsah obsahu a jazyky — knihovna je použije při veřejném čtení, články a formuláře připravujeme.",
-    builtIn: "Vestavěné",
-    builtInAssistant: "Asistent v intranetu — otázka a odpověď nad celou knihovnou pro přihlášené; nenastavuje se.",
-    builtInPortal: "Knihovna v intranetu — platné dokumenty pro přihlášené; nenastavuje se.",
+    builtIn: "Vestavěné v intranetu",
+    builtInAssistant: "Asistent v intranetu",
+    builtInPortal: "Knihovna v intranetu",
     tabsLabel: "Části kanálů",
     tabList: "Kanály",
     tabMyTickets: "Moje tickety",
@@ -11019,8 +11043,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     back: "Kanály",
     intro: "Kanál je jedno místo, kde se lidé ptají: má vlastní obsah (složky knihovny), schránku, řešitele a widget. Kanálů může být víc — každý pro jiný projekt a publikum.",
     list: "Kanály",
-    empty: "Zatím žádný kanál.",
     newChannel: "Nový kanál",
+    introAgent: "Kanály, ve kterých odpovídáte na tickety.",
+    levels: { public: "veřejný", internal: "interní" },
+    openCount: n => `${n} ${n === 1 ? "otevřený" : n >= 2 && n <= 4 ? "otevřené" : "otevřených"}`,
+    openLabel: n => (n === 1 ? "otevřený" : n >= 2 && n <= 4 ? "otevřené" : "otevřených"),
+    mailboxStalled: "Schránka nesynchronizuje",
+    builtInFixed: "nenastavuje se",
+    builtInAssistantSub: "otázka a odpověď nad celou knihovnou pro přihlášené",
+    builtInPortalSub: "platné dokumenty pro přihlášené",
+    emptyTitle: "Zatím žádný kanál",
+    emptyText: "Widget vložíte do cizí stránky, portál otevře knihovnu dalším lidem. Kanál založíte tlačítkem nahoře.",
+    newIntro: "Název a typ. Typ se po vytvoření nemění; ostatní nastavíte v kanálu.",
+    nameHint: "Vidí ho lidé v hlavičce widgetu nebo portálu.",
+    create: "Vytvořit kanál",
+    cancelNew: "Zrušit",
     edit: "upravit",
     keyHint: "Klíč kanálu, přidělený při založení. Je v adrese skriptu widgetu a v claimu aud tokenu; nemění se.",
     name: "Název",
@@ -11140,7 +11177,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     miningRun: "Navrhnout záznamy FAQ",
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Těžba proběhla: vláken ${threads}, návrhů ${proposed}, uložených do konceptu ${saved}, duplicitních ${duplicates}.`,
     noFaqDocuments: "V knihovně ještě není FAQ dokument — založ ho v Knihovně → Nový dokument → FAQ.",
-    tickets: (open: number, total: number) => `tickety: ${open} otevřených z ${total}`,
     save: "Uložit kanál",
     saved: "Kanál je uložen.",
     created: "Kanál je založen.",
@@ -15279,9 +15315,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     ticketsOn: "Tickets",
     ticketsHint: "After two negative ratings a person can write to the helpdesk; e-mails from the mailbox become tickets. Without tickets the channel is just the assistant.",
     portalNote: "A portal carries only the content scope and languages for now — the library will use them for public reading; articles and forms are in preparation.",
-    builtIn: "Built in",
-    builtInAssistant: "The assistant in the intranet — question and answer over the whole library for signed-in people; not configurable.",
-    builtInPortal: "The library in the intranet — documents in force for signed-in people; not configurable.",
+    builtIn: "Built into the intranet",
+    builtInAssistant: "Assistant in the intranet",
+    builtInPortal: "Library in the intranet",
     tabsLabel: "Channel sections",
     tabList: "Channels",
     tabMyTickets: "My tickets",
@@ -15291,8 +15327,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     back: "Channels",
     intro: "A channel is one place where people ask: it has its own content (library folders), mailbox, agents and widget. There can be several channels — one per project and audience.",
     list: "Channels",
-    empty: "No channels yet.",
     newChannel: "New channel",
+    introAgent: "Channels where you answer tickets.",
+    levels: { public: "public", internal: "internal" },
+    openCount: n => `${n} open`,
+    openLabel: () => "open",
+    mailboxStalled: "Mailbox not syncing",
+    builtInFixed: "not configurable",
+    builtInAssistantSub: "questions and answers over the whole library for signed-in people",
+    builtInPortalSub: "current documents for signed-in people",
+    emptyTitle: "No channel yet",
+    emptyText: "A widget goes into another website, a portal opens the library to more people. Create a channel with the button above.",
+    newIntro: "Name and type. The type cannot change later; set the rest in the channel.",
+    nameHint: "People see it in the widget or portal header.",
+    create: "Create channel",
+    cancelNew: "Cancel",
     edit: "edit",
     keyHint: "The channel key, assigned at creation. It is in the widget script address and in the token's aud claim; it never changes.",
     name: "Name",
@@ -15412,7 +15461,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     miningRun: "Propose FAQ entries",
     miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Mining finished: threads ${threads}, proposals ${proposed}, saved to the draft ${saved}, duplicates ${duplicates}.`,
     noFaqDocuments: "There is no FAQ document in the library yet — create one in Library → New document → FAQ.",
-    tickets: (open: number, total: number) => `tickets: ${open} open of ${total}`,
     save: "Save channel",
     saved: "The channel is saved.",
     created: "The channel is created.",
