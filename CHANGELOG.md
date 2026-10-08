@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: synchronizácia každých 5 minút, interval pri kanáli (2026-10-08)
+
+Pri schránke kanála je **Interval synchronizácie** — 5, 15, 30, 60 minút
+alebo raz denne, predvolene 5. Spúšťa ju GitHub Actions každých 5 minút
+(plán Hobby na Verceli častejší cron nedovolí; denný cron ostáva ako
+záloha) a synchronizuje sa len kanál, ktorému interval uplynul.
+Spúšťač treba raz zapnúť secretom `CRON_SECRET` v GitHube —
+`docs/NASADENIE_app.md` § 5c.
+
 ### MCP konektory: pripojenie organizácie a živý zdroj (2026-10-07)
 
 **ADR-029.** Organizácia sa vie pripojiť k cudziemu MCP serveru (prvý je

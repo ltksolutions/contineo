@@ -62,7 +62,7 @@ export async function saveChannelAction(fd: FormData) {
       widgetOrigins: lines(fd, "widgetOrigins"),
       rateLimitPerHour: fieldText(fd, "rateLimitPerHour"),
       mailbox: mailboxKind
-        ? { kind: mailboxKind, address: fieldText(fd, "address"), tenantId: fieldText(fd, "tenantId"), clientId: fieldText(fd, "clientId"), clientSecret: fieldText(fd, "clientSecret") }
+        ? { kind: mailboxKind, address: fieldText(fd, "address"), tenantId: fieldText(fd, "tenantId"), clientId: fieldText(fd, "clientId"), clientSecret: fieldText(fd, "clientSecret"), syncIntervalMinutes: fieldText(fd, "syncInterval") }
         : null,
     }, ctx.person.email)
     key = saved.key

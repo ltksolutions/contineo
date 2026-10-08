@@ -46,6 +46,24 @@ export const MAILBOX_KINDS: MailboxKind[] = ["graph", "imap"]
 /** Koľko stránok delta dotazu zoberie jedno spustenie — do 60 s cronu. */
 export const SYNC_MAX_PAGES = 20
 export const DEFAULT_RATE_LIMIT = 60
+/**
+ * Ako často sa schránka kanála synchronizuje, v minútach (Ján 8. 10. 2026:
+ * „každých 5 minút, interval si nastaví každý sám"). Spúšťač beží každých
+ * 5 minút (GitHub Actions, `.github/workflows/helpdesk-sync.yml`) a berie
+ * len kanály, ktorým interval uplynul (`isSyncDue()`); kratší interval než
+ * spúšťač nemá zmysel. 1440 = raz denne.
+ */
+export const SYNC_INTERVALS = [5, 15, 30, 60, 1440] as const
+export const DEFAULT_SYNC_INTERVAL = 5
+/** Rezerva na nepresný spúšťač — kolo o pár sekúnd skôr sa nepreskočí. */
+const SYNC_SLACK_MS = 60_000
+
+/** Má sa schránka synchronizovať teraz? Bez predošlého behu áno. */
+export function isSyncDue(mailbox: Pick<ChannelMailbox, "lastSyncAt" | "syncIntervalMinutes">, now = new Date()): boolean {
+  if (!mailbox.lastSyncAt) return true
+  const minutes = mailbox.syncIntervalMinutes ?? DEFAULT_SYNC_INTERVAL
+  return now.getTime() - new Date(mailbox.lastSyncAt).getTime() >= minutes * 60_000 - SYNC_SLACK_MS
+}
 
 export class HelpdeskError extends AppError {}
 
@@ -80,6 +98,8 @@ export interface ChannelMailbox {
    * nestáva — ide do ťažby FAQ (D165).
    */
   syncSince: Date | null
+  /** Interval synchronizácie v minútach (`SYNC_INTERVALS`); chýbajúci = `DEFAULT_SYNC_INTERVAL`. */
+  syncIntervalMinutes?: number
   lastSyncAt: Date | null
   lastSyncError: string | null
   lastSyncCounts: { created: number; appended: number; skipped: number } | null
@@ -193,6 +213,8 @@ export interface ChannelInput {
     clientId?: string
     /** Prázdne = bez zmeny. */
     clientSecret?: string
+    /** Minúty zo `SYNC_INTERVALS`; prázdne = predošlý alebo predvolený. */
+    syncIntervalMinutes?: number | string
   } | null
 }
 
@@ -238,6 +260,11 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
     const address = input.mailbox.address.trim().toLowerCase()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) throw new HelpdeskError("helpdesk.mailboxAddress", "Adresa schránky nie je e-mailová adresa.")
     const changedIdentity = !mailbox || mailbox.kind !== kind || mailbox.address !== address
+    const rawInterval = String(input.mailbox.syncIntervalMinutes ?? "").trim()
+    const interval = rawInterval ? Number(rawInterval) : mailbox?.syncIntervalMinutes ?? DEFAULT_SYNC_INTERVAL
+    if (!(SYNC_INTERVALS as readonly number[]).includes(interval)) {
+      throw new HelpdeskError("helpdesk.syncInterval", "Neznámy interval synchronizácie.", { interval: rawInterval })
+    }
     const next: ChannelMailbox = {
       kind, address,
       // Iná schránka = iná história; značka a hranica ticketov začínajú odznova.
@@ -245,6 +272,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
       cursorSince: changedIdentity ? false : Boolean(mailbox!.cursorSince),
       sentCursor: changedIdentity ? null : mailbox!.sentCursor ?? null,
       syncSince: changedIdentity ? null : mailbox!.syncSince,
+      syncIntervalMinutes: interval,
       lastSyncAt: changedIdentity ? null : mailbox!.lastSyncAt,
       lastSyncError: changedIdentity ? null : mailbox!.lastSyncError,
       lastSyncCounts: changedIdentity ? null : mailbox!.lastSyncCounts,

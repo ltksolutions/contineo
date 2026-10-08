@@ -17,7 +17,7 @@ import SubmitButton from "@/components/SubmitButton"
 import { orgContext } from "@/lib/orgSettings"
 import { isHelpdeskAgent } from "@/lib/helpdeskAgents"
 import { ChannelPartTabs, channelHref } from "@/components/ChannelTabs"
-import { channelByKey, channelView, takeRevealedWidgetSecret, HELPDESK_ROLE, DEFAULT_RATE_LIMIT } from "@/lib/channels"
+import { channelByKey, channelView, takeRevealedWidgetSecret, HELPDESK_ROLE, DEFAULT_RATE_LIMIT, SYNC_INTERVALS, DEFAULT_SYNC_INTERVAL } from "@/lib/channels"
 import { allFolders, flattenTree } from "@/lib/folders"
 import { listPeople } from "@/lib/people"
 import { treeOptions } from "@/lib/treeOptions"
@@ -178,6 +178,12 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
                 {" "}{t.clientSecretHint}
               </span>
             </label>
+            <div className="field">
+              <span className="field-label">{t.syncInterval}</span>
+              <Select language={language} name="syncInterval" fieldLabel={t.syncInterval} initial={String(raw.mailbox?.syncIntervalMinutes ?? DEFAULT_SYNC_INTERVAL)}
+                options={SYNC_INTERVALS.map(m => ({ value: String(m), label: t.syncIntervalOption(m) }))} />
+              <span className="quiet field-hint">{t.syncIntervalHint}</span>
+            </div>
             <p className="quiet field-hint" style={{ margin: 0 }}>{t.deployNote}</p>
           </div>
         </section>

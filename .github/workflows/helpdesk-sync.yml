@@ -1,0 +1,45 @@
+# Synchronizácia schránok kanálov helpdesku (ADR-028, D162) každých 5 minút.
+#
+# Prečo GitHub Actions a nie Vercel cron: plán Hobby na Verceli dovolí cron
+# len raz denne (ten ostáva vo vercel.json ako záloha). Repozitár je verejný,
+# plánované behy sú zadarmo. GitHub ich pri záťaži zvykne oneskoriť o pár
+# minút — pre e-maily helpdesku to stačí.
+#
+# Route sama rozhodne, ktoré kanály sú na rade (interval v nastavení kanála,
+# `isSyncDue()`), takže tento beh môže ísť vždy každých 5 minút.
+#
+# Nastavenie (raz): Settings → Secrets and variables → Actions →
+#   secret   CRON_SECRET          — rovnaká hodnota ako vo Verceli
+#   variable HELPDESK_SYNC_URL    — nepovinné, predvolene produkcia SFZ
+# Bez secretu sa beh preskočí (nie zlyhá), aby forky nehlásili chyby.
+
+name: helpdesk-sync
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: helpdesk-sync
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Zavolať synchronizáciu
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          URL: ${{ vars.HELPDESK_SYNC_URL || 'https://intranet.futbalsfz.sk/api/cron/helpdesk-sync' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::notice::CRON_SECRET nie je nastavený — synchronizácia sa preskočila."
+            exit 0
+          fi
+          curl --silent --show-error --fail-with-body --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" "$URL" \
+            | head -c 2000
