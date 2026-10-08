@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Karta osoby: sekcie, lišta uloženia, Ďalšie akcie (2026-10-08)
+
+- `/people/<id>` je formulár so sekciami **Osoba · Kontakt · Zaradenie ·
+  Jazyk a oslovenie · Skupiny a trasy · Roly** (nadpis vľavo, polia vpravo
+  od 1024 px). Skupiny, trasy a roly sú riadky priamo v sekcii — bez karty
+  v karte.
+- **Uložiť** je v lište prilepenej dole („Uloží všetky sekcie na tejto
+  stránke.") — na telefóne netreba posúvať na koniec.
+- „Prístup a členstvo" nahradila karta **Ďalšie akcie**: pozvánka, Vyradiť…
+  (potvrdenie sa otvorí až po kliknutí, `?exclude=1`), dátum skončenia
+  vzťahu a Vrátiť.
+- Pod hlavičkou ostal jeden riadok (e-mail · naposledy …); predošlé adresy
+  a „prihlasuje sa cez" sú poznámka pod e-mailom.
+- Reťaz dôkazov: riadok = dokument · stav · posledný krok, celá časová os
+  sa rozbalí v riadku.
+
 ### Opýtať sa: predvolene len knižnica (2026-10-08)
 
 - Pri otázke sa **predvolene hľadá len v knižnici**. Pripojený konektor

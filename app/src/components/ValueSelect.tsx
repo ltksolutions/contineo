@@ -29,8 +29,13 @@ export interface ValueOption {
 }
 
 export default function ValueSelect({
-  kind, name, legend, options, selected, language, prefillNew, forced, warning,
+  kind, name, legend, options, selected, language, prefillNew, forced, warning, variant = "card",
 }: {
+  /**
+   * `card` — `.form-group` s vlastnou kartou; `rows` — riadky priamo v sekcii
+   * `.set-sec` bez karty v karte (OSOBY-karta-osoby Q2, 8. 10. 2026).
+   */
+  variant?: "card" | "rows"
   /** Skupiny osôb alebo značky dokumentov — určuje texty. */
   kind: "groups" | "tags"
   name: string
@@ -59,10 +64,11 @@ export default function ValueSelect({
     ...all.filter(o => !chosen.has(key(o.value))).sort((a, b) => name_(a).localeCompare(name_(b), "sk")),
   ]
 
+  const rows = variant === "rows"
   return (
-    <fieldset className="form-group">
-      <legend className="form-group-head">{legend}</legend>
-      <div className="card form-group-body form-group-body--rows">
+    <fieldset className={rows ? "sec-rows" : "form-group"}>
+      <legend className={rows ? "sec-rows-head" : "form-group-head"}>{legend}</legend>
+      <div className={rows ? "sec-rows-body" : "card form-group-body form-group-body--rows"}>
         <ValueCombo name={name} kind={kind} empty={sorted.length === 0} language={language} />
         <div className="form-list">
           {sorted.map(o => {
@@ -96,7 +102,7 @@ export default function ValueSelect({
         {forced && <input type="hidden" name={`${name}Force`} value={forced} />}
         {warning}
       </div>
-      <p className="form-group-foot quiet">{sorted.length ? labels.foot : labels.emptyFoot}</p>
+      <p className={rows ? "sec-rows-foot quiet" : "form-group-foot quiet"}>{sorted.length ? labels.foot : labels.emptyFoot}</p>
     </fieldset>
   )
 }

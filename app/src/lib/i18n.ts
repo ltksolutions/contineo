@@ -1985,6 +1985,17 @@ interface Dictionary {
       save: string
       /** Súhrn `<details>` „Prístup a členstvo" (OSOBY.md, úloha 3). */
       accessSummary: string
+      sectionPerson: string
+      sectionContact: string
+      sectionPlacement: string
+      sectionLanguage: string
+      sectionGroups: string
+      sectionRoles: string
+      excludeOpen: string
+      excludeRowNote: string
+      excludeConfirmTitle: (name: string) => string
+      cancel: string
+      dutyTimeline: string
       /** Prázdne dôkazy na karte osoby (OSOBY.md, úloha 4). */
       evidenceEmptyTitle: string
       evidenceEmptyText: string
@@ -6312,6 +6323,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evidenceEmptyTitle: "Žiadne pridelené dokumenty",
       evidenceEmptyText: "Tejto osobe zatiaľ nikto nepridelil normu na potvrdenie.",
       accessSummary: "Prístup a členstvo",
+      sectionPerson: "Osoba",
+      sectionContact: "Kontakt",
+      sectionPlacement: "Zaradenie",
+      sectionLanguage: "Jazyk a oslovenie",
+      sectionGroups: "Skupiny a trasy",
+      sectionRoles: "Roly",
+      excludeOpen: "Vyradiť…",
+      excludeRowNote: "Neprihlási sa a nedostane nové povinnosti. Potvrdenia ostávajú.",
+      excludeConfirmTitle: n => `Vyradiť ${n}?`,
+      cancel: "Zrušiť",
+      dutyTimeline: "Časová os",
       returnHeading: "Vrátiť osobu",
       excludeHeading: "Vyradiť osobu",
       inviteHeading: "Pozvánka",
@@ -10475,6 +10497,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evidenceEmptyTitle: "Žádné přidělené dokumenty",
       evidenceEmptyText: "Této osobě zatím nikdo nepřidělil předpis k potvrzení.",
       accessSummary: "Přístup a členství",
+      sectionPerson: "Osoba",
+      sectionContact: "Kontakt",
+      sectionPlacement: "Zařazení",
+      sectionLanguage: "Jazyk a oslovení",
+      sectionGroups: "Skupiny a trasy",
+      sectionRoles: "Role",
+      excludeOpen: "Vyřadit…",
+      excludeRowNote: "Nepřihlásí se a nedostane nové povinnosti. Potvrzení zůstávají.",
+      excludeConfirmTitle: n => `Vyřadit ${n}?`,
+      cancel: "Zrušit",
+      dutyTimeline: "Časová osa",
       returnHeading: "Vrátit osobu",
       excludeHeading: "Vyřadit osobu",
       inviteHeading: "Pozvánka",
@@ -14627,6 +14660,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evidenceEmptyTitle: "No documents assigned",
       evidenceEmptyText: "Nobody has assigned this person a document to acknowledge yet.",
       accessSummary: "Access and membership",
+      sectionPerson: "Person",
+      sectionContact: "Contact",
+      sectionPlacement: "Placement",
+      sectionLanguage: "Language and address",
+      sectionGroups: "Groups and tracks",
+      sectionRoles: "Roles",
+      excludeOpen: "Deactivate…",
+      excludeRowNote: "They can no longer sign in or receive new duties. Acknowledgements stay.",
+      excludeConfirmTitle: n => `Deactivate ${n}?`,
+      cancel: "Cancel",
+      dutyTimeline: "Timeline",
       returnHeading: "Reinstate the person",
       excludeHeading: "Exclude the person",
       inviteHeading: "Invitation",

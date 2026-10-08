@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>OSOBY — karta osoby</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-small:13px;--fs-micro:12px;--shadow:0 -6px 18px rgba(20,28,42,.08)}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--shadow:0 -6px 18px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:96ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+.notes{display:grid;gap:6px;max-width:96ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+/* rám */
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.scroll{flex:1;overflow:hidden;position:relative}
+.body{padding:24px 28px 36px}
+.page{max-width:760px;margin:0 auto;display:grid;gap:18px}
+.page-head{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-lead{font-size:14px;color:var(--muted);margin:-10px 0 0;overflow-wrap:anywhere}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--danger{background:var(--surface);color:var(--bad-fg);border-color:var(--bad-fg)}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--warn{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--bad{background:var(--bad-bg);color:var(--bad-fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.notice{display:flex;gap:10px;padding:10px 14px;border-radius:10px;background:var(--ok-bg);color:var(--ok-fg);font-size:14px}
+/* set-form */
+.set-sec{display:grid;gap:14px;padding:20px 22px;border-bottom:1px solid var(--line)}
+.set-sec-head h2{font-size:var(--fs-section);margin:0 0 2px}
+.set-sec-head p{margin:0;font-size:13px;color:var(--muted);max-width:60ch}
+.set-sec-body{display:grid;gap:14px;min-width:0}
+.set-savebar{position:sticky;bottom:0;z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 22px;background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow)}
+.set-savebar .quiet{font-size:12.5px}
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%;display:flex;align-items:center;gap:8px}
+.field-input.ph{color:var(--muted)}
+.field-input .chev{margin-left:auto;color:var(--muted);font-size:12px}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.phone{display:grid;grid-template-columns:120px 1fr;gap:8px}
+/* riadky priamo v sekcii — bez karty */
+.sec-rows{display:grid;margin:0 -22px}
+.sec-rows-head{font-size:var(--fs-small);font-weight:600;padding:0 22px 6px;display:flex;gap:8px}
+.sec-rows-head .n{color:var(--muted);font-weight:400}
+.sec-rows-foot{font-size:var(--fs-micro);color:var(--muted);padding:6px 22px 0;margin:0}
+.form-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 22px;font-size:15px;line-height:1.35;border-top:1px solid var(--line)}
+.form-row:last-child{border-bottom:1px solid var(--line)}
+.form-row-main{flex:1;min-width:0;display:grid;gap:1px}
+.form-row-sub{font-size:12.5px;color:var(--muted)}
+.form-row-detail{color:var(--muted);font-size:14px;white-space:nowrap}
+.ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none;position:relative}
+.ck.on{background:var(--accent);border-color:var(--accent)}
+.ck.on::after{content:"";position:absolute;left:6.5px;top:2.5px;width:6px;height:11px;border:solid var(--on-accent);border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.sel-combo{display:flex;align-items:center;gap:9px;height:40px;margin:0 22px 10px;padding:0 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:15px}
+.sec-gap{height:8px}
+/* ďalšie akcie */
+.more-head{padding:16px 22px 4px}
+.more-head h2{margin:0;font-size:var(--fs-section)}
+.more-row{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line)}
+.more-head + .more-row{border-top:0}
+.more-main{flex:1 1 280px;display:grid;gap:2px;min-width:0}
+.more-main b{font-weight:600;font-size:15px}
+.more-main span{font-size:13px;color:var(--muted)}
+.more-confirm{display:grid;gap:14px;padding:16px 22px 18px;border-top:1px solid var(--line);background:var(--bad-bg)}
+.more-confirm h3{margin:0;font-size:15px;display:flex;gap:8px;align-items:center}
+.ex-ico{width:22px;height:22px;border-radius:50%;background:var(--bad-fg);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.ex-tl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ex-tl li{display:grid;gap:1px;font-size:12.5px;color:var(--muted);border-top:2px solid var(--line-strong);padding-top:8px}
+.ex-tl li.now{border-color:var(--bad-fg)}
+.ex-tl b{color:var(--ink);font-size:13.5px}
+.ex-copy{justify-self:start;font-size:14px;padding:3px 8px;background:var(--surface);border:1px solid var(--line)}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0}
+.facts div{display:grid;gap:1px}
+.facts dt{font-size:var(--fs-micro);color:var(--muted)}
+.facts dd{margin:0;font-weight:600;font-size:15px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+/* povinnosti */
+.form-group{display:grid;gap:10px}
+.form-group-head{font-size:var(--fs-section);font-weight:650;padding:0 4px;margin:0;display:flex;gap:10px;align-items:baseline}
+.form-group-head a{font-size:13px;font-weight:400;margin-left:auto}
+.form-group-foot{font-size:var(--fs-micro);color:var(--muted);padding:0 4px;margin:0}
+.duty{display:grid}
+.duty-row{position:relative;padding:12px 16px;display:grid;gap:4px}
+.duty-row + .duty-row{border-top:1px solid var(--line)}
+.duty-top{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.duty-top b{font-weight:600;font-size:15px}
+.duty-top .tag{margin-left:auto}
+.duty-sub{font-size:12.5px;color:var(--muted)}
+.duty-tl{font-size:13px}
+.duty-tl summary{color:var(--accent);cursor:pointer;min-height:32px;display:inline-flex;align-items:center}
+.tl{list-style:none;margin:4px 0 2px;padding:0 0 0 14px;border-left:2px solid var(--line);display:grid;gap:6px}
+.tl li{font-size:13px}
+.tl li span{color:var(--muted)}
+.stub{padding:16px 22px;color:var(--muted);font-size:14px;display:flex;gap:10px;justify-content:space-between;border-bottom:1px solid var(--line)}
+/* mobil */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 0}
+.m .page-title{font-size:22px}
+.m .button{min-height:44px}
+.m .set-sec,.m .more-row,.m .more-head,.m .more-confirm{padding-left:14px;padding-right:14px}
+.m .sec-rows{margin:0 -14px}
+.m .form-row{padding-left:14px;padding-right:14px;font-size:16px}
+.m .sec-rows-head,.m .sec-rows-foot{padding-left:14px;padding-right:14px}
+.m .sel-combo{margin:0 14px 10px;height:44px}
+.m .field-row{grid-template-columns:1fr}
+.m .facts{grid-template-columns:1fr 1fr}
+.m .more-row .button{width:100%}
+.m .set-savebar .button{width:100%}
+.m .page{gap:16px}
+.bar-pin{position:absolute;left:14px;right:14px;bottom:0;z-index:6}
+.bar-pin .set-savebar{border:1px solid var(--line);border-bottom:0;border-radius:var(--radius) var(--radius) 0 0;padding:12px 14px}
+.bar-pin .button{width:100%}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">OSOBY — karta osoby (<code>/people/[id]</code>)</h1>
+<p class="doc">Úprava karty osoby: všetko je v jednom <code>form.card.set-form</code> so sekciami a prilepenou lištou <code>.set-savebar</code>, bez karty v karte. Skupiny, Trasy a Roly sú riadky <code>.select-row</code> priamo v tele sekcie. „Prístup a členstvo" sa presúva do karty „Ďalšie akcie". Povinnosti sú zoznam s časovou osou zbalenou v riadku. Polia, ich mená a <code>savePersonAction</code> ostávajú. Popis je v <code>OSOBY-karta-osoby.md</code>.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Časť</th><th>Dnes</th><th>Návrh</th></tr>
+    <tr><td>Hlavička</td><td class="old">dva riadky <code>p.quiet</code> s inline štýlmi: e-mail · predtým … / naposledy … · prihlasuje sa cez …</td><td class="new"><code>.page-head</code> (meno s titulmi + stav) a <code>p.quiet.page-lead</code>: e-mail · naposledy 6. 10. 2026. Predošlé adresy a „prihlasuje sa cez" sú v sekcii Kontakt pod e-mailom</td></tr>
+    <tr><td>Formulár</td><td class="old">jedna <code>.card</code> (padding 20 inline), 14 polí pod sebou, výbery s vlastnou kartou</td><td class="new"><code>.set-form</code>: Osoba · Kontakt · Zaradenie · Jazyk a oslovenie · Skupiny a trasy · Roly</td></tr>
+    <tr><td>Výbery</td><td class="old"><code>.form-group</code> + <code>.card.form-group-body--rows</code> v karte formulára</td><td class="new"><code>.sec-rows</code>: nadpis, riadky cez celú šírku sekcie oddelené čiarou, pätička (Q2)</td></tr>
+    <tr><td>Uložiť</td><td class="old">na konci formulára, na telefóne po 3–4 obrazovkách</td><td class="new"><code>.set-savebar</code> prilepená dole: „Uložiť" + „Uloží všetky sekcie na tejto stránke."</td></tr>
+    <tr><td>Prístup a členstvo</td><td><code>&lt;details&gt;</code>, vnútri karty pozvánky, vyradenia, skončenia, vrátenia</td><td class="new">karta „Ďalšie akcie": riadky s tichými tlačidlami; „Vyradiť…" (danger) → <code>?exclude=1</code>, karta vyradenia sa otvorí v riadku (Q1)</td></tr>
+    <tr><td>Povinnosti</td><td class="old"><code>section.card</code> s inline štýlmi, pri každom dokumente celá os</td><td class="new"><code>.form-group</code> „Povinnosti": dokument · stav · posledný krok; celá os v <code>&lt;details&gt;</code> (Q3)</td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — aktívna osoba (2 skupiny, 1 trasa, rola hr, 3 povinnosti)</p>
+  <div class="frame" style="width:1440px" id="f-active"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>V hlavičke je meno s titulmi a stav. Pod ňou je jeden riadok <code>.page-lead</code> bez inline štýlov.</p>
+    <p><span class="ann">2</span>Jeden <code>form.card.set-form</code> má šesť sekcií. Dvojice polí (meno a priezvisko, tituly) sú v <code>.field-row</code> (D83).</p>
+    <p><span class="ann">3</span>Predošlá adresa a „prihlasuje sa cez" sú nápovedou pod e-mailom.</p>
+    <p><span class="ann">4</span>Skupiny a trasy majú riadky priamo v sekcii, bez vlastnej karty. Pole „Hľadať alebo pridať" pre skupiny ostáva (ZAKLAD-vyber-skupin-a-znaciek).</p>
+    <p><span class="ann">5</span>Lišta je prilepená k spodnému okraju okna, kým je formulár na obrazovke. Na konci formulára ostane stáť pod sekciou Roly.</p>
+    <p><span class="ann">6</span>Pri aktívnej osobe, ktorá sa už prihlásila, majú „Ďalšie akcie" len riadok „Vyradiť osobu".</p>
+    <p><span class="ann">7</span>Povinnosti (len rola <code>hr</code>, D67): riadok ukazuje dokument, stav a posledný krok. Celá os je zbalená v <code>&lt;details&gt;</code>.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — pozvaná osoba · otvorené vyradenie ?exclude=1</p>
+  <div class="row-frames">
+    <div><p class="cap">Pozvaná osoba — pozvánka v Ďalších akciách</p><div class="frame" style="width:700px" id="f-invited"></div></div>
+    <div><p class="cap">Aktívna osoba — /people/&lt;id&gt;?exclude=1#more</p><div class="frame" style="width:700px" id="f-exclude"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Pozvánka sa ukazuje len kým sa osoba ani raz neprihlásila (<code>needsInvitation</code>). Tlačidlo je tiché, text pri ňom je z <code>inviteNote</code>.</p>
+    <p><span class="ann">2</span>Pri <code>?exclude=1</code> sa „Vyradiť…" skryje a pod riadkom sa otvorí karta vyradenia z rámu <code>OSOBY-skoncenie-vztahu</code>: časová os, nepovinný dátum skončenia a adresa na opísanie. Tlačidlo „Vyradiť" je <code>.button--danger</code>, „Zrušiť" je odkaz bez parametra.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — aktívna osoba · vyradená osoba</p>
+  <div class="row-frames">
+    <div><p class="cap">Aktívna — lišta prilepená dole</p><div class="frame m dark" style="width:390px;height:844px" id="f-m1"></div></div>
+    <div><p class="cap">Vyradená — posunuté na koniec formulára</p><div class="frame m dark" style="width:390px;height:844px" id="f-m2"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Lišta je pri spodnom okraji obrazovky po celý čas posúvania formulára a tlačidlo v nej má celú šírku. Pod lištou je ešte hlavná lišta aplikácie.</p>
+    <p><span class="ann">2</span>Na konci formulára stojí lišta pod poslednou sekciou a karta „Ďalšie akcie" je pod ňou.</p>
+    <p><span class="ann">3</span>Vyradená osoba: fakty (vyradená, vzťah skončil, doklady sa zmažú od) a dátum skončenia s tichým „Uložiť dátum" sú samostatný formulár (<code>setEndedAtAction</code>). Pod nimi je riadok „Vrátiť osobu" s tichým tlačidlom.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=a=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const F=(l,v,h,ph)=>`<label class="field"><span class="field-label">${l}</span><span class="field-input${ph?" ph":""}">${v}</span>${h?`<span class="field-hint">${h}</span>`:""}</label>`;
+const S=(l,v,h)=>`<label class="field"><span class="field-label">${l}</span><span class="field-input">${v}<span class="chev">⌃⌄</span></span>${h?`<span class="field-hint">${h}</span>`:""}</label>`;
+const sec=(h,p,body)=>`<section class="set-sec"><div class="set-sec-head"><h2>${h}</h2>${p?`<p>${p}</p>`:""}</div><div class="set-sec-body">${body}</div></section>`;
+const rows=(head,n,items,foot,combo)=>`<div class="sec-rows">${head?`<div class="sec-rows-head">${head}${n?`<span class="n">${n}</span>`:""}</div>`:""}${combo?`<div class="sel-combo">⌕ ${combo}</div>`:""}${items.map(([t,d,on,sub])=>`<label class="form-row"><i class="ck${on?" on":""}"></i><span class="form-row-main"><span>${t}</span>${sub?`<span class="form-row-sub">${sub}</span>`:""}</span>${d?`<span class="form-row-detail">${d}</span>`:""}</label>`).join("")}${foot?`<p class="sec-rows-foot">${foot}</p>`:""}</div>`;
+const bar=`<div class="set-savebar"><span class="button">Uložiť</span><span class="quiet">Uloží všetky sekcie na tejto stránke.</span></div>`;
+
+const secOsoba=sec("Osoba","",`<div class="field-row">${F("Meno","Marek")}${F("Priezvisko","Kováč")}</div><div class="field-row">${F("Titul pred menom","Mgr.")}${F("Titul za menom","PhD.","")}</div><span class="field-hint" style="margin-top:-8px">Meno a priezvisko sa v potvrdeniach zobrazia s titulmi.</span>`);
+const secKontakt=(m)=>sec("Kontakt","",`<div class="rel">${m?"":an(3,"left:-34px;top:62px")}${F("E-mail","marek.kovac@futbalsfz.sk","Predtým: m.kovac@futbalsfz.sk · prihlasuje sa cez Microsoft")}</div><div class="field"><span class="field-label">Mobil</span><div class="phone"><span class="field-input">+421<span class="chev">⌃⌄</span></span><span class="field-input">905 123 456</span></div><span class="field-hint">Na pripomienky SMS, ak ich organizácia zapne.</span></div>`);
+const secZar=sec("Zaradenie","",`<div class="field-row">${F("Pozícia","Rozhodca")}${S("Pracovisko","Bratislava — Tomášikova")}</div>${S("Oddelenie","Úsek rozhodcov","Komisia rozhodcov › Úsek rozhodcov")}${S("Typ osoby","Zamestnanec")}`);
+const secJaz=sec("Jazyk a oslovenie","",`<div class="field-row">${S("Jazyk","Slovenčina","Jazyk aplikácie a e-mailov.")}${S("Pohlavie","Muž","Na oslovenie v e-mailoch.")}</div>`);
+const secSkup=(m)=>sec("Skupiny a trasy","",`<div class="rel">${m?"":an(4,"left:-34px;top:0")}${rows("Skupiny","",[["rozhodcovia","14 ľudí",1],["delegati","6 ľudí",1],["komisari","9 ľudí",0]],"Nová skupina vznikne uložením osoby.",`<span>Hľadať alebo pridať skupinu</span>`)}</div><div class="sec-gap"></div>${rows("Trasy","",[["Rozhodcovia 2026","",1],["Nástup 2026","",0]],"Osoba dostane všetko, čo je trase pridelené.")}`);
+const secRoly=sec("Roly","",rows("","",[["Správa osôb","",0],["Personalista (hr)","",1],["Schvaľovateľ","",0],["Správa vzdelávania","",0]],"Rola určuje, čo osoba v aplikácii smie robiť."));
+const head=(tag,lead)=>`<div class="page-head rel">${tag}</div><p class="page-lead">${lead}</p>`;
+const nameTag=(t,c)=>`<h1 class="page-title">Mgr. Marek Kováč, PhD.</h1><span class="tag ${c}">${t}</span>`;
+
+const more=(inner)=>`<section class="card rel" id="more"><div class="more-head"><h2>Ďalšie akcie</h2></div>${inner}</section>`;
+const exRow=`<div class="more-row"><div class="more-main"><b>Vyradiť osobu</b><span>Neprihlási sa a nedostane nové povinnosti. Potvrdenia ostávajú.</span></div><a class="button button--danger" href="#">Vyradiť…</a></div>`;
+const tl=[["6. 10.","Potvrdil"],["2. 10.","Otvoril dokument"],["1. 10.","Pridelené, termín 15. 10. 2026"]];
+const duties=[["Pracovný poriadok SFZ","Potvrdené","tag--ok","Potvrdil 6. 10. 2026","verzia 3 · od 1. 9. 2026"],["Smernica o ochrane osobných údajov","Otvorené","tag--warn","Otvoril 4. 10. 2026 · termín 15. 10. 2026","verzia 2"],["Etický kódex","Neotvorené","","Pridelené 1. 10. 2026 · termín 15. 10. 2026","verzia 1"]];
+const dutyList=`<div class="form-group rel">${an(7,"left:-11px;top:2px")}<p class="form-group-head">Povinnosti<span class="quiet" style="font-weight:400;font-size:13px">3</span><a href="#">Výkaz všetkých ľudí</a></p><div class="card duty">${duties.map(([t,s,c,last,v],i)=>`<div class="duty-row"><div class="duty-top"><b>${t}</b><span class="tag ${c}">${s}</span></div><span class="duty-sub">${last} · ${v}</span><details class="duty-tl"${i===0?" open":""}><summary>Časová os</summary>${i===0?`<ol class="tl">${tl.map(([d,e])=>`<li>${e} <span>· ${d} 2026</span></li>`).join("")}</ol>`:""}</details></div>`).join("")}</div><p class="form-group-foot">Upozornenie e-mailom sa eviduje, ale nie je dôkazom, že osoba dokument videla.</p></div>`;
+
+document.getElementById("f-active").innerHTML=hdr()+crumbs(["Prehľad","Osoby","Mgr. Marek Kováč, PhD."])+`<div class="scroll"><div class="body"><div class="page">
+${head(an(1,"left:-34px;top:4px")+nameTag("Aktívna","tag--ok"),"marek.kovac@futbalsfz.sk · naposledy 6. 10. 2026")}
+<form class="card set-form rel">${an(2,"left:-11px;top:20px")}${secOsoba}${secKontakt()}${secZar}${secJaz}${secSkup()}${secRoly}<div class="rel">${an(5,"left:-11px;top:20px")}${bar}</div></form>
+<div class="rel">${an(6,"left:-11px;top:16px")}${more(exRow)}</div>
+${dutyList}
+</div></div></div>`;
+
+const stub=`<form class="card set-form"><div class="stub"><span>Osoba · Kontakt · Zaradenie · Jazyk a oslovenie · Skupiny a trasy · Roly</span><span>bez zmeny</span></div>${bar}</form>`;
+document.getElementById("f-invited").innerHTML=hdr()+crumbs(["Osoby","Jana Nová"])+`<div class="scroll"><div class="body"><div class="page">
+<div class="page-head"><h1 class="page-title">Jana Nová</h1><span class="tag tag--warn">Pozvaná</span></div><p class="page-lead">jana.nova@futbalsfz.sk · pozvaná, ešte sa neprihlásila</p>
+${stub}
+<div class="rel">${an(1,"left:-11px;top:60px")}${more(`<div class="more-row"><div class="more-main"><b>Pozvánka</b><span>Osoba sa ešte neprihlásila. Pozvaná 1. 10. 2026, e-mail odoslaný 1. 10. 2026.</span></div><span class="button button--quiet">Poslať pozvánku znova</span></div>${exRow}`)}</div>
+</div></div></div>`;
+
+document.getElementById("f-exclude").innerHTML=hdr()+crumbs(["Osoby","Mgr. Marek Kováč, PhD."])+`<div class="scroll"><div class="body"><div class="page">
+${head(nameTag("Aktívna","tag--ok"),"marek.kovac@futbalsfz.sk · naposledy 6. 10. 2026")}
+${stub}
+<div class="rel">${an(2,"left:-11px;top:60px")}${more(`<div class="more-row"><div class="more-main"><b>Vyradiť osobu</b><span>Neprihlási sa a nedostane nové povinnosti. Potvrdenia ostávajú.</span></div></div>
+<div class="more-confirm"><h3><span class="ex-ico">!</span>Vyradiť Mgr. Marek Kováč, PhD.?</h3>
+<ol class="ex-tl"><li class="now"><b>Vyradenie</b>dnes · neprihlási sa</li><li><b>Vzťah skončil</b>dátum nižšie</li><li><b>+ 3 roky</b>potvrdenia sa zmažú</li></ol>
+${F("Vzťah so zväzom skončil","dd. mm. rrrr","Nepovinné. Nevyplnené → lehota plynie od vyradenia.",1)}
+<label class="field"><span class="field-label">Na potvrdenie napíšte adresu</span><code class="ex-copy">marek.kovac@futbalsfz.sk</code><span class="field-input"></span></label>
+<div class="acts"><span class="button button--danger">Vyradiť</span><a class="button button--quiet" href="#">Zrušiť</a></div></div>`)}</div>
+</div></div></div>`;
+
+document.getElementById("f-m1").innerHTML=hdr(1)+crumbs(["Osoby","Marek Kováč"])+`<div class="scroll"><div class="body"><div class="page">
+${head(nameTag("Aktívna","tag--ok"),"marek.kovac@futbalsfz.sk · naposledy 6. 10. 2026")}
+<div class="notice">✓ Osoba uložená.</div>
+<form class="card set-form">${secOsoba}${secKontakt(1)}${secZar}</form>
+</div></div><div class="bar-pin rel">${an(1,"right:6px;top:-11px")}${bar}</div></div>`;
+
+document.getElementById("f-m2").innerHTML=hdr(1)+crumbs(["Osoby","Peter Malý"])+`<div class="scroll"><div class="body"><div class="page">
+<form class="card set-form" style="margin-top:-6px">${secRoly.replace("Personalista (hr)\",\"\",1","")}<div class="rel">${an(2,"right:6px;top:-11px")}${bar}</div></form>
+<div class="rel">${an(3,"right:-6px;top:60px")}${more(`<div class="more-row" style="display:grid;gap:14px"><div class="more-main"><b>Skončenie vzťahu</b></div>
+<dl class="facts"><div><dt>Vyradená</dt><dd>12. 9. 2026</dd></div><div><dt>Vzťah skončil</dt><dd>31. 8. 2026</dd></div><div><dt>Doklady sa zmažú od</dt><dd>31. 8. 2029</dd></div></dl>
+${F("Vzťah so zväzom skončil","31. 8. 2026","Od tohto dátumu plynie lehota dokladov.")}<span class="button button--quiet">Uložiť dátum</span></div>
+<div class="more-row"><div class="more-main"><b>Vrátiť osobu</b><span>Vráti sa ako <b style="font-size:13px">pozvaná</b> a dostane pozvánku.</span></div><span class="button button--quiet">Vrátiť osobu</span></div>`)}</div>
+</div></div></div>`;
+</script>
+</body></html>

@@ -287,7 +287,10 @@ export async function togglePersonStatusAction(fd: FormData) {
   }
 
   revalidatePath("/people")
-  redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  // Chyba vyradenia (zlá adresa na potvrdenie) nechá kartu vyradenia otvorenú
+  // (OSOBY-karta-osoby Q1, 8. 10. 2026).
+  const reopen = error && toStatus === "inactive" ? "&exclude=1#more" : ""
+  redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}${reopen}`)
 }
 
 /**
