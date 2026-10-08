@@ -55,6 +55,16 @@ function ConnectorForm({ c, language }: { c: ConnectorView | null; language: UiL
       </section>
 
       <section className="set-sec">
+        <div className="set-sec-head"><h2>{t.ingestOn}</h2><p>{t.ingestNote}</p></div>
+        <div className="set-sec-body">
+          <label className="form-row form-row--bare">
+            <input type="checkbox" className="toggle" role="switch" name="ingestEnabled" defaultChecked={c?.uses.ingest.enabled ?? false} />
+            <span>{t.ingestOn}</span>
+          </label>
+        </div>
+      </section>
+
+      <section className="set-sec">
         <div className="set-sec-head"><h2>{t.secScopes}</h2><p>{t.secScopesNote}</p></div>
         <div className="set-sec-body">
           <label className="field">

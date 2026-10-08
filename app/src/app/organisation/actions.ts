@@ -596,6 +596,7 @@ export async function saveConnectorAction(fd: FormData) {
       profile: fieldText(fd, "profile"),
       retrievalEnabled: fieldText(fd, "retrievalEnabled") === "on",
       retrievalAccessLevel: fieldText(fd, "accessLevel"),
+      ingestEnabled: fieldText(fd, "ingestEnabled") === "on",
       scopes: await parseScopeLines(fieldLines(fd, "scopes")),
       reduction: {
         dropSections: fieldLines(fd, "dropSections"),

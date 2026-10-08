@@ -137,6 +137,8 @@ export interface ConnectorInput {
   profile: string
   retrievalEnabled: boolean
   retrievalAccessLevel: string
+  /** Použitie B (import do knižnice). Nezadané = bez zmeny. */
+  ingestEnabled?: boolean
   reduction?: Partial<ReductionPolicy>
   /** Rozsahy ako riadky `key | label | filter=value, filter=value`. */
   scopes?: ConnectorScope[]
@@ -197,7 +199,7 @@ export async function saveConnector(companyCode: string, input: ConnectorInput, 
     scopes,
     uses: {
       retrieval: { enabled: Boolean(input.retrievalEnabled), accessLevel, reduction },
-      ingest: existing?.uses.ingest ?? { enabled: false },
+      ingest: { enabled: input.ingestEnabled ?? existing?.uses.ingest.enabled ?? false },
       agentTools: existing?.uses.agentTools ?? { allowed: [] },
     },
     capabilities: endpointChanged ? null : existing?.capabilities ?? null,

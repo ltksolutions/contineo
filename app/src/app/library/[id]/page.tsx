@@ -21,6 +21,7 @@ import { AppError } from "@/lib/appError"
 import Notice from "@/components/Notice"
 import {
   publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction, reindexVersionAction, loadTextForFixAction,
+  resyncConnectorDocumentAction,
   fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction, archiveDocumentAction, restoreDocumentAction,
 } from "../actions"
@@ -112,6 +113,7 @@ export default async function DocumentDetailPage({
   const t = dictionary(language).library.detail
   const tf = dictionary(language).library.fields
   const tflow = dictionary(language).library.flow
+  const tci = dictionary(language).library.connectorImport
   const extras = tenantExtras(ctx.tenant)
   // Značky s počtami len pre úpravu dokumentu — inde sa nekreslia.
   const tagChoices = editDocument ? await tagOptions(ctx.tenant.companyCode, extras) : []
@@ -1510,6 +1512,19 @@ export default async function DocumentDetailPage({
               <div><SubmitButton className="button button--danger">{tflow.archive.submit}</SubmitButton></div>
             </form>
           )}
+        </section>
+      )}
+      {/* Pôvod z MCP konektora (ADR-029, použitie B): odkiaľ článok je a kontrola zmien. */}
+      {d.source && d.source.type === "mcp" && (
+        <section className="card detail-block" id="source">
+          <h2 className="detail-block-title">{tci.sourceHeading}</h2>
+          <p className="detail-block-note" style={{ margin: 0 }}>{tci.sourceLine(d.source.connectorName, d.source.group, formatDate(new Date(d.source.fetchedAt), language))}</p>
+          <p className="detail-block-small" style={{ margin: 0 }}>{tci.sourcePath}: <code>{d.source.externalId}</code></p>
+          <form action={resyncConnectorDocumentAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <SubmitButton className="button button--quiet">{tci.resync}</SubmitButton>
+            <span className="quiet field-hint">{tci.resyncHint}</span>
+          </form>
         </section>
       )}
       <section className="card detail-block">
