@@ -58,7 +58,7 @@ function ScopeValue({ field, row, value, options, label }: { field: ScopeField; 
   }
   return (
     <input className="field-input" name={name} defaultValue={value} aria-label={label}
-           list={options?.length ? `opts-${field.key}` : undefined} placeholder={field.description?.slice(0, 60)}
+           list={options?.length ? `opts-${field.key}` : undefined} title={field.description}
            spellCheck={false} autoCapitalize="none" />
   )
 }

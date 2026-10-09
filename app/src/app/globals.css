@@ -8444,18 +8444,22 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 .line-remove { flex: none; min-width: 44px; min-height: 44px; }
 .form-default-submit { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
 .set-form { position: relative; }
-/* Rozsahy: od 640 px stĺpce s hlavičkou, pod 640 px karta s viditeľnými
-   popiskami — jeden DOM, prepína CSS. */
-.scope-table { display: grid; gap: 10px; }
-.scope-row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+/* Rozsahy: stĺpce s hlavičkou, keď má tabuľka aspoň 760 px; inak karta
+   s viditeľnými popiskami — jeden DOM, prepína CSS. Podľa šírky tabuľky,
+   nie okna: v `.set-sec` vedľa zoznamu častí je stĺpec polí okolo 650 px
+   aj na veľkom monitore a tri polia rozsahu by sa doň nezmestili
+   (naostro 9. 10. 2026). */
+.scope-table { display: grid; gap: 10px; container-type: inline-size; min-width: 0; }
+.scope-row { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
 .scope-row--head { display: none; }
 .scope-row .field { min-width: 0; }
+.scope-row .field-input { width: 100%; min-width: 0; }
 .scope-new { grid-column: 1 / -1; font-size: var(--fs-micro); font-weight: 600; color: var(--muted); }
 .scope-remove { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
 .scope-remove:empty { display: none; }
-@media (min-width: 640px) {
+@container (min-width: 760px) {
   .scope-row {
-    grid-template-columns: 120px minmax(120px, 1fr) repeat(var(--scope-cols, 0), minmax(110px, 1fr)) 44px;
+    grid-template-columns: minmax(70px, 0.8fr) minmax(90px, 1fr) repeat(var(--scope-cols, 0), minmax(0, 1fr)) 44px;
     padding: 0; border: 0; background: none; align-items: center;
   }
   .scope-row--head { display: grid; }
@@ -8464,6 +8468,10 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
   .scope-remove { grid-column: auto; }
   .scope-remove:empty { display: block; }
 }
+/* Stĺpec polí v `.set-sec` je `auto` stopa mriežky — tabuľka rozsahov
+   a dlhý názov nástroja vo výbere by ju roztiahli za okraj karty
+   (naostro 9. 10. 2026, Sportnet s tromi poľami rozsahu). */
+.connector-detail .set-sec-body { grid-template-columns: minmax(0, 1fr); }
 .adv { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
 .adv-sum { display: flex; align-items: center; min-height: 44px; padding: 0 14px; cursor: pointer; font-size: 15px; }
 .adv-body { display: grid; gap: 12px; padding: 12px 14px 14px; border-top: 1px solid var(--line); }
