@@ -26,14 +26,32 @@ export interface ProfileFilterField {
   label: string
 }
 
+/**
+ * Predvyplnenie pre známy server (D178): profil už nie je jediné miesto so
+ * znalosťou servera, len navrhne, ktorý nástroj je hľadanie. Správca to na
+ * detaile konektora môže zmeniť.
+ */
+export interface ProfileDefaults {
+  searchTool?: string
+  searchQueryArg?: string
+  optionsTool?: string
+}
+
 export interface ServerProfile {
   key: string
   label: string
   /** Polia, z ktorých sa skladá rozsah; prázdne = server filtre nemá. */
   filterFields: ProfileFilterField[]
-  /** Hľadanie; profil bez neho nevie byť živým zdrojom. */
+  /** Rozpoznanie servera podľa adresy alebo `serverInfo.name` — správca profil nevyberá (Q1). */
+  matches?(endpoint: string, serverName?: string): boolean
+  defaults?: ProfileDefaults
+  /** Rozsah oprávnení OAuth, ktorý server potrebuje; inak ho povedia metadáta servera (Q12). */
+  oauthScope?: string
+  /** Čistenie textu odpovede (preambula servera) — platí aj pre všeobecné čítanie výsledku. */
+  cleanText?(text: string): string
+  /** Hľadanie vlastným rozkladom výsledku; bez neho sa výsledok číta všeobecne (`generic.ts`). */
   search?(client: McpToolCaller, query: string, filter: Record<string, string>, limit: number): Promise<LiveArticle[]>
-  /** Celý článok podľa `externalId` — pre import (fáza 2). */
+  /** Celý článok podľa `externalId` — pre import (fáza 2); bez neho `resources/read`. */
   fetch?(client: McpToolCaller, externalId: string): Promise<LiveArticle | null>
 }
 

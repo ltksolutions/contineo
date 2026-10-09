@@ -4,6 +4,38 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Konektory podľa štandardu MCP (2026-10-09, D178)
+
+- **Pridať konektor** chce len adresu servera; názov je nepovinný a prevezme
+  sa z toho, ako sa server predstaví. Pre server bez automatickej registrácie
+  klienta je zbalené **Pokročilé prihlásenie** (Client ID, Client Secret).
+  **Pripojiť** konektor založí a hneď otvorí prihlásenie na serveri. Profil
+  servera sa nevyberá — Sportnet sa rozpozná sám.
+- **Prehľad** je zoznam riadkov: ikona servera, adresa a verzia, štítky
+  použití, stav a počet nástrojov. Každý konektor má **vlastnú stránku**
+  `/organisation/connectors/<id>`; nič podstatné už nie je v rozbaľovačke.
+- **Detail**: pásik stavu pripojenia, **O serveri** (názov, verzia, web,
+  pokyny servera — len sa zobrazujú, asistentovi sa neposielajú),
+  **Nástroje** vždy viditeľné so štítkami „Len číta", „Mení dáta",
+  „Mimo servera" a „Hľadanie", **Vyskúšať hľadanie**, **Použitia**
+  a **Ďalšie akcie**.
+- **Nástroj na hľadanie a pole otázky** vyberá správca — konektor tak môže
+  byť živým zdrojom aj pre server bez profilu v kóde. Výsledok takého
+  servera sa číta podľa štandardu (odkazy na dokumenty, štruktúrovaný
+  výsledok, inak celý text). Import do knižnice funguje aj cez zdroje servera.
+- **Rozsahy** sú riadky s poľami podľa vstupov nástroja na hľadanie
+  a s ponúkanými hodnotami (zo schémy, z nástroja s možnosťami — pri
+  Sportnete projekty, kategórie a značky — alebo zo zdrojov servera). Kľúč
+  uloženého rozsahu sa nemení.
+- **Redukcia**: riadky s krížikom namiesto textových polí, hotové vzory
+  (e-mail, telefón, IBAN, rodné číslo) a vlastné regulárne výrazy.
+- **Vyskúšať hľadanie** ukáže, čo server vráti a čo po redukcii dostane
+  asistent, a navrhne opakované nadpisy na zahodenie, spoločné časti ciest
+  na vynechanie a nové rozsahy.
+- **Odstrániť** sa potvrdzuje a povie, ktoré kanály prídu o rozsahy.
+- Rozsah oprávnení pri prihlásení sa berie z metadát servera, nie napevno
+  `docs.read`; adresa servera sa po založení nemení.
+
 ### Editor FAQ: hľadanie podkladu a hľadanie v záznamoch (2026-10-08)
 
 - Pri **Novom zázname** je **Hľadať podklad**: otázka a prepínače, kde hľadať

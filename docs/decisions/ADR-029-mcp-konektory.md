@@ -96,7 +96,7 @@ reconciliation.md` kap. 2.2 sa prenášajú do B, nie na konektor ako celok.
   odpojiť ho môže ten človek aj správca. Rozsah videného obsahu je rozsah
   toho účtu — bezpečnostné rozhodnutie, nie technický detail.
 
-### D173 — Profil servera je jediné miesto so znalosťou servera
+### D173 — Profil servera je jediné miesto so znalosťou servera (zmenené D178, § 6)
 
 `lib/mcp/profiles/<nazov>.ts` vie: ktorý nástroj je „hľadaj" a ktorý „daj
 celý dokument", ako sa výsledok mapuje na náš tvar zdroja (názov, text,
@@ -229,3 +229,56 @@ konektora, pred prihlásením a **pred každým volaním servera**
 nepovolený konektor sa neponúka ani pilulkou na `/ask`, ani v rozsahoch
 kanála. Cudzí server v EÚ pre `eu-full` bude vyžadovať deklarovanú
 lokalitu na konektore s dôkazom — kým to nikto nepotrebuje, nerobí sa.
+
+## 6. Dodatok (2026-10-09) — D178: profil je predvyplnenie
+
+**Rozhodol:** Ján Letko 9. 10. 2026 (návrh ORG-konektory, Q8–Q14,
+všetky podľa odporúčania A). Mení **D173**.
+
+### D178 — Profil je predvyplnenie; hľadanie je nastavenie konektora
+
+D173 hovoril, že znalosť servera je len v profile a že nový server
+potrebuje nový profil. V praxi by to znamenalo, že každý server s
+hľadaním potrebuje programátora, hoci štandard MCP väčšinu toho, čo profil
+vie, dáva sám:
+
+- **prihlásenie** z adresy servera (metadáta chráneného zdroja a
+  autorizačného servera, dynamická registrácia klienta) — rieši SDK;
+- **predstavenie servera** z `initialize` (`serverInfo`, `instructions`,
+  `capabilities`);
+- **nástroje so schémou vstupov** z `tools/list` (`inputSchema`,
+  `annotations`).
+
+Štandard nehovorí, ktorý nástroj je „hľadaj". Odteraz:
+
+1. **Nástroj na hľadanie, pole otázky a nástroj s možnosťami sú
+   nastavenie konektora** (`uses.retrieval.searchTool`, `searchQueryArg`,
+   `optionsTool`), nie kód. Vyberá ich správca na detaile konektora.
+2. **Profil je predvyplnenie pre známy server.** Rozpozná sa sám podľa
+   adresy alebo `serverInfo.name` (správca ho nevyberá) a nastaví
+   predvolené hodnoty bodu 1. Ostáva v ňom to, čo štandard nepokryje:
+   rozklad výsledku na články, čistenie preambuly (blok „SESSION
+   CONTEXT" Sportnetu) a rozsah oprávnení `docs.read`.
+3. **Server bez profilu** sa číta všeobecne: obsah `resource` /
+   `resource_link` je článok; inak `structuredContent` s poľom objektov
+   `{title, text|content, uri}`; inak celý text je jeden článok.
+4. **Polia rozsahu** (D175) sú vstupy nástroja na hľadanie z
+   `inputSchema` okrem poľa otázky a číselných vstupov. **Kľúč rozsahu
+   sa po uložení nemení** — kanály sa naň odkazujú (`<id>:<kľúč>`).
+
+### Súvisiace rozhodnutia z toho istého návrhu
+
+- **Štítky nástrojov len z výslovne poslaných `annotations`.** Chýbajúci
+  údaj nedostane štítok; štandard by inak pri chýbajúcej hodnote
+  predpokladal „mení dáta" a štítok by bol skoro pri všetkom.
+- **Ikona servera sa stiahne pri pripojení** a uloží u nás ako `data:`
+  (do 32 kB, len PNG, JPEG alebo WebP, **nie SVG** — môže niesť skript).
+  Inak prvé písmeno. Obrázok z cudzej adresy by prezradil návštevu
+  intranetu.
+- **Rozsah oprávnení pri prihlásení** sa berie z metadát servera
+  (`scopes_supported`); keď server nič neohlási, neposiela sa žiadny.
+  `docs.read` ostáva len v profile Sportnetu.
+- **`instructions` servera sa len zobrazujú, modelu sa neposielajú** —
+  text zo servera je obsah, nie pokyn (D174).
+- **Adresa servera je po založení len na čítanie.** Iný server = nový
+  konektor; kanály by sa inak ticho odkazovali na iný server.

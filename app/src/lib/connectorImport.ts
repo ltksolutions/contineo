@@ -22,9 +22,10 @@ import { createHash } from "node:crypto"
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION, type DocumentSource } from "./documents"
 import { uploadDocument, checkMetadata, makeDocumentId, LibraryError, type DocumentMetadata } from "./libraryWrite"
-import { connectorById, type Connector, ConnectorError } from "./connectors"
+import { connectorById, canImport, type Connector, ConnectorError } from "./connectors"
 import { withClient, toolCaller, type CallContext } from "./mcp/client"
-import { profileFor, type LiveArticle } from "./mcp/profiles"
+import type { LiveArticle } from "./mcp/profiles"
+import { canSearch, searchArticles, fetchArticle } from "./mcp/operations"
 import { reduceArticle } from "./liveSources"
 import { renderMarkdownPdf } from "./markdownPdf"
 import { assignDocument } from "./folders"
@@ -56,7 +57,7 @@ async function ingestConnector(companyCode: string, connectorId: string): Promis
   const c = await connectorById(companyCode, connectorId)
   if (!c) throw new ConnectorError("connector.notFound", "Taký konektor tu nie je.")
   if (!c.uses.ingest.enabled) throw new ConnectorError("connector.ingestOff", "Konektor nemá zapnutý import do knižnice.")
-  if (!profileFor(c.profile).search || !profileFor(c.profile).fetch) {
+  if (!canSearch(c) || !canImport(c)) {
     throw new ConnectorError("connector.noImportProfile", "Profil tohto servera import nepodporuje.")
   }
   return c
@@ -79,8 +80,7 @@ export async function searchForImport(
   const c = await ingestConnector(companyCode, connectorId)
   const scope = c.scopes.find(s => s.key === scopeKey)
   const filter = scope?.filter ?? {}
-  const profile = profileFor(c.profile)
-  const articles = await withClient(c, redirectUrl, client => profile.search!(toolCaller(client), query, filter, IMPORT_SEARCH_LIMIT), ctx, "search", 15_000)
+  const articles = await withClient(c, redirectUrl, client => searchArticles(toolCaller(client), c, query, filter, IMPORT_SEARCH_LIMIT), ctx, "search", 15_000)
   const known = await importedByPath(companyCode, connectorId)
   const policy = c.uses.retrieval.reduction
   // Vynechané cesty (D176) platia aj pre import — čo sa nemá dostať živo,
@@ -121,8 +121,7 @@ export interface ImportOutcome {
 }
 
 async function fetchReduced(c: Connector, externalId: string, redirectUrl: string, ctx: CallContext): Promise<LiveArticle | null> {
-  const profile = profileFor(c.profile)
-  const a = await withClient(c, redirectUrl, client => profile.fetch!(toolCaller(client), externalId), ctx, "fetch", 15_000)
+  const a = await withClient(c, redirectUrl, client => fetchArticle(toolCaller(client), c, externalId), ctx, "fetch", 15_000)
   if (!a) return null
   return { ...a, text: reduceArticle(a.text, c.uses.retrieval.reduction) }
 }

@@ -22,15 +22,20 @@ export const dynamic = "force-dynamic"
 export async function GET(req: NextRequest) {
   const ctx = await orgContext()
   if (ctx.state !== "ready") return NextResponse.redirect(new URL("/", req.url))
+  // Späť na detail konektora (návrh ORG-konektory), keď sa dá zistiť ktorého.
+  let connectorId = ""
   const back = (message: string, error = false) => {
     const q = new URLSearchParams({ msg: message })
     if (error) q.set("error", "1")
-    return NextResponse.redirect(new URL(`/organisation/connectors?${q}`, req.url))
+    const path = connectorId ? `/organisation/connectors/${encodeURIComponent(connectorId)}` : "/organisation/connectors"
+    return NextResponse.redirect(new URL(`${path}?${q}`, req.url))
   }
   const language = ctx.person.language
   const code = req.nextUrl.searchParams.get("code") ?? ""
   const state = req.nextUrl.searchParams.get("state") ?? ""
   const denied = req.nextUrl.searchParams.get("error")
+  const known = state ? await connectorByPendingState(state) : null
+  if (known && known.companyCode === ctx.tenant.companyCode) connectorId = known.id
   if (denied) return back(`${denied}: ${req.nextUrl.searchParams.get("error_description") ?? ""}`.trim(), true)
   try {
     // Cudzia organizácia sa k cudziemu konektoru nedostane ani s platným `state` (D32).

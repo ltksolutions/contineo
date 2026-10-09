@@ -42,8 +42,10 @@ import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
 import { saveAiSettingsAction, deleteAiKeyAction } from "../actions"
 import { AI_MODELS, aiSettingsView } from "@/lib/aiSettings"
-import ConnectorsSection from "../ConnectorsSection"
-import { listConnectors, connectorView } from "@/lib/connectors"
+import ConnectorList from "../_connectors/ConnectorList"
+import ConnectorDetail from "../_connectors/ConnectorDetail"
+import { listConnectors, connectorById, connectorView, channelsUsingConnector } from "@/lib/connectors"
+import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { ratesForDate, formatUsd } from "@/lib/pricing"
 
@@ -204,7 +206,7 @@ export default async function OrganisationSectionPage({
     notFound()
   }
 
-  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string; remove?: string; request?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string; remove?: string; request?: string; new?: string; endpoint?: string; name?: string; connector?: string; instructions?: string; try?: string; scope?: string }>(await searchParams)
   const { msg: message, error, search, list: listParam } = query
   const { section } = await params
   // Neznáma časť je 404 — adresa je zmluva, nie návrh. DPO bez roly
@@ -303,22 +305,33 @@ export default async function OrganisationSectionPage({
     return r ? `${label} — ${t.ai.price(String(r.input), String(r.output))}` : label
   }
 
+  // Detail konektora (`/organisation/connectors/<id>`, návrh ORG-konektory):
+  // cesta pod hlavičkou ho pomenuje, preto sa načíta pred vykreslením.
+  const connector = now === "connectors" && query.connector
+    ? await connectorById(tenant.companyCode, query.connector)
+    : null
+  if (now === "connectors" && query.connector && !connector) notFound()
+  const connectorHref = connector ? `/organisation/connectors/${encodeURIComponent(connector.id)}` : null
+
   const records = now === "audit"
     ? await auditRecords(tenant.companyCode, { search: search, limit: 200 })
     : []
 
   return (
     <AppShell language={ctx.person.language}
-              title={now === "ai" && aiView === "usage" ? tu.tabUsage : t.tabs[now]}
+              title={now === "ai" && aiView === "usage" ? tu.tabUsage : connector ? connector.name : t.tabs[now]}
               trail={now === "ai" && aiView === "usage"
                 ? { "/organisation": t.heading, "/organisation/ai": t.tabs.ai }
+                : connector
+                ? { "/organisation": t.heading, "/organisation/connectors": t.tabs.connectors }
                 : { "/organisation": t.heading }}>
     <div className="org-set" style={tenantStyle(branding)}>
+      {/* Chyba pri pridávaní konektora sa ukáže v úlohe, nie tu (ORG-konektory). */}
       <Notice
         language={language}
-        message={message}
+        message={now === "connectors" && query.new === "1" && error === "1" ? undefined : message}
         error={error === "1"}
-        back={orgSectionHref(now)}
+        back={connectorHref ?? orgSectionHref(now)}
       />
 
       <div className="org-head">
@@ -1074,9 +1087,22 @@ export default async function OrganisationSectionPage({
       </div>
       )}
 
-      {/* Konektory (ADR-029): pripojenia k cudzím MCP serverom a ich použitia. */}
-      {now === "connectors" && (
-        <ConnectorsSection connectors={(await listConnectors(tenant.companyCode)).map(connectorView)} language={language} />
+      {/*
+        Konektory (ADR-029, D178; návrh ORG-konektory, 9. 10. 2026): prehľad
+        riadkov s pridaním z adresy (`?new=1`) a detail na vlastnej ceste.
+      */}
+      {now === "connectors" && !connector && (
+        <ConnectorList connectors={(await listConnectors(tenant.companyCode)).map(connectorView)} language={language} query={query} />
+      )}
+      {now === "connectors" && connector && (
+        <ConnectorDetail
+          c={connectorView(connector)}
+          channels={await channelsUsingConnector(tenant.companyCode, connector.id)}
+          query={query}
+          language={language}
+          redirectUrl={await connectorCallbackUrl()}
+          ctx={{ actor: { personId: ctx.person.id, personName: ctx.person.fullName } }}
+        />
       )}
 
       {/*

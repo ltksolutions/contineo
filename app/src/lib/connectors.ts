@@ -11,6 +11,11 @@
  * kľúča sa konektor založiť nedá — token v čitateľnej podobe by bol prístup
  * do cudzieho systému pod identitou organizácie (D172).
  *
+ * Od 9. 10. 2026 (D178, návrh ORG-konektory) sa konektor zakladá len z adresy:
+ * prihlásenie, predstavenie servera a nástroje so schémou vstupov dáva
+ * štandard MCP; profil je predvyplnenie pre známy server a nástroj na
+ * hľadanie vyberá správca.
+ *
  * Identita volania má tri režimy (`auth.mode`); fáza 1 vie `tenant` — jeden
  * zdieľaný token, dnes osobný účet toho, kto konektor pripojil
  * (`connectedBy`). Je to zapísaná odchýlka od servisného účtu, viď ADR-029.
@@ -22,7 +27,10 @@ import { requireCompanyCode } from "./tenantScope"
 import { AppError } from "./appError"
 import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { writeAudit } from "./audit"
-import { PROFILES, isProfileKey, type ProfileKey } from "./mcp/profiles"
+import { profileFor, detectProfile, type ProfileKey } from "./mcp/profiles"
+import type { ToolInfo } from "./mcp/generic"
+import { isScrubPreset, type ScrubPreset } from "./connectorReduction"
+import { listChannels } from "./channels"
 import { checkConnector } from "./residency"
 import { getTenantProfile } from "./tenantProfile"
 
@@ -53,6 +61,8 @@ export interface ReductionPolicy {
   scrubPatterns: string[]
   /** Cesty na serveri, ktoré sa vynechajú (regulárny výraz nad `externalId`). */
   skipPaths: string[]
+  /** Hotové vzory (e-mail, telefón, IBAN, rodné číslo) — regulárne výrazy sú v kóde. */
+  scrubPresets?: ScrubPreset[]
 }
 
 export interface ConnectorAuth {
@@ -68,6 +78,8 @@ export interface ConnectorAuth {
   pendingState?: string
   connectedBy?: string
   connectedAt?: Date
+  /** Vlastný klient (Client ID/Secret od správcu servera) — obrazovka vie „nastavený" bez dešifrovania. */
+  customClient?: boolean
 }
 
 export interface ConnectorUses {
@@ -81,14 +93,38 @@ export interface ConnectorUses {
      * vyberá správca kanálu (D175).
      */
     defaultOn?: boolean
+    /** Nástroj na hľadanie a jeho vstup pre otázku (D178). Prázdne = podľa profilu. */
+    searchTool?: string
+    searchQueryArg?: string
+    /** Nástroj, ktorý vymenuje hodnoty polí rozsahu (Sportnet: `list-documentation-filters`). */
+    optionsTool?: string
   }
   ingest: { enabled: boolean }
   agentTools: { allowed: string[] }
 }
 
 export interface ConnectorCapabilities {
-  tools: { name: string; description: string }[]
+  /** Celé `tools/list` — `inputSchema` a `annotations` sú od 9. 10. 2026, staršie záznamy ich nemajú. */
+  tools: ToolInfo[]
   discoveredAt: Date
+  /** Server ponúka `resources` (import bez profilu cez `resources/read`). */
+  resources?: boolean
+  /** Začiatky adries zdrojov — ponuka hodnôt pre rozsahy. */
+  resourcePrefixes?: string[]
+  /** Hodnoty polí rozsahu z nástroja s možnosťami (kľúč = vstup nástroja na hľadanie). */
+  fieldOptions?: Record<string, string[]>
+}
+
+/** Ako sa server predstavil v `initialize` (`serverInfo`, `instructions`). */
+export interface ConnectorServerInfo {
+  name: string
+  title?: string
+  version?: string
+  websiteUrl?: string
+  /** `data:` obrázok — PNG/JPEG/WebP do 32 kB, stiahnutý pri pripojení; nikdy SVG (Q11). */
+  icon?: string
+  /** Pokyny servera — len sa zobrazujú, modelu sa neposielajú (D174, Q13). */
+  instructions?: string
 }
 
 export interface Connector {
@@ -101,6 +137,9 @@ export interface Connector {
   scopes: ConnectorScope[]
   uses: ConnectorUses
   capabilities: ConnectorCapabilities | null
+  server?: ConnectorServerInfo | null
+  /** Názov sa pri pripojení prevezme zo servera — správca ho pri zakladaní nevyplnil. */
+  autoName?: boolean
   status: ConnectorStatus
   lastError: string | null
   createdAt: Date
@@ -110,12 +149,12 @@ export interface Connector {
 
 /** Čo smie vidieť obrazovka — bez tajomstiev. */
 export type ConnectorView = Omit<Connector, "auth"> & {
-  auth: { mode: ConnectorAuthMode; connectedBy?: string; connectedAt?: Date; hasTokens: boolean }
+  auth: { mode: ConnectorAuthMode; connectedBy?: string; connectedAt?: Date; hasTokens: boolean; customClient: boolean }
 }
 
 export function connectorView(c: Connector): ConnectorView {
   const { auth, ...rest } = c
-  return { ...rest, auth: { mode: auth.mode, connectedBy: auth.connectedBy, connectedAt: auth.connectedAt, hasTokens: Boolean(auth.tokensEnc) } }
+  return { ...rest, auth: { mode: auth.mode, connectedBy: auth.connectedBy, connectedAt: auth.connectedAt, hasTokens: Boolean(auth.tokensEnc), customClient: Boolean(auth.customClient) } }
 }
 
 /** Identifikátor rozsahu v kanáli: `<connectorId>:<scopeKey>` (D175). */
@@ -149,7 +188,40 @@ export async function connectorAllowed(companyCode: string, endpoint: string): P
   try { await assertConnectorAllowed(companyCode, endpoint); return true } catch { return false }
 }
 
-export const EMPTY_REDUCTION: ReductionPolicy = { dropSections: [], scrubPatterns: [], skipPaths: [] }
+export const EMPTY_REDUCTION: ReductionPolicy = { dropSections: [], scrubPatterns: [], skipPaths: [], scrubPresets: [] }
+
+/**
+ * Nástroj na hľadanie a pole otázky: nastavenie konektora, inak predvoľba
+ * profilu (D178). `null`, keď konektor hľadať nevie.
+ */
+export function searchSetup(c: Pick<Connector, "profile" | "uses" | "capabilities">): { tool: string; queryArg: string; viaProfile: boolean } | null {
+  const profile = profileFor(c.profile)
+  const r = c.uses.retrieval
+  const tool = r.searchTool || profile.defaults?.searchTool
+  const queryArg = r.searchQueryArg || profile.defaults?.searchQueryArg
+  if (!tool || !queryArg) return null
+  // Profil číta výsledok po svojom len pri svojom nástroji; iný nástroj sa číta všeobecne.
+  const viaProfile = Boolean(profile.search) && tool === profile.defaults?.searchTool
+  return { tool, queryArg, viaProfile }
+}
+
+/** Konektor vie importovať: profil vie stiahnuť článok, alebo server ponúka `resources`. */
+export function canImport(c: Pick<Connector, "profile" | "capabilities">): boolean {
+  return Boolean(profileFor(c.profile).fetch || c.capabilities?.resources)
+}
+
+/** Kanály, ktoré používajú rozsahy tohto konektora — do potvrdenia odstránenia. */
+export async function channelsUsingConnector(companyCode: string, id: string): Promise<{ key: string; name: string; scopes: string[] }[]> {
+  const prefix = `${id}:`
+  return (await listChannels(companyCode))
+    .map(ch => ({ key: ch.key, name: ch.name, scopes: (ch.connectorScopes ?? []).filter(r => r.startsWith(prefix)).map(r => r.slice(prefix.length)) }))
+    .filter(ch => ch.scopes.length)
+}
+
+/** Kľúč rozsahu z názvu, keď ho správca nevyplnil: malé písmená, číslice, pomlčky. */
+export function scopeKeyFrom(label: string): string {
+  return label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40)
+}
 
 export async function listConnectors(companyCode: string): Promise<Connector[]> {
   const code = requireCompanyCode(companyCode, "listConnectors")
@@ -165,9 +237,13 @@ export async function connectorById(companyCode: string, id: string): Promise<Co
 
 export interface ConnectorInput {
   id?: string
+  /** Prázdny pri založení = prevezme sa zo servera (`autoName`). */
   name: string
-  endpoint: string
-  profile: string
+  /** Len pri založení — iný server je nový konektor (Q14). */
+  endpoint?: string
+  /** Vlastný klient OAuth (Pokročilé prihlásenie), len pri založení. */
+  clientId?: string
+  clientSecret?: string
   retrievalEnabled: boolean
   retrievalAccessLevel: string
   /** Hľadať v konektore aj bez zapnutia pilulkou (len portál). */
@@ -175,8 +251,11 @@ export interface ConnectorInput {
   /** Použitie B (import do knižnice). Nezadané = bez zmeny. */
   ingestEnabled?: boolean
   reduction?: Partial<ReductionPolicy>
-  /** Rozsahy ako riadky `key | label | filter=value, filter=value`. */
+  /** Rozsahy (riadky formulára). Nezadané = bez zmeny. */
   scopes?: ConnectorScope[]
+  searchTool?: string
+  searchQueryArg?: string
+  optionsTool?: string
 }
 
 function tidyLines(xs: string[] | undefined): string[] {
@@ -191,18 +270,32 @@ function validRegex(src: string): boolean {
 export async function saveConnector(companyCode: string, input: ConnectorInput, actor: string): Promise<Connector> {
   const code = requireCompanyCode(companyCode, "saveConnector")
   if (!encryptionAvailable()) throw new ConnectorError("tenant.noEncryptionKey", "Šifrovací kľúč nie je nastavený — konektor sa nedá uložiť.")
-  const name = input.name.replace(/\s+/g, " ").trim()
-  if (!name) throw new ConnectorError("connector.nameRequired", "Názov konektora je povinný.")
+  const col = await getCollection<Connector>(CONNECTORS_COLLECTION)
+  const now = new Date()
+  const existing = input.id ? await col.findOne({ companyCode: code, id: input.id }) : null
+  if (input.id && !existing) throw new ConnectorError("connector.notFound", "Taký konektor tu nie je.")
+
+  // Adresa sa zadáva len pri založení (Q14): nová adresa = nové prihlásenie,
+  // nové nástroje a rozsahy, a kanály by sa ticho odkazovali na iný server.
   let endpoint: string
-  try {
-    const u = new URL(input.endpoint.trim())
-    if (u.protocol !== "https:") throw new Error("https")
-    endpoint = u.toString()
-  } catch {
-    throw new ConnectorError("connector.endpoint", "Adresa servera musí byť úplná a začínať https://.")
+  if (existing) endpoint = existing.endpoint
+  else {
+    try {
+      const u = new URL((input.endpoint ?? "").trim())
+      if (u.protocol !== "https:") throw new Error("https")
+      endpoint = u.toString()
+    } catch {
+      throw new ConnectorError("connector.endpoint", "Adresa servera musí byť úplná a začínať https://.")
+    }
   }
-  if (!isProfileKey(input.profile)) throw new ConnectorError("connector.profile", "Neznámy profil servera.", { profile: input.profile })
   await assertConnectorAllowed(code, endpoint)
+
+  // Názov je pri založení nepovinný — do pripojenia je ním hostiteľ, potom
+  // ho nahradí názov, ktorým sa server predstaví (Q1).
+  const typed = input.name.replace(/\s+/g, " ").trim()
+  const autoName = !typed
+  const name = typed || existing?.server?.title || existing?.server?.name || new URL(endpoint).host
+
   const accessLevel: ConnectorAccessLevel = input.retrievalAccessLevel === "public" ? "public" : "internal"
   const scrub = tidyLines(input.reduction?.scrubPatterns)
   const bad = scrub.find(p => !validRegex(p)) ?? tidyLines(input.reduction?.skipPaths).find(p => !validRegex(p))
@@ -211,36 +304,58 @@ export async function saveConnector(companyCode: string, input: ConnectorInput, 
     dropSections: tidyLines(input.reduction?.dropSections),
     scrubPatterns: scrub,
     skipPaths: tidyLines(input.reduction?.skipPaths),
+    scrubPresets: (input.reduction?.scrubPresets ?? existing?.uses.retrieval.reduction.scrubPresets ?? []).filter(isScrubPreset),
   }
-  // Rozsahy: kľúč je identita (odkazujú sa naň kanály), nesmie sa opakovať.
-  const scopes = (input.scopes ?? []).map(s => ({ key: s.key.trim(), label: s.label.trim() || s.key.trim(), filter: s.filter }))
-    .filter(s => s.key && Object.keys(s.filter).length)
-  if (new Set(scopes.map(s => s.key)).size !== scopes.length) throw new ConnectorError("connector.scopeDuplicate", "Dva rozsahy majú rovnaký kľúč.")
 
-  const col = await getCollection<Connector>(CONNECTORS_COLLECTION)
-  const now = new Date()
-  const existing = input.id ? await col.findOne({ companyCode: code, id: input.id }) : null
-  if (input.id && !existing) throw new ConnectorError("connector.notFound", "Taký konektor tu nie je.")
+  // Rozsahy: kľúč je identita (odkazujú sa naň kanály, `<id>:<kľúč>`), nesmie
+  // sa opakovať a po uložení sa nemení — formulár ho pri uloženom rozsahu
+  // posiela skrytý. Rozsah bez názvu aj hodnôt je zmazaný.
+  const scopes = input.scopes === undefined ? existing?.scopes ?? [] : input.scopes
+    .map(sc => {
+      const filter = Object.fromEntries(Object.entries(sc.filter).map(([k, v]) => [k, v.trim()]).filter(([, v]) => v))
+      const label = sc.label.trim()
+      const key = (sc.key.trim() || scopeKeyFrom(label || Object.values(filter).join("-"))).slice(0, 40)
+      return { key, label: label || key, filter }
+    })
+    .filter(sc => sc.key && (sc.label !== sc.key || Object.keys(sc.filter).length))
+  if (new Set(scopes.map(sc => sc.key)).size !== scopes.length) throw new ConnectorError("connector.scopeDuplicate", "Dva rozsahy majú rovnaký kľúč.")
 
-  // Iný server = iné prihlásenie. Tokeny patria serveru, nie záznamu.
-  const endpointChanged = existing ? existing.endpoint !== endpoint : false
-  const auth: ConnectorAuth = existing && !endpointChanged ? existing.auth : { mode: "tenant" }
+  const profile: ProfileKey = existing?.profile ?? detectProfile(endpoint)
+  const r0 = existing?.uses.retrieval
+  const keep = (given: string | undefined, before: string | undefined) => given === undefined ? before : given.trim() || undefined
 
+  // Vlastný klient OAuth (Pokročilé prihlásenie) ide tam, kam by SDK uložilo
+  // dynamicky registrovaného klienta — `clientInformation()` ho vráti rovnako.
+  const clientId = input.clientId?.trim()
+  const auth: ConnectorAuth = existing?.auth ?? { mode: "tenant" }
+  if (!existing && clientId) {
+    auth.clientInfoEnc = encrypt(JSON.stringify({ client_id: clientId, ...(input.clientSecret?.trim() ? { client_secret: input.clientSecret.trim() } : {}) }))
+    auth.customClient = true
+  }
+
+  const profileDefaultsOn = !existing && Boolean(profileFor(profile).defaults?.searchTool)
   const connector: Connector = {
     companyCode: code,
     id: existing?.id ?? randomUUID(),
-    name, endpoint,
-    profile: input.profile,
-    auth,
-    scopes,
+    name, endpoint, profile, auth, scopes,
+    autoName: autoName || undefined,
     uses: {
-      retrieval: { enabled: Boolean(input.retrievalEnabled), accessLevel, reduction, defaultOn: Boolean(input.retrievalDefaultOn) },
+      retrieval: {
+        // Pri založení je živý zdroj zapnutý, keď profil vie hľadať; inak ho zapne správca.
+        enabled: existing ? Boolean(input.retrievalEnabled) : (input.retrievalEnabled || profileDefaultsOn),
+        accessLevel, reduction,
+        defaultOn: Boolean(input.retrievalDefaultOn),
+        searchTool: keep(input.searchTool, r0?.searchTool),
+        searchQueryArg: keep(input.searchQueryArg, r0?.searchQueryArg),
+        optionsTool: keep(input.optionsTool, r0?.optionsTool),
+      },
       ingest: { enabled: input.ingestEnabled ?? existing?.uses.ingest.enabled ?? false },
       agentTools: existing?.uses.agentTools ?? { allowed: [] },
     },
-    capabilities: endpointChanged ? null : existing?.capabilities ?? null,
-    status: existing && !endpointChanged ? existing.status : "new",
-    lastError: endpointChanged ? null : existing?.lastError ?? null,
+    capabilities: existing?.capabilities ?? null,
+    server: existing?.server ?? null,
+    status: existing?.status ?? "new",
+    lastError: existing?.lastError ?? null,
     createdAt: existing?.createdAt ?? now,
     createdBy: existing?.createdBy ?? actor,
     updatedAt: now,
@@ -251,9 +366,9 @@ export async function saveConnector(companyCode: string, input: ConnectorInput, 
     targetId: connector.id, targetLabel: name,
     changes: existing ? {
       ...(existing.name !== name ? { name: { from: existing.name, to: name } } : {}),
-      ...(endpointChanged ? { endpoint: { from: existing.endpoint, to: endpoint } } : {}),
       ...(existing.uses.retrieval.enabled !== connector.uses.retrieval.enabled ? { retrieval: { from: existing.uses.retrieval.enabled, to: connector.uses.retrieval.enabled } } : {}),
       ...(existing.uses.retrieval.accessLevel !== accessLevel ? { accessLevel: { from: existing.uses.retrieval.accessLevel, to: accessLevel } } : {}),
+      ...((existing.uses.retrieval.searchTool ?? "") !== (connector.uses.retrieval.searchTool ?? "") ? { searchTool: { from: existing.uses.retrieval.searchTool ?? "", to: connector.uses.retrieval.searchTool ?? "" } } : {}),
     } : undefined,
   })
   return connector
@@ -320,9 +435,32 @@ export async function markConnectorError(companyCode: string, id: string, messag
   const col = await getCollection<Connector>(CONNECTORS_COLLECTION)
   await col.updateOne({ companyCode, id }, { $set: { status, lastError: message.slice(0, 500), updatedAt: new Date() } })
 }
-export async function saveCapabilities(companyCode: string, id: string, tools: { name: string; description: string }[]): Promise<void> {
+/**
+ * Čo server povedal pri pripojení (D178): predstavenie, nástroje, zdroje
+ * a hodnoty polí. Názov sa prevezme, len keď ho správca nevyplnil; profil
+ * sa doplní, keď ho server prezradil až menom.
+ */
+export async function saveDiscovery(companyCode: string, id: string, found: {
+  server: ConnectorServerInfo | null
+  capabilities: Omit<ConnectorCapabilities, "discoveredAt">
+}): Promise<void> {
   const col = await getCollection<Connector>(CONNECTORS_COLLECTION)
-  await col.updateOne({ companyCode, id }, { $set: { capabilities: { tools, discoveredAt: new Date() }, updatedAt: new Date() } })
+  const c = await col.findOne({ companyCode, id })
+  if (!c) return
+  const set: Record<string, unknown> = {
+    server: found.server,
+    capabilities: { ...found.capabilities, discoveredAt: new Date() },
+    updatedAt: new Date(),
+  }
+  if (c.autoName && found.server) set.name = found.server.title || found.server.name || c.name
+  if (c.profile === "generic") {
+    const detected = detectProfile(c.endpoint, found.server?.name)
+    if (detected !== "generic") {
+      set.profile = detected
+      if (!c.uses.retrieval.searchTool && profileFor(detected).defaults?.searchTool) set["uses.retrieval.enabled"] = true
+    }
+  }
+  await col.updateOne({ companyCode, id }, { $set: set })
 }
 
 /** Konektor podľa `state` z návratu OAuth — `state` je náhodný a jednorazový. */
@@ -332,7 +470,4 @@ export async function connectorByPendingState(state: string): Promise<Connector 
   return col.findOne({ "auth.pendingState": state })
 }
 
-/** Profily na výber v nastavení (kľúč → názov). */
-export function profileOptions(): { value: ProfileKey; label: string }[] {
-  return (Object.keys(PROFILES) as ProfileKey[]).map(k => ({ value: k, label: PROFILES[k].label }))
-}
+

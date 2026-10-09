@@ -1549,21 +1549,16 @@ interface Dictionary {
     gdpr: { readOnly: string; saveContact: string; contactSaved: string; saved: string }
     /** MCP konektory organizácie (ADR-029). */
     connectors: {
-      intro: string
-      none: string
       add: string
-      edit: string
       name: string
       endpoint: string
       endpointHint: string
-      profile: string
       status: Record<"new" | "connected" | "disconnected" | "error", string>
       connectedBy: (by: string, date: string) => string
       connect: string
       reconnect: string
       disconnect: string
       remove: string
-      removeConfirm: string
       secRetrieval: string
       secRetrievalNote: string
       retrievalOn: string
@@ -1577,8 +1572,6 @@ interface Dictionary {
       accessHint: string
       secScopes: string
       secScopesNote: string
-      scopesField: string
-      scopesHint: (fields: string) => string
       secReduction: string
       secReductionNote: string
       dropSections: string
@@ -1588,7 +1581,6 @@ interface Dictionary {
       skipPaths: string
       skipPathsHint: string
       tools: string
-      toolsNone: string
       save: string
       saved: string
       created: string
@@ -1597,6 +1589,96 @@ interface Dictionary {
       disconnected: string
       lastError: string
       personalAccountNote: string
+      introShort: string
+      toolsCount: (n: number) => string
+      tagLive: string
+      tagImport: string
+      levelInternal: string
+      levelPublic: string
+      emptyTitle: string
+      emptyText: string
+      newIntro: string
+      nameAuto: string
+      advancedAuth: string
+      advancedAuthHint: string
+      clientId: string
+      clientSecret: string
+      connectHint: string
+      cancel: string
+      bandIdle: string
+      bandIdleNote: string
+      about: string
+      aboutName: string
+      aboutVersion: string
+      aboutWeb: string
+      aboutEndpoint: string
+      aboutAuth: string
+      aboutInstructions: string
+      authAuto: string
+      authCustom: string
+      showAll: string
+      showLess: string
+      instructionsNote: string
+      aboutAfterConnect: string
+      toolsLoaded: (date: string) => string
+      toolsEmpty: string
+      reload: string
+      reloaded: string
+      annReadOnly: string
+      annWrites: string
+      annOpenWorld: string
+      annSearch: string
+      agentPerm: string
+      agentPermAlways: string
+      agentPermAsk: string
+      agentPermNever: string
+      agentToolsSoon: string
+      uses: string
+      usesLead: string
+      secConnector: string
+      secConnectorNote: string
+      fromProfile: (label: string) => string
+      searchTool: string
+      searchQueryArg: string
+      toolChangeHint: string
+      noSearchTools: string
+      optionsTool: string
+      optionsToolHint: string
+      noneOption: string
+      scopeKey: string
+      scopeLabel: string
+      scopeNew: string
+      scopeKeyLocked: string
+      scopeKeyHint: string
+      scopesNeedTool: string
+      ingestUnavailable: string
+      audienceNote: string
+      scrubPresetsLabel: string
+      scrubPreset: Record<"email" | "phone" | "iban" | "birthNumber", string>
+      ownPatterns: string
+      removeRow: (what: string) => string
+      saveUses: string
+      tryTitle: string
+      tryLead: string
+      tryQuestion: string
+      tryScope: string
+      scopeAll: string
+      try: string
+      tryCount: (n: number, tool: string) => string
+      tryChars: (n: string) => string
+      trySkipped: (n: number) => string
+      tryFallback: string
+      tryEmpty: string
+      suggestTitle: string
+      suggestGroups: string
+      suggestExisting: (key: string) => string
+      suggestNone: string
+      addSelected: string
+      suggestionsAdded: string
+      disconnectNote: string
+      removeNote: string
+      removeConfirm: (name: string, scopes: string, channels: string[]) => string
+      removeConfirmButton: string
     }
     ai: {
       intro: string
@@ -6085,23 +6167,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavenia GDPR sú uložené.",
     },
     connectors: {
-      intro: "Pripojenie k cudziemu MCP serveru s viacerými použitiami. Živý zdroj: asistent pri otázke hľadá aj na serveri a výsledok cituje ako neoverený. Import do knižnice: články zo servera sa prevezmú ako dokumenty (Knižnica → Nahrať dokument → Import zo servera) a ďalej prejdú schválením. Rozsahy sú pomenované výseky obsahu servera — kanál si vyberá, ktoré smie použiť. Nástroje asistenta pribudnú.",
-      none: "Zatiaľ žiadny konektor.",
       add: "Pridať konektor",
-      edit: "Upraviť",
       name: "Názov",
       endpoint: "Adresa servera",
       endpointHint: "Úplná adresa MCP servera, napr. https://mcp.sportnet.online/mcp.",
-      profile: "Profil servera",
       status: { new: "Nepripojený", connected: "Pripojený", disconnected: "Odpojený", error: "Chyba" },
       connectedBy: (by, date) => `Pripojil ${by} (${date}).`,
       connect: "Pripojiť",
       reconnect: "Pripojiť znova",
       disconnect: "Odpojiť",
       remove: "Odstrániť",
-      removeConfirm: "Odstrániť konektor? Kanály, ktoré sa naň odkazujú, prídu o jeho rozsahy.",
       secRetrieval: "Živý zdroj",
-      secRetrievalNote: "Pri otázke sa popri knižnici zavolá aj server. Výsledok obišiel kurátora, preto je v citácii označený ako neoverený.",
+      secRetrievalNote: "Pri otázke sa popri knižnici zavolá aj server. Výsledky sú označené ako neoverené — obišli kurátora.",
       retrievalOn: "Používať ako živý zdroj",
       defaultOn: "Používať predvolene pri otázke",
       defaultOnNote: "Vypnuté: na portáli sa predvolene hľadá len v knižnici a tento zdroj si človek zapne pilulkou pod otázkou. Kanálov sa to netýka — tam rozsah vyberá správca kanála.",
@@ -6113,8 +6190,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       accessHint: "Server dáva účtu všetko a verejné od interného nerozlíši — úroveň je vlastnosť konektora. Interný konektor sa do e-mailov nedostane.",
       secScopes: "Rozsahy",
       secScopesNote: "Pomenované výseky servera, ktoré si vyberajú kanály. Filter posiela server pred hľadaním.",
-      scopesField: "Rozsahy",
-      scopesHint: fields => `Jeden rozsah na riadok: kľúč | názov | ${fields}. Napríklad: issf | ISSF | project=issf`,
       secReduction: "Redukcia",
       secReductionNote: "Zúženie pre interných čitateľov, nie brána pre verejnosť. Všetko deterministické; prázdne polia nič nerežú.",
       dropSections: "Zahodiť sekcie",
@@ -6123,8 +6198,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       scrubPatternsHint: "Regulárne výrazy, jeden na riadok; zhody sa nahradia […] (napr. T_[A-Z_]+).",
       skipPaths: "Vynechať cesty",
       skipPathsHint: "Regulárne výrazy nad cestou článku na serveri, jeden na riadok (napr. -rules-).",
-      tools: "Nástroje servera",
-      toolsNone: "Zoznam nástrojov sa načíta pri pripojení.",
+      tools: "Nástroje",
       save: "Uložiť",
       saved: "Konektor je uložený.",
       created: "Konektor je založený — teraz ho pripojte.",
@@ -6133,6 +6207,96 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disconnected: "Konektor je odpojený.",
       lastError: "Posledná chyba",
       personalAccountNote: "Pripojenie beží pod účtom toho, kto ho pripojil — server vidí to, čo ten účet. Keď server ponúkne servisný prístup, pripojí sa ním (ADR-029).",
+      introShort: "Servery iných systémov, v ktorých asistent hľadá a z ktorých knižnica preberá dokumenty.",
+      toolsCount: n => n === 1 ? "1 nástroj" : n >= 2 && n <= 4 ? `${n} nástroje` : `${n} nástrojov`,
+      tagLive: "Živý zdroj",
+      tagImport: "Import",
+      levelInternal: "Interná",
+      levelPublic: "Verejná",
+      emptyTitle: "Zatiaľ žiadny konektor",
+      emptyText: "Konektor pripojí server iného systému — stačí jeho adresa.",
+      newIntro: "Stačí adresa. Prihlásenie a údaje o serveri sa zistia zo servera.",
+      nameAuto: "Ak ho nevyplníte, prevezme sa zo servera.",
+      advancedAuth: "Pokročilé prihlásenie",
+      advancedAuthHint: "Len ak server nepodporuje automatickú registráciu klienta. Údaje dostanete od správcu servera.",
+      clientId: "Client ID",
+      clientSecret: "Client Secret",
+      connectHint: "Otvorí sa prihlásenie na serveri. Po prihlásení sa vrátite sem.",
+      cancel: "Zrušiť",
+      bandIdle: "Nepripojený. Prihlásite sa na serveri; konektor potom beží pod vaším účtom.",
+      bandIdleNote: "Kým nie je pripojený, nástroje sa nenačítajú a asistent v ňom nehľadá.",
+      about: "O serveri",
+      aboutName: "Názov",
+      aboutVersion: "Verzia",
+      aboutWeb: "Web",
+      aboutEndpoint: "Adresa",
+      aboutAuth: "Prihlásenie",
+      aboutInstructions: "Pokyny servera",
+      authAuto: "automatické (dynamická registrácia)",
+      authCustom: "vlastný klient · Client Secret nastavený",
+      showAll: "Zobraziť celé",
+      showLess: "Zobraziť menej",
+      instructionsNote: "Pokyny sú od servera. Asistentovi sa neposielajú.",
+      aboutAfterConnect: "Názov, verzia, pokyny a nástroje sa načítajú po pripojení.",
+      toolsLoaded: date => `Načítané pri pripojení ${date}. Popisy sú od servera.`,
+      toolsEmpty: "Server neponúka žiadne nástroje.",
+      reload: "Načítať znova",
+      reloaded: "Údaje o serveri sú načítané znova.",
+      annReadOnly: "Len číta",
+      annWrites: "Mení dáta",
+      annOpenWorld: "Mimo servera",
+      annSearch: "Hľadanie",
+      agentPerm: "Asistent",
+      agentPermAlways: "vždy",
+      agentPermAsk: "so súhlasom",
+      agentPermNever: "nikdy",
+      agentToolsSoon: "Nástroje asistenta pribudnú — potom tu nastavíte, ktoré smie asistent volať sám, so súhlasom alebo nikdy. Teraz ich nevolá.",
+      uses: "Použitia",
+      usesLead: "Ako intranet tento server používa.",
+      secConnector: "Konektor",
+      secConnectorNote: "Názov, pod ktorým konektor uvidia správcovia a ľudia v pilulke pod otázkou.",
+      fromProfile: label => `Nastavené podľa profilu ${label}. Môžete zmeniť.`,
+      searchTool: "Nástroj na hľadanie",
+      searchQueryArg: "Pole otázky",
+      toolChangeHint: "Po zmene nástroja uložte — polia otázky a rozsahov sa prekreslia.",
+      noSearchTools: "Server nemá nástroj s textovým vstupom, ktorý by sa dal použiť na hľadanie.",
+      optionsTool: "Nástroj s možnosťami",
+      optionsToolHint: "Nepovinný. Vymenuje hodnoty polí rozsahu; volá sa pri pripojení a pri Načítať znova.",
+      noneOption: "— žiadny —",
+      scopeKey: "Kľúč",
+      scopeLabel: "Názov",
+      scopeNew: "Nový rozsah",
+      scopeKeyLocked: "Kľúč uloženého rozsahu sa nemení — kanály sa naň odkazujú. Rozsah zmažete vymazaním názvu aj hodnôt.",
+      scopeKeyHint: "Kľúč nového rozsahu, ak ho nevyplníte, vznikne z názvu.",
+      scopesNeedTool: "Rozsahy sa nastavia, keď má konektor nástroj na hľadanie.",
+      ingestUnavailable: "Server nesprístupňuje dokumenty.",
+      audienceNote: "Obsah, ktorý server označí len pre AI (annotations.audience), sa vynechá sám.",
+      scrubPresetsLabel: "Vymazať v texte",
+      scrubPreset: { email: "E-mailové adresy", phone: "Telefónne čísla", iban: "Čísla účtov (IBAN)", birthNumber: "Rodné čísla" },
+      ownPatterns: "Vlastné vzory",
+      removeRow: what => `Odstrániť: ${what}`,
+      saveUses: "Uloží všetky sekcie Použití.",
+      tryTitle: "Vyskúšať hľadanie",
+      tryLead: "Ukáže, čo server vráti a čo z toho po redukcii dostane asistent. Server sa volá len po stlačení.",
+      tryQuestion: "Otázka",
+      tryScope: "Rozsah",
+      scopeAll: "Celý server",
+      try: "Vyskúšať",
+      tryCount: (n, tool) => `${n === 1 ? "1 výsledok" : n >= 2 && n <= 4 ? `${n} výsledky` : `${n} výsledkov`} · ${tool}`,
+      tryChars: n => `${n} znakov`,
+      trySkipped: n => `Vynechané podľa ciest: ${n}`,
+      tryFallback: "Odpovede asistenta idú v takom prípade len z knižnice.",
+      tryEmpty: "Server nič nevrátil. Skúste inú otázku alebo rozsah.",
+      suggestTitle: "Návrhy z výsledku",
+      suggestGroups: "Nové rozsahy",
+      suggestExisting: key => `už je rozsah ${key}`,
+      suggestNone: "Vo výsledku sa nič neopakuje.",
+      addSelected: "Pridať vybrané",
+      suggestionsAdded: "Vybrané návrhy sú pridané.",
+      disconnectNote: "Tokeny sa zmažú; nastavenie a rozsahy ostanú. Znova sa pripojíte jedným klikom.",
+      removeNote: "Konektor zmizne aj s nastavením. Dokumenty importované do knižnice ostávajú.",
+      removeConfirm: (name, scopes, channels) => channels.length ? `Odstrániť konektor ${name}? Rozsahy ${scopes} používa ${channels.length === 1 ? "1 kanál" : channels.length <= 4 ? `${channels.length} kanály` : `${channels.length} kanálov`} — ${channels.join(", ")}. Odpovede v nich prestanú hľadať na serveri ${name}. Dokumenty importované do knižnice ostávajú.` : `Odstrániť konektor ${name}? Žiadny kanál jeho rozsahy nepoužíva. Dokumenty importované do knižnice ostávajú.`,
+      removeConfirmButton: "Odstrániť konektor",
     },
     ai: {
       intro: "Asistent, úprava otázok a prepis skenov používajú model Claude od spoločnosti Anthropic. Tu nastavíte, cez aký kľúč sa platí a ktoré modely sa použijú.",
@@ -10502,23 +10666,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavení GDPR jsou uložena.",
     },
     connectors: {
-      intro: "Připojení k cizímu MCP serveru s více použitími. Živý zdroj: asistent při dotazu hledá i na serveru a výsledek cituje jako neověřený. Import do knihovny: články ze serveru se převezmou jako dokumenty (Knihovna → Nahrát dokument → Import ze serveru) a dále projdou schválením. Rozsahy jsou pojmenované výseky obsahu serveru — kanál si vybírá, které smí použít. Nástroje asistenta přibudou.",
-      none: "Zatím žádný konektor.",
       add: "Přidat konektor",
-      edit: "Upravit",
       name: "Název",
       endpoint: "Adresa serveru",
       endpointHint: "Úplná adresa MCP serveru, např. https://mcp.sportnet.online/mcp.",
-      profile: "Profil serveru",
       status: { new: "Nepřipojený", connected: "Připojený", disconnected: "Odpojený", error: "Chyba" },
       connectedBy: (by, date) => `Připojil ${by} (${date}).`,
       connect: "Připojit",
       reconnect: "Připojit znovu",
       disconnect: "Odpojit",
       remove: "Odstranit",
-      removeConfirm: "Odstranit konektor? Kanály, které se na něj odkazují, přijdou o jeho rozsahy.",
       secRetrieval: "Živý zdroj",
-      secRetrievalNote: "Při dotazu se vedle knihovny zavolá i server. Výsledek obešel kurátora, proto je v citaci označen jako neověřený.",
+      secRetrievalNote: "Při otázce se vedle knihovny zavolá i server. Výsledky jsou označeny jako neověřené — obešly kurátora.",
       retrievalOn: "Používat jako živý zdroj",
       defaultOn: "Používat výchozím způsobem při dotazu",
       defaultOnNote: "Vypnuto: na portálu se výchozím způsobem hledá jen v knihovně a tento zdroj si člověk zapne pilulkou pod dotazem. Kanálů se to netýká — tam rozsah vybírá správce kanálu.",
@@ -10530,8 +10689,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       accessHint: "Server dává účtu vše a veřejné od interního nerozliší — úroveň je vlastnost konektoru. Interní konektor se do e-mailů nedostane.",
       secScopes: "Rozsahy",
       secScopesNote: "Pojmenované výseky serveru, které si vybírají kanály. Filtr posílá server před hledáním.",
-      scopesField: "Rozsahy",
-      scopesHint: fields => `Jeden rozsah na řádek: klíč | název | ${fields}. Například: issf | ISSF | project=issf`,
       secReduction: "Redukce",
       secReductionNote: "Zúžení pro interní čtenáře, ne brána pro veřejnost. Vše deterministické; prázdná pole nic neřežou.",
       dropSections: "Zahodit sekce",
@@ -10540,8 +10697,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       scrubPatternsHint: "Regulární výrazy, jeden na řádek; shody se nahradí […] (např. T_[A-Z_]+).",
       skipPaths: "Vynechat cesty",
       skipPathsHint: "Regulární výrazy nad cestou článku na serveru, jeden na řádek (např. -rules-).",
-      tools: "Nástroje serveru",
-      toolsNone: "Seznam nástrojů se načte při připojení.",
+      tools: "Nástroje",
       save: "Uložit",
       saved: "Konektor je uložen.",
       created: "Konektor je založen — nyní ho připojte.",
@@ -10550,6 +10706,96 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disconnected: "Konektor je odpojen.",
       lastError: "Poslední chyba",
       personalAccountNote: "Připojení běží pod účtem toho, kdo ho připojil — server vidí to, co ten účet. Až server nabídne servisní přístup, připojí se jím (ADR-029).",
+      introShort: "Servery jiných systémů, ve kterých asistent hledá a ze kterých knihovna přebírá dokumenty.",
+      toolsCount: n => n === 1 ? "1 nástroj" : n >= 2 && n <= 4 ? `${n} nástroje` : `${n} nástrojů`,
+      tagLive: "Živý zdroj",
+      tagImport: "Import",
+      levelInternal: "Interní",
+      levelPublic: "Veřejná",
+      emptyTitle: "Zatím žádný konektor",
+      emptyText: "Konektor připojí server jiného systému — stačí jeho adresa.",
+      newIntro: "Stačí adresa. Přihlášení a údaje o serveru se zjistí ze serveru.",
+      nameAuto: "Pokud ho nevyplníte, převezme se ze serveru.",
+      advancedAuth: "Pokročilé přihlášení",
+      advancedAuthHint: "Jen pokud server nepodporuje automatickou registraci klienta. Údaje dostanete od správce serveru.",
+      clientId: "Client ID",
+      clientSecret: "Client Secret",
+      connectHint: "Otevře se přihlášení na serveru. Po přihlášení se vrátíte sem.",
+      cancel: "Zrušit",
+      bandIdle: "Nepřipojený. Přihlásíte se na serveru; konektor pak běží pod vaším účtem.",
+      bandIdleNote: "Dokud není připojený, nástroje se nenačtou a asistent v něm nehledá.",
+      about: "O serveru",
+      aboutName: "Název",
+      aboutVersion: "Verze",
+      aboutWeb: "Web",
+      aboutEndpoint: "Adresa",
+      aboutAuth: "Přihlášení",
+      aboutInstructions: "Pokyny serveru",
+      authAuto: "automatické (dynamická registrace)",
+      authCustom: "vlastní klient · Client Secret nastaven",
+      showAll: "Zobrazit celé",
+      showLess: "Zobrazit méně",
+      instructionsNote: "Pokyny jsou od serveru. Asistentovi se neposílají.",
+      aboutAfterConnect: "Název, verze, pokyny a nástroje se načtou po připojení.",
+      toolsLoaded: date => `Načteno při připojení ${date}. Popisy jsou od serveru.`,
+      toolsEmpty: "Server nenabízí žádné nástroje.",
+      reload: "Načíst znovu",
+      reloaded: "Údaje o serveru jsou načteny znovu.",
+      annReadOnly: "Jen čte",
+      annWrites: "Mění data",
+      annOpenWorld: "Mimo server",
+      annSearch: "Hledání",
+      agentPerm: "Asistent",
+      agentPermAlways: "vždy",
+      agentPermAsk: "se souhlasem",
+      agentPermNever: "nikdy",
+      agentToolsSoon: "Nástroje asistenta přibudou — pak zde nastavíte, které smí asistent volat sám, se souhlasem nebo nikdy. Teď je nevolá.",
+      uses: "Použití",
+      usesLead: "Jak intranet tento server používá.",
+      secConnector: "Konektor",
+      secConnectorNote: "Název, pod kterým konektor uvidí správci a lidé v pilulce pod otázkou.",
+      fromProfile: label => `Nastaveno podle profilu ${label}. Můžete změnit.`,
+      searchTool: "Nástroj pro hledání",
+      searchQueryArg: "Pole otázky",
+      toolChangeHint: "Po změně nástroje uložte — pole otázky a rozsahů se překreslí.",
+      noSearchTools: "Server nemá nástroj s textovým vstupem, který by šel použít pro hledání.",
+      optionsTool: "Nástroj s možnostmi",
+      optionsToolHint: "Nepovinný. Vyjmenuje hodnoty polí rozsahu; volá se při připojení a při Načíst znovu.",
+      noneOption: "— žádný —",
+      scopeKey: "Klíč",
+      scopeLabel: "Název",
+      scopeNew: "Nový rozsah",
+      scopeKeyLocked: "Klíč uloženého rozsahu se nemění — kanály se na něj odkazují. Rozsah smažete vymazáním názvu i hodnot.",
+      scopeKeyHint: "Klíč nového rozsahu, pokud ho nevyplníte, vznikne z názvu.",
+      scopesNeedTool: "Rozsahy se nastaví, když má konektor nástroj pro hledání.",
+      ingestUnavailable: "Server nezpřístupňuje dokumenty.",
+      audienceNote: "Obsah, který server označí jen pro AI (annotations.audience), se vynechá sám.",
+      scrubPresetsLabel: "Vymazat v textu",
+      scrubPreset: { email: "E-mailové adresy", phone: "Telefonní čísla", iban: "Čísla účtů (IBAN)", birthNumber: "Rodná čísla" },
+      ownPatterns: "Vlastní vzory",
+      removeRow: what => `Odstranit: ${what}`,
+      saveUses: "Uloží všechny sekce Použití.",
+      tryTitle: "Vyzkoušet hledání",
+      tryLead: "Ukáže, co server vrátí a co z toho po redukci dostane asistent. Server se volá jen po stisknutí.",
+      tryQuestion: "Otázka",
+      tryScope: "Rozsah",
+      scopeAll: "Celý server",
+      try: "Vyzkoušet",
+      tryCount: (n, tool) => `${n === 1 ? "1 výsledek" : n >= 2 && n <= 4 ? `${n} výsledky` : `${n} výsledků`} · ${tool}`,
+      tryChars: n => `${n} znaků`,
+      trySkipped: n => `Vynechané podle cest: ${n}`,
+      tryFallback: "Odpovědi asistenta jdou v takovém případě jen z knihovny.",
+      tryEmpty: "Server nic nevrátil. Zkuste jinou otázku nebo rozsah.",
+      suggestTitle: "Návrhy z výsledku",
+      suggestGroups: "Nové rozsahy",
+      suggestExisting: key => `už je rozsah ${key}`,
+      suggestNone: "Ve výsledku se nic neopakuje.",
+      addSelected: "Přidat vybrané",
+      suggestionsAdded: "Vybrané návrhy jsou přidány.",
+      disconnectNote: "Tokeny se smažou; nastavení a rozsahy zůstanou. Znovu se připojíte jedním kliknutím.",
+      removeNote: "Konektor zmizí i s nastavením. Dokumenty importované do knihovny zůstávají.",
+      removeConfirm: (name, scopes, channels) => channels.length ? `Odstranit konektor ${name}? Rozsahy ${scopes} používá ${channels.length === 1 ? "1 kanál" : channels.length <= 4 ? `${channels.length} kanály` : `${channels.length} kanálů`} — ${channels.join(", ")}. Odpovědi v nich přestanou hledat na serveru ${name}. Dokumenty importované do knihovny zůstávají.` : `Odstranit konektor ${name}? Žádný kanál jeho rozsahy nepoužívá. Dokumenty importované do knihovny zůstávají.`,
+      removeConfirmButton: "Odstranit konektor",
     },
     ai: {
       intro: "Asistent, úprava dotazů a přepis skenů používají model Claude od společnosti Anthropic. Zde nastavíte, přes jaký klíč se platí a které modely se použijí.",
@@ -14908,23 +15154,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "GDPR settings saved.",
     },
     connectors: {
-      intro: "A connection to an external MCP server with several uses. Live source: the assistant also searches the server when asked and cites the result as unreviewed. Import into the library: articles from the server are taken over as documents (Library → Upload document → Import from a server) and then go through approval. Scopes are named slices of the server's content — a channel chooses which it may use. Assistant tools come later.",
-      none: "No connector yet.",
       add: "Add connector",
-      edit: "Edit",
       name: "Name",
       endpoint: "Server address",
       endpointHint: "Full address of the MCP server, e.g. https://mcp.sportnet.online/mcp.",
-      profile: "Server profile",
       status: { new: "Not connected", connected: "Connected", disconnected: "Disconnected", error: "Error" },
       connectedBy: (by, date) => `Connected by ${by} (${date}).`,
       connect: "Connect",
       reconnect: "Connect again",
       disconnect: "Disconnect",
       remove: "Remove",
-      removeConfirm: "Remove the connector? Channels referring to it lose its scopes.",
       secRetrieval: "Live source",
-      secRetrievalNote: "When asked, the server is called alongside the library. The result bypassed the curator, so the citation marks it as unreviewed.",
+      secRetrievalNote: "When a question is asked, the server is called alongside the library. Results are marked as unverified — they bypassed the curator.",
       retrievalOn: "Use as a live source",
       defaultOn: "Use by default when asking",
       defaultOnNote: "Off: on the portal the library is searched by default and a person switches this source on with the pill under the question. Channels are unaffected — their scope is chosen by the channel admin.",
@@ -14936,8 +15177,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       accessHint: "The server gives the account everything and cannot tell public from internal — the level belongs to the connector. An internal connector never reaches e-mails.",
       secScopes: "Scopes",
       secScopesNote: "Named slices of the server that channels pick from. The server applies the filter before searching.",
-      scopesField: "Scopes",
-      scopesHint: fields => `One scope per line: key | label | ${fields}. For example: issf | ISSF | project=issf`,
       secReduction: "Reduction",
       secReductionNote: "A narrowing for internal readers, not a gate for the public. All deterministic; empty fields cut nothing.",
       dropSections: "Drop sections",
@@ -14946,8 +15185,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       scrubPatternsHint: "Regular expressions, one per line; matches become […] (e.g. T_[A-Z_]+).",
       skipPaths: "Skip paths",
       skipPathsHint: "Regular expressions over the article path on the server, one per line (e.g. -rules-).",
-      tools: "Server tools",
-      toolsNone: "The tool list loads on connect.",
+      tools: "Tools",
       save: "Save",
       saved: "Connector saved.",
       created: "Connector created — now connect it.",
@@ -14956,6 +15194,96 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disconnected: "Connector disconnected.",
       lastError: "Last error",
       personalAccountNote: "The connection runs under the account of whoever connected it — the server shows what that account sees. Once the server offers service access, it will connect with that (ADR-029).",
+      introShort: "Servers of other systems the assistant searches and the library imports documents from.",
+      toolsCount: n => n === 1 ? "1 tool" : `${n} tools`,
+      tagLive: "Live source",
+      tagImport: "Import",
+      levelInternal: "Internal",
+      levelPublic: "Public",
+      emptyTitle: "No connectors yet",
+      emptyText: "A connector links a server of another system — its address is all you need.",
+      newIntro: "The address is enough. Sign-in and server details are discovered from the server.",
+      nameAuto: "Leave empty to use the name the server reports.",
+      advancedAuth: "Advanced sign-in",
+      advancedAuthHint: "Only if the server does not support automatic client registration. The server's administrator gives you these.",
+      clientId: "Client ID",
+      clientSecret: "Client Secret",
+      connectHint: "The server's sign-in opens. You come back here afterwards.",
+      cancel: "Cancel",
+      bandIdle: "Not connected. You sign in on the server; the connector then runs under your account.",
+      bandIdleNote: "Until it is connected, tools are not loaded and the assistant does not search it.",
+      about: "About the server",
+      aboutName: "Name",
+      aboutVersion: "Version",
+      aboutWeb: "Website",
+      aboutEndpoint: "Address",
+      aboutAuth: "Sign-in",
+      aboutInstructions: "Server instructions",
+      authAuto: "automatic (dynamic registration)",
+      authCustom: "own client · Client Secret set",
+      showAll: "Show all",
+      showLess: "Show less",
+      instructionsNote: "The instructions come from the server. They are not sent to the assistant.",
+      aboutAfterConnect: "Name, version, instructions and tools load after connecting.",
+      toolsLoaded: date => `Loaded on connecting, ${date}. Descriptions come from the server.`,
+      toolsEmpty: "The server offers no tools.",
+      reload: "Reload",
+      reloaded: "Server details reloaded.",
+      annReadOnly: "Read-only",
+      annWrites: "Changes data",
+      annOpenWorld: "Outside the server",
+      annSearch: "Search",
+      agentPerm: "Assistant",
+      agentPermAlways: "always",
+      agentPermAsk: "with approval",
+      agentPermNever: "never",
+      agentToolsSoon: "Assistant tools are coming — you will then set which ones the assistant may call on its own, with approval, or never. It does not call them now.",
+      uses: "Uses",
+      usesLead: "How the intranet uses this server.",
+      secConnector: "Connector",
+      secConnectorNote: "The name admins see, and people see on the pill under their question.",
+      fromProfile: label => `Set from the ${label} profile. You can change it.`,
+      searchTool: "Search tool",
+      searchQueryArg: "Question field",
+      toolChangeHint: "After changing the tool, save — the question and scope fields refresh.",
+      noSearchTools: "The server has no tool with a text input that could be used for search.",
+      optionsTool: "Options tool",
+      optionsToolHint: "Optional. Lists values for scope fields; called on connecting and on Reload.",
+      noneOption: "— none —",
+      scopeKey: "Key",
+      scopeLabel: "Name",
+      scopeNew: "New scope",
+      scopeKeyLocked: "A saved scope's key does not change — channels refer to it. Clear the name and values to delete a scope.",
+      scopeKeyHint: "A new scope's key is derived from its name if you leave it empty.",
+      scopesNeedTool: "Scopes can be set once the connector has a search tool.",
+      ingestUnavailable: "The server does not expose documents.",
+      audienceNote: "Content the server marks as for AI only (annotations.audience) is left out automatically.",
+      scrubPresetsLabel: "Remove from text",
+      scrubPreset: { email: "Email addresses", phone: "Phone numbers", iban: "Account numbers (IBAN)", birthNumber: "Birth numbers" },
+      ownPatterns: "Own patterns",
+      removeRow: what => `Remove: ${what}`,
+      saveUses: "Saves all Uses sections.",
+      tryTitle: "Try a search",
+      tryLead: "Shows what the server returns and what the assistant gets after reduction. The server is only called when you press the button.",
+      tryQuestion: "Question",
+      tryScope: "Scope",
+      scopeAll: "Whole server",
+      try: "Try",
+      tryCount: (n, tool) => `${n === 1 ? "1 result" : `${n} results`} · ${tool}`,
+      tryChars: n => `${n} characters`,
+      trySkipped: n => `Skipped by path: ${n}`,
+      tryFallback: "In that case the assistant's answers come from the library only.",
+      tryEmpty: "The server returned nothing. Try another question or scope.",
+      suggestTitle: "Suggestions from the result",
+      suggestGroups: "New scopes",
+      suggestExisting: key => `already scope ${key}`,
+      suggestNone: "Nothing repeats in this result.",
+      addSelected: "Add selected",
+      suggestionsAdded: "The selected suggestions were added.",
+      disconnectNote: "The tokens are deleted; settings and scopes stay. Reconnect with one click.",
+      removeNote: "The connector and its settings are removed. Documents imported into the library stay.",
+      removeConfirm: (name, scopes, channels) => channels.length ? `Remove the connector ${name}? Scopes ${scopes} are used by ${channels.length === 1 ? "1 channel" : `${channels.length} channels`} — ${channels.join(", ")}. Answers there will stop searching ${name}. Documents imported into the library stay.` : `Remove the connector ${name}? No channel uses its scopes. Documents imported into the library stay.`,
+      removeConfirmButton: "Remove connector",
     },
     ai: {
       intro: "The assistant, question rewriting and scan transcription use Anthropic's Claude model. Here you set which key pays for it and which models are used.",

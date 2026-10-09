@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ORG — konektory podľa MCP</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px;--shadow:0 -6px 18px rgba(20,28,42,.08)}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--shadow:0 -6px 18px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:100ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px;max-width:390px}
+.notes{display:grid;gap:6px;max-width:100ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+.sample{font-size:11px;color:#9a3412;background:#ffedd5;border-radius:4px;padding:0 5px;font-weight:600;white-space:nowrap}
+/* rám */
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.body{padding:22px 28px 32px}
+.narrow{max-width:860px;display:grid;gap:22px}
+.page-head{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-head--section .page-title{font-size:22px}
+.page-head-spacer{flex:1}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:-10px 0 0;max-width:66ch}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--danger{background:var(--surface);color:var(--bad-fg);border-color:var(--bad-fg)}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.x{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);display:grid;place-items:center;font-size:15px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--warn{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--accent{background:var(--accent-soft);color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+/* org */
+.org-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:28px;align-items:start}
+.org-nav{display:grid;gap:2px}
+.org-nav p{margin:10px 10px 4px;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.org-nav a{display:flex;align-items:center;min-height:36px;padding:0 10px;border-radius:9px;color:var(--ink);text-decoration:none;font-size:14px}
+.org-nav a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.org-body{display:grid;gap:20px;min-width:0;max-width:900px}
+/* ikona servera */
+.sico{flex:none;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:15px;overflow:hidden}
+.sico.img{background:#e8572a;color:#fff}
+.sico.bad{background:var(--bad-bg);color:var(--bad-fg)}
+.sico.lg{width:44px;height:44px;border-radius:11px;font-size:20px}
+/* skupiny a riadky */
+.form-group{border:0;margin:0;padding:0;min-width:0;display:grid;gap:6px}
+.form-group-head{padding:0 4px;font-size:var(--fs-small);font-weight:600;color:var(--muted);display:flex;gap:8px;align-items:center;width:100%}
+.form-group-head.lg{font-size:var(--fs-section);color:var(--ink);font-weight:650}
+.form-group-foot{margin:0;padding:0 4px;font-size:var(--fs-micro);color:var(--muted)}
+.gh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 4px}
+.gh h2{margin:0;font-size:var(--fs-section)}
+.gh .quiet{font-size:var(--fs-small)}
+.form-list{display:grid}
+.form-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;color:var(--ink);text-decoration:none;font-size:15px}
+.form-list > .form-row + .form-row::before,.form-list > .choice-row + .choice-row::before,.form-list > .select-row + .select-row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+a.form-row{min-height:60px}
+.form-row-main{flex:1;display:grid;gap:1px;min-width:0}
+.form-row-main b{font-weight:600;font-size:15px}
+.form-row-sub{font-size:var(--fs-small);color:var(--muted);overflow-wrap:anywhere}
+.row-end{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.row-end .n{font-size:var(--fs-small);color:var(--muted);white-space:nowrap;margin-left:4px}
+.chev{color:var(--line-strong);font-size:20px;line-height:1;flex:none}
+.tg{width:46px;height:28px;border-radius:999px;background:rgba(120,128,140,.3);flex:none;position:relative}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.tg.on{background:var(--accent)}.tg.on::after{left:20px}
+.tg.off{opacity:.4}
+.tick{width:18px;flex:none;color:var(--accent);font-weight:700;text-align:center}
+.choice-row,.select-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;font-size:15px}
+.ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none;position:relative}
+.ck.on{background:var(--accent);border-color:var(--accent)}
+.ck.on::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid var(--on-accent);border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.lc{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 16px;padding:11px 16px;position:relative;font-size:15px}
+.lc + .lc::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.lc > span:first-child{color:var(--muted);font-size:14px}
+.clamp4{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;white-space:pre-line}
+/* nástroje */
+.tool{position:relative;display:flex;gap:12px 16px;align-items:center;padding:10px 16px;min-height:52px;flex-wrap:wrap}
+.tool + .tool::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.tool-main{flex:1 1 360px;display:grid;gap:3px;min-width:0}
+.tool-main .t{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tool-main b{font-weight:600;font-size:15px}
+.tool-main code{font-size:12.5px}
+.tool-main > span{font-size:var(--fs-small);color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.perm{min-height:36px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-size:13px;display:inline-flex;align-items:center;gap:8px;opacity:.55;white-space:nowrap}
+/* formuláre */
+.set-form{padding:0}
+.set-sec{display:grid;gap:12px;padding:20px 22px;border-bottom:1px solid var(--line);position:relative}
+.set-sec-head h2{font-size:var(--fs-section);margin:0 0 3px}
+.set-sec-head p{margin:0;font-size:13px;color:var(--muted);line-height:1.55;max-width:64ch}
+.set-sec-body{display:grid;gap:14px;min-width:0}
+.set-sec-body .card,.task-card .card{background:var(--bg)}
+.set-savebar{position:sticky;bottom:0;z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 22px;background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow)}
+.set-savebar .quiet{font-size:12.5px}
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:40px;padding:8px 12px;width:100%;display:flex;align-items:center;gap:8px;min-width:0}
+.field-input.ph{color:var(--muted)}
+.field-input.mono{font-family:ui-monospace,Menlo,monospace;font-size:13.5px}
+.field-input.sel::after{content:"⌃⌄";margin-left:auto;color:var(--muted);font-size:11px;letter-spacing:-2px}
+.field-input.dl::after{content:"▾";margin-left:auto;color:var(--muted);font-size:12px}
+.field-input.locked{background:transparent;border-style:dashed}
+.field-input.off{opacity:.45}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.pnote{display:flex;gap:8px;align-items:center;font-size:var(--fs-small);color:var(--ok-fg);background:var(--ok-bg);border-radius:9px;padding:7px 10px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* rozsahy */
+.scopes{display:grid;gap:8px}
+.scope-grid{display:grid;grid-template-columns:110px minmax(0,1fr) 130px 150px minmax(0,1fr);gap:8px;align-items:center}
+.scope-grid.head span{font-size:var(--fs-micro);font-weight:600;color:var(--muted);padding:0 2px}
+.scope-card{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.scope-card .wide{grid-column:1/-1}
+.scope-card .free{grid-column:1/-1;font-size:var(--fs-micro);font-weight:600;color:var(--muted)}
+.lines{display:grid;gap:8px}
+.line{display:flex;gap:8px;align-items:center}
+/* hlášky */
+.lnote{display:flex;gap:10px;padding:12px 14px;border-radius:12px;font-size:14px;align-items:center;flex-wrap:wrap;background:var(--accent-soft)}
+.lnote-mark{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--on-accent);background:var(--accent)}
+.lnote-text{flex:1 1 300px;min-width:0}
+.lnote-text small{display:block;font-size:var(--fs-small);color:var(--muted)}
+.lnote--warn{background:var(--warn-bg)}.lnote--warn .lnote-mark{background:var(--warn-fg);color:#fff}
+.lnote--bad{background:var(--bad-bg)}.lnote--bad .lnote-mark{background:var(--bad-fg);color:#fff}
+/* skúška */
+.try{display:grid;gap:14px;padding:18px 20px}
+.try-form{display:grid;grid-template-columns:minmax(0,1fr) 200px auto;gap:10px;align-items:end}
+.hit{position:relative;display:grid;gap:4px;padding:12px 16px}
+.hit + .hit::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.hit .t{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hit b{font-size:15px;font-weight:600}
+.hit .meta{font-size:var(--fs-micro);color:var(--muted)}
+.hit p{margin:0;font-size:var(--fs-small);color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.55}
+.sug{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.empty{display:grid;gap:4px;justify-items:center;text-align:center;padding:24px 20px}
+.empty-title{font-weight:600;font-size:16px}
+.empty-text{font-size:14px;color:var(--muted);max-width:44ch}
+/* ďalšie akcie */
+.more{display:grid}
+.more-head{padding:16px 22px 4px}
+.more-head h2{margin:0;font-size:var(--fs-section)}
+.more-row{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line)}
+.more-head + .more-row{border-top:0}
+.more-main{flex:1 1 280px;display:grid;gap:2px;min-width:0}
+.more-main b{font-weight:600;font-size:15px}
+.more-main span{font-size:13px;color:var(--muted)}
+.more-confirm{display:grid;gap:10px;padding:14px 22px 18px;border-top:1px solid var(--line);background:var(--bad-bg)}
+.more-confirm p{margin:0;font-size:14px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.acts a.link{min-height:44px;display:inline-flex;align-items:center;padding:0 8px}
+/* úloha */
+.task-card{display:grid;gap:14px;padding:16px 18px 18px;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.task-card h2{margin:0;font-size:var(--fs-section)}
+.task-card > p{margin:-10px 0 0;font-size:14px}
+.adv{border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.adv-sum{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;font-size:15px}
+.adv-sum .chev{margin-left:auto;font-size:14px;color:var(--muted)}
+.adv-body{display:grid;gap:12px;padding:4px 14px 14px;border-top:1px solid var(--line);padding-top:12px}
+/* mobil */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px}
+.m .narrow{gap:18px}
+.m .page-title{font-size:22px}
+.m .button{min-height:44px}
+.m .page-head--section .button{flex:1 1 100%}
+.m a.form-row{align-items:flex-start;padding:12px 14px}
+.m a.form-row .sico,.m a.form-row .chev{margin-top:2px}
+.m .form-row-main .row-end{justify-content:flex-start;margin-top:5px}
+.m .row-end .n{margin-left:0}
+.m .set-sec,.m .set-savebar,.m .more-row,.m .more-head,.m .more-confirm{padding-left:14px;padding-right:14px}
+.m .set-savebar > .button,.m .lnote .button,.m .more-row .button,.m .more-confirm .button,.m .task-card .acts .button,.m .try .button{width:100%}
+.m .task-card{padding:16px 14px}
+.m .lnote-text{flex-basis:100%}
+.m .lc{grid-template-columns:1fr;padding:10px 14px}
+.m .try{padding:16px 14px}
+.m .try-form{grid-template-columns:1fr}
+.m .pair{grid-template-columns:1fr}
+.m .tool{padding:10px 14px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">ORG — konektory podľa štandardu MCP (<code>/organisation/connectors</code>)</h1>
+<p class="doc">Úprava existujúcej časti tak, aby sa dal pripojiť akýkoľvek MCP server. Pri pridaní stačí adresa: prihlásenie si klient zistí zo servera, server sa predstaví sám (<code>serverInfo</code>, <code>instructions</code>) a profil sa rozpozná sám. Každý konektor má vlastnú stránku: O serveri · Nástroje · Vyskúšať hľadanie · Použitia (jeden <code>.set-form</code> s lištou) · Ďalšie akcie. Akcie <code>save/connect/disconnect/remove</code> a polia použití ostávajú. Popis je v <code>ORG-konektory.md</code>. <span class="sample">ukážka</span> = údaj v ráme je vymyslený a skutočný príde zo servera.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Časť</th><th>Dnes</th><th>Návrh</th></tr>
+    <tr><td>Pridať</td><td class="old"><code>&lt;details&gt;</code> na konci zoznamu: celý formulár + výber profilu (Sportnet / Všeobecný)</td><td class="new">plné v hlavičke → <code>?new=1</code>: Adresa (povinná), Názov (nepovinný), zbalené Pokročilé prihlásenie; plné „Pripojiť" založí konektor a hneď odíde na prihlásenie servera</td></tr>
+    <tr><td>Profil</td><td class="old">vyberá človek</td><td class="new">rozpozná sa podľa servera; je len predvyplnenie Použití</td></tr>
+    <tr><td>Zoznam</td><td class="old">karta so všetkým, 3 tlačidlá, 2× details</td><td class="new"><code>a.form-row</code>: ikona servera · názov · adresa · verzia · štítky použití, stav, počet nástrojov · ›</td></tr>
+    <tr><td>O serveri</td><td class="old">—</td><td class="new">názov, verzia, web, adresa, pokyny servera na 4 riadky + „Zobraziť celé" (<code>?instructions=1</code>)</td></tr>
+    <tr><td>Nástroje</td><td class="old"><code>&lt;details&gt;</code>, názov — popis</td><td class="new">vždy viditeľné: názov, <code>code</code>, popis na 2 riadky, štítky z <code>annotations</code>, „Hľadanie"; povolenia pre asistenta vypnuté</td></tr>
+    <tr><td>Vyskúšať hľadanie</td><td class="old">—</td><td class="new">GET <code>?try=…#try</code>: vrátené články po redukcii + návrhy do redukcie a rozsahov</td></tr>
+    <tr><td>Použitia</td><td class="old">5 blokov v <code>&lt;details&gt;</code>, tiché Uložiť</td><td class="new">jeden <code>.set-form</code>: Živý zdroj (nástroj, pole otázky) · Rozsahy (riadky polí) · Import · Redukcia (riadky, hotové vzory) + <code>.set-savebar</code></td></tr>
+    <tr><td>Rozsahy</td><td class="old">textarea „kľúč | názov | project=issf"</td><td class="new">riadok = Kľúč (po uložení nemenný) · Názov · pole za každý vstup nástroja; ponúkané hodnoty; vždy jeden voľný riadok</td></tr>
+    <tr><td>Odstrániť</td><td class="old">maže na prvý klik</td><td class="new">Ďalšie akcie → <code>?remove=1#more</code>, veta o kanáloch, <code>.button--danger</code></td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — prehľad: Sportnet pripojený, Wiki SFZ (neznámy server) v chybe</p>
+  <div class="frame" style="width:1440px" id="f-list"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Jediné plné tlačidlo „Pridať konektor" → <code>?new=1</code>. Úvod má jednu vetu.</p>
+    <p><span class="ann">2</span>Ikona = <code>serverInfo.icons</code> (najmenšia ≥ 32 px), inak prvé písmeno názvu. Podnadpis = hostiteľ · <code>serverInfo.version</code>. Celý riadok je odkaz na detail.</p>
+    <p><span class="ann">3</span>Šedé štítky použití (Živý zdroj, Import, Interná/Verejná), štítok stavu (triedy ako dnes), počet nástrojov.</p>
+    <p><span class="ann">4</span>Pri chybe ikona s červeným podkladom a štítok „Chyba". Text chyby je v <code>title</code> riadku a na detaile.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — celý detail Sportnetu (pripojený, profil rozpoznaný)</p>
+  <div class="frame" style="width:1440px" id="f-detail"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Hlavička: ikona servera, názov, štítok stavu. Bez tlačidiel. Bez bočného panela Organizácie — je to podstránka, cesta vedie späť.</p>
+    <p><span class="ann">2</span>Pásik Pripojený (info): kto, kedy, osobný účet a tiché „Pripojiť znova". Je to vlastný <code>form</code> mimo Použití. Tokeny ani Client Secret sa nekreslia, pri vlastnom klientovi len „nastavené".</p>
+    <p><span class="ann">3</span>O serveri je <code>LabeledContent</code>, len na čítanie. Pokyny servera (<code>instructions</code>) sa neprekladajú, sú orezané na 4 riadky a „Zobraziť celé" je odkaz <code>?instructions=1</code>.</p>
+    <p><span class="ann">4</span>Nad nástrojmi je dátum načítania a tiché „Načítať znova" (<code>connectConnectorAction</code>: pri platných tokenoch nanovo načíta <code>tools/list</code>, nikam neodíde).</p>
+    <p><span class="ann">5</span>Štítky sa kreslia len z výslovne uvedených <code>annotations</code>: <code>readOnlyHint</code> → „Len číta", <code>destructiveHint</code> / <code>readOnlyHint:false</code> → „Mení dáta" (warn), <code>openWorldHint</code> → „Mimo servera". „Hľadanie" (accent) dostane nástroj zvolený v Použitiach.</p>
+    <p><span class="ann">6</span>Povolenie pre asistenta (vždy / so súhlasom / nikdy) je nakreslené, ale vypnuté (<code>disabled</code>, „nikdy"). Pod zoznamom je poznámka „Nástroje asistenta pribudnú".</p>
+    <p><span class="ann">7</span>Vyskúšať hľadanie je samostatný <code>form method="get"</code>. Kreslí sa, len keď je zapnutý živý zdroj. Server sa volá až po stlačení tlačidla. Plný výsledok je v samostatnom ráme nižšie.</p>
+    <p><span class="ann">8</span>Pri rozpoznanom profile: zelená poznámka „Nastavené podľa profilu Sportnet — dokumentácia". Nástroj na hľadanie a pole otázky sú predvyplnené, dajú sa zmeniť.</p>
+    <p><span class="ann">9</span>Rozsahy: uložený kľúč je len na čítanie (čiarkovaný rámik), lebo kanály sa naň odkazujú. Stĺpce = textové vstupy zvoleného nástroja okrem poľa otázky. <code>project</code> ponúka hodnoty z „Nástroja s možnosťami" (<code>&lt;input list&gt;</code> + <code>&lt;datalist&gt;</code>, vlastnú hodnotu napísať ide).</p>
+    <p><span class="ann">10</span>Redukcia: zoznamy riadkov s ✕ (<code>button name="remove" value="drop:2"</code> uloží formulár bez riadku) a s voľným riadkom. Vzory v texte majú hotové voľby <code>.select-row</code> a vlastné regulárne výrazy.</p>
+    <p><span class="ann">11</span>Jediné plné tlačidlo je „Uložiť" v prilepenej lište (stav Pripojený).</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — Vyskúšať hľadanie „prestup hráča" (?try=prestup+hráča#try)</p>
+  <div class="frame" style="width:1440px" id="f-try"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Otázka a voliteľný rozsah (Celý server / uložené rozsahy). Tiché „Vyskúšať". Volanie sa zapíše do stopy (<code>connector_calls</code>, D177) ako každé iné.</p>
+    <p><span class="ann">2</span>Výsledok vykreslí server: názov, cesta (<code>externalId</code>), skupina, dĺžka, prvé riadky textu <b>už po redukcii</b> (zmazané vzory ako <code>[…]</code>). Ukazuje to, čo by dostal model.</p>
+    <p><span class="ann">3</span>Návrhy z vráteného textu: najčastejšie nadpisy sekcií → Zahodiť sekcie, spoločné časti ciest → Vynechať cesty, hodnoty skupín → Rozsahy. Sú to <code>.select-row</code> v samostatnom POST formulári. Tiché „Pridať vybrané" doplní nastavenie a vráti sa na <code>#try</code>. Čo už v nastavení je, sa nenavrhuje.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — prehľad · ?new=1 zbalené · ?new=1 Pokročilé prihlásenie rozbalené</p>
+  <div class="row-frames">
+    <div><p class="cap">Prehľad</p><div class="frame m dark" style="width:390px" id="m-list"></div></div>
+    <div><p class="cap">?new=1</p><div class="frame m dark" style="width:390px" id="m-new"></div></div>
+    <div><p class="cap">?new=1 — Pokročilé prihlásenie</p><div class="frame m dark" style="width:390px" id="m-new-adv"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Povinná je len Adresa servera. Prázdny Názov sa po pripojení doplní zo <code>serverInfo.title</code> alebo <code>name</code>, dovtedy sa používa hostiteľ.</p>
+    <p><span class="ann">2</span>„Pokročilé prihlásenie" je jediný <code>&lt;details&gt;</code> na obrazovke a je to zámer — väčšina serverov ho nepotrebuje (dynamická registrácia). Client Secret je <code>type="password"</code> a po uložení sa už nezobrazí.</p>
+    <p><span class="ann">3</span>Plné „Pripojiť" uloží konektor a hneď presmeruje na prihlásenie servera. Po návrate (<code>/api/connectors/callback</code>) príde človek na detail. Keď server prihlásenie nepotrebuje, ide rovno na detail.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — neznámy server: nepripojený · Použitia po pripojení · Vyskúšať s chybou</p>
+  <div class="row-frames">
+    <div><p class="cap">Detail nepripojeného (prihlásenie prerušené)</p><div class="frame m dark" style="width:390px" id="m-idle"></div></div>
+    <div><p class="cap">Použitia — výber nástroja, 2 rozsahy + voľný</p><div class="frame m dark" style="width:390px" id="m-uses"></div></div>
+    <div><p class="cap">Vyskúšať hľadanie — chyba servera</p><div class="frame m dark" style="width:390px" id="m-tryerr"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Pred pripojením server o sebe nič nepovedal. Názov = hostiteľ, ikona = písmeno, v O serveri je len adresa. Pásik <code>--warn</code> má plné „Pripojiť", „Uložiť" je vtedy tiché.</p>
+    <p><span class="ann">2</span>Bez rozpoznaného profilu sa nástroj na hľadanie vyberá v <code>Select</code> z nástrojov servera. Pole otázky sú textové vstupy z <code>inputSchema</code>, predvolené <code>query</code>/<code>q</code>, ak existuje.</p>
+    <p><span class="ann">3</span>Rozsah 1: <code>space</code> ponúka hodnoty (tu z <code>enum</code> v <code>inputSchema</code> → <code>Select</code>). Rozsah 2: <code>author</code> je voľné pole s nápoveďou z <code>description</code> vstupu.</p>
+    <p><span class="ann">4</span>Import: server neponúka <code>resources</code> a profil nevie článok stiahnuť, preto je prepínač vypnutý (<code>disabled</code>) s vetou „Server nesprístupňuje dokumenty".</p>
+    <p><span class="ann">5</span>Chyba servera je <code>.lnote--bad</code> s dnešným textom chyby (<code>connector.timeout</code>). Formulár ostáva vyplnený.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 tmavá — Ďalšie akcie s otvoreným potvrdením (?remove=1#more)</p>
+  <div class="row-frames"><div><div class="frame m dark" style="width:390px" id="m-more"></div></div></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Potvrdenie je v adrese. Veta menuje kanály, ktoré prídu o rozsahy (odvodené z <code>channels.connectorScopes</code>), a hovorí, že importované dokumenty ostávajú. Ďalej <code>.button--danger</code> a „Zrušiť" (odkaz bez <code>?remove</code>).</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const SM=`<span class="sample">ukážka</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=a=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const F=(l,v,h,cls="")=>`<label class="field"><span class="field-label">${l}</span><span class="field-input ${cls}">${v||"&nbsp;"}</span>${h?`<span class="field-hint">${h}</span>`:""}</label>`;
+const sec=(h,p,body,a="")=>`<section class="set-sec">${a}<div class="set-sec-head"><h2>${h}</h2>${p?`<p>${p}</p>`:""}</div><div class="set-sec-body">${body}</div></section>`;
+const tog=(t,sub,st)=>`<label class="form-row"><span class="form-row-main"><span>${t}</span>${sub?`<span class="form-row-sub">${sub}</span>`:""}</span><i class="tg ${st||""}"></i></label>`;
+const choice=(t,sub,on)=>`<label class="choice-row"><span class="form-row-main"><span>${t}</span>${sub?`<span class="form-row-sub">${sub}</span>`:""}</span><span class="tick">${on?"✓":""}</span></label>`;
+const selrow=(t,sub,on)=>`<label class="select-row"><i class="ck${on?" on":""}"></i><span class="form-row-main"><span>${t}</span>${sub?`<span class="form-row-sub">${sub}</span>`:""}</span></label>`;
+const rows=x=>`<div class="card"><div class="form-list">${x}</div></div>`;
+const orgNav=`<nav class="org-nav"><p>Organizácia</p>${["Všeobecné","Oddelenia","Číselníky"].map(t=>`<a href="#">${t}</a>`).join("")}<p>Prístup</p>${["Prihlásenie","Domény"].map(t=>`<a href="#">${t}</a>`).join("")}<p>Prepojenia</p><a href="#" class="on">Konektory</a><p>Ochrana údajov</p>${["GDPR","AI","Záznam zmien"].map(t=>`<a href="#">${t}</a>`).join("")}</nav>`;
+
+/* ---------- prehľad ---------- */
+const LEAD=`<p class="page-lead">Servery iných systémov, v ktorých asistent hľadá a z ktorých knižnica preberá dokumenty.</p>`;
+const secHead=(btn,a="")=>`<div class="page-head page-head--section rel">${a}<h1 class="page-title">Konektory</h1><span class="page-head-spacer"></span>${btn?`<a class="button" href="#">Pridať konektor</a>`:""}</div>`;
+const lrow=(o,m)=>{const end=`<span class="row-end rel">${o.b||""}${o.tags}</span>`;return `<a class="form-row" href="#"${o.title?` title="${o.title}"`:""}>${o.a||""}<span class="sico ${o.ic||""}">${o.l}</span><span class="form-row-main"><b>${o.name}</b><span class="form-row-sub">${o.sub}</span>${m?end:""}</span>${m?"":end}<span class="chev">›</span></a>`};
+const SPORT=(m,a,b)=>lrow({l:"S",ic:"img",name:"Sportnet",sub:"mcp.sportnet.online · 1.4.2",tags:`<span class="tag">Živý zdroj</span><span class="tag">Import</span><span class="tag">Interná</span><span class="tag tag--published">Pripojený</span><span class="n">7 nástrojov</span>`,a,b},m);
+const WIKI=(m,a)=>lrow({l:"W",ic:"bad",name:"Wiki SFZ",sub:"kb.futbalsfz.sk · 2.0.0",title:"Prihlásenie ku konektoru vypršalo — pripojte ho znova.",tags:`<span class="tag">Živý zdroj</span><span class="tag tag--warn">Chyba</span><span class="n">3 nástroje</span>`,a},m);
+const list=(m,a2,a3,a4)=>rows(SPORT(m,a2,a3)+WIKI(m,a4));
+document.getElementById("f-list").innerHTML=hdr()+crumbs(["Prehľad","Nastavenie organizácie","Konektory"])+`<div class="body"><h1 class="page-title">Nastavenie organizácie</h1><p class="quiet" style="margin:4px 0 22px;font-size:var(--fs-lead)">Nastavenia platia pre celú organizáciu <b>SFZ</b>.</p><div class="org-grid">${orgNav}<div class="org-body">`+
+ secHead(1,an(1,"right:-30px;top:8px"))+LEAD+list(0,an(2,"left:-11px;top:18px"),an(3,"left:-30px;top:0"),an(4,"left:-11px;top:18px"))+`</div></div></div>`;
+
+/* ---------- detail Sportnet ---------- */
+const head=(l,ic,name,tag,a="")=>`<div class="page-head rel">${a}<span class="sico lg ${ic}">${l}</span><h1 class="page-title">${name}</h1>${tag}</div>`;
+const bandOk=(a="")=>`<div class="lnote rel">${a}<span class="lnote-mark">i</span><span class="lnote-text">Pripojil <b>Ján Letko</b> 8. 10. 2026.<small>Beží pod jeho osobným účtom — server vracia to, čo vidí tento účet.</small></span><span class="button button--quiet button--sm">Pripojiť znova</span></div>`;
+const bandWarn=(a="")=>`<div class="lnote lnote--warn rel">${a}<span class="lnote-mark">!</span><span class="lnote-text"><b>Nepripojený.</b> Prihlásite sa na serveri; konektor potom beží pod vaším účtom.<small>Kým nie je pripojený, nehľadá ani neimportuje.</small></span><span class="button">Pripojiť</span></div>`;
+const about=(a="")=>`<fieldset class="form-group rel">${a}<legend class="form-group-head lg">O serveri</legend>${rows(
+ `<div class="lc"><span>Názov</span><span>Sportnet Documentation <span class="quiet">· sportnet-docs</span></span></div>`+
+ `<div class="lc"><span>Verzia</span><span>1.4.2</span></div>`+
+ `<div class="lc"><span>Web</span><a href="#">sportnet.online</a></div>`+
+ `<div class="lc"><span>Adresa</span><code style="justify-self:start">https://mcp.sportnet.online/mcp</code></div>`+
+ `<div class="lc"><span>Prihlásenie</span><span>automatické (dynamická registrácia)</span></div>`+
+ `<div class="lc"><span>Pokyny servera ${SM}</span><span style="display:grid;gap:4px"><span class="clamp4">Use search-sportnet-documentation to find relevant articles before answering questions about the Sportnet platform. Results are grouped by project. Always cite the article path. Use get-documentation-file to read the full article when the excerpt is not sufficient. Filters can be discovered with list-documentation-filters. Do not invent project names.</span><a href="#" style="font-size:14px;min-height:28px">Zobraziť celé</a></span></div>`)}</fieldset>`;
+const T=[
+ ["list-documentation-filters","","Lists available projects, categories and tags that can be used to filter the documentation search.",["ro"]],
+ ["search-sportnet-documentation","","Semantic search across Sportnet platform documentation. Inputs: query, project, category, tags, limit. Returns matching articles grouped by project with relevance scores and article paths for follow-up retrieval.",["ro","search"]],
+ ["get-documentation-file","","Returns the full Markdown content of a single documentation file by its path.",["ro"]],
+ ["generate-sportnet-documentation","","Generates or regenerates documentation articles for a project from its source repository. Long-running.",["rw","ow"]],
+ ["generate-user-manual","","Generates a user manual draft for a module from existing documentation articles.",["rw"]],
+ ["publish-user-manual","","Publishes a generated user manual to the public Sportnet help site.",["rw","ow"]],
+ ["whoami","","Returns the profile of the currently authenticated user.",["ro"]]];
+const TAG={ro:`<span class="tag">Len číta</span>`,rw:`<span class="tag tag--warn">Mení dáta</span>`,ow:`<span class="tag">Mimo servera</span>`,search:`<span class="tag tag--accent">Hľadanie</span>`};
+const toolRow=([n,title,d,tags],a="",p="")=>`<div class="tool rel" title="${d}">${a}<span class="tool-main"><span class="t">${title?`<b>${title}</b><code>${n}</code>`:`<code style="font-size:13.5px">${n}</code>`}${tags.map(t=>TAG[t]).join("")}</span><span>${d}</span></span><span class="perm rel">${p}Asistent: nikdy <span>⌃⌄</span></span></div>`;
+const tools=(list,date,a4="",a5="",a6="")=>`<fieldset class="form-group">${""}<div class="gh rel">${a4}<h2>Nástroje · ${list.length}</h2><span class="quiet">Načítané pri pripojení ${date}. Popisy sú od servera.</span><span class="page-head-spacer"></span><span class="button button--quiet button--sm">Načítať znova</span></div><div class="card">${list.map((t,i)=>toolRow(t,i===1?a5:"",i===1?a6:"")).join("")}</div><p class="form-group-foot">Nástroje asistenta pribudnú — potom tu nastavíte, ktoré smie asistent volať sám, so súhlasom alebo nikdy. Teraz ich nevolá.</p></fieldset>`;
+const tryForm=(q,scope)=>`<div class="try-form"><label class="field"><span class="field-label">Otázka</span><span class="field-input${q?"":" ph"}">${q||"napr. prestup hráča"}</span></label><label class="field"><span class="field-label">Rozsah</span><span class="field-input sel">${scope}</span></label><span class="button button--quiet">Vyskúšať</span></div>`;
+const tryCard=(inner,a="")=>`<section class="card try rel" id="try">${a}<div class="gh" style="padding:0"><h2>Vyskúšať hľadanie</h2></div><p class="quiet" style="margin:-10px 0 0;font-size:var(--fs-small)">Zavolá zvolený nástroj s otázkou a ukáže, čo by dostal asistent — po redukcii.</p>${inner}</section>`;
+
+const scopeHead=`<div class="scope-grid head"><span>Kľúč</span><span>Názov</span><span>project</span><span>category</span><span>tags</span></div>`;
+const sgrid=(cells)=>`<div class="scope-grid">${cells.join("")}</div>`;
+const inp=(v,cls="")=>`<span class="field-input ${cls}">${v||"&nbsp;"}</span>`;
+const sportScopes=(a="")=>`<div class="scopes rel">${a}${scopeHead}
+ ${sgrid([inp("issf","mono locked"),inp("ISSF"),inp("issf","mono dl"),inp("","dl"),inp("","mono")])}
+ ${sgrid([inp("sutaze","mono locked"),inp("Súťaže"),inp("sutaze","mono dl"),inp("business-logic","mono dl"),inp("","mono")])}
+ ${sgrid([inp("kľúč","mono ph"),inp("názov","ph"),inp("","dl"),inp("","dl"),inp("","mono")])}</div>`;
+const lines=(vals,ph)=>`<div class="lines">${vals.map(v=>`<div class="line"><span class="field-input mono">${v}</span><span class="x" title="Odstrániť">✕</span></div>`).join("")}<div class="line"><span class="field-input ph">${ph}</span><span class="x" style="visibility:hidden">✕</span></div></div>`;
+const reduction=(a="")=>sec("Redukcia","Čo sa z článku vyhodí, kým ho dostane asistent. Zúženie pre interných, nie ochrana pre verejnosť. Obsah, ktorý server označí len pre AI (annotations.audience), sa vynechá sám.",
+ `<div class="field"><span class="field-label">Zahodiť sekcie s nadpisom</span>${lines(["Key files","Data","Side effects","Sportnet status"],"ďalší nadpis, bez #")}</div>
+ <fieldset class="form-group"><legend class="form-group-head" style="color:var(--ink)">Vymazať v texte</legend>${rows(selrow("E-mailové adresy","",1)+selrow("Telefónne čísla","",1)+selrow("IBAN","",0)+selrow("Rodné čísla","",1))}</fieldset>
+ <div class="field"><span class="field-label">Vlastné vzory (regulárne výrazy)</span>${lines(["T_[A-Z_]+","\\w+\\.java:\\d+","RULE-\\d+"],"ďalší vzor")}<span class="field-hint">Zhoda sa nahradí […]. Vzor, ktorý sa nedá použiť, sa neuloží.</span></div>
+ <div class="field"><span class="field-label">Vynechať cesty na serveri</span>${lines(["-rules-"],"časť cesty alebo regulárny výraz")}</div>`,a);
+
+const sportUses=(o={})=>`<form class="card set-form">
+ ${sec("Konektor","",F("Názov","Sportnet","Prázdne = názov zo servera (Sportnet Documentation)."))}
+ ${sec("Živý zdroj","Pri otázke sa popri knižnici hľadá aj na serveri. Výsledky sú označené ako neoverené — obišli kurátora.",
+  `<div class="pnote rel">${o.a8||""}<span>✓</span><span>Nastavené podľa profilu <b>Sportnet — dokumentácia</b>. Môžete zmeniť.</span></div>`+
+  rows(tog("Hľadať v konektore pri otázkach","","on")+tog("Používať predvolene pri otázke","Inak sa hľadá len v knižnici a konektor si človek zapne pod otázkou. Kanálov sa netýka.",""))+
+  `<div class="pair">${F("Nástroj na hľadanie","search-sportnet-documentation","","sel mono")}${F("Pole otázky","query","textové vstupy nástroja","sel mono")}</div>`+
+  `<div class="field"><span class="field-label">Prístupová úroveň</span><div class="card"><div class="form-list">${choice("Interná","len pre prihlásených v intranete",1)}${choice("Verejná","aj pre verejné rozhrania",0)}</div></div><span class="field-hint">Server nerozlišuje verejné a interné — úroveň platí pre všetko, čo vráti.</span></div>`)}
+ ${sec("Rozsahy","Pomenované výseky servera, ktoré si vyberá kanál. Hodnoty posiela server pri hľadaní — mimo rozsahu nič nevráti.",
+  F("Nástroj s možnosťami","list-documentation-filters","Odtiaľ sa pri pripojení načítajú ponúkané hodnoty polí (projekty, kategórie, značky). Nepovinné.","sel mono")+
+  sportScopes(o.a9||"")+`<span class="field-hint">Kľúč sa po uložení nemení — kanály sa naň odkazujú. Rozsah zmažete vymazaním názvu a hodnôt. tags oddeľte čiarkou.</span>`)}
+ ${sec("Import do knižnice","Vybraný článok sa stiahne ako koncept dokumentu a ide bežným postupom schválenia.",rows(tog("Povoliť import článkov","Knižnica → Nahrať → Import zo servera","on")))}
+ ${reduction(o.a10||"")}
+ <div class="set-savebar rel">${o.a11||""}<span class="button">Uložiť</span><span class="quiet">Uloží všetky sekcie Použití.</span></div></form>`;
+
+const moreCard=(confirm,hasTokens=true)=>`<section class="card more rel" id="more"><div class="more-head"><h2>Ďalšie akcie</h2></div>
+${hasTokens?`<div class="more-row"><div class="more-main"><b>Odpojiť</b><span>Zmaže prihlásenie k serveru. Nastavenie a rozsahy ostávajú, kanály sa naň odkazujú ďalej.</span></div><span class="button button--quiet">Odpojiť</span></div>`:""}
+<div class="more-row"><div class="more-main"><b>Odstrániť konektor</b><span>Natrvalo. Kanály prídu o jeho rozsahy.</span></div>${confirm?"":`<span class="button button--danger">Odstrániť…</span>`}</div>
+${confirm?`<form class="more-confirm rel">${confirm}<p><b>Odstrániť konektor Sportnet?</b> Rozsahy ISSF a Súťaže používajú 2 kanály — ISSF Helpdesk a Rozhodcovia. Odpovede v nich prestanú hľadať na serveri Sportnet. Dokumenty importované do knižnice ostávajú.</p><div class="acts"><span class="button button--danger">Odstrániť konektor</span><a class="link" href="#">Zrušiť</a></div></form>`:""}</section>`;
+
+const usesHead=`<div class="gh"><h2>Použitia</h2><span class="quiet">Čo Contineo s konektorom robí.</span></div>`;
+document.getElementById("f-detail").innerHTML=hdr()+crumbs(["Prehľad","Nastavenie organizácie","Konektory","Sportnet"])+`<div class="body"><div class="narrow">
+${head("S","img","Sportnet",`<span class="tag tag--published">Pripojený</span>`,an(1,"left:-30px;top:10px"))}
+${bandOk(an(2,"left:-11px;top:14px"))}
+${about(an(3,"left:-30px;top:-2px"))}
+${tools(T,"8. 10. 2026",an(4,"left:-30px;top:6px"),an(5,"left:-11px;top:12px"),an(6,"right:-8px;top:-10px"))}
+${tryCard(tryForm("","Celý server"),an(7,"left:-11px;top:16px"))}
+<div style="display:grid;gap:8px">${usesHead}${sportUses({a8:an(8,"left:-34px;top:4px"),a9:an(9,"left:-34px;top:20px"),a10:an(10,"left:-11px;top:20px"),a11:an(11,"left:-11px;top:20px")})}</div>
+${moreCard(0)}
+</div></div>`;
+
+/* ---------- Vyskúšať — výsledok ---------- */
+const hits=[
+ ["Prestup hráča medzi klubmi","issf/business-logic/prestupy/prestup-hraca.md","issf","6 840 znakov","# Prestup hráča medzi klubmi\nPrestup začína žiadosťou nového klubu v module Matrika. Materský klub má 7 dní na vyjadrenie; po uplynutí lehoty sa žiadosť považuje za odsúhlasenú. Poplatok sa počíta podľa vekovej kategórie […]"],
+ ["Hosťovanie a návrat z hosťovania","issf/business-logic/prestupy/hostovanie.md","issf","4 120 znakov","# Hosťovanie a návrat z hosťovania\nHosťovanie je dočasný prestup na dobu určitú, najviac 12 mesiacov. Po skončení sa hráč vracia do materského klubu bez ďalšej žiadosti. Kontakt na matriku: […]"],
+ ["Súpiska družstva po prestupe","sutaze/business-logic/supisky/zmena-supisky.md","sutaze","3 310 znakov","# Súpiska družstva po prestupe\nHráča po schválenom prestupe možno zapísať na súpisku nového družstva najskôr nasledujúci deň. Zmena súpisky počas súťaže podlieha […]"]];
+const hitRow=([t,p,g,len,txt])=>`<div class="hit"><span class="t"><b>${t}</b><span class="tag">${g}</span></span><span class="meta"><code>${p}</code> · ${len}</span><p>${txt.replace(/\n/g,"<br>")}</p></div>`;
+const sugg=(a="")=>`<form class="rel" style="display:grid;gap:12px">${a}<div class="gh" style="padding:0"><h2 style="font-size:15px">Návrhy do nastavenia</h2><span class="quiet">z vrátených článkov</span></div><div class="sug">
+ <fieldset class="form-group"><legend class="form-group-head">Zahodiť sekcie</legend>${rows(selrow("Key files","12×",1)+selrow("Data","9×",1)+selrow("Overview","3×",0))}</fieldset>
+ <fieldset class="form-group"><legend class="form-group-head">Vynechať cesty</legend>${rows(selrow("<code>-rules-</code>","v 2 cestách z odkazov článkov",0))}</fieldset>
+ <fieldset class="form-group"><legend class="form-group-head">Rozsahy · project</legend>${rows(selrow("<code>issf</code>","2 články · už je rozsah ISSF",0)+selrow("<code>sutaze</code>","1 článok · už je rozsah Súťaže",0))}</fieldset>
+ </div><div class="acts"><span class="button button--quiet">Pridať vybrané</span><span class="quiet" style="font-size:var(--fs-small)">Doplní Redukciu a Rozsahy, uloží a vráti sa sem.</span></div></form>`;
+document.getElementById("f-try").innerHTML=hdr()+crumbs(["Prehľad","Nastavenie organizácie","Konektory","Sportnet"])+`<div class="body"><div class="narrow">
+${tryCard(`<div class="rel">${an(1,"left:-31px;top:24px")}${tryForm("prestup hráča","Celý server")}</div>
+<div class="field rel">${an(2,"left:-31px;top:0")}<span class="field-label">3 výsledky · nástroj <code>search-sportnet-documentation</code> ${SM}</span><div class="card">${hits.map(hitRow).join("")}</div></div>
+${sugg(an(3,"left:-31px;top:0"))}`)}
+</div></div>`;
+
+/* ---------- 390 ---------- */
+const mB=c=>`<div class="body"><div class="narrow">${c}</div></div>`;
+const mLead=LEAD.replace('class="page-lead"','class="page-lead" style="font-size:14px"');
+document.getElementById("m-list").innerHTML=hdr(1)+crumbs(["Organizácia","Konektory"])+mB(secHead(1)+mLead+list(1));
+const newCard=(adv,a1="",a2="",a3="")=>`<form class="card task-card rel"><h2>Pridať konektor</h2><p class="quiet">Stačí adresa. Prihlásenie a údaje o serveri sa zistia zo servera.</p>
+ <div class="rel">${a1}${F("Adresa servera","https://kb.futbalsfz.sk/mcp","Úplná adresa MCP servera, začína https://.","mono")}</div>
+ ${F("Názov <span class='quiet' style='font-weight:400'>(nepovinné)</span>","","Ak ho nevyplníte, prevezme sa zo servera.")}
+ <div class="adv rel">${a2}<div class="adv-sum">Pokročilé prihlásenie<span class="chev">${adv?"⌃":"⌄"}</span></div>${adv?`<div class="adv-body"><span class="field-hint" style="font-size:13px">Len ak server nepodporuje automatickú registráciu klienta. Údaje dostanete od správcu servera.</span>${F("Client ID","contineo-sfz","","mono")}${F("Client Secret","••••••••••••","Po uložení sa už nezobrazí.","mono")}</div>`:""}</div>
+ <div class="acts rel">${a3}<span class="button">Pripojiť</span><a class="button button--quiet" href="#">Zrušiť</a></div>
+ <span class="field-hint">Otvorí sa prihlásenie na serveri. Po prihlásení sa vrátite sem.</span></form>`;
+document.getElementById("m-new").innerHTML=hdr(1)+crumbs(["Organizácia","Konektory"])+mB(secHead(0)+newCard(0,an(1,"right:-6px;top:-8px"),"",an(3,"right:-6px;top:-10px"))+list(1));
+document.getElementById("m-new-adv").innerHTML=hdr(1)+crumbs(["Organizácia","Konektory"])+mB(secHead(0)+newCard(1,"",an(2,"right:-6px;top:-10px")));
+
+document.getElementById("m-idle").innerHTML=hdr(1)+crumbs(["Konektory","kb.futbalsfz.sk"])+mB(
+ head("K","","kb.futbalsfz.sk",`<span class="tag">Nepripojený</span>`)+bandWarn(an(1,"right:-6px;top:-10px"))+
+ `<fieldset class="form-group"><legend class="form-group-head lg">O serveri</legend>${rows(`<div class="lc"><span>Adresa</span><code style="justify-self:start">https://kb.futbalsfz.sk/mcp</code></div><div class="lc"><span>Prihlásenie</span><span>automatické</span></div>`)}<p class="form-group-foot">Názov, verzia, pokyny a nástroje sa načítajú po pripojení.</p></fieldset>`+
+ `<div style="display:grid;gap:8px">${usesHead}<form class="card set-form">${sec("Konektor","",F("Názov","","Prázdne = názov zo servera."))}${sec("Použitia","","<span class='quiet' style='font-size:14px'>Živý zdroj, rozsahy a import nastavíte po pripojení — závisia od nástrojov servera.</span>")}<div class="set-savebar"><span class="button button--quiet">Uložiť</span><span class="quiet">Uloží všetky sekcie Použití.</span></div></form></div>`+
+ moreCard(0,false));
+
+const kbScope=(k,l,space,author,lock)=>`<div class="scope-card">${F("Kľúč",k,"","mono"+(lock?" locked":""))}${F("Názov",l)}<div class="wide">${F("space",space,"","sel mono")}</div><div class="wide">${F("author",author,"","mono")}</div></div>`;
+document.getElementById("m-uses").innerHTML=hdr(1)+crumbs(["Konektory","Wiki SFZ"])+mB(
+ `<div style="display:grid;gap:8px">${usesHead}<form class="card set-form">
+ ${sec("Živý zdroj","Pri otázke sa popri knižnici hľadá aj na serveri.",
+  rows(tog("Hľadať v konektore pri otázkach","","on"))+
+  `<div class="rel">${an(2,"right:-6px;top:-10px")}${F("Nástroj na hľadanie","Hľadať články · search_articles","Nástroje servera, ktoré berú text otázky.","sel")}</div>`+
+  F("Pole otázky","q","textové vstupy nástroja: q, author","sel mono"))}
+ ${sec("Rozsahy","Pomenované výseky servera, ktoré si vyberá kanál.",
+  F("Nástroj s možnosťami","— žiadny —","Server nemá nástroj so zoznamom hodnôt. space ponúka hodnoty z popisu vstupu (enum).","sel")+
+  `<div class="scopes rel">${an(3,"right:-6px;top:-10px")}${kbScope("pravidla","Pravidlá","pravidla","",1)}${kbScope("licencie","Licencie trénerov","licencie","metodik@futbalsfz.sk",1)}<div class="scope-card"><span class="free">Nový rozsah</span>${F("Kľúč","","","mono")}${F("Názov","")}<div class="wide">${F("space","","","sel mono")}</div><div class="wide">${F("author","","Autor článku (e-mail). — z popisu vstupu na serveri","mono")}</div></div></div>`)}
+ ${sec("Import do knižnice","",`<div class="rel">${an(4,"right:-6px;top:-10px")}${rows(tog("Povoliť import článkov","Server nesprístupňuje dokumenty.","off"))}</div>`)}
+ <div class="set-savebar"><span class="button">Uložiť</span><span class="quiet">Uloží všetky sekcie Použití.</span></div></form></div>`);
+
+document.getElementById("m-tryerr").innerHTML=hdr(1)+crumbs(["Konektory","Wiki SFZ"])+mB(
+ tryCard(tryForm("prestup hráča","Pravidlá")+`<div class="lnote lnote--bad rel">${an(5,"right:-6px;top:-10px")}<span class="lnote-mark">!</span><span class="lnote-text">Server neodpovedal včas.<small>Odpovede asistenta idú v takom prípade len z knižnice.</small></span></div>`));
+
+document.getElementById("m-more").innerHTML=hdr(1)+crumbs(["Konektory","Sportnet"])+mB(moreCard(an(1,"right:-6px;top:-10px")));
+</script>
+</body></html>

@@ -15,7 +15,9 @@
 import type { ChunkResult } from "./mongoSearch"
 import { listConnectors, parseScopeRef, connectorAllowed, type Connector, type ConnectorScope, type ReductionPolicy } from "./connectors"
 import { withClient, toolCaller, type CallContext } from "./mcp/client"
-import { profileFor, type LiveArticle } from "./mcp/profiles"
+import { canSearch, searchArticles } from "./mcp/operations"
+import type { LiveArticle } from "./mcp/profiles"
+import { scrubRegexes } from "./connectorReduction"
 
 export const LIVE_SOURCE_TYPE = "mcp"
 
@@ -66,13 +68,14 @@ export function reduceArticle(text: string, policy: ReductionPolicy): string {
     }
     out = kept.join("\n")
   }
-  for (const src of policy.scrubPatterns) {
+  // Hotové vzory (e-mail, telefón, IBAN, rodné číslo) a vlastné vzory.
+  for (const src of scrubRegexes(policy.scrubPresets, policy.scrubPatterns)) {
     try { out = out.replace(new RegExp(src, "g"), "[…]") } catch { /* neplatný vzor sa pri uložení neprijme; tu sa len preskočí */ }
   }
   return out.trim()
 }
 
-function skipped(externalId: string, policy: ReductionPolicy): boolean {
+export function skipped(externalId: string, policy: ReductionPolicy): boolean {
   return policy.skipPaths.some(p => { try { return new RegExp(p).test(externalId) } catch { return false } })
 }
 
@@ -142,7 +145,7 @@ export async function liveConnectorsFor(companyCode: string, accessLevel: "publi
   const all = await listConnectors(companyCode)
   const refIds = scopeRefs?.length ? new Set(scopeRefs.map(parseScopeRef).filter(Boolean).map(r => r!.connectorId)) : null
   const usable = all.filter(c =>
-    c.uses.retrieval.enabled && c.status === "connected" && profileFor(c.profile).search
+    c.uses.retrieval.enabled && c.status === "connected" && canSearch(c)
     && (accessLevel === "internal" || c.uses.retrieval.accessLevel === "public")
     && (!refIds || refIds.has(c.id)),
   )
@@ -163,9 +166,8 @@ export async function liveSearch(input: LiveSearchInput): Promise<LiveSearchResu
   const jobs = connectors.flatMap(c => scopesToAsk(c, input.scopeRefs).map(s => ({ c, s })))
   const failed: LiveSearchResult["failed"] = []
   const results = await Promise.all(jobs.map(async ({ c, s }) => {
-    const profile = profileFor(c.profile)
     try {
-      const articles = await withClient(c, input.redirectUrl, client => profile.search!(toolCaller(client), input.query, s.filter, ARTICLES_PER_SCOPE), input.ctx, "search")
+      const articles = await withClient(c, input.redirectUrl, client => searchArticles(toolCaller(client), c, input.query, s.filter, ARTICLES_PER_SCOPE), input.ctx, "search")
       const policy = c.uses.retrieval.reduction
       return articles.filter(a => !skipped(a.externalId, policy)).slice(0, ARTICLES_PER_SCOPE).flatMap(a => toChunks(c, a, policy))
     } catch (e) {
@@ -177,4 +179,26 @@ export async function liveSearch(input: LiveSearchInput): Promise<LiveSearchResu
   const seen = new Set<string>()
   const chunks = results.flat().filter(ch => (seen.has(ch._id) ? false : (seen.add(ch._id), true)))
   return { chunks, failed, asked: connectors.map(c => ({ connectorId: c.id, name: c.name })) }
+}
+
+// ── Vyskúšať hľadanie (návrh ORG-konektory, Q7) ─────────────────────────────
+
+export interface TryResult {
+  /** Články pred redukciou — z nich sa počítajú návrhy (`suggestReductions`). */
+  raw: LiveArticle[]
+  /** Čo by dostal model: bez vynechaných ciest, po redukcii. */
+  shown: (LiveArticle & { reducedText: string })[]
+}
+
+/**
+ * Jedno hľadanie na výslovné stlačenie správcu. Ten istý nástroj, ten istý
+ * rozklad a tá istá redukcia ako pri otázke — inak by skúška ukázala niečo
+ * iné, než dostane model. Volanie má stopu (D177) ako každé iné.
+ */
+export async function trySearch(c: Connector, query: string, scopeKey: string, redirectUrl: string, ctx: CallContext): Promise<TryResult> {
+  const filter = c.scopes.find(s => s.key === scopeKey)?.filter ?? {}
+  const raw = await withClient(c, redirectUrl, client => searchArticles(toolCaller(client), c, query, filter, 10), ctx, "try", 15_000)
+  const policy = c.uses.retrieval.reduction
+  const shown = raw.filter(a => !skipped(a.externalId, policy)).map(a => ({ ...a, reducedText: reduceArticle(a.text, policy) }))
+  return { raw, shown }
 }

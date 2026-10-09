@@ -35,6 +35,7 @@ import { addLegalBasis, retireLegalBasis, setStandardLegalBasisHidden } from "@/
 import { prefixForCountry } from "@/lib/phoneCountries"
 import { saveAiSettings, deleteAiKey } from "@/lib/aiSettings"
 import { saveConnector, removeConnector, disconnectConnector, connectorById, type ConnectorScope } from "@/lib/connectors"
+import { pathPattern } from "@/lib/connectorReduction"
 import { startAuthorization } from "@/lib/mcp/client"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 
@@ -559,28 +560,89 @@ export async function deleteAiKeyAction(fd: FormData) {
   back(fd, dictionary(self.language).org.ai.keyDeleted)
 }
 
-// ── Konektory (ADR-029) ──────────────────────────────────────────────────────
+// ── Konektory (ADR-029, D178; návrh ORG-konektory, 9. 10. 2026) ───────────────
 
-function fieldLines(fd: FormData, name: string): string[] {
-  return fieldText(fd, name).split(/\r?\n/).map(x => x.trim()).filter(Boolean)
+const CONNECTORS_HREF = "/organisation/connectors"
+
+function connectorHref(id: string, q: Record<string, string> = {}, hash = ""): string {
+  const qs = new URLSearchParams(q).toString()
+  return `${CONNECTORS_HREF}/${encodeURIComponent(id)}${qs ? `?${qs}` : ""}${hash}`
+}
+
+/** Späť na detail konektora so správou; `keep` nesie stav obrazovky (otvorené Vyskúšať). */
+function backToConnector(id: string, message: string, error = false, keep: Record<string, string> = {}, hash = ""): never {
+  redirect(connectorHref(id, { ...keep, msg: message, ...(error ? { error: "1" } : {}) }, hash))
+}
+
+/** Hodnoty opakovaného poľa (riadky formulára), bez prázdnych. */
+function fieldAll(fd: FormData, name: string): string[] {
+  return fd.getAll(name).map(v => (typeof v === "string" ? v.trim() : "")).filter(Boolean)
 }
 
 /**
- * Rozsahy z textového poľa: `kľúč | názov | project=issf, category=manuals`.
- * Jeden riadok = jeden rozsah; filter sú dvojice `pole=hodnota` oddelené
- * čiarkou. Textové pole, nie opakované riadky formulára — rozsahov je
- * zopár a správca ich píše raz.
+ * Riadky zoznamu s krížikom: tlačidlo `remove=<kind>:<i>` odošle formulár
+ * a riadok `i` sa vynechá. Prázdne riadky (voľný riadok navyše) vypadnú.
  */
-export async function parseScopeLines(lines: string[]): Promise<ConnectorScope[]> {
-  return lines.map(line => {
-    const [key = "", label = "", rest = ""] = line.split("|").map(x => x.trim())
-    const filter: Record<string, string> = {}
-    for (const pair of rest.split(",")) {
-      const i = pair.indexOf("=")
-      if (i > 0) filter[pair.slice(0, i).trim()] = pair.slice(i + 1).trim()
-    }
-    return { key, label: label || key, filter }
-  }).filter(s => s.key)
+function rowsWithout(fd: FormData, name: string, kind: string): string[] {
+  const all = fd.getAll(name).map(v => (typeof v === "string" ? v.trim() : ""))
+  const remove = fieldText(fd, "remove")
+  const drop = remove.startsWith(`${kind}:`) ? Number(remove.slice(kind.length + 1)) : -1
+  return all.filter((v, i) => v && i !== drop)
+}
+
+/**
+ * Rozsahy z riadkov formulára: `scopeKey.<i>`, `scopeLabel.<i>`,
+ * `scope.<i>.<vstup>`. Kľúč uloženého rozsahu je skrytý a nemenný (D175).
+ */
+export async function parseScopeRows(fd: FormData): Promise<ConnectorScope[]> {
+  const rows = new Map<number, ConnectorScope>()
+  const row = (i: number) => rows.get(i) ?? (rows.set(i, { key: "", label: "", filter: {} }), rows.get(i)!)
+  const remove = fieldText(fd, "remove")
+  for (const [name, v] of fd.entries()) {
+    if (typeof v !== "string") continue
+    let m = name.match(/^scopeKey\.(\d+)$/)
+    if (m) { row(Number(m[1])).key = v.trim(); continue }
+    m = name.match(/^scopeLabel\.(\d+)$/)
+    if (m) { row(Number(m[1])).label = v.trim(); continue }
+    m = name.match(/^scope\.(\d+)\.([\w.-]+)$/)
+    if (m && v.trim()) row(Number(m[1])).filter[m[2]] = v.trim()
+  }
+  return [...rows.entries()].sort((x, y) => x[0] - y[0])
+    .filter(([i]) => remove !== `scope:${i}`)
+    .map(([, r]) => r)
+    .filter(r => r.key || r.label || Object.keys(r.filter).length)
+}
+
+/** Pridať konektor (Q1): založí z adresy a hneď pošle na prihlásenie servera. */
+export async function addAndConnectAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const endpoint = fieldText(fd, "endpoint")
+  const name = fieldText(fd, "name")
+  let url: URL | null = null
+  let id = ""
+  try {
+    const c = await saveConnector(self.companyCode, {
+      name, endpoint,
+      clientId: fieldText(fd, "clientId"),
+      clientSecret: fieldText(fd, "clientSecret"),
+      retrievalEnabled: false,
+      retrievalAccessLevel: "internal",
+      ingestEnabled: false,
+    }, self.email)
+    id = c.id
+    url = await startAuthorization(c, await connectorCallbackUrl())
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    // Konektor už mohol vzniknúť (zlyhalo až prihlásenie) — vtedy na detail,
+    // kde sa dá pripojiť znova. Client Secret sa do adresy nikdy nevracia.
+    if (id) backToConnector(id, errorMessage(e, self.language), true)
+    const q = new URLSearchParams({ new: "1", error: "1", msg: errorMessage(e, self.language), endpoint, name })
+    redirect(`${CONNECTORS_HREF}?${q}#new`)
+  }
+  revalidatePath("/organisation", "layout")
+  if (!url) backToConnector(id, dictionary(self.language).org.connectors.connected)
+  redirect(url.toString())
 }
 
 export async function saveConnectorAction(fd: FormData) {
@@ -590,76 +652,120 @@ export async function saveConnectorAction(fd: FormData) {
   const id = fieldText(fd, "id")
   try {
     await saveConnector(self.companyCode, {
-      id: id || undefined,
+      id,
       name: fieldText(fd, "name"),
-      endpoint: fieldText(fd, "endpoint"),
-      profile: fieldText(fd, "profile"),
       retrievalEnabled: fieldText(fd, "retrievalEnabled") === "on",
       retrievalDefaultOn: fieldText(fd, "retrievalDefaultOn") === "on",
       retrievalAccessLevel: fieldText(fd, "accessLevel"),
-      ingestEnabled: fieldText(fd, "ingestEnabled") === "on",
-      scopes: await parseScopeLines(fieldLines(fd, "scopes")),
+      // Vypnutý prepínač sa neodošle; keď server import nevie, pole chýba celé.
+      ingestEnabled: fd.has("ingestShown") ? fieldText(fd, "ingestEnabled") === "on" : undefined,
+      searchTool: fd.has("searchTool") ? fieldText(fd, "searchTool") : undefined,
+      searchQueryArg: fd.has("searchQueryArg") ? fieldText(fd, "searchQueryArg") : undefined,
+      optionsTool: fd.has("optionsTool") ? fieldText(fd, "optionsTool") : undefined,
+      scopes: fd.has("scopesShown") ? await parseScopeRows(fd) : undefined,
       reduction: {
-        dropSections: fieldLines(fd, "dropSections"),
-        scrubPatterns: fieldLines(fd, "scrubPatterns"),
-        skipPaths: fieldLines(fd, "skipPaths"),
+        dropSections: rowsWithout(fd, "dropSections", "drop"),
+        skipPaths: rowsWithout(fd, "skipPaths", "skip"),
+        scrubPatterns: rowsWithout(fd, "scrubPatterns", "scrub"),
+        scrubPresets: fieldAll(fd, "scrubPresets") as never,
       },
     }, self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e, self.language), true)
+    backToConnector(id, errorMessage(e, self.language), true, {}, "#uses")
   }
   revalidatePath("/organisation", "layout")
-  back(fd, id ? t.saved : t.created)
+  // Krížik pri riadku je tiež uloženie — vráti sa tam, kde človek bol.
+  backToConnector(id, t.saved, false, {}, fieldText(fd, "remove") ? "#uses" : "")
 }
 
 export async function removeConnectorAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
+  const id = fieldText(fd, "id")
   try {
-    await removeConnector(self.companyCode, fieldText(fd, "id"), self.email)
+    await removeConnector(self.companyCode, id, self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e, self.language), true)
+    backToConnector(id, errorMessage(e, self.language), true)
   }
   revalidatePath("/organisation", "layout")
-  back(fd, dictionary(self.language).org.connectors.removed)
+  redirect(`${CONNECTORS_HREF}?${new URLSearchParams({ msg: dictionary(self.language).org.connectors.removed })}`)
 }
 
 export async function disconnectConnectorAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
+  const id = fieldText(fd, "id")
   try {
-    await disconnectConnector(self.companyCode, fieldText(fd, "id"), self.email)
+    await disconnectConnector(self.companyCode, id, self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e, self.language), true)
+    backToConnector(id, errorMessage(e, self.language), true)
   }
   revalidatePath("/organisation", "layout")
-  back(fd, dictionary(self.language).org.connectors.disconnected)
+  backToConnector(id, dictionary(self.language).org.connectors.disconnected)
 }
 
 /**
  * Prihlásenie ku konektoru: človek odíde na server, vráti sa na
  * `/api/connectors/callback` s kódom (D172). `redirect()` na cudziu adresu
  * je mimo `try` — vyhadzuje výnimku a `catch` by ju ohlásil ako chybu.
+ * Pri platných tokenoch nikam nejde, len nanovo načíta údaje o serveri
+ * („Načítať znova").
  */
 export async function connectConnectorAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
+  const id = fieldText(fd, "id")
   let url: URL | null
   try {
-    const c = await connectorById(self.companyCode, fieldText(fd, "id"))
+    const c = await connectorById(self.companyCode, id)
     if (!c) throw new AppError("connector.notFound", "Taký konektor tu nie je.")
     url = await startAuthorization(c, await connectorCallbackUrl())
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e, self.language), true)
+    backToConnector(id, errorMessage(e, self.language), true)
   }
-  // Tokeny platia — nikam sa nejde, len sa obnovil zoznam nástrojov.
   if (!url) {
     revalidatePath("/organisation", "layout")
-    back(fd, dictionary(self.language).org.connectors.connected)
+    const t = dictionary(self.language).org.connectors
+    backToConnector(id, fieldText(fd, "reload") ? t.reloaded : t.connected, false, {}, fieldText(fd, "reload") ? "#tools" : "")
   }
   redirect(url.toString())
+}
+
+/**
+ * Návrhy z Vyskúšať hľadanie (Q7): zaškrtnuté nadpisy do „Zahodiť sekcie",
+ * úseky ciest do „Vynechať cesty", hodnoty skupín ako nové rozsahy. Uloží
+ * a vráti sa na ten istý výsledok.
+ */
+export async function applySuggestionsAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "id")
+  const keep = { try: fieldText(fd, "q"), scope: fieldText(fd, "scope") }
+  try {
+    const c = await connectorById(self.companyCode, id)
+    if (!c) throw new AppError("connector.notFound", "Taký konektor tu nie je.")
+    const r = c.uses.retrieval
+    const add = (xs: string[], more: string[]) => [...xs, ...more.filter(m => !xs.includes(m))]
+    const groupField = fieldText(fd, "groupField")
+    const newScopes = groupField ? fieldAll(fd, "group").filter(v => !c.scopes.some(s => s.filter[groupField] === v)).map(v => ({ key: "", label: v, filter: { [groupField]: v } })) : []
+    await saveConnector(self.companyCode, {
+      id, name: c.autoName ? "" : c.name,
+      retrievalEnabled: r.enabled, retrievalDefaultOn: r.defaultOn, retrievalAccessLevel: r.accessLevel,
+      reduction: {
+        ...r.reduction,
+        dropSections: add(r.reduction.dropSections, fieldAll(fd, "drop")),
+        skipPaths: add(r.reduction.skipPaths, fieldAll(fd, "skip").map(pathPattern)),
+      },
+      scopes: [...c.scopes, ...newScopes],
+    }, self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    backToConnector(id, errorMessage(e, self.language), true, keep, "#try")
+  }
+  revalidatePath("/organisation", "layout")
+  backToConnector(id, dictionary(self.language).org.connectors.suggestionsAdded, false, keep, "#try")
 }
