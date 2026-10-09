@@ -11,7 +11,7 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
 import {
-  harvestItems, harvestCandidates, addressHash, applyClassification, applyMerge, mergeChunks, MERGE_CHUNK, MERGE_ANCHORS, pickThreads, parseDraft, draftThread, classifyPrompt,
+  harvestItems, harvestCandidates, draftPlan, draftPrompt, addressHash, applyClassification, applyMerge, mergeChunks, MERGE_CHUNK, MERGE_ANCHORS, pickThreads, parseDraft, draftThread, classifyPrompt,
   NO_TOPIC, type HarvestItem, type HarvestTopic,
 } from "../src/lib/faqHarvest"
 import type { MailMessage, MailHeader } from "../src/lib/mailbox/types"
@@ -130,6 +130,13 @@ describe("navrh za temu", () => {
     expect(t?.question).not.toContain("1234567")
     expect(t?.answers[0].text).toBe("Napíšte na [e-mail].")
     expect(draftThread([msg({})])).toBeNull()
+  })
+  it("velka tema (od 100 otazok): 10 + 4 vlakien a az 6 zaznamov; prompt nesie limit", () => {
+    expect(draftPlan(445)).toEqual({ newest: 10, oldest: 4, maxEntries: 6 })
+    expect(draftPlan(99)).toEqual({ newest: 6, oldest: 2, maxEntries: 3 })
+    expect(draftPrompt({ label: "Heslo", description: "", threads: 445 }, [], [], 6)).toContain("Najviac záznamov FAQ: 6")
+    const e = { question: "Q", variants: [], answer: "A", audience: [], sources: [], changedOverTime: false, normConflict: false, note: "" }
+    expect(parseDraft({ entries: Array(8).fill(e) }, 0, 6)).toHaveLength(6)
   })
   it("parseDraft: najviac 3 zaznamy, zdroje v rozsahu, bez otazky vynecha", () => {
     const e = { question: "Ako obnovím heslo?", variants: ["zabudol som heslo"], answer: "Kliknite na Zabudnuté heslo.", audience: ["hráč"], sources: [1, 7], changedOverTime: true, normConflict: false, note: "Do 2024 sa heslo menilo cez matriku." }
