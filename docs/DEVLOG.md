@@ -10,6 +10,30 @@
 
 ---
 
+## 2026-10-09 — konektory podľa štandardu MCP (ORG-konektory, D178)
+
+**Čo sa zmenilo:** Ján chcel univerzálne pridávanie konektorov, preto sa
+zadanie prepísalo podľa štandardu MCP a ADR-029 dostal § 6 (D178: profil je
+predvyplnenie, nástroj na hľadanie vyberá správca). Nové `lib/mcp/generic.ts`
+(vstupy z `inputSchema`, čítanie výsledku bez profilu, možnosti polí, ikona),
+`lib/mcp/operations.ts` (jedno miesto pre profil vs. všeobecné hľadanie
+a stiahnutie — živý zdroj, import aj Vyskúšať) a `lib/connectorReduction.ts`
+(hotové vzory, návrhy). Pripojenie ukladá `serverInfo`, `instructions`, celé
+`tools/list`, `resources` a hodnoty polí z nástroja s možnosťami — len pre
+vstupy nástroja na hľadanie, nič iné z odpovede. Detail má vlastnú cestu
+`[section]/[id]/page.tsx`, ktorá zapína obsah zdieľanej stránky ako `usage`.
+
+**Nájdené cestou:** regulárny výraz preambuly Sportnetu končil `\Z`, čo
+JavaScript nepozná (doslovné „Z") — pri texte bez nadpisu projektu by sa
+preambula s profilom osoby nezahodila. Opravené, s testom.
+
+**Odchýlky od návrhu:** detail nie je samostatný `connectors/[id]/page.tsx`,
+ale `[section]/[id]/page.tsx` so zdieľaným obsahom (vzor `usage`). Ikona len
+PNG/JPEG/WebP z hostiteľa servera, nie SVG (rozhodnutie Q11). Povolenia
+pre asistenta sú vypnutý `<select>`, nie len nakreslený ovládač.
+
+---
+
 ## 2026-10-08 — prehľad kanálov (KANALY-prehlad)
 
 **Čo sa zmenilo:** `/channels` podľa návrhu — `a.form-row.channel-row` na

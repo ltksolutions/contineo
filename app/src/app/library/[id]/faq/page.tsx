@@ -29,11 +29,10 @@ import type { UiLanguage } from "@/lib/i18n"
 import type { ReactNode } from "react"
 import { errorText } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
-import { listConnectors } from "@/lib/connectors"
+import { listConnectors, canImport } from "@/lib/connectors"
 import Link from "next/link"
 import { openProposalsByChannel } from "@/lib/faqProposals"
 import { channelByKey } from "@/lib/channels"
-import { profileFor } from "@/lib/mcp/profiles"
 import {
   parseAssist, parseConnectorSource, connectorSource, filterEntries, LIBRARY_SOURCE, type AssistDraft,
 } from "@/lib/faqAssist"
@@ -153,7 +152,7 @@ export default async function FaqEditorPage({ params, searchParams }: { params: 
   // ako na stránke Import zo servera, každý rozsah ako vlastný prepínač.
   const ta = t.assist
   const connectors = (await listConnectors(ctx.tenant.companyCode).catch(() => []))
-    .filter(c => c.uses.ingest.enabled && c.status === "connected" && profileFor(c.profile).fetch)
+    .filter(c => c.uses.ingest.enabled && c.status === "connected" && canImport(c))
   const sourceOptions = [
     { value: LIBRARY_SOURCE, label: ta.library },
     ...connectors.flatMap(c => c.scopes.map(s => ({ value: connectorSource(c.id, s.key), label: c.scopes.length > 1 ? `${c.name} · ${s.label}` : c.name }))),

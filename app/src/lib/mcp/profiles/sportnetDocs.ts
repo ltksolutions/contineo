@@ -13,7 +13,9 @@
 
 import { textOf, type LiveArticle, type McpToolCaller, type ServerProfile } from "./types"
 
-const PREAMBLE = /^\s*\[SESSION CONTEXT[^\]]*\][\s\S]*?(?=^# |\Z)/m
+// Do prvého nadpisu projektu, a keď žiadny nie je, do konca textu — JavaScript
+// `\Z` nepozná (bol by to doslovný znak „Z") a preambula by inak ostala celá.
+const PREAMBLE = /^\s*\[SESSION CONTEXT[^\]]*\][\s\S]*?(?=^# |$(?![\s\S]))/m
 
 /** Zahodí preambulu servera; keď chýba, text sa nemení. */
 export function stripSessionContext(text: string): string {
@@ -49,6 +51,13 @@ export function parseSearchResult(raw: string): LiveArticle[] {
 export const sportnetDocs: ServerProfile = {
   key: "sportnet-docs",
   label: "Sportnet — dokumentácia",
+  matches: (endpoint, serverName) => {
+    try { if (new URL(endpoint).host === "mcp.sportnet.online") return true } catch { /* zlá adresa */ }
+    return /sportnet/i.test(serverName ?? "")
+  },
+  defaults: { searchTool: "search-sportnet-documentation", searchQueryArg: "query", optionsTool: "list-documentation-filters" },
+  oauthScope: "docs.read",
+  cleanText: stripSessionContext,
   filterFields: [
     { key: "project", label: "project" },
     { key: "category", label: "category" },

@@ -29,8 +29,7 @@ import { allFolders, flattenTree as flattenFolders } from "@/lib/folders"
 import { treeOptions } from "@/lib/treeOptions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, errorText } from "@/lib/i18n"
-import { listConnectors } from "@/lib/connectors"
-import { profileFor } from "@/lib/mcp/profiles"
+import { listConnectors, canImport } from "@/lib/connectors"
 import { searchForImport, type ImportCandidate } from "@/lib/connectorImport"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { AppError } from "@/lib/appError"
@@ -54,7 +53,7 @@ export default async function ConnectorImportPage({ searchParams }: { searchPara
   const branding = brandingView(ctx.tenant)
   const companyCode = ctx.tenant.companyCode
 
-  const connectors = (await listConnectors(companyCode)).filter(c => c.uses.ingest.enabled && c.status === "connected" && profileFor(c.profile).fetch)
+  const connectors = (await listConnectors(companyCode)).filter(c => c.uses.ingest.enabled && c.status === "connected" && canImport(c))
   const connector = connectors.find(c => c.id === q.connector) ?? connectors[0] ?? null
   const scopeKey = connector?.scopes.some(s => s.key === q.scope) ? q.scope! : (connector?.scopes[0]?.key ?? "")
   const query = (q.q ?? "").trim()

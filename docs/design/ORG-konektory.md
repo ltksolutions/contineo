@@ -1,6 +1,6 @@
 # ORG — konektory podľa štandardu MCP
 
-> **Stav: návrh 9. 10. 2026.** Nahrádza zastavený návrh v1 (`_archiv/ORG-konektory-v1-zastavene.*`). Q1–Q7 navrhnuté v zadaní, odporúčaná je vždy A. Q8–Q13 sú nové.
+> **Stav: rozhodnuté 9. 10. 2026 (Ján) — Q1–Q14 podľa odporúčania A.** Nahrádza zastavený návrh v1 (`_archiv/ORG-konektory-v1-zastavene.*`).
 
 Referencia: `ORG-konektory.html`. Základ: `ZAKLAD.md`, `ZAKLAD-podmenu-a-akcie.md`, `ZAKLAD-lista-ulozenia.md` (`.set-form`, `.set-savebar`, Ďalšie akcie), `ZAKLAD-vyber-a-prepinace.md`, `ZAKLAD-vyber-skupin-a-znaciek.md` (`.select-row`), `KANALY-prehlad.md` (riadok-odkaz, `?new=1`). Zdroj: `app/organisation/ConnectorsSection.tsx`, `organisation/actions.ts`, `organisation/[section]/page.tsx`, `lib/connectors.ts`, `lib/mcp/client.ts`, `lib/mcp/profiles/*`, `api/connectors/callback/route.ts`, ADR-029.
 
@@ -12,7 +12,7 @@ Je to **rozdiel oproti existujúcej obrazovke**. Akcie `saveConnectorAction`, `c
 - `.page-head.page-head--section` > `h1` „Konektory" + plné `a.button` `t.add` → `?new=1`. Pri `?new=1` sa nekreslí.
 - `p.page-lead` `t.introShort` „Servery iných systémov, v ktorých asistent hľadá a z ktorých knižnica preberá dokumenty." Dnešných päť viet `t.intro` sa ruší a ich obsah ide do poznámok sekcií na detaile.
 - `div.card > .form-list` s `a.form-row` → `/organisation/connectors/<id>`:
-  - `span.sico`: obrázok zo `serverInfo.icons` (Q11), inak prvé písmeno `name`; pri `error` `.sico.bad`;
+  - `span.sico`: ikona zo `serverInfo.icons` stiahnutá pri pripojení a uložená ako `data:` — **len PNG, JPEG alebo WebP do 32 kB, SVG nikdy** (Q11); inak prvé písmeno `name`; pri `error` `.sico.bad`;
   - `b` `name` + `span.form-row-sub` hostiteľ · `serverInfo.version` (ak je);
   - `span.row-end`: `.tag` Živý zdroj / Import / Interná|Verejná (posledný len pri zapnutom živom zdroji), štítok stavu (triedy ako dnes), `span.n` `t.toolsCount(n)`;
   - `title` riadku = `lastError`.
@@ -115,7 +115,7 @@ Poradie odhora:
 - **Stopa každého volania** (D177) — Vyskúšať, nástroj s možnosťami aj `resources/list` sa zapisujú.
 - **Predvolene len knižnica, `defaultOn`** (§ 5, Ján 8. 10. 2026).
 - **Kontrola režimu pri uložení, pripojení a každom volaní** (§ 5) — chyba pri Pridať je `.lnote--bad` v karte úlohy.
-- **Mení sa — ako otázka Q8 nižšie, nekreslené ako hotové:** D173 „Profil servera je jediné miesto so znalosťou servera".
+- **D178** (ADR-029 § 6, Ján 9. 10. 2026) — profil je predvyplnenie; nástroj na hľadanie, pole otázky a nástroj s možnosťami sú nastavenie konektora. Upravuje D173.
 
 ## Rámy
 
@@ -140,7 +140,7 @@ Poradie odhora:
 ## Údaje, ktoré v modeli neexistujú
 
 V `Connector` dnes je len `capabilities.tools[{name, description(≤300)}]`, `discoveredAt`, `profile`, `auth.clientInfoEnc`. Nové (všetko voliteľné, starý záznam funguje):
-- `server: { name, title?, version?, websiteUrl?, icons?, instructions? } | null` — z `initialize`.
+- `server: { name, title?, version?, websiteUrl?, icon?, instructions? } | null` — z `initialize`. `icon` = `data:` URL, len PNG / JPEG / WebP do 32 kB stiahnuté zo `serverInfo.icons` pri pripojení; SVG sa neukladá (Q11). Bez vhodnej ikony `icon` chýba a kreslí sa písmeno.
 - `capabilities.tools[]` rozšíriť o `title?`, `inputSchema`, `annotations?`; popis bez orezania.
 - `capabilities.resources: boolean`, `capabilities.resourcePrefixes: string[]`.
 - `capabilities.fieldOptions: Record<vstup, string[]>` — z `optionsTool`.
@@ -151,54 +151,34 @@ V `Connector` dnes je len `capabilities.tools[{name, description(≤300)}]`, `di
 - Kanály pri odstránení sa odvodia z `channels.connectorScopes` (bez zmeny schémy).
 - **Nenavrhuje sa:** katalóg MCP Registry, posledné volania, konektor na osobu.
 
-## Rozhodnuté
+## Rozhodnuté (Ján, 9. 10. 2026 — všetky podľa odporúčania A)
 
-Ján 9. 10. 2026: **Q1–Q14 všetky A.**
-
-- **Q8** zapísané ako **D178** v ADR-029 § 6.
-- **Q11** spresnené: ikona len PNG, JPEG alebo WebP do 32 kB, **nie SVG**
-  (ani po sanitizácii — cudzí server ho dodáva a môže niesť skript).
-- **Q12**: keď server `scopes_supported` neohlási, žiadny rozsah sa
-  neposiela; `docs.read` len v profile Sportnetu.
+- **Q1** Pridanie len s adresou, Názov nepovinný, zbalené Pokročilé prihlásenie (Client ID, Client Secret). „Pripojiť" konektor založí a hneď presmeruje na prihlásenie servera.
+- **Q2** Detail na vlastnej stránke v poradí O serveri → Nástroje → Vyskúšať hľadanie → Použitia → Ďalšie akcie.
+- **Q3** Nástroje vždy viditeľné so štítkami z `annotations`. Povolenia pre asistenta sú nakreslené ako vypnuté.
+- **Q4** Použitia s výberom nástroja na hľadanie a poľa otázky, rozsahy ako riadky s ponúkanými hodnotami, hotové vzory redukcie.
+- **Q5** Pásik stavu; plné je Pripojiť (nepripojený, chyba) alebo Uložiť (pripojený).
+- **Q6** Prehľad: riadky s ikonou, adresou · verziou a štítkami; `.empty` s odkazom na `?new=1`.
+- **Q7** Vyskúšať hľadanie cez GET, volá sa len na stlačenie, s návrhmi do redukcie a rozsahov.
+- **Q8** Zapísané ako **D178 v ADR-029 § 6**: profil je predvyplnenie; nástroj na hľadanie, pole otázky a nástroj s možnosťami sú nastavenie konektora.
+- **Q9** Štítky nástrojov len z výslovne uvedených `annotations`. Bez údaja sa štítok nekreslí.
+- **Q10** Výsledok servera bez profilu: `resource` / `resource_link` = článok; inak `structuredContent` s poľom `{title, text|content, uri}`; inak celý text = jeden článok.
+- **Q11** Ikona servera **len PNG, JPEG alebo WebP do 32 kB**, stiahnutá pri pripojení a uložená ako `data:`. **SVG nie, ani po sanitizácii** — dodáva ho cudzí server a môže niesť skript. Inak prvé písmeno.
+- **Q12** Rozsah oprávnení OAuth zo `scopes_supported` v metadátach chráneného zdroja. Keď server nič neohlási, `scope` sa neposiela. `docs.read` ostáva len v profile Sportnetu.
+- **Q13** Pokyny servera (`instructions`) sa modelu neposielajú, len sa zobrazujú.
+- **Q14** Adresa servera je na detaile len na čítanie. Iný server = nový konektor.
 
 ## Otázky
 
-- **Q1** — Pridanie len s adresou, Názov nepovinný, zbalené Pokročilé prihlásenie, „Pripojiť" založí a hneď odíde na prihlásenie?
-  **A (odporúčam): áno.** Pri serveroch podľa MCP všetko ostatné zistí klient sám a krok „ulož, potom pripoj" by bol bez úžitku. B: Založiť a Pripojiť ako dva kroky.
-- **Q2** — Vlastná stránka detailu v poradí O serveri → Nástroje → Vyskúšať → Použitia → Ďalšie akcie?
-  **A (odporúčam): áno.** Najprv to, čo server je a vie, potom ako ho používame — Použitia závisia od nástrojov. B: Použitia hneď pod pásikom.
-- **Q3** — Nástroje vždy viditeľné so štítkami z `annotations`, povolenia pre asistenta nakreslené vypnuté?
-  **A (odporúčam): áno.** Správca vidí, či server vie meniť dáta, ešte pred zapnutím použitia C. Vypnutý ovládač ukazuje, kam to smeruje, a nič nesľubuje. B: povolenia nekresliť vôbec.
-- **Q4** — Použitia s výberom nástroja a poľa otázky, rozsahy ako riadky s ponúkanými hodnotami, hotové vzory redukcie?
-  **A (odporúčam): áno.** Iba tak ide pripojiť server bez profilu v kóde a vstupy aj ich hodnoty sú známe zo schémy. B: všeobecný server len pre nástroje asistenta (dnešný stav).
-- **Q5** — Pásik stavu a plné tlačidlo podľa stavu (Pripojiť vs. Uložiť)?
-  **A (odporúčam): áno.** Nepripojený konektor nič nerobí, hlavný krok je Pripojiť. B: Uložiť vždy plné.
-- **Q6** — Prehľad: riadky s ikonou servera, adresou · verziou, štítkami a `.empty` s odkazom?
-  **A (odporúčam): áno.** Riadok povie, čo konektor je a robí, bez otvárania. B: bez verzie.
-- **Q7** — Vyskúšať hľadanie ako GET, volá sa len na stlačenie, s návrhmi do redukcie a rozsahov?
-  **A (odporúčam): áno.** Redukcia sa dá overiť len na skutočnom výsledku a adresa `?try=` sa dá poslať kolegovi. B: bez návrhov, len výsledok.
-- **Q8** — **D173** hovorí, že profil je jediné miesto so znalosťou servera. Návrh z neho robí predvyplnenie a nástroj na hľadanie vyberá správca. Meniť D173?
-  **A (odporúčam): áno, doplniť ADR-029 o D178 „Profil je predvyplnenie; hľadanie, pole otázky a nástroj s možnosťami sú nastavenie konektora".** Znalosť servera ostáva v profile (rozklad výsledku, čistenie preambuly), mení sa len to, kto vyberá nástroj. Rozhoduje Ján. B: nechať D173, všeobecný server bez živého zdroja.
-- **Q9** — Štítky nástrojov len z výslovne uvedených `annotations`? (Štandard pri chýbajúcej hodnote predpokladá `destructiveHint: true` a `openWorldHint: true`.)
-  **A (odporúčam): áno, bez údaja bez štítku.** Inak by väčšina serverov, ktoré `annotations` neposielajú, mala pri každom nástroji „Mení dáta" a štítok by stratil význam. B: kresliť aj predvolené hodnoty zo štandardu.
-- **Q10** — Ako čítať výsledok hľadania servera bez profilu?
-  **A (odporúčam): obsah `resource` / `resource_link` = článok; inak `structuredContent` s poľom objektov `{title, text|content, uri}`; inak celý text = jeden článok.** Pokryje to servery podľa štandardu a Vyskúšať hneď ukáže, ako sa výsledok rozložil. B: všeobecný server vždy ako jeden článok.
-- **Q11** — Ikonu servera (`serverInfo.icons`) načítať priamo z cudzej adresy?
-  **A (odporúčam): nie, stiahnuť pri pripojení a uložiť ako `data:` (do 32 kB, len PNG/SVG po sanitizácii), inak písmeno.** Obrázok z cudzieho servera v intranete prezradí návštevu a CSP ho aj tak nepustí. B: písmeno vždy.
-- **Q12** — OAuth `scope` brať z metadát servera namiesto natvrdo `"docs.read"`?
-  **A (odporúčam): áno, `scopes_supported` z metadát chráneného zdroja; pri profile Sportnet ostáva `docs.read`.** Iný server `docs.read` nepozná a prihlásenie by zlyhalo. B: pole „Scope" v Pokročilom prihlásení.
-- **Q13** — Pokyny servera (`instructions`) posielať modelu pri živom zdroji?
-  **A (odporúčam): nie, len zobraziť.** Podľa D174 je text zo servera obsah, nie pokyn, a Sportnet je príklad servera s pokynmi pre model. B: posielať s označením „pokyny cudzieho servera".
-- **Q14** — Zmena adresy servera na detaile?
-  **A (odporúčam): adresa je len na čítanie. Iný server = nový konektor.** Nová adresa znamená nové prihlásenie, nástroje aj rozsahy a kanály by sa ticho odkazovali na iný server. B: pole Adresa v Použitiach ako dnes.
+Žiadne otvorené.
 
 ## Prompt pre Claude Code
 
 ```
 Stiahni design: design_handoff_contineo_intranet/ORG-konektory.html + .md.
 Vetva design/org-konektory-mcp z main. ADR-029 (D171–D177, § 5).
-Najprv Q8 (D173) — bez Jánovho rozhodnutia nerob bod 4 (výber nástroja);
-ostatné otázky: implementuj odporúčanú A, kým nie sú rozhodnuté.
+Q1–Q14 rozhodnuté podľa A (Ján 9. 10. 2026), D178 v ADR-029 § 6.
+Ikona servera len PNG/JPEG/WebP ≤ 32 kB ako data:, SVG nie (Q11).
 
 1. Model a klient (lib/connectors.ts, lib/mcp/client.ts): nové voliteľné
    polia podľa „Údaje, ktoré v modeli neexistujú"; pri connect uložiť

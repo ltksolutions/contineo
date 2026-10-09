@@ -18,8 +18,11 @@ import { auth, UnauthorizedError, type OAuthClientProvider } from "@modelcontext
 import type { OAuthClientInformationMixed, OAuthClientMetadata, OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js"
 import {
   ConnectorError, connectorById, connectorByPendingState, markConnectorError, readClientInfo, readPending, readTokens,
-  saveCapabilities, saveClientInfo, savePending, saveTokens, assertConnectorAllowed, type Connector,
+  saveDiscovery, saveClientInfo, savePending, saveTokens, assertConnectorAllowed, searchSetup,
+  type Connector, type ConnectorServerInfo,
 } from "../connectors"
+import { profileFor } from "./profiles"
+import { iconCandidates, iconDataUrl, optionsFor, parseFieldOptions, resourcePrefixes, scopeFields, type ToolInfo } from "./generic"
 import { getCollection } from "../mongodb"
 import type { McpToolCaller } from "./profiles/types"
 
@@ -59,14 +62,23 @@ export interface CallContext {
 
 // ── OAuth poskytovateľ nad konektorom ───────────────────────────────────────
 
-function clientMetadata(redirectUrl: string): OAuthClientMetadata {
+/**
+ * Rozsah oprávnení (Q12): ten, ktorý pozná profil (Sportnet `docs.read`),
+ * inak žiadny — SDK potom vezme `scopes_supported` z metadát chráneného
+ * zdroja, a keď server nič neohlási, rozsah sa neposiela vôbec.
+ */
+function oauthScope(c: Connector): string | undefined {
+  return profileFor(c.profile).oauthScope
+}
+
+function clientMetadata(redirectUrl: string, scope: string | undefined): OAuthClientMetadata {
   return {
     client_name: "Contineo",
     redirect_uris: [redirectUrl],
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"],
     token_endpoint_auth_method: "none",
-    scope: "docs.read",
+    ...(scope ? { scope } : {}),
   }
 }
 
@@ -82,7 +94,7 @@ function providerFor(c: Connector, redirectUrl: string, actor?: string): OAuthCl
   const provider: OAuthClientProvider & { authorizationUrl: URL | null } = {
     authorizationUrl: null,
     get redirectUrl() { return redirectUrl },
-    get clientMetadata() { return clientMetadata(redirectUrl) },
+    get clientMetadata() { return clientMetadata(redirectUrl, oauthScope(c)) },
     state: () => state,
     clientInformation: () => (readClientInfo(c) ?? undefined) as OAuthClientInformationMixed | undefined,
     saveClientInformation: info => saveClientInfo(c.companyCode, c.id, info as unknown as Record<string, unknown>),
@@ -115,31 +127,106 @@ export async function startAuthorization(c: Connector, redirectUrl: string): Pro
   const provider = providerFor(c, redirectUrl)
   let result: "AUTHORIZED" | "REDIRECT"
   try {
-    result = await auth(provider, { serverUrl: c.endpoint, scope: "docs.read" })
+    result = await auth(provider, { serverUrl: c.endpoint, scope: oauthScope(c) })
   } catch (e) {
     throw new ConnectorError("connector.authStart", "Server nedovolil začať prihlásenie.", { detail: String((e as Error)?.message ?? e) })
   }
   if (result === "AUTHORIZED") {
-    await discoverTools(c, redirectUrl, c.auth.connectedBy ?? null)
+    await discover(c, redirectUrl, c.auth.connectedBy ?? null)
     return null
   }
   if (!provider.authorizationUrl) throw new ConnectorError("connector.authStart", "Server nedal adresu na prihlásenie.")
   return provider.authorizationUrl
 }
 
-/** Čo server ponúka — zapíše sa pri pripojení, obrazovka to ukáže. Zlyhanie sa len zaloguje. */
-async function discoverTools(c: Connector, redirectUrl: string, actor: string | null): Promise<void> {
+/** Ikona servera: prvý vhodný kandidát, stiahnutý a overený podľa obsahu (Q11). Zlyhanie = bez ikony. */
+async function fetchIcon(icons: { src?: string; mimeType?: string }[] | undefined, endpoint: string): Promise<string | undefined> {
+  for (const src of iconCandidates(icons, endpoint)) {
+    if (src.startsWith("data:")) return src
+    try {
+      const res = await fetch(src, { signal: AbortSignal.timeout(3_000), redirect: "error" })
+      if (!res.ok) continue
+      const len = Number(res.headers.get("content-length") ?? 0)
+      if (len > 32 * 1024) continue
+      const data = iconDataUrl(new Uint8Array(await res.arrayBuffer()))
+      if (data) return data
+    } catch { /* ďalší kandidát */ }
+  }
+  return undefined
+}
+
+/**
+ * Čo server ponúka (D178) — zapíše sa pri pripojení a pri „Načítať znova":
+ * predstavenie (`serverInfo`, `instructions`), celé `tools/list`, zdroje
+ * a hodnoty polí z nástroja s možnosťami. Zlyhanie sa len zaloguje —
+ * pripojenie samo platí aj bez toho.
+ */
+async function discover(c: Connector, redirectUrl: string, actor: string | null): Promise<void> {
   // Záznam nanovo z databázy: po výmene kódu `c` tokeny ešte nenesie.
   const fresh = await connectorById(c.companyCode, c.id)
   if (!fresh) return
+  const ctx = { actor: { personId: null, personName: actor } }
   try {
-    const tools = await withClient({ ...fresh, status: "connected" }, redirectUrl, async client => {
-      const r = await client.listTools()
-      return r.tools.map(t => ({ name: t.name, description: (t.description ?? "").slice(0, 300) }))
-    }, { actor: { personId: null, personName: actor } }, "tools/list")
-    await saveCapabilities(c.companyCode, c.id, tools)
+    const found = await withClient({ ...fresh, status: "connected" }, redirectUrl, async client => {
+      const info = client.getServerVersion()
+      const caps = client.getServerCapabilities()
+      const tools: ToolInfo[] = []
+      let cursor: string | undefined
+      for (let page = 0; page < 5; page++) {
+        const r = await client.listTools(cursor ? { cursor } : undefined)
+        for (const t of r.tools) {
+          tools.push({
+            name: t.name,
+            title: t.title ?? t.annotations?.title,
+            description: t.description ?? "",
+            inputSchema: t.inputSchema as ToolInfo["inputSchema"],
+            ...(t.annotations ? { annotations: t.annotations } : {}),
+          })
+        }
+        cursor = r.nextCursor
+        if (!cursor) break
+      }
+      let prefixes: string[] | undefined
+      if (caps?.resources) {
+        try { prefixes = resourcePrefixes((await client.listResources()).resources.map(r => r.uri)) } catch { /* zdroje sú doplnok */ }
+      }
+      // Hodnoty polí rozsahu: len pre vstupy nástroja na hľadanie — nič iné
+      // z odpovede (napr. profil osoby v preambule servera) sa neukladá.
+      const profile = profileFor(fresh.profile)
+      const optionsTool = fresh.uses.retrieval.optionsTool || profile.defaults?.optionsTool
+      let fieldOptions: Record<string, string[]> | undefined
+      if (optionsTool && tools.some(t => t.name === optionsTool)) {
+        try {
+          const parsed = parseFieldOptions(await client.callTool({ name: optionsTool, arguments: {} }))
+          const setup = searchSetup({ ...fresh, capabilities: { tools, discoveredAt: new Date() } })
+          const fields = scopeFields(tools.find(t => t.name === setup?.tool), setup?.queryArg)
+          fieldOptions = Object.fromEntries(fields.flatMap(f => {
+            const vals = optionsFor(parsed, f.key)
+            return vals ? [[f.key, vals.slice(0, 2000)]] : []
+          }))
+        } catch { /* možnosti sú doplnok */ }
+      }
+      return {
+        info: info ?? null,
+        instructions: client.getInstructions(),
+        capabilities: { tools, resources: Boolean(caps?.resources), resourcePrefixes: prefixes, fieldOptions },
+      }
+    }, ctx, "discover", 20_000)
+    const i = found.info as (typeof found.info & { title?: string; websiteUrl?: string; icons?: { src?: string; mimeType?: string }[] }) | null
+    const server: ConnectorServerInfo | null = i ? {
+      name: i.name,
+      ...(i.title ? { title: i.title } : {}),
+      ...(i.version ? { version: i.version } : {}),
+      ...(i.websiteUrl && /^https:\/\//.test(i.websiteUrl) ? { websiteUrl: i.websiteUrl } : {}),
+      ...(found.instructions ? { instructions: found.instructions.slice(0, 20_000) } : {}),
+    } : null
+    if (server) {
+      const icon = await fetchIcon(i?.icons, fresh.endpoint)
+      if (icon) server.icon = icon
+    }
+    await saveDiscovery(c.companyCode, c.id, { server, capabilities: found.capabilities })
   } catch (e) {
-    console.error("[connector] zoznam nástrojov sa nepodarilo načítať:", e)
+    console.error("[connector] údaje o serveri sa nepodarilo načítať:", e)
   }
 }
 
@@ -153,14 +240,14 @@ export async function finishAuthorization(state: string, code: string, redirectU
   await assertConnectorAllowed(c.companyCode, c.endpoint)
   const provider = providerFor(c, redirectUrl, actor)
   try {
-    const result = await auth(provider, { serverUrl: c.endpoint, authorizationCode: code, scope: "docs.read" })
+    const result = await auth(provider, { serverUrl: c.endpoint, authorizationCode: code, scope: oauthScope(c) })
     if (result !== "AUTHORIZED") throw new Error(result)
   } catch (e) {
     const msg = String((e as Error)?.message ?? e)
     await markConnectorError(c.companyCode, c.id, msg)
     throw new ConnectorError("connector.authFinish", "Výmena kódu za token zlyhala.", { detail: msg })
   }
-  await discoverTools(c, redirectUrl, actor)
+  await discover(c, redirectUrl, actor)
   return (await connectorById(c.companyCode, c.id)) ?? c
 }
 
@@ -219,9 +306,10 @@ export async function withClient<T>(
   }
 }
 
-/** Volanie jedného nástroja — tvar, ktorému rozumejú profily. */
-export function toolCaller(client: Client): McpToolCaller {
+/** Volanie jedného nástroja — tvar, ktorému rozumejú profily; `readResource` pre import bez profilu. */
+export function toolCaller(client: Client): McpToolCaller & { readResource(uri: string): Promise<unknown> } {
   return {
     callTool: (name, args) => client.callTool({ name, arguments: args }),
+    readResource: uri => client.readResource({ uri }),
   }
 }
