@@ -14,8 +14,8 @@
  *   2. `merge`   — jedno volanie nad zoznamom tém zlúči duplicitné témy.
  *      E-maily v ňom nie sú, len názvy a opisy tém.
  *   3. `draft`   — pre tému s aspoň `MIN_THREADS` vláknami sa zo schránky
- *      znova prečíta najviac 6 najnovších a 2 najstaršie vlákna; model z nich
- *      napíše 1–3 návrhy FAQ s článkom normy z knižnice kanála. Návrhy idú
+ *      znova prečíta 6 najnovších a 2 najstaršie vlákna (veľká téma 10 + 4,
+ *      `draftPlan`); model z nich napíše 1–3 (veľká téma až 6) návrhy FAQ s článkom normy z knižnice kanála. Návrhy idú
  *      do fronty kurátora (`faqProposals.ts`, D185).
  *
  * Po etape `draft` sa záznamy vlákien zmažú: pôvod nesie už len návrh
@@ -64,6 +64,24 @@ export const CLASSIFY_PARALLEL = 1
 export const QUESTION_CHARS = 800
 export const DRAFT_NEWEST = 6
 export const DRAFT_OLDEST = 2
+export const DRAFT_MAX_ENTRIES = 3
+/**
+ * Veľká téma (Ján 9. 10. 2026): „Prihlasovanie do ISSF a obnova hesla" mala
+ * po 12 mesiacoch 445 otázok — takmer polovicu všetkých — a skrýva viac
+ * problémov (zabudnuté heslo, zablokovaný účet, zmena e-mailu, nový účet).
+ * Taká téma dostane viac vlákien na čítanie a až 6 záznamov FAQ.
+ */
+export const BIG_TOPIC_THREADS = 100
+export const BIG_DRAFT_NEWEST = 10
+export const BIG_DRAFT_OLDEST = 4
+export const BIG_DRAFT_MAX_ENTRIES = 6
+
+/** Koľko vlákien čítať a koľko záznamov smie téma dostať podľa veľkosti. */
+export function draftPlan(threads: number): { newest: number; oldest: number; maxEntries: number } {
+  return threads >= BIG_TOPIC_THREADS
+    ? { newest: BIG_DRAFT_NEWEST, oldest: BIG_DRAFT_OLDEST, maxEntries: BIG_DRAFT_MAX_ENTRIES }
+    : { newest: DRAFT_NEWEST, oldest: DRAFT_OLDEST, maxEntries: DRAFT_MAX_ENTRIES }
+}
 export const DRAFT_THREAD_CHARS = 3000
 /** Kľúč „nie je to otázka" (spam, poďakovanie, interná vec). */
 export const NO_TOPIC = "_none"
@@ -370,7 +388,7 @@ export function pickThreads<T extends { askedAt: Date }>(threads: T[], newest = 
 
 export const DRAFT_SYSTEM = [
   "Si redaktor FAQ športového zväzu. Dostaneš tému, niekoľko e-mailových vlákien helpdesku k nej (otázka člena a odpoveď helpdesku s dátumom) a úseky noriem z knižnice zväzu.",
-  "Napíš jeden až tri záznamy FAQ, ktoré pokryjú tému. Viac ako jeden len vtedy, keď ide naozaj o rôzne otázky s rôznou odpoveďou.",
+  "Napíš záznamy FAQ, ktoré pokryjú tému — najviac toľko, koľko povie zadanie. Viac ako jeden len vtedy, keď ide naozaj o rôzne otázky s rôznou odpoveďou (pri veľkej téme napríklad zabudnuté heslo, zablokovaný účet, zmena e-mailu).",
   "Pravidlá:",
   "– Nikdy neuvádzaj mená, adresy, čísla, kluby ani iné údaje konkrétnej osoby. Píš všeobecne („hráč“, „klub“, „rodič“).",
   "– Odpoveď vychádza z odpovedí helpdesku, a to z **najnovšej**. Nič nedomýšľaj. Úseky noriem použi na doplnenie a uveď ich čísla v „sources“; keď sa norma s odpoveďou helpdesku rozchádza, nastav „normConflict“ a v „note“ to vysvetli.",
@@ -414,9 +432,9 @@ export interface DraftThread {
 
 const ym = (d: Date) => d.toISOString().slice(0, 10)
 
-export function draftPrompt(topic: Pick<HarvestTopic, "label" | "description" | "threads">, threads: DraftThread[], chunks: { title: string; articleRef: string | null; text: string }[]): string {
+export function draftPrompt(topic: Pick<HarvestTopic, "label" | "description" | "threads">, threads: DraftThread[], chunks: { title: string; articleRef: string | null; text: string }[], maxEntries = DRAFT_MAX_ENTRIES): string {
   const cut = (s: string) => (s.length > DRAFT_THREAD_CHARS ? `${s.slice(0, DRAFT_THREAD_CHARS)} …` : s)
-  const parts = [`Téma: ${topic.label}\nOpis: ${topic.description}\nPočet otázok v histórii: ${topic.threads}`]
+  const parts = [`Téma: ${topic.label}\nOpis: ${topic.description}\nPočet otázok v histórii: ${topic.threads}\nNajviac záznamov FAQ: ${maxEntries}`]
   threads.forEach((t, i) => {
     const lines = [`### Vlákno ${i + 1} (otázka ${ym(t.askedAt)})`, "Otázka:", cut(t.question)]
     t.answers.forEach(a => lines.push("", `Odpoveď helpdesku (${ym(a.at)}):`, cut(a.text)))
@@ -453,11 +471,11 @@ export interface DraftEntry {
   note: string
 }
 
-export function parseDraft(raw: unknown, chunkCount: number): DraftEntry[] {
+export function parseDraft(raw: unknown, chunkCount: number, maxEntries = DRAFT_MAX_ENTRIES): DraftEntry[] {
   const list = (raw as { entries?: unknown })?.entries
   const out: DraftEntry[] = []
   const strs = (xs: unknown, max: number) => (Array.isArray(xs) ? xs : []).map(x => String(x ?? "").replace(/\s+/g, " ").trim()).filter(Boolean).slice(0, max)
-  for (const e of Array.isArray(list) ? list.slice(0, 3) : []) {
+  for (const e of Array.isArray(list) ? list.slice(0, maxEntries) : []) {
     const x = e as Record<string, unknown>
     const question = String(x.question ?? "").replace(/\s+/g, " ").trim()
     const answer = String(x.answer ?? "").trim()
@@ -757,15 +775,16 @@ async function draftTopic(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<vo
     const all = await col.find({ ...runFilter(ctx), topicKey: key }, { projection: { _id: 0, threadRef: 1, askedAt: 1 } }).toArray()
     const adapter = mailboxFor(ctx.channel)
     const threads: DraftThread[] = []
-    for (const t of pickThreads(all)) {
+    const plan = draftPlan(topic.threads)
+    for (const t of pickThreads(all, plan.newest, plan.oldest)) {
       if (Date.now() > ctx.hardStop) throw new FaqHarvestError("mailbox.slow", "Schránka odpovedá pomaly — téma sa nestihla spracovať.")
       const t2 = draftThread(await adapter.listThread(t.threadRef))
       if (t2) threads.push(t2)
     }
     if (threads.length) {
       const chunks = await topicChunks(ctx.code, ctx.channel, `${topic.label}. ${topic.description}\n${threads[0].question.slice(0, 600)}`)
-      const raw = await callJson(ctx.client, ctx.answerModel, DRAFT_SYSTEM, draftPrompt(topic, threads, chunks), DRAFT_SCHEMA, 16000, usageFor(ctx, ctx.answerModel, topic.label), "medium")
-      const entries = parseDraft(raw, chunks.length)
+      const raw = await callJson(ctx.client, ctx.answerModel, DRAFT_SYSTEM, draftPrompt(topic, threads, chunks, plan.maxEntries), DRAFT_SCHEMA, 16000, usageFor(ctx, ctx.answerModel, topic.label), "medium")
+      const entries = parseDraft(raw, chunks.length, plan.maxEntries)
       const proposals: NewProposal[] = entries.map(e => ({
         topicKey: key, topicLabel: topic.label,
         question: e.question, variants: e.variants, answer: e.answer, audience: e.audience,
