@@ -178,3 +178,13 @@ describe("continueAnalysis", () => {
     expect(col.updateOne).not.toHaveBeenCalled()
   })
 })
+
+describe("throttleDelayMs (Graph 429)", async () => {
+  const { throttleDelayMs } = await import("../src/lib/mailbox/graph")
+  it("Retry-After v sekundach, inak exponencialne, strop 10 s", () => {
+    expect(throttleDelayMs("3", 0)).toBe(3000)
+    expect(throttleDelayMs(null, 2)).toBe(4000)
+    expect(throttleDelayMs("120", 0)).toBe(10000)
+    expect(throttleDelayMs("x", 5)).toBe(10000)
+  })
+})

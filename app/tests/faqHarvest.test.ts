@@ -11,10 +11,10 @@ import { describe, it, expect, vi } from "vitest"
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
 import {
-  harvestItems, addressHash, applyClassification, applyMerge, pickThreads, parseDraft, draftThread, classifyPrompt,
+  harvestItems, harvestCandidates, draftPlan, draftPrompt, addressHash, applyClassification, applyMerge, mergeChunks, MERGE_CHUNK, MERGE_ANCHORS, pickThreads, parseDraft, draftThread, classifyPrompt,
   NO_TOPIC, type HarvestItem, type HarvestTopic,
 } from "../src/lib/faqHarvest"
-import type { MailMessage } from "../src/lib/mailbox/types"
+import type { MailMessage, MailHeader } from "../src/lib/mailbox/types"
 
 const BOX = "helpdesk@futbalsfz.sk"
 const msg = (over: Partial<MailMessage>): MailMessage => ({
@@ -38,6 +38,26 @@ describe("harvestItems", () => {
     expect(items.map(i => i.threadRef)).toEqual(["ok"])
     expect(items[0].question).toContain("[číslo]")
     expect(items[0].question).not.toContain("1234567")
+    expect(skips).toEqual({ colleague: 1, excluded: 1, unanswered: 1 })
+  })
+})
+
+describe("harvestCandidates", () => {
+  const h = (over: Partial<MailHeader>): MailHeader => ({
+    threadRef: "t1", fromAddress: "a@klub.sk", subject: "Obnova hesla", receivedAt: new Date("2026-03-10T08:00:00Z"), outgoing: false, folder: "other", ...over,
+  })
+  const reply = (threadRef: string, at = "2026-03-11T08:00:00Z") => h({ threadRef, fromAddress: BOX, outgoing: true, receivedAt: new Date(at) })
+  it("z hlaviciek vyberie len vlakna zvonku s odpovedou; automaticke upozornenia helpdesku nie", () => {
+    const { refs, skips } = harvestCandidates([
+      h({ threadRef: "ok" }), reply("ok", "2026-04-02T08:00:00Z"),
+      // tisíce upozornení ISSF odoslaných z adresy helpdesku — vlákno začal helpdesk
+      ...Array.from({ length: 50 }, (_, i) => h({ threadRef: `issf${i}`, fromAddress: BOX, outgoing: true })),
+      h({ threadRef: "kolega", fromAddress: "x@futbalsfz.sk" }), reply("kolega"),
+      h({ threadRef: "bez" }),
+      h({ threadRef: "spam", folder: "junk" }), reply("spam"),
+      h({ threadRef: "namietka", fromAddress: "namietka@klub.sk" }), reply("namietka"),
+    ], "2026-03", BOX, new Set([addressHash("namietka@klub.sk")]))
+    expect(refs).toEqual(["ok"])
     expect(skips).toEqual({ colleague: 1, excluded: 1, unanswered: 1 })
   })
 })
@@ -82,6 +102,23 @@ describe("applyMerge", () => {
   })
 })
 
+describe("triedenie a zlucovanie vo velkom", () => {
+  const topic = (key: string, threads: number): HarvestTopic => ({ key, label: key, description: "", threads, firstMonth: null, lastMonth: null, proposals: null })
+  it("prompt radi temy od najcastejsej a ukazuje pocet", () => {
+    const p = classifyPrompt([{ key: "a", label: "Malá", description: "", threads: 1 }, { key: "b", label: "Veľká", description: "", threads: 40 }], [])
+    expect(p.indexOf("Veľká")).toBeLessThan(p.indexOf("Malá"))
+    expect(p).toContain("b — Veľká:  (40)")
+  })
+  it("mergeChunks: kusky od najvacsej temy, dalsie s kotvami", () => {
+    const topics = Array.from({ length: MERGE_CHUNK + 10 }, (_, i) => topic(`t${i}`, 1000 - i))
+    const chunks = mergeChunks(topics)
+    expect(chunks).toHaveLength(2)
+    expect(chunks[0][0].key).toBe("t0")
+    expect(chunks[1].slice(0, MERGE_ANCHORS).map(t => t.key)).toEqual(topics.slice(0, MERGE_ANCHORS).map(t => t.key))
+    expect(chunks[1]).toHaveLength(MERGE_ANCHORS + 10)
+  })
+})
+
 describe("navrh za temu", () => {
   it("pickThreads: 6 najnovsich a 2 najstarsie", () => {
     const threads = Array.from({ length: 12 }, (_, i) => ({ id: i, askedAt: new Date(Date.UTC(2024, i, 1)) }))
@@ -93,6 +130,13 @@ describe("navrh za temu", () => {
     expect(t?.question).not.toContain("1234567")
     expect(t?.answers[0].text).toBe("Napíšte na [e-mail].")
     expect(draftThread([msg({})])).toBeNull()
+  })
+  it("velka tema (od 100 otazok): 10 + 4 vlakien a az 6 zaznamov; prompt nesie limit", () => {
+    expect(draftPlan(445)).toEqual({ newest: 10, oldest: 4, maxEntries: 6 })
+    expect(draftPlan(99)).toEqual({ newest: 6, oldest: 2, maxEntries: 3 })
+    expect(draftPrompt({ label: "Heslo", description: "", threads: 445 }, [], [], 6)).toContain("Najviac záznamov FAQ: 6")
+    const e = { question: "Q", variants: [], answer: "A", audience: [], sources: [], changedOverTime: false, normConflict: false, note: "" }
+    expect(parseDraft({ entries: Array(8).fill(e) }, 0, 6)).toHaveLength(6)
   })
   it("parseDraft: najviac 3 zaznamy, zdroje v rozsahu, bez otazky vynecha", () => {
     const e = { question: "Ako obnovím heslo?", variants: ["zabudol som heslo"], answer: "Kliknite na Zabudnuté heslo.", audience: ["hráč"], sources: [1, 7], changedOverTime: true, normConflict: false, note: "Do 2024 sa heslo menilo cez matriku." }
