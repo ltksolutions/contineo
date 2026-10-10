@@ -16,7 +16,7 @@ vi.mock("../src/lib/faq", () => ({
   saveFaqEntry: (...a: unknown[]) => saveFaqEntry(...a),
 }))
 
-import { approveProposal, rejectProposal, mergeProposal, type FaqProposal } from "../src/lib/faqProposals"
+import { approveProposal, rejectProposal, mergeProposal, updateProposal, type FaqProposal } from "../src/lib/faqProposals"
 
 const proposal = (over: Partial<FaqProposal> = {}): FaqProposal => ({
   id: "p1", companyCode: "SFZ", channelKey: "k", topicKey: "t1", topicLabel: "Heslo", question: "Ako obnovím heslo?",
@@ -58,8 +58,24 @@ describe("rozhodnutie kuratora", () => {
     await mergeProposal("SFZ", "k", "p1", "p2", "kurator@x.sk")
     const target = col.updateOne.mock.calls.find(c => c[0].id === "p2")![1]
     expect(target.$set.variants).toEqual(["Ako obnovím heslo?", "zabudol som heslo"])
+    // Odpoveď zlúčeného návrhu nevypadne — ide do poznámky cieľa; zdroje sa spoja.
+    expect(target.$set.note).toContain("Zo zlúčeného návrhu „Ako obnovím heslo?“: Zabudnuté heslo.")
+    expect(target.$set.sources).toEqual([{ documentId: "d1", title: "Príručka ISSF", articleRef: "čl. 3" }])
     const merged = col.updateOne.mock.calls.find(c => c[0].id === "p1")![1]
     expect(merged.$set).toMatchObject({ status: "merged", mergedInto: "p2", origin: null })
     await expect(mergeProposal("SFZ", "k", "p1", "p1", "x")).rejects.toMatchObject({ code: "proposal.mergeSelf" })
+  })
+
+  it("uprava bez schvalenia ulozi prve znenie do revision len raz", async () => {
+    col.findOne.mockResolvedValue(proposal())
+    await updateProposal("SFZ", "k", "p1", { answer: "Nová odpoveď." }, "kurator@x.sk")
+    const set = col.updateOne.mock.calls[0][1].$set
+    expect(set).toMatchObject({ answer: "Nová odpoveď.", editedBy: "kurator@x.sk" })
+    expect(set.status).toBeUndefined()
+    expect(set.revision.previous.answer).toBe("Zabudnuté heslo.")
+    col.updateOne.mockClear()
+    col.findOne.mockResolvedValue(proposal({ revision: { at: new Date(), by: "x", previous: { question: "q0", variants: [], answer: "a0", audience: [], sources: [], note: "" } } }))
+    await updateProposal("SFZ", "k", "p1", { answer: "Ešte novšia." }, "kurator@x.sk")
+    expect(col.updateOne.mock.calls[0][1].$set.revision).toBeUndefined()
   })
 })

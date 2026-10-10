@@ -8518,3 +8518,12 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 /* Hľadanie v záznamoch FAQ v editore. */
 .faq-find { display: grid; gap: 8px; margin: 0 0 16px; }
 .faq-find-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── Fronta kurátora: pôvodný návrh a zmeny (ADR-030 D185, 10. 10. 2026) ──
+   Porovnanie po slovách s pôvodným návrhom modelu. Farba nie je jediným
+   nosičom: vypadnuté je prečiarknuté, pribudnuté podčiarknuté. */
+.pr-original { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.pr-original > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.pr-original-body { display: grid; gap: 8px; padding-top: 4px; }
+.pr-diff ins { background: var(--ok-bg); color: var(--ok-fg); text-decoration: underline; text-decoration-thickness: 1px; }
+.pr-diff del { background: var(--bad-bg); color: var(--bad-fg); text-decoration: line-through; }

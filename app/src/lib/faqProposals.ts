@@ -63,7 +63,30 @@ export interface FaqProposal {
   faqDocumentId: string | null
   faqEntryId: string | null
   mergedInto: string | null
+  /**
+   * Prvé znenie pred akoukoľvek úpravou (revízia podľa manuálov, úprava
+   * kurátora). Drží sa, aby kurátor videl, čo navrhol model a čo sa zmenilo;
+   * zapisuje sa raz, ďalšie úpravy ho neprepisujú.
+   */
+  revision?: { at: Date; by: string; previous: ProposalSnapshot } | null
+  /** Posledná uložená úprava bez schválenia. */
+  editedAt?: Date | null
+  editedBy?: string | null
 }
+
+export type ProposalSnapshot = Pick<FaqProposal, "question" | "variants" | "answer" | "audience" | "sources" | "note">
+
+/** Znenie, s ktorým sa porovnáva: prvé uložené pred úpravami, inak žiadne. */
+export function originalOf(p: Pick<FaqProposal, "revision">): ProposalSnapshot | null {
+  return p.revision?.previous ?? null
+}
+
+/** Značka v poznámke, ktorou revízia označila otázku na rozhodnutie. */
+export const DECISION_MARK = "[NA ROZHODNUTIE]"
+
+export type ProposalFilter = "open" | "decision" | "nosource" | "decided"
+
+export const PROPOSAL_FILTERS: ProposalFilter[] = ["open", "decision", "nosource", "decided"]
 
 export type NewProposal = Pick<FaqProposal,
   "topicKey" | "topicLabel" | "question" | "variants" | "answer" | "audience" | "sources" |
@@ -97,18 +120,50 @@ export async function removeOpenProposals(companyCode: string, channelKey: strin
 
 /**
  * Poradie fronty: viac vlákien skôr, pri zhode novšia téma skôr. Rozhodnuté
- * návrhy sa ukazujú len na požiadanie (prepínač pohľadu).
+ * návrhy sa ukazujú len na požiadanie (prepínač pohľadu). `decision` sú
+ * otvorené návrhy s poznámkou „[NA ROZHODNUTIE]“, `nosource` otvorené bez
+ * navrhnutého zdroja — tie treba pri schválení doplniť alebo overiť.
  */
-export async function listProposals(companyCode: string, channelKey: string, status: ProposalStatus | "decided" = "open"): Promise<FaqProposal[]> {
+export async function listProposals(
+  companyCode: string, channelKey: string, filter: ProposalFilter | "decided" = "open", topicKey?: string | null,
+): Promise<FaqProposal[]> {
   const code = requireCompanyCode(companyCode, "listProposals")
-  const filter = status === "decided"
-    ? { companyCode: code, channelKey, status: { $in: ["approved", "merged", "rejected"] as ProposalStatus[] } }
-    : { companyCode: code, channelKey, status }
+  const base: Record<string, unknown> = { companyCode: code, channelKey, ...(topicKey ? { topicKey } : {}) }
+  const query =
+    filter === "decided" ? { ...base, status: { $in: ["approved", "merged", "rejected"] as ProposalStatus[] } }
+    : filter === "decision" ? { ...base, status: "open" as const, note: { $regex: DECISION_MARK.replace(/[[\]]/g, "\\$&") } }
+    : filter === "nosource" ? { ...base, status: "open" as const, "sources.0": { $exists: false } }
+    : { ...base, status: "open" as const }
   return (await proposals())
-    .find(filter, { projection: { _id: 0 } })
-    .sort(status === "open" ? { threads: -1, lastMonth: -1, question: 1 } : { decidedAt: -1 })
+    .find(query, { projection: { _id: 0 } })
+    .sort(filter === "decided" ? { decidedAt: -1 } : { threads: -1, lastMonth: -1, question: 1 })
     .limit(500)
     .toArray()
+}
+
+/** Počty pre prepínač pohľadu. */
+export async function proposalFilterCounts(companyCode: string, channelKey: string, topicKey?: string | null): Promise<Record<ProposalFilter, number>> {
+  const code = requireCompanyCode(companyCode, "proposalFilterCounts")
+  const col = await proposals()
+  const base = { companyCode: code, channelKey, ...(topicKey ? { topicKey } : {}) }
+  const [open, decision, nosource, decided] = await Promise.all([
+    col.countDocuments({ ...base, status: "open" }),
+    col.countDocuments({ ...base, status: "open", note: { $regex: DECISION_MARK.replace(/[[\]]/g, "\\$&") } }),
+    col.countDocuments({ ...base, status: "open", "sources.0": { $exists: false } }),
+    col.countDocuments({ ...base, status: { $in: ["approved", "merged", "rejected"] } }),
+  ])
+  return { open, decision, nosource, decided }
+}
+
+/** Témy otvorených návrhov kanála pre filter. */
+export async function proposalTopics(companyCode: string, channelKey: string): Promise<{ topicKey: string; topicLabel: string; open: number }[]> {
+  const code = requireCompanyCode(companyCode, "proposalTopics")
+  const rows = await (await proposals()).aggregate<{ _id: string; label: string; n: number; threads: number }>([
+    { $match: { companyCode: code, channelKey, status: "open" } },
+    { $group: { _id: "$topicKey", label: { $first: "$topicLabel" }, n: { $sum: 1 }, threads: { $max: "$threads" } } },
+    { $sort: { threads: -1 } },
+  ]).toArray()
+  return rows.map(r => ({ topicKey: r._id, topicLabel: r.label, open: r.n }))
 }
 
 export async function proposalCounts(companyCode: string, channelKey: string): Promise<Record<ProposalStatus, number>> {
@@ -154,6 +209,38 @@ async function decide(code: string, channelKey: string, id: string, set: Partial
 }
 
 /**
+ * Úprava bez schválenia (10. 10. 2026): kurátor opraví znenie a vráti sa
+ * k nemu neskôr. Prvé znenie pred úpravou sa uloží do `revision`, ak tam
+ * ešte nie je — porovnanie tak vždy ukazuje návrh modelu.
+ */
+export async function updateProposal(
+  companyCode: string, channelKey: string, id: string,
+  input: { question?: string; variants?: string[]; answer?: string; audience?: string[] },
+  actor: string,
+): Promise<void> {
+  const code = requireCompanyCode(companyCode, "updateProposal")
+  const p = await openProposal(code, channelKey, id)
+  const entry = checkEntry({
+    question: input.question ?? p.question,
+    variants: input.variants ?? p.variants,
+    answer: input.answer ?? p.answer,
+    audience: input.audience ?? p.audience,
+    sources: p.sources.map(s => ({ documentId: s.documentId, articleRef: s.articleRef })),
+  })
+  const now = new Date()
+  const set: Partial<FaqProposal> = {
+    question: entry.question, variants: entry.variants, answer: entry.answer, audience: entry.audience,
+    editedAt: now, editedBy: actor,
+  }
+  if (!p.revision) {
+    set.revision = { at: now, by: actor, previous: { question: p.question, variants: p.variants, answer: p.answer, audience: p.audience, sources: p.sources, note: p.note } }
+  }
+  const r = await (await proposals()).updateOne({ companyCode: code, channelKey, id, status: "open" }, { $set: set })
+  if (!r.modifiedCount) throw new FaqProposalError("proposal.decided", "O návrhu už niekto rozhodol.")
+  await writeAudit({ companyCode: code, subject: "document", action: "faq-navrh-upraveny", actor, targetId: id, targetLabel: entry.question })
+}
+
+/**
  * Schválenie: záznam (s úpravami kurátora) ide do konceptu FAQ dokumentu.
  * Zdroje sa preberú z návrhu; `checkEntry` overí, čo kurátor napísal.
  */
@@ -184,9 +271,17 @@ export async function mergeProposal(companyCode: string, channelKey: string, id:
   const p = await openProposal(code, channelKey, id)
   const target = await openProposal(code, channelKey, intoId)
   const variants = [...new Set([...target.variants, p.question, ...p.variants].map(v => v.trim()).filter(v => v && v !== target.question))].slice(0, 20)
+  // Odpoveď zlúčeného návrhu sa nesmie stratiť (Ján 10. 10. 2026: „aby
+  // nevypadla nejaká dôležitá časť“) — ide do poznámky cieľa, kurátor z nej
+  // prevezme, čo v cieľovej odpovedi chýba.
+  const carried = `Zo zlúčeného návrhu „${p.question}“: ${p.answer}`
   await (await proposals()).updateOne(
     { companyCode: code, channelKey, id: intoId, status: "open" },
-    { $set: { variants, threads: target.threads + (target.topicKey === p.topicKey ? 0 : p.threads) } },
+    { $set: {
+      variants, threads: target.threads + (target.topicKey === p.topicKey ? 0 : p.threads),
+      note: target.note ? `${target.note}\n\n${carried}` : carried,
+      sources: [...new Map([...target.sources, ...p.sources].map(x => [`${x.documentId}|${x.articleRef ?? ""}`, x])).values()].slice(0, 8),
+    } },
   )
   await decide(code, channelKey, id, { status: "merged", decidedBy: actor, mergedInto: intoId })
   await writeAudit({ companyCode: code, subject: "document", action: "faq-navrh-zluceny", actor, targetId: intoId, targetLabel: target.question, note: p.question })

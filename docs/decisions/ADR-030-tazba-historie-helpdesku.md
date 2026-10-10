@@ -186,6 +186,16 @@ sa prenesú) alebo **zamietne**. Pri každom rozhodnutí sa **pôvod zmaže**
 (identifikátory vlákien a správ, odpoveď DPO 5); ostáva počet vlákien
 a obdobie. Poradie fronty: počet vlákien, potom čerstvosť.
 
+*Doplnené 10. 10. 2026 (Ján: „smart formulár, kde budem vidieť pôvodné
+znenie a navrhované znenie, ktoré môžem upraviť“; „zlúč FAQ…, aby nevypadla
+dôležitá časť“):* pri návrhu je porovnanie s pôvodným návrhom modelu po
+slovách (`revision.previous`, zapisuje sa raz), úprava sa dá uložiť bez
+schválenia (`faq-navrh-upraveny`), fronta má pohľady otvorené / treba
+rozhodnúť („[NA ROZHODNUTIE]“ v poznámke) / bez zdroja / rozhodnuté, filter
+témy a stránkovanie. Pri zlúčení ide odpoveď zlúčeného návrhu do poznámky
+cieľa a zdroje sa spoja — nič z nej sa nestratí. Excel zamietnutý:
+spätný import by obchádzal kontrolu záznamu, audit a súbeh s frontou.
+
 ### D186 — Námietka vylučuje adresu odtlačkom
 
 Kto namietne (odpoveď DPO 10), toho e-maily sa z ťažby vylúčia. Správca

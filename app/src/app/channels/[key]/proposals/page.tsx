@@ -3,8 +3,12 @@
  * schránky kanála (ADR-030, D185). Len správca obsahu (`libraryContext`).
  *
  * Každý návrh je karta s vlastnými úkonmi, preto sú všetky tlačidlá tiché
- * (CLAUDE.md, R1). Pohľad „Na rozhodnutie / Rozhodnuté" je prepínač
- * `.view-switch` so stavom v adrese (`?view=decided`).
+ * (CLAUDE.md, R1). Pohľad (otvorené / treba rozhodnúť / bez zdroja /
+ * rozhodnuté) je prepínač `.view-switch`, téma a strana sú v adrese.
+ *
+ * Od 10. 10. 2026 (Ján: „smart formulár, kde budem vidieť pôvodné znenie
+ * a navrhované znenie, ktoré môžem upraviť“): pri návrhu je porovnanie
+ * s pôvodným návrhom modelu po slovách a úpravu možno uložiť bez schválenia.
  */
 
 import { notFound, redirect } from "next/navigation"
@@ -16,7 +20,11 @@ import SubmitButton from "@/components/SubmitButton"
 import { libraryContext } from "@/lib/library"
 import { channelHref } from "@/components/ChannelTabs"
 import { channelByKey, channelView } from "@/lib/channels"
-import { listProposals, proposalCounts, type FaqProposal } from "@/lib/faqProposals"
+import {
+  listProposals, proposalFilterCounts, proposalTopics, originalOf,
+  PROPOSAL_FILTERS, type FaqProposal, type ProposalFilter,
+} from "@/lib/faqProposals"
+import { wordDiff, hasChanges, type WordDiffPart } from "@/lib/wordDiff"
 import { monthRange } from "@/lib/historyAnalysis"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
@@ -24,12 +32,23 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { approveProposalAction, rejectProposalAction, mergeProposalAction } from "../../proposalActions"
+import { approveProposalAction, saveProposalAction, rejectProposalAction, mergeProposalAction } from "../../proposalActions"
 
 export const dynamic = "force-dynamic"
 
-/** Toľko kariet naraz — každá má formulár s dlhou odpoveďou. */
-const PAGE = 30
+/** Toľko kariet na stranu — každá má formulár s dlhou odpoveďou. */
+const PAGE = 20
+
+function Diff({ parts }: { parts: WordDiffPart[] }) {
+  return (
+    <span className="pr-diff">
+      {parts.map((p, i) =>
+        p.kind === "added" ? <ins key={i}>{p.text}</ins>
+        : p.kind === "removed" ? <del key={i}>{p.text}</del>
+        : <span key={i}>{p.text}</span>)}
+    </span>
+  )
+}
 
 export default async function ProposalsPage({ params, searchParams }: { params: Promise<{ key: string }>; searchParams: Promise<RawQuery> }) {
   const ctx = await libraryContext()
@@ -38,23 +57,42 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
     notFound()
   }
   const { key } = await params
-  const { msg, error, view } = normalizeQuery<{ msg?: string; error?: string; view?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string; view?: string; topic?: string; page?: string }>(await searchParams)
   const raw = await channelByKey(ctx.tenant.companyCode, decodeURIComponent(key))
   if (!raw) notFound()
   const c = channelView(raw)
   const language: UiLanguage = ctx.person.language
   const t = dictionary(language).channels
   const branding = brandingView(ctx.tenant)
+  const view: ProposalFilter = (PROPOSAL_FILTERS as string[]).includes(q.view ?? "") ? (q.view as ProposalFilter) : "open"
   const decided = view === "decided"
+  const topic = q.topic || null
   const base = `${channelHref(c.key)}/proposals`
 
-  const [list, counts, faqDocs] = await Promise.all([
-    listProposals(ctx.tenant.companyCode, c.key, decided ? "decided" : "open"),
-    proposalCounts(ctx.tenant.companyCode, c.key),
+  const [list, counts, topics, faqDocs] = await Promise.all([
+    listProposals(ctx.tenant.companyCode, c.key, view, topic),
+    proposalFilterCounts(ctx.tenant.companyCode, c.key, topic),
+    proposalTopics(ctx.tenant.companyCode, c.key),
     (await getCollection(DOCUMENTS_COLLECTION))
       .find({ companyCode: ctx.tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1, folderPath: 1 } })
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; folderPath?: string[] }[]>,
   ])
+  const pages = Math.max(1, Math.ceil(list.length / PAGE))
+  const page = Math.min(pages, Math.max(1, Number(q.page) || 1))
+  const shown = list.slice((page - 1) * PAGE, page * PAGE)
+
+  const href = (over: { view?: ProposalFilter; topic?: string | null; page?: number }) => {
+    const p = new URLSearchParams()
+    const v = over.view ?? view
+    const tp = over.topic === undefined ? topic : over.topic
+    if (v !== "open") p.set("view", v)
+    if (tp) p.set("topic", tp)
+    if (over.page && over.page > 1) p.set("page", String(over.page))
+    const s = p.toString()
+    return s ? `${base}?${s}` : base
+  }
+  const backQuery = href({ page }).split("?")[1] ?? ""
+
   // FAQ dokumenty v priečinkoch kanála prvé — tam patria záznamy z jeho schránky.
   const inChannel = (d: { folderPath?: string[] }) => (d.folderPath ?? []).some(f => raw.folderIds.includes(f))
   const faqOptions = faqDocs
@@ -66,10 +104,11 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
     const d = monthRange(k).start
     return `${t.historyMonthNames[d.getUTCMonth()]} ${d.getUTCFullYear()}`
   }
-  const shown = list.slice(0, PAGE)
   const byTopic = new Map<string, FaqProposal[]>()
   for (const p of list) byTopic.set(p.topicKey, [...(byTopic.get(p.topicKey) ?? []), p])
-  const decidedCount = counts.approved + counts.merged + counts.rejected
+  const viewLabel: Record<ProposalFilter, string> = {
+    open: t.proposalsViewOpen, decision: t.proposalsViewDecision, nosource: t.proposalsViewNoSource, decided: t.proposalsViewDecided,
+  }
 
   return (
     <AppShell language={language} title={t.proposals} trail={{ [channelHref(c.key)]: c.name }}>
@@ -80,22 +119,41 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
         <span className="tag">{c.name}</span>
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.proposalsIntro}</p>
-      <Notice message={msg} error={error === "1"} back={decided ? `${base}?view=decided` : base} language={language} />
+      <Notice message={q.msg} error={q.error === "1"} back={href({ page })} language={language} />
 
-      <nav className="view-switch view-switch--fit" aria-label={t.proposals} style={{ marginBottom: 16 }}>
-        <Link className={`view-switch-item${decided ? "" : " is-on"}`} aria-current={decided ? undefined : "true"} href={base}>
-          {t.proposalsViewOpen} <span className="view-switch-count">{n(counts.open)}</span>
-        </Link>
-        <Link className={`view-switch-item${decided ? " is-on" : ""}`} aria-current={decided ? "true" : undefined} href={`${base}?view=decided`}>
-          {t.proposalsViewDecided} <span className="view-switch-count">{n(decidedCount)}</span>
-        </Link>
+      <nav className="view-switch view-switch--fit" aria-label={t.proposals} style={{ marginBottom: 12 }}>
+        {PROPOSAL_FILTERS.map(f => (
+          <Link key={f} className={`view-switch-item${f === view ? " is-on" : ""}`} aria-current={f === view ? "true" : undefined} href={href({ view: f, page: 1 })}>
+            {viewLabel[f]} <span className="view-switch-count">{n(counts[f])}</span>
+          </Link>
+        ))}
       </nav>
+
+      {topics.length > 1 && (
+        <form method="get" action={base} className="mg-inline" style={{ alignItems: "flex-end", marginBottom: 16 }}>
+          {view !== "open" && <input type="hidden" name="view" value={view} />}
+          <label className="field" style={{ margin: 0 }}>
+            <span className="field-label">{t.proposalTopicFilter}</span>
+            <select className="field-input" name="topic" defaultValue={topic ?? ""}>
+              <option value="">{t.proposalTopicAll}</option>
+              {topics.map(x => <option key={x.topicKey} value={x.topicKey}>{x.topicLabel} ({x.open})</option>)}
+            </select>
+          </label>
+          <div><button type="submit" className="button button--quiet">{t.proposalTopicApply}</button></div>
+        </form>
+      )}
 
       {!decided && faqOptions.length === 0 && <p className="tag tag--warn" style={{ justifySelf: "start" }}>{t.proposalsNoFaq}</p>}
       {shown.length === 0 && <p className="quiet">{t.proposalsEmpty}</p>}
 
       <div style={{ display: "grid", gap: 16 }}>
-        {shown.map(p => (
+        {shown.map(p => {
+          const original = originalOf(p)
+          const qDiff = original ? wordDiff(original.question, p.question) : null
+          const aDiff = original ? wordDiff(original.answer, p.answer) : null
+          const vDiff = original ? wordDiff(original.variants.join("\n"), p.variants.join("\n")) : null
+          const changed = Boolean(qDiff && aDiff && vDiff && (hasChanges(qDiff) || hasChanges(aDiff) || hasChanges(vDiff)))
+          return (
           <section key={p.id} className="card detail-block" id={p.id}>
             <div className="mg-pills">
               <span className="tag">{t.proposalTopic}: {p.topicLabel}</span>
@@ -104,13 +162,30 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
               {decided && p.status !== "open" && <span className="tag">{t.proposalStatus[p.status]}</span>}
             </div>
             <p className="quiet" style={{ margin: 0 }}>{t.proposalThreads(n(p.threads), monthLabel(p.firstMonth), monthLabel(p.lastMonth))}</p>
-            {p.note && <p style={{ margin: 0 }}><b>{t.proposalNote}:</b> {p.note}</p>}
+            {p.note && <p style={{ margin: 0, whiteSpace: "pre-wrap" }}><b>{t.proposalNote}:</b> {p.note}</p>}
             {p.sources.length > 0 && (
               <p className="quiet" style={{ margin: 0 }}>
                 {t.proposalSources}: {p.sources.map((s, i) => (
                   <span key={`${s.documentId}|${s.articleRef ?? ""}`}>{i > 0 && " · "}<Link href={`/library/${encodeURIComponent(s.documentId)}`}>{s.title}{s.articleRef ? `, ${s.articleRef}` : ""}</Link></span>
                 ))}
               </p>
+            )}
+            {p.editedAt && <p className="quiet" style={{ margin: 0 }}>{t.proposalEdited(p.editedBy ?? "", formatDate(p.editedAt, language))}</p>}
+
+            {original && qDiff && aDiff && vDiff && (
+              <details className="pr-original">
+                <summary>{t.proposalOriginal}</summary>
+                {changed ? (
+                  <div className="pr-original-body">
+                    <p className="quiet" style={{ margin: 0 }}>{t.proposalOriginalIntro}</p>
+                    <p style={{ margin: 0 }}><b>{t.proposalQuestion}:</b> <Diff parts={qDiff} /></p>
+                    {(original.variants.length > 0 || p.variants.length > 0) && <p style={{ margin: 0, whiteSpace: "pre-wrap" }}><b>{t.proposalVariants}:</b>{"\n"}<Diff parts={vDiff} /></p>}
+                    <p style={{ margin: 0, whiteSpace: "pre-wrap" }}><b>{t.proposalAnswer}:</b>{"\n"}<Diff parts={aDiff} /></p>
+                  </div>
+                ) : (
+                  <p className="quiet" style={{ margin: 0 }}>{t.proposalNoChanges}</p>
+                )}
+              </details>
             )}
 
             {decided ? (
@@ -127,6 +202,8 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
                 <form action={approveProposalAction} style={{ display: "grid", gap: 12 }}>
                   <input type="hidden" name="key" value={c.key} />
                   <input type="hidden" name="id" value={p.id} />
+                  <input type="hidden" name="back" value={backQuery} />
+                  <input type="hidden" name="anchor" value={p.id} />
                   <label className="field" style={{ margin: 0 }}>
                     <span className="field-label">{t.proposalQuestion}</span>
                     <input className="field-input" name="question" required maxLength={300} defaultValue={p.question} />
@@ -138,7 +215,7 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
                   </label>
                   <label className="field" style={{ margin: 0 }}>
                     <span className="field-label">{t.proposalAnswer}</span>
-                    <textarea className="field-input" name="answer" required rows={8} defaultValue={p.answer} />
+                    <textarea className="field-input" name="answer" required rows={10} defaultValue={p.answer} />
                   </label>
                   <label className="field" style={{ margin: 0 }}>
                     <span className="field-label">{t.proposalAudience}</span>
@@ -151,18 +228,23 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
                       <Select language={language} name="documentId" fieldLabel={t.proposalDocument} options={faqOptions} initial={faqOptions[0].value} />
                     </div>
                   )}
-                  {faqOptions.length > 0 && <div><SubmitButton className="button button--quiet">{t.proposalApprove}</SubmitButton></div>}
+                  <div className="mg-actions">
+                    <SubmitButton className="button button--quiet" formAction={saveProposalAction}>{t.proposalSave}</SubmitButton>
+                    {faqOptions.length > 0 && <SubmitButton className="button button--quiet">{t.proposalApprove}</SubmitButton>}
+                  </div>
                 </form>
                 <div className="mg-actions">
                   <form action={rejectProposalAction}>
                     <input type="hidden" name="key" value={c.key} />
                     <input type="hidden" name="id" value={p.id} />
+                    <input type="hidden" name="back" value={backQuery} />
                     <SubmitButton className="button button--quiet">{t.proposalReject}</SubmitButton>
                   </form>
                   {(byTopic.get(p.topicKey) ?? []).length > 1 && (
                     <form action={mergeProposalAction} className="mg-inline" style={{ alignItems: "flex-end" }}>
                       <input type="hidden" name="key" value={c.key} />
                       <input type="hidden" name="id" value={p.id} />
+                      <input type="hidden" name="back" value={backQuery} />
                       <div className="field" style={{ margin: 0 }}>
                         <span className="field-label">{t.proposalMergeInto}</span>
                         <Select language={language} name="into" fieldLabel={t.proposalMergeInto}
@@ -176,9 +258,17 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
               </>
             )}
           </section>
-        ))}
+          )
+        })}
       </div>
-      {list.length > PAGE && <p className="quiet" style={{ marginTop: 16 }}>{t.proposalsMore(list.length - PAGE)}</p>}
+
+      {pages > 1 && (
+        <nav className="mg-actions" aria-label={t.proposalsPage(page, pages)} style={{ marginTop: 16, alignItems: "center" }}>
+          {page > 1 && <Link className="button button--quiet" href={href({ page: page - 1 })}>{t.proposalsPrev}</Link>}
+          <span className="quiet">{t.proposalsPage(page, pages)}</span>
+          {page < pages && <Link className="button button--quiet" href={href({ page: page + 1 })}>{t.proposalsNext}</Link>}
+        </nav>
+      )}
     </div>
     </AppShell>
   )
