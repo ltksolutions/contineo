@@ -98,3 +98,24 @@ describe("sadzba písma (ADR-031)", () => {
     expect(plainInline("**Menu** → Dokumenty")).toBe("Menu › Dokumenty")
   })
 })
+
+describe("názov dokumentu v hlavičke", () => {
+  it("krátky v jednom riadku, dlhý na dva, čo sa nezmestí, skončí „…“", async () => {
+    const { PDFDocument } = await import("pdf-lib")
+    const fontkit = (await import("@pdf-lib/fontkit")).default
+    const { readFile } = await import("node:fs/promises")
+    const path = await import("node:path")
+    const { FONT_DIR, PDF_FONT_OPTIONS } = await import("../src/lib/certificatePdf")
+    const { headerTitleLines } = await import("../src/lib/markdownPdf")
+    const doc = await PDFDocument.create()
+    doc.registerFontkit(fontkit)
+    const bold = await doc.embedFont(await readFile(path.join(FONT_DIR, "NotoSans-SemiBold.ttf")), PDF_FONT_OPTIONS)
+    expect(headerTitleLines("ISSF-07 Faktúry", bold, 10.5, 250)).toEqual(["ISSF-07 Faktúry"])
+    const two = headerTitleLines("ISSF-09 Kredity z prerozdelenia príspevkov a futbalnet.shop", bold, 10.5, 250)
+    expect(two).toHaveLength(2)
+    const long = headerTitleLines("Veľmi dlhý názov dokumentu, ktorý sa nezmestí ani do dvoch riadkov hlavičky, lebo má priveľa slov a ešte niečo navyše", bold, 10.5, 200)
+    expect(long).toHaveLength(2)
+    expect(long[1].endsWith("…")).toBe(true)
+    for (const l of long) expect(bold.widthOfTextAtSize(l, 10.5)).toBeLessThanOrEqual(200)
+  })
+})

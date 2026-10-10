@@ -219,6 +219,20 @@ export async function renderMarkdownPdf(input: { title: string; markdown: string
   return doc.save({ useObjectStreams: false })
 }
 
+/** Veľkosť názvu dokumentu v hlavičke — o stupeň nad názvom organizácie (9). */
+const TITLE_SIZE = 10.5
+
+/**
+ * Názov dokumentu v hlavičke: najviac dva riadky do šírky `max`; čo sa
+ * nezmestí ani do druhého, skončí „…". Hlavička je na každej strane — tretí
+ * riadok by ju roztiahol cez text.
+ */
+export function headerTitleLines(title: string, font: PDFFont, size: number, max: number): string[] {
+  const lines = wrapText(title, font, size, max)
+  if (lines.length <= 2) return lines
+  return [lines[0], ellipsize(lines.slice(1).join(" "), font, size, max)]
+}
+
 /** Skráti text na šírku `max` a doplní „…"; keď sa zmestí, vráti ho celý. */
 export function ellipsize(text: string, font: PDFFont, size: number, max: number): string {
   if (max <= 0) return ""
@@ -260,11 +274,17 @@ async function drawLetterhead(
     if (title) {
       // Na stred strany, nie medzi logo a názov — v strede sa nesmie hýbať
       // podľa dĺžky názvu organizácie. Šírka je preto symetrická k širšiemu
-      // z oboch krajov.
+      // z oboch krajov. Tučne a o stupeň väčšie než organizácia (Ján 10. 10.
+      // 2026); dlhý názov sa zalomí na dva riadky, oba na stred.
       const side = Math.max(logoW, nameW) + 16
-      const fitted = ellipsize(title, sans, nameSize, PAGE.width - 2 * MARGIN - 2 * side)
-      const w = sans.widthOfTextAtSize(fitted, nameSize)
-      p.drawText(fitted, { x: (PAGE.width - w) / 2, y: midY, size: nameSize, font: sans, color: INK })
+      const lines = headerTitleLines(title, bold, TITLE_SIZE, PAGE.width - 2 * MARGIN - 2 * side)
+      const lineH = TITLE_SIZE * 1.25
+      // Blok riadkov zvislo na stred loga.
+      const firstY = top - LOGO_H / 2 + ((lines.length - 1) * lineH) / 2 - TITLE_SIZE / 3
+      lines.forEach((line, k) => {
+        const w = bold.widthOfTextAtSize(line, TITLE_SIZE)
+        p.drawText(line, { x: (PAGE.width - w) / 2, y: firstY - k * lineH, size: TITLE_SIZE, font: bold, color: INK })
+      })
     }
     p.drawLine({ start: { x: MARGIN, y: top - LOGO_H - 10 }, end: { x: PAGE.width - MARGIN, y: top - LOGO_H - 10 }, thickness: 0.5, color: MUTED })
 
