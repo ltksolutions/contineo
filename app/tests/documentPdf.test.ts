@@ -18,7 +18,7 @@ const SFZ = {
   branding: { displayName: "Slovenský futbalový zväz" },
   controller: {
     legalName: "Slovenský futbalový zväz",
-    address: "Trnavská cesta 100, 821 01 Bratislava",
+    address: "Tomášikova 30C, 821 01 Bratislava",
     registrationNumber: "00687308",
     taxId: "2020898913",
     vatId: "SK2020898913",
@@ -29,7 +29,7 @@ const SFZ = {
 describe("päta z profilu organizácie", () => {
   it("tri riadky: kto, čísla, ako sa ozvať", () => {
     expect(footerLines(SFZ, "sk")).toEqual([
-      "Slovenský futbalový zväz · Trnavská cesta 100, 821 01 Bratislava",
+      "Slovenský futbalový zväz · Tomášikova 30C, 821 01 Bratislava",
       "IČO 00687308 · DIČ 2020898913 · IČ DPH SK2020898913",
       "www.futbalsfz.sk · helpdesk@futbalsfz.sk · tel. +421 2 4820 6000",
     ])
@@ -74,5 +74,27 @@ describe("PDF so šablónou", () => {
     const a = await renderDocumentPdf(input)
     const b = await renderDocumentPdf({ ...input, createdOn: new Date(2026, 9, 11, 9) })
     expect(Buffer.from(a).equals(Buffer.from(b))).toBe(false)
+  })
+})
+
+describe("sadzba písma (ADR-031)", () => {
+  it("„fi“ ostane dvoma glyfmi — bez ligatúry, ktorá v slove nechávala medzeru", async () => {
+    const { PDFDocument } = await import("pdf-lib")
+    const fontkit = (await import("@pdf-lib/fontkit")).default
+    const { readFile } = await import("node:fs/promises")
+    const path = await import("node:path")
+    const { FONT_DIR, PDF_FONT_OPTIONS } = await import("../src/lib/certificatePdf")
+    const doc = await PDFDocument.create()
+    doc.registerFontkit(fontkit)
+    const font = await doc.embedFont(await readFile(path.join(FONT_DIR, "NotoSans-Regular.ttf")), PDF_FONT_OPTIONS)
+    // Jeden glyf = štyri hexadecimálne znaky.
+    expect(font.encodeText("fi").asString().length).toBe(8)
+    expect(font.encodeText("notifikácie").asString().length).toBe(4 * "notifikácie".length)
+  })
+
+  it("šípka, ktorú písmo nemá, sa nahradí „›“", async () => {
+    const { printable, plainInline } = await import("../src/lib/markdownPdf")
+    expect(printable("Faktúry → Položky")).toBe("Faktúry › Položky")
+    expect(plainInline("**Menu** → Dokumenty")).toBe("Menu › Dokumenty")
   })
 })

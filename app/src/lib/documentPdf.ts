@@ -4,7 +4,7 @@
  *
  * Schvaľuje a potvrdzuje sa PDF (ADR-011, D94). Kto píše dokumenty v `.md`,
  * dovtedy musel PDF vyrobiť sám mimo Continea. Teraz stačí nahrať `.md`
- * a PDF vznikne tu — s hlavičkou (logo, názov organizácie) a pätou (právny
+ * a PDF vznikne tu — s hlavičkou (logo, názov dokumentu, organizácia) a pätou (právny
  * názov, sídlo, IČO, DIČ, IČ DPH, web, e-mail, telefón, dátum, strana).
  *
  * Údaje sa berú z profilu organizácie **v čase vytvorenia znenia** a sú
@@ -90,6 +90,7 @@ export async function letterheadFor(
   tenant: Pick<Tenant, "companyCode" | "branding" | "controller" | "contact">,
   language: UiLanguage,
   dates: { createdOn: Date; effectiveFrom?: Date | null },
+  documentTitle?: string,
 ): Promise<PdfLetterhead> {
   const t = dictionary(language).library.upload.letterhead
   const date = [
@@ -99,6 +100,7 @@ export async function letterheadFor(
   return {
     logoPng: await tenantLogoPng(tenant),
     name: organisationName(tenant),
+    documentTitle,
     footer: footerLines(tenant, language),
     date,
     creationDate: dayOf(dates.createdOn),
@@ -131,6 +133,6 @@ export async function renderDocumentPdf(input: {
     markdown: body,
     author: organisationName(input.tenant),
     texts: { page: dictionary(input.language).library.faq.pdfPage },
-    letterhead: await letterheadFor(input.tenant, input.language, { createdOn: input.createdOn, effectiveFrom: input.effectiveFrom }),
+    letterhead: await letterheadFor(input.tenant, input.language, { createdOn: input.createdOn, effectiveFrom: input.effectiveFrom }, title),
   })
 }

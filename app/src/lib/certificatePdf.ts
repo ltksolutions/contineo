@@ -62,6 +62,17 @@ export function certificatePdfTexts(
 
 export const FONT_DIR = path.join(process.cwd(), "assets", "fonts")
 
+/**
+ * Voľby vloženia písma pre všetky PDF Continea (certifikát, FAQ, Markdown).
+ *
+ * **Bez ligatúr.** pdf-lib cez fontkit predvolene skladá „fi" a „fl" do
+ * jedného glyfu, ale šírku riadku a rozloženie počíta po znakoch — v slove
+ * potom ostala medzera („notifi kácie") a skopírovaný text mal namiesto
+ * „fi" iný znak („notiťkácie"), čo kazí aj vyhľadávanie v PDF. Slovenčina
+ * ligatúry nepotrebuje.
+ */
+export const PDF_FONT_OPTIONS = { subset: false, features: { liga: false, clig: false, dlig: false } } as const
+
 let fontCache: Promise<Record<"sans" | "sansBold" | "serif" | "mono", Uint8Array>> | null = null
 function fontBytes() {
   fontCache ??= (async () => {
@@ -138,10 +149,10 @@ export async function renderCertificatePdf(input: {
   doc.registerFontkit(fontkit)
   const bytes = await fontBytes()
   const [sans, sansBold, serif, mono] = await Promise.all([
-    doc.embedFont(bytes.sans, { subset: false }),
-    doc.embedFont(bytes.sansBold, { subset: false }),
-    doc.embedFont(bytes.serif, { subset: false }),
-    doc.embedFont(bytes.mono, { subset: false }),
+    doc.embedFont(bytes.sans, PDF_FONT_OPTIONS),
+    doc.embedFont(bytes.sansBold, PDF_FONT_OPTIONS),
+    doc.embedFont(bytes.serif, PDF_FONT_OPTIONS),
+    doc.embedFont(bytes.mono, PDF_FONT_OPTIONS),
   ])
   doc.setTitle(`${t.title} ${c.registrationNumber}`)
   doc.setAuthor(c.issuedBy.legalName ?? c.issuedBy.name)

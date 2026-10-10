@@ -43,8 +43,9 @@ a jeho odtlačok je odtlačok znenia. ADR-011 platí bez výnimky.
 
 ### D188 — Šablóna: hlavička s logom, päta s údajmi organizácie, dátumom a stranou
 
-- **Hlavička** (každá strana): logo organizácie vľavo, názov organizácie
-  vpravo, linka. Názov je **právny názov**, inak názov portálu —
+- **Hlavička** (každá strana): logo organizácie vľavo, **názov dokumentu
+  v strede strany** (dlhý sa skráti s „…"), názov organizácie vpravo, linka
+  (Ján 10. 10. 2026). Názov je **právny názov**, inak názov portálu —
   `branding.displayName` býva názov aplikácie („Intranet SFZ"), na dokumente
   má stáť, kto ho vydal.
 - **Päta** (každá strana), najviac tri riadky vľavo: právny názov a sídlo ·
@@ -61,6 +62,11 @@ a jeho odtlačok je odtlačok znenia. ADR-011 platí bez výnimky.
   poškodené alebo chýbajúce logo = hlavička bez loga, PDF kvôli tomu
   nezlyhá.
 
+- **Písmo bez ligatúr** vo všetkých PDF Continea (`PDF_FONT_OPTIONS`
+  v `certificatePdf.ts`): „fi" sa skladalo do jedného glyfu a v slove ostala
+  medzera („notifi kácie"), skopírovaný text mal iný znak. Znaky, ktoré
+  písmo nemá (→, ⇒, ←), sa pri sadzbe nahradia „›" a „‹".
+
 ### D189 — DIČ, IČ DPH a kontakt na dokumentoch v profile organizácie
 
 - `controller.taxId` (DIČ, 8 až 12 číslic) a `controller.vatId` (IČ DPH,
@@ -76,5 +82,4 @@ a jeho odtlačok je odtlačok znenia. ADR-011 platí bez výnimky.
 
 - Tučné písmo, odkazy a tabuľky v PDF z Markdownu (dnes obyčajný text,
   tabuľka ako riadky s „·").
-- Ligatúra „fi" a šípka „→" v písme PDF (samostatná úloha).
 - Faktúry za služby — DIČ a IČ DPH sú pripravené, samotná fakturácia nie.
