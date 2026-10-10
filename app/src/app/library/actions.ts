@@ -22,7 +22,10 @@ import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
   reindexVersion, reindexAllVersions, fixText, loadVersionIntoDraft, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
-import { loadFile } from "@/lib/fileStore"
+import { loadFile, fileInfo } from "@/lib/fileStore"
+import { renderDocumentPdf } from "@/lib/documentPdf"
+import { tenantByCompanyCode } from "@/lib/tenants"
+import { isUiLanguage } from "@/lib/i18n"
 import { textDiff } from "@/lib/textFix"
 import { revokeVersion } from "@/lib/acknowledgements"
 import { assign, carryOverCandidates, audienceRef } from "@/lib/assignments"
@@ -161,7 +164,7 @@ function errorMessage(e: unknown, language: UiLanguage): string {
  * `source` — bez JavaScriptu, do 4 MB). Identifikátor má prednosť: keď ho
  * skript vyplnil, súbor z poľa už neodoslal.
  */
-async function filesFromForm(fd: FormData): Promise<UploadFiles> {
+async function filesFromForm(fd: FormData): Promise<{ pdf: IncomingFile | null; source: IncomingFile | null }> {
   const pick = async (idField: string, fileField: string): Promise<IncomingFile | null> => {
     const storedId = fieldText(fd, idField)
     if (storedId) return { storedId }
@@ -172,8 +175,46 @@ async function filesFromForm(fd: FormData): Promise<UploadFiles> {
     return null
   }
   const pdf = await pick("pdfFileId", "pdf")
-  if (!pdf) throw new LibraryError("library.pdfRequired", "Schvaľovaná podoba musí byť PDF — ulož dokument vo Worde ako PDF.")
-  return { pdf, source: await pick("sourceFileId", "source") }
+  const source = await pick("sourceFileId", "source")
+  if (!pdf && !source) throw new LibraryError("library.pdfRequired", "Schvaľovaná podoba musí byť PDF — ulož dokument vo Worde ako PDF.")
+  return { pdf, source }
+}
+
+/** Názov a bajty zdroja — z formulára aj nahratého po kúskoch. */
+async function sourceBytes(companyCode: string, f: IncomingFile): Promise<{ name: string; data: Buffer } | null> {
+  if ("data" in f) return f
+  const info = await fileInfo(companyCode, f.storedId)
+  const loaded = info ? await loadFile(companyCode, f.storedId) : null
+  return info && loaded ? { name: info.name, data: loaded.data } : null
+}
+
+/**
+ * Doplní PDF, keď prišiel len zdroj `.md` (ADR-031): vyrobí ho so šablónou
+ * organizácie — logo a názov v hlavičke, údaje organizácie, dátum vytvorenia
+ * (a účinnosti, ak je vyplnená) a strana v päte. PDF je potom schvaľovaná
+ * podoba ako každé iné (D94); zdroj ostáva vedľa neho ako predloha.
+ *
+ * Bez PDF a so zdrojom iným než `.md` (Word, Excel) sa nahrávanie odmietne —
+ * z Wordu PDF nevyrábame, tam ho človek uloží sám.
+ */
+async function withGeneratedPdf(
+  files: { pdf: IncomingFile | null; source: IncomingFile | null },
+  ctx: { companyCode: string; language: UiLanguage; title: string; documentLanguage: string; effectiveFrom: Date | null },
+): Promise<UploadFiles> {
+  if (files.pdf) return { pdf: files.pdf, source: files.source }
+  const src = files.source ? await sourceBytes(ctx.companyCode, files.source) : null
+  if (!src || !/\.md$/i.test(src.name)) {
+    throw new LibraryError("library.pdfOrMarkdownRequired", "Nahraj PDF, alebo zdroj vo formáte .md — z neho Contineo PDF vyrobí.")
+  }
+  const tenant = await tenantByCompanyCode(ctx.companyCode)
+  if (!tenant) throw new LibraryError("library.documentNotFound", "Organizácia sa nenašla.")
+  // Päta je v jazyku dokumentu, nie prostredia — je to súčasť dokumentu.
+  const language = isUiLanguage(ctx.documentLanguage) ? ctx.documentLanguage : ctx.language
+  const pdf = await renderDocumentPdf({
+    tenant, language, title: ctx.title, markdown: src.data.toString("utf8"),
+    createdOn: new Date(), effectiveFrom: ctx.effectiveFrom,
+  })
+  return { pdf: { name: src.name.replace(/\.md$/i, ".pdf"), data: Buffer.from(pdf) }, source: files.source }
 }
 
 export async function uploadAction(fd: FormData) {
@@ -205,7 +246,11 @@ export async function uploadAction(fd: FormData) {
     // Táto obrazovka zakladá **nový** dokument. Keď kľúč už existuje, zápis
     // sa odmietne — dovtedy ticho prepísal koncept, metadáta aj pôvodný
     // súbor existujúceho dokumentu (D80).
-    const v = await uploadDocument(meta, files, self.email, "new", metaFromForm(fd))
+    const versionMeta = metaFromForm(fd)
+    const v = await uploadDocument(meta, await withGeneratedPdf(files, {
+      companyCode: self.companyCode, language: self.language, title: meta.title,
+      documentLanguage: meta.language, effectiveFrom: versionMeta.effectiveFrom,
+    }), self.email, "new", versionMeta)
 
     revalidatePath("/library")
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
@@ -275,7 +320,11 @@ export async function uploadVersionAction(fd: FormData) {
       internalNumber: (before.internalNumber as string | null) ?? undefined,
     }, self.extras)
 
-    const v = await uploadDocument(meta, files, self.email, "version", metaFromForm(fd))
+    const versionMeta = metaFromForm(fd)
+    const v = await uploadDocument(meta, await withGeneratedPdf(files, {
+      companyCode: self.companyCode, language: self.language, title: meta.title,
+      documentLanguage: meta.language, effectiveFrom: versionMeta.effectiveFrom,
+    }), self.email, "version", versionMeta)
 
     // **Porovnanie s platným znením hneď, nie až v editore.** Bez neho sa nedá
     // odlíšiť novela od znovunahratia toho istého PDF — a to je presne tá

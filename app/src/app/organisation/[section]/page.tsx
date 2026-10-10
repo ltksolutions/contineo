@@ -427,6 +427,19 @@ export default async function OrganisationSectionPage({
                        defaultValue={tenant.controller?.registrationNumber ?? ""} />
               </label>
             </div>
+            {/* DIČ a IČ DPH (ADR-031) — päta dokumentov, neskôr faktúry za služby. */}
+            <div className="set-pair">
+              <label className="field">
+                <span className="field-label">{t.branding.controllerTaxId}</span>
+                <input className="field-input" name="controllerTaxId" inputMode="numeric"
+                       defaultValue={tenant.controller?.taxId ?? ""} />
+              </label>
+              <label className="field">
+                <span className="field-label">{t.branding.controllerVatId}</span>
+                <input className="field-input" name="controllerVatId" autoCapitalize="characters"
+                       defaultValue={tenant.controller?.vatId ?? ""} />
+              </label>
+            </div>
             {/* Krajina určuje dozorný úrad a zákony na stránke Ochrana osobných údajov (ADR-022). */}
             <label className="field">
               <span className="field-label">{t.branding.controllerCountry}</span>
@@ -481,6 +494,31 @@ export default async function OrganisationSectionPage({
                 options={phoneCountries(language).map(c => ({ value: c.code, label: c.label }))}
               />
               <span className="quiet field-hint">{t.branding.phonePrefixNote}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Kontakt na dokumentoch (ADR-031) — päta PDF vygenerovaného z Markdownu. */}
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.branding.secDocumentContact}</h2>
+            <p>{t.branding.secDocumentContactNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <label className="field">
+              <span className="field-label">{t.branding.contactWeb}</span>
+              <input className="field-input" name="contactWeb" inputMode="url" autoCapitalize="none"
+                     defaultValue={tenant.contact?.web ?? ""} />
+            </label>
+            <div className="set-pair">
+              <label className="field">
+                <span className="field-label">{t.branding.contactEmail}</span>
+                <input className="field-input" name="contactEmail" type="email" defaultValue={tenant.contact?.email ?? ""} />
+              </label>
+              <label className="field">
+                <span className="field-label">{t.branding.contactPhone}</span>
+                <input className="field-input" name="contactPhone" type="tel" defaultValue={tenant.contact?.phone ?? ""} />
+              </label>
             </div>
           </div>
         </section>
