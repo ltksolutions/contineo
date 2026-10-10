@@ -8166,7 +8166,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       kinds: {
         heading: "Ako dokument vznikne",
         intro: "Dokumenty v knižnici vznikajú dvoma spôsobmi. Vyber ten, ktorý sedí na to, čo pridávaš.",
-        file: { title: "Dokument zo súboru", text: "Predpis, smernica, zákon, manuál, zmluva… Nahráš PDF (schvaľuje a potvrdzuje sa) a upraviteľný zdroj (Word); z neho vznikne text, ktorý sa podľa druhu dokumentu rozdelí na úseky pre vyhľadávanie.", cta: "Nahrať súbor ↓" },
+        file: { title: "Dokument zo súboru", text: "Predpis, smernica, zákon, manuál, zmluva… Nahráš PDF (schvaľuje a potvrdzuje sa) a upraviteľný zdroj (Word); z neho vznikne text, ktorý sa podľa druhu dokumentu rozdelí na úseky pre vyhľadávanie. Pri Markdowne (.md) stačí nahrať len ten — PDF s hlavičkou a pätou organizácie vyrobí Contineo.", cta: "Nahrať súbor ↓" },
         faq: { title: "Časté otázky (FAQ)", text: "Bez súboru: záznamy otázka a odpoveď píšeš priamo tu. Každý záznam je jedna hotová odpoveď pre asistenta, môže odkazovať na predpisy a pri ich novom znení sa označí na kontrolu. PDF sa zloží samo.", cta: "Založiť FAQ →" },
         connector: { title: "Import zo servera", text: "Články z pripojeného servera (napríklad Sportnet) sa prevezmú aj s pôvodom a ďalej sa s nimi zaobchádza ako s dokumentom zo súboru. Napríklad popis procesu prestupu z dokumentácie Sportnetu pre riešiteľov helpdesku — ako interný dokument.", cta: "Importovať →" },
       },
@@ -12683,7 +12683,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       kinds: {
         heading: "Jak dokument vznikne",
         intro: "Dokumenty v knihovně vznikají dvěma způsoby. Vyber ten, který odpovídá tomu, co přidáváš.",
-        file: { title: "Dokument ze souboru", text: "Předpis, směrnice, zákon, manuál, smlouva… Nahraješ PDF (schvaluje a potvrzuje se) a upravitelný zdroj (Word); z něj vznikne text, který se podle druhu dokumentu rozdělí na úseky pro vyhledávání.", cta: "Nahrát soubor ↓" },
+        file: { title: "Dokument ze souboru", text: "Předpis, směrnice, zákon, manuál, smlouva… Nahraješ PDF (schvaluje a potvrzuje se) a upravitelný zdroj (Word); z něj vznikne text, který se podle druhu dokumentu rozdělí na úseky pro vyhledávání. U Markdownu (.md) stačí nahrát jen ten — PDF se záhlavím a zápatím organizace vyrobí Contineo.", cta: "Nahrát soubor ↓" },
         faq: { title: "Časté otázky (FAQ)", text: "Bez souboru: záznamy otázka a odpověď píšeš přímo zde. Každý záznam je jedna hotová odpověď pro asistenta, může odkazovat na předpisy a při jejich novém znění se označí ke kontrole. PDF se složí samo.", cta: "Založit FAQ →" },
         connector: { title: "Import ze serveru", text: "Články z připojeného serveru (například Sportnet) se převezmou i s původem a dále se s nimi zachází jako s dokumentem ze souboru. Například popis procesu přestupu z dokumentace Sportnetu pro řešitele helpdesku — jako interní dokument.", cta: "Importovat →" },
       },
@@ -17186,7 +17186,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       kinds: {
         heading: "How a document is created",
         intro: "Documents in the library are created in two ways. Pick the one that fits what you are adding.",
-        file: { title: "Document from a file", text: "Regulation, directive, law, manual, contract… You upload the PDF (that is what gets approved and acknowledged) and an editable source (Word); it becomes the text, split into sections for search according to the kind of document.", cta: "Upload a file ↓" },
+        file: { title: "Document from a file", text: "Regulation, directive, law, manual, contract… You upload the PDF (that is what gets approved and acknowledged) and an editable source (Word); it becomes the text, split into sections for search according to the kind of document. With Markdown (.md) the source alone is enough — Contineo generates the PDF with the organisation's header and footer.", cta: "Upload a file ↓" },
         faq: { title: "Frequently asked questions (FAQ)", text: "No file: you write question-and-answer entries right here. Each entry is one ready answer for the assistant, can refer to regulations and is flagged for review when they get a new version. The PDF is put together automatically.", cta: "Create FAQ →" },
         connector: { title: "Import from a server", text: "Articles from a connected server (for example Sportnet) are taken over with their origin and then treated like a document from a file. For example, the description of the transfer process from the Sportnet documentation for helpdesk agents — as an internal document.", cta: "Import →" },
       },
