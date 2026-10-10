@@ -12,7 +12,8 @@ import { libraryContext } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
-import { approveProposal, rejectProposal, mergeProposal, updateProposal } from "@/lib/faqProposals"
+import { approveProposal, rejectProposal, mergeProposal, updateProposal, applyReview, dismissReview } from "@/lib/faqProposals"
+import { startProposalReview, continueReview, proposalsScopeKey } from "@/lib/complianceCheck"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -32,7 +33,7 @@ async function ready() {
 function back(key: string, message: string, error = false, fd?: FormData): never {
   revalidatePath(`/channels/${encodeURIComponent(key)}/proposals`)
   const q = new URLSearchParams(fd ? fieldText(fd, "back") : "")
-  for (const k of [...q.keys()]) if (!["view", "topic", "page"].includes(k)) q.delete(k)
+  for (const k of [...q.keys()]) if (!["view", "topic", "page", "review"].includes(k)) q.delete(k)
   q.set("msg", message)
   if (error) q.set("error", "1")
   const anchor = fd && !error ? fieldText(fd, "anchor") : ""
@@ -101,4 +102,46 @@ export async function mergeProposalAction(fd: FormData) {
     back(key, failure(e, ctx.language), true, fd)
   }
   back(key, ctx.t.proposalMerged, false, fd)
+}
+
+/**
+ * Kontrola otvorených návrhov proti vybraným dokumentom (ADR-032, fáza 1).
+ * Prvá dávka hneď, aby kurátor videl, že beh ide; zvyšok cron.
+ */
+export async function startReviewAction(fd: FormData) {
+  const ctx = await ready()
+  const key = fieldText(fd, "key")
+  try {
+    await startProposalReview(ctx.person.companyCode, key, fd.getAll("documentIds").map(String), fieldText(fd, "topic") || null, ctx.person.email)
+    await continueReview(ctx.person.companyCode, proposalsScopeKey(key), { budgetMs: 1, hardMs: 90_000 },
+      { companyCode: ctx.person.companyCode, personId: ctx.person.id, personName: ctx.person.fullName, email: ctx.person.email })
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(key, failure(e, ctx.language), true, fd)
+  }
+  back(key, ctx.t.reviewStarted, false, fd)
+}
+
+export async function applyReviewAction(fd: FormData) {
+  const ctx = await ready()
+  const key = fieldText(fd, "key")
+  try {
+    await applyReview(ctx.person.companyCode, key, fieldText(fd, "id"), ctx.person.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(key, failure(e, ctx.language), true, fd)
+  }
+  back(key, ctx.t.reviewApplied, false, fd)
+}
+
+export async function dismissReviewAction(fd: FormData) {
+  const ctx = await ready()
+  const key = fieldText(fd, "key")
+  try {
+    await dismissReview(ctx.person.companyCode, key, fieldText(fd, "id"), ctx.person.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(key, failure(e, ctx.language), true, fd)
+  }
+  back(key, ctx.t.reviewDismissed, false, fd)
 }

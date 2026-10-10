@@ -16,6 +16,7 @@ import Link from "next/link"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import Select from "@/components/Select"
+import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
 import { libraryContext } from "@/lib/library"
 import { channelHref } from "@/components/ChannelTabs"
@@ -25,6 +26,7 @@ import {
   PROPOSAL_FILTERS, type FaqProposal, type ProposalFilter,
 } from "@/lib/faqProposals"
 import { wordDiff, hasChanges, type WordDiffPart } from "@/lib/wordDiff"
+import { reviewRunFor, proposalsScopeKey, REVIEW_VERDICTS, MAX_FAILURES as REVIEW_MAX_FAILURES, type ReviewVerdict } from "@/lib/complianceCheck"
 import { monthRange } from "@/lib/historyAnalysis"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
@@ -32,9 +34,11 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { approveProposalAction, saveProposalAction, rejectProposalAction, mergeProposalAction } from "../../proposalActions"
+import { approveProposalAction, saveProposalAction, rejectProposalAction, mergeProposalAction, startReviewAction, applyReviewAction, dismissReviewAction } from "../../proposalActions"
 
 export const dynamic = "force-dynamic"
+// Akcia „Skontrolovať proti dokumentom“ spracuje prvú dávku hneď (do 90 s).
+export const maxDuration = 120
 
 /** Toľko kariet na stranu — každá má formulár s dlhou odpoveďou. */
 const PAGE = 20
@@ -57,7 +61,7 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
     notFound()
   }
   const { key } = await params
-  const q = normalizeQuery<{ msg?: string; error?: string; view?: string; topic?: string; page?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string; view?: string; topic?: string; page?: string; review?: string }>(await searchParams)
   const raw = await channelByKey(ctx.tenant.companyCode, decodeURIComponent(key))
   if (!raw) notFound()
   const c = channelView(raw)
@@ -67,26 +71,34 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
   const view: ProposalFilter = (PROPOSAL_FILTERS as string[]).includes(q.view ?? "") ? (q.view as ProposalFilter) : "open"
   const decided = view === "decided"
   const topic = q.topic || null
+  const reviewVerdict = (REVIEW_VERDICTS as string[]).includes(q.review ?? "") ? (q.review as ReviewVerdict) : null
   const base = `${channelHref(c.key)}/proposals`
 
-  const [list, counts, topics, faqDocs] = await Promise.all([
-    listProposals(ctx.tenant.companyCode, c.key, view, topic),
+  const [list, counts, topics, faqDocs, run, refDocs] = await Promise.all([
+    listProposals(ctx.tenant.companyCode, c.key, view, topic, reviewVerdict),
     proposalFilterCounts(ctx.tenant.companyCode, c.key, topic),
     proposalTopics(ctx.tenant.companyCode, c.key),
     (await getCollection(DOCUMENTS_COLLECTION))
       .find({ companyCode: ctx.tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1, folderPath: 1 } })
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; folderPath?: string[] }[]>,
+    reviewRunFor(ctx.tenant.companyCode, proposalsScopeKey(c.key)),
+    // Referenčné dokumenty: verejné, nie FAQ (ADR-032 D194).
+    (await getCollection(DOCUMENTS_COLLECTION))
+      .find({ companyCode: ctx.tenant.companyCode, accessLevel: "public", category: { $ne: "faq" } }, { projection: { documentId: 1, title: 1, category: 1 } })
+      .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; category?: string }[]>,
   ])
   const pages = Math.max(1, Math.ceil(list.length / PAGE))
   const page = Math.min(pages, Math.max(1, Number(q.page) || 1))
   const shown = list.slice((page - 1) * PAGE, page * PAGE)
 
-  const href = (over: { view?: ProposalFilter; topic?: string | null; page?: number }) => {
+  const href = (over: { view?: ProposalFilter; topic?: string | null; page?: number; review?: ReviewVerdict | null }) => {
     const p = new URLSearchParams()
     const v = over.view ?? view
     const tp = over.topic === undefined ? topic : over.topic
+    const rv = over.review === undefined ? reviewVerdict : over.review
     if (v !== "open") p.set("view", v)
     if (tp) p.set("topic", tp)
+    if (rv) p.set("review", rv)
     if (over.page && over.page > 1) p.set("page", String(over.page))
     const s = p.toString()
     return s ? `${base}?${s}` : base
@@ -129,9 +141,18 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
         ))}
       </nav>
 
-      {topics.length > 1 && (
+      {(topics.length > 1 || run) && (
         <form method="get" action={base} className="mg-inline" style={{ alignItems: "flex-end", marginBottom: 16 }}>
           {view !== "open" && <input type="hidden" name="view" value={view} />}
+          {run && (
+            <label className="field" style={{ margin: 0 }}>
+              <span className="field-label">{t.reviewFilter}</span>
+              <select className="field-input" name="review" defaultValue={reviewVerdict ?? ""}>
+                <option value="">{t.reviewFilterAll}</option>
+                {REVIEW_VERDICTS.map(v => <option key={v} value={v}>{t.reviewVerdicts[v]}</option>)}
+              </select>
+            </label>
+          )}
           <label className="field" style={{ margin: 0 }}>
             <span className="field-label">{t.proposalTopicFilter}</span>
             <select className="field-input" name="topic" defaultValue={topic ?? ""}>
@@ -141,6 +162,45 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
           </label>
           <div><button type="submit" className="button button--quiet">{t.proposalTopicApply}</button></div>
         </form>
+      )}
+
+      {/* Kontrola proti dokumentom knižnice (ADR-032, fáza 1). */}
+      {!decided && (
+        <section className="card detail-block" style={{ marginBottom: 16 }}>
+          <h2 className="detail-block-title">{t.review}</h2>
+          <p className="detail-block-note" style={{ margin: 0 }}>{t.reviewIntro}</p>
+          {run && (
+            <>
+              <p style={{ margin: 0 }}>
+                {run.pending.length === 0
+                  ? t.reviewDone(formatDate(run.finishedAt ?? run.updatedAt, language))
+                  : run.failures >= REVIEW_MAX_FAILURES ? <span className="bad-fg">{t.reviewStopped}</span>
+                  : t.reviewProgress(run.total - run.pending.length, run.total)}
+              </p>
+              <p className="quiet" style={{ margin: 0 }}>{t.reviewCounts(run.counts.differs, run.counts.conflict, run.counts.not_covered, run.counts.agree)}</p>
+              <p className="quiet" style={{ margin: 0 }}>{t.reviewAgainst(run.documents.map(d => `${d.title}${d.state === "draft" ? ` (${t.reviewDraftMark})` : d.label ? ` (${d.label})` : ""}`).join(", "))}</p>
+            </>
+          )}
+          <form action={startReviewAction} style={{ display: "grid", gap: 12 }}>
+            <input type="hidden" name="key" value={c.key} />
+            <input type="hidden" name="back" value={backQuery} />
+            <div className="field" style={{ margin: 0 }}>
+              <span className="field-label">{t.reviewDocuments}</span>
+              <MultiSelect name="documentIds" options={refDocs.map(d => ({ value: d.documentId, label: String(d.title ?? d.documentId) }))}
+                selected={run?.documentIds ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+            </div>
+            {topics.length > 1 && (
+              <label className="field" style={{ margin: 0 }}>
+                <span className="field-label">{t.reviewScope}</span>
+                <select className="field-input" name="topic" defaultValue={topic ?? ""}>
+                  <option value="">{t.reviewScopeAll}</option>
+                  {topics.map(x => <option key={x.topicKey} value={x.topicKey}>{x.topicLabel} ({x.open})</option>)}
+                </select>
+              </label>
+            )}
+            <div><SubmitButton className="button button--quiet">{t.reviewStart}</SubmitButton></div>
+          </form>
+        </section>
       )}
 
       {!decided && faqOptions.length === 0 && <p className="tag tag--warn" style={{ justifySelf: "start" }}>{t.proposalsNoFaq}</p>}
@@ -186,6 +246,48 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
                   <p className="quiet" style={{ margin: 0 }}>{t.proposalNoChanges}</p>
                 )}
               </details>
+            )}
+
+            {p.review && (
+              <div className="pr-review">
+                <div className="mg-pills">
+                  <span className={`tag${p.review.verdict === "agree" ? "" : " tag--warn"}`}>{t.reviewVerdicts[p.review.verdict]}</span>
+                  {p.review.decision && p.review.verdict !== "agree" && <span className="tag">{t.reviewDecision[p.review.decision]}</span>}
+                </div>
+                {p.review.note && <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{p.review.note}</p>}
+                {p.review.citations.length > 0 && (
+                  <div>
+                    <b>{t.reviewCitations}:</b>
+                    <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                      {p.review.citations.map((ci, i) => (
+                        <li key={i}><Link href={`/library/${encodeURIComponent(ci.documentId)}`}>{ci.title}{ci.articleRef ? `, ${ci.articleRef}` : ""}</Link>{ci.quote ? <> — <q>{ci.quote}</q></> : null}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {p.review.proposed && !p.review.decision && !decided && (
+                  <>
+                    <p style={{ margin: 0 }}><b>{t.reviewProposed} — {t.proposalQuestion}:</b> <Diff parts={wordDiff(p.question, p.review.proposed.question)} /></p>
+                    <p style={{ margin: 0, whiteSpace: "pre-wrap" }}><b>{t.proposalAnswer}:</b>{"\n"}<Diff parts={wordDiff(p.answer, p.review.proposed.answer)} /></p>
+                    <div className="mg-actions">
+                      <form action={applyReviewAction}>
+                        <input type="hidden" name="key" value={c.key} />
+                        <input type="hidden" name="id" value={p.id} />
+                        <input type="hidden" name="back" value={backQuery} />
+                        <input type="hidden" name="anchor" value={p.id} />
+                        <SubmitButton className="button button--quiet">{t.reviewApply}</SubmitButton>
+                      </form>
+                      <form action={dismissReviewAction}>
+                        <input type="hidden" name="key" value={c.key} />
+                        <input type="hidden" name="id" value={p.id} />
+                        <input type="hidden" name="back" value={backQuery} />
+                        <input type="hidden" name="anchor" value={p.id} />
+                        <SubmitButton className="button button--quiet">{t.reviewDismiss}</SubmitButton>
+                      </form>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
 
             {decided ? (

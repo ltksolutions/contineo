@@ -1736,7 +1736,7 @@ interface Dictionary {
       emptyText: string
       capped: (shown: number, all: number) => string
       note: string
-      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining", { label: string; why: string }>
+      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining" | "faq-review", { label: string; why: string }>
     }
     branding: {
       name: string
@@ -2654,6 +2654,29 @@ interface Dictionary {
     proposalsPage: (page: number, pages: number) => string
     proposalsPrev: string
     proposalsNext: string
+    review: string
+    reviewIntro: string
+    reviewDocuments: string
+    reviewScope: string
+    reviewScopeAll: string
+    reviewStart: string
+    reviewStarted: string
+    reviewProgress: (done: number, total: number) => string
+    reviewDone: (when: string) => string
+    reviewStopped: string
+    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => string
+    reviewAgainst: (list: string) => string
+    reviewDraftMark: string
+    reviewVerdicts: Record<"agree" | "differs" | "not_covered" | "conflict", string>
+    reviewFilter: string
+    reviewFilterAll: string
+    reviewProposed: string
+    reviewCitations: string
+    reviewApply: string
+    reviewDismiss: string
+    reviewApplied: string
+    reviewDismissed: string
+    reviewDecision: Record<"applied" | "dismissed", string>
     save: string
     saved: string
     created: string
@@ -5988,6 +6011,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.notFound": "Taký návrh tu nie je.",
     "proposal.decided": "O návrhu už niekto rozhodol.",
     "proposal.mergeSelf": "Návrh sa nedá zlúčiť sám so sebou.",
+    "proposal.noReview": "Návrh nemá výsledok kontroly na prevzatie.",
+    "compliance.noDocuments": "Vyberte aspoň jeden dokument.",
+    "compliance.unknownDocument": "Niektorý z vybraných dokumentov tu nie je.",
+    "compliance.notPublic": "Na kontrolu verejných návrhov možno použiť len verejné dokumenty — „{title}“ verejný nie je.",
+    "compliance.emptyDocuments": "Vybrané dokumenty nemajú text.",
+    "compliance.packTooLarge": "Vybrané dokumenty sú spolu príliš veľké — vyberte menej.",
+    "compliance.nothingToCheck": "Nie sú tu otvorené návrhy na kontrolu.",
+    "compliance.aiFailed": "Kontrola sa nepodarila — skúste to o chvíľu.",
     "mailbox.slow": "Schránka odpovedá pomaly — časť sa nestihla prečítať, ďalší beh v nej pokračuje.",
     "ticket.notFound": "Taký ticket tu nie je.",
     "ticket.notEmail": "Ticket nevznikol z e-mailu — nemá vlákno v schránke.",
@@ -6406,6 +6437,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "markdown-clean": { label: "Úprava členenia textu", why: "obnovenie nadpisov a článkov v prevedenom texte" },
         "chunking-analysis": { label: "Analýza členenia", why: "návrh, ako dokument narezať na úseky pre vyhľadávanie" },
         "faq-mining": { label: "Ťažba FAQ", why: "návrhy záznamov FAQ z histórie schránky helpdesku (ADR-028)" },
+        "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhov a záznamov FAQ proti dokumentom knižnice (ADR-032)" },
       },
     },
     branding: {
@@ -7335,6 +7367,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalsPage: (page: number, pages: number) => `Strana ${page} z ${pages}`,
     proposalsPrev: "Predchádzajúca strana",
     proposalsNext: "Ďalšia strana",
+    review: "Kontrola proti dokumentom",
+    reviewIntro: "Umelá inteligencia porovná otvorené návrhy (alebo len zvolenú tému) s vybranými dokumentmi z knižnice a ku každému dá verdikt s citáciou. Odpovede sama nemení — výsledok prevezmete, alebo ponecháte pôvodné. Použiť možno len verejné dokumenty; dokument, ktorý ešte nemá zverejnené znenie, sa použije ako koncept a je tak označený.",
+    reviewDocuments: "Dokumenty, proti ktorým sa kontroluje",
+    reviewScope: "Čo kontrolovať",
+    reviewScopeAll: "Všetky otvorené návrhy",
+    reviewStart: "Skontrolovať proti dokumentom",
+    reviewStarted: "Kontrola beží. Dávky sa dopĺňajú automaticky každých 5 minút — stránku stačí neskôr obnoviť.",
+    reviewProgress: (done: number, total: number) => `Skontrolované ${done} z ${total} návrhov.`,
+    reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
+    reviewStopped: "Kontrola sa po opakovaných chybách zastavila. Skúste ju spustiť znova.",
+    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => `rozchádza sa ${differs} · dokumenty si protirečia ${conflict} · nepokrývajú ${notCovered} · súhlasí ${agree}`,
+    reviewAgainst: (list: string) => `Proti: ${list}`,
+    reviewDraftMark: "koncept",
+    reviewVerdicts: { differs: "rozchádza sa s dokumentmi", conflict: "dokumenty si protirečia", not_covered: "dokumenty tému nepokrývajú", agree: "súhlasí s dokumentmi" },
+    reviewFilter: "Výsledok kontroly",
+    reviewFilterAll: "Všetky",
+    reviewProposed: "Návrh z kontroly",
+    reviewCitations: "Citácie",
+    reviewApply: "Prevziať návrh z kontroly",
+    reviewDismiss: "Ponechať pôvodné",
+    reviewApplied: "Návrh z kontroly je prevzatý; pôvodné znenie ostáva v porovnaní.",
+    reviewDismissed: "Ponechané pôvodné znenie.",
+    reviewDecision: { applied: "prevzaté", dismissed: "ponechané pôvodné" },
     save: "Uložiť kanál",
     saved: "Kanál je uložený.",
     created: "Kanál je založený.",
@@ -10527,6 +10582,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.notFound": "Takový návrh tu není.",
     "proposal.decided": "O návrhu už někdo rozhodl.",
     "proposal.mergeSelf": "Návrh nelze sloučit sám se sebou.",
+    "proposal.noReview": "Návrh nemá výsledek kontroly k převzetí.",
+    "compliance.noDocuments": "Vyberte alespoň jeden dokument.",
+    "compliance.unknownDocument": "Některý z vybraných dokumentů tu není.",
+    "compliance.notPublic": "Ke kontrole veřejných návrhů lze použít jen veřejné dokumenty — „{title}“ veřejný není.",
+    "compliance.emptyDocuments": "Vybrané dokumenty nemají text.",
+    "compliance.packTooLarge": "Vybrané dokumenty jsou dohromady příliš velké — vyberte méně.",
+    "compliance.nothingToCheck": "Nejsou tu otevřené návrhy ke kontrole.",
+    "compliance.aiFailed": "Kontrola se nepodařila — zkuste to za chvíli.",
     "mailbox.slow": "Schránka odpovídá pomalu — část se nestihla přečíst, další běh v ní pokračuje.",
     "ticket.notFound": "Takový ticket tady není.",
     "ticket.notEmail": "Ticket nevznikl z e-mailu — nemá vlákno ve schránce.",
@@ -10945,6 +11008,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "markdown-clean": { label: "Úprava členění textu", why: "obnovení nadpisů a článků v převedeném textu" },
         "chunking-analysis": { label: "Analýza členění", why: "návrh, jak dokument rozřezat na úseky pro vyhledávání" },
         "faq-mining": { label: "Těžba FAQ", why: "návrhy záznamů FAQ z historie schránky helpdesku (ADR-028)" },
+        "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhů a záznamů FAQ proti dokumentům knihovny (ADR-032)" },
       },
     },
     branding: {
@@ -11872,6 +11936,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalsPage: (page: number, pages: number) => `Strana ${page} z ${pages}`,
     proposalsPrev: "Předchozí strana",
     proposalsNext: "Další strana",
+    review: "Kontrola proti dokumentům",
+    reviewIntro: "Umělá inteligence porovná otevřené návrhy (nebo jen zvolené téma) s vybranými dokumenty z knihovny a ke každému dá verdikt s citací. Odpovědi sama nemění — výsledek převezmete, nebo ponecháte původní. Použít lze jen veřejné dokumenty; dokument, který ještě nemá zveřejněné znění, se použije jako koncept a je tak označen.",
+    reviewDocuments: "Dokumenty, proti kterým se kontroluje",
+    reviewScope: "Co kontrolovat",
+    reviewScopeAll: "Všechny otevřené návrhy",
+    reviewStart: "Zkontrolovat proti dokumentům",
+    reviewStarted: "Kontrola běží. Dávky se doplňují automaticky každých 5 minut — stránku stačí později obnovit.",
+    reviewProgress: (done: number, total: number) => `Zkontrolováno ${done} z ${total} návrhů.`,
+    reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
+    reviewStopped: "Kontrola se po opakovaných chybách zastavila. Zkuste ji spustit znovu.",
+    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => `rozchází se ${differs} · dokumenty si odporují ${conflict} · nepokrývají ${notCovered} · souhlasí ${agree}`,
+    reviewAgainst: (list: string) => `Proti: ${list}`,
+    reviewDraftMark: "koncept",
+    reviewVerdicts: { differs: "rozchází se s dokumenty", conflict: "dokumenty si odporují", not_covered: "dokumenty téma nepokrývají", agree: "souhlasí s dokumenty" },
+    reviewFilter: "Výsledek kontroly",
+    reviewFilterAll: "Všechny",
+    reviewProposed: "Návrh z kontroly",
+    reviewCitations: "Citace",
+    reviewApply: "Převzít návrh z kontroly",
+    reviewDismiss: "Ponechat původní",
+    reviewApplied: "Návrh z kontroly je převzatý; původní znění zůstává v porovnání.",
+    reviewDismissed: "Ponecháno původní znění.",
+    reviewDecision: { applied: "převzato", dismissed: "ponecháno původní" },
     save: "Uložit kanál",
     saved: "Kanál je uložen.",
     created: "Kanál je založen.",
@@ -15055,6 +15142,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.notFound": "There is no such proposal.",
     "proposal.decided": "Someone has already decided on this proposal.",
     "proposal.mergeSelf": "A proposal cannot be merged with itself.",
+    "proposal.noReview": "The proposal has no check result to take over.",
+    "compliance.noDocuments": "Select at least one document.",
+    "compliance.unknownDocument": "One of the selected documents does not exist here.",
+    "compliance.notPublic": "Only public documents can be used to check public proposals — “{title}” is not public.",
+    "compliance.emptyDocuments": "The selected documents have no text.",
+    "compliance.packTooLarge": "The selected documents are too large together — select fewer.",
+    "compliance.nothingToCheck": "There are no open proposals to check.",
+    "compliance.aiFailed": "The check failed — try again in a moment.",
     "mailbox.slow": "The mailbox is responding slowly — part of it was not read in time; the next run continues.",
     "ticket.notFound": "There is no such ticket here.",
     "ticket.notEmail": "The ticket did not come from an e-mail — it has no thread in the mailbox.",
@@ -15473,6 +15568,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "markdown-clean": { label: "Text structure cleanup", why: "restoring headings and articles in converted text" },
         "chunking-analysis": { label: "Chunking analysis", why: "a proposal for splitting the document into chunks for search" },
         "faq-mining": { label: "FAQ mining", why: "FAQ entry proposals from the helpdesk mailbox history (ADR-028)" },
+        "faq-review": { label: "FAQ review", why: "checking FAQ proposals and entries against library documents (ADR-032)" },
       },
     },
     branding: {
@@ -16400,6 +16496,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalsPage: (page: number, pages: number) => `Page ${page} of ${pages}`,
     proposalsPrev: "Previous page",
     proposalsNext: "Next page",
+    review: "Check against documents",
+    reviewIntro: "Artificial intelligence compares the open proposals (or just the selected topic) with the documents you choose from the library and gives each a verdict with a citation. It never changes the answers itself — you take over the result or keep the original. Only public documents can be used; a document without a published version is used as a draft and marked as such.",
+    reviewDocuments: "Documents to check against",
+    reviewScope: "What to check",
+    reviewScopeAll: "All open proposals",
+    reviewStart: "Check against documents",
+    reviewStarted: "The check is running. Batches are processed automatically every 5 minutes — just reload the page later.",
+    reviewProgress: (done: number, total: number) => `${done} of ${total} proposals checked.`,
+    reviewDone: (when: string) => `The check is complete (${when}).`,
+    reviewStopped: "The check stopped after repeated errors. Try running it again.",
+    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => `differs ${differs} · documents conflict ${conflict} · not covered ${notCovered} · agrees ${agree}`,
+    reviewAgainst: (list: string) => `Against: ${list}`,
+    reviewDraftMark: "draft",
+    reviewVerdicts: { differs: "differs from the documents", conflict: "the documents conflict", not_covered: "the documents do not cover the topic", agree: "agrees with the documents" },
+    reviewFilter: "Check result",
+    reviewFilterAll: "All",
+    reviewProposed: "Proposal from the check",
+    reviewCitations: "Citations",
+    reviewApply: "Take over the proposal from the check",
+    reviewDismiss: "Keep the original",
+    reviewApplied: "The proposal from the check was taken over; the original wording stays in the comparison.",
+    reviewDismissed: "The original wording was kept.",
+    reviewDecision: { applied: "taken over", dismissed: "original kept" },
     save: "Save channel",
     saved: "The channel is saved.",
     created: "The channel is created.",

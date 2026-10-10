@@ -8527,3 +8527,5 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 .pr-original-body { display: grid; gap: 8px; padding-top: 4px; }
 .pr-diff ins { background: var(--ok-bg); color: var(--ok-fg); text-decoration: underline; text-decoration-thickness: 1px; }
 .pr-diff del { background: var(--bad-bg); color: var(--bad-fg); text-decoration: line-through; }
+/* Výsledok kontroly proti dokumentom pri návrhu FAQ (ADR-032, fáza 1). */
+.pr-review { display: grid; gap: 8px; border-left: 3px solid var(--warn-fg); padding: 4px 0 4px 12px; }

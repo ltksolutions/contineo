@@ -11,7 +11,13 @@
 > (`expireCurationFor` — nové znenie zdroja archivuje odvodené odpovede),
 > ADR-024 (odpoveď podľa znenia platného k dňu), ADR-026 (AI ako nastavenie
 > organizácie, spotreba bez znenia), ADR-014 (postup znenia).
-> **Implementácia:** fáza 1 (kontrola na požiadanie) — otvorené, `docs/TODO.md`.
+> **Doplnené 10. 10. 2026:** D196–D198 — všeobecná kontrola súladu
+> dokumentu proti dokumentom (Ján: „tak isto ako FAQ by takáto funkcionalita
+> kontroly bola vhodná aj pre Manuály ISSF, ale aj všeobecne dokument vs.
+> dokumenty… každý rok príde Rozpis súťaží… kontrolovať rozpor voči stanovám,
+> poriadkom a normám"); „áno, rozšír ADR-032 a začni fázou 1".
+> **Implementácia:** fáza 1 (kontrola návrhov FAQ vo fronte kurátora,
+> spoločný mechanizmus `lib/complianceCheck.ts`) — rozpracovaná.
 
 ---
 
@@ -129,13 +135,64 @@ zostáva vyradený z vyhľadávania (D11 platí), kým kurátor nerozhodne:
 V editore FAQ je pri vyradených záznamoch viditeľné „vyradené novým znením
 dokumentu X — čaká na kontrolu".
 
+### D196 — Všeobecná kontrola súladu: dokument proti dokumentom
+
+Kontrola FAQ je jeden prípad všeobecnej **kontroly súladu**. Kontrolovať sa
+dá aj znenie dokumentu — ideálne ešte v koncepte pred schválením (ADR-014):
+rozpis súťaží zväzu na sezónu, manuál ISSF, nová smernica — proti
+referenčným dokumentom z knižnice (stanovy, poriadky, normy).
+
+- **Výstup pri dokumente** je zoznam nálezov, nie prepísaný dokument: miesto
+  v kontrolovanom dokumente, citácia z normy (článok a úryvok), druh nálezu
+  — *rozpor*, *chýba povinná náležitosť*, *nejasné* — a odporúčanie.
+- **Zobrazenie:** v postupe znenia pri kroku schválenie. Schvaľovateľ vidí
+  nálezy pred zverejnením a pri každom zapíše *opravené* alebo *vedome
+  ponechané* s dôvodom.
+- Pri FAQ ostáva navrhnuté znenie (D192) — záznam FAQ je krátky a jeho
+  oprava je jasná; dokument opravuje autor.
+
+Vedľajší produkt: dva ročníky toho istého dokumentu (rozpis súťaží
+2026/2027 a 2027/2028 jedného zväzu) sa dajú porovnať tým istým
+mechanizmom — „čo sa zmenilo oproti minulej sezóne" (sezóna 1. 7. – 30. 6.).
+
+### D197 — Referenčné dokumenty podľa druhu dokumentu
+
+V číselníku Druhy dokumentov sa pri druhu nastaví, proti čomu sa kontroluje
+(napríklad „Rozpis súťaží" proti Stanovám, Súťažnému poriadku, RaPP
+a Disciplinárnemu poriadku; „Manuál" proti RaPP). Kontrola sa potom spustí
+**sama pri nahratí nového znenia** konceptu; na požiadanie si referenčné
+dokumenty vyberie človek ručne.
+
+### D198 — Poradie záväznosti noriem je nastavenie organizácie
+
+Pri rozpore rozhoduje poradie záväznosti, ktoré si organizácia nastaví
+(napríklad Stanovy > poriadky > ostatné normy > rozpisy a manuály >
+stránky webu). Pri kontrole rozpisov proti stanovám je to jadro funkcie,
+preto ide spolu s D196, nie až na koniec. Do nastavenia platí predvolené
+poradie podľa druhu dokumentu: norma pred manuálom, manuál pred ostatným;
+pri rovnakom druhu je to *protirečia si*.
+
+### Spresnenie D194 z implementácie (10. 10. 2026)
+
+Manuály ISSF sú v knižnici zatiaľ **koncept** (bez zverejneného znenia,
+bez úsekov v indexe). Fáza 1 preto modelu nedáva úseky z vyhľadávania, ale
+**celé texty vybraných dokumentov**: platné znenie, a ak dokument platné
+znenie nemá, koncept s výslovným označením „koncept". Balík dokumentov je
+v každom volaní rovnaký a ide do cache modelu (zlomok ceny pri ďalších
+dávkach). Nad limitom veľkosti balíka kontrola odmietne štart a požiada
+o menší výber; vyhľadávanie po úsekoch príde s veľkými dokumentmi
+(fáza 2, rozpisy súťaží).
+
 ## 3. Postup
 
-1. **Fáza 1 — kontrola na požiadanie** (D191 bod 1 a 2, D192, D193, D194):
-   výber dokumentov a záznamov, beh, výsledky vo fronte kurátora.
-2. **Fáza 2 — automaticky pri novom znení** (D195).
-3. **Fáza 3 — poradie dokumentov pri rozpore** ako nastavenie organizácie
-   (dnes pevne v pokyne pre SFZ).
+1. **Fáza 1 — kontrola návrhov FAQ vo fronte kurátora** (D191 bod 2, D192,
+   D194) na spoločnom mechanizme kontroly súladu; výsledok pri návrhu ako
+   „návrh z kontroly" s porovnaním a prevzatím jedným úkonom.
+2. **Fáza 2 — záznamy FAQ v editore a nové znenie zdroja** (D191 bod 1,
+   D193, D195).
+3. **Fáza 3 — kontrola dokumentu pri schválení, referenčné dokumenty podľa
+   druhu a poradie záväznosti** (D196–D198) — hotové pred letom 2027,
+   keď prídu rozpisy súťaží na sezónu 2027/2028.
 
 ## 4. Dôsledky
 

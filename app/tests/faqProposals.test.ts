@@ -16,7 +16,7 @@ vi.mock("../src/lib/faq", () => ({
   saveFaqEntry: (...a: unknown[]) => saveFaqEntry(...a),
 }))
 
-import { approveProposal, rejectProposal, mergeProposal, updateProposal, type FaqProposal } from "../src/lib/faqProposals"
+import { approveProposal, rejectProposal, mergeProposal, updateProposal, applyReview, dismissReview, type FaqProposal } from "../src/lib/faqProposals"
 
 const proposal = (over: Partial<FaqProposal> = {}): FaqProposal => ({
   id: "p1", companyCode: "SFZ", channelKey: "k", topicKey: "t1", topicLabel: "Heslo", question: "Ako obnovím heslo?",
@@ -77,5 +77,22 @@ describe("rozhodnutie kuratora", () => {
     col.findOne.mockResolvedValue(proposal({ revision: { at: new Date(), by: "x", previous: { question: "q0", variants: [], answer: "a0", audience: [], sources: [], note: "" } } }))
     await updateProposal("SFZ", "k", "p1", { answer: "Ešte novšia." }, "kurator@x.sk")
     expect(col.updateOne.mock.calls[0][1].$set.revision).toBeUndefined()
+  })
+
+  it("prevzatie kontroly: navrhnute znenie, zdroje z citacii, poznamka kontroly a rozhodnutie; ponechanie oznaci odmietnute", async () => {
+    const review = { runId: "r", at: new Date("2026-10-10T00:00:00Z"), verdict: "differs" as const, citations: [], note: "RaPP čl. 15.", model: "m", documents: [], decision: null,
+      proposed: { question: "Kedy?", answer: "Po dvoch rokoch.", sources: [{ documentId: "r1", title: "RaPP", articleRef: "čl. 15" }] } }
+    col.findOne.mockResolvedValue(proposal({ review }))
+    await applyReview("SFZ", "k", "p1", "kurator@x.sk")
+    const set = col.updateOne.mock.calls[0][1].$set
+    expect(set).toMatchObject({ question: "Kedy?", answer: "Po dvoch rokoch.", sources: [{ documentId: "r1", articleRef: "čl. 15" }] })
+    expect(set.note).toContain("Kontrola proti dokumentom (2026-10-10): RaPP čl. 15.")
+    expect(set.review.decision).toBe("applied")
+    col.updateOne.mockClear()
+    col.findOne.mockResolvedValue(proposal({ review }))
+    await dismissReview("SFZ", "k", "p1", "kurator@x.sk")
+    expect(col.updateOne.mock.calls[0][1].$set["review.decision"]).toBe("dismissed")
+    col.findOne.mockResolvedValue(proposal({ review: { ...review, decision: "applied" } }))
+    await expect(applyReview("SFZ", "k", "p1", "x")).rejects.toMatchObject({ code: "proposal.noReview" })
   })
 })
