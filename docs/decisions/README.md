@@ -43,6 +43,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-029](ADR-029-mcp-konektory.md) | MCP konektory: pripojenie organizácie s viacerými použitiami (živý zdroj, import, nástroje), profil servera, rozsah per kanál, redukcia len pre interných | ✅ prijaté · fázy 1 a 2 v `main`, dodatok § 5 |
 | [ADR-030](ADR-030-tazba-historie-helpdesku.md) | Ťažba histórie helpdesku v troch krokoch: analýza bez zápisu (len hlavičky, mesačný súhrn), pilot so zoskupením a súhlasom DPO, archív po témach; fronta kurátora · doplnené D183–D186 (DPO: celé obdobie, témy modelom bez ukladania textu) | ✅ prijaté · krok 1 v `main`, úplná ťažba rozpracovaná |
 | [ADR-031](ADR-031-pdf-z-markdownu-so-sablonou.md) | PDF z Markdownu so šablónou organizácie: zdroj `.md` bez PDF → PDF s hlavičkou (logo, právny názov) a pätou (sídlo, IČO, DIČ, IČ DPH, kontakt, dátum, strana); DIČ, IČ DPH a kontakt na dokumentoch v profile organizácie (D187–D189) · doplnené D190: sídlo po častiach (ulica, číslo, PSČ, mesto) | ✅ prijaté |
+| [ADR-032](ADR-032-kontrola-faq-proti-dokumentom.md) | Kontrola FAQ proti dokumentom knižnice pomocou AI: na požiadanie v editore FAQ a vo fronte kurátora, automaticky pri novom znení zdroja; výsledok je návrh vo fronte (verdikt, citácia, navrhnuté znenie), nie zmena (D191–D195) | ✅ prijaté · fáza 1 otvorená |
 
 ## Čo sem nepatrí
 
@@ -55,6 +56,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-032**. Súbor `ADR-032-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-033**. Súbor `ADR-033-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
