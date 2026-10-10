@@ -2640,6 +2640,20 @@ interface Dictionary {
     proposalStatus: Record<"approved" | "merged" | "rejected", string>
     proposalDecidedBy: (who: string, when: string) => string
     proposalsMore: (n: number) => string
+    proposalSave: string
+    proposalSaved: string
+    proposalOriginal: string
+    proposalOriginalIntro: string
+    proposalNoChanges: string
+    proposalEdited: (who: string, when: string) => string
+    proposalsViewDecision: string
+    proposalsViewNoSource: string
+    proposalTopicFilter: string
+    proposalTopicAll: string
+    proposalTopicApply: string
+    proposalsPage: (page: number, pages: number) => string
+    proposalsPrev: string
+    proposalsNext: string
     save: string
     saved: string
     created: string
@@ -7280,7 +7294,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     harvestExclusionsAdded: (n: number) => `Pridaných vylúčených adries: ${n}.`,
     proposals: "Návrhy FAQ z helpdesku",
     proposalsIntro: "Návrhy vznikli z odpovedí helpdesku za obdobie zvolené pri ťažbe. Pred schválením skontrolujte, že odpoveď neobsahuje meno ani iný údaj konkrétnej osoby a že platí dnes. Schválený záznam ide do konceptu vybraného FAQ dokumentu a zverejní sa až jeho schválením. Odkaz na e-maily sa po rozhodnutí zmaže.",
-    proposalsViewOpen: "Na rozhodnutie",
+    proposalsViewOpen: "Otvorené",
     proposalsViewDecided: "Rozhodnuté",
     proposalsEmpty: "Žiadne návrhy na rozhodnutie.",
     proposalsNoFaq: "V knižnici kanála nie je FAQ dokument — založte ho v Knižnici → Nový dokument → FAQ.",
@@ -7307,6 +7321,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalStatus: { approved: "schválený", merged: "zlúčený", rejected: "zamietnutý" },
     proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
     proposalsMore: (n: number) => `Ďalších ${n} návrhov sa ukáže po rozhodnutí o týchto.`,
+    proposalSave: "Uložiť úpravu",
+    proposalSaved: "Úprava je uložená, návrh ostáva vo fronte.",
+    proposalOriginal: "Pôvodný návrh a zmeny",
+    proposalOriginalIntro: "Prečiarknuté oproti pôvodnému návrhu vypadlo, podčiarknuté pribudlo.",
+    proposalNoChanges: "Bez zmien oproti pôvodnému návrhu.",
+    proposalEdited: (who: string, when: string) => `Upravené ${when}, ${who}`,
+    proposalsViewDecision: "Treba rozhodnúť",
+    proposalsViewNoSource: "Bez zdroja",
+    proposalTopicFilter: "Téma",
+    proposalTopicAll: "Všetky témy",
+    proposalTopicApply: "Zobraziť",
+    proposalsPage: (page: number, pages: number) => `Strana ${page} z ${pages}`,
+    proposalsPrev: "Predchádzajúca strana",
+    proposalsNext: "Ďalšia strana",
     save: "Uložiť kanál",
     saved: "Kanál je uložený.",
     created: "Kanál je založený.",
@@ -11803,7 +11831,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     harvestExclusionsAdded: (n: number) => `Přidaných vyloučených adres: ${n}.`,
     proposals: "Návrhy FAQ z helpdesku",
     proposalsIntro: "Návrhy vznikly z odpovědí helpdesku za období zvolené při těžbě. Před schválením zkontrolujte, že odpověď neobsahuje jméno ani jiný údaj konkrétní osoby a že platí dnes. Schválený záznam jde do konceptu vybraného FAQ dokumentu a zveřejní se až jeho schválením. Odkaz na e-maily se po rozhodnutí smaže.",
-    proposalsViewOpen: "K rozhodnutí",
+    proposalsViewOpen: "Otevřené",
     proposalsViewDecided: "Rozhodnuté",
     proposalsEmpty: "Žádné návrhy k rozhodnutí.",
     proposalsNoFaq: "V knihovně kanálu není FAQ dokument — založte ho v Knihovně → Nový dokument → FAQ.",
@@ -11830,6 +11858,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalStatus: { approved: "schválený", merged: "sloučený", rejected: "zamítnutý" },
     proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
     proposalsMore: (n: number) => `Dalších ${n} návrhů se ukáže po rozhodnutí o těchto.`,
+    proposalSave: "Uložit úpravu",
+    proposalSaved: "Úprava je uložená, návrh zůstává ve frontě.",
+    proposalOriginal: "Původní návrh a změny",
+    proposalOriginalIntro: "Přeškrtnuté oproti původnímu návrhu vypadlo, podtržené přibylo.",
+    proposalNoChanges: "Beze změn oproti původnímu návrhu.",
+    proposalEdited: (who: string, when: string) => `Upraveno ${when}, ${who}`,
+    proposalsViewDecision: "Je třeba rozhodnout",
+    proposalsViewNoSource: "Bez zdroje",
+    proposalTopicFilter: "Téma",
+    proposalTopicAll: "Všechna témata",
+    proposalTopicApply: "Zobrazit",
+    proposalsPage: (page: number, pages: number) => `Strana ${page} z ${pages}`,
+    proposalsPrev: "Předchozí strana",
+    proposalsNext: "Další strana",
     save: "Uložit kanál",
     saved: "Kanál je uložen.",
     created: "Kanál je založen.",
@@ -16317,7 +16359,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     harvestExclusionsAdded: (n: number) => `Excluded addresses added: ${n}.`,
     proposals: "FAQ proposals from the helpdesk",
     proposalsIntro: "The proposals come from helpdesk answers over the period chosen for mining. Before approving, check that the answer contains no name or other detail of a specific person and that it is still valid today. An approved entry goes to the draft of the selected FAQ document and is published only when that draft is approved. The reference to the e-mails is deleted after your decision.",
-    proposalsViewOpen: "To decide",
+    proposalsViewOpen: "Open",
     proposalsViewDecided: "Decided",
     proposalsEmpty: "No proposals to decide.",
     proposalsNoFaq: "The channel library has no FAQ document — create one in Library → New document → FAQ.",
@@ -16344,6 +16386,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalStatus: { approved: "approved", merged: "merged", rejected: "rejected" },
     proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
     proposalsMore: (n: number) => `Another ${n} proposals will show once these are decided.`,
+    proposalSave: "Save changes",
+    proposalSaved: "The changes are saved; the proposal stays in the queue.",
+    proposalOriginal: "Original proposal and changes",
+    proposalOriginalIntro: "Struck-through text was removed from the original proposal, underlined text was added.",
+    proposalNoChanges: "No changes from the original proposal.",
+    proposalEdited: (who: string, when: string) => `Edited ${when} by ${who}`,
+    proposalsViewDecision: "Needs a decision",
+    proposalsViewNoSource: "No source",
+    proposalTopicFilter: "Topic",
+    proposalTopicAll: "All topics",
+    proposalTopicApply: "Show",
+    proposalsPage: (page: number, pages: number) => `Page ${page} of ${pages}`,
+    proposalsPrev: "Previous page",
+    proposalsNext: "Next page",
     save: "Save channel",
     saved: "The channel is saved.",
     created: "The channel is created.",
