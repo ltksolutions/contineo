@@ -20,6 +20,7 @@ import { AppError } from "./appError"
 import { requireCompanyCode } from "./tenantScope"
 import { checkEntry, saveFaqEntry, type FaqEntryInput } from "./faq"
 import { writeAudit } from "./audit"
+import type { ProposalReview, ReviewVerdict } from "./complianceCheck"
 
 export class FaqProposalError extends AppError {}
 
@@ -69,6 +70,8 @@ export interface FaqProposal {
    * zapisuje sa raz, ďalšie úpravy ho neprepisujú.
    */
   revision?: { at: Date; by: string; previous: ProposalSnapshot } | null
+  /** Výsledok poslednej kontroly proti dokumentom (ADR-032 D192); kurátor ho prevezme alebo ponechá pôvodné. */
+  review?: ProposalReview | null
   /** Posledná uložená úprava bez schválenia. */
   editedAt?: Date | null
   editedBy?: string | null
@@ -126,9 +129,14 @@ export async function removeOpenProposals(companyCode: string, channelKey: strin
  */
 export async function listProposals(
   companyCode: string, channelKey: string, filter: ProposalFilter | "decided" = "open", topicKey?: string | null,
+  reviewVerdict?: ReviewVerdict | null,
 ): Promise<FaqProposal[]> {
   const code = requireCompanyCode(companyCode, "listProposals")
-  const base: Record<string, unknown> = { companyCode: code, channelKey, ...(topicKey ? { topicKey } : {}) }
+  const base: Record<string, unknown> = {
+    companyCode: code, channelKey, ...(topicKey ? { topicKey } : {}),
+    // Výsledok kontroly, o ktorom kurátor ešte nerozhodol (ADR-032).
+    ...(reviewVerdict ? { "review.verdict": reviewVerdict, "review.decision": null } : {}),
+  }
   const query =
     filter === "decided" ? { ...base, status: { $in: ["approved", "merged", "rejected"] as ProposalStatus[] } }
     : filter === "decision" ? { ...base, status: "open" as const, note: { $regex: DECISION_MARK.replace(/[[\]]/g, "\\$&") } }
@@ -215,22 +223,24 @@ async function decide(code: string, channelKey: string, id: string, set: Partial
  */
 export async function updateProposal(
   companyCode: string, channelKey: string, id: string,
-  input: { question?: string; variants?: string[]; answer?: string; audience?: string[] },
+  input: { question?: string; variants?: string[]; answer?: string; audience?: string[]; sources?: ProposalSource[] },
   actor: string,
+  extra: Partial<FaqProposal> = {},
 ): Promise<void> {
   const code = requireCompanyCode(companyCode, "updateProposal")
   const p = await openProposal(code, channelKey, id)
+  const sources = input.sources ?? p.sources
   const entry = checkEntry({
     question: input.question ?? p.question,
     variants: input.variants ?? p.variants,
     answer: input.answer ?? p.answer,
     audience: input.audience ?? p.audience,
-    sources: p.sources.map(s => ({ documentId: s.documentId, articleRef: s.articleRef })),
+    sources: sources.map(s => ({ documentId: s.documentId, articleRef: s.articleRef })),
   })
   const now = new Date()
   const set: Partial<FaqProposal> = {
     question: entry.question, variants: entry.variants, answer: entry.answer, audience: entry.audience,
-    editedAt: now, editedBy: actor,
+    sources, editedAt: now, editedBy: actor, ...extra,
   }
   if (!p.revision) {
     set.revision = { at: now, by: actor, previous: { question: p.question, variants: p.variants, answer: p.answer, audience: p.audience, sources: p.sources, note: p.note } }
@@ -238,6 +248,35 @@ export async function updateProposal(
   const r = await (await proposals()).updateOne({ companyCode: code, channelKey, id, status: "open" }, { $set: set })
   if (!r.modifiedCount) throw new FaqProposalError("proposal.decided", "O návrhu už niekto rozhodol.")
   await writeAudit({ companyCode: code, subject: "document", action: "faq-navrh-upraveny", actor, targetId: id, targetLabel: entry.question })
+}
+
+/**
+ * Prevzatie výsledku kontroly (ADR-032 D192): navrhnuté znenie a zdroje
+ * z citácií nahradia návrh; poznámka kontroly sa pridá k poznámke návrhu.
+ * Pôvodné znenie ostáva v `revision` (ak tam ešte nie je, uloží sa teraz).
+ */
+export async function applyReview(companyCode: string, channelKey: string, id: string, actor: string): Promise<void> {
+  const code = requireCompanyCode(companyCode, "applyReview")
+  const p = await openProposal(code, channelKey, id)
+  const proposed = p.review?.proposed
+  if (!p.review || p.review.decision || !proposed) throw new FaqProposalError("proposal.noReview", "Návrh nemá výsledok kontroly na prevzatie.")
+  const note = [p.note, p.review.note ? `Kontrola proti dokumentom (${p.review.at.toISOString().slice(0, 10)}): ${p.review.note}` : ""].filter(Boolean).join("\n\n")
+  await updateProposal(code, channelKey, id, {
+    question: proposed.question, answer: proposed.answer,
+    sources: proposed.sources.length ? proposed.sources : p.sources,
+  }, actor, { note, review: { ...p.review, decision: "applied", decidedBy: actor, decidedAt: new Date() } })
+}
+
+/** Ponechanie pôvodného znenia — výsledok kontroly sa označí ako odmietnutý a ostane na prečítanie. */
+export async function dismissReview(companyCode: string, channelKey: string, id: string, actor: string): Promise<void> {
+  const code = requireCompanyCode(companyCode, "dismissReview")
+  const p = await openProposal(code, channelKey, id)
+  if (!p.review || p.review.decision) throw new FaqProposalError("proposal.noReview", "Návrh nemá výsledok kontroly na prevzatie.")
+  await (await proposals()).updateOne(
+    { companyCode: code, channelKey, id, status: "open" },
+    { $set: { "review.decision": "dismissed", "review.decidedBy": actor, "review.decidedAt": new Date() } },
+  )
+  await writeAudit({ companyCode: code, subject: "document", action: "faq-kontrola-odmietnuta", actor, targetId: id, targetLabel: p.question })
 }
 
 /**

@@ -31,7 +31,7 @@ export const AI_USAGE_RETENTION_DAYS = 761
  * Na čo sa model volal. Kľúče sú dáta v `ai_usage` — nepremenúvať.
  * Popis „na čo a prečo" k nim dáva slovník (`org.aiUsage.purposes`).
  */
-export const AI_USAGE_PURPOSES = ["answer", "query-rewrite", "query-classify", "pdf-rewrite", "markdown-clean", "chunking-analysis", "faq-mining"] as const
+export const AI_USAGE_PURPOSES = ["answer", "query-rewrite", "query-classify", "pdf-rewrite", "markdown-clean", "chunking-analysis", "faq-mining", "faq-review"] as const
 export type AiUsagePurpose = (typeof AI_USAGE_PURPOSES)[number]
 
 export function isAiUsagePurpose(value: string | undefined): value is AiUsagePurpose {
