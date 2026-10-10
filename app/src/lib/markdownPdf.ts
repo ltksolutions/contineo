@@ -17,7 +17,7 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib"
 import fontkit from "@pdf-lib/fontkit"
-import { FONT_DIR, wrapText } from "./certificatePdf"
+import { FONT_DIR, wrapText, PDF_FONT_OPTIONS } from "./certificatePdf"
 import { FAQ_PDF_DATE } from "./faqPdf"
 
 const PAGE = { width: 595.28, height: 841.89 }
@@ -38,9 +38,20 @@ function fontBytes() {
   return fontCache
 }
 
+/**
+ * Znaky, ktoré písmo Noto Sans nemá — pdf-lib by na ich mieste nechal prázdno
+ * („Faktúry    Položky"). Nahradia sa najbližším, ktorý písmo má.
+ */
+const MISSING_GLYPHS: Record<string, string> = { "→": "›", "⇒": "›", "←": "‹", "⇐": "‹" }
+
+/** Text pripravený na sadzbu: bez znakov, ktoré písmo nevie vykresliť. */
+export function printable(s: string): string {
+  return s.replace(/[→⇒←⇐]/g, ch => MISSING_GLYPHS[ch] ?? ch)
+}
+
 /** Inline Markdown (`**x**`, `` `x` ``, `[a](b)`) na obyčajný text. */
 export function plainInline(s: string): string {
-  return s
+  return printable(s)
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/(\*\*|__)(.+?)\1/g, "$2")
@@ -70,7 +81,7 @@ export function parseBlocks(markdown: string): Block[] {
   for (const raw of lines) {
     if (code) {
       if (/^\s*```/.test(raw)) { blocks.push({ kind: "code", lines: code }); code = null }
-      else code.push(raw.replace(/\t/g, "  "))
+      else code.push(printable(raw.replace(/\t/g, "  ")))
       continue
     }
     const line = raw.replace(/\s+$/, "")
@@ -103,35 +114,66 @@ export interface MarkdownPdfTexts {
   origin?: string
 }
 
-export async function renderMarkdownPdf(input: { title: string; markdown: string; texts: MarkdownPdfTexts; author?: string }): Promise<Uint8Array> {
+/**
+ * Hlavička a päta organizácie na každej strane (ADR-031) — pre dokument, ktorý
+ * do knižnice prišiel len ako `.md`. Bez nej je PDF holý výtlačok ako doteraz
+ * (import z konektora, FAQ).
+ */
+export interface PdfLetterhead {
+  /** Logo ako PNG (pdf-lib nevie SVG ani WebP). Chýba = hlavička bez loga. */
+  logoPng?: Uint8Array | null
+  /** Názov organizácie vpravo v hlavičke. */
+  name: string
+  /** Názov dokumentu v strede hlavičky; dlhý sa skráti s „…". */
+  documentTitle?: string
+  /** Riadky päty vľavo: právny názov, sídlo, IČO…, kontakty. Prázdne sa vynechajú. */
+  footer: string[]
+  /** Riadok vpravo dole nad číslom strany — „Vytvorené 10. 10. 2026". */
+  date?: string
+  /**
+   * Čas do metadát PDF. Deň, nie okamih: ten istý text v ten istý deň dá
+   * ten istý súbor, a teda aj ten istý odtlačok znenia.
+   */
+  creationDate?: Date
+}
+
+/** Výška pásu hlavičky a päty, keď je hlavička zapnutá. */
+const HEADER_BAND = 92
+const FOOTER_BAND = 84
+
+export async function renderMarkdownPdf(input: { title: string; markdown: string; texts: MarkdownPdfTexts; author?: string; letterhead?: PdfLetterhead }): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   doc.registerFontkit(fontkit)
   const bytes = await fontBytes()
   const [sans, bold] = await Promise.all([
-    doc.embedFont(bytes.sans, { subset: false }),
-    doc.embedFont(bytes.bold, { subset: false }),
+    doc.embedFont(bytes.sans, PDF_FONT_OPTIONS),
+    doc.embedFont(bytes.bold, PDF_FONT_OPTIONS),
   ])
-  doc.setTitle(input.title)
+  doc.setTitle(printable(input.title))
   if (input.author) doc.setAuthor(input.author)
   doc.setCreator("Contineo")
   doc.setProducer("Contineo")
-  doc.setCreationDate(FAQ_PDF_DATE)
-  doc.setModificationDate(FAQ_PDF_DATE)
+  const head = input.letterhead ?? null
+  doc.setCreationDate(head?.creationDate ?? FAQ_PDF_DATE)
+  doc.setModificationDate(head?.creationDate ?? FAQ_PDF_DATE)
 
   const W = PAGE.width - 2 * MARGIN
+  // S hlavičkou sa text posúva pod jej pás a končí nad pätou.
+  const TOP = head ? PAGE.height - HEADER_BAND : PAGE.height - MARGIN
+  const BOTTOM = head ? FOOTER_BAND : MARGIN
   const pages: PDFPage[] = []
   let page!: PDFPage
   let y = 0
   const newPage = () => {
     page = doc.addPage([PAGE.width, PAGE.height])
     pages.push(page)
-    y = PAGE.height - MARGIN
+    y = TOP
   }
   const paragraph = (text: string, font: PDFFont, size: number, color = INK, indent = 0, hanging = "") => {
     const lines = wrapText(text, font, size, W - indent)
     const lineHeight = size * 1.4
     lines.forEach((line, i) => {
-      if (y - lineHeight < MARGIN) newPage()
+      if (y - lineHeight < BOTTOM) newPage()
       y -= lineHeight
       if (i === 0 && hanging) page.drawText(hanging, { x: MARGIN + indent - font.widthOfTextAtSize(hanging + " ", size), y, size, font, color })
       page.drawText(line, { x: MARGIN + indent, y, size, font, color })
@@ -140,14 +182,14 @@ export async function renderMarkdownPdf(input: { title: string; markdown: string
   const gap = (h: number) => { y -= h }
 
   newPage()
-  paragraph(input.title, bold, 18)
+  paragraph(printable(input.title), bold, 18)
   if (input.texts.origin) { gap(4); paragraph(input.texts.origin, sans, 9, MUTED) }
   gap(14)
 
   for (const b of parseBlocks(input.markdown)) {
     if (b.kind === "heading") {
       // Nadpis nesmie ostať sám na konci strany.
-      if (y - 60 < MARGIN) newPage()
+      if (y - 60 < BOTTOM) newPage()
       gap(b.level <= 2 ? 10 : 6)
       paragraph(b.text, bold, b.level === 1 ? 15 : b.level === 2 ? 13 : 11.5)
       gap(4)
@@ -167,9 +209,94 @@ export async function renderMarkdownPdf(input: { title: string; markdown: string
     }
   }
 
-  pages.forEach((p, i) => {
-    const label = input.texts.page(i + 1, pages.length)
-    p.drawText(label, { x: PAGE.width - MARGIN - sans.widthOfTextAtSize(label, 8), y: MARGIN / 2, size: 8, font: sans, color: MUTED })
-  })
+  if (head) await drawLetterhead(doc, pages, head, input.texts, sans, bold)
+  else {
+    pages.forEach((p, i) => {
+      const label = input.texts.page(i + 1, pages.length)
+      p.drawText(label, { x: PAGE.width - MARGIN - sans.widthOfTextAtSize(label, 8), y: MARGIN / 2, size: 8, font: sans, color: MUTED })
+    })
+  }
   return doc.save({ useObjectStreams: false })
+}
+
+/** Veľkosť názvu dokumentu v hlavičke — o stupeň nad názvom organizácie (9). */
+const TITLE_SIZE = 10.5
+
+/**
+ * Názov dokumentu v hlavičke: najviac dva riadky do šírky `max`; čo sa
+ * nezmestí ani do druhého, skončí „…". Hlavička je na každej strane — tretí
+ * riadok by ju roztiahol cez text.
+ */
+export function headerTitleLines(title: string, font: PDFFont, size: number, max: number): string[] {
+  const lines = wrapText(title, font, size, max)
+  if (lines.length <= 2) return lines
+  return [lines[0], ellipsize(lines.slice(1).join(" "), font, size, max)]
+}
+
+/** Skráti text na šírku `max` a doplní „…"; keď sa zmestí, vráti ho celý. */
+export function ellipsize(text: string, font: PDFFont, size: number, max: number): string {
+  if (max <= 0) return ""
+  if (font.widthOfTextAtSize(text, size) <= max) return text
+  let cut = text
+  while (cut.length > 1 && font.widthOfTextAtSize(cut + "…", size) > max) cut = cut.slice(0, -1)
+  return cut.trimEnd() + "…"
+}
+
+/**
+ * Hlavička (logo vľavo, názov dokumentu v strede, organizácia vpravo, linka) a päta (údaje organizácie
+ * vľavo, dátum a strana vpravo) na každej strane. Kreslí sa až po sadzbe,
+ * lebo „strana N z M" pozná M až na konci.
+ */
+async function drawLetterhead(
+  doc: PDFDocument, pages: PDFPage[], head: PdfLetterhead, texts: MarkdownPdfTexts, sans: PDFFont, bold: PDFFont,
+): Promise<void> {
+  const logo = head.logoPng ? await doc.embedPng(head.logoPng).catch(() => null) : null
+  const LOGO_H = 30
+  const top = PAGE.height - 36
+  const footerSize = 7.5
+  const rightWidth = 120
+  // Riadky päty sa zalomia do šírky vľavo od dátumu a strany; najviac tri.
+  const footer = head.footer
+    .filter(Boolean)
+    .flatMap(line => wrapText(printable(line), sans, footerSize, PAGE.width - 2 * MARGIN - rightWidth))
+    .slice(0, 3)
+
+  const logoW = logo ? (logo.width / logo.height) * LOGO_H : 0
+  const title = head.documentTitle ? printable(head.documentTitle) : ""
+
+  pages.forEach((p, i) => {
+    if (logo) p.drawImage(logo, { x: MARGIN, y: top - LOGO_H, width: logoW, height: LOGO_H })
+    const nameSize = 9
+    const name = printable(head.name)
+    const nameW = bold.widthOfTextAtSize(name, nameSize)
+    const midY = top - LOGO_H / 2 - nameSize / 3
+    p.drawText(name, { x: PAGE.width - MARGIN - nameW, y: midY, size: nameSize, font: bold, color: MUTED })
+    if (title) {
+      // Na stred strany, nie medzi logo a názov — v strede sa nesmie hýbať
+      // podľa dĺžky názvu organizácie. Šírka je preto symetrická k širšiemu
+      // z oboch krajov. Tučne a o stupeň väčšie než organizácia (Ján 10. 10.
+      // 2026); dlhý názov sa zalomí na dva riadky, oba na stred.
+      const side = Math.max(logoW, nameW) + 16
+      const lines = headerTitleLines(title, bold, TITLE_SIZE, PAGE.width - 2 * MARGIN - 2 * side)
+      const lineH = TITLE_SIZE * 1.25
+      // Blok riadkov zvislo na stred loga.
+      const firstY = top - LOGO_H / 2 + ((lines.length - 1) * lineH) / 2 - TITLE_SIZE / 3
+      lines.forEach((line, k) => {
+        const w = bold.widthOfTextAtSize(line, TITLE_SIZE)
+        p.drawText(line, { x: (PAGE.width - w) / 2, y: firstY - k * lineH, size: TITLE_SIZE, font: bold, color: INK })
+      })
+    }
+    p.drawLine({ start: { x: MARGIN, y: top - LOGO_H - 10 }, end: { x: PAGE.width - MARGIN, y: top - LOGO_H - 10 }, thickness: 0.5, color: MUTED })
+
+    const ruleY = FOOTER_BAND - 26
+    p.drawLine({ start: { x: MARGIN, y: ruleY }, end: { x: PAGE.width - MARGIN, y: ruleY }, thickness: 0.5, color: MUTED })
+    footer.forEach((line, k) => {
+      p.drawText(line, { x: MARGIN, y: ruleY - 12 - k * 10, size: footerSize, font: sans, color: MUTED })
+    })
+    const label = texts.page(i + 1, pages.length)
+    p.drawText(label, { x: PAGE.width - MARGIN - sans.widthOfTextAtSize(label, 8), y: ruleY - 12, size: 8, font: sans, color: MUTED })
+    if (head.date) {
+      p.drawText(head.date, { x: PAGE.width - MARGIN - sans.widthOfTextAtSize(head.date, footerSize), y: ruleY - 22, size: footerSize, font: sans, color: MUTED })
+    }
+  })
 }

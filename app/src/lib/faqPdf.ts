@@ -20,7 +20,7 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib"
 import fontkit from "@pdf-lib/fontkit"
-import { FONT_DIR, wrapText } from "./certificatePdf"
+import { FONT_DIR, wrapText, PDF_FONT_OPTIONS } from "./certificatePdf"
 import type { FaqEntry } from "./faq"
 
 /** A4 na výšku v bodoch. */
@@ -73,8 +73,8 @@ export async function renderFaqPdf(input: {
   doc.registerFontkit(fontkit)
   const bytes = await fontBytes()
   const [sans, bold] = await Promise.all([
-    doc.embedFont(bytes.sans, { subset: false }),
-    doc.embedFont(bytes.bold, { subset: false }),
+    doc.embedFont(bytes.sans, PDF_FONT_OPTIONS),
+    doc.embedFont(bytes.bold, PDF_FONT_OPTIONS),
   ])
   doc.setTitle(input.title)
   if (input.author) doc.setAuthor(input.author)

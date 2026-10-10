@@ -169,6 +169,51 @@ describe("uloženie zmeny", () => {
     expect(updateOne.mock.calls[0][1].$set["controller.registrationNumber"]).toBe("")
   })
 
+  it("DIČ a IČ DPH (ADR-031): uložia sa bez medzier, IČ DPH veľkými písmenami", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await saveTenant("SFZ", { controllerTaxId: "2020 898 913", controllerVatId: "sk 2020898913" }, "kto@ltk.solutions")
+
+    const set = updateOne.mock.calls[0][1].$set
+    expect(set["controller.taxId"]).toBe("2020898913")
+    expect(set["controller.vatId"]).toBe("SK2020898913")
+  })
+
+  it("DIČ s písmenami a IČ DPH bez kódu krajiny neprejdú", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await expect(saveTenant("SFZ", { controllerTaxId: "SK2020898913" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.taxIdShape" })
+    await expect(saveTenant("SFZ", { controllerVatId: "2020898913" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.vatIdShape" })
+    expect(updateOne).not.toHaveBeenCalled()
+  })
+
+  it("kontakt na dokumentoch (ADR-031): web bez https:// a lomky, e-mail malými, prázdne sa zmaže", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await saveTenant("SFZ", {
+      contactWeb: "https://www.FutbalSFZ.sk/", contactEmail: "Helpdesk@FutbalSFZ.sk", contactPhone: "",
+    }, "kto@ltk.solutions")
+
+    const set = updateOne.mock.calls[0][1].$set
+    expect(set["contact.web"]).toBe("www.futbalsfz.sk")
+    expect(set["contact.email"]).toBe("helpdesk@futbalsfz.sk")
+    expect(set["contact.phone"]).toBe("")
+  })
+
+  it("web bez bodky, e-mail bez zavináča a telefón s písmenami neprejdú", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await expect(saveTenant("SFZ", { contactWeb: "futbalsfz" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.contactWebShape" })
+    await expect(saveTenant("SFZ", { contactEmail: "helpdesk.futbalsfz.sk" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.contactEmailShape" })
+    await expect(saveTenant("SFZ", { contactPhone: "volať 0905" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.contactPhoneShape" })
+    expect(updateOne).not.toHaveBeenCalled()
+  })
+
   it("lehoty organizácie sa orežú do rozsahov a posunú verziu textu (ADR-022)", async () => {
     findOne.mockResolvedValue(SFZ)
     await saveTenant("SFZ", { privacyRetention: { evidenceYears: 0, capYears: 2, learningDetailMonths: 999 } }, "dpo@sfz.sk")

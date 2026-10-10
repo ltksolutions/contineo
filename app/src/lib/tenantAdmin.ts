@@ -102,6 +102,13 @@ export interface TenantChange {
   controllerRegistrationNumber?: string
   /** Krajina sídla prevádzkovateľa (ADR-022). */
   controllerCountry?: string
+  /** DIČ a IČ DPH (ADR-031). Prázdne pole sa zapíše prázdne. */
+  controllerTaxId?: string
+  controllerVatId?: string
+  /** Kontakt na dokumentoch (ADR-031). Prázdne pole sa zapíše prázdne. */
+  contactWeb?: string
+  contactEmail?: string
+  contactPhone?: string
   chunking?: Partial<ChunkingProfile>
   /** Pomenované profily členenia (D79). */
   chunkingProfiles?: ChunkingProfileDef[]
@@ -229,6 +236,51 @@ function toSet(change: TenantChange): Record<string, unknown> {
       )
     }
     set["controller.registrationNumber"] = reg
+  }
+  /*
+    DIČ a IČ DPH (ADR-031). Ukladajú sa tak, ako ich človek napísal, overuje
+    sa len tvar: DIČ 8 až 12 číslic (slovenské má 10, české 8 až 10), IČ DPH
+    kód krajiny a 8 až 12 znakov. Na faktúre by preklep znamenal neplatný
+    doklad — a prejavil by sa až u odberateľa.
+  */
+  if (change.controllerTaxId !== undefined) {
+    const v = change.controllerTaxId.trim().replace(/\s+/g, "")
+    if (v && !/^\d{8,12}$/.test(v)) {
+      throw new TenantValidationError("tenant.taxIdShape", `DIČ „${v}" nemá správny tvar — očakáva sa 8 až 12 číslic.`, { value: v })
+    }
+    set["controller.taxId"] = v
+  }
+  if (change.controllerVatId !== undefined) {
+    const v = change.controllerVatId.trim().replace(/\s+/g, "").toUpperCase()
+    if (v && !/^[A-Z]{2}[0-9A-Z]{8,12}$/.test(v)) {
+      throw new TenantValidationError("tenant.vatIdShape", `IČ DPH „${v}" nemá správny tvar — očakáva sa kód krajiny a číslice.`, { value: v })
+    }
+    set["controller.vatId"] = v
+  }
+  /*
+    Kontakt na dokumentoch (ADR-031). Web sa ukladá bez `https://` a bez
+    lomky na konci — v päte sa číta ako „www.futbalsfz.sk", nie ako odkaz.
+  */
+  if (change.contactWeb !== undefined) {
+    const v = change.contactWeb.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "").toLowerCase()
+    if (v && !/^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/.test(v)) {
+      throw new TenantValidationError("tenant.contactWebShape", `„${v}" nie je adresa webu.`, { value: v })
+    }
+    set["contact.web"] = v
+  }
+  if (change.contactEmail !== undefined) {
+    const v = change.contactEmail.trim().toLowerCase()
+    if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+      throw new TenantValidationError("tenant.contactEmailShape", `Adresa „${v}" nemá tvar e-mailovej adresy.`, { value: v })
+    }
+    set["contact.email"] = v
+  }
+  if (change.contactPhone !== undefined) {
+    const v = change.contactPhone.trim().replace(/\s+/g, " ")
+    if (v && !/^\+?[0-9][0-9 ]{5,19}$/.test(v)) {
+      throw new TenantValidationError("tenant.contactPhoneShape", `Telefón „${v}" nemá správny tvar.`, { value: v })
+    }
+    set["contact.phone"] = v
   }
   if (change.privacyRetention !== undefined) set["privacy.retention"] = retentionSettings(change.privacyRetention)
   // Kontakt GDPR (D153). Adresa sa overuje len tvarom — preklep by poslal

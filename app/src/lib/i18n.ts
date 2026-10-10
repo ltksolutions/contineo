@@ -1761,6 +1761,15 @@ interface Dictionary {
       controllerAddress: string
       controllerRegistrationNumber: string
       controllerCountry: string
+      /** DIČ a IČ DPH — na dokumentoch a neskôr na faktúrach (ADR-031). */
+      controllerTaxId: string
+      controllerVatId: string
+      /** Kontakt na dokumentoch — päta PDF vygenerovaného z Markdownu (ADR-031). */
+      secDocumentContact: string
+      secDocumentContactNote: string
+      contactWeb: string
+      contactEmail: string
+      contactPhone: string
       countries: Record<"SK" | "CZ", string>
       /** Sekcie formulára (rám ADMIN-prevadzkovatel-a-ciselniky, 24. 9. 2026). */
       secIdentity: string
@@ -3641,6 +3650,15 @@ interface Dictionary {
       pdfNote: string
       sourceTitle: string
       sourceNote: string
+      /** Hlavička a päta PDF vygenerovaného z `.md` (ADR-031). */
+      letterhead: {
+        createdOn: (date: string) => string
+        effectiveFrom: (date: string) => string
+        registrationNumber: (value: string) => string
+        taxId: (value: string) => string
+        vatId: (value: string) => string
+        phone: (value: string) => string
+      }
       noScriptLimit: (mb: number) => string
       /** Šablóna — `{name}`, `{percent}`. Ide do klientskeho komponentu, funkcia by tam neprešla. */
       uploadingFile: string
@@ -5841,6 +5859,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.phonePrefixShape": "Predvoľba „{value}“ nemá správny tvar — očakáva sa napríklad +421.",
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správny tvar — očakáva sa 6 až 12 číslic.",
     "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailovej adresy.",
+    "tenant.taxIdShape": "DIČ „{value}“ nemá správny tvar — očakáva sa 8 až 12 číslic.",
+    "tenant.vatIdShape": "IČ DPH „{value}“ nemá správny tvar — očakáva sa kód krajiny a číslice, napr. SK2020898913.",
+    "tenant.contactWebShape": "„{value}“ nie je adresa webu.",
+    "tenant.contactEmailShape": "Adresa „{value}“ nemá tvar e-mailovej adresy.",
+    "tenant.contactPhoneShape": "Telefón „{value}“ nemá správny tvar — očakávajú sa číslice, prípadne s + na začiatku.",
     "person.givenNameRequired": "Meno je povinné.",
     "person.surnameRequired": "Priezvisko je povinné.",
     "person.unknownWorkplace": "Pracovisko „{value}“ v číselníku organizácie nie je. Doplňte ho v Organizácia → Číselníky.",
@@ -5972,6 +5995,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── knižnica ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral si súbor.",
     "library.pdfRequired": "Schvaľovaná podoba musí byť PDF — ulož dokument vo Worde ako PDF.",
+    "library.pdfOrMarkdownRequired": "Nahraj PDF, alebo zdroj vo formáte .md — z neho Contineo PDF vyrobí.",
     "library.sourceNotPdf": "Zdrojový súbor má byť upraviteľný (.docx, .xlsx, .md…), nie druhé PDF.",
     "library.uploadedFileNotFound": "Nahratý súbor sa nenašiel. Skús ho nahrať znova.",
     "library.documentNotFound": "Taký dokument tu nie je.",
@@ -6387,6 +6411,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
       controllerCountry: "Krajina sídla",
+      controllerTaxId: "DIČ",
+      controllerVatId: "IČ DPH",
+      secDocumentContact: "Kontakt na dokumentoch",
+      secDocumentContactNote: "Vypíše sa do päty PDF, ktoré Contineo vyrobí z nahratého Markdownu, spolu s názvom, sídlom a IČO. Prázdne pole sa vynechá.",
+      contactWeb: "Web",
+      contactEmail: "E-mail",
+      contactPhone: "Telefón",
       countries: { SK: "Slovensko", CZ: "Česko" },
       secIdentity: "Názov portálu",
       secIdentityNote: "Názov a logo v hlavičke, v e-mailoch a na prihlasovacej obrazovke. Pod nimi organizácia, ktorá portál prevádzkuje a spracúva osobné údaje.",
@@ -8156,10 +8187,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       optional: "nepovinné",
       pickPdfFirst: "Najprv vyber PDF.",
       prefillFromWord: "Zdroj je dokument Word — prázdne polia sa predvyplnia z tabuľky na jeho prvej strane (Schválil, Dátum schválenia, Dátum účinnosti). Potvrdíš ich na detaile.",
-      pdfTitle: "PDF — schvaľovaná podoba (povinné)",
-      pdfNote: "Takto dokument uvidia schvaľovatelia aj zamestnanci — vrátane príloh, formulárov a obrázkov. Vo Worde: Súbor → Uložiť ako → PDF.",
+      pdfTitle: "PDF — schvaľovaná podoba (povinné, ak nie je zdroj .md)",
+      pdfNote: "Takto dokument uvidia schvaľovatelia aj zamestnanci — vrátane príloh, formulárov a obrázkov. Vo Worde: Súbor → Uložiť ako → PDF. Pri zdroji .md môže pole ostať prázdne — PDF vyrobí Contineo s hlavičkou a pätou organizácie.",
       sourceTitle: "Upraviteľný zdroj (odporúčané)",
       sourceNote: "Word, Excel, Markdown alebo text. Z neho vznikne čistejší text na vyhľadávanie a je to predloha, z ktorej sa pripraví ďalšie znenie.",
+      letterhead: {
+        createdOn: (date: string) => `Vytvorené ${date}`,
+        effectiveFrom: (date: string) => `Účinné od ${date}`,
+        registrationNumber: (value: string) => `IČO ${value}`,
+        taxId: (value: string) => `DIČ ${value}`,
+        vatId: (value: string) => `IČ DPH ${value}`,
+        phone: (value: string) => `tel. ${value}`,
+      },
       noScriptLimit: mb => `bez JavaScriptu najviac ${mb} MB`,
       uploadingFile: "Nahrávam {name} — {percent} %",
       uploadFailed: "Nahratie zlyhalo:",
@@ -10340,6 +10379,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.phonePrefixShape": "Předvolba „{value}“ nemá správný tvar — očekává se například +420.",
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správný tvar — očekává se 6 až 12 číslic.",
     "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailové adresy.",
+    "tenant.taxIdShape": "DIČ „{value}“ nemá správný tvar — očekává se 8 až 12 číslic.",
+    "tenant.vatIdShape": "IČ DPH „{value}“ nemá správný tvar — očekává se kód země a číslice, např. SK2020898913.",
+    "tenant.contactWebShape": "„{value}“ není adresa webu.",
+    "tenant.contactEmailShape": "Adresa „{value}“ nemá tvar e-mailové adresy.",
+    "tenant.contactPhoneShape": "Telefon „{value}“ nemá správný tvar — očekávají se číslice, případně s + na začátku.",
     "person.givenNameRequired": "Jméno je povinné.",
     "person.surnameRequired": "Příjmení je povinné.",
     "person.unknownWorkplace": "Pracoviště „{value}“ v číselníku organizace není. Doplňte ho v Organizace → Číselníky.",
@@ -10471,6 +10515,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── knihovna ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral jsi soubor.",
     "library.pdfRequired": "Schvalovaná podoba musí být PDF — ulož dokument ve Wordu jako PDF.",
+    "library.pdfOrMarkdownRequired": "Nahraj PDF, nebo zdroj ve formátu .md — z něj Contineo PDF vyrobí.",
     "library.sourceNotPdf": "Zdrojový soubor má být upravitelný (.docx, .xlsx, .md…), ne druhé PDF.",
     "library.uploadedFileNotFound": "Nahraný soubor se nenašel. Zkus ho nahrát znovu.",
     "library.documentNotFound": "Takový dokument tu není.",
@@ -10886,6 +10931,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
       controllerCountry: "Země sídla",
+      controllerTaxId: "DIČ",
+      controllerVatId: "IČ DPH",
+      secDocumentContact: "Kontakt na dokumentech",
+      secDocumentContactNote: "Vypíše se do zápatí PDF, které Contineo vyrobí z nahraného Markdownu, spolu s názvem, sídlem a IČO. Prázdné pole se vynechá.",
+      contactWeb: "Web",
+      contactEmail: "E-mail",
+      contactPhone: "Telefon",
       countries: { SK: "Slovensko", CZ: "Česko" },
       secIdentity: "Název portálu",
       secIdentityNote: "Název a logo v hlavičce, v e-mailech a na přihlašovací obrazovce. Pod nimi organizace, která portál provozuje a zpracovává osobní údaje.",
@@ -12652,10 +12704,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       optional: "nepovinné",
       pickPdfFirst: "Nejprve vyber PDF.",
       prefillFromWord: "Zdroj je dokument Word — prázdná pole se předvyplní z tabulky na jeho první straně (Schválil, Datum schválení, Datum účinnosti). Potvrdíš je na detailu.",
-      pdfTitle: "PDF — schvalovaná podoba (povinné)",
-      pdfNote: "Takto dokument uvidí schvalovatelé i zaměstnanci — včetně příloh, formulářů a obrázků. Ve Wordu: Soubor → Uložit jako → PDF.",
+      pdfTitle: "PDF — schvalovaná podoba (povinné, pokud zdroj není .md)",
+      pdfNote: "Takto dokument uvidí schvalovatelé i zaměstnanci — včetně příloh, formulářů a obrázků. Ve Wordu: Soubor → Uložit jako → PDF. Při zdroji .md může pole zůstat prázdné — PDF vyrobí Contineo se záhlavím a zápatím organizace.",
       sourceTitle: "Upravitelný zdroj (doporučeno)",
       sourceNote: "Word, Excel, Markdown nebo text. Z něj vznikne čistší text pro vyhledávání a je to předloha, ze které se připraví další znění.",
+      letterhead: {
+        createdOn: (date: string) => `Vytvořeno ${date}`,
+        effectiveFrom: (date: string) => `Účinné od ${date}`,
+        registrationNumber: (value: string) => `IČO ${value}`,
+        taxId: (value: string) => `DIČ ${value}`,
+        vatId: (value: string) => `IČ DPH ${value}`,
+        phone: (value: string) => `tel. ${value}`,
+      },
       noScriptLimit: mb => `bez JavaScriptu nejvýše ${mb} MB`,
       uploadingFile: "Nahrávám {name} — {percent} %",
       uploadFailed: "Nahrání selhalo:",
@@ -14828,6 +14888,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.phonePrefixShape": "The dialling code “{value}” has the wrong shape — something like +421 is expected.",
     "tenant.registrationNumberShape": "The company ID “{value}” has the wrong shape — 6 to 12 digits are expected.",
     "tenant.privacyContactEmailShape": "“{value}” is not an e-mail address.",
+    "tenant.taxIdShape": "The tax ID “{value}” has the wrong shape — 8 to 12 digits are expected.",
+    "tenant.vatIdShape": "The VAT ID “{value}” has the wrong shape — a country code and digits are expected, e.g. SK2020898913.",
+    "tenant.contactWebShape": "“{value}” is not a website address.",
+    "tenant.contactEmailShape": "“{value}” is not an e-mail address.",
+    "tenant.contactPhoneShape": "The phone number “{value}” has the wrong shape — digits are expected, optionally starting with +.",
     "person.givenNameRequired": "The first name is required.",
     "person.surnameRequired": "The surname is required.",
     "person.unknownWorkplace": "The workplace “{value}” is not in the organisation's code list. Add it under Organisation → Code lists.",
@@ -14959,6 +15024,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── library ────────────────────────────────────────────────────────────
     "library.noFileChosen": "You did not choose a file.",
     "library.pdfRequired": "The version for approval must be a PDF — save the document from Word as PDF.",
+    "library.pdfOrMarkdownRequired": "Upload a PDF, or a .md source — Contineo will generate the PDF from it.",
     "library.sourceNotPdf": "The source file must be editable (.docx, .xlsx, .md…), not a second PDF.",
     "library.uploadedFileNotFound": "The uploaded file was not found. Try uploading it again.",
     "library.documentNotFound": "There is no such document here.",
@@ -15374,6 +15440,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerAddress: "Registered address",
       controllerRegistrationNumber: "Company ID",
       controllerCountry: "Country of registered office",
+      controllerTaxId: "Tax ID",
+      controllerVatId: "VAT ID",
+      secDocumentContact: "Contact on documents",
+      secDocumentContactNote: "Printed in the footer of the PDF that Contineo generates from an uploaded Markdown file, together with the name, registered office and company ID. Empty fields are left out.",
+      contactWeb: "Website",
+      contactEmail: "E-mail",
+      contactPhone: "Phone",
       countries: { SK: "Slovakia", CZ: "Czechia" },
       secIdentity: "Portal name",
       secIdentityNote: "Name and logo in the header, in emails and on the sign-in screen. Below them, the organisation that runs the portal and processes personal data.",
@@ -17135,9 +17208,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       pickPdfFirst: "Choose the PDF first.",
       prefillFromWord: "The source is a Word document — empty fields are prefilled from the table on its first page (Approved by, Approval date, Effective date). You confirm them on the detail page.",
       pdfTitle: "PDF — the version for approval (required)",
-      pdfNote: "This is what approvers and employees will see — including annexes, forms and images. In Word: File → Save As → PDF.",
+      pdfNote: "This is what approvers and employees will see — including annexes, forms and images. In Word: File → Save As → PDF. With a .md source this field can stay empty — Contineo generates the PDF with the organisation's header and footer.",
       sourceTitle: "Editable source (recommended)",
       sourceNote: "Word, Excel, Markdown or text. It gives cleaner text for search and is the template for preparing the next version.",
+      letterhead: {
+        createdOn: (date: string) => `Created ${date}`,
+        effectiveFrom: (date: string) => `Effective from ${date}`,
+        registrationNumber: (value: string) => `Company ID ${value}`,
+        taxId: (value: string) => `Tax ID ${value}`,
+        vatId: (value: string) => `VAT ID ${value}`,
+        phone: (value: string) => `tel. ${value}`,
+      },
       noScriptLimit: mb => `without JavaScript up to ${mb} MB`,
       uploadingFile: "Uploading {name} — {percent} %",
       uploadFailed: "Upload failed:",

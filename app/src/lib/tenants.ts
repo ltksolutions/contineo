@@ -136,6 +136,24 @@ export interface Tenant {
      * česky, ale sťažuje sa slovenskému úradu. Chýba = `SK`.
      */
     country?: "SK" | "CZ"
+    /**
+     * DIČ a IČ DPH (ADR-031). Dnes len do päty dokumentov; neskôr aj na faktúry
+     * za služby — preto pri právnom subjekte, nie pri kontaktoch.
+     */
+    taxId?: string
+    vatId?: string
+  }
+
+  /**
+   * Kontakt, ktorý organizácia uvádza na svojich dokumentoch — päta PDF
+   * vygenerovaného z Markdownu (ADR-031). Nie `branding.supportEmail`: ten je
+   * pre ľudí v aplikácii („komu napísať, keď niečo nesedí"), tento ide von
+   * na papier. Prázdne pole sa v päte vynechá.
+   */
+  contact?: {
+    web?: string
+    email?: string
+    phone?: string
   }
 
   /**

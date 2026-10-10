@@ -4,7 +4,8 @@
  * Dve polia na súbor pri nahrávaní znenia (ADR-011):
  *
  *   · **PDF — povinné.** To, čo uvidia schvaľovatelia a zamestnanci, vrátane
- *     príloh, formulárov a obrázkov (D94).
+ *     príloh, formulárov a obrázkov (D94). **Výnimka: zdroj `.md`** — bez PDF
+ *     ho vyrobí server so šablónou organizácie (ADR-031).
  *   · **Upraviteľný zdroj — odporúčaný.** `.docx`, `.xlsx`, `.md`… Z neho
  *     vznikne čistejší text na vyhľadávanie a je to **predloha pre ďalšie
  *     znenie** — správca si ho stiahne, upraví a nahrá ako novelu (D95).
@@ -111,13 +112,14 @@ export default function UploadFiles({
 
       const pdf = el.querySelector<HTMLInputElement>('input[data-upload="pdf"]')?.files?.[0]
       const source = el.querySelector<HTMLInputElement>('input[data-upload="source"]')?.files?.[0]
-      if (!pdf) return // povinnosť ohlási prehliadač (`required`) alebo server
+      const markdownOnly = !pdf && !!source && /\.md$/i.test(source.name)
+      if (!pdf && !markdownOnly) return // povinnosť ohlási prehliadač (`required`) alebo server
 
       e.preventDefault()
       setError(null)
       setPhase("uploading")
       try {
-        const queue = [pdf, ...(source ? [source] : [])]
+        const queue = [...(pdf ? [pdf] : []), ...(source ? [source] : [])]
         for (const file of queue) {
           if (file.size > maxBytes) {
             throw new Error(fill(labels.tooLarge, {
@@ -138,7 +140,7 @@ export default function UploadFiles({
           done += file.size
           ids.push(r.fileId)
         }
-        const next = { pdf: ids[0], source: ids[1] ?? "" }
+        const next = pdf ? { pdf: ids[0], source: ids[1] ?? "" } : { pdf: "", source: ids[0] }
         uploadedRef.current = next
         submitter.current = e.submitter
         setPhase("submitting")
@@ -179,6 +181,8 @@ export default function UploadFiles({
     }
   }, [form.pending])
 
+  /** Zdroj `.md` — PDF nie je povinné, vyrobí ho server (ADR-031). */
+  const markdownSource = !!chosen.source && /\.md$/i.test(chosen.source.name)
   const uploading = phase === "uploading"
   const busy = phase !== "idle" || form.pending
 
@@ -192,7 +196,7 @@ export default function UploadFiles({
         prehliadač do neho súbor pustí sám, drag & drop funguje aj bez skriptu.
         Po nahratí po kúskoch pole stratí `name`: bajty už sú na serveri.
       */}
-      <label className={`upload-drop${highlight && !chosen.pdf ? " is-required" : ""}${chosen.pdf ? " is-set" : ""}`}>
+      <label className={`upload-drop${highlight && !chosen.pdf && !markdownSource ? " is-required" : ""}${chosen.pdf ? " is-set" : ""}`}>
         <span className="upload-drop-title">{labels.pdfTitle}</span>
         <span className="quiet upload-drop-note">
           {labels.pdfNote}
@@ -200,7 +204,7 @@ export default function UploadFiles({
           {labels.maxSize} · {labels.noScriptLimit}
         </span>
         <input className="upload-file" type="file" name={uploaded ? undefined : "pdf"}
-               data-upload="pdf" required accept={pdfAccept} onChange={pick("pdf")} />
+               data-upload="pdf" required={!markdownSource} accept={pdfAccept} onChange={pick("pdf")} />
         {chosen.pdf && <ChosenFile file={chosen.pdf} change={labels.change} />}
       </label>
 
