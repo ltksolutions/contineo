@@ -51,3 +51,45 @@ describe("parseReview", () => {
     expect(reviewPrompt(items)).toContain("### Návrh 2\nOtázka: Aké je prihlasovacie meno?\nIné znenia: login")
   })
 })
+
+import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview } from "../src/lib/complianceCheck"
+
+describe("viac krokov a dokument proti dokumentom", () => {
+  const big = (id: string, cat: string, n: number) => ({ documentId: id, title: id, category: cat, versions: [{ versionId: "v", isActive: true, markdown: Array.from({ length: n }, (_, i) => `Odsek ${i} ${"x".repeat(90)}`).join("\n\n") }] })
+  it("vyber nad strop sa rozdeli na balicky, velky dokument na casti, norma pred manualom", () => {
+    const packs = buildPacks([big("manual", "manual", 5), big("rapp", "norma", 60), big("sp", "norma", 5)], 3000)
+    expect(packs.length).toBeGreaterThan(1)
+    expect(packs.every(p => p.text.length <= 3000)).toBe(true)
+    expect(packs[0].text).toContain("rapp (časť 1 z")
+    expect(packs[packs.length - 1].documents.map(d => d.documentId)).toContain("manual")
+    expect(splitText("a\n\nb", 100)).toEqual(["a\n\nb"])
+  })
+  it("zlucenie krokov: zmena prebije suhlas, nepokryva len ked nepokryva ziadny krok, navrh z posledneho meniaceho", () => {
+    const c = (q: string) => ({ documentId: "r", title: "RaPP", articleRef: "čl. 15", quote: q })
+    const m = mergeSteps([
+      { verdict: "differs", citations: [c("dva roky")], proposed: { question: "Q", answer: "A1", sources: [] }, note: "krok 1" },
+      { verdict: "agree", citations: [], proposed: null, note: "" },
+      { verdict: "not_covered", citations: [], proposed: null, note: "" },
+    ])!
+    expect(m).toMatchObject({ verdict: "differs", proposed: { answer: "A1" }, note: "krok 1" })
+    expect(mergeSteps([{ verdict: "not_covered", citations: [], proposed: null, note: "" }, { verdict: "agree", citations: [], proposed: null, note: "" }])!.verdict).toBe("agree")
+  })
+  it("pristup: verejny obsah len verejnymi, interny akymikolvek", () => {
+    expect(referenceAllowed("public", "public")).toBe(true)
+    expect(referenceAllowed("public", "internal")).toBe(false)
+    expect(referenceAllowed("internal", "public")).toBe(true)
+    expect(referenceAllowed("internal", "internal")).toBe(true)
+  })
+  it("nalezy dokumentu s citaciou z balika; bez platnej citacie sa zahodia", () => {
+    const pack = buildPacks([big("rapp", "norma", 2)])[0]
+    let n = 0
+    const r = parseDocReview({ findings: [
+      { kind: "conflict", location: "časť 5", quote: "web: 7 dní", citation: { doc: 1, ref: "čl. 18 ods. 8", quote: "do troch dní" }, recommendation: "Opraviť na 3 dni." },
+      { kind: "missing", location: "x", quote: "", citation: { doc: 5, ref: "?", quote: "" }, recommendation: "" },
+      { kind: "zle", location: "x", quote: "", citation: { doc: 1, ref: "", quote: "" }, recommendation: "" },
+    ], summary: "Jeden rozpor." }, pack, () => `f${++n}`)
+    expect(r.findings).toHaveLength(1)
+    expect(r.findings[0]).toMatchObject({ id: "f1", kind: "conflict", status: null, citation: { documentId: "rapp", articleRef: "čl. 18 ods. 8" } })
+    expect(r.summary).toBe("Jeden rozpor.")
+  })
+})

@@ -629,6 +629,10 @@ export default async function LibraryPage({
             <Link className="page-more-item" href="/library/curation">
               {dictionary(uiLanguage).curation.open}
             </Link>
+            {/* Kontrola súladu dokumentov proti normám (ADR-032, D196). */}
+            <Link className="page-more-item" href="/library/compliance">
+              {dictionary(uiLanguage).library.compliance.open}
+            </Link>
           </div>
         </details>
       </div>

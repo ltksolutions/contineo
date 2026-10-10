@@ -37,8 +37,6 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { approveProposalAction, saveProposalAction, rejectProposalAction, mergeProposalAction, startReviewAction, applyReviewAction, dismissReviewAction } from "../../proposalActions"
 
 export const dynamic = "force-dynamic"
-// Akcia „Skontrolovať proti dokumentom“ spracuje prvú dávku hneď (do 90 s).
-export const maxDuration = 120
 
 /** Toľko kariet na stranu — každá má formulár s dlhou odpoveďou. */
 const PAGE = 20

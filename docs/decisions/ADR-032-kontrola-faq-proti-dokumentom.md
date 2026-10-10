@@ -179,9 +179,29 @@ bez úsekov v indexe). Fáza 1 preto modelu nedáva úseky z vyhľadávania, ale
 **celé texty vybraných dokumentov**: platné znenie, a ak dokument platné
 znenie nemá, koncept s výslovným označením „koncept". Balík dokumentov je
 v každom volaní rovnaký a ide do cache modelu (zlomok ceny pri ďalších
-dávkach). Nad limitom veľkosti balíka kontrola odmietne štart a požiada
-o menší výber; vyhľadávanie po úsekoch príde s veľkými dokumentmi
-(fáza 2, rozpisy súťaží).
+dávkach). **Viac krokov namiesto odmietnutia** (Ján 10. 10. 2026: „rozdeliť kontrolu
+do viacerých interných krokov a zlúčiť výsledky krokov"): výber nad
+400 000 znakov sa rozdelí na balíky v poradí záväznosti, dokument väčší
+než balík na časti po odsekoch. Položka prejde krokmi od najzáväznejšieho;
+každý ďalší krok dostane zistenia predošlých a nesmie ich prebiť nižším
+dokumentom. Výsledky sa zlúčia: rozpor alebo zmena z ktoréhokoľvek kroku
+prebije „súhlasí", „nepokrýva" platí, len keď nepokrýva žiadny krok,
+navrhnuté znenie je z posledného kroku, ktorý ho zmenil. Strop celého
+výberu je 2 000 000 znakov. Sedem noriem SFZ (RaPP, DP, Revízny poriadok,
+Poriadok komory, Stanovy, SP, Volebný poriadok) má spolu asi 813 000 znakov
+— tri kroky.
+
+**Prístup** (Ján 10. 10. 2026: „kontrolovať interné dokumenty verejnými…
+pôjde?"): áno. Referenčný dokument nesmie byť prísnejší než kontrolovaný
+obsah — verejný návrh alebo dokument len proti verejným, interný (napríklad
+interný predpis pre riadenie súťaží) proti verejným aj interným. Výsledok
+vidí ten, kto vidí kontrolovaný obsah.
+
+**Kontrola dokumentu proti dokumentom (D196) je od 10. 10. 2026
+v knižnici** (`/library/compliance`) skôr, než bolo plánované vo fáze 3:
+Ján chcel najprv overiť manuály ISSF proti nadradeným normám. Pripojenie
+k postupu znenia (nálezy pri kroku schválenie) a referenčné dokumenty podľa
+druhu (D197) ostávajú vo fáze 3.
 
 ## 3. Postup
 

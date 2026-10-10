@@ -13,7 +13,7 @@ import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
 import { approveProposal, rejectProposal, mergeProposal, updateProposal, applyReview, dismissReview } from "@/lib/faqProposals"
-import { startProposalReview, continueReview, proposalsScopeKey } from "@/lib/complianceCheck"
+import { startProposalReview } from "@/lib/complianceCheck"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -104,17 +104,14 @@ export async function mergeProposalAction(fd: FormData) {
   back(key, ctx.t.proposalMerged, false, fd)
 }
 
-/**
- * Kontrola otvorených návrhov proti vybraným dokumentom (ADR-032, fáza 1).
- * Prvá dávka hneď, aby kurátor videl, že beh ide; zvyšok cron.
- */
+/** Kontrola otvorených návrhov proti vybraným dokumentom (ADR-032, fáza 1); dávky spracúva cron. */
 export async function startReviewAction(fd: FormData) {
   const ctx = await ready()
   const key = fieldText(fd, "key")
   try {
+    // Len založiť — veľký výber noriem má viac krokov na dávku a akcia by nestihla
+    // časový limit; prvú dávku vezme cron do 5 minút.
     await startProposalReview(ctx.person.companyCode, key, fd.getAll("documentIds").map(String), fieldText(fd, "topic") || null, ctx.person.email)
-    await continueReview(ctx.person.companyCode, proposalsScopeKey(key), { budgetMs: 1, hardMs: 90_000 },
-      { companyCode: ctx.person.companyCode, personId: ctx.person.id, personName: ctx.person.fullName, email: ctx.person.email })
   } catch (e) {
     if (isRedirect(e)) throw e
     back(key, failure(e, ctx.language), true, fd)
