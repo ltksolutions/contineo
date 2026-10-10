@@ -78,6 +78,20 @@ a jeho odtlačok je odtlačok znenia. ADR-011 platí bez výnimky.
 - Všetko nepovinné; prázdne pole sa zapíše prázdne (údaj sa dá zmazať),
   overuje sa len tvar.
 
+### D190 — Sídlo po častiach: ulica, číslo, PSČ, mesto
+
+Doplnené 10. 10. 2026 (Ján: „rozdeliť Sídlo na komplexnú adresu").
+
+- `controller.street`, `controller.streetNumber`, `controller.postalCode`
+  (tvar „821 01"), `controller.city`. Jednoriadkové sídlo sa **skladá**
+  (`formatAddress()` v `lib/address.ts`, D27) — v päte PDF, na `/privacy`,
+  pri vydavateľovi certifikátu aj v náhľade nastavení.
+- Starý `controller.address` sa číta len ako záloha a pri uložení častí sa
+  zmaže; existujúce sídla rozdelil `npm run migrate:address`.
+- Rozdelenie toho istého riadku na časti neposúva verziu textu `/privacy`
+  (porovnáva sa zložený riadok).
+- Časti budú potrebné aj pre faktúry za služby.
+
 ## 3. Čo zostáva
 
 - Tučné písmo, odkazy a tabuľky v PDF z Markdownu (dnes obyčajný text,

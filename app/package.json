@@ -43,6 +43,7 @@
     "migrate:profiles": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_chunking_profiles.mjs",
     "migrate:documentkey": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_document_key.mjs",
     "migrate:personname": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_person_name.mjs",
+    "migrate:address": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/migrate_controller_address.mjs",
     "migrate:indexes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_index_names.mjs",
     "docs:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/import.mjs",
     "docs:delete": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/delete_documents.mjs",

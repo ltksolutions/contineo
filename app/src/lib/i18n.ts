@@ -1759,6 +1759,11 @@ interface Dictionary {
       controllerNote: string
       controllerLegalName: string
       controllerAddress: string
+      /** Sídlo po častiach (10. 10. 2026). */
+      controllerStreet: string
+      controllerStreetNumber: string
+      controllerPostalCode: string
+      controllerCity: string
       controllerRegistrationNumber: string
       controllerCountry: string
       /** DIČ a IČ DPH — na dokumentoch a neskôr na faktúrach (ADR-031). */
@@ -5860,6 +5865,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správny tvar — očakáva sa 6 až 12 číslic.",
     "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailovej adresy.",
     "tenant.taxIdShape": "DIČ „{value}“ nemá správny tvar — očakáva sa 8 až 12 číslic.",
+    "tenant.postalCodeShape": "PSČ „{value}“ nemá správny tvar — očakáva sa 5 číslic, napr. 821 01.",
     "tenant.vatIdShape": "IČ DPH „{value}“ nemá správny tvar — očakáva sa kód krajiny a číslice, napr. SK2020898913.",
     "tenant.contactWebShape": "„{value}“ nie je adresa webu.",
     "tenant.contactEmailShape": "Adresa „{value}“ nemá tvar e-mailovej adresy.",
@@ -6409,6 +6415,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerNote: "Ukazuje sa v informovaní o ochrane osobných údajov (stránka Ochrana osobných údajov). Prázdny právny názov = použije sa názov portálu.",
       controllerLegalName: "Právny názov",
       controllerAddress: "Sídlo",
+      controllerStreet: "Ulica",
+      controllerStreetNumber: "Číslo",
+      controllerPostalCode: "PSČ",
+      controllerCity: "Mesto",
       controllerRegistrationNumber: "IČO",
       controllerCountry: "Krajina sídla",
       controllerTaxId: "DIČ",
@@ -10380,6 +10390,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.registrationNumberShape": "IČO „{value}“ nemá správný tvar — očekává se 6 až 12 číslic.",
     "tenant.privacyContactEmailShape": "Adresa „{value}“ nemá tvar e-mailové adresy.",
     "tenant.taxIdShape": "DIČ „{value}“ nemá správný tvar — očekává se 8 až 12 číslic.",
+    "tenant.postalCodeShape": "PSČ „{value}“ nemá správný tvar — očekává se 5 číslic, např. 110 00.",
     "tenant.vatIdShape": "IČ DPH „{value}“ nemá správný tvar — očekává se kód země a číslice, např. SK2020898913.",
     "tenant.contactWebShape": "„{value}“ není adresa webu.",
     "tenant.contactEmailShape": "Adresa „{value}“ nemá tvar e-mailové adresy.",
@@ -10929,6 +10940,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerNote: "Zobrazuje se v informacích o ochraně osobních údajů (stránka Ochrana osobních údajů). Prázdný právní název = použije se název portálu.",
       controllerLegalName: "Právní název",
       controllerAddress: "Sídlo",
+      controllerStreet: "Ulice",
+      controllerStreetNumber: "Číslo",
+      controllerPostalCode: "PSČ",
+      controllerCity: "Obec",
       controllerRegistrationNumber: "IČO",
       controllerCountry: "Země sídla",
       controllerTaxId: "DIČ",
@@ -14889,6 +14904,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.registrationNumberShape": "The company ID “{value}” has the wrong shape — 6 to 12 digits are expected.",
     "tenant.privacyContactEmailShape": "“{value}” is not an e-mail address.",
     "tenant.taxIdShape": "The tax ID “{value}” has the wrong shape — 8 to 12 digits are expected.",
+    "tenant.postalCodeShape": "The postal code “{value}” has the wrong shape — 5 digits are expected, e.g. 821 01.",
     "tenant.vatIdShape": "The VAT ID “{value}” has the wrong shape — a country code and digits are expected, e.g. SK2020898913.",
     "tenant.contactWebShape": "“{value}” is not a website address.",
     "tenant.contactEmailShape": "“{value}” is not an e-mail address.",
@@ -15438,6 +15454,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerNote: "Shown in the data protection notice (Data protection page). An empty legal name means the portal name is used.",
       controllerLegalName: "Legal name",
       controllerAddress: "Registered address",
+      controllerStreet: "Street",
+      controllerStreetNumber: "Number",
+      controllerPostalCode: "Postal code",
+      controllerCity: "City",
       controllerRegistrationNumber: "Company ID",
       controllerCountry: "Country of registered office",
       controllerTaxId: "Tax ID",

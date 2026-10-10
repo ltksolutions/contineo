@@ -6,6 +6,7 @@
  * Ukazuje len údaje o organizácii a kontakt na DPO, nič o prihlásenom človeku.
  */
 
+import { formatAddress } from "@/lib/address"
 import { notFound } from "next/navigation"
 import { currentTenant, currentPerson } from "@/lib/session"
 import { brandingView, type Tenant } from "@/lib/tenants"
@@ -143,9 +144,9 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
           <section className="card privacy-who-card">
             <h2>{t.controllerHeading}</h2>
             <p>{t.controller(tenant.controller?.legalName || branding.displayName)}</p>
-            {(tenant.controller?.address || tenant.controller?.registrationNumber) && (
+            {(formatAddress(tenant.controller) || tenant.controller?.registrationNumber) && (
               <p className="quiet">
-                {t.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}
+                {t.controllerDetails(formatAddress(tenant.controller), tenant.controller?.registrationNumber ?? "")}
               </p>
             )}
           </section>

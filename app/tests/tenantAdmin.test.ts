@@ -144,13 +144,40 @@ describe("uloženie zmeny", () => {
 
     await saveTenant("SFZ", {
       controllerLegalName: " Slovenský futbalový zväz ",
-      controllerAddress: "Tomášikova 30C, 821 01 Bratislava",
+      controllerStreet: "Tomášikova",
+      controllerStreetNumber: "30C",
+      controllerPostalCode: "82101",
+      controllerCity: "Bratislava",
       controllerRegistrationNumber: "00  687 308",
     }, "kto@ltk.solutions")
 
     const set = updateOne.mock.calls[0][1].$set
     expect(set["controller.legalName"]).toBe("Slovenský futbalový zväz")
     expect(set["controller.registrationNumber"]).toBe("00 687 308")
+  })
+
+  it("sídlo po častiach: PSČ v tvare „821 01“, starý riadok sa zmaže", async () => {
+    findOne.mockResolvedValue({ ...SFZ, controller: { address: "Tomášikova 30C, 821 01 Bratislava" } })
+
+    await saveTenant("SFZ", {
+      controllerStreet: " Tomášikova ", controllerStreetNumber: "30C", controllerPostalCode: "82101", controllerCity: "Bratislava",
+    }, "kto@ltk.solutions")
+
+    const update = updateOne.mock.calls[0][1]
+    expect(update.$set["controller.street"]).toBe("Tomášikova")
+    expect(update.$set["controller.postalCode"]).toBe("821 01")
+    expect(update.$unset).toEqual({ "controller.address": "" })
+    // Rozdelenie toho istého riadku nie je zmena textu na /privacy.
+    expect(update.$set["privacy.updatedAt"]).toBeUndefined()
+  })
+
+  it("zlé PSČ neprejde; bez zmeny sídla sa starý riadok nemaže", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await expect(saveTenant("SFZ", { controllerPostalCode: "8210" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.postalCodeShape" })
+    await saveTenant("SFZ", { controllerRegistrationNumber: "00687308" }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[0][1].$unset).toBeUndefined()
   })
 
   it("IČO s písmenami alebo prikrátke neprejde", async () => {

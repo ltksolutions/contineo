@@ -133,7 +133,10 @@ export async function saveBrandingAction(fd: FormData) {
       // Krajina zo zoznamu → predvoľba; uložený tvar sa nemení (`+421`).
       phonePrefix: prefixForCountry(fieldText(fd, "phoneCountry")),
       controllerLegalName: fieldText(fd, "controllerLegalName"),
-      controllerAddress: fieldText(fd, "controllerAddress"),
+      controllerStreet: fieldText(fd, "controllerStreet"),
+      controllerStreetNumber: fieldText(fd, "controllerStreetNumber"),
+      controllerPostalCode: fieldText(fd, "controllerPostalCode"),
+      controllerCity: fieldText(fd, "controllerCity"),
       controllerRegistrationNumber: fieldText(fd, "controllerRegistrationNumber"),
       controllerCountry: fieldText(fd, "controllerCountry") || undefined,
       controllerTaxId: fieldText(fd, "controllerTaxId"),
