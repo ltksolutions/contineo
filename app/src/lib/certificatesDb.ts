@@ -10,6 +10,7 @@ import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import { loadBrand } from "./branding"
+import { formatAddress } from "./address"
 import { deleteFile, loadFile, saveFile } from "./fileStore"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
@@ -91,7 +92,7 @@ async function issuerOf(tenant: Tenant, actor: string): Promise<CertificateIssue
     kind: "tenant",
     name: b.displayName,
     legalName: tenant.controller?.legalName || undefined,
-    address: tenant.controller?.address || undefined,
+    address: formatAddress(tenant.controller) || undefined,
     registrationNumber: tenant.controller?.registrationNumber || undefined,
   }
   const logo = b.logoUrl ?? ""

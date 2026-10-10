@@ -23,6 +23,10 @@ import {
 import { UI_LANGUAGES, isUiLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import type { Tenant } from "./tenants"
+import { formatAddress, normalizePostalCode } from "./address"
+
+/** Časti sídla v `controller` (10. 10. 2026). */
+const ADDRESS_PART_KEYS = ["street", "streetNumber", "postalCode", "city"] as const
 import { encrypt, encryptionAvailable } from "./secrets"
 import type { OAuthProviderName } from "./oauth"
 import { DEFAULT_CHUNKING, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
@@ -98,7 +102,11 @@ export interface TenantChange {
   phonePrefix?: string
   /** Prevádzkovateľ pre informovanie (C1). Prázdne pole sa zapíše prázdne. */
   controllerLegalName?: string
-  controllerAddress?: string
+  /** Sídlo po častiach. Uloženie ktorejkoľvek časti zmaže starý riadok `controller.address`. */
+  controllerStreet?: string
+  controllerStreetNumber?: string
+  controllerPostalCode?: string
+  controllerCity?: string
   controllerRegistrationNumber?: string
   /** Krajina sídla prevádzkovateľa (ADR-022). */
   controllerCountry?: string
@@ -224,7 +232,27 @@ function toSet(change: TenantChange): Record<string, unknown> {
     a neprešiel preklep typu telefónneho čísla.
   */
   if (change.controllerLegalName !== undefined) set["controller.legalName"] = change.controllerLegalName.trim()
-  if (change.controllerAddress !== undefined) set["controller.address"] = change.controllerAddress.trim()
+  /*
+    Sídlo po častiach (10. 10. 2026). Riadok sa skladá (`formatAddress()`),
+    preto sa starý `controller.address` pri uložení častí zmaže — dve pravdy
+    o tej istej adrese by sa raz rozišli. PSČ sa ukladá v tvare „821 01".
+  */
+  const addressChanged = [change.controllerStreet, change.controllerStreetNumber, change.controllerPostalCode, change.controllerCity]
+    .some(v => v !== undefined)
+  if (addressChanged) {
+    const tidy = (v: string | undefined) => (v ?? "").trim().replace(/\s+/g, " ")
+    if (change.controllerStreet !== undefined) set["controller.street"] = tidy(change.controllerStreet)
+    if (change.controllerStreetNumber !== undefined) set["controller.streetNumber"] = tidy(change.controllerStreetNumber)
+    if (change.controllerCity !== undefined) set["controller.city"] = tidy(change.controllerCity)
+    if (change.controllerPostalCode !== undefined) {
+      const raw = tidy(change.controllerPostalCode)
+      const psc = raw ? normalizePostalCode(raw) : ""
+      if (psc === null) {
+        throw new TenantValidationError("tenant.postalCodeShape", `PSČ „${raw}" nemá správny tvar — očakáva sa 5 číslic, napr. 821 01.`, { value: raw })
+      }
+      set["controller.postalCode"] = psc
+    }
+  }
   if (change.controllerRegistrationNumber !== undefined) {
     const reg = change.controllerRegistrationNumber.trim().replace(/\s+/g, " ")
     const digits = reg.replace(/\s/g, "")
@@ -398,8 +426,16 @@ export async function saveTenant(
   // posunie jej dátum — z dátumu sa dá vyčítať, kedy sa zmenilo, čo človek čítal.
   const current = (path: string): unknown =>
     path.split(".").reduce<unknown>((x, k) => (x as Record<string, unknown>)?.[k], existing)
+  // Sídlo sa porovnáva zložené: rozdelenie toho istého riadku na časti
+  // (migrácia, prvé uloženie) nie je zmena textu, ktorý človek čítal.
+  const addressKeys = new Set(ADDRESS_PART_KEYS.map(k => `controller.${k}`))
+  const addressTouched = Object.keys(set).some(k => addressKeys.has(k))
+  const addressBefore = existing.controller ?? {}
+  const addressAfter = { ...addressBefore, ...Object.fromEntries(ADDRESS_PART_KEYS.map(k => [k, set[`controller.${k}`] ?? addressBefore[k]])) }
   const privacyChanged = Object.keys(set).some(k =>
-    (k.startsWith("controller.") || k.startsWith("privacy.")) && JSON.stringify(current(k) ?? "") !== JSON.stringify(set[k] ?? ""))
+    (k.startsWith("controller.") || k.startsWith("privacy.")) && !addressKeys.has(k)
+    && JSON.stringify(current(k) ?? "") !== JSON.stringify(set[k] ?? ""))
+    || (addressTouched && formatAddress(addressBefore) !== formatAddress({ ...addressAfter, address: undefined }))
   if (privacyChanged) {
     set["privacy.updatedAt"] = new Date()
     set["privacy.updatedBy"] = actor
@@ -407,7 +443,12 @@ export async function saveTenant(
 
   // Bodkové cesty (`branding.displayName`) sa v typoch ovládača vyjadriť
   // nedajú, preto jedno pretypovanie tu a nikde inde.
-  await col.updateOne({ companyCode: code }, { $set: set } as never)
+  // Starý jednoriadkový `controller.address` po uložení častí zmizne — riadok
+  // sa odteraz skladá (D27).
+  await col.updateOne(
+    { companyCode: code },
+    (addressTouched ? { $set: set, $unset: { "controller.address": "" } } : { $set: set }) as never,
+  )
 
   // Rozdiel sa počíta z bodkových ciest (`branding.displayName`), takže
   // pôvodné hodnoty sa čítajú tou istou cestou — inak by v zázname bolo

@@ -67,6 +67,7 @@ import type { Tenant } from "@/lib/tenants"
 import AppShell from "@/components/AppShell"
 import { STANDARD_LEGAL_BASES, MAX_LEGAL_REFERENCE_FIELD } from "@/lib/legalBases"
 import { legalBasisUsage } from "@/lib/legalBasesDb"
+import { addressParts, formatAddress } from "@/lib/address"
 import { LEGAL_BASES } from "@/lib/versionResponsibility"
 import {
   addLegalBasisAction, retireLegalBasisAction, toggleStandardLegalBasisAction,
@@ -233,6 +234,8 @@ export default async function OrganisationSectionPage({
   const t = d.org
   const tp = d.privacy
   // Náhľad úvodnej vety pozvánky z uložených hodnôt (rovnaké skladanie ako `inviteEmail`).
+  // Sídlo po častiach; organizácia pred migráciou dostane rozložený starý riadok (10. 10. 2026).
+  const address = addressParts(tenant.controller)
   const inviteIntro = d.inviteEmail.intro(tenant.controller?.legalName?.trim() || tenant.branding.displayName, tenant.branding.displayName)
   const pending = ctx.canAdmin
     ? (await domainRequests(tenant.companyCode)).filter(z => !tenant.hostnames.includes(z.host))
@@ -418,9 +421,26 @@ export default async function OrganisationSectionPage({
             </label>
             <div className="set-pair">
               <label className="field">
-                <span className="field-label">{t.branding.controllerAddress}</span>
-                <input className="field-input" name="controllerAddress" defaultValue={tenant.controller?.address ?? ""} />
+                <span className="field-label">{t.branding.controllerStreet}</span>
+                <input className="field-input" name="controllerStreet" autoComplete="address-line1" defaultValue={address.street ?? ""} />
               </label>
+              <label className="field">
+                <span className="field-label">{t.branding.controllerStreetNumber}</span>
+                <input className="field-input" name="controllerStreetNumber" defaultValue={address.streetNumber ?? ""} />
+              </label>
+            </div>
+            <div className="set-pair">
+              <label className="field">
+                <span className="field-label">{t.branding.controllerPostalCode}</span>
+                <input className="field-input" name="controllerPostalCode" inputMode="numeric" autoComplete="postal-code"
+                       placeholder="821 01" defaultValue={address.postalCode ?? ""} />
+              </label>
+              <label className="field">
+                <span className="field-label">{t.branding.controllerCity}</span>
+                <input className="field-input" name="controllerCity" autoComplete="address-level2" defaultValue={address.city ?? ""} />
+              </label>
+            </div>
+            <div className="set-pair">
               <label className="field">
                 <span className="field-label">{t.branding.controllerRegistrationNumber}</span>
                 <input className="field-input" name="controllerRegistrationNumber" inputMode="numeric"
@@ -454,8 +474,8 @@ export default async function OrganisationSectionPage({
             <p className="set-preview">
               {t.branding.controllerPreview}{" "}
               <b>„{tp.controller(tenant.controller?.legalName || tenant.branding.displayName)}“</b>
-              {(tenant.controller?.address || tenant.controller?.registrationNumber) &&
-                ` · ${tp.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}`}
+              {(formatAddress(tenant.controller) || tenant.controller?.registrationNumber) &&
+                ` · ${tp.controllerDetails(formatAddress(tenant.controller), tenant.controller?.registrationNumber ?? "")}`}
             </p>
           </div>
         </section>

@@ -126,7 +126,20 @@ export interface Tenant {
   controller?: {
     /** Úplný právny názov, napr. „Slovenský futbalový zväz". */
     legalName?: string
-    /** Sídlo v jednom riadku, napr. „Tomášikova 30C, 821 01 Bratislava". */
+    /**
+     * Sídlo po častiach (10. 10. 2026). Riadok „Tomášikova 30C, 821 01
+     * Bratislava" sa skladá v `formatAddress()` (`lib/address.ts`), neukladá sa.
+     */
+    street?: string
+    streetNumber?: string
+    /** PSČ v tvare „821 01". */
+    postalCode?: string
+    city?: string
+    /**
+     * **Odchádza.** Sídlo v jednom riadku spred 10. 10. 2026. Číta sa len ako
+     * záloha, kým organizáciu nezasiahne `migrate_controller_address.mjs`
+     * alebo prvé uloženie nastavení; nikam sa už nezapisuje.
+     */
     address?: string
     /** IČO — ako sa píše (medzery zostávajú), overené sú len číslice. */
     registrationNumber?: string

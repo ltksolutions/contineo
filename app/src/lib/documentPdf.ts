@@ -16,6 +16,7 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import sharp from "sharp"
 import { loadBrand } from "./branding"
+import { formatAddress } from "./address"
 import { dictionary, formatDate, type UiLanguage } from "./i18n"
 import { renderMarkdownPdf, type PdfLetterhead } from "./markdownPdf"
 import type { Tenant } from "./tenants"
@@ -58,7 +59,7 @@ export function footerLines(
 ): string[] {
   const t = dictionary(language).library.upload.letterhead
   const c = tenant.controller ?? {}
-  const who = [organisationName(tenant), c.address]
+  const who = [organisationName(tenant), formatAddress(c)]
   const ids = [
     c.registrationNumber ? t.registrationNumber(c.registrationNumber) : null,
     c.taxId ? t.taxId(c.taxId) : null,
