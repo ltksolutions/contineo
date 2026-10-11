@@ -127,8 +127,12 @@ export function notificationHref(
     case "objectionSubmitted":
       return "/dpo#objections"
     case "complianceDone":
-    case "complianceToApply":
       return params.runId ? `/library/compliance/${encodeURIComponent(params.runId)}` : "/library/compliance"
+    case "complianceToApply":
+      // Rovno na dokument a rozhodnuté nálezy — tam čaká „Zapísať do konceptu" (KNIZ-kontrola-suladu-detail).
+      return params.runId
+        ? `/library/compliance/${encodeURIComponent(params.runId)}${params.documentId ? `?doc=${encodeURIComponent(params.documentId)}&view=decided` : ""}`
+        : "/library/compliance"
     default:
       // Neznámy druh nemá odkaz. Radšej nikam, než na obrazovku, ktorá
       // s udalosťou nesúvisí.
