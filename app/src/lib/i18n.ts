@@ -3149,6 +3149,7 @@ interface Dictionary {
       proposedHintValid: string
       proposedHintDraft: string
       overlapNote: (location: string, appended: boolean) => string
+      carriedNote: string
       proposedHintNoRights: string
       proposedMissing: string
       acceptedText: string
@@ -7928,6 +7929,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       proposed: "Nové znenie",
       proposedHintValid: "Nahradí úryvok v koncepte ďalšieho znenia. Platné znenie sa nemení, kým koncept nezverejníte.",
       proposedHintDraft: "Nahradí úryvok v koncepte. Dokument ešte nie je zverejnený.",
+      carriedNote: "Prevzaté z predchádzajúcej kontroly — miesto ste vedome ponechali. Ak sa medzičasom niečo zmenilo, rozhodnutie zmeňte.",
       overlapNote: (location, appended) => `Toto miesto už zmenil prijatý nález „${location}“ — v poli je aktuálne znenie z konceptu${appended ? " a doplnenie z tohto nálezu je pridané na koniec. Skontrolujte ho pred uložením." : ". Doplňte doň odporúčanie tohto nálezu (zmena znenia vyššie)."}`,
       proposedHintNoRights: "Rozhodnutie sa uloží; do konceptu ho vloží správca obsahu.",
       proposedMissing: "Tento beh nové znenie nenavrhol — v poli je pôvodný úryvok, upravte ho podľa odporúčania.",
@@ -12638,6 +12640,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       proposed: "Nové znění",
       proposedHintValid: "Nahradí úryvek v konceptu dalšího znění. Platné znění se nemění, dokud koncept nezveřejníte.",
       proposedHintDraft: "Nahradí úryvek v konceptu. Dokument ještě není zveřejněn.",
+      carriedNote: "Převzato z předchozí kontroly — místo jste vědomě ponechali. Pokud se mezitím něco změnilo, rozhodnutí změňte.",
       overlapNote: (location, appended) => `Toto místo už změnil přijatý nález „${location}“ — v poli je aktuální znění z konceptu${appended ? " a doplnění z tohoto nálezu je přidáno na konec. Zkontrolujte ho před uložením." : ". Doplňte do něj doporučení tohoto nálezu (změna znění výše)."}`,
       proposedHintNoRights: "Rozhodnutí se uloží; do konceptu ho vloží správce obsahu.",
       proposedMissing: "Tento běh nové znění nenavrhl — v poli je původní úryvek, upravte ho podle doporučení.",
@@ -17334,6 +17337,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       proposed: "New wording",
       proposedHintValid: "Replaces the excerpt in the draft of the next version. The valid version does not change until you publish the draft.",
       proposedHintDraft: "Replaces the excerpt in the draft. The document is not published yet.",
+      carriedNote: "Carried over from the previous check — you kept this passage on purpose. If something has changed since, change the decision.",
       overlapNote: (location, appended) => `An accepted finding “${location}” already changed this passage — the field holds the current draft wording${appended ? " with this finding\u2019s addition appended. Check it before saving." : ". Add this finding\u2019s recommendation to it (change of wording above)."}`,
       proposedHintNoRights: "The decision is saved; a content manager puts it into the draft.",
       proposedMissing: "This run did not propose new wording — the field holds the original excerpt, edit it according to the recommendation.",

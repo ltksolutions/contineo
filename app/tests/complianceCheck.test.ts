@@ -52,7 +52,7 @@ describe("parseReview", () => {
   })
 })
 
-import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS, currentWording, suggestOnCurrent, quotesOverlap, runTitle } from "../src/lib/complianceCheck"
+import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS, currentWording, suggestOnCurrent, quotesOverlap, runTitle, carryKept, docReviewPrompt } from "../src/lib/complianceCheck"
 
 describe("viac krokov a dokument proti dokumentom", () => {
   const big = (id: string, cat: string, n: number) => ({ documentId: id, title: id, category: cat, versions: [{ versionId: "v", isActive: true, markdown: Array.from({ length: n }, (_, i) => `Odsek ${i} ${"x".repeat(90)}`).join("\n\n") }] })
@@ -178,5 +178,24 @@ describe("názov kontroly", () => {
     expect(runTitle("  Kontrola manuálov\nISSF  ")).toBe("Kontrola manuálov ISSF")
     expect(runTitle("x".repeat(200))).toHaveLength(120)
     expect(runTitle("   ")).toBe("")
+  })
+})
+
+describe("pamäť ponechaných rozhodnutí (11. 10. 2026)", () => {
+  const cit = { documentId: "sfz:rapp", title: "RaPP", articleRef: "príloha č. 2 – Sadzobník poplatkov", quote: "1 EUR" }
+  const kept = { runId: "r1", findingId: "f004", location: "6.4 Poplatok za správu osobného konta v ISSF", quote: "poplatok za správu osobného konta v ISSF: **0,50 € mesačne**", citationDocumentId: "sfz:rapp", citationTitle: "RaPP", articleRef: "Príloha č. 2", reason: "ISSF účtuje mesačne", decidedBy: "jan", decidedAt: new Date("2026-10-11") }
+  const f = (over: Partial<Parameters<typeof carryKept>[0][number]>) => ({ id: "f001", kind: "conflict" as const, location: "6.4 Poplatok za správu osobného konta v ISSF – Hráči", quote: "poplatok za správu osobného konta v ISSF: 0,50 € mesačne", citation: cit, recommendation: "", status: null, ...over })
+  it("rovnaká norma, článok a úryvok → prevezme ponechanie s dôvodom", () => {
+    const [r] = carryKept([f({})], [kept])
+    expect(r).toMatchObject({ status: "kept", reason: "ISSF účtuje mesačne", carriedFrom: { runId: "r1", findingId: "f004" } })
+  })
+  it("iný článok alebo iná norma → ostáva nerozhodnutý; rozhodnutý sa nemení", () => {
+    expect(carryKept([f({ citation: { ...cit, articleRef: "čl. 13 ods. 3" } })], [kept])[0].status).toBeNull()
+    expect(carryKept([f({ citation: { ...cit, documentId: "sfz:stanovy" } })], [kept])[0].status).toBeNull()
+    expect(carryKept([f({ status: "accepted" })], [kept])[0].status).toBe("accepted")
+  })
+  it("pokyn pre model nesie ponechané miesta s dôvodom", () => {
+    expect(docReviewPrompt({ title: "T", text: "x" }, [], false, [kept])).toContain("vedome ponechal")
+    expect(docReviewPrompt({ title: "T", text: "x" }, [], false, [kept])).toContain("ISSF účtuje mesačne")
   })
 })
