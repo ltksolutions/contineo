@@ -555,6 +555,11 @@ interface Dictionary {
     costLine: (usd: string) => string
     button: string
     note: string
+    /** Kontrola návrhov FAQ (rovnaký e-mail, iný predmet behu). */
+    subtitleProposals: string
+    introProposals: (proposals: number, changed: number) => string
+    buttonProposals: string
+    noteProposals: string
   }
 
   approvalEmail: {
@@ -2257,6 +2262,8 @@ interface Dictionary {
       complianceDone: (documents: number, findings: number) => string
       /** Prijaté znenie čaká na zápis do konceptu (D199) — správcom obsahu. */
       complianceToApply: (title: string) => string
+      /** Kontrola návrhov FAQ dobehla — tomu, kto ju spustil. */
+      faqReviewDone: (proposals: number, changed: number) => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -4886,6 +4893,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       costLine: usd => `Cena behu: ${usd} USD`,
       button: "Otvoriť nálezy",
       note: "Pri každom náleze rozhodnite, či znenie ponecháte, alebo prijmete odporúčanie. Prijaté znenie sa zapíše do konceptu dokumentu; platné znenie sa mení až zverejnením.",
+      subtitleProposals: "Kontrola návrhov FAQ",
+      introProposals: (n, c) => `Kontrola návrhov FAQ, ktorú ste spustili, dobehla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhov"}, ${c} sa odlišuje od dokumentov alebo s nimi koliduje.`,
+      buttonProposals: "Otvoriť návrhy FAQ",
+      noteProposals: "Pri každom návrhu prevezmite opravené znenie z kontroly alebo ponechajte pôvodné. Do FAQ ide návrh až po schválení.",
     },
     approvalEmail: {
       subject: org => `Znenie na schválenie \u2014 ${org}`,
@@ -7100,6 +7111,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Ste zodpovedná osoba za znenie „${label}" dokumentu „${title}". Určte právny základ.`,
       draftResponsibleAssigned: (title) => `Ste zodpovedná osoba za pripravované znenie dokumentu „${title}". Právny základ môžete určiť ešte pred zverejnením.`,
       objectionSubmitted: () => "Nová námietka (čl. 21) čaká na vaše rozhodnutie.",
+      faqReviewDone: (n, c) => `Kontrola návrhov FAQ dobehla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhov"}, ${c} na prevzatie alebo úpravu.`,
       complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
     },
@@ -9600,6 +9612,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       costLine: usd => `Cena běhu: ${usd} USD`,
       button: "Otevřít nálezy",
       note: "U každého nálezu rozhodněte, zda znění ponecháte, nebo přijmete doporučení. Přijaté znění se zapíše do konceptu dokumentu; platné znění se mění až zveřejněním.",
+      subtitleProposals: "Kontrola návrhů FAQ",
+      introProposals: (n, c) => `Kontrola návrhů FAQ, kterou jste spustili, doběhla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhů"}, ${c} se liší od dokumentů nebo s nimi koliduje.`,
+      buttonProposals: "Otevřít návrhy FAQ",
+      noteProposals: "U každého návrhu převezměte opravené znění z kontroly, nebo ponechte původní. Do FAQ jde návrh až po schválení.",
     },
     approvalEmail: {
       subject: org => `Znění ke schválení \u2014 ${org}`,
@@ -11812,6 +11828,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Jste odpovědná osoba za znění „${label}" dokumentu „${title}". Určete právní základ.`,
       draftResponsibleAssigned: (title) => `Jste odpovědná osoba za připravované znění dokumentu „${title}". Právní základ můžete určit ještě před zveřejněním.`,
       objectionSubmitted: () => "Nová námitka (čl. 21) čeká na vaše rozhodnutí.",
+      faqReviewDone: (n, c) => `Kontrola návrhů FAQ doběhla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhů"}, ${c} k převzetí nebo úpravě.`,
       complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
     },
@@ -14305,6 +14322,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       costLine: usd => `Run cost: ${usd} USD`,
       button: "Open findings",
       note: "For each finding, decide whether to keep the wording or accept the recommendation. Accepted wording is written into the document draft; the valid version changes only when it is published.",
+      subtitleProposals: "FAQ proposal check",
+      introProposals: (n, c) => `The FAQ proposal check you started has finished: ${n} ${n === 1 ? "proposal" : "proposals"}, ${c} differ from or conflict with the documents.`,
+      buttonProposals: "Open FAQ proposals",
+      noteProposals: "For each proposal, take over the corrected wording from the check or keep the original. A proposal goes into the FAQ only after approval.",
     },
     approvalEmail: {
       subject: org => `A version to approve \u2014 ${org}`,
@@ -16515,6 +16536,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `You are the responsible person for version “${label}” of “${title}”. Please set the legal basis.`,
       draftResponsibleAssigned: (title) => `You are the responsible person for the version of “${title}” in preparation. You can set the legal basis before it is published.`,
       objectionSubmitted: () => "A new objection (Art. 21) is waiting for your decision.",
+      faqReviewDone: (n, c) => `FAQ proposal check finished: ${n} ${n === 1 ? "proposal" : "proposals"}, ${c} to take over or edit.`,
       complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
       complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,
     },

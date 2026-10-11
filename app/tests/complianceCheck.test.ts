@@ -199,3 +199,14 @@ describe("pamäť ponechaných rozhodnutí (11. 10. 2026)", () => {
     expect(docReviewPrompt({ title: "T", text: "x" }, [], false, [kept])).toContain("ISSF účtuje mesačne")
   })
 })
+
+describe("e-mail po kontrole návrhov FAQ", () => {
+  it("iné vety a tlačidlo ako pri dokumentoch", async () => {
+    const { complianceDoneEmail } = await import("../src/lib/ecomail")
+    const m = complianceDoneEmail("https://x/channels/k/proposals", "x", { documents: 54, findings: 12, usd: 8.5, proposals: true }, "sk")
+    expect(m.text).toContain("Kontrola návrhov FAQ, ktorú ste spustili, dobehla: 54 návrhov, 12")
+    expect(m.html).toContain("Otvoriť návrhy FAQ")
+    const d = complianceDoneEmail("https://x/library/compliance/r", "x", { documents: 10, findings: 42, usd: 4.59 }, "sk")
+    expect(d.html).toContain("Otvoriť nálezy")
+  })
+})

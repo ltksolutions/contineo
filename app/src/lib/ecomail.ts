@@ -515,27 +515,31 @@ export function approvalEmail(
 export function complianceDoneEmail(
   link: string,
   host: string,
-  run: { documents: number; findings: number; usd: number | null },
+  run: { documents: number; findings: number; usd: number | null; proposals?: boolean },
   language: UiLanguage = "sk",
   branding?: SignInBranding,
 ): Omit<Message, "to"> {
   const s = dictionary(language).complianceEmail
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
-  const intro = s.intro(run.documents, run.findings)
+  // Kontrola návrhov FAQ má ten istý e-mail s inými vetami (11. 10. 2026).
+  const intro = run.proposals ? s.introProposals(run.documents, run.findings) : s.intro(run.documents, run.findings)
+  const subtitle = run.proposals ? s.subtitleProposals : s.subtitle
+  const button = run.proposals ? s.buttonProposals : s.button
+  const note = run.proposals ? s.noteProposals : s.note
   const cost = run.usd !== null ? s.costLine(formatAmount(run.usd, language)) : ""
-  const text = [intro, ...(cost ? ["", cost] : []), "", link, "", s.note].join("\n")
+  const text = [intro, ...(cost ? ["", cost] : []), "", link, "", note].join("\n")
   const html = `<!doctype html>
 <html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
   <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
     <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logoTag(branding, host)}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
-    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(s.subtitle)}</div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(subtitle)}</div>
     <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(intro)}</p>
     ${cost ? `<p style="font-size:13.5px;color:#5c6675;margin:0 0 20px">${escapujHtml(cost)}</p>` : ""}
     <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
-      ${escapujHtml(s.button)}
+      ${escapujHtml(button)}
     </a>
-    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(note)}</p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
     ${footerHtml(host)}
   </div>
