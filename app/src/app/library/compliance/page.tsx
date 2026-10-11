@@ -18,7 +18,7 @@ import Notice from "@/components/Notice"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
 import { complianceContext } from "@/lib/complianceAccess"
-import { documentRuns, MAX_FAILURES } from "@/lib/complianceCheck"
+import { documentRuns, reviewRunFor, proposalsScopeKey, MAX_FAILURES } from "@/lib/complianceCheck"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { brandingView } from "@/lib/tenants"
@@ -48,7 +48,15 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
   const options = docs.map(d => ({ value: d.documentId, label: `${String(d.title ?? d.documentId)}${d.accessLevel === "internal" ? " · interný" : ""}` }))
   // Kontrola návrhov FAQ sa spúšťa vo fronte návrhov kanála, nie tu — odkaz tam, kde návrhy sú.
   const proposalChannels = new Set(await (await getCollection(PROPOSALS_COLLECTION)).distinct("channelKey", { companyCode: ctx.tenant.companyCode }) as string[])
-  const faqQueues = (await listChannels(ctx.tenant.companyCode)).filter(ch => proposalChannels.has(ch.key))
+  const faqQueues = await Promise.all((await listChannels(ctx.tenant.companyCode)).filter(ch => proposalChannels.has(ch.key)).map(async ch => {
+    const proposalsCol = await getCollection(PROPOSALS_COLLECTION)
+    const [open, reviewed, run] = await Promise.all([
+      proposalsCol.countDocuments({ companyCode: ctx.tenant.companyCode, channelKey: ch.key, status: "open" }),
+      proposalsCol.countDocuments({ companyCode: ctx.tenant.companyCode, channelKey: ch.key, status: "open", review: { $exists: true } }),
+      reviewRunFor(ctx.tenant.companyCode, proposalsScopeKey(ch.key)),
+    ])
+    return { key: ch.key, name: ch.name, open, reviewed, run }
+  }))
 
   return (
     <AppShell language={language} title={t.heading} trail={{ "/library": dictionary(language).library.list.heading }}>
@@ -57,12 +65,6 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
         <h1 className="page-title">{t.heading}</h1>
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
-      {faqQueues.length > 0 && (
-        <p className="quiet" style={{ margin: "0 0 16px" }}>
-          {t.faqElsewhere}{" "}
-          {faqQueues.map((ch, i) => <span key={ch.key}>{i > 0 && ", "}<Link href={`/channels/${encodeURIComponent(ch.key)}/proposals`}>{ch.name}</Link></span>)}
-        </p>
-      )}
       <Notice message={q.msg} error={q.error === "1"} back="/library/compliance" language={language} />
 
       <section className="card detail-block" style={{ marginBottom: 16 }}>
@@ -90,6 +92,25 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       </section>
 
       <h2 className="detail-block-title" style={{ margin: "8px 0 10px" }}>{t.runsHeading}</h2>
+      {/* Kontrola návrhov FAQ ako karta v zozname kontrol (Ján 11. 10. 2026: riadok pod
+          úvodom bol „úplne prehliadnuteľný"). Spúšťa sa vo fronte návrhov kanála. */}
+      {faqQueues.length > 0 && (
+        <div style={{ display: "grid", gap: 12, marginBottom: 12 }}>
+          {faqQueues.map(q => (
+            <section key={q.key} className="card detail-block compliance-run">
+              <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
+                <p style={{ margin: 0 }}><b>{t.faqCardTitle(q.name)}</b>{" · "}{t.faqCardCounts(q.open, q.reviewed)}</p>
+                <p className="quiet" style={{ margin: 0 }}>
+                  {q.run && q.run.pending.length > 0
+                    ? (q.run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span> : t.faqCardRunning(q.run.total - q.run.pending.length, q.run.total))
+                    : q.run ? t.faqCardLast(formatDate(q.run.finishedAt ?? q.run.updatedAt, language)) : t.faqCardNever}
+                </p>
+              </div>
+              <Link className="button button--quiet" href={`/channels/${encodeURIComponent(q.key)}/proposals#review`}>{t.faqCardOpen}</Link>
+            </section>
+          ))}
+        </div>
+      )}
       {runs.length === 0 && <p className="quiet">{t.none}</p>}
       <div style={{ display: "grid", gap: 12 }}>
         {runs.map(run => {

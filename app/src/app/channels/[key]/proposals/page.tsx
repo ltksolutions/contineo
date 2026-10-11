@@ -164,7 +164,7 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
 
       {/* Kontrola proti dokumentom knižnice (ADR-032, fáza 1). */}
       {!decided && (
-        <section className="card detail-block" style={{ marginBottom: 16 }}>
+        <section id="review" className="card detail-block" style={{ marginBottom: 16 }}>
           <h2 className="detail-block-title">{t.review}</h2>
           <p className="detail-block-note" style={{ margin: 0 }}>{t.reviewIntro}</p>
           {run && (
