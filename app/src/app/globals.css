@@ -8670,3 +8670,14 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
 
 /* Odkaz do nového okna (norma v kontrole súladu, 11. 10. 2026): malá šípka za textom. */
 .ext-icon { display: inline-block; margin-left: 4px; vertical-align: baseline; opacity: .75; }
+
+/*
+ * Kotva článku a odseku normy (`lib/articleAnchors.ts`, 11. 10. 2026): odkaz
+ * z kontroly súladu skočí na `#cl-18-ods-8`. Odstup nad cieľom, aby ho
+ * nezakryla hlavička; cieľ sa na chvíľu zvýrazní, aby ho oko v dlhom
+ * texte našlo.
+ */
+.norm-anchor { scroll-margin-top: 88px; }
+.norm-anchor:target { background: var(--warn-bg); border-radius: 6px; box-shadow: 0 0 0 6px var(--warn-bg); animation: norm-target 2.4s ease-out 1; }
+@keyframes norm-target { from { box-shadow: 0 0 0 6px color-mix(in srgb, var(--warn-fg) 30%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .norm-anchor:target { animation: none; } }
