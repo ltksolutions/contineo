@@ -951,6 +951,27 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .field-hint { font-size: var(--fs-micro); }
 
 /*
+  Povinné pole (12. 10. 2026). SwiftUI na to vlastný prvok nemá; iOS pri
+  nastavení účtu píše „Povinné" sivo priamo pri poli — preto sivé slovo za
+  popisom, nie červená hviezdička. Text ide z i18n cez `--t-required` na
+  `<body>` (layout), takže ho dostane každé pole s `required` bez zásahu
+  do komponentu. Pole, ktoré je povinné až pre ďalší krok (dátum účinnosti
+  pred predložením), sa označí triedou `.field--required`.
+  Červený okraj až po tom, čo s poľom človek niečo urobil (`:user-invalid`)
+  — prázdny formulár nemá kričať skôr, než sa ho niekto dotkne.
+*/
+.field:has(> :is(input, select, textarea):required:enabled) > .field-label::after,
+.field--required > .field-label::after,
+.form-group--required > .form-group-head::after {
+  content: var(--t-required, "Povinné");
+  margin-left: 8px;
+  font-size: var(--fs-micro);
+  font-weight: 400;
+  color: var(--muted);
+}
+.field-input:user-invalid { border-color: var(--bad-fg); }
+
+/*
   Dve krátke polia vedľa seba (meno a priezvisko, tituly). Na telefóne pod
   sebou — `minmax(0, …)` je tu podstatné: bez neho by pole s dlhou hodnotou
   roztiahlo stĺpec a riadok by pretiekol cez okraj obrazovky.
@@ -1125,12 +1146,23 @@ html[data-theme="dark"] select.field-input {
 /*
  * Pás cesty (SHELL-rozcestnik, bod 4) — 40 px pod hlavičkou, cez celú
  * šírku; riadok v ňom lícuje s obsahom (ten istý strop a odsadenie ako
- * `.app-main`). Nie `sticky`: cesta je orientácia pri príchode, nie
- * ovládací prvok, ktorý treba mať stále na očiach — a hlavička nad ňou
- * už `sticky` je.
+ * `.app-main`). **Prilepený pod hlavičkou** (rozhodnutie Jána 12. 10. 2026,
+ * mení pôvodné „nie sticky" zo SHELL-rozcestnik): na dlhom zozname alebo
+ * detaile je cesta jediný návrat o úroveň vyššie, a ten má byť po ruke aj
+ * dole na stránke, nie až po vyrolovaní nahor.
+ *
+ * Výšku hlavičky a pásu nesie `--chrome-h` — z nej počítajú odsadenie všetky
+ * ďalšie prilepené prvky a kotvy (`scroll-margin-top`), aby nevkĺzli pod pás.
+ * Na Prehľade pás nie je, preto `:has()`.
  */
+:root { --chrome-h: 57px; }
+:root:has(.app-path) { --chrome-h: 98px; }
+/* Každá kotva (`#links`, článok normy) skončí pod pásom, nie za ním. */
+html { scroll-padding-top: var(--chrome-h); }
 .app-path {
-  position: relative;
+  position: sticky;
+  top: 57px;
+  z-index: 9;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -1192,10 +1224,19 @@ html[data-theme="dark"] select.field-input {
   overflow-wrap: anywhere;
 }
 
-/* Telefón: dlhá cesta sa zalomí, odkazy majú terč ~30 px v páse 44 px. */
+/*
+  Telefón: pás je prilepený, preto jeden riadok, nie zalomenie — dva riadky
+  cesty by zobrali kus obrazovky natrvalo. Ako v iOS ostáva rodič (návrat
+  o úroveň vyššie) a aktuálna stránka; šípka pred rodičom hovorí, že cesta
+  pokračuje. Na Prehľad a do sekcií vedie spodná lišta.
+*/
 @media (max-width: 639px) {
-  .app-path-row { align-items: flex-start; min-height: 44px; padding: 2px 10px; }
-  .app-path-list { padding: 6px 0; font-size: 12.5px; }
+  :root:has(.app-path) { --chrome-h: 102px; }
+  .app-path-row { min-height: 44px; padding: 0 10px; }
+  .app-path-list { flex-wrap: nowrap; padding: 0; font-size: 12.5px; }
+  .app-path-list li:not(:nth-last-child(-n + 2)) { display: none; }
+  .app-path-list li { flex: 0 1 auto; }
+  .app-path-list li > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .app-path-list a { padding: 6px 4px; }
 }
 
@@ -4468,9 +4509,9 @@ button.view-switch-item:disabled { cursor: default; opacity: .7; }
      s vlastným rolovaním, keď sú dlhšie než okno. */
   .ask-layout.is-split .ask-aside {
     position: sticky;
-    top: 112px;
+    top: calc(var(--chrome-h) + 14px);
     align-self: start;
-    max-height: calc(100dvh - 128px);
+    max-height: calc(100dvh - var(--chrome-h) - 30px);
     overflow: auto;
   }
 }
@@ -5330,7 +5371,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   font-weight: 650;
   letter-spacing: -0.01em;
   /* Kotva z cesty (`/#management`) — nadpis nemá skončiť pod hlavičkou. */
-  scroll-margin-top: 72px;
+  scroll-margin-top: 15px;
 }
 
 .section-tiles {
@@ -6101,7 +6142,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
    Karta „Nové znenie" na detaile: krokovník, telo aktuálneho kroku, riadok
    „Potom" a päta s akciou. Predpona `flow-`, lebo `.check-row` a
    `.approval-*` už v aplikácii znamenajú niečo iné. */
-.flow { padding: 0; overflow: hidden; margin: 0 0 18px; scroll-margin-top: 72px; }
+.flow { padding: 0; overflow: hidden; margin: 0 0 18px; scroll-margin-top: 15px; }
 .flow-head {
   display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap;
   padding: 14px 18px; border-bottom: 1px solid var(--line);
@@ -6424,7 +6465,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
     gap: 16px;
     padding: 14px;
     position: sticky;
-    top: 72px;
+    top: calc(var(--chrome-h) + 15px);
   }
   .dpo-pills { display: none; }
 }
@@ -6565,7 +6606,7 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 }
 @media (min-width: 1024px) {
   .privacy { grid-template-columns: 220px minmax(0, 1fr); }
-  .privacy-toc { display: grid; gap: 2px; position: sticky; top: 16px; align-self: start; }
+  .privacy-toc { display: grid; gap: 2px; position: sticky; top: calc(var(--chrome-h) + 16px); align-self: start; }
   .privacy-chips { display: none; }
 }
 .privacy-who { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 22px 0 0; }
@@ -7046,7 +7087,7 @@ span.domain-end { font-size: 12.5px; }
 .pp-head { display: grid; gap: 8px; }
 .pp-head .page-title { margin: 0; text-wrap: pretty; }
 .ph-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
-.pp-outline { display: none; gap: 2px; position: sticky; top: 12px; }
+.pp-outline { display: none; gap: 2px; position: sticky; top: calc(var(--chrome-h) + 12px); }
 .pp-outline h2 { font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
 .pp-orow { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 6px; border-radius: 7px; font-size: 13px; color: var(--ink); text-decoration: none; }
 .pp-orow:hover { background: var(--surface-2); }
@@ -7293,7 +7334,7 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
 
 @media (min-width: 1024px) {
   .mc-detail { grid-template-columns: 240px minmax(0, 1fr); }
-  .mc-side { position: sticky; top: 12px; }
+  .mc-side { position: sticky; top: calc(var(--chrome-h) + 12px); }
   .mc-side .pp-orow { display: flex; }
 }
 
@@ -7348,7 +7389,7 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
 
 @media (min-width: 1024px) {
   .te-grid { grid-template-columns: minmax(0, 1fr) 300px; }
-  .te-side { order: 0; position: sticky; top: 12px; }
+  .te-side { order: 0; position: sticky; top: calc(var(--chrome-h) + 12px); }
 }
 
 /* ── Vzdelávanie: pokus a výsledok testu (rámy TEST-ATTEMPT, RESULT) ─────── */
@@ -7365,7 +7406,7 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
 .at-closed { padding: 20px; display: grid; gap: 12px; justify-items: start; }
 .at-closed.is-warn { box-shadow: inset 3px 0 0 var(--warn-fg); }
 .at-closed-ico { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--warn-bg); color: var(--warn-fg); font-weight: 800; }
-.abar { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 10px 14px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.abar { position: sticky; top: var(--chrome-h); z-index: 6; display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; padding: 10px 14px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
 .abar-pos { font-weight: 650; font-variant-numeric: tabular-nums; }
 .abar-time { padding: 2px 8px; border-radius: 6px; background: var(--surface-2); font-variant-numeric: tabular-nums; font-size: 13px; }
 .abar-time.is-warn { background: var(--warn-bg); color: var(--warn-fg); }
@@ -7914,7 +7955,7 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
   .org-index { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; max-width: 980px; }
   .org-grid { grid-template-columns: 220px minmax(0, 720px); gap: 28px; align-items: start; }
   .org-grid--single { grid-template-columns: minmax(0, 720px); }
-  .org-grid .org-nav { position: sticky; top: 72px; gap: 14px; }
+  .org-grid .org-nav { position: sticky; top: calc(var(--chrome-h) + 15px); gap: 14px; }
   .org-grid .org-nav-group { gap: 2px; }
   .org-grid .org-nav-title { padding: 0 12px 4px; }
   .org-grid .org-nav-list { gap: 2px; background: none; border: 0; border-radius: 0; overflow: visible; }
@@ -8598,9 +8639,9 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
 .cf-list { display: grid; gap: 10px; }
 .cf-row { display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; min-height: 56px; padding: 8px 8px 8px 16px; }
 .cf-loc { flex: 1 1 240px; min-width: 0; font-size: 15px; overflow-wrap: anywhere; }
-.cf { display: grid; gap: 16px; padding: 16px 20px 20px; min-width: 0; scroll-margin-top: 80px; }
+.cf { display: grid; gap: 16px; padding: 16px 20px 20px; min-width: 0; scroll-margin-top: 23px; }
 .cf.is-open { border-color: var(--line-strong); box-shadow: 0 2px 10px rgba(20, 28, 42, .06); }
-.cf-row { scroll-margin-top: 80px; }
+.cf-row { scroll-margin-top: 23px; }
 .cf-head { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; }
 .cf-head b { flex: 1 1 260px; min-width: 0; font-size: 16px; font-weight: 650; overflow-wrap: anywhere; }
 .cf-head a { font-size: 14px; min-height: 44px; display: inline-flex; align-items: center; }
@@ -8618,7 +8659,7 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
 .decision-tick { display: none; }
 @media (min-width: 1024px) {
   .cf-split { grid-template-columns: 320px minmax(0, 1fr); gap: 28px; align-items: start; }
-  .cf-split-side { display: block; position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow: auto; }
+  .cf-split-side { display: block; position: sticky; top: calc(var(--chrome-h) + 19px); max-height: calc(100vh - var(--chrome-h) - 39px); overflow: auto; }
   .cf-docs-full, a.form-row.cf-pick { display: none; }
   .cf-split-main.is-docs .cf-main { display: grid; }
 }
@@ -8722,7 +8763,7 @@ a.pq-chip:hover { background: var(--surface-2); }
  * nezakryla hlavička; cieľ sa na chvíľu zvýrazní, aby ho oko v dlhom
  * texte našlo.
  */
-.norm-anchor { scroll-margin-top: 88px; }
+.norm-anchor { scroll-margin-top: 31px; }
 .norm-anchor:target { background: var(--warn-bg); border-radius: 6px; box-shadow: 0 0 0 6px var(--warn-bg); animation: norm-target 2.4s ease-out 1; }
 @keyframes norm-target { from { box-shadow: 0 0 0 6px color-mix(in srgb, var(--warn-fg) 30%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .norm-anchor:target { animation: none; } }
