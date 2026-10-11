@@ -56,7 +56,15 @@ function Norm({ t, f }: { t: T; f: DocumentFinding }) {
   return (
     <div className="cf-blk">
       <span className="cf-blk-l">{t.norm}</span>
-      <p><Link href={`/library/${encodeURIComponent(f.citation.documentId)}`}>{f.citation.title}{f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}</Link></p>
+      {/* Náhľad normy v novom okne (Ján 11. 10. 2026) — čitateľský pohľad, nie karta
+          v správe; rozpracované rozhodnutie na tejto stránke ostáva. */}
+      <p>
+        <a href={`/documents/${encodeURIComponent(f.citation.documentId)}`} target="_blank" rel="noopener">
+          {f.citation.title}{f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}
+          <svg className="ext-icon" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <span className="sr-only"> {t.opensNewWindow}</span>
+        </a>
+      </p>
       {f.citation.quote && <blockquote className="quote">{f.citation.quote}</blockquote>}
     </div>
   )
