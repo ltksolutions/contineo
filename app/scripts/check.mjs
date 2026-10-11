@@ -152,8 +152,10 @@ for (const d of documents) {
  */
 // Kópia `ASSIGNABLE_ROLES` (`people.ts`) + `PLATFORM_ROLE` — skript beží bez
 // TypeScript háčika. Nová rola sa dopisuje na obe miesta, inak ju tu nahlási
-// ako neznámu (stalo sa pri `dpo` a `learning-admin`).
-const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "dpo", "learning-admin", "platform-admin"])
+// ako neznámu (stalo sa pri `dpo`, `learning-admin` a `helpdesk`).
+// Súlad s kódom stráži `tests/checkRoles.test.ts` — chýbajúca rola tam zhodí test,
+// nie až nočnú kontrolu (stalo sa aj pri `helpdesk`, 11. 10. 2026).
+const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "dpo", "learning-admin", "helpdesk", "platform-admin"])
 const STARE_ROLE = new Set(["spravca-obsahu"])
 for (const o of persons) {
   for (const r of o.roles ?? []) {
