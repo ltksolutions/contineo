@@ -8413,10 +8413,12 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 .gh .quiet { font-size: var(--fs-small); }
 .gh > form { margin-left: auto; }
 .connector-about { padding: 0; overflow: hidden; }
-.lc { position: relative; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 16px; padding: 11px 16px; font-size: 15px; }
-.lc + .lc::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--line); }
-.lc > span:first-child { color: var(--muted); font-size: 14px; }
-.lc > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+/* Riadok „popis — hodnota" (SwiftUI `LabeledContent`). Nie `.lc` — to je
+   karta kurzu (`CourseCard`) a s ňou sa 9. 10. 2026 zrazila. */
+.labeled-row { position: relative; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 16px; padding: 11px 16px; font-size: 15px; }
+.labeled-row + .labeled-row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--line); }
+.labeled-row > span:first-child { color: var(--muted); font-size: 14px; }
+.labeled-row > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .connector-instr { display: grid; gap: 6px; }
 .connector-instr-text { white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; }
 .connector-instr-text.is-full { display: block; -webkit-line-clamp: unset; }
@@ -8494,7 +8496,7 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 .try-suggest h3 { margin: 0; font-size: var(--fs-lead); }
 .try-none { margin: 0; font-size: var(--fs-small); }
 @media (max-width: 639px) {
-  .lc { grid-template-columns: 1fr; padding: 10px 14px; }
+  .labeled-row { grid-template-columns: 1fr; padding: 10px 14px; }
   .tool { padding: 10px 14px; }
   .connector-band form, .connector-band .button { width: 100%; }
   .connector-try { padding: 14px; }
