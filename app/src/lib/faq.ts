@@ -44,6 +44,7 @@ import { saveFile } from "./fileStore"
 import { strictestAccessLevel, QA_SOURCE_TYPE } from "./curation"
 import { chunkingStrategyFor } from "./codelists"
 import { writeAudit } from "./audit"
+import { closeStaleRounds } from "./approvalsDb"
 import { dictionary, isUiLanguage, type UiLanguage } from "./i18n"
 import { renderFaqPdf, sourceLine, type FaqPdfTexts } from "./faqPdf"
 
@@ -408,6 +409,7 @@ async function writeDraft(companyCode: string, doc: RawDoc, entries: FaqEntry[],
       },
     },
   )
+  await closeStaleRounds(companyCode, doc.documentId, actor)
   await releaseDraftFiles(companyCode, doc.documentId, [doc.draftPdf, doc.draftSource], [storedPdf.id, storedMd.id])
     .catch(() => {}) // upratovanie; zápis už prebehol a nemá kvôli nemu zlyhať
 }

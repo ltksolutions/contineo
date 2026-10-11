@@ -15,6 +15,7 @@
 import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { writeAudit } from "./audit"
+import { notifyPeople } from "./notifications"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { DOCUMENTS_COLLECTION, type VersionFile } from "./documents"
 import { documentDraftIdentity, metaProblem, normalizeMeta } from "./versionMeta"
@@ -136,6 +137,19 @@ export async function submitForApproval(input: SubmitInput): Promise<ApprovalRou
     }
   }
 
+  // Jedno bežiace kolo na dokument (Ján 12. 10. 2026). Kolá starých podôb
+  // konceptu sa najprv uzavrú; čo ostane bežať pri inom znení, je skutočné
+  // kolo a druhé vedľa neho by schvaľovateľa mýlilo — dve „čaká na
+  // schválenie" pri jednom dokumente, z ktorých jedno už nič neznamená.
+  await closeStaleRounds(input.companyCode, input.documentId, input.submittedBy)
+  const colRounds = await getCollection<ApprovalRound>(APPROVALS_COLLECTION)
+  const other = await colRounds.findOne({
+    companyCode: input.companyCode, documentId: input.documentId, outcome: null, versionId: { $ne: input.versionId },
+  })
+  if (other) {
+    throw new ApprovalError("approval.otherRunning", "Pri tomto dokumente už beží iné kolo schvaľovania.")
+  }
+
   const rounds = await roundsForVersion(input.companyCode, input.documentId, input.versionId)
   const problem = submitProblem({
     rounds,
@@ -248,6 +262,66 @@ export async function cancelRound(input: {
     targetLabel: input.documentId,
     note: `Znenie ${input.versionId}, kolo ${last.round}. Dôvod: ${reason}`,
   })
+}
+
+/**
+ * Uzavrie bežiace kolá, ktoré sa týkajú podoby konceptu, ktorá už neexistuje
+ * (Ján 12. 10. 2026).
+ *
+ * Kolo je naviazané na odtlačok konceptu (text + PDF + údaje + názov). Po
+ * zmene konceptu sa naň už nič nedá schváliť — ale v databáze ostávalo
+ * otvorené, takže ho zoznamy ukazovali a schvaľovateľ ho videl vedľa nového
+ * kola (11. 10. 2026: ISSF-04 a ISSF-05 dvakrát „čaká na schválenie").
+ *
+ * Kolo sa **nemaže** (ADR-006, časť 5): dostane výsledok `rejected`, poznámku
+ * a záznam v audite, rovnako ako ručne zrušené. Schvaľovatelia, ktorí ešte
+ * nerozhodli, dostanú upozornenie do zvončeka.
+ *
+ * **Nikdy nevyhadzuje** — volá sa po uložení konceptu a zlyhané upratanie
+ * nesmie zhodiť uloženie. Poistkou je kontrola v `startRound()`.
+ */
+export async function closeStaleRounds(companyCode: string, documentId: string, by: string): Promise<ApprovalRound[]> {
+  try {
+    const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne(
+      { companyCode, documentId },
+      { projection: { title: 1, draftMarkdown: 1, draftPdf: 1, draftMeta: 1, draftTitle: 1, "versions.versionId": 1 } },
+    ) as { title?: string; draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null; draftTitle?: string | null; versions?: { versionId: string }[] } | null
+    if (!doc) return []
+    const current = String(doc.draftMarkdown ?? "").trim() ? documentDraftIdentity(doc) : null
+    const published = new Set((doc.versions ?? []).map(v => v.versionId))
+    const col = await getCollection<ApprovalRound>(APPROVALS_COLLECTION)
+    const stale = (await col.find({ companyCode, documentId, outcome: null }).toArray())
+      .filter(r => r.versionId !== current && !published.has(r.versionId))
+    if (stale.length === 0) return []
+
+    const now = new Date()
+    for (const r of stale) {
+      await col.updateOne(
+        { companyCode, documentId, versionId: r.versionId, round: r.round, outcome: null },
+        { $set: { outcome: "rejected", closedAt: now, note: `${r.note ? `${r.note}\n\n` : ""}Kolo zrušené automaticky: koncept sa po predložení zmenil (${by}).` } },
+      )
+      await writeAudit({
+        companyCode, subject: "document", action: "approval-cancelled", actor: by,
+        targetId: documentId, targetLabel: doc.title ?? documentId,
+        note: `Znenie ${r.versionId}, kolo ${r.round}. Koncept sa po predložení zmenil — kolo sa týkalo podoby, ktorá už neexistuje.`,
+      })
+    }
+
+    const emails = [...new Set(stale.flatMap(r => r.approvers.filter(a => a.decision === null).map(a => a.email.toLowerCase())))]
+    if (emails.length > 0) {
+      const people = await (await getCollection<Person>(PERSONS_COLLECTION)).find(
+        { companyCode, email: { $in: emails } } as never, { projection: { _id: 0, id: 1 } },
+      ).toArray()
+      await notifyPeople({
+        companyCode, personIds: people.map(p => p.id), kind: "approvalCancelled",
+        params: { documentId, documentTitle: doc.title ?? documentId },
+      })
+    }
+    return stale
+  } catch (e) {
+    console.error(`[schvalovanie] zastarané kolá ${companyCode}/${documentId} sa nepodarilo uzavrieť:`, e)
+    return []
+  }
 }
 
 /** Kolá, v ktorých tento človek ešte nerozhodol. Obrazovka schvaľovateľa. */

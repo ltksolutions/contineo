@@ -39,7 +39,7 @@ import { AppError } from "./appError"
 import { publishBlock, APPROVALS_COLLECTION } from "./approvals"
 import { documentDraftIdentity, normalizeMeta, isEmptyMeta, suggestMetaFromMarkdown, metaLocked, type VersionMeta } from "./versionMeta"
 import { allDepartments } from "./departments"
-import { versionStateFor } from "./approvalsDb"
+import { closeStaleRounds, versionStateFor } from "./approvalsDb"
 import { responsibleSnapshot } from "./versionResponsibilityDb"
 import { legalBasisFromDraft, type DraftLegalBasis } from "./versionResponsibility"
 import { autoVersionLabel } from "./versionLabel"
@@ -471,6 +471,8 @@ export async function uploadDocument(
       (source ? ` · zdroj ${FILE_TYPE_LABEL[converted.type]} · ${source.name}` : "") +
       ` · ${converted.method}`,
   })
+  // Nový koncept — kolo predošlého sa týka podoby, ktorá už neexistuje.
+  await closeStaleRounds(meta.companyCode, documentId, actor)
 
   // Predošlý koncept je nahradený — jeho súbory už nič neukazuje.
   if (existing) {
@@ -553,6 +555,8 @@ export async function saveDraft(
   )
   if (!r.matchedCount) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
   await regenerateDraftPdf(companyCode, documentId, actor)
+  // Zmenený text (a s ním PDF) je iný koncept — bežiace kolo sa uzavrie, nie ostane visieť.
+  await closeStaleRounds(companyCode, documentId, actor)
 }
 
 /**
@@ -743,6 +747,7 @@ export async function saveDraftTitle(
     changes: diff({ draftTitle: before }, { draftTitle: next }),
     note: "nový názov v príprave znenia (ADR-015)",
   })
+  await closeStaleRounds(companyCode, documentId, actor)
   return true
 }
 
@@ -1095,6 +1100,9 @@ export async function publish(
       ` · zodpovedná osoba: ${responsible.fullName}` +
       (draftTitle && draftTitle !== String(doc.title ?? "") ? ` · nový názov: „${draftTitle}" (pôvodne „${String(doc.title ?? "")}")` : ""),
   })
+
+  // Zverejnením koncept zmizol; kolá iných jeho podôb už nemajú čo schváliť.
+  await closeStaleRounds(companyCode, documentId, actor)
 
   return {
     versionId, label, chunks: chunkCount, archived: archive.modifiedCount, alreadyDone: false,
@@ -1846,6 +1854,7 @@ export async function loadVersionIntoDraft(
     { documentId, companyCode },
     { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor } },
   )
+  await closeStaleRounds(companyCode, documentId, actor)
   return { label: target.label }
 }
 
