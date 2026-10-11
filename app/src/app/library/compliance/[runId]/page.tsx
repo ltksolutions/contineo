@@ -26,7 +26,9 @@ import {
   defaultDocument, filterFindings, findingAnchor, findingState, isFindingView, nextOpen, openCount, orderedFindings, runProgress,
   type FindingView,
 } from "@/lib/complianceView"
-import { wordDiff } from "@/lib/wordDiff"
+import { wordDiff, readableInline } from "@/lib/wordDiff"
+import { getCollection } from "@/lib/mongodb"
+import { PERSONS_COLLECTION, type Person } from "@/lib/persons"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
@@ -42,7 +44,7 @@ type Ready = Extract<ComplianceViewContext, { state: "ready" }>
 function Diff({ before, after }: { before: string; after: string }) {
   return (
     <div className="pr-diff cf-diff">
-      {wordDiff(before, after).map((part, i) =>
+      {wordDiff(readableInline(before), readableInline(after)).map((part, i) =>
         part.kind === "removed" ? <del key={i}>{part.text}</del> : part.kind === "added" ? <ins key={i}>{part.text}</ins> : <span key={i}>{part.text}</span>,
       )}
     </div>
@@ -135,6 +137,9 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   const { runId } = await params
   const run = await documentRun(ctx.tenant.companyCode, decodeURIComponent(runId))
   if (!run) notFound()
+  // Meno, nie e-mail: beh nesie len adresu toho, kto ho spustil (kópia v čase spustenia).
+  const starter = await (await getCollection<Person>(PERSONS_COLLECTION)).findOne({ companyCode: ctx.tenant.companyCode, email: run.startedBy }, { projection: { _id: 0, fullName: 1 } })
+  const startedByName = starter?.fullName?.trim() || run.startedBy
   const q = normalizeQuery<{ msg?: string; error?: string; doc?: string; view?: string; f?: string; change?: string; docs?: string }>(await searchParams)
   const language: UiLanguage = ctx.person.language
   const dict = dictionary(language)
@@ -146,7 +151,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   const running = run.pending.length > 0
   const stopped = running && run.failures >= MAX_FAILURES
   const meta: [string, string][] = [
-    [t.metaStarted, `${formatDate(run.startedAt, language)}, ${run.startedBy}`],
+    [t.metaStarted, `${formatDate(run.startedAt, language)}, ${startedByName}`],
     [t.metaFinished, run.finishedAt ? formatDate(run.finishedAt, language) : t.running],
     [t.metaDuration, minutes === null ? t.metaUnknown : t.duration(minutes)],
     [t.metaModel, model ?? t.metaUnknown],
@@ -221,7 +226,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
           </div>
           <div className="cf-blk">
             <span className="cf-blk-l">{t.change}</span>
-            {f.proposed ? <Diff before={f.quote} after={f.proposed} /> : <div className="pr-diff cf-diff">{f.quote}</div>}
+            {f.proposed ? <Diff before={f.quote} after={f.proposed} /> : <div className="pr-diff cf-diff">{readableInline(f.quote)}</div>}
           </div>
           <Norm t={t} f={f} />
           {f.recommendation && <div className="cf-blk"><span className="cf-blk-l">{t.recommendation}</span><p>{f.recommendation}</p></div>}
@@ -254,7 +259,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
         {state === "manual" && <StateNote t={t} f={f} cls="lnote--warn" mark="!" title={t.stateManual} who={who} note={t.manualNote} />}
         <div className="cf-blk">
           <span className="cf-blk-l">{state === "kept" ? t.keptText : t.acceptedText}</span>
-          {state === "kept" ? <div className="pr-diff cf-diff">{f.quote}</div> : <Diff before={f.quote} after={accepted} />}
+          {state === "kept" ? <div className="pr-diff cf-diff">{readableInline(f.quote)}</div> : <Diff before={f.quote} after={accepted} />}
         </div>
         <Norm t={t} f={f} />
         {state === "manual" && (
@@ -327,7 +332,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
       <div className="page-head">
         <div className="page-head-main">
           <h1 className="page-title">{run.name || t.runDefaultName(when)}</h1>
-          <p className="quiet page-lead">{t.runScope(subjectIds.length || run.total, run.documents.length, run.startedBy, when)}</p>
+          <p className="quiet page-lead">{t.runScope(subjectIds.length || run.total, run.documents.length, startedByName, when)}</p>
         </div>
         {ctx.isReviewer && subjectIds.length > 0 && (
           <form action={startDocumentReviewAction} className="page-tools">

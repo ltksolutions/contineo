@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { wordDiff, hasChanges } from "../src/lib/wordDiff"
+import { wordDiff, hasChanges, readableInline } from "../src/lib/wordDiff"
 
 describe("wordDiff", () => {
   it("zmena jedneho slova v odseku je jedno slovo, nie cely odsek", () => {
@@ -16,5 +16,15 @@ describe("wordDiff", () => {
   it("rovnake texty nemaju zmeny, novy riadok sa zachova", () => {
     expect(hasChanges(wordDiff("a\nb", "a\nb"))).toBe(false)
     expect(wordDiff("a", "a\nb").map(p => p.text).join("")).toBe("a\nb")
+  })
+})
+
+describe("readableInline — porovnanie bez hviezdičiek (11. 10. 2026)", () => {
+  it("odstráni značky tučného písma, text ostane", () => {
+    expect(readableInline("aj **poplatok: 0,50 € mesačne**.")).toBe("aj poplatok: 0,50 € mesačne.")
+  })
+  it("hviezdičky sa nehlásia ako zmena", () => {
+    const parts = wordDiff(readableInline("v ISSF: **0,50 € mesačne**."), readableInline("v ISSF: **1 €** ročne."))
+    expect(parts.filter(p => p.kind !== "same").map(p => p.text).join("|")).not.toContain("*")
   })
 })
