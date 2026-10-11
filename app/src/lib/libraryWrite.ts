@@ -552,6 +552,59 @@ export async function saveDraft(
     { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor } },
   )
   if (!r.matchedCount) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  await regenerateDraftPdf(companyCode, documentId, actor)
+}
+
+/**
+ * PDF a zdroj `.md` konceptu z aktuálneho textu (ADR-031, Ján 11. 10. 2026).
+ *
+ * Schvaľuje a zverejňuje sa PDF (ADR-011, D94). Keď PDF vzniklo z nahratého
+ * `.md`, je text konceptu jeho predlohou — a úprava textu v Contineo
+ * (editor, kontrola súladu, prijatý návrh modelu) PDF neprepisovala:
+ * 11. 10. 2026 išiel „Elektronický transfer hráča" na schválenie s PDF spred
+ * opráv. Preto sa pri každej zmene textu konceptu so zdrojom `.md` PDF aj
+ * zdroj vyrobia nanovo so šablónou organizácie. Kolo schvaľovania je
+ * naviazané na odtlačok konceptu (text + PDF), takže sa tým zneplatní — tak
+ * je to správne, schvaľuje sa nové PDF.
+ *
+ * Dokument so zdrojom iným než `.md` (sken, Word) sa nemení — jeho PDF nie je
+ * vyrobené z textu. Zlyhané vykreslenie sa ohlási: tichý starý PDF by bol
+ * horší než chyba.
+ */
+export async function regenerateDraftPdf(companyCode: string, documentId: string, actor: string): Promise<boolean> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  const source = doc?.draftSource as VersionFile | null | undefined
+  const markdown = String(doc?.draftMarkdown ?? "").trim()
+  if (!doc || !source || !/\.md$/i.test(source.name) || !markdown) return false
+  const { renderDocumentPdf } = await import("./documentPdf")
+  const { tenantByCompanyCode } = await import("./tenants")
+  const { isUiLanguage } = await import("./i18n")
+  const tenant = await tenantByCompanyCode(companyCode)
+  if (!tenant) throw new LibraryError("library.documentNotFound", "Organizácia sa nenašla.")
+  const draftMeta = doc.draftMeta as { effectiveFrom?: Date | string | null } | null | undefined
+  const title = typeof doc.draftTitle === "string" && doc.draftTitle.trim() ? doc.draftTitle : String(doc.title ?? documentId)
+  let pdf: Uint8Array
+  try {
+    pdf = await renderDocumentPdf({
+      tenant, language: isUiLanguage(String(doc.language)) ? (String(doc.language) as never) : "sk", title, markdown,
+      createdOn: new Date(), effectiveFrom: draftMeta?.effectiveFrom ? new Date(draftMeta.effectiveFrom) : null,
+    })
+  } catch (e) {
+    console.error(`[library] PDF konceptu ${companyCode}/${documentId} sa nepodarilo vyrobiť:`, e)
+    throw new LibraryError("library.draftPdfFailed", "Text je uložený, ale PDF konceptu sa nepodarilo vyrobiť — skúste to znova, kým sa koncept nepredloží na schválenie.")
+  }
+  const now = new Date()
+  const pdfName = source.name.replace(/\.md$/i, ".pdf")
+  const storedPdf = await saveFile(companyCode, pdfName, "application/pdf", Buffer.from(pdf), actor)
+  const storedMd = await saveFile(companyCode, source.name, "text/markdown", Buffer.from(markdown, "utf8"), actor)
+  await col.updateOne({ documentId, companyCode }, { $set: {
+    draftPdf: { id: storedPdf.id, name: storedPdf.name, bytes: storedPdf.bajtov, sha256: storedPdf.sha256, type: "pdf", uploadedAt: now, uploadedBy: actor, generatedFromMarkdown: true },
+    draftSource: { id: storedMd.id, name: storedMd.name, bytes: storedMd.bajtov, sha256: storedMd.sha256, type: "markdown", uploadedAt: now, uploadedBy: actor },
+  } })
+  // Staré súbory sa uvoľnia, len keď na ne neodkazuje znenie ani kolo schvaľovania (`releaseDraftFiles`).
+  await releaseDraftFiles(companyCode, documentId, [doc.draftPdf as VersionFile | null, source], [storedPdf.id, storedMd.id])
+  return true
 }
 
 /**
