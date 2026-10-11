@@ -73,6 +73,8 @@ export type NotificationKind =
   | "objectionSubmitted"
   /** Kontrola súladu dokumentov dobehla (ADR-032, D196) — tomu, kto ju spustil. */
   | "complianceDone"
+  /** Prijaté znenie z kontroly súladu čaká na zápis do konceptu — všetkým správcom obsahu (D199). */
+  | "complianceToApply"
 
 export interface NotificationParams {
   documentId?: string
@@ -125,6 +127,7 @@ export function notificationHref(
     case "objectionSubmitted":
       return "/dpo#objections"
     case "complianceDone":
+    case "complianceToApply":
       return params.runId ? `/library/compliance/${encodeURIComponent(params.runId)}` : "/library/compliance"
     default:
       // Neznámy druh nemá odkaz. Radšej nikam, než na obrazovku, ktorá

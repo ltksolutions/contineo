@@ -29,6 +29,35 @@ export type ComplianceContext =
   | { state: "forbidden" }
   | { state: "ready"; person: Person; tenant: Tenant; canEditDrafts: boolean }
 
+/**
+ * Detail behu vidí aj správca obsahu bez roly `compliance` — dostal
+ * upozornenie, že prijaté znenie čaká na zápis do konceptu (D199). Správca
+ * obsahu už spravuje všetky dokumenty knižnice vrátane interných, nálezy
+ * mu nič nové neodkryjú. Rozhodovať a spúšťať smie len rola `compliance`.
+ */
+export type ComplianceViewContext =
+  | { state: "unknown-host" }
+  | { state: "not-signed-in" }
+  | { state: "forbidden" }
+  | { state: "ready"; person: Person; tenant: Tenant; canEditDrafts: boolean; isReviewer: boolean }
+
+export async function complianceViewContext(): Promise<ComplianceViewContext> {
+  let tenant: Tenant | null = null
+  try {
+    tenant = await currentTenant()
+  } catch (e) {
+    console.error("[kontrola-suladu] tenanta sa nepodarilo načítať:", e)
+    return { state: "unknown-host" }
+  }
+  if (!tenant) return { state: "unknown-host" }
+  const person = await currentPerson()
+  if (!person) return { state: "not-signed-in" }
+  const isReviewer = isComplianceReviewer(person)
+  const canEditDrafts = isContentManager(person)
+  if (person.companyCode !== tenant.companyCode || (!isReviewer && !canEditDrafts)) return { state: "forbidden" }
+  return { state: "ready", person, tenant, canEditDrafts, isReviewer }
+}
+
 export async function complianceContext(): Promise<ComplianceContext> {
   let tenant: Tenant | null = null
   try {

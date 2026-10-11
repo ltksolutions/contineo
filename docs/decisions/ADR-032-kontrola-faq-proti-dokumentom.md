@@ -228,6 +228,17 @@ Z prvej kontroly 10 manuálov ISSF proti 7 normám (42 nálezov, 3,05 USD,
    a e-mail. Detail behu (`/library/compliance/[runId]`) ukazuje model, čas,
    volania, tokeny a cenu; spotreba ide do prehľadu AI pod vlastným účelom
    „Kontrola súladu dokumentov".
+6. **Bez roly správcu obsahu** sa prijaté znenie do konceptu nezapíše hneď:
+   všetkým s `content-admin` príde upozornenie do zvončeka (bez e-mailu,
+   aby desiatky nálezov nezahltili) a na detaile behu majú pri náleze
+   „Zapísať do konceptu". Detail behu preto vidí aj správca obsahu bez roly
+   `compliance` — rozhodovať a spúšťať nesmie.
+7. **Model je nastavenie organizácie** („Kontrola súladu dokumentov"
+   v Nastaveniach AI), predvolený **Opus 5.5**: prvá kontrola so Sonnet 5
+   mala 24 zo 42 nálezov slabých; Opus stojí ~5,30 USD za 10 manuálov
+   namiesto 3,05 a beží zriedka. Kúsok behu je preto **jeden krok** (jeden
+   balík noriem) dokumentu, nie celý dokument — tri pomalšie volania za
+   sebou by prekročili 300 s funkcie; rozpracované kroky sú v `partials`.
 
 ## 3. Postup
 

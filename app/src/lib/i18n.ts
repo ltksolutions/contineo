@@ -1712,6 +1712,8 @@ interface Dictionary {
       utilityNote: string
       rewrite: string
       rewriteNote: string
+      compliance: string
+      complianceNote: string
       price: (input: string, output: string) => string
       save: string
       saved: string
@@ -2248,6 +2250,8 @@ interface Dictionary {
       objectionSubmitted: () => string
       /** Kontrola súladu dokumentov dobehla (D196) — tomu, kto ju spustil. */
       complianceDone: (documents: number, findings: number) => string
+      /** Prijaté znenie čaká na zápis do konceptu (D199) — správcom obsahu. */
+      complianceToApply: (title: string) => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -3128,6 +3132,8 @@ interface Dictionary {
       savedManual: string
       decided: (status: string, who: string, when: string) => string
       decisionKeep: string
+      applyToDraft: string
+      applyHint: string
       changeDecision: string
       decisionAccept: string
       proposed: string
@@ -6109,6 +6115,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.noSubjects": "Vyberte aspoň jeden dokument na kontrolu.",
     "compliance.reasonRequired": "Uveďte dôvod rozhodnutia.",
     "compliance.textRequired": "Prijaté znenie nemôže byť prázdne.",
+    "compliance.nothingToApply": "Pri tomto náleze nie je čo zapísať.",
     "compliance.unknownRun": "Taká kontrola tu nie je.",
     "mailbox.slow": "Schránka odpovedá pomaly — časť sa nestihla prečítať, ďalší beh v nej pokračuje.",
     "ticket.notFound": "Taký ticket tu nie je.",
@@ -6486,6 +6493,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       utilityNote: "Beží pred vyhľadávaním a čaká sa naň, preto len najrýchlejší model.",
       rewrite: "Prepis skenov PDF",
       rewriteNote: "Prepisuje skenované predpisy v knižnici do textu.",
+      compliance: "Kontrola súladu dokumentov",
+      complianceNote: "Porovnáva dokumenty a návrhy FAQ s normami. Beží na pozadí a zriedka, preto sa oplatí najsilnejší model.",
       price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
       save: "Uložiť",
       saved: "Nastavenie AI je uložené.",
@@ -7031,6 +7040,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Ste zodpovedná osoba za znenie „${label}" dokumentu „${title}". Určte právny základ.`,
       draftResponsibleAssigned: (title) => `Ste zodpovedná osoba za pripravované znenie dokumentu „${title}". Právny základ môžete určiť ešte pred zverejnením.`,
       objectionSubmitted: () => "Nová námietka (čl. 21) čaká na vaše rozhodnutie.",
+      complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
     },
   },
@@ -7848,6 +7858,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       savedDraft: "Rozhodnutie je uložené a nové znenie je v koncepte dokumentu.",
       savedManual: "Rozhodnutie je uložené. Znenie treba vložiť do konceptu ručne — úryvok sa v texte nenašiel jednoznačne alebo nemáte rolu správcu obsahu.",
       decisionKeep: "Ponechať existujúce znenie",
+      applyToDraft: "Zapísať do konceptu",
+      applyHint: "Znenie prijal niekto bez roly správcu obsahu. Zápisom nahradí úryvok v koncepte; platné znenie sa nemení.",
       changeDecision: "Zmeniť rozhodnutie",
       decisionAccept: "Prijať odporúčanie a upraviť",
       proposed: "Nové znenie",
@@ -10762,6 +10774,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.noSubjects": "Vyberte alespoň jeden dokument ke kontrole.",
     "compliance.reasonRequired": "Uveďte důvod rozhodnutí.",
     "compliance.textRequired": "Přijaté znění nemůže být prázdné.",
+    "compliance.nothingToApply": "U tohoto nálezu není co zapsat.",
     "compliance.unknownRun": "Taková kontrola tu není.",
     "mailbox.slow": "Schránka odpovídá pomalu — část se nestihla přečíst, další běh v ní pokračuje.",
     "ticket.notFound": "Takový ticket tady není.",
@@ -11139,6 +11152,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       utilityNote: "Běží před vyhledáváním a čeká se na ni, proto jen nejrychlejší model.",
       rewrite: "Přepis skenů PDF",
       rewriteNote: "Přepisuje skenované předpisy v knihovně do textu.",
+      compliance: "Kontrola souladu dokumentů",
+      complianceNote: "Porovnává dokumenty a návrhy FAQ s normami. Běží na pozadí a zřídka, proto se vyplatí nejsilnější model.",
       price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
       save: "Uložit",
       saved: "Nastavení AI je uloženo.",
@@ -11682,6 +11697,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Jste odpovědná osoba za znění „${label}" dokumentu „${title}". Určete právní základ.`,
       draftResponsibleAssigned: (title) => `Jste odpovědná osoba za připravované znění dokumentu „${title}". Právní základ můžete určit ještě před zveřejněním.`,
       objectionSubmitted: () => "Nová námitka (čl. 21) čeká na vaše rozhodnutí.",
+      complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
     },
   },
@@ -12498,6 +12514,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       savedDraft: "Rozhodnutí je uloženo a nové znění je v konceptu dokumentu.",
       savedManual: "Rozhodnutí je uloženo. Znění je třeba vložit do konceptu ručně — úryvek se v textu nenašel jednoznačně nebo nemáte roli správce obsahu.",
       decisionKeep: "Ponechat stávající znění",
+      applyToDraft: "Zapsat do konceptu",
+      applyHint: "Znění přijal někdo bez role správce obsahu. Zápisem nahradí úryvek v konceptu; platné znění se nemění.",
       changeDecision: "Změnit rozhodnutí",
       decisionAccept: "Přijmout doporučení a upravit",
       proposed: "Nové znění",
@@ -15404,6 +15422,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.noSubjects": "Select at least one document to check.",
     "compliance.reasonRequired": "Give a reason for the decision.",
     "compliance.textRequired": "The accepted wording cannot be empty.",
+    "compliance.nothingToApply": "There is nothing to write for this finding.",
     "compliance.unknownRun": "There is no such check.",
     "mailbox.slow": "The mailbox is responding slowly — part of it was not read in time; the next run continues.",
     "ticket.notFound": "There is no such ticket here.",
@@ -15781,6 +15800,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       utilityNote: "Runs before the search and is waited for, so only the fastest model.",
       rewrite: "PDF scan transcription",
       rewriteNote: "Transcribes scanned regulations in the library into text.",
+      compliance: "Document compliance check",
+      complianceNote: "Compares documents and FAQ proposals with norms. Runs in the background and rarely, so the strongest model pays off.",
       price: (input, output) => `input $${input} · output $${output}`,
       save: "Save",
       saved: "The AI settings have been saved.",
@@ -16324,6 +16345,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `You are the responsible person for version “${label}” of “${title}”. Please set the legal basis.`,
       draftResponsibleAssigned: (title) => `You are the responsible person for the version of “${title}” in preparation. You can set the legal basis before it is published.`,
       objectionSubmitted: () => "A new objection (Art. 21) is waiting for your decision.",
+      complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
       complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,
     },
   },
@@ -17134,6 +17156,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       savedDraft: "Decision saved and the new wording is in the document draft.",
       savedManual: "Decision saved. The wording has to be put into the draft by hand — the excerpt was not found unambiguously or you do not have the content manager role.",
       decisionKeep: "Keep the current wording",
+      applyToDraft: "Write to draft",
+      applyHint: "The wording was accepted by someone without the content manager role. Writing it replaces the excerpt in the draft; the valid version does not change.",
       changeDecision: "Change decision",
       decisionAccept: "Accept the recommendation and edit",
       proposed: "New wording",

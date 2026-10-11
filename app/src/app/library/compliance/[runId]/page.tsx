@@ -13,13 +13,13 @@ import Link from "next/link"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
-import { complianceContext } from "@/lib/complianceAccess"
+import { complianceViewContext } from "@/lib/complianceAccess"
 import { documentRun, runUsage, runModel, MAX_FAILURES, FINDING_KINDS, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { decideFindingAction } from "../../complianceActions"
+import { decideFindingAction, applyFindingAction } from "../../complianceActions"
 
 export const dynamic = "force-dynamic"
 
@@ -66,7 +66,7 @@ function DecisionForm({ t, run, res, f, canEditDrafts }: { t: T; run: Compliance
 }
 
 export default async function ComplianceRunPage({ params, searchParams }: { params: Promise<{ runId: string }>; searchParams: Promise<RawQuery> }) {
-  const ctx = await complianceContext()
+  const ctx = await complianceViewContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
@@ -95,7 +95,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   const back = `/library/compliance/${encodeURIComponent(run.runId)}`
 
   return (
-    <AppShell language={language} title={t.heading} trail={{ "/library": dict.library.list.heading, "/library/compliance": t.heading }}>
+    <AppShell language={language} title={t.heading} trail={ctx.isReviewer ? { "/library": dict.library.list.heading, "/library/compliance": t.heading } : { "/library": dict.library.list.heading }}>
     <div className="detail-page" style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <div className="page-head">
         <h1 className="page-title">{t.runMeta(formatDate(run.startedAt, language), run.startedBy)}</h1>
@@ -145,14 +145,25 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
                       {f.acceptedText && <p style={{ margin: 0, whiteSpace: "pre-wrap" }}><b>{t.acceptedText}:</b> {f.acceptedText}</p>}
                       {f.reason && <p style={{ margin: 0, whiteSpace: "pre-wrap" }}><b>{t.reason}:</b> {f.reason}</p>}
                       {f.applied && <p style={{ margin: 0 }}><Link href={`/library/${encodeURIComponent(res.documentId)}/text`}>{t.openDraft}</Link></p>}
-                      <details>
-                        <summary className="quiet" style={{ cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center" }}>{t.changeDecision}</summary>
-                        <DecisionForm t={t} run={run} res={res} f={f} canEditDrafts={ctx.canEditDrafts} />
-                      </details>
+                      {f.applied === "manual" && f.acceptedText && ctx.canEditDrafts && (
+                        <form action={applyFindingAction} style={{ display: "grid", gap: 6 }}>
+                          <input type="hidden" name="runId" value={run.runId} />
+                          <input type="hidden" name="documentId" value={res.documentId} />
+                          <input type="hidden" name="findingId" value={f.id} />
+                          <span className="quiet field-hint">{t.applyHint}</span>
+                          <div><SubmitButton className="button button--quiet">{t.applyToDraft}</SubmitButton></div>
+                        </form>
+                      )}
+                      {ctx.isReviewer && (
+                        <details>
+                          <summary className="quiet" style={{ cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center" }}>{t.changeDecision}</summary>
+                          <DecisionForm t={t} run={run} res={res} f={f} canEditDrafts={ctx.canEditDrafts} />
+                        </details>
+                      )}
                     </>
-                  ) : (
+                  ) : ctx.isReviewer ? (
                     <DecisionForm t={t} run={run} res={res} f={f} canEditDrafts={ctx.canEditDrafts} />
-                  )}
+                  ) : null}
                 </div>
               ))}
             </div>

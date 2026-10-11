@@ -11,11 +11,11 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { headers } from "next/headers"
-import { complianceContext } from "@/lib/complianceAccess"
+import { complianceContext, complianceViewContext } from "@/lib/complianceAccess"
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
-import { startDocumentReview, decideFinding } from "@/lib/complianceCheck"
+import { startDocumentReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
 
 const PAGE = "/library/compliance"
@@ -73,9 +73,36 @@ export async function decideFindingAction(fd: FormData) {
     const text = typeof fd.get("text") === "string" ? String(fd.get("text")) : ""
     const r = await decideFinding(ctx.person.companyCode, runId, documentId, findingId, decision, fieldText(fd, "reason"), text, ctx.person.email, ctx.canEditDrafts)
     message = decision === "kept" ? ctx.t.savedKept : r.applied === "draft" ? ctx.t.savedDraft : r.applied === "manual" ? ctx.t.savedManual : ctx.t.saved
+    // Bez roly správcu obsahu znenie čaká — dať vedieť tým, ktorí ho zapíšu (D199).
+    if (r.applied === "manual" && !ctx.canEditDrafts) {
+      const run = await documentRun(ctx.person.companyCode, runId)
+      const title = run?.results?.find(x => x.documentId === documentId)?.title ?? documentId
+      await notifyContentManagers(ctx.person.companyCode, runId, documentId, title)
+    }
   } catch (e) {
     if (isRedirect(e)) throw e
     back(path, failure(e, ctx.language), true, anchor)
+  }
+  back(path, message, false, anchor)
+}
+
+/** Správca obsahu zapíše prijaté znenie do konceptu (D199). */
+export async function applyFindingAction(fd: FormData) {
+  const ctx = await complianceViewContext()
+  if (ctx.state !== "ready" || !ctx.canEditDrafts) redirect("/")
+  const t = dictionary(ctx.person.language).library.compliance
+  const runId = fieldText(fd, "runId")
+  const documentId = fieldText(fd, "documentId")
+  const findingId = fieldText(fd, "findingId")
+  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  const anchor = `${documentId}-${findingId}`
+  let message = ""
+  try {
+    const applied = await applyAcceptedFinding(ctx.person.companyCode, runId, documentId, findingId, ctx.person.email)
+    message = applied === "manual" ? t.savedManual : t.savedDraft
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(path, failure(e, ctx.person.language), true, anchor)
   }
   back(path, message, false, anchor)
 }

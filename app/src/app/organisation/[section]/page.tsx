@@ -1253,6 +1253,16 @@ export default async function OrganisationSectionPage({
               />
               <span className="quiet field-hint">{t.ai.rewriteNote}</span>
             </div>
+            <div className="field">
+              <span className="field-label">{t.ai.compliance}</span>
+              <Select language={language}
+                name="modelCompliance"
+                fieldLabel={t.ai.compliance}
+                initial={ai.models.compliance}
+                options={AI_MODELS.compliance.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
+              />
+              <span className="quiet field-hint">{t.ai.complianceNote}</span>
+            </div>
           </div>
         </section>
 
