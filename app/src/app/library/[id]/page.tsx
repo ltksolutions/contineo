@@ -282,6 +282,13 @@ export default async function DocumentDetailPage({
   )
   // Údaje o znení (ADR-013): uložené, návrh z prvej strany a zámok po predložení.
   const tm = dictionary(language).versionMeta
+  // Znenie bez orgánu (manuály, smernice) schválilo len kolo v Contineo —
+  // ukáže sa to namiesto pomlčky. Odvodené z kola, neukladá sa (D27).
+  const approvedInContineo = (versionId: string): string | null => {
+    const r = [...(rounds.get(versionId) ?? [])].reverse().find(x => x.outcome === "approved")
+    if (!r) return null
+    return tm.approvedInContineo(r.approvers.map(a => a.fullName).join(", "), date(r.closedAt ?? r.submittedAt))
+  }
   const metaIsLocked = metaLocked(draftState, Boolean(d.draftMeta))
   // Schválené ešte bez údajov (pred ADR-013): doplniť sa smú, ale zrušia schválenie.
   const metaVoidsApproval = draftState === "approved" && !d.draftMeta
@@ -734,7 +741,7 @@ export default async function DocumentDetailPage({
           <dt>{tm.approvedBy}</dt>
           <dd>{v.approvedBy
         ? `${v.approvedBy}${v.approvedOn ? ` · ${date(v.approvedOn)}` : ""}`
-        : ts.none}</dd>
+        : approvedInContineo(v.versionId) ?? ts.none}</dd>
         </div>
         <div>
           <dt>{tm.author}</dt>
@@ -752,7 +759,9 @@ export default async function DocumentDetailPage({
     : !latest ? tflow.firstVersion
     : draftEffectiveFrom ? tflow.heading(date(draftEffectiveFrom)) : tflow.headingUndated
   const flowStatus = !flow ? "" : flow.step === 1
-    ? (flow.rejected ? tflow.statusRejected(date(flow.rejected.closedAt ?? flow.rejected.submittedAt)) : tflow.statusPreparing)
+    ? (flow.rejected ? tflow.statusRejected(date(flow.rejected.closedAt ?? flow.rejected.submittedAt))
+      : flow.cancelled ? tflow.statusCancelled(date(flow.cancelled.closedAt ?? flow.cancelled.submittedAt))
+      : tflow.statusPreparing)
     : flow.step === 2 && running ? tflow.statusInReview(nameOf(running.submittedBy), date(running.submittedAt))
     : flow.step === 3
       ? `${tflow.statusApproved}${approvedRound?.closedAt ? ` · ${date(approvedRound.closedAt)}` : ""}`
@@ -761,7 +770,9 @@ export default async function DocumentDetailPage({
   const flowSubs = !flow ? [] : [
     flow.step === 1 ? tflow.subPrepare : tflow.subPrepareDone,
     flow.step === 1
-      ? (flow.rejected ? (rejectedBy(flow.rejected) ? tflow.subRejected(flow.rejected.round) : tflow.subCancelled(flow.rejected.round)) : tflow.subWaitSubmit)
+      ? (flow.rejected ? tflow.subRejected(flow.rejected.round)
+        : flow.cancelled ? tflow.subCancelled(flow.cancelled.round)
+        : tflow.subWaitSubmit)
       : flow.step === 2 ? tflow.subInReview(decided, running?.approvers.length ?? 0)
       : tflow.subApproved,
     flow.step === 2 ? tflow.subWaitApproval : flow.step === 4 ? tflow.subPublished : "",
@@ -1117,7 +1128,14 @@ export default async function DocumentDetailPage({
                     : flow.rejected.note && <q>{flow.rejected.note}</q>}
                 </div>
               )}
-              <p className="flow-lead">{flow.rejected ? tflow.lead1Rejected : tflow.lead1}</p>
+              {/* Zrušené kolo je sivé, nie červené: nikto nič nevytkol (ADR-006, dodatok 12. 10. 2026). */}
+              {flow.cancelled && (
+                <div className="flow-reject flow-reject--cancelled" role="note">
+                  <b>{tflow.cancelled(date(flow.cancelled.closedAt ?? flow.cancelled.submittedAt), flow.cancelled.round)}</b>
+                  {flow.cancelled.note && <q>{flow.cancelled.note}</q>}
+                </div>
+              )}
+              <p className="flow-lead">{flow.rejected ? tflow.lead1Rejected : flow.cancelled ? tflow.lead1Cancelled : tflow.lead1}</p>
 
               <div className="flow-check">
                 <div className="flow-check-row">

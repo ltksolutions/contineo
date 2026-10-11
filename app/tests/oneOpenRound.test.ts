@@ -66,7 +66,7 @@ describe("zastarané kolá", () => {
     const closed = await closeStaleRounds("SFZ", "sfz:issf_05", "jan@sfz.sk")
     expect(closed.map(r => r.versionId)).toEqual([OLD_ID])
     const [old, cur] = db.cols.approval_rounds
-    expect(old).toMatchObject({ outcome: "rejected" })
+    expect(old).toMatchObject({ outcome: "cancelled" })
     expect(String(old.note)).toContain("koncept sa po predložení zmenil")
     expect(cur).toMatchObject({ outcome: null })
     expect(db.audit[0]).toMatchObject({ action: "approval-cancelled" })
@@ -108,7 +108,7 @@ describe("predloženie", () => {
     db.cols.approval_rounds = [round(old)]
     const r = await submit()
     expect(r.outcome).toBeNull()
-    expect(db.cols.approval_rounds[0]).toMatchObject({ versionId: old, outcome: "rejected" })
+    expect(db.cols.approval_rounds[0]).toMatchObject({ versionId: old, outcome: "cancelled" })
   })
 
   it("druhé kolo vedľa bežiaceho iného znenia sa predložiť nedá", async () => {

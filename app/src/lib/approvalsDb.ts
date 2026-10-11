@@ -218,7 +218,7 @@ export async function submitForApproval(input: SubmitInput): Promise<ApprovalRou
  * Zruší bežiace kolo — jediná cesta, ako sa zo zoznamu schvaľovateľov dostane
  * ten, kto tam byť nemá (ADR-006, časť 5).
  *
- * Kolo sa **nemaže**: dostane výsledok `rejected` a poznámku, kto ho zrušil
+ * Kolo sa **nemaže**: dostane výsledok `cancelled` (dodatok ADR-006, 12. 10. 2026) a poznámku, kto ho zrušil
  * a prečo. Zmazané kolo by z histórie odstránilo, že sa raz predložilo niečo,
  * čo sa predkladať nemalo — a to je práve to, čo má byť vidieť.
  */
@@ -246,7 +246,7 @@ export async function cancelRound(input: {
     { companyCode: input.companyCode, documentId: input.documentId, versionId: input.versionId, round: last.round },
     {
       $set: {
-        outcome: "rejected",
+        outcome: "cancelled",
         closedAt: now,
         note: `${last.note ? `${last.note}\n\n` : ""}Kolo zrušil predkladateľ (${input.by}): ${reason}`,
       },
@@ -273,7 +273,7 @@ export async function cancelRound(input: {
  * otvorené, takže ho zoznamy ukazovali a schvaľovateľ ho videl vedľa nového
  * kola (11. 10. 2026: ISSF-04 a ISSF-05 dvakrát „čaká na schválenie").
  *
- * Kolo sa **nemaže** (ADR-006, časť 5): dostane výsledok `rejected`, poznámku
+ * Kolo sa **nemaže** (ADR-006, časť 5): dostane výsledok `cancelled`, poznámku
  * a záznam v audite, rovnako ako ručne zrušené. Schvaľovatelia, ktorí ešte
  * nerozhodli, dostanú upozornenie do zvončeka.
  *
@@ -298,7 +298,7 @@ export async function closeStaleRounds(companyCode: string, documentId: string, 
     for (const r of stale) {
       await col.updateOne(
         { companyCode, documentId, versionId: r.versionId, round: r.round, outcome: null },
-        { $set: { outcome: "rejected", closedAt: now, note: `${r.note ? `${r.note}\n\n` : ""}Kolo zrušené automaticky: koncept sa po predložení zmenil (${by}).` } },
+        { $set: { outcome: "cancelled", closedAt: now, note: `${r.note ? `${r.note}\n\n` : ""}Kolo zrušené automaticky: koncept sa po predložení zmenil (${by}).` } },
       )
       await writeAudit({
         companyCode, subject: "document", action: "approval-cancelled", actor: by,
