@@ -213,7 +213,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="sk">
       {/* Stĺpec s `min-height`, aby pätička na krátkej stránke sedela dole
           a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
-      <body style={{ ...tenantStyle(branding), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+      <body style={{ ...tenantStyle(branding), ["--t-required" as string]: JSON.stringify(dictionary(language).common.required), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <SessionProvider>
           {/* Nad hlavičkou a pred ňou: prúžok má byť vidieť od chvíle kliknutia,
               teda skôr, než sa vymení obsah pod ním. */}
