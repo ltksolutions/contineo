@@ -108,8 +108,8 @@ export default function FormattedText({
    * len pri texte predpisu v čitateľskom pohľade, nie v odpovediach či kurzoch.
    */
   anchors?: boolean
-  /** Kotva bloku, ktorý sa zvýrazní (citovaný odsek v náhľade článku). */
-  highlight?: string
+  /** Kotvy blokov, ktoré sa zvýraznia (citované odseky v náhľade článku). */
+  highlight?: string[]
   /**
    * Citácie odpovede s polohou `at` zo streamu — vložia sa ako značky `[n]`
    * na konce viet. Bez nich (alebo bez `at`) text ostáva, ako je.
@@ -118,6 +118,7 @@ export default function FormattedText({
 }) {
   const blocks = toBlocks(citations?.length ? markCitations(text, citations) : text)
   const ids = anchors ? blockAnchors(blocks) : []
+  const cited = new Set(highlight ?? [])
   return (
     <>
       {blocks.map((b, i) =>
@@ -125,7 +126,7 @@ export default function FormattedText({
           <div
             key={i}
             id={ids[i] ?? undefined}
-            className={ids[i] ? `norm-anchor${ids[i] === highlight ? " is-cited" : ""}` : undefined}
+            className={ids[i] ? `norm-anchor${cited.has(ids[i]!) ? " is-cited" : ""}` : undefined}
             style={{
               fontSize: b.level <= 2 ? 16.5 : 15.5,
               fontWeight: 700,
@@ -135,7 +136,7 @@ export default function FormattedText({
             <Segments segments={b.segments} />
           </div>
         ) : b.druh === "odsek" ? (
-          <p key={i} id={ids[i] ?? undefined} className={ids[i] ? `norm-anchor${ids[i] === highlight ? " is-cited" : ""}` : undefined} style={{ margin: "0 0 12px" }}>
+          <p key={i} id={ids[i] ?? undefined} className={ids[i] ? `norm-anchor${cited.has(ids[i]!) ? " is-cited" : ""}` : undefined} style={{ margin: "0 0 12px" }}>
             <Segments segments={b.segments} />
           </p>
         ) : b.numbered ? (
