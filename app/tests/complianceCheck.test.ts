@@ -52,7 +52,7 @@ describe("parseReview", () => {
   })
 })
 
-import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS } from "../src/lib/complianceCheck"
+import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS, currentWording, suggestOnCurrent, quotesOverlap } from "../src/lib/complianceCheck"
 
 describe("viac krokov a dokument proti dokumentom", () => {
   const big = (id: string, cat: string, n: number) => ({ documentId: id, title: id, category: cat, versions: [{ versionId: "v", isActive: true, markdown: Array.from({ length: n }, (_, i) => `Odsek ${i} ${"x".repeat(90)}`).join("\n\n") }] })
@@ -131,5 +131,44 @@ describe("teplý balík v cache (11. 10. 2026)", () => {
   it("nové použitie posunie čas, nezdvojí záznam", () => {
     const w = markWarm(markWarm([], 2, new Date(0)), 2, new Date(1000))
     expect(w).toEqual([{ step: 2, at: new Date(1000) }])
+  })
+})
+
+describe("prekrývajúce sa nálezy na jednom mieste (11. 10. 2026)", () => {
+  const base = { kind: "missing" as const, location: "4", citation: { documentId: "x", title: "X", articleRef: null, quote: "" }, recommendation: "" }
+  const q = "- Klub sa dostane do stavu **„Neplatič\"** po uplynutí splatnosti faktúry."
+  const g = { ...base, id: "f003", quote: q, status: "accepted" as const, applied: "draft" as const, acceptedText: `${q} Pokuta má športovo-technické dôsledky.` }
+  const f = { ...base, id: "f010", quote: q, status: null, proposed: `${q} Odpočítajú sa tri body.` }
+  it("aktuálne znenie z iného prijatého nálezu, keď pôvodný úryvok už v texte nie je", () => {
+    const draft = `# 4\n\n${g.acceptedText}\n\n- Ďalší bod.`
+    const cur = currentWording(draft, f, [g, f])
+    expect(cur?.via.id).toBe("f003")
+    expect(suggestOnCurrent(f, cur!.text)).toBe(`${g.acceptedText} Odpočítajú sa tri body.`)
+  })
+  it("pôvodný úryvok v texte je → bez prekrytia; nahradenie mimo doplnenia ostáva na človeku", () => {
+    expect(currentWording(`# 4\n\n${q}`, f, [g, f])).toBeNull()
+    const rewrite = { ...f, proposed: "- Úplne iná veta." }
+    expect(suggestOnCurrent(rewrite, "aktuálne")).toBe("aktuálne")
+  })
+  it("úryvky sa porovnávajú bez Markdownu a medzier", () => {
+    expect(quotesOverlap("**Tajomník komisie** priebežne sleduje podania", "Tajomník komisie  priebežne sleduje podania")).toBe(true)
+    expect(quotesOverlap("Úplne iný odsek o niečom inom", "Tajomník komisie priebežne sleduje")).toBe(false)
+  })
+})
+
+describe("dve doplnenia jednej vety a zmena rozhodnutia", () => {
+  const base = { kind: "missing" as const, location: "4", citation: { documentId: "x", title: "X", articleRef: null, quote: "" }, recommendation: "" }
+  const q = "- Klub je neplatič po splatnosti faktúry."
+  const f003 = { ...base, id: "f003", quote: q, status: "accepted" as const, applied: "draft" as const, acceptedText: `${q} A1.` }
+  const f010 = { ...base, id: "f010", quote: q, status: "accepted" as const, applied: "draft" as const, acceptedText: `${q} A2.` }
+  const draft = `# 4\n\n${q} A2. A1.\n- Ďalší bod.`
+  it("celý riadok so zapísaným znením, aj keď ho tvoria dve doplnenia", () => {
+    expect(currentWording(draft, f003, [f003, f010])?.text).toBe(`${q} A2. A1.`)
+  })
+  it("zmena vlastného rozhodnutia nahrádza celý riadok", () => {
+    expect(currentWording(draft, f003, [f003, f010], true)?.text).toBe(`${q} A2. A1.`)
+    const lone = { ...f003, acceptedText: `${q} A1.` }
+    expect(currentWording(`${q} A1.`, lone, [lone])).toBeNull()
+    expect(currentWording(`${q} A1.`, lone, [lone], true)?.text).toBe(`${q} A1.`)
   })
 })

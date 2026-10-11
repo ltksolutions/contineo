@@ -26,7 +26,7 @@ import ScrollToCited from "@/components/ScrollToCited"
 import FormattedText from "@/components/FormattedText"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type DocumentRecord } from "@/lib/documents"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
-import { documentRun, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
+import { documentRun, draftBase, currentWording, suggestOnCurrent, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import {
   defaultDocument, filterFindings, findingAnchor, findingState, isFindingView, nextOpen, openCount, orderedFindings, runProgress,
   type FindingView,
@@ -114,9 +114,11 @@ function KindTag({ t, f }: { t: T; f: DocumentFinding }) {
   return <span className={f.kind === "conflict" ? "tag tag--warn" : "tag"}>{t.kinds[f.kind]}</span>
 }
 
-function DecisionForm({ t, run, res, f, ctx, view, next, nextLabel }: {
+function DecisionForm({ t, run, res, f, ctx, view, next, nextLabel, overlap }: {
   t: T; run: ComplianceRun; res: DocumentResult; f: DocumentFinding; ctx: Ready; view: FindingView
   next: { documentId: string; findingId: string } | null; nextLabel: string | null
+  /** Miesto už zmenil iný prijatý nález — pole začína jeho aktuálnym znením. */
+  overlap?: { text: string; via: DocumentFinding } | null
 }) {
   const hint = !ctx.canEditDrafts ? t.proposedHintNoRights : res.state === "valid" ? t.proposedHintValid : t.proposedHintDraft
   // Nerozhodnutý nález s navrhnutým znením má predvolene „Prijať a upraviť" (rám návrhu) — pole Nové znenie je hneď vidieť.
@@ -147,7 +149,8 @@ function DecisionForm({ t, run, res, f, ctx, view, next, nextLabel }: {
           Nie `<label>`: editor je viacero ovládačov, názov nesie `label`. */}
       <div className="field decision-text">
         <span className="field-label">{t.proposed}</span>
-        <TextEditor name="text" initial={f.acceptedText ?? f.proposed ?? f.quote} compact label={t.proposed} />
+        <TextEditor name="text" initial={overlap ? (f.status ? overlap.text : suggestOnCurrent(f, overlap.text)) : f.acceptedText ?? f.proposed ?? f.quote} compact label={t.proposed} />
+        {overlap && <span className="quiet field-hint">{t.overlapNote(overlap.via.location, !f.status && suggestOnCurrent(f, overlap.text) !== overlap.text)}</span>}
         <span className="quiet field-hint">{f.proposed || f.acceptedText ? hint : `${t.proposedMissing} ${hint}`}</span>
       </div>
       <label className="field">
@@ -222,6 +225,9 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   // Náhľad článku len pre otvorený nález — jeden dokument na načítanie, nie 62.
   const openFinding = selected?.findings.find(x => x.id === q.f) ?? null
   const normPreview = openFinding ? await loadNormPreview(ctx.tenant.companyCode, openFinding) : null
+  // Iný prijatý nález už prepísal to isté miesto — pole začne aktuálnym znením z konceptu.
+  const openBase = openFinding && selected ? await draftBase(ctx.tenant.companyCode, selected.documentId) : null
+  const overlap = openFinding && selected && openBase !== null ? currentWording(openBase, openFinding, selected.findings) : null
   const position = selected ? results.indexOf(selected) + 1 : 0
   const showDocs = q.docs === "1"
   // Odkaz so stavom obrazovky; filter `open` je predvolený a do adresy nejde.
@@ -284,7 +290,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
           </div>
           <Norm t={t} f={f} preview={normPreview} />
           {f.recommendation && <div className="cf-blk"><span className="cf-blk-l">{t.recommendation}</span><p>{f.recommendation}</p></div>}
-          <DecisionForm t={t} run={run} res={res} f={f} ctx={ctx} view={view} next={next} nextLabel={nextLabel} />
+          <DecisionForm t={t} run={run} res={res} f={f} ctx={ctx} view={view} next={next} nextLabel={nextLabel} overlap={overlap} />
         </article>
       )
     }
