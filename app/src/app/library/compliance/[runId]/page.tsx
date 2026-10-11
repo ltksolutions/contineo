@@ -26,7 +26,7 @@ import ScrollToCited from "@/components/ScrollToCited"
 import FormattedText from "@/components/FormattedText"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type DocumentRecord } from "@/lib/documents"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
-import { documentRun, draftBase, currentWording, suggestOnCurrent, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
+import { isRunning, documentRun, draftBase, currentWording, suggestOnCurrent, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import {
   defaultDocument, filterFindings, findingAnchor, findingState, isFindingView, nextOpen, openCount, orderedFindings, runProgress,
   type FindingView,
@@ -409,7 +409,8 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
             </details>
           )}
         </div>
-        {ctx.isReviewer && subjectIds.length > 0 && (
+        {/* „Spustiť znova" až po dobehnutí — počas behu by zdvojil prácu (Ján 11. 10. 2026). */}
+        {ctx.isReviewer && subjectIds.length > 0 && !isRunning(run) && (
           <form action={startDocumentReviewAction} className="page-tools">
             {subjectIds.map(id => <input key={id} type="hidden" name="subjectIds" value={id} />)}
             {run.documentIds.map(id => <input key={id} type="hidden" name="documentIds" value={id} />)}

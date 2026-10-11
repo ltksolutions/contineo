@@ -2698,6 +2698,8 @@ interface Dictionary {
     reviewScope: string
     reviewScopeAll: string
     reviewStart: string
+    reviewRunningTitle: string
+    reviewRunningNote: (when: string, who: string) => string
     reviewStarted: string
     reviewProgress: (done: number, total: number) => string
     reviewDone: (when: string) => string
@@ -6226,6 +6228,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.aiFailed": "Kontrola sa nepodarila — skúste to o chvíľu.",
     "compliance.noSubjects": "Vyberte aspoň jeden dokument na kontrolu.",
     "compliance.reasonRequired": "Uveďte dôvod rozhodnutia.",
+    "compliance.alreadyRunning": "Kontrola už beží — počkajte, kým dobehne.",
     "compliance.textRequired": "Prijaté znenie nemôže byť prázdne.",
     "compliance.nothingToApply": "Pri tomto náleze nie je čo zapísať.",
     "compliance.unknownRun": "Taká kontrola tu nie je.",
@@ -7591,6 +7594,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewScope: "Čo kontrolovať",
     reviewScopeAll: "Všetky otvorené návrhy",
     reviewStart: "Skontrolovať proti dokumentom",
+    reviewRunningTitle: "Kontrola beží na pozadí",
+    reviewRunningNote: (when, who) => `Spustená ${when}, ${who}. Novú spustíte, keď dobehne — príde upozornenie a e-mail. Stav uvidíte po obnovení stránky.`,
     reviewStarted: "Kontrola beží na pozadí — dávky idú jedna za druhou, stránku stačí neskôr obnoviť.",
     reviewProgress: (done: number, total: number) => `Skontrolované ${done} z ${total} návrhov.`,
     reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
@@ -10977,6 +10982,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.aiFailed": "Kontrola se nepodařila — zkuste to za chvíli.",
     "compliance.noSubjects": "Vyberte alespoň jeden dokument ke kontrole.",
     "compliance.reasonRequired": "Uveďte důvod rozhodnutí.",
+    "compliance.alreadyRunning": "Kontrola už běží — počkejte, až doběhne.",
     "compliance.textRequired": "Přijaté znění nemůže být prázdné.",
     "compliance.nothingToApply": "U tohoto nálezu není co zapsat.",
     "compliance.unknownRun": "Taková kontrola tu není.",
@@ -12340,6 +12346,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewScope: "Co kontrolovat",
     reviewScopeAll: "Všechny otevřené návrhy",
     reviewStart: "Zkontrolovat proti dokumentům",
+    reviewRunningTitle: "Kontrola běží na pozadí",
+    reviewRunningNote: (when, who) => `Spuštěna ${when}, ${who}. Novou spustíte, až doběhne — přijde upozornění a e-mail. Stav uvidíte po obnovení stránky.`,
     reviewStarted: "Kontrola běží na pozadí — dávky jdou jedna za druhou, stránku stačí později obnovit.",
     reviewProgress: (done: number, total: number) => `Zkontrolováno ${done} z ${total} návrhů.`,
     reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
@@ -15717,6 +15725,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.aiFailed": "The check failed — try again in a moment.",
     "compliance.noSubjects": "Select at least one document to check.",
     "compliance.reasonRequired": "Give a reason for the decision.",
+    "compliance.alreadyRunning": "A check is already running — wait until it finishes.",
     "compliance.textRequired": "The accepted wording cannot be empty.",
     "compliance.nothingToApply": "There is nothing to write for this finding.",
     "compliance.unknownRun": "There is no such check.",
@@ -17080,6 +17089,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewScope: "What to check",
     reviewScopeAll: "All open proposals",
     reviewStart: "Check against documents",
+    reviewRunningTitle: "The check is running in the background",
+    reviewRunningNote: (when, who) => `Started ${when}, ${who}. You can start a new one when it finishes — you will get a notification and an e-mail. Reload the page to see the state.`,
     reviewStarted: "The check is running in the background — batches run one after another, just reload the page later.",
     reviewProgress: (done: number, total: number) => `${done} of ${total} proposals checked.`,
     reviewDone: (when: string) => `The check is complete (${when}).`,
