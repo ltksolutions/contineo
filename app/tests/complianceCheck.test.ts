@@ -52,7 +52,7 @@ describe("parseReview", () => {
   })
 })
 
-import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote } from "../src/lib/complianceCheck"
+import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS } from "../src/lib/complianceCheck"
 
 describe("viac krokov a dokument proti dokumentom", () => {
   const big = (id: string, cat: string, n: number) => ({ documentId: id, title: id, category: cat, versions: [{ versionId: "v", isActive: true, markdown: Array.from({ length: n }, (_, i) => `Odsek ${i} ${"x".repeat(90)}`).join("\n\n") }] })
@@ -117,5 +117,19 @@ describe("nahradenie úryvku v koncepte (Ján 11. 10. 2026)", () => {
   })
   it("špeciálne znaky v úryvku nie sú regulárny výraz", () => {
     expect(replaceQuote("Cena (spolu) 1+1 €", "Cena  (spolu) 1+1 €", "Y")).toBe("Y")
+  })
+})
+
+describe("teplý balík v cache (11. 10. 2026)", () => {
+  it("balík je teplý do 55 minút od posledného použitia", () => {
+    const t0 = new Date("2026-10-11T10:00:00Z")
+    const warm = markWarm([], 1, t0)
+    expect(packWarm(warm, 1, t0.getTime() + WARM_MS - 1)).toBe(true)
+    expect(packWarm(warm, 1, t0.getTime() + WARM_MS)).toBe(false)
+    expect(packWarm(warm, 0, t0.getTime())).toBe(false)
+  })
+  it("nové použitie posunie čas, nezdvojí záznam", () => {
+    const w = markWarm(markWarm([], 2, new Date(0)), 2, new Date(1000))
+    expect(w).toEqual([{ step: 2, at: new Date(1000) }])
   })
 })
