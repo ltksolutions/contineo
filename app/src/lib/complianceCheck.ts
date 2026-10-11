@@ -936,16 +936,72 @@ export type FindingDecision = "accepted" | "kept"
  * rozpracovanom sa upraví ten. `manual` = úryvok sa jednoznačne nenašiel,
  * `null` = text sa nemení (znenie je rovnaké).
  */
-async function writeToDraft(code: string, documentId: string, quote: string, text: string, actor: string): Promise<"draft" | "manual" | null> {
+/**
+ * Text, do ktorého sa prijaté znenie zapisuje: rozpracovaný koncept, alebo
+ * pri voľnom koncepte platné znenie (z neho koncept vznikne). `null` = taký dokument tu nie je.
+ */
+export async function draftBase(code: string, documentId: string): Promise<string | null> {
   const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne({ companyCode: code, documentId }) as Record<string, unknown> | null
-  if (!doc) throw new ComplianceError("library.documentNotFound", "Taký dokument tu nie je.")
+  if (!doc) return null
   const versions = (doc.versions ?? []) as { versionId: string; label: string; markdown?: string; isActive?: boolean; pdf?: { id?: string } }[]
   const draft = String(doc.draftMarkdown ?? "")
   const draftPdf = (doc.draftPdf as { id?: string } | null | undefined)?.id ?? null
   const active = versions.find(v => v.isActive)
   const free = draftIsFree(draft, versions, draftPdf, versions.map(v => v.pdf?.id ?? "").filter(Boolean))
-  const base = free && active ? String(active.markdown ?? doc.markdown ?? "") : draft
-  const next = replaceQuote(base, quote, text)
+  return free && active ? String(active.markdown ?? doc.markdown ?? "") : draft
+}
+
+const loose = (s: string) => s.replace(/\*\*|__/g, "").replace(/\s+/g, " ").trim()
+
+/** Týkajú sa dva úryvky toho istého miesta? Rovnaké, alebo jeden obsahuje druhý (bez Markdownu a medzier). */
+export function quotesOverlap(a: string, b: string): boolean {
+  const x = loose(a), y = loose(b)
+  if (x.length < 20 || y.length < 20) return x === y && x.length > 0
+  return x === y || x.includes(y) || y.includes(x)
+}
+
+/**
+ * Aktuálne znenie miesta, ktoré už zmenil prijatý nález tohto behu (Ján
+ * 11. 10. 2026: dva nálezy na jednu vetu — druhý sa nezapísal, lebo pôvodná
+ * veta v koncepte už nebola, alebo pri doplnení prepísal len jej začiatok
+ * a doplnenie prvého nevidel). Vracia sa **celý riadok** (odsek, odrážka),
+ * v ktorom zapísané znenie leží — po dvoch doplneniach je zapísané znenie
+ * prvého nálezu už len časťou riadku a nahradiť treba celý. `includeSelf`
+ * pri zápise: zmena vlastného rozhodnutia nahrádza vlastné zapísané znenie.
+ * `null` = miesto nezmenil žiaden prijatý nález, alebo jeho znenie v texte už nie je.
+ */
+export function currentWording(base: string, f: DocumentFinding, siblings: DocumentFinding[], includeSelf = false): { text: string; via: DocumentFinding } | null {
+  let best: { text: string; via: DocumentFinding } | null = null
+  for (const g of siblings) {
+    if ((g.id === f.id && !includeSelf) || (g.status !== "accepted" && g.status !== "fixed") || !g.acceptedText) continue
+    if (g.id !== f.id && !quotesOverlap(g.quote, f.quote)) continue
+    const written = g.acceptedText.trim()
+    const at = base.indexOf(written)
+    if (at < 0 || base.indexOf(written, at + 1) >= 0) continue
+    const from = base.lastIndexOf("\n", at) + 1
+    const to = base.indexOf("\n", at + written.length)
+    const text = base.slice(from, to < 0 ? base.length : to).trim()
+    if (!best || text.length > best.text.length) best = { text, via: g }
+  }
+  return best
+}
+
+/**
+ * Návrh nového znenia nad aktuálnym textom miesta: keď model len doplnil
+ * vetu k pôvodnému úryvku, doplnenie sa pridá za aktuálne znenie; inak
+ * ostane aktuálne znenie a doplnenie z odporúčania dopíše človek.
+ */
+export function suggestOnCurrent(f: DocumentFinding, current: string): string {
+  const q = f.quote.trim(), p = (f.proposed ?? "").trim()
+  return p.startsWith(q) && p.length > q.length ? `${current}${p.slice(q.length)}` : current
+}
+
+async function writeToDraft(code: string, documentId: string, f: DocumentFinding, text: string, actor: string, siblings: DocumentFinding[]): Promise<"draft" | "manual" | null> {
+  const base = await draftBase(code, documentId)
+  if (base === null) throw new ComplianceError("library.documentNotFound", "Taký dokument tu nie je.")
+  // Keď miesto už prepísal iný prijatý nález, nahrádza sa jeho aktuálne znenie, inak pôvodný úryvok.
+  const cur = currentWording(base, f, siblings, true)
+  const next = (cur ? replaceQuote(base, cur.text, text) : null) ?? replaceQuote(base, f.quote, text)
   if (next === null) return "manual"
   if (next.trim() === base.trim()) return null
   await saveDraft(code, documentId, next, `${actor} (kontrola súladu)`)
@@ -964,7 +1020,7 @@ export async function applyAcceptedFinding(companyCode: string, runId: string, d
   if (!run || !res || !finding) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
   // `manual` sa pripúšťa kvôli rozhodnutiam spred 11. 10. 2026, keď „bez práv" a „nenašlo sa" mali jednu hodnotu.
   if (!finding.acceptedText || (finding.applied !== "pending" && finding.applied !== "manual")) throw new ComplianceError("compliance.nothingToApply", "Pri tomto náleze nie je čo zapísať.")
-  const applied = await writeToDraft(code, documentId, finding.quote, finding.acceptedText, actor)
+  const applied = await writeToDraft(code, documentId, finding, finding.acceptedText, actor, res.findings)
   if (applied === "manual" && finding.applied === "pending") {
     // Úryvok sa nenašiel — z „čaká na správcu" sa stáva „treba vložiť ručne".
     await (await runs()).updateOne(
@@ -1020,11 +1076,12 @@ export async function decideFinding(
   if (!why) throw new ComplianceError("compliance.reasonRequired", "Uveďte dôvod rozhodnutia.")
   if (decision === "accepted" && !accepted) throw new ComplianceError("compliance.textRequired", "Prijaté znenie nemôže byť prázdne.")
   const run = await documentRun(code, runId)
-  const finding = run?.results?.find(r => r.documentId === documentId)?.findings.find(f => f.id === findingId)
+  const siblings = run?.results?.find(r => r.documentId === documentId)?.findings ?? []
+  const finding = siblings.find(f => f.id === findingId)
   if (!run || !finding) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
 
   let applied: FindingApplied = null
-  if (decision === "accepted") applied = canEditDrafts ? await writeToDraft(code, documentId, finding.quote, accepted, actor) : "pending"
+  if (decision === "accepted") applied = canEditDrafts ? await writeToDraft(code, documentId, finding, accepted, actor, siblings) : "pending"
 
   const r = await (await runs()).updateOne(
     { companyCode: code, runId, "scope.kind": "documents" },
