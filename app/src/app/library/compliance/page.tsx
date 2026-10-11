@@ -25,7 +25,8 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { startDocumentReviewAction } from "../complianceActions"
+import { startDocumentReviewAction, dismissRequestAction, removeLinkAction } from "../complianceActions"
+import { openRequests, listLinks } from "@/lib/complianceRequests"
 
 export const dynamic = "force-dynamic"
 
@@ -45,6 +46,7 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       .find({ companyCode: ctx.tenant.companyCode, category: { $ne: "faq" } }, { projection: { documentId: 1, title: 1, category: 1, accessLevel: 1 } })
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; category?: string; accessLevel?: string }[]>,
   ])
+  const [requests, links] = await Promise.all([openRequests(ctx.tenant.companyCode), listLinks(ctx.tenant.companyCode)])
   const options = docs.map(d => ({ value: d.documentId, label: `${String(d.title ?? d.documentId)}${d.accessLevel === "internal" ? " · interný" : ""}` }))
   // Kontrola návrhov FAQ sa spúšťa vo fronte návrhov kanála, nie tu — odkaz tam, kde návrhy sú.
   const proposalChannels = new Set(await (await getCollection(PROPOSALS_COLLECTION)).distinct("channelKey", { companyCode: ctx.tenant.companyCode }) as string[])
@@ -66,6 +68,44 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
       <Notice message={q.msg} error={q.error === "1"} back="/library/compliance" language={language} />
+
+      {/* Požiadavky na kontrolu pri novom znení dokumentu v pevnej väzbe (ADR-032, D200). */}
+      {requests.length > 0 && (
+        <div id="requests" style={{ display: "grid", gap: 12, marginBottom: 16 }}>
+          <h2 className="detail-block-title" style={{ margin: "0 0 2px" }}>{t.requestsHeading}</h2>
+          {requests.map(r => (
+            <section key={r.id} className="card detail-block" style={{ display: "grid", gap: 8 }}>
+              <p style={{ margin: 0 }}><span className="tag tag--warn">{t.requestTag}</span> <b>{t.requestTitle(r.documentTitle, r.versionLabel)}</b></p>
+              <p className="quiet" style={{ margin: 0 }}>{t.requestWhen(formatDate(r.publishedAt, language), r.publishedBy)}</p>
+              {r.subjectIds.length > 0 && <p style={{ margin: 0 }}><b>{t.subjects}:</b> {r.subjectTitles.join(", ")}</p>}
+              {r.referenceIds.length > 0 && <p style={{ margin: 0 }}><b>{t.references}:</b> {r.referenceTitles.join(", ")}</p>}
+              {r.faq.map(f => <p key={f.channelKey} style={{ margin: 0 }}><Link href={`/channels/${encodeURIComponent(f.channelKey)}/proposals#review`}>{t.requestFaq(f.proposals)}</Link></p>)}
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
+                {r.subjectIds.length > 0 && (
+                  <form action={startDocumentReviewAction}>
+                    <input type="hidden" name="requestId" value={r.id} />
+                    <input type="hidden" name="name" value={t.requestRunName(r.documentTitle, r.versionLabel)} />
+                    {r.subjectIds.map(id => <input key={id} type="hidden" name="subjectIds" value={id} />)}
+                    {r.referenceIds.map(id => <input key={id} type="hidden" name="documentIds" value={id} />)}
+                    <SubmitButton className="button button--quiet">{t.requestStart}</SubmitButton>
+                  </form>
+                )}
+                <details className="cf-rename">
+                  <summary>{t.requestDismiss}</summary>
+                  <form action={dismissRequestAction} className="cf-rename-form">
+                    <input type="hidden" name="requestId" value={r.id} />
+                    <label className="field" style={{ margin: 0 }}>
+                      <span className="field-label">{t.reason}</span>
+                      <textarea className="field-input" name="reason" rows={2} required maxLength={1000} placeholder={t.requestDismissPlaceholder} />
+                    </label>
+                    <div><SubmitButton className="button button--quiet">{t.requestDismissSave}</SubmitButton></div>
+                  </form>
+                </details>
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
 
       <section className="card detail-block" style={{ marginBottom: 16 }}>
         <form action={startDocumentReviewAction} style={{ display: "grid", gap: 12 }}>
@@ -133,6 +173,25 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
             </section>
           )
         })}
+      </div>
+
+      {/* Pevné väzby (D197) — pri novom znení normy vznikne požiadavka na kontrolu. */}
+      <h2 id="links" className="detail-block-title" style={{ margin: "20px 0 4px" }}>{t.linksHeading}</h2>
+      <p className="quiet" style={{ margin: "0 0 10px" }}>{t.linksIntro}</p>
+      {links.length === 0 && <p className="quiet">{t.linksNone}</p>}
+      <div style={{ display: "grid", gap: 8 }}>
+        {links.map(l => (
+          <section key={l.subjectId} className="card detail-block compliance-run">
+            <div style={{ display: "grid", gap: 2, minWidth: 0 }}>
+              <p style={{ margin: 0 }}><b>{l.subjectTitle}</b></p>
+              <p className="quiet" style={{ margin: 0 }}>{t.against(l.referenceTitles.join(", "))}</p>
+            </div>
+            <form action={removeLinkAction}>
+              <input type="hidden" name="subjectId" value={l.subjectId} />
+              <SubmitButton className="button button--quiet">{t.linkRemove}</SubmitButton>
+            </form>
+          </section>
+        ))}
       </div>
     </div>
     </AppShell>

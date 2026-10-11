@@ -560,6 +560,14 @@ interface Dictionary {
     introProposals: (proposals: number, changed: number) => string
     buttonProposals: string
     noteProposals: string
+    /** Požiadavka na kontrolu pri novom znení (D200). */
+    requestSubject: (title: string) => string
+    requestSubtitle: string
+    requestIntro: (title: string, label: string) => string
+    requestDocuments: (n: number) => string
+    requestFaq: (n: number) => string
+    requestButton: string
+    requestNote: string
   }
 
   approvalEmail: {
@@ -2264,6 +2272,8 @@ interface Dictionary {
       complianceToApply: (title: string) => string
       /** Kontrola návrhov FAQ dobehla — tomu, kto ju spustil. */
       faqReviewDone: (proposals: number, changed: number) => string
+      /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (D200). */
+      complianceRequested: (title: string, label: string, documents: number) => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -3111,6 +3121,24 @@ interface Dictionary {
       intro: string
       subjects: string
       subjectsHint: string
+      saveLinks: string
+      linksSaved: (n: number) => string
+      linkRemoved: string
+      requestDismissed: string
+      requestsHeading: string
+      requestTag: string
+      requestTitle: (title: string, label: string) => string
+      requestWhen: (when: string, who: string) => string
+      requestFaq: (n: number) => string
+      requestRunName: (title: string, label: string) => string
+      requestStart: string
+      requestDismiss: string
+      requestDismissPlaceholder: string
+      requestDismissSave: string
+      linksHeading: string
+      linksIntro: string
+      linksNone: string
+      linkRemove: string
       faqCardTitle: (channel: string) => string
       faqCardCounts: (open: number, reviewed: number) => string
       faqCardRunning: (done: number, total: number) => string
@@ -4903,6 +4931,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introProposals: (n, c) => `Kontrola návrhov FAQ, ktorú ste spustili, dobehla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhov"}, ${c} sa odlišuje od dokumentov alebo s nimi koliduje.`,
       buttonProposals: "Otvoriť návrhy FAQ",
       noteProposals: "Pri každom návrhu prevezmite opravené znenie z kontroly alebo ponechajte pôvodné. Do FAQ ide návrh až po schválení.",
+      requestSubject: title => `Treba skontrolovať súlad — ${title}`,
+      requestSubtitle: "Požiadavka na kontrolu súladu",
+      requestIntro: (title, label) => `Zverejnilo sa nové znenie „${label}" dokumentu „${title}". Dokumenty, ktoré sa proti nemu kontrolujú, treba skontrolovať znova.`,
+      requestDocuments: n => `Prepojené dokumenty: ${n}`,
+      requestFaq: n => `Návrhy FAQ, ktoré ho citujú: ${n}`,
+      requestButton: "Otvoriť požiadavku",
+      requestNote: "Kontrola sa nespúšťa sama. Spustíte ju jedným kliknutím, alebo zapíšete, prečo netreba.",
     },
     approvalEmail: {
       subject: org => `Znenie na schválenie \u2014 ${org}`,
@@ -7117,6 +7152,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Ste zodpovedná osoba za znenie „${label}" dokumentu „${title}". Určte právny základ.`,
       draftResponsibleAssigned: (title) => `Ste zodpovedná osoba za pripravované znenie dokumentu „${title}". Právny základ môžete určiť ešte pred zverejnením.`,
       objectionSubmitted: () => "Nová námietka (čl. 21) čaká na vaše rozhodnutie.",
+      complianceRequested: (title, label, d) => `Nové znenie „${label}" dokumentu „${title}" — treba skontrolovať súlad${d ? ` (${d} ${d === 1 ? "prepojený dokument" : d < 5 ? "prepojené dokumenty" : "prepojených dokumentov"})` : ""}.`,
       faqReviewDone: (n, c) => `Kontrola návrhov FAQ dobehla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhov"}, ${c} na prevzatie alebo úpravu.`,
       complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
@@ -7908,6 +7944,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Umelá inteligencia porovná vybrané dokumenty (napríklad manuály alebo rozpis súťaží) s referenčnými normami a vypíše nálezy — rozpor, zastarané, chýba, nejasné — s citáciou článku a odporúčaním. Dokument sama nemení. Normy idú od najzáväznejšej; veľký výber sa skontroluje v niekoľkých krokoch a výsledky sa spoja. Verejný dokument sa kontroluje len verejnými normami.",
       subjects: "Dokumenty na kontrolu",
       subjectsHint: "Dokument bez zverejneného znenia sa skontroluje v koncepte.",
+      saveLinks: "Uložiť ako pevné väzby",
+      linksSaved: n => `Pevné väzby sú uložené: ${n} ${n === 1 ? "dokument" : n < 5 ? "dokumenty" : "dokumentov"}. Pri novom znení niektorej normy vznikne požiadavka na kontrolu.`,
+      linkRemoved: "Pevná väzba je zrušená.",
+      requestDismissed: "Požiadavka je uzavretá s dôvodom.",
+      requestsHeading: "Čaká na kontrolu",
+      requestTag: "nové znenie",
+      requestTitle: (title, label) => `${title} — ${label}`,
+      requestWhen: (when, who) => `Zverejnené ${when}, ${who}`,
+      requestFaq: n => `Návrhy FAQ, ktoré dokument citujú: ${n} — skontrolovať vo fronte`,
+      requestRunName: (title, label) => `Kontrola po novom znení ${title} (${label})`,
+      requestStart: "Skontrolovať",
+      requestDismiss: "Netreba",
+      requestDismissPlaceholder: "Prečo kontrola netreba — napríklad „len oprava preklepov“.",
+      requestDismissSave: "Uzavrieť požiadavku",
+      linksHeading: "Pevné väzby",
+      linksIntro: "Ktoré dokumenty sa kontrolujú proti ktorým normám. Pri novom znení dokumentu alebo normy z väzby vznikne požiadavka na kontrolu a dostanú upozornenie zodpovedné osoby, správcovia obsahu a rola compliance. Väzby sa ukladajú z dobehnutej kontroly.",
+      linksNone: "Zatiaľ žiadne. Uložíte ich na detaile dobehnutej kontroly tlačidlom „Uložiť ako pevné väzby“.",
+      linkRemove: "Zrušiť",
       faqCardTitle: ch => `Návrhy FAQ — ${ch}`,
       faqCardCounts: (o, r) => `${o} ${o === 1 ? "otvorený návrh" : o < 5 && o > 0 ? "otvorené návrhy" : "otvorených návrhov"}, ${r} skontrolovaných`,
       faqCardRunning: (d, n) => `Kontrola beží — ${d} z ${n} návrhov.`,
@@ -9628,6 +9682,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introProposals: (n, c) => `Kontrola návrhů FAQ, kterou jste spustili, doběhla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhů"}, ${c} se liší od dokumentů nebo s nimi koliduje.`,
       buttonProposals: "Otevřít návrhy FAQ",
       noteProposals: "U každého návrhu převezměte opravené znění z kontroly, nebo ponechte původní. Do FAQ jde návrh až po schválení.",
+      requestSubject: title => `Je třeba zkontrolovat soulad — ${title}`,
+      requestSubtitle: "Požadavek na kontrolu souladu",
+      requestIntro: (title, label) => `Zveřejnilo se nové znění „${label}" dokumentu „${title}". Dokumenty, které se proti němu kontrolují, je třeba zkontrolovat znovu.`,
+      requestDocuments: n => `Propojené dokumenty: ${n}`,
+      requestFaq: n => `Návrhy FAQ, které ho citují: ${n}`,
+      requestButton: "Otevřít požadavek",
+      requestNote: "Kontrola se nespouští sama. Spustíte ji jedním kliknutím, nebo zapíšete, proč netřeba.",
     },
     approvalEmail: {
       subject: org => `Znění ke schválení \u2014 ${org}`,
@@ -11840,6 +11901,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Jste odpovědná osoba za znění „${label}" dokumentu „${title}". Určete právní základ.`,
       draftResponsibleAssigned: (title) => `Jste odpovědná osoba za připravované znění dokumentu „${title}". Právní základ můžete určit ještě před zveřejněním.`,
       objectionSubmitted: () => "Nová námitka (čl. 21) čeká na vaše rozhodnutí.",
+      complianceRequested: (title, label, d) => `Nové znění „${label}" dokumentu „${title}" — je třeba zkontrolovat soulad${d ? ` (${d} ${d === 1 ? "propojený dokument" : d < 5 ? "propojené dokumenty" : "propojených dokumentů"})` : ""}.`,
       faqReviewDone: (n, c) => `Kontrola návrhů FAQ doběhla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhů"}, ${c} k převzetí nebo úpravě.`,
       complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
@@ -12630,6 +12692,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Umělá inteligence porovná vybrané dokumenty (například manuály nebo rozpis soutěží) s referenčními normami a vypíše nálezy — rozpor, zastaralé, chybí, nejasné — s citací článku a doporučením. Dokument sama nemění. Normy jdou od nejzávaznější; velký výběr se zkontroluje v několika krocích a výsledky se spojí. Veřejný dokument se kontroluje jen veřejnými normami.",
       subjects: "Dokumenty ke kontrole",
       subjectsHint: "Dokument bez zveřejněného znění se zkontroluje v konceptu.",
+      saveLinks: "Uložit jako pevné vazby",
+      linksSaved: n => `Pevné vazby jsou uloženy: ${n} ${n === 1 ? "dokument" : n < 5 ? "dokumenty" : "dokumentů"}. Při novém znění některé normy vznikne požadavek na kontrolu.`,
+      linkRemoved: "Pevná vazba je zrušena.",
+      requestDismissed: "Požadavek je uzavřen s důvodem.",
+      requestsHeading: "Čeká na kontrolu",
+      requestTag: "nové znění",
+      requestTitle: (title, label) => `${title} — ${label}`,
+      requestWhen: (when, who) => `Zveřejněno ${when}, ${who}`,
+      requestFaq: n => `Návrhy FAQ, které dokument citují: ${n} — zkontrolovat ve frontě`,
+      requestRunName: (title, label) => `Kontrola po novém znění ${title} (${label})`,
+      requestStart: "Zkontrolovat",
+      requestDismiss: "Netřeba",
+      requestDismissPlaceholder: "Proč kontrola netřeba — například „jen oprava překlepů“.",
+      requestDismissSave: "Uzavřít požadavek",
+      linksHeading: "Pevné vazby",
+      linksIntro: "Které dokumenty se kontrolují proti kterým normám. Při novém znění dokumentu nebo normy z vazby vznikne požadavek na kontrolu a upozornění dostanou odpovědné osoby, správci obsahu a role compliance. Vazby se ukládají z doběhnuté kontroly.",
+      linksNone: "Zatím žádné. Uložíte je na detailu doběhnuté kontroly tlačítkem „Uložit jako pevné vazby“.",
+      linkRemove: "Zrušit",
       faqCardTitle: ch => `Návrhy FAQ — ${ch}`,
       faqCardCounts: (o, r) => `${o} ${o === 1 ? "otevřený návrh" : o < 5 && o > 0 ? "otevřené návrhy" : "otevřených návrhů"}, ${r} zkontrolovaných`,
       faqCardRunning: (d, n) => `Kontrola běží — ${d} z ${n} návrhů.`,
@@ -14344,6 +14424,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introProposals: (n, c) => `The FAQ proposal check you started has finished: ${n} ${n === 1 ? "proposal" : "proposals"}, ${c} differ from or conflict with the documents.`,
       buttonProposals: "Open FAQ proposals",
       noteProposals: "For each proposal, take over the corrected wording from the check or keep the original. A proposal goes into the FAQ only after approval.",
+      requestSubject: title => `Compliance check needed — ${title}`,
+      requestSubtitle: "Compliance check request",
+      requestIntro: (title, label) => `A new version “${label}” of “${title}” was published. Documents checked against it should be checked again.`,
+      requestDocuments: n => `Linked documents: ${n}`,
+      requestFaq: n => `FAQ proposals citing it: ${n}`,
+      requestButton: "Open request",
+      requestNote: "The check does not start by itself. Start it with one click, or record why it is not needed.",
     },
     approvalEmail: {
       subject: org => `A version to approve \u2014 ${org}`,
@@ -16554,6 +16641,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `You are the responsible person for version “${label}” of “${title}”. Please set the legal basis.`,
       draftResponsibleAssigned: (title) => `You are the responsible person for the version of “${title}” in preparation. You can set the legal basis before it is published.`,
       objectionSubmitted: () => "A new objection (Art. 21) is waiting for your decision.",
+      complianceRequested: (title, label, d) => `New version “${label}” of “${title}” — a compliance check is needed${d ? ` (${d} linked ${d === 1 ? "document" : "documents"})` : ""}.`,
       faqReviewDone: (n, c) => `FAQ proposal check finished: ${n} ${n === 1 ? "proposal" : "proposals"}, ${c} to take over or edit.`,
       complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
       complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,
@@ -17338,6 +17426,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Artificial intelligence compares the selected documents (for example manuals or competition rules for a season) with the reference rules and lists the findings — conflict, outdated, missing, unclear — with the cited article and a recommendation. It never changes the document itself. Rules are ordered from the most binding; a large selection is checked in several steps and the results are combined. A public document is checked only against public rules.",
       subjects: "Documents to check",
       subjectsHint: "A document without a published version is checked as a draft.",
+      saveLinks: "Save as fixed links",
+      linksSaved: n => `Fixed links saved: ${n} ${n === 1 ? "document" : "documents"}. A new version of one of the norms will create a check request.`,
+      linkRemoved: "The fixed link is removed.",
+      requestDismissed: "The request is closed with a reason.",
+      requestsHeading: "Waiting for a check",
+      requestTag: "new version",
+      requestTitle: (title, label) => `${title} — ${label}`,
+      requestWhen: (when, who) => `Published ${when}, ${who}`,
+      requestFaq: n => `FAQ proposals citing the document: ${n} — check in the queue`,
+      requestRunName: (title, label) => `Check after new version of ${title} (${label})`,
+      requestStart: "Check",
+      requestDismiss: "Not needed",
+      requestDismissPlaceholder: "Why no check is needed — e.g. “typo fixes only”.",
+      requestDismissSave: "Close request",
+      linksHeading: "Fixed links",
+      linksIntro: "Which documents are checked against which norms. A new version of a document or norm in a link creates a check request and notifies responsible persons, content managers and the compliance role. Links are saved from a finished check.",
+      linksNone: "None yet. Save them on a finished check with “Save as fixed links”.",
+      linkRemove: "Remove",
       faqCardTitle: ch => `FAQ proposals — ${ch}`,
       faqCardCounts: (o, r) => `${o} open ${o === 1 ? "proposal" : "proposals"}, ${r} checked`,
       faqCardRunning: (d, n) => `Check running — ${d} of ${n} proposals.`,
