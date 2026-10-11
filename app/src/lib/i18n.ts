@@ -3086,13 +3086,6 @@ interface Dictionary {
       moreActions: string
 
       /** „Čaká na schválenie“ nad knižnicou (ADR-006, krok 6). */
-      waiting: {
-        heading: string
-        count: (n: number) => string
-        since: (date: string) => string
-        waitingFor: (names: string) => string
-        nobodyPending: string
-      }
       viewTable: string
       viewCards: string
       /** Hromadné akcie nad označenými dokumentmi. */
@@ -8010,13 +8003,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       filters: "Filtre",
       showResults: n => (n === 1 ? "Zobraziť 1 dokument" : n >= 2 && n <= 4 ? `Zobraziť ${n} dokumenty` : `Zobraziť ${n} dokumentov`),
       moreActions: "Ďalšie akcie",
-      waiting: {
-        heading: "Čaká na schválenie",
-        count: n => (n === 1 ? "1 znenie" : n >= 2 && n <= 4 ? `${n} znenia` : `${n} znení`),
-        since: date => `predložené ${date}`,
-        waitingFor: names => `čaká sa na: ${names}`,
-        nobodyPending: "všetci rozhodli",
-      },
       viewTable: "Tabuľka",
       viewCards: "Karty",
       bulk: {
@@ -12843,13 +12829,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       filters: "Filtry",
       showResults: n => (n === 1 ? "Zobrazit 1 dokument" : n >= 2 && n <= 4 ? `Zobrazit ${n} dokumenty` : `Zobrazit ${n} dokumentů`),
       moreActions: "Další akce",
-      waiting: {
-        heading: "Čeká na schválení",
-        count: n => (n === 1 ? "1 znění" : n >= 2 && n <= 4 ? `${n} znění` : `${n} znění`),
-        since: date => `předloženo ${date}`,
-        waitingFor: names => `čeká se na: ${names}`,
-        nobodyPending: "všichni rozhodli",
-      },
       viewTable: "Tabulka",
       viewCards: "Karty",
       bulk: {
@@ -17667,13 +17646,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       filters: "Filters",
       showResults: n => (n === 1 ? "Show 1 document" : `Show ${n} documents`),
       moreActions: "More actions",
-      waiting: {
-        heading: "Waiting for approval",
-        count: n => (n === 1 ? "1 version" : `${n} versions`),
-        since: date => `submitted ${date}`,
-        waitingFor: names => `waiting for: ${names}`,
-        nobodyPending: "everyone has decided",
-      },
       viewTable: "Table",
       viewCards: "Cards",
       bulk: {
