@@ -9,7 +9,7 @@
  * ktorú kartu a v akom stave nakresliť.
  */
 
-import type { ApprovalRound, VersionState } from "./approvals"
+import { roundCancelled, type ApprovalRound, type VersionState } from "./approvals"
 
 export type FlowStep = 1 | 2 | 3 | 4
 export type StepState = "done" | "current" | "rejected" | "todo"
@@ -32,28 +32,35 @@ export interface Flow {
   step: FlowStep
   /** Stav každého zo štyroch krokov, v poradí. */
   states: [StepState, StepState, StepState, StepState]
-  /** Zamietnuté alebo stiahnuté kolo, ku ktorému sa príprava vrátila. */
+  /** Kolo zamietnuté schvaľovateľom, ku ktorému sa príprava vrátila. */
   rejected: ApprovalRound | null
+  /** Kolo zrušené predkladateľom alebo zmenou konceptu (ADR-006, dodatok 12. 10. 2026). */
+  cancelled: ApprovalRound | null
 }
 
 /** Ktorý krok a v akom stave; `null` = žiadna karta (nič sa nepripravuje). */
 export function versionFlow(i: FlowInput): Flow | null {
   if (!i.preparing) {
     return i.carryOverCount > 0
-      ? { step: 4, states: ["done", "done", "done", "current"], rejected: null }
+      ? { step: 4, states: ["done", "done", "done", "current"], rejected: null, cancelled: null }
       : null
   }
   if (i.draftState === "in-review") {
-    return { step: 2, states: ["done", "current", "todo", "todo"], rejected: null }
+    return { step: 2, states: ["done", "current", "todo", "todo"], rejected: null, cancelled: null }
   }
   if (i.draftState === "approved" || i.draftState === "published-before") {
-    return { step: 3, states: ["done", "done", "current", "todo"], rejected: null }
+    return { step: 3, states: ["done", "done", "current", "todo"], rejected: null, cancelled: null }
   }
-  const rejected = i.lastRound?.outcome === "rejected" ? i.lastRound : null
+  // Zrušené kolo nie je zamietnutie: nikto nič nevytkol, krok schválenia
+  // nedostane ✕ a karta nehovorí „oprav, čo schvaľovateľ vytkol".
+  const closed = i.lastRound && (i.lastRound.outcome === "rejected" || i.lastRound.outcome === "cancelled") ? i.lastRound : null
+  const cancelled = closed && roundCancelled(closed) ? closed : null
+  const rejected = closed && !cancelled ? closed : null
   return {
     step: 1,
     states: ["current", rejected ? "rejected" : "todo", "todo", "todo"],
     rejected,
+    cancelled,
   }
 }
 

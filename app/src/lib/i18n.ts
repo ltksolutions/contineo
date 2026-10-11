@@ -399,6 +399,8 @@ interface Dictionary {
     authorHint: string
     approvedBy: string
     approvedByHint: string
+    /** Pri znení bez orgánu: kto ho schválil v kole Contineo (odvodené z kola, D27). */
+    approvedInContineo: (names: string, date: string) => string
     approvedOn: string
     effectiveFrom: string
     effectiveFromHint: string
@@ -2840,9 +2842,12 @@ interface Dictionary {
       statusInReview: (by: string, date: string) => string
       statusApproved: string
       statusRejected: (date: string) => string
+      /** Posledné kolo zrušené predkladateľom alebo zmenou konceptu (ADR-006, dodatok 12. 10. 2026). */
+      statusCancelled: (date: string) => string
       statusPublished: (date: string) => string
       lead1: string
       lead1Rejected: string
+      lead1Cancelled: string
       rejectedBy: (who: string, date: string, round: number) => string
       cancelled: (date: string, round: number) => string
       checkPdf: string
@@ -3614,6 +3619,8 @@ interface Dictionary {
       approvalApproved: (when: string) => string
       approvalRejected: (when: string) => string
       approvalRoundHeading: (round: number) => string
+      /** Štítok zrušeného kola v histórii — nie zamietnutie (ADR-006, dodatok 12. 10. 2026). */
+      approvalRoundCancelled: string
       approvalSubmittedBy: (who: string, when: string) => string
       approvalHistory: (n: number) => string
       approvalCancel: string
@@ -4963,9 +4970,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Autor, kto znenie schválil a dátumy. Sú súčasťou schválenia — schvaľovateľ ich vidí pri PDF a po predložení sa už meniť nedajú.",
       author: "Autor",
       authorHint: "Osoba, oddelenie alebo komisia, ktorá dokument pripravila.",
-      approvedBy: "Schválil",
-      approvedByHint: "Osoba alebo orgán, napríklad Výkonný výbor SFZ.",
-      approvedOn: "Dátum schválenia",
+      approvedBy: "Prijal (orgán)",
+      approvedByHint: "Orgán, ktorý dokument prijal mimo Contineo, napríklad Výkonný výbor SFZ. Ak dokument schvaľuje len kolo v Contineo, nechaj prázdne.",
+      approvedInContineo: (names, date) => `schválené v Contineo: ${names} · ${date}`,
+      approvedOn: "Dátum prijatia",
       effectiveFrom: "Dátum účinnosti",
       effectiveFromHint: "Povinný pred predložením na schválenie. Je aj v potvrdzovacej formulke; pri zverejnení sa už nezadáva.",
       save: "Uložiť údaje",
@@ -7801,7 +7809,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subInReview: (done, total) => `${done} z ${total} schválilo`,
       subApproved: "schválené",
       subRejected: n => `kolo ${n} zamietnuté`,
-      subCancelled: n => `kolo ${n} stiahnuté`,
+      subCancelled: n => `kolo ${n} zrušené`,
       subWaitApproval: "čaká na schválenie",
       subPublished: "zverejnené",
       subAssign: "prenos pridelení",
@@ -7813,7 +7821,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       lead1: "Skontroluj, čo sa bude schvaľovať. Po predložení sa nič z toho nedá zmeniť.",
       lead1Rejected: "Oprav, čo schvaľovateľ vytkol, skontroluj údaje a predlož nové kolo. Zamietnutie zostáva v histórii.",
       rejectedBy: (who, date, n) => `${who} zamietol ${date} · kolo ${n} sa tým zastavilo`,
-      cancelled: (date, n) => `Kolo ${n} stiahnuté ${date}`,
+      cancelled: (date, n) => `Kolo ${n} zrušené ${date}`,
+      statusCancelled: date => `príprava · kolo zrušené ${date}`,
+      lead1Cancelled: "Kolo bolo zrušené, nikto nič nevytkol. Skontroluj, čo sa bude schvaľovať, a predlož znenie znova.",
       checkPdf: "PDF",
       checkPdfMissing: "Chýba PDF — bez neho sa znenie nedá predložiť. Nahraj ho cez „Vymeniť“.",
       checkSource: "Upraviteľný zdroj",
@@ -8496,6 +8506,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalApproved: when => `schválil ${when}`,
       approvalRejected: when => `zamietol ${when}`,
       approvalRoundHeading: round => `${round}. kolo`,
+      approvalRoundCancelled: "zrušené",
       approvalSubmittedBy: (who, when) => `predložil ${who} · ${when}`,
       approvalHistory: n => (n === 1 ? "1 kolo" : n >= 2 && n <= 4 ? `${n} kolá` : `${n} kôl`),
       approvalCancel: "zrušiť kolo",
@@ -9794,9 +9805,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Autor, kdo znění schválil, a data. Jsou součástí schválení — schvalovatel je vidí u PDF a po předložení se už měnit nedají.",
       author: "Autor",
       authorHint: "Osoba, oddělení nebo komise, která dokument připravila.",
-      approvedBy: "Schválil",
-      approvedByHint: "Osoba nebo orgán, například Výkonný výbor.",
-      approvedOn: "Datum schválení",
+      approvedBy: "Přijal (orgán)",
+      approvedByHint: "Orgán, který dokument přijal mimo Contineo, například Výkonný výbor. Pokud dokument schvaluje jen kolo v Contineo, nech pole prázdné.",
+      approvedInContineo: (names, date) => `schváleno v Contineo: ${names} · ${date}`,
+      approvedOn: "Datum přijetí",
       effectiveFrom: "Datum účinnosti",
       effectiveFromHint: "Povinné před předložením ke schválení. Je i v potvrzovací formulce; při zveřejnění se už nezadává.",
       save: "Uložit údaje",
@@ -12630,7 +12642,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subInReview: (done, total) => `${done} z ${total} schválilo`,
       subApproved: "schváleno",
       subRejected: n => `kolo ${n} zamítnuto`,
-      subCancelled: n => `kolo ${n} staženo`,
+      subCancelled: n => `kolo ${n} zrušeno`,
       subWaitApproval: "čeká na schválení",
       subPublished: "zveřejněno",
       subAssign: "přenos přidělení",
@@ -12642,7 +12654,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       lead1: "Zkontroluj, co se bude schvalovat. Po předložení nic z toho nelze změnit.",
       lead1Rejected: "Oprav, co schvalovatel vytkl, zkontroluj údaje a předlož nové kolo. Zamítnutí zůstává v historii.",
       rejectedBy: (who, date, n) => `${who} zamítl ${date} · kolo ${n} se tím zastavilo`,
-      cancelled: (date, n) => `Kolo ${n} staženo ${date}`,
+      cancelled: (date, n) => `Kolo ${n} zrušeno ${date}`,
+      statusCancelled: date => `příprava · kolo zrušeno ${date}`,
+      lead1Cancelled: "Kolo bylo zrušeno, nikdo nic nevytkl. Zkontroluj, co se bude schvalovat, a předlož znění znovu.",
       checkPdf: "PDF",
       checkPdfMissing: "Chybí PDF — bez něj nelze znění předložit. Nahraj ho přes „Vyměnit“.",
       checkSource: "Upravitelný zdroj",
@@ -13324,6 +13338,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalApproved: when => `schválil ${when}`,
       approvalRejected: when => `zamítl ${when}`,
       approvalRoundHeading: round => `${round}. kolo`,
+      approvalRoundCancelled: "zrušeno",
       approvalSubmittedBy: (who, when) => `předložil ${who} · ${when}`,
       approvalHistory: n => (n === 1 ? "1 kolo" : n >= 2 && n <= 4 ? `${n} kola` : `${n} kol`),
       approvalCancel: "zrušit kolo",
@@ -14616,9 +14631,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Author, who approved the version, and the dates. They are part of the approval — approvers see them with the PDF, and they cannot be changed once submitted.",
       author: "Author",
       authorHint: "Person, department or committee that prepared the document.",
-      approvedBy: "Approved by",
-      approvedByHint: "A person or a body, for example the Executive Committee.",
-      approvedOn: "Approval date",
+      approvedBy: "Adopted by (body)",
+      approvedByHint: "The body that adopted the document outside Contineo, for example the Executive Committee. Leave empty if the document is approved only by a round in Contineo.",
+      approvedInContineo: (names, date) => `approved in Contineo: ${names} · ${date}`,
+      approvedOn: "Adoption date",
       effectiveFrom: "Effective date",
       effectiveFromHint: "Required before submitting for approval. It is also in the acknowledgement statement; it is not entered again at publishing.",
       save: "Save details",
@@ -17450,7 +17466,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subInReview: (done, total) => `${done} of ${total} approved`,
       subApproved: "approved",
       subRejected: n => `round ${n} rejected`,
-      subCancelled: n => `round ${n} withdrawn`,
+      subCancelled: n => `round ${n} cancelled`,
       subWaitApproval: "waiting for approval",
       subPublished: "published",
       subAssign: "carry over assignments",
@@ -17462,7 +17478,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       lead1: "Check what will be approved. After submitting, none of it can be changed.",
       lead1Rejected: "Fix what the approver pointed out, check the details and submit a new round. The rejection stays in the history.",
       rejectedBy: (who, date, n) => `${who} rejected ${date} · this stopped round ${n}`,
-      cancelled: (date, n) => `Round ${n} withdrawn ${date}`,
+      cancelled: (date, n) => `Round ${n} cancelled ${date}`,
+      statusCancelled: date => `preparation · round cancelled ${date}`,
+      lead1Cancelled: "The round was cancelled; nobody raised an objection. Check what will be approved and submit the version again.",
       checkPdf: "PDF",
       checkPdfMissing: "The PDF is missing — the version cannot be submitted without it. Upload it via “Replace”.",
       checkSource: "Editable source",
@@ -18139,6 +18157,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalApproved: when => `approved ${when}`,
       approvalRejected: when => `rejected ${when}`,
       approvalRoundHeading: round => `Round ${round}`,
+      approvalRoundCancelled: "cancelled",
       approvalSubmittedBy: (who, when) => `submitted by ${who} · ${when}`,
       approvalHistory: n => (n === 1 ? "1 round" : `${n} rounds`),
       approvalCancel: "cancel this round",

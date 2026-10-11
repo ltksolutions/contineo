@@ -52,7 +52,12 @@ export interface ApprovalRound {
   note?: string
   approvers: ApproverDecision[]
   closedAt: Date | null
-  outcome: "approved" | "rejected" | null
+  /**
+   * `cancelled` = kolo zrušil predkladateľ alebo ho zrušila zmena konceptu
+   * (dodatok ADR-006, 12. 10. 2026). Staršie zrušené kolá nesú `rejected`
+   * bez zamietnutia schvaľovateľa — rozlišuje ich `roundCancelled()`.
+   */
+  outcome: "approved" | "rejected" | "cancelled" | null
 }
 
 /**
@@ -134,8 +139,21 @@ export function versionState(
   if (last.outcome === "approved") return "approved"
   // Zamietnuté aj zrušené kolo vracia znenie do konceptu — predkladateľ s ním
   // musí niečo urobiť, a to je presne to, čo „koncept" znamená.
-  if (last.outcome === "rejected") return "draft"
+  if (last.outcome === "rejected" || last.outcome === "cancelled") return "draft"
   return "in-review"
+}
+
+/**
+ * Bolo kolo zrušené, nie zamietnuté? Zamietnutie je rozhodnutie schvaľovateľa
+ * a nesie jeho dôvod; zrušenie je krok predkladateľa alebo dôsledok zmeny
+ * konceptu (ADR-006, dodatok 12. 10. 2026).
+ *
+ * Kolá zrušené pred týmto dňom majú výsledok `rejected` — záznam sa spätne
+ * neprepisuje (D24), preto sa rozpoznajú podľa toho, že nikto nezamietol.
+ */
+export function roundCancelled(round: Pick<ApprovalRound, "outcome" | "approvers">): boolean {
+  if (round.outcome === "cancelled") return true
+  return round.outcome === "rejected" && !round.approvers.some(a => a.decision === "rejected")
 }
 
 /**

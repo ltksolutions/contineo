@@ -80,3 +80,20 @@ Nahratie s vyplnenými poľami ich uloží hneď, lebo ich človek videl.
   novým nahratím. Je to cena za to, že dátum je súčasťou schváleného.
 - **Voľný text** pripúšťa „VV SFZ" aj „Výkonný výbor SFZ" vedľa seba. Návrhy to
   zmierňujú, nevylučujú.
+
+---
+
+## Dodatok 1 — „Schválil" je orgán, ktorý dokument prijal (2026-10-12)
+
+> **Zadal a odsúhlasil:** Ján Letko (12. 10. 2026) — „načo máme pole
+> Schválil…, keď nižšie máme Schvaľovatelia? To je nezmysel."
+
+Pole **Schválil** a **Dátum schválenia** (D106) sa na obrazovke volajú
+**Prijal (orgán)** a **Dátum prijatia**. Je to údaj o tom, kto dokument
+prijal **mimo Contineo** (napríklad Výkonný výbor SFZ uznesením), ako ho
+predpis nesie na prvej strane — nie schvaľovatelia kola v Contineo
+(ADR-006). Pri dokumente bez orgánu (manuály, smernice) ostáva prázdne
+a karta znenia namiesto pomlčky ukáže „schválené v Contineo: mená · dátum"
+z posledného schváleného kola (odvodené, D27). Polia v databáze
+(`approvedBy`, `approvedOn`) sa nemenia.
+

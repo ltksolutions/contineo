@@ -7,7 +7,7 @@
  */
 
 import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
-import type { ApprovalRound } from "@/lib/approvals"
+import { roundCancelled, type ApprovalRound } from "@/lib/approvals"
 
 export default function ApprovalRounds({
   versionId,
@@ -25,6 +25,7 @@ export default function ApprovalRounds({
         <li key={`${versionId}-r${r.round}`}>
           <div className="approval-round-head">
             <strong>{t.approvalRoundHeading(r.round)}</strong>
+            {roundCancelled(r) && <span className="tag">{t.approvalRoundCancelled}</span>}
             <span className="quiet">
               {t.approvalSubmittedBy(r.submittedBy, formatDate(r.submittedAt, language))}
             </span>

@@ -41,11 +41,30 @@ describe("versionFlow", () => {
   })
 
   it("po zamietnutí je krok 1 a krok 2 je zamietnutý", () => {
-    const r = round({ outcome: "rejected", closedAt: new Date() })
+    const r = round({
+      outcome: "rejected", closedAt: new Date(),
+      approvers: [{ email: "marek@sfz.sk", fullName: "Marek", decidedAt: new Date(), decision: "rejected", reason: "chýba článok" }],
+    })
     const f = versionFlow({ preparing: true, draftState: "draft", lastRound: r, carryOverCount: 0 })
     expect(f?.step).toBe(1)
     expect(f?.states[1]).toBe("rejected")
     expect(f?.rejected).toBe(r)
+    expect(f?.cancelled).toBeNull()
+  })
+
+  // ADR-006, dodatok 12. 10. 2026: zrušené kolo nie je zamietnutie.
+  it("zrušené kolo vráti prípravu bez ✕ a bez „oprav, čo vytkol\"", () => {
+    for (const r of [
+      round({ outcome: "cancelled", closedAt: new Date() }),
+      // staršie zrušené kolo: `rejected`, ale nikto nezamietol
+      round({ outcome: "rejected", closedAt: new Date() }),
+    ]) {
+      const f = versionFlow({ preparing: true, draftState: "draft", lastRound: r, carryOverCount: 0 })
+      expect(f?.step).toBe(1)
+      expect(f?.states[1]).toBe("todo")
+      expect(f?.rejected).toBeNull()
+      expect(f?.cancelled).toBe(r)
+    }
   })
 
   it("bežiace kolo je krok 2, schválené krok 3", () => {

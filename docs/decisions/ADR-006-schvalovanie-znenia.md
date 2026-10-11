@@ -236,3 +236,37 @@ Stav znenia je **odvodený** z posledného kola (D27), nie uložený:
 - **Kto smie meniť zoznam schvaľovateľov po predložení.** Prvá verzia: nikto;
   kolo sa zruší a otvorí nové.
 - **Retencia** kôl schvaľovania — patrí k O16 spolu s auditom a potvrdeniami.
+
+---
+
+## Dodatok 1 — Jedno bežiace kolo a zrušené kolo nie je zamietnutie (2026-10-12)
+
+> **Zadal a odsúhlasil:** Ján Letko (12. 10. 2026) — „Vždy môže byť otvorené
+> len jedno kolo, inak je to mätúce." a pri zrušenom kole ISSF-01 ukázanom
+> ako zamietnutie: „áno, urob obe".
+
+### D202 — Jedno bežiace kolo na dokument
+
+Pri jednom dokumente beží najviac jedno kolo. Kolo je naviazané na odtlačok
+konceptu (D96); keď sa koncept zmení (nové súbory, úprava textu a s ňou
+nové PDF, názov, načítanie znenia do konceptu, FAQ, zverejnenie), kolo
+predošlej podoby sa **uzavrie samo** (`closeStaleRounds()`), s poznámkou
+a záznamom `approval-cancelled` v audite. Schvaľovatelia, ktorí ešte
+nerozhodli, dostanú upozornenie. Predloženie, pri ktorom beží kolo iného
+znenia, sa odmietne (`approval.otherRunning`).
+
+Podnet: 11. 10. 2026 boli ISSF-04 a ISSF-05 v „čaká na schválenie"
+dvakrát — kolo starého PDF ostalo po pregenerovaní otvorené.
+
+### D203 — Zrušené kolo má vlastný výsledok `cancelled`
+
+Zamietnutie je rozhodnutie schvaľovateľa s dôvodom; zrušenie je krok
+predkladateľa (časť 5) alebo dôsledok zmeny konceptu (D202). Odteraz majú
+rôzny výsledok: `rejected` a `cancelled`. Na stav znenia vplývajú rovnako
+(znenie sa vráti do konceptu), v rozhraní nie: zrušené kolo je sivé, krok
+Schválenie nedostane ✕ a karta nehovorí „oprav, čo schvaľovateľ vytkol".
+V histórii kôl má štítok „zrušené".
+
+Kolá zrušené pred týmto dodatkom majú výsledok `rejected` a **neprepisujú
+sa** (D24). Rozpozná ich `roundCancelled()`: výsledok `rejected`, ale žiadny
+schvaľovateľ nezamietol.
