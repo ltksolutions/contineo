@@ -62,3 +62,13 @@ export function wordDiff(before: string, after: string): WordDiffPart[] {
 export function hasChanges(parts: WordDiffPart[]): boolean {
   return parts.some(p => p.kind !== "same")
 }
+
+/**
+ * Text na čítanie bez značiek tučného písma z Markdownu (`**`, `__`).
+ * Úryvky z kontroly súladu sú zdroj konceptu v Markdowne; v porovnaní by
+ * hviezdičky prekážali a samy by sa hlásili ako zmena („€" → „€**",
+ * 11. 10. 2026). Pole na úpravu znenia nesie zdroj nezmenený.
+ */
+export function readableInline(text: string): string {
+  return text.replace(/\*\*|__/g, "")
+}
