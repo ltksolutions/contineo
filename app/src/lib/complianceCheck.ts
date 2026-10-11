@@ -491,6 +491,8 @@ export interface ComplianceRun {
   partials?: DocumentPartial[]
   /** Kedy sa ktorý balík naposledy poslal modelu — či je ešte v cache (1 h). */
   warmPacks?: WarmPack[]
+  /** Kontrola návrhov FAQ: rozpracovaná dávka medzi kúskami behu. */
+  proposalBatch?: ProposalBatch | null
   startedAt: Date
   startedBy: string
   /** Osoba, ktorej príde upozornenie po skončení; behy pred 11. 10. 2026 ho nemajú. */
@@ -714,27 +716,44 @@ async function callStep(ctx: CallCtx, system: string, pack: ReferencePack, user:
 }
 
 /** Dávka návrhov cez všetky kroky; výsledok zlúčený (`mergeSteps`). */
-async function reviewProposalBatch(ctx: CallCtx, packs: ReferencePack[], items: ReviewItem[]): Promise<Map<string, StepResult>> {
-  const steps = new Map<string, StepResult[]>()
+/**
+ * Rozpracovaná dávka návrhov FAQ (11. 10. 2026): kúsok behu je **jeden krok**
+ * (jeden balík noriem), nie celá dávka — pri Opus 5.5 by štyri návrhy cez tri
+ * balíky za sebou prekročili 300 s funkcie a dávka by sa začínala odznova,
+ * až kým by sa beh po piatich pokusoch nezastavil. Rovnako ako pri
+ * dokumentoch (`DocumentPartial`).
+ */
+export interface ProposalBatch {
+  ids: string[]
+  /** Koľko balíkov je už hotových. */
+  step: number
+  /** Znenie, ktoré kontroluje ďalší krok — opravené, ak ho predošlý krok navrhol. */
+  current: ReviewItem[]
+  steps: { id: string; results: StepResult[] }[]
+}
+
+/** Jeden krok dávky návrhov: jeden balík noriem. */
+async function reviewProposalStep(ctx: CallCtx, packs: ReferencePack[], batch: ProposalBatch): Promise<ProposalBatch> {
+  const pack = packs[batch.step]
   const prior = new Map<string, PriorFindings>()
-  let current = items
-  for (const pack of packs) {
-    const raw = await callStep(ctx, REVIEW_SYSTEM, pack, reviewPrompt(current, prior), REVIEW_SCHEMA, `kontrola FAQ: ${items.length} návrhov`)
-    const r = parseReview(raw, current, pack)
-    for (const [id, res] of r) {
-      steps.set(id, [...(steps.get(id) ?? []), res])
-      const merged = mergeSteps(steps.get(id)!)!
-      prior.set(id, { verdict: merged.verdict, citations: merged.citations, note: merged.note })
-    }
-    // Ďalší krok kontroluje už opravené znenie, ak ho tento krok navrhol.
-    current = current.map(it => {
-      const p = r.get(it.id)?.proposed
-      return p ? { ...it, question: p.question, answer: p.answer } : it
-    })
+  for (const s of batch.steps) {
+    const merged = mergeSteps(s.results)
+    if (merged) prior.set(s.id, { verdict: merged.verdict, citations: merged.citations, note: merged.note })
   }
-  const out = new Map<string, StepResult>()
-  for (const [id, list] of steps) out.set(id, mergeSteps(list)!)
-  return out
+  const raw = await callStep(ctx, REVIEW_SYSTEM, pack, reviewPrompt(batch.current, prior), REVIEW_SCHEMA, `kontrola FAQ: ${batch.current.length} návrhov`)
+  const r = parseReview(raw, batch.current, pack)
+  const steps = batch.steps.map(s => ({ ...s, results: [...s.results] }))
+  for (const [id, res] of r) {
+    const row = steps.find(s => s.id === id)
+    if (row) row.results.push(res)
+    else steps.push({ id, results: [res] })
+  }
+  // Ďalší krok kontroluje už opravené znenie, ak ho tento krok navrhol.
+  const current = batch.current.map(it => {
+    const p = r.get(it.id)?.proposed
+    return p ? { ...it, question: p.question, answer: p.answer } : it
+  })
+  return { ids: batch.ids, step: batch.step + 1, current, steps }
 }
 
 export interface WarmPack { step: number; at: Date }
@@ -895,6 +914,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
     let pending = run.pending.slice()
     let partials: DocumentPartial[] = run.partials ?? []
     let warm: WarmPack[] = run.warmPacks ?? []
+    let batch: ProposalBatch | null = run.proposalBatch ?? null
     let longest = 0
     while (pending.length) {
       // Ďalší kúsok len vtedy, keď sa zmestí aj do tvrdej hranice — inak by ho funkcia zabila v polovici.
@@ -903,27 +923,37 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
       const r0 = await col.updateOne(mine, { $inc: { failures: 1 }, $set: { updatedAt: new Date() } })
       if (!r0.matchedCount) break
       if (run.scope.kind === "proposals") {
-        const ids = pending.slice(0, REVIEW_BATCH)
-        const rows = await proposals.find({ companyCode: code, id: { $in: ids }, status: "open" }, { projection: { _id: 0, id: 1, question: 1, variants: 1, answer: 1 } }).toArray()
-        const items: ReviewItem[] = ids.flatMap(id => {
-          const r = rows.find(x => x.id === id)
-          return r ? [{ id: r.id, question: r.question, variants: r.variants, answer: r.answer }] : []
-        })
-        const results = items.length ? await reviewProposalBatch(ctx, packs, items) : new Map<string, StepResult>()
-        const counts: Partial<Record<ReviewVerdict, number>> = {}
-        for (const it of items) {
-          const r = results.get(it.id)
-          if (!r) continue
-          const review: ProposalReview = { ...r, runId: run.runId, at: new Date(), model: ctx.model, documents: docMeta, decision: r.verdict === "agree" ? "applied" : null }
-          await proposals.updateOne({ companyCode: code, id: it.id, status: "open" }, { $set: { review } })
-          counts[r.verdict] = (counts[r.verdict] ?? 0) + 1
+        if (!batch) {
+          const ids = pending.slice(0, REVIEW_BATCH)
+          const rows = await proposals.find({ companyCode: code, id: { $in: ids }, status: "open" }, { projection: { _id: 0, id: 1, question: 1, variants: 1, answer: 1 } }).toArray()
+          const items: ReviewItem[] = ids.flatMap(id => {
+            const r = rows.find(x => x.id === id)
+            return r ? [{ id: r.id, question: r.question, variants: r.variants, answer: r.answer }] : []
+          })
+          batch = { ids, step: 0, current: items, steps: [] }
         }
-        await col.updateOne(mine, {
-          $pull: { pending: { $in: ids } },
-          $inc: Object.fromEntries(Object.entries(counts).map(([k, v]) => [`counts.${k}`, v])) as Record<string, number>,
-          $set: { failures: 0, error: null, updatedAt: new Date(), ...(pending.length <= REVIEW_BATCH ? { finishedAt: new Date() } : {}) },
-        })
-        pending = pending.slice(REVIEW_BATCH)
+        if (batch.current.length) batch = await reviewProposalStep(ctx, packs, batch)
+        if (!batch.current.length || batch.step >= packs.length) {
+          const ids = batch.ids
+          const counts: Partial<Record<ReviewVerdict, number>> = {}
+          for (const s of batch.steps) {
+            const r = mergeSteps(s.results)
+            if (!r) continue
+            const review: ProposalReview = { ...r, runId: run.runId, at: new Date(), model: ctx.model, documents: docMeta, decision: r.verdict === "agree" ? "applied" : null }
+            await proposals.updateOne({ companyCode: code, id: s.id, status: "open" }, { $set: { review } })
+            counts[r.verdict] = (counts[r.verdict] ?? 0) + 1
+          }
+          const finished = pending.every(id => ids.includes(id))
+          await col.updateOne(mine, {
+            $pull: { pending: { $in: ids } },
+            $inc: Object.fromEntries(Object.entries(counts).map(([k, v]) => [`counts.${k}`, v])) as Record<string, number>,
+            $set: { proposalBatch: null, failures: 0, error: null, updatedAt: new Date(), ...(finished ? { finishedAt: new Date() } : {}) },
+          })
+          pending = pending.filter(id => !ids.includes(id))
+          batch = null
+        } else {
+          await col.updateOne(mine, { $set: { proposalBatch: batch, failures: 0, error: null, updatedAt: new Date() } })
+        }
       } else {
         // Dva dokumenty naraz, po jednom kroku: referenčný balík je v cache.
         const ids = pending.slice(0, DOC_PARALLEL)
@@ -965,7 +995,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
   } finally {
     await col.updateOne(mine, { $set: { leaseUntil: null } })
   }
-  if (run.scope.kind === "documents") await announceFinished(code, run.runId)
+  await announceFinished(code, run.runId)
   return done
 }
 
@@ -983,19 +1013,29 @@ async function announceFinished(code: string, runId: string): Promise<void> {
   )
   if (!run) return
   try {
-    const findings = (run.results ?? []).reduce((n, r) => n + r.findings.length, 0)
+    // Pri návrhoch FAQ sú „nálezy" návrhy, ktoré sa od dokumentov odlišujú alebo s nimi kolidujú.
+    const proposalsRun = run.scope.kind === "proposals"
+    const findings = proposalsRun
+      ? (run.counts?.differs ?? 0) + (run.counts?.conflict ?? 0)
+      : (run.results ?? []).reduce((n, r) => n + r.findings.length, 0)
     const persons = await getCollection<Person>(PERSONS_COLLECTION)
     const person = run.startedById
       ? await persons.findOne({ companyCode: code, id: run.startedById })
       : await persons.findOne({ companyCode: code, email: run.startedBy })
     if (!person) return
-    await notify({ companyCode: code, personId: person.id, kind: "complianceDone", params: { runId, count: findings, total: run.total } })
+    const channelKey = run.scope.kind === "proposals" ? run.scope.channelKey : null
+    await notify(channelKey
+      ? { companyCode: code, personId: person.id, kind: "faqReviewDone", params: { channelKey, count: findings, total: run.total } }
+      : { companyCode: code, personId: person.id, kind: "complianceDone", params: { runId, count: findings, total: run.total } })
     const tenant = await tenantByCompanyCode(code)
     const host = tenant?.hostnames[0]
     if (!tenant || !host || !person.email) return
     await send({
       to: person.email,
-      ...complianceDoneEmail(`https://${host}/library/compliance/${runId}`, host, { documents: run.total, findings, usd: run.usage?.usd ?? null }, normalizeLanguage(person.language), brandingView(tenant)),
+      ...complianceDoneEmail(
+        channelKey ? `https://${host}/channels/${encodeURIComponent(channelKey)}/proposals` : `https://${host}/library/compliance/${runId}`,
+        host, { documents: run.total, findings, usd: run.usage?.usd ?? null, proposals: Boolean(channelKey) }, normalizeLanguage(person.language), brandingView(tenant),
+      ),
     })
   } catch (e) {
     console.error(`[compliance] upozornenie o skončení ${code}/${runId} zlyhalo:`, e)
