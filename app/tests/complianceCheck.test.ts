@@ -210,3 +210,13 @@ describe("e-mail po kontrole návrhov FAQ", () => {
     expect(d.html).toContain("Otvoriť nálezy")
   })
 })
+
+describe("beh, ktorý ešte pracuje", () => {
+  it("čakajúce položky a menej ako 5 chýb; hotový ani zastavený nebeží", async () => {
+    const { isRunning } = await import("../src/lib/complianceCheck")
+    expect(isRunning({ pending: ["p1"], failures: 1 })).toBe(true)
+    expect(isRunning({ pending: [], failures: 0 })).toBe(false)
+    expect(isRunning({ pending: ["p1"], failures: 5 })).toBe(false)
+    expect(isRunning(null)).toBe(false)
+  })
+})

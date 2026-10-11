@@ -26,7 +26,7 @@ import {
   PROPOSAL_FILTERS, type FaqProposal, type ProposalFilter,
 } from "@/lib/faqProposals"
 import { wordDiff, hasChanges, type WordDiffPart } from "@/lib/wordDiff"
-import { reviewRunFor, proposalsScopeKey, REVIEW_VERDICTS, MAX_FAILURES as REVIEW_MAX_FAILURES, type ReviewVerdict } from "@/lib/complianceCheck"
+import { reviewRunFor, proposalsScopeKey, REVIEW_VERDICTS, MAX_FAILURES as REVIEW_MAX_FAILURES, type ReviewVerdict, isRunning } from "@/lib/complianceCheck"
 import { monthRange } from "@/lib/historyAnalysis"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
@@ -179,6 +179,16 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
               <p className="quiet" style={{ margin: 0 }}>{t.reviewAgainst(run.documents.map(d => `${d.title}${d.state === "draft" ? ` (${t.reviewDraftMark})` : d.label ? ` (${d.label})` : ""}`).join(", "))}</p>
             </>
           )}
+          {/* Kým beží, nový štart sa neponúka — prepísal by rozbehnutý beh (Ján 11. 10. 2026). */}
+          {isRunning(run) ? (
+            <div className="lnote lnote--info">
+              <span className="lnote-mark" aria-hidden="true">…</span>
+              <span className="lnote-text">
+                <b>{t.reviewRunningTitle}</b>
+                <small>{t.reviewRunningNote(formatDate(run!.startedAt, language), run!.startedBy)}</small>
+              </span>
+            </div>
+          ) : (
           <form action={startReviewAction} style={{ display: "grid", gap: 12 }}>
             <input type="hidden" name="key" value={c.key} />
             <input type="hidden" name="back" value={backQuery} />
@@ -198,6 +208,7 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
             )}
             <div><SubmitButton className="button button--quiet">{t.reviewStart}</SubmitButton></div>
           </form>
+          )}
         </section>
       )}
 

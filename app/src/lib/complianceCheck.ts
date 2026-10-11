@@ -617,6 +617,11 @@ function newRun(code: string, scopeKey: string, scope: RunScope, ids: string[], 
   }
 }
 
+/** Beh ešte pracuje (nie je hotový ani zastavený po opakovaných chybách). */
+export function isRunning(run: Pick<ComplianceRun, "pending" | "failures"> | null | undefined): boolean {
+  return Boolean(run && run.pending.length > 0 && run.failures < MAX_FAILURES)
+}
+
 /**
  * Nový beh kontroly otvorených návrhov kanála (voliteľne jednej témy).
  * Návrhy idú do verejného okna pomoci, preto len verejné referencie (D194).
@@ -625,6 +630,8 @@ export async function startProposalReview(
   companyCode: string, channelKey: string, documentIds: string[], topicKey: string | null, actorEmail: string, now = new Date(),
 ): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startProposalReview")
+  // Druhé spustenie by beh prepísalo a rozbehnutá práca by sa zahodila (Ján 11. 10. 2026).
+  if (isRunning(await reviewRunFor(code, proposalsScopeKey(channelKey)))) throw new ComplianceError("compliance.alreadyRunning", "Kontrola už beží — počkajte, kým dobehne.")
   const { ids, packs } = await prepareReferences(code, documentIds, ["public"])
   const ai = await aiForCompany(code)
   if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
@@ -666,6 +673,10 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   const code = requireCompanyCode(companyCode, "startDocumentReview")
   const subjects = [...new Set(subjectIds.filter(Boolean))]
   if (!subjects.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
+  // Tie isté dokumenty už kontroluje rozbehnutý beh — druhý by len zdvojil prácu a cenu.
+  const same = [...subjects].sort().join("|")
+  const active = await (await runs()).find({ companyCode: code, "scope.kind": "documents", "pending.0": { $exists: true }, failures: { $lt: MAX_FAILURES } }, { projection: { _id: 0, scope: 1 } }).toArray()
+  if (active.some(r => r.scope.kind === "documents" && [...r.scope.subjectIds].sort().join("|") === same)) throw new ComplianceError("compliance.alreadyRunning", "Kontrola už beží — počkajte, kým dobehne.")
   const refs = documentIds.filter(id => !subjects.includes(id))
   const subjectDocs = await loadDocuments(code, subjects)
   if (subjectDocs.length !== subjects.length) throw new ComplianceError("compliance.unknownDocument", "Niektorý z vybraných dokumentov tu nie je.")
