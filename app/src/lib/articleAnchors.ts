@@ -59,3 +59,46 @@ export function articleHash(ref: string | null | undefined): string {
   const annex = /príloh[ay]\s*(?:č\.\s*)?(\d+)/i.exec(r)
   return annex ? `#priloha-${annex[1]}` : ""
 }
+
+const HEADING_LINE = /^#{1,6}\s+(.+?)\s*#*$/
+
+/**
+ * Text citovaného článku (alebo prílohy) z Markdownu normy — na náhľad pri
+ * náleze kontroly súladu (Ján 11. 10. 2026, voľba 1). Od nadpisu článku po
+ * nadpis iného článku, prílohy alebo časti; rozdelený článok (`čl. 18 ods.
+ * 1–7`, `čl. 18 ods. 8–19`) sa vráti celý. `null` = citácia nemá článok
+ * alebo sa v texte nenašiel. Strop dĺžky chráni stránku pred celým poriadkom
+ * pri neštandardnom texte.
+ */
+export function articleSection(markdown: string, ref: string | null | undefined, maxChars = 20_000): { text: string; hash: string } | null {
+  const hash = articleHash(ref)
+  if (!hash) return null
+  const want = hash.slice(1).replace(/-ods-.*$/, "")
+  const lines = markdown.replace(/\r\n?/g, "\n").split("\n")
+  const keyOf = (line: string): string | null | undefined => {
+    const h = HEADING_LINE.exec(line)
+    if (!h) return undefined
+    const art = ARTICLE.exec(h[1].trim())
+    if (art) return `cl-${art[1].toLowerCase()}`
+    const annex = ANNEX.exec(h[1].trim())
+    return annex ? `priloha-${annex[1]}` : null
+  }
+  const start = lines.findIndex(l => keyOf(l) === want)
+  if (start < 0) return null
+  let end = lines.length
+  for (let i = start + 1; i < lines.length; i++) {
+    const k = keyOf(lines[i])
+    if (k !== undefined && k !== want) { end = i; break }
+  }
+  const text = lines.slice(start, end).join("\n").trim()
+  return { text: text.length > maxChars ? `${text.slice(0, maxChars)}…` : text, hash }
+}
+
+/** Krátky názov citovaného miesta pre tlačidlo náhľadu: „čl. 18", „príloha č. 2". */
+export function articleLabel(ref: string | null | undefined): string {
+  const h = articleHash(ref)
+  const art = /^#cl-([^-]+)/.exec(h)
+  if (art) return `čl. ${art[1]}`
+  const annex = /^#priloha-(\d+)/.exec(h)
+  return annex ? `príloha č. ${annex[1]}` : ""
+}

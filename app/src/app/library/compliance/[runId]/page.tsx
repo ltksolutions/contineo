@@ -21,7 +21,9 @@ import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
 import CopyLink from "@/components/CopyLink"
 import TextEditor from "@/components/TextEditor"
-import { articleHash } from "@/lib/articleAnchors"
+import { articleHash, articleSection, articleLabel } from "@/lib/articleAnchors"
+import FormattedText from "@/components/FormattedText"
+import { DOCUMENTS_COLLECTION, effectiveVersion, type DocumentRecord } from "@/lib/documents"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
 import { documentRun, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import {
@@ -53,7 +55,23 @@ function Diff({ before, after }: { before: string; after: string }) {
   )
 }
 
-function Norm({ t, f }: { t: T; f: DocumentFinding }) {
+/** Text citovaného článku na náhľad (voľba 1, Ján 11. 10. 2026) a záväzné PDF. */
+interface NormPreview { text: string; hash: string; pdfHref: string | null }
+
+async function loadNormPreview(companyCode: string, f: DocumentFinding): Promise<NormPreview | null> {
+  const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne({ companyCode, documentId: f.citation.documentId }) as unknown as DocumentRecord | null
+  if (!doc) return null
+  const v = effectiveVersion(doc)
+  const markdown = v.ok ? String(v.version.markdown ?? doc.markdown ?? "") : String((doc as { draftMarkdown?: string }).draftMarkdown ?? "")
+  const section = articleSection(markdown, f.citation.articleRef)
+  if (!section) return null
+  const pdfHref = v.ok && v.version.pdf
+    ? `/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(v.version.versionId)}`
+    : null
+  return { ...section, pdfHref }
+}
+
+function Norm({ t, f, preview }: { t: T; f: DocumentFinding; preview?: NormPreview | null }) {
   return (
     <div className="cf-blk">
       <span className="cf-blk-l">{t.norm}</span>
@@ -67,6 +85,23 @@ function Norm({ t, f }: { t: T; f: DocumentFinding }) {
         </a>
       </p>
       {f.citation.quote && <blockquote className="quote">{f.citation.quote}</blockquote>}
+      {/* Náhľad celého článku pri náleze. Čitateľský pohľad pri PDF text neukazuje
+          (ADR-011, rozhodnutie 30. 9. 2026), preto je text tu — označený ako
+          text na vyhľadávanie, záväzné ostáva PDF. */}
+      {preview && (
+        <details className="norm-preview">
+          <summary>{t.showArticle(articleLabel(f.citation.articleRef))}</summary>
+          <div className="norm-preview-body">
+            <p className="quiet field-hint">
+              {t.articleNote}
+              {preview.pdfHref && <> · <a href={preview.pdfHref} target="_blank" rel="noopener">{t.openPdf}<span className="sr-only"> {t.opensNewWindow}</span></a></>}
+            </p>
+            <div className="answer">
+              <FormattedText text={preview.text} anchors highlight={preview.hash.slice(1)} />
+            </div>
+          </div>
+        </details>
+      )}
     </div>
   )
 }
@@ -180,6 +215,9 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   const progress = runProgress(run)
   const view: FindingView = isFindingView(q.view) ? q.view : "open"
   const selected = results.find(r => r.documentId === q.doc) ?? defaultDocument(results)
+  // Náhľad článku len pre otvorený nález — jeden dokument na načítanie, nie 62.
+  const openFinding = selected?.findings.find(x => x.id === q.f) ?? null
+  const normPreview = openFinding ? await loadNormPreview(ctx.tenant.companyCode, openFinding) : null
   const position = selected ? results.indexOf(selected) + 1 : 0
   const showDocs = q.docs === "1"
   // Odkaz so stavom obrazovky; filter `open` je predvolený a do adresy nejde.
@@ -240,7 +278,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
             <span className="cf-blk-l">{t.change}</span>
             {f.proposed ? <Diff before={f.quote} after={f.proposed} /> : <div className="pr-diff cf-diff">{readableInline(f.quote)}</div>}
           </div>
-          <Norm t={t} f={f} />
+          <Norm t={t} f={f} preview={normPreview} />
           {f.recommendation && <div className="cf-blk"><span className="cf-blk-l">{t.recommendation}</span><p>{f.recommendation}</p></div>}
           <DecisionForm t={t} run={run} res={res} f={f} ctx={ctx} view={view} next={next} nextLabel={nextLabel} />
         </article>
