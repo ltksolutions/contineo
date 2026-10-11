@@ -12,6 +12,7 @@
  * druhého (D32).
  */
 
+import { requestOnPublish } from "@/lib/complianceRequests"
 import { normalizeMeta, parseDate, metaCanonical, documentDraftIdentity, type VersionMeta } from "@/lib/versionMeta"
 import { redirect } from "next/navigation"
 import { tagsFromForm } from "@/lib/tagValues"
@@ -515,6 +516,9 @@ export async function publishVersionAction(fd: FormData) {
       ? say(self.language).alreadyPublished
       : say(self.language).published(v.chunks, v.archived)
     if (!v.alreadyDone) {
+      // Nové znenie dokumentu v pevnej väzbe → požiadavka na kontrolu súladu (ADR-032, D200).
+      // Nikdy nevyhodí — zverejnenie je hotové aj vtedy, keď sa požiadavka nepodarí.
+      await requestOnPublish(self.companyCode, id, v.label, self.email)
       await notify({
         companyCode: self.companyCode,
         personId: self.personId,

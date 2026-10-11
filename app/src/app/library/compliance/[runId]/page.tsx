@@ -38,7 +38,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction } from "../../complianceActions"
+import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction } from "../../complianceActions"
 
 export const dynamic = "force-dynamic"
 
@@ -415,6 +415,13 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
             {run.documentIds.map(id => <input key={id} type="hidden" name="documentIds" value={id} />)}
             {run.name && <input type="hidden" name="name" value={run.name} />}
             <SubmitButton className="button button--quiet">{t.runAgain}</SubmitButton>
+          </form>
+        )}
+        {/* Pevné väzby (D197): pri novom znení niektorej normy vznikne požiadavka na kontrolu (D200). */}
+        {ctx.isReviewer && subjectIds.length > 0 && run.pending.length === 0 && (
+          <form action={saveLinksAction} className="page-tools">
+            <input type="hidden" name="runId" value={run.runId} />
+            <SubmitButton className="button button--quiet">{t.saveLinks}</SubmitButton>
           </form>
         )}
       </div>

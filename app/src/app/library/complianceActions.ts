@@ -17,6 +17,7 @@ import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
 import { renameRun, startDocumentReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
+import { setLinksFromRun, removeLink, dismissRequest, markRequestStarted } from "@/lib/complianceRequests"
 
 const PAGE = "/library/compliance"
 
@@ -58,6 +59,9 @@ export async function startDocumentReviewAction(fd: FormData) {
     // „Spustiť znova" na detaile posiela ten istý výber aj názov (Q4).
     const run = await startDocumentReview(ctx.person.companyCode, fd.getAll("subjectIds").map(String), fd.getAll("documentIds").map(String), { email: ctx.person.email, personId: ctx.person.id }, new Date(), fieldText(fd, "name"))
     runId = run.runId
+    // Spustené z požiadavky na kontrolu (D200) — požiadavka sa uzavrie s odkazom na beh.
+    const requestId = fieldText(fd, "requestId")
+    if (requestId) await markRequestStarted(ctx.person.companyCode, requestId, run.runId, ctx.person.email)
     const origin = originFromHeaders(await headers())
     after(() => kick(origin, "/api/cron/compliance"))
   } catch (e) {
@@ -136,4 +140,44 @@ export async function renameRunAction(fd: FormData) {
     back(path, failure(e, ctx.language), true)
   }
   back(path, ctx.t.renamed)
+}
+
+/** Pevné väzby z dobehnutej kontroly (D197): každý kontrolovaný dokument proti jej normám. */
+export async function saveLinksAction(fd: FormData) {
+  const ctx = await ready()
+  const runId = fieldText(fd, "runId")
+  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  let message = ""
+  try {
+    const run = await documentRun(ctx.person.companyCode, runId)
+    if (!run) throw new AppError("compliance.unknownRun", "Taká kontrola tu nie je.")
+    message = ctx.t.linksSaved(await setLinksFromRun(ctx.person.companyCode, run, ctx.person.email))
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(path, failure(e, ctx.language), true)
+  }
+  back(path, message)
+}
+
+export async function removeLinkAction(fd: FormData) {
+  const ctx = await ready()
+  try {
+    await removeLink(ctx.person.companyCode, fieldText(fd, "subjectId"))
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(PAGE, failure(e, ctx.language), true, "links")
+  }
+  back(PAGE, ctx.t.linkRemoved, false, "links")
+}
+
+/** „Netreba" pri požiadavke na kontrolu (D200) — s dôvodom. */
+export async function dismissRequestAction(fd: FormData) {
+  const ctx = await ready()
+  try {
+    await dismissRequest(ctx.person.companyCode, fieldText(fd, "requestId"), fieldText(fd, "reason"), ctx.person.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(PAGE, failure(e, ctx.language), true, "requests")
+  }
+  back(PAGE, ctx.t.requestDismissed, false, "requests")
 }

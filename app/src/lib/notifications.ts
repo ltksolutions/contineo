@@ -77,6 +77,8 @@ export type NotificationKind =
   | "complianceToApply"
   /** Kontrola návrhov FAQ proti dokumentom dobehla (ADR-032) — tomu, kto ju spustil. */
   | "faqReviewDone"
+  /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (ADR-032, D200). */
+  | "complianceRequested"
 
 export interface NotificationParams {
   documentId?: string
@@ -130,6 +132,8 @@ export function notificationHref(
       return "/hr/reminders"
     case "objectionSubmitted":
       return "/dpo#objections"
+    case "complianceRequested":
+      return "/library/compliance#requests"
     case "faqReviewDone":
       return params.channelKey ? `/channels/${encodeURIComponent(params.channelKey)}/proposals` : null
     case "complianceDone":

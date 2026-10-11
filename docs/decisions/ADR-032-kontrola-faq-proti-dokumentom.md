@@ -240,6 +240,33 @@ Z prvej kontroly 10 manuálov ISSF proti 7 normám (42 nálezov, 3,05 USD,
    balík noriem) dokumentu, nie celý dokument — tri pomalšie volania za
    sebou by prekročili 300 s funkcie; rozpracované kroky sú v `partials`.
 
+### D200 — Požiadavka na kontrolu pri novom znení; pevné väzby (11. 10. 2026)
+
+Ján 11. 10. 2026: „ak do budúcna automaticky pri nahratí novej verzie normy
+vznikne požiadavka na zistenie súladu s prepojenými normami, bolo by fajn to
+nájsť na jednom mieste… a notifikovať zodpovedné osoby a content-admin";
+„pevné väzby, ktoré už teraz vieš nastaviť, nastav hneď".
+
+1. **Pevné väzby (prvá podoba D197).** Kolekcia `compliance_links`:
+   kontrolovaný dokument → normy. Ukladajú sa z dobehnutej kontroly
+   („Uložiť ako pevné väzby" na jej detaile), zobrazujú a rušia sa na
+   `/library/compliance`. Väzby podľa druhu dokumentu ako nastavenie
+   organizácie ostávajú vo fáze 3.
+2. **Požiadavka, nie automatická kontrola.** Pri **zverejnení** nového
+   znenia (nie pri uložení konceptu) vznikne v `compliance_requests`
+   požiadavka, ak je dokument v pevnej väzbe (ako norma aj ako kontrolovaný),
+   ak sa proti nemu už kontrolovalo (história behov) alebo ho citujú otvorené
+   návrhy FAQ. Kontrola sa nespúšťa sama — stojí jednotky USD a nie každá
+   novela ju potrebuje. Na `/library/compliance` je pod „Čaká na kontrolu"
+   s predvyplneným výberom a „Skontrolovať", alebo „Netreba" s dôvodom.
+   Novšie znenie toho istého dokumentu staršiu otvorenú požiadavku uzavrie.
+3. **Komu.** Zvonček: zodpovedné osoby zmeneného a prepojených dokumentov,
+   všetci s `content-admin` a s rolou `compliance`. Súhrnný e-mail len rola
+   `compliance` (spúšťa kontroly); ostatných by e-maily pri každej novele
+   zahlcovali.
+4. Vytvorenie požiadavky **nikdy nezhodí zverejnenie** — je to pripomienka
+   o operácii, nie jej súčasť.
+
 ## 3. Postup
 
 1. **Fáza 1 — kontrola návrhov FAQ vo fronte kurátora** (D191 bod 2, D192,
