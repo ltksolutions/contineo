@@ -23,3 +23,14 @@ describe("čo skontrolovať pri novom znení (ADR-032, D200)", () => {
     expect(linkedChecks("volebny", [{ subjectId: "m0", referenceIds: ["sp"] }], [])).toEqual({ subjectIds: [], referenceIds: [] })
   })
 })
+
+describe("nové znenie, ktoré je výsledkom kontroly", () => {
+  it("dokument aktuálny od kontroly sa sám nekontroluje; normy jeho väzieb sa nepýtajú", () => {
+    const links = [{ subjectId: "m1", referenceIds: ["rapp", "sp"] }]
+    expect(linkedChecks("m1", links, [], true)).toEqual({ subjectIds: [], referenceIds: [] })
+  })
+  it("ak je zároveň normou iných, ich kontrola ostáva", () => {
+    const links = [{ subjectId: "m1", referenceIds: ["rapp"] }, { subjectId: "rozpis", referenceIds: ["m1"] }]
+    expect(linkedChecks("m1", links, [], true)).toEqual({ subjectIds: ["rozpis"], referenceIds: ["m1"] })
+  })
+})

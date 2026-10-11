@@ -29,6 +29,7 @@ import { PERSONS_COLLECTION, type Person } from "./persons"
 import { tenantByCompanyCode, brandingView } from "./tenants"
 import { send, complianceRequestEmail } from "./ecomail"
 import { normalizeLanguage } from "./i18n"
+import { textFingerprint } from "./chunkIdentity"
 
 export class ComplianceRequestError extends AppError {}
 
@@ -120,6 +121,8 @@ export function linkedChecks(
   documentId: string,
   linkRows: { subjectId: string; referenceIds: string[] }[],
   history: { subjectIds: string[]; referenceIds: string[] }[],
+  /** Zverejnený text sa zhoduje s textom po poslednej kontrole a všetko je rozhodnuté — sám sa nekontroluje (D200). */
+  selfUpToDate = false,
 ): { subjectIds: string[]; referenceIds: string[] } {
   const subjects = new Set<string>()
   const refs = new Set<string>()
@@ -128,13 +131,32 @@ export function linkedChecks(
       row.subjectIds.forEach(s => subjects.add(s))
       row.referenceIds.forEach(r => refs.add(r))
     }
-    if (row.subjectIds.includes(documentId)) {
+    if (row.subjectIds.includes(documentId) && !selfUpToDate) {
       subjects.add(documentId)
       row.referenceIds.forEach(r => refs.add(r))
     }
   }
   for (const s of subjects) refs.delete(s)
   return { subjectIds: [...subjects], referenceIds: [...refs] }
+}
+
+/**
+ * Je zverejnený text dokumentu presne ten, ktorý vyšiel z jeho poslednej
+ * kontroly (skontrolovaný text + zapísané prijaté znenia), a sú všetky
+ * nálezy rozhodnuté? Potom je nové znenie výsledkom kontroly, nie zmenou,
+ * ktorú treba kontrolovať znova (Ján 11. 10. 2026).
+ */
+export async function upToDateSinceCheck(code: string, documentId: string): Promise<boolean> {
+  const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne({ companyCode: code, documentId }, { projection: { _id: 0, versions: 1, markdown: 1 } })
+  const active = ((doc?.versions ?? []) as { isActive?: boolean; markdown?: string }[]).find(v => v.isActive)
+  const text = String(active?.markdown ?? doc?.markdown ?? "")
+  if (!text.trim()) return false
+  const last = await (await getCollection(RUNS_COLLECTION)).find(
+    { companyCode: code, "scope.kind": "documents", "results.documentId": documentId },
+    { projection: { _id: 0, results: 1 } },
+  ).sort({ startedAt: -1 }).limit(1).next()
+  const res = ((last?.results ?? []) as { documentId: string; textHash?: string; findings: { status?: string | null }[] }[]).find(r => r.documentId === documentId)
+  return Boolean(res?.textHash && res.textHash === textFingerprint(text) && res.findings.every(f => f.status))
 }
 
 async function titles(code: string, ids: string[]): Promise<string[]> {
@@ -163,7 +185,7 @@ export async function requestOnPublish(companyCode: string, documentId: string, 
       ]).toArray(),
     ])
     const history = runRows.map(r => ({ subjectIds: ((r.scope as { subjectIds?: string[] })?.subjectIds ?? []), referenceIds: (r.documentIds as string[]) ?? [] }))
-    const { subjectIds, referenceIds } = linkedChecks(documentId, linkRows, history)
+    const { subjectIds, referenceIds } = linkedChecks(documentId, linkRows, history, await upToDateSinceCheck(code, documentId))
     const faq = faqRows.map(r => ({ channelKey: r._id, proposals: r.n }))
     if (!subjectIds.length && !faq.length) return null
     const [documentTitle] = await titles(code, [documentId])

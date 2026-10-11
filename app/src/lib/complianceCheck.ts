@@ -42,6 +42,7 @@ import { writeAudit } from "./audit"
 import { PROPOSALS_COLLECTION, type FaqProposal, type ProposalSource } from "./faqProposals"
 import type { TokenCounts } from "./pricing"
 import { articleHash } from "./articleAnchors"
+import { textFingerprint } from "./chunkIdentity"
 import { notify, notifyPeople } from "./notifications"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { tenantByCompanyCode, brandingView } from "./tenants"
@@ -417,6 +418,14 @@ export type FindingApplied = "draft" | "pending" | "manual" | null
 
 export interface DocumentResult {
   documentId: string
+  /**
+   * Odtlačok textu dokumentu po tejto kontrole (D200, 11. 10. 2026): pri
+   * vzniku výsledku skontrolovaný text, potom sa posúva s každým zápisom
+   * prijatého znenia z tejto kontroly. Keď sa zverejnený text zhoduje a všetko
+   * je rozhodnuté, nové znenie dokumentu požiadavku na kontrolu nevytvorí.
+   * Ručná úprava konceptu mimo kontroly reťaz pretrhne — a požiadavka vznikne.
+   */
+  textHash?: string
   title: string
   state: "valid" | "draft"
   label: string | null
@@ -798,7 +807,7 @@ async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject:
 function documentResult(subject: RawDocument, partial: DocumentPartial, kept: KeptDecision[] = []): DocumentResult {
   const { state, label } = documentText(subject)
   // Zhrnutie za dokument napísal posledný krok (Q3); medzikroky sa nespájajú.
-  return { documentId: subject.documentId, title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.at(-1) ?? "", findings: carryKept(partial.findings, kept) }
+  return { documentId: subject.documentId, textHash: textFingerprint(documentText(subject).text), title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.at(-1) ?? "", findings: carryKept(partial.findings, kept) }
 }
 
 /** Vedome ponechané miesto z predchádzajúcej kontroly — pamäť rozhodnutí (Ján 11. 10. 2026). */
@@ -1128,7 +1137,7 @@ export function suggestOnCurrent(f: DocumentFinding, current: string): string {
   return p.startsWith(q) && p.length > q.length ? `${current}${p.slice(q.length)}` : current
 }
 
-async function writeToDraft(code: string, documentId: string, f: DocumentFinding, text: string, actor: string, siblings: DocumentFinding[]): Promise<"draft" | "manual" | null> {
+async function writeToDraft(code: string, documentId: string, f: DocumentFinding, text: string, actor: string, siblings: DocumentFinding[], runId: string): Promise<"draft" | "manual" | null> {
   const base = await draftBase(code, documentId)
   if (base === null) throw new ComplianceError("library.documentNotFound", "Taký dokument tu nie je.")
   // Keď miesto už prepísal iný prijatý nález, nahrádza sa jeho aktuálne znenie, inak pôvodný úryvok.
@@ -1137,6 +1146,12 @@ async function writeToDraft(code: string, documentId: string, f: DocumentFinding
   if (next === null) return "manual"
   if (next.trim() === base.trim()) return null
   await saveDraft(code, documentId, next, `${actor} (kontrola súladu)`)
+  // Reťaz odtlačkov (D200): posunie sa len z textu, ktorý táto kontrola naposledy poznala.
+  await (await runs()).updateOne(
+    { companyCode: code, runId, "scope.kind": "documents" },
+    { $set: { "results.$[d].textHash": textFingerprint(next) } },
+    { arrayFilters: [{ "d.documentId": documentId, "d.textHash": textFingerprint(base) }] },
+  )
   return "draft"
 }
 
@@ -1152,7 +1167,7 @@ export async function applyAcceptedFinding(companyCode: string, runId: string, d
   if (!run || !res || !finding) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
   // `manual` sa pripúšťa kvôli rozhodnutiam spred 11. 10. 2026, keď „bez práv" a „nenašlo sa" mali jednu hodnotu.
   if (!finding.acceptedText || (finding.applied !== "pending" && finding.applied !== "manual")) throw new ComplianceError("compliance.nothingToApply", "Pri tomto náleze nie je čo zapísať.")
-  const applied = await writeToDraft(code, documentId, finding, finding.acceptedText, actor, res.findings)
+  const applied = await writeToDraft(code, documentId, finding, finding.acceptedText, actor, res.findings, runId)
   if (applied === "manual" && finding.applied === "pending") {
     // Úryvok sa nenašiel — z „čaká na správcu" sa stáva „treba vložiť ručne".
     await (await runs()).updateOne(
@@ -1213,7 +1228,7 @@ export async function decideFinding(
   if (!run || !finding) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
 
   let applied: FindingApplied = null
-  if (decision === "accepted") applied = canEditDrafts ? await writeToDraft(code, documentId, finding, accepted, actor, siblings) : "pending"
+  if (decision === "accepted") applied = canEditDrafts ? await writeToDraft(code, documentId, finding, accepted, actor, siblings, runId) : "pending"
 
   const r = await (await runs()).updateOne(
     { companyCode: code, runId, "scope.kind": "documents" },
