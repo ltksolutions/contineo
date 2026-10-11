@@ -14,6 +14,9 @@ import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
 import { approveProposal, rejectProposal, mergeProposal, updateProposal, applyReview, dismissReview } from "@/lib/faqProposals"
 import { startProposalReview } from "@/lib/complianceCheck"
+import { kick, originFromHeaders } from "@/lib/backgroundKick"
+import { after } from "next/server"
+import { headers } from "next/headers"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -110,8 +113,10 @@ export async function startReviewAction(fd: FormData) {
   const key = fieldText(fd, "key")
   try {
     // Len založiť — veľký výber noriem má viac krokov na dávku a akcia by nestihla
-    // časový limit; prvú dávku vezme cron do 5 minút.
+    // časový limit; prvú dávku hneď po odpovedi spustí reťaz na pozadí.
     await startProposalReview(ctx.person.companyCode, key, fd.getAll("documentIds").map(String), fieldText(fd, "topic") || null, ctx.person.email)
+    const origin = originFromHeaders(await headers())
+    after(() => kick(origin, "/api/cron/compliance"))
   } catch (e) {
     if (isRedirect(e)) throw e
     back(key, failure(e, ctx.language), true, fd)

@@ -6,6 +6,7 @@
  * nevie nahrať sám a pri každej zmene predpisu musí čakať na nás.
  */
 
+import { isComplianceReviewer } from "@/lib/complianceAccess"
 import { notFound, redirect } from "next/navigation"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
@@ -629,10 +630,13 @@ export default async function LibraryPage({
             <Link className="page-more-item" href="/library/curation">
               {dictionary(uiLanguage).curation.open}
             </Link>
-            {/* Kontrola súladu dokumentov proti normám (ADR-032, D196). */}
-            <Link className="page-more-item" href="/library/compliance">
-              {dictionary(uiLanguage).library.compliance.open}
-            </Link>
+            {/* Kontrola súladu dokumentov proti normám (ADR-032, D196) — len s rolou
+                `compliance`; bez nej by odkaz viedol na 404. */}
+            {isComplianceReviewer(ctx.person) && (
+              <Link className="page-more-item" href="/library/compliance">
+                {dictionary(uiLanguage).library.compliance.open}
+              </Link>
+            )}
           </div>
         </details>
       </div>

@@ -47,6 +47,7 @@ function sentence(language: UiLanguage, kind: string, params: NotificationParams
     case "responsibleAssigned": return t.responsibleAssigned(title, params.versionLabel ?? "")
     case "draftResponsibleAssigned": return t.draftResponsibleAssigned(title)
     case "objectionSubmitted": return t.objectionSubmitted()
+    case "complianceDone": return t.complianceDone(params.total ?? 0, params.count ?? 0)
     default: return title || kind
   }
 }

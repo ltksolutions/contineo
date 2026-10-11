@@ -34,10 +34,18 @@ import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { requireCompanyCode } from "./tenantScope"
 import { aiForCompany } from "./aiSettings"
-import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
+import { recordAiUsage, usageRecord, AI_USAGE_COLLECTION, type UsageActor, type AiUsagePurpose, type AiUsageRecord } from "./aiUsage"
 import { DOCUMENTS_COLLECTION } from "./documents"
+import { saveDraft } from "./libraryWrite"
+import { draftIsFree } from "./textFix"
+import { writeAudit } from "./audit"
 import { PROPOSALS_COLLECTION, type FaqProposal, type ProposalSource } from "./faqProposals"
 import type { TokenCounts } from "./pricing"
+import { notify } from "./notifications"
+import { PERSONS_COLLECTION, type Person } from "./persons"
+import { tenantByCompanyCode, brandingView } from "./tenants"
+import { send, complianceDoneEmail } from "./ecomail"
+import { normalizeLanguage } from "./i18n"
 
 export class ComplianceError extends AppError {}
 
@@ -49,6 +57,8 @@ export const PACK_MAX_CHARS = 400_000
 /** Strop celého výberu — nad ním by beh trval priveľa krokov. */
 export const SELECTION_MAX_CHARS = 2_000_000
 export const MAX_FAILURES = 5
+/** Kontrolovaných dokumentov naraz v jednom kúsku behu. */
+export const DOC_PARALLEL = 2
 
 export type ReviewVerdict = "agree" | "differs" | "not_covered" | "conflict"
 export const REVIEW_VERDICTS: ReviewVerdict[] = ["differs", "conflict", "not_covered", "agree"]
@@ -333,6 +343,8 @@ export const DOC_REVIEW_SYSTEM = [
   ...COMMON_RULES,
   "– Nehodnoť štýl ani technické kroky v informačnom systéme, ktoré norma neupravuje. Hlásiť len vecné rozpory s normami.",
   "– Ku každému nálezu uveď miesto v kontrolovanom dokumente (časť, nadpis), doslovný úryvok z neho a odporúčanie, ako text opraviť.",
+  "– „quote“ skopíruj z kontrolovaného dokumentu presne, znak po znaku, vrátane Markdownu (**, odrážky) — nahrádza sa ním v texte. Jeden súvislý úsek, najviac jeden odsek.",
+  "– „proposed“ je nové znenie presne toho úryvku: celý úryvok prepísaný tak, aby bol v súlade s normou (pri „missing“ pôvodný text s doplnením). Rovnaký štýl a Markdown ako dokument, bez odkazov na tento pokyn.",
   "– „summary“ je jedna-dve vety pre autora. Ak nálezy nie sú, vráť prázdny zoznam.",
   "Vráť JSON podľa schémy.",
 ].join("\n")
@@ -352,8 +364,9 @@ export const DOC_REVIEW_SCHEMA = {
           quote: { type: "string", description: "Doslovný úryvok z kontrolovaného dokumentu." },
           citation: CITATION_SCHEMA,
           recommendation: { type: "string" },
+          proposed: { type: "string", description: "Nové znenie úryvku „quote“." },
         },
-        required: ["kind", "location", "quote", "citation", "recommendation"],
+        required: ["kind", "location", "quote", "citation", "recommendation", "proposed"],
       },
     },
     summary: { type: "string" },
@@ -371,9 +384,19 @@ export interface DocumentFinding {
   quote: string
   citation: ReviewCitation
   recommendation: string
-  /** Rozhodnutie autora/schvaľovateľa (D196). */
-  status: "fixed" | "kept" | null
+  /** Navrhnuté nové znenie úryvku `quote`; behy pred 11. 10. 2026 ho nemajú. */
+  proposed?: string | null
+  /**
+   * Rozhodnutie (D196, Ján 11. 10. 2026): `accepted` — prijaté odporúčanie
+   * s upraveným znením, `kept` — vedome ponechané. `fixed` je staré
+   * „opravené" z behov pred zmenou; číta sa ako prijaté.
+   */
+  status: "accepted" | "fixed" | "kept" | null
   reason?: string | null
+  /** Znenie, ktoré človek prijal (po svojej úprave). */
+  acceptedText?: string | null
+  /** Kam sa prijaté znenie zapísalo: do konceptu, alebo ho treba vložiť ručne. */
+  applied?: "draft" | "manual" | null
   decidedBy?: string | null
   decidedAt?: Date | null
 }
@@ -408,8 +431,9 @@ export function parseDocReview(raw: unknown, pack: ReferencePack, newId: () => s
     findings.push({
       id: newId(), kind, citation, status: null,
       location: String(x.location ?? "").trim().slice(0, 200),
-      quote: String(x.quote ?? "").trim().slice(0, 400),
+      quote: String(x.quote ?? "").trim().slice(0, 2000),
       recommendation: String(x.recommendation ?? "").trim().slice(0, 1500),
+      proposed: String(x.proposed ?? "").trim().slice(0, 4000) || null,
     })
   }
   return { findings: findings.slice(0, 40), summary: String(r?.summary ?? "").trim().slice(0, 1000) }
@@ -439,11 +463,29 @@ export interface ComplianceRun {
   results?: DocumentResult[]
   startedAt: Date
   startedBy: string
+  /** Osoba, ktorej príde upozornenie po skončení; behy pred 11. 10. 2026 ho nemajú. */
+  startedById?: string | null
+  /** Model, ktorý kontrolu robil (kópia v čase behu). */
+  model?: string | null
+  /** Spotreba behu — súčet volaní; v `ai_usage` je každé volanie zvlášť. */
+  usage?: RunUsage
+  /** Kedy odišlo upozornenie o skončení — aby neodišlo dvakrát. */
+  notifiedAt?: Date | null
   updatedAt: Date
   finishedAt: Date | null
   error: string | null
   failures: number
   leaseUntil: Date | null
+}
+
+export interface RunUsage {
+  calls: number
+  failed: number
+  input: number
+  output: number
+  cacheWrite: number
+  cacheRead: number
+  usd: number
 }
 
 export function proposalsScopeKey(channelKey: string): string {
@@ -463,10 +505,46 @@ export async function reviewRunFor(companyCode: string, scopeKey: string): Promi
   return (await runs()).findOne({ companyCode: code, scopeKey }, { projection: { _id: 0 } })
 }
 
-/** Posledné kontroly dokumentov (D196) — pre prehľad v knižnici. */
-export async function documentRuns(companyCode: string, limit = 10): Promise<ComplianceRun[]> {
+/**
+ * Kontroly dokumentov (D196) organizácie, najnovšie hore. Vidia ich všetci
+ * s rolou kontroly súladu, nie len ten, kto ich spustil (Ján 11. 10. 2026).
+ */
+export async function documentRuns(companyCode: string, limit = 30): Promise<ComplianceRun[]> {
   const code = requireCompanyCode(companyCode, "documentRuns")
   return (await runs()).find({ companyCode: code, "scope.kind": "documents" }, { projection: { _id: 0 } }).sort({ startedAt: -1 }).limit(limit).toArray()
+}
+
+/**
+ * Spotreba behu. Behy pred 11. 10. 2026 ju na sebe nemajú — dopočíta sa
+ * z `ai_usage` podľa času behu a toho, kto ho spustil (vtedy pod účelom
+ * „faq-review"). Nové behy si ju sčítavajú samy pri každom volaní.
+ */
+export async function runUsage(run: ComplianceRun): Promise<RunUsage | null> {
+  if (run.usage) return run.usage
+  if (!run.finishedAt) return null
+  const [row] = await (await getCollection(AI_USAGE_COLLECTION)).aggregate([
+    { $match: { companyCode: run.companyCode, purpose: "faq-review", email: run.startedBy, at: { $gte: run.startedAt, $lte: new Date(run.finishedAt.getTime() + 5000) } } },
+    { $group: {
+      _id: "$model", calls: { $sum: 1 }, failed: { $sum: { $cond: ["$failed", 1, 0] } },
+      input: { $sum: "$tokens.input" }, output: { $sum: "$tokens.output" }, cacheWrite: { $sum: "$tokens.cacheWrite" }, cacheRead: { $sum: "$tokens.cacheRead" }, usd: { $sum: "$usd" },
+    } },
+  ]).toArray()
+  return row ? { calls: row.calls, failed: row.failed, input: row.input, output: row.output, cacheWrite: row.cacheWrite, cacheRead: row.cacheRead, usd: row.usd } : null
+}
+
+/** Model behu; pri starých behoch z prvého volania v `ai_usage`. */
+export async function runModel(run: ComplianceRun): Promise<string | null> {
+  if (run.model) return run.model
+  const row = await (await getCollection(AI_USAGE_COLLECTION)).findOne(
+    { companyCode: run.companyCode, purpose: "faq-review", email: run.startedBy, at: { $gte: run.startedAt } },
+    { projection: { _id: 0, model: 1 }, sort: { at: 1 } },
+  )
+  return row ? String(row.model) : null
+}
+
+export async function documentRun(companyCode: string, runId: string): Promise<ComplianceRun | null> {
+  const code = requireCompanyCode(companyCode, "documentRun")
+  return (await runs()).findOne({ companyCode: code, runId, "scope.kind": "documents" }, { projection: { _id: 0 } })
 }
 
 /** Overí referenčné dokumenty a postaví balíky; spoločné pre oba druhy kontroly. */
@@ -484,13 +562,17 @@ async function prepareReferences(code: string, documentIds: string[], subjectAcc
   return { ids, packs: buildPacks(docs) }
 }
 
-function newRun(code: string, scopeKey: string, scope: RunScope, ids: string[], packs: ReferencePack[], pending: string[], actorEmail: string, now: Date): ComplianceRun {
+export interface RunStarter { email: string; personId?: string | null }
+
+function newRun(code: string, scopeKey: string, scope: RunScope, ids: string[], packs: ReferencePack[], pending: string[], starter: RunStarter, model: string, now: Date): ComplianceRun {
   return {
     companyCode: code, scopeKey, scope, runId: randomBytes(8).toString("hex"),
     documentIds: ids, documents: [...new Map(packs.flatMap(p => p.documents).map(d => [d.documentId, d])).values()], steps: packs.length,
     pending, total: pending.length, counts: { agree: 0, differs: 0, not_covered: 0, conflict: 0 },
     ...(scope.kind === "documents" ? { results: [] } : {}),
-    startedAt: now, startedBy: actorEmail, updatedAt: now, finishedAt: null, error: null, failures: 0, leaseUntil: null,
+    startedAt: now, startedBy: starter.email, startedById: starter.personId ?? null, model,
+    usage: { calls: 0, failed: 0, input: 0, output: 0, cacheWrite: 0, cacheRead: 0, usd: 0 }, notifiedAt: null,
+    updatedAt: now, finishedAt: null, error: null, failures: 0, leaseUntil: null,
   }
 }
 
@@ -509,7 +591,7 @@ export async function startProposalReview(
     .find({ companyCode: code, channelKey, status: "open", ...(topicKey ? { topicKey } : {}) }, { projection: { _id: 0, id: 1 } })
     .sort({ threads: -1, lastMonth: -1, question: 1 }).toArray()
   if (!open.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otvorené návrhy na kontrolu.")
-  const run = newRun(code, proposalsScopeKey(channelKey), { kind: "proposals", channelKey, topicKey }, ids, packs, open.map(p => p.id), actorEmail, now)
+  const run = newRun(code, proposalsScopeKey(channelKey), { kind: "proposals", channelKey, topicKey }, ids, packs, open.map(p => p.id), { email: actorEmail }, ai.models.answer, now)
   await (await runs()).replaceOne({ companyCode: code, scopeKey: run.scopeKey }, run, { upsert: true })
   return run
 }
@@ -519,7 +601,7 @@ export async function startProposalReview(
  * dokument nesmie byť zároveň referenčný; verejný sa kontroluje len
  * verejnými, interný akýmikoľvek.
  */
-export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], actorEmail: string, now = new Date()): Promise<ComplianceRun> {
+export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date()): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startDocumentReview")
   const subjects = [...new Set(subjectIds.filter(Boolean))]
   if (!subjects.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
@@ -530,7 +612,7 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   const { ids, packs } = await prepareReferences(code, refs, subjectDocs.map(d => d.accessLevel ?? "public"))
   const ai = await aiForCompany(code)
   if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
-  const run = newRun(code, "", { kind: "documents", subjectIds: subjects }, ids, packs, subjects, actorEmail, now)
+  const run = newRun(code, "", { kind: "documents", subjectIds: subjects }, ids, packs, subjects, starter, ai.models.answer, now)
   run.scopeKey = `documents:${run.runId}`
   await (await runs()).insertOne(run)
   return run
@@ -543,12 +625,17 @@ interface CallCtx {
   model: string
   actor: UsageActor
   keySource: Awaited<ReturnType<typeof aiForCompany>>["keySource"]
+  purpose: AiUsagePurpose
+  /** Pripočíta volanie k spotrebe behu. */
+  onUsage: (rec: AiUsageRecord) => Promise<void>
 }
 
 async function callStep(ctx: CallCtx, system: string, pack: ReferencePack, user: string, schema: object, subject: string): Promise<unknown> {
-  const usage = (tokens: Partial<TokenCounts>, failed?: boolean) => void recordAiUsage(usageRecord({
-    actor: ctx.actor, purpose: "faq-review", subject: subject.slice(0, 200), provider: "anthropic", model: ctx.model, keySource: ctx.keySource, tokens, failed,
-  }))
+  const usage = async (tokens: Partial<TokenCounts>, failed?: boolean) => {
+    const rec = usageRecord({ actor: ctx.actor, purpose: ctx.purpose, subject: subject.slice(0, 200), provider: "anthropic", model: ctx.model, keySource: ctx.keySource, tokens, failed })
+    void recordAiUsage(rec)
+    await ctx.onUsage(rec)
+  }
   let answer: Anthropic.Message
   try {
     answer = await ctx.client.messages.create({
@@ -562,11 +649,11 @@ async function callStep(ctx: CallCtx, system: string, pack: ReferencePack, user:
       output_config: { format: { type: "json_schema", schema: schema as Record<string, unknown> }, effort: "medium" },
     })
   } catch (e) {
-    usage({}, true)
+    await usage({}, true)
     console.error("[compliance] volanie modelu zlyhalo:", e)
     throw new ComplianceError("compliance.aiFailed", "Kontrola sa nepodarila — skúste to o chvíľu.")
   }
-  usage({
+  await usage({
     input: answer.usage.input_tokens, output: answer.usage.output_tokens,
     cacheWrite: answer.usage.cache_creation_input_tokens ?? 0, cacheRead: answer.usage.cache_read_input_tokens ?? 0,
   })
@@ -639,7 +726,18 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
   const ctx: CallCtx = {
     client: new Anthropic({ apiKey: ai.apiKey, maxRetries: 1, timeout: 180_000 }),
     model: ai.models.answer, keySource: ai.keySource,
-    actor: actor ?? { companyCode: code, personId: null, personName: "Kontrola súladu (cron)", email: run.startedBy },
+    actor: actor ?? { companyCode: code, personId: run.startedById ?? null, personName: "Kontrola súladu (na pozadí)", email: run.startedBy },
+    purpose: run.scope.kind === "documents" ? "compliance-review" : "faq-review",
+    onUsage: async rec => {
+      await col.updateOne(mine, {
+        $inc: {
+          "usage.calls": 1, "usage.failed": rec.failed ? 1 : 0,
+          "usage.input": rec.tokens.input, "usage.output": rec.tokens.output,
+          "usage.cacheWrite": rec.tokens.cacheWrite, "usage.cacheRead": rec.tokens.cacheRead, "usage.usd": rec.usd,
+        },
+        $set: { model: rec.model },
+      })
+    },
   }
   const proposals = await getCollection<FaqProposal>(PROPOSALS_COLLECTION)
   let done = 0
@@ -674,16 +772,18 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
         })
         pending = pending.slice(REVIEW_BATCH)
       } else {
-        const id = pending[0]
-        const [subject] = await loadDocuments(code, [id])
-        const result = subject ? await reviewDocument(ctx, packs, subject) : null
+        // Dva dokumenty naraz: referenčný balík je v cache, čas behu sa skráti na polovicu.
+        const ids = pending.slice(0, DOC_PARALLEL)
+        const subjects = await loadDocuments(code, ids)
+        const results = await Promise.all(subjects.map(d => reviewDocument(ctx, packs, d)))
+        const withFindings = results.filter(r => r.findings.length).length
         await col.updateOne(mine, {
-          $pull: { pending: id },
-          ...(result ? { $push: { results: result } } : {}),
-          $inc: { [`counts.${result && result.findings.length ? "differs" : "agree"}`]: 1 },
-          $set: { failures: 0, error: null, updatedAt: new Date(), ...(pending.length <= 1 ? { finishedAt: new Date() } : {}) },
+          $pull: { pending: { $in: ids } },
+          ...(results.length ? { $push: { results: { $each: results } } } : {}),
+          $inc: { "counts.differs": withFindings, "counts.agree": ids.length - withFindings },
+          $set: { failures: 0, error: null, updatedAt: new Date(), ...(pending.length <= ids.length ? { finishedAt: new Date() } : {}) },
         })
-        pending = pending.slice(1)
+        pending = pending.slice(ids.length)
       }
       done += 1
     }
@@ -693,26 +793,130 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
   } finally {
     await col.updateOne(mine, { $set: { leaseUntil: null } })
   }
+  if (run.scope.kind === "documents") await announceFinished(code, run.runId)
   return done
 }
 
-/** Rozhodnutie o náleze kontroly dokumentu (D196): opravené, alebo vedome ponechané s dôvodom. */
+/**
+ * Upozornenie tomu, kto kontrolu spustil: zvonček a e-mail (Ján 11. 10. 2026:
+ * „po skončení behu pošle používateľovi"). `notifiedAt` sa nastaví atomicky
+ * pred odoslaním, takže súbežný kúsok ani cron druhé neodošle. Zlyhaný
+ * e-mail beh nezhodí — zvonček ostáva.
+ */
+async function announceFinished(code: string, runId: string): Promise<void> {
+  const run = await (await runs()).findOneAndUpdate(
+    { companyCode: code, runId, "pending.0": { $exists: false }, notifiedAt: null },
+    { $set: { notifiedAt: new Date() } },
+    { returnDocument: "after", projection: { _id: 0 } },
+  )
+  if (!run) return
+  try {
+    const findings = (run.results ?? []).reduce((n, r) => n + r.findings.length, 0)
+    const persons = await getCollection<Person>(PERSONS_COLLECTION)
+    const person = run.startedById
+      ? await persons.findOne({ companyCode: code, id: run.startedById })
+      : await persons.findOne({ companyCode: code, email: run.startedBy })
+    if (!person) return
+    await notify({ companyCode: code, personId: person.id, kind: "complianceDone", params: { runId, count: findings, total: run.total } })
+    const tenant = await tenantByCompanyCode(code)
+    const host = tenant?.hostnames[0]
+    if (!tenant || !host || !person.email) return
+    await send({
+      to: person.email,
+      ...complianceDoneEmail(`https://${host}/library/compliance/${runId}`, host, { documents: run.total, findings, usd: run.usage?.usd ?? null }, normalizeLanguage(person.language), brandingView(tenant)),
+    })
+  } catch (e) {
+    console.error(`[compliance] upozornenie o skončení ${code}/${runId} zlyhalo:`, e)
+  }
+}
+
+/**
+ * Nahradí úryvok `quote` v texte novým znením. Najprv doslovne, potom
+ * s voľnými medzerami a koncami riadkov (model občas zlúči riadky).
+ * Úryvok, ktorý sa v texte nenájde, alebo sa nájde viackrát, sa nenahrádza —
+ * radšej ručne, než na nesprávnom mieste. `null` = nenájdené.
+ */
+export function replaceQuote(text: string, quote: string, replacement: string): string | null {
+  const q = quote.trim()
+  if (!q) return null
+  const first = text.indexOf(q)
+  if (first >= 0) return text.indexOf(q, first + 1) >= 0 ? null : text.slice(0, first) + replacement + text.slice(first + q.length)
+  const pattern = new RegExp(q.split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+"), "g")
+  const hits = [...text.matchAll(pattern)]
+  if (hits.length !== 1) return null
+  const at = hits[0].index!
+  return text.slice(0, at) + replacement + text.slice(at + hits[0][0].length)
+}
+
+export type FindingDecision = "accepted" | "kept"
+
+/**
+ * Rozhodnutie o náleze kontroly dokumentu (D196, Ján 11. 10. 2026).
+ *
+ * - **Ponechať existujúce znenie** — dokument sa nemení, zapíše sa dôvod.
+ * - **Prijať odporúčanie a upraviť** — prijaté (človekom upravené) znenie
+ *   nahradí úryvok v **koncepte**. Platné znenie sa nikdy nemení: pri
+ *   dokumente s platným znením a voľným konceptom vznikne koncept z platného
+ *   textu, pri rozpracovanom koncepte sa upraví ten. Do platnosti ide až
+ *   bežným zverejnením (schválenie, zodpovedná osoba, potvrdenia).
+ *   Keď sa úryvok v texte jednoznačne nenájde, rozhodnutie sa uloží
+ *   s `applied: "manual"` a znenie treba vložiť v editore.
+ *
+ * Dôvod je povinný pri oboch — o rok má byť čitateľné, prečo sa tak stalo.
+ */
 export async function decideFinding(
-  companyCode: string, runId: string, documentId: string, findingId: string, status: "fixed" | "kept", reason: string, actor: string,
-): Promise<void> {
+  companyCode: string, runId: string, documentId: string, findingId: string,
+  decision: FindingDecision, reason: string, text: string, actor: string, canEditDrafts = true,
+): Promise<{ applied: "draft" | "manual" | null }> {
   const code = requireCompanyCode(companyCode, "decideFinding")
-  if (status === "kept" && !reason.trim()) throw new ComplianceError("compliance.reasonRequired", "Pri ponechaní uveďte dôvod.")
+  const why = reason.trim()
+  const accepted = text.replace(/\r\n?/g, "\n").trim()
+  if (!why) throw new ComplianceError("compliance.reasonRequired", "Uveďte dôvod rozhodnutia.")
+  if (decision === "accepted" && !accepted) throw new ComplianceError("compliance.textRequired", "Prijaté znenie nemôže byť prázdne.")
+  const run = await documentRun(code, runId)
+  const finding = run?.results?.find(r => r.documentId === documentId)?.findings.find(f => f.id === findingId)
+  if (!run || !finding) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
+
+  let applied: "draft" | "manual" | null = null
+  if (decision === "accepted" && !canEditDrafts) applied = "manual"
+  else if (decision === "accepted") {
+    const docs = await getCollection(DOCUMENTS_COLLECTION)
+    const doc = await docs.findOne({ companyCode: code, documentId }) as Record<string, unknown> | null
+    if (!doc) throw new ComplianceError("library.documentNotFound", "Taký dokument tu nie je.")
+    const versions = (doc.versions ?? []) as { versionId: string; label: string; markdown?: string; isActive?: boolean; pdf?: { id?: string } }[]
+    const draft = String(doc.draftMarkdown ?? "")
+    const draftPdf = (doc.draftPdf as { id?: string } | null | undefined)?.id ?? null
+    const active = versions.find(v => v.isActive)
+    const free = draftIsFree(draft, versions, draftPdf, versions.map(v => v.pdf?.id ?? "").filter(Boolean))
+    const base = free && active ? String(active.markdown ?? doc.markdown ?? "") : draft
+    const next = replaceQuote(base, finding.quote, accepted)
+    if (next !== null && next.trim() !== base.trim()) {
+      await saveDraft(code, documentId, next, `${actor} (kontrola súladu)`)
+      applied = "draft"
+    } else {
+      applied = next === null ? "manual" : null
+    }
+  }
+
   const r = await (await runs()).updateOne(
     { companyCode: code, runId, "scope.kind": "documents" },
     { $set: {
-      "results.$[d].findings.$[f].status": status,
-      "results.$[d].findings.$[f].reason": reason.trim() || null,
+      "results.$[d].findings.$[f].status": decision,
+      "results.$[d].findings.$[f].reason": why,
+      "results.$[d].findings.$[f].acceptedText": decision === "accepted" ? accepted : null,
+      "results.$[d].findings.$[f].applied": applied,
       "results.$[d].findings.$[f].decidedBy": actor,
       "results.$[d].findings.$[f].decidedAt": new Date(),
     } },
     { arrayFilters: [{ "d.documentId": documentId }, { "f.id": findingId }] },
   )
   if (!r.matchedCount) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
+  await writeAudit({
+    companyCode: code, subject: "document", action: decision === "accepted" ? "kontrola-suladu-prijate" : "kontrola-suladu-ponechane",
+    actor, targetId: documentId, targetLabel: run.results!.find(x => x.documentId === documentId)!.title,
+    note: `${finding.location} — ${finding.citation.title}${finding.citation.articleRef ? `, ${finding.citation.articleRef}` : ""}: ${why}`.slice(0, 1000),
+  })
+  return { applied }
 }
 
 export async function reviewsInProgress(): Promise<Pick<ComplianceRun, "companyCode" | "scopeKey">[]> {

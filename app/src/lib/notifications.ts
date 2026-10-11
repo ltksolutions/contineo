@@ -71,14 +71,20 @@ export type NotificationKind =
   | "draftResponsibleAssigned"
   /** Prihlásená osoba podala námietku (ADR-012, D153) — všetkým s rolou DPO. */
   | "objectionSubmitted"
+  /** Kontrola súladu dokumentov dobehla (ADR-032, D196) — tomu, kto ju spustil. */
+  | "complianceDone"
 
 export interface NotificationParams {
   documentId?: string
   /** Kópia názvu v čase udalosti — dokument sa môže premenovať alebo zmiznúť. */
   documentTitle?: string
   versionLabel?: string
-  /** Počet úsekov, odoslaných mailov — podľa druhu. */
+  /** Počet úsekov, odoslaných mailov, nálezov — podľa druhu. */
   count?: number
+  /** Beh kontroly súladu (`complianceDone`). */
+  runId?: string
+  /** Počet kontrolovaných dokumentov (`complianceDone`). */
+  total?: number
 }
 
 export interface Notification {
@@ -118,6 +124,8 @@ export function notificationHref(
       return "/hr/reminders"
     case "objectionSubmitted":
       return "/dpo#objections"
+    case "complianceDone":
+      return params.runId ? `/library/compliance/${encodeURIComponent(params.runId)}` : "/library/compliance"
     default:
       // Neznámy druh nemá odkaz. Radšej nikam, než na obrazovku, ktorá
       // s udalosťou nesúvisí.
