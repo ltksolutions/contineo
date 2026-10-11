@@ -3140,6 +3140,7 @@ interface Dictionary {
       applyToDraft: string
       applyHint: string
       changeDecision: string
+      opensNewWindow: string
       decisionAccept: string
       proposed: string
       proposedHintValid: string
@@ -7912,6 +7913,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       applyToDraft: "Zapísať do konceptu",
       applyHint: "Znenie prijal niekto bez roly správcu obsahu. Zápisom nahradí úryvok v koncepte; platné znenie sa nemení.",
       changeDecision: "Zmeniť rozhodnutie",
+      opensNewWindow: "(otvorí sa v novom okne)",
       decisionAccept: "Prijať a upraviť",
       proposed: "Nové znenie",
       proposedHintValid: "Nahradí úryvok v koncepte ďalšieho znenia. Platné znenie sa nemení, kým koncept nezverejníte.",
@@ -12614,6 +12616,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       applyToDraft: "Zapsat do konceptu",
       applyHint: "Znění přijal někdo bez role správce obsahu. Zápisem nahradí úryvek v konceptu; platné znění se nemění.",
       changeDecision: "Změnit rozhodnutí",
+      opensNewWindow: "(otevře se v novém okně)",
       decisionAccept: "Přijmout a upravit",
       proposed: "Nové znění",
       proposedHintValid: "Nahradí úryvek v konceptu dalšího znění. Platné znění se nemění, dokud koncept nezveřejníte.",
@@ -17302,6 +17305,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       applyToDraft: "Write to draft",
       applyHint: "The wording was accepted by someone without the content manager role. Writing it replaces the excerpt in the draft; the valid version does not change.",
       changeDecision: "Change decision",
+      opensNewWindow: "(opens in a new window)",
       decisionAccept: "Accept and edit",
       proposed: "New wording",
       proposedHintValid: "Replaces the excerpt in the draft of the next version. The valid version does not change until you publish the draft.",

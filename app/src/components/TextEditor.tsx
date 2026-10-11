@@ -23,12 +23,22 @@ import { useEffect, useRef, useState } from "react"
 import type Editor from "@toast-ui/editor"
 import "@toast-ui/editor/dist/toastui-editor.css"
 
+/**
+ * `compact` — krátky úryvok, nie celý dokument (nové znenie nálezu kontroly
+ * súladu, Ján 11. 10. 2026): nižší editor a len inline nástroje — nadpis
+ * ani tabuľka v úryvku jedného odseku nemajú čo robiť.
+ */
 export default function TextEditor({
   name: name,
   initial: initial,
+  compact = false,
+  label,
 }: {
   name: string
   initial: string
+  compact?: boolean
+  /** Názov poľa pre čítačky, keď editor nie je v `<label>`. */
+  label?: string
 }) {
   const wrap = useRef<HTMLDivElement>(null)
   const editor = useRef<Editor | null>(null)
@@ -56,16 +66,18 @@ export default function TextEditor({
         initialValue: initial,
         initialEditType: "wysiwyg",
         previewStyle: "vertical",
-        height: "70vh",
+        height: compact ? "220px" : "70vh",
         usageStatistics: false,
         hideModeSwitch: false,
         language: "en-US",
-        toolbarItems: [
-          ["heading", "bold", "italic"],
-          ["ul", "ol"],
-          ["table", "link"],
-          ["quote", "code"],
-        ],
+        toolbarItems: compact
+          ? [["bold", "italic"], ["ul", "ol"], ["link"]]
+          : [
+              ["heading", "bold", "italic"],
+              ["ul", "ol"],
+              ["table", "link"],
+              ["quote", "code"],
+            ],
       })
 
       // Zmena sa prepisuje do skrytého poľa priebežne, nie až pri odoslaní:
@@ -101,12 +113,12 @@ export default function TextEditor({
             name={name}
             defaultValue={initial}
             spellCheck={false}
-            aria-label="Text dokumentu v Markdowne"
+            aria-label={label ?? "Text dokumentu v Markdowne"}
           />
         </noscript>
       )}
 
-      <div ref={wrap} className="editor-tui" />
+      <div ref={wrap} className="editor-tui" aria-label={label} />
     </div>
   )
 }

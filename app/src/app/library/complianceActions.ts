@@ -79,7 +79,10 @@ export async function decideFindingAction(fd: FormData) {
   let message = ""
   try {
     // Kto nemá aj content-admin, koncept nemení — rozhodnutie sa uloží a znenie vloží správca obsahu.
-    const text = typeof fd.get("text") === "string" ? String(fd.get("text")) : ""
+    // Posledná hodnota: bez JavaScriptu editor pošle skryté pole s pôvodným textom
+    // aj `<noscript>` pole s úpravou — platí úprava.
+    const texts = fd.getAll("text").filter((v): v is string => typeof v === "string")
+    const text = texts.length ? texts[texts.length - 1] : ""
     const r = await decideFinding(ctx.person.companyCode, runId, documentId, findingId, decision, fieldText(fd, "reason"), text, ctx.person.email, ctx.canEditDrafts)
     message = decision === "kept" ? ctx.t.savedKept : r.applied === "draft" ? ctx.t.savedDraft : r.applied === "pending" ? ctx.t.savedPending : r.applied === "manual" ? ctx.t.savedManual : ctx.t.saved
     // Bez roly správcu obsahu znenie čaká — dať vedieť tým, ktorí ho zapíšu (D199).
