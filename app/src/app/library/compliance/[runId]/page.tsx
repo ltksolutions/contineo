@@ -21,6 +21,7 @@ import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
 import CopyLink from "@/components/CopyLink"
 import TextEditor from "@/components/TextEditor"
+import { articleHash } from "@/lib/articleAnchors"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
 import { documentRun, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import {
@@ -59,7 +60,7 @@ function Norm({ t, f }: { t: T; f: DocumentFinding }) {
       {/* Náhľad normy v novom okne (Ján 11. 10. 2026) — čitateľský pohľad, nie karta
           v správe; rozpracované rozhodnutie na tejto stránke ostáva. */}
       <p>
-        <a href={`/documents/${encodeURIComponent(f.citation.documentId)}`} target="_blank" rel="noopener">
+        <a href={`/documents/${encodeURIComponent(f.citation.documentId)}${articleHash(f.citation.articleRef)}`} target="_blank" rel="noopener">
           {f.citation.title}{f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}
           <svg className="ext-icon" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
           <span className="sr-only"> {t.opensNewWindow}</span>

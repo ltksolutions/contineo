@@ -16,6 +16,7 @@
  * komponentu (detail dokumentu), aj z klientskeho (`Answer.tsx`).
  */
 
+import { blockAnchors } from "@/lib/articleAnchors"
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { toBlocks, markCitations, CITE_TOKEN, type Segment } from "@/lib/formatText"
@@ -98,8 +99,14 @@ function CitedSegments({ segments }: { segments: Segment[] }) {
 export default function FormattedText({
   text,
   citations,
+  anchors = false,
 }: {
   text: string
+  /**
+   * Kotvy na články a odseky normy (`#cl-18-ods-8`, `lib/articleAnchors.ts`) —
+   * len pri texte predpisu v čitateľskom pohľade, nie v odpovediach či kurzoch.
+   */
+  anchors?: boolean
   /**
    * Citácie odpovede s polohou `at` zo streamu — vložia sa ako značky `[n]`
    * na konce viet. Bez nich (alebo bez `at`) text ostáva, ako je.
@@ -107,12 +114,15 @@ export default function FormattedText({
   citations?: { citedText: string; at?: number }[]
 }) {
   const blocks = toBlocks(citations?.length ? markCitations(text, citations) : text)
+  const ids = anchors ? blockAnchors(blocks) : []
   return (
     <>
       {blocks.map((b, i) =>
         b.druh === "nadpis" ? (
           <div
             key={i}
+            id={ids[i] ?? undefined}
+            className={ids[i] ? "norm-anchor" : undefined}
             style={{
               fontSize: b.level <= 2 ? 16.5 : 15.5,
               fontWeight: 700,
@@ -122,7 +132,7 @@ export default function FormattedText({
             <Segments segments={b.segments} />
           </div>
         ) : b.druh === "odsek" ? (
-          <p key={i} style={{ margin: "0 0 12px" }}>
+          <p key={i} id={ids[i] ?? undefined} className={ids[i] ? "norm-anchor" : undefined} style={{ margin: "0 0 12px" }}>
             <Segments segments={b.segments} />
           </p>
         ) : b.numbered ? (

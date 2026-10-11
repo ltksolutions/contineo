@@ -183,7 +183,7 @@ export default async function DocumentPage({
             />
           ) : (
             <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
-              <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
+              <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} anchors />
             </article>
           )}
 
