@@ -3141,6 +3141,9 @@ interface Dictionary {
       applyHint: string
       changeDecision: string
       opensNewWindow: string
+      showArticle: (label: string) => string
+      articleNote: string
+      openPdf: string
       decisionAccept: string
       proposed: string
       proposedHintValid: string
@@ -7914,6 +7917,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       applyHint: "Znenie prijal niekto bez roly správcu obsahu. Zápisom nahradí úryvok v koncepte; platné znenie sa nemení.",
       changeDecision: "Zmeniť rozhodnutie",
       opensNewWindow: "(otvorí sa v novom okne)",
+      showArticle: label => `Zobraziť ${label || "článok"}`,
+      articleNote: "Text na vyhľadávanie — záväzné je PDF.",
+      openPdf: "Otvoriť PDF",
       decisionAccept: "Prijať a upraviť",
       proposed: "Nové znenie",
       proposedHintValid: "Nahradí úryvok v koncepte ďalšieho znenia. Platné znenie sa nemení, kým koncept nezverejníte.",
@@ -12617,6 +12623,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       applyHint: "Znění přijal někdo bez role správce obsahu. Zápisem nahradí úryvek v konceptu; platné znění se nemění.",
       changeDecision: "Změnit rozhodnutí",
       opensNewWindow: "(otevře se v novém okně)",
+      showArticle: label => `Zobrazit ${label || "článek"}`,
+      articleNote: "Text pro vyhledávání — závazné je PDF.",
+      openPdf: "Otevřít PDF",
       decisionAccept: "Přijmout a upravit",
       proposed: "Nové znění",
       proposedHintValid: "Nahradí úryvek v konceptu dalšího znění. Platné znění se nemění, dokud koncept nezveřejníte.",
@@ -17306,6 +17315,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       applyHint: "The wording was accepted by someone without the content manager role. Writing it replaces the excerpt in the draft; the valid version does not change.",
       changeDecision: "Change decision",
       opensNewWindow: "(opens in a new window)",
+      showArticle: label => `Show ${label || "article"}`,
+      articleNote: "Search text — the PDF is binding.",
+      openPdf: "Open PDF",
       decisionAccept: "Accept and edit",
       proposed: "New wording",
       proposedHintValid: "Replaces the excerpt in the draft of the next version. The valid version does not change until you publish the draft.",
