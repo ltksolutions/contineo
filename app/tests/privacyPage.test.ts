@@ -146,7 +146,7 @@ describe("/privacy — helpdesk (ADR-028, D178)", () => {
     expect(html).toContain("registračné číslo v ISSF")
     expect(html).toContain("Otázky v helpdesku sa spracúvajú na základe oprávneného záujmu")
     expect(html).toContain("18 mesiacov od jeho zavretia")
-    expect(html).toContain("Tickety čítajú len riešitelia kanála")
+    expect(html).toContain("Tickety čítajú len správcovia ticketov kanála")
   })
   it("po anglicky s predvolenou lehotou 24 mesiacov", async () => {
     s.channels = true
