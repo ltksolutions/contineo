@@ -4,6 +4,58 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Schvaľovanie: vždy len jedno bežiace kolo na dokument (2026-10-12)
+
+- Keď sa koncept zmení (nové súbory, úprava textu, názov, FAQ, zverejnenie),
+  kolo jeho predošlej podoby sa **samo zruší** — s poznámkou a záznamom
+  v audite, nemaže sa. Schvaľovatelia, ktorí ešte nerozhodli, dostanú
+  upozornenie do zvončeka.
+- Druhé kolo vedľa bežiaceho kola iného znenia sa **predložiť nedá**.
+
+### Rozhranie: povinné polia, prilepená cesta, stav v knižnici (2026-10-11)
+
+- **Povinné polia** majú za popisom sivé „Povinné" (vzor z iOS); dátum
+  účinnosti a schvaľovatelia v príprave znenia tiež. Červený okraj až po
+  dotyku poľa.
+- **Cesta pod hlavičkou** (Prehľad › Organizácia › …) ostáva pri rolovaní
+  na očiach. Na telefóne v jednom riadku: nadradená úroveň a aktuálna stránka.
+- **Knižnica:** v stĺpci Stav pilulka kroku — Príprava, Čaká na schválenie,
+  Čaká na zverejnenie, Čaká na pridelenie. Blok „Čaká na schválenie" nad
+  zoznamom zanikol.
+
+### Kanály: FAQ patrí ku kanálu (2026-10-11, D201)
+
+- Každý kanál má vlastné FAQ, ktoré vznikne samo; časti kanála sú Tickety ·
+  Návrhy FAQ · FAQ · Nastavenie. V knižnici sa FAQ ukáže len pri filtri druhu.
+
+### Kontrola súladu dokumentov (2026-10-10 – 2026-10-11, ADR-032)
+
+- **Dokumenty proti normám** a **návrhy FAQ proti dokumentom**, v sekcii
+  Knižnica → Kontrola súladu pre rolu **compliance**. Kontrola beží na
+  pozadí, po skončení príde zvonček a e-mail; rozbehnutá sa nedá spustiť
+  druhýkrát. Pri behu je model, čas a cena, spotreba je aj v Organizácia →
+  Umelá inteligencia. Model kontroly sa vyberá v nastaveniach AI.
+- **Rozhodnutie** pri náleze: Ponechať existujúce znenie (s dôvodom) alebo
+  Prijať odporúčanie a upraviť — nové znenie v editore Markdownu sa zapíše
+  do konceptu. Bez roly správcu obsahu čaká prijaté znenie na správcu.
+- **Ponechané rozhodnutia** si ďalšia kontrola pamätá a znova ich nehlási.
+- **Citovaný článok normy** sa ukáže priamo pri náleze so zvýraznenými
+  odsekmi; články a odseky noriem majú kotvy.
+- **Pevné väzby** medzi dokumentmi: nové znenie viazaného dokumentu založí
+  požiadavku „Čaká na kontrolu" a dá vedieť zodpovedným osobám, správcom
+  obsahu a compliance (D200). Znenie, ktoré je výsledkom kontroly, požiadavku
+  nezakladá.
+
+### PDF konceptu z textu (2026-10-10 – 2026-10-11, ADR-031)
+
+- Do knižnice stačí nahrať **`.md`** — PDF vyrobí Contineo s hlavičkou
+  a pätou organizácie (logo, názov dokumentu, sídlo, IČO, kontakt).
+- Pri každej zmene textu konceptu so zdrojom `.md` sa PDF vyrobí nanovo,
+  takže na schválenie ide vždy aktuálny text.
+- V nastaveniach organizácie: **sídlo po častiach** (ulica, číslo, PSČ,
+  mesto; D190), DIČ, IČ DPH a kontakt na dokumentoch.
+- Písmo PDF bez ligatúr — „fi" sa už nerozdelí medzerou.
+
 ### Návrhy FAQ: témy vľavo, jeden otvorený návrh, Schváliť a ďalší (2026-10-11)
 
 - **Témy** sú od 1024 px vľavo s počtom nerozhodnutých, „na rozhodnutie",
@@ -41,6 +93,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - Zhrnutie dokumentu je jedno za celý dokument — napíše ho posledný krok
   kontroly (platí pre nové behy).
 
+### Fronta kurátora FAQ: porovnanie s pôvodným návrhom (2026-10-10)
+
+- Pri návrhu je zmena otázky, variantov a odpovede oproti návrhu modelu
+  po slovách; úprava sa dá uložiť bez schválenia. Zlúčenie prenesie odpoveď
+  zlučovaného návrhu do poznámky, zdroje sa spoja.
+
+### Import dokumentov skriptom: PDF a zdroj ako na obrazovke (2026-10-10)
+
+- `npm run docs:import` berie PDF so zdrojom `.md` alebo `.docx`, voliteľne
+  priečinok, zodpovednú osobu a autora; kontrola nasucho číta aj súbory.
+
 ### Konektory podľa štandardu MCP (2026-10-09, D178)
 
 - **Pridať konektor** chce len adresu servera; názov je nepovinný a prevezme
@@ -72,6 +135,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Odstrániť** sa potvrdzuje a povie, ktoré kanály prídu o rozsahy.
 - Rozsah oprávnení pri prihlásení sa berie z metadát servera, nie napevno
   `docs.read`; adresa servera sa po založení nemení.
+
+### FAQ z histórie helpdesku (2026-10-08 – 2026-10-09, ADR-030)
+
+- **Analýza histórie** schránky bez zápisu textu: mesačný súhrn, čas do
+  odpovede, časté slová (Kanál → História).
+- **Ťažba FAQ** za zvolené obdobie (12/24/36 mesiacov): otázky zvonku
+  s odpoveďou sa zoradia do tém, za tému vzniknú návrhy FAQ s článkom normy.
+  Text otázok sa neukladá, pôvod sa pri rozhodnutí kurátora zmaže (odpovede
+  DPO 9. 10.). Vylúčené adresy sa dajú nastaviť.
+- **Fronta kurátora** Návrhy FAQ: schváliť do FAQ, zlúčiť, zamietnuť.
 
 ### Editor FAQ: hľadanie podkladu a hľadanie v záznamoch (2026-10-08)
 

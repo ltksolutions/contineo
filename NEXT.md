@@ -6,11 +6,28 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-08** (súpis DESIGN_ODCHYLKY vybavený celý: mechanické #321, posledné návrhy #322; kanály: náhľad obsahu, kód na vloženie widgetu, nedoručené správy; návrhy z Claude Design dokončené: lišta uloženia #306, výber skupín a značiek #308/#312, karta osoby #314, posudok #317, akcie detailu dokumentu #319/#320; helpdesk na `/privacy` a lehota ticketov D178, PR #315; karta osoby PR #314; doplnené 5.–6. 10.: AI organizácie ADR-026, editor členenia ADR-027, stav tlačidiel PR #269–#271; MCP konektory ADR-029: fáza 1 živý zdroj PR #307, fáza 2 import do knižnice PR #311, D171–D177; predtým helpdesk ADR-028, PR #273–#285, D161–D170)
+Posledná aktualizácia: **2026-10-12** (kontrola súladu ADR-032 v prevádzke, #343–#363, #367; manuály ISSF na schválení; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Manuály ISSF (10) sú na schválení u Agáty Galkovej (11.–12. 10.).** Prešli
+dvoma kontrolami súladu proti 7 normám (ADR-032; 104 nálezov, všetky
+rozhodnuté a zapísané do konceptov), PDF sú vyrobené z aktuálneho textu
+(ADR-031, #365). Staré kolá ISSF-04 a ISSF-05 zo starých PDF sú zrušené; od
+#372 sa kolo starej podoby konceptu ruší samo a druhé kolo vedľa bežiaceho
+sa predložiť nedá. Medzi manuálmi a normami sú **pevné väzby** (D200) — nové
+znenie normy alebo manuálu založí požiadavku „Čaká na kontrolu" v Knižnica →
+Kontrola súladu.
+
+**Kontrola súladu (ADR-032)** je v prevádzke: dokument proti normám aj
+návrhy FAQ proti dokumentom, beh na pozadí (sám sa reťazí, cron je poistka),
+rola `compliance`, model Opus 5.5 z nastavení AI, cena pri behu.
+**FAQ z histórie helpdesku (ADR-030)** dobehlo 9. 10. za 36 mesiacov
+(20 tém); 54 návrhov prešlo kontrolou proti dokumentom a čaká vo fronte
+kurátora kanála (`/channels/[key]/proposals`). FAQ patrí ku kanálu a vzniká
+samo (D201).
 
 **MCP konektory (ADR-029, 7.–8. 10., PR #307) sú v `main`.** Konektor je
 pripojenie organizácie k cudziemu MCP serveru s viacerými použitiami; fáza 1
@@ -175,6 +192,14 @@ nastaví v Nastaveniach, záložka GDPR (D154). Otvorená karta po nasadení pon
 
 ## Čo čaká na rozhodnutie Jána
 
+**Návrhy FAQ vo fronte kurátora** — 54 otvorených, 6 s otázkou
+`[NA ROZHODNUTIE]`; päť otázok o trénerských licenciách nepokryla žiadna
+norma v kontrole (doplniť licenčnú normu do výberu a spustiť kontrolu znova).
+
+**Podnet legislatíve: RaPP verzus prax ISSF** — tri vedome ponechané nálezy
+(poplatok 0,50 € mesačne, žiadosť o preukaz „sám pre seba", fotografia
+v žiadosti), `docs/TODO.md`.
+
 **🔴 Ako DPO: súhlas s účelom „história otázok“** (H1) — nasadené 30. 9.
 pred súhlasom, na pokyn Jána; záznam o spracúvaní a `/privacy` sú doplnené.
 
@@ -213,21 +238,18 @@ počty v `retention[].helpdesk`).
 
 ## Najbližšie kroky
 
-0. **Prvý kurz naostro:** Ján zverejní kurz, prejde ho sám s testom
-   a stiahne certifikát aj PDF — overiť `/verify` z QR na telefóne.
-1. **Prvé ostré nové znenie cez kartu** — samotné kolo je overené; pri ňom
-   overiť nový názov, základ určený v príprave (ADR-023, od D151 na karte
-   v správe) a prenos pridelení
-   (`docs/TODO.md`, O15/O16). Potom asistenta: `npm run versions:questions`
-   má zmysel doplniť o otázky na tú normu.
-2. **Čas po prvý token, fáza 3:** fázy 1 a 2 sú nasadené (PR #205, #209;
-   hodnotenia už majú časy fáz aj tokeny). Pár dní zbierať hodnotenia,
-   potom `node --env-file=.env.local scripts/ratings_overview.mjs`
-   a rozhodnúť o hlavnom modeli — ten (2,8–6,2 s po prvý token) je
-   najväčšia položka, prah D9 je p95 pod 2 s. Model sa od 5. 10. vyberá
-   v Organizácia → Umelá inteligencia (ADR-026), bez nasadenia.
-3. **Dátum skončenia na karte osoby** — overiť pri prvom skutočnom odchode
-   (zadáva sa pri vyradení; zvyšok `/dpo` je overený, `docs/TODO.md`).
+1. **Zverejniť manuály ISSF** po schválení a overiť, že pri zverejnení
+   nevznikne požiadavka „Čaká na kontrolu" (znenie je výsledkom kontroly).
+2. **Prejsť návrhy FAQ** vo fronte kurátora a schváliť ich do FAQ kanála.
+3. **Ďalšie znenie ISSF-01** — rozpor „NIE JE emailová adresa" verzus
+   „prihlasovacie meno" trvá a zmena e-mailu v manuáloch chýba
+   (`docs/TODO.md`, „Manuály ISSF — rozpory").
+
+Ďalej podľa staršieho plánu: prvý kurz naostro s certifikátom a `/verify`
+z telefónu; prvé ostré nové znenie normy cez kartu (nový názov, základ
+v príprave, prenos pridelení); čas po prvý token, fáza 3
+(`scripts/ratings_overview.mjs`); dátum skončenia na karte osoby pri prvom
+odchode.
 
 ## Ako sa projekt overuje
 
@@ -237,8 +259,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (8. 10. večer): **0 errors, 41 warnings,
-2565 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
+Baseline, proti ktorej sa porovnáva (12. 10.): **0 errors, 41 warnings,
+2733 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
 na 390 px — #321 prešiel štyrmi brzdami a typ otázky aj tak pretekal o 65 px. Pri paralelnej session pred zlúčením PR
 zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
 `main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže

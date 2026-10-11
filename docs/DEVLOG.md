@@ -10,6 +10,48 @@
 
 ---
 
+## 2026-10-09 – 2026-10-12 — kontrola súladu, manuály ISSF na schválenie, FAQ z histórie
+
+**Čo sa zmenilo:** ťažba FAQ z histórie helpdesku (ADR-030, #328–#335)
+dobehla 9. 10. za 36 mesiacov — 3 413 vlákien, 20 tém, 63 návrhov vo fronte
+kurátora (#342: porovnanie s pôvodným návrhom po slovách, uloženie úpravy).
+Knižnica vyrobí PDF z `.md` so šablónou organizácie (ADR-031, #339) a od
+11. 10. pri **každej** zmene textu konceptu (#365); sídlo organizácie je po
+častiach (D190, #341). Hlavná práca bola **kontrola súladu** (ADR-032,
+#343–#363, #367): dokument proti normám aj návrhy FAQ proti dokumentom, beh
+na pozadí, ktorý sa sám reťazí (`lib/backgroundKick.ts`, cron je len
+poistka), rola `compliance`, model z nastavení AI (Opus 5.5), spotreba
+a cena pri behu, rozhodnutie „Ponechať / Prijať a upraviť" so zápisom do
+konceptu (D199), pamäť ponechaných rozhodnutí, náhľad citovaného článku
+so zvýraznenými odsekmi, pevné väzby a požiadavka na kontrolu pri novom
+znení (D200). FAQ patrí ku kanálu a v knižnici je skryté (D201, #364).
+Rozhranie: pilulka kroku v stĺpci Stav (#368), „Povinné" pri poliach
+(#369), prilepená cesta (#370), Knižnica bez bloku „Čaká na schválenie"
+(#371). Schvaľovanie: vždy len jedno bežiace kolo na dokument (#372).
+
+**Ako to šlo:** dva behy nad 10 manuálmi ISSF proti 7 normám — Sonnet 5
+62 nálezov za 6,81 USD, Opus 5.5 42 nálezov za 4,59 USD; všetkých 104 Ján
+rozhodol. Kontrola 54 návrhov FAQ trvala 27 min za 7,71 USD (11 súhlasí,
+29 sa odlišuje, 14 nepokrytých). Tri nálezy Ján vedome ponechal, lebo
+manuál opisuje prax ISSF a rozporný je RaPP — podnet pre legislatívu je
+v `docs/TODO.md`.
+
+**Čo nevyšlo:** úprava textu konceptu neprepisovala PDF — 11. 10. išiel
+„Elektronický transfer hráča" na schválenie so starým PDF. Opravené #365
+a všetkých 10 PDF manuálov pregenerovaných. Pritom zostali otvorené staré
+kolá ISSF-04 a ISSF-05 vedľa nových (dvakrát v „čaká na schválenie"):
+kolo je naviazané na odtlačok konceptu, po zmene sa len prestalo brať do
+úvahy, v databáze ostalo otvorené. Obe ručne zrušené, #372 to robí samo
+a druhé kolo vedľa bežiaceho nepustí. Prvý pokus o náhľad článku viedol
+na čitateľskú stránku, ktorá pri znení s PDF ukazuje PDF (ADR-011), nie
+text — preto náhľad priamo pri náleze.
+
+**Nabudúce:** pri každom zápise do konceptu myslieť na všetko, čo je
+odvodené z jeho odtlačku (PDF, kolá, požiadavky na kontrolu) — tri chyby
+týchto dní boli tá istá trieda.
+
+---
+
 ## 2026-10-11 — fronta kurátora návrhov FAQ (KANALY-navrhy-faq-kuracia)
 
 **Čo sa zmenilo:** `/channels/[key]/proposals` podľa návrhu (Q1–Q7 A),
