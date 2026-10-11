@@ -1179,11 +1179,12 @@ export default async function DocumentDetailPage({
                   approvers={metaOptions.approvers}
                   language={language}
                   disabled={metaIsLocked}
+                  requireEffectiveFrom
                 />
               </div>
 
               {/* Schvaľovatelia predvyplnení z posledného kola (ADR-014, D110). */}
-              <fieldset className="form-group">
+              <fieldset className="form-group form-group--required">
                 <legend className="form-group-head">{tflow.approvers}</legend>
                 <div className="card form-group-body form-group-body--rows">
                 {approverChoices.length === 0 ? (

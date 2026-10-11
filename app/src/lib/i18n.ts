@@ -110,6 +110,8 @@ interface Dictionary {
   /** Spoločné texty prierezových komponentov (ZAKLAD). */
   common: {
     saveBarNote: string
+    /** Sivé slovo za popisom povinného poľa (CSS `--t-required`, globals.css). */
+    required: string
     moreActions: string
     /** Príklad zoznamu domén (jedna na riadok) — neutrálny. */
     domainsPlaceholder: string
@@ -4703,6 +4705,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   sk: {
   common: {
     saveBarNote: "Uloží všetky sekcie na tejto stránke.",
+    required: "Povinné",
     moreActions: "Ďalšie akcie",
     domainsPlaceholder: "organizacia.sk\nmarketing.organizacia.sk",
     noticeConfirm: "Rozumiem",
@@ -9538,6 +9541,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   cs: {
   common: {
     saveBarNote: "Uloží všechny sekce na této stránce.",
+    required: "Povinné",
     moreActions: "Další akce",
     domainsPlaceholder: "organizace.cz\nmarketing.organizace.cz",
     noticeConfirm: "Rozumím",
@@ -14370,6 +14374,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   en: {
   common: {
     saveBarNote: "Saves every section on this page.",
+    required: "Required",
     moreActions: "More actions",
     domainsPlaceholder: "example.com\nmarketing.example.com",
     noticeConfirm: "OK",
