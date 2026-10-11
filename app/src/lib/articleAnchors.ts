@@ -102,3 +102,41 @@ export function articleLabel(ref: string | null | undefined): string {
   const annex = /^#priloha-(\d+)/.exec(h)
   return annex ? `príloha č. ${annex[1]}` : ""
 }
+
+/**
+ * Všetky citované odseky prvého článku citácie — na zvýraznenie v náhľade
+ * (Ján 11. 10. 2026: „odsek 8 je zvýraznený a odsek 19 nie"). Tvary
+ * z nálezov: „ods. 8 a ods. 19", „ods. 2 a 3", „ods. 14–19", „ods. 8, 14 až
+ * 17, 20", „ods. 1 a 2, čl. 12 ods. 9" (druhý článok sa nečíta — náhľad
+ * ukazuje prvý). Písmená („písm. c)") sa preskočia, iné slovo čítanie ukončí.
+ */
+export function citedParagraphs(ref: string | null | undefined): string[] {
+  const r = (ref ?? "").trim()
+  const art = /čl(?:ánok|\.)?\s*(\d+[a-z]?)/i.exec(r)
+  if (!art) return []
+  const id = art[1].toLowerCase()
+  const after = r.slice(art.index + art[0].length)
+  const stop = after.search(/čl(?:ánok|\.)|;|príloh/i)
+  const seg = stop < 0 ? after : after.slice(0, stop)
+  const ods = /ods\.\s*/i.exec(seg)
+  if (!ods) return []
+  const tokens = seg.slice(ods.index).match(/\d+[a-z]?|až|[–-]|,|[^\s,–-]+/gi) ?? []
+  const out: string[] = []
+  let prev: number | null = null
+  let range = false
+  for (const tok of tokens) {
+    const low = tok.toLowerCase()
+    if (/^\d+[a-z]?$/.test(low)) {
+      const n = parseInt(low, 10)
+      if (range && prev !== null && /^\d+$/.test(low) && n > prev && n - prev <= 50) {
+        for (let k = prev + 1; k <= n; k++) out.push(String(k))
+      } else out.push(low)
+      prev = /^\d+$/.test(low) ? n : null
+      range = false
+    } else if (low === "až" || low === "–" || low === "-") range = true
+    else if (low === "," || low === "a" || low === "ods.") continue
+    else if (low === "písm." || /^[a-z]{1,2}\)$/.test(low)) continue
+    else break
+  }
+  return [...new Set(out)].map(n => `cl-${id}-ods-${n}`)
+}

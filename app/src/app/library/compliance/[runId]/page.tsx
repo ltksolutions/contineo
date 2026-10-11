@@ -21,7 +21,8 @@ import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
 import CopyLink from "@/components/CopyLink"
 import TextEditor from "@/components/TextEditor"
-import { articleHash, articleSection, articleLabel } from "@/lib/articleAnchors"
+import { articleHash, articleSection, articleLabel, citedParagraphs } from "@/lib/articleAnchors"
+import ScrollToCited from "@/components/ScrollToCited"
 import FormattedText from "@/components/FormattedText"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type DocumentRecord } from "@/lib/documents"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
@@ -56,7 +57,7 @@ function Diff({ before, after }: { before: string; after: string }) {
 }
 
 /** Text citovaného článku na náhľad (voľba 1, Ján 11. 10. 2026) a záväzné PDF. */
-interface NormPreview { text: string; hash: string; pdfHref: string | null }
+interface NormPreview { text: string; hash: string; cited: string[]; pdfHref: string | null }
 
 async function loadNormPreview(companyCode: string, f: DocumentFinding): Promise<NormPreview | null> {
   const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne({ companyCode, documentId: f.citation.documentId }) as unknown as DocumentRecord | null
@@ -68,7 +69,9 @@ async function loadNormPreview(companyCode: string, f: DocumentFinding): Promise
   const pdfHref = v.ok && v.version.pdf
     ? `/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(v.version.versionId)}`
     : null
-  return { ...section, pdfHref }
+  // Všetky citované odseky („ods. 8 a ods. 19"); bez odsekov aspoň miesto z kotvy.
+  const cited = citedParagraphs(f.citation.articleRef)
+  return { ...section, cited: cited.length ? cited : [section.hash.slice(1)], pdfHref }
 }
 
 function Norm({ t, f, preview }: { t: T; f: DocumentFinding; preview?: NormPreview | null }) {
@@ -97,8 +100,9 @@ function Norm({ t, f, preview }: { t: T; f: DocumentFinding; preview?: NormPrevi
               {preview.pdfHref && <> · <a href={preview.pdfHref} target="_blank" rel="noopener">{t.openPdf}<span className="sr-only"> {t.opensNewWindow}</span></a></>}
             </p>
             <div className="answer">
-              <FormattedText text={preview.text} anchors highlight={preview.hash.slice(1)} />
+              <FormattedText text={preview.text} anchors highlight={preview.cited} />
             </div>
+            <ScrollToCited />
           </div>
         </details>
       )}

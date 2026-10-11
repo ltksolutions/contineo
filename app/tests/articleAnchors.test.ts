@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { blockAnchors, articleHash, articleSection, articleLabel } from "../src/lib/articleAnchors"
+import { blockAnchors, articleHash, articleSection, articleLabel, citedParagraphs } from "../src/lib/articleAnchors"
 import { toBlocks } from "../src/lib/formatText"
 
 const NORM = [
@@ -52,5 +52,21 @@ describe("názov citovaného miesta", () => {
     expect(articleLabel("čl. 18 ods. 8 a ods. 19")).toBe("čl. 18")
     expect(articleLabel("Príloha č. 2 – Sadzobník poplatkov")).toBe("príloha č. 2")
     expect(articleLabel("")).toBe("")
+  })
+})
+
+describe("citované odseky na zvýraznenie", () => {
+  const ods = (ref: string) => citedParagraphs(ref).map(x => x.replace(/^cl-\d+[a-z]?-ods-/, ""))
+  it("tvary zo skutočných nálezov", () => {
+    expect(ods("čl. 18 ods. 8 a ods. 19")).toEqual(["8", "19"])
+    expect(ods("čl. 27 ods. 3 a 4")).toEqual(["3", "4"])
+    expect(ods("čl. 8 ods. 14–19")).toEqual(["14", "15", "16", "17", "18", "19"])
+    expect(ods("čl. 8 ods. 8, 14 až 17, 20")).toEqual(["8", "14", "15", "16", "17", "20"])
+    expect(ods("čl. 84 ods. 1 a 2, čl. 12 ods. 9")).toEqual(["1", "2"])
+    expect(ods("čl. 35 ods. 7 písm. c) Stanov SFZ")).toEqual(["7"])
+    expect(ods("čl. 41 ods. 1, 7 a 8; príloha č. 2")).toEqual(["1", "7", "8"])
+    expect(ods("čl. 45 ods. 1–2 Súťažného poriadku futbalu SFZ")).toEqual(["1", "2"])
+    expect(ods("čl. 25; čl. 43 ods. 2 písm. c)")).toEqual([])
+    expect(citedParagraphs("čl. 18 ods. 8")).toEqual(["cl-18-ods-8"])
   })
 })
