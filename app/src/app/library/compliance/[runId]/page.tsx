@@ -68,7 +68,8 @@ function DecisionForm({ t, run, res, f, ctx, view, next, nextLabel }: {
   next: { documentId: string; findingId: string } | null; nextLabel: string | null
 }) {
   const hint = !ctx.canEditDrafts ? t.proposedHintNoRights : res.state === "valid" ? t.proposedHintValid : t.proposedHintDraft
-  const prior = f.status === "kept" ? "kept" : f.status ? "accepted" : null
+  // Nerozhodnutý nález s navrhnutým znením má predvolene „Prijať a upraviť" (rám návrhu) — pole Nové znenie je hneď vidieť.
+  const prior = f.status === "kept" ? "kept" : f.status || f.proposed ? "accepted" : null
   return (
     <form action={decideFindingAction} className="decision cf-dec">
       <input type="hidden" name="runId" value={run.runId} />

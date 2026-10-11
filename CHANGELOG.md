@@ -4,6 +4,25 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Detail kontroly súladu: dokumenty vľavo, nálezy jedného dokumentu (2026-10-11)
+
+- **Nadpis** je názov kontroly (nové nepovinné pole pri spustení), pod ním
+  rozsah a kto ju spustil. Tiché **Spustiť znova** spustí ten istý výber.
+- **Postup** za celú kontrolu („3 z 62 nálezov rozhodnutých", pásik, počty
+  podľa druhu); údaje o behu (model, čas, cena) sú zbalené do jedného riadku.
+- **Dokumenty**: od 1024 px zoznam vľavo s počtom nerozhodnutých, „hotovo"
+  alebo „bez nálezov"; na tablete a telefóne riadok „Dokument 8 z 10 ›".
+- **Nálezy** jedného dokumentu s filtrom Nerozhodnuté / Rozhodnuté / Všetky
+  (predvolené Nerozhodnuté). Nerozhodnutý nález je riadok s „Rozhodnúť";
+  otvorený ukáže zmenu znenia ako jeden text s vyškrtnutým a doplneným,
+  normu s citátom a odporúčanie.
+- **Uložiť a ďalší** otvorí ďalší nerozhodnutý nález, aj v ďalšom dokumente.
+- Rozhodnutý nález ukazuje stav: zapísané do konceptu, ponechané, **čaká na
+  správcu obsahu** (správca má „Zapísať do konceptu"), alebo **treba vložiť
+  ručne** (znenie na skopírovanie).
+- Zhrnutie dokumentu je jedno za celý dokument — napíše ho posledný krok
+  kontroly (platí pre nové behy).
+
 ### Konektory podľa štandardu MCP (2026-10-09, D178)
 
 - **Pridať konektor** chce len adresu servera; názov je nepovinný a prevezme
