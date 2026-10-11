@@ -3176,6 +3176,9 @@ interface Dictionary {
       runAgain: string
       nameLabel: string
       nameHint: string
+      rename: string
+      saveName: string
+      renamed: string
       decidedOf: (decided: number, total: number) => string
       remaining: (n: number) => string
       kindsShort: Record<"conflict" | "outdated" | "missing" | "unclear", string>
@@ -7958,6 +7961,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       runAgain: "Spustiť znova",
       nameLabel: "Názov kontroly",
       nameHint: "Nepovinné. Bez názvu sa kontrola volá podľa dátumu.",
+      rename: "Premenovať",
+      saveName: "Uložiť názov",
+      renamed: "Názov kontroly je uložený.",
       decidedOf: (d, n) => `${d} z ${n} ${n === 1 ? "nálezu" : "nálezov"} rozhodnutých`,
       remaining: n => `${n} ostáva`,
       kindsShort: { conflict: "Rozpor", outdated: "Zastarané", missing: "Chýba", unclear: "Nejasné" },
@@ -12665,6 +12671,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       runAgain: "Spustit znovu",
       nameLabel: "Název kontroly",
       nameHint: "Nepovinné. Bez názvu se kontrola jmenuje podle data.",
+      rename: "Přejmenovat",
+      saveName: "Uložit název",
+      renamed: "Název kontroly je uložen.",
       decidedOf: (d, n) => `${d} z ${n} ${n === 1 ? "nálezu" : "nálezů"} rozhodnuto`,
       remaining: n => `${n} zbývá`,
       kindsShort: { conflict: "Rozpor", outdated: "Zastaralé", missing: "Chybí", unclear: "Nejasné" },
@@ -17358,6 +17367,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       runAgain: "Run again",
       nameLabel: "Check name",
       nameHint: "Optional. Without a name the check is named after its date.",
+      rename: "Rename",
+      saveName: "Save name",
+      renamed: "The check name is saved.",
       decidedOf: (d, n) => `${d} of ${n} ${n === 1 ? "finding" : "findings"} decided`,
       remaining: n => `${n} left`,
       kindsShort: { conflict: "Conflict", outdated: "Outdated", missing: "Missing", unclear: "Unclear" },
