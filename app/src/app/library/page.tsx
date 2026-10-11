@@ -261,6 +261,9 @@ export default async function LibraryPage({
     const stav = row.archived ? "archived" : displayStatus(row.status, row.effectiveTo)
     return <span className={statusTagClass(stav)}>{statusLabel(stav)}</span>
   }
+  /** Krok postupu znenia (ADR-014): na čom dokument stojí — Príprava, Čaká na schválenie… */
+  const stageTag = (row: { stage?: "prep" | "review" | "publish" | "assign" | null }) =>
+    row.stage ? <span className={`tag stage-tag stage-tag--${row.stage}`} title={t.stageTitle}>{t.stageLabel[row.stage]}</span> : null
 
   /*
    * Potvrdenia ako pásik (KNIZNICA.md, úloha 2): stĺpec sa skenuje očami
@@ -1122,6 +1125,7 @@ export default async function LibraryPage({
                 <div className="doc-card-body">
                   <div className="doc-card-top">
                     {statusTag(r)}
+                    {stageTag(r)}
                     {/* Technický stav spracovania len keď niečo hovorí —
                         „vo vyhľadávaní" je normálny koniec a pri každom
                         riadku by bol šum; zlyhanie je jediné červené. */}
@@ -1267,6 +1271,7 @@ export default async function LibraryPage({
                     <td>
                       {/* Farba nesie stav (KNIZNICA.md, úloha 1). */}
                       {statusTag(r)}
+                    {stageTag(r)}
                       {/* Technický stav spracovania len keď niečo hovorí —
                           „vo vyhľadávaní" je normálny koniec a pri každom
                           riadku by bol šum; zlyhanie je jediné červené.

@@ -8757,3 +8757,12 @@ a.pq-chip:hover { background: var(--surface-2); }
 /* Premenovanie kontroly pod nadpisom (11. 10. 2026). */
 .cf-rename > summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; color: var(--accent); font-size: var(--fs-small); }
 .cf-rename-form { display: grid; gap: 10px; max-width: 560px; padding-top: 4px; }
+
+/*
+ * Krok postupu znenia v zozname knižnice (Ján 11. 10. 2026): „nech viem, na
+ * čom to stojí". Obrys namiesto plnej farby — stav dokumentu (Návrh, Platný)
+ * nesie vedľajšia pilulka; tu je len krok. Čakanie na niekoho je výraznejšie.
+ */
+.stage-tag { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.stage-tag--review, .stage-tag--publish { box-shadow: inset 0 0 0 1px var(--warn-fg); color: var(--warn-fg); }
+.stage-tag--assign { box-shadow: inset 0 0 0 1px var(--accent); }
