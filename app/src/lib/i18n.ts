@@ -2276,6 +2276,8 @@ interface Dictionary {
       faqReviewDone: (proposals: number, changed: number) => string
       /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (D200). */
       complianceRequested: (title: string, label: string, documents: number) => string
+      /** Kolo zrušené, lebo sa koncept po predložení zmenil — schvaľovateľom. */
+      approvalCancelled: (title: string) => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -6104,6 +6106,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.draftChanged": "Koncept sa medzitým zmenil — obnov stránku a predlož ho znova.",
     "approval.reasonRequired": "Bez dôvodu sa kolo zrušiť nedá. O rok nikto nezistí, prečo skončilo.",
     "approval.nothingRunning": "Pre toto znenie nebeží žiadne kolo.",
+    "approval.otherRunning": "Pri tomto dokumente už beží iné kolo schvaľovania. Nové sa predloží, až keď to skončí alebo ho zrušíš.",
     "assignment.notApproved": "Znenie nie je schválené. Prideliť sa dá až text, na ktorom sa niekto zhodol \u2014 predlož ho na schválenie v detaile dokumentu.",
     "approval.notApprover": "Toto kolo na teba nečaká \u2014 nie si medzi menovanými schvaľovateľmi.",
     "approval.roundClosed": "Kolo je uzavreté. Rozhodnutie doň už pribudnúť nemôže.",
@@ -7234,6 +7237,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftResponsibleAssigned: (title) => `Ste zodpovedná osoba za pripravované znenie dokumentu „${title}". Právny základ môžete určiť ešte pred zverejnením.`,
       objectionSubmitted: () => "Nová námietka (čl. 21) čaká na vaše rozhodnutie.",
       complianceRequested: (title, label, d) => `Nové znenie „${label}" dokumentu „${title}" — treba skontrolovať súlad${d ? ` (${d} ${d === 1 ? "prepojený dokument" : d < 5 ? "prepojené dokumenty" : "prepojených dokumentov"})` : ""}.`,
+      approvalCancelled: title => `Kolo schvaľovania dokumentu „${title}" bolo zrušené — koncept sa po predložení zmenil. Schváliť sa dá až nové predloženie.`,
       faqReviewDone: (n, c) => `Kontrola návrhov FAQ dobehla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhov"}, ${c} na prevzatie alebo úpravu.`,
       complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
@@ -10933,6 +10937,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.draftChanged": "Koncept se mezitím změnil — obnov stránku a předlož ho znovu.",
     "approval.reasonRequired": "Bez důvodu kolo zrušit nelze. Za rok nikdo nezjistí, proč skončilo.",
     "approval.nothingRunning": "Pro toto znění neběží žádné kolo.",
+    "approval.otherRunning": "U tohoto dokumentu už běží jiné kolo schvalování. Nové se předloží, až to skončí nebo ho zrušíš.",
     "assignment.notApproved": "Znění není schválené. Přidělit lze až text, na kterém se někdo shodl \u2014 předlož ho ke schválení v detailu dokumentu.",
     "approval.notApprover": "Toto kolo na tebe nečeká \u2014 nejsi mezi jmenovanými schvalovateli.",
     "approval.roundClosed": "Kolo je uzavřené. Rozhodnutí do něj už přibýt nemůže.",
@@ -12061,6 +12066,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftResponsibleAssigned: (title) => `Jste odpovědná osoba za připravované znění dokumentu „${title}". Právní základ můžete určit ještě před zveřejněním.`,
       objectionSubmitted: () => "Nová námitka (čl. 21) čeká na vaše rozhodnutí.",
       complianceRequested: (title, label, d) => `Nové znění „${label}" dokumentu „${title}" — je třeba zkontrolovat soulad${d ? ` (${d} ${d === 1 ? "propojený dokument" : d < 5 ? "propojené dokumenty" : "propojených dokumentů"})` : ""}.`,
+      approvalCancelled: title => `Kolo schvalování dokumentu „${title}" bylo zrušeno — koncept se po předložení změnil. Schválit lze až nové předložení.`,
       faqReviewDone: (n, c) => `Kontrola návrhů FAQ doběhla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhů"}, ${c} k převzetí nebo úpravě.`,
       complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
@@ -15751,6 +15757,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.draftChanged": "The draft has changed in the meantime — reload the page and submit it again.",
     "approval.reasonRequired": "A round cannot be cancelled without a reason. A year from now nobody would know why it ended.",
     "approval.nothingRunning": "No round is running for this version.",
+    "approval.otherRunning": "Another approval round is already running for this document. Submit a new one once it ends or after you cancel it.",
     "assignment.notApproved": "This version is not approved. Only text somebody has agreed on can be assigned \u2014 submit it for approval on the document page.",
     "approval.notApprover": "This round is not waiting for you \u2014 you are not one of its named approvers.",
     "approval.roundClosed": "The round is closed. No decision can be added to it now.",
@@ -16879,6 +16886,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftResponsibleAssigned: (title) => `You are the responsible person for the version of “${title}” in preparation. You can set the legal basis before it is published.`,
       objectionSubmitted: () => "A new objection (Art. 21) is waiting for your decision.",
       complianceRequested: (title, label, d) => `New version “${label}” of “${title}” — a compliance check is needed${d ? ` (${d} linked ${d === 1 ? "document" : "documents"})` : ""}.`,
+      approvalCancelled: title => `The approval round for “${title}” was cancelled — the draft changed after it was submitted. Only a new submission can be approved.`,
       faqReviewDone: (n, c) => `FAQ proposal check finished: ${n} ${n === 1 ? "proposal" : "proposals"}, ${c} to take over or edit.`,
       complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
       complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,

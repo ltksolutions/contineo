@@ -79,6 +79,8 @@ export type NotificationKind =
   | "faqReviewDone"
   /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (ADR-032, D200). */
   | "complianceRequested"
+  /** Kolo schvaľovania sa zrušilo, lebo sa koncept po predložení zmenil — schvaľovateľom, ktorí ešte nerozhodli. */
+  | "approvalCancelled"
 
 export interface NotificationParams {
   documentId?: string
@@ -130,6 +132,8 @@ export function notificationHref(
       return documentId ? `/library/${encodeURIComponent(documentId)}` : null
     case "remindersSent":
       return "/hr/reminders"
+    case "approvalCancelled":
+      return "/approvals"
     case "objectionSubmitted":
       return "/dpo#objections"
     case "complianceRequested":

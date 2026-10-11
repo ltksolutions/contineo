@@ -51,6 +51,7 @@ function sentence(language: UiLanguage, kind: string, params: NotificationParams
     case "complianceToApply": return t.complianceToApply(title)
     case "faqReviewDone": return t.faqReviewDone(params.total ?? 0, params.count ?? 0)
     case "complianceRequested": return t.complianceRequested(title, params.versionLabel ?? "", params.count ?? 0)
+    case "approvalCancelled": return t.approvalCancelled(title)
     default: return title || kind
   }
 }
