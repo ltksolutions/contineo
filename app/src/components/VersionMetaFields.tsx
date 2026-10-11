@@ -21,6 +21,7 @@ export default function VersionMetaFields({
   approvers,
   language,
   disabled = false,
+  requireEffectiveFrom = false,
 }: {
   value?: VersionMeta | null
   suggestion?: VersionMeta | null
@@ -28,6 +29,8 @@ export default function VersionMetaFields({
   approvers: string[]
   language: UiLanguage
   disabled?: boolean
+  /** Dátum účinnosti je povinný až pre predloženie, nie pre uloženie — preto trieda, nie `required`. */
+  requireEffectiveFrom?: boolean
 }) {
   const t = dictionary(language).versionMeta
   const pick = <K extends keyof VersionMeta>(k: K) => value?.[k] ?? suggestion?.[k] ?? null
@@ -50,7 +53,7 @@ export default function VersionMetaFields({
         <input className="field-input" type="date" name="metaApprovedOn"
                defaultValue={iso(pick("approvedOn"))} disabled={disabled} />
       </label>
-      <label className="field">
+      <label className={requireEffectiveFrom && !disabled ? "field field--required" : "field"}>
         <span className="field-label">{t.effectiveFrom}</span>
         <input className="field-input" type="date" name="metaEffectiveFrom"
                defaultValue={iso(pick("effectiveFrom"))} disabled={disabled} />

@@ -951,6 +951,27 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .field-hint { font-size: var(--fs-micro); }
 
 /*
+  Povinné pole (12. 10. 2026). SwiftUI na to vlastný prvok nemá; iOS pri
+  nastavení účtu píše „Povinné" sivo priamo pri poli — preto sivé slovo za
+  popisom, nie červená hviezdička. Text ide z i18n cez `--t-required` na
+  `<body>` (layout), takže ho dostane každé pole s `required` bez zásahu
+  do komponentu. Pole, ktoré je povinné až pre ďalší krok (dátum účinnosti
+  pred predložením), sa označí triedou `.field--required`.
+  Červený okraj až po tom, čo s poľom človek niečo urobil (`:user-invalid`)
+  — prázdny formulár nemá kričať skôr, než sa ho niekto dotkne.
+*/
+.field:has(> :is(input, select, textarea):required:enabled) > .field-label::after,
+.field--required > .field-label::after,
+.form-group--required > .form-group-head::after {
+  content: var(--t-required, "Povinné");
+  margin-left: 8px;
+  font-size: var(--fs-micro);
+  font-weight: 400;
+  color: var(--muted);
+}
+.field-input:user-invalid { border-color: var(--bad-fg); }
+
+/*
   Dve krátke polia vedľa seba (meno a priezvisko, tituly). Na telefóne pod
   sebou — `minmax(0, …)` je tu podstatné: bez neho by pole s dlhou hodnotou
   roztiahlo stĺpec a riadok by pretiekol cez okraj obrazovky.
