@@ -9,7 +9,7 @@
  * s hlavičkou `key`. Vyžaduje platený účet a overenú odosielaciu doménu.
  */
 
-import { dictionary } from "./i18n"
+import { dictionary, formatAmount } from "./i18n"
 import type { UiLanguage } from "./i18n"
 
 const API = "https://api2.ecomailapp.cz/transactional/send-message"
@@ -523,7 +523,7 @@ export function complianceDoneEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
   const intro = s.intro(run.documents, run.findings)
-  const cost = run.usd !== null ? s.costLine(run.usd.toFixed(2)) : ""
+  const cost = run.usd !== null ? s.costLine(formatAmount(run.usd, language)) : ""
   const text = [intro, ...(cost ? ["", cost] : []), "", link, "", s.note].join("\n")
   const html = `<!doctype html>
 <html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">

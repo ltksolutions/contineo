@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { DICTIONARY, UI_LANGUAGES, dictionary, normalizeLanguage, formatDate } from "../src/lib/i18n"
+import { DICTIONARY, UI_LANGUAGES, dictionary, normalizeLanguage, formatDate, formatAmount } from "../src/lib/i18n"
 
 /** Cesty ku všetkým listom slovníka (funkcie a polia sa berú ako listy). */
 function paths(value: unknown, prefix = ""): string[] {
@@ -71,5 +71,13 @@ describe("slovník", () => {
     expect(formatDate(d, "sk")).toBe("1. 9. 2026")
     expect(formatDate(d, "cs")).toBe("1. 9. 2026")
     expect(formatDate(d, "en")).toBe("1 September 2026")
+  })
+})
+
+describe("suma podľa jazyka — e-mail 11. 10. 2026 mal 6.81 USD", () => {
+  it("slovenčina a čeština desatinnou čiarkou, angličtina bodkou", () => {
+    expect(formatAmount(6.8136, "sk")).toBe("6,81")
+    expect(formatAmount(3, "cs")).toBe("3,00")
+    expect(formatAmount(6.8136, "en")).toBe("6.81")
   })
 })
