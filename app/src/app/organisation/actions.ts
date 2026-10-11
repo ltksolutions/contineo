@@ -545,6 +545,7 @@ export async function saveAiSettingsAction(fd: FormData) {
       models: {
         answer: fieldText(fd, "modelAnswer") || undefined,
         rewrite: fieldText(fd, "modelRewrite") || undefined,
+        compliance: fieldText(fd, "modelCompliance") || undefined,
       },
     }, self.email)
   } catch (e) {

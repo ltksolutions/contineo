@@ -542,6 +542,16 @@ interface Dictionary {
     }
   }
 
+  /** Kontrola súladu dobehla (ADR-032, D196) — tomu, kto ju spustil. */
+  complianceEmail: {
+    subject: (organisation: string) => string
+    subtitle: string
+    intro: (documents: number, findings: number) => string
+    costLine: (usd: string) => string
+    button: string
+    note: string
+  }
+
   approvalEmail: {
     subject: (organisation: string) => string
     subtitle: string
@@ -1702,6 +1712,8 @@ interface Dictionary {
       utilityNote: string
       rewrite: string
       rewriteNote: string
+      compliance: string
+      complianceNote: string
       price: (input: string, output: string) => string
       save: string
       saved: string
@@ -1736,7 +1748,7 @@ interface Dictionary {
       emptyText: string
       capped: (shown: number, all: number) => string
       note: string
-      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining" | "faq-review", { label: string; why: string }>
+      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining" | "faq-review" | "compliance-review", { label: string; why: string }>
     }
     branding: {
       name: string
@@ -2236,6 +2248,10 @@ interface Dictionary {
       draftResponsibleAssigned: (title: string) => string
       /** Prihlásená osoba podala námietku (D153) — ide všetkým s rolou DPO. */
       objectionSubmitted: () => string
+      /** Kontrola súladu dokumentov dobehla (D196) — tomu, kto ju spustil. */
+      complianceDone: (documents: number, findings: number) => string
+      /** Prijaté znenie čaká na zápis do konceptu (D199) — správcom obsahu. */
+      complianceToApply: (title: string) => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -3104,12 +3120,47 @@ interface Dictionary {
       status: string
       statusOpen: string
       statusFixed: string
+      statusAccepted: string
       statusKept: string
       reason: string
       reasonHint: string
+      reasonPlaceholder: string
       save: string
       saved: string
+      savedKept: string
+      savedDraft: string
+      savedManual: string
       decided: (status: string, who: string, when: string) => string
+      decisionKeep: string
+      applyToDraft: string
+      applyHint: string
+      changeDecision: string
+      decisionAccept: string
+      proposed: string
+      proposedHintValid: string
+      proposedHintDraft: string
+      proposedHintNoRights: string
+      proposedMissing: string
+      acceptedText: string
+      appliedDraft: string
+      appliedManual: string
+      openDraft: string
+      runsHeading: string
+      openRun: string
+      findingsCount: (total: number, open: number) => string
+      metaHeading: string
+      metaModel: string
+      metaStarted: string
+      metaFinished: string
+      metaDuration: string
+      metaCalls: string
+      metaTokens: string
+      metaCost: string
+      metaUnknown: string
+      duration: (minutes: number) => string
+      tokens: (input: number, output: number, cached: number) => string
+      calls: (calls: number, failed: number) => string
+      running: string
     }
     tracks: {
       heading: string
@@ -4768,6 +4819,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otvoriť výkaz",
       note: "Právny základ určuje zodpovedná osoba za predpis; vy ho kontrolujete (O15/A10). Zoznam predpisov je vo výkaze po prihlásení, v e-maile sú len počty.",
     },
+    complianceEmail: {
+      subject: org => `Kontrola súladu dobehla — ${org}`,
+      subtitle: "Kontrola súladu dokumentov",
+      intro: (d, f) => `Kontrola, ktorú ste spustili, dobehla: ${d} ${d === 1 ? "dokument" : d < 5 ? "dokumenty" : "dokumentov"}, ${f} ${f === 1 ? "nález" : f < 5 ? "nálezy" : "nálezov"}.`,
+      costLine: usd => `Cena behu: ${usd} USD`,
+      button: "Otvoriť nálezy",
+      note: "Pri každom náleze rozhodnite, či znenie ponecháte, alebo prijmete odporúčanie. Dokument sa sám nemení.",
+    },
     approvalEmail: {
       subject: org => `Znenie na schválenie \u2014 ${org}`,
       subtitle: "Na schválenie",
@@ -6054,7 +6113,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.nothingToCheck": "Nie sú tu otvorené návrhy na kontrolu.",
     "compliance.aiFailed": "Kontrola sa nepodarila — skúste to o chvíľu.",
     "compliance.noSubjects": "Vyberte aspoň jeden dokument na kontrolu.",
-    "compliance.reasonRequired": "Pri ponechaní uveďte dôvod.",
+    "compliance.reasonRequired": "Uveďte dôvod rozhodnutia.",
+    "compliance.textRequired": "Prijaté znenie nemôže byť prázdne.",
+    "compliance.nothingToApply": "Pri tomto náleze nie je čo zapísať.",
     "compliance.unknownRun": "Taká kontrola tu nie je.",
     "mailbox.slow": "Schránka odpovedá pomaly — časť sa nestihla prečítať, ďalší beh v nej pokračuje.",
     "ticket.notFound": "Taký ticket tu nie je.",
@@ -6432,6 +6493,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       utilityNote: "Beží pred vyhľadávaním a čaká sa naň, preto len najrýchlejší model.",
       rewrite: "Prepis skenov PDF",
       rewriteNote: "Prepisuje skenované predpisy v knižnici do textu.",
+      compliance: "Kontrola súladu dokumentov",
+      complianceNote: "Porovnáva dokumenty a návrhy FAQ s normami. Beží na pozadí a zriedka, preto sa oplatí najsilnejší model.",
       price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
       save: "Uložiť",
       saved: "Nastavenie AI je uložené.",
@@ -6475,6 +6538,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "chunking-analysis": { label: "Analýza členenia", why: "návrh, ako dokument narezať na úseky pre vyhľadávanie" },
         "faq-mining": { label: "Ťažba FAQ", why: "návrhy záznamov FAQ z histórie schránky helpdesku (ADR-028)" },
         "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhov a záznamov FAQ proti dokumentom knižnice (ADR-032)" },
+        "compliance-review": { label: "Kontrola súladu dokumentov", why: "kontrola dokumentov (manuály, rozpisy) proti normám knižnice (ADR-032, D196)" },
       },
     },
     branding: {
@@ -6705,6 +6769,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dpo: "dpo — zodpovedná osoba: kontroluje právne základy, rozhoduje o námietkach",
       "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázok a testy",
       helpdesk: "helpdesk — správca ticketov: odpovedá na tickety svojich kanálov a navrhuje záznamy do FAQ; kanály nenastavuje",
+      compliance: "compliance — spúšťa kontroly súladu dokumentov s normami a rozhoduje o nálezoch",
     },
     list: {
       heading: "Osoby",
@@ -6975,6 +7040,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Ste zodpovedná osoba za znenie „${label}" dokumentu „${title}". Určte právny základ.`,
       draftResponsibleAssigned: (title) => `Ste zodpovedná osoba za pripravované znenie dokumentu „${title}". Právny základ môžete určiť ešte pred zverejnením.`,
       objectionSubmitted: () => "Nová námietka (čl. 21) čaká na vaše rozhodnutie.",
+      complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
+      complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
     },
   },
   responsibility: {
@@ -7410,7 +7477,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewScope: "Čo kontrolovať",
     reviewScopeAll: "Všetky otvorené návrhy",
     reviewStart: "Skontrolovať proti dokumentom",
-    reviewStarted: "Kontrola beží. Dávky sa dopĺňajú automaticky každých 5 minút — stránku stačí neskôr obnoviť.",
+    reviewStarted: "Kontrola beží na pozadí — dávky idú jedna za druhou, stránku stačí neskôr obnoviť.",
     reviewProgress: (done: number, total: number) => `Skontrolované ${done} z ${total} návrhov.`,
     reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
     reviewStopped: "Kontrola sa po opakovaných chybách zastavila. Skúste ju spustiť znova.",
@@ -7766,7 +7833,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       references: "Referenčné normy",
       referencesHint: "Stanovy, poriadky a normy v platnom znení, proti ktorým sa kontroluje.",
       start: "Skontrolovať súlad",
-      started: "Kontrola beží. Dokumenty sa spracúvajú automaticky každých 5 minút — stránku stačí neskôr obnoviť.",
+      started: "Kontrola beží na pozadí — keď dobehne, príde vám upozornenie a e-mail.",
       none: "Kontrola dokumentov ešte neprebehla.",
       runMeta: (when: string, who: string) => `Spustené ${when}, ${who}`,
       against: (list: string) => `Proti: ${list}`,
@@ -7785,8 +7852,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusOpen: "nerozhodnuté",
       statusFixed: "opravené",
       statusKept: "vedome ponechané",
+      statusAccepted: "prijaté",
+      reasonPlaceholder: "Prečo ste sa tak rozhodli — napríklad „ISSF účtuje 0,50 € mesačne podľa uznesenia VV“.",
+      savedKept: "Rozhodnutie je uložené — znenie ostáva.",
+      savedDraft: "Rozhodnutie je uložené a nové znenie je v koncepte dokumentu.",
+      savedManual: "Rozhodnutie je uložené. Znenie treba vložiť do konceptu ručne — úryvok sa v texte nenašiel jednoznačne alebo nemáte rolu správcu obsahu.",
+      decisionKeep: "Ponechať existujúce znenie",
+      applyToDraft: "Zapísať do konceptu",
+      applyHint: "Znenie prijal niekto bez roly správcu obsahu. Zápisom nahradí úryvok v koncepte; platné znenie sa nemení.",
+      changeDecision: "Zmeniť rozhodnutie",
+      decisionAccept: "Prijať odporúčanie a upraviť",
+      proposed: "Nové znenie",
+      proposedHintValid: "Nahradí úryvok v koncepte ďalšieho znenia. Platné znenie sa nemení, kým koncept nezverejníte.",
+      proposedHintDraft: "Nahradí úryvok v koncepte. Dokument ešte nie je zverejnený.",
+      proposedHintNoRights: "Rozhodnutie sa uloží; do konceptu ho vloží správca obsahu.",
+      proposedMissing: "Tento beh nové znenie nenavrhol — v poli je pôvodný úryvok, upravte ho podľa odporúčania.",
+      acceptedText: "Prijaté znenie",
+      appliedDraft: "zapísané do konceptu",
+      appliedManual: "treba vložiť do konceptu ručne",
+      openDraft: "Otvoriť koncept",
+      runsHeading: "Kontroly",
+      openRun: "Otvoriť",
+      findingsCount: (total: number, open: number) => `${total} ${total === 1 ? "nález" : total < 5 && total > 0 ? "nálezy" : "nálezov"}${open ? `, ${open} nerozhodnutých` : ""}`,
+      metaHeading: "Údaje o behu",
+      metaModel: "Model",
+      metaStarted: "Spustené",
+      metaFinished: "Dokončené",
+      metaDuration: "Trvanie",
+      metaCalls: "Volania modelu",
+      metaTokens: "Tokeny",
+      metaCost: "Cena",
+      metaUnknown: "—",
+      duration: (m: number) => (m < 1 ? "menej než minúta" : `${m} min`),
+      tokens: (i: number, o: number, c: number) => `${i.toLocaleString("sk")} vstup, ${o.toLocaleString("sk")} výstup, ${c.toLocaleString("sk")} z cache`,
+      calls: (n: number, f: number) => `${n}${f ? ` (${f} zlyhalo)` : ""}`,
+      running: "beží",
       reason: "Dôvod",
-      reasonHint: "Pri ponechaní povinný.",
+      reasonHint: "Povinný pri oboch rozhodnutiach — o rok má byť jasné, prečo.",
       save: "Uložiť rozhodnutie",
       saved: "Rozhodnutie je uložené.",
       decided: (status: string, who: string, when: string) => `${status} — ${when}, ${who}`,
@@ -9376,6 +9478,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otevřít výkaz",
       note: "Právní základ určuje odpovědná osoba za předpis; vy ho kontrolujete (O15/A10). Seznam předpisů je ve výkazu po přihlášení, v e-mailu jsou jen počty.",
     },
+    complianceEmail: {
+      subject: org => `Kontrola souladu doběhla — ${org}`,
+      subtitle: "Kontrola souladu dokumentů",
+      intro: (d, f) => `Kontrola, kterou jste spustili, doběhla: ${d} ${d === 1 ? "dokument" : d < 5 ? "dokumenty" : "dokumentů"}, ${f} ${f === 1 ? "nález" : f < 5 ? "nálezy" : "nálezů"}.`,
+      costLine: usd => `Cena běhu: ${usd} USD`,
+      button: "Otevřít nálezy",
+      note: "U každého nálezu rozhodněte, zda znění ponecháte, nebo přijmete doporučení. Dokument se sám nemění.",
+    },
     approvalEmail: {
       subject: org => `Znění ke schválení \u2014 ${org}`,
       subtitle: "Ke schválení",
@@ -10662,7 +10772,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.nothingToCheck": "Nejsou tu otevřené návrhy ke kontrole.",
     "compliance.aiFailed": "Kontrola se nepodařila — zkuste to za chvíli.",
     "compliance.noSubjects": "Vyberte alespoň jeden dokument ke kontrole.",
-    "compliance.reasonRequired": "Při ponechání uveďte důvod.",
+    "compliance.reasonRequired": "Uveďte důvod rozhodnutí.",
+    "compliance.textRequired": "Přijaté znění nemůže být prázdné.",
+    "compliance.nothingToApply": "U tohoto nálezu není co zapsat.",
     "compliance.unknownRun": "Taková kontrola tu není.",
     "mailbox.slow": "Schránka odpovídá pomalu — část se nestihla přečíst, další běh v ní pokračuje.",
     "ticket.notFound": "Takový ticket tady není.",
@@ -11040,6 +11152,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       utilityNote: "Běží před vyhledáváním a čeká se na ni, proto jen nejrychlejší model.",
       rewrite: "Přepis skenů PDF",
       rewriteNote: "Přepisuje skenované předpisy v knihovně do textu.",
+      compliance: "Kontrola souladu dokumentů",
+      complianceNote: "Porovnává dokumenty a návrhy FAQ s normami. Běží na pozadí a zřídka, proto se vyplatí nejsilnější model.",
       price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
       save: "Uložit",
       saved: "Nastavení AI je uloženo.",
@@ -11083,6 +11197,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "chunking-analysis": { label: "Analýza členění", why: "návrh, jak dokument rozřezat na úseky pro vyhledávání" },
         "faq-mining": { label: "Těžba FAQ", why: "návrhy záznamů FAQ z historie schránky helpdesku (ADR-028)" },
         "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhů a záznamů FAQ proti dokumentům knihovny (ADR-032)" },
+        "compliance-review": { label: "Kontrola souladu dokumentů", why: "kontrola dokumentů (manuály, rozpisy) proti normám knihovny (ADR-032, D196)" },
       },
     },
     branding: {
@@ -11313,6 +11428,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dpo: "dpo — pověřenec: kontroluje právní základy, rozhoduje o námitkách",
       "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázek a testy",
       helpdesk: "helpdesk — správce tiketů: odpovídá na tikety svých kanálů a navrhuje záznamy do FAQ; kanály nenastavuje",
+      compliance: "compliance — spouští kontroly souladu dokumentů s normami a rozhoduje o nálezech",
     },
     list: {
       heading: "Osoby",
@@ -11581,6 +11697,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `Jste odpovědná osoba za znění „${label}" dokumentu „${title}". Určete právní základ.`,
       draftResponsibleAssigned: (title) => `Jste odpovědná osoba za připravované znění dokumentu „${title}". Právní základ můžete určit ještě před zveřejněním.`,
       objectionSubmitted: () => "Nová námitka (čl. 21) čeká na vaše rozhodnutí.",
+      complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
+      complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
     },
   },
   responsibility: {
@@ -12016,7 +12134,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewScope: "Co kontrolovat",
     reviewScopeAll: "Všechny otevřené návrhy",
     reviewStart: "Zkontrolovat proti dokumentům",
-    reviewStarted: "Kontrola běží. Dávky se doplňují automaticky každých 5 minut — stránku stačí později obnovit.",
+    reviewStarted: "Kontrola běží na pozadí — dávky jdou jedna za druhou, stránku stačí později obnovit.",
     reviewProgress: (done: number, total: number) => `Zkontrolováno ${done} z ${total} návrhů.`,
     reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
     reviewStopped: "Kontrola se po opakovaných chybách zastavila. Zkuste ji spustit znovu.",
@@ -12371,7 +12489,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       references: "Referenční normy",
       referencesHint: "Stanovy, řády a normy v platném znění, proti kterým se kontroluje.",
       start: "Zkontrolovat soulad",
-      started: "Kontrola běží. Dokumenty se zpracovávají automaticky každých 5 minut — stránku stačí později obnovit.",
+      started: "Kontrola běží na pozadí — až doběhne, přijde vám upozornění a e-mail.",
       none: "Kontrola dokumentů ještě neproběhla.",
       runMeta: (when: string, who: string) => `Spuštěno ${when}, ${who}`,
       against: (list: string) => `Proti: ${list}`,
@@ -12390,8 +12508,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusOpen: "nerozhodnuto",
       statusFixed: "opraveno",
       statusKept: "vědomě ponecháno",
+      statusAccepted: "přijato",
+      reasonPlaceholder: "Proč jste se tak rozhodli — například „ISSF účtuje 0,50 € měsíčně podle usnesení VV“.",
+      savedKept: "Rozhodnutí je uloženo — znění zůstává.",
+      savedDraft: "Rozhodnutí je uloženo a nové znění je v konceptu dokumentu.",
+      savedManual: "Rozhodnutí je uloženo. Znění je třeba vložit do konceptu ručně — úryvek se v textu nenašel jednoznačně nebo nemáte roli správce obsahu.",
+      decisionKeep: "Ponechat stávající znění",
+      applyToDraft: "Zapsat do konceptu",
+      applyHint: "Znění přijal někdo bez role správce obsahu. Zápisem nahradí úryvek v konceptu; platné znění se nemění.",
+      changeDecision: "Změnit rozhodnutí",
+      decisionAccept: "Přijmout doporučení a upravit",
+      proposed: "Nové znění",
+      proposedHintValid: "Nahradí úryvek v konceptu dalšího znění. Platné znění se nemění, dokud koncept nezveřejníte.",
+      proposedHintDraft: "Nahradí úryvek v konceptu. Dokument ještě není zveřejněn.",
+      proposedHintNoRights: "Rozhodnutí se uloží; do konceptu ho vloží správce obsahu.",
+      proposedMissing: "Tento běh nové znění nenavrhl — v poli je původní úryvek, upravte ho podle doporučení.",
+      acceptedText: "Přijaté znění",
+      appliedDraft: "zapsáno do konceptu",
+      appliedManual: "je třeba vložit do konceptu ručně",
+      openDraft: "Otevřít koncept",
+      runsHeading: "Kontroly",
+      openRun: "Otevřít",
+      findingsCount: (total: number, open: number) => `${total} ${total === 1 ? "nález" : total < 5 && total > 0 ? "nálezy" : "nálezů"}${open ? `, ${open} nerozhodnutých` : ""}`,
+      metaHeading: "Údaje o běhu",
+      metaModel: "Model",
+      metaStarted: "Spuštěno",
+      metaFinished: "Dokončeno",
+      metaDuration: "Trvání",
+      metaCalls: "Volání modelu",
+      metaTokens: "Tokeny",
+      metaCost: "Cena",
+      metaUnknown: "—",
+      duration: (m: number) => (m < 1 ? "méně než minuta" : `${m} min`),
+      tokens: (i: number, o: number, c: number) => `${i.toLocaleString("cs")} vstup, ${o.toLocaleString("cs")} výstup, ${c.toLocaleString("cs")} z cache`,
+      calls: (n: number, f: number) => `${n}${f ? ` (${f} selhalo)` : ""}`,
+      running: "běží",
       reason: "Důvod",
-      reasonHint: "Při ponechání povinný.",
+      reasonHint: "Povinný u obou rozhodnutí — za rok má být jasné, proč.",
       save: "Uložit rozhodnutí",
       saved: "Rozhodnutí je uložené.",
       decided: (status: string, who: string, when: string) => `${status} — ${when}, ${who}`,
@@ -13975,6 +14128,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Open the report",
       note: "The legal basis is set by the person responsible for the document; you review it (O15/A10). The list of documents is in the report after signing in; the e-mail only carries counts.",
     },
+    complianceEmail: {
+      subject: org => `Compliance check finished — ${org}`,
+      subtitle: "Document compliance check",
+      intro: (d, f) => `The check you started has finished: ${d} ${d === 1 ? "document" : "documents"}, ${f} ${f === 1 ? "finding" : "findings"}.`,
+      costLine: usd => `Run cost: ${usd} USD`,
+      button: "Open findings",
+      note: "For each finding, decide whether to keep the wording or accept the recommendation. The document does not change by itself.",
+    },
     approvalEmail: {
       subject: org => `A version to approve \u2014 ${org}`,
       subtitle: "To approve",
@@ -15259,7 +15420,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.nothingToCheck": "There are no open proposals to check.",
     "compliance.aiFailed": "The check failed — try again in a moment.",
     "compliance.noSubjects": "Select at least one document to check.",
-    "compliance.reasonRequired": "Give a reason when keeping it.",
+    "compliance.reasonRequired": "Give a reason for the decision.",
+    "compliance.textRequired": "The accepted wording cannot be empty.",
+    "compliance.nothingToApply": "There is nothing to write for this finding.",
     "compliance.unknownRun": "There is no such check.",
     "mailbox.slow": "The mailbox is responding slowly — part of it was not read in time; the next run continues.",
     "ticket.notFound": "There is no such ticket here.",
@@ -15637,6 +15800,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       utilityNote: "Runs before the search and is waited for, so only the fastest model.",
       rewrite: "PDF scan transcription",
       rewriteNote: "Transcribes scanned regulations in the library into text.",
+      compliance: "Document compliance check",
+      complianceNote: "Compares documents and FAQ proposals with norms. Runs in the background and rarely, so the strongest model pays off.",
       price: (input, output) => `input $${input} · output $${output}`,
       save: "Save",
       saved: "The AI settings have been saved.",
@@ -15680,6 +15845,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "chunking-analysis": { label: "Chunking analysis", why: "a proposal for splitting the document into chunks for search" },
         "faq-mining": { label: "FAQ mining", why: "FAQ entry proposals from the helpdesk mailbox history (ADR-028)" },
         "faq-review": { label: "FAQ review", why: "checking FAQ proposals and entries against library documents (ADR-032)" },
+        "compliance-review": { label: "Document compliance check", why: "checking documents (manuals, schedules) against library norms (ADR-032, D196)" },
       },
     },
     branding: {
@@ -15910,6 +16076,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dpo: "dpo — data protection officer: reviews legal bases, decides on objections",
       "learning-admin": "learning-admin — instructor: manages courses, the question bank and tests",
       helpdesk: "helpdesk — ticket manager: answers tickets of their channels and proposes FAQ entries; does not configure channels",
+      compliance: "compliance — runs document compliance checks against norms and decides on findings",
     },
     list: {
       heading: "People",
@@ -16178,6 +16345,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       responsibleAssigned: (title, label) => `You are the responsible person for version “${label}” of “${title}”. Please set the legal basis.`,
       draftResponsibleAssigned: (title) => `You are the responsible person for the version of “${title}” in preparation. You can set the legal basis before it is published.`,
       objectionSubmitted: () => "A new objection (Art. 21) is waiting for your decision.",
+      complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
+      complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,
     },
   },
   responsibility: {
@@ -16613,7 +16782,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewScope: "What to check",
     reviewScopeAll: "All open proposals",
     reviewStart: "Check against documents",
-    reviewStarted: "The check is running. Batches are processed automatically every 5 minutes — just reload the page later.",
+    reviewStarted: "The check is running in the background — batches run one after another, just reload the page later.",
     reviewProgress: (done: number, total: number) => `${done} of ${total} proposals checked.`,
     reviewDone: (when: string) => `The check is complete (${when}).`,
     reviewStopped: "The check stopped after repeated errors. Try running it again.",
@@ -16962,7 +17131,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       references: "Reference rules",
       referencesHint: "Statutes, codes and rules in their valid version to check against.",
       start: "Check compliance",
-      started: "The check is running. Documents are processed automatically every 5 minutes — just reload the page later.",
+      started: "The check is running in the background — you will get a notification and an e-mail when it finishes.",
       none: "No document check has run yet.",
       runMeta: (when: string, who: string) => `Started ${when} by ${who}`,
       against: (list: string) => `Against: ${list}`,
@@ -16981,8 +17150,43 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusOpen: "undecided",
       statusFixed: "fixed",
       statusKept: "kept on purpose",
+      statusAccepted: "accepted",
+      reasonPlaceholder: "Why you decided this way — e.g. “ISSF charges €0.50 a month under the Executive Committee resolution”.",
+      savedKept: "Decision saved — the wording stays.",
+      savedDraft: "Decision saved and the new wording is in the document draft.",
+      savedManual: "Decision saved. The wording has to be put into the draft by hand — the excerpt was not found unambiguously or you do not have the content manager role.",
+      decisionKeep: "Keep the current wording",
+      applyToDraft: "Write to draft",
+      applyHint: "The wording was accepted by someone without the content manager role. Writing it replaces the excerpt in the draft; the valid version does not change.",
+      changeDecision: "Change decision",
+      decisionAccept: "Accept the recommendation and edit",
+      proposed: "New wording",
+      proposedHintValid: "Replaces the excerpt in the draft of the next version. The valid version does not change until you publish the draft.",
+      proposedHintDraft: "Replaces the excerpt in the draft. The document is not published yet.",
+      proposedHintNoRights: "The decision is saved; a content manager puts it into the draft.",
+      proposedMissing: "This run did not propose new wording — the field holds the original excerpt, edit it according to the recommendation.",
+      acceptedText: "Accepted wording",
+      appliedDraft: "written to the draft",
+      appliedManual: "to be put into the draft by hand",
+      openDraft: "Open draft",
+      runsHeading: "Checks",
+      openRun: "Open",
+      findingsCount: (total: number, open: number) => `${total} ${total === 1 ? "finding" : "findings"}${open ? `, ${open} undecided` : ""}`,
+      metaHeading: "Run details",
+      metaModel: "Model",
+      metaStarted: "Started",
+      metaFinished: "Finished",
+      metaDuration: "Duration",
+      metaCalls: "Model calls",
+      metaTokens: "Tokens",
+      metaCost: "Cost",
+      metaUnknown: "—",
+      duration: (m: number) => (m < 1 ? "under a minute" : `${m} min`),
+      tokens: (i: number, o: number, c: number) => `${i.toLocaleString("en")} input, ${o.toLocaleString("en")} output, ${c.toLocaleString("en")} from cache`,
+      calls: (n: number, f: number) => `${n}${f ? ` (${f} failed)` : ""}`,
+      running: "running",
       reason: "Reason",
-      reasonHint: "Required when kept.",
+      reasonHint: "Required for both decisions — in a year it should be clear why.",
       save: "Save decision",
       saved: "The decision is saved.",
       decided: (status: string, who: string, when: string) => `${status} — ${when}, ${who}`,

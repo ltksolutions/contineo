@@ -203,6 +203,43 @@ Ján chcel najprv overiť manuály ISSF proti nadradeným normám. Pripojenie
 k postupu znenia (nálezy pri kroku schválenie) a referenčné dokumenty podľa
 druhu (D197) ostávajú vo fáze 3.
 
+### D199 — Rozhodnutie o náleze, rola a beh na pozadí (11. 10. 2026)
+
+Z prvej kontroly 10 manuálov ISSF proti 7 normám (42 nálezov, 3,05 USD,
+32 minút) Ján 11. 10. 2026 rozhodol:
+
+1. **Dve voľby pri náleze:** *ponechať existujúce znenie*, alebo *prijať
+   odporúčanie a upraviť*. Pri prijatí sa ukáže navrhnuté znenie úryvku
+   (model ho od tohto dňa vracia v poli `proposed`) a dá sa upraviť.
+   **Dôvod je povinný pri oboch** a pole má viac riadkov.
+2. **Čo prijatie urobí:** prijaté znenie nahradí úryvok v **koncepte**
+   dokumentu. Platné znenie sa nemení nikdy — pri voľnom koncepte sa koncept
+   založí z platného textu, pri rozpracovanom sa upraví ten. Do platnosti ide
+   až bežným zverejnením (schválenie, zodpovedná osoba, potvrdenia). Úryvok,
+   ktorý sa v texte nenájde jednoznačne, sa nenahrádza a rozhodnutie nesie
+   „treba vložiť ručne". Rozhodnutie ide do auditu dokumentu.
+3. **Vlastná rola `compliance`** — kontrola číta aj interné normy a nálezy
+   hovoria o slabinách predpisov. Behy sú spoločné všetkým s rolou. Zápis do
+   konceptu robí len ten, kto má aj `content-admin`.
+4. **Beh na pozadí bez čakania na cron:** kúsok po skončení hneď zavolá
+   ďalší (`lib/backgroundKick.ts`, odpoveď 202 a práca v `after()`); cron
+   ostáva ako poistka pri pretrhnutej reťazi. Dva dokumenty naraz.
+5. **Po skončení** príde tomu, kto kontrolu spustil, upozornenie do zvončeka
+   a e-mail. Detail behu (`/library/compliance/[runId]`) ukazuje model, čas,
+   volania, tokeny a cenu; spotreba ide do prehľadu AI pod vlastným účelom
+   „Kontrola súladu dokumentov".
+6. **Bez roly správcu obsahu** sa prijaté znenie do konceptu nezapíše hneď:
+   všetkým s `content-admin` príde upozornenie do zvončeka (bez e-mailu,
+   aby desiatky nálezov nezahltili) a na detaile behu majú pri náleze
+   „Zapísať do konceptu". Detail behu preto vidí aj správca obsahu bez roly
+   `compliance` — rozhodovať a spúšťať nesmie.
+7. **Model je nastavenie organizácie** („Kontrola súladu dokumentov"
+   v Nastaveniach AI), predvolený **Opus 5.5**: prvá kontrola so Sonnet 5
+   mala 24 zo 42 nálezov slabých; Opus stojí ~5,30 USD za 10 manuálov
+   namiesto 3,05 a beží zriedka. Kúsok behu je preto **jeden krok** (jeden
+   balík noriem) dokumentu, nie celý dokument — tri pomalšie volania za
+   sebou by prekročili 300 s funkcie; rozpracované kroky sú v `partials`.
+
 ## 3. Postup
 
 1. **Fáza 1 — kontrola návrhov FAQ vo fronte kurátora** (D191 bod 2, D192,

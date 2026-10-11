@@ -1,11 +1,12 @@
 /**
- * /library/compliance — kontrola súladu dokumentov proti normám (ADR-032, D196).
- * Len správca obsahu (`libraryContext`).
+ * /library/compliance — kontroly súladu dokumentov proti normám (ADR-032, D196).
+ * Rola `compliance` (`complianceContext`); behy sú spoločné pre všetkých
+ * s rolou (Ján 11. 10. 2026). Nálezy a rozhodnutia sú na detaile behu
+ * (`/library/compliance/[runId]`) — časť, ktorú má cesta pomenovať, má
+ * vlastnú adresu.
  *
  * Ján 10. 10. 2026: „spravme kontrolu manuálov voči platným dokumentom… nech
- * vieme, že návody sú OK voči nadradeným normám". Výsledok je zoznam nálezov
- * pri každom kontrolovanom dokumente; dokument sa nemení. Pri každom náleze
- * sa zapíše *opravené* alebo *vedome ponechané* s dôvodom.
+ * vieme, že návody sú OK voči nadradeným normám".
  */
 
 import { notFound, redirect } from "next/navigation"
@@ -14,20 +15,20 @@ import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
-import { libraryContext } from "@/lib/library"
-import { documentRuns, MAX_FAILURES, FINDING_KINDS, type DocumentFinding } from "@/lib/complianceCheck"
+import { complianceContext } from "@/lib/complianceAccess"
+import { documentRuns, MAX_FAILURES } from "@/lib/complianceCheck"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { startDocumentReviewAction, decideFindingAction } from "../complianceActions"
+import { startDocumentReviewAction } from "../complianceActions"
 
 export const dynamic = "force-dynamic"
 
 export default async function ComplianceRunsPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
-  const ctx = await libraryContext()
+  const ctx = await complianceContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
@@ -43,7 +44,7 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; category?: string; accessLevel?: string }[]>,
   ])
   const options = docs.map(d => ({ value: d.documentId, label: `${String(d.title ?? d.documentId)}${d.accessLevel === "internal" ? " · interný" : ""}` }))
-  const statusLabel = (f: DocumentFinding) => (f.status === "fixed" ? t.statusFixed : f.status === "kept" ? t.statusKept : t.statusOpen)
+  const last = runs[0]
 
   return (
     <AppShell language={language} title={t.heading} trail={{ "/library": dictionary(language).library.list.heading }}>
@@ -58,81 +59,41 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
         <form action={startDocumentReviewAction} style={{ display: "grid", gap: 12 }}>
           <div className="field" style={{ margin: 0 }}>
             <span className="field-label">{t.subjects}</span>
-            <MultiSelect name="subjectIds" options={options} selected={runs[0]?.scope.kind === "documents" ? runs[0].scope.subjectIds : []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+            <MultiSelect name="subjectIds" options={options} selected={last?.scope.kind === "documents" ? last.scope.subjectIds : []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
             <span className="quiet field-hint">{t.subjectsHint}</span>
           </div>
           <div className="field" style={{ margin: 0 }}>
             <span className="field-label">{t.references}</span>
-            <MultiSelect name="documentIds" options={options} selected={runs[0]?.documentIds ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+            <MultiSelect name="documentIds" options={options} selected={last?.documentIds ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
             <span className="quiet field-hint">{t.referencesHint}</span>
           </div>
           <div><SubmitButton className="button">{t.start}</SubmitButton></div>
         </form>
       </section>
 
+      <h2 className="detail-block-title" style={{ margin: "8px 0 10px" }}>{t.runsHeading}</h2>
       {runs.length === 0 && <p className="quiet">{t.none}</p>}
-
-      <div style={{ display: "grid", gap: 16 }}>
-        {runs.map(run => (
-          <section key={run.runId} className="card detail-block">
-            <p style={{ margin: 0 }}>
-              <b>{t.runMeta(formatDate(run.startedAt, language), run.startedBy)}</b>{" · "}
-              {run.pending.length === 0 ? t.done
-                : run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span>
-                : t.progress(run.total - run.pending.length, run.total)}
-            </p>
-            <p className="quiet" style={{ margin: 0 }}>
-              {t.against(run.documents.map(d => `${d.title}${d.state === "draft" ? ` (${t.draftMark})` : d.label ? ` (${d.label})` : ""}`).join(", "))} · {t.steps(run.steps)}
-            </p>
-            {(run.results ?? []).map(res => (
-              <details key={res.documentId} className="pr-original" open={res.findings.some(f => !f.status)}>
-                <summary>
-                  <Link href={`/library/${encodeURIComponent(res.documentId)}`}>{res.title}</Link>
-                  {res.state === "draft" && <span className="quiet">&nbsp;({t.draftMark})</span>}
-                  &nbsp;<span className={`tag${res.findings.length ? " tag--warn" : ""}`}>{res.findings.length}</span>
-                </summary>
-                <div className="pr-original-body">
-                  {res.summary && <p style={{ margin: 0 }}>{res.summary}</p>}
-                  {res.findings.length === 0 && <p className="quiet" style={{ margin: 0 }}>{t.noFindings}</p>}
-                  {FINDING_KINDS.flatMap(kind => res.findings.filter(f => f.kind === kind)).map(f => (
-                    <div key={f.id} id={`${res.documentId}-${f.id}`} className="pr-review">
-                      <div className="mg-pills">
-                        <span className="tag tag--warn">{t.kinds[f.kind]}</span>
-                        <span className="tag">{f.decidedAt ? t.decided(statusLabel(f), f.decidedBy ?? "", formatDate(f.decidedAt, language)) : t.statusOpen}</span>
-                      </div>
-                      <p style={{ margin: 0 }}><b>{t.location}:</b> {f.location}</p>
-                      {f.quote && <p style={{ margin: 0 }}><b>{t.quote}:</b> <q>{f.quote}</q></p>}
-                      <p style={{ margin: 0 }}>
-                        <b>{t.norm}:</b> <Link href={`/library/${encodeURIComponent(f.citation.documentId)}`}>{f.citation.title}{f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}</Link>
-                        {f.citation.quote && <> — <q>{f.citation.quote}</q></>}
-                      </p>
-                      <p style={{ margin: 0, whiteSpace: "pre-wrap" }}><b>{t.recommendation}:</b> {f.recommendation}</p>
-                      {f.reason && <p className="quiet" style={{ margin: 0 }}><b>{t.reason}:</b> {f.reason}</p>}
-                      <form action={decideFindingAction} className="mg-inline" style={{ alignItems: "flex-end" }}>
-                        <input type="hidden" name="runId" value={run.runId} />
-                        <input type="hidden" name="documentId" value={res.documentId} />
-                        <input type="hidden" name="findingId" value={f.id} />
-                        <label className="field" style={{ margin: 0 }}>
-                          <span className="field-label">{t.status}</span>
-                          <select className="field-input" name="status" defaultValue={f.status ?? "fixed"}>
-                            <option value="fixed">{t.statusFixed}</option>
-                            <option value="kept">{t.statusKept}</option>
-                          </select>
-                        </label>
-                        <label className="field" style={{ margin: 0 }}>
-                          <span className="field-label">{t.reason}</span>
-                          <input className="field-input" name="reason" defaultValue={f.reason ?? ""} maxLength={500} />
-                          <span className="quiet field-hint">{t.reasonHint}</span>
-                        </label>
-                        <div><SubmitButton className="button button--quiet">{t.save}</SubmitButton></div>
-                      </form>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            ))}
-          </section>
-        ))}
+      <div style={{ display: "grid", gap: 12 }}>
+        {runs.map(run => {
+          const findings = (run.results ?? []).flatMap(r => r.findings)
+          const open = findings.filter(f => !f.status).length
+          return (
+            <section key={run.runId} className="card detail-block compliance-run">
+              <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
+                <p style={{ margin: 0 }}>
+                  <b>{t.runMeta(formatDate(run.startedAt, language), run.startedBy)}</b>{" · "}
+                  {run.pending.length === 0 ? t.findingsCount(findings.length, open)
+                    : run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span>
+                    : t.progress(run.total - run.pending.length, run.total)}
+                </p>
+                <p className="quiet" style={{ margin: 0 }}>
+                  {run.scope.kind === "documents" ? run.scope.subjectIds.length : run.total} → {t.against(run.documents.map(d => d.title).join(", "))}
+                </p>
+              </div>
+              <Link className="button button--quiet" href={`/library/compliance/${encodeURIComponent(run.runId)}`}>{t.openRun}</Link>
+            </section>
+          )
+        })}
       </div>
     </div>
     </AppShell>

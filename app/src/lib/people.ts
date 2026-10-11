@@ -36,6 +36,7 @@ import { AppError } from "./appError"
 import { EVALUATOR_ROLE } from "./evaluation"
 import { DPO_ROLE } from "./dpo"
 import { LEARNING_ROLE } from "./learning"
+import { COMPLIANCE_ROLE } from "./complianceAccess"
 
 export const PEOPLE_ROLE = "people-admin"
 
@@ -44,7 +45,7 @@ export const PEOPLE_ROLE = "people-admin"
  * obrazovke ukáže len pri zapnutom module Vzdelávanie (ADR-018) — pri
  * vypnutom ho formulár nesie skryto, aby sa uložením osoby nestratil.
  */
-export const ASSIGNABLE_ROLES = [HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE, LEARNING_ROLE, HELPDESK_ROLE] as const
+export const ASSIGNABLE_ROLES = [HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE, LEARNING_ROLE, HELPDESK_ROLE, COMPLIANCE_ROLE] as const
 
 export function isPeopleAdmin(person: Person | null): boolean {
   return Boolean(person?.roles?.includes(PEOPLE_ROLE))

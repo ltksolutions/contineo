@@ -23,7 +23,7 @@ import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 
 /** Na čo sa model používa. Kľúče sú dáta v tenantovi — nepremenúvať. */
-export type AiPurpose = "answer" | "utility" | "rewrite"
+export type AiPurpose = "answer" | "utility" | "rewrite" | "compliance"
 
 export interface AiModelOption {
   id: string
@@ -53,6 +53,13 @@ export const AI_MODELS: Record<AiPurpose, AiModelOption[]> = {
     { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
     { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
   ],
+  // Kontrola súladu (ADR-032, D199): beží zriedka a na pozadí, nikto na ňu
+  // nečaká — rozhoduje kvalita právneho čítania, nie rýchlosť.
+  compliance: [
+    { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
+    { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
+    { id: "claude-sonnet-5", label: "Claude Sonnet 5" },
+  ],
 }
 
 /** Modely, ktoré platia, kým organizácia nevyberie iné — dnešné správanie. */
@@ -61,6 +68,9 @@ export function defaultModels(): Record<AiPurpose, string> {
     answer: process.env.GENERATION_MODEL ?? "claude-sonnet-5",
     utility: process.env.UTILITY_MODEL ?? "claude-haiku-4-5-20251001",
     rewrite: process.env.CMS_PREPIS_MODEL ?? "claude-sonnet-4-5",
+    // Ján 11. 10. 2026: Opus 5.5 — prvá kontrola so Sonnet 5 mala 24 zo 42
+    // nálezov slabých; Opus ~5,30 USD za 10 manuálov namiesto 3,05.
+    compliance: process.env.COMPLIANCE_MODEL ?? "claude-opus-5-5",
   }
 }
 
@@ -109,6 +119,7 @@ export function resolveAi(ai: TenantAi | undefined): ResolvedAi {
     answer: pickModel("answer", ai?.models?.answer),
     utility: pickModel("utility", ai?.models?.utility),
     rewrite: pickModel("rewrite", ai?.models?.rewrite),
+    compliance: pickModel("compliance", ai?.models?.compliance),
   }
   if (ai?.apiKeyEnc) {
     try {

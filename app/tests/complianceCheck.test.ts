@@ -52,7 +52,7 @@ describe("parseReview", () => {
   })
 })
 
-import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview } from "../src/lib/complianceCheck"
+import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote } from "../src/lib/complianceCheck"
 
 describe("viac krokov a dokument proti dokumentom", () => {
   const big = (id: string, cat: string, n: number) => ({ documentId: id, title: id, category: cat, versions: [{ versionId: "v", isActive: true, markdown: Array.from({ length: n }, (_, i) => `Odsek ${i} ${"x".repeat(90)}`).join("\n\n") }] })
@@ -91,5 +91,31 @@ describe("viac krokov a dokument proti dokumentom", () => {
     expect(r.findings).toHaveLength(1)
     expect(r.findings[0]).toMatchObject({ id: "f1", kind: "conflict", status: null, citation: { documentId: "rapp", articleRef: "čl. 18 ods. 8" } })
     expect(r.summary).toBe("Jeden rozpor.")
+  })
+  it("navrhnuté znenie nálezu sa prevezme; prázdne je null", () => {
+    const pack = buildPacks([big("rapp", "norma", 2)])[0]
+    const r = parseDocReview({ findings: [
+      { kind: "conflict", location: "6.4", quote: "0,50 € mesačne", citation: { doc: 1, ref: "príloha 2", quote: "1 EUR" }, recommendation: "Ročne 1 €.", proposed: "1 € ročne" },
+      { kind: "missing", location: "1", quote: "a", citation: { doc: 1, ref: "", quote: "" }, recommendation: "", proposed: "  " },
+    ], summary: "" }, pack, () => "f")
+    expect(r.findings.map(f => f.proposed)).toEqual(["1 € ročne", null])
+  })
+})
+
+describe("nahradenie úryvku v koncepte (Ján 11. 10. 2026)", () => {
+  const text = "# Poplatky\n\nPoplatok za správu konta: **0,50 €** mesačne.\n\nĎalší odsek."
+  it("doslovná zhoda sa nahradí", () => {
+    expect(replaceQuote(text, "Poplatok za správu konta: **0,50 €** mesačne.", "Poplatok: 1 € ročne.")).toBe("# Poplatky\n\nPoplatok: 1 € ročne.\n\nĎalší odsek.")
+  })
+  it("zlúčené medzery a riadky sa tolerujú", () => {
+    expect(replaceQuote("Hráč príde\nosobne na matriku.", "Hráč príde osobne  na matriku.", "X")).toBe("X")
+  })
+  it("nenájdený alebo viacnásobný úryvok sa nenahrádza", () => {
+    expect(replaceQuote(text, "neexistuje", "X")).toBeNull()
+    expect(replaceQuote("a. b. a.", "a.", "X")).toBeNull()
+    expect(replaceQuote(text, "  ", "X")).toBeNull()
+  })
+  it("špeciálne znaky v úryvku nie sú regulárny výraz", () => {
+    expect(replaceQuote("Cena (spolu) 1+1 €", "Cena  (spolu) 1+1 €", "Y")).toBe("Y")
   })
 })
