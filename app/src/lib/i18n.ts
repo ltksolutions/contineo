@@ -3155,6 +3155,9 @@ interface Dictionary {
        * „koncepty") — a na tej istej obrazovke vedľa seba hovoril riadok
        * „Platný" a panel „publikované".
        */
+      /** Krok postupu znenia v zozname (Ján 11. 10. 2026). */
+      stageLabel: Record<"prep" | "review" | "publish" | "assign", string>
+      stageTitle: string
       statusLabel: {
         published: string
         draft: string
@@ -8068,6 +8071,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           after: "po",
         },
       },
+      stageLabel: { prep: "Príprava", review: "Čaká na schválenie", publish: "Čaká na zverejnenie", assign: "Čaká na pridelenie" },
+      stageTitle: "Krok postupu znenia",
       statusLabel: {
         published: "Platný",
         draft: "Návrh",
@@ -12898,6 +12903,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           after: "po",
         },
       },
+      stageLabel: { prep: "Příprava", review: "Čeká na schválení", publish: "Čeká na zveřejnění", assign: "Čeká na přidělení" },
+      stageTitle: "Krok postupu znění",
       statusLabel: {
         published: "Platný",
         draft: "Návrh",
@@ -17719,6 +17726,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           after: "after",
         },
       },
+      stageLabel: { prep: "Preparation", review: "Awaiting approval", publish: "Awaiting publication", assign: "Awaiting assignment" },
+      stageTitle: "Version workflow step",
       statusLabel: {
         published: "Valid",
         draft: "Draft",

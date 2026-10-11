@@ -17,7 +17,10 @@ import type { Version, DocumentSource } from "./documents"
 import type { ResponsiblePerson, DraftLegalBasis } from "./versionResponsibility"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
-import { openRounds } from "./approvalsDb"
+import { openRounds, stateOf } from "./approvalsDb"
+import { APPROVALS_COLLECTION, type ApprovalRound } from "./approvals"
+import { documentDraftIdentity } from "./versionMeta"
+import { versionFlow, versionStage, lastPreparationRound, type VersionStage } from "./versionFlow"
 import { archiveState } from "./documentArchiveState"
 import { allDepartments } from "./departments"
 import { codelistOptions, type CodelistExtras } from "./codelists"
@@ -95,6 +98,8 @@ export interface LibraryRow {
   effectiveTo: Date | null
   /** Archivovaný predpis, ktorého archivácia už platí (ADR-025). */
   archived?: boolean
+  /** Krok postupu znenia (ADR-014) — Príprava, Čaká na schválenie, zverejnenie, pridelenie. */
+  stage?: VersionStage | null
   /**
    * Znenie, ktoré platí teraz. Potvrdenia sa viažu naň, nie na dokument (D28),
    * takže bez neho sa stĺpec s potvrdeniami nedá naplniť.
@@ -484,6 +489,50 @@ function sortCounts(rows: { _id: unknown; n: number }[]): FacetCount[] {
     .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value, "sk"))
 }
 
+interface StageRecord {
+  documentId: string
+  draftMarkdown?: string | null
+  draftPdf?: { id?: string; sha256?: string | null } | null
+  draftMeta?: Record<string, unknown> | null
+  draftTitle?: string | null
+  versions?: { versionId: string; isActive?: boolean; effectiveFrom?: Date; effectiveTo?: Date | null; pdf?: { id?: string }; publishedAt?: Date }[]
+}
+
+/**
+ * Krok postupu znenia pre každý riadok zoznamu (Ján 11. 10. 2026). Kolá sa
+ * načítajú jedným dotazom pre celú organizáciu; pridelenie (krok 4) sa
+ * počíta len pri dokumente s viac zneniami — prvé znenie publikum na prenos
+ * nemá. Rovnaké vstupy ako karta postupu na detaile.
+ */
+async function listStages(companyCode: string, records: StageRecord[]): Promise<Map<string, VersionStage | null>> {
+  const ids = records.map(r => r.documentId)
+  const rounds = await (await getCollection<ApprovalRound>(APPROVALS_COLLECTION)).find({ companyCode, documentId: { $in: ids } }).sort({ round: 1 }).toArray()
+  const byDoc = new Map<string, ApprovalRound[]>()
+  for (const r of rounds) byDoc.set(r.documentId, [...(byDoc.get(r.documentId) ?? []), r])
+  const { carryOverCandidates } = await import("./assignments")
+  const out = new Map<string, VersionStage | null>()
+  await Promise.all(records.map(async d => {
+    const versions = d.versions ?? []
+    const hasDraft = Boolean(String(d.draftMarkdown ?? "").trim() || d.draftPdf?.id)
+    const identity = hasDraft ? documentDraftIdentity(d) : ""
+    // Koncept, ktorý je niektorým zverejneným znením (napr. po „Opraviť text"), nie je príprava nového.
+    const preparing = hasDraft && !versions.some(v => v.versionId === identity) &&
+      !(d.draftPdf?.id && versions.some(v => v.pdf?.id === d.draftPdf!.id) && !String(d.draftMarkdown ?? "").trim())
+    const docRounds = byDoc.get(d.documentId) ?? []
+    const draftState = stateOf(docRounds.filter(r => r.versionId === identity))
+    const lastPublishedAt = versions.reduce<Date | null>((acc, v) => (v.publishedAt && (!acc || new Date(v.publishedAt) > acc) ? new Date(v.publishedAt) : acc), null)
+    const byVersion = new Map<string, ApprovalRound[]>()
+    for (const r of docRounds) byVersion.set(r.versionId, [...(byVersion.get(r.versionId) ?? []), r])
+    let carryOverCount = 0
+    if (!preparing && versions.length > 1) {
+      const eff = effectiveVersion(d as never)
+      if (eff.ok) carryOverCount = (await carryOverCandidates(companyCode, d.documentId, eff.version.versionId)).length
+    }
+    out.set(d.documentId, versionStage(versionFlow({ preparing, draftState, lastRound: lastPreparationRound(byVersion.values(), lastPublishedAt), carryOverCount })))
+  }))
+  return out
+}
+
 /**
  * Jedna agregácia namiesto šiestich dotazov.
  *
@@ -615,15 +664,17 @@ export async function libraryList(
         "versions.effectiveFrom": 1, "versions.effectiveTo": 1,
         // Záznam o archivácii — pre pilulku „Archivovaný" (ADR-025).
         "versions.archives": 1,
+        // Krok postupu znenia: identita konceptu (text + PDF + údaje + názov) a PDF znení.
+        "draftPdf.id": 1, "draftPdf.sha256": 1, draftMeta: 1, draftTitle: 1, "versions.pdf.id": 1, "versions.publishedAt": 1,
       },
     })
     .sort({ updatedAt: -1, title: 1 })
     .toArray()
 
-  const folders = await allFolders(companyCode)
+  const [folders, stages] = await Promise.all([allFolders(companyCode), listStages(companyCode, records as unknown as StageRecord[])])
   return records.map(z => {
     const r = toRow(z as RawRow)
-    return { ...r, folderTrail: pathTo(folders, r.folderId).map(p => p.name) }
+    return { ...r, folderTrail: pathTo(folders, r.folderId).map(p => p.name), stage: stages.get(r.documentId) ?? null }
   })
 }
 

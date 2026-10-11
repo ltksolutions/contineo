@@ -96,3 +96,14 @@ describe("rejectedBy", () => {
     expect(rejectedBy(round({ outcome: "rejected" }))).toBeNull()
   })
 })
+
+describe("krok postupu v zozname knižnice (11. 10. 2026)", () => {
+  it("rovnaký výpočet ako karta postupu", async () => {
+    const { versionFlow, versionStage } = await import("../src/lib/versionFlow")
+    expect(versionStage(versionFlow({ preparing: true, draftState: "draft", lastRound: null, carryOverCount: 0 }))).toBe("prep")
+    expect(versionStage(versionFlow({ preparing: true, draftState: "in-review", lastRound: null, carryOverCount: 0 }))).toBe("review")
+    expect(versionStage(versionFlow({ preparing: true, draftState: "approved", lastRound: null, carryOverCount: 0 }))).toBe("publish")
+    expect(versionStage(versionFlow({ preparing: false, draftState: "draft", lastRound: null, carryOverCount: 2 }))).toBe("assign")
+    expect(versionStage(versionFlow({ preparing: false, draftState: "draft", lastRound: null, carryOverCount: 0 }))).toBeNull()
+  })
+})

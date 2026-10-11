@@ -102,3 +102,16 @@ export function previousApproverIds(
 export function rejectedBy(round: ApprovalRound) {
   return round.approvers.find(a => a.decision === "rejected") ?? null
 }
+
+/**
+ * Krok postupu ako jedno slovo pre zoznam knižnice (Ján 11. 10. 2026: „nech
+ * viem, na čom to stojí"). Ten istý výpočet ako karta postupu na detaile
+ * (`versionFlow`), aby zoznam a detail nikdy nepovedali niečo iné.
+ * `null` = nič sa nepripravuje a nič nečaká.
+ */
+export type VersionStage = "prep" | "review" | "publish" | "assign"
+
+export function versionStage(flow: Flow | null): VersionStage | null {
+  if (!flow) return null
+  return flow.step === 1 ? "prep" : flow.step === 2 ? "review" : flow.step === 3 ? "publish" : "assign"
+}
