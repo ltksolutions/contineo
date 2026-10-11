@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>KANALY — fronta kurátora návrhov FAQ</title>
+<style>
+
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--seg-bg:rgba(118,118,128,.12);--seg-thumb:#fff;--seg-shadow:0 1px 3px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.06);--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--seg-bg:rgba(118,118,128,.24);--seg-thumb:#3a3f48;--seg-shadow:0 1px 3px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:100ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px;max-width:390px}
+.notes{display:grid;gap:6px;max-width:100ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff;line-height:1}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+.sample{font-size:11px;color:#9a3412;background:#ffedd5;border-radius:4px;padding:0 5px;font-weight:600;white-space:nowrap}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px 18px;flex:none;margin-top:auto}
+.tabbar span{display:grid;justify-items:center;gap:3px;font-size:10.5px;color:var(--muted);min-height:44px;align-content:center}
+.tabbar span::before{content:"";width:22px;height:22px;border-radius:6px;background:var(--surface-2)}
+.tabbar span.on{color:var(--accent);font-weight:600}.tabbar span.on::before{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.body{padding:22px 28px 32px;display:grid;gap:20px;align-content:start}
+.page-head{display:flex;align-items:flex-start;gap:10px 16px;flex-wrap:wrap}
+.page-head-main{flex:1 1 380px;min-width:0;display:grid;gap:4px}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:0}
+.page-tools{display:flex;gap:8px;flex-wrap:wrap}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--warn,.tag--draft{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--bad{background:var(--bad-bg);color:var(--bad-fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+/* postup */
+.prog{display:grid;gap:10px;padding:16px 20px 0}
+.prog-top{display:flex;gap:8px 16px;align-items:baseline;flex-wrap:wrap}
+.prog-top b{font-size:var(--fs-section);font-weight:650}
+.bar{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok-fg);border-radius:999px}
+.kinds{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:var(--fs-small);color:var(--muted)}
+.disc{border-top:1px solid var(--line);margin-top:14px}
+.disc-sum{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 20px;font-size:14px;color:var(--ink)}
+.disc-sum .k{color:var(--muted)}
+.disc-sum .chev{margin-left:auto;color:var(--muted);font-size:13px}
+.lc{display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 16px;padding:9px 20px;position:relative;font-size:14px;border-top:1px solid var(--line)}
+.lc > span:first-child{color:var(--muted)}
+/* rozdelenie */
+.split{display:grid;grid-template-columns:320px minmax(0,1fr);gap:28px;align-items:start}
+.side{display:grid;gap:6px;position:sticky;top:0}
+.side-h{padding:0 4px;font-size:var(--fs-small);font-weight:600;color:var(--muted)}
+.form-list{display:grid}
+.form-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;color:var(--ink);text-decoration:none;font-size:15px}
+.form-list > .form-row + .form-row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.form-row-main{flex:1;display:grid;gap:1px;min-width:0}
+.form-row-main b{font-weight:600;font-size:15px}
+.form-row-sub{font-size:var(--fs-small);color:var(--muted);overflow-wrap:anywhere}
+.form-row.on{background:var(--accent-soft)}
+.form-row.on b{color:var(--accent)}
+.form-row.on::after{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.n{font-size:var(--fs-small);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chev{color:var(--line-strong);font-size:20px;line-height:1;flex:none}
+.pick{min-height:60px}
+.pick .k{font-size:var(--fs-micro);color:var(--accent);font-weight:600}
+.pick b{color:var(--accent)}
+.main{display:grid;gap:16px;min-width:0;max-width:880px}
+.doc-head{display:grid;gap:6px}
+.doc-head .t{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.doc-head h2{margin:0;font-size:21px;letter-spacing:-.01em}
+.doc-head p{margin:0;font-size:15px;max-width:72ch;text-wrap:pretty}
+.doc-head .open{font-size:14px;min-height:44px;display:inline-flex;align-items:center;margin-left:auto}
+/* prepínač pohľadu */
+.view-switch{display:inline-flex;padding:2px;border-radius:9px;background:var(--seg-bg);justify-self:start;max-width:100%}
+.view-switch-item{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 14px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:14px;white-space:nowrap;flex:1}
+.view-switch-item + .view-switch-item::before{content:"";position:absolute;left:0;top:8px;bottom:8px;border-left:1px solid var(--line-strong)}
+.view-switch-item.is-on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.view-switch-item.is-on::before,.view-switch-item.is-on + .view-switch-item::before{opacity:0}
+.view-switch-count{margin-left:5px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+/* nález */
+.flist{display:grid;gap:10px}
+.fc-row{display:flex;align-items:center;gap:10px 12px;padding:8px 8px 8px 16px;min-height:56px;flex-wrap:wrap}
+.fc-row .loc{flex:1 1 240px;min-width:0;font-size:15px}
+.fc{display:grid;gap:16px;padding:16px 20px 20px}
+.fc.is-open{border-color:var(--line-strong);box-shadow:0 2px 10px rgba(20,28,42,.06)}
+.fc-head{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.fc-head b{font-size:16px;font-weight:650;flex:1 1 260px;min-width:0}
+.fc-head a{font-size:14px}
+.blk{display:grid;gap:5px}
+.blk-l{font-size:var(--fs-small);font-weight:600;color:var(--muted)}
+.blk p{margin:0;font-size:15px;max-width:72ch;text-wrap:pretty}
+.diff{padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:15px;line-height:1.65;max-width:72ch}
+.diff del{background:var(--bad-bg);color:var(--bad-fg);text-decoration:line-through}
+.diff ins{background:var(--ok-bg);color:var(--ok-fg);text-decoration:underline;text-decoration-thickness:1px}
+.quote{margin:0;padding:2px 0 2px 14px;border-left:3px solid var(--line-strong);font-size:15px;color:var(--ink);max-width:72ch}
+.dec{display:grid;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
+.decision-switch{display:grid;grid-template-columns:1fr 1fr;padding:2px;border-radius:10px;background:var(--seg-bg);max-width:560px}
+.decision-option{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;min-height:40px;padding:4px 12px;border-radius:8px;font-size:14.5px;line-height:1.25}
+.decision-option.on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.choice-list{display:grid;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.choice-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;font-size:15px}
+.choice-row + .choice-row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.tick{width:18px;flex:none;color:var(--accent);font-weight:700;text-align:center}
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;min-width:0;line-height:1.5;white-space:pre-wrap}
+.field-input.ph{color:var(--muted)}
+.ta3{min-height:calc(3 * 1.5em + 20px)}
+.ta5{min-height:calc(5 * 1.5em + 20px)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.acts{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
+.acts .quiet{font-size:var(--fs-small)}
+.lnote{display:flex;gap:10px;padding:12px 14px;border-radius:10px;font-size:14px;align-items:flex-start;background:var(--ok-bg);color:var(--ok-fg)}
+.lnote-mark{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--surface);color:inherit;margin-top:1px}
+.lnote-text{flex:1 1 300px;min-width:0;line-height:1.45}
+.lnote-text b{font-weight:650}
+.lnote-text small{display:block;margin-top:3px;font-size:var(--fs-small);color:var(--muted)}
+.lnote--info{background:var(--surface-2);color:var(--ink)}
+.lnote--warn{background:var(--warn-bg);color:var(--warn-fg)}
+.reason{margin:0;font-size:15px;white-space:pre-line;max-width:72ch}
+.who{font-size:var(--fs-small);color:var(--muted)}
+.state-l{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:6px 0 -6px 4px}
+/* mobil a tablet */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px;gap:16px}
+.m .page-title{font-size:22px}
+.m .page-head-main{flex-basis:100%}
+.m .button{min-height:44px}
+.m .prog{padding:14px 14px 0}
+.m .disc-sum{padding:0 14px}
+.m .lc{grid-template-columns:1fr;padding:9px 14px;gap:0}
+.m .view-switch{display:flex;justify-self:stretch}
+.m .view-switch-item{min-height:36px;padding:0 6px;font-size:13.5px}
+.m .fc{padding:14px 14px 16px}
+.m .fc-row{padding:8px 8px 8px 14px}
+.m .acts .button{width:100%}
+.m .doc-head .open{margin-left:0}
+.t .body{padding:20px 24px 28px}
+.t .main{max-width:none}
+
+.rv{display:grid;gap:12px;padding:14px 16px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.rv-head{display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap}
+.rv-head b{font-size:15px;font-weight:650}
+.rv-head .quiet{font-size:var(--fs-small)}
+.rv .acts{padding-top:2px}
+.ext{font-size:12px;margin-left:3px}
+.sec2{display:grid;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
+.sec2-h{font-size:var(--fs-section);font-weight:650;margin:0}
+.vlist{border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.vlist .form-row{min-height:44px;padding:8px 14px;font-size:14.5px}
+.vlist .form-row.off span.v{text-decoration:line-through;color:var(--muted)}
+.cb{width:20px;height:20px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:800;border:1.5px solid var(--line-strong)}
+.cb.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.vmore{font-size:14px;color:var(--accent);padding:10px 14px;border-top:1px solid var(--line);min-height:44px;display:flex;align-items:center}
+.src{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:8px;align-items:center}
+.sel{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sel::after{content:"⌄";color:var(--muted)}
+.x{min-width:44px;min-height:40px;display:grid;place-items:center;border-radius:10px;color:var(--muted);font-size:13px}
+.ta10{min-height:calc(8 * 1.5em + 20px)}
+.orig{border:1px solid var(--line);border-radius:10px}
+.orig .disc-sum{padding:0 14px}
+.cnote{font-size:15px}
+.cnote .lnote-text b{display:block}
+.acts2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-top:14px;border-top:1px solid var(--line)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chips .lbl{font-size:var(--fs-small);color:var(--muted);margin-right:2px}
+.chip{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;font-size:13.5px;white-space:nowrap}
+.chip.on{border-color:var(--ink);font-weight:600}
+.chip .c{color:var(--muted);font-weight:400}
+.chip.dis{color:var(--muted)}
+.topic-h{display:grid;gap:12px}
+.topic-h .t{display:flex;gap:8px 12px;align-items:baseline;flex-wrap:wrap}
+.topic-h h2{margin:0;font-size:21px;letter-spacing:-.01em;text-wrap:pretty}
+.empty{display:grid;gap:8px;justify-items:center;text-align:center;padding:44px 20px}
+.empty-title{font-size:var(--fs-section);font-weight:650}
+.empty-text{color:var(--muted);font-size:15px;max-width:46ch}
+.run{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 14px;border-radius:10px;background:var(--surface-2);font-size:14px}
+.run i{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.q{flex:1 1 300px;min-width:0;display:grid;gap:2px}
+.q b{font-size:15px;font-weight:600;text-wrap:pretty}
+.q span{font-size:var(--fs-small);color:var(--muted)}
+.mk{display:flex;gap:6px;flex-wrap:wrap}
+.sub-form{display:grid;gap:12px;padding:14px 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--bg)}
+.sub-form .choice-list{background:var(--surface)}
+.choice-row .q{flex:1}
+.m .src{grid-template-columns:minmax(0,1fr) auto}
+.m .src .art{grid-column:1}
+.body,.topic-h,.flist{grid-template-columns:minmax(0,1fr)}
+.m .view-switch-item{padding:4px 4px;font-size:13px;white-space:normal;text-align:center;line-height:1.15;flex-direction:column;min-height:44px}
+.m .view-switch-count{margin-left:0}
+.m .chip{min-height:40px}
+.m .acts2 .button{width:100%}
+.m .rv{padding:12px}
+.m .run{width:100%}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">KANALY — fronta kurátora návrhov FAQ (<code>/channels/&lt;kanál&gt;/proposals</code>)</h1>
+<p class="doc">Úprava existujúcej fronty podľa vzoru <b>KNIZ-kontrola-suladu-detail</b>: témy vľavo (<code>NavigationSplitView</code>), návrhy jednej témy vpravo, otvorený vždy len jeden návrh a „Schváliť do FAQ a ďalší". Akcie z <code>proposalActions.ts</code> ostávajú (schváliť, uložiť, zamietnuť, zlúčiť, prevziať / ponechať výsledok kontroly, spustiť kontrolu). Popis, údaje mimo modelu a otázky sú v <code>KANALY-navrhy-faq-kuracia.md</code>. <span class="sample">ukážka</span> = údaj je vymyslený.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Časť</th><th>Dnes</th><th>Návrh</th></tr>
+    <tr><td>Hlavička</td><td class="old">„Návrhy FAQ" + štítok kanála</td><td class="new">cesta Kanály › ISSF Helpdesk › Návrhy FAQ; riadok „54 otvorených · 3 roky e-mailov"; tiché „Skontrolovať proti dokumentom" v <code>.page-tools</code> (počas behu stav)</td></tr>
+    <tr><td>Kontrola</td><td class="old">karta „Kontrola proti dokumentom" s formulárom nad zoznamom</td><td class="new">postup (12 z 66, pásik) + počty kontroly; formulár behu je úloha cez adresu <code>?check=1</code></td></tr>
+    <tr><td>Témy</td><td class="old">výber v <code>&lt;select&gt;</code> + „Použiť"</td><td class="new">od 1024 px bočný panel, pod 1024 px riadok „Téma 1 z 17 ›" → <code>?topics=1</code>; <code>?topic=</code></td></tr>
+    <tr><td>Pohľad</td><td class="old">Otvorené · Treba rozhodnúť · Bez zdroja · Rozhodnuté; výsledok kontroly v <code>&lt;select&gt;</code></td><td class="new">Nerozhodnuté · Na rozhodnutie · Rozhodnuté · Všetky; výsledok kontroly ako odkazy-čipy <code>?review=</code> (Q5)</td></tr>
+    <tr><td>Návrh</td><td class="old">20 rozbalených kariet s formulárom na stranu</td><td class="new">zbalený riadok; otvorený len jeden <code>?p=</code>; bez stránkovania (téma má 1–6 návrhov)</td></tr>
+    <tr><td>Výsledok kontroly</td><td class="old">otázka a odpoveď ako dva diffy, citácie v zozname</td><td class="new">verdikt, citácia s odkazom do nového okna + citát, jeden text s vyznačením, Prevziať / Ponechať</td></tr>
+    <tr><td>Varianty, zdroje</td><td class="old">varianty v <code>textarea</code> po riadkoch; zdroje len na čítanie</td><td class="new">varianty ako riadky so zaškrtnutím (odškrtnúť = zmazať) + pole nových; zdroje dokument + článok, upraviteľné</td></tr>
+    <tr><td>Úkony</td><td class="old">Uložiť · Schváliť · Zamietnuť · Zlúčiť (<code>Select</code>) vždy viditeľné</td><td class="new">Schváliť do FAQ a ďalší · Uložiť; Zamietnuť… a Zlúčiť s… otvoria v karte krátky formulár (<code>&amp;act=</code>)</td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — ?topic=prihlasenie&amp;p=p7f2 · stav 2: otvorený návrh „Odlišuje sa"</p>
+  <div class="frame" style="width:1440px" id="f-desk"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Cesta Kanály › ISSF Helpdesk › Návrhy FAQ. Pod nadpisom kanál, počet otvorených a obdobie ťažby. Jediný úkon hlavičky je tiché „Skontrolovať proti dokumentom" → <code>?check=1</code> (dnešný formulár výberu dokumentov ako karta úlohy). Plné tlačidlo na obrazovke nie je.</p>
+    <p><span class="ann">2</span>Postup za celý kanál: „12 z 66 rozhodnutých", pásik, počty poslednej kontroly a štítok „Na rozhodnutie 6". Len na čítanie. <code>&lt;details&gt;</code> „Posledná kontrola" nesie dátum a dokumenty (dnešné <code>reviewAgainst</code>).</p>
+    <p><span class="ann">3</span>Témy: riadky-odkazy <code>?topic=…</code> (zachová <code>view</code>, zahodí <code>p</code>). Vpravo počet nerozhodnutých, pod názvom „4 odlišuje sa" / „dokumenty neriešia", štítok „2 na rozhodnutie". Hotová téma „hotovo". Vybraná má farbu organizácie. Bez <code>?topic=</code> prvá téma s [NA ROZHODNUTIE] (Q2).</p>
+    <p><span class="ann">4</span>Vybraná téma: názov, sivý prepínač pohľadu s počtami, pod ním čipy výsledku kontroly (<code>?review=differs</code>…); čip s nulou je sivý a nie je odkaz.</p>
+    <p><span class="ann">5</span>Otvorený návrh (<code>?p=…#p…</code>): otázka, počet vlákien a obdobie, „Zbaliť". Výsledok kontroly: verdikt, dátum, poznámka kontroly, citácia „↗" do nového okna + doslovný citát, zmena odpovede ako jeden text s <code>del</code>/<code>ins</code>.</p>
+    <p><span class="ann">6</span>„Prevziať návrh z kontroly" / „Ponechať pôvodné" — dva tiché submit (<code>applyReviewAction</code> / <code>dismissReviewAction</code>), vrátia sa na ten istý návrh. Prevzatie prepíše polia Úpravy nižšie (Q6).</p>
+    <p><span class="ann">7</span>Úprava: otázka; varianty ako riadky so zaškrtnutím (odškrtnutý sa uložením zmaže, bez JS), 4 viditeľné + „Ďalších 10"; pole nových variantov. Odpoveď v Markdowne (pole, nápoveda). Publikum, zdroje (dokument + článok, riadok sa dá odobrať, prázdny riadok pridá zdroj), cieľový FAQ dokument.</p>
+    <p><span class="ann">8</span>Návrh bol upravený → „Pôvodný návrh z ťažby" (dnešné <code>.pr-original</code>), zbalené.</p>
+    <p><span class="ann">9</span>Úkony, všetky tiché: „Schváliť do FAQ a ďalší" + veta, kam prejde; „Uložiť" (bez schválenia). Pod čiarou „Zamietnuť…" a „Zlúčiť s…" → <code>&amp;act=reject|merge</code> otvorí formulár v karte (rám tmavá).</p>
+    <p><span class="ann">10</span>Zbalené nerozhodnuté (stav 1): otázka, „96 vlákien", štítok výsledku kontroly, „Na rozhodnutie" ako <code>.tag--warn</code>, tiché „Rozhodnúť".</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 tmavá — stavy 1, 3, 4–7 a úkony Zamietnuť / Zlúčiť (stĺpec obsahu)</p>
+  <div class="frame dark" style="width:1440px" id="f-states"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Stav 6 — kontrola beží: namiesto tlačidla v hlavičke tichý stav „Kontrola beží · 23 z 54" (rozhodnutie Jána 11. 10.: kým beží, nový štart sa neponúka). Počty v postupe sú priebežné.</p>
+    <p><span class="ann">2</span>Stav 1 — téma bez rozhodnutia, všetky návrhy zbalené.</p>
+    <p><span class="ann">3</span>Stav 3 — „Dokumenty neriešia": bez zmeny znenia a bez Prevziať / Ponechať; len poznámka kontroly a zoznam dokumentov, proti ktorým sa kontrolovalo. Úprava a úkony ako v stave 2.</p>
+    <p><span class="ann">4</span>Stav 4 — [NA ROZHODNUTIE]: poznámka je žltá <code>.lnote--warn</code> s „?" úplne hore v karte, nad výsledkom kontroly — prvé, čo kurátor vidí. Značka sa v texte nezobrazuje, je z nej nadpis.</p>
+    <p><span class="ann">5</span>Zamietnuť (<code>&amp;act=reject</code>): povinný dôvod, tiché „Zamietnuť", „Zrušiť" je odkaz bez <code>act</code>.</p>
+    <p><span class="ann">6</span>Zlúčiť (<code>&amp;act=merge</code>): otvorené návrhy tej istej témy ako <code>.choice-row</code> s natívnym <code>radio</code>, pod nimi čo sa stane. Funguje bez JS a na telefóne (Q4).</p>
+    <p><span class="ann">7</span>Stav 5 — Rozhodnuté: zbalené riadky „Schválené do FAQ · kto · kedy" s odkazom na FAQ dokument, „Zamietnuté · dôvod", „Zlúčené do …" s odkazom na cieľový návrh.</p>
+    <p><span class="ann">8</span>Stav 7 — téma bez nerozhodnutých: <code>.empty</code> „Všetky návrhy témy sú rozhodnuté." + odkaz na ďalšiu tému s nerozhodnutými.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 svetlá — iPadOS: riadok témy nad obsahom · stav 4 [NA ROZHODNUTIE] · ?topic=gdpr&amp;p=p3c1</p>
+  <div class="row-frames"><div><div class="frame m t" style="width:834px" id="t-detail"></div></div></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Pod 1024 px riadok „Téma 9 z 17 · Ochrana osobných údajov a GDPR ›" v farbe organizácie → <code>?topics=1</code> (zoznam tém na celú šírku, ako rám 390). Q1 z KNIZ-kontrola-suladu-detail.</p>
+    <p><span class="ann">2</span>Poznámka [NA ROZHODNUTIE] je prvá vec v otvorenej karte.</p>
+    <p><span class="ann">3</span>Kontrola „Sedí" — zbalená na jeden riadok s verdiktom a citáciou, bez volieb.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 — iOS: rozhodovanie (tmavá) · ?topics=1 výber témy (svetlá) · Rozhodnuté a hotová téma (tmavá)</p>
+  <div class="row-frames">
+    <div><p class="cap">?topic=prihlasenie&amp;p=p7f2</p><div class="frame m dark" style="width:390px" id="m-detail"></div></div>
+    <div><p class="cap">?topics=1</p><div class="frame m" style="width:390px" id="m-topics"></div></div>
+    <div><p class="cap">?view=decided · téma bez nerozhodnutých</p><div class="frame m dark" style="width:390px" id="m-states"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Riadok témy na celú šírku, terč 60 px.</p>
+    <p><span class="ann">2</span>Prepínač pohľadu cez celú šírku; cs „Nerozhodnuté / K rozhodnutí", en „Undecided / To decide" sa zmestia, počty sú v <code>.view-switch-count</code>. Čipy sa zalamujú, výška 40 px.</p>
+    <p><span class="ann">3</span>Prevziať / Ponechať a úkony karty pod sebou cez celú šírku, 44 px. Zdroj: dokument a článok pod sebou.</p>
+    <p><span class="ann">4</span>Dole len hlavná lišta aplikácie.</p>
+    <p><span class="ann">5</span>Zoznam tém na celú šírku; riadok → <code>?topic=…</code> (bez <code>topics</code>).</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const SM=`<span class="sample">ukážka</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=(a="")=>`<div class="crumbs rel">${a}<a href="#">Kanály</a><span>›</span><a href="#">ISSF Helpdesk</a><span>›</span><b>Návrhy FAQ</b></div>`;
+const tabbar=`<div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span>Knižnica</span><span class="on">Viac</span></div>`;
+const head=(o={})=>`<div class="page-head rel">${o.a||""}<div class="page-head-main"><h1 class="page-title">Návrhy FAQ</h1><p class="page-lead">ISSF Helpdesk · 54 otvorených · 3 roky e-mailov</p></div><div class="page-tools">${o.run?`<span class="run rel">${o.ra||""}<i></i>Kontrola beží · 23 z 54</span>`:`<a class="button button--quiet" href="#">Skontrolovať proti dokumentom</a>`}</div></div>`;
+const prog=(o={})=>`<section class="card rel">${o.a||""}<div class="prog"><div class="prog-top"><b>12 z 66 rozhodnutých</b><span class="quiet" style="font-size:var(--fs-small)">54 ostáva</span></div><div class="bar"><i style="width:18%"></i></div><div class="kinds"><span>Kontrola:</span>${o.run?`<span class="tag">Sedí 4</span><span class="tag">Odlišuje sa 13</span><span class="tag">Dokumenty neriešia 6</span><span class="tag">Rozpor 0</span>`:`<span class="tag">Sedí 11</span><span class="tag">Odlišuje sa 29</span><span class="tag">Dokumenty neriešia 14</span><span class="tag">Rozpor 0</span>`}<span class="tag tag--warn">Na rozhodnutie 6</span></div></div><div class="disc"><div class="disc-sum"><span class="k">Posledná kontrola</span><span>${o.run?"beží od 11. 10. 2026 14:05":"11. 10. 2026 · 4 dokumenty"}</span><span class="chev">⌄</span></div></div></section>`;
+
+const T=[["prihlasenie","Problémy s prihlásením a aktiváciou účtu v ISSF",6,"4 odlišuje sa",2],["prestup","Prestup hráča a odstupné medzi klubmi",6,"5 odlišuje sa",0],["predlzenie","Predĺženie registrácie a licencie hráča",5,"",0],["trener","Vzdelávanie a predĺženie licencie trénera",5,"dokumenty neriešia",0],["registracia","Základná registrácia hráča",4,"",0],["udaje","Úprava údajov a fotografie v registrácii",4,"",0],["poplatok","Úhrada členského poplatku",4,"",1],["striedavy","Správa striedavého štartu",3,"",0],["gdpr","Ochrana osobných údajov a GDPR",2,"",2],
+["hostovanie","Hosťovanie hráča",3,"",1,1],["delegovanie","Delegovanie rozhodcov",2,"",0,1],["zapis","Elektronický zápis o stretnutí",2,"",0,1],["faktury","Faktúry klubu v ISSF",2,"2 odlišuje sa",0,1],["statutar","Zmena štatutára klubu",2,"",0,1],["druzstvo","Prihlásenie družstva do súťaže",2,"",0,1],["pokuty","Disciplinárne pokuty",1,"",0,1],["preukaz","Doklad o registrácii hráča",1,"",0,1],["kontakty","Kontakty na sekretariát",0,"",0,1]];
+const tRow=([k,l,n,sub,d,sm],sel)=>`<a class="form-row${k===sel?" on":""}" href="#"><span class="form-row-main"><b>${l}${sm?" "+SM:""}</b>${sub?`<span class="form-row-sub">${sub}</span>`:""}</span>${d?`<span class="tag tag--warn">${d} na rozhodnutie</span>`:""}${n===0?`<span class="tag tag--published">hotovo</span>`:`<span class="n">${n}</span>`}</a>`;
+const topics=(sel,a="")=>`<div class="side rel">${a}<div class="side-h">Témy · 17 otvorených</div><div class="card"><div class="form-list">${T.map(t=>tRow(t,sel)).join("")}</div></div></div>`;
+const pick=(i,l,n,a="")=>`<a class="card form-row pick rel" href="#">${a}<span class="form-row-main"><span class="k">Téma ${i} z 17</span><b>${l}</b></span><span class="n">${n}</span><span class="chev" style="color:var(--accent)">›</span></a>`;
+
+const VS=(on,c)=>`<nav class="view-switch">${[["open","Nerozhodnuté"],["decision","Na rozhodnutie"],["decided","Rozhodnuté"],["all","Všetky"]].map(([k,l],i)=>`<a class="view-switch-item${k===on?" is-on":""}" href="#">${l}<span class="view-switch-count">${c[i]}</span></a>`).join("")}</nav>`;
+const CH=(c,on="")=>`<div class="chips"><span class="lbl">Kontrola:</span>${[["differs","Odlišuje sa"],["conflict","Rozpor"],["not_covered","Neriešia"],["agree","Sedí"]].map(([k,l],i)=>c[i]?`<a class="chip${k===on?" on":""}" href="#">${l}<span class="c">${c[i]}</span></a>`:`<span class="chip dis">${l}<span class="c">0</span></span>`).join("")}</div>`;
+const topicHead=(l,n,vs,ch,a="")=>`<div class="topic-h rel">${a}<div class="t"><h2>${l}</h2><span class="quiet">${n}</span></div>${vs}${ch}</div>`;
+
+const VER={d:`<span class="tag tag--warn">Odlišuje sa</span>`,n:`<span class="tag">Dokumenty neriešia</span>`,a:`<span class="tag tag--published">Sedí</span>`,x:`<span class="tag tag--bad">Rozpor</span>`};
+const NA=`<span class="tag tag--warn">Na rozhodnutie</span>`;
+const coll=(q,th,v,na,a="")=>`<div class="card fc-row rel">${a}<span class="q"><b>${q}</b><span>${th}</span></span><span class="mk">${na?NA:""}${VER[v]||""}</span><a class="button button--quiet button--sm" href="#">Rozhodnúť</a></div>`;
+
+const P1Q="Zabudol som prihlasovacie meno a heslo do ISSF, ako sa dostanem do účtu?";
+const VARS=["Ako si obnovím heslo do ISSF?","Nefunguje mi aktivačný link na email, čo teraz?","Aké je moje prihlasovacie meno do ISSF? "+SM,"Zabudol som heslo, kto mi ho resetuje? "+SM];
+const vlist=(m)=>`<div class="vlist"><div class="form-list">${VARS.map((v,i)=>`<label class="form-row${i===3?" off":""}"><span class="cb${i===3?"":" on"}">${i===3?"":"✓"}</span><span class="v" style="flex:1">${v}</span></label>`).join("")}</div><div class="vmore">Ďalších 10 variantov</div></div>`;
+const ANS=`Prihlasovacie meno do ISSF nie je e-mailová adresa, ale vaše registračné číslo alebo rodné číslo (bez lomítka).`;
+const review=(m,o={})=>`<div class="rv rel">${o.a||""}<div class="rv-head">${VER.d}<b>Výsledok kontroly</b><span class="quiet">11. 10. 2026</span></div>
+ <p style="margin:0;font-size:15px;max-width:72ch">Návrh posiela obnovu hesla cez matrikára klubu; manuál ju určuje cez „Zabudnuté heslo" na prihlasovacej stránke. ${SM}</p>
+ <div class="blk"><span class="blk-l">Norma</span><p><a href="#">ISSF-01 Konto a prihlásenie, časť 4<span class="ext">↗</span></a></p><blockquote class="quote">Heslo si používateľ obnoví odkazom „Zabudnuté heslo" na prihlasovacej stránke; nový aktivačný e-mail odošle matrikár klubu. ${SM}</blockquote></div>
+ <div class="blk"><span class="blk-l">Zmena odpovede</span><div class="diff">${ANS} Heslo si obnovíte <del>u matrikára svojho klubu</del><ins>odkazom „Zabudnuté heslo" na prihlasovacej stránke ISSF; ak vám nepríde aktivačný e-mail, nový pošle matrikár klubu</ins>. ${SM}</div></div>
+ <div class="acts rel">${o.b||""}<span class="button button--quiet">Prevziať návrh z kontroly</span><span class="button button--quiet">Ponechať pôvodné</span></div></div>`;
+const sel=t=>`<span class="field-input sel">${t}</span>`;
+const edit=(m,o={})=>`<div class="sec2 rel">${o.a||""}<h3 class="sec2-h">Úprava</h3>
+ <label class="field"><span class="field-label">Otázka</span><span class="field-input">${P1Q}</span></label>
+ <div class="field"><span class="field-label">Varianty otázky · 14</span>${vlist(m)}<span class="field-hint">Odškrtnutý variant sa uložením odstráni.</span></div>
+ <label class="field"><span class="field-label">Pridať varianty</span><span class="field-input ph">Každý na nový riadok</span></label>
+ <label class="field"><span class="field-label">Odpoveď</span><span class="field-input ta10">${ANS}\n\nHeslo si obnovíte u matrikára svojho klubu. ${SM}\n\n- Registračné číslo nájdete na doklade o registrácii. ${SM}</span><span class="field-hint">Markdown: **tučné**, zoznam začnite pomlčkou, odkaz [text](adresa).</span></label>
+ <label class="field"><span class="field-label">Publikum</span><span class="field-input">hráči, rodičia, matrikári klubov ${SM}</span><span class="field-hint">Oddeľte čiarkou.</span></label>
+ <div class="field"><span class="field-label">Zdroje</span>
+  <div class="src">${sel("ISSF-01 Konto a prihlásenie")}<span class="field-input art">časť 4</span><span class="x" title="Odobrať zdroj">✕</span></div>
+  <div class="src">${sel("Vyberte dokument")}<span class="field-input ph art">článok</span><span></span></div>
+  <span class="field-hint">Dokument z knižnice a článok alebo časť.</span></div>
+ <div class="field"><span class="field-label">Cieľový FAQ dokument</span>${sel("FAQ ISSF — konto a prihlásenie "+SM)}</div></div>`;
+const orig=a=>`<div class="orig rel">${a||""}<div class="disc-sum"><span class="k">Pôvodný návrh z ťažby</span><span>upravil Ján Letko 10. 10. 2026</span><span class="chev">⌄</span></div></div>`;
+const acts=(o={})=>`<div class="acts rel">${o.a||""}<span class="button button--quiet">Schváliť do FAQ a ďalší</span><span class="button button--quiet">Uložiť</span><span class="quiet">Ďalší: Prečo mi nechodí aktivačný e-mail do ISSF?</span></div>
+ <div class="acts2"><span class="button button--quiet button--sm">Zamietnuť…</span><span class="button button--quiet button--sm">Zlúčiť s…</span></div>`;
+const open1=(m,o={})=>`<article class="card fc is-open rel" id="p7f2">${o.a5||""}<div class="fc-head"><b>${P1Q}</b>${m?"":`<a href="#">Zbaliť</a>`}</div>
+ <p class="who" style="margin:-8px 0 0">187 vlákien · jan 2024 – sep 2026 ${SM}</p>
+ ${review(m,{b:o.a6})}${edit(m,{a:o.a7})}${orig(o.a8)}${acts({a:o.a9})}</article>`;
+const rest1=(a="")=>coll("Prečo mi nechodí aktivačný e-mail do ISSF? "+SM,"96 vlákien","d",1,a)+coll("Ako zmením e-mailovú adresu v konte ISSF? "+SM,"54 vlákien","d")+coll("Môže mať rodič prístup do konta dieťaťa? "+SM,"38 vlákien","n",1)+coll("Konto je zablokované po viacerých pokusoch, čo s tým? "+SM,"31 vlákien","d")+coll("Dá sa prihlásiť do ISSF cez mobil? "+SM,"12 vlákien","a");
+const TH1=(a,m)=>topicHead("Problémy s prihlásením a aktiváciou účtu v ISSF","6 nerozhodnutých",VS("open",[6,2,3,9]),CH([4,0,1,1]),a);
+
+/* 1440 */
+document.getElementById("f-desk").innerHTML=hdr()+crumbs()+`<div class="body">${head({a:an(1,"left:-30px;top:6px")})}${prog({a:an(2,"left:-30px;top:16px")})}
+<div class="split">${topics("prihlasenie",an(3,"left:-30px;top:0"))}<div class="main">${TH1(an(4,"right:-30px;top:0"))}
+<div class="flist">${open1(0,{a5:an(5,"left:-30px;top:16px"),a6:an(6,"left:-41px;top:0"),a7:an(7,"left:-41px;top:14px"),a8:an(8,"left:-41px;top:10px"),a9:an(9,"left:-41px;top:4px")})}${rest1(an(10,"left:-30px;top:16px"))}</div></div></div></div>`;
+
+/* stavy */
+const lab=t=>`<p class="state-l">${t}</p>`;
+const s3=a=>`<article class="card fc is-open rel">${a}<div class="fc-head"><b>Ako si predĺžim trénerskú licenciu? ${SM}</b><a href="#">Zbaliť</a></div><p class="who" style="margin:-8px 0 0">64 vlákien · mar 2024 – sep 2026 ${SM}</p>
+ <div class="rv"><div class="rv-head">${VER.n}<b>Výsledok kontroly</b><span class="quiet">11. 10. 2026</span></div><p style="margin:0;font-size:15px;max-width:72ch">Vybrané dokumenty vzdelávanie trénerov neupravujú. Zdrojom by bola Smernica o vzdelávaní trénerov, ktorá nebola vo výbere. ${SM}</p><p class="who" style="margin:0">Kontrolované proti: RaPP, Súťažný poriadok, ISSF-01, ISSF-02</p></div>
+ <div class="sec2"><h3 class="sec2-h">Úprava</h3><p class="quiet" style="margin:0">… polia ako v stave 2</p></div>${acts()}</article>`;
+const s4=(a,b)=>`<article class="card fc is-open rel">${a||""}<div class="fc-head"><b>Ako požiadam o výmaz svojich osobných údajov z ISSF? ${SM}</b><a href="#">Zbaliť</a></div><p class="who" style="margin:-8px 0 0">22 vlákien · máj 2024 – aug 2026 ${SM}</p>
+ <div class="lnote lnote--warn cnote rel">${b||""}<span class="lnote-mark">?</span><span class="lnote-text"><b>Na rozhodnutie</b>Kam presne podať písomnú žiadosť — na sekretariát SFZ, alebo zodpovednej osobe (DPO)? E-maily helpdesku uvádzajú oboje. ${SM}</span></div>`;
+const s4rest=(a)=>`<div class="rv rel">${a||""}<div class="rv-head">${VER.a}<b>Výsledok kontroly</b><span class="quiet">11. 10. 2026 · <a href="#">Zásady ochrany osobných údajov SFZ, čl. 9<span class="ext">↗</span></a></span></div></div>
+ <div class="sec2"><h3 class="sec2-h">Úprava</h3><label class="field"><span class="field-label">Otázka</span><span class="field-input">Ako požiadam o výmaz svojich osobných údajov z ISSF? ${SM}</span></label><label class="field"><span class="field-label">Odpoveď</span><span class="field-input ta5">Žiadosť o výmaz pošlite písomne … ${SM}</span></label><p class="quiet" style="margin:0">… ďalšie polia ako v stave 2</p></div>${acts()}</article>`;
+const rejectF=a=>`<div class="sub-form rel">${a}<b>Zamietnuť návrh</b><label class="field"><span class="field-label">Dôvod</span><span class="field-input ta3">Odpoveď závisí od klubu, do FAQ nepatrí. ${SM}</span><span class="field-hint">Povinné. Zapíše sa do auditu a ukáže sa v Rozhodnutých.</span></label><div class="acts"><span class="button button--quiet">Zamietnuť</span><a href="#" style="min-height:44px;display:inline-flex;align-items:center">Zrušiť</a></div></div>`;
+const mergeF=(a,m)=>`<div class="sub-form rel">${a}<b>Zlúčiť s návrhom tej istej témy</b><div class="choice-list">${["Zabudol som prihlasovacie meno a heslo do ISSF, ako sa dostanem do účtu?","Ako zmením e-mailovú adresu v konte ISSF? "+SM,"Môže mať rodič prístup do konta dieťaťa? "+SM,"Konto je zablokované po viacerých pokusoch, čo s tým? "+SM].map((q,i)=>`<label class="choice-row"><span class="q"><b style="font-weight:${i?400:600}">${q}</b><span>${[187,54,38,31][i]} vlákien</span></span><span class="tick">${i?"":"✓"}</span></label>`).join("")}</div><p class="field-hint" style="margin:0;font-size:var(--fs-small)">Otázka a varianty prejdú medzi varianty vybraného návrhu, odpoveď do jeho poznámky a zdroje sa spoja. Tento návrh bude „Zlúčený".</p><div class="acts"><span class="button button--quiet">Zlúčiť</span><a href="#" style="min-height:44px;display:inline-flex;align-items:center">Zrušiť</a></div></div>`;
+const dr=(tag,q,who,extra,a="")=>`<div class="card fc-row rel">${a}${tag}<span class="q"><b>${q}</b><span>${who}</span></span>${extra}</div>`;
+const decided=(a="")=>dr(`<span class="tag tag--published">Schválené do FAQ</span>`,"Ako si nastavím nové heslo po prvom prihlásení? "+SM,"Ján Letko · 10. 10. 2026",`<a href="#" style="font-size:14px">FAQ ISSF ↗</a>`,a)+dr(`<span class="tag">Zamietnuté</span>`,"Prečo nevidím v ISSF svoj klub? "+SM,"Mária Kováčová · 10. 10. 2026 · Patrí do témy Základná registrácia, tam je už schválený. "+SM,"")+dr(`<span class="tag">Zlúčené</span>`,"Nejde mi heslo do ISSF "+SM,`Ján Letko · 10. 10. 2026 · do <a href="#">Zabudol som prihlasovacie meno a heslo…</a>`,"");
+const done=(a="")=>`<div class="card empty rel">${a}<div class="empty-title">Všetky návrhy témy sú rozhodnuté.</div><div class="empty-text">Kontakty na sekretariát — 3 schválené, 1 zamietnutý. ${SM}</div><a class="empty-action" href="#" style="font-size:15px;min-height:44px;display:inline-flex;align-items:center">Ďalšia téma: Problémy s prihlásením a aktiváciou účtu v ISSF ›</a></div>`;
+document.getElementById("f-states").innerHTML=hdr()+crumbs()+`<div class="body">${head({run:1,ra:an(1,"left:-30px;top:8px")})}${prog({run:1})}<div class="split"><div></div><div class="main"><div class="flist">
+${lab("1 · Téma bez rozhodnutia — všetky zbalené")}<div class="rel">${an(2,"left:-30px;top:16px")}${coll(P1Q,"187 vlákien","d")}</div>${rest1()}
+${lab("3 · Otvorený návrh „Dokumenty neriešia“")}${s3(an(3,"left:-30px;top:16px"))}
+${lab("4 · Návrh s [NA ROZHODNUTIE]")}${s4("",an(4,"left:-41px;top:0"))}${s4rest()}
+${lab("Úkon Zamietnuť… (&act=reject) — nahradí riadok Zamietnuť / Zlúčiť v karte")}${rejectF(an(5,"left:-30px;top:12px"))}
+${lab("Úkon Zlúčiť s… (&act=merge)")}${mergeF(an(6,"left:-30px;top:12px"))}
+${lab("5 · Rozhodnuté (?view=decided)")}${decided(an(7,"left:-30px;top:16px"))}
+${lab("7 · Téma, v ktorej je všetko rozhodnuté")}${done(an(8,"left:-30px;top:16px"))}
+</div></div></div></div>`;
+
+/* 834 */
+document.getElementById("t-detail").innerHTML=hdr()+crumbs()+`<div class="body">${head()}${prog()}${pick(9,"Ochrana osobných údajov a GDPR","2",an(1,"right:-6px;top:-10px"))}<div class="main">${topicHead("Ochrana osobných údajov a GDPR","2 nerozhodnuté",VS("open",[2,2,0,2]),CH([0,0,0,2]))}<div class="flist">${s4(an(2,"right:-6px;top:-10px"),"")}${s4rest(an(3,"right:-6px;top:-10px"))}${coll("Kto vidí moje údaje v ISSF? "+SM,"9 vlákien","a",1)}</div></div></div>`;
+
+/* 390 */
+document.getElementById("m-detail").innerHTML=hdr(1)+crumbs()+`<div class="body">${head()}${prog()}${pick(1,"Problémy s prihlásením a aktiváciou účtu v ISSF","6",an(1,"right:-6px;top:-10px"))}<div class="rel">${an(2,"right:-6px;top:-10px")}${topicHead("Problémy s prihlásením a aktiváciou účtu v ISSF","6 nerozhodnutých",VS("open",[6,2,3,9]),CH([4,0,1,1]))}</div><div class="flist">${open1(1,{a9:an(3,"right:-6px;top:-10px")})}${rest1()}</div></div>`+`<div class="rel">${an(4,"right:6px;top:-10px")}</div>`+tabbar;
+document.getElementById("m-topics").innerHTML=hdr(1)+crumbs()+`<div class="body">${head()}<div class="rel">${an(5,"right:-6px;top:-10px")}${topics("prihlasenie")}</div></div>`+tabbar;
+document.getElementById("m-states").innerHTML=hdr(1)+crumbs()+`<div class="body">${pick(1,"Problémy s prihlásením a aktiváciou účtu v ISSF","6")}${topicHead("Problémy s prihlásením a aktiváciou účtu v ISSF","6 nerozhodnutých",VS("decided",[6,2,3,9]),"")}<div class="flist">${decided()}</div>${pick(17,"Kontakty na sekretariát "+SM,"0")}${done()}</div>`+tabbar;
+</script>
+</body></html>

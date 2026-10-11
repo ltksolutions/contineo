@@ -8662,6 +8662,73 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
   .cf-dec .decision-option:has(input:checked) .decision-tick { display: inline; color: var(--accent); font-weight: 700; }
 }
 
+/*
+ * Fronta kurátora návrhov FAQ (návrh KANALY-navrhy-faq-kuracia, 11. 10. 2026).
+ * Rozloženie (panel tém, riadok výberu, postup, zbalený / otvorený záznam)
+ * je spoločné s detailom kontroly súladu (`.cf-*`); tu je len to, čo má
+ * návrh navyše: čipy výsledku kontroly, blok kontroly, varianty, zdroje
+ * a formuláre zamietnutia a zlúčenia v karte.
+ */
+.pq-run { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 14px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.pq-run i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); flex: none; }
+.pq-meta-body { padding: 4px 20px 14px; display: grid; gap: 6px; }
+.pq-meta-body p { margin: 0; font-size: 14px; }
+.pq-topic-h { display: grid; gap: 12px; min-width: 0; }
+.pq-topic-t { display: flex; gap: 8px 12px; align-items: baseline; flex-wrap: wrap; }
+.pq-topic-t h2 { margin: 0; font-size: 21px; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.pq-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.pq-chips > .quiet { font-size: var(--fs-small); margin-right: 2px; }
+.pq-chip { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; font-size: 13.5px; white-space: nowrap; }
+a.pq-chip:hover { background: var(--surface-2); }
+.pq-chip.is-on { border-color: var(--ink); font-weight: 600; }
+.pq-chip.is-off { color: var(--muted); }
+.pq-chip-n { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.pq-row { align-items: center; }
+.pq-q { flex: 1 1 300px; min-width: 0; display: grid; gap: 2px; }
+.pq-q b { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.pq-q > span { font-size: var(--fs-small); color: var(--muted); overflow-wrap: anywhere; }
+.pq-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.pq-tags:empty { display: none; }
+.pq-faq { font-size: 14px; min-height: 44px; display: inline-flex; align-items: center; }
+.pq-who { margin: -8px 0 0; font-size: var(--fs-small); }
+.pq-note { align-items: flex-start; }
+.pq-note .lnote-text b { display: block; font-weight: 650; }
+.pq-note-text { white-space: pre-line; overflow-wrap: anywhere; }
+.pq-rv { display: grid; gap: 12px; padding: 14px 16px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); min-width: 0; }
+.pq-rv-head { display: flex; gap: 6px 10px; align-items: center; flex-wrap: wrap; }
+.pq-rv-head b { font-size: 15px; font-weight: 650; }
+.pq-rv-head .quiet { font-size: var(--fs-small); }
+.pq-rv-note { margin: 0; font-size: 15px; max-width: 72ch; white-space: pre-line; }
+.pq-rv .cf-diff { background: var(--surface); }
+.pq-ext { font-size: 12px; margin-left: 3px; }
+.pq-edit { display: grid; gap: 14px; padding-top: 16px; border-top: 1px solid var(--line); min-width: 0; }
+.pq-edit-h { margin: 0; font-size: var(--fs-section); font-weight: 650; }
+.pq-intro { margin: -6px 0 0; max-width: 72ch; }
+.pq-edit textarea { resize: vertical; line-height: 1.5; }
+.pq-more { border-top: 1px solid var(--line); }
+.pq-more > summary { display: flex; align-items: center; min-height: 44px; padding: 0 14px; color: var(--accent); font-size: 14px; cursor: pointer; }
+.pq-src { display: grid; grid-template-columns: minmax(0, 1fr) 160px 44px; gap: 8px; align-items: center; }
+.pq-src > .select, .pq-src .field-input { min-width: 0; }
+.pq-src-x { position: relative; display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: 10px; color: var(--muted); cursor: pointer; }
+.pq-src-x input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.pq-src-x:has(input:checked) { background: var(--bad-bg); color: var(--bad-fg); }
+.pq-src-x:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pq-nofaq { justify-self: start; }
+.pq-acts2 { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 14px; border-top: 1px solid var(--line); }
+.pq-sub { display: grid; gap: 12px; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--bg); min-width: 0; }
+.pq-cancel { min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 639px) {
+  .pq-src { grid-template-columns: minmax(0, 1fr) 44px; }
+  .pq-src > :first-child { grid-column: 1 / -1; }
+  .pq-chip { min-height: 40px; }
+  /* Štyri voľby pohľadu: počet pod popisom, popis sa smie zalomiť (cs/en). */
+  .pq-filter .view-switch-item { flex-direction: column; white-space: normal; line-height: 1.15; min-height: 44px; padding: 4px; font-size: 13px; text-align: center; }
+  .pq-filter .view-switch-count { margin-left: 0; }
+  .pq-acts2 .button, .pq-run { width: 100%; }
+  .pq-rv { padding: 12px; }
+  .pq-meta-body { padding: 4px 14px 12px; }
+}
+
 /* Riadok v zozname kontrol: text vľavo, „Otvoriť" vpravo. */
 .compliance-run { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
 @media (max-width: 639px) {

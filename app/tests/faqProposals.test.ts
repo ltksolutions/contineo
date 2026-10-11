@@ -47,10 +47,16 @@ describe("rozhodnutie kuratora", () => {
 
   it("zamietnutie zmaze povod; o rozhodnutom navrhu sa druhy raz nerozhodne", async () => {
     col.findOne.mockResolvedValue(proposal())
-    await rejectProposal("SFZ", "k", "p1", "kurator@x.sk")
-    expect(col.updateOne.mock.calls[0][1].$set).toMatchObject({ status: "rejected", origin: null })
+    await rejectProposal("SFZ", "k", "p1", "kurator@x.sk", " Patrí do inej témy. ")
+    expect(col.updateOne.mock.calls[0][1].$set).toMatchObject({ status: "rejected", origin: null, rejectReason: "Patrí do inej témy." })
     col.findOne.mockResolvedValue(proposal({ status: "rejected" }))
-    await expect(rejectProposal("SFZ", "k", "p1", "kurator@x.sk")).rejects.toMatchObject({ code: "proposal.decided" })
+    await expect(rejectProposal("SFZ", "k", "p1", "kurator@x.sk", "dôvod")).rejects.toMatchObject({ code: "proposal.decided" })
+  })
+
+  it("zamietnutie bez dôvodu sa neuloží (Q7)", async () => {
+    col.findOne.mockResolvedValue(proposal())
+    await expect(rejectProposal("SFZ", "k", "p1", "kurator@x.sk", "  ")).rejects.toMatchObject({ code: "proposal.reasonRequired" })
+    expect(col.updateOne).not.toHaveBeenCalled()
   })
 
   it("zlucenie prenesie otazku medzi varianty ciela a zluceny navrh strati povod", async () => {

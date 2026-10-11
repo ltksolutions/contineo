@@ -2731,6 +2731,69 @@ interface Dictionary {
     reviewApplied: string
     reviewDismissed: string
     reviewDecision: Record<"applied" | "dismissed", string>
+    proposalsLead: (channel: string, open: number, period: string | null) => string
+    periodLabel: (months: number) => string
+    reviewRunningShort: (done: number, total: number) => string
+    proposalCancel: string
+    decidedOf: (decided: number, total: number) => string
+    remaining: (n: number) => string
+    reviewLabel: string
+    reviewVerdictsShort: Record<"differs" | "conflict" | "not_covered" | "agree", string>
+    reviewVerdictsChip: Record<"differs" | "conflict" | "not_covered" | "agree", string>
+    decisionCount: (n: number) => string
+    reviewLast: string
+    reviewLastSummary: (date: string, docs: number) => string
+    reviewRunningSince: (date: string) => string
+    topicsHeading: (open: number) => string
+    topicDiffers: (n: number) => string
+    topicNotCovered: string
+    topicDecision: (n: number) => string
+    topicDone: string
+    topicPosition: (i: number, n: number) => string
+    openInTopic: (n: number) => string
+    proposalsViewAll: string
+    threadsCount: (n: string) => string
+    decide: string
+    collapse: string
+    decisionNote: string
+    reviewHeading: string
+    reviewNorm: string
+    opensNewWindow: string
+    reviewChange: string
+    reviewQuestionChange: string
+    editHeading: string
+    variantsCount: (n: number) => string
+    variantRemoveHint: string
+    moreVariants: (n: number) => string
+    variantsAdd: string
+    variantsAddHint: string
+    markdownHint: string
+    sourcesLabel: string
+    sourceDocPlaceholder: string
+    sourceRef: string
+    sourceRemove: (title: string) => string
+    sourcesHint: string
+    noSourceTag: string
+    approveNext: string
+    approveOnly: string
+    saveShort: string
+    nextIs: (question: string) => string
+    lastOpen: string
+    rejectOpen: string
+    mergeOpen: string
+    rejectTitle: string
+    rejectReason: string
+    rejectReasonHint: string
+    mergeTitle: string
+    mergeExplain: string
+    proposalStatusTag: Record<"approved" | "merged" | "rejected", string>
+    mergedIntoLabel: string
+    faqLink: string
+    topicAllDecided: string
+    topicSummary: (approved: number, rejected: number, merged: number) => string
+    nextTopic: (topic: string) => string
+    reviewNotCoveredAgainst: (list: string) => string
+    decidedNone: string
     save: string
     saved: string
     created: string
@@ -6233,6 +6296,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.decided": "O návrhu už niekto rozhodol.",
     "proposal.mergeSelf": "Návrh sa nedá zlúčiť sám so sebou.",
     "proposal.noReview": "Návrh nemá výsledok kontroly na prevzatie.",
+    "proposal.reasonRequired": "Uveďte dôvod zamietnutia.",
     "compliance.noDocuments": "Vyberte aspoň jeden dokument.",
     "compliance.unknownDocument": "Niektorý z vybraných dokumentov tu nie je.",
     "compliance.notPublic": "Verejný obsah možno kontrolovať len verejnými dokumentmi — „{title}“ verejný nie je.",
@@ -7576,12 +7640,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     harvestExclusionsAdded: (n: number) => `Pridaných vylúčených adries: ${n}.`,
     proposals: "Návrhy FAQ z helpdesku",
     proposalsIntro: "Návrhy vznikli z odpovedí helpdesku za obdobie zvolené pri ťažbe. Pred schválením skontrolujte, že odpoveď neobsahuje meno ani iný údaj konkrétnej osoby a že platí dnes. Schválený záznam ide do konceptu vybraného FAQ dokumentu a zverejní sa až jeho schválením. Odkaz na e-maily sa po rozhodnutí zmaže.",
-    proposalsViewOpen: "Otvorené",
+    proposalsViewOpen: "Nerozhodnuté",
     proposalsViewDecided: "Rozhodnuté",
     proposalsEmpty: "Žiadne návrhy na rozhodnutie.",
     proposalsNoFaq: "V knižnici kanála nie je FAQ dokument — založte ho v Knižnici → Nový dokument → FAQ.",
     proposalTopic: "Téma",
-    proposalThreads: (threads: string, first: string, last: string) => `${threads} otázok v histórii · ${first} – ${last}`,
+    proposalThreads: (threads: string, first: string, last: string) => `${threads} vlákien · ${first} – ${last}`,
     proposalChanged: "odpoveď sa v čase menila",
     proposalNormConflict: "rozchádza sa s normou",
     proposalNote: "Poznámka pre kurátora",
@@ -7609,7 +7673,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalOriginalIntro: "Prečiarknuté oproti pôvodnému návrhu vypadlo, podčiarknuté pribudlo.",
     proposalNoChanges: "Bez zmien oproti pôvodnému návrhu.",
     proposalEdited: (who: string, when: string) => `Upravené ${when}, ${who}`,
-    proposalsViewDecision: "Treba rozhodnúť",
+    proposalsViewDecision: "Na rozhodnutie",
     proposalsViewNoSource: "Bez zdroja",
     proposalTopicFilter: "Téma",
     proposalTopicAll: "Všetky témy",
@@ -7642,6 +7706,69 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewApplied: "Návrh z kontroly je prevzatý; pôvodné znenie ostáva v porovnaní.",
     reviewDismissed: "Ponechané pôvodné znenie.",
     reviewDecision: { applied: "prevzaté", dismissed: "ponechané pôvodné" },
+    proposalsLead: (c, n, p) => [c, `${n} ${n === 1 ? "otvorený" : n >= 2 && n <= 4 ? "otvorené" : "otvorených"}`, p].filter(Boolean).join(" · "),
+    periodLabel: m => m >= 12 ? `${Math.round(m / 12)} ${Math.round(m / 12) === 1 ? "rok" : Math.round(m / 12) <= 4 ? "roky" : "rokov"} e-mailov` : `${m} ${m === 1 ? "mesiac" : m <= 4 ? "mesiace" : "mesiacov"} e-mailov`,
+    reviewRunningShort: (d, n) => `Kontrola beží · ${d} z ${n}`,
+    proposalCancel: "Zrušiť",
+    decidedOf: (d, n) => `${d} z ${n} rozhodnutých`,
+    remaining: n => `${n} ostáva`,
+    reviewLabel: "Kontrola:",
+    reviewVerdictsShort: { agree: "Sedí", differs: "Odlišuje sa", not_covered: "Dokumenty neriešia", conflict: "Rozpor" },
+    reviewVerdictsChip: { differs: "Odlišuje sa", conflict: "Rozpor", not_covered: "Neriešia", agree: "Sedí" },
+    decisionCount: n => `Na rozhodnutie ${n}`,
+    reviewLast: "Posledná kontrola",
+    reviewLastSummary: (d, n) => `${d} · ${n} ${n === 1 ? "dokument" : n <= 4 ? "dokumenty" : "dokumentov"}`,
+    reviewRunningSince: d => `beží od ${d}`,
+    topicsHeading: n => `Témy · ${n} ${n === 1 ? "otvorená" : n <= 4 ? "otvorené" : "otvorených"}`,
+    topicDiffers: n => `${n} odlišuje sa`,
+    topicNotCovered: "dokumenty neriešia",
+    topicDecision: n => `${n} na rozhodnutie`,
+    topicDone: "hotovo",
+    topicPosition: (i, n) => `Téma ${i} z ${n}`,
+    openInTopic: n => `${n} ${n === 1 ? "nerozhodnutý" : n <= 4 ? "nerozhodnuté" : "nerozhodnutých"}`,
+    proposalsViewAll: "Všetky",
+    threadsCount: n => `${n} vlákien`,
+    decide: "Rozhodnúť",
+    collapse: "Zbaliť",
+    decisionNote: "Na rozhodnutie",
+    reviewHeading: "Výsledok kontroly",
+    reviewNorm: "Norma",
+    opensNewWindow: "otvorí sa v novom okne",
+    reviewChange: "Zmena odpovede",
+    reviewQuestionChange: "Zmena otázky",
+    editHeading: "Úprava",
+    variantsCount: n => `Varianty otázky · ${n}`,
+    variantRemoveHint: "Odškrtnutý variant sa uložením odstráni.",
+    moreVariants: n => `Ďalších ${n} ${n === 1 ? "variant" : n <= 4 ? "varianty" : "variantov"}`,
+    variantsAdd: "Pridať varianty",
+    variantsAddHint: "Každý na nový riadok.",
+    markdownHint: "Markdown: **tučné**, zoznam začnite pomlčkou, odkaz [text](adresa).",
+    sourcesLabel: "Zdroje",
+    sourceDocPlaceholder: "Vyberte dokument",
+    sourceRef: "Článok alebo časť",
+    sourceRemove: t => `Odobrať zdroj ${t}`,
+    sourcesHint: "Dokument z knižnice a článok alebo časť. Prázdny riadok pridá zdroj.",
+    noSourceTag: "bez zdroja",
+    approveNext: "Schváliť do FAQ a ďalší",
+    approveOnly: "Schváliť do FAQ",
+    saveShort: "Uložiť",
+    nextIs: q => `Ďalší: ${q}`,
+    lastOpen: "Posledný nerozhodnutý návrh.",
+    rejectOpen: "Zamietnuť…",
+    mergeOpen: "Zlúčiť s…",
+    rejectTitle: "Zamietnuť návrh",
+    rejectReason: "Dôvod",
+    rejectReasonHint: "Povinné. Zapíše sa do auditu a ukáže sa v Rozhodnutých.",
+    mergeTitle: "Zlúčiť s návrhom tej istej témy",
+    mergeExplain: "Otázka a varianty prejdú medzi varianty vybraného návrhu, odpoveď do jeho poznámky a zdroje sa spoja. Tento návrh bude „Zlúčený“.",
+    proposalStatusTag: { approved: "Schválené do FAQ", merged: "Zlúčené", rejected: "Zamietnuté" },
+    mergedIntoLabel: "do",
+    faqLink: "FAQ",
+    topicAllDecided: "Všetky návrhy témy sú rozhodnuté.",
+    topicSummary: (a, r, m) => [a ? `${a} schválené` : "", r ? `${r} zamietnuté` : "", m ? `${m} zlúčené` : ""].filter(Boolean).join(", "),
+    nextTopic: t => `Ďalšia téma: ${t}`,
+    reviewNotCoveredAgainst: l => `Kontrolované proti: ${l}`,
+    decidedNone: "Zatiaľ nie je rozhodnutý žiadny návrh témy.",
     save: "Uložiť kanál",
     saved: "Kanál je uložený.",
     created: "Kanál je založený.",
@@ -11002,6 +11129,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.decided": "O návrhu už někdo rozhodl.",
     "proposal.mergeSelf": "Návrh nelze sloučit sám se sebou.",
     "proposal.noReview": "Návrh nemá výsledek kontroly k převzetí.",
+    "proposal.reasonRequired": "Uveďte důvod zamítnutí.",
     "compliance.noDocuments": "Vyberte alespoň jeden dokument.",
     "compliance.unknownDocument": "Některý z vybraných dokumentů tu není.",
     "compliance.notPublic": "Veřejný obsah lze kontrolovat jen veřejnými dokumenty — „{title}“ veřejný není.",
@@ -12343,12 +12471,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     harvestExclusionsAdded: (n: number) => `Přidaných vyloučených adres: ${n}.`,
     proposals: "Návrhy FAQ z helpdesku",
     proposalsIntro: "Návrhy vznikly z odpovědí helpdesku za období zvolené při těžbě. Před schválením zkontrolujte, že odpověď neobsahuje jméno ani jiný údaj konkrétní osoby a že platí dnes. Schválený záznam jde do konceptu vybraného FAQ dokumentu a zveřejní se až jeho schválením. Odkaz na e-maily se po rozhodnutí smaže.",
-    proposalsViewOpen: "Otevřené",
+    proposalsViewOpen: "Nerozhodnuté",
     proposalsViewDecided: "Rozhodnuté",
     proposalsEmpty: "Žádné návrhy k rozhodnutí.",
     proposalsNoFaq: "V knihovně kanálu není FAQ dokument — založte ho v Knihovně → Nový dokument → FAQ.",
     proposalTopic: "Téma",
-    proposalThreads: (threads: string, first: string, last: string) => `${threads} otázek v historii · ${first} – ${last}`,
+    proposalThreads: (threads: string, first: string, last: string) => `${threads} vláken · ${first} – ${last}`,
     proposalChanged: "odpověď se v čase měnila",
     proposalNormConflict: "rozchází se s normou",
     proposalNote: "Poznámka pro kurátora",
@@ -12376,7 +12504,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalOriginalIntro: "Přeškrtnuté oproti původnímu návrhu vypadlo, podtržené přibylo.",
     proposalNoChanges: "Beze změn oproti původnímu návrhu.",
     proposalEdited: (who: string, when: string) => `Upraveno ${when}, ${who}`,
-    proposalsViewDecision: "Je třeba rozhodnout",
+    proposalsViewDecision: "K rozhodnutí",
     proposalsViewNoSource: "Bez zdroje",
     proposalTopicFilter: "Téma",
     proposalTopicAll: "Všechna témata",
@@ -12409,6 +12537,69 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewApplied: "Návrh z kontroly je převzatý; původní znění zůstává v porovnání.",
     reviewDismissed: "Ponecháno původní znění.",
     reviewDecision: { applied: "převzato", dismissed: "ponecháno původní" },
+    proposalsLead: (c, n, p) => [c, `${n} ${n === 1 ? "otevřený" : n >= 2 && n <= 4 ? "otevřené" : "otevřených"}`, p].filter(Boolean).join(" · "),
+    periodLabel: m => m >= 12 ? `${Math.round(m / 12)} ${Math.round(m / 12) === 1 ? "rok" : Math.round(m / 12) <= 4 ? "roky" : "let"} e-mailů` : `${m} ${m === 1 ? "měsíc" : m <= 4 ? "měsíce" : "měsíců"} e-mailů`,
+    reviewRunningShort: (d, n) => `Kontrola běží · ${d} z ${n}`,
+    proposalCancel: "Zrušit",
+    decidedOf: (d, n) => `${d} z ${n} rozhodnuto`,
+    remaining: n => `${n} zbývá`,
+    reviewLabel: "Kontrola:",
+    reviewVerdictsShort: { agree: "Sedí", differs: "Liší se", not_covered: "Dokumenty neřeší", conflict: "Rozpor" },
+    reviewVerdictsChip: { differs: "Liší se", conflict: "Rozpor", not_covered: "Neřeší", agree: "Sedí" },
+    decisionCount: n => `K rozhodnutí ${n}`,
+    reviewLast: "Poslední kontrola",
+    reviewLastSummary: (d, n) => `${d} · ${n} ${n === 1 ? "dokument" : n <= 4 ? "dokumenty" : "dokumentů"}`,
+    reviewRunningSince: d => `běží od ${d}`,
+    topicsHeading: n => `Témata · ${n} ${n === 1 ? "otevřené" : n <= 4 ? "otevřená" : "otevřených"}`,
+    topicDiffers: n => `${n} se liší`,
+    topicNotCovered: "dokumenty neřeší",
+    topicDecision: n => `${n} k rozhodnutí`,
+    topicDone: "hotovo",
+    topicPosition: (i, n) => `Téma ${i} z ${n}`,
+    openInTopic: n => `${n} ${n === 1 ? "nerozhodnutý" : n <= 4 ? "nerozhodnuté" : "nerozhodnutých"}`,
+    proposalsViewAll: "Všechny",
+    threadsCount: n => `${n} vláken`,
+    decide: "Rozhodnout",
+    collapse: "Sbalit",
+    decisionNote: "K rozhodnutí",
+    reviewHeading: "Výsledek kontroly",
+    reviewNorm: "Norma",
+    opensNewWindow: "otevře se v novém okně",
+    reviewChange: "Změna odpovědi",
+    reviewQuestionChange: "Změna otázky",
+    editHeading: "Úprava",
+    variantsCount: n => `Varianty otázky · ${n}`,
+    variantRemoveHint: "Odškrtnutá varianta se uložením odstraní.",
+    moreVariants: n => `Dalších ${n} ${n === 1 ? "varianta" : n <= 4 ? "varianty" : "variant"}`,
+    variantsAdd: "Přidat varianty",
+    variantsAddHint: "Každou na nový řádek.",
+    markdownHint: "Markdown: **tučně**, seznam začněte pomlčkou, odkaz [text](adresa).",
+    sourcesLabel: "Zdroje",
+    sourceDocPlaceholder: "Vyberte dokument",
+    sourceRef: "Článek nebo část",
+    sourceRemove: t => `Odebrat zdroj ${t}`,
+    sourcesHint: "Dokument z knihovny a článek nebo část. Prázdný řádek přidá zdroj.",
+    noSourceTag: "bez zdroje",
+    approveNext: "Schválit do FAQ a další",
+    approveOnly: "Schválit do FAQ",
+    saveShort: "Uložit",
+    nextIs: q => `Další: ${q}`,
+    lastOpen: "Poslední nerozhodnutý návrh.",
+    rejectOpen: "Zamítnout…",
+    mergeOpen: "Sloučit s…",
+    rejectTitle: "Zamítnout návrh",
+    rejectReason: "Důvod",
+    rejectReasonHint: "Povinné. Zapíše se do auditu a ukáže se v Rozhodnutých.",
+    mergeTitle: "Sloučit s návrhem stejného tématu",
+    mergeExplain: "Otázka a varianty přejdou mezi varianty vybraného návrhu, odpověď do jeho poznámky a zdroje se spojí. Tento návrh bude „Sloučený“.",
+    proposalStatusTag: { approved: "Schváleno do FAQ", merged: "Sloučeno", rejected: "Zamítnuto" },
+    mergedIntoLabel: "do",
+    faqLink: "FAQ",
+    topicAllDecided: "Všechny návrhy tématu jsou rozhodnuté.",
+    topicSummary: (a, r, m) => [a ? `${a} schválené` : "", r ? `${r} zamítnuté` : "", m ? `${m} sloučené` : ""].filter(Boolean).join(", "),
+    nextTopic: t => `Další téma: ${t}`,
+    reviewNotCoveredAgainst: l => `Kontrolováno proti: ${l}`,
+    decidedNone: "Zatím není rozhodnutý žádný návrh tématu.",
     save: "Uložit kanál",
     saved: "Kanál je uložen.",
     created: "Kanál je založen.",
@@ -15760,6 +15951,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.decided": "Someone has already decided on this proposal.",
     "proposal.mergeSelf": "A proposal cannot be merged with itself.",
     "proposal.noReview": "The proposal has no check result to take over.",
+    "proposal.reasonRequired": "Give a reason for rejecting.",
     "compliance.noDocuments": "Select at least one document.",
     "compliance.unknownDocument": "One of the selected documents does not exist here.",
     "compliance.notPublic": "Public content can be checked only against public documents — “{title}” is not public.",
@@ -17101,12 +17293,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     harvestExclusionsAdded: (n: number) => `Excluded addresses added: ${n}.`,
     proposals: "FAQ proposals from the helpdesk",
     proposalsIntro: "The proposals come from helpdesk answers over the period chosen for mining. Before approving, check that the answer contains no name or other detail of a specific person and that it is still valid today. An approved entry goes to the draft of the selected FAQ document and is published only when that draft is approved. The reference to the e-mails is deleted after your decision.",
-    proposalsViewOpen: "Open",
+    proposalsViewOpen: "Undecided",
     proposalsViewDecided: "Decided",
     proposalsEmpty: "No proposals to decide.",
     proposalsNoFaq: "The channel library has no FAQ document — create one in Library → New document → FAQ.",
     proposalTopic: "Topic",
-    proposalThreads: (threads: string, first: string, last: string) => `${threads} questions in history · ${first} – ${last}`,
+    proposalThreads: (threads: string, first: string, last: string) => `${threads} threads · ${first} – ${last}`,
     proposalChanged: "the answer changed over time",
     proposalNormConflict: "differs from the rules",
     proposalNote: "Note for the curator",
@@ -17134,7 +17326,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalOriginalIntro: "Struck-through text was removed from the original proposal, underlined text was added.",
     proposalNoChanges: "No changes from the original proposal.",
     proposalEdited: (who: string, when: string) => `Edited ${when} by ${who}`,
-    proposalsViewDecision: "Needs a decision",
+    proposalsViewDecision: "To decide",
     proposalsViewNoSource: "No source",
     proposalTopicFilter: "Topic",
     proposalTopicAll: "All topics",
@@ -17167,6 +17359,69 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reviewApplied: "The proposal from the check was taken over; the original wording stays in the comparison.",
     reviewDismissed: "The original wording was kept.",
     reviewDecision: { applied: "taken over", dismissed: "original kept" },
+    proposalsLead: (c, n, p) => [c, `${n} open`, p].filter(Boolean).join(" · "),
+    periodLabel: m => m >= 12 ? `${Math.round(m / 12)} ${Math.round(m / 12) === 1 ? "year" : "years"} of e-mails` : `${m} ${m === 1 ? "month" : "months"} of e-mails`,
+    reviewRunningShort: (d, n) => `Check running · ${d} of ${n}`,
+    proposalCancel: "Cancel",
+    decidedOf: (d, n) => `${d} of ${n} decided`,
+    remaining: n => `${n} left`,
+    reviewLabel: "Check:",
+    reviewVerdictsShort: { agree: "Matches", differs: "Differs", not_covered: "Not covered", conflict: "Conflict" },
+    reviewVerdictsChip: { differs: "Differs", conflict: "Conflict", not_covered: "Not covered", agree: "Matches" },
+    decisionCount: n => `To decide ${n}`,
+    reviewLast: "Last check",
+    reviewLastSummary: (d, n) => `${d} · ${n} ${n === 1 ? "document" : "documents"}`,
+    reviewRunningSince: d => `running since ${d}`,
+    topicsHeading: n => `Topics · ${n} open`,
+    topicDiffers: n => `${n} differ`,
+    topicNotCovered: "not covered",
+    topicDecision: n => `${n} to decide`,
+    topicDone: "done",
+    topicPosition: (i, n) => `Topic ${i} of ${n}`,
+    openInTopic: n => `${n} undecided`,
+    proposalsViewAll: "All",
+    threadsCount: n => `${n} threads`,
+    decide: "Decide",
+    collapse: "Collapse",
+    decisionNote: "To decide",
+    reviewHeading: "Check result",
+    reviewNorm: "Rule",
+    opensNewWindow: "opens in a new window",
+    reviewChange: "Change of answer",
+    reviewQuestionChange: "Change of question",
+    editHeading: "Edit",
+    variantsCount: n => `Question variants · ${n}`,
+    variantRemoveHint: "An unticked variant is removed when you save.",
+    moreVariants: n => `${n} more ${n === 1 ? "variant" : "variants"}`,
+    variantsAdd: "Add variants",
+    variantsAddHint: "One per line.",
+    markdownHint: "Markdown: **bold**, start a list with a dash, link [text](address).",
+    sourcesLabel: "Sources",
+    sourceDocPlaceholder: "Choose a document",
+    sourceRef: "Article or section",
+    sourceRemove: t => `Remove source ${t}`,
+    sourcesHint: "A library document and an article or section. The empty row adds a source.",
+    noSourceTag: "no source",
+    approveNext: "Approve to FAQ and next",
+    approveOnly: "Approve to FAQ",
+    saveShort: "Save",
+    nextIs: q => `Next: ${q}`,
+    lastOpen: "Last undecided proposal.",
+    rejectOpen: "Reject…",
+    mergeOpen: "Merge with…",
+    rejectTitle: "Reject proposal",
+    rejectReason: "Reason",
+    rejectReasonHint: "Required. It is written to the audit log and shown under Decided.",
+    mergeTitle: "Merge with a proposal of the same topic",
+    mergeExplain: "The question and variants move to the chosen proposal's variants, the answer to its note, and the sources are combined. This proposal becomes “Merged”.",
+    proposalStatusTag: { approved: "Approved to FAQ", merged: "Merged", rejected: "Rejected" },
+    mergedIntoLabel: "into",
+    faqLink: "FAQ",
+    topicAllDecided: "All proposals of this topic are decided.",
+    topicSummary: (a, r, m) => [a ? `${a} approved` : "", r ? `${r} rejected` : "", m ? `${m} merged` : ""].filter(Boolean).join(", "),
+    nextTopic: t => `Next topic: ${t}`,
+    reviewNotCoveredAgainst: l => `Checked against: ${l}`,
+    decidedNone: "No proposal of this topic is decided yet.",
     save: "Save channel",
     saved: "The channel is saved.",
     created: "The channel is created.",
