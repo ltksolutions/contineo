@@ -109,14 +109,14 @@ export default function ConnectorDetail({ c, channels, query, language, redirect
         <h2 className="form-group-head">{t.about}</h2>
         <div className="card connector-about">
           {s && (s.title || s.name) && (
-            <div className="lc"><span>{t.aboutName}</span><span>{[s.title, s.name].filter(Boolean).filter((x, i, xs) => xs.indexOf(x) === i).join(" · ")}</span></div>
+            <div className="labeled-row"><span>{t.aboutName}</span><span>{[s.title, s.name].filter(Boolean).filter((x, i, xs) => xs.indexOf(x) === i).join(" · ")}</span></div>
           )}
-          {s?.version && <div className="lc"><span>{t.aboutVersion}</span><span>{s.version}</span></div>}
-          {s?.websiteUrl && <div className="lc"><span>{t.aboutWeb}</span><span><a href={s.websiteUrl} target="_blank" rel="noreferrer noopener">{s.websiteUrl}</a></span></div>}
-          <div className="lc"><span>{t.aboutEndpoint}</span><span><code>{c.endpoint}</code></span></div>
-          <div className="lc"><span>{t.aboutAuth}</span><span>{c.auth.customClient ? t.authCustom : t.authAuto}</span></div>
+          {s?.version && <div className="labeled-row"><span>{t.aboutVersion}</span><span>{s.version}</span></div>}
+          {s?.websiteUrl && <div className="labeled-row"><span>{t.aboutWeb}</span><span><a href={s.websiteUrl} target="_blank" rel="noreferrer noopener">{s.websiteUrl}</a></span></div>}
+          <div className="labeled-row"><span>{t.aboutEndpoint}</span><span><code>{c.endpoint}</code></span></div>
+          <div className="labeled-row"><span>{t.aboutAuth}</span><span>{c.auth.customClient ? t.authCustom : t.authAuto}</span></div>
           {s?.instructions && (
-            <div className="lc">
+            <div className="labeled-row">
               <span>{t.aboutInstructions}</span>
               <span className="connector-instr">
                 {/* Pokyny sú obsah zo servera, nie pokyn pre nás ani pre model (D174, Q13). */}
