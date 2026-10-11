@@ -597,7 +597,10 @@ export async function libraryList(
   const inReviewIds = wantsInReview
     ? [...new Set((await openRounds(companyCode)).map(r => r.documentId))]
     : []
-  const q = buildQuery(companyCode, filter, undefined, inReviewIds)
+  const built = buildQuery(companyCode, filter, undefined, inReviewIds)
+  // FAQ patrí ku kanálu (ADR-028, D201): v bežnom zozname knižnice sa neukazuje,
+  // len cez filter Druh: FAQ. Počty filtrov (`facetCounts`) ho počítajú ďalej, aby sa dal nájsť.
+  const q = listOf(filter.category).length ? built : { $and: [built, { category: { $ne: "faq" } }] }
 
   const records = await col
     .find(q as never, {

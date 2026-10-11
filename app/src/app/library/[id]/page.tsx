@@ -7,6 +7,7 @@
  * Rám z Claude Design: `docs/design/KNIZNICA-postup-znenia.md`.
  */
 
+import { channelsOfFaq } from "@/lib/channels"
 import { notFound, redirect } from "next/navigation"
 import { basesOf } from "@/lib/versionResponsibility"
 import { treeOptions } from "@/lib/treeOptions"
@@ -788,6 +789,8 @@ export default async function DocumentDetailPage({
    * **je** príprava.
    */
   const isFaq = chunkingStrategyFor(d.category) === "entries"
+  // FAQ patrí ku kanálu (ADR-028, D201) — poznámka, ku ktorému.
+  const faqChannels = isFaq ? await channelsOfFaq(ctx.tenant.companyCode, d.documentId) : []
   const tfaq = dictionary(language).library.faq
 
   return (
@@ -796,6 +799,12 @@ export default async function DocumentDetailPage({
               trail={editDocument ? { [base]: d.title } : undefined}>
     <div className="detail-page" style={tenantStyle(branding)}>
       <Notice language={language} message={message} error={error === "1"} back={base} />
+      {faqChannels.length > 0 && (
+        <p className="quiet" style={{ margin: "0 0 12px" }}>
+          {dictionary(language).channels.faqBelongsTo(faqChannels.map(ch => ch.name).join(", "))}{" "}
+          {faqChannels.map(ch => <Link key={ch.key} href={`/channels/${encodeURIComponent(ch.key)}/faq`}>{ch.name}</Link>)}
+        </p>
+      )}
 
       {/*
         Úprava dokumentu ako samostatný pohľad (rám KNIZNICA-uprava-dokumentu):

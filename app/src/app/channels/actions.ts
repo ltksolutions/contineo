@@ -13,7 +13,7 @@ import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
-import { saveChannel, removeChannel, verifyMailbox, syncChannel, rotateWidgetSecret } from "@/lib/channels"
+import { ensureChannelFaq, saveChannel, removeChannel, verifyMailbox, syncChannel, rotateWidgetSecret } from "@/lib/channels"
 import { mineFaqDrafts } from "@/lib/faqMining"
 import { startAnalysis, continueAnalysis } from "@/lib/historyAnalysis"
 import { startHarvest, continueHarvest, addExclusions } from "@/lib/faqHarvest"
@@ -70,6 +70,8 @@ export async function saveChannelAction(fd: FormData) {
         : null,
     }, ctx.person.email)
     key = saved.key
+    // FAQ vzniká s kanálom (ADR-028, D201); pri úprave sa doplní, ak chýba.
+    await ensureChannelFaq(ctx.person.companyCode, saved, ctx.person.email)
   } catch (e) {
     if (isRedirect(e)) throw e
     if (isNew) {

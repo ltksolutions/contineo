@@ -5,6 +5,7 @@
  * ani keď kanál spravuje — dostane 404, nie prázdny zoznam (D170).
  */
 
+import { isContentManager } from "@/lib/library"
 import { notFound, redirect } from "next/navigation"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
@@ -45,7 +46,7 @@ export default async function ChannelTicketsPage({ params, searchParams }: { par
         <span className="page-head-spacer" />
         <span className="tag">{tc.kinds[channel.kind]}</span>
       </div>
-      <ChannelPartTabs channelKey={key} current={base} canTickets canSettings={ctx.isAdmin} language={language} />
+      <ChannelPartTabs channelKey={key} current={base} canTickets canSettings={ctx.isAdmin} canContent={isContentManager(ctx.person)} hasFaq={Boolean(channel.faqDocumentId)} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
       <Notice message={msg} error={error === "1"} back={base} language={language} />
       <TicketList tickets={tickets} view={view} base={base} channelName={new Map([[key, channel.name]])}
