@@ -17,7 +17,7 @@ import { complianceViewContext } from "@/lib/complianceAccess"
 import { documentRun, runUsage, runModel, MAX_FAILURES, FINDING_KINDS, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
+import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { decideFindingAction, applyFindingAction } from "../../complianceActions"
 
@@ -89,7 +89,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
     [t.metaModel, model ?? t.metaUnknown],
     [t.metaCalls, usage ? t.calls(usage.calls, usage.failed) : t.metaUnknown],
     [t.metaTokens, usage ? t.tokens(usage.input + usage.cacheWrite, usage.output, usage.cacheRead) : t.metaUnknown],
-    [t.metaCost, usage ? `${usage.usd.toFixed(2)} USD` : t.metaUnknown],
+    [t.metaCost, usage ? `${formatAmount(usage.usd, language)} USD` : t.metaUnknown],
     [t.references, `${run.documents.map(d => `${d.title}${d.state === "draft" ? ` (${t.draftMark})` : d.label ? ` (${d.label})` : ""}`).join(", ")} · ${t.steps(run.steps)}`],
   ]
   const back = `/library/compliance/${encodeURIComponent(run.runId)}`

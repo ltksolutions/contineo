@@ -80,6 +80,11 @@ export function formatDate(d: Date, language: UiLanguage = DEFAULT_LANGUAGE): st
 }
 
 /** Číslo s oddeľovačom tisícov podľa jazyka prostredia (12 345 / 12,345). */
+/** Suma s dvoma desatinnými miestami podľa jazyka — „6,81" po slovensky, nie „6.81". */
+export function formatAmount(n: number, language: UiLanguage = DEFAULT_LANGUAGE): string {
+  return n.toLocaleString(language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 export function formatNumber(n: number, language: UiLanguage = DEFAULT_LANGUAGE): string {
   return n.toLocaleString(language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK")
 }
@@ -4825,7 +4830,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: (d, f) => `Kontrola, ktorú ste spustili, dobehla: ${d} ${d === 1 ? "dokument" : d < 5 ? "dokumenty" : "dokumentov"}, ${f} ${f === 1 ? "nález" : f < 5 ? "nálezy" : "nálezov"}.`,
       costLine: usd => `Cena behu: ${usd} USD`,
       button: "Otvoriť nálezy",
-      note: "Pri každom náleze rozhodnite, či znenie ponecháte, alebo prijmete odporúčanie. Dokument sa sám nemení.",
+      note: "Pri každom náleze rozhodnite, či znenie ponecháte, alebo prijmete odporúčanie. Prijaté znenie sa zapíše do konceptu dokumentu; platné znenie sa mení až zverejnením.",
     },
     approvalEmail: {
       subject: org => `Znenie na schválenie \u2014 ${org}`,
@@ -9484,7 +9489,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: (d, f) => `Kontrola, kterou jste spustili, doběhla: ${d} ${d === 1 ? "dokument" : d < 5 ? "dokumenty" : "dokumentů"}, ${f} ${f === 1 ? "nález" : f < 5 ? "nálezy" : "nálezů"}.`,
       costLine: usd => `Cena běhu: ${usd} USD`,
       button: "Otevřít nálezy",
-      note: "U každého nálezu rozhodněte, zda znění ponecháte, nebo přijmete doporučení. Dokument se sám nemění.",
+      note: "U každého nálezu rozhodněte, zda znění ponecháte, nebo přijmete doporučení. Přijaté znění se zapíše do konceptu dokumentu; platné znění se mění až zveřejněním.",
     },
     approvalEmail: {
       subject: org => `Znění ke schválení \u2014 ${org}`,
@@ -14134,7 +14139,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: (d, f) => `The check you started has finished: ${d} ${d === 1 ? "document" : "documents"}, ${f} ${f === 1 ? "finding" : "findings"}.`,
       costLine: usd => `Run cost: ${usd} USD`,
       button: "Open findings",
-      note: "For each finding, decide whether to keep the wording or accept the recommendation. The document does not change by itself.",
+      note: "For each finding, decide whether to keep the wording or accept the recommendation. Accepted wording is written into the document draft; the valid version changes only when it is published.",
     },
     approvalEmail: {
       subject: org => `A version to approve \u2014 ${org}`,
