@@ -10,6 +10,29 @@
 
 ---
 
+## 2026-10-11 — detail kontroly súladu (KNIZ-kontrola-suladu-detail)
+
+**Čo sa zmenilo:** `/library/compliance/[runId]` podľa návrhu (Q1–Q5 A).
+Stav obrazovky je v adrese (`doc`, `view`, `f`, `change`, `docs`); čo sa
+počíta z behu (stav nálezu, postup, ďalší nerozhodnutý), je v čistom
+`lib/complianceView.ts` s testom. Model: `ComplianceRun.name`, `applied`
+má novú hodnotu `pending` (prijaté bez roly správcu obsahu) — `manual` už
+znamená len „úryvok sa nenašiel"; posledný krok dostane pokyn napísať
+zhrnutie za celý dokument a výsledok berie len jeho zhrnutie.
+
+**Nájdené cestou:** `.lc` z ORG-konektory (#336) sa zrazila s kartou kurzu
+(`CourseCard`) — karty vo Vzdelávaní sa kreslili v mriežke 150 px.
+Opravené zvlášť v #347 (`.labeled-row`), ostatné nové triedy preverené.
+
+**Odchýlky od návrhu:** nerozhodnutý nález s navrhnutým znením má predvolene
+„Prijať a upraviť" (tak je v ráme, `.md` to nehovorí). Citát normy je
+existujúci `.quote` (sivá doska), nie čiara vľavo. Staré rozhodnutia bez
+práv nesú `manual` a ukážu sa ako „treba vložiť ručne"; správca obsahu ich
+môže zapísať cez backend (`applyAcceptedFinding` pripúšťa `manual`), tlačidlo
+pri nich nie je.
+
+---
+
 ## 2026-10-09 — konektory podľa štandardu MCP (ORG-konektory, D178)
 
 **Čo sa zmenilo:** Ján chcel univerzálne pridávanie konektorov, preto sa

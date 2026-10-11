@@ -9,7 +9,7 @@
  *
  * Zápis prijatého znenia do konceptu je úprava dokumentu, preto ho robí len
  * ten, kto má **aj** `content-admin`. Ostatným sa rozhodnutie uloží a znenie
- * vloží správca obsahu (`applied: "manual"`).
+ * vloží správca obsahu (`applied: "pending"`).
  */
 
 import { currentTenant, currentPerson } from "./session"

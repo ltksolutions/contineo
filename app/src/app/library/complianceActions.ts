@@ -31,12 +31,19 @@ async function ready() {
   return { ...ctx, t: dictionary(ctx.person.language).library.compliance, language: ctx.person.language }
 }
 
-function back(path: string, message: string, error = false, anchor = ""): never {
+function back(path: string, message: string, error = false, anchor = "", keep: Record<string, string> = {}): never {
   revalidatePath(PAGE)
   revalidatePath(path)
-  const q = new URLSearchParams({ msg: message })
+  const q = new URLSearchParams(Object.entries(keep).filter(([, v]) => v))
+  q.set("msg", message)
   if (error) q.set("error", "1")
   redirect(`${path}?${q.toString()}${anchor ? `#${encodeURIComponent(anchor)}` : ""}`)
+}
+
+/** Stav obrazovky detailu (KNIZ-kontrola-suladu-detail): vybraný dokument a filter. */
+function viewOf(fd: FormData, documentId: string): Record<string, string> {
+  const view = fieldText(fd, "view")
+  return { doc: documentId, ...(view && view !== "open" ? { view } : {}) }
 }
 
 function failure(e: unknown, language: string): string {
@@ -48,7 +55,8 @@ export async function startDocumentReviewAction(fd: FormData) {
   const ctx = await ready()
   let runId = ""
   try {
-    const run = await startDocumentReview(ctx.person.companyCode, fd.getAll("subjectIds").map(String), fd.getAll("documentIds").map(String), { email: ctx.person.email, personId: ctx.person.id })
+    // „Spustiť znova" na detaile posiela ten istý výber aj názov (Q4).
+    const run = await startDocumentReview(ctx.person.companyCode, fd.getAll("subjectIds").map(String), fd.getAll("documentIds").map(String), { email: ctx.person.email, personId: ctx.person.id }, new Date(), fieldText(fd, "name"))
     runId = run.runId
     const origin = originFromHeaders(await headers())
     after(() => kick(origin, "/api/cron/compliance"))
@@ -67,23 +75,28 @@ export async function decideFindingAction(fd: FormData) {
   const decision = fieldText(fd, "decision") === "kept" ? "kept" : "accepted"
   const anchor = `${documentId}-${findingId}`
   const path = `${PAGE}/${encodeURIComponent(runId)}`
+  const keep = viewOf(fd, documentId)
   let message = ""
   try {
     // Kto nemá aj content-admin, koncept nemení — rozhodnutie sa uloží a znenie vloží správca obsahu.
     const text = typeof fd.get("text") === "string" ? String(fd.get("text")) : ""
     const r = await decideFinding(ctx.person.companyCode, runId, documentId, findingId, decision, fieldText(fd, "reason"), text, ctx.person.email, ctx.canEditDrafts)
-    message = decision === "kept" ? ctx.t.savedKept : r.applied === "draft" ? ctx.t.savedDraft : r.applied === "manual" ? ctx.t.savedManual : ctx.t.saved
+    message = decision === "kept" ? ctx.t.savedKept : r.applied === "draft" ? ctx.t.savedDraft : r.applied === "pending" ? ctx.t.savedPending : r.applied === "manual" ? ctx.t.savedManual : ctx.t.saved
     // Bez roly správcu obsahu znenie čaká — dať vedieť tým, ktorí ho zapíšu (D199).
-    if (r.applied === "manual" && !ctx.canEditDrafts) {
+    if (r.applied === "pending") {
       const run = await documentRun(ctx.person.companyCode, runId)
       const title = run?.results?.find(x => x.documentId === documentId)?.title ?? documentId
       await notifyContentManagers(ctx.person.companyCode, runId, documentId, title)
     }
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(path, failure(e, ctx.language), true, anchor)
+    back(path, failure(e, ctx.language), true, anchor, { ...keep, f: findingId })
   }
-  back(path, message, false, anchor)
+  // „Uložiť a ďalší": ďalší nerozhodnutý nález, aj v ďalšom dokumente. Stránka
+  // ho poslala ako `dokument:nález`; keď už nie je, ostane sa pri tomto.
+  const [nextDoc, nextFinding] = fieldText(fd, "next").split(":")
+  if (nextDoc && nextFinding) back(path, message, false, `${nextDoc}-${nextFinding}`, { ...viewOf(fd, nextDoc), f: nextFinding })
+  back(path, message, false, anchor, keep)
 }
 
 /** Správca obsahu zapíše prijaté znenie do konceptu (D199). */
@@ -96,13 +109,14 @@ export async function applyFindingAction(fd: FormData) {
   const findingId = fieldText(fd, "findingId")
   const path = `${PAGE}/${encodeURIComponent(runId)}`
   const anchor = `${documentId}-${findingId}`
+  const keep = viewOf(fd, documentId)
   let message = ""
   try {
     const applied = await applyAcceptedFinding(ctx.person.companyCode, runId, documentId, findingId, ctx.person.email)
     message = applied === "manual" ? t.savedManual : t.savedDraft
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(path, failure(e, ctx.person.language), true, anchor)
+    back(path, failure(e, ctx.person.language), true, anchor, keep)
   }
-  back(path, message, false, anchor)
+  back(path, message, false, anchor, keep)
 }

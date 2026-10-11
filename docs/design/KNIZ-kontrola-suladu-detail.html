@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>KNIZ — detail kontroly súladu</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--seg-bg:rgba(118,118,128,.12);--seg-thumb:#fff;--seg-shadow:0 1px 3px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.06);--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--seg-bg:rgba(118,118,128,.24);--seg-thumb:#3a3f48;--seg-shadow:0 1px 3px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:100ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.sec{margin:36px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px;max-width:390px}
+.notes{display:grid;gap:6px;max-width:100ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff;line-height:1}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+.sample{font-size:11px;color:#9a3412;background:#ffedd5;border-radius:4px;padding:0 5px;font-weight:600;white-space:nowrap}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px 18px;flex:none;margin-top:auto}
+.tabbar span{display:grid;justify-items:center;gap:3px;font-size:10.5px;color:var(--muted);min-height:44px;align-content:center}
+.tabbar span::before{content:"";width:22px;height:22px;border-radius:6px;background:var(--surface-2)}
+.tabbar span.on{color:var(--accent);font-weight:600}.tabbar span.on::before{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.body{padding:22px 28px 32px;display:grid;gap:20px;align-content:start}
+.page-head{display:flex;align-items:flex-start;gap:10px 16px;flex-wrap:wrap}
+.page-head-main{flex:1 1 380px;min-width:0;display:grid;gap:4px}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:0}
+.page-tools{display:flex;gap:8px;flex-wrap:wrap}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--warn,.tag--draft{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--bad{background:var(--bad-bg);color:var(--bad-fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+/* postup */
+.prog{display:grid;gap:10px;padding:16px 20px 0}
+.prog-top{display:flex;gap:8px 16px;align-items:baseline;flex-wrap:wrap}
+.prog-top b{font-size:var(--fs-section);font-weight:650}
+.bar{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok-fg);border-radius:999px}
+.kinds{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:var(--fs-small);color:var(--muted)}
+.disc{border-top:1px solid var(--line);margin-top:14px}
+.disc-sum{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 20px;font-size:14px;color:var(--ink)}
+.disc-sum .k{color:var(--muted)}
+.disc-sum .chev{margin-left:auto;color:var(--muted);font-size:13px}
+.lc{display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 16px;padding:9px 20px;position:relative;font-size:14px;border-top:1px solid var(--line)}
+.lc > span:first-child{color:var(--muted)}
+/* rozdelenie */
+.split{display:grid;grid-template-columns:320px minmax(0,1fr);gap:28px;align-items:start}
+.side{display:grid;gap:6px;position:sticky;top:0}
+.side-h{padding:0 4px;font-size:var(--fs-small);font-weight:600;color:var(--muted)}
+.form-list{display:grid}
+.form-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;color:var(--ink);text-decoration:none;font-size:15px}
+.form-list > .form-row + .form-row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.form-row-main{flex:1;display:grid;gap:1px;min-width:0}
+.form-row-main b{font-weight:600;font-size:15px}
+.form-row-sub{font-size:var(--fs-small);color:var(--muted);overflow-wrap:anywhere}
+.form-row.on{background:var(--accent-soft)}
+.form-row.on b{color:var(--accent)}
+.form-row.on::after{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.n{font-size:var(--fs-small);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chev{color:var(--line-strong);font-size:20px;line-height:1;flex:none}
+.pick{min-height:60px}
+.pick .k{font-size:var(--fs-micro);color:var(--accent);font-weight:600}
+.pick b{color:var(--accent)}
+.main{display:grid;gap:16px;min-width:0;max-width:880px}
+.doc-head{display:grid;gap:6px}
+.doc-head .t{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.doc-head h2{margin:0;font-size:21px;letter-spacing:-.01em}
+.doc-head p{margin:0;font-size:15px;max-width:72ch;text-wrap:pretty}
+.doc-head .open{font-size:14px;min-height:44px;display:inline-flex;align-items:center;margin-left:auto}
+/* prepínač pohľadu */
+.view-switch{display:inline-flex;padding:2px;border-radius:9px;background:var(--seg-bg);justify-self:start;max-width:100%}
+.view-switch-item{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 14px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:14px;white-space:nowrap;flex:1}
+.view-switch-item + .view-switch-item::before{content:"";position:absolute;left:0;top:8px;bottom:8px;border-left:1px solid var(--line-strong)}
+.view-switch-item.is-on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.view-switch-item.is-on::before,.view-switch-item.is-on + .view-switch-item::before{opacity:0}
+.view-switch-count{margin-left:5px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+/* nález */
+.flist{display:grid;gap:10px}
+.fc-row{display:flex;align-items:center;gap:10px 12px;padding:8px 8px 8px 16px;min-height:56px;flex-wrap:wrap}
+.fc-row .loc{flex:1 1 240px;min-width:0;font-size:15px}
+.fc{display:grid;gap:16px;padding:16px 20px 20px}
+.fc.is-open{border-color:var(--line-strong);box-shadow:0 2px 10px rgba(20,28,42,.06)}
+.fc-head{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.fc-head b{font-size:16px;font-weight:650;flex:1 1 260px;min-width:0}
+.fc-head a{font-size:14px}
+.blk{display:grid;gap:5px}
+.blk-l{font-size:var(--fs-small);font-weight:600;color:var(--muted)}
+.blk p{margin:0;font-size:15px;max-width:72ch;text-wrap:pretty}
+.diff{padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:15px;line-height:1.65;max-width:72ch}
+.diff del{background:var(--bad-bg);color:var(--bad-fg);text-decoration:line-through}
+.diff ins{background:var(--ok-bg);color:var(--ok-fg);text-decoration:underline;text-decoration-thickness:1px}
+.quote{margin:0;padding:2px 0 2px 14px;border-left:3px solid var(--line-strong);font-size:15px;color:var(--ink);max-width:72ch}
+.dec{display:grid;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
+.decision-switch{display:grid;grid-template-columns:1fr 1fr;padding:2px;border-radius:10px;background:var(--seg-bg);max-width:560px}
+.decision-option{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;min-height:40px;padding:4px 12px;border-radius:8px;font-size:14.5px;line-height:1.25}
+.decision-option.on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.choice-list{display:grid;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.choice-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;font-size:15px}
+.choice-row + .choice-row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.tick{width:18px;flex:none;color:var(--accent);font-weight:700;text-align:center}
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;min-width:0;line-height:1.5;white-space:pre-wrap}
+.field-input.ph{color:var(--muted)}
+.ta3{min-height:calc(3 * 1.5em + 20px)}
+.ta5{min-height:calc(5 * 1.5em + 20px)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.acts{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
+.acts .quiet{font-size:var(--fs-small)}
+.lnote{display:flex;gap:10px;padding:12px 14px;border-radius:10px;font-size:14px;align-items:flex-start;background:var(--ok-bg);color:var(--ok-fg)}
+.lnote-mark{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--surface);color:inherit;margin-top:1px}
+.lnote-text{flex:1 1 300px;min-width:0;line-height:1.45}
+.lnote-text b{font-weight:650}
+.lnote-text small{display:block;margin-top:3px;font-size:var(--fs-small);color:var(--muted)}
+.lnote--info{background:var(--surface-2);color:var(--ink)}
+.lnote--warn{background:var(--warn-bg);color:var(--warn-fg)}
+.reason{margin:0;font-size:15px;white-space:pre-line;max-width:72ch}
+.who{font-size:var(--fs-small);color:var(--muted)}
+.state-l{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:6px 0 -6px 4px}
+/* mobil a tablet */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px;gap:16px}
+.m .page-title{font-size:22px}
+.m .page-head-main{flex-basis:100%}
+.m .button{min-height:44px}
+.m .prog{padding:14px 14px 0}
+.m .disc-sum{padding:0 14px}
+.m .lc{grid-template-columns:1fr;padding:9px 14px;gap:0}
+.m .view-switch{display:flex;justify-self:stretch}
+.m .view-switch-item{min-height:36px;padding:0 6px;font-size:13.5px}
+.m .fc{padding:14px 14px 16px}
+.m .fc-row{padding:8px 8px 8px 14px}
+.m .acts .button{width:100%}
+.m .doc-head .open{margin-left:0}
+.t .body{padding:20px 24px 28px}
+.t .main{max-width:none}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">KNIZ — detail kontroly súladu (<code>/library/compliance/&lt;runId&gt;</code>)</h1>
+<p class="doc">Úprava existujúcej obrazovky z dlhej stránky so všetkými dokumentmi na <b>zoznam dokumentov a nálezy jedného dokumentu</b> (<code>NavigationSplitView</code>). Rozhodnutie o náleze ostáva podľa D199 (dve voľby, povinný dôvod, zápis do konceptu). Akcie <code>decideFindingAction</code> a <code>applyFindingAction</code> ostávajú. Popis, údaje mimo modelu a otázky sú v <code>KNIZ-kontrola-suladu-detail.md</code>. <span class="sample">ukážka</span> = údaj je vymyslený.</p>
+
+<div class="sec">
+  <p class="sec-h">Dnes → návrh</p>
+  <table class="spec">
+    <tr><th>Časť</th><th>Dnes</th><th>Návrh</th></tr>
+    <tr><td>Nadpis</td><td class="old">„Kontrola 11. 10. 2026, Ján Letko"</td><td class="new">názov kontroly + riadok rozsahu; tiché „Spustiť znova" v <code>.page-tools</code></td></tr>
+    <tr><td>Údaje o behu</td><td class="old">karta s 8 riadkami nad nálezmi</td><td class="new">postup (x z 62, pásik, počty podľa druhu) + údaje o behu zbalené do jedného riadku <code>&lt;details&gt;</code></td></tr>
+    <tr><td>Dokumenty</td><td class="old">10× <code>&lt;details&gt;</code> pod sebou, všetky nálezy na jednej stránke</td><td class="new">od 1024 px bočný panel, pod 1024 px riadok „Dokument 8 z 10 ›" → <code>?docs=1</code>; vybraný dokument v <code>?doc=</code></td></tr>
+    <tr><td>Nálezy</td><td class="old">všetky otvorené s formulárom</td><td class="new">filter <code>?view=open|decided|all</code> (predvolené Nerozhodnuté); zbalený riadok, otvorený len jeden <code>?f=</code></td></tr>
+    <tr><td>Zmena znenia</td><td class="old">Úryvok a Odporúčanie oddelene</td><td class="new">jeden text s <code>del</code>/<code>ins</code> (ako <code>.pr-diff</code> vo fronte FAQ)</td></tr>
+    <tr><td>Uložiť</td><td class="old">„Uložiť" → späť na kotvu toho istého nálezu</td><td class="new">„Uložiť a ďalší" → otvorí ďalší nerozhodnutý nález (aj v ďalšom dokumente)</td></tr>
+    <tr><td>Stav po rozhodnutí</td><td class="old">sivé štítky + <code>&lt;details&gt;</code> Zmeniť</td><td class="new"><code>.lnote</code> so stavom, kto, kedy, dôvod; úkony podľa stavu (koncept / čaká na správcu / vložiť ručne)</td></tr>
+  </table>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 svetlá — ?doc=issf-07&amp;view=open&amp;f=f64 · otvorený nález s voľbou „Prijať a upraviť"</p>
+  <div class="frame" style="width:1440px" id="f-desk"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Cesta Knižnica › Kontrola súladu › 11. 10. 2026. Nadpis = názov kontroly, pod ním rozsah a kto spustil. Jediný úkon hlavičky je tiché „Spustiť znova" — plné tlačidlo na obrazovke nie je.</p>
+    <p><span class="ann">2</span>Postup za celú kontrolu: „3 z 62 nálezov rozhodnutých", zelený pásik, počty podľa druhu. Počty druhu sú len na čítanie (nie filter).</p>
+    <p><span class="ann">3</span>Údaje o behu sú <code>&lt;details&gt;</code> s jedným riadkom: model · trvanie · cena. Rozbalené v ráme 834.</p>
+    <p><span class="ann">4</span>Bočný panel: 10 dokumentov ako riadky-odkazy <code>?doc=…</code> (zachová <code>view</code>). Vpravo počet nerozhodnutých „8 z 10", hotové so štítkom „hotovo", bez nálezov „bez nálezov". Vybraný má farbu organizácie. Panel je prilepený pri posúvaní.</p>
+    <p><span class="ann">5</span>Vybraný dokument: názov, štítok „koncept" alebo „platné 1.0", odkaz „Otvoriť koncept" (<code>/library/&lt;id&gt;/text</code>) a jedno zhrnutie za dokument (Q3).</p>
+    <p><span class="ann">6</span>Filter je sivý <code>.view-switch</code> s počtami, odkazy <code>?view=</code>. Predvolené Nerozhodnuté (Q2).</p>
+    <p><span class="ann">7</span>Otvorený nález (<code>?f=f64#f64</code>): druh, miesto, „Zbaliť" (odkaz bez <code>f</code>). Zmena znenia je jeden text — vyškrtnuté červené, doplnené zelené podčiarknuté.</p>
+    <p><span class="ann">8</span>Norma: názov a článok ako odkaz na dokument, doslovná veta ako citát. Pod tým odporúčanie modelu.</p>
+    <p><span class="ann">9</span>Rozhodnutie: <code>Picker(.segmented)</code> — dve voľby, natívne <code>radio</code> (dnešné <code>.decision-switch</code>). Pole „Nové znenie" sa ukáže len pri „Prijať a upraviť" (CSS <code>:has</code>, bez JS je viditeľné vždy).</p>
+    <p><span class="ann">10</span>„Dôvod" je povinný pri oboch voľbách, 3 riadky, do 1000 znakov. Tiché „Uložiť a ďalší" + veta, kam prejde. Posledný nerozhodnutý: tlačidlo „Uložiť", veta „Posledný nerozhodnutý nález."</p>
+    <p><span class="ann">11</span>Zbalené nerozhodnuté nálezy (stav 1): štítok druhu, miesto, tiché „Rozhodnúť" (<code>?f=…#…</code>). V zozname kariet sú všetky tlačidlá tiché.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">1440 tmavá — stavy karty nálezu (stĺpec obsahu)</p>
+  <div class="frame dark" style="width:1440px" id="f-states"></div>
+  <div class="notes">
+    <p><span class="ann">1</span>Stav 1 — nerozhodnuté, zbalené. Stav 2 je v ráme 1440 svetlá.</p>
+    <p><span class="ann">2</span>Stav 3 — prijaté a zapísané do konceptu: zelená <code>.lnote</code> „✓", kto a kedy, dôvod. Zmena znenia ukazuje <b>prijaté</b> znenie (môže sa líšiť od návrhu). Úkony: Otvoriť koncept, Zmeniť rozhodnutie (<code>?f=…&amp;change=1</code> otvorí formulár stavu 2 s predvyplnením).</p>
+    <p><span class="ann">3</span>Stav 4 — vedome ponechané: sivá <code>.lnote</code>, kto, kedy, dôvod. Zobrazí sa pôvodný úryvok bez vyznačenia. Úkon: Zmeniť rozhodnutie.</p>
+    <p><span class="ann">4</span>Stav 5 — prijal niekto bez roly <code>content-admin</code>. Žltá <code>.lnote</code>. Správca obsahu vidí tiché „Zapísať do konceptu"; človek len s <code>compliance</code> vidí namiesto neho vetu „Správcovia obsahu dostali upozornenie."</p>
+    <p><span class="ann">5</span>Stav 6 — úryvok sa v texte nenašiel jednoznačne: „Treba vložiť ručne". Znenie je v poli len na čítanie (dá sa označiť aj bez JS), „Kopírovať znenie" je <code>CopyLink</code> (s JS). Úkony: Otvoriť koncept, Zmeniť rozhodnutie.</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">834 svetlá — iPadOS: výber dokumentu nad obsahom · údaje o behu rozbalené · ?docs=1</p>
+  <div class="row-frames">
+    <div><p class="cap">Detail, údaje o behu rozbalené</p><div class="frame m t" style="width:834px" id="t-detail"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Pod 1024 px sa panel mení na riadok „Dokument 8 z 10 · Faktúry, poplatky a platby ›" v farbe organizácie → <code>?docs=1</code> (zoznam z panela na celú šírku, ako v ráme 390). Vzor: <code>NavigationSplitView</code> v kompaktnej šírke. Q5.</p>
+    <p><span class="ann">2</span>Rozbalené údaje o behu: spustil, trvanie, model, volania, tokeny, cena, referenčné normy a počet krokov. Riadky <code>LabeledContent</code> (<code>.lc</code>).</p>
+    <p><span class="ann">3</span>Od 640 px ostávajú voľby rozhodnutia vedľa seba (segmented).</p>
+  </div>
+</div>
+
+<div class="sec">
+  <p class="sec-h">390 — iOS: detail (tmavá) · ?docs=1 výber dokumentu (svetlá) · stav 5 a 6 (tmavá)</p>
+  <div class="row-frames">
+    <div><p class="cap">?doc=issf-07&amp;f=f64 — rozhodovanie</p><div class="frame m dark" style="width:390px" id="m-detail"></div></div>
+    <div><p class="cap">?docs=1 — výber dokumentu</p><div class="frame m" style="width:390px" id="m-docs"></div></div>
+    <div><p class="cap">?view=decided — stav 5 a 6 (správca obsahu)</p><div class="frame m dark" style="width:390px" id="m-states"></div></div>
+  </div>
+  <div class="notes">
+    <p><span class="ann">1</span>Údaje o behu sú zbalené; postup ostáva viditeľný.</p>
+    <p><span class="ann">2</span>Riadok výberu dokumentu (jediný prvok vo farbe organizácie), terč 60 px.</p>
+    <p><span class="ann">3</span>Prepínač pohľadu cez celú šírku. Dlhšie slová (cs „Nerozhodnuté", en „Undecided") sa zmestia — popisy sú krátke, počty v <code>.view-switch-count</code>.</p>
+    <p><span class="ann">4</span>Pod 640 px sú voľby rozhodnutia pod sebou ako <code>Picker(.inline)</code> — <code>.choice-row</code> s fajkou vpravo, rovnaké <code>radio</code>. Dlhé „Ponechať existujúce znenie" sa v polovici šírky nezmestí.</p>
+    <p><span class="ann">5</span>„Uložiť a ďalší" cez celú šírku, 44 px. Dole je len hlavná lišta aplikácie.</p>
+    <p><span class="ann">6</span>Zoznam dokumentov na celú šírku: riadok-odkaz → <code>?doc=…</code> (bez <code>docs</code>). Vybraný je vyznačený.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const an=(n,s)=>`<span class="ann" style="${s}">${n}</span>`;
+const SM=`<span class="sample">ukážka</span>`;
+const hdr=m=>`<div class="hdr"><span class="logo"></span><span class="ask">${m?"Opýtajte sa…":"Opýtajte sa svojich dokumentov…"}</span><span class="av"></span></div>`;
+const crumbs=(a=["Knižnica","Kontrola súladu","11. 10. 2026"])=>`<div class="crumbs">${a.map((t,i)=>i===a.length-1?`<b>${t}</b>`:`<a href="#">${t}</a><span>›</span>`).join("")}</div>`;
+const tabbar=`<div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>`;
+
+const head=(a="")=>`<div class="page-head rel">${a}<div class="page-head-main"><h1 class="page-title">Manuály ISSF proti normám</h1><p class="page-lead">10 dokumentov proti 7 normám · spustil Ján Letko 11. 10. 2026</p></div><div class="page-tools"><a class="button button--quiet" href="#">Spustiť znova</a></div></div>`;
+const NORMS="Stanovy SFZ, Registračný a prestupový poriadok, Súťažný poriadok, Disciplinárny poriadok, Revízny poriadok, Poriadok komory SFZ, Volebný poriadok";
+const meta=open=>`<div class="disc"><div class="disc-sum"><span class="k">Údaje o behu</span><span>Opus 5.5 · 8 min · 6,81 USD</span><span class="chev">${open?"⌃":"⌄"}</span></div>${open?[
+ ["Spustil","Ján Letko, 11. 10. 2026 9:12"],["Dokončené","11. 10. 2026 9:20 · 8 min"],["Model","Opus 5.5"],["Volania","30 · žiadne nezlyhalo"],
+ ["Tokeny","949 tis. vstup · 76 tis. výstup · 3,3 mil. z cache"],["Cena","6,81 USD"],["Referenčné normy",NORMS],["Kroky","3 na dokument"]].map(([k,v])=>`<div class="lc"><span>${k}</span><span>${v}</span></div>`).join(""):""}</div>`;
+const prog=(o={})=>`<section class="card rel">${o.a2||""}<div class="prog"><div class="prog-top"><b>3 z 62 nálezov rozhodnutých</b><span class="quiet" style="font-size:var(--fs-small)">59 ostáva</span></div><div class="bar"><i style="width:4.8%"></i></div><div class="kinds"><span class="tag tag--warn">Rozpor 15</span><span class="tag">Chýba 34</span><span class="tag">Nejasné 13</span></div></div><div class="rel">${o.a3||""}${meta(o.open)}</div></section>`;
+
+const DOCS=[["ISSF-00","Úvod a prihlásenie",4,4],["ISSF-01","Konto a profil osoby",7,7],["ISSF-02","Matrika — registrácia hráča",9,9],["ISSF-03","Prestupy a hosťovania",0,1],["ISSF-04","Kluby a družstvá",5,5],["ISSF-05","Súťaže a zápasy",6,6],["ISSF-06","Delegovanie",3,3],["ISSF-07","Faktúry, poplatky a platby",8,10],["ISSF-08","Disciplinárne konanie",8,8],["ISSF-09","Sadzobník a lehoty",9,9]];
+const docRow=([c,t,o,n],sel)=>`<a class="form-row${sel?" on":""}" href="#"><span class="form-row-main"><b>${t}</b><span class="form-row-sub">${c}</span></span>${n===0?`<span class="tag">bez nálezov</span>`:o===0?`<span class="tag tag--published">hotovo</span>`:`<span class="n">${o} z ${n}</span>`}</a>`;
+const docList=(a="")=>`<div class="side rel">${a}<div class="side-h">Dokumenty · 10 ${SM}</div><div class="card"><div class="form-list">${DOCS.map(d=>docRow(d,d[0]==="ISSF-07")).join("")}</div></div></div>`;
+const pick=(a="")=>`<a class="card form-row pick rel" href="#">${a}<span class="form-row-main"><span class="k">Dokument 8 z 10</span><b>Faktúry, poplatky a platby</b></span><span class="n">8 z 10</span><span class="chev" style="color:var(--accent)">›</span></a>`;
+
+const docHead=(a="")=>`<div class="doc-head rel">${a}<div class="t"><h2>Faktúry, poplatky a platby</h2><span class="tag tag--draft">koncept</span><a class="open" href="#">Otvoriť koncept</a></div><p>Manuál opisuje vystavenie a úhradu faktúr v ISSF. Výška a periodicita poplatku za konto sa rozchádza s RaPP a chýba postup pri nesúhlase s pokutou. ${SM}</p></div>`;
+const filter=(on="open",a="")=>`<nav class="view-switch rel">${a}${[["open","Nerozhodnuté",8],["decided","Rozhodnuté",2],["all","Všetky",10]].map(([k,l,c])=>`<a class="view-switch-item${k===on?" is-on":""}" href="#">${l}<span class="view-switch-count">${c}</span></a>`).join("")}</nav>`;
+
+const KIND={r:`<span class="tag tag--warn">Rozpor s normou</span>`,c:`<span class="tag">Chýba podmienka</span>`,n:`<span class="tag">Nejasné</span>`};
+const collapsed=(k,loc,a="")=>`<div class="card fc-row rel">${a}${KIND[k]}<span class="loc">${loc}</span><a class="button button--quiet button--sm" href="#">Rozhodnúť</a></div>`;
+const F64={diff:`…sa generuje aj <ins>ročný</ins> poplatok za správu osobného konta v ISSF: <del>0,50 € mesačne</del><ins>1 € (každý člen SFZ – fyzická osoba od veku 9 rokov)</ins>.`,
+ normT:"Registračný a prestupový poriadok SFZ, Príloha č. 2",normQ:"ročný poplatok za správu osobného konta v ISSF (každý člen SFZ – fyzická osoba od veku 9 rokov) 1 EUR",
+ rec:"Zosúladiť výšku a periodicitu poplatku s Prílohou č. 2 RaPP: 1 € ročne pre každého člena – fyzickú osobu od 9 rokov.",
+ neu:"…sa generuje aj ročný poplatok za správu osobného konta v ISSF: 1 € (každý člen SFZ – fyzická osoba od veku 9 rokov)."};
+const blocks=(f,o={})=>`<div class="blk rel">${o.a7||""}<span class="blk-l">${o.diffL||"Zmena znenia"}</span><div class="diff">${f.diff}</div></div>
+ <div class="blk rel">${o.a8||""}<span class="blk-l">Norma</span><p><a href="#">${f.normT}</a></p><blockquote class="quote">${f.normQ}</blockquote></div>
+ ${f.rec?`<div class="blk"><span class="blk-l">Odporúčanie</span><p>${f.rec}</p></div>`:""}`;
+const choose=(m,a="")=>m?`<div class="field rel">${a}<span class="field-label">Rozhodnutie</span><div class="choice-list"><label class="choice-row"><span style="flex:1">Ponechať existujúce znenie</span><span class="tick"></span></label><label class="choice-row"><span style="flex:1">Prijať a upraviť</span><span class="tick">✓</span></label></div></div>`
+ :`<div class="field rel">${a}<span class="field-label">Rozhodnutie</span><div class="decision-switch"><label class="decision-option">Ponechať existujúce znenie</label><label class="decision-option on">Prijať a upraviť</label></div></div>`;
+const openCard=(m,o={})=>`<article class="card fc is-open rel" id="f64">${o.a7h||""}<div class="fc-head">${KIND.r}<b>6.4 Poplatok za správu osobného konta v ISSF</b>${m?"":`<a href="#">Zbaliť</a>`}</div>
+ ${blocks(F64,o)}
+ <form class="dec">
+  ${choose(m,o.a9||"")}
+  <label class="field"><span class="field-label">Nové znenie</span><span class="field-input ta5">${F64.neu}</span><span class="field-hint">Nahradí úryvok v koncepte dokumentu. Platné znenie sa zmení až zverejnením.</span></label>
+  <label class="field rel">${o.a10||""}<span class="field-label">Dôvod</span><span class="field-input ta3">Príloha č. 2 RaPP je nadradená manuálu; manuál uvádzal sumu spred novely. ${SM}</span><span class="field-hint">Povinné pri oboch voľbách. Zapíše sa do auditu dokumentu.</span></label>
+  <div class="acts rel">${o.a11||""}<span class="button button--quiet">Uložiť a ďalší</span><span class="quiet">Ďalší: 3. Reklamácia položky</span></div>
+ </form></article>`;
+const restList=(a="")=>[["c","3. Reklamácia položky",a],["c","1.2 Kto vystavuje faktúru klubu "+SM],["n","2.3 Splatnosť faktúry "+SM],["r","4.1 Poplatok za prestup amatéra "+SM],["c","4.5 Úhrada cez platobnú bránu "+SM],["n","5. Dobropis a storno "+SM],["c","6.2 Poplatok za registráciu klubu "+SM]].map(([k,l,x])=>collapsed(k,l,x||"")).join("");
+
+/* 1440 */
+document.getElementById("f-desk").innerHTML=hdr()+crumbs().replace('class="crumbs"','class="crumbs rel"')+`<div class="body">
+${head(an(1,"left:-30px;top:6px"))}
+${prog({a2:an(2,"left:-30px;top:16px"),a3:an(3,"left:-30px;top:10px")})}
+<div class="split">${docList(an(4,"left:-30px;top:0"))}<div class="main">
+${docHead(an(5,"left:-30px;top:4px"))}
+${filter("open",an(6,"right:-30px;top:6px"))}
+<div class="flist">${openCard(0,{a7h:an(7,"left:-30px;top:16px"),a8:an(8,"left:-41px;top:0"),a9:an(9,"left:-41px;top:0"),a10:an(10,"left:-41px;top:0")})}${restList(an(11,"left:-30px;top:16px"))}</div>
+</div></div></div>`;
+
+/* stavy */
+const F21={diff:`Konto aktivuje matrikár klubu <ins>alebo matrika SFZ</ins> po overení totožnosti hráča. ${SM}`,normT:"Registračný a prestupový poriadok SFZ, čl. 8 ods. 4",normQ:"Registráciu hráča vykoná matrikár klubu alebo matrika SFZ. "+SM,rec:""};
+const F3={diff:`Reklamáciu položky faktúry podá klub do 15 dní od vystavenia. <ins>Nesúhlas s uloženou pokutou sa nerieši reklamáciou, ale odvolaním do 7 dní; pokuta sa platí aj počas odvolania.</ins> ${SM}`,normT:"Disciplinárny poriadok SFZ, čl. 12 ods. 9 a čl. 84 ods. 2",normQ:"Odvolanie nemá odkladný účinok na splatnosť peňažnej sankcie. "+SM,rec:""};
+const decided=(f,k,loc,note,acts,a="",extra="")=>`<article class="card fc rel">${a}<div class="fc-head">${KIND[k]}<b>${loc}</b></div>${note}${blocks(f,{diffL:f.diffL})}${extra}<div class="acts">${acts}</div></article>`;
+const ln=(cls,mark,t,who,reason)=>`<div class="lnote ${cls}"><span class="lnote-mark">${mark}</span><span class="lnote-text"><b>${t}</b> · ${who}<small style="color:inherit;opacity:.9">${reason}</small></span></div>`;
+const Q=`<span class="button button--quiet">`;const QE=`</span>`;
+const s3=a=>decided({...F21,diffL:"Prijaté znenie"},"c","2.1 Aktivácia konta na matrike (hráč), bod 1",ln("","✓","Prijaté a zapísané do konceptu","Ján Letko, 11. 10. 2026 10:02","Dôvod: RaPP čl. 8 ods. 4 pripúšťa aj matriku SFZ; manuál ju vynechal. "+SM),`${Q}Otvoriť koncept${QE}${Q}Zmeniť rozhodnutie${QE}`,a);
+const s4=a=>decided({...F3,diff:"Reklamáciu položky faktúry podá klub do 15 dní od vystavenia. "+SM,diffL:"Ponechané znenie"},"c","3. Reklamácia položky",ln("lnote--info","–","Ponechané existujúce znenie","Ján Letko, 11. 10. 2026 10:06","Dôvod: odvolanie proti pokute opisuje manuál ISSF-08; tu by sa to opakovalo. "+SM),`${Q}Zmeniť rozhodnutie${QE}`,a);
+const s5=(a,m)=>decided({...F21,diffL:"Prijaté znenie"},"c","2.1 Aktivácia konta na matrike (hráč), bod 1",ln("lnote--warn","!","Prijaté, čaká na správcu obsahu","prijala Mária Kováčová "+SM+", 11. 10. 2026 10:15","Do konceptu ho zapíše správca obsahu. Dôvod: doplniť matriku SFZ podľa RaPP. "+SM),`${Q}Zapísať do konceptu${QE}${Q}Zmeniť rozhodnutie${QE}`,a);
+const s6=(a,m)=>decided({...F3,diffL:"Prijaté znenie"},"c","3. Reklamácia položky",ln("lnote--warn","!","Treba vložiť ručne","Ján Letko, 11. 10. 2026 10:20","Úryvok sa v koncepte nenašiel jednoznačne — nahraďte ho v koncepte sami. Dôvod: doplniť postup pri nesúhlase s pokutou. "+SM),`${Q}Kopírovať znenie${QE}${Q}Otvoriť koncept${QE}${Q}Zmeniť rozhodnutie${QE}`,a,`<label class="field"><span class="field-label">Znenie na vloženie</span><span class="field-input ta3">Reklamáciu položky faktúry podá klub do 15 dní od vystavenia. Nesúhlas s uloženou pokutou sa nerieši reklamáciou, ale odvolaním do 7 dní; pokuta sa platí aj počas odvolania.</span></label>`);
+const lab=t=>`<p class="state-l">${t}</p>`;
+document.getElementById("f-states").innerHTML=hdr()+crumbs()+`<div class="body"><div class="split"><div></div><div class="main"><div class="flist">
+${lab("1 · Nerozhodnuté — zbalené")}${collapsed("c","3. Reklamácia položky",an(1,"left:-30px;top:16px"))}
+${lab("3 · Prijaté a zapísané do konceptu")}${s3(an(2,"left:-30px;top:16px"))}
+${lab("4 · Vedome ponechané")}${s4(an(3,"left:-30px;top:16px"))}
+${lab("5 · Prijaté, čaká na správcu obsahu — pohľad správcu obsahu")}${s5(an(4,"left:-30px;top:16px"))}
+${lab("6 · Úryvok sa v texte nenašiel")}${s6(an(5,"left:-30px;top:16px"))}
+</div></div></div></div>`;
+
+/* 834 */
+document.getElementById("t-detail").innerHTML=hdr()+crumbs()+`<div class="body">${head()}${prog({open:1,a3:an(2,"right:8px;top:10px")})}${pick(an(1,"right:-6px;top:-10px"))}<div class="main">${docHead()}${filter("open")}<div class="flist">${openCard(0,{a9:an(3,"right:0;top:-6px")})}${restList()}</div></div></div>`;
+
+/* 390 */
+document.getElementById("m-detail").innerHTML=hdr(1)+crumbs()+`<div class="body">${head()}${prog({a3:an(1,"right:-6px;top:-10px")})}${pick(an(2,"right:-6px;top:-10px"))}${docHead()}${filter("open",an(3,"right:-6px;top:-12px"))}<div class="flist">${openCard(1,{a9:an(4,"right:-6px;top:-8px"),a11:an(5,"right:-6px;top:-10px")})}${restList()}</div></div>`+tabbar;
+document.getElementById("m-docs").innerHTML=hdr(1)+crumbs()+`<div class="body">${head()}${prog()}<div class="rel">${an(6,"right:-6px;top:-10px")}${docList()}</div></div>`+tabbar;
+document.getElementById("m-states").innerHTML=hdr(1)+crumbs()+`<div class="body">${pick()}${filter("decided")}<div class="flist">${s5()}${s6()}</div></div>`+tabbar;
+</script>
+</body></html>

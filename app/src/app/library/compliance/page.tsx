@@ -57,6 +57,12 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
 
       <section className="card detail-block" style={{ marginBottom: 16 }}>
         <form action={startDocumentReviewAction} style={{ display: "grid", gap: 12 }}>
+          {/* Názov kontroly (KNIZ-kontrola-suladu-detail, Q4): nadpis detailu. */}
+          <label className="field" style={{ margin: 0 }}>
+            <span className="field-label">{t.nameLabel}</span>
+            <input className="field-input" name="name" maxLength={120} />
+            <span className="quiet field-hint">{t.nameHint}</span>
+          </label>
           <div className="field" style={{ margin: 0 }}>
             <span className="field-label">{t.subjects}</span>
             <MultiSelect name="subjectIds" options={options} selected={last?.scope.kind === "documents" ? last.scope.subjectIds : []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
@@ -81,7 +87,7 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
             <section key={run.runId} className="card detail-block compliance-run">
               <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
                 <p style={{ margin: 0 }}>
-                  <b>{t.runMeta(formatDate(run.startedAt, language), run.startedBy)}</b>{" · "}
+                  <b>{run.name || t.runMeta(formatDate(run.startedAt, language), run.startedBy)}</b>{" · "}
                   {run.pending.length === 0 ? t.findingsCount(findings.length, open)
                     : run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span>
                     : t.progress(run.total - run.pending.length, run.total)}

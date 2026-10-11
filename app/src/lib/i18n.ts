@@ -3166,6 +3166,52 @@ interface Dictionary {
       tokens: (input: number, output: number, cached: number) => string
       calls: (calls: number, failed: number) => string
       running: string
+      runDefaultName: (date: string) => string
+      runScope: (docs: number, norms: number, who: string, date: string) => string
+      runAgain: string
+      nameLabel: string
+      nameHint: string
+      decidedOf: (decided: number, total: number) => string
+      remaining: (n: number) => string
+      kindsShort: Record<"conflict" | "outdated" | "missing" | "unclear", string>
+      documents: (n: number) => string
+      openOf: (open: number, total: number) => string
+      openOfTitle: (open: number) => string
+      docDone: string
+      docNoFindings: string
+      docPosition: (i: number, n: number) => string
+      validLabel: (label: string) => string
+      openDocument: string
+      viewLabel: string
+      viewOpen: string
+      viewDecided: string
+      viewAll: string
+      docAllDecided: string
+      docNoneDecided: string
+      nextDocument: (title: string) => string
+      decide: string
+      collapse: string
+      change: string
+      saveNext: string
+      nextIs: (location: string) => string
+      nextInDoc: (title: string) => string
+      lastOpen: string
+      stateDraft: string
+      stateKept: string
+      stateWaiting: string
+      stateManual: string
+      acceptedBy: (who: string, when: string) => string
+      decidedWhoWhen: (who: string, when: string) => string
+      reasonLine: (reason: string) => string
+      waitingNote: string
+      waitingNotified: string
+      manualNote: string
+      manualText: string
+      copyText: string
+      copied: string
+      keptText: string
+      savedPending: string
+      metaSteps: string
     }
     tracks: {
       heading: string
@@ -7848,7 +7894,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       stopped: "Kontrola sa po opakovaných chybách zastavila. Skúste ju spustiť znova.",
       draftMark: "koncept",
       noFindings: "Bez nálezov — dokument je s normami v súlade.",
-      kinds: { conflict: "rozpor s normou", outdated: "zastarané", missing: "chýba podmienka", unclear: "nejasné" },
+      kinds: { conflict: "Rozpor s normou", outdated: "Zastarané", missing: "Chýba podmienka", unclear: "Nejasné" },
       location: "Miesto",
       quote: "V dokumente",
       norm: "Norma",
@@ -7861,12 +7907,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "Prečo ste sa tak rozhodli — napríklad „ISSF účtuje 0,50 € mesačne podľa uznesenia VV“.",
       savedKept: "Rozhodnutie je uložené — znenie ostáva.",
       savedDraft: "Rozhodnutie je uložené a nové znenie je v koncepte dokumentu.",
-      savedManual: "Rozhodnutie je uložené. Znenie treba vložiť do konceptu ručne — úryvok sa v texte nenašiel jednoznačne alebo nemáte rolu správcu obsahu.",
+      savedManual: "Rozhodnutie je uložené. Úryvok sa v koncepte nenašiel jednoznačne — znenie treba vložiť ručne.",
       decisionKeep: "Ponechať existujúce znenie",
       applyToDraft: "Zapísať do konceptu",
       applyHint: "Znenie prijal niekto bez roly správcu obsahu. Zápisom nahradí úryvok v koncepte; platné znenie sa nemení.",
       changeDecision: "Zmeniť rozhodnutie",
-      decisionAccept: "Prijať odporúčanie a upraviť",
+      decisionAccept: "Prijať a upraviť",
       proposed: "Nové znenie",
       proposedHintValid: "Nahradí úryvok v koncepte ďalšieho znenia. Platné znenie sa nemení, kým koncept nezverejníte.",
       proposedHintDraft: "Nahradí úryvok v koncepte. Dokument ešte nie je zverejnený.",
@@ -7893,10 +7939,56 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       calls: (n: number, f: number) => `${n}${f ? ` (${f} zlyhalo)` : ""}`,
       running: "beží",
       reason: "Dôvod",
-      reasonHint: "Povinný pri oboch rozhodnutiach — o rok má byť jasné, prečo.",
-      save: "Uložiť rozhodnutie",
+      reasonHint: "Povinné pri oboch voľbách. Zapíše sa do auditu dokumentu.",
+      save: "Uložiť",
       saved: "Rozhodnutie je uložené.",
       decided: (status: string, who: string, when: string) => `${status} — ${when}, ${who}`,
+      runDefaultName: date => `Kontrola ${date}`,
+      runScope: (docs, norms, who, date) => `${docs} ${docs === 1 ? "dokument" : docs >= 2 && docs <= 4 ? "dokumenty" : "dokumentov"} proti ${norms} ${norms === 1 ? "norme" : "normám"} · spustil ${who} ${date}`,
+      runAgain: "Spustiť znova",
+      nameLabel: "Názov kontroly",
+      nameHint: "Nepovinné. Bez názvu sa kontrola volá podľa dátumu.",
+      decidedOf: (d, n) => `${d} z ${n} ${n === 1 ? "nálezu" : "nálezov"} rozhodnutých`,
+      remaining: n => `${n} ostáva`,
+      kindsShort: { conflict: "Rozpor", outdated: "Zastarané", missing: "Chýba", unclear: "Nejasné" },
+      documents: n => `Dokumenty · ${n}`,
+      openOf: (o, n) => `${o} z ${n}`,
+      openOfTitle: n => `Nerozhodnuté: ${n}`,
+      docDone: "hotovo",
+      docNoFindings: "bez nálezov",
+      docPosition: (i, n) => `Dokument ${i} z ${n}`,
+      validLabel: label => `platné ${label}`,
+      openDocument: "Otvoriť dokument",
+      viewLabel: "Zobraziť nálezy",
+      viewOpen: "Nerozhodnuté",
+      viewDecided: "Rozhodnuté",
+      viewAll: "Všetky",
+      docAllDecided: "Všetky nálezy dokumentu sú rozhodnuté.",
+      docNoneDecided: "Zatiaľ nie je rozhodnutý žiadny nález.",
+      nextDocument: title => `Ďalší dokument: ${title}`,
+      decide: "Rozhodnúť",
+      collapse: "Zbaliť",
+      change: "Zmena znenia",
+      saveNext: "Uložiť a ďalší",
+      nextIs: loc => `Ďalší: ${loc}`,
+      nextInDoc: title => `Ďalší v dokumente ${title}`,
+      lastOpen: "Posledný nerozhodnutý nález.",
+      stateDraft: "Prijaté a zapísané do konceptu",
+      stateKept: "Ponechané existujúce znenie",
+      stateWaiting: "Prijaté, čaká na správcu obsahu",
+      stateManual: "Treba vložiť ručne",
+      acceptedBy: (who, when) => `prijal(a) ${who}, ${when}`,
+      decidedWhoWhen: (who, when) => `${who}, ${when}`,
+      reasonLine: r => `Dôvod: ${r}`,
+      waitingNote: "Do konceptu ho zapíše správca obsahu.",
+      waitingNotified: "Správcovia obsahu dostali upozornenie.",
+      manualNote: "Úryvok sa v koncepte nenašiel jednoznačne — nahraďte ho v koncepte sami.",
+      manualText: "Znenie na vloženie",
+      copyText: "Kopírovať znenie",
+      copied: "Skopírované",
+      keptText: "Ponechané znenie",
+      savedPending: "Rozhodnutie je uložené. Znenie do konceptu zapíše správca obsahu — dostal upozornenie.",
+      metaSteps: "Kroky",
     },
     tracks: {
       heading: "Trasy",
@@ -12504,7 +12596,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       stopped: "Kontrola se po opakovaných chybách zastavila. Zkuste ji spustit znovu.",
       draftMark: "koncept",
       noFindings: "Bez nálezů — dokument je s normami v souladu.",
-      kinds: { conflict: "rozpor s normou", outdated: "zastaralé", missing: "chybí podmínka", unclear: "nejasné" },
+      kinds: { conflict: "Rozpor s normou", outdated: "Zastaralé", missing: "Chybí podmínka", unclear: "Nejasné" },
       location: "Místo",
       quote: "V dokumentu",
       norm: "Norma",
@@ -12517,12 +12609,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "Proč jste se tak rozhodli — například „ISSF účtuje 0,50 € měsíčně podle usnesení VV“.",
       savedKept: "Rozhodnutí je uloženo — znění zůstává.",
       savedDraft: "Rozhodnutí je uloženo a nové znění je v konceptu dokumentu.",
-      savedManual: "Rozhodnutí je uloženo. Znění je třeba vložit do konceptu ručně — úryvek se v textu nenašel jednoznačně nebo nemáte roli správce obsahu.",
+      savedManual: "Rozhodnutí je uloženo. Úryvek se v konceptu nenašel jednoznačně — znění je třeba vložit ručně.",
       decisionKeep: "Ponechat stávající znění",
       applyToDraft: "Zapsat do konceptu",
       applyHint: "Znění přijal někdo bez role správce obsahu. Zápisem nahradí úryvek v konceptu; platné znění se nemění.",
       changeDecision: "Změnit rozhodnutí",
-      decisionAccept: "Přijmout doporučení a upravit",
+      decisionAccept: "Přijmout a upravit",
       proposed: "Nové znění",
       proposedHintValid: "Nahradí úryvek v konceptu dalšího znění. Platné znění se nemění, dokud koncept nezveřejníte.",
       proposedHintDraft: "Nahradí úryvek v konceptu. Dokument ještě není zveřejněn.",
@@ -12549,10 +12641,56 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       calls: (n: number, f: number) => `${n}${f ? ` (${f} selhalo)` : ""}`,
       running: "běží",
       reason: "Důvod",
-      reasonHint: "Povinný u obou rozhodnutí — za rok má být jasné, proč.",
-      save: "Uložit rozhodnutí",
+      reasonHint: "Povinné u obou voleb. Zapíše se do auditu dokumentu.",
+      save: "Uložit",
       saved: "Rozhodnutí je uložené.",
       decided: (status: string, who: string, when: string) => `${status} — ${when}, ${who}`,
+      runDefaultName: date => `Kontrola ${date}`,
+      runScope: (docs, norms, who, date) => `${docs} ${docs === 1 ? "dokument" : docs >= 2 && docs <= 4 ? "dokumenty" : "dokumentů"} proti ${norms} ${norms === 1 ? "normě" : "normám"} · spustil ${who} ${date}`,
+      runAgain: "Spustit znovu",
+      nameLabel: "Název kontroly",
+      nameHint: "Nepovinné. Bez názvu se kontrola jmenuje podle data.",
+      decidedOf: (d, n) => `${d} z ${n} ${n === 1 ? "nálezu" : "nálezů"} rozhodnuto`,
+      remaining: n => `${n} zbývá`,
+      kindsShort: { conflict: "Rozpor", outdated: "Zastaralé", missing: "Chybí", unclear: "Nejasné" },
+      documents: n => `Dokumenty · ${n}`,
+      openOf: (o, n) => `${o} z ${n}`,
+      openOfTitle: n => `Nerozhodnuté: ${n}`,
+      docDone: "hotovo",
+      docNoFindings: "bez nálezů",
+      docPosition: (i, n) => `Dokument ${i} z ${n}`,
+      validLabel: label => `platné ${label}`,
+      openDocument: "Otevřít dokument",
+      viewLabel: "Zobrazit nálezy",
+      viewOpen: "Nerozhodnuté",
+      viewDecided: "Rozhodnuté",
+      viewAll: "Všechny",
+      docAllDecided: "Všechny nálezy dokumentu jsou rozhodnuté.",
+      docNoneDecided: "Zatím není rozhodnutý žádný nález.",
+      nextDocument: title => `Další dokument: ${title}`,
+      decide: "Rozhodnout",
+      collapse: "Sbalit",
+      change: "Změna znění",
+      saveNext: "Uložit a další",
+      nextIs: loc => `Další: ${loc}`,
+      nextInDoc: title => `Další v dokumentu ${title}`,
+      lastOpen: "Poslední nerozhodnutý nález.",
+      stateDraft: "Přijato a zapsáno do konceptu",
+      stateKept: "Ponecháno stávající znění",
+      stateWaiting: "Přijato, čeká na správce obsahu",
+      stateManual: "Je třeba vložit ručně",
+      acceptedBy: (who, when) => `přijal(a) ${who}, ${when}`,
+      decidedWhoWhen: (who, when) => `${who}, ${when}`,
+      reasonLine: r => `Důvod: ${r}`,
+      waitingNote: "Do konceptu ho zapíše správce obsahu.",
+      waitingNotified: "Správci obsahu dostali upozornění.",
+      manualNote: "Úryvek se v konceptu nenašel jednoznačně — nahraďte ho v konceptu sami.",
+      manualText: "Znění k vložení",
+      copyText: "Kopírovat znění",
+      copied: "Zkopírováno",
+      keptText: "Ponechané znění",
+      savedPending: "Rozhodnutí je uloženo. Znění do konceptu zapíše správce obsahu — dostal upozornění.",
+      metaSteps: "Kroky",
     },
     tracks: {
       heading: "Trasy",
@@ -17146,7 +17284,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       stopped: "The check stopped after repeated errors. Try running it again.",
       draftMark: "draft",
       noFindings: "No findings — the document complies with the rules.",
-      kinds: { conflict: "conflicts with a rule", outdated: "outdated", missing: "missing condition", unclear: "unclear" },
+      kinds: { conflict: "Conflicts with a rule", outdated: "Outdated", missing: "Missing condition", unclear: "Unclear" },
       location: "Where",
       quote: "In the document",
       norm: "Rule",
@@ -17159,12 +17297,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "Why you decided this way — e.g. “ISSF charges €0.50 a month under the Executive Committee resolution”.",
       savedKept: "Decision saved — the wording stays.",
       savedDraft: "Decision saved and the new wording is in the document draft.",
-      savedManual: "Decision saved. The wording has to be put into the draft by hand — the excerpt was not found unambiguously or you do not have the content manager role.",
+      savedManual: "The decision is saved. The excerpt was not found unambiguously in the draft — insert the wording manually.",
       decisionKeep: "Keep the current wording",
       applyToDraft: "Write to draft",
       applyHint: "The wording was accepted by someone without the content manager role. Writing it replaces the excerpt in the draft; the valid version does not change.",
       changeDecision: "Change decision",
-      decisionAccept: "Accept the recommendation and edit",
+      decisionAccept: "Accept and edit",
       proposed: "New wording",
       proposedHintValid: "Replaces the excerpt in the draft of the next version. The valid version does not change until you publish the draft.",
       proposedHintDraft: "Replaces the excerpt in the draft. The document is not published yet.",
@@ -17191,10 +17329,56 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       calls: (n: number, f: number) => `${n}${f ? ` (${f} failed)` : ""}`,
       running: "running",
       reason: "Reason",
-      reasonHint: "Required for both decisions — in a year it should be clear why.",
-      save: "Save decision",
+      reasonHint: "Required for both choices. It is written to the document's audit log.",
+      save: "Save",
       saved: "The decision is saved.",
       decided: (status: string, who: string, when: string) => `${status} — ${when}, ${who}`,
+      runDefaultName: date => `Check ${date}`,
+      runScope: (docs, norms, who, date) => `${docs} ${docs === 1 ? "document" : "documents"} against ${norms} ${norms === 1 ? "norm" : "norms"} · started by ${who} ${date}`,
+      runAgain: "Run again",
+      nameLabel: "Check name",
+      nameHint: "Optional. Without a name the check is named after its date.",
+      decidedOf: (d, n) => `${d} of ${n} ${n === 1 ? "finding" : "findings"} decided`,
+      remaining: n => `${n} left`,
+      kindsShort: { conflict: "Conflict", outdated: "Outdated", missing: "Missing", unclear: "Unclear" },
+      documents: n => `Documents · ${n}`,
+      openOf: (o, n) => `${o} of ${n}`,
+      openOfTitle: n => `Undecided: ${n}`,
+      docDone: "done",
+      docNoFindings: "no findings",
+      docPosition: (i, n) => `Document ${i} of ${n}`,
+      validLabel: label => `valid ${label}`,
+      openDocument: "Open document",
+      viewLabel: "Show findings",
+      viewOpen: "Undecided",
+      viewDecided: "Decided",
+      viewAll: "All",
+      docAllDecided: "All findings of this document are decided.",
+      docNoneDecided: "No finding is decided yet.",
+      nextDocument: title => `Next document: ${title}`,
+      decide: "Decide",
+      collapse: "Collapse",
+      change: "Change of wording",
+      saveNext: "Save and next",
+      nextIs: loc => `Next: ${loc}`,
+      nextInDoc: title => `Next in ${title}`,
+      lastOpen: "Last undecided finding.",
+      stateDraft: "Accepted and written to the draft",
+      stateKept: "Existing wording kept",
+      stateWaiting: "Accepted, waiting for a content manager",
+      stateManual: "Needs to be inserted manually",
+      acceptedBy: (who, when) => `accepted by ${who}, ${when}`,
+      decidedWhoWhen: (who, when) => `${who}, ${when}`,
+      reasonLine: r => `Reason: ${r}`,
+      waitingNote: "A content manager writes it into the draft.",
+      waitingNotified: "Content managers have been notified.",
+      manualNote: "The excerpt was not found unambiguously in the draft — replace it in the draft yourself.",
+      manualText: "Wording to insert",
+      copyText: "Copy wording",
+      copied: "Copied",
+      keptText: "Kept wording",
+      savedPending: "The decision is saved. A content manager will write the wording into the draft — they have been notified.",
+      metaSteps: "Steps",
     },
     tracks: {
       heading: "Tracks",

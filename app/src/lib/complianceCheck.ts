@@ -395,14 +395,22 @@ export interface DocumentFinding {
   reason?: string | null
   /** Znenie, ktoré človek prijal (po svojej úprave). */
   acceptedText?: string | null
-  /** Kam sa prijaté znenie zapísalo: do konceptu, alebo ho treba vložiť ručne. */
-  applied?: "draft" | "manual" | null
+  /**
+   * Kam sa prijaté znenie zapísalo: `draft` — do konceptu; `pending` —
+   * prijal ho niekto bez roly správcu obsahu a čaká na zápis; `manual` —
+   * úryvok sa v texte nenašiel jednoznačne a treba ho vložiť ručne.
+   * `pending` je od 11. 10. 2026 (KNIZ-kontrola-suladu-detail); staršie
+   * rozhodnutia bez práv nesú `manual`.
+   */
+  applied?: FindingApplied
   /** Kto znenie zapísal do konceptu, keď ho prijal niekto bez roly správcu obsahu. */
   appliedBy?: string | null
   appliedAt?: Date | null
   decidedBy?: string | null
   decidedAt?: Date | null
 }
+
+export type FindingApplied = "draft" | "pending" | "manual" | null
 
 export interface DocumentResult {
   documentId: string
@@ -414,12 +422,20 @@ export interface DocumentResult {
   findings: DocumentFinding[]
 }
 
-export function docReviewPrompt(subject: { title: string; text: string }, prior: DocumentFinding[]): string {
+/**
+ * Posledný krok píše zhrnutie za celý dokument (KNIZ-kontrola-suladu-detail,
+ * Q3, 11. 10. 2026) — spojené zhrnutia krokov mali vety typu „RaPP v tomto
+ * kroku nebol…", ktoré čitateľovi nič nehovoria.
+ */
+export const FINAL_STEP_NOTE = "Toto je posledný krok kontroly. „summary“ napíš za celý dokument — zhrň aj doterajšie nálezy vyššie; nepíš o krokoch ani o tom, ktoré normy v tomto kroku neboli."
+
+export function docReviewPrompt(subject: { title: string; text: string }, prior: DocumentFinding[], last = false): string {
   return [
     `### Kontrolovaný dokument: ${subject.title}`,
     "",
     subject.text,
-    ...(prior.length ? ["", "Doterajšie nálezy z vyšších dokumentov (neopakovať, nemeniť):", ...prior.map(f => `– ${f.location}: ${f.citation.title}${f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}`)] : []),
+    ...(prior.length ? ["", "Doterajšie nálezy z vyšších dokumentov (neopakovať, nemeniť):", ...prior.map(f => `– ${f.kind} · ${f.location}: ${f.citation.title}${f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}`)] : []),
+    ...(last ? ["", FINAL_STEP_NOTE] : []),
   ].join("\n")
 }
 
@@ -453,6 +469,8 @@ export interface ComplianceRun {
   scopeKey: string
   scope: RunScope
   runId: string
+  /** Názov kontroly zadaný pri spustení (Q4); prázdny = „Kontrola <dátum>". */
+  name?: string | null
   /** Referenčné dokumenty. */
   documentIds: string[]
   documents: PackDocument[]
@@ -608,7 +626,7 @@ export async function startProposalReview(
  * dokument nesmie byť zároveň referenčný; verejný sa kontroluje len
  * verejnými, interný akýmikoľvek.
  */
-export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date()): Promise<ComplianceRun> {
+export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date(), name = ""): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startDocumentReview")
   const subjects = [...new Set(subjectIds.filter(Boolean))]
   if (!subjects.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
@@ -621,6 +639,8 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
   const run = newRun(code, "", { kind: "documents", subjectIds: subjects }, ids, packs, subjects, starter, ai.models.compliance, now)
   run.scopeKey = `documents:${run.runId}`
+  const title = name.replace(/\s+/g, " ").trim().slice(0, 120)
+  if (title) run.name = title
   await (await runs()).insertOne(run)
   return run
 }
@@ -725,14 +745,16 @@ async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject:
   const pack = packs[partial.step]
   let seq = partial.findings.length
   const newId = () => `f${(++seq).toString().padStart(3, "0")}`
-  const raw = await callStep(ctx, DOC_REVIEW_SYSTEM, pack, docReviewPrompt({ title, text }, partial.findings), DOC_REVIEW_SCHEMA, `kontrola dokumentu: ${title}`)
+  const last = partial.step === packs.length - 1
+  const raw = await callStep(ctx, DOC_REVIEW_SYSTEM, pack, docReviewPrompt({ title, text }, partial.findings, last && packs.length > 1), DOC_REVIEW_SCHEMA, `kontrola dokumentu: ${title}`)
   const r = parseDocReview(raw, pack, newId)
   return { documentId: partial.documentId, step: partial.step + 1, findings: [...partial.findings, ...r.findings], summaries: r.summary ? [...partial.summaries, r.summary] : partial.summaries }
 }
 
 function documentResult(subject: RawDocument, partial: DocumentPartial): DocumentResult {
   const { state, label } = documentText(subject)
-  return { documentId: subject.documentId, title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.join(" "), findings: partial.findings }
+  // Zhrnutie za dokument napísal posledný krok (Q3); medzikroky sa nespájajú.
+  return { documentId: subject.documentId, title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.at(-1) ?? "", findings: partial.findings }
 }
 
 /**
@@ -934,14 +956,23 @@ async function writeToDraft(code: string, documentId: string, quote: string, tex
  * Správca obsahu zapíše do konceptu znenie, ktoré prijal niekto bez jeho
  * roly (Ján 11. 10. 2026: upozornenie správcom obsahu, potom jedno kliknutie).
  */
-export async function applyAcceptedFinding(companyCode: string, runId: string, documentId: string, findingId: string, actor: string): Promise<"draft" | "manual" | null> {
+export async function applyAcceptedFinding(companyCode: string, runId: string, documentId: string, findingId: string, actor: string): Promise<FindingApplied> {
   const code = requireCompanyCode(companyCode, "applyAcceptedFinding")
   const run = await documentRun(code, runId)
   const res = run?.results?.find(r => r.documentId === documentId)
   const finding = res?.findings.find(f => f.id === findingId)
   if (!run || !res || !finding) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
-  if (!finding.acceptedText || finding.applied !== "manual") throw new ComplianceError("compliance.nothingToApply", "Pri tomto náleze nie je čo zapísať.")
+  // `manual` sa pripúšťa kvôli rozhodnutiam spred 11. 10. 2026, keď „bez práv" a „nenašlo sa" mali jednu hodnotu.
+  if (!finding.acceptedText || (finding.applied !== "pending" && finding.applied !== "manual")) throw new ComplianceError("compliance.nothingToApply", "Pri tomto náleze nie je čo zapísať.")
   const applied = await writeToDraft(code, documentId, finding.quote, finding.acceptedText, actor)
+  if (applied === "manual" && finding.applied === "pending") {
+    // Úryvok sa nenašiel — z „čaká na správcu" sa stáva „treba vložiť ručne".
+    await (await runs()).updateOne(
+      { companyCode: code, runId, "scope.kind": "documents" },
+      { $set: { "results.$[d].findings.$[f].applied": "manual" } },
+      { arrayFilters: [{ "d.documentId": documentId }, { "f.id": findingId }] },
+    )
+  }
   if (applied === "draft" || applied === null) {
     await (await runs()).updateOne(
       { companyCode: code, runId, "scope.kind": "documents" },
@@ -974,14 +1005,15 @@ export async function notifyContentManagers(companyCode: string, runId: string, 
  *   textu, pri rozpracovanom koncepte sa upraví ten. Do platnosti ide až
  *   bežným zverejnením (schválenie, zodpovedná osoba, potvrdenia).
  *   Keď sa úryvok v texte jednoznačne nenájde, rozhodnutie sa uloží
- *   s `applied: "manual"` a znenie treba vložiť v editore.
+ *   s `applied: "manual"` a znenie treba vložiť v editore. Bez roly
+ *   správcu obsahu sa uloží `pending` — zapíše ho správca obsahu.
  *
  * Dôvod je povinný pri oboch — o rok má byť čitateľné, prečo sa tak stalo.
  */
 export async function decideFinding(
   companyCode: string, runId: string, documentId: string, findingId: string,
   decision: FindingDecision, reason: string, text: string, actor: string, canEditDrafts = true,
-): Promise<{ applied: "draft" | "manual" | null }> {
+): Promise<{ applied: FindingApplied }> {
   const code = requireCompanyCode(companyCode, "decideFinding")
   const why = reason.trim()
   const accepted = text.replace(/\r\n?/g, "\n").trim()
@@ -991,8 +1023,8 @@ export async function decideFinding(
   const finding = run?.results?.find(r => r.documentId === documentId)?.findings.find(f => f.id === findingId)
   if (!run || !finding) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
 
-  let applied: "draft" | "manual" | null = null
-  if (decision === "accepted") applied = canEditDrafts ? await writeToDraft(code, documentId, finding.quote, accepted, actor) : "manual"
+  let applied: FindingApplied = null
+  if (decision === "accepted") applied = canEditDrafts ? await writeToDraft(code, documentId, finding.quote, accepted, actor) : "pending"
 
   const r = await (await runs()).updateOne(
     { companyCode: code, runId, "scope.kind": "documents" },
