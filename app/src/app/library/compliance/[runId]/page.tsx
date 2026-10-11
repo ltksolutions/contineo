@@ -311,7 +311,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
       <article key={f.id} id={anchor} className="card cf">
         <div className="cf-head"><KindTag t={t} f={f} /><b>{f.location}</b></div>
         {state === "draft" && <StateNote t={t} f={f} cls="" mark="✓" title={t.stateDraft} who={who} />}
-        {state === "kept" && <StateNote t={t} f={f} cls="lnote--info" mark="–" title={t.stateKept} who={who} />}
+        {state === "kept" && <StateNote t={t} f={f} cls="lnote--info" mark="–" title={t.stateKept} who={who} note={f.carriedFrom ? t.carriedNote : undefined} />}
         {state === "pending" && (
           <StateNote t={t} f={f} cls="lnote--warn" mark="!" title={t.stateWaiting}
                      who={t.acceptedBy(f.decidedBy ?? "—", f.decidedAt ? formatDate(f.decidedAt, language) : "—")} note={t.waitingNote} />

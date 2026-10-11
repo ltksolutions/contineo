@@ -41,6 +41,7 @@ import { draftIsFree } from "./textFix"
 import { writeAudit } from "./audit"
 import { PROPOSALS_COLLECTION, type FaqProposal, type ProposalSource } from "./faqProposals"
 import type { TokenCounts } from "./pricing"
+import { articleHash } from "./articleAnchors"
 import { notify, notifyPeople } from "./notifications"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { tenantByCompanyCode, brandingView } from "./tenants"
@@ -403,6 +404,8 @@ export interface DocumentFinding {
    * rozhodnutia bez práv nesú `manual`.
    */
   applied?: FindingApplied
+  /** Ponechanie prevzaté z predchádzajúcej kontroly (pamäť rozhodnutí, 11. 10. 2026). */
+  carriedFrom?: { runId: string; findingId: string } | null
   /** Kto znenie zapísal do konceptu, keď ho prijal niekto bez roly správcu obsahu. */
   appliedBy?: string | null
   appliedAt?: Date | null
@@ -429,12 +432,14 @@ export interface DocumentResult {
  */
 export const FINAL_STEP_NOTE = "Toto je posledný krok kontroly. „summary“ napíš za celý dokument — zhrň aj doterajšie nálezy vyššie; nepíš o krokoch ani o tom, ktoré normy v tomto kroku neboli."
 
-export function docReviewPrompt(subject: { title: string; text: string }, prior: DocumentFinding[], last = false): string {
+export function docReviewPrompt(subject: { title: string; text: string }, prior: DocumentFinding[], last = false, kept: KeptDecision[] = []): string {
   return [
     `### Kontrolovaný dokument: ${subject.title}`,
     "",
     subject.text,
     ...(prior.length ? ["", "Doterajšie nálezy z vyšších dokumentov (neopakovať, nemeniť):", ...prior.map(f => `– ${f.kind} · ${f.location}: ${f.citation.title}${f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}`)] : []),
+    // Pamäť rozhodnutí (Ján 11. 10. 2026): autor tieto miesta vedome ponechal — nehlásiť znova.
+    ...(kept.length ? ["", "Miesta, ktoré autor v predchádzajúcej kontrole vedome ponechal (s dôvodom). Nehlásiť ich znova, ani inou formuláciou:", ...kept.map(k => `– ${k.location}: ${k.citationTitle}${k.articleRef ? `, ${k.articleRef}` : ""} — dôvod: ${k.reason}`)] : []),
     ...(last ? ["", FINAL_STEP_NOTE] : []),
   ].join("\n")
 }
@@ -759,22 +764,88 @@ export interface DocumentPartial {
  * nie celý dokument (11. 10. 2026) — pri Opus 5.5 by tri balíky za sebou
  * prekročili 300 s funkcie a dokument by sa začínal stále odznova.
  */
-async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject: RawDocument, partial: DocumentPartial): Promise<DocumentPartial> {
+async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject: RawDocument, partial: DocumentPartial, kept: KeptDecision[] = []): Promise<DocumentPartial> {
   const { text } = documentText(subject)
   const title = String(subject.title ?? subject.documentId)
   const pack = packs[partial.step]
   let seq = partial.findings.length
   const newId = () => `f${(++seq).toString().padStart(3, "0")}`
   const last = partial.step === packs.length - 1
-  const raw = await callStep(ctx, DOC_REVIEW_SYSTEM, pack, docReviewPrompt({ title, text }, partial.findings, last && packs.length > 1), DOC_REVIEW_SCHEMA, `kontrola dokumentu: ${title}`)
+  const raw = await callStep(ctx, DOC_REVIEW_SYSTEM, pack, docReviewPrompt({ title, text }, partial.findings, last && packs.length > 1, kept), DOC_REVIEW_SCHEMA, `kontrola dokumentu: ${title}`)
   const r = parseDocReview(raw, pack, newId)
   return { documentId: partial.documentId, step: partial.step + 1, findings: [...partial.findings, ...r.findings], summaries: r.summary ? [...partial.summaries, r.summary] : partial.summaries }
 }
 
-function documentResult(subject: RawDocument, partial: DocumentPartial): DocumentResult {
+function documentResult(subject: RawDocument, partial: DocumentPartial, kept: KeptDecision[] = []): DocumentResult {
   const { state, label } = documentText(subject)
   // Zhrnutie za dokument napísal posledný krok (Q3); medzikroky sa nespájajú.
-  return { documentId: subject.documentId, title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.at(-1) ?? "", findings: partial.findings }
+  return { documentId: subject.documentId, title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.at(-1) ?? "", findings: carryKept(partial.findings, kept) }
+}
+
+/** Vedome ponechané miesto z predchádzajúcej kontroly — pamäť rozhodnutí (Ján 11. 10. 2026). */
+export interface KeptDecision {
+  runId: string
+  findingId: string
+  location: string
+  quote: string
+  citationDocumentId: string
+  citationTitle: string
+  articleRef: string | null
+  reason: string
+  decidedBy: string | null
+  decidedAt: Date | null
+}
+
+/** Ten istý nález ako ponechaný? Tá istá norma a článok, a ten istý úryvok alebo miesto. */
+export function sameKept(f: DocumentFinding, k: KeptDecision): boolean {
+  if (f.citation.documentId !== k.citationDocumentId) return false
+  const art = (r: string | null | undefined) => articleHash(r).replace(/-ods-.*$/, "")
+  if (art(f.citation.articleRef) !== art(k.articleRef)) return false
+  return quotesOverlap(f.quote, k.quote) || f.location.trim().slice(0, 30) === k.location.trim().slice(0, 30)
+}
+
+/**
+ * Nález, ktorý model napriek pokynu nahlásil znova, prevezme ponechanie
+ * z predchádzajúcej kontroly: stav, dôvod, kto a kedy, plus `carriedFrom`.
+ * Človek ho vidí zbalený medzi rozhodnutými a môže ho zmeniť.
+ */
+export function carryKept(findings: DocumentFinding[], kept: KeptDecision[]): DocumentFinding[] {
+  return findings.map(f => {
+    if (f.status) return f
+    const k = kept.find(x => sameKept(f, x))
+    return k ? { ...f, status: "kept" as const, reason: k.reason, decidedBy: k.decidedBy, decidedAt: k.decidedAt, carriedFrom: { runId: k.runId, findingId: k.findingId } } : f
+  })
+}
+
+/**
+ * Ponechané rozhodnutia ku kontrolovanému dokumentu zo starších behov,
+ * najnovšie rozhodnutie pre to isté miesto vyhráva. Prevzaté ponechanie sa
+ * znova nepreberá zo seba samého — nesie odkaz na pôvodné.
+ */
+export async function keptDecisions(companyCode: string, documentId: string, exceptRunId: string): Promise<KeptDecision[]> {
+  const code = requireCompanyCode(companyCode, "keptDecisions")
+  const list = await (await runs()).find(
+    { companyCode: code, "scope.kind": "documents", runId: { $ne: exceptRunId }, "results.documentId": documentId },
+    { projection: { _id: 0, runId: 1, startedAt: 1, results: 1 } },
+  ).sort({ startedAt: -1 }).toArray()
+  // Od najnovšieho behu: prvé rozhodnutie o mieste platí (aj prijatie), staršie sa preskočia.
+  const decided: KeptDecision[] = []
+  const out: KeptDecision[] = []
+  for (const run of list) {
+    const res = (run.results ?? []).find(r => r.documentId === documentId)
+    for (const f of res?.findings ?? []) {
+      if (!f.status) continue
+      const place: KeptDecision = {
+        runId: f.carriedFrom?.runId ?? run.runId, findingId: f.carriedFrom?.findingId ?? f.id,
+        location: f.location, quote: f.quote, citationDocumentId: f.citation.documentId, citationTitle: f.citation.title,
+        articleRef: f.citation.articleRef, reason: f.reason ?? "", decidedBy: f.decidedBy ?? null, decidedAt: f.decidedAt ?? null,
+      }
+      if (decided.some(d => sameKept({ ...f, status: null }, d))) continue
+      decided.push(place)
+      if (f.status === "kept" && place.reason) out.push(place)
+    }
+  }
+  return out
 }
 
 /**
@@ -857,6 +928,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
         // Dva dokumenty naraz, po jednom kroku: referenčný balík je v cache.
         const ids = pending.slice(0, DOC_PARALLEL)
         const subjects = await loadDocuments(code, ids)
+        const keptBy = new Map(await Promise.all(subjects.map(async d => [d.documentId, await keptDecisions(code, d.documentId, run.runId)] as const)))
         const items = subjects.map(d => ({ d, p: partials.find(p => p.documentId === d.documentId) ?? { documentId: d.documentId, step: 0, findings: [], summaries: [] } }))
         const stepped: DocumentPartial[] = []
         // Studený balík (v cache ešte nie je) ide najprv s jedným dokumentom;
@@ -866,13 +938,13 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
         while (queue.length) {
           const cold = queue.find(it => !packWarm(warm, it.p.step))
           const group = cold ? [cold] : queue
-          const out = await Promise.all(group.map(it => reviewDocumentStep(ctx, packs, it.d, it.p)))
+          const out = await Promise.all(group.map(it => reviewDocumentStep(ctx, packs, it.d, it.p, keptBy.get(it.d.documentId) ?? [])))
           stepped.push(...out)
           for (const it of group) warm = markWarm(warm, it.p.step)
           queue = queue.filter(it => !group.includes(it))
         }
         const doneIds = ids.filter(id => !subjects.some(d => d.documentId === id) || (stepped.find(p => p.documentId === id)?.step ?? 0) >= packs.length)
-        const results = subjects.filter(d => doneIds.includes(d.documentId)).map(d => documentResult(d, stepped.find(p => p.documentId === d.documentId)!))
+        const results = subjects.filter(d => doneIds.includes(d.documentId)).map(d => documentResult(d, stepped.find(p => p.documentId === d.documentId)!, keptBy.get(d.documentId) ?? []))
         partials = [...partials.filter(p => !ids.includes(p.documentId)), ...stepped.filter(p => !doneIds.includes(p.documentId))]
         const withFindings = results.filter(r => r.findings.length).length
         const finished = pending.length <= doneIds.length && doneIds.length === pending.length
