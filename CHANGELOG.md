@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Návrhy FAQ: témy vľavo, jeden otvorený návrh, Schváliť a ďalší (2026-10-11)
+
+- **Témy** sú od 1024 px vľavo s počtom nerozhodnutých, „na rozhodnutie",
+  „odlišuje sa" alebo „hotovo"; na tablete a telefóne riadok „Téma 1 z 17 ›".
+  Predvolene sa otvorí prvá téma s otázkou na rozhodnutie.
+- **Pohľad** Nerozhodnuté / Na rozhodnutie / Rozhodnuté / Všetky a čipy
+  výsledku kontroly namiesto výberu. „Bez zdroja" je štítok pri návrhu.
+- **Návrh** je zbalený riadok s „Rozhodnúť"; otvorený ukáže otázku na
+  rozhodnutie navrchu, výsledok kontroly s citáciou a zmenou odpovede
+  (Prevziať / Ponechať) a úpravu.
+- **Úprava**: varianty so zaškrtnutím (odškrtnutý sa zmaže) a pole nových,
+  **upraviteľné zdroje** (dokument + článok), cieľový FAQ dokument.
+- **Schváliť do FAQ a ďalší** otvorí ďalší nerozhodnutý návrh, aj v ďalšej téme.
+- **Zamietnuť** chce dôvod (ukáže sa v Rozhodnutých), **Zlúčiť** je výber
+  z návrhov témy priamo v karte.
+- **Kontrola proti dokumentom** sa spúšťa z hlavičky; kým beží, je tam stav.
+- Postup za kanál a obdobie e-mailov v hlavičke; stránkovanie zaniklo.
+
 ### Detail kontroly súladu: dokumenty vľavo, nálezy jedného dokumentu (2026-10-11)
 
 - **Nadpis** je názov kontroly (nové nepovinné pole pri spustení), pod ním

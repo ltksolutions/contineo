@@ -10,6 +10,25 @@
 
 ---
 
+## 2026-10-11 — fronta kurátora návrhov FAQ (KANALY-navrhy-faq-kuracia)
+
+**Čo sa zmenilo:** `/channels/[key]/proposals` podľa návrhu (Q1–Q7 A),
+rozloženie zdieľa triedy `.cf-*` s detailom kontroly súladu. Fronta načíta
+všetky návrhy kanála naraz (`channelProposals`) a témy, počty, filter
+a ďalší nerozhodnutý počíta čisté `lib/proposalView.ts` s testom. Model:
+`rejectReason` (povinný, do auditu), zdroje z formulára cez
+`resolveSources` (názov z knižnice), varianty z políčok + nové riadky,
+filter `nosource` → `all`. Akcie po rozhodnutí presmerujú na `next`
+(`téma:id`), uloženie a prevzatie kontroly nechajú otvorený ten istý návrh.
+
+**Odchýlky od návrhu:** podmenu kanála (Návrhy FAQ · FAQ · …) ostáva pod
+hlavičkou — rám ho nekreslí, pravidlo repozitára ho chce na všetkých
+stránkach kanála. Úvodný odsek o kontrole osobných údajov pred schválením
+ostal ako nápoveda pod „Úprava" (rám ho vynechal). Popis „vlákien" aj
+v riadku otvoreného návrhu (bolo „otázok v histórii").
+
+---
+
 ## 2026-10-11 — detail kontroly súladu (KNIZ-kontrola-suladu-detail)
 
 **Čo sa zmenilo:** `/library/compliance/[runId]` podľa návrhu (Q1–Q5 A).

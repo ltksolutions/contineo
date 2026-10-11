@@ -20,6 +20,7 @@ import { AppError } from "./appError"
 import { requireCompanyCode } from "./tenantScope"
 import { checkEntry, saveFaqEntry, type FaqEntryInput } from "./faq"
 import { writeAudit } from "./audit"
+import { DOCUMENTS_COLLECTION } from "./documents"
 import type { ProposalReview, ReviewVerdict } from "./complianceCheck"
 
 export class FaqProposalError extends AppError {}
@@ -64,6 +65,8 @@ export interface FaqProposal {
   faqDocumentId: string | null
   faqEntryId: string | null
   mergedInto: string | null
+  /** Dôvod zamietnutia — pôvod sa maže, dôvod je jediná stopa (KANALY-navrhy-faq-kuracia, Q7). */
+  rejectReason?: string | null
   /**
    * Prvé znenie pred akoukoľvek úpravou (revízia podľa manuálov, úprava
    * kurátora). Drží sa, aby kurátor videl, čo navrhol model a čo sa zmenilo;
@@ -87,9 +90,13 @@ export function originalOf(p: Pick<FaqProposal, "revision">): ProposalSnapshot |
 /** Značka v poznámke, ktorou revízia označila otázku na rozhodnutie. */
 export const DECISION_MARK = "[NA ROZHODNUTIE]"
 
-export type ProposalFilter = "open" | "decision" | "nosource" | "decided"
+/**
+ * Pohľady fronty (KANALY-navrhy-faq-kuracia, 11. 10. 2026). „Bez zdroja"
+ * zaniklo (Q5) — zdroj sa dopĺňa priamo v karte a pri návrhu je štítok.
+ */
+export type ProposalFilter = "open" | "decision" | "decided" | "all"
 
-export const PROPOSAL_FILTERS: ProposalFilter[] = ["open", "decision", "nosource", "decided"]
+export const PROPOSAL_FILTERS: ProposalFilter[] = ["open", "decision", "decided", "all"]
 
 export type NewProposal = Pick<FaqProposal,
   "topicKey" | "topicLabel" | "question" | "variants" | "answer" | "audience" | "sources" |
@@ -140,7 +147,7 @@ export async function listProposals(
   const query =
     filter === "decided" ? { ...base, status: { $in: ["approved", "merged", "rejected"] as ProposalStatus[] } }
     : filter === "decision" ? { ...base, status: "open" as const, note: { $regex: DECISION_MARK.replace(/[[\]]/g, "\\$&") } }
-    : filter === "nosource" ? { ...base, status: "open" as const, "sources.0": { $exists: false } }
+    : filter === "all" ? base
     : { ...base, status: "open" as const }
   return (await proposals())
     .find(query, { projection: { _id: 0 } })
@@ -154,13 +161,46 @@ export async function proposalFilterCounts(companyCode: string, channelKey: stri
   const code = requireCompanyCode(companyCode, "proposalFilterCounts")
   const col = await proposals()
   const base = { companyCode: code, channelKey, ...(topicKey ? { topicKey } : {}) }
-  const [open, decision, nosource, decided] = await Promise.all([
+  const [open, decision, decided] = await Promise.all([
     col.countDocuments({ ...base, status: "open" }),
     col.countDocuments({ ...base, status: "open", note: { $regex: DECISION_MARK.replace(/[[\]]/g, "\\$&") } }),
-    col.countDocuments({ ...base, status: "open", "sources.0": { $exists: false } }),
     col.countDocuments({ ...base, status: { $in: ["approved", "merged", "rejected"] } }),
   ])
-  return { open, decision, nosource, decided }
+  return { open, decision, decided, all: open + decided }
+}
+
+/**
+ * Všetky návrhy kanála naraz (bez pôvodu) — fronta z nich počíta témy,
+ * počty, filter a „ďalší nerozhodnutý" (`proposalView.ts`). Kanál ich má
+ * desiatky, strop je poistka.
+ */
+export async function channelProposals(companyCode: string, channelKey: string): Promise<FaqProposal[]> {
+  const code = requireCompanyCode(companyCode, "channelProposals")
+  return (await proposals())
+    .find({ companyCode: code, channelKey }, { projection: { _id: 0, origin: 0 } })
+    .sort({ threads: -1, lastMonth: -1, question: 1 })
+    .limit(2000)
+    .toArray()
+}
+
+/**
+ * Zdroje z formulára (dokument + článok) s názvom z knižnice — kópia názvu
+ * v čase úpravy, ako pri zdrojoch z modelu. Neznámy dokument sa vynechá.
+ */
+export async function resolveSources(companyCode: string, refs: { documentId: string; articleRef: string | null }[]): Promise<ProposalSource[]> {
+  const code = requireCompanyCode(companyCode, "resolveSources")
+  const ids = [...new Set(refs.map(r => r.documentId).filter(Boolean))]
+  if (!ids.length) return []
+  const docs = await (await getCollection<{ documentId: string; title?: string }>(DOCUMENTS_COLLECTION))
+    .find({ companyCode: code, documentId: { $in: ids } }, { projection: { _id: 0, documentId: 1, title: 1 } }).toArray()
+  const title = new Map(docs.map(d => [d.documentId, String(d.title ?? d.documentId)]))
+  const seen = new Set<string>()
+  return refs.flatMap(r => {
+    const k = `${r.documentId}|${r.articleRef ?? ""}`
+    if (!title.has(r.documentId) || seen.has(k)) return []
+    seen.add(k)
+    return [{ documentId: r.documentId, title: title.get(r.documentId)!, articleRef: r.articleRef?.trim() || null }]
+  }).slice(0, 8)
 }
 
 /** Témy otvorených návrhov kanála pre filter. */
@@ -285,21 +325,23 @@ export async function dismissReview(companyCode: string, channelKey: string, id:
  */
 export async function approveProposal(
   companyCode: string, channelKey: string, id: string,
-  input: { documentId: string; question?: string; variants?: string[]; answer?: string; audience?: string[] },
+  input: { documentId: string; question?: string; variants?: string[]; answer?: string; audience?: string[]; sources?: ProposalSource[] },
   actor: string,
 ): Promise<string> {
   const code = requireCompanyCode(companyCode, "approveProposal")
   const p = await openProposal(code, channelKey, id)
+  // Zdroje upravené v karte (KANALY-navrhy-faq-kuracia), inak tie z návrhu.
+  const sources = input.sources ?? p.sources
   const entry: FaqEntryInput = checkEntry({
     question: input.question ?? p.question,
     variants: input.variants ?? p.variants,
     answer: input.answer ?? p.answer,
     audience: input.audience ?? p.audience,
-    sources: p.sources.map(s => ({ documentId: s.documentId, articleRef: s.articleRef })),
+    sources: sources.map(s => ({ documentId: s.documentId, articleRef: s.articleRef })),
   })
   // Pôvod do FAQ nejde — maže sa rozhodnutím (odpoveď DPO 5).
   const saved = await saveFaqEntry(code, input.documentId, { ...entry, id: null }, actor)
-  await decide(code, channelKey, id, { status: "approved", decidedBy: actor, faqDocumentId: input.documentId, faqEntryId: saved.id, question: entry.question, answer: entry.answer })
+  await decide(code, channelKey, id, { status: "approved", decidedBy: actor, faqDocumentId: input.documentId, faqEntryId: saved.id, question: entry.question, answer: entry.answer, sources })
   return saved.id
 }
 
@@ -326,9 +368,12 @@ export async function mergeProposal(companyCode: string, channelKey: string, id:
   await writeAudit({ companyCode: code, subject: "document", action: "faq-navrh-zluceny", actor, targetId: intoId, targetLabel: target.question, note: p.question })
 }
 
-export async function rejectProposal(companyCode: string, channelKey: string, id: string, actor: string): Promise<void> {
+/** Zamietnutie s povinným dôvodom (Q7) — pôvod sa maže, dôvod ostáva v návrhu aj v audite. */
+export async function rejectProposal(companyCode: string, channelKey: string, id: string, actor: string, reason: string): Promise<void> {
   const code = requireCompanyCode(companyCode, "rejectProposal")
+  const why = reason.replace(/\r\n?/g, "\n").trim().slice(0, 500)
+  if (!why) throw new FaqProposalError("proposal.reasonRequired", "Uveďte dôvod zamietnutia.")
   const p = await openProposal(code, channelKey, id)
-  await decide(code, channelKey, id, { status: "rejected", decidedBy: actor })
-  await writeAudit({ companyCode: code, subject: "document", action: "faq-navrh-zamietnuty", actor, targetId: id, targetLabel: p.question })
+  await decide(code, channelKey, id, { status: "rejected", decidedBy: actor, rejectReason: why })
+  await writeAudit({ companyCode: code, subject: "document", action: "faq-navrh-zamietnuty", actor, targetId: id, targetLabel: p.question, note: why })
 }
