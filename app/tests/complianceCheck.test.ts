@@ -52,7 +52,7 @@ describe("parseReview", () => {
   })
 })
 
-import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS, currentWording, suggestOnCurrent, quotesOverlap } from "../src/lib/complianceCheck"
+import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS, currentWording, suggestOnCurrent, quotesOverlap, runTitle } from "../src/lib/complianceCheck"
 
 describe("viac krokov a dokument proti dokumentom", () => {
   const big = (id: string, cat: string, n: number) => ({ documentId: id, title: id, category: cat, versions: [{ versionId: "v", isActive: true, markdown: Array.from({ length: n }, (_, i) => `Odsek ${i} ${"x".repeat(90)}`).join("\n\n") }] })
@@ -170,5 +170,13 @@ describe("dve doplnenia jednej vety a zmena rozhodnutia", () => {
     const lone = { ...f003, acceptedText: `${q} A1.` }
     expect(currentWording(`${q} A1.`, lone, [lone])).toBeNull()
     expect(currentWording(`${q} A1.`, lone, [lone], true)?.text).toBe(`${q} A1.`)
+  })
+})
+
+describe("názov kontroly", () => {
+  it("jeden riadok, najviac 120 znakov, prázdny ostane prázdny", () => {
+    expect(runTitle("  Kontrola manuálov\nISSF  ")).toBe("Kontrola manuálov ISSF")
+    expect(runTitle("x".repeat(200))).toHaveLength(120)
+    expect(runTitle("   ")).toBe("")
   })
 })

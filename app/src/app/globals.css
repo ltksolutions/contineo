@@ -8686,3 +8686,7 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
 .norm-preview > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--accent); }
 .norm-preview-body { display: grid; gap: 8px; max-height: 420px; overflow: auto; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; }
 .norm-anchor.is-cited { background: var(--warn-bg); border-radius: 6px; box-shadow: 0 0 0 6px var(--warn-bg); }
+
+/* Premenovanie kontroly pod nadpisom (11. 10. 2026). */
+.cf-rename > summary { cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; color: var(--accent); font-size: var(--fs-small); }
+.cf-rename-form { display: grid; gap: 10px; max-width: 560px; padding-top: 4px; }

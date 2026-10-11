@@ -15,7 +15,7 @@ import { complianceContext, complianceViewContext } from "@/lib/complianceAccess
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
-import { startDocumentReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
+import { renameRun, startDocumentReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
 
 const PAGE = "/library/compliance"
@@ -122,4 +122,18 @@ export async function applyFindingAction(fd: FormData) {
     back(path, failure(e, ctx.person.language), true, anchor, keep)
   }
   back(path, message, false, anchor, keep)
+}
+
+/** Premenovanie kontroly na jej detaile (rola `compliance`). */
+export async function renameRunAction(fd: FormData) {
+  const ctx = await ready()
+  const runId = fieldText(fd, "runId")
+  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  try {
+    await renameRun(ctx.person.companyCode, runId, fieldText(fd, "name"))
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(path, failure(e, ctx.language), true)
+  }
+  back(path, ctx.t.renamed)
 }

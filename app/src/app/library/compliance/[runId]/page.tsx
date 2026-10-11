@@ -38,7 +38,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { decideFindingAction, applyFindingAction, startDocumentReviewAction } from "../../complianceActions"
+import { renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction } from "../../complianceActions"
 
 export const dynamic = "force-dynamic"
 
@@ -393,6 +393,21 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
         <div className="page-head-main">
           <h1 className="page-title">{run.name || t.runDefaultName(when)}</h1>
           <p className="quiet page-lead">{t.runScope(subjectIds.length || run.total, run.documents.length, startedByName, when)}</p>
+          {/* Premenovanie (Ján 11. 10. 2026) — názov sa dal zadať len pri spustení. */}
+          {ctx.isReviewer && (
+            <details className="cf-rename">
+              <summary>{t.rename}</summary>
+              <form action={renameRunAction} className="cf-rename-form">
+                <input type="hidden" name="runId" value={run.runId} />
+                <label className="field" style={{ margin: 0 }}>
+                  <span className="field-label">{t.nameLabel}</span>
+                  <input className="field-input" name="name" defaultValue={run.name ?? ""} maxLength={120} placeholder={t.runDefaultName(when)} />
+                  <span className="quiet field-hint">{t.nameHint}</span>
+                </label>
+                <div><SubmitButton className="button button--quiet">{t.saveName}</SubmitButton></div>
+              </form>
+            </details>
+          )}
         </div>
         {ctx.isReviewer && subjectIds.length > 0 && (
           <form action={startDocumentReviewAction} className="page-tools">

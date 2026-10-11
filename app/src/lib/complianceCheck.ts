@@ -621,6 +621,26 @@ export async function startProposalReview(
   return run
 }
 
+/** Názov kontroly: jeden riadok, najviac 120 znakov; prázdny = podľa dátumu. */
+export function runTitle(name: string): string {
+  return name.replace(/\s+/g, " ").trim().slice(0, 120)
+}
+
+/**
+ * Premenovanie kontroly (Ján 11. 10. 2026: „neviem zmeniť/uložiť názov
+ * kontroly") — pole „Názov" bolo len pri spustení. Prázdny názov ho zruší
+ * a kontrola sa znova volá podľa dátumu.
+ */
+export async function renameRun(companyCode: string, runId: string, name: string): Promise<void> {
+  const code = requireCompanyCode(companyCode, "renameRun")
+  const title = runTitle(name)
+  const r = await (await runs()).updateOne(
+    { companyCode: code, runId, "scope.kind": "documents" },
+    title ? { $set: { name: title } } : { $unset: { name: "" } },
+  )
+  if (!r.matchedCount) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
+}
+
 /**
  * Nový beh kontroly dokumentov proti dokumentom (D196). Kontrolovaný
  * dokument nesmie byť zároveň referenčný; verejný sa kontroluje len
@@ -639,7 +659,7 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
   const run = newRun(code, "", { kind: "documents", subjectIds: subjects }, ids, packs, subjects, starter, ai.models.compliance, now)
   run.scopeKey = `documents:${run.runId}`
-  const title = name.replace(/\s+/g, " ").trim().slice(0, 120)
+  const title = runTitle(name)
   if (title) run.name = title
   await (await runs()).insertOne(run)
   return run
