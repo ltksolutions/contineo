@@ -20,6 +20,7 @@ import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
 import CopyLink from "@/components/CopyLink"
+import TextEditor from "@/components/TextEditor"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
 import { documentRun, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import {
@@ -94,11 +95,13 @@ function DecisionForm({ t, run, res, f, ctx, view, next, nextLabel }: {
           </label>
         </div>
       </fieldset>
-      <label className="field decision-text">
+      {/* Editor Markdownu z knižnice (vizuálny aj zdrojový režim) — úryvok je zdroj konceptu.
+          Nie `<label>`: editor je viacero ovládačov, názov nesie `label`. */}
+      <div className="field decision-text">
         <span className="field-label">{t.proposed}</span>
-        <textarea className="field-input" name="text" rows={5} defaultValue={f.acceptedText ?? f.proposed ?? f.quote} />
+        <TextEditor name="text" initial={f.acceptedText ?? f.proposed ?? f.quote} compact label={t.proposed} />
         <span className="quiet field-hint">{f.proposed || f.acceptedText ? hint : `${t.proposedMissing} ${hint}`}</span>
-      </label>
+      </div>
       <label className="field">
         <span className="field-label">{t.reason}</span>
         <textarea className="field-input" name="reason" rows={3} required maxLength={1000} defaultValue={f.reason ?? ""} placeholder={t.reasonPlaceholder} />
