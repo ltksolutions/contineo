@@ -11,6 +11,9 @@
  * s pôvodným návrhom modelu po slovách a úpravu možno uložiť bez schválenia.
  */
 
+import { isPeopleAdmin } from "@/lib/people"
+import { isHelpdeskAgent } from "@/lib/helpdeskAgents"
+import { ChannelPartTabs, channelHref } from "@/components/ChannelTabs"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
@@ -19,7 +22,6 @@ import Select from "@/components/Select"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
 import { libraryContext } from "@/lib/library"
-import { channelHref } from "@/components/ChannelTabs"
 import { channelByKey, channelView } from "@/lib/channels"
 import {
   listProposals, proposalFilterCounts, proposalTopics, originalOf,
@@ -104,9 +106,10 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
   const backQuery = href({ page }).split("?")[1] ?? ""
 
   // FAQ dokumenty v priečinkoch kanála prvé — tam patria záznamy z jeho schránky.
-  const inChannel = (d: { folderPath?: string[] }) => (d.folderPath ?? []).some(f => raw.folderIds.includes(f))
+  // FAQ kanála (D201) prvé, potom FAQ v priečinkoch kanála — tam patria záznamy z jeho schránky.
+  const inChannel = (d: { documentId: string; folderPath?: string[] }) => (d.documentId === raw.faqDocumentId ? 2 : 0) + ((d.folderPath ?? []).some(f => raw.folderIds.includes(f)) ? 1 : 0)
   const faqOptions = faqDocs
-    .slice().sort((a, b) => Number(inChannel(b)) - Number(inChannel(a)))
+    .slice().sort((a, b) => inChannel(b) - inChannel(a))
     .map(d => ({ value: d.documentId, label: String(d.title ?? d.documentId) }))
   const n = (x: number) => formatNumber(x, language)
   const monthLabel = (k: string | null) => {
@@ -128,6 +131,9 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
         <span className="page-head-spacer" />
         <span className="tag">{c.name}</span>
       </div>
+      <ChannelPartTabs channelKey={c.key} current={channelHref(c.key, "proposals")}
+        canTickets={c.kind === "widget" && raw.tickets && isHelpdeskAgent(ctx.person) && raw.assigneeIds.includes(ctx.person.id)}
+        canSettings={isPeopleAdmin(ctx.person)} canContent hasFaq={Boolean(raw.faqDocumentId)} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.proposalsIntro}</p>
       <Notice message={q.msg} error={q.error === "1"} back={href({ page })} language={language} />
 

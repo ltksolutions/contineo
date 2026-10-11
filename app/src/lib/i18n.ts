@@ -2466,6 +2466,20 @@ interface Dictionary {
     tabList: string
     tabMyTickets: string
     tabTickets: string
+    tabProposals: string
+    tabFaq: string
+    faqHeading: string
+    faqIntro: string
+    faqDocument: string
+    faqDraft: (n: number) => string
+    faqPublished: (label: string, n: number) => string
+    faqNotPublished: string
+    faqEdit: string
+    faqOpenDocument: string
+    faqProposalsOpen: (n: number) => string
+    faqListLine: (n: number) => string
+    faqListNone: string
+    faqBelongsTo: (channels: string) => string
     tabSettings: string
     agentsNote: string
     back: string
@@ -7345,6 +7359,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Časti kanálov",
     tabList: "Kanály",
     tabMyTickets: "Moje tickety",
+    tabProposals: "Návrhy FAQ",
+    tabFaq: "FAQ",
+    faqHeading: "FAQ kanála",
+    faqIntro: "Záznamy, ktoré kanál odpovedá v okne pomoci. Nové záznamy prichádzajú z návrhov FAQ; do okna pomoci idú až zverejnením znenia. Dokument je uložený v knižnici (verzie, schvaľovanie, vyhľadávanie), v jej zozname je skrytý.",
+    faqDocument: "Dokument",
+    faqDraft: n => `V koncepte ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamov"}`,
+    faqPublished: (label, n) => `Platné znenie ${label} · ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamov"}`,
+    faqNotPublished: "Zatiaľ bez zverejneného znenia — okno pomoci z FAQ ešte neodpovedá.",
+    faqEdit: "Upraviť záznamy",
+    faqOpenDocument: "Zverejniť a znenia",
+    faqProposalsOpen: n => `Otvorené návrhy FAQ: ${n}`,
+    faqListLine: n => `FAQ: ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamov"}`,
+    faqListNone: "FAQ: bez záznamov",
+    faqBelongsTo: ch => `Patrí ku kanálu ${ch}. V zozname knižnice je FAQ skryté — ukáže ho filter Druh: FAQ.`,
     tabTickets: "Tickety",
     tabSettings: "Nastavenie",
     agentsNote: "Správcovia ticketov majú zmysel, keď sú zapnuté tickety.",
@@ -12097,6 +12125,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Části kanálů",
     tabList: "Kanály",
     tabMyTickets: "Moje tickety",
+    tabProposals: "Návrhy FAQ",
+    tabFaq: "FAQ",
+    faqHeading: "FAQ kanálu",
+    faqIntro: "Záznamy, kterými kanál odpovídá v okně nápovědy. Nové záznamy přicházejí z návrhů FAQ; do okna nápovědy jdou až zveřejněním znění. Dokument je uložen v knihovně (verze, schvalování, vyhledávání), v jejím seznamu je skrytý.",
+    faqDocument: "Dokument",
+    faqDraft: n => `V konceptu ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamů"}`,
+    faqPublished: (label, n) => `Platné znění ${label} · ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamů"}`,
+    faqNotPublished: "Zatím bez zveřejněného znění — okno nápovědy z FAQ ještě neodpovídá.",
+    faqEdit: "Upravit záznamy",
+    faqOpenDocument: "Zveřejnit a znění",
+    faqProposalsOpen: n => `Otevřené návrhy FAQ: ${n}`,
+    faqListLine: n => `FAQ: ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamů"}`,
+    faqListNone: "FAQ: bez záznamů",
+    faqBelongsTo: ch => `Patří ke kanálu ${ch}. V seznamu knihovny je FAQ skryté — ukáže ho filtr Druh: FAQ.`,
     tabTickets: "Tickety",
     tabSettings: "Nastavení",
     agentsNote: "Správci tiketů mají smysl, když jsou zapnuté tikety.",
@@ -16840,6 +16882,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Channel sections",
     tabList: "Channels",
     tabMyTickets: "My tickets",
+    tabProposals: "FAQ proposals",
+    tabFaq: "FAQ",
+    faqHeading: "Channel FAQ",
+    faqIntro: "Entries the channel answers with in the help window. New entries come from FAQ proposals; they reach the help window only when the version is published. The document is stored in the library (versions, approval, search) and hidden from its list.",
+    faqDocument: "Document",
+    faqDraft: n => `${n} ${n === 1 ? "entry" : "entries"} in the draft`,
+    faqPublished: (label, n) => `Valid version ${label} · ${n} ${n === 1 ? "entry" : "entries"}`,
+    faqNotPublished: "No published version yet — the help window does not answer from the FAQ yet.",
+    faqEdit: "Edit entries",
+    faqOpenDocument: "Publish and versions",
+    faqProposalsOpen: n => `Open FAQ proposals: ${n}`,
+    faqListLine: n => `FAQ: ${n} ${n === 1 ? "entry" : "entries"}`,
+    faqListNone: "FAQ: no entries",
+    faqBelongsTo: ch => `Belongs to the channel ${ch}. The FAQ is hidden from the library list — the filter Type: FAQ shows it.`,
     tabTickets: "Tickets",
     tabSettings: "Settings",
     agentsNote: "Ticket managers matter when tickets are on.",

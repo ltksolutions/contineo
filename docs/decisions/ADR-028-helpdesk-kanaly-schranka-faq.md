@@ -305,6 +305,29 @@ tickety svojich kanálov, odosiela odpovede a navrhuje záznamy do FAQ;
 schvaľuje ich správca obsahu (`content-admin`). Pridáva sa do
 `ASSIGNABLE_ROLES`.
 
+### D201 — FAQ patrí ku kanálu; úložisko ostáva v knižnici (11. 10. 2026)
+
+Ján 11. 10. 2026: „FAQ ku kanálu by malo byť vidieť ako vstavaný kanál…
+FAQ kanál by mal vzniknúť automaticky ku každému kanálu, v knižnici asi
+nemá vôbec byť, alebo áno?" Rozhodnutie (s odporúčaním, schválené):
+
+1. **Úložisko ostáva dokument v knižnici** (D164). Verzie, schvaľovanie,
+   vyhľadávanie v asistentovi a widgete, PDF archív a expirácia záznamu
+   pri novom znení zdroja fungujú bez zmeny; vlastné úložisko pri kanáli
+   by ich muselo zopakovať.
+2. **FAQ vzniká s kanálom.** Kanál typu widget dostane pri uložení FAQ
+   dokument (`ensureChannelFaq`, `channels.faqDocumentId`), verejný,
+   prázdny. Kanál „ISSF Helpdesk" dostal existujúci „Časté otázky ISSF".
+3. **FAQ je časť kanála**, nie samostatný vstavaný kanál — vstavané riadky
+   na `/channels` sú rozhrania (asistent, knižnica), FAQ je obsah kanála.
+   Podmenu kanála: Tickety · **Návrhy FAQ** · **FAQ** · Nastavenie;
+   `/channels/[key]/faq` je prehľad (platné znenie, koncept, otvorené návrhy)
+   a vstup do úpravy záznamov a zverejnenia cestou knižnice. Zoznam kanálov
+   ukazuje počet záznamov. Schvaľovanie návrhu ponúka FAQ kanála ako prvé.
+4. **V knižnici je FAQ skryté** z bežného zoznamu; ukáže ho filter
+   Druh: FAQ (počty filtrov ho počítajú). Detail FAQ dokumentu hovorí, ku
+   ktorému kanálu patrí.
+
 ### D178 — Lehota ticketov a osôb z widgetu; helpdesk na stránke ochrany údajov
 
 Rozhodnutie Jána 8. 10. 2026 (štyri body „áno, všetky štyri"). D165 sľúbil

@@ -8,6 +8,7 @@
  * nedostanú (`channelView`); nové tajomstvo widgetu sa ukáže raz zo servera.
  */
 
+import { isContentManager } from "@/lib/library"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
@@ -109,7 +110,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
         <span className="page-head-spacer" />
         <span className="tag">{t.kinds[c.kind]}</span>
       </div>
-      <ChannelPartTabs channelKey={c.key} current={base} canTickets={canTickets} canSettings language={language} />
+      <ChannelPartTabs channelKey={c.key} current={base} canTickets={canTickets} canSettings canContent={isContentManager(ctx.person)} hasFaq={Boolean(raw.faqDocumentId)} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.kindHints[c.kind]}</p>
       <Notice message={msg} error={error === "1"} back={base} language={language} />
 

@@ -7,6 +7,7 @@
  * len mesačný súhrn z `mailbox_analyses`.
  */
 
+import { isContentManager } from "@/lib/library"
 import { notFound, redirect } from "next/navigation"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
@@ -86,7 +87,7 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
         <span className="page-head-spacer" />
         <span className="tag">{c.name}</span>
       </div>
-      <ChannelPartTabs channelKey={c.key} current={channelHref(c.key, "settings")} canTickets={canTickets} canSettings language={language} />
+      <ChannelPartTabs channelKey={c.key} current={channelHref(c.key, "settings")} canTickets={canTickets} canSettings canContent={isContentManager(ctx.person)} hasFaq={Boolean(raw.faqDocumentId)} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.historyIntro}</p>
       <Notice message={msg} error={error === "1"} back={base} language={language} />
 
