@@ -26,8 +26,6 @@ import SearchStrip from "@/components/SearchStrip"
 import Icon from "@/components/Icon"
 import { moveManyAction, assignManyAction } from "./actions"
 import AppShell from "@/components/AppShell"
-import WaitingForApproval from "@/components/WaitingForApproval"
-import { openRounds, documentTitles } from "@/lib/approvalsDb"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
@@ -120,25 +118,17 @@ export default async function LibraryPage({
   // k inému pohľadu, než je na obrazovke.
   const listFilter = listFilterOf(filters)
 
-  const [rows, folders, folderCounts, facets, waiting, departments] = await Promise.all([
+  const [rows, folders, folderCounts, facets, departments] = await Promise.all([
     libraryList(ctx.tenant.companyCode, listFilter),
     allFolders(ctx.tenant.companyCode),
     counts(ctx.tenant.companyCode),
     libraryFacets(ctx.tenant.companyCode, listFilter),
-    // Bežiace kolá schvaľovania. **Nefiltrujú sa filtrami zoznamu**: čo čaká
-    // na rozhodnutie, čaká bez ohľadu na to, čo si človek práve odfiltroval —
-    // a schovať to za filter by znamenalo, že si toho nikto nevšimne.
-    openRounds(ctx.tenant.companyCode),
     // Strom oddelení sa načíta **raz**, kvôli názvom vo facete. V riadkoch
     // zoznamu je len identifikátor (D49) — dotaz na názov pri každom riadku
     // by bol sto dotazov na jedno vykreslenie.
     allDepartments(ctx.tenant.companyCode),
   ])
   const tree = flattenTree(folders)
-  const waitingTitles = await documentTitles(
-    ctx.tenant.companyCode,
-    waiting.map(r => r.documentId),
-  )
 
   // Filtre sa nesú ďalej v každom odkaze aj v každom formulári — inak by sa
   // človek po založení priečinka ocitol späť na nefiltrovanom zozname.
@@ -551,13 +541,6 @@ export default async function LibraryPage({
     <AppShell language={uiLanguage} wide>
     <div style={tenantStyle(branding)}>
       <Notice language={uiLanguage} message={message} error={error === "1"} back="/library" />
-
-      {/*
-        Nad zoznamom, nie v ňom: je to úloha, nie obsah knižnice. Názvy sa
-        načítavajú zvlášť, nie z riadkov zoznamu — tie sú prefiltrované, takže
-        dokument v kole medzi nimi byť nemusí a zostalo by po ňom `documentId`.
-      */}
-      <WaitingForApproval rounds={waiting} titles={waitingTitles} language={uiLanguage} />
 
       {/*
         Hlavička stránky je `.page-head` ako inde v portáli, nie vlastné
