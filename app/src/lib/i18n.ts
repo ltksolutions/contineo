@@ -3111,6 +3111,7 @@ interface Dictionary {
       intro: string
       subjects: string
       subjectsHint: string
+      faqElsewhere: string
       references: string
       referencesHint: string
       start: string
@@ -7902,6 +7903,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Umelá inteligencia porovná vybrané dokumenty (napríklad manuály alebo rozpis súťaží) s referenčnými normami a vypíše nálezy — rozpor, zastarané, chýba, nejasné — s citáciou článku a odporúčaním. Dokument sama nemení. Normy idú od najzáväznejšej; veľký výber sa skontroluje v niekoľkých krokoch a výsledky sa spoja. Verejný dokument sa kontroluje len verejnými normami.",
       subjects: "Dokumenty na kontrolu",
       subjectsHint: "Dokument bez zverejneného znenia sa skontroluje v koncepte.",
+      faqElsewhere: "Návrhy FAQ sa kontrolujú vo fronte návrhov kanála (Kontrola proti dokumentom):",
       references: "Referenčné normy",
       referencesHint: "Stanovy, poriadky a normy v platnom znení, proti ktorým sa kontroluje.",
       start: "Skontrolovať súlad",
@@ -12618,6 +12620,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Umělá inteligence porovná vybrané dokumenty (například manuály nebo rozpis soutěží) s referenčními normami a vypíše nálezy — rozpor, zastaralé, chybí, nejasné — s citací článku a doporučením. Dokument sama nemění. Normy jdou od nejzávaznější; velký výběr se zkontroluje v několika krocích a výsledky se spojí. Veřejný dokument se kontroluje jen veřejnými normami.",
       subjects: "Dokumenty ke kontrole",
       subjectsHint: "Dokument bez zveřejněného znění se zkontroluje v konceptu.",
+      faqElsewhere: "Návrhy FAQ se kontrolují ve frontě návrhů kanálu (Kontrola proti dokumentům):",
       references: "Referenční normy",
       referencesHint: "Stanovy, řády a normy v platném znění, proti kterým se kontroluje.",
       start: "Zkontrolovat soulad",
@@ -17320,6 +17323,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Artificial intelligence compares the selected documents (for example manuals or competition rules for a season) with the reference rules and lists the findings — conflict, outdated, missing, unclear — with the cited article and a recommendation. It never changes the document itself. Rules are ordered from the most binding; a large selection is checked in several steps and the results are combined. A public document is checked only against public rules.",
       subjects: "Documents to check",
       subjectsHint: "A document without a published version is checked as a draft.",
+      faqElsewhere: "FAQ proposals are checked in the channel\u2019s proposal queue (Check against documents):",
       references: "Reference rules",
       referencesHint: "Statutes, codes and rules in their valid version to check against.",
       start: "Check compliance",

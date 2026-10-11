@@ -9,6 +9,8 @@
  * vieme, že návody sú OK voči nadradeným normám".
  */
 
+import { listChannels } from "@/lib/channels"
+import { PROPOSALS_COLLECTION } from "@/lib/faqProposals"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
@@ -44,7 +46,9 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; category?: string; accessLevel?: string }[]>,
   ])
   const options = docs.map(d => ({ value: d.documentId, label: `${String(d.title ?? d.documentId)}${d.accessLevel === "internal" ? " · interný" : ""}` }))
-  const last = runs[0]
+  // Kontrola návrhov FAQ sa spúšťa vo fronte návrhov kanála, nie tu — odkaz tam, kde návrhy sú.
+  const proposalChannels = new Set(await (await getCollection(PROPOSALS_COLLECTION)).distinct("channelKey", { companyCode: ctx.tenant.companyCode }) as string[])
+  const faqQueues = (await listChannels(ctx.tenant.companyCode)).filter(ch => proposalChannels.has(ch.key))
 
   return (
     <AppShell language={language} title={t.heading} trail={{ "/library": dictionary(language).library.list.heading }}>
@@ -53,6 +57,12 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
         <h1 className="page-title">{t.heading}</h1>
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
+      {faqQueues.length > 0 && (
+        <p className="quiet" style={{ margin: "0 0 16px" }}>
+          {t.faqElsewhere}{" "}
+          {faqQueues.map((ch, i) => <span key={ch.key}>{i > 0 && ", "}<Link href={`/channels/${encodeURIComponent(ch.key)}/proposals`}>{ch.name}</Link></span>)}
+        </p>
+      )}
       <Notice message={q.msg} error={q.error === "1"} back="/library/compliance" language={language} />
 
       <section className="card detail-block" style={{ marginBottom: 16 }}>
@@ -65,12 +75,14 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
           </label>
           <div className="field" style={{ margin: 0 }}>
             <span className="field-label">{t.subjects}</span>
-            <MultiSelect name="subjectIds" options={options} selected={last?.scope.kind === "documents" ? last.scope.subjectIds : []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+            {/* Prázdny výber (Ján 11. 10. 2026: „mám prednastavené posledné dokumenty, to nie je ok") —
+                zopakovanie kontroly je „Spustiť znova" na jej detaile. */}
+            <MultiSelect name="subjectIds" options={options} selected={[]} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
             <span className="quiet field-hint">{t.subjectsHint}</span>
           </div>
           <div className="field" style={{ margin: 0 }}>
             <span className="field-label">{t.references}</span>
-            <MultiSelect name="documentIds" options={options} selected={last?.documentIds ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+            <MultiSelect name="documentIds" options={options} selected={[]} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
             <span className="quiet field-hint">{t.referencesHint}</span>
           </div>
           <div><SubmitButton className="button">{t.start}</SubmitButton></div>
