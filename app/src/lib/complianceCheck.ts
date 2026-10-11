@@ -466,6 +466,8 @@ export interface ComplianceRun {
   results?: DocumentResult[]
   /** Rozpracované dokumenty — hotové kroky, kým neprejdú všetkými balíkmi. */
   partials?: DocumentPartial[]
+  /** Kedy sa ktorý balík naposledy poslal modelu — či je ešte v cache (1 h). */
+  warmPacks?: WarmPack[]
   startedAt: Date
   startedBy: string
   /** Osoba, ktorej príde upozornenie po skončení; behy pred 11. 10. 2026 ho nemajú. */
@@ -690,6 +692,19 @@ async function reviewProposalBatch(ctx: CallCtx, packs: ReferencePack[], items: 
   return out
 }
 
+export interface WarmPack { step: number; at: Date }
+
+/** Cache modelu drží balík hodinu; s rezervou 55 minút od posledného použitia. */
+export const WARM_MS = 55 * 60_000
+
+export function packWarm(warm: WarmPack[], step: number, now = Date.now()): boolean {
+  return warm.some(w => w.step === step && now - new Date(w.at).getTime() < WARM_MS)
+}
+
+export function markWarm(warm: WarmPack[], step: number, at = new Date()): WarmPack[] {
+  return [...warm.filter(w => w.step !== step), { step, at }]
+}
+
 /** Rozpracovaný kontrolovaný dokument — hotové kroky a ich nálezy. */
 export interface DocumentPartial {
   documentId: string
@@ -766,6 +781,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
     const docMeta = packs.flatMap(p => p.documents).map(d => ({ documentId: d.documentId, title: d.title, state: d.state, label: d.label }))
     let pending = run.pending.slice()
     let partials: DocumentPartial[] = run.partials ?? []
+    let warm: WarmPack[] = run.warmPacks ?? []
     let longest = 0
     while (pending.length) {
       // Ďalší kúsok len vtedy, keď sa zmestí aj do tvrdej hranice — inak by ho funkcia zabila v polovici.
@@ -799,7 +815,20 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
         // Dva dokumenty naraz, po jednom kroku: referenčný balík je v cache.
         const ids = pending.slice(0, DOC_PARALLEL)
         const subjects = await loadDocuments(code, ids)
-        const stepped = await Promise.all(subjects.map(d => reviewDocumentStep(ctx, packs, d, partials.find(p => p.documentId === d.documentId) ?? { documentId: d.documentId, step: 0, findings: [], summaries: [] })))
+        const items = subjects.map(d => ({ d, p: partials.find(p => p.documentId === d.documentId) ?? { documentId: d.documentId, step: 0, findings: [], summaries: [] } }))
+        const stepped: DocumentPartial[] = []
+        // Studený balík (v cache ešte nie je) ide najprv s jedným dokumentom;
+        // súbežné volania by ho zapísali každé zvlášť (11. 10. 2026: prvé dva
+        // manuály 6 zápisov po ~0,7 USD namiesto 3). Teplé idú súbežne.
+        let queue = items
+        while (queue.length) {
+          const cold = queue.find(it => !packWarm(warm, it.p.step))
+          const group = cold ? [cold] : queue
+          const out = await Promise.all(group.map(it => reviewDocumentStep(ctx, packs, it.d, it.p)))
+          stepped.push(...out)
+          for (const it of group) warm = markWarm(warm, it.p.step)
+          queue = queue.filter(it => !group.includes(it))
+        }
         const doneIds = ids.filter(id => !subjects.some(d => d.documentId === id) || (stepped.find(p => p.documentId === id)?.step ?? 0) >= packs.length)
         const results = subjects.filter(d => doneIds.includes(d.documentId)).map(d => documentResult(d, stepped.find(p => p.documentId === d.documentId)!))
         partials = [...partials.filter(p => !ids.includes(p.documentId)), ...stepped.filter(p => !doneIds.includes(p.documentId))]
@@ -809,7 +838,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
           ...(doneIds.length ? { $pull: { pending: { $in: doneIds } } } : {}),
           ...(results.length ? { $push: { results: { $each: results } } } : {}),
           $inc: { "counts.differs": withFindings, "counts.agree": doneIds.length - withFindings },
-          $set: { partials, failures: 0, error: null, updatedAt: new Date(), ...(finished ? { finishedAt: new Date() } : {}) },
+          $set: { partials, warmPacks: warm, failures: 0, error: null, updatedAt: new Date(), ...(finished ? { finishedAt: new Date() } : {}) },
         })
         pending = pending.filter(id => !doneIds.includes(id))
       }
