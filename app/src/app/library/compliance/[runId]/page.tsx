@@ -14,6 +14,8 @@
  * Bez JavaScriptu funguje všetko okrem „Kopírovať znenie".
  */
 
+import NormCitation from "@/components/NormCitation"
+import { loadNormPreview, type NormPreview } from "@/lib/normPreview"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
@@ -21,10 +23,6 @@ import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
 import CopyLink from "@/components/CopyLink"
 import TextEditor from "@/components/TextEditor"
-import { articleHash, articleSection, articleLabel, citedParagraphs } from "@/lib/articleAnchors"
-import ScrollToCited from "@/components/ScrollToCited"
-import FormattedText from "@/components/FormattedText"
-import { DOCUMENTS_COLLECTION, effectiveVersion, type DocumentRecord } from "@/lib/documents"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
 import { isRunning, documentRun, draftBase, currentWording, suggestOnCurrent, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import {
@@ -57,57 +55,8 @@ function Diff({ before, after }: { before: string; after: string }) {
 }
 
 /** Text citovaného článku na náhľad (voľba 1, Ján 11. 10. 2026) a záväzné PDF. */
-interface NormPreview { text: string; hash: string; cited: string[]; pdfHref: string | null }
-
-async function loadNormPreview(companyCode: string, f: DocumentFinding): Promise<NormPreview | null> {
-  const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne({ companyCode, documentId: f.citation.documentId }) as unknown as DocumentRecord | null
-  if (!doc) return null
-  const v = effectiveVersion(doc)
-  const markdown = v.ok ? String(v.version.markdown ?? doc.markdown ?? "") : String((doc as { draftMarkdown?: string }).draftMarkdown ?? "")
-  const section = articleSection(markdown, f.citation.articleRef)
-  if (!section) return null
-  const pdfHref = v.ok && v.version.pdf
-    ? `/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(v.version.versionId)}`
-    : null
-  // Všetky citované odseky („ods. 8 a ods. 19"); bez odsekov aspoň miesto z kotvy.
-  const cited = citedParagraphs(f.citation.articleRef)
-  return { ...section, cited: cited.length ? cited : [section.hash.slice(1)], pdfHref }
-}
-
 function Norm({ t, f, preview }: { t: T; f: DocumentFinding; preview?: NormPreview | null }) {
-  return (
-    <div className="cf-blk">
-      <span className="cf-blk-l">{t.norm}</span>
-      {/* Náhľad normy v novom okne (Ján 11. 10. 2026) — čitateľský pohľad, nie karta
-          v správe; rozpracované rozhodnutie na tejto stránke ostáva. */}
-      <p>
-        <a href={`/documents/${encodeURIComponent(f.citation.documentId)}${articleHash(f.citation.articleRef)}`} target="_blank" rel="noopener">
-          {f.citation.title}{f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}
-          <svg className="ext-icon" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4.5 2.5h5v5M9.5 2.5 3 9" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          <span className="sr-only"> {t.opensNewWindow}</span>
-        </a>
-      </p>
-      {f.citation.quote && <blockquote className="quote">{f.citation.quote}</blockquote>}
-      {/* Náhľad celého článku pri náleze. Čitateľský pohľad pri PDF text neukazuje
-          (ADR-011, rozhodnutie 30. 9. 2026), preto je text tu — označený ako
-          text na vyhľadávanie, záväzné ostáva PDF. */}
-      {preview && (
-        <details className="norm-preview">
-          <summary>{t.showArticle(articleLabel(f.citation.articleRef))}</summary>
-          <div className="norm-preview-body">
-            <p className="quiet field-hint">
-              {t.articleNote}
-              {preview.pdfHref && <> · <a href={preview.pdfHref} target="_blank" rel="noopener">{t.openPdf}<span className="sr-only"> {t.opensNewWindow}</span></a></>}
-            </p>
-            <div className="answer">
-              <FormattedText text={preview.text} anchors highlight={preview.cited} />
-            </div>
-            <ScrollToCited />
-          </div>
-        </details>
-      )}
-    </div>
-  )
+  return <NormCitation citation={f.citation} preview={preview} labels={{ norm: t.norm, opensNewWindow: t.opensNewWindow, showArticle: t.showArticle, articleNote: t.articleNote, openPdf: t.openPdf }} />
 }
 
 function KindTag({ t, f }: { t: T; f: DocumentFinding }) {
@@ -224,7 +173,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   const selected = results.find(r => r.documentId === q.doc) ?? defaultDocument(results)
   // Náhľad článku len pre otvorený nález — jeden dokument na načítanie, nie 62.
   const openFinding = selected?.findings.find(x => x.id === q.f) ?? null
-  const normPreview = openFinding ? await loadNormPreview(ctx.tenant.companyCode, openFinding) : null
+  const normPreview = openFinding ? await loadNormPreview(ctx.tenant.companyCode, openFinding.citation) : null
   // Iný prijatý nález už prepísal to isté miesto — pole začne aktuálnym znením z konceptu.
   const openBase = openFinding && selected ? await draftBase(ctx.tenant.companyCode, selected.documentId) : null
   const overlap = openFinding && selected && openBase !== null ? currentWording(openBase, openFinding, selected.findings) : null

@@ -253,8 +253,16 @@ function priorText(prior: PriorFindings | undefined): string {
   ].join("\n")
 }
 
-export function reviewPrompt(items: ReviewItem[], prior?: Map<string, PriorFindings>): string {
-  return items.map((it, i) => [
+/**
+ * Posledný krok kontroly návrhov FAQ (11. 10. 2026): poznámka za celý návrh
+ * pre kurátora. Dovtedy sa spájali poznámky všetkých krokov a v poznámke
+ * ostali vety typu „Doterajšie zistenie not_covered vychádzalo z vyšších
+ * noriem; tento krok…" — o krokoch, nie o návrhu.
+ */
+export const FINAL_REVIEW_NOTE = "Toto je posledný krok kontroly. „note“ pri každom návrhu napíš za celý návrh — zhrň aj doterajšie zistenia vyššie, jednou-tromi vetami pre kurátora. Nepíš o krokoch, o tom, ktoré normy v tomto kroku neboli, ani interné označenia verdiktov (agree, differs, not_covered, conflict)."
+
+export function reviewPrompt(items: ReviewItem[], prior?: Map<string, PriorFindings>, last = false): string {
+  const body = items.map((it, i) => [
     `### Návrh ${i + 1}`,
     `Otázka: ${it.question}`,
     ...(it.variants.length ? [`Iné znenia: ${it.variants.join(" | ")}`] : []),
@@ -262,6 +270,7 @@ export function reviewPrompt(items: ReviewItem[], prior?: Map<string, PriorFindi
     it.answer,
     ...(priorText(prior?.get(it.id)) ? ["", priorText(prior?.get(it.id))] : []),
   ].join("\n")).join("\n\n")
+  return last ? `${body}\n\n${FINAL_REVIEW_NOTE}` : body
 }
 
 export interface ProposalReview {
@@ -328,7 +337,8 @@ export function mergeSteps(steps: StepResult[]): StepResult | null {
   const verdict = steps.reduce<ReviewVerdict>((v, s) => (rank[s.verdict] > rank[v] ? s.verdict : v), "not_covered")
   const proposed = [...steps].reverse().find(s => s.proposed)?.proposed ?? null
   const citations = [...new Map(steps.flatMap(s => s.citations).map(c => [`${c.documentId}|${c.articleRef ?? ""}|${c.quote}`, c])).values()].slice(0, 12)
-  const note = steps.map(s => s.note).filter(Boolean).join("\n\n").slice(0, 4000)
+  // Poznámku za celý návrh píše posledný krok (FINAL_REVIEW_NOTE); spájajú sa len pri jedinom kroku bez nej.
+  const note = ([...steps].reverse().find(s => s.note)?.note ?? "").slice(0, 4000)
   return { verdict, citations, proposed: verdict === "differs" || verdict === "conflict" ? proposed : null, note }
 }
 
@@ -760,7 +770,7 @@ async function reviewProposalStep(ctx: CallCtx, packs: ReferencePack[], batch: P
     const merged = mergeSteps(s.results)
     if (merged) prior.set(s.id, { verdict: merged.verdict, citations: merged.citations, note: merged.note })
   }
-  const raw = await callStep(ctx, REVIEW_SYSTEM, pack, reviewPrompt(batch.current, prior), REVIEW_SCHEMA, `kontrola FAQ: ${batch.current.length} návrhov`)
+  const raw = await callStep(ctx, REVIEW_SYSTEM, pack, reviewPrompt(batch.current, prior, batch.step === packs.length - 1 && packs.length > 1), REVIEW_SCHEMA, `kontrola FAQ: ${batch.current.length} návrhov`)
   const r = parseReview(raw, batch.current, pack)
   const steps = batch.steps.map(s => ({ ...s, results: [...s.results] }))
   for (const [id, res] of r) {

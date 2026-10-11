@@ -220,3 +220,13 @@ describe("beh, ktorý ešte pracuje", () => {
     expect(isRunning(null)).toBe(false)
   })
 })
+
+describe("poznámka kontroly návrhu FAQ za celý návrh", () => {
+  it("platí poznámka posledného kroku, nie zlepené kroky", () => {
+    const m = mergeSteps([
+      { verdict: "not_covered", citations: [], proposed: null, note: "Doterajšie zistenie not_covered…" },
+      { verdict: "differs", citations: [], proposed: { question: "Q", answer: "A", sources: [] }, note: "Odpoveď treba doplniť o matriku SFZ." },
+    ])!
+    expect(m.note).toBe("Odpoveď treba doplniť o matriku SFZ.")
+  })
+})

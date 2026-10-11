@@ -14,6 +14,8 @@
  * Bez JavaScriptu funguje všetko.
  */
 
+import NormCitation from "@/components/NormCitation"
+import { loadNormPreview } from "@/lib/normPreview"
 import { isPeopleAdmin } from "@/lib/people"
 import { isHelpdeskAgent } from "@/lib/helpdeskAgents"
 import { ChannelPartTabs, channelHref } from "@/components/ChannelTabs"
@@ -93,6 +95,11 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
   const topic = stats.find(s => s.topicKey === q.topic) ?? defaultTopic(stats)
   const inTopic = topic ? all.filter(p => p.topicKey === topic.topicKey) : []
   const shown = filterProposals(inTopic, view, review)
+  // Náhľad citovaných článkov len pre otvorený návrh — ako pri kontrole súladu (Ján 11. 10. 2026).
+  const openOne = all.find(x => x.id === q.p)
+  const previews = new Map(await Promise.all((openOne?.review?.citations ?? []).map(async ci => [`${ci.documentId}|${ci.articleRef ?? ""}`, await loadNormPreview(ctx.tenant.companyCode, ci)] as const)))
+  const tc = dictionary(language).library.compliance
+  const normLabels = { norm: t.reviewNorm, opensNewWindow: tc.opensNewWindow, showArticle: tc.showArticle, articleNote: tc.articleNote, openPdf: tc.openPdf }
   const counts = viewCounts(inTopic)
   const verdicts = verdictCounts(inTopic)
   const openAll = all.filter(p => p.status === "open")
@@ -237,14 +244,9 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
               {rv.decision && rv.verdict !== "agree" && <span className="tag">{t.reviewDecision[rv.decision]}</span>}
             </div>
             {rv.note && <p className="pq-rv-note">{rv.note}</p>}
+            {/* Rovnaká citácia ako pri kontrole súladu: čitateľský pohľad s kotvou článku a náhľad článku. */}
             {rv.citations.map((ci, i) => (
-              <div key={i} className="cf-blk">
-                <span className="cf-blk-l">{t.reviewNorm}</span>
-                <p><a href={`/library/${encodeURIComponent(ci.documentId)}`} target="_blank" rel="noopener" aria-label={`${ci.title}${ci.articleRef ? `, ${ci.articleRef}` : ""} (${t.opensNewWindow})`}>
-                  {ci.title}{ci.articleRef ? `, ${ci.articleRef}` : ""}<span className="pq-ext" aria-hidden="true">↗</span>
-                </a></p>
-                {ci.quote && <blockquote className="quote">{ci.quote}</blockquote>}
-              </div>
+              <NormCitation key={i} citation={ci} preview={previews.get(`${ci.documentId}|${ci.articleRef ?? ""}`)} labels={normLabels} />
             ))}
             {rv.verdict === "not_covered" && <p className="quiet pq-who">{t.reviewNotCoveredAgainst(rv.documents.map(d => d.title).join(", "))}</p>}
             {rv.proposed && !rv.decision && rv.verdict !== "agree" && rv.verdict !== "not_covered" && (
