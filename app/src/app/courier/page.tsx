@@ -21,6 +21,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { listThreads } from "@/lib/courier"
 import { dictionary } from "@/lib/i18n"
 import { messageTime } from "./time"
+import CourierLive from "@/components/CourierLive"
 
 export const dynamic = "force-dynamic"
 
@@ -47,6 +48,8 @@ export default async function CourierPage({
     <AppShell language={language} title={t.title}>
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
         <Notice language={language} message={q.msg} error={q.error === "1"} back="/courier" />
+        {/* Len počet na obálke naživo (D210); zoznam sa obnoví navigáciou. */}
+        <CourierLive me={ctx.person.id} language={language} />
 
         {/* Jediné plné tlačidlo obrazovky: napísať. Zoznam sám akcie nemá. */}
         <div className="page-head">

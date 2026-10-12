@@ -739,6 +739,8 @@ interface Dictionary {
     account: (email: string) => string
     signOut: string
     themeLabel: string
+    /** Prepínač ranného súhrnu Kuriéra v plachte účtu (ADR-033, D207). */
+    courierDigest: (on: boolean) => string
     theme: Record<"system" | "light" | "dark", string>
     /** Popis pre čítačku obrazovky — hovorí aj to, čo sa stane po kliknutí. */
     themeToggle: (now: string, next: string) => string
@@ -2329,6 +2331,8 @@ interface Dictionary {
     inReplyTo: string
     /** Poznámka pri prepínači „Všetkým" — vlastná, nie z prideľovania. */
     everyoneNote: string
+    /** „Peter píše…" (D210) — živé spojenie v otvorenom vlákne. */
+    typing: (names: string) => string
     msgAnnounced: (n: number) => string
   }
   notifications: {
@@ -5472,6 +5476,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     account: (email) => `Účet ${email}`,
     signOut: "Odhlásiť",
     themeLabel: "Téma:",
+    courierDigest: (on) => `Ranný súhrn Kuriéra e-mailom: ${on ? "zapnutý" : "vypnutý"}`,
     theme: { system: "podľa systému", light: "svetlá", dark: "tmavá" },
     themeToggle: (now, next) => `Téma ${now}. Prepnúť na: ${next}`,
     themeState: (now) => `Téma ${now}`,
@@ -7499,6 +7504,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     followUp: "Doplniť oznam — všetkým príjemcom",
     inReplyTo: "Odpoveď na oznam",
     everyoneNote: "každému v organizácii, kto je dnes aktívny — výber nižšie sa potom neberie do úvahy",
+    typing: (names) => `${names} píše…`,
     msgAnnounced: (n) => (n === 1 ? "Oznam je odoslaný 1 osobe." : `Oznam je odoslaný ${n} osobám.`),
   },
   notifications: {
@@ -10503,6 +10509,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     account: (email) => `Účet ${email}`,
     signOut: "Odhlásit",
     themeLabel: "Motiv:",
+    courierDigest: (on) => `Ranní souhrn Kurýra e-mailem: ${on ? "zapnutý" : "vypnutý"}`,
     theme: { system: "podle systému", light: "světlý", dark: "tmavý" },
     themeToggle: (now, next) => `Motiv ${now}. Přepnout na: ${next}`,
     themeState: (now) => `Motiv ${now}`,
@@ -12530,6 +12537,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     followUp: "Doplnit oznámení — všem příjemcům",
     inReplyTo: "Odpověď na oznámení",
     everyoneNote: "každému v organizaci, kdo je dnes aktivní — výběr níže se pak nebere v úvahu",
+    typing: (names) => `${names} píše…`,
     msgAnnounced: (n) => (n === 1 ? "Oznámení je odesláno 1 osobě." : `Oznámení je odesláno ${n} osobám.`),
   },
   notifications: {
@@ -15525,6 +15533,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     account: (email) => `Account ${email}`,
     signOut: "Sign out",
     themeLabel: "Theme:",
+    courierDigest: (on) => `Morning Courier digest by e-mail: ${on ? "on" : "off"}`,
     theme: { system: "system", light: "light", dark: "dark" },
     themeToggle: (now, next) => `Theme ${now}. Switch to: ${next}`,
     themeState: (now) => `Theme ${now}`,
@@ -17550,6 +17559,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     followUp: "Add to the announcement — to all recipients",
     inReplyTo: "Reply to an announcement",
     everyoneNote: "everyone active in the organisation today — the selection below is then ignored",
+    typing: (names) => `${names} is typing…`,
     msgAnnounced: (n) => (n === 1 ? "The announcement has been sent to 1 person." : `The announcement has been sent to ${n} people.`),
   },
   notifications: {

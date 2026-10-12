@@ -19,6 +19,8 @@ import SectionsSheet, { type MenuLabels } from "./SectionsSheet"
 import type { SheetColumn } from "@/lib/appNav"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { UNREAD_EVENT } from "./CourierLive"
+import { setCourierDigestAction } from "@/app/courier/actions"
 
 /**
  * Voľba témy má **tri** stavy, nie dva.
@@ -112,6 +114,7 @@ export default function Header({
   isPeopleAdmin: isPeopleAdmin,
   notifications: notifications,
   courier,
+  courierDigest: courierDigestProp,
   language,
   menu,
 }: {
@@ -129,6 +132,8 @@ export default function Header({
   notifications?: number
   /** Počet neprečítaných vlákien Kuriéra (ADR-033, D214). Nula = obálka bez odznaku. */
   courier?: number
+  /** Ranný súhrn Kuriéra zapnutý (D207) — prepínač v plachte účtu. */
+  courierDigest?: boolean
   /** Jazyk prostredia prihlásenej osoby; bez nej slovenčina. */
   language?: UiLanguage
   /**
@@ -140,6 +145,19 @@ export default function Header({
 }) {
   const t = dictionary(language)
   const [choice, setChoice] = useState<ThemeChoice>("system")
+  /*
+   * Počet na obálke naživo (ADR-033, D210): keď je otvorený Kuriér,
+   * `CourierLive` posiela nový počet udalosťou `courier:unread`. Inde
+   * platí číslo zo servera — spojenie sa mimo Kuriéra nedrží.
+   */
+  const [liveCourier, setLiveCourier] = useState<number | null>(null)
+  useEffect(() => {
+    const onUnread = (e: Event) => setLiveCourier((e as CustomEvent<number>).detail)
+    window.addEventListener(UNREAD_EVENT, onUnread)
+    return () => window.removeEventListener(UNREAD_EVENT, onUnread)
+  }, [])
+  const courierCount = liveCourier ?? courier ?? 0
+  const [courierDigest, setCourierDigest] = useState(courierDigestProp !== false)
   /*
    * Nápoveda `⌘K` v poli. Windows a Linux majú `Ctrl K` — zisťuje sa až po
    * pripojení, lebo server platformu nepozná a hádať ju znamená hydratačný
@@ -393,11 +411,11 @@ export default function Header({
             <Link
               href="/courier"
               className="head-icon"
-              aria-label={t.courier.envelopeLabel(courier ?? 0)}
+              aria-label={t.courier.envelopeLabel(courierCount)}
             >
               <Icon name="courier" size={21} />
-              {(courier ?? 0) > 0 && (
-                <span className="head-badge" aria-hidden="true">{courier}</span>
+              {courierCount > 0 && (
+                <span className="head-badge" aria-hidden="true">{courierCount}</span>
               )}
             </Link>
 
@@ -534,6 +552,23 @@ export default function Header({
                   >
                     <ThemeIcon choice={choice} />
                     {t.nav.themeLabel} {t.nav.theme[choice]}
+                  </button>
+
+                  {/* Ranný súhrn Kuriéra (ADR-033, D207) — jediné nastavenie,
+                      ktoré si človek mení sám; preto tu, vedľa témy. */}
+                  <button
+                    type="button"
+                    role="menuitemcheckbox"
+                    aria-checked={courierDigest}
+                    className="account-item"
+                    onClick={() => {
+                      const next = !courierDigest
+                      setCourierDigest(next)
+                      setCourierDigestAction(next).catch(() => setCourierDigest(!next))
+                    }}
+                  >
+                    <Icon name="courier" />
+                    {t.nav.courierDigest(courierDigest)}
                   </button>
 
                   <button

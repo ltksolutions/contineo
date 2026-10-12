@@ -79,6 +79,8 @@ export interface Participant extends PersonRef {
   lastReadAt: Date | null
   /** Stlmené vlákno (fáza 2) — nateraz vždy `null`. */
   mutedAt: Date | null
+  /** „Píše…" (D210): zapíše sa pri písaní, platí `TYPING_MS`; nič sa nemaže. */
+  typingAt: Date | null
   /**
    * Kedy bolo vlákno naposledy v rannom súhrne tejto osoby (D207). Nová
    * správa ho vynuluje; súhrn tak nesie len to, čo odvtedy pribudlo, a to
@@ -195,7 +197,7 @@ export function validateContent(subject: string, text: string): { subject: strin
 }
 
 function participant(p: PersonRef, readAt: Date | null): Participant {
-  return { personId: p.personId, email: p.email.toLowerCase(), name: p.name, lastReadAt: readAt, mutedAt: null, digestedAt: null }
+  return { personId: p.personId, email: p.email.toLowerCase(), name: p.name, lastReadAt: readAt, mutedAt: null, typingAt: null, digestedAt: null }
 }
 
 /**
@@ -311,6 +313,26 @@ export async function postMessage(input: {
     targetLabel: thread.subject,
     note: `${thread.kind} · ${others.length}`,
   })
+}
+
+/** Ako dlho platí „píše…" od posledného zápisu `typingAt`. */
+export const TYPING_MS = 5_000
+
+/** „Píše…": len účastník; zápis bez auditu — nie je to udalosť, ale stav na 5 s. */
+export async function setTyping(companyCode: string, threadId: string, personId: string, now: Date = new Date()): Promise<void> {
+  if (!ObjectId.isValid(threadId)) return
+  const col = await threads()
+  await col.updateOne(
+    { _id: new ObjectId(threadId), companyCode, "participants.personId": personId },
+    { $set: { "participants.$[me].typingAt": now } },
+    { arrayFilters: [{ "me.personId": personId }] },
+  )
+}
+
+/** Správy vlákna po danom čase — pre živé spojenie (D210). */
+export async function messagesSince(companyCode: string, threadId: string, since: Date): Promise<Message[]> {
+  const col = await messages()
+  return col.find({ companyCode, threadId, at: { $gt: since } }).sort({ at: 1 }).limit(MESSAGES_PAGE).toArray()
 }
 
 /** Otvorenie vlákna: `lastReadAt` a vyradenie z `unreadFor` naraz. */

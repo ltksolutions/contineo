@@ -24,6 +24,7 @@ function matches(r: Row, f: Row): boolean {
       if ("$ne" in c) return Array.isArray(v) && Array.isArray(c.$ne) ? v.length !== (c.$ne as unknown[]).length : !same(v, c.$ne)
       if ("$in" in c) return (c.$in as unknown[]).some(x => same(v, x))
       if ("$elemMatch" in c) return Array.isArray(v) && v.some(e => matches(e as Row, c.$elemMatch as Row))
+      if ("$gt" in c) return v instanceof Date && v.getTime() > (c.$gt as Date).getTime()
     }
     if (k.includes(".")) {
       // `participants.personId` — pole dokumentov: zhoda v ktoromkoľvek prvku.
@@ -85,8 +86,9 @@ vi.mock("../src/lib/audit", () => ({ writeAudit: vi.fn(async (r: Row) => { audit
 import {
   createDirectThread, postMessage, markThreadRead, unreadThreadCount, listThreads, loadThread, threadMessages,
   previewOf, validateContent, CourierError, createAnnouncement, replyToAnnouncement, readStats,
-  pendingDigests, markDigested,
+  pendingDigests, markDigested, setTyping,
 } from "../src/lib/courier"
+import { poll, liveEvents, othersStatus, type LiveState } from "../src/lib/courierLive"
 
 const anna = { personId: "p-anna", email: "anna@sfz.sk", name: "Anna Nová" }
 const peter = { personId: "p-peter", email: "peter@sfz.sk", name: "Peter Malý" }
@@ -226,5 +228,51 @@ describe("ranný súhrn (D207)", () => {
 
     await postMessage({ companyCode: "SFZ", threadId: a, author: anna, text: "Ešte niečo", now: later(4) })
     expect((await pendingDigests("SFZ")).map(p => p.items.map(i => i.subject))).toEqual([["Prvé"]])
+  })
+})
+
+describe("živé spojenie (D210, D211)", () => {
+  it("poll vracia len rozdiely: počet, nové správy, stav ostatných", async () => {
+    const id = await createDirectThread({ companyCode: "SFZ", from: anna, to: peter, subject: "Rozpis", text: "t", now: t0 })
+    const state: LiveState = { since: t0, unread: null, status: null }
+    const input = { companyCode: "SFZ", personId: "p-anna", threadId: id }
+
+    const first = await poll(input, state, later(1))
+    expect(first.map(e => e.type)).toEqual(["unread", "status"])
+    expect(first[0]).toEqual({ type: "unread", count: 0 })
+    expect(first[1]).toMatchObject({ others: [{ personId: "p-peter", typing: false, lastReadAt: null }] })
+
+    // Bez zmeny nič.
+    expect(await poll(input, state, later(2))).toEqual([])
+
+    const sec = (n: number) => new Date(later(3).getTime() + n * 1000)
+    await setTyping("SFZ", id, "p-peter", later(3))
+    expect(await poll(input, state, sec(2))).toMatchObject([{ type: "status", others: [{ typing: true }] }])
+    // Po 5 s „píše…" zhasne.
+    expect(await poll(input, state, sec(6))).toMatchObject([{ type: "status", others: [{ typing: false }] }])
+
+    await postMessage({ companyCode: "SFZ", threadId: id, author: peter, text: "Odpoveď", now: later(10) })
+    const after = await poll(input, state, later(11))
+    expect(after.map(e => e.type)).toEqual(["unread", "message", "status"])
+    expect(after[1]).toMatchObject({ type: "message", author: { personId: "p-peter" }, text: "Odpoveď" })
+    expect(state.since).toEqual(later(10))
+    // Tá istá správa druhýkrát nejde.
+    expect((await poll(input, state, later(12))).some(e => e.type === "message")).toBe(false)
+  })
+
+  it("stav ostatných pre cudzie vlákno nie je; oznam ukáže všetkých príjemcov", () => {
+    const thread = { participants: [
+      { personId: "a", name: "A", lastReadAt: null, typingAt: null },
+      { personId: "b", name: "B", lastReadAt: t0, typingAt: later(0) },
+    ] } as never
+    expect(othersStatus(thread, "a", later(0.05)).others).toEqual([{ personId: "b", name: "B", typing: true, lastReadAt: t0.toISOString() }])
+  })
+
+  it("liveEvents bez change streamu beží na časovači a skončí po maxMs", async () => {
+    const id = await createDirectThread({ companyCode: "SFZ", from: anna, to: peter, subject: "Rozpis", text: "t", now: t0 })
+    const out = []
+    for await (const e of liveEvents({ companyCode: "SFZ", personId: "p-peter", threadId: id }, { pollMs: 5, maxMs: 40, since: t0 })) out.push(e)
+    expect(out[0]).toEqual({ type: "unread", count: 1 })
+    expect(out.some(e => e.type === "status")).toBe(true)
   })
 })
