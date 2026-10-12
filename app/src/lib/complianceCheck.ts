@@ -85,6 +85,12 @@ export interface PackDocument {
   state: "valid" | "draft"
   label: string | null
   chars: number
+  /**
+   * Odtlačok textu, proti ktorému sa kontrolovalo (12. 10. 2026). Pri
+   * zverejnení podľa neho `requestOnPublish()` pozná, že návrh FAQ už bol
+   * skontrolovaný proti tomu istému textu; staršie behy ho nemajú.
+   */
+  textHash?: string
 }
 
 /** Jeden krok kontroly: časť referenčných dokumentov, ktorá sa zmestí do jedného volania. */
@@ -139,7 +145,7 @@ export function buildPacks(docs: RawDocument[], max = PACK_MAX_CHARS): Reference
   for (const e of entries) {
     const meta: PackDocument = {
       documentId: e.d.documentId, title: String(e.d.title ?? e.d.documentId), category: e.d.category ?? null,
-      state: e.state, label: e.label, chars: e.text.length,
+      state: e.state, label: e.label, chars: e.text.length, textHash: textFingerprint(e.text),
     }
     const parts = splitText(e.text, max - 400)
     parts.forEach((body, i) => blocks.push({
@@ -282,7 +288,7 @@ export interface ProposalReview {
   proposed: { question: string; answer: string; sources: ProposalSource[] } | null
   note: string
   model: string
-  documents: Pick<PackDocument, "documentId" | "title" | "state" | "label">[]
+  documents: Pick<PackDocument, "documentId" | "title" | "state" | "label" | "textHash">[]
   /** Čo s výsledkom urobil kurátor; `null` kým nerozhodol. */
   decision: "applied" | "dismissed" | null
   decidedBy?: string | null
@@ -940,7 +946,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
   let done = 0
   try {
     const packs = buildPacks(await loadDocuments(code, run.documentIds))
-    const docMeta = packs.flatMap(p => p.documents).map(d => ({ documentId: d.documentId, title: d.title, state: d.state, label: d.label }))
+    const docMeta = packs.flatMap(p => p.documents).map(d => ({ documentId: d.documentId, title: d.title, state: d.state, label: d.label, textHash: d.textHash }))
     let pending = run.pending.slice()
     let partials: DocumentPartial[] = run.partials ?? []
     let warm: WarmPack[] = run.warmPacks ?? []

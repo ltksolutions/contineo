@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { linkedChecks } from "../src/lib/complianceRequests"
+import { faqToCheck, linkedChecks } from "../src/lib/complianceRequests"
 
 const MANUALS = ["m0", "m1"]
 const NORMS = ["rapp", "sp", "dp"]
@@ -32,5 +32,23 @@ describe("nové znenie, ktoré je výsledkom kontroly", () => {
   it("ak je zároveň normou iných, ich kontrola ostáva", () => {
     const links = [{ subjectId: "m1", referenceIds: ["rapp"] }, { subjectId: "rozpis", referenceIds: ["m1"] }]
     expect(linkedChecks("m1", links, [], true)).toEqual({ subjectIds: ["rozpis"], referenceIds: ["m1"] })
+  })
+})
+
+describe("faqToCheck — návrhy FAQ pri novom znení", () => {
+  const doc = "sfz:issf_02"
+  const row = (channelKey: string, textHash?: string) => ({ channelKey, review: textHash === undefined ? null : { documents: [{ documentId: doc, textHash }] } })
+
+  it("návrh skontrolovaný proti tomu istému textu sa nepočíta (12. 10. 2026)", () => {
+    expect(faqToCheck(doc, [row("issf", "h1"), row("issf", "h1")], "h1")).toEqual([])
+  })
+
+  it("návrh bez kontroly, so starším odtlačkom alebo spred odtlačkov sa počíta po kanáloch", () => {
+    const r = faqToCheck(doc, [row("issf", "h0"), row("issf"), row("matrika", "h1"), { channelKey: "issf", review: { documents: [{ documentId: doc }] } }], "h1")
+    expect(r).toEqual([{ channelKey: "issf", proposals: 3 }])
+  })
+
+  it("bez zverejneného textu sa počíta všetko", () => {
+    expect(faqToCheck(doc, [row("issf", "h1")], null)).toEqual([{ channelKey: "issf", proposals: 1 }])
   })
 })
