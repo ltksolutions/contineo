@@ -13,7 +13,9 @@
 > obaja diskutujúci otvorený messenger, volajme ho ‚courier‘ po slovensky
 > ‚Kuriér‘, vedeli živo diskutovať v reálnom čase aj s reálnymi notifikáciami
 > do zvončeka, alebo kuriéra" — D207 a D210 preto platia v tomto znení,
-> D211–D213 sú doplnené.
+> D211–D213 sú doplnené. Ďalej: „notifikácie zo systému a samotného
+> messengera oddeliť, messenger nech má vlastnú ikonu v hlavičke, napríklad
+> obálku" — D214.
 > **Nadväzuje na:** D39, D40 a `lib/notifications.ts` (zvonček nesie
 > udalosti, nie správy), ADR-005 (publikum pridelenia: osoba, oddelenie,
 > skupina, trasa, všetci — kópia, nie odkaz), D27 (stav sa odvodzuje),
@@ -102,9 +104,8 @@ pri ktorej záleží na tom, kto ju čítal, patrí tam. Pri 1:1 vlákne
 Prečítanie sa **neukladá per správa**: na účastníkovi vlákna je
 `lastReadAt`; čo je neprečítané, sa odvodí (D27). Počet neprečítaných
 vlákien je štítok **„Kuriér 3"** v navigácii — rovnako ako „Na potvrdenie
-3". Zvonček počet neopakuje (dve miesta s tou istou pravdou sa raz rozídu —
-`lib/notifications.ts`); nesie **udalosť** `messageReceived` („Peter Novák:
-Rozpis súťaží"), ktorá sa označí ako prečítaná otvorením vlákna.
+3" a štítok na **obálke v hlavičke** (D214). Zvonček správy nenesie vôbec
+(D214) — ani počet, ani udalosť.
 
 ### D207 — E-mail je ranný súhrn neprečítaných, nie správa per vlákno
 
@@ -162,13 +163,13 @@ prístupové práva dokumentu — to je dôvod, prečo prílohy nie sú.
 Keď má človek **otvorený Kuriér** (zoznam alebo vlákno), prehliadač drží
 spojenie Server-Sent Events na `/api/courier/stream` — ten istý mechanizmus
 a klient (`lib/sseClient.ts`), ktorým „Spýtať sa" streamuje odpoveď.
-Server ním posiela nové správy vo vlákne, zmenu počtu neprečítaných
-a udalosti zvončeka. Spojenie beží do 55 s (`maxDuration = 60`), potom sa
+Server ním posiela nové správy vo vlákne a zmenu počtu neprečítaných
+(štítok na obálke, D214). Spojenie beží do 55 s (`maxDuration = 60`), potom sa
 prehliadač sám znova pripojí; pre človeka je to súvislé. Dvaja ľudia
 s otvoreným vláknom tak diskutujú v reálnom čase.
 
-**Mimo Kuriéra sa spojenie nedrží** (Ján, 12. 10. 2026): štítok a zvonček
-sa obnovia pri navigácii. Pri 100 ľuďoch to znamená rádovo desiatky
+**Mimo Kuriéra sa spojenie nedrží** (Ján, 12. 10. 2026): štítok na obálke
+sa obnoví pri navigácii. Pri 100 ľuďoch to znamená rádovo desiatky
 otvorených spojení, nie stovky; aj najmenší stupeň Atlasu to unesie.
 
 **Indikátory pri 1:1** sú vo fáze 1: „píše…" (klient pošle
@@ -213,6 +214,23 @@ Rozmer: 100 osôb × 5 správ denne ≈ 130 000 správ ročne, ~100 MB za
 dvojročnú retenciu. Pri desaťnásobku jednotky GB — stále bez zmeny
 architektúry.
 
+### D214 — Kuriér má v hlavičke vlastnú ikonu (obálka); do zvončeka správy nechodia
+
+Zvonček je **„čo sa stalo"** (udalosti systému, `lib/notifications.ts`),
+Kuriér je **„kto mi píše"** (človek). Miešať ich by znamenalo, že oznam od
+HR stojí v jednom zozname s „preindexovanie dobehlo". Preto má Kuriér
+v hlavičke **vlastnú ikonu — obálku** (`Icon name="mail"`, SF Symbols
+`envelope` / `envelope.badge`) so štítkom počtu neprečítaných vlákien,
+v rovnakom tvare ako zvonček (spoločná trieda `.head-icon`). Poradie
+vpravo: **obálka, zvonček, téma, profil** — obálka bližšie k stredu, lebo
+sa na ňu klikne častejšie. Na telefóne ostáva v hlavičke; do spodnej lišty
+nejde (spodok patrí hlavnej lište aplikácie).
+
+Obálka, nie bublina rozhovoru: sedí k názvu (kuriér nosí listy), Kuriér je
+v prvom rade oznamy a rozhovor až druhá vrstva, a bublina by bola vizuálne
+blízko ikone „Spýtať sa", ktorá v hlavičke už je. Živé spojenie (D210)
+prekresľuje štítok na obálke; zvonček sa Kuriéra netýka.
+
 ## 3. Čo tým vzniká
 
 **Kolekcie** (`companyCode` všade v podmienke, D32):
@@ -236,7 +254,7 @@ prihláseného.
 neprečítaných, tlačidlo, bez tela (D207); cron `/api/cron/courier-digest`.
 Jazyk podľa osoby, texty cez i18n (sk/cs/en).
 
-**Zvonček:** druh `messageReceived` v `lib/notifications.ts`.
+**Hlavička:** obálka so štítkom v `Header.tsx` (D214); `.bell` → `.head-icon`.
 
 **Retencia:** `purgeThreads` v `lib/retentionDb.ts`, `courierMonths`
 v nastaveniach, riadok v `RetentionRun`.
@@ -245,7 +263,7 @@ v nastaveniach, riadok v `RetentionRun`.
 
 | Fáza | Obsah |
 |---|---|
-| **1 — Oznamy a 1:1** | vlákno od role publiku a 1:1 od kohokoľvek; Markdown + karty obsahu; náhľad pred hromadným odoslaním; živé spojenie v Kuriérovi (SSE + change stream), „píše…" a „prečítané" pri 1:1; udalosť v zvončeku; ranný súhrn e-mailom; štítok neprečítaných; odpoveď na oznam súkromne; retencia; /privacy; audit |
+| **1 — Oznamy a 1:1** | vlákno od role publiku a 1:1 od kohokoľvek; Markdown + karty obsahu; náhľad pred hromadným odoslaním; živé spojenie v Kuriérovi (SSE + change stream), „píše…" a „prečítané" pri 1:1; obálka v hlavičke; ranný súhrn e-mailom; štítok neprečítaných; odpoveď na oznam súkromne; retencia; /privacy; audit |
 | **2 — Rozhovory** | skupinové vlákno s odpoveďou všetkým (voľba pri založení); stlmenie vlákna; úprava vlastnej správy do 15 minút so značkou „upravené"; hľadanie v mojich vláknach; koncept |
 | **3 — Doplnky** | odoslanie v naplánovanom čase; príznak „dôležité"; výber karty obsahu vyhľadávaním v knižnici; push (PWA); export vlákna pre DPO v jednom kroku |
 
@@ -256,7 +274,8 @@ v nastaveniach, riadok v `RetentionRun`.
 - **Zoznam mien, kto čítal** — to sú Potvrdenia (D206).
 - **Správa, ktorú treba potvrdiť** — to je pridelenie s termínom (ADR-004,
   ADR-005); messenger nie je dôkazný záznam a nesmie sa ním stať.
-- **Živé spojenie mimo Kuriéra** — štítok a zvonček inde žijú navigáciou (D210).
+- **Živé spojenie mimo Kuriéra** — štítok na obálke inde žije navigáciou (D210).
+- **Správy v zvončeku** — zvonček je systém, obálka je človek (D214).
 - **E-mail pri každej správe** — len ranný súhrn (D207).
 - **Externí adresáti** — ich cesta je ticket (ADR-028).
 
