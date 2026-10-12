@@ -31,15 +31,19 @@ import { RATINGS_COLLECTION } from "./ratings"
 import { TICKETS_COLLECTION } from "./tickets"
 import {
   retentionDecision, isStaleActive, learningDetailsDue, addMonths, retentionSettings, RETENTION_LOG_DAYS, LEARNING_DETAIL_MONTHS, ANSWERS_MONTHS,
-  TICKET_MONTHS, EXTERNAL_INACTIVE_MONTHS,
+  TICKET_MONTHS, COURIER_MONTHS, EXTERNAL_INACTIVE_MONTHS,
   type RetentionBasis, type RetentionMode,
 } from "./retention"
+import {
+  THREADS_COLLECTION as COURIER_THREADS, MESSAGES_COLLECTION as COURIER_MESSAGES, DRAFTS_COLLECTION as COURIER_DRAFTS,
+} from "./courier"
 
 export const RETENTION_LOG_COLLECTION = "retention_log"
 
 /** `details` = orezanie podrobností vzdelávania po roku (ADR-021, D131). */
 /** `tickets` a `external` = helpdesk (ADR-028, D178). */
-export type DeletionReason = RetentionBasis | "objection" | "details" | "answers" | "tickets" | "external"
+/** `courier` = vlákna Kuriéra po lehote (ADR-033, D209). */
+export type DeletionReason = RetentionBasis | "objection" | "details" | "answers" | "tickets" | "external" | "courier"
 
 export interface DeletionCounts {
   acknowledgements: number
@@ -61,13 +65,16 @@ export interface DeletionCounts {
   tickets: number
   /** Osoby z widgetu bez aktivity (D178). */
   externalPersons: number
+  /** Vlákna Kuriéra a ich správy po lehote (D209). */
+  courierThreads: number
+  courierMessages: number
 }
 
 const ZERO: DeletionCounts = {
   acknowledgements: 0, documentOpens: 0, readingTimes: 0,
   assignments: 0, approvalRounds: 0, responsibleCleared: 0, objections: 0,
   enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0, answers: 0,
-  tickets: 0, externalPersons: 0,
+  tickets: 0, externalPersons: 0, courierThreads: 0, courierMessages: 0,
 }
 
 /** Kolekcie vzdelávania osoby, ktoré maže lehota (D130). */
@@ -338,6 +345,13 @@ export interface RetentionRun {
   answers: AnswersCounts
   /** Helpdesk po lehote (D178): zavreté tickety a osoby z widgetu bez aktivity. */
   helpdesk: HelpdeskCounts
+  /** Kuriér po lehote (D209): vlákna od poslednej správy. */
+  courier: CourierCounts
+}
+
+export interface CourierCounts {
+  threads: number
+  messages: number
 }
 
 export interface HelpdeskCounts {
@@ -527,6 +541,7 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
     learningDetails: { enrollments: 0, testAttempts: 0, videoWatchTrimmed: 0, videoWatchDeleted: 0 },
     answers: { deleted: 0, detached: 0 },
     helpdesk: { tickets: 0, externalPersons: 0 },
+    courier: { threads: 0, messages: 0 },
   }
   const last = await lastEvents(companyCode, people)
   for (const p of people) {
@@ -548,5 +563,34 @@ export async function runRetention(companyCode: string, mode: RetentionMode, now
     tickets: await purgeTickets(companyCode, mode, now, settings.ticketMonths),
     externalPersons: await purgeExternalPersons(companyCode, mode, now),
   }
+  run.courier = await purgeCourier(companyCode, mode, now, settings.courierMonths)
   return run
+}
+
+/**
+ * Vlákna Kuriéra (ADR-033, D209), v ktorých posledná správa prišla pred
+ * `courierMonths`, sa zmažú celé aj so správami — v tom poradí: najprv správy,
+ * potom vlákno, aby prerušený beh nenechal správy bez vlákna. Koncepty
+ * bez zmeny rovnako dlho sa mažú tiež. Nie TTL index: DPO potrebuje vedieť,
+ * čo a kedy sa zmazalo (`retention_log`).
+ */
+export async function purgeCourier(
+  companyCode: string, mode: RetentionMode, now: Date = new Date(), months: number = COURIER_MONTHS,
+): Promise<CourierCounts> {
+  const threads = await getCollection(COURIER_THREADS)
+  const messages = await getCollection(COURIER_MESSAGES)
+  const cutoff = addMonths(now, -months)
+  const due = await threads
+    .find({ companyCode, lastMessageAt: { $lt: cutoff } }, { projection: { _id: 1 } })
+    .toArray()
+  const ids = due.map(t => String(t._id))
+  const messageCount = ids.length ? await messages.countDocuments({ companyCode, threadId: { $in: ids } }) : 0
+  const counts = { threads: ids.length, messages: messageCount }
+  if (mode !== "delete" || !ids.length) return counts
+  await messages.deleteMany({ companyCode, threadId: { $in: ids } })
+  await threads.deleteMany({ companyCode, _id: { $in: due.map(t => t._id) } })
+  const drafts = await getCollection(COURIER_DRAFTS)
+  await drafts.deleteMany({ companyCode, updatedAt: { $lt: cutoff } })
+  await logDeletion(companyCode, null, "courier", { ...ZERO, courierThreads: counts.threads, courierMessages: counts.messages }, now)
+  return counts
 }

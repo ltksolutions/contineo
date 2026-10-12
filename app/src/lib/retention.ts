@@ -49,6 +49,12 @@ export const TICKET_MONTHS = 24
  * inak ostávala navždy.
  */
 export const EXTERNAL_INACTIVE_MONTHS = 24
+/**
+ * Vlákno Kuriéra (ADR-033, D209) — mesiace od **poslednej správy**, potom sa
+ * zmaže celé aj so správami. Nie je to dôkazný záznam; správa, pri ktorej
+ * záleží na tom, kto ju čítal, patrí do Potvrdení (D206).
+ */
+export const COURIER_MONTHS = 24
 /** `retention_log` — dlhšie než najdlhšia plánovaná retencia záloh (D102). */
 export const RETENTION_LOG_DAYS = 395
 
@@ -68,6 +74,8 @@ export interface RetentionSettings {
   answersMonths: number
   /** Mesiace od zavretia ticketu, potom sa ticket zmaže (D178). */
   ticketMonths: number
+  /** Mesiace od poslednej správy vo vlákne Kuriéra, potom sa vlákno zmaže (D209). */
+  courierMonths: number
 }
 
 export const DEFAULT_RETENTION: RetentionSettings = {
@@ -76,6 +84,7 @@ export const DEFAULT_RETENTION: RetentionSettings = {
   learningDetailMonths: LEARNING_DETAIL_MONTHS,
   answersMonths: ANSWERS_MONTHS,
   ticketMonths: TICKET_MONTHS,
+  courierMonths: COURIER_MONTHS,
 }
 
 /** Rozsahy, ktoré obrazovka pustí — nula by znamenala „zmazať hneď". */
@@ -85,6 +94,7 @@ export const RETENTION_LIMITS = {
   learningDetailMonths: [1, 60],
   answersMonths: [1, 60],
   ticketMonths: [1, 120],
+  courierMonths: [1, 120],
 } as const
 
 const clampInt = (v: unknown, [min, max]: readonly [number, number], fallback: number) => {
@@ -104,6 +114,7 @@ export function retentionSettings(saved?: Partial<RetentionSettings> | null): Re
     learningDetailMonths: clampInt(saved?.learningDetailMonths, RETENTION_LIMITS.learningDetailMonths, DEFAULT_RETENTION.learningDetailMonths),
     answersMonths: clampInt(saved?.answersMonths, RETENTION_LIMITS.answersMonths, DEFAULT_RETENTION.answersMonths),
     ticketMonths: clampInt(saved?.ticketMonths, RETENTION_LIMITS.ticketMonths, DEFAULT_RETENTION.ticketMonths),
+    courierMonths: clampInt(saved?.courierMonths, RETENTION_LIMITS.courierMonths, DEFAULT_RETENTION.courierMonths),
   }
 }
 

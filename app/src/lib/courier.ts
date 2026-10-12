@@ -79,6 +79,12 @@ export interface Participant extends PersonRef {
   lastReadAt: Date | null
   /** Stlmené vlákno (fáza 2) — nateraz vždy `null`. */
   mutedAt: Date | null
+  /**
+   * Kedy bolo vlákno naposledy v rannom súhrne tejto osoby (D207). Nová
+   * správa ho vynuluje; súhrn tak nesie len to, čo odvtedy pribudlo, a to
+   * isté neprečítané vlákno nechodí e-mailom každé ráno.
+   */
+  digestedAt: Date | null
 }
 
 export interface Thread {
@@ -189,7 +195,7 @@ export function validateContent(subject: string, text: string): { subject: strin
 }
 
 function participant(p: PersonRef, readAt: Date | null): Participant {
-  return { personId: p.personId, email: p.email.toLowerCase(), name: p.name, lastReadAt: readAt, mutedAt: null }
+  return { personId: p.personId, email: p.email.toLowerCase(), name: p.name, lastReadAt: readAt, mutedAt: null, digestedAt: null }
 }
 
 /**
@@ -291,9 +297,10 @@ export async function postMessage(input: {
         lastMessage: { authorName: input.author.name, preview: previewOf(text) },
         unreadFor: others,
         "participants.$[me].lastReadAt": now,
+        "participants.$[other].digestedAt": null,
       },
     },
-    { arrayFilters: [{ "me.personId": input.author.personId }] },
+    { arrayFilters: [{ "me.personId": input.author.personId }, { "other.personId": { $ne: input.author.personId } }] },
   )
   await writeAudit({
     companyCode: input.companyCode,
@@ -488,6 +495,56 @@ export async function loadDraft(companyCode: string, personId: string): Promise<
 export async function clearDraft(companyCode: string, personId: string): Promise<void> {
   const col = await getCollection<Draft>(DRAFTS_COLLECTION)
   await col.deleteOne({ companyCode, personId })
+}
+
+/** Jedna položka súhrnu — predmet a kto písal, nikdy text (D207). */
+export interface DigestItem {
+  threadId: string
+  subject: string
+  from: string
+}
+
+export interface PendingDigest {
+  personId: string
+  email: string
+  name: string
+  items: DigestItem[]
+}
+
+/**
+ * Komu ísť ranný súhrn (D207): osoby s neprečítaným vláknom, ktoré ešte
+ * v súhrne nebolo (`digestedAt: null`). Jeden beh vezme najviac `limit` osôb;
+ * zvyšok dobehne ďalší beh, lebo odoslané sa označia.
+ */
+export async function pendingDigests(companyCode: string, limit = 100): Promise<PendingDigest[]> {
+  const col = await threads()
+  const rows = await col
+    .find({ companyCode, unreadFor: { $ne: [] }, participants: { $elemMatch: { digestedAt: null } } })
+    .sort({ lastMessageAt: -1 })
+    .limit(2000)
+    .toArray()
+  const byPerson = new Map<string, PendingDigest>()
+  for (const t of rows) {
+    for (const p of participantsOf(t)) {
+      if (p.digestedAt !== null || !(t.unreadFor ?? []).includes(p.personId)) continue
+      const entry = byPerson.get(p.personId) ?? { personId: p.personId, email: p.email, name: p.name, items: [] }
+      entry.items.push({ threadId: String(t._id), subject: t.subject, from: t.lastMessage?.authorName ?? t.createdBy.name })
+      byPerson.set(p.personId, entry)
+    }
+  }
+  return [...byPerson.values()].slice(0, limit)
+}
+
+/** Po odoslaní súhrnu: tieto vlákna už tejto osobe v súhrne boli. */
+export async function markDigested(companyCode: string, personId: string, threadIds: string[], now: Date = new Date()): Promise<void> {
+  const ids = threadIds.filter(id => ObjectId.isValid(id)).map(id => new ObjectId(id))
+  if (!ids.length) return
+  const col = await threads()
+  await col.updateMany(
+    { companyCode, _id: { $in: ids }, "participants.personId": personId },
+    { $set: { "participants.$[me].digestedAt": now } },
+    { arrayFilters: [{ "me.personId": personId }] },
+  )
 }
 
 /** „Prečítalo 45 zo 120" (D206): príjemcovia, ktorí oznam otvorili po poslednej správe. */

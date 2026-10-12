@@ -108,6 +108,7 @@ export async function saveGdprPageAction(fd: FormData) {
     learningDetailMonths: Number(field(fd, "learningDetailMonths")),
     answersMonths: Number(field(fd, "answersMonths")),
     ticketMonths: Number(field(fd, "ticketMonths")),
+    courierMonths: Number(field(fd, "courierMonths")),
   }
   const before = retentionSettings(ctx.tenant.privacy?.retention)
   const after = retentionSettings(retention)
