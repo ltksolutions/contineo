@@ -4,6 +4,56 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kuriér: správy medzi ľuďmi v organizácii (2026-10-12, ADR-033)
+
+- **Obálka v hlavičke** vedľa zvončeka s počtom neprečítaných vlákien;
+  položka **Kuriér** v menu pre každého prihláseného. Zvonček správy nenesie.
+- **Správa jednej osobe** (`/courier/new`) — ktokoľvek komukoľvek; predmet
+  a text v ľahkom Markdowne (tučné, odrážky, číslovanie, odkazy na obsah
+  v Contineo). Prílohy sa neposielajú — namiesto nich odkaz.
+- **Oznam skupine** (`/courier/announce`) — správca osôb, HR a správca obsahu:
+  publikum ako pri prideľovaní (oddelenie s podriadenými, skupina, trasa,
+  osoby, všetci). **Skontrolovať príjemcov** ukáže počet a mená; až potom
+  **Odoslať N osobám**. Zmena výberu po náhľade vráti náhľad znova.
+- **Odpoveď na oznam ide súkromne autorovi** do vlákna „Re: …“ s odkazom na
+  oznam; autor dopĺňa oznam všetkým a vidí **„Prečítalo N z M“** (mená nie).
+- **Vlákno** (`/courier/[id]`): správy najstaršie hore, otvorenie = prečítanie,
+  odpoveď dole; pri 1:1 „Prečítané · čas“.
+- **Živo** v otvorenom Kuriérovi: nová správa, „píše…“ a „prečítané“ bez
+  obnovenia; počet na obálke klesne sám. Bez JavaScriptu funguje všetko,
+  len bez živého prekreslenia.
+- **E-mail raz ráno** (7:30 v lete, 6:30 v zime): zoznam „kto · predmet“
+  neprečítaných vlákien, bez textu správ; to isté vlákno nechodí každé
+  ráno. Vypne sa v plachte účtu (**Ranný súhrn Kuriéra e-mailom**).
+- **Ochrana údajov:** vlákna sa mažú po lehote od poslednej správy
+  (Organizácia → GDPR → *Mesiace pre správy v Kuriérovi*, predvolene 24);
+  správca cudzie správy nevidí, asistent ich neprehľadáva; do auditu ide
+  kto, komu, kedy a predmet, nie text. Odsek na `/privacy`, verzia textu
+  12. 10. 2026.
+
+### Schvaľovanie: zrušené kolo nie je zamietnutie; „Prijal (orgán)“ (2026-10-12, D202, D203)
+
+- Kolo zrušené predkladateľom alebo zmenou konceptu má výsledok **zrušené**:
+  karta ho ukáže sivo, bez ✕ v kroku Schválenie a bez výzvy „oprav, čo
+  schvaľovateľ vytkol“; v histórii kôl štítok „zrušené“.
+- Polia *Schválil / Dátum schválenia* sú **Prijal (orgán) / Dátum prijatia**
+  s nápovedou; znenie bez orgánu ukáže „schválené v Contineo: mená · dátum“
+  z kola.
+
+### Kontrola súladu: návrh FAQ proti nezmenenému textu nezaloží požiadavku (2026-10-12)
+
+- Zverejnenie dokumentu už nezaloží „Čaká na kontrolu“ pre návrhy FAQ,
+  ktoré prešli kontrolou proti tomu istému textu (odtlačok textu pri
+  kontrole). Zverejnenie manuálov ISSF predtým založilo šesť zbytočných
+  požiadaviek.
+
+### Kanály: rola „Správca ticketov“ (2026-10-11)
+
+- Rola `helpdesk` sa volá **Správca ticketov** (cs „správce tiketů“, en
+  „ticket manager“) a pole pri kanáli **Správcovia ticketov**; rovnako na
+  `/privacy` (verzia textu 11. 10. 2026). `npm run check` rolu pozná a súlad
+  zoznamu rolí stráži test.
+
 ### Knižnica: nový detail dokumentu (2026-10-12, KNIZ-detail-dokumentu)
 
 - **Stav a súhrn vpravo** (od 1024 px, na telefóne Stav hore): jedna veta,

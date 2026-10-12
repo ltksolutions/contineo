@@ -10,6 +10,54 @@
 
 ---
 
+## 2026-10-12 — Kuriér: interný messenger (ADR-033, #376–#379)
+
+**Čo sa zmenilo:** Ján chcel „posielať formátované správy osobám, nie
+notifikácie“, bez príloh, so správami, ktoré zostávajú na platforme, a hneď
+s výhľadom na odpovede. Z jednej diskusie vzniklo **ADR-033** (D204–D214)
+a za jeden deň celá fáza 1 v štyroch PR: model a 1:1 vlákna s obálkou
+v hlavičke (#376), oznam publiku s náhľadom príjemcov (#377), ranný súhrn,
+retencia a `/privacy` (#378), živé spojenie cez SSE (#379). Názov **Kuriér**
+je Jánov („volajme ho courier, po slovensky Kuriér“).
+
+**Rozhodnutia, ktoré stáli za zápis:** hromadne píšu len role, 1:1
+ktokoľvek (D204); odpoveď na oznam ide **súkromne autorovi** do vlákna
+„Re: …“, nie 120 ľuďom (D205); autor vidí len **počet** prečítaní, mená
+sú vecou Potvrdení (D206); e-mail **nie pri každej správe**, ale raz ráno
+ako zoznam predmetov (D207 — Ján to zmenil po rozbore záťaže); zvonček
+správy **nenesie**, Kuriér má **obálku** (D214 — „oddeliť notifikácie zo
+systému a messengera“). Pri záťaži 100 × 5 správ denne (~130 000 ročne)
+netreba novú technológiu: dve kolekcie, index na účastníka, `unreadFor`
+ako uložený index pre počet na obálke (zapísaná výnimka z D27), nad 500
+príjemcov vlastná kolekcia (D212 — zatiaľ sa väčší oznam odmietne).
+
+**Živé spojenie (D210, D211):** `EventSource` na `/api/courier/stream`,
+55 s a znova; jedna slučka `poll()` vracia rozdiely, **change stream
+Atlasu ju len budí** — bez repliky ostane časovač 2 s a obrazovky o tom
+nevedia. Tak nemôže vzniknúť stav, že obe cesty vracajú niečo iné.
+Spojenie sa drží len v otvorenom Kuriérovi (Jánova voľba).
+
+**Čo nevyšlo a stálo čas:** Vercel dvakrát za deň zhodil nasadenie
+s `git_info_fail` za 4 s (nestiahol údaje o commite, build ani nezačal) —
+raz pomohol prázdny commit, raz `vercel redeploy`; pri #378 produkcia
+prešla, ale stav na GitHub nedorazil a čakanie na status vypršalo. Overovať
+treba vo Verceli, nie len v statusoch. **Lokálne sa Kuriér skúšať nedá:**
+dev beží nad produkčnou DB, prihlásenie ide e-mailom do Jánovej schránky
+a každá skúšobná správa by bola zápis do produkcie — preto som na intranete
+klikal len náhľady a neodosielal; Ján si prvé správy poslal sám a kolegovia
+(Cyril, Agáta) už odpovedali.
+
+**Čo by som nabudúce urobil inak:** HR poznámku „Všetkým“ som najprv
+prevzal z prideľovania a znela nezmyselne („…znenie viselo v prehľade“) —
+text prevzatý z inej obrazovky treba čítať v novom kontexte.
+
+**Zostáva (fáza 2, `docs/TODO.md`):** skupinové vlákna s odpoveďou všetkým,
+stlmenie, úprava správy do 15 min, hľadanie v správach, koncepty 1:1;
+rola ako publikum; `courier_participants` nad 500; export vlákien pre DPO
+jedným krokom; push (PWA). Prvý ranný súhrn pôjde 13. 10. o 7:30.
+
+---
+
 ## 2026-10-12 — detail dokumentu v knižnici (KNIZ-detail-dokumentu)
 
 **Čo sa zmenilo:** `/library/[id]` podľa návrhu (Q1–Q9 A). Dáta a serverové

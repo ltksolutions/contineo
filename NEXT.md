@@ -6,18 +6,34 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-12** (kontrola súladu ADR-032 v prevádzke, #343–#363, #367; manuály ISSF na schválení; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-12 večer** (Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
 
-**Manuály ISSF (10) sú na schválení u Agáty Galkovej (11.–12. 10.).** Prešli
+**Kuriér (ADR-033, 12. 10., #376–#379) je v `main` celý vo fáze 1** —
+interný messenger: obálka v hlavičke oddelená od zvončeka (D214), 1:1
+správa od kohokoľvek, oznam publiku len od správcu osôb, HR a správcu
+obsahu s náhľadom príjemcov (D204), odpoveď na oznam súkromne autorovi
+(D205), autor vidí len počet prečítaní (D206), e-mail raz ráno ako zoznam
+predmetov (D207, cron `courier-digest` 5:30 UTC, prepínač v plachte účtu),
+ľahký Markdown bez príloh (D208), retencia `courierMonths` a odsek na
+`/privacy` s verziou 12. 10. (D209), živé spojenie cez SSE len v otvorenom
+Kuriérovi, change stream ako budík nad `poll()` (D210, D211). Kolegovia
+(Cyril Janoško, Agáta Galková) už odpovedali v 1:1 vláknach; živý rozhovor
+dvoch ľudí a prvý ranný súhrn (13. 10.) sú ešte neoverené naostro. Fáza 2
+a 3 v `docs/TODO.md` („Kuriér — fáza 2 a 3“). Lokálne sa Kuriér neskúša
+(dev nad ostrou DB, prihlásenie e-mailom) — overuje sa na intranete.
+
+**Manuály ISSF (10) sú zverejnené (12. 10., schválila Agáta Galková).** Prešli
 dvoma kontrolami súladu proti 7 normám (ADR-032; 104 nálezov, všetky
 rozhodnuté a zapísané do konceptov), PDF sú vyrobené z aktuálneho textu
 (ADR-031, #365). Staré kolá ISSF-04 a ISSF-05 zo starých PDF sú zrušené; od
 #372 sa kolo starej podoby konceptu ruší samo a druhé kolo vedľa bežiaceho
-sa predložiť nedá. Medzi manuálmi a normami sú **pevné väzby** (D200) — nové
+sa predložiť nedá; zrušené kolo nie je zamietnutie a „Schválil“ je „Prijal
+(orgán)“ (#373, D202, D203). Zverejnenie založilo šesť požiadaviek „Čaká na
+kontrolu“ len cez návrhy FAQ — od #375 sa pri nezmenenom texte nezakladajú. Medzi manuálmi a normami sú **pevné väzby** (D200) — nové
 znenie normy alebo manuálu založí požiadavku „Čaká na kontrolu" v Knižnica →
 Kontrola súladu.
 
@@ -238,8 +254,10 @@ počty v `retention[].helpdesk`).
 
 ## Najbližšie kroky
 
-1. **Zverejniť manuály ISSF** po schválení a overiť, že pri zverejnení
-   nevznikne požiadavka „Čaká na kontrolu" (znenie je výsledkom kontroly).
+1. **Kuriér naostro:** živý rozhovor dvoch ľudí v jednom vlákne („píše…",
+   správa do 2 s), prvý ranný súhrn 13. 10. (`report` cronu `courier-digest`
+   v logu Vercelu), prvý oznam oddeleniu s náhľadom. Potom fáza 2 podľa
+   toho, čo ľuďom chýba.
 2. **Prejsť návrhy FAQ** vo fronte kurátora a schváliť ich do FAQ kanála.
 3. **Ďalšie znenie ISSF-01** — rozpor „NIE JE emailová adresa" verzus
    „prihlasovacie meno" trvá a zmena e-mailu v manuáloch chýba
@@ -259,8 +277,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (12. 10.): **0 errors, 41 warnings,
-2733 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
+Baseline, proti ktorej sa porovnáva (12. 10. večer): **0 errors, 41 warnings,
+2760 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
 na 390 px — #321 prešiel štyrmi brzdami a typ otázky aj tak pretekal o 65 px. Pri paralelnej session pred zlúčením PR
 zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
 `main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže
