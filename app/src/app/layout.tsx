@@ -144,6 +144,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let unread = 0
   /** Počet neprečítaných vlákien Kuriéra pri obálke (ADR-033, D214). */
   let courier = 0
+  /** Ranný súhrn Kuriéra (D207) — chýba = zapnutý. */
+  let courierDigest = true
   try {
     email = (await currentEmail()) ?? undefined
   } catch (e) {
@@ -169,6 +171,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
        * `unreadCount()` nikdy nevyhodí výnimku a pri zlyhaní vráti nulu:
        * hlavička sa nemá rozbiť pre ozdobu.
        */
+      if (self?.courierDigest === false) courierDigest = false
       if (self?.id) {
         [unread, courier] = await Promise.all([
           unreadCount(self.companyCode, self.id),
@@ -235,6 +238,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             isPeopleAdmin={isPeopleAdmin}
             notifications={unread}
             courier={courier}
+            courierDigest={courierDigest}
             language={language}
             menu={menu}
           />

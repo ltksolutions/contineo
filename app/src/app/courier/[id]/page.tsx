@@ -24,6 +24,7 @@ import Link from "next/link"
 import { loadThread, threadMessages, markThreadRead, participantsOf, readStats, TEXT_MAX } from "@/lib/courier"
 import { dictionary } from "@/lib/i18n"
 import { replyAction } from "../actions"
+import CourierLive, { TypingSignal } from "@/components/CourierLive"
 import { messageTime } from "../time"
 
 export const dynamic = "force-dynamic"
@@ -98,10 +99,22 @@ export default async function ThreadPage({
               </article>
             )
           })}
+          {/* Živá vrstva (D210): nové správy, „píše…" a „prečítané" bez
+              obnovenia. Bez JS ostáva riadok nižšie zo servera. */}
+          <CourierLive
+            threadId={id}
+            me={me}
+            since={messages.at(-1)?.at.toISOString() ?? thread.createdAt.toISOString()}
+            language={language}
+            direct={Boolean(other && lastMine)}
+            initialReadAt={readByOther ? readByOther.toISOString() : null}
+          />
           {other && lastMine && (
-            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)", textAlign: "right" }}>
-              {readByOther ? t.readAt(messageTime(readByOther, language)) : t.notReadYet}
-            </p>
+            <noscript>
+              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)", textAlign: "right" }}>
+                {readByOther ? t.readAt(messageTime(readByOther, language)) : t.notReadYet}
+              </p>
+            </noscript>
           )}
         </section>
 
@@ -113,7 +126,8 @@ export default async function ThreadPage({
             <span className="field-label">
               {announcement ? (isAuthor ? t.followUp : t.replyPrivately(thread.createdBy.name)) : t.reply}
             </span>
-            <textarea className="field-input" name="text" required rows={5} maxLength={TEXT_MAX} placeholder={t.replyPlaceholder} style={{ resize: "vertical", lineHeight: 1.5 }} />
+            <textarea id="courier-reply" className="field-input" name="text" required rows={5} maxLength={TEXT_MAX} placeholder={t.replyPlaceholder} style={{ resize: "vertical", lineHeight: 1.5 }} />
+            {thread.kind === "direct" && <TypingSignal threadId={id} fieldId="courier-reply" />}
             <span className="quiet field-hint">
               {announcement && !isAuthor ? t.replyGoesTo(thread.createdBy.name) : t.textHint}
             </span>

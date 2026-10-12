@@ -21,6 +21,8 @@ import { audienceSignature } from "@/lib/assignSummary"
 import { allDepartments } from "@/lib/departments"
 import { trackNames } from "@/lib/tracks"
 import { loadPersonById } from "@/lib/people"
+import { getCollection } from "@/lib/mongodb"
+import { PERSONS_COLLECTION, type Person } from "@/lib/persons"
 import { AppError } from "@/lib/appError"
 import { isRedirect } from "@/lib/redirects"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
@@ -139,6 +141,17 @@ export async function sendAnnouncementAction(fd: FormData) {
   }
   revalidatePath("/", "layout")
   redirect(`/courier/${encodeURIComponent(threadId)}?msg=${encodeURIComponent(t.msgAnnounced(count))}`)
+}
+
+/**
+ * Ranný súhrn zapnúť/vypnúť (D207) — jediné nastavenie, ktoré si osoba
+ * mení sama; je v plachte účtu v hlavičke. Vracia nový stav.
+ */
+export async function setCourierDigestAction(on: boolean): Promise<boolean> {
+  const ctx = await ready()
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  await col.updateOne({ companyCode: ctx.person.companyCode, id: ctx.person.id }, { $set: { courierDigest: on } })
+  return on
 }
 
 /** Odpoveď vo vlákne, ktorého je prihlásená osoba účastníkom. */

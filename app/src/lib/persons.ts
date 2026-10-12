@@ -270,6 +270,8 @@ export interface Person {
   directorySyncedAt?: Date
   /** Verzia uloženej fotky (`person_photos`). Chýba = nemá fotku. */
   photoVersion?: string
+  /** Ranný súhrn Kuriéra e-mailom (ADR-033, D207). Chýba = zapnutý; `false` = vypnutý. */
+  courierDigest?: boolean
 
   /** Prázdne u bežnej osoby. `"hr"` alebo `"platform-admin"`. */
   roles: string[]
