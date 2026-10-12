@@ -266,6 +266,15 @@ nájsť na jednom mieste… a notifikovať zodpovedné osoby a content-admin";
    zahlcovali.
 4. Vytvorenie požiadavky **nikdy nezhodí zverejnenie** — je to pripomienka
    o operácii, nie jej súčasť.
+5. **Bez zbytočných požiadaviek (11.–12. 10. 2026).** Dokument, ktorého
+   zverejnený text sa zhoduje s textom po poslednej kontrole a všetky jej
+   nálezy sú rozhodnuté, sa sám nekontroluje (`upToDateSinceCheck`). To isté
+   platí pre **návrhy FAQ**: návrh, ktorý posledná kontrola preverila proti
+   tomu istému textu, požiadavku nezaloží (`faqToCheck`, odtlačok
+   `textHash` pri dokumente v `review.documents`). Podnet: zverejnenie
+   manuálov ISSF 12. 10. založilo šesť požiadaviek na návrhy, ktoré deň
+   predtým prešli kontrolou proti nezmenenému textu — zamietnuté s dôvodom.
+   Kontroly spred 12. 10. odtlačok nemajú, pri nich požiadavka vznikne.
 
 ## 3. Postup
 

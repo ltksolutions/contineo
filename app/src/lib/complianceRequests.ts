@@ -159,6 +159,38 @@ export async function upToDateSinceCheck(code: string, documentId: string): Prom
   return Boolean(res?.textHash && res.textHash === textFingerprint(text) && res.findings.every(f => f.status))
 }
 
+interface FaqCitingRow {
+  channelKey: string
+  review?: { documents?: { documentId: string; textHash?: string }[] } | null
+}
+
+/**
+ * Návrhy FAQ, ktoré treba skontrolovať proti novému zneniu — po kanáloch.
+ *
+ * Návrh, ktorý posledná kontrola preverila **proti tomu istému textu**, aký
+ * sa práve zverejnil, sa nepočíta (Ján 12. 10. 2026). Bez toho zverejnenie
+ * manuálov ISSF založilo šesť požiadaviek na kontrolu návrhov, ktoré deň
+ * predtým prešli kontrolou proti nezmenenému textu. To isté pravidlo ako
+ * pri dokumentoch (D200, `upToDateSinceCheck`). Staršie kontroly odtlačok
+ * nemajú, takže pri nich požiadavka vznikne — radšej raz navyše než nikdy.
+ */
+export function faqToCheck(documentId: string, rows: FaqCitingRow[], fingerprint: string | null): { channelKey: string; proposals: number }[] {
+  const counts = new Map<string, number>()
+  for (const r of rows) {
+    const checked = fingerprint !== null && (r.review?.documents ?? []).some(d => d.documentId === documentId && d.textHash === fingerprint)
+    if (!checked) counts.set(r.channelKey, (counts.get(r.channelKey) ?? 0) + 1)
+  }
+  return [...counts].map(([channelKey, proposals]) => ({ channelKey, proposals }))
+}
+
+/** Odtlačok zverejneného textu (platné znenie), `null` keď text nie je. */
+async function publishedFingerprint(code: string, documentId: string): Promise<string | null> {
+  const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne({ companyCode: code, documentId }, { projection: { _id: 0, versions: 1, markdown: 1 } })
+  const active = ((doc?.versions ?? []) as { isActive?: boolean; markdown?: string }[]).find(v => v.isActive)
+  const text = String(active?.markdown ?? doc?.markdown ?? "")
+  return text.trim() ? textFingerprint(text) : null
+}
+
 async function titles(code: string, ids: string[]): Promise<string[]> {
   const rows = await (await getCollection(DOCUMENTS_COLLECTION)).find({ companyCode: code, documentId: { $in: ids } }, { projection: { _id: 0, documentId: 1, title: 1 } }).toArray()
   return ids.map(id => String(rows.find(r => r.documentId === id)?.title ?? id))
@@ -179,14 +211,14 @@ export async function requestOnPublish(companyCode: string, documentId: string, 
         { companyCode: code, "scope.kind": "documents", $or: [{ documentIds: documentId }, { "scope.subjectIds": documentId }] },
         { projection: { _id: 0, documentIds: 1, "scope.subjectIds": 1 } },
       ).toArray(),
-      (await getCollection(PROPOSALS_COLLECTION)).aggregate<{ _id: string; n: number }>([
-        { $match: { companyCode: code, status: "open", "sources.documentId": documentId } },
-        { $group: { _id: "$channelKey", n: { $sum: 1 } } },
-      ]).toArray(),
+      (await getCollection<FaqCitingRow>(PROPOSALS_COLLECTION)).find(
+        { companyCode: code, status: "open", "sources.documentId": documentId },
+        { projection: { _id: 0, channelKey: 1, "review.documents": 1 } },
+      ).toArray(),
     ])
     const history = runRows.map(r => ({ subjectIds: ((r.scope as { subjectIds?: string[] })?.subjectIds ?? []), referenceIds: (r.documentIds as string[]) ?? [] }))
     const { subjectIds, referenceIds } = linkedChecks(documentId, linkRows, history, await upToDateSinceCheck(code, documentId))
-    const faq = faqRows.map(r => ({ channelKey: r._id, proposals: r.n }))
+    const faq = faqToCheck(documentId, faqRows, await publishedFingerprint(code, documentId))
     if (!subjectIds.length && !faq.length) return null
     const [documentTitle] = await titles(code, [documentId])
     const req: ComplianceRequest = {
