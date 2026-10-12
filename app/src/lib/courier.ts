@@ -34,13 +34,27 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { writeAudit } from "./audit"
+import { audienceMembers, audienceLabel, type Audience } from "./assignments"
+import { isHr } from "./hr"
+import { isPeopleAdmin } from "./people"
+import { isContentManager } from "./library"
+import type { Person } from "./persons"
 
 export const THREADS_COLLECTION = "courier_threads"
 export const MESSAGES_COLLECTION = "courier_messages"
+/** Rozpísaný oznam medzi krokom „Skontrolovať príjemcov" a odoslaním. */
+export const DRAFTS_COLLECTION = "courier_drafts"
 
 /** Stránkovanie od začiatku (D213). */
 export const THREADS_PAGE = 50
 export const MESSAGES_PAGE = 100
+
+/**
+ * Strop pre účastníkov v poli vo vlákne (D212). Nad ním patria do vlastnej
+ * kolekcie `courier_participants` — tá ešte nie je; dovtedy sa väčší oznam
+ * odmietne s chybou, nie uloží potichu nad limit dokumentu.
+ */
+export const INLINE_PARTICIPANTS_MAX = 500
 
 /** Predmet a text majú strop — správa nie je dokument. */
 export const SUBJECT_MAX = 200
@@ -72,6 +86,11 @@ export interface Thread {
   companyCode: string
   kind: ThreadKind
   subject: string
+  /**
+   * Publikum oznamu v čase odoslania — kópia s názvami (ADR-005), aby bolo
+   * o rok čitateľné, komu sa písalo. Pri 1:1 prázdne.
+   */
+  audience: Audience[]
   participants: Participant[]
   /** Počet príjemcov v čase odoslania — pri ozname aj po zmene oddelení. */
   recipients: number
@@ -197,6 +216,7 @@ export async function createDirectThread(input: {
     companyCode: input.companyCode,
     kind: "direct",
     subject,
+    audience: [],
     participants: [participant(input.from, now), participant(input.to, null)],
     recipients: 1,
     createdBy: input.from,
@@ -311,6 +331,170 @@ export async function unreadThreadCount(companyCode: string, personId: string): 
     console.error("[courier] pocet neprecitanych zlyhal:", e)
     return 0
   }
+}
+
+/** Hromadne píšu len role (D204): správca osôb, HR, správca obsahu. */
+export function canAnnounce(person: Pick<Person, "roles"> | null | undefined): boolean {
+  return isHr(person as Person) || isPeopleAdmin(person as Person) || isContentManager(person as Person)
+}
+
+/**
+ * Príjemcovia oznamu z publík: zjednotenie cez `audienceMembers()` —
+ * jediné miesto s pravidlom príslušnosti (`matchesAudience`). Externé osoby
+ * z okna pomoci oznam nedostanú (D204) a odosielateľ sa nepočíta — je
+ * účastníkom ako autor, nie ako príjemca.
+ */
+export async function announcementRecipients(
+  companyCode: string,
+  audiences: Audience[],
+  senderId: string,
+): Promise<PersonRef[]> {
+  const seen = new Map<string, PersonRef>()
+  for (const a of audiences) {
+    for (const m of await audienceMembers(companyCode, a)) {
+      if (m.personType === "external" || m.id === senderId || seen.has(m.id)) continue
+      seen.set(m.id, { personId: m.id, email: m.email, name: m.fullName })
+    }
+  }
+  return [...seen.values()]
+}
+
+/**
+ * Oznam publiku (D204). Príjemcovia sa zmrazia teraz; odpovede idú
+ * súkromne odosielateľovi (`replyTo: "sender"`, D205). Audit nesie druhy
+ * publika a počet, nie mená ani text.
+ */
+export async function createAnnouncement(input: {
+  companyCode: string
+  from: PersonRef
+  audiences: Audience[]
+  recipients: PersonRef[]
+  subject: string
+  text: string
+  now?: Date
+}): Promise<string> {
+  if (input.audiences.length === 0 || input.recipients.length === 0) {
+    throw new CourierError("courier.noRecipients", "Oznam nemá komu ísť.")
+  }
+  if (input.recipients.length > INLINE_PARTICIPANTS_MAX) {
+    throw new CourierError("courier.tooManyRecipients", "Oznam má priveľa príjemcov.")
+  }
+  const { subject, text } = validateContent(input.subject, input.text)
+  const now = input.now ?? new Date()
+  const col = await threads()
+  const thread: Thread = {
+    companyCode: input.companyCode,
+    kind: "announcement",
+    subject,
+    audience: input.audiences,
+    participants: [participant(input.from, now), ...input.recipients.map(r => participant(r, null))],
+    recipients: input.recipients.length,
+    createdBy: input.from,
+    createdAt: now,
+    lastMessageAt: now,
+    lastMessage: { authorName: input.from.name, preview: previewOf(text) },
+    replyTo: "sender",
+    parentThreadId: null,
+    unreadFor: input.recipients.map(r => r.personId),
+  }
+  const r = await col.insertOne(thread)
+  const threadId = String(r.insertedId)
+  const msgs = await messages()
+  await msgs.insertOne({ companyCode: input.companyCode, threadId, author: input.from, text, at: now, editedAt: null })
+  await writeAudit({
+    companyCode: input.companyCode,
+    subject: "courier",
+    action: "oznam",
+    actor: input.from.email,
+    targetId: threadId,
+    targetLabel: subject,
+    note: `${input.audiences.map(audienceLabel).join(", ")} · ${input.recipients.length}`,
+  })
+  return threadId
+}
+
+/**
+ * Odpoveď príjemcu na oznam (D205): nie do oznamu, ale do 1:1 vlákna
+ * s odosielateľom. Ak také vlákno k tomuto oznamu už je, správa ide doň;
+ * inak vznikne s predmetom „Re: …" a odkazom na oznam.
+ */
+export async function replyToAnnouncement(input: {
+  companyCode: string
+  threadId: string
+  author: PersonRef
+  text: string
+  now?: Date
+}): Promise<string> {
+  const parent = await loadThread(input.companyCode, input.threadId, input.author.personId)
+  if (!parent) throw new CourierError("courier.notFound", "Také vlákno tu nie je.")
+  if (parent.kind !== "announcement" || parent.createdBy.personId === input.author.personId) {
+    // Autor oznamu doň píše priamo — doplnenie ide všetkým.
+    await postMessage(input)
+    return input.threadId
+  }
+  const col = await threads()
+  const existing = await col.findOne({
+    companyCode: input.companyCode,
+    kind: "direct",
+    parentThreadId: input.threadId,
+    "participants.personId": input.author.personId,
+  })
+  if (existing) {
+    const id = String(existing._id)
+    await postMessage({ ...input, threadId: id })
+    return id
+  }
+  return createDirectThread({
+    companyCode: input.companyCode,
+    from: input.author,
+    to: parent.createdBy,
+    subject: `Re: ${parent.subject}`,
+    text: input.text,
+    parentThreadId: input.threadId,
+    now: input.now,
+  })
+}
+
+/**
+ * Koncept oznamu — jeden na osobu. Krok náhľadu (R2: odoslanie až po
+ * prečítaní, komu to ide) prejde cez presmerovanie a text oznamu je pridlhý
+ * na adresu; preto ostane tu, nie v `?text=`. Po odoslaní sa zmaže. Fáza 2
+ * (koncepty) ho rozšíri, nezaloží druhýkrát.
+ */
+export interface Draft {
+  companyCode: string
+  personId: string
+  all: boolean
+  audience: string[]
+  subject: string
+  text: string
+  updatedAt: Date
+}
+
+export async function saveDraft(d: Omit<Draft, "updatedAt">, now: Date = new Date()): Promise<void> {
+  const col = await getCollection<Draft>(DRAFTS_COLLECTION)
+  await col.updateOne(
+    { companyCode: d.companyCode, personId: d.personId },
+    { $set: { ...d, updatedAt: now } },
+    { upsert: true },
+  )
+}
+
+export async function loadDraft(companyCode: string, personId: string): Promise<Draft | null> {
+  const col = await getCollection<Draft>(DRAFTS_COLLECTION)
+  return col.findOne({ companyCode, personId })
+}
+
+export async function clearDraft(companyCode: string, personId: string): Promise<void> {
+  const col = await getCollection<Draft>(DRAFTS_COLLECTION)
+  await col.deleteOne({ companyCode, personId })
+}
+
+/** „Prečítalo 45 zo 120" (D206): príjemcovia, ktorí oznam otvorili po poslednej správe. */
+export function readStats(thread: Thread): { read: number; total: number } {
+  const recipients = participantsOf(thread).filter(p => p.personId !== thread.createdBy.personId)
+  const read = recipients.filter(p => p.lastReadAt && p.lastReadAt.getTime() >= thread.lastMessageAt.getTime()).length
+  return { read, total: recipients.length }
 }
 
 function counterpartOf(thread: Thread, personId: string): string {

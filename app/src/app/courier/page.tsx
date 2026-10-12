@@ -70,7 +70,10 @@ export default async function CourierPage({
                     nesie farbu a váhu riadku, nie ďalší odznak. */}
                 <Link href={`/courier/${encodeURIComponent(r.id)}`} className="notif-row-link">
                   <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-                    <span style={{ flex: "1 1 auto", minWidth: 0 }}>{r.subject}</span>
+                    <span style={{ flex: "1 1 auto", minWidth: 0 }}>
+                      {r.kind === "announcement" && <span className="tag tag--new" style={{ marginRight: 8 }}>{t.announcement}</span>}
+                      {r.subject}
+                    </span>
                     <span className="quiet notif-row-date" style={{ fontSize: "var(--fs-small)", marginTop: 0 }}>
                       {messageTime(r.lastMessageAt, language)}
                     </span>

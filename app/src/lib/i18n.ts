@@ -2286,6 +2286,28 @@ interface Dictionary {
     older: string
     /** Nápoveda pod zoznamom — správy zostávajú na platforme (D207). */
     stayNote: string
+    /** Oznam publiku (D204) — druhá voľba na `/courier/new`, len pre role. */
+    modeDirect: string
+    modeAnnounce: string
+    announceTitle: string
+    announceLead: string
+    /** Krok náhľadu: „Skontrolovať príjemcov" → počet a mená → „Odoslať N ľuďom". */
+    checkRecipients: string
+    recipientsCount: (n: number) => string
+    recipientsNone: string
+    recipientsChanged: string
+    sendTo: (n: number) => string
+    /** Štítok pri ozname a „Prečítalo 45 zo 120" pre autora (D206). */
+    announcement: string
+    readStats: (read: number, total: number) => string
+    /** Odpoveď príjemcu ide súkromne autorovi (D205). */
+    replyPrivately: (name: string) => string
+    replyGoesTo: (name: string) => string
+    /** Doplnenie autora ide všetkým príjemcom. */
+    followUp: string
+    /** Odkaz na pôvodný oznam z 1:1 vlákna. */
+    inReplyTo: string
+    msgAnnounced: (n: number) => string
   }
   notifications: {
     title: string
@@ -6489,6 +6511,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "courier.selfRecipient": "Správu si nemôžete poslať sami sebe.",
     "courier.recipientMissing": "Vyberte, komu správu posielate.",
     "courier.recipientUnknown": "Taká osoba v organizácii nie je alebo je vyradená.",
+    "courier.noRecipients": "Oznam nemá komu ísť — vyberte publikum, v ktorom niekto je.",
+    "courier.tooManyRecipients": "Oznam má priveľa príjemcov (najviac 500). Rozdeľte ho na viac oznamov.",
+    "courier.notAllowed": "Oznam skupine môže poslať len správca osôb, HR alebo správca obsahu.",
     "ticket.notEmail": "Ticket nevznikol z e-mailu — nemá vlákno v schránke.",
     "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
     "ticket.emptyAnswer": "Prázdna odpoveď sa odoslať nedá.",
@@ -7414,6 +7439,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgReplied: "Odpoveď je odoslaná.",
     older: "Staršie vlákna",
     stayNote: "Správy zostávajú v Contineo. E-mailom príde ráno len zoznam neprečítaných.",
+    modeDirect: "Jednej osobe",
+    modeAnnounce: "Oznam skupine",
+    announceTitle: "Nový oznam",
+    announceLead: "Oznam dostane každý z vybraného publika, kto je v ňom dnes. Odpovede prídu vám súkromne, nie všetkým.",
+    checkRecipients: "Skontrolovať príjemcov",
+    recipientsCount: (n) => (n === 1 ? "Oznam dostane 1 osoba" : n < 5 ? `Oznam dostanú ${n} osoby` : `Oznam dostane ${n} osôb`),
+    recipientsNone: "Vybrané publikum nemá nikoho, komu by oznam išiel.",
+    recipientsChanged: "Výber sa zmenil — skontrolujte príjemcov znova.",
+    sendTo: (n) => (n === 1 ? "Odoslať 1 osobe" : n < 5 ? `Odoslať ${n} osobám` : `Odoslať ${n} osobám`),
+    announcement: "Oznam",
+    readStats: (read, total) => `Prečítalo ${read} z ${total}`,
+    replyPrivately: (name) => `Odpovedať súkromne — ${name}`,
+    replyGoesTo: (name) => `Odpoveď pôjde len osobe ${name}, nie všetkým príjemcom.`,
+    followUp: "Doplniť oznam — všetkým príjemcom",
+    inReplyTo: "Odpoveď na oznam",
+    msgAnnounced: (n) => (n === 1 ? "Oznam je odoslaný 1 osobe." : `Oznam je odoslaný ${n} osobám.`),
   },
   notifications: {
     title: "Upozornenia",
@@ -11478,6 +11519,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "courier.selfRecipient": "Zprávu si nemůžete poslat sami sobě.",
     "courier.recipientMissing": "Vyberte, komu zprávu posíláte.",
     "courier.recipientUnknown": "Taková osoba v organizaci není nebo je vyřazená.",
+    "courier.noRecipients": "Oznámení nemá komu jít — vyberte publikum, ve kterém někdo je.",
+    "courier.tooManyRecipients": "Oznámení má příliš mnoho příjemců (nejvýše 500). Rozdělte ho na více oznámení.",
+    "courier.notAllowed": "Oznámení skupině může poslat jen správce osob, HR nebo správce obsahu.",
     "ticket.notEmail": "Ticket nevznikl z e-mailu — nemá vlákno ve schránce.",
     "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
     "ticket.emptyAnswer": "Prázdná odpověď se odeslat nedá.",
@@ -12403,6 +12447,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgReplied: "Odpověď je odeslána.",
     older: "Starší vlákna",
     stayNote: "Zprávy zůstávají v Contineu. E-mailem přijde ráno jen seznam nepřečtených.",
+    modeDirect: "Jedné osobě",
+    modeAnnounce: "Oznámení skupině",
+    announceTitle: "Nové oznámení",
+    announceLead: "Oznámení dostane každý z vybraného publika, kdo je v něm dnes. Odpovědi přijdou vám soukromě, ne všem.",
+    checkRecipients: "Zkontrolovat příjemce",
+    recipientsCount: (n) => (n === 1 ? "Oznámení dostane 1 osoba" : n < 5 ? `Oznámení dostanou ${n} osoby` : `Oznámení dostane ${n} osob`),
+    recipientsNone: "Vybrané publikum nemá nikoho, komu by oznámení šlo.",
+    recipientsChanged: "Výběr se změnil — zkontrolujte příjemce znovu.",
+    sendTo: (n) => (n === 1 ? "Odeslat 1 osobě" : `Odeslat ${n} osobám`),
+    announcement: "Oznámení",
+    readStats: (read, total) => `Přečetlo ${read} z ${total}`,
+    replyPrivately: (name) => `Odpovědět soukromě — ${name}`,
+    replyGoesTo: (name) => `Odpověď půjde jen osobě ${name}, ne všem příjemcům.`,
+    followUp: "Doplnit oznámení — všem příjemcům",
+    inReplyTo: "Odpověď na oznámení",
+    msgAnnounced: (n) => (n === 1 ? "Oznámení je odesláno 1 osobě." : `Oznámení je odesláno ${n} osobám.`),
   },
   notifications: {
     title: "Upozornění",
@@ -16456,6 +16516,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "courier.selfRecipient": "You cannot send a message to yourself.",
     "courier.recipientMissing": "Choose who the message goes to.",
     "courier.recipientUnknown": "There is no such person in the organisation, or they are inactive.",
+    "courier.noRecipients": "There is nobody to send the announcement to — choose an audience with people in it.",
+    "courier.tooManyRecipients": "The announcement has too many recipients (500 at most). Split it into several.",
+    "courier.notAllowed": "Only a people admin, HR or a content manager can send an announcement to a group.",
     "ticket.notEmail": "The ticket did not come from an e-mail — it has no thread in the mailbox.",
     "ticket.emptyDraft": "An empty draft cannot be saved.",
     "ticket.emptyAnswer": "An empty answer cannot be sent.",
@@ -17381,6 +17444,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgReplied: "The reply has been sent.",
     older: "Older threads",
     stayNote: "Messages stay in Contineo. In the morning you only get an e-mail listing the unread ones.",
+    modeDirect: "One person",
+    modeAnnounce: "Announcement to a group",
+    announceTitle: "New announcement",
+    announceLead: "Everyone in the chosen audience today receives the announcement. Replies come to you privately, not to everyone.",
+    checkRecipients: "Check recipients",
+    recipientsCount: (n) => (n === 1 ? "1 person will receive the announcement" : `${n} people will receive the announcement`),
+    recipientsNone: "Nobody in the chosen audience would receive the announcement.",
+    recipientsChanged: "The selection changed — check the recipients again.",
+    sendTo: (n) => (n === 1 ? "Send to 1 person" : `Send to ${n} people`),
+    announcement: "Announcement",
+    readStats: (read, total) => `Read by ${read} of ${total}`,
+    replyPrivately: (name) => `Reply privately — ${name}`,
+    replyGoesTo: (name) => `The reply goes only to ${name}, not to all recipients.`,
+    followUp: "Add to the announcement — to all recipients",
+    inReplyTo: "Reply to an announcement",
+    msgAnnounced: (n) => (n === 1 ? "The announcement has been sent to 1 person." : `The announcement has been sent to ${n} people.`),
   },
   notifications: {
     title: "Notifications",
