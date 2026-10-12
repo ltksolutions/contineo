@@ -1,4 +1,4 @@
-# ADR-033 — Správy: formátované správy osobám a interný messenger
+# ADR-033 — Kuriér: formátované správy osobám a interný messenger
 
 > **Stav:** prijaté · **Dátum:** 2026-10-12
 > **Rozhodol:** Ján Letko (2026-10-12) — „Potrebujeme doplniť do Contineo
@@ -7,7 +7,13 @@
 > platforme, človeku ide iba notifikácia o novej správe s predmetom správy.
 > Naplánujme aj celý interný systém interného messengera, pre prípad
 > možnosti odpovedí a podobne." Štyri doplňujúce otázky zodpovedal
-> odporúčanými možnosťami (D204–D207).
+> odporúčanými možnosťami (D204–D207). Po rozbore záťaže doplnil: „nebudeme
+> pri každej správe posielať email, len notifikácia v systéme, email sa pošle
+> raz za deň ráno ako zoznam neprečítaných správ… ideálne by bolo aby ak majú
+> obaja diskutujúci otvorený messenger, volajme ho ‚courier‘ po slovensky
+> ‚Kuriér‘, vedeli živo diskutovať v reálnom čase aj s reálnymi notifikáciami
+> do zvončeka, alebo kuriéra" — D207 a D210 preto platia v tomto znení,
+> D211–D213 sú doplnené.
 > **Nadväzuje na:** D39, D40 a `lib/notifications.ts` (zvonček nesie
 > udalosti, nie správy), ADR-005 (publikum pridelenia: osoba, oddelenie,
 > skupina, trasa, všetci — kópia, nie odkaz), D27 (stav sa odvodzuje),
@@ -17,6 +23,10 @@
 > vnútorné odkazy).
 > **Implementácia:** fáza 1 — plánovaná, vetva `docs/adr-033-spravy` nesie
 > len toto rozhodnutie.
+>
+> **Názov modulu:** **Kuriér** (kľúč `courier`, cesta `/courier`, kolekcie
+> `courier_threads`, `courier_messages`). V texte nižšie „správa" a „vlákno"
+> sú pojmy Kuriéra.
 
 ---
 
@@ -46,9 +56,9 @@ a rozhovory nestavali dvakrát.
 
 ## 2. Rozhodnutie
 
-### D204 — Správy sú modul `messages` s vláknami; oznam aj rozhovor sú to isté
+### D204 — Kuriér je modul `courier` s vláknami; oznam aj rozhovor sú to isté
 
-Vzniká modul **Správy** (`/messages`). Základ je **vlákno** (`thread`):
+Vzniká modul **Kuriér** (`/courier`). Základ je **vlákno** (`thread`):
 predmet, zmrazené publikum, zoznam správ. Jednorazový oznam 120 ľuďom
 a rozhovor dvoch kolegov sú ten istý model; líšia sa len tým, komu ide
 odpoveď (D205). Vďaka tomu fáza 2 (rozhovory) nepridáva kolekciu, len
@@ -91,20 +101,25 @@ pri ktorej záleží na tom, kto ju čítal, patrí tam. Pri 1:1 vlákne
 
 Prečítanie sa **neukladá per správa**: na účastníkovi vlákna je
 `lastReadAt`; čo je neprečítané, sa odvodí (D27). Počet neprečítaných
-vlákien je štítok **„Správy 3"** v navigácii — rovnako ako „Na potvrdenie
-3". Zvonček ho neopakuje (dve miesta s tou istou pravdou sa raz rozídu —
-`lib/notifications.ts`).
+vlákien je štítok **„Kuriér 3"** v navigácii — rovnako ako „Na potvrdenie
+3". Zvonček počet neopakuje (dve miesta s tou istou pravdou sa raz rozídu —
+`lib/notifications.ts`); nesie **udalosť** `messageReceived` („Peter Novák:
+Rozpis súťaží"), ktorá sa označí ako prečítaná otvorením vlákna.
 
-### D207 — E-mail ide raz na vlákno, do otvorenia, a nesie len predmet
+### D207 — E-mail je ranný súhrn neprečítaných, nie správa per vlákno
 
-Keď do vlákna príde správa a účastník má v ňom **nič neprečítané**, dostane
-e-mail: predmet vlákna, kto píše, tlačidlo „Otvoriť správu". **Telo správy
-platformu neopustí.** Ďalšie správy v tom istom vlákne e-mail **neposielajú**,
-kým ho človek neotvorí — živý rozhovor by inak poslal desať e-mailov za
-minútu. Značka „e-mail odoslaný" je na účastníkovi vlákna a nuluje sa
-otvorením. Odpovedať e-mailom späť do Contineo sa **nedá** (zámerne —
-správy zostávajú na platforme; a schránka Contineo nie je schránka
-kanála, ADR-028).
+Pri každej správe sa **e-mail neposiela** (Ján, 12. 10. 2026). Doručenie
+v systéme je zvonček, štítok a živé spojenie (D210). E-mail ide **raz
+denne ráno** (cron `/api/cron/courier-digest`, 7:00): jeden e-mail tomu,
+kto má aspoň jedno neprečítané vlákno — zoznam „odosielateľ · predmet ·
+počet nových", tlačidlo „Otvoriť Kuriér". **Telo správy platformu
+neopustí.** Kto nemá nič neprečítané, nedostane nič; súhrn sa dá v profile
+osoby vypnúť. Odpovedať e-mailom späť sa **nedá** (správy zostávajú na
+platforme; schránka Contineo nie je schránka kanála, ADR-028).
+
+Dôsledok pre záťaž: namiesto fronty e-mailov pri hromadnom ozname (120
+ľudí = 120 odoslaní naraz, dlhšie než limit požiadavky na Verceli) je jeden
+cron s dávkou najviac 100 adresátov na beh a pokračovaním v ďalšom behu.
 
 ### D208 — Formátovanie je ľahký Markdown cez `formatText.ts`; prílohy nahrádzajú karty obsahu
 
@@ -132,7 +147,7 @@ prístupové práva dokumentu — to je dôvod, prečo prílohy nie sú.
 - **Audit** (D24) drží len: kto, kedy, komu (druh publika a počet), predmet.
   Text správy do auditu nejde.
 - **Retencia:** vlákno sa maže **24 mesiacov od poslednej správy**;
-  lehota je nastaviteľná v organizácii (`messageMonths`, 1–120) ako lehota
+  lehota je nastaviteľná v organizácii (`courierMonths`, 1–120) ako lehota
   ticketov (D178). Osoba odstránená z organizácie z vlákien zmizne
   retenciou, nie hneď — druhý účastník rozhovoru oň nepríde skôr.
 - **DPO** vie vydať vlákna osoby ako súčasť exportu pri žiadosti dotknutej
@@ -142,42 +157,95 @@ prístupové práva dokumentu — to je dôvod, prečo prílohy nie sú.
 - **/privacy** dostane nový odsek „Správy" (účel, údaje, základ, lehota,
   príjemcovia) a posun `PRIVACY_NOTICE_VERSION`.
 
-### D210 — Bez živého pripojenia; stránka funguje bez JavaScriptu
+### D210 — Živý rozhovor v Kuriérovi cez SSE; mimo Kuriéra sa stav obnovuje navigáciou
 
-Správy sa čítajú a píšu obyčajnými formulármi; počet neprečítaných sa
-obnoví pri každej navigácii. Žiadny websocket, žiadny polling v prvých
-dvoch fázach. Contineo je intranet, kde človek otvorí stránku, prečíta,
-odpovie a zavrie; messenger s indikátorom písania je iný produkt. Push
-do telefónu (PWA) je až fáza 3 a vznikne, keď bude prvý skutočný dôvod —
-rovnako ako vznikla kolekcia `notifications`.
+Keď má človek **otvorený Kuriér** (zoznam alebo vlákno), prehliadač drží
+spojenie Server-Sent Events na `/api/courier/stream` — ten istý mechanizmus
+a klient (`lib/sseClient.ts`), ktorým „Spýtať sa" streamuje odpoveď.
+Server ním posiela nové správy vo vlákne, zmenu počtu neprečítaných
+a udalosti zvončeka. Spojenie beží do 55 s (`maxDuration = 60`), potom sa
+prehliadač sám znova pripojí; pre človeka je to súvislé. Dvaja ľudia
+s otvoreným vláknom tak diskutujú v reálnom čase.
+
+**Mimo Kuriéra sa spojenie nedrží** (Ján, 12. 10. 2026): štítok a zvonček
+sa obnovia pri navigácii. Pri 100 ľuďoch to znamená rádovo desiatky
+otvorených spojení, nie stovky; aj najmenší stupeň Atlasu to unesie.
+
+**Indikátory pri 1:1** sú vo fáze 1: „píše…" (klient pošle
+`POST /api/courier/typing`, server zapíše `typingAt` na účastníka, platí
+5 s — nič sa nemaže) a „prečítané" (z `lastReadAt` druhého účastníka).
+Pri hromadnom ozname ostáva len počet (D206).
+
+**Bez JavaScriptu** stránka ďalej funguje: formuláre odosielajú, zoznam
+sa načíta, len sa živo neprekresľuje. Push do telefónu (PWA) je fáza 3.
+
+### D211 — Zdroj živých udalostí je change stream MongoDB; polling je záloha
+
+Server sa o novej správe dozvie z **change streamu** Atlasu
+(`courier_messages.watch()` s filtrom na vlákno, resp. na osobu) — zápis je
+jedna operácia a čítanie jedna otvorená pozícia na spojenie, bez ďalšej
+služby (Redis, Pusher). Keď `watch()` nie je dostupné (lokálny Mongo bez
+repliky), SSE prejde na **polling každé 2 s** nad tým istým dotazom.
+Obrazovky o rozdiele nevedia; prepína to jedna funkcia `threadEvents()`.
+
+### D212 — Účastníci sú pole vo vlákne do 500; nad to samostatná kolekcia
+
+`participants[]` vo vlákne (`personId`, `email`, `name` ako kópia,
+`lastReadAt`, `emailedAt`, `typingAt`, `mutedAt`) je pri 120 ľuďoch pár KB
+a index `{ companyCode, "participants.personId", lastMessageAt: -1 }` dá
+zoznam vlákien osoby jedným dotazom. Oznam nad **500 príjemcov** uloží
+účastníkov do `courier_participants` (jeden dokument na osobu a vlákno),
+aby vlákno nerástlo k limitu 16 MB. Kód číta účastníkov **len cez
+`participantsOf(thread)`**, takže hranica je vec uloženia, nie obrazoviek.
+V SFZ sa druhý režim nespustí; existuje pre väčšieho zákazníka.
+
+### D213 — Dve kolekcie, stránkovanie od začiatku, retencia cez `runRetention`
+
+Vlákno a správy sú **dve kolekcie** (správy ako pole vo vlákne by rástli bez
+stropu). Zoznam vlákien po 50, správy vo vlákne po 100 s odkazom na
+staršie. Indexy sa zakladajú v kóde pri prvom zápise (ako `askHistory.ts`),
+nie ručne v Atlase. Retencia beží v `runRetention` (cron `overdue`), **nie
+TTL indexom** — TTL by mazal bez zápisu do `RetentionRun` a DPO potrebuje
+vedieť, čo a kedy sa zmazalo. Hľadanie v správach (fáza 2) je Atlas Search
+nad `text` s filtrom na účastníka; nie vektorové, nie do „Spýtať sa".
+
+Rozmer: 100 osôb × 5 správ denne ≈ 130 000 správ ročne, ~100 MB za
+dvojročnú retenciu. Pri desaťnásobku jednotky GB — stále bez zmeny
+architektúry.
 
 ## 3. Čo tým vzniká
 
 **Kolekcie** (`companyCode` všade v podmienke, D32):
 
-- `message_threads` — `subject`, `kind` (`"announcement" | "direct"`),
+- `courier_threads` — `subject`, `kind` (`"announcement" | "direct"`),
   `audience` (zmrazená kópia: druhy a názvy ako ADR-005 + počet),
-  `participants[]` (`personId`, `email`, `name` ako kópia, `lastReadAt`,
-  `emailedAt`, `mutedAt`), `createdBy`, `lastMessageAt`, `replyTo`
+  `participants[]` (D212), `createdBy`, `lastMessageAt`, `replyTo`
   (D205: `"sender" | "all"`), `parentThreadId` pri odpovedi na oznam.
-- `messages` — `threadId`, `authorId`, `text` (Markdown), `cards[]`
+- `courier_messages` — `threadId`, `authorId`, `text` (Markdown), `cards[]`
   (`kind`, `id`, `title` ako kópia), `at`, `editedAt`.
+- `courier_participants` — len nad 500 príjemcov (D212).
 
-**Obrazovky:** `/messages` (vlákna, neprečítané hore, archív),
-`/messages/new` (publikum, predmet, text, náhľad), `/messages/[id]`
-(vlákno, odpoveď). Štítok „Správy" v navigácii pre každého prihláseného.
+**Obrazovky:** `/courier` (vlákna, neprečítané hore, archív),
+`/courier/new` (publikum, predmet, text, náhľad), `/courier/[id]`
+(vlákno, odpoveď, živé spojenie). Štítok „Kuriér" v navigácii pre každého
+prihláseného.
 
-**E-mail:** `messageEmail()` v `lib/ecomail.ts` — predmet, autor, tlačidlo,
-bez tela. Jazyk podľa osoby, texty cez i18n (sk/cs/en).
+**API:** `/api/courier/stream` (SSE, D210–D211), `/api/courier/typing`.
 
-**Retencia:** `purgeThreads` v `lib/retentionDb.ts`, `messageMonths`
+**E-mail:** `courierDigestEmail()` v `lib/ecomail.ts` — zoznam
+neprečítaných, tlačidlo, bez tela (D207); cron `/api/cron/courier-digest`.
+Jazyk podľa osoby, texty cez i18n (sk/cs/en).
+
+**Zvonček:** druh `messageReceived` v `lib/notifications.ts`.
+
+**Retencia:** `purgeThreads` v `lib/retentionDb.ts`, `courierMonths`
 v nastaveniach, riadok v `RetentionRun`.
 
 ## 4. Fázy
 
 | Fáza | Obsah |
 |---|---|
-| **1 — Oznamy** | vlákno od role publiku a 1:1 od kohokoľvek; Markdown + karty obsahu; náhľad pred hromadným odoslaním; e-mail raz na vlákno; štítok neprečítaných; odpoveď na oznam súkromne; retencia; /privacy; audit |
+| **1 — Oznamy a 1:1** | vlákno od role publiku a 1:1 od kohokoľvek; Markdown + karty obsahu; náhľad pred hromadným odoslaním; živé spojenie v Kuriérovi (SSE + change stream), „píše…" a „prečítané" pri 1:1; udalosť v zvončeku; ranný súhrn e-mailom; štítok neprečítaných; odpoveď na oznam súkromne; retencia; /privacy; audit |
 | **2 — Rozhovory** | skupinové vlákno s odpoveďou všetkým (voľba pri založení); stlmenie vlákna; úprava vlastnej správy do 15 minút so značkou „upravené"; hľadanie v mojich vláknach; koncept |
 | **3 — Doplnky** | odoslanie v naplánovanom čase; príznak „dôležité"; výber karty obsahu vyhľadávaním v knižnici; push (PWA); export vlákna pre DPO v jednom kroku |
 
@@ -188,12 +256,13 @@ v nastaveniach, riadok v `RetentionRun`.
 - **Zoznam mien, kto čítal** — to sú Potvrdenia (D206).
 - **Správa, ktorú treba potvrdiť** — to je pridelenie s termínom (ADR-004,
   ADR-005); messenger nie je dôkazný záznam a nesmie sa ním stať.
-- **Živé pripojenie a indikátor písania** (D210).
+- **Živé spojenie mimo Kuriéra** — štítok a zvonček inde žijú navigáciou (D210).
+- **E-mail pri každej správe** — len ranný súhrn (D207).
 - **Externí adresáti** — ich cesta je ticket (ADR-028).
 
 ## 6. Dôsledky
 
-- Vzniká štvrtý kanál smerom k človeku (zvonček, e-mail, ticket, správa).
+- Vzniká štvrtý kanál smerom k človeku (zvonček, e-mail, ticket, Kuriér).
   Hranica je v tom, kto píše: udalosť systému → zvonček; šablóna krokov →
   e-mail; človek zvonku → ticket; **človek zvnútra → správa**.
 - Dve nové kolekcie s osobnými údajmi → záznam o spracovateľských
