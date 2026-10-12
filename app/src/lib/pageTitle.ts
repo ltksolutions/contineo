@@ -42,6 +42,7 @@ export function pageTitle(pathname: string | null | undefined, organisation: str
       // (6. 10. 2026, napr. „Intranet SFZ" na Upozorneniach).
       "/notifications": t.notifications.title,
       "/courier/new": t.courier.newTitle,
+      "/courier/announce": t.courier.announceTitle,
       "/acknowledgements": t.myAcknowledgements.heading,
       "/guide": t.guide.heading,
       "/privacy": t.privacy.title,

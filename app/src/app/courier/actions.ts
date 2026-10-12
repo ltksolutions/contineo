@@ -12,7 +12,14 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { onboardingContext } from "@/lib/session"
-import { createDirectThread, postMessage, CourierError } from "@/lib/courier"
+import {
+  createDirectThread, replyToAnnouncement, createAnnouncement, announcementRecipients,
+  canAnnounce, saveDraft, clearDraft, CourierError,
+} from "@/lib/courier"
+import { audienceFromSelection } from "@/lib/assignments"
+import { audienceSignature } from "@/lib/assignSummary"
+import { allDepartments } from "@/lib/departments"
+import { trackNames } from "@/lib/tracks"
 import { loadPersonById } from "@/lib/people"
 import { AppError } from "@/lib/appError"
 import { isRedirect } from "@/lib/redirects"
@@ -70,6 +77,70 @@ export async function sendDirectAction(fd: FormData) {
   redirect(`/courier/${encodeURIComponent(threadId)}?msg=${encodeURIComponent(dictionary(language).courier.msgSent)}`)
 }
 
+function audienceValues(fd: FormData): string[] {
+  return fd.getAll("audience").filter((v): v is string => typeof v === "string")
+}
+
+/**
+ * Krok „Skontrolovať príjemcov" (R2): nič sa neodošle. Výber, predmet a text
+ * sa odložia do konceptu a stránka ukáže, komu presne to pôjde.
+ */
+export async function previewAnnouncementAction(fd: FormData) {
+  const ctx = await ready()
+  if (!canAnnounce(ctx.person)) redirect("/courier")
+  await saveDraft({
+    companyCode: ctx.person.companyCode,
+    personId: ctx.person.id,
+    all: fd.get("all") === "1",
+    audience: audienceValues(fd),
+    subject: fieldText(fd, "subject"),
+    text: typeof fd.get("text") === "string" ? String(fd.get("text")) : "",
+  })
+  redirect("/courier/announce?preview=1")
+}
+
+/**
+ * Odoslanie oznamu. Príjemcovia sa rátajú **znova z formulára**, nie z toho,
+ * čo videl náhľad — a podpis výberu musí sedieť s tým, ktorý náhľad potvrdil.
+ * Kto po náhľade zmení publikum, dostane náhľad znova, nie odoslanie.
+ */
+export async function sendAnnouncementAction(fd: FormData) {
+  const ctx = await ready()
+  const language = ctx.person.language
+  const t = dictionary(language).courier
+  const subject = fieldText(fd, "subject")
+  const text = typeof fd.get("text") === "string" ? String(fd.get("text")) : ""
+  const selection = { all: fd.get("all") === "1", audience: audienceValues(fd), addresses: "" }
+
+  let threadId = ""
+  let count = 0
+  try {
+    if (!canAnnounce(ctx.person)) throw new CourierError("courier.notAllowed", "Oznam skupine môže poslať len správca osôb, HR alebo správca obsahu.")
+    if (fieldText(fd, "confirmed") !== audienceSignature(selection)) {
+      await saveDraft({ companyCode: ctx.person.companyCode, personId: ctx.person.id, all: selection.all, audience: selection.audience, subject, text })
+      redirect(`/courier/announce?preview=1&error=${encodeURIComponent(t.recipientsChanged)}`)
+    }
+    const [tree, names] = await Promise.all([allDepartments(ctx.person.companyCode), trackNames(ctx.person.companyCode)])
+    const audiences = audienceFromSelection({
+      all: selection.all,
+      selected: selection.audience,
+      departmentNames: Object.fromEntries(tree.map(o => [o.id, o.name])),
+      trackNames: names,
+    })
+    const from = { personId: ctx.person.id, email: ctx.person.email, name: ctx.person.fullName }
+    const recipients = await announcementRecipients(ctx.person.companyCode, audiences, ctx.person.id)
+    count = recipients.length
+    threadId = await createAnnouncement({ companyCode: ctx.person.companyCode, from, audiences, recipients, subject, text })
+    await clearDraft(ctx.person.companyCode, ctx.person.id)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    await saveDraft({ companyCode: ctx.person.companyCode, personId: ctx.person.id, all: selection.all, audience: selection.audience, subject, text })
+    redirect(`/courier/announce?preview=1&error=${encodeURIComponent(errorMessage(e, language))}`)
+  }
+  revalidatePath("/", "layout")
+  redirect(`/courier/${encodeURIComponent(threadId)}?msg=${encodeURIComponent(t.msgAnnounced(count))}`)
+}
+
 /** Odpoveď vo vlákne, ktorého je prihlásená osoba účastníkom. */
 export async function replyAction(fd: FormData) {
   const ctx = await ready()
@@ -80,8 +151,11 @@ export async function replyAction(fd: FormData) {
     revalidatePath("/", "layout")
     redirect(`/courier/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
   }
+  // Pri ozname ide odpoveď príjemcu súkromne autorovi (D205) — do iného
+  // vlákna; preto sa po odoslaní otvorí to, kam odpoveď naozaj išla.
+  let target = id
   try {
-    await postMessage({
+    target = await replyToAnnouncement({
       companyCode: ctx.person.companyCode,
       threadId: id,
       author: { personId: ctx.person.id, email: ctx.person.email, name: ctx.person.fullName },
@@ -91,5 +165,6 @@ export async function replyAction(fd: FormData) {
     if (isRedirect(e)) throw e
     back(errorMessage(e, language), true)
   }
-  back(dictionary(language).courier.msgReplied)
+  revalidatePath("/", "layout")
+  redirect(`/courier/${encodeURIComponent(target)}?msg=${encodeURIComponent(dictionary(language).courier.msgReplied)}`)
 }

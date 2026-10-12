@@ -639,7 +639,7 @@ export async function recordNotification(
 export type AudienceMember = Pick<
   Person,
   "id" | "email" | "fullName" | "language" | "departmentHistory" | "groupHistory"
-> & {
+> & Partial<Pick<Person, "personType">> & {
   /**
    * Bola v oddelení v čase pridelenia, dnes už nie je (D50).
    *
@@ -689,6 +689,9 @@ async function audiencePool(companyCode: string): Promise<PoolMember[]> {
       {
         projection: {
           id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1, departmentPath: 1,
+          // Druh osoby kvôli Kuriérovi (ADR-033, D204): externé osoby z okna
+          // pomoci do publika patria, ale oznam nedostanú.
+          personType: 1,
           // História kvôli `dueForPerson()` v `notAcknowledged()` — termín
           // pre osobu sa počíta odkedy je v oddelení (D50), nie od pridelenia.
           departmentHistory: 1, groupHistory: 1,

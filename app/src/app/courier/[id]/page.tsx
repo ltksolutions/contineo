@@ -20,7 +20,8 @@ import Notice from "@/components/Notice"
 import FormattedText from "@/components/FormattedText"
 import SubmitButton from "@/components/SubmitButton"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { loadThread, threadMessages, markThreadRead, participantsOf, TEXT_MAX } from "@/lib/courier"
+import Link from "next/link"
+import { loadThread, threadMessages, markThreadRead, participantsOf, readStats, TEXT_MAX } from "@/lib/courier"
 import { dictionary } from "@/lib/i18n"
 import { replyAction } from "../actions"
 import { messageTime } from "../time"
@@ -55,6 +56,10 @@ export default async function ThreadPage({
 
   const others = participantsOf(thread).filter(p => p.personId !== me)
   const other = thread.kind === "direct" ? others[0] : null
+  const isAuthor = thread.createdBy.personId === me
+  // Oznam (D205): príjemca odpovedá súkromne autorovi, autor dopĺňa všetkým.
+  const announcement = thread.kind === "announcement"
+  const stats = announcement && isAuthor ? readStats(thread) : null
   const lastMine = [...messages].reverse().find(m => m.author.personId === me)
   const readByOther = other && lastMine && other.lastReadAt && other.lastReadAt.getTime() >= lastMine.at.getTime()
     ? other.lastReadAt
@@ -67,11 +72,16 @@ export default async function ThreadPage({
 
         <div className="page-head">
           <h1 className="page-title">{thread.subject}</h1>
+          {announcement && <span className="tag tag--new">{t.announcement}</span>}
+          {stats && <span className="tag tag--review">{t.readStats(stats.read, stats.total)}</span>}
         </div>
         <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 18px" }}>
           {thread.kind === "direct"
             ? other?.name
             : `${thread.createdBy.name} · ${t.recipients(thread.recipients)}`}
+          {thread.parentThreadId && (
+            <> · <Link href={`/courier/${encodeURIComponent(thread.parentThreadId)}`}>{t.inReplyTo}</Link></>
+          )}
         </p>
 
         <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 18 }}>
@@ -100,9 +110,13 @@ export default async function ThreadPage({
         <form action={replyAction} className="card" style={{ marginTop: 16, padding: "18px 20px", display: "grid", gap: 12 }}>
           <input type="hidden" name="id" value={id} />
           <label className="field">
-            <span className="field-label">{t.reply}</span>
+            <span className="field-label">
+              {announcement ? (isAuthor ? t.followUp : t.replyPrivately(thread.createdBy.name)) : t.reply}
+            </span>
             <textarea className="field-input" name="text" required rows={5} maxLength={TEXT_MAX} placeholder={t.replyPlaceholder} style={{ resize: "vertical", lineHeight: 1.5 }} />
-            <span className="quiet field-hint">{t.textHint}</span>
+            <span className="quiet field-hint">
+              {announcement && !isAuthor ? t.replyGoesTo(thread.createdBy.name) : t.textHint}
+            </span>
           </label>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <SubmitButton className="button" pendingLabel={d.common.pending.sending}>{t.send}</SubmitButton>

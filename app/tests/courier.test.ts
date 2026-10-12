@@ -68,7 +68,7 @@ vi.mock("../src/lib/audit", () => ({ writeAudit: vi.fn(async (r: Row) => { audit
 
 import {
   createDirectThread, postMessage, markThreadRead, unreadThreadCount, listThreads, loadThread, threadMessages,
-  previewOf, validateContent, CourierError,
+  previewOf, validateContent, CourierError, createAnnouncement, replyToAnnouncement, readStats,
 } from "../src/lib/courier"
 
 const anna = { personId: "p-anna", email: "anna@sfz.sk", name: "Anna Nová" }
@@ -143,5 +143,51 @@ describe("1:1 vlákno", () => {
       [b, "Druhé", "Peter Malý", true],
       [a, "Prvé", "Peter Malý", false],
     ])
+  })
+})
+
+describe("oznam (D204–D206)", () => {
+  const jana = { personId: "p-jana", email: "jana@sfz.sk", name: "Jana Veľká" }
+  const audiences = [{ kind: "department" as const, value: "d1", label: "Matrika" }]
+  const recipients = [peter, jana]
+
+  it("príjemcovia neprečítané, autor áno; audit nesie publikum a počet, nie mená", async () => {
+    const id = await createAnnouncement({ companyCode: "SFZ", from: anna, audiences, recipients, subject: "Rozpis", text: "Tajný", now: t0 })
+    expect(await unreadThreadCount("SFZ", "p-peter")).toBe(1)
+    expect(await unreadThreadCount("SFZ", "p-anna")).toBe(0)
+    const a = audit.rows.at(-1)!
+    expect(a).toMatchObject({ action: "oznam", targetId: id, targetLabel: "Rozpis", note: `oddelenie „Matrika" a jeho podriadené · 2` })
+    expect(JSON.stringify(a)).not.toContain("Tajný")
+    expect(JSON.stringify(a)).not.toContain("Peter")
+    const thread = (await loadThread("SFZ", id, "p-anna"))!
+    expect(thread.recipients).toBe(2)
+    expect(readStats(thread)).toEqual({ read: 0, total: 2 })
+  })
+
+  it("bez príjemcov alebo nad 500 sa oznam neuloží", async () => {
+    await expect(createAnnouncement({ companyCode: "SFZ", from: anna, audiences, recipients: [], subject: "x", text: "y" })).rejects.toThrow(CourierError)
+    const many = Array.from({ length: 501 }, (_, i) => ({ personId: `p${i}`, email: `p${i}@sfz.sk`, name: `P${i}` }))
+    await expect(createAnnouncement({ companyCode: "SFZ", from: anna, audiences, recipients: many, subject: "x", text: "y" })).rejects.toThrow(/priveľa/)
+  })
+
+  it("odpoveď príjemcu ide súkromne autorovi do 1:1 vlákna; druhá do toho istého; autor dopĺňa všetkým", async () => {
+    const id = await createAnnouncement({ companyCode: "SFZ", from: anna, audiences, recipients, subject: "Rozpis", text: "t", now: t0 })
+    await markThreadRead("SFZ", id, "p-peter", later(1))
+    const r1 = await replyToAnnouncement({ companyCode: "SFZ", threadId: id, author: peter, text: "Otázka", now: later(2) })
+    expect(r1).not.toBe(id)
+    const direct = (await loadThread("SFZ", r1, "p-anna"))!
+    expect(direct).toMatchObject({ kind: "direct", subject: "Re: Rozpis", parentThreadId: id })
+    expect(direct.participants.map(p => p.personId).sort()).toEqual(["p-anna", "p-peter"])
+    // Jana odpoveď Petra nevidí.
+    expect(await loadThread("SFZ", r1, "p-jana")).toBeNull()
+
+    const r2 = await replyToAnnouncement({ companyCode: "SFZ", threadId: id, author: peter, text: "Ešte", now: later(3) })
+    expect(r2).toBe(r1)
+    expect((await threadMessages("SFZ", r1)).map(m => m.text)).toEqual(["Otázka", "Ešte"])
+
+    const r3 = await replyToAnnouncement({ companyCode: "SFZ", threadId: id, author: anna, text: "Doplnenie", now: later(4) })
+    expect(r3).toBe(id)
+    expect(await unreadThreadCount("SFZ", "p-jana")).toBe(1)
+    expect(readStats((await loadThread("SFZ", id, "p-anna"))!)).toEqual({ read: 0, total: 2 })
   })
 })

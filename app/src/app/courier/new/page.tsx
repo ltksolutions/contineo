@@ -20,7 +20,8 @@ import SubmitButton from "@/components/SubmitButton"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { listPeople } from "@/lib/people"
 import { sortPeopleBySurname } from "@/lib/assignOrder"
-import { SUBJECT_MAX, TEXT_MAX } from "@/lib/courier"
+import Link from "next/link"
+import { SUBJECT_MAX, TEXT_MAX, canAnnounce } from "@/lib/courier"
 import { dictionary } from "@/lib/i18n"
 import { sendDirectAction } from "../actions"
 
@@ -54,6 +55,9 @@ export default async function NewMessagePage({
 
         <div className="page-head">
           <h1 className="page-title">{t.newTitle}</h1>
+          <span className="page-head-spacer" aria-hidden="true" />
+          {/* Oznam skupine len pre role (D204) — tichý odkaz, plné je Odoslať dole. */}
+          {canAnnounce(ctx.person) && <Link className="button button--quiet" href="/courier/announce">{t.modeAnnounce}</Link>}
         </div>
 
         <form action={sendDirectAction} className="card" style={{ padding: "18px 20px", display: "grid", gap: 16 }}>
