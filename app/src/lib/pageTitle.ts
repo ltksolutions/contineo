@@ -21,7 +21,7 @@ type Dictionary = ReturnType<typeof dictionary>
 
 const SECTION_KEYS: NavKey[] = [
   "overview", "ask", "toAcknowledge", "toApprove", "directory", "library", "learning",
-  "assigned", "evidence", "people", "evaluation", "dpo", "channels", "learningManage", "learningTests",
+  "assigned", "evidence", "people", "evaluation", "dpo", "channels", "courier", "learningManage", "learningTests",
 ]
 
 export function pageTitle(pathname: string | null | undefined, organisation: string, t: Dictionary): string {
@@ -41,6 +41,7 @@ export function pageTitle(pathname: string | null | undefined, organisation: str
       // Stránky mimo sekcií menu — bez nich bola v karte len organizácia
       // (6. 10. 2026, napr. „Intranet SFZ" na Upozorneniach).
       "/notifications": t.notifications.title,
+      "/courier/new": t.courier.newTitle,
       "/acknowledgements": t.myAcknowledgements.heading,
       "/guide": t.guide.heading,
       "/privacy": t.privacy.title,

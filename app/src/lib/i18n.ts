@@ -664,6 +664,8 @@ interface Dictionary {
     dpo: string
     /** Kanály (ADR-028, D169, D170) — správca organizácie a riešitelia kanálov. */
     channels: string
+    /** Kuriér (ADR-033) — každý prihlásený. */
+    courier: string
     /** Modul Vzdelávanie (ADR-018) — len pri zapnutom module. */
     learning: string
     learningManage: string
@@ -2249,6 +2251,41 @@ interface Dictionary {
     sending: string
     thanks: string
     failed: string
+  }
+  /** Kuriér — správy medzi ľuďmi (ADR-033). */
+  courier: {
+    title: string
+    /** Popisok obálky v hlavičke pre čítačku obrazovky; nesie aj počet (D214). */
+    envelopeLabel: (unread: number) => string
+    unread: (n: number) => string
+    /** Akcia v `.page-head` a nadpis `/courier/new`. */
+    write: string
+    newTitle: string
+    emptyTitle: string
+    emptyText: string
+    /** Oznam N ľuďom — v zozname pri hromadnom vlákne. */
+    recipients: (n: number) => string
+    /** Pole „Komu" pri 1:1 a nadpis zoznamu osôb pre čítačku. */
+    to: string
+    toList: string
+    subject: string
+    text: string
+    /** Čo z Markdownu prejde — jedna veta pod poľom (D208). */
+    textHint: string
+    send: string
+    reply: string
+    replyPlaceholder: string
+    /** „Vy" pri vlastnej správe vo vlákne. */
+    you: string
+    /** „Prečítané · 12. 10. 2026 14:05" pri 1:1 (D206). */
+    readAt: (when: string) => string
+    notReadYet: string
+    /** Hlásenia po akcii. */
+    msgSent: string
+    msgReplied: string
+    older: string
+    /** Nápoveda pod zoznamom — správy zostávajú na platforme (D207). */
+    stayNote: string
   }
   notifications: {
     title: string
@@ -5352,6 +5389,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evaluation: "Na posúdenie",
     dpo: "Ochrana údajov",
     channels: "Kanály",
+    courier: "Kuriér",
     learning: "Vzdelávanie",
     learningManage: "Správa kurzov",
     learningTests: "Testy",
@@ -6443,6 +6481,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.unknownRun": "Taká kontrola tu nie je.",
     "mailbox.slow": "Schránka odpovedá pomaly — časť sa nestihla prečítať, ďalší beh v nej pokračuje.",
     "ticket.notFound": "Taký ticket tu nie je.",
+    "courier.notFound": "Také vlákno tu nie je.",
+    "courier.emptySubject": "Predmet chýba.",
+    "courier.subjectTooLong": "Predmet je pridlhý — najviac 200 znakov.",
+    "courier.emptyText": "Správa je prázdna.",
+    "courier.textTooLong": "Správa je pridlhá — najviac 20 000 znakov.",
+    "courier.selfRecipient": "Správu si nemôžete poslať sami sebe.",
+    "courier.recipientMissing": "Vyberte, komu správu posielate.",
+    "courier.recipientUnknown": "Taká osoba v organizácii nie je alebo je vyradená.",
     "ticket.notEmail": "Ticket nevznikol z e-mailu — nemá vlákno v schránke.",
     "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
     "ticket.emptyAnswer": "Prázdna odpoveď sa odoslať nedá.",
@@ -7343,6 +7389,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sending: "Odosielam…",
     thanks: "Ďakujeme. Hlásenie sme zapísali aj s otázkou a zdrojmi.",
     failed: "Hlásenie sa nepodarilo odoslať. Skús to prosím znova.",
+  },
+  courier: {
+    title: "Kuriér",
+    envelopeLabel: (unread) => (unread > 0 ? `Kuriér — ${unreadWord(unread, "sk")}` : "Kuriér"),
+    unread: (n) => unreadWord(n, "sk"),
+    write: "Napísať správu",
+    newTitle: "Nová správa",
+    emptyTitle: "Žiadne správy",
+    emptyText: "Keď vám niekto napíše, správa sa objaví tu. Vy môžete napísať kolegovi hneď.",
+    recipients: (n) => (n === 1 ? "1 príjemca" : n < 5 ? `${n} príjemcovia` : `${n} príjemcov`),
+    to: "Komu",
+    toList: "Osoby",
+    subject: "Predmet",
+    text: "Správa",
+    textHint: "Tučné **takto**, odrážky „- “, číslovanie „1. “ a odkazy na obsah v Contineo [názov](/library/…). Prílohy sa neposielajú — vložte odkaz.",
+    send: "Odoslať",
+    reply: "Odpovedať",
+    replyPlaceholder: "Napíšte odpoveď…",
+    you: "Vy",
+    readAt: (when) => `Prečítané · ${when}`,
+    notReadYet: "Zatiaľ neprečítané",
+    msgSent: "Správa je odoslaná.",
+    msgReplied: "Odpoveď je odoslaná.",
+    older: "Staršie vlákna",
+    stayNote: "Správy zostávajú v Contineo. E-mailom príde ráno len zoznam neprečítaných.",
   },
   notifications: {
     title: "Upozornenia",
@@ -10307,6 +10378,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evaluation: "K posouzení",
     dpo: "Ochrana údajů",
     channels: "Kanály",
+    courier: "Kurýr",
     learning: "Vzdělávání",
     learningManage: "Správa kurzů",
     learningTests: "Testy",
@@ -11398,6 +11470,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.unknownRun": "Taková kontrola tu není.",
     "mailbox.slow": "Schránka odpovídá pomalu — část se nestihla přečíst, další běh v ní pokračuje.",
     "ticket.notFound": "Takový ticket tady není.",
+    "courier.notFound": "Takové vlákno tady není.",
+    "courier.emptySubject": "Chybí předmět.",
+    "courier.subjectTooLong": "Předmět je příliš dlouhý — nejvýše 200 znaků.",
+    "courier.emptyText": "Zpráva je prázdná.",
+    "courier.textTooLong": "Zpráva je příliš dlouhá — nejvýše 20 000 znaků.",
+    "courier.selfRecipient": "Zprávu si nemůžete poslat sami sobě.",
+    "courier.recipientMissing": "Vyberte, komu zprávu posíláte.",
+    "courier.recipientUnknown": "Taková osoba v organizaci není nebo je vyřazená.",
     "ticket.notEmail": "Ticket nevznikl z e-mailu — nemá vlákno ve schránce.",
     "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
     "ticket.emptyAnswer": "Prázdná odpověď se odeslat nedá.",
@@ -12298,6 +12378,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sending: "Odesílám…",
     thanks: "Děkujeme. Hlášení jsme zapsali i s otázkou a zdroji.",
     failed: "Hlášení se nepodařilo odeslat. Zkus to prosím znovu.",
+  },
+  courier: {
+    title: "Kurýr",
+    envelopeLabel: (unread) => (unread > 0 ? `Kurýr — ${unreadWord(unread, "cs")}` : "Kurýr"),
+    unread: (n) => unreadWord(n, "cs"),
+    write: "Napsat zprávu",
+    newTitle: "Nová zpráva",
+    emptyTitle: "Žádné zprávy",
+    emptyText: "Když vám někdo napíše, zpráva se objeví tady. Vy můžete napsat kolegovi hned.",
+    recipients: (n) => (n === 1 ? "1 příjemce" : n < 5 ? `${n} příjemci` : `${n} příjemců`),
+    to: "Komu",
+    toList: "Osoby",
+    subject: "Předmět",
+    text: "Zpráva",
+    textHint: "Tučně **takto**, odrážky „- “, číslování „1. “ a odkazy na obsah v Contineu [název](/library/…). Přílohy se neposílají — vložte odkaz.",
+    send: "Odeslat",
+    reply: "Odpovědět",
+    replyPlaceholder: "Napište odpověď…",
+    you: "Vy",
+    readAt: (when) => `Přečteno · ${when}`,
+    notReadYet: "Zatím nepřečteno",
+    msgSent: "Zpráva je odeslána.",
+    msgReplied: "Odpověď je odeslána.",
+    older: "Starší vlákna",
+    stayNote: "Zprávy zůstávají v Contineu. E-mailem přijde ráno jen seznam nepřečtených.",
   },
   notifications: {
     title: "Upozornění",
@@ -15253,6 +15358,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evaluation: "To evaluate",
     dpo: "Data protection",
     channels: "Channels",
+    courier: "Courier",
     learning: "Learning",
     learningManage: "Course management",
     learningTests: "Tests",
@@ -16342,6 +16448,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.unknownRun": "There is no such check.",
     "mailbox.slow": "The mailbox is responding slowly — part of it was not read in time; the next run continues.",
     "ticket.notFound": "There is no such ticket here.",
+    "courier.notFound": "There is no such thread here.",
+    "courier.emptySubject": "The subject is missing.",
+    "courier.subjectTooLong": "The subject is too long — 200 characters at most.",
+    "courier.emptyText": "The message is empty.",
+    "courier.textTooLong": "The message is too long — 20,000 characters at most.",
+    "courier.selfRecipient": "You cannot send a message to yourself.",
+    "courier.recipientMissing": "Choose who the message goes to.",
+    "courier.recipientUnknown": "There is no such person in the organisation, or they are inactive.",
     "ticket.notEmail": "The ticket did not come from an e-mail — it has no thread in the mailbox.",
     "ticket.emptyDraft": "An empty draft cannot be saved.",
     "ticket.emptyAnswer": "An empty answer cannot be sent.",
@@ -17242,6 +17356,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sending: "Sending…",
     thanks: "Thank you. The report was saved together with the question and the sources.",
     failed: "The report could not be sent. Please try again.",
+  },
+  courier: {
+    title: "Courier",
+    envelopeLabel: (unread) => (unread > 0 ? `Courier — ${unread} unread` : "Courier"),
+    unread: (n) => `${n} unread`,
+    write: "Write a message",
+    newTitle: "New message",
+    emptyTitle: "No messages",
+    emptyText: "When someone writes to you, the message appears here. You can write to a colleague right away.",
+    recipients: (n) => (n === 1 ? "1 recipient" : `${n} recipients`),
+    to: "To",
+    toList: "People",
+    subject: "Subject",
+    text: "Message",
+    textHint: "Bold **like this**, bullets “- ”, numbering “1. ” and links to content in Contineo [title](/library/…). Attachments are not sent — insert a link.",
+    send: "Send",
+    reply: "Reply",
+    replyPlaceholder: "Write a reply…",
+    you: "You",
+    readAt: (when) => `Read · ${when}`,
+    notReadYet: "Not read yet",
+    msgSent: "The message has been sent.",
+    msgReplied: "The reply has been sent.",
+    older: "Older threads",
+    stayNote: "Messages stay in Contineo. In the morning you only get an e-mail listing the unread ones.",
   },
   notifications: {
     title: "Notifications",

@@ -111,6 +111,7 @@ export default function Header({
   isAdmin: isAdmin,
   isPeopleAdmin: isPeopleAdmin,
   notifications: notifications,
+  courier,
   language,
   menu,
 }: {
@@ -126,6 +127,8 @@ export default function Header({
   isPeopleAdmin?: boolean
   /** Počet neprečítaných upozornení. Nula = zvonček bez odznaku. */
   notifications?: number
+  /** Počet neprečítaných vlákien Kuriéra (ADR-033, D214). Nula = obálka bez odznaku. */
+  courier?: number
   /** Jazyk prostredia prihlásenej osoby; bez nej slovenčina. */
   language?: UiLanguage
   /**
@@ -383,9 +386,24 @@ export default function Header({
               Odznak je len keď je čo čítať: zvonček s nulou je ozdoba,
               ktorá učí oko prehliadať aj to, keď tam číslo naozaj je.
             */}
+            {/* Obálka Kuriéra pred zvončekom (ADR-033, D214): zvonček je „čo
+                sa stalo" (systém), obálka je „kto mi píše" (človek). Bližšie
+                k stredu, lebo sa na ňu klikne častejšie. Rovnaký tvar
+                a rovnaký odznak ako zvonček — dve rôzne ikony, jeden ovládač. */}
+            <Link
+              href="/courier"
+              className="head-icon"
+              aria-label={t.courier.envelopeLabel(courier ?? 0)}
+            >
+              <Icon name="courier" size={21} />
+              {(courier ?? 0) > 0 && (
+                <span className="head-badge" aria-hidden="true">{courier}</span>
+              )}
+            </Link>
+
             <Link
               href="/notifications"
-              className="bell"
+              className="head-icon"
               aria-label={t.notifications.bellLabel(notifications ?? 0)}
             >
               {/* 21 px, nie predvolených 17: zvonček stojí vedľa avatara
@@ -396,7 +414,7 @@ export default function Header({
                   bodka hovorí len „niečo", číslo hovorí „koľko". Pri nule
                   sa nekreslí nič. */}
               {(notifications ?? 0) > 0 && (
-                <span className="bell-badge" aria-hidden="true">{notifications}</span>
+                <span className="head-badge" aria-hidden="true">{notifications}</span>
               )}
             </Link>
 

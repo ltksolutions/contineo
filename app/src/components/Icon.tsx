@@ -200,6 +200,14 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="m3 5 6 5 6-5" />
     </>
   ),
+  // Kuriér (ADR-033, D214) — tá istá obálka ako `mail`: kuriér nosí listy
+  // a hlavička nemá mať dve mierne odlišné obálky.
+  courier: (
+    <>
+      <rect x="2.5" y="4" width="13" height="10" rx="1.5" />
+      <path d="m3 5 6 5 6-5" />
+    </>
+  ),
   // Všetky sekcie — 9 bodiek 3 × 3 (SHELL-rozcestnik, plachta). Plné ako
   // „Viac" a z toho istého dôvodu: bodka z ťahu by na 18 px bola krúžok.
   grid: (

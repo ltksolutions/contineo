@@ -31,6 +31,7 @@ import { testsResponsibleFor } from "@/lib/testsDb"
 import { currentPerson } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
+import { unreadThreadCount } from "@/lib/courier"
 
 export interface ShellNavData {
   flags: NavFlags
@@ -97,6 +98,9 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
       ])
       counts.toAcknowledge = pending.total
       counts.toApprove = rounds.length
+      // Neprečítané vlákna Kuriéra (ADR-033) — to isté číslo ako na obálke
+      // v hlavičke; `unreadThreadCount()` nikdy nevyhodí výnimku.
+      counts.courier = await unreadThreadCount(person.companyCode, person.id)
       // Počíta sa len tomu, kto frontu vôbec vidí — cudzie čakajúce
       // odpovede nikomu inému nič nehovoria a je to dotaz navyše.
       if (flags.isEvaluator) counts.evaluation = await queueCount(person.companyCode)

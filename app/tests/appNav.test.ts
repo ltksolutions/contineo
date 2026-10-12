@@ -20,7 +20,7 @@ describe("položky navigácie", () => {
     // v-hlavicke, Q5) — Knižnica s platnými dokumentmi organizácie (D90),
     // Vzdelávanie pri vypnutom module s vysvetlením, nie 404.
     expect(navItems({}).map(o => o.href))
-      .toEqual(["/", "/ask", "/documents", "/approvals", "/directory", "/library", "/learning"])
+      .toEqual(["/", "/ask", "/documents", "/approvals", "/courier", "/directory", "/library", "/learning"])
   })
 
   it("rola pridá práve svoju sekciu", () => {
@@ -129,7 +129,7 @@ describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
 
   it("každá sekcia je práve v jednej skupine; neznámy kľúč padne do Správy", () => {
     const items = navItems(ALL)
-    const main: NavKey[] = ["overview", "ask", "toAcknowledge", "toApprove"]
+    const main: NavKey[] = ["overview", "ask", "toAcknowledge", "toApprove", "courier"]
     expect(sectionGroups(items).flatMap(g => g.items.map(o => o.key)).sort())
       .toEqual(items.map(o => o.key).filter(k => !main.includes(k)).sort())
     const future = [...items, { href: "/nove", key: "nova" as never }]
@@ -321,7 +321,7 @@ describe("celé menu — plachta aj /more (SHELL-menu-v-hlavicke, Q4)", () => {
   it("Hlavné, Organizácia, Správa", () => {
     const groups = menuGroups(navItems(ALL))
     expect(groups.map(g => g.key)).toEqual(["main", "organisation", "management"])
-    expect(groups[0].items.map(o => o.key)).toEqual(["overview", "ask", "toAcknowledge", "toApprove"])
+    expect(groups[0].items.map(o => o.key)).toEqual(["overview", "ask", "toAcknowledge", "toApprove", "courier"])
   })
 
   it("bez rolí: Hlavné a Organizácia, Správa nie", () => {
