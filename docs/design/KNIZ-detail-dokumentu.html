@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>KNIZ — detail dokumentu v knižnici</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--seg-bg:rgba(118,118,128,.12);--seg-thumb:#fff;--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--seg-bg:rgba(118,118,128,.24);--seg-thumb:#3a3f48}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:100ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.sec{margin:40px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 8px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.notes{display:grid;gap:6px;max-width:110ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff;line-height:1}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px 18px;flex:none;margin-top:auto}
+.tabbar span{display:grid;justify-items:center;gap:3px;font-size:10.5px;color:var(--muted);min-height:44px;align-content:center}
+.tabbar span::before{content:"";width:22px;height:22px;border-radius:6px;background:var(--surface-2)}
+.tabbar span.on{color:var(--accent);font-weight:600}.tabbar span.on::before{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.body{padding:22px 28px 32px;display:grid;gap:20px;align-content:start}
+.page-head{display:flex;align-items:flex-start;gap:10px 16px;flex-wrap:wrap}
+.page-head-main{flex:1 1 380px;min-width:0;display:grid;gap:6px}
+.ttl{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0;text-wrap:pretty}
+.meta{display:flex;gap:4px 8px;flex-wrap:wrap;font-size:var(--fs-small);color:var(--muted);align-items:center}
+.meta i{font-style:normal;color:var(--line-strong)}
+.page-tools{display:flex;gap:8px;flex-wrap:wrap}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong);font-weight:500}
+.button--danger{background:var(--surface);color:var(--bad-fg);border-color:var(--bad-fg);font-weight:600}
+.button--row{min-height:44px;padding:0 16px;font-size:14.5px}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--published,.tag--ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--bad{background:var(--bad-bg);color:var(--bad-fg)}
+.tag--info{background:var(--accent-soft);color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+/* rozloženie */
+.doc-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+.col{display:grid;gap:20px;min-width:0}
+.insp{display:grid;gap:16px;position:sticky;top:0}
+.insp-h{font-size:var(--fs-small);font-weight:650;color:var(--muted);margin:0 0 6px 4px}
+.stat{padding:14px 16px;display:grid;gap:4px}
+.stat b{font-size:var(--fs-section);font-weight:650;line-height:1.3;text-wrap:pretty}
+.stat span{font-size:var(--fs-small);color:var(--muted)}
+.stat a{font-size:14px;min-height:32px;display:inline-flex;align-items:center}
+/* LabeledContent */
+.lrs{display:grid}
+.labeled-row{position:relative;display:grid;grid-template-columns:minmax(110px,38%) minmax(0,1fr);gap:2px 12px;padding:10px 16px;font-size:14px;min-height:44px;align-items:baseline}
+.lrs > .labeled-row + .labeled-row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.labeled-row > span:first-child{color:var(--muted)}
+.labeled-row .v{min-width:0;overflow-wrap:anywhere}
+.labeled-row .v small{display:block;font-size:var(--fs-micro);color:var(--muted)}
+.lrs-foot{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px 14px;border-top:1px solid var(--line)}
+.pct{display:grid;gap:8px;padding:14px 16px}
+.pct-top{display:flex;align-items:baseline;gap:8px}
+.pct-top b{font-size:28px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok-fg);border-radius:999px}
+/* karta postupu */
+.flow{display:grid}
+.flow-h{display:grid;gap:14px;padding:18px 20px 16px}
+.flow-h .t{display:flex;gap:8px 12px;align-items:baseline;flex-wrap:wrap}
+.flow-h h2{margin:0;font-size:19px;letter-spacing:-.01em}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;list-style:none;margin:0;padding:0}
+.steps li{display:grid;gap:6px;font-size:13.5px;color:var(--muted)}
+.steps li::before{content:"";height:4px;border-radius:999px;background:var(--surface-2)}
+.steps li.done{color:var(--ink)}.steps li.done::before{background:var(--ok-fg)}
+.steps li.now{color:var(--accent);font-weight:650}.steps li.now::before{background:var(--accent)}
+.steps li.bad{color:var(--bad-fg)}.steps li.bad::before{background:var(--bad-fg)}
+.steps li span{display:flex;gap:5px;align-items:center}
+.fsec{display:grid;gap:10px;padding:16px 20px;border-top:1px solid var(--line)}
+.fsec-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin:0;font-size:var(--fs-small);font-weight:650;color:var(--muted);text-transform:none}
+.fsec-h b{color:var(--ink);font-size:15px}
+.inset{border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.lock{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--muted);padding:2px 0}
+.lock b{color:var(--ink);font-weight:600}
+/* kontrolný zoznam */
+.chk{position:relative;display:flex;gap:12px;align-items:center;min-height:52px;padding:8px 10px 8px 14px;flex-wrap:wrap}
+.inset > .chk + .chk::before,.inset > .chk + .basis::before{content:"";position:absolute;top:0;left:48px;right:0;border-top:1px solid var(--line)}
+.ico{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;line-height:1}
+.ico.ok{background:var(--ok-fg);color:var(--surface)}
+.ico.wait{border:2px solid var(--accent);color:var(--accent);font-size:10px}
+.ico.todo{background:var(--warn-bg);color:var(--warn-fg);box-shadow:inset 0 0 0 1.5px var(--warn-fg)}
+.ico.bad{background:var(--bad-fg);color:var(--surface)}
+.ico.off{border:2px solid var(--line-strong)}
+.chk-main{flex:1 1 220px;min-width:0;display:grid;gap:1px}
+.chk-main b{font-size:14.5px;font-weight:600}
+.chk-main span{font-size:var(--fs-small);color:var(--muted);text-wrap:pretty}
+.chk-main span.on{color:var(--ink)}
+.basis{position:relative;display:grid;gap:14px;padding:4px 16px 16px 48px}
+.foot{display:flex;gap:10px 12px;flex-wrap:wrap;align-items:center;padding:16px 20px;border-top:1px solid var(--line)}
+.foot .quiet{font-size:var(--fs-small)}
+/* časový rad */
+.tl{list-style:none;margin:0;padding:0;display:grid}
+.tl li{position:relative;display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:2px 12px;padding:6px 0;font-size:14px;align-items:baseline}
+.tl li::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--line-strong);margin-top:5px;grid-row:span 2;align-self:start}
+.tl li::after{content:"";position:absolute;left:4.5px;top:22px;bottom:-8px;border-left:1px solid var(--line)}
+.tl li:last-child::after{display:none}
+.tl li.ok::before{background:var(--ok-fg)}
+.tl li.bad::before{background:var(--bad-fg)}
+.tl li.now::before{background:var(--surface);box-shadow:inset 0 0 0 2px var(--accent)}
+.tl li.off{color:var(--muted)}
+.tl .d{font-size:var(--fs-small);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tl .bad-t{color:var(--bad-fg);font-weight:600}
+.tl .ok-t{color:var(--ok-fg);font-weight:600}
+.tl .x{grid-column:2 / -1}
+.quote{margin:2px 0 0;padding:2px 0 2px 12px;border-left:3px solid var(--line-strong);font-size:14px;color:var(--ink);max-width:68ch}
+.tl li.off .quote{color:var(--muted)}
+.tl-more{font-size:14px;min-height:40px;display:inline-flex;align-items:center}
+/* hlášky */
+.lnote{display:flex;gap:10px;padding:12px 14px;border-radius:10px;font-size:14px;align-items:flex-start;background:var(--surface-2);color:var(--ink)}
+.lnote-mark{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--surface);color:inherit;margin-top:1px}
+.lnote-text{flex:1 1 260px;min-width:0;line-height:1.45}
+.lnote-text b{font-weight:650}
+.lnote-text small{display:block;margin-top:3px;font-size:var(--fs-small);color:var(--muted)}
+.lnote--warn{background:var(--warn-bg);color:var(--warn-fg)}
+.lnote--bad{background:var(--bad-bg);color:var(--bad-fg)}
+.lnote--bad .quote{border-color:currentColor;color:var(--ink)}
+/* formulár */
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;width:100%;min-width:0;line-height:1.5;min-height:40px}
+.field-input.ph{color:var(--muted)}
+.ta2{min-height:calc(2 * 1.5em + 20px)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.form-list{display:grid;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.form-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:9px 14px;font-size:14.5px}
+.form-list > .form-row + .form-row::before{content:"";position:absolute;top:0;left:46px;right:0;border-top:1px solid var(--line)}
+.form-row-main{flex:1;display:grid;gap:1px;min-width:0}
+.form-row-sub{font-size:var(--fs-small);color:var(--muted)}
+.cb{width:20px;height:20px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:800;border:1.5px solid var(--line-strong)}
+.cb.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.tgl{width:44px;height:26px;border-radius:999px;background:var(--line-strong);flex:none;position:relative}
+.tgl.on{background:var(--ok-fg)}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tgl.on::after{left:21px}
+.f2{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px}
+.acts{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
+.acts a{font-size:14.5px;min-height:44px;display:inline-flex;align-items:center}
+/* znenia */
+.vlist{display:grid}
+.vh{display:flex;gap:8px 12px;align-items:baseline;flex-wrap:wrap;padding:16px 20px 12px}
+.vh h2{margin:0;font-size:19px;letter-spacing:-.01em}
+.vrow{position:relative;display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap;min-height:56px;padding:8px 10px 8px 20px;border-top:1px solid var(--line)}
+.vrow-main{flex:1 1 280px;min-width:0;display:grid;gap:1px}
+.vrow-main b{font-size:15px;font-weight:600}
+.vrow-main span{font-size:var(--fs-small);color:var(--muted)}
+.vrow .n{font-size:var(--fs-small);color:var(--muted);white-space:nowrap}
+.dots{min-width:44px;min-height:40px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:16px;letter-spacing:1px;line-height:1}
+.dots.on{background:var(--surface-2)}
+.vcur{display:grid;gap:0;border-top:1px solid var(--line);background:var(--surface)}
+.vcur-h{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;padding:14px 10px 6px 20px}
+.vcur-h b{font-size:16px;font-weight:650;flex:1 1 260px;min-width:0}
+.vcur .lrs{padding:0 4px}
+.vtools{display:flex;gap:8px;flex-wrap:wrap;padding:8px 20px 16px;align-items:center}
+.menu{position:absolute;right:10px;top:46px;z-index:5;width:280px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;display:grid}
+.menu a{display:grid;gap:1px;min-height:44px;padding:8px 12px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14.5px}
+.menu a small{font-size:var(--fs-micro);color:var(--muted)}
+.menu a:first-child{background:var(--surface-2)}
+.menu a.danger{color:var(--bad-fg)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 8px}
+.vall{padding:4px 20px 10px;border-top:1px solid var(--line)}
+.vall a{font-size:14px;min-height:44px;display:inline-flex;align-items:center}
+/* ďalšie akcie */
+.more{display:grid}
+.more-head{padding:14px 20px 4px}
+.more-head h2{margin:0;font-size:var(--fs-section)}
+.more-row{position:relative;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;padding:12px 16px 12px 20px;min-height:64px}
+.more-row + .more-row,.more-confirm + .more-row{border-top:1px solid var(--line)}
+.more-main{flex:1 1 300px;min-width:0;display:grid;gap:1px}
+.more-main b{font-size:15px;font-weight:600}
+.more-main span{font-size:var(--fs-small);color:var(--muted);text-wrap:pretty}
+.more-confirm{display:grid;gap:12px;margin:0 16px 16px 20px;padding:14px 16px;border-radius:10px;border:1px solid var(--bad-fg);background:var(--bad-bg)}
+.more-confirm.in{margin:0;background:var(--bad-bg)}
+.more-confirm h3{margin:0;font-size:15.5px;color:var(--bad-fg)}
+.more-confirm p{margin:0;font-size:14px;color:var(--ink);max-width:66ch;text-wrap:pretty}
+.more-confirm ul{margin:0;padding-left:18px;font-size:14px;color:var(--ink);display:grid;gap:2px}
+.more-confirm .field-input{background:var(--surface)}
+.mcp{font-size:var(--fs-small);color:var(--muted)}
+/* mobil a tablet */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px;gap:16px}
+.m .page-title{font-size:22px}
+.m .page-head-main{flex-basis:100%}
+.m .page-tools{width:100%}
+.m .button{min-height:44px}
+.m .flow-h{padding:16px 14px 14px}
+.m .fsec{padding:14px}
+.m .foot{padding:14px}
+.m .foot .button{width:100%}
+.m .steps li{font-size:12px}
+.m .chk{padding:8px 8px 8px 12px}
+.m .chk .button{width:100%}
+.m .basis{padding:4px 12px 14px}
+.m .labeled-row{grid-template-columns:1fr;gap:0}
+.m .vrow{padding:8px 8px 8px 14px}
+.m .more-row{padding:12px 14px}
+.m .more-row .button{width:100%}
+.m .more-confirm{margin:0 14px 14px}
+.m .more-confirm .button{width:100%}
+.m .tl li{grid-template-columns:16px minmax(0,1fr)}
+.m .tl .d{grid-column:2}
+.t .body{padding:20px 24px 28px}
+.state-l{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 0 -8px 4px}
+</style></head>
+<body><div class="sheet">
+
+<h1 class="doc">KNIZ — detail dokumentu v knižnici (<code>/library/[id]</code>)</h1>
+<p class="doc">Nový návrh od základu. Vľavo, čo sa s dokumentom robí: karta postupu, Znenia, Ďalšie akcie. Vpravo od 1024 px inšpektor so súhrnom: Stav, Potvrdenia, Dokument, Text. Nič podstatné nie je v <code>&lt;details&gt;</code>. Serverové akcie a ich polia ostávajú. <code>/edit</code>, <code>/text</code>, <code>/chunks</code>, <code>/version</code>, <code>/faq</code> sa nemenia. Popis: <code>KNIZ-detail-dokumentu.md</code>.</p>
+<p class="doc">Vzory SwiftUI: <code>.inspector</code> (súhrn vpravo), <code>List</code> (Znenia), <code>LabeledContent</code> (<code>.labeled-row</code>), <code>Menu</code> (•••), <code>confirmationDialog</code> (<code>.more-confirm</code> v adrese), krokovník ako <code>FlowSteps</code>.</p>
+
+<div class="sec">
+<p class="sec-h">Dnes → nové</p>
+<table class="spec">
+<tr><th>Miesto</th><th>Dnes</th><th>Nové</th></tr>
+<tr><td>Stiahnuť kolo, Právny základ, História</td><td class="old"><code>&lt;details&gt;</code> 12,5 px na spodku 819 px karty, pod „Potom"</td><td class="new">Stiahnuť kolo = tiché tlačidlo v päte. Právny základ = riadok „Pred zverejnením". História = časový rad vždy viditeľný</td></tr>
+<tr><td>Právny základ</td><td class="old">poznámka v tretej osobe aj čitateľovi, ktorý ho má určiť</td><td class="new">úloha s „Určiť" (44 px) pre toho, kto smie, inak „Určí {meno} — dostal upozornenie"</td></tr>
+<tr><td>Hlavička</td><td class="old">3 štítky („prevedené, nepublikované", „manual"), „Pokračovať v príprave" aj počas kola</td><td class="new">1 štítok stavu, riadok údajov, úkon podľa kroku. Štítok spracovania len pri chybe alebo počas behu</td></tr>
+<tr><td>Metadáta</td><td class="old">manual, public, sk · „Upraviť dokument" 2×</td><td class="new">názvy z číselníkov v inšpektore; „Upraviť dokument" len v hlavičke</td></tr>
+<tr><td>Krok 2</td><td class="old">„Čo sa schvaľuje" + rámček „Potom" opakujú krokovník</td><td class="new">schvaľovatelia + jeden riadok „PDF · text · údaje o znení 🔒", „Potom" sa ruší</td></tr>
+<tr><td>Ďalšie akcie</td><td class="old">5 riadkov o súboroch s e-mailom, 4-riadkový odsek, „Opraviť text" dvakrát</td><td class="new">len celý dokument: Preindexovať všetky znenia, Skontrolovať zmeny v zdroji, Archivovať. Súbory v inšpektore, meno namiesto e-mailu</td></tr>
+</table>
+</div>
+
+<!-- ============ 1 ============ -->
+<div class="sec">
+<p class="sec-h">1 · 1440 svetlá — prvé znenie v kroku 2, 0 z 1, právny základ neurčený, číta Ján Letko (zodpovedná osoba aj správca obsahu)</p>
+<div class="frame" style="width:1440px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa na predpisy organizácie…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Ekonomika</a><span>›</span><b>Kredity z prerozdelenia príspevkov a futbalnet.shop</b></div>
+  <div class="body">
+    <div class="page-head rel">
+      <span class="ann" style="left:-12px;top:-6px">1</span>
+      <div class="page-head-main">
+        <div class="ttl"><h1 class="page-title">Kredity z prerozdelenia príspevkov a futbalnet.shop</h1><span class="tag tag--info">V schvaľovaní</span></div>
+        <div class="meta"><span>Smernica</span><i>·</i><span>Ekonomika</span><i>·</i><span>navrhovaná účinnosť 1. 11. 2026</span><i>·</i><code>sfz:kredity_futbalnet</code></div>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Stiahnuť ▾</a><a class="button button--quiet" href="#">Upraviť dokument</a><a class="button button--quiet" href="#flow">Stav schvaľovania</a></div>
+    </div>
+    <div class="doc-grid">
+      <div class="col">
+        <section class="card flow rel" id="flow">
+          <div class="flow-h">
+            <div class="t"><h2>Prvé znenie od 1. 11. 2026</h2><span class="quiet" style="font-size:13px">predložil Ján Letko 9. 10. 2026</span></div>
+            <ol class="steps"><li class="done"><span>✓ Príprava</span></li><li class="now"><span>2 Schválenie</span></li><li><span>3 Zverejnenie</span></li><li><span>4 Pridelenie</span></li></ol>
+          </div>
+          <div class="fsec rel">
+            <span class="ann" style="left:-12px;top:14px">2</span>
+            <p class="fsec-h"><b>Teraz</b> Schválenie · kolo 1 · 0 z 1</p>
+            <div class="inset">
+              <div class="chk"><span class="ico wait">◷</span><span class="chk-main"><b>Agáta Galková</b><span>IT · dostala úlohu 9. 10. · rozhoduje v Na schválenie</span></span><span class="tag">Čaká</span></div>
+            </div>
+            <div class="lock"><span>🔒</span><b>PDF · text · údaje o znení</b><span>zamknuté počas kola</span></div>
+          </div>
+          <div class="fsec rel">
+            <span class="ann" style="left:-12px;top:14px">3</span>
+            <p class="fsec-h"><b>Pred zverejnením</b> 2 z 4 hotové</p>
+            <div class="inset">
+              <div class="chk"><span class="ico wait">◷</span><span class="chk-main"><b>Schválenie</b><span>0 z 1 · čaká Agáta Galková</span></span></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Zodpovedná osoba</b><span class="on">Ján Letko (vy)</span></span><a class="button button--quiet button--row" href="#">Zmeniť</a></div>
+              <div class="chk rel"><span class="ann" style="right:150px;top:14px">4</span><span class="ico todo">!</span><span class="chk-main"><b>Právny základ <span class="tag tag--draft" style="margin-left:6px">Neurčený</span></b><span>Určujete vy ako zodpovedná osoba. Nie je súčasť schválenia — dá sa určiť aj počas kola.</span></span><a class="button button--quiet button--row" href="#">Určiť</a></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Dátum účinnosti</b><span class="on">1. 11. 2026 · z údajov o znení</span></span></div>
+            </div>
+          </div>
+          <div class="foot rel"><span class="ann" style="left:-12px;top:22px">5</span><a class="button button--quiet" href="#">Stiahnuť kolo…</a><span class="quiet">Vráti znenie do prípravy.</span></div>
+        </section>
+        <section class="card more">
+          <div class="more-head"><h2>Ďalšie akcie</h2></div>
+          <div class="more-row"><span class="more-main"><b>Preindexovať všetky znenia</b><span>Text sa nemení, potvrdenia ostávajú.</span></span><a class="button button--quiet" href="#">Preindexovať</a></div>
+          <div class="more-row"><span class="more-main"><b>Archivovať</b><span>Nedá sa, kým dokument nemá platné znenie.</span></span></div>
+        </section>
+      </div>
+      <aside class="insp rel">
+        <span class="ann" style="left:-12px;top:-6px">6</span>
+        <div><p class="insp-h">Stav</p><div class="card stat"><b>Čaká sa na schválenie Agátou Galkovou</b><span>Kolo 1 · predložené 9. 10. 2026 · potom zverejníte vy</span></div></div>
+        <div><p class="insp-h">Potvrdenia</p><div class="card stat"><span>Prvé znenie ešte neplatí — nikomu nie je pridelené.</span></div></div>
+        <div><p class="insp-h">Dokument</p><div class="card lrs">
+          <div class="labeled-row"><span>Druh</span><span class="v">Smernica</span></div>
+          <div class="labeled-row"><span>Priečinok</span><span class="v">Ekonomika</span></div>
+          <div class="labeled-row"><span>Značky</span><span class="v">Kredity, E-shop</span></div>
+          <div class="labeled-row"><span>Prístup</span><span class="v">Verejný</span></div>
+          <div class="labeled-row"><span>Jazyk</span><span class="v">Slovenčina</span></div>
+          <div class="labeled-row"><span>Pôvod</span><span class="v">Nahraté ručne</span></div>
+          <div class="labeled-row"><span>Identifikátor</span><span class="v"><code>sfz:kredity_futbalnet</code></span></div>
+        </div></div>
+        <div><p class="insp-h">Text</p><div class="card lrs">
+          <div class="labeled-row"><span>PDF</span><span class="v"><a href="#">Kredity_2026.pdf</a><small>schvaľuje sa · 6 strán</small></span></div>
+          <div class="labeled-row"><span>Zdroj</span><span class="v"><a href="#">Kredity_2026.docx</a><small>predloha ďalšieho znenia</small></span></div>
+          <div class="labeled-row"><span>Pôvodný súbor</span><span class="v"><a href="#">Kredity_2026.docx</a><small>nahral Ján Letko 8. 10. 2026</small></span></div>
+          <div class="lrs-foot"><a class="button button--quiet button--sm" href="#">Editor textu</a><a class="button button--quiet button--sm" href="#">Členenie</a></div>
+        </div></div>
+      </aside>
+    </div>
+  </div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Názov + jeden štítok stavu. Pod ním drobne druh, priečinok, účinnosť, identifikátor v <code>&lt;code&gt;</code>. V kroku 2 nie je plné tlačidlo — „Stav schvaľovania" je tiché a vedie na <code>#flow</code>. „Stiahnuť ▾" ostáva (KNIZNICA-akcie-dokumentu, Q9).</p>
+  <p><span class="ann">2</span>„Teraz" = telo kroku: schvaľovatelia so stavom a jeden riadok zámku. Rámček „Potom" a „Čo sa schvaľuje" sa rušia, krokovník hovorí, čo príde.</p>
+  <p><span class="ann">3</span>„Pred zverejnením" = kontrolný zoznam (<code>.labeled-row</code> s ikonou): schválenie, zodpovedná osoba, právny základ, dátum účinnosti. Nevyriešený riadok má tiché tlačidlo 44 px.</p>
+  <p><span class="ann">4</span>Čitateľ je zodpovedná osoba → „Určujete vy…" a „Určiť" → <code>?open=basis#flow</code> (rám 2). Nikdy „Ján Letko ho môže určiť", keď to číta Ján.</p>
+  <p><span class="ann">5</span>Tiché úkony kroku sú tlačidlá v päte, nie <code>&lt;details&gt;</code>. Pri prvom bežiacom kole bez histórie sa časový rad nekreslí.</p>
+  <p><span class="ann">6</span>Inšpektor: Stav jednou vetou (kto je na ťahu), Potvrdenia, Dokument (názvy z číselníkov, nie <code>manual / public / sk</code>), Text so súbormi a odkazmi Editor a Členenie. Nemá žiadne tlačidlo úpravy.</p>
+</div>
+</div>
+
+<!-- ============ 2 ============ -->
+<div class="sec">
+<p class="sec-h">2 · 1440 svetlá — to isté s <code>?open=basis#flow</code> (výrez karty postupu)</p>
+<div class="frame" style="width:1440px">
+  <div class="body">
+    <div class="doc-grid">
+      <div class="col">
+        <section class="card flow">
+          <div class="flow-h">
+            <div class="t"><h2>Prvé znenie od 1. 11. 2026</h2><span class="quiet" style="font-size:13px">predložil Ján Letko 9. 10. 2026</span></div>
+            <ol class="steps"><li class="done"><span>✓ Príprava</span></li><li class="now"><span>2 Schválenie</span></li><li><span>3 Zverejnenie</span></li><li><span>4 Pridelenie</span></li></ol>
+          </div>
+          <div class="fsec">
+            <p class="fsec-h"><b>Pred zverejnením</b> 2 z 4 hotové</p>
+            <div class="inset">
+              <div class="chk"><span class="ico wait">◷</span><span class="chk-main"><b>Schválenie</b><span>0 z 1 · čaká Agáta Galková</span></span></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Zodpovedná osoba</b><span class="on">Ján Letko (vy)</span></span><a class="button button--quiet button--row" href="#">Zmeniť</a></div>
+              <div class="chk rel"><span class="ann" style="left:-12px;top:14px">1</span><span class="ico todo">!</span><span class="chk-main"><b>Právny základ <span class="tag tag--draft" style="margin-left:6px">Neurčený</span></b><span>Nie je súčasť schválenia — počas kola sa nezamyká a mení sa bez dôvodu.</span></span></div>
+              <form class="basis rel">
+                <span class="ann" style="left:12px;top:14px">2</span>
+                <div class="field"><span class="field-label">Na akom základe sa spracúvajú osobné údaje pri potvrdení</span>
+                  <div class="form-list">
+                    <label class="form-row"><span class="cb on">✓</span><span class="form-row-main"><span>Zákonná povinnosť</span><span class="form-row-sub">čl. 6 ods. 1 písm. c) GDPR</span></span></label>
+                    <label class="form-row"><span class="cb"></span><span class="form-row-main"><span>Plnenie zmluvy</span><span class="form-row-sub">čl. 6 ods. 1 písm. b)</span></span></label>
+                    <label class="form-row"><span class="cb"></span><span class="form-row-main"><span>Oprávnený záujem</span><span class="form-row-sub">čl. 6 ods. 1 písm. f)</span></span></label>
+                  </div>
+                  <span class="field-hint">Položky z číselníka organizácie. Pri viacerých rozhoduje zákonná povinnosť.</span>
+                </div>
+                <label class="field"><span class="field-label">Predpis, z ktorého povinnosť vyplýva</span><span class="field-input">Zákon č. 431/2002 Z. z. o účtovníctve, § 35</span></label>
+                <div class="acts"><a class="button button--quiet" href="#">Uložiť právny základ</a><a href="#">Zrušiť</a><span class="quiet" style="font-size:13px">Pri zverejnení prejde do znenia.</span></div>
+              </form>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Dátum účinnosti</b><span class="on">1. 11. 2026 · z údajov o znení</span></span></div>
+            </div>
+          </div>
+          <div class="foot"><a class="button button--quiet" href="#">Stiahnuť kolo…</a><span class="quiet">Vráti znenie do prípravy.</span></div>
+        </section>
+      </div>
+      <aside class="insp"><div><p class="insp-h">Stav</p><div class="card stat"><b>Čaká sa na schválenie Agátou Galkovou</b><span>Kolo 1 · predložené 9. 10. 2026 · potom zverejníte vy</span></div></div></aside>
+    </div>
+  </div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Riadok ostáva na mieste, tlačidlo „Určiť" zmizne (formulár je otvorený). Adresa <code>?open=basis#flow</code>, bez JS.</p>
+  <p><span class="ann">2</span>Telo je dnešný <code>LegalBasisForm</code> pre koncept (<code>setDraftLegalBasis</code>) — polia sa nemenia, len miesto. Uloženie je tiché: plné tlačidlo kroku je len v päte karty (R2), v kroku 2 žiadne. „Zrušiť" = adresa bez <code>open</code>.</p>
+</div>
+</div>
+
+<!-- ============ 3 ============ -->
+<div class="sec">
+<p class="sec-h">3 · 1440 svetlá — platný predpis, nové znenie v kroku 1 po zamietnutom kole 1</p>
+<div class="frame" style="width:1440px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa na predpisy organizácie…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Personálne</a><span>›</span><b>Smernica o pracovných cestách</b></div>
+  <div class="body">
+    <div class="page-head">
+      <div class="page-head-main">
+        <div class="ttl"><h1 class="page-title">Smernica o pracovných cestách</h1><span class="tag tag--published">Platí</span></div>
+        <div class="meta"><span>Smernica</span><i>·</i><span>Personálne</span><i>·</i><span>účinné od 1. 3. 2026</span><i>·</i><code>sfz:pracovne_cesty</code></div>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Stiahnuť ▾</a><a class="button button--quiet" href="#">Upraviť dokument</a><a class="button button--quiet" href="#flow">Pokračovať v príprave</a></div>
+    </div>
+    <div class="doc-grid">
+      <div class="col">
+        <section class="card flow rel">
+          <div class="flow-h">
+            <div class="t"><h2>Nové znenie od 1. 1. 2027</h2><span class="quiet" style="font-size:13px">pripravuje Ján Letko od 2. 10. 2026</span></div>
+            <ol class="steps"><li class="now"><span>1 Príprava</span></li><li class="bad"><span>✕ Kolo 1 zamietnuté</span></li><li><span>3 Zverejnenie</span></li><li><span>4 Pridelenie</span></li></ol>
+            <div class="lnote lnote--bad rel"><span class="ann" style="left:-26px;top:10px">1</span><span class="lnote-mark">✕</span><span class="lnote-text"><b>Kolo 1 zamietol Peter Kováč 10. 10. 2026</b><blockquote class="quote">Sadzby stravného v prílohe 2 sú ešte podľa opatrenia z roku 2024. Prosím doplniť nové z MPSVR od 1. 12.</blockquote><small>Upravte PDF alebo údaje a predložte kolo 2. Predložiť sa dá aj bez výmeny súborov.</small></span></div>
+          </div>
+          <div class="fsec">
+            <p class="fsec-h"><b>Teraz</b> Príprava</p>
+            <div class="inset">
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>PDF</b><span class="on">Smernica_cesty_2027.pdf · 9 strán</span></span><a class="button button--quiet button--row" href="#">Vymeniť</a></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Text</b><span class="on">prevedený zo zdroja .docx</span></span><a class="button button--quiet button--row" href="#">Editor</a></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Údaje o znení</b><span class="on">Prijal VV SFZ 22. 9. 2026 · účinné od 1. 1. 2027</span></span><a class="button button--quiet button--row" href="#">Upraviť</a></div>
+            </div>
+            <div class="field"><span class="field-label">Schvaľovatelia kola 2</span>
+              <div class="form-list">
+                <label class="form-row"><span class="cb on">✓</span><span class="form-row-main"><span>Peter Kováč</span><span class="form-row-sub">Ekonomické oddelenie · zamietol kolo 1</span></span></label>
+                <label class="form-row"><span class="cb on">✓</span><span class="form-row-main"><span>Agáta Galková</span><span class="form-row-sub">IT · schválila kolo 1</span></span></label>
+              </div><span class="field-hint">Predvyplnené z posledného kola.</span></div>
+          </div>
+          <div class="fsec">
+            <p class="fsec-h"><b>Pred zverejnením</b> 3 z 4 hotové</p>
+            <div class="inset">
+              <div class="chk"><span class="ico off"></span><span class="chk-main"><b>Schválenie</b><span>kolo 2 sa ešte nepredložilo</span></span></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Zodpovedná osoba</b><span class="on">Michaela Žikavská</span></span><a class="button button--quiet button--row" href="#">Zmeniť</a></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Právny základ</b><span class="on">Plnenie zmluvy · určila Michaela Žikavská 3. 10.</span></span><a class="button button--quiet button--row" href="#">Zmeniť</a></div>
+              <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Dátum účinnosti</b><span class="on">1. 1. 2027</span></span></div>
+            </div>
+          </div>
+          <div class="foot"><a class="button" href="#">Uložiť a predložiť kolo 2</a><a class="button button--quiet" href="#">Len uložiť</a></div>
+          <div class="fsec rel" id="history">
+            <span class="ann" style="left:-12px;top:14px">2</span>
+            <p class="fsec-h"><b>História</b></p>
+            <ol class="tl">
+              <li class="bad"><span><span class="bad-t">Zamietol</span> Peter Kováč · kolo 1</span><span class="d">10. 10. 2026</span><blockquote class="quote x">Sadzby stravného v prílohe 2 sú ešte podľa opatrenia z roku 2024. Prosím doplniť nové z MPSVR od 1. 12.</blockquote></li>
+              <li class="ok"><span><span class="ok-t">Schválila</span> Agáta Galková · kolo 1</span><span class="d">9. 10. 2026</span></li>
+              <li><span>Predložené na schválenie · kolo 1 · Ján Letko</span><span class="d">8. 10. 2026</span></li>
+              <li><span>Právny základ určila Michaela Žikavská</span><span class="d">3. 10. 2026</span></li>
+              <li><span>Nové znenie začaté · Ján Letko</span><span class="d">2. 10. 2026</span></li>
+            </ol>
+          </div>
+        </section>
+        <section class="card vlist rel">
+          <span class="ann" style="left:-12px;top:14px">3</span>
+          <div class="vh"><h2>Znenia</h2><span class="quiet" style="font-size:13px">3</span></div>
+          <div class="vcur">
+            <div class="vcur-h"><b>Úplné znenie od 1. 3. 2026</b><span class="tag tag--published">Platí</span><a class="dots" href="#">•••</a></div>
+            <div class="lrs">
+              <div class="labeled-row"><span>Zodpovedná osoba</span><span class="v">Michaela Žikavská</span></div>
+              <div class="labeled-row"><span>Právny základ</span><span class="v">Plnenie zmluvy</span></div>
+              <div class="labeled-row"><span>Prijal (orgán)</span><span class="v">VV SFZ · 18. 2. 2026</span></div>
+              <div class="labeled-row"><span>Autor</span><span class="v">Ján Letko</span></div>
+              <div class="labeled-row"><span>Potvrdenia</span><span class="v">41 z 50 · 82 %</span></div>
+            </div>
+            <div class="vtools"><a class="button button--quiet button--sm" href="#">PDF</a><a class="button button--quiet button--sm" href="#">Zodpovedná osoba</a><a class="button button--quiet button--sm" href="#">Právny základ</a><a class="button button--quiet button--sm" href="#">Opraviť text</a><a class="button button--quiet button--sm" href="#">História</a></div>
+          </div>
+          <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 7. 2025</b><span>1. 7. 2025 – 28. 2. 2026 · nové sadzby náhrad</span></span><span class="n">47 potvrdení</span><a class="button button--quiet button--sm" href="#">PDF</a><a class="dots" href="#">•••</a></div>
+          <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 1. 2024</b><span>1. 1. 2024 – 30. 6. 2025 · prvé znenie</span></span><span class="n">44 potvrdení</span><a class="button button--quiet button--sm" href="#">PDF</a><a class="dots" href="#">•••</a></div>
+        </section>
+        <section class="card more">
+          <div class="more-head"><h2>Ďalšie akcie</h2></div>
+          <div class="more-row"><span class="more-main"><b>Preindexovať všetky znenia</b><span>Text sa nemení, potvrdenia ostávajú.</span></span><a class="button button--quiet" href="#">Preindexovať</a></div>
+          <div class="more-row rel"><span class="ann" style="left:-12px;top:20px">4</span><span class="more-main"><b>Archivovať</b><span>Nedá sa, kým sa pripravuje nové znenie.</span></span></div>
+        </section>
+      </div>
+      <aside class="insp">
+        <div><p class="insp-h">Stav</p><div class="card stat"><b>Nové znenie je v príprave — na ťahu ste vy</b><span>Kolo 1 zamietnuté 10. 10. · platí znenie od 1. 3. 2026</span></div></div>
+        <div><p class="insp-h">Potvrdenia</p><div class="card pct"><div class="pct-top"><b>82 %</b><span class="quiet">41 z 50</span></div><div class="bar"><i style="width:82%"></i></div><span class="quiet" style="font-size:13px">platné znenie · 3 po termíne</span><a href="#" style="font-size:14px">Výkaz potvrdení</a></div></div>
+        <div><p class="insp-h">Dokument</p><div class="card lrs">
+          <div class="labeled-row"><span>Druh</span><span class="v">Smernica</span></div>
+          <div class="labeled-row"><span>Priečinok</span><span class="v">Personálne</span></div>
+          <div class="labeled-row"><span>Prístup</span><span class="v">Zamestnanci</span></div>
+          <div class="labeled-row"><span>Jazyk</span><span class="v">Slovenčina</span></div>
+          <div class="labeled-row"><span>Identifikátor</span><span class="v"><code>sfz:pracovne_cesty</code></span></div>
+        </div></div>
+        <div><p class="insp-h">Text</p><div class="card lrs">
+          <div class="labeled-row"><span>PDF konceptu</span><span class="v"><a href="#">Smernica_cesty_2027.pdf</a></span></div>
+          <div class="labeled-row"><span>Zdroj konceptu</span><span class="v"><a href="#">Smernica_cesty_2027.docx</a><small>nahral Ján Letko 2. 10. 2026</small></span></div>
+          <div class="labeled-row"><span>Platné PDF</span><span class="v"><a href="#">Smernica_cesty_2026.pdf</a></span></div>
+          <div class="lrs-foot"><a class="button button--quiet button--sm" href="#">Editor textu</a><a class="button button--quiet button--sm" href="#">Členenie</a></div>
+        </div></div>
+      </aside>
+    </div>
+  </div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Pás zamietnutia nad telom kroku: kto, kedy, dôvod v <code>.quote</code>. Krokovník: 2 = ✕ (červené). Plné tlačidlo kroku „Uložiť a predložiť kolo 2" ostáva na konci karty (R2). V hlavičke len tiché „Pokračovať v príprave" → <code>#flow</code>.</p>
+  <p><span class="ann">2</span>Časový rad na konci karty: posledných 5 (najnovšie hore), pri viac „Celá história (N)" → <code>?history=all#history</code>. Zamietnutie červené s dôvodom, schválenie zelené.</p>
+  <p><span class="ann">3</span>Znenia ako List: platné rozbalené (<code>.labeled-row</code> + tiché úkony + •••), staršie po riadku (DETAIL-starsie-znenia). „Prijal (orgán)", nie „Schválil".</p>
+  <p><span class="ann">4</span><code>archiveBlocked</code>: dôvod namiesto tlačidla.</p>
+</div>
+</div>
+
+<!-- ============ 4 ============ -->
+<div class="sec">
+<p class="sec-h">4 · 1440 svetlá — platný predpis bez prípravy, Znenia s platným a 4 staršími, ••• otvorená</p>
+<div class="frame" style="width:1440px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa na predpisy organizácie…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Personálne</a><span>›</span><b>Pracovný poriadok SFZ</b></div>
+  <div class="body">
+    <div class="page-head rel">
+      <span class="ann" style="left:-12px;top:-6px">1</span>
+      <div class="page-head-main">
+        <div class="ttl"><h1 class="page-title">Pracovný poriadok SFZ</h1><span class="tag tag--published">Platí</span></div>
+        <div class="meta"><span>Pracovný poriadok</span><i>·</i><span>Personálne</span><i>·</i><span>účinné od 1. 9. 2026</span><i>·</i><code>sfz:pracovny_poriadok</code></div>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Stiahnuť ▾</a><a class="button button--quiet" href="#">Upraviť dokument</a><a class="button" href="#">Nové znenie</a></div>
+    </div>
+    <div class="doc-grid">
+      <div class="col">
+        <section class="card vlist rel" style="overflow:visible">
+          <div class="vh"><h2>Znenia</h2><span class="quiet" style="font-size:13px">5</span></div>
+          <div class="vcur rel">
+            <div class="vcur-h"><b>Úplné znenie od 1. 9. 2026</b><span class="tag tag--published">Platí</span><a class="dots on" href="#">•••</a></div>
+            <div class="menu rel"><span class="ann" style="left:-30px;top:8px">2</span>
+              <a href="#">Odvolať potvrdenia…<small>Ľudia potvrdia znenie znova</small></a>
+              <a href="#">Preindexovať toto znenie<small>Text sa nemení, potvrdenia ostávajú</small></a>
+            </div>
+            <div class="lrs">
+              <div class="labeled-row"><span>Zodpovedná osoba</span><span class="v">Michaela Žikavská</span></div>
+              <div class="labeled-row"><span>Právny základ</span><span class="v">Plnenie zmluvy</span></div>
+              <div class="labeled-row"><span>Prijal (orgán)</span><span class="v">VV SFZ · 26. 8. 2026</span></div>
+              <div class="labeled-row"><span>Autor</span><span class="v">Ján Letko</span></div>
+              <div class="labeled-row"><span>Potvrdenia</span><span class="v">112 z 128 · 88 %</span></div>
+            </div>
+            <div class="vtools"><a class="button button--quiet button--sm" href="#">PDF</a><a class="button button--quiet button--sm" href="#">Zodpovedná osoba</a><a class="button button--quiet button--sm" href="#">Právny základ</a><a class="button button--quiet button--sm" href="#">Opraviť text</a><a class="button button--quiet button--sm" href="#">História</a></div>
+          </div>
+          <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 1. 2026</b><span>1. 1. 2026 – 31. 8. 2026 · domáca práca</span></span><span class="n">121 potvrdení</span><a class="button button--quiet button--sm" href="#">PDF</a><a class="dots" href="#">•••</a></div>
+          <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 5. 2025</b><span>1. 5. 2025 – 31. 12. 2025 · pracovný čas</span></span><span class="n">118 potvrdení</span><a class="button button--quiet button--sm" href="#">PDF</a><a class="dots" href="#">•••</a></div>
+          <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 1. 2025</b><span>1. 1. 2025 – 30. 4. 2025</span></span><span class="n">109 potvrdení</span><a class="button button--quiet button--sm" href="#">PDF</a><a class="dots" href="#">•••</a></div>
+          <div class="vall"><a href="#">Všetky staršie znenia (4)</a></div>
+        </section>
+        <section class="card more rel">
+          <span class="ann" style="left:-12px;top:14px">3</span>
+          <div class="more-head"><h2>Ďalšie akcie</h2></div>
+          <div class="more-row"><span class="more-main"><b>Preindexovať všetky znenia</b><span>Text sa nemení, potvrdenia ostávajú.</span></span><a class="button button--quiet" href="#">Preindexovať</a></div>
+          <div class="more-row"><span class="more-main"><b>Archivovať</b><span>Predpis prestane platiť ku dňu, ktorý zadáte. Potvrdenia ostanú ako doklady.</span></span><a class="button button--danger" href="#">Archivovať…</a></div>
+        </section>
+      </div>
+      <aside class="insp">
+        <div><p class="insp-h">Stav</p><div class="card stat"><b>Platí od 1. 9. 2026</b><span>Nič sa nepripravuje · zodpovedá Michaela Žikavská</span></div></div>
+        <div><p class="insp-h">Potvrdenia</p><div class="card pct"><div class="pct-top"><b>88 %</b><span class="quiet">112 z 128</span></div><div class="bar"><i style="width:88%"></i></div><a href="#" style="font-size:14px">Výkaz potvrdení</a></div></div>
+        <div><p class="insp-h">Dokument</p><div class="card lrs">
+          <div class="labeled-row"><span>Druh</span><span class="v">Pracovný poriadok</span></div>
+          <div class="labeled-row"><span>Priečinok</span><span class="v">Personálne</span></div>
+          <div class="labeled-row"><span>Prístup</span><span class="v">Zamestnanci</span></div>
+          <div class="labeled-row"><span>Jazyk</span><span class="v">Slovenčina</span></div>
+          <div class="labeled-row"><span>Identifikátor</span><span class="v"><code>sfz:pracovny_poriadok</code></span></div>
+        </div></div>
+        <div><p class="insp-h">Text</p><div class="card lrs">
+          <div class="labeled-row"><span>PDF</span><span class="v"><a href="#">Pracovny_poriadok_2026-09.pdf</a></span></div>
+          <div class="labeled-row"><span>Zdroj</span><span class="v"><a href="#">Pracovny_poriadok_2026-09.docx</a><small>nahral Ján Letko 27. 8. 2026</small></span></div>
+          <div class="lrs-foot"><a class="button button--quiet button--sm" href="#">Editor textu</a><a class="button button--quiet button--sm" href="#">Členenie</a></div>
+        </div></div>
+      </aside>
+    </div>
+  </div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Nič nebeží → plné „Nové znenie" v hlavičke (jediné plné na obrazovke). Karta postupu sa nekreslí.</p>
+  <p><span class="ann">2</span>••• = <code>Menu</code>, otvára sa adresou <code>?menu=&lt;versionId&gt;#v-…</code> (ako DETAIL-starsie-znenia). Zriedkavé úkony znenia: Odvolať potvrdenia, Preindexovať toto znenie. Obe vedú na panel <code>?open=revoke|reindex</code>.</p>
+  <p><span class="ann">3</span>Ďalšie akcie len pre celý dokument. Archivovať je nevratné → <code>.button--danger</code> → <code>?archive=1#more</code> (rám 7).</p>
+</div>
+</div>
+
+<!-- ============ 5 ============ -->
+<div class="sec">
+<p class="sec-h">5 · 834 svetlá — krok 3 s prenosom pridelení, celé „Pred zverejnením" zelené</p>
+<div class="frame m t" style="width:834px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Personálne</a><span>›</span><b>Smernica o pracovných cestách</b></div>
+  <div class="body">
+    <div class="page-head">
+      <div class="page-head-main">
+        <div class="ttl"><h1 class="page-title">Smernica o pracovných cestách</h1><span class="tag tag--published">Platí</span></div>
+        <div class="meta"><span>Smernica</span><i>·</i><span>Personálne</span><i>·</i><span>účinné od 1. 3. 2026</span><i>·</i><code>sfz:pracovne_cesty</code></div>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Stiahnuť ▾</a><a class="button button--quiet" href="#">Upraviť dokument</a><a class="button button--quiet" href="#flow">Zverejniť…</a></div>
+    </div>
+    <div class="card stat rel"><span class="ann" style="left:-12px;top:10px">1</span><b>Schválené — na ťahu ste vy</b><span>Kolo 2 schválili obaja 11. 10. · zverejnite od 1. 1. 2027</span></div>
+    <section class="card flow">
+      <div class="flow-h">
+        <div class="t"><h2>Nové znenie od 1. 1. 2027</h2></div>
+        <ol class="steps"><li class="done"><span>✓ Príprava</span></li><li class="done"><span>✓ Schválenie</span></li><li class="now"><span>3 Zverejnenie</span></li><li><span>4 Pridelenie</span></li></ol>
+      </div>
+      <div class="fsec rel">
+        <span class="ann" style="left:-12px;top:14px">2</span>
+        <p class="fsec-h"><b>Teraz</b> Zverejnenie</p>
+        <div class="form-list">
+          <label class="form-row"><span class="tgl on"></span><span class="form-row-main"><span>Prideliť nové znenie tým istým 50 ľuďom</span><span class="form-row-sub">Publiká z predošlých znení: Zamestnanci sekretariátu, Delegáti. Odškrtnite, ak chcete prideliť inak.</span></span></label>
+        </div>
+        <div class="f2">
+          <label class="field"><span class="field-label">Dôvod pridelenia</span><span class="field-input">Nové sadzby stravného od 1. 1. 2027</span></label>
+          <label class="field"><span class="field-label">Termín</span><span class="field-input">14 dní</span></label>
+        </div>
+        <span class="field-hint">Pôvodný termín sa neprenáša, e-maily sa neposielajú.</span>
+      </div>
+      <div class="fsec">
+        <p class="fsec-h"><b>Pred zverejnením</b> 4 z 4 hotové</p>
+        <div class="inset">
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Schválenie</b><span class="on">kolo 2 · 2 z 2 · 11. 10. 2026</span></span></div>
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Zodpovedná osoba</b><span class="on">Michaela Žikavská</span></span></div>
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Právny základ</b><span class="on">Plnenie zmluvy</span></span><a class="button button--quiet button--row" href="#">Zmeniť</a></div>
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Dátum účinnosti</b><span class="on">1. 1. 2027</span></span></div>
+        </div>
+      </div>
+      <div class="foot rel"><span class="ann" style="left:-12px;top:22px">3</span><a class="button" href="#">Zverejniť a prideliť</a><a class="button button--quiet" href="#">Zmeniť zodpovednú osobu</a></div>
+      <div class="fsec">
+        <p class="fsec-h"><b>História</b></p>
+        <ol class="tl">
+          <li class="ok"><span><span class="ok-t">Schválil</span> Peter Kováč · kolo 2</span><span class="d">11. 10. 2026</span></li>
+          <li class="ok"><span><span class="ok-t">Schválila</span> Agáta Galková · kolo 2</span><span class="d">11. 10. 2026</span></li>
+          <li><span>Predložené na schválenie · kolo 2 · Ján Letko</span><span class="d">10. 10. 2026</span></li>
+          <li class="bad"><span><span class="bad-t">Zamietol</span> Peter Kováč · kolo 1</span><span class="d">10. 10. 2026</span><blockquote class="quote x">Sadzby stravného v prílohe 2 sú ešte podľa opatrenia z roku 2024.</blockquote></li>
+          <li class="ok"><span><span class="ok-t">Schválila</span> Agáta Galková · kolo 1</span><span class="d">9. 10. 2026</span></li>
+        </ol>
+        <a class="tl-more" href="#">Celá história (7)</a>
+      </div>
+    </section>
+    <section class="card vlist">
+      <div class="vh"><h2>Znenia</h2><span class="quiet" style="font-size:13px">3</span></div>
+      <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 3. 2026</b><span>platí · Michaela Žikavská · Plnenie zmluvy</span></span><span class="tag tag--published">Platí</span><a class="dots" href="#">•••</a></div>
+      <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 7. 2025</b><span>1. 7. 2025 – 28. 2. 2026</span></span><a class="button button--quiet button--sm" href="#">PDF</a><a class="dots" href="#">•••</a></div>
+    </section>
+    <p class="state-l">Inšpektor pod 1024 px — pod obsahom</p>
+    <div class="card pct"><div class="pct-top"><b>82 %</b><span class="quiet">41 z 50 potvrdilo platné znenie</span></div><div class="bar"><i style="width:82%"></i></div></div>
+    <div class="card lrs">
+      <div class="labeled-row"><span>Druh</span><span class="v">Smernica</span></div>
+      <div class="labeled-row"><span>Priečinok</span><span class="v">Personálne</span></div>
+      <div class="labeled-row"><span>PDF konceptu</span><span class="v"><a href="#">Smernica_cesty_2027.pdf</a></span></div>
+    </div>
+  </div>
+  <div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Pod 1024 px je Stav hore (pod hlavičkou), zvyšok inšpektora (Potvrdenia, Dokument, Text) až pod Znenia a Ďalšie akcie.</p>
+  <p><span class="ann">2</span>Krok 3: prenos pridelení ako voľba (D111), polia <code>CarryOverFields</code> bez zmeny. Označenie znenia sa nekreslí (ADR-016). Personalistovi; inak voľba chýba.</p>
+  <p><span class="ann">3</span>Plné „Zverejniť a prideliť" na konci karty (R2). V hlavičke tichý odkaz „Zverejniť…" → <code>#flow</code>. „Zmeniť zodpovednú osobu" je tiché tlačidlo kroku, nie <code>&lt;details&gt;</code>.</p>
+</div>
+</div>
+
+<!-- ============ 6, 7 ============ -->
+<div class="sec">
+<p class="sec-h">6 · 390 tmavá — archivovaný predpis s novým znením v kroku 2, <code>?withdraw=1</code>, časový rad so stiahnutým aj zamietnutým kolom · 7 · 390 tmavá — Ďalšie akcie s <code>?archive=1</code> (predpis z MCP konektora)</p>
+<div class="row-frames">
+<div class="frame m dark" style="width:390px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Ekonomika</a><span>›</span><b>Smernica o cestovných náhradách</b></div>
+  <div class="body">
+    <div class="page-head">
+      <div class="page-head-main">
+        <div class="ttl"><h1 class="page-title">Smernica o cestovných náhradách</h1><span class="tag">Archivovaný</span></div>
+        <div class="meta"><span>Smernica</span><i>·</i><span>Ekonomika</span><i>·</i><span>neplatí od 1. 10. 2026</span><i>·</i><code>sfz:cestovne_nahrady</code></div>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Stiahnuť ▾</a><a class="button button--quiet" href="#">Upraviť</a><a class="button button--quiet" href="#flow">Stav schvaľovania</a></div>
+    </div>
+    <div class="card stat rel"><span class="ann" style="left:-12px;top:10px">1</span><b>Archivovaný od 1. 10. 2026</b><span>Nové znenie je v schvaľovaní — zverejnením predpis znova platí. Čaká Peter Kováč.</span></div>
+    <section class="card flow">
+      <div class="flow-h">
+        <div class="t"><h2>Nové znenie od 1. 1. 2027</h2></div>
+        <ol class="steps"><li class="done"><span>✓ Príprava</span></li><li class="now"><span>2 Schválenie</span></li><li><span>3 Zverej.</span></li><li><span>4 Prid.</span></li></ol>
+      </div>
+      <div class="fsec">
+        <p class="fsec-h"><b>Teraz</b> kolo 3 · 1 z 2</p>
+        <div class="inset">
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Agáta Galková</b><span>IT · schválila 11. 10.</span></span></div>
+          <div class="chk"><span class="ico wait">◷</span><span class="chk-main"><b>Peter Kováč</b><span>Ekonomické oddelenie</span></span><span class="tag">Čaká</span></div>
+        </div>
+        <div class="lock"><span>🔒</span><b>PDF · text · údaje o znení</b><span>zamknuté</span></div>
+      </div>
+      <div class="fsec">
+        <p class="fsec-h"><b>Pred zverejnením</b> 3 z 4</p>
+        <div class="inset">
+          <div class="chk"><span class="ico wait">◷</span><span class="chk-main"><b>Schválenie</b><span>1 z 2</span></span></div>
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Zodpovedná osoba</b><span class="on">Michaela Žikavská</span></span></div>
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Právny základ</b><span class="on">Zákonná povinnosť</span></span></div>
+          <div class="chk"><span class="ico ok">✓</span><span class="chk-main"><b>Dátum účinnosti</b><span class="on">1. 1. 2027</span></span></div>
+        </div>
+      </div>
+      <div class="foot rel" id="withdraw" style="display:grid">
+        <span class="ann" style="left:-12px;top:22px">2</span>
+        <form class="more-confirm in">
+          <h3>Stiahnuť kolo 3?</h3>
+          <ul><li>Znenie sa vráti do prípravy a údaje sa odomknú.</li><li>Agáte Galkovej a Petrovi Kováčovi zmizne úloha.</li><li>Kolo sa zapíše ako zrušené — sivé, nikto nič nevytkol.</li></ul>
+          <label class="field"><span class="field-label">Dôvod</span><span class="field-input ta2 ph">Prečo kolo sťahujete — uvidia ho schvaľovatelia</span></label>
+          <a class="button button--danger" href="#">Stiahnuť kolo</a>
+          <a href="#flow" style="font-size:14.5px;min-height:44px;display:flex;align-items:center;justify-content:center">Zrušiť</a>
+        </form>
+      </div>
+      <div class="fsec rel" id="history">
+        <span class="ann" style="left:-12px;top:14px">3</span>
+        <p class="fsec-h"><b>História</b></p>
+        <ol class="tl">
+          <li class="ok"><span><span class="ok-t">Schválila</span> Agáta Galková · kolo 3</span><span class="d">11. 10. 2026</span></li>
+          <li><span>Predložené · kolo 3 · Ján Letko</span><span class="d">10. 10. 2026</span></li>
+          <li class="off"><span>Stiahnuté · kolo 2 · Ján Letko</span><span class="d">7. 10. 2026</span><blockquote class="quote x">Chýbala príloha so sadzbami, predložím znova.</blockquote></li>
+          <li class="bad"><span><span class="bad-t">Zamietol</span> Peter Kováč · kolo 1</span><span class="d">3. 10. 2026</span><blockquote class="quote x">Nesedí dátum účinnosti s uznesením VV.</blockquote></li>
+          <li><span>Archivované · Ján Letko</span><span class="d">1. 10. 2026</span></li>
+        </ol>
+        <a class="tl-more" href="#">Celá história (8)</a>
+      </div>
+    </section>
+    <section class="card vlist">
+      <div class="vh"><h2>Znenia</h2><span class="quiet" style="font-size:13px">2</span></div>
+      <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 1. 2025</b><span>1. 1. 2025 – 30. 9. 2026 · archivované</span></span><a class="dots" href="#">•••</a></div>
+      <div class="vrow"><span class="vrow-main"><b>Úplné znenie od 1. 6. 2023</b><span>1. 6. 2023 – 31. 12. 2024</span></span><a class="dots" href="#">•••</a></div>
+    </section>
+    <section class="card more rel">
+      <span class="ann" style="left:-12px;top:14px">4</span>
+      <div class="more-head"><h2>Ďalšie akcie</h2></div>
+      <div class="more-row"><span class="more-main"><b>Preindexovať všetky znenia</b><span>Text sa nemení, potvrdenia ostávajú.</span></span><a class="button button--quiet" href="#">Preindexovať</a></div>
+      <div class="more-row"><span class="more-main"><b>Obnoviť platnosť</b><span>Archivované omylom 1. 10. — „Nahradené smernicou o náhradách". Odvolané pridelenia sa neobnovia.</span></span><a class="button button--quiet" href="#">Obnoviť platnosť</a></div>
+    </section>
+  </div>
+  <div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>
+</div>
+
+<div class="frame m dark" style="width:390px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><b>Smernica o bezpečnosti IT</b></div>
+  <div class="body">
+    <div class="page-head">
+      <div class="page-head-main">
+        <div class="ttl"><h1 class="page-title">Smernica o bezpečnosti IT</h1><span class="tag tag--published">Platí</span></div>
+        <div class="meta"><span>Smernica</span><i>·</i><span>z konektora Confluence</span><i>·</i><span>účinné od 1. 4. 2026</span></div>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Stiahnuť ▾</a><a class="button button--quiet" href="#">Upraviť</a><a class="button" href="#">Nové znenie</a></div>
+    </div>
+    <p class="state-l">… Znenia, inšpektor …</p>
+    <section class="card more rel" id="more">
+      <span class="ann" style="left:-12px;top:14px">5</span>
+      <div class="more-head"><h2>Ďalšie akcie</h2></div>
+      <div class="more-row"><span class="more-main"><b>Preindexovať všetky znenia</b><span>Text sa nemení, potvrdenia ostávajú.</span></span><a class="button button--quiet" href="#">Preindexovať</a></div>
+      <div class="more-row"><span class="more-main"><b>Skontrolovať zmeny v zdroji</b><span>Confluence · IT/Bezpečnosť · naposledy 9. 10. bez zmien</span></span><a class="button button--quiet" href="#">Skontrolovať</a></div>
+      <div class="more-row"><span class="more-main"><b>Archivovať</b><span>Predpis prestane platiť ku dňu, ktorý zadáte.</span></span></div>
+      <form class="more-confirm rel">
+        <span class="ann" style="right:-8px;top:-8px">6</span>
+        <h3>Archivovať predpis?</h3>
+        <ul><li>Odo dňa nižšie sa z neho neodpovedá a nedá sa prideliť.</li><li>Nepotvrdené pridelenia sa odvolajú (36).</li><li>Text, PDF a 92 potvrdení ostávajú ako doklady.</li></ul>
+        <label class="field"><span class="field-label">Neplatí od</span><span class="field-input">12. 10. 2026</span><span class="field-hint">Smie byť aj v budúcnosti — dovtedy platí.</span></label>
+        <label class="field"><span class="field-label">Dôvod</span><span class="field-input ta2 ph">Napr. zrušené uznesením VV SFZ</span></label>
+        <a class="button button--danger" href="#">Archivovať</a>
+        <a href="#more" style="font-size:14.5px;min-height:44px;display:flex;align-items:center;justify-content:center">Zrušiť</a>
+      </form>
+    </section>
+  </div>
+  <div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>
+</div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Archivovaný predpis smie mať nové znenie (ADR-025 §3). Stav to povie jednou vetou; samostatná hláška archivácie sa nekreslí, keď Stav hovorí to isté.</p>
+  <p><span class="ann">2</span><code>?withdraw=1#flow</code>: v päte namiesto „Stiahnuť kolo…" <code>.more-confirm</code> (<code>confirmationDialog</code>) — čo sa stane, povinný <code>reason</code> pre <code>cancelApprovalAction</code>, <code>.button--danger</code>, „Zrušiť" = adresa bez <code>withdraw</code>.</p>
+  <p><span class="ann">3</span>Stiahnuté kolo sivé s dôvodom, zamietnuté červené (ADR-006, dodatok 12. 10. 2026). V rade aj archivácia, aby bolo vidieť, prečo predpis neplatí.</p>
+  <p><span class="ann">4</span>Archivovaný: „Obnoviť platnosť" je tiché (vratné), bez potvrdenia — <code>restoreDocumentAction</code>. Riadok Archivovať chýba.</p>
+  <p><span class="ann">5</span>Dokument z MCP konektora: pôvod v riadku údajov hlavičky („z konektora Confluence"), riadok „Skontrolovať zmeny v zdroji" (<code>resyncConnectorDocumentAction</code>) v Ďalších akciách.</p>
+  <p><span class="ann">6</span><code>?archive=1#more</code>: pod riadkom <code>form.more-confirm</code> s dátumom a povinným dôvodom (<code>archiveDocumentAction</code>). Počty z existujúcich dát.</p>
+</div>
+</div>
+
+<!-- ============ ostatné stavy ============ -->
+<div class="sec">
+<p class="sec-h">Ostatné stavy — hlavička, Stav a karta postupu</p>
+<table class="spec">
+<tr><th>Stav</th><th>Štítok</th><th>Úkon v hlavičke</th><th>Stav (inšpektor)</th><th>Karta postupu / poznámka</th></tr>
+<tr><td>Prvé znenie, krok 1</td><td><span class="tag tag--draft">Koncept</span></td><td>tiché „Pokračovať v príprave"</td><td>„Pripravuje sa prvé znenie — na ťahu ste vy"</td><td>krok 1, plné „Uložiť a predložiť na schválenie" v päte</td></tr>
+<tr><td>Prvé znenie, krok 3</td><td><span class="tag tag--ok">Schválené</span></td><td>tiché „Zverejniť…"</td><td>„Schválené — zverejníte vy"</td><td>krok 3 bez prenosu (nie je čo prenášať), plné „Zverejniť od {d}"</td></tr>
+<tr><td>Platné + nové znenie, krok 2</td><td><span class="tag tag--published">Platí</span></td><td>tiché „Stav schvaľovania"</td><td>„Nové znenie čaká na {meno}"</td><td>ako rám 1, nad Znenia</td></tr>
+<tr><td>Platné + krok 4</td><td><span class="tag tag--published">Platí</span></td><td>plné „Nové znenie"</td><td>„Zverejnené {d} — ešte neprenesené pridelenia"</td><td>krok 4 = <code>carryOverAssignmentsAction</code>, plné „Prideliť" v päte → potom v hlavičke tiché (jedno plné)</td></tr>
+<tr><td>Novela vopred</td><td><span class="tag tag--published">Platí</span></td><td>plné „Nové znenie" (nič sa nepripravuje)</td><td>„Platí znenie od {d}, od {d2} novela"</td><td>prvý riadok Znení: novela so štítkom <span class="tag tag--info">Platí od 1. 1. 2027</span>, rozbalená ako platné</td></tr>
+<tr><td>Archivovaný, naplánovaný</td><td><span class="tag tag--draft">Archivuje sa</span></td><td>plné „Nové znenie"</td><td>„Platí ešte do {d} — potom sa archivuje"</td><td>Ďalšie akcie: „Obnoviť platnosť" tiché</td></tr>
+<tr><td>Archivovaný, platný</td><td><span class="tag">Archivovaný</span></td><td>plné „Nové znenie"</td><td>„Archivovaný od {d}" + dôvod</td><td>rám 6 bez karty postupu</td></tr>
+<tr><td>FAQ</td><td><span class="tag tag--published">Platí</span></td><td>plné „Upraviť záznamy" → <code>/faq</code></td><td>„{n} záznamov · kanál {kanál}"</td><td>poznámka ku kanálu (D201) v Stave; Text bez PDF</td></tr>
+<tr><td>Spracovanie beží</td><td>stavový + <span class="tag tag--info">Spracúva sa</span></td><td>podľa kroku</td><td>„Text sa pripravuje — asistent ho zatiaľ nepozná"</td><td>—</td></tr>
+<tr><td>Spracovanie zlyhalo</td><td>stavový + <span class="tag tag--bad">Chyba spracovania</span></td><td>podľa kroku</td><td>—</td><td>pod hlavičkou <code>.lnote--bad</code> s chybou a tichým „Spracovať znova" (<code>reindexDocumentAction</code>)</td></tr>
+</table>
+</div>
+
+</div></body></html>

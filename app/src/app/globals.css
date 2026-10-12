@@ -8243,6 +8243,117 @@ section.rating { border-top: 1px solid var(--line); }
 /* Položka ponuky: názov a pod ním znenie, typ a veľkosť. */
 .doc-menu .mc-menu-list a { display: grid; gap: 1px; align-content: center; padding: 7px 12px; }
 .doc-menu .mc-menu-list small { margin-left: 0; }
+
+/* ── Detail dokumentu (KNIZ-detail-dokumentu, 12. 10. 2026) ────────────────
+   Obsah a inšpektor (SwiftUI `.inspector`, Q1). Pod 1024 px je Stav hneď
+   pod hlavičkou a zvyšok inšpektora pod obsahom — poradie robia oblasti
+   mriežky, nie poradie v kóde. */
+.page-title .tag { vertical-align: 0.25em; font-size: 12px; letter-spacing: 0; }
+.doc-headline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; font-size: var(--fs-small); color: var(--muted); overflow-wrap: anywhere; }
+.doc-headline code { font-size: 12px; }
+.doc-failed { margin: 0 0 18px; align-items: center; }
+.doc-failed .lnote-text { flex: 1 1 200px; }
+.doc-grid {
+  display: grid; gap: 18px; align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "stat" "main" "insp";
+}
+.doc-main { grid-area: main; display: grid; gap: 18px; min-width: 0; }
+.doc-main > .card { margin: 0; }
+.doc-stat { grid-area: stat; display: grid; gap: 4px; padding: 14px 16px; }
+.doc-stat > b { font-size: 16px; font-weight: 650; line-height: 1.35; }
+.doc-stat > span { font-size: var(--fs-small); color: var(--muted); }
+.doc-insp { grid-area: insp; display: grid; gap: 16px; min-width: 0; }
+@media (min-width: 1024px) {
+  .doc-grid { grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "main stat" "main insp"; grid-template-rows: auto 1fr; }
+  .doc-main { grid-row: 1 / span 2; }
+}
+.insp-sec { display: grid; gap: 6px; min-width: 0; }
+.insp-title { margin: 0; font-size: 13px; font-weight: 650; color: var(--muted); }
+.doc-stat .insp-title { margin-bottom: 2px; }
+.insp-card { padding: 14px 16px; display: grid; gap: 8px; }
+.insp-card > p { margin: 0; }
+.insp-rows { padding: 0; overflow: hidden; }
+.insp-rows .labeled-row { grid-template-columns: 110px minmax(0, 1fr); font-size: 14px; }
+.insp-rows .labeled-row > span:first-child { font-size: 13px; }
+.insp-note { display: block; font-size: 12px; color: var(--muted); }
+.insp-empty { margin: 0; padding: 12px 16px; font-size: var(--fs-small); }
+.insp-warnings { margin: 0; padding: 6px 16px 6px 34px; font-size: 12.5px; }
+.insp-foot { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+
+/* Karta postupu: Teraz → Pred zverejnením → päta → História (Q2, Q5). */
+.flow-sec-title { margin: 0; font-size: 15px; font-weight: 650; }
+.flow-sec-title .quiet { font-size: var(--fs-small); font-weight: 500; }
+.flow-form { display: grid; gap: 14px; }
+.flow-form > * { margin: 0; }
+.flow-body + .flow-body { border-top: 1px solid var(--line); }
+.flow-band + .flow-body { border-top: 0; }
+.doc-band-text { display: grid; gap: 6px; }
+.doc-band-text .quote { display: block; color: var(--ink); font-size: 14px; quotes: "„" "“"; }
+.flow-locked { font-size: var(--fs-small); }
+.flow-confirm { border-top: 1px solid var(--line); padding: 16px 18px 18px; }
+.flow-confirm h3 { margin: 0; font-size: 16px; color: var(--bad-fg); }
+.flow-confirm .field-input { max-width: none; }
+.flow-effects { margin: 0; padding-left: 20px; font-size: 13.5px; display: grid; gap: 2px; }
+
+/* Kontrolný zoznam (`List` s ikonou stavu). Riadok s úkonom má tlačidlo 44 px. */
+.chk-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); overflow: hidden; }
+.chk { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; padding: 10px 12px; min-height: 52px; }
+.chk + .chk::before { content: ""; position: absolute; top: 0; left: 48px; right: 0; border-top: 1px solid var(--line); }
+.chk-ico { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 800; border: 1.5px solid var(--line-strong, var(--line)); color: var(--muted); }
+.chk-ico.is-ok { background: var(--ok-fg); border-color: var(--ok-fg); color: var(--surface); }
+.chk-ico.is-wait { border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.chk-ico.is-todo { border-color: var(--warn-fg); color: var(--warn-fg); background: var(--warn-bg); }
+.chk-ico.is-bad { background: var(--bad-fg); border-color: var(--bad-fg); color: var(--surface); }
+.chk-main { display: grid; gap: 1px; min-width: 0; overflow-wrap: anywhere; }
+.chk-main > b { font-weight: 600; font-size: 14.5px; }
+.chk-main > small { font-size: 12.5px; color: var(--muted); }
+.chk-act { min-height: 44px; }
+.chk-panel { grid-column: 2 / -1; }
+.chk-form { display: grid; gap: 10px; padding: 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+
+/* Časový rad histórie (Q5) — najnovšie hore. */
+.tl { list-style: none; margin: 0; padding: 0; display: grid; }
+.tl-item { position: relative; display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 2px 10px; padding: 6px 0; font-size: 13.5px; }
+.tl-item + .tl-item::after { content: ""; position: absolute; left: 4px; top: -6px; height: 12px; border-left: 1.5px solid var(--line); }
+.tl-dot { width: 9px; height: 9px; margin-top: 6px; border-radius: 50%; background: var(--line-strong, var(--muted)); }
+.tl-main { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.tl-main .quote { display: block; font-size: 13.5px; padding: 8px 12px; quotes: "„" "“"; }
+.tl-item time { font-size: 12px; color: var(--muted); white-space: nowrap; padding-top: 1px; }
+.tl-item.is-approved .tl-dot { background: var(--ok-fg); }
+.tl-item.is-approved .tl-main > span { color: var(--ok-fg); }
+.tl-item.is-rejected .tl-dot { background: var(--bad-fg); }
+.tl-item.is-rejected .tl-main > span { color: var(--bad-fg); }
+.tl-item.is-cancelled .tl-main > span { color: var(--muted); }
+.tl-more { font-size: var(--fs-small); }
+@media (max-width: 639px) {
+  .tl-item { grid-template-columns: 14px minmax(0, 1fr); }
+  .tl-item time { grid-column: 2; }
+}
+
+/* Znenia (Q7, `List`): platné rozbalené s `.labeled-row`, staršie po riadku. */
+.versions { padding: 0; overflow: visible; }
+.versions-head { display: flex; align-items: baseline; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.versions-head h2 { margin: 0; font-size: var(--fs-section); }
+.vcur { display: grid; gap: 10px; padding: 14px 18px; scroll-margin-top: 15px; }
+.vcur + .vcur, .vcur + .older { border-top: 1px solid var(--line); }
+.vcur-head { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
+.vcur-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
+.vcur-more { margin-left: auto; }
+.vcur-more > summary { width: 44px; height: 44px; border: 1px solid var(--line); }
+.vcur-rows { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.vcur-rows .labeled-row { font-size: 14px; }
+.vcur-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.vcur-acts .button[aria-current="true"] { background: var(--surface-2); }
+.versions .older { margin: 0; }
+.versions .older-list { margin: 0; }
+.more-menu--notes a { display: grid; gap: 1px; align-content: center; padding: 7px 10px; }
+.more-menu--notes small { font-size: 12px; color: var(--muted); }
+.doc-fix h4 { margin: 0; }
+.doc-fix-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0; font-size: var(--fs-small); }
+@media (max-width: 1023px) {
+  .vcur-acts .button, .chk-act, .flow-foot .button { min-height: 44px; }
+}
 .doc-archive { align-items: flex-start; flex-wrap: wrap; margin: 0 0 18px; }
 .doc-archive-text { display: grid; gap: 3px; flex: 1 1 260px; min-width: 0; }
 .doc-archive-text strong { font-size: 15px; }

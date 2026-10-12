@@ -10,6 +10,34 @@
 
 ---
 
+## 2026-10-12 — detail dokumentu v knižnici (KNIZ-detail-dokumentu)
+
+**Čo sa zmenilo:** `/library/[id]` podľa návrhu (Q1–Q9 A). Dáta a serverové
+akcie ostali, prestavaná je vykresľovacia časť: `.doc-grid` s inšpektorom
+(Stav, Potvrdenia, Dokument, Text), karta postupu Teraz → Pred zverejnením →
+päta → História, sekcia Znenia, Ďalšie akcie len pre celý dokument. Časový
+rad skladá čisté `lib/documentTimeline.ts` (kolá, rozhodnutia, stiahnutie
+s dôvodom z poznámky kola) s testom. Nová akcia `setDraftResponsibleAction`
+(zmena zodpovednej osoby počas kola — `saveDraftResponsible` to už vedel).
+Tlačidlá kroku sú v päte cez `form="flow-step"`, aby formuláre panelov
+v kontrolnom zozname neboli vnorené.
+
+**Rozpor so zadaním:** zadanie písalo „správca len ako náhradník"; platí
+D155 (správca smie vždy) a návrh aj kód sa riadia ním — chyba bola
+v zadaní, nie v návrhu.
+
+**Odchýlky od návrhu:** panely v karte sú `?open=draftBasis` a
+`?open=draftResponsible` (nie `?open=basis#flow`) — `basis` už otvára panel
+pri platnom znení a oba by sa otvorili naraz. Ponuka ••• platného znenia je
+`<details>` ako pri starších, nie `?menu=`. Schvaľovatelia v kroku 1 ostali
+`PeopleSearch`. Oprava textu je pod znením zbalená do riadku s odkazom
+(rozdiel a formulár až po „Opraviť text"). Mená sa neskloňujú („Čaká sa na
+schválenie: Agáta Galková"). „Nové znenie začaté" v histórii nie je — nemá
+dátum. Poznámka o kanáli FAQ je v Stave. Pri `.doc-meta` hrozila kolízia
+so zoznamom knižnice, trieda je `.doc-headline`.
+
+---
+
 ## 2026-10-09 – 2026-10-12 — kontrola súladu, manuály ISSF na schválenie, FAQ z histórie
 
 **Čo sa zmenilo:** ťažba FAQ z histórie helpdesku (ADR-030, #328–#335)

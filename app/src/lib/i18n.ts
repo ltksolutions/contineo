@@ -3776,6 +3776,127 @@ interface Dictionary {
     }
     /** FAQ ako druh dokumentu (ADR-028, D164): založenie, editor záznamov, texty znenia a indexu. */
     /** Import článkov z MCP konektora (ADR-029, použitie B). */
+    /** Detail dokumentu (KNIZ-detail-dokumentu, 12. 10. 2026). */
+    docView: {
+      state: { draft: string; inReview: string; approved: string; published: string; archiving: string; archived: string; expired: string }
+      proposedFrom: (date: string) => string
+      invalidFrom: (date: string) => string
+      fromConnector: (name: string) => string
+      processingRunning: string
+      processingFailed: string
+      processingFailedNote: string
+      processAgain: string
+      statusLink: string
+      publishLink: string
+      stateHeading: string
+      st: {
+        firstPrep: string
+        newPrep: string
+        waitingFor: (names: string) => string
+        approvedYou: string
+        assign: string
+        validFrom: (date: string) => string
+        validUntil: (date: string) => string
+        archivedFrom: (date: string) => string
+        nothing: string
+      }
+      stDetail: {
+        round: (n: number, date: string) => string
+        rejected: (n: number, date: string) => string
+        cancelled: (n: number, date: string) => string
+        approved: (n: number, date: string) => string
+        current: (date: string) => string
+        responsible: (name: string) => string
+        nothingPrepared: string
+        upcoming: (date: string) => string
+        archivedPrep: string
+      }
+      docHeading: string
+      rows: { category: string; folder: string; tags: string; access: string; language: string; origin: string; identifier: string }
+      originManual: string
+      originConnector: (name: string) => string
+      textHeading: string
+      files: { draftPdf: string; draftSource: string; pdf: string; source: string; original: string }
+      draftPdfNote: string
+      sourceNote: string
+      uploaded: (name: string, date: string) => string
+      editor: string
+      chunks: string
+      faqEntries: string
+      noFiles: string
+      now: string
+      roundOf: (n: number, decided: number, total: number) => string
+      lockedLine: string
+      lockedNote: string
+      approversRound: (n: number) => string
+      beforePublish: string
+      doneOf: (n: number, total: number) => string
+      chk: {
+        approval: string
+        approvalNone: string
+        approvalNoneRound: (n: number) => string
+        approvalWaiting: (decided: number, total: number, names: string) => string
+        approvalDone: (n: number, date: string) => string
+        responsible: string
+        responsibleNone: string
+        you: string
+        basis: string
+        basisUnset: string
+        basisByYou: string
+        basisByOther: (name: string) => string
+        basisNoResponsible: string
+        basisGone: string
+        basisNotApproval: string
+        basisSetBy: (name: string, date: string) => string
+        effective: string
+        effectiveMissing: string
+        effectiveMeta: (date: string) => string
+      }
+      set: string
+      change: string
+      close: string
+      withdrawOpen: string
+      withdrawHint: string
+      withdrawTitle: (n: number) => string
+      withdrawBack: string
+      withdrawTasks: (names: string) => string
+      withdrawCancelled: string
+      withdrawReason: string
+      withdrawReasonHint: string
+      changeResponsible: string
+      saveResponsible: string
+      responsibleSaved: string
+      rejectedNext: (n: number) => string
+      history: string
+      historyAll: (n: number) => string
+      historyLess: string
+      ev: {
+        submitted: (n: number, who: string) => string
+        approved: (who: string, n: number) => string
+        rejected: (who: string, n: number) => string
+        cancelled: (n: number, who: string) => string
+        published: (who: string) => string
+        responsible: (from: string, to: string, who: string) => string
+        basis: (label: string, who: string) => string
+        fix: (who: string) => string
+        textFix: (who: string) => string
+        archived: (who: string) => string
+      }
+      versions: string
+      validTag: (date: string) => string
+      current: string
+      acksRow: string
+      acksValue: (n: number, total: number, percent: number) => string
+      acksNone: string
+      more: string
+      revokeItem: string
+      revokeNote: string
+      reindexItem: string
+      reindexNote: string
+      reindexAllNote: string
+      reindexShort: string
+      restoreNote: string
+    }
     connectorImport: {
       heading: string
       intro: string
@@ -8663,6 +8784,126 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       carryOverFailed: "Znenie je zverejnené, prenos pridelení sa ale nepodaril:",
       failed: "Nepodarilo sa to. Skús to znova.",
     },
+    docView: {
+      state: { draft: "Koncept", inReview: "V schvaľovaní", approved: "Schválené", published: "Platí", archiving: "Archivuje sa", archived: "Archivovaný", expired: "Neplatí" },
+      proposedFrom: (d) => `navrhovaná účinnosť ${d}`,
+      invalidFrom: (d) => `neplatí od ${d}`,
+      fromConnector: (n) => `z konektora ${n}`,
+      processingRunning: "Spracúva sa",
+      processingFailed: "Chyba spracovania",
+      processingFailedNote: "Text sa nepodarilo spracovať — asistent z neho zatiaľ neodpovedá.",
+      processAgain: "Spracovať znova",
+      statusLink: "Stav schvaľovania",
+      publishLink: "Zverejniť…",
+      stateHeading: "Stav",
+      st: {
+        firstPrep: "Pripravuje sa prvé znenie — na ťahu ste vy",
+        newPrep: "Nové znenie je v príprave — na ťahu ste vy",
+        waitingFor: (names) => `Čaká sa na schválenie: ${names}`,
+        approvedYou: "Schválené — na ťahu ste vy",
+        assign: "Zverejnené — pridelenia sa ešte neprenášali",
+        validFrom: (d) => `Platí od ${d}`,
+        validUntil: (d) => `Platí ešte do ${d} — potom sa archivuje`,
+        archivedFrom: (d) => `Archivovaný od ${d}`,
+        nothing: "Zatiaľ bez znenia",
+      },
+      stDetail: {
+        round: (n, d) => `Kolo ${n} · predložené ${d}`,
+        rejected: (n, d) => `Kolo ${n} zamietnuté ${d}`,
+        cancelled: (n, d) => `Kolo ${n} stiahnuté ${d}`,
+        approved: (n, d) => `Kolo ${n} schválené ${d}`,
+        current: (d) => `platí znenie od ${d}`,
+        responsible: (n) => `zodpovedá ${n}`,
+        nothingPrepared: "Nič sa nepripravuje",
+        upcoming: (d) => `od ${d} platí novela`,
+        archivedPrep: "Nové znenie je v príprave — zverejnením predpis znova platí.",
+      },
+      docHeading: "Dokument",
+      rows: { category: "Druh", folder: "Priečinok", tags: "Značky", access: "Prístup", language: "Jazyk", origin: "Pôvod", identifier: "Identifikátor" },
+      originManual: "Nahraté ručne",
+      originConnector: (n) => `Z konektora ${n}`,
+      textHeading: "Text",
+      files: { draftPdf: "PDF konceptu", draftSource: "Zdroj konceptu", pdf: "Platné PDF", source: "Zdroj", original: "Pôvodný súbor" },
+      draftPdfNote: "schvaľuje sa",
+      sourceNote: "predloha ďalšieho znenia",
+      uploaded: (name, d) => `nahraté ${d} · ${name}`,
+      editor: "Editor textu",
+      chunks: "Členenie",
+      faqEntries: "Záznamy FAQ",
+      noFiles: "Zatiaľ bez súborov.",
+      now: "Teraz",
+      roundOf: (n, decided, total) => `kolo ${n} · ${decided} z ${total}`,
+      lockedLine: "PDF · text · údaje o znení",
+      lockedNote: "zamknuté počas kola",
+      approversRound: (n) => `Schvaľovatelia kola ${n}`,
+      beforePublish: "Pred zverejnením",
+      doneOf: (n, total) => `${n} z ${total} hotové`,
+      chk: {
+        approval: "Schválenie",
+        approvalNone: "ešte sa nepredložilo",
+        approvalNoneRound: (n) => `kolo ${n} sa ešte nepredložilo`,
+        approvalWaiting: (decided, total, names) => `${decided} z ${total} · čaká ${names}`,
+        approvalDone: (n, d) => `kolo ${n} · schválené ${d}`,
+        responsible: "Zodpovedná osoba",
+        responsibleNone: "Neurčená — povinná pri zverejnení",
+        you: "(vy)",
+        basis: "Právny základ",
+        basisUnset: "Neurčený",
+        basisByYou: "Určujete vy ako zodpovedná osoba.",
+        basisByOther: (n) => `Určí ${n} — dostáva o tom upozornenie.`,
+        basisNoResponsible: "Príprava nemá zodpovednú osobu — určí správca obsahu.",
+        basisGone: "Zodpovedná osoba už nie je aktívna — určí správca obsahu.",
+        basisNotApproval: "Nie je súčasť schválenia — dá sa určiť aj počas kola.",
+        basisSetBy: (n, d) => `určené ${d} · ${n}`,
+        effective: "Dátum účinnosti",
+        effectiveMissing: "Chýba v údajoch o znení",
+        effectiveMeta: (d) => `${d} · z údajov o znení`,
+      },
+      set: "Určiť",
+      change: "Zmeniť",
+      close: "Zrušiť",
+      withdrawOpen: "Stiahnuť kolo…",
+      withdrawHint: "Vráti znenie do prípravy.",
+      withdrawTitle: (n) => `Stiahnuť kolo ${n}?`,
+      withdrawBack: "Znenie sa vráti do prípravy a údaje sa odomknú.",
+      withdrawTasks: (names) => `${names}: zmizne úloha schváliť.`,
+      withdrawCancelled: "Kolo sa zapíše ako zrušené — sivé, nikto nič nevytkol.",
+      withdrawReason: "Dôvod",
+      withdrawReasonHint: "Prečo kolo sťahujete — uvidia to schvaľovatelia",
+      changeResponsible: "Zmeniť zodpovednú osobu",
+      saveResponsible: "Uložiť zodpovednú osobu",
+      responsibleSaved: "Zodpovedná osoba nového znenia je uložená.",
+      rejectedNext: (n) => `Upravte PDF alebo údaje a predložte kolo ${n}. Predložiť sa dá aj bez výmeny súborov.`,
+      history: "História",
+      historyAll: (n) => `Celá história (${n})`,
+      historyLess: "Len posledné",
+      ev: {
+        submitted: (n, who) => `Predložené na schválenie · kolo ${n} · ${who}`,
+        approved: (who, n) => `Schválenie · ${who} · kolo ${n}`,
+        rejected: (who, n) => `Zamietnutie · ${who} · kolo ${n}`,
+        cancelled: (n, who) => `Stiahnuté · kolo ${n} · ${who}`,
+        published: (who) => `Zverejnené · ${who}`,
+        responsible: (from, to, who) => `Zodpovedná osoba ${from} → ${to} · ${who}`,
+        basis: (label, who) => `Právny základ: ${label} · ${who}`,
+        fix: (who) => `Oprava údajov · ${who}`,
+        textFix: (who) => `Oprava textu · ${who}`,
+        archived: (who) => `Archivované · ${who}`,
+      },
+      versions: "Znenia",
+      validTag: (d) => `Platí od ${d}`,
+      current: "Platí",
+      acksRow: "Potvrdenia",
+      acksValue: (n, total, p) => `${n} z ${total} · ${p} %`,
+      acksNone: "nikomu nepridelené",
+      more: "Ďalšie úkony znenia",
+      revokeItem: "Odvolať potvrdenia…",
+      revokeNote: "Ľudia potvrdia znenie znova",
+      reindexItem: "Preindexovať toto znenie",
+      reindexNote: "Text sa nemení, potvrdenia ostávajú.",
+      reindexAllNote: "Text sa nemení, potvrdenia ostávajú.",
+      reindexShort: "Preindexovať",
+      restoreNote: "Predpis znova platí. Odvolané pridelenia sa neobnovia.",
+    },
     connectorImport: {
       heading: "Import zo servera",
       intro: "Vyhľadaj články na pripojenom MCP serveri a vybrané ulož ako koncepty dokumentov. Ďalej idú bežnou cestou: metadáta, schválenie, zverejnenie. Server nemá zoznam súborov — vyberá sa z výsledkov hľadania.",
@@ -13495,6 +13736,126 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       carryOverFailed: "Znění je zveřejněno, přenos přidělení se ale nepodařil:",
       failed: "Nepodařilo se to. Zkus to znovu.",
     },
+    docView: {
+      state: { draft: "Koncept", inReview: "Ve schvalování", approved: "Schváleno", published: "Platí", archiving: "Archivuje se", archived: "Archivovaný", expired: "Neplatí" },
+      proposedFrom: (d) => `navrhovaná účinnost ${d}`,
+      invalidFrom: (d) => `neplatí od ${d}`,
+      fromConnector: (n) => `z konektoru ${n}`,
+      processingRunning: "Zpracovává se",
+      processingFailed: "Chyba zpracování",
+      processingFailedNote: "Text se nepodařilo zpracovat — asistent z něj zatím neodpovídá.",
+      processAgain: "Zpracovat znovu",
+      statusLink: "Stav schvalování",
+      publishLink: "Zveřejnit…",
+      stateHeading: "Stav",
+      st: {
+        firstPrep: "Připravuje se první znění — jste na tahu vy",
+        newPrep: "Nové znění je v přípravě — jste na tahu vy",
+        waitingFor: (names) => `Čeká se na schválení: ${names}`,
+        approvedYou: "Schváleno — jste na tahu vy",
+        assign: "Zveřejněno — přidělení se ještě nepřenesla",
+        validFrom: (d) => `Platí od ${d}`,
+        validUntil: (d) => `Platí ještě do ${d} — potom se archivuje`,
+        archivedFrom: (d) => `Archivovaný od ${d}`,
+        nothing: "Zatím bez znění",
+      },
+      stDetail: {
+        round: (n, d) => `Kolo ${n} · předloženo ${d}`,
+        rejected: (n, d) => `Kolo ${n} zamítnuto ${d}`,
+        cancelled: (n, d) => `Kolo ${n} staženo ${d}`,
+        approved: (n, d) => `Kolo ${n} schváleno ${d}`,
+        current: (d) => `platí znění od ${d}`,
+        responsible: (n) => `odpovídá ${n}`,
+        nothingPrepared: "Nic se nepřipravuje",
+        upcoming: (d) => `od ${d} platí novela`,
+        archivedPrep: "Nové znění je v přípravě — zveřejněním předpis znovu platí.",
+      },
+      docHeading: "Dokument",
+      rows: { category: "Druh", folder: "Složka", tags: "Štítky", access: "Přístup", language: "Jazyk", origin: "Původ", identifier: "Identifikátor" },
+      originManual: "Nahráno ručně",
+      originConnector: (n) => `Z konektoru ${n}`,
+      textHeading: "Text",
+      files: { draftPdf: "PDF konceptu", draftSource: "Zdroj konceptu", pdf: "Platné PDF", source: "Zdroj", original: "Původní soubor" },
+      draftPdfNote: "schvaluje se",
+      sourceNote: "předloha dalšího znění",
+      uploaded: (name, d) => `nahráno ${d} · ${name}`,
+      editor: "Editor textu",
+      chunks: "Členění",
+      faqEntries: "Záznamy FAQ",
+      noFiles: "Zatím bez souborů.",
+      now: "Teď",
+      roundOf: (n, decided, total) => `kolo ${n} · ${decided} z ${total}`,
+      lockedLine: "PDF · text · údaje o znění",
+      lockedNote: "zamčeno během kola",
+      approversRound: (n) => `Schvalovatelé kola ${n}`,
+      beforePublish: "Před zveřejněním",
+      doneOf: (n, total) => `${n} z ${total} hotovo`,
+      chk: {
+        approval: "Schválení",
+        approvalNone: "ještě se nepředložilo",
+        approvalNoneRound: (n) => `kolo ${n} se ještě nepředložilo`,
+        approvalWaiting: (decided, total, names) => `${decided} z ${total} · čeká ${names}`,
+        approvalDone: (n, d) => `kolo ${n} · schváleno ${d}`,
+        responsible: "Odpovědná osoba",
+        responsibleNone: "Neurčena — povinná při zveřejnění",
+        you: "(vy)",
+        basis: "Právní základ",
+        basisUnset: "Neurčen",
+        basisByYou: "Určujete vy jako odpovědná osoba.",
+        basisByOther: (n) => `Určí ${n} — dostává o tom upozornění.`,
+        basisNoResponsible: "Příprava nemá odpovědnou osobu — určí správce obsahu.",
+        basisGone: "Odpovědná osoba už není aktivní — určí správce obsahu.",
+        basisNotApproval: "Není součástí schválení — lze určit i během kola.",
+        basisSetBy: (n, d) => `určeno ${d} · ${n}`,
+        effective: "Datum účinnosti",
+        effectiveMissing: "Chybí v údajích o znění",
+        effectiveMeta: (d) => `${d} · z údajů o znění`,
+      },
+      set: "Určit",
+      change: "Změnit",
+      close: "Zrušit",
+      withdrawOpen: "Stáhnout kolo…",
+      withdrawHint: "Vrátí znění do přípravy.",
+      withdrawTitle: (n) => `Stáhnout kolo ${n}?`,
+      withdrawBack: "Znění se vrátí do přípravy a údaje se odemknou.",
+      withdrawTasks: (names) => `${names}: zmizí úkol schválit.`,
+      withdrawCancelled: "Kolo se zapíše jako zrušené — šedé, nikdo nic nevytkl.",
+      withdrawReason: "Důvod",
+      withdrawReasonHint: "Proč kolo stahujete — uvidí to schvalovatelé",
+      changeResponsible: "Změnit odpovědnou osobu",
+      saveResponsible: "Uložit odpovědnou osobu",
+      responsibleSaved: "Odpovědná osoba nového znění je uložena.",
+      rejectedNext: (n) => `Upravte PDF nebo údaje a předložte kolo ${n}. Předložit lze i bez výměny souborů.`,
+      history: "Historie",
+      historyAll: (n) => `Celá historie (${n})`,
+      historyLess: "Jen poslední",
+      ev: {
+        submitted: (n, who) => `Předloženo ke schválení · kolo ${n} · ${who}`,
+        approved: (who, n) => `Schválení · ${who} · kolo ${n}`,
+        rejected: (who, n) => `Zamítnutí · ${who} · kolo ${n}`,
+        cancelled: (n, who) => `Staženo · kolo ${n} · ${who}`,
+        published: (who) => `Zveřejněno · ${who}`,
+        responsible: (from, to, who) => `Odpovědná osoba ${from} → ${to} · ${who}`,
+        basis: (label, who) => `Právní základ: ${label} · ${who}`,
+        fix: (who) => `Oprava údajů · ${who}`,
+        textFix: (who) => `Oprava textu · ${who}`,
+        archived: (who) => `Archivováno · ${who}`,
+      },
+      versions: "Znění",
+      validTag: (d) => `Platí od ${d}`,
+      current: "Platí",
+      acksRow: "Potvrzení",
+      acksValue: (n, total, p) => `${n} z ${total} · ${p} %`,
+      acksNone: "nikomu nepřiděleno",
+      more: "Další úkony znění",
+      revokeItem: "Odvolat potvrzení…",
+      revokeNote: "Lidé potvrdí znění znovu",
+      reindexItem: "Přeindexovat toto znění",
+      reindexNote: "Text se nemění, potvrzení zůstávají.",
+      reindexAllNote: "Text se nemění, potvrzení zůstávají.",
+      reindexShort: "Přeindexovat",
+      restoreNote: "Předpis znovu platí. Odvolaná přidělení se neobnoví.",
+    },
     connectorImport: {
       heading: "Import ze serveru",
       intro: "Vyhledej články na připojeném MCP serveru a vybrané ulož jako koncepty dokumentů. Dál jdou běžnou cestou: metadata, schválení, zveřejnění. Server nemá seznam souborů — vybírá se z výsledků hledání.",
@@ -18312,6 +18673,126 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftPrepared: "Preparation saved.",
       carryOverFailed: "The version is published, but carrying over assignments failed:",
       failed: "That did not work. Try again.",
+    },
+    docView: {
+      state: { draft: "Draft", inReview: "In review", approved: "Approved", published: "In effect", archiving: "Being archived", archived: "Archived", expired: "Not in effect" },
+      proposedFrom: (d) => `proposed effective date ${d}`,
+      invalidFrom: (d) => `not in effect since ${d}`,
+      fromConnector: (n) => `from connector ${n}`,
+      processingRunning: "Processing",
+      processingFailed: "Processing failed",
+      processingFailedNote: "The text could not be processed — the assistant does not answer from it yet.",
+      processAgain: "Process again",
+      statusLink: "Approval status",
+      publishLink: "Publish…",
+      stateHeading: "Status",
+      st: {
+        firstPrep: "The first version is being prepared — it's your turn",
+        newPrep: "A new version is being prepared — it's your turn",
+        waitingFor: (names) => `Waiting for approval: ${names}`,
+        approvedYou: "Approved — it's your turn",
+        assign: "Published — assignments not carried over yet",
+        validFrom: (d) => `In effect from ${d}`,
+        validUntil: (d) => `In effect until ${d} — then archived`,
+        archivedFrom: (d) => `Archived since ${d}`,
+        nothing: "No version yet",
+      },
+      stDetail: {
+        round: (n, d) => `Round ${n} · submitted ${d}`,
+        rejected: (n, d) => `Round ${n} rejected ${d}`,
+        cancelled: (n, d) => `Round ${n} withdrawn ${d}`,
+        approved: (n, d) => `Round ${n} approved ${d}`,
+        current: (d) => `version from ${d} in effect`,
+        responsible: (n) => `responsible: ${n}`,
+        nothingPrepared: "Nothing in preparation",
+        upcoming: (d) => `amendment in effect from ${d}`,
+        archivedPrep: "A new version is being prepared — publishing it puts the document back in effect.",
+      },
+      docHeading: "Document",
+      rows: { category: "Type", folder: "Folder", tags: "Tags", access: "Access", language: "Language", origin: "Origin", identifier: "Identifier" },
+      originManual: "Uploaded manually",
+      originConnector: (n) => `From connector ${n}`,
+      textHeading: "Text",
+      files: { draftPdf: "Draft PDF", draftSource: "Draft source", pdf: "Current PDF", source: "Source", original: "Original file" },
+      draftPdfNote: "under approval",
+      sourceNote: "template for the next version",
+      uploaded: (name, d) => `uploaded ${d} · ${name}`,
+      editor: "Text editor",
+      chunks: "Chunks",
+      faqEntries: "FAQ entries",
+      noFiles: "No files yet.",
+      now: "Now",
+      roundOf: (n, decided, total) => `round ${n} · ${decided} of ${total}`,
+      lockedLine: "PDF · text · version details",
+      lockedNote: "locked during the round",
+      approversRound: (n) => `Approvers of round ${n}`,
+      beforePublish: "Before publishing",
+      doneOf: (n, total) => `${n} of ${total} done`,
+      chk: {
+        approval: "Approval",
+        approvalNone: "not submitted yet",
+        approvalNoneRound: (n) => `round ${n} not submitted yet`,
+        approvalWaiting: (decided, total, names) => `${decided} of ${total} · waiting for ${names}`,
+        approvalDone: (n, d) => `round ${n} · approved ${d}`,
+        responsible: "Responsible person",
+        responsibleNone: "Not set — required when publishing",
+        you: "(you)",
+        basis: "Legal basis",
+        basisUnset: "Not set",
+        basisByYou: "You set it as the responsible person.",
+        basisByOther: (n) => `${n} sets it — they have been notified.`,
+        basisNoResponsible: "The preparation has no responsible person — a content manager sets it.",
+        basisGone: "The responsible person is no longer active — a content manager sets it.",
+        basisNotApproval: "Not part of the approval — can be set during the round too.",
+        basisSetBy: (n, d) => `set ${d} · ${n}`,
+        effective: "Effective date",
+        effectiveMissing: "Missing in version details",
+        effectiveMeta: (d) => `${d} · from version details`,
+      },
+      set: "Set",
+      change: "Change",
+      close: "Cancel",
+      withdrawOpen: "Withdraw round…",
+      withdrawHint: "Returns the version to preparation.",
+      withdrawTitle: (n) => `Withdraw round ${n}?`,
+      withdrawBack: "The version returns to preparation and its details unlock.",
+      withdrawTasks: (names) => `${names}: the approval task disappears.`,
+      withdrawCancelled: "The round is recorded as withdrawn — grey, nobody objected.",
+      withdrawReason: "Reason",
+      withdrawReasonHint: "Why you are withdrawing the round — approvers will see it",
+      changeResponsible: "Change responsible person",
+      saveResponsible: "Save responsible person",
+      responsibleSaved: "The responsible person of the new version was saved.",
+      rejectedNext: (n) => `Fix the PDF or details and submit round ${n}. You can submit without replacing files.`,
+      history: "History",
+      historyAll: (n) => `Full history (${n})`,
+      historyLess: "Latest only",
+      ev: {
+        submitted: (n, who) => `Submitted for approval · round ${n} · ${who}`,
+        approved: (who, n) => `Approval · ${who} · round ${n}`,
+        rejected: (who, n) => `Rejection · ${who} · round ${n}`,
+        cancelled: (n, who) => `Withdrawn · round ${n} · ${who}`,
+        published: (who) => `Published · ${who}`,
+        responsible: (from, to, who) => `Responsible person ${from} → ${to} · ${who}`,
+        basis: (label, who) => `Legal basis: ${label} · ${who}`,
+        fix: (who) => `Details corrected · ${who}`,
+        textFix: (who) => `Text corrected · ${who}`,
+        archived: (who) => `Archived · ${who}`,
+      },
+      versions: "Versions",
+      validTag: (d) => `In effect from ${d}`,
+      current: "In effect",
+      acksRow: "Acknowledgements",
+      acksValue: (n, total, p) => `${n} of ${total} · ${p} %`,
+      acksNone: "not assigned to anyone",
+      more: "More version actions",
+      revokeItem: "Revoke acknowledgements…",
+      revokeNote: "People acknowledge the version again",
+      reindexItem: "Re-index this version",
+      reindexNote: "The text does not change, acknowledgements stay.",
+      reindexAllNote: "The text does not change, acknowledgements stay.",
+      reindexShort: "Re-index",
+      restoreNote: "The document is in effect again. Revoked assignments are not restored.",
     },
     connectorImport: {
       heading: "Import from a server",

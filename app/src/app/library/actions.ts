@@ -1765,3 +1765,36 @@ export async function resyncConnectorDocumentAction(fd: FormData) {
   if (failed) q.set("error", "1")
   redirect(`/library/${encodeURIComponent(id)}?${q.toString()}`)
 }
+
+/**
+ * Zmena zodpovednej osoby nového znenia mimo kroku 1 (KNIZ-detail-dokumentu,
+ * 12. 10. 2026). Nie je súčasťou schválenia (D109), takže sa smie meniť aj
+ * počas kola a po schválení — dovtedy sa dala len v kroku 1 a pri zverejnení.
+ */
+export async function setDraftResponsibleAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  const responsibleId = fieldText(fd, "responsiblePersonId")
+  let message = dictionary(self.language).library.docView.responsibleSaved
+  let error = false
+  try {
+    if (responsibleId && await saveDraftResponsible(self.companyCode, id, responsibleId, self.email)) {
+      // Rovnako ako v kroku 1: do zvončeka, keď to nie je ten, kto ukladá (D139).
+      if (responsibleId !== self.personId) {
+        await notify({
+          companyCode: self.companyCode,
+          personId: responsibleId,
+          kind: "draftResponsibleAssigned",
+          params: { documentId: id, documentTitle: await documentTitleFor(self.companyCode, id) },
+        })
+      }
+    }
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#flow`)
+}
