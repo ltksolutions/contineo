@@ -285,6 +285,16 @@ interface Dictionary {
    * Pripomienka termínu (ADR-004). Dva tóny jednej šablóny — text hovorí
    * stav, nie len fakt.
    */
+  /** Ranný súhrn Kuriéra (ADR-033, D207) — len predmety, nikdy text správy. */
+  courierDigestEmail: {
+    subject: (organisation: string, n: number) => string
+    subtitle: string
+    intro: (n: number) => string
+    /** „Peter Malý · Rozpis súťaží" */
+    line: (from: string, subject: string) => string
+    button: string
+    note: string
+  }
   dueReminderEmail: {
     subjectSoon: (organisation: string) => string
     subjectOver: (organisation: string) => string
@@ -360,6 +370,14 @@ interface Dictionary {
      * kanál. `{tickets}` doplní stránka z lehôt organizácie.
      */
     helpdesk: {
+      purpose: string
+      data: [string, string][]
+      basis: string
+      retention: [string, string][]
+      recipients: string
+    }
+    /** Kuriér (ADR-033, D209) — každá organizácia; `{courier}` doplní stránka z lehôt. */
+    courier: {
       purpose: string
       data: [string, string][]
       basis: string
@@ -536,6 +554,8 @@ interface Dictionary {
       answersMonthsNote: string
       ticketMonths: string
       ticketMonthsNote: string
+      courierMonths: string
+      courierMonthsNote: string
       fixed: string
       warning: string
       save: string
@@ -5013,7 +5033,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       privacyLink: "Ochrana osobných údajov",
     },
 
-    dueReminderEmail: {
+    courierDigestEmail: {
+    subject: (organisation, n) => `${organisation} — ${n === 1 ? "1 neprečítaná správa" : n < 5 ? `${n} neprečítané správy` : `${n} neprečítaných správ`} v Kuriérovi`,
+    subtitle: "Kuriér",
+    intro: n => (n === 1 ? "Máte 1 neprečítanú správu:" : n < 5 ? `Máte ${n} neprečítané správy:` : `Máte ${n} neprečítaných správ:`),
+    line: (from, subject) => `${from} · ${subject}`,
+    button: "Otvoriť Kuriér",
+    note: "Správy zostávajú v Contineo; tento e-mail nesie len predmety. Odpovedá sa v aplikácii, nie na tento e-mail.",
+  },
+  dueReminderEmail: {
       subjectSoon: org => `Blíži sa termín potvrdenia \u2014 ${org}`,
       subjectOver: org => `Ste po termíne potvrdenia \u2014 ${org}`,
       subtitleSoon: "Blíži sa termín",
@@ -5121,6 +5149,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["záznam o osobe z okna pomoci", "24 mesiacov od poslednej otázky, ak nemá otvorený ticket"],
         ],
         recipients: "Tickety čítajú len správcovia ticketov kanála, ktorému sú určené; správca organizácie vidí len ich počet. Odpoveď navrhne umelá inteligencia a pred odoslaním ju vždy prečíta a schváli človek. E-maily ostávajú aj v schránke organizácie u jej poskytovateľa pošty (napríklad Microsoft 365). Z histórie schránky môže umelá inteligencia navrhnúť všeobecné otázky a odpovede (FAQ). E-mailové adresy, telefónne a iné čísla sa z textu odstraňujú ešte pred spracovaním, mená a ďalšie údaje o konkrétnej osobe pri tvorbe návrhu; každý návrh pred zverejnením prečíta a schváli správca obsahu. E-maily sa pritom neukladajú; odkaz na e-maily, z ktorých návrh vznikol, sa drží len do rozhodnutia správcu obsahu. Ak nechcete, aby sa vaše e-maily na to použili, môžete namietať.",
+      },
+      courier: {
+        purpose: "Kuriér je interná pošta organizácie: kolegovia si v ňom píšu správy a organizácia ním posiela oznamy oddeleniam, skupinám alebo všetkým.",
+        data: [
+          ["správa v Kuriérovi: kto ju poslal, komu, predmet, text a čas; pri ozname aj publikum (oddelenie, skupina) a zoznam príjemcov v čase odoslania", "aby sa správa doručila a bolo čitateľné, kto ju komu kedy poslal"],
+          ["kedy ste vlákno naposledy otvorili", "aby ste videli, čo je nové; odosielateľ 1:1 správy vidí, že ste ju prečítali, pri ozname len počet, nie mená"],
+        ],
+        basis: "Správy v Kuriérovi sa spracúvajú na základe pracovnoprávneho alebo obdobného vzťahu (čl. 6 ods. 1 písm. b) GDPR) — interná komunikácia organizácie.",
+        retention: [
+          ["vlákno správ v Kuriérovi", "{courier} od poslednej správy vo vlákne"],
+        ],
+        recipients: "Správu číta len jej odosielateľ a príjemcovia; správca organizácie cudzie správy nevidí a umelá inteligencia ich neprehľadáva. Správy zostávajú v aplikácii — e-mailom vám ráno príde len zoznam predmetov neprečítaných správ, nie ich text. Do záznamu o činnosti sa zapisuje, kto komu kedy poslal správu a jej predmet, nie text.",
       },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
@@ -5307,6 +5347,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       answersMonthsNote: "Potom sa otázky, odpovede a ich hodnotenie zmažú. Záznamy, z ktorých vznikla overená odpoveď, ostanú bez mena toho, kto sa pýtal.",
       ticketMonths: "Mesiace pre tickety helpdesku",
       ticketMonthsNote: "Plynú od zavretia ticketu; potom sa ticket zmaže celý aj so správami. Otvorený ticket sa nemaže.",
+      courierMonths: "Mesiace pre správy v Kuriérovi",
+      courierMonthsNote: "Plynú od poslednej správy vo vlákne; potom sa vlákno zmaže celé aj so správami.",
       fixed: "Pevné pre celú platformu (riadi ich databáza): čas strávený nad znením 12 mesiacov, pripomienky 90 dní, audit 24 mesiacov, spotreba umelej inteligencie 25 mesiacov. Certifikáty sa nemažú. Osoba z widgetu sa zmaže po 24 mesiacoch bez aktivity, ak nemá otvorený ticket.",
       warning: "Skrátenie lehoty môže pri zapnutom ostrom mazaní zmazať záznamy hneď v najbližšej nočnej dávke.",
       save: "Uložiť lehoty",
@@ -10022,7 +10064,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       privacyLink: "Ochrana osobních údajů",
     },
 
-    dueReminderEmail: {
+    courierDigestEmail: {
+    subject: (organisation, n) => `${organisation} — ${n === 1 ? "1 nepřečtená zpráva" : n < 5 ? `${n} nepřečtené zprávy` : `${n} nepřečtených zpráv`} v Kurýrovi`,
+    subtitle: "Kurýr",
+    intro: n => (n === 1 ? "Máte 1 nepřečtenou zprávu:" : n < 5 ? `Máte ${n} nepřečtené zprávy:` : `Máte ${n} nepřečtených zpráv:`),
+    line: (from, subject) => `${from} · ${subject}`,
+    button: "Otevřít Kurýr",
+    note: "Zprávy zůstávají v Contineu; tento e-mail nese jen předměty. Odpovídá se v aplikaci, ne na tento e-mail.",
+  },
+  dueReminderEmail: {
       subjectSoon: org => `Blíží se termín potvrzení \u2014 ${org}`,
       subjectOver: org => `Jste po termínu potvrzení \u2014 ${org}`,
       subtitleSoon: "Blíží se termín",
@@ -10130,6 +10180,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["záznam o osobě z okna nápovědy", "24 měsíců od posledního dotazu, pokud nemá otevřený tiket"],
         ],
         recipients: "Tikety čtou jen správci tiketů kanálu, kterému jsou určeny; správce organizace vidí jen jejich počet. Odpověď navrhne umělá inteligence a před odesláním ji vždy přečte a schválí člověk. E-maily zůstávají i ve schránce organizace u jejího poskytovatele pošty (například Microsoft 365). Z historie schránky může umělá inteligence navrhnout obecné otázky a odpovědi (FAQ). E-mailové adresy, telefonní a jiná čísla se z textu odstraňují ještě před zpracováním, jména a další údaje o konkrétní osobě při tvorbě návrhu; každý návrh před zveřejněním přečte a schválí správce obsahu. E-maily se přitom neukládají; odkaz na e-maily, ze kterých návrh vznikl, se drží jen do rozhodnutí správce obsahu. Pokud nechcete, aby se vaše e-maily k tomu použily, můžete vznést námitku.",
+      },
+      courier: {
+        purpose: "Kurýr je interní pošta organizace: kolegové si v něm píší zprávy a organizace jím posílá oznámení oddělením, skupinám nebo všem.",
+        data: [
+          ["zpráva v Kurýrovi: kdo ji poslal, komu, předmět, text a čas; u oznámení i publikum (oddělení, skupina) a seznam příjemců v době odeslání", "aby se zpráva doručila a bylo čitelné, kdo ji komu kdy poslal"],
+          ["kdy jste vlákno naposledy otevřeli", "abyste viděli, co je nové; odesílatel zprávy 1:1 vidí, že jste ji přečetli, u oznámení jen počet, ne jména"],
+        ],
+        basis: "Zprávy v Kurýrovi se zpracovávají na základě pracovněprávního nebo obdobného vztahu (čl. 6 odst. 1 písm. b) GDPR) — interní komunikace organizace.",
+        retention: [
+          ["vlákno zpráv v Kurýrovi", "{courier} od poslední zprávy ve vláknu"],
+        ],
+        recipients: "Zprávu čte jen její odesílatel a příjemci; správce organizace cizí zprávy nevidí a umělá inteligence je neprohledává. Zprávy zůstávají v aplikaci — e-mailem vám ráno přijde jen seznam předmětů nepřečtených zpráv, ne jejich text. Do záznamu o činnosti se zapisuje, kdo komu kdy poslal zprávu a její předmět, ne text.",
       },
       rightsHeading: "Vaše práva",
       rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
@@ -10316,6 +10378,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       answersMonthsNote: "Potom se otázky, odpovědi a jejich hodnocení smažou. Záznamy, ze kterých vznikla ověřená odpověď, zůstanou bez jména toho, kdo se ptal.",
       ticketMonths: "Měsíce pro tikety helpdesku",
       ticketMonthsNote: "Běží od uzavření tiketu; potom se tiket smaže celý i se zprávami. Otevřený tiket se nemaže.",
+      courierMonths: "Měsíce pro zprávy v Kurýrovi",
+      courierMonthsNote: "Běží od poslední zprávy ve vláknu; potom se vlákno smaže celé i se zprávami.",
       fixed: "Pevné pro celou platformu (řídí je databáze): čas strávený nad zněním 12 měsíců, připomínky 90 dní, audit 24 měsíců, spotřeba umělé inteligence 25 měsíců. Certifikáty se nemažou. Osoba z widgetu se smaže po 24 měsících bez aktivity, pokud nemá otevřený tiket.",
       warning: "Zkrácení lhůty může při zapnutém ostrém mazání smazat záznamy hned v nejbližší noční dávce.",
       save: "Uložit lhůty",
@@ -15022,7 +15086,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       privacyLink: "Privacy notice",
     },
 
-    dueReminderEmail: {
+    courierDigestEmail: {
+    subject: (organisation, n) => `${organisation} — ${n === 1 ? "1 unread message" : `${n} unread messages`} in Courier`,
+    subtitle: "Courier",
+    intro: n => (n === 1 ? "You have 1 unread message:" : `You have ${n} unread messages:`),
+    line: (from, subject) => `${from} · ${subject}`,
+    button: "Open Courier",
+    note: "Messages stay in Contineo; this e-mail carries subjects only. Reply in the application, not to this e-mail.",
+  },
+  dueReminderEmail: {
       subjectSoon: org => `A deadline is approaching \u2014 ${org}`,
       subjectOver: org => `You are past a deadline \u2014 ${org}`,
       subtitleSoon: "Deadline approaching",
@@ -15130,6 +15202,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ["record of a person from the help window", "24 months after their last question, unless they have an open ticket"],
         ],
         recipients: "Tickets are read only by the ticket managers of the channel they are meant for; the organisation's administrator sees only how many there are. Artificial intelligence drafts the answer, and a person always reads and approves it before it is sent. E-mails also remain in the organisation's mailbox with its e-mail provider (for example Microsoft 365). Artificial intelligence may suggest general questions and answers (FAQ) from the mailbox history. E-mail addresses, phone and other numbers are removed from the text before processing, names and other details about a specific person when the proposal is written; the content manager reads and approves every proposal before it is published. The e-mails are not stored; the reference to the e-mails a proposal came from is kept only until the content manager decides on it. If you do not want your e-mails to be used for this, you can object.",
+      },
+      courier: {
+        purpose: "Courier is the organisation's internal mail: colleagues write messages to each other and the organisation sends announcements to departments, groups or everyone.",
+        data: [
+          ["a Courier message: who sent it, to whom, subject, text and time; for an announcement also the audience (department, group) and the list of recipients at the time of sending", "so that the message is delivered and it stays readable who sent what to whom and when"],
+          ["when you last opened a thread", "so that you see what is new; the sender of a 1:1 message sees that you read it, for an announcement only a count, not names"],
+        ],
+        basis: "Courier messages are processed on the basis of the employment or similar relationship (Art. 6(1)(b) GDPR) — the organisation's internal communication.",
+        retention: [
+          ["a Courier message thread", "{courier} after the last message in the thread"],
+        ],
+        recipients: "A message is read only by its sender and recipients; the organisation's administrator does not see other people's messages and artificial intelligence does not search them. Messages stay in the application — in the morning you only get an e-mail listing the subjects of unread messages, not their text. The activity log records who sent a message to whom and when and its subject, not the text.",
       },
       rightsHeading: "Your rights",
       rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
@@ -15316,6 +15400,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       answersMonthsNote: "Then questions, answers and their ratings are deleted. Records that became a verified answer stay, without the name of the person who asked.",
       ticketMonths: "Months for helpdesk tickets",
       ticketMonthsNote: "Counted from when the ticket is closed; then the whole ticket including its messages is deleted. An open ticket is never deleted.",
+      courierMonths: "Months for Courier messages",
+      courierMonthsNote: "Counted from the last message in a thread; then the whole thread including its messages is deleted.",
       fixed: "Fixed for the whole platform (enforced by the database): time spent on a version 12 months, reminders 90 days, audit 24 months, artificial intelligence usage 25 months. Certificates are never deleted. A person from the widget is deleted after 24 months without activity unless they have an open ticket.",
       warning: "Shortening a period may delete records in the very next nightly run when real deletion is switched on.",
       save: "Save periods",

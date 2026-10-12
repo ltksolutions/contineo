@@ -90,6 +90,8 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
   // z toho istého dôvodu ako Vzdelávanie.
   const hasChannels = (await listChannels(tenant.companyCode).catch(() => [])).length > 0
   const helpdesk = hasChannels ? t.helpdesk : null
+  // Kuriér (ADR-033, D209) má každá organizácia — 1:1 smie napísať ktokoľvek.
+  const courier = t.courier
   // Úrad a zákony podľa krajiny sídla prevádzkovateľa, nie podľa jazyka (ADR-022).
   const country = tenant.controller?.country ?? "SK"
   const profile = await getTenantProfile(tenant.companyCode).catch(() => defaultProfile(tenant.companyCode))
@@ -100,7 +102,8 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
     .replace("{cap}", t.years(r.capYears))
     .replace("{months}", t.months(r.learningDetailMonths))
     .replace("{answers}", t.months(r.answersMonths))
-    .replace("{tickets}", t.months(r.ticketMonths))] as [string, string])
+    .replace("{tickets}", t.months(r.ticketMonths))
+    .replace("{courier}", t.months(r.courierMonths))] as [string, string])
   // Verzia textu: neskoršia zo spoločného textu a nastavení organizácie (D138).
   const updated = tenant.privacy?.updatedAt ? new Date(tenant.privacy.updatedAt) : null
   const version = updated && updated > PRIVACY_NOTICE_VERSION ? updated : PRIVACY_NOTICE_VERSION
@@ -165,10 +168,10 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
         </div>
 
         <h2 id="purpose">{t.purposeHeading}</h2>
-        <p>{t.purpose}{learning && <> {learning.purpose}</>}{helpdesk && <> {helpdesk.purpose}</>}</p>
+        <p>{t.purpose}{learning && <> {learning.purpose}</>}{helpdesk && <> {helpdesk.purpose}</>} {courier.purpose}</p>
 
         <h2 id="data">{t.dataHeading}</h2>
-        <Table columns={t.dataColumns} rows={[...t.data, ...(learning?.data ?? []), ...(helpdesk?.data ?? [])]} />
+        <Table columns={t.dataColumns} rows={[...t.data, ...(learning?.data ?? []), ...(helpdesk?.data ?? []), ...courier.data]} />
         <p>{t.hrNote}</p>
         <p>{t.responsibleNote}</p>
 
@@ -181,15 +184,17 @@ export default async function PrivacyPage({ searchParams }: { searchParams?: Pro
         <p>{t.basisDirectory}</p>
         {learning && <p>{learning.basis(t.archiveLaw[country])}</p>}
         {helpdesk && <p>{helpdesk.basis}</p>}
+        <p>{courier.basis}</p>
 
         <h2 id="retention">{t.retentionHeading}</h2>
-        <Table columns={t.retentionColumns} rows={period([...t.retention, ...(learning?.retention ?? []), ...(helpdesk?.retention ?? [])])} />
+        <Table columns={t.retentionColumns} rows={period([...t.retention, ...(learning?.retention ?? []), ...(helpdesk?.retention ?? []), ...courier.retention])} />
         <p>{t.retentionDelete}{learning && <> {learning.retentionNote}</>}</p>
 
         <h2 id="recipients">{t.recipientsHeading}</h2>
         <p>{t.recipients}</p>
         {learning && <p>{learning.recipients}</p>}
         {helpdesk && <p>{helpdesk.recipients}</p>}
+        <p>{courier.recipients}</p>
         <Table columns={t.processorsColumns} rows={processors} />
         <p>{t.noSale} {learning ? learning.automated : t.automated}</p>
 

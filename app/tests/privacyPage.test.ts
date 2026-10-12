@@ -148,6 +148,14 @@ describe("/privacy — helpdesk (ADR-028, D178)", () => {
     expect(html).toContain("18 mesiacov od jeho zavretia")
     expect(html).toContain("Tickety čítajú len správcovia ticketov kanála")
   })
+  it("Kuriér (ADR-033, D209) je tam vždy: účel, základ, lehota z nastavení, príjemcovia", async () => {
+    s.privacy = { retention: { courierMonths: 6 } }
+    const html = await render()
+    expect(html).toContain("Kuriér je interná pošta organizácie")
+    expect(html).toContain("pracovnoprávneho alebo obdobného vzťahu")
+    expect(html).toContain("6 mesiacov od poslednej správy vo vlákne")
+    expect(html).toContain("správca organizácie cudzie správy nevidí")
+  })
   it("po anglicky s predvolenou lehotou 24 mesiacov", async () => {
     s.channels = true
     s.language = "en"

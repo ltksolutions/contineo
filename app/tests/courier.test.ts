@@ -19,6 +19,12 @@ const same = (v: unknown, x: unknown): boolean => {
 function matches(r: Row, f: Row): boolean {
   return Object.entries(f).every(([k, cond]) => {
     const v = get(r, k)
+    if (cond && typeof cond === "object" && !(cond instanceof Date) && !(cond instanceof ObjectId) && !Array.isArray(cond)) {
+      const c = cond as Row
+      if ("$ne" in c) return Array.isArray(v) && Array.isArray(c.$ne) ? v.length !== (c.$ne as unknown[]).length : !same(v, c.$ne)
+      if ("$in" in c) return (c.$in as unknown[]).some(x => same(v, x))
+      if ("$elemMatch" in c) return Array.isArray(v) && v.some(e => matches(e as Row, c.$elemMatch as Row))
+    }
     if (k.includes(".")) {
       // `participants.personId` — pole dokumentov: zhoda v ktoromkoľvek prvku.
       const [head, ...rest] = k.split(".")
@@ -39,6 +45,18 @@ function cursor(rows: Row[]) {
   }
   return c
 }
+/** `$set` s `arrayFilters` (`participants.$[x].pole`) a `$pull` — ako Mongo. */
+function apply(doc: Row, u: { $set?: Row; $pull?: Row }, o?: { arrayFilters?: Row[] }) {
+  for (const [k, v] of Object.entries(u.$set ?? {})) {
+    const m = /^participants\.\$\[(\w+)\]\.(\w+)$/.exec(k)
+    if (m) {
+      const filter = o?.arrayFilters?.find(af => Object.keys(af)[0].startsWith(`${m[1]}.`)) ?? {}
+      const sub = Object.fromEntries(Object.entries(filter).map(([fk, fv]) => [fk.slice(m[1].length + 1), fv]))
+      for (const p of doc.participants as Row[]) if (matches(p, sub)) p[m[2]] = v
+    } else doc[k] = v
+  }
+  for (const [k, v] of Object.entries(u.$pull ?? {})) doc[k] = (doc[k] as unknown[]).filter(x => x !== v)
+}
 function collection(name: string) {
   const rows = () => (db.data[name] ??= [])
   return {
@@ -50,15 +68,13 @@ function collection(name: string) {
     updateOne: async (f: Row, u: { $set?: Row; $pull?: Row }, o?: { arrayFilters?: Row[] }) => {
       const doc = rows().find(r => matches(r, f))
       if (!doc) return { matchedCount: 0 }
-      for (const [k, v] of Object.entries(u.$set ?? {})) {
-        const m = /^participants\.\$\[me\]\.(\w+)$/.exec(k)
-        if (m) {
-          const id = o?.arrayFilters?.[0]?.["me.personId"]
-          for (const p of doc.participants as Row[]) if (p.personId === id) p[m[1]] = v
-        } else doc[k] = v
-      }
-      for (const [k, v] of Object.entries(u.$pull ?? {})) doc[k] = (doc[k] as unknown[]).filter(x => x !== v)
+      apply(doc, u, o)
       return { matchedCount: 1 }
+    },
+    updateMany: async (f: Row, u: { $set?: Row; $pull?: Row }, o?: { arrayFilters?: Row[] }) => {
+      const hit = rows().filter(r => matches(r, f))
+      for (const doc of hit) apply(doc, u, o)
+      return { modifiedCount: hit.length }
     },
   }
 }
@@ -69,6 +85,7 @@ vi.mock("../src/lib/audit", () => ({ writeAudit: vi.fn(async (r: Row) => { audit
 import {
   createDirectThread, postMessage, markThreadRead, unreadThreadCount, listThreads, loadThread, threadMessages,
   previewOf, validateContent, CourierError, createAnnouncement, replyToAnnouncement, readStats,
+  pendingDigests, markDigested,
 } from "../src/lib/courier"
 
 const anna = { personId: "p-anna", email: "anna@sfz.sk", name: "Anna Nová" }
@@ -189,5 +206,25 @@ describe("oznam (D204–D206)", () => {
     expect(r3).toBe(id)
     expect(await unreadThreadCount("SFZ", "p-jana")).toBe(1)
     expect(readStats((await loadThread("SFZ", id, "p-anna"))!)).toEqual({ read: 0, total: 2 })
+  })
+})
+
+describe("ranný súhrn (D207)", () => {
+  it("len neprečítané vlákna, ktoré v súhrne ešte neboli; po označení nič; nová správa ich vráti", async () => {
+    const a = await createDirectThread({ companyCode: "SFZ", from: anna, to: peter, subject: "Prvé", text: "1", now: t0 })
+    const b = await createDirectThread({ companyCode: "SFZ", from: anna, to: peter, subject: "Druhé", text: "2", now: later(1) })
+    await markThreadRead("SFZ", b, "p-peter", later(2))
+
+    const pending = await pendingDigests("SFZ")
+    expect(pending.map(p => [p.personId, p.items.map(i => i.subject)])).toEqual([["p-peter", ["Prvé"]]])
+    expect(pending[0].items[0]).toMatchObject({ threadId: a, from: "Anna Nová" })
+    // Anna nemá nič neprečítané — nedostane nič.
+    expect(pending.some(p => p.personId === "p-anna")).toBe(false)
+
+    await markDigested("SFZ", "p-peter", [a], later(3))
+    expect(await pendingDigests("SFZ")).toEqual([])
+
+    await postMessage({ companyCode: "SFZ", threadId: a, author: anna, text: "Ešte niečo", now: later(4) })
+    expect((await pendingDigests("SFZ")).map(p => p.items.map(i => i.subject))).toEqual([["Prvé"]])
   })
 })

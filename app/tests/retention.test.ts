@@ -66,7 +66,7 @@ vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async (name: string)
 import {
   retentionDecision, isStaleActive, addYears, retentionMode, addMonths, learningDetailsDue, retentionSettings,
 } from "../src/lib/retention"
-import { deletePersonEvidence, trimLearningDetails, purgeAnswers, purgeTickets, purgeExternalPersons } from "../src/lib/retentionDb"
+import { deletePersonEvidence, trimLearningDetails, purgeAnswers, purgeTickets, purgeExternalPersons, purgeCourier } from "../src/lib/retentionDb"
 import { courseProgress, type ProgressFacts } from "../src/lib/learningProgress"
 
 const NOW = new Date("2030-06-01T00:00:00Z")
@@ -163,7 +163,7 @@ beforeEach(seed)
 describe("deletePersonEvidence (D101)", () => {
   it("výkaz spočíta, ale nezmaže nič a nezapíše záznam o výmaze", async () => {
     const c = await deletePersonEvidence(PERSON, "endedAt", "report", NOW)
-    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1, objections: 1, enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0, answers: 0, tickets: 0, externalPersons: 0 })
+    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1, objections: 1, enrollments: 0, partCompletions: 0, videoWatch: 0, testAttempts: 0, answers: 0, tickets: 0, externalPersons: 0, courierThreads: 0, courierMessages: 0 })
     expect(db.data.acknowledgements).toHaveLength(5)
     expect(db.data.retention_log).toHaveLength(0)
   })
@@ -320,7 +320,7 @@ describe("orezanie podrobností rok po dokončení (D131)", () => {
 
 describe("lehoty organizácie (ADR-022, D136)", () => {
   it("predvolené = rozhodnutia DPO SFZ; strop nie kratší než lehota; rozsahy", () => {
-    expect(retentionSettings(undefined)).toEqual({ evidenceYears: 3, capYears: 5, learningDetailMonths: 12, answersMonths: 12, ticketMonths: 24 })
+    expect(retentionSettings(undefined)).toEqual({ evidenceYears: 3, capYears: 5, learningDetailMonths: 12, answersMonths: 12, ticketMonths: 24, courierMonths: 24 })
     // Tickety helpdesku (D178): 1–120 mesiacov od zavretia.
     expect(retentionSettings({ ticketMonths: 500 }).ticketMonths).toBe(120)
     expect(retentionSettings({ ticketMonths: 0 }).ticketMonths).toBe(24)
@@ -333,7 +333,7 @@ describe("lehoty organizácie (ADR-022, D136)", () => {
   it("rozhodnutie a orezanie podľa lehôt organizácie", () => {
     const p = { status: "inactive" as const, endedAt: Y("2028-06-01") }
     expect(retentionDecision(p, NOW).due).toBe(false)
-    expect(retentionDecision(p, NOW, { evidenceYears: 2, capYears: 5, learningDetailMonths: 12, answersMonths: 12, ticketMonths: 24 }).due).toBe(true)
+    expect(retentionDecision(p, NOW, { evidenceYears: 2, capYears: 5, learningDetailMonths: 12, answersMonths: 12, ticketMonths: 24, courierMonths: 24 }).due).toBe(true)
     expect(learningDetailsDue(Y("2030-01-01"), NOW, 6)).toBe(false)
     expect(learningDetailsDue(Y("2029-11-01"), NOW, 6)).toBe(true)
   })
@@ -398,6 +398,27 @@ describe("helpdesk po lehote (ADR-028, D178)", () => {
     expect(await purgeTickets("SFZ", "delete", NOW)).toBe(1)
     expect(db.data.tickets.map(t => t.id)).toEqual(["t-recent", "t-open", "t-reopened", "t-foreign"])
     expect(db.data.retention_log.at(-1)).toMatchObject({ reason: "tickets" })
+  })
+
+  it("vlákno Kuriéra 24 mesiacov od poslednej správy zmizne aj so správami; živé a cudzie nie (ADR-033, D209)", async () => {
+    db.data.courier_threads = [
+      { _id: "c-old", companyCode: "SFZ", lastMessageAt: Y("2026-01-01") },
+      { _id: "c-live", companyCode: "SFZ", lastMessageAt: Y("2030-01-01") },
+      { _id: "c-foreign", companyCode: "LTK", lastMessageAt: Y("2026-01-01") },
+    ]
+    db.data.courier_messages = [
+      { companyCode: "SFZ", threadId: "c-old", text: "a" },
+      { companyCode: "SFZ", threadId: "c-old", text: "b" },
+      { companyCode: "SFZ", threadId: "c-live", text: "c" },
+    ]
+    db.data.courier_drafts = [{ companyCode: "SFZ", personId: "p", updatedAt: Y("2026-01-01") }]
+    expect(await purgeCourier("SFZ", "report", NOW)).toEqual({ threads: 1, messages: 2 })
+    expect(db.data.courier_messages).toHaveLength(3)
+    expect(await purgeCourier("SFZ", "delete", NOW)).toEqual({ threads: 1, messages: 2 })
+    expect(db.data.courier_threads.map(t => t._id)).toEqual(["c-live", "c-foreign"])
+    expect(db.data.courier_messages.map(m => m.text)).toEqual(["c"])
+    expect(db.data.courier_drafts).toHaveLength(0)
+    expect(db.data.retention_log.at(-1)).toMatchObject({ reason: "courier", counts: { courierThreads: 1, courierMessages: 2 } })
   })
 
   it("osoba z widgetu bez aktivity 24 mesiacov zmizne; s otvoreným ticketom, s potvrdením a zamestnanec nie", async () => {
