@@ -19,7 +19,7 @@
  */
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "channels" | "learning" | "learningManage" | "learningTests"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "channels" | "courier" | "learning" | "learningManage" | "learningTests"
 
 export interface NavItem {
   href: string
@@ -82,6 +82,9 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // by mu zároveň dovolilo normy nahrávať a publikovať. Kto nemá čo
     // schvaľovať, uvidí, že nemá nič.
     { href: "/approvals", key: "toApprove" },
+    // Kuriér (ADR-033) vidí každý prihlásený: 1:1 smie napísať ktokoľvek
+    // (D204) a správu môže dostať ktokoľvek.
+    { href: "/courier", key: "courier" },
     // Adresár vidí **každý prihlásený** (D87) — je to zoznam kolegov, nie
     // správa prístupov. Podmieniť ho rolou by znamenalo mať adresár, do
     // ktorého sa nepozrie ten, kto v tej organizácii pracuje.
@@ -261,7 +264,7 @@ export type SectionGroupKey = "organisation" | "management"
  * Opýtať sa je pole v hlavičke a povinnosti človeka sú KPI nad dlaždicami.
  * V plachte všetkých sekcií tvoria prvý stĺpec „Hlavné".
  */
-export const MAIN_KEYS: NavKey[] = ["overview", "ask", "toAcknowledge", "toApprove"]
+export const MAIN_KEYS: NavKey[] = ["overview", "ask", "toAcknowledge", "toApprove", "courier"]
 
 /**
  * Skupiny dlaždíc. Rovnaké na Prehľade, na `/more` aj v plachte — tá istá
@@ -386,6 +389,7 @@ const SECTION_HREF: Record<NavKey, string> = {
   evaluation: "/evaluation",
   dpo: "/dpo",
   channels: "/channels",
+  courier: "/courier",
   learningManage: "/learning/manage",
   learningTests: "/learning/tests",
 }

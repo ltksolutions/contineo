@@ -25,6 +25,7 @@ import type { MenuLabels } from "@/components/SectionsSheet"
 import { tenantStyle } from "@/components/TenantHeader"
 import { normalizeLanguage, dictionary, type UiLanguage } from "@/lib/i18n"
 import { unreadCount } from "@/lib/notifications"
+import { unreadThreadCount } from "@/lib/courier"
 
 /**
  * Názov v záložke prehliadača je tiež informácia.
@@ -141,6 +142,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let language: UiLanguage | undefined
   /** Počet neprečítaných upozornení pri zvončeku. Nula aj pre neprihláseného. */
   let unread = 0
+  /** Počet neprečítaných vlákien Kuriéra pri obálke (ADR-033, D214). */
+  let courier = 0
   try {
     email = (await currentEmail()) ?? undefined
   } catch (e) {
@@ -166,7 +169,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
        * `unreadCount()` nikdy nevyhodí výnimku a pri zlyhaní vráti nulu:
        * hlavička sa nemá rozbiť pre ozdobu.
        */
-      if (self?.id) unread = await unreadCount(self.companyCode, self.id)
+      if (self?.id) {
+        [unread, courier] = await Promise.all([
+          unreadCount(self.companyCode, self.id),
+          unreadThreadCount(self.companyCode, self.id),
+        ])
+      }
     } catch (e) {
       console.error("[layout] meno osoby sa nepodarilo načítať:", e)
     }
@@ -226,6 +234,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             isAdmin={isAdmin}
             isPeopleAdmin={isPeopleAdmin}
             notifications={unread}
+            courier={courier}
             language={language}
             menu={menu}
           />

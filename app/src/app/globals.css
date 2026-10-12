@@ -5551,11 +5551,12 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
  * ikony aj v tmavej téme.
  */
 /*
- * Zvonček v hlavičke. Vlastný terč 40 px — kruh ako avatar vedľa neho, nie
- * ikona nalepená na okraj. Priestor v lište na to je a na telefóne sa do
- * menšieho palcom netrafí.
+ * Ikona v hlavičke — obálka Kuriéra (ADR-033, D214) a zvonček, jeden tvar.
+ * Vlastný terč 40 px — kruh ako avatar vedľa neho, nie ikona nalepená na
+ * okraj. Priestor v lište na to je a na telefóne sa do menšieho palcom
+ * netrafí. (Do 12. 10. 2026 `.bell`; premenované, keď pribudla obálka.)
  */
-.bell {
+.head-icon {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -5567,10 +5568,10 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   transition: background 0.15s ease;
 }
 
-.bell:hover { background: var(--surface-2); }
-.bell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.head-icon:hover { background: var(--surface-2); }
+.head-icon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.bell-badge {
+.head-badge {
   position: absolute;
   top: 2px;
   right: 1px;
