@@ -14,10 +14,13 @@ import { useEffect, useRef, useState } from "react"
 export default function PublishSubmit({
   withCarryOver,
   labels,
+  form,
 }: {
   /** Ponúka sa prenos pridelení (a je predvolene zaškrtnutý). */
   withCarryOver: boolean
   labels: { publish: string; publishAndAssign: string }
+  /** Formulár, ktorý tlačidlo odosiela, keď stojí mimo neho (päta karty postupu). */
+  form?: string
 }) {
   const ref = useRef<HTMLButtonElement>(null)
   const [on, setOn] = useState(withCarryOver)
@@ -39,7 +42,7 @@ export default function PublishSubmit({
   }, [])
 
   return (
-    <button ref={ref} className="button" type="submit">
+    <button ref={ref} className="button" type="submit" form={form}>
       {on ? labels.publishAndAssign : labels.publish}
     </button>
   )

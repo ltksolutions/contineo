@@ -146,10 +146,19 @@ describe("detail — postup znenia", () => {
   it("krok 2: stav kola, čo sa schvaľuje a stiahnutie kola", async () => {
     state.rounds = new Map([[await draftId(), [round({})]]])
     const html = await render()
-    expect(html).toContain("Čaká na schválenie — 1 z 2")
-    expect(html).toContain("Čo sa schvaľuje")
-    expect(html).toContain("Stiahnuť kolo")
+    // KNIZ-detail-dokumentu: kto je na ťahu, jeden riadok zámku, stiahnutie ako tlačidlo.
+    expect(html).toContain("Čaká sa na schválenie: Peter Kováč")
+    expect(html).toContain("zamknuté počas kola")
+    expect(html).toContain('href="/library/sfz%3App?withdraw=1#withdraw">Stiahnuť kolo…</a>')
+    expect(html).not.toContain("Čo sa schvaľuje")
     expect(html).not.toContain("Uložiť a predložiť")
+    // V karte postupu nie je nič podstatné v rozbaľovačke (Q2).
+    const flow = html.slice(html.indexOf('id="flow"'), html.indexOf('id="versions"'))
+    expect(flow).not.toContain("<details")
+    // Potvrdenie v adrese s povinným dôvodom.
+    const confirm = await render({ withdraw: "1" })
+    expect(confirm).toContain("Stiahnuť kolo 1?")
+    expect(confirm).toMatch(/<textarea[^>]*name="reason"[^>]*required/)
   })
 
   it("krok 3: návrh označenia, osoba z prípravy a prenos pridelení", async () => {
@@ -164,7 +173,8 @@ describe("detail — postup znenia", () => {
     expect(html).toContain("znenie účinné od 1. 10. 2026")
     expect(html).not.toContain('name="label"')
     expect(html).not.toContain('name="effectiveFromSource"')
-    expect(html).toContain("Zodpovedná osoba: Marek Horák. Určená v príprave.")
+    expect(html).toMatch(/id="chk-responsible"[\s\S]*?Marek Horák/)
+    expect(html).toContain("Zmeniť zodpovednú osobu")
     expect(html).toContain('name="carryOver"')
     expect(html).toContain("Zverejniť a prideliť")
   })
@@ -181,7 +191,7 @@ describe("detail — postup znenia", () => {
     state.detail = detail({ draftMarkdown: effective.markdown, draftPdf: effective.pdf })
     const html = await render({ open: "history" })
     expect(html).not.toContain('class="card flow"')
-    expect(html).toContain("Platné znenie")
+    expect(html).toContain('<div class="vcur is-open" id="current">')
     // „Opraviť údaje" zrušené (ADR-016).
     expect(html).not.toContain("Dôvod opravy")
     expect(html).not.toContain("Opraviť údaje")
@@ -209,13 +219,14 @@ describe("detail — právny základ v príprave (ADR-023, D139)", () => {
   it("s aktívnou zodpovednou osobou povie, kto ho určí — a správcovi formulár ponúkne tiež (D155)", async () => {
     state.detail = detail({ draftResponsible: MAREK })
     const html = await render()
-    expect(html).toContain("Marek Horák ho môže určiť ešte pred zverejnením")
-    expect(html).toContain('name="draft" value="1"')
+    expect(html).toContain("Určí Marek Horák — dostáva o tom upozornenie.")
+    expect(html).toContain('href="/library/sfz%3App?open=draftBasis#chk-basis">Určiť</a>')
+    expect(await render({ open: "draftBasis" })).toContain('name="draft" value="1"')
   })
 
   it("bez zodpovednej osoby ho smie určiť správca obsahu — mimo formulára kroku", async () => {
-    const html = await render()
-    expect(html).toContain("Kým príprava nemá zodpovednú osobu, môže ho určiť správca obsahu.")
+    expect(await render()).toContain("Príprava nemá zodpovednú osobu — určí správca obsahu.")
+    const html = await render({ open: "draftBasis" })
     expect(html).toContain('name="draft" value="1"')
     expect(html).toContain('name="back" value="library"')
     // Formuláre sa nevnárajú: v mieste poľa je otvorený práve jeden — vlastný.
@@ -230,7 +241,7 @@ describe("detail — právny základ v príprave (ADR-023, D139)", () => {
       draftLegalBasis: { entries: [{ basis: "legal_obligation", key: "bozp", label: "BOZP", reference: "§ 7" }], at: new Date(), by: "marek@sfz.sk" },
     })
     const html = await render()
-    expect(html).toContain("Právny základ: BOZP. Určený v príprave")
+    expect(html).toMatch(/id="chk-basis"[\s\S]*?BOZP · určené/)
   })
 
   it("história znenia povie, že základ bol určený v príprave", async () => {
@@ -284,8 +295,8 @@ describe("detail — staršie znenia (DETAIL-starsie-znenia)", () => {
     expect(r).toContain("základ neurčený")
     // Autor z riadku odchádza.
     expect(r).not.toContain("Autor")
-    // Platné znenie sa nemení: PDF a úkony ako odkazy v `cur-links`.
-    expect(html).toMatch(/<div class="cur-links"><a href="\/api\/library\/file\/old"/)
+    // Platné znenie: PDF a úkony ako tiché tlačidlá (KNIZ-detail-dokumentu Q7).
+    expect(html).toMatch(/<div class="vcur-acts"><a class="button button--quiet button--sm" href="\/api\/library\/file\/old"/)
   })
 
   it("odvolanie potvrdení len pre personalistu a len pri znení s potvrdeniami", async () => {
@@ -327,9 +338,10 @@ describe("detail — staršie znenia (DETAIL-starsie-znenia)", () => {
     expect(row(html, "v-4")).not.toContain("older-panel")
   })
 
-  it("bez starších znení prázdny stav v tej istej karte", async () => {
+  it("bez starších znení len platné znenie v sekcii Znenia", async () => {
     const html = await render()
-    expect(html).toMatch(/<section class="card older" id="older"><div class="older-head"><h2>Staršie znenia<\/h2><\/div><p class="older-empty">Žiadne\./)
+    expect(html).toContain('<section class="card versions" id="versions">')
+    expect(html).not.toContain('id="older"')
   })
 })
 
@@ -353,8 +365,8 @@ describe("detail — platné a pripravované znenie (novela vopred)", () => {
   it("platné je dnes platné znenie, nie naposledy zverejnené", async () => {
     const html = await render()
     const cur = html.slice(html.indexOf('id="current"'))
-    expect(cur).toContain("Platné znenie")
-    expect(cur).toContain("od 1. 7. 2026 – 1. 1. 2099")
+    expect(cur).toContain("znenie účinné od 1. 7. 2026")
+    expect(cur).toContain('<span class="tag tag--published">Platí</span>')
     // Hlavička hovorí o dnes platnom znení a súbory sú jeho.
     expect(html).toContain("platné od 1. 7. 2026")
     expect(html).toContain("/api/library/file/v2")
@@ -363,8 +375,7 @@ describe("detail — platné a pripravované znenie (novela vopred)", () => {
   it("novela vopred má vlastnú kartu, nie je medzi staršími", async () => {
     const html = await render()
     expect(html).toContain('id="v-v-3"')
-    expect(html).toContain("Pripravované znenie")
-    expect(html).toContain("Zverejnené, platiť začne 1. 1. 2099")
+    expect(html).toContain('<span class="tag tag--review">Platí od 1. 1. 2099</span>')
     const older = html.slice(html.indexOf('id="older"'))
     expect(older).toContain('id="v-v-1"')
     expect(older).not.toContain('id="v-v-2"')
@@ -436,8 +447,10 @@ describe("detail — oprava textu platného alebo pripravovaného znenia (fáza 
 
   it("oprava platného znenia: cieľ je platné znenie a dá sa prepnúť na novelu", async () => {
     state.detail = base("# Čl. 1\nlehota 30 dní,\n# Čl. 4\npoplatok 50 eur")
-    const html = await render()
-    expect(html).toContain("Opravuje sa: znenie účinné od 1. 7. 2026")
+    const line = await render()
+    expect(line).toContain("Opravuje sa: znenie účinné od 1. 7. 2026")
+    expect(line).toContain("fixTarget=v-2#fix")
+    const html = await render({ fixTarget: "v-2" })
     expect(html).toContain("fixTarget=v-3")
     expect(html).toMatch(/name="versionId" value="v-2"/)
     const other = await render({ fixTarget: "v-3" })
@@ -450,12 +463,12 @@ describe("detail — archivácia predpisu (ADR-025, D156)", () => {
     state.detail = detail({ draftMarkdown: effective.markdown, draftPdf: effective.pdf, draftMeta: null })
     const html = await render()
     expect(html).toContain("Archivovať predpis")
-    expect(html).toContain('href="/library/sfz%3App?archive=1#more"')
+    expect(html).toContain('href="/library/sfz%3App?archive=1#archive-form"')
     expect(html).not.toContain('name="until"')
     const open = await render({ archive: "1" })
     expect(open).toContain('name="until"')
     expect(open).toContain('name="reason"')
-    expect(open).not.toContain('?archive=1#more"')
+    expect(open).not.toContain('?archive=1#archive-form"')
   })
 
   it("počas prípravy nového znenia formulár nie je — karta povie prečo", async () => {
@@ -472,7 +485,8 @@ describe("detail — archivácia predpisu (ADR-025, D156)", () => {
     }
     state.detail = detail({ versions: [archived], effectiveVersionId: undefined, draftMarkdown: effective.markdown, draftPdf: effective.pdf, draftMeta: null })
     const html = await render()
-    expect(html).toContain("Archivovaný — neplatí od 1. 10. 2026")
+    expect(html).toContain('<span class="tag tag--archived">Archivovaný</span>')
+    expect(html).toContain("Archivovaný od 1. 10. 2026")
     expect(html).toContain("Zrušené uznesením VV.")
     expect(html).toContain("Obnoviť platnosť")
     expect(html).not.toContain('name="until"')

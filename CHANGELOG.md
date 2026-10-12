@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica: nový detail dokumentu (2026-10-12, KNIZ-detail-dokumentu)
+
+- **Stav a súhrn vpravo** (od 1024 px, na telefóne Stav hore): jedna veta,
+  kto je na ťahu, potvrdenia, údaje o dokumente názvami z číselníkov (nie
+  `manual`, `public`, `sk`) a súbory s odkazmi Editor textu a Členenie.
+- **Karta postupu bez rozbaľovačiek:** „Pred zverejnením" je kontrolný
+  zoznam (schválenie, zodpovedná osoba, právny základ, dátum účinnosti)
+  s tlačidlami Určiť / Zmeniť. Právny základ sa určuje priamo v karte.
+- **Stiahnuť kolo…** je tlačidlo s potvrdením a povinným dôvodom.
+- **História** je vždy viditeľný časový rad (posledných 5 udalostí, celá
+  za odkazom) — aj pri znení namiesto troch rozbaľovačiek.
+- **Znenia** v jednej sekcii: platné rozbalené s tichými úkonmi, zriedkavé
+  v ponuke •••; staršie ako doteraz.
+- Hlavička má jeden štítok stavu; spracovanie len počas behu alebo pri
+  chybe. Zodpovednú osobu nového znenia možno zmeniť aj počas kola.
+
 ### Schvaľovanie: vždy len jedno bežiace kolo na dokument (2026-10-12)
 
 - Keď sa koncept zmení (nové súbory, úprava textu, názov, FAQ, zverejnenie),
