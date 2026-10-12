@@ -2307,6 +2307,8 @@ interface Dictionary {
     followUp: string
     /** Odkaz na pôvodný oznam z 1:1 vlákna. */
     inReplyTo: string
+    /** Poznámka pri prepínači „Všetkým" — vlastná, nie z prideľovania. */
+    everyoneNote: string
     msgAnnounced: (n: number) => string
   }
   notifications: {
@@ -7454,6 +7456,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     replyGoesTo: (name) => `Odpoveď pôjde len osobe ${name}, nie všetkým príjemcom.`,
     followUp: "Doplniť oznam — všetkým príjemcom",
     inReplyTo: "Odpoveď na oznam",
+    everyoneNote: "každému v organizácii, kto je dnes aktívny — výber nižšie sa potom neberie do úvahy",
     msgAnnounced: (n) => (n === 1 ? "Oznam je odoslaný 1 osobe." : `Oznam je odoslaný ${n} osobám.`),
   },
   notifications: {
@@ -12462,6 +12465,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     replyGoesTo: (name) => `Odpověď půjde jen osobě ${name}, ne všem příjemcům.`,
     followUp: "Doplnit oznámení — všem příjemcům",
     inReplyTo: "Odpověď na oznámení",
+    everyoneNote: "každému v organizaci, kdo je dnes aktivní — výběr níže se pak nebere v úvahu",
     msgAnnounced: (n) => (n === 1 ? "Oznámení je odesláno 1 osobě." : `Oznámení je odesláno ${n} osobám.`),
   },
   notifications: {
@@ -17459,6 +17463,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     replyGoesTo: (name) => `The reply goes only to ${name}, not to all recipients.`,
     followUp: "Add to the announcement — to all recipients",
     inReplyTo: "Reply to an announcement",
+    everyoneNote: "everyone active in the organisation today — the selection below is then ignored",
     msgAnnounced: (n) => (n === 1 ? "The announcement has been sent to 1 person." : `The announcement has been sent to ${n} people.`),
   },
   notifications: {

@@ -126,7 +126,7 @@ export default async function AnnouncePage({
                 <span className="assign-step" aria-hidden="true">2</span>
                 {th.to}
               </legend>
-              <AudienceAll label={th.everyone} note={th.everyoneNote} defaultChecked={all}>
+              <AudienceAll label={th.everyone} note={t.everyoneNote} defaultChecked={all}>
                 {treeRows.length > 0 && (
                   <fieldset className="form-group assign-sub">
                     <legend className="form-group-head">{th.departments}</legend>
