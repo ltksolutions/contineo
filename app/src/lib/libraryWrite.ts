@@ -581,6 +581,10 @@ export async function regenerateDraftPdf(companyCode: string, documentId: string
   const source = doc?.draftSource as VersionFile | null | undefined
   const markdown = String(doc?.draftMarkdown ?? "").trim()
   if (!doc || !source || !/\.md$/i.test(source.name) || !markdown) return false
+  // FAQ má zdroj `.md` tiež, ale jeho PDF robí `renderFaqPdf` zo záznamov
+  // (`faq.ts`, `writeDraft`) a dátum účinnosti v ňom nie je. Prepísať ho
+  // šablónou dokumentu by z FAQ urobilo iné PDF (13. 10. 2026, Časté otázky ISSF).
+  if (chunkingStrategyFor(String(doc.category ?? "")) === "entries") return false
   const { renderDocumentPdf } = await import("./documentPdf")
   const { tenantByCompanyCode } = await import("./tenants")
   const { isUiLanguage } = await import("./i18n")
