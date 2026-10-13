@@ -915,7 +915,11 @@ export default async function OrganisationSectionPage({
             const own = isCustom(p.key)
             return (
               <div key={p.key} className="cl-row">
-                <span className="cl-name">{p.label ?? p.key}</span>
+                <span className="cl-name">
+                  {p.label ?? p.key}
+                  {/* Úloha druhu dokumentu (ADR-034, D215) — či je záväzný, výkladový alebo záznam. */}
+                  {c.name === "category" && <span className="quiet"> · {t.codelists.roles[p.role ?? "guidance"]}</span>}
+                </span>
                 <code className="cl-key">{p.key}</code>
                 <span className="cl-use">
                   {!own ? <span className="cl-badge">{t.codelists.baseBadge}</span>
@@ -971,6 +975,15 @@ export default async function OrganisationSectionPage({
                   taken: t.codelists.keyTakenHint,
                 }}
               />
+              {c.name === "category" && (
+                <label className="field">
+                  <span className="field-label">{t.codelists.roleLabel}</span>
+                  <select className="field-input" name="role" defaultValue="guidance">
+                    {(["binding", "guidance", "record"] as const).map(r => <option key={r} value={r}>{t.codelists.roles[r]}</option>)}
+                  </select>
+                  <span className="quiet field-hint">{t.codelists.roleHint}</span>
+                </label>
+              )}
               <SubmitButton className="button button--quiet">{t.codelists.add}</SubmitButton>
             </form>
             <p className="quiet cl-note">{t.codelists.keyNote}</p>

@@ -74,6 +74,8 @@ export async function addCodelistItem(
   key: string,
   label: string,
   actor: string,
+  /** Úloha vlastného druhu dokumentu (ADR-034, D215); pri iných číselníkoch sa ignoruje. */
+  role?: string,
 ): Promise<void> {
   if (!isCustom(codelist)) {
     throw new CodelistError(
@@ -82,7 +84,7 @@ export async function addCodelistItem(
       { codelist },
     )
   }
-  const item = checkCustomItem(key, label)
+  const item = checkCustomItem(key, label, codelist === "category" ? role : undefined)
 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })

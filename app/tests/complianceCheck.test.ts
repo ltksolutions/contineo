@@ -230,3 +230,25 @@ describe("poznámka kontroly návrhu FAQ za celý návrh", () => {
     expect(m.note).toBe("Odpoveď treba doplniť o matriku SFZ.")
   })
 })
+
+describe("úloha a záväznosť druhu (ADR-034)", () => {
+  it("zákon › stanovy › poriadok › smernica › manuál", async () => {
+    const { categoryRank } = await import("../src/lib/codelists")
+    const order = ["zakon", "stanovy", "poriadok", "smernica", "manual"].map(k => categoryRank(k))
+    expect([...order].sort((a, b) => a - b)).toEqual(order)
+    expect(new Set(order).size).toBe(order.length)
+  })
+
+  it("úloha z číselníka; vlastný druh podľa voľby, inak výkladový", async () => {
+    const { documentRole, categoryRank, checkCustomItem } = await import("../src/lib/codelists")
+    expect(documentRole("stanovy")).toBe("binding")
+    expect(documentRole("manual")).toBe("guidance")
+    expect(documentRole("zapisnica")).toBe("record")
+    expect(documentRole("neznamy")).toBe("guidance")
+    const extras = { category: [checkCustomItem("rozhodnutie", "Rozhodnutie", "binding"), checkCustomItem("navod", "Návod", "nezmysel")] }
+    expect(documentRole("rozhodnutie", extras)).toBe("binding")
+    expect(documentRole("navod", extras)).toBe("guidance")
+    expect(categoryRank("rozhodnutie", extras)).toBeGreaterThan(categoryRank("smernica"))
+    expect(categoryRank("rozhodnutie", extras)).toBeLessThan(categoryRank("manual"))
+  })
+})

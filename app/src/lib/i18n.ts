@@ -1963,6 +1963,10 @@ interface Dictionary {
       colKey: string
       colUse: string
       baseBadge: string
+      /** Úloha druhu dokumentu (ADR-034, D215). */
+      roles: Record<"binding" | "guidance" | "record", string>
+      roleLabel: string
+      roleHint: string
     }
     /** Časť Potvrdzovanie (3. 10. 2026) — prah meškania organizácie. */
     acknowledgements: {
@@ -6543,6 +6547,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.reasonRequired": "Uveďte dôvod zamietnutia.",
     "compliance.noDocuments": "Vyberte aspoň jeden dokument.",
     "compliance.unknownDocument": "Niektorý z vybraných dokumentov tu nie je.",
+    "compliance.referenceNotBinding": "Proti dokumentu „{title}\" sa kontrolovať nedá — nie je záväzný. Meradlom je zákon, stanovy, poriadok alebo smernica.",
     "compliance.notPublic": "Verejný obsah možno kontrolovať len verejnými dokumentmi — „{title}“ verejný nie je.",
     "compliance.emptyDocuments": "Vybrané dokumenty nemajú text.",
     "compliance.packTooLarge": "Vybrané dokumenty sú spolu príliš veľké — vyberte menej.",
@@ -7132,7 +7137,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labels: {
         category: {
           name: "Druhy dokumentov",
-          hint: "Čím dokument je: norma, smernica, metodický pokyn, zápisnica…",
+          hint: "Čím dokument je: zákon, stanovy, poriadok, smernica, manuál, zápisnica… Úloha hovorí, či je záväzný, výkladový alebo záznam.",
         },
         tags: {
           name: "Značky",
@@ -7163,6 +7168,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colKey: "Kľúč",
       colUse: "Použitie",
       baseBadge: "základná",
+      roles: { binding: "záväzný", guidance: "výkladový", record: "záznam" },
+      roleLabel: "Úloha druhu",
+      roleHint: "Záväzný mení len orgán novým znením a je meradlom pri kontrole súladu. Výkladový (návod, manuál) sa kontroluje proti záväzným a dopĺňa sa z otázok helpdesku. Záznam sa nemení ani nekontroluje.",
     },
     acknowledgements: {
       heading: "Potvrdzovanie",
@@ -8427,7 +8435,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardNever: "Proti dokumentom ešte neskontrolované. Kontrola sa spúšťa vo fronte návrhov.",
       faqCardOpen: "Skontrolovať vo fronte",
       references: "Referenčné normy",
-      referencesHint: "Stanovy, poriadky a normy v platnom znení, proti ktorým sa kontroluje.",
+      referencesHint: "Ponúkajú sa len záväzné dokumenty — zákon, stanovy, poriadky a smernice — od najvyššieho, v platnom znení.",
       start: "Skontrolovať súlad",
       started: "Kontrola beží na pozadí — keď dobehne, príde vám upozornenie a e-mail.",
       none: "Kontrola dokumentov ešte neprebehla.",
@@ -11579,6 +11587,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.reasonRequired": "Uveďte důvod zamítnutí.",
     "compliance.noDocuments": "Vyberte alespoň jeden dokument.",
     "compliance.unknownDocument": "Některý z vybraných dokumentů tu není.",
+    "compliance.referenceNotBinding": "Proti dokumentu „{title}\" nelze kontrolovat — není závazný. Měřítkem je zákon, stanovy, řád nebo směrnice.",
     "compliance.notPublic": "Veřejný obsah lze kontrolovat jen veřejnými dokumenty — „{title}“ veřejný není.",
     "compliance.emptyDocuments": "Vybrané dokumenty nemají text.",
     "compliance.packTooLarge": "Vybrané dokumenty jsou dohromady příliš velké — vyberte méně.",
@@ -12168,7 +12177,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labels: {
         category: {
           name: "Druhy dokumentů",
-          hint: "Čím dokument je: norma, směrnice, metodický pokyn, zápis…",
+          hint: "Čím dokument je: zákon, stanovy, řád, směrnice, manuál, zápis… Úloha říká, zda je závazný, výkladový nebo záznam.",
         },
         tags: {
           name: "Značky",
@@ -12199,6 +12208,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colKey: "Klíč",
       colUse: "Použití",
       baseBadge: "základní",
+      roles: { binding: "závazný", guidance: "výkladový", record: "záznam" },
+      roleLabel: "Úloha druhu",
+      roleHint: "Závazný mění jen orgán novým zněním a je měřítkem při kontrole souladu. Výkladový (návod, manuál) se kontroluje proti závazným a doplňuje se z otázek helpdesku. Záznam se nemění ani nekontroluje.",
     },
     acknowledgements: {
       heading: "Potvrzování",
@@ -13460,7 +13472,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardNever: "Proti dokumentům ještě nezkontrolováno. Kontrola se spouští ve frontě návrhů.",
       faqCardOpen: "Zkontrolovat ve frontě",
       references: "Referenční normy",
-      referencesHint: "Stanovy, řády a normy v platném znění, proti kterým se kontroluje.",
+      referencesHint: "Nabízejí se jen závazné dokumenty — zákon, stanovy, řády a směrnice — od nejvyššího, v platném znění.",
       start: "Zkontrolovat soulad",
       started: "Kontrola běží na pozadí — až doběhne, přijde vám upozornění a e-mail.",
       none: "Kontrola dokumentů ještě neproběhla.",
@@ -16604,6 +16616,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "proposal.reasonRequired": "Give a reason for rejecting.",
     "compliance.noDocuments": "Select at least one document.",
     "compliance.unknownDocument": "One of the selected documents does not exist here.",
+    "compliance.referenceNotBinding": "You cannot check against “{title}” — it is not binding. The measure is a law, statutes, a regulation or a directive.",
     "compliance.notPublic": "Public content can be checked only against public documents — “{title}” is not public.",
     "compliance.emptyDocuments": "The selected documents have no text.",
     "compliance.packTooLarge": "The selected documents are too large together — select fewer.",
@@ -17193,7 +17206,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       labels: {
         category: {
           name: "Document types",
-          hint: "What the document is: a regulation, a directive, a guideline, minutes…",
+          hint: "What the document is: a law, statutes, a regulation, a directive, a manual, minutes… The role says whether it is binding, guidance or a record.",
         },
         tags: {
           name: "Tags",
@@ -17224,6 +17237,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colKey: "Key",
       colUse: "Usage",
       baseBadge: "built-in",
+      roles: { binding: "binding", guidance: "guidance", record: "record" },
+      roleLabel: "Role of the type",
+      roleHint: "A binding document is changed only by a body through a new version and is the measure in compliance checks. Guidance (a manual, a how-to) is checked against binding ones and completed from helpdesk questions. A record is neither changed nor checked.",
     },
     acknowledgements: {
       heading: "Acknowledgement",
@@ -18479,7 +18495,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardNever: "Not checked against documents yet. The check is started in the proposal queue.",
       faqCardOpen: "Check in the queue",
       references: "Reference rules",
-      referencesHint: "Statutes, codes and rules in their valid version to check against.",
+      referencesHint: "Only binding documents are offered — law, statutes, regulations and directives — highest first, in their valid version.",
       start: "Check compliance",
       started: "The check is running in the background — you will get a notification and an e-mail when it finishes.",
       none: "No document check has run yet.",

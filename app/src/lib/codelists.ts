@@ -36,11 +36,30 @@ import { AppError } from "./appError"
  */
 export type ChunkingStrategy = "articles" | "entries"
 
+/**
+ * Úloha dokumentu — vlastnosť **druhu** (ADR-034, D215).
+ *
+ *   • `binding`  — záväzný (zákon, stanovy, poriadok, smernica): mení ho len
+ *     orgán novým schváleným znením; v kontrole súladu je len referenciou a
+ *     analýza helpdesku k nemu nenavrhuje text, len podnet pre legislatívu;
+ *   • `guidance` — výkladový (manuál, návod, metodický pokyn): mení ho správca
+ *     obsahu; kontroluje sa proti záväzným a analýza helpdesku doň navrhuje
+ *     doplnenia;
+ *   • `record`   — záznam (zápisnica, zmluva, tlačivo): nemení sa a nekontroluje.
+ */
+export type DocumentRole = "binding" | "guidance" | "record"
+export const DOCUMENT_ROLES: readonly DocumentRole[] = ["binding", "guidance", "record"]
+
 export interface CodelistItem {
   key: string
   label?: string
   description?: string
   chunking?: ChunkingStrategy
+  /** Len pri `category` (ADR-034). */
+  role?: DocumentRole
+  /** Poradie záväznosti pri `category` — menšie číslo je vyššie (zákon 0). */
+  rank?: number
+  isActive?: boolean
 }
 
 export interface Codelist {
@@ -48,7 +67,7 @@ export interface Codelist {
   items: CodelistItem[]
 }
 
-type RawCodelist = { closed?: boolean; items?: { key: string; label?: string; description?: string; chunking?: ChunkingStrategy }[] }
+type RawCodelist = { closed?: boolean; items?: CodelistItem[] }
 
 function prepare(c: unknown): Codelist {
   const s = c as RawCodelist
@@ -79,6 +98,34 @@ export function chunkingStrategyFor(category: string | null | undefined): Chunki
   if (!category) return "articles"
   const item = CODELISTS.category.items.find(p => p.key === category)
   return item?.chunking === "entries" ? "entries" : "articles"
+}
+
+/**
+ * Úloha druhu dokumentu (ADR-034, D215). Vlastný druh organizácie ju nesie,
+ * keď ju pri ňom správca vybral; inak a pri neznámom druhu je **výkladový** —
+ * dokument bez určenej úlohy sa smie kontrolovať, ale nemá byť meradlom pre
+ * iné (záväznosť sa neprisudzuje potichu).
+ */
+export function documentRole(category: string | null | undefined, extras?: CodelistExtras): DocumentRole {
+  if (!category) return "guidance"
+  const item = codelistFor("category", extras).items.find(p => p.key === category)
+  return item?.role ?? "guidance"
+}
+
+/** Záväzný druh bez čísla (vlastný druh organizácie) sa radí za smernicu. */
+const CUSTOM_BINDING_RANK = 4
+/** Výkladový a neznámy druh — za všetky záväzné. */
+const GUIDANCE_RANK = 10
+
+/**
+ * Poradie záväznosti druhu — menšie číslo je vyššie (ADR-034, D216). Slúži na
+ * zoradenie referencií v kontrole súladu a ako predvoľba, kým dokument nemá
+ * miesto v hierarchii dokumentov.
+ */
+export function categoryRank(category: string | null | undefined, extras?: CodelistExtras): number {
+  const item = category ? codelistFor("category", extras).items.find(p => p.key === category) : undefined
+  if (typeof item?.rank === "number") return item.rank
+  return item?.role === "binding" ? CUSTOM_BINDING_RANK : GUIDANCE_RANK
 }
 
 /** Povinné metadáta dokumentu — zhodné s `scripts/lib/meta.mjs`. */
@@ -194,7 +241,7 @@ export function codelistOptions(codelist: string, extras?: CodelistExtras): { va
  * Kľúč sa **nedá vziať späť**: otaguje sa ním obsah a zostane v `documents`
  * aj v `document_chunks`. Preto ten istý úzky tvar ako všade inde.
  */
-export function checkCustomItem(key: string, label: string): CodelistItem {
+export function checkCustomItem(key: string, label: string, role?: string): CodelistItem {
   const k = (key ?? "").trim().toLowerCase()
   if (!KEY_PATTERN.test(k)) {
     throw new CodelistError(
@@ -205,5 +252,7 @@ export function checkCustomItem(key: string, label: string): CodelistItem {
     )
   }
   const l = (label ?? "").trim()
-  return l ? { key: k, label: l } : { key: k }
+  // Úloha druhu (ADR-034) — len známa hodnota; bez nej je druh výkladový.
+  const r = DOCUMENT_ROLES.find(x => x === role)
+  return { key: k, ...(l ? { label: l } : {}), ...(r ? { role: r } : {}) }
 }
