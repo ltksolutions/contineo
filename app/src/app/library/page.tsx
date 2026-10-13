@@ -616,6 +616,10 @@ export default async function LibraryPage({
             <Link className="page-more-item" href="/library/curation">
               {dictionary(uiLanguage).curation.open}
             </Link>
+            {/* Hierarchia dokumentov — čo je čomu nadradené (ADR-034, D219). */}
+            <Link className="page-more-item" href="/library/hierarchy">
+              {dictionary(uiLanguage).library.hierarchy.title}
+            </Link>
             {/* Kontrola súladu dokumentov proti normám (ADR-032, D196) — len s rolou
                 `compliance`; bez nej by odkaz viedol na 404. */}
             {isComplianceReviewer(ctx.person) && (

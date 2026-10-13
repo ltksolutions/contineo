@@ -1971,3 +1971,35 @@ export async function reindexAll(
 
   return { preindexovanych: reindexed, preskocenych: skipped, remaining: remaining, errors: errors }
 }
+
+/**
+ * Nadradené dokumenty (ADR-034, D219). Viac je v poriadku — manuál môže stáť
+ * pod dvoma poriadkami —, cyklus nie: dokument nesmie byť nadradený sám sebe
+ * ani cez iné. Nadradený musí byť dokument tej istej organizácie (D32).
+ * Zmena ide do auditu s názvami (kópia, nie odkaz).
+ *
+ * Vracia `false`, keď je výber rovnaký ako uložený.
+ */
+export async function saveDocumentParents(companyCode: string, documentId: string, parentIds: string[], actor: string): Promise<boolean> {
+  const { parentsMapOf, parentsProblem } = await import("./documentHierarchy")
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const all = await col.find({ companyCode }, { projection: { _id: 0, documentId: 1, title: 1, parentIds: 1 } }).toArray() as unknown as { documentId: string; title?: string; parentIds?: string[] }[]
+  const doc = all.find(d => d.documentId === documentId)
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  const wanted = [...new Set(parentIds.map(p => p.trim()).filter(Boolean))]
+  if (wanted.some(p => !all.some(d => d.documentId === p))) throw new LibraryError("library.documentNotFound", "Niektorý z nadradených dokumentov tu nie je.")
+  const problem = parentsProblem(documentId, wanted, parentsMapOf(all))
+  if (problem) throw new LibraryError(problem, problem === "hierarchy.self" ? "Dokument nemôže byť nadradený sám sebe." : "Takto by bol dokument nadradený sám sebe cez iné dokumenty.")
+
+  const before = doc.parentIds ?? []
+  if (before.length === wanted.length && before.every(p => wanted.includes(p))) return false
+  await col.updateOne({ companyCode, documentId }, { $set: { parentIds: wanted, updatedAt: new Date(), updatedBy: actor } })
+  const title = (id: string) => String(all.find(d => d.documentId === id)?.title ?? id)
+  await writeAudit({
+    companyCode, subject: "document", action: "changed", actor,
+    targetId: documentId, targetLabel: String(doc.title ?? documentId),
+    changes: { parentIds: { from: before.map(title).join(", ") || null, to: wanted.map(title).join(", ") || null } },
+    note: "nadradené dokumenty (ADR-034, D219)",
+  })
+  return true
+}

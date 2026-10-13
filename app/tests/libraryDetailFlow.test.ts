@@ -62,6 +62,7 @@ vi.mock("@/lib/libraryRead", async importOriginal => ({
   libraryDetail: async () => state.detail,
   versionMetaSuggestions: async () => ({ authors: [], approvers: [] }),
   tagOptions: async () => [],
+  hierarchyDocuments: async () => [],
 }))
 vi.mock("@/app/documents/[documentId]/actions", () => stubs(["acknowledgeAction","setLegalBasisAction"]))
 vi.mock("@/lib/session", () => ({}))

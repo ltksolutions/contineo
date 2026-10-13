@@ -83,6 +83,8 @@ export interface LibraryRow {
   /** `draft` = ešte nepublikované, `published` = má aspoň jedno vydané znenie. */
   status: string
   folderId?: string | null
+  /** Nadradené dokumenty (ADR-034, D219) — documentId; viac je v poriadku. */
+  parentIds: string[]
   /** Názvy priečinkov od koreňa — do zoznamu, aby bolo vidieť, kde dokument je. */
   folderTrail?: string[]
   versionCount: number
@@ -220,6 +222,7 @@ function toRow(d: RawRow): LibraryRow {
     processingState: (d.processingStatus as ProcessingState | undefined) ?? "uploaded",
     status: String(d.status ?? "draft"),
     folderId: (d.folderId as string | null | undefined) ?? null,
+    parentIds: Array.isArray(d.parentIds) ? (d.parentIds as string[]) : [],
     versionCount: (d.versions ?? []).length,
     effectiveLabel: validityLabel(d),
     effectiveFrom: validityFrom(d),
@@ -656,7 +659,7 @@ export async function libraryList(
       projection: {
         documentId: 1, title: 1, category: 1, language: 1, accessLevel: 1,
         tags: 1, status: 1, processingStatus: 1, draftMarkdown: 1, originalFile: 1,
-        folderId: 1, folderPath: 1, updatedAt: 1, updatedBy: 1,
+        folderId: 1, folderPath: 1, parentIds: 1, updatedAt: 1, updatedBy: 1,
         ownerDepartmentId: 1, internalNumber: 1, source: 1,
         // Z verzií len to, čo treba na „ktoré znenie platí" — samotné texty
         // znení sú veľké a v zozname by sa ťahali zbytočne.
@@ -778,4 +781,16 @@ export async function tagOptions(companyCode: string, extras?: CodelistExtras): 
     ...fromCodelist.map(o => ({ value: o.value, label: o.label, count: counts.get(o.value) ?? 0 })),
     ...extra.map(value => ({ value, count: counts.get(value) ?? 0 })),
   ]
+}
+
+/** Dokumenty organizácie pre hierarchiu (ADR-034, D219) — názov, druh a nadradené. */
+export async function hierarchyDocuments(companyCode: string): Promise<{ documentId: string; title: string; category: string | null; parentIds: string[] }[]> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const rows = await col.find({ companyCode }, { projection: { _id: 0, documentId: 1, title: 1, category: 1, parentIds: 1 } }).sort({ title: 1 }).toArray()
+  return rows.map(r => ({
+    documentId: String(r.documentId),
+    title: String(r.title ?? r.documentId),
+    category: r.category ? String(r.category) : null,
+    parentIds: Array.isArray(r.parentIds) ? (r.parentIds as string[]) : [],
+  }))
 }
