@@ -5287,6 +5287,13 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 @media (min-width: 1024px) {
   .kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+/* Piata dlaždica (Kontrola súladu, len s rolou) — na telefóne cez celú šírku,
+   aby neostala osamelá v polovici riadku; od 1024 px päť v rade. */
+.kpi--5 > :last-child { grid-column: 1 / -1; }
+@media (min-width: 1024px) {
+  .kpi--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .kpi--5 > :last-child { grid-column: auto; }
+}
 
 .kpi-tile {
   display: flex;

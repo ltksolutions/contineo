@@ -1242,6 +1242,7 @@ interface Dictionary {
     soonNote: (n: number) => string
     mine: string
     newNote: (days: number) => string
+    complianceNote: string
     expiringNote: (days: number) => string
     attention: string
     news: string
@@ -3312,7 +3313,7 @@ interface Dictionary {
       faqCardTitle: (channel: string) => string
       faqCardCounts: (open: number, reviewed: number) => string
       faqCardRunning: (done: number, total: number) => string
-      faqCardLast: (when: string) => string
+      faqCardLast: (when: string, who: string) => string
       faqCardNever: string
       faqCardOpen: string
       references: string
@@ -5929,10 +5930,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       toApprove: "Čaká na schválenie",
       new: "Nové",
       expiring: "Expiruje",
+      compliance: "Kontrola súladu",
     },
     soonNote: n => (n === 1 ? "1 súrne" : n <= 4 ? `${n} súrne` : `${n} súrnych`),
     mine: "na mňa",
     newNote: days => `dokumentov za ${days} dní`,
+    complianceNote: "čaká na kontrolu",
     expiringNote: days => `predpisov do ${days} dní`,
     attention: "Vyžaduje vašu pozornosť",
     news: "Novinky v knižnici",
@@ -8420,7 +8423,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardTitle: ch => `Návrhy FAQ — ${ch}`,
       faqCardCounts: (o, r) => `${o} ${o === 1 ? "otvorený návrh" : o < 5 && o > 0 ? "otvorené návrhy" : "otvorených návrhov"}, ${r} skontrolovaných`,
       faqCardRunning: (d, n) => `Kontrola beží — ${d} z ${n} návrhov.`,
-      faqCardLast: when => `Posledná kontrola ${when}. Spúšťa sa vo fronte návrhov.`,
+      faqCardLast: (when, who) => `Posledná kontrola ${when}, ${who}. Spúšťa sa vo fronte návrhov.`,
       faqCardNever: "Proti dokumentom ešte neskontrolované. Kontrola sa spúšťa vo fronte návrhov.",
       faqCardOpen: "Skontrolovať vo fronte",
       references: "Referenčné normy",
@@ -10963,10 +10966,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       toApprove: "Čeká na schválení",
       new: "Nové",
       expiring: "Expiruje",
+      compliance: "Kontrola souladu",
     },
     soonNote: n => (n === 1 ? "1 spěchá" : `${n} spěchá`),
     mine: "na mě",
     newNote: days => `dokumentů za ${days} dní`,
+    complianceNote: "čeká na kontrolu",
     expiringNote: days => `předpisů do ${days} dní`,
     attention: "Vyžaduje vaši pozornost",
     news: "Novinky v knihovně",
@@ -13451,7 +13456,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardTitle: ch => `Návrhy FAQ — ${ch}`,
       faqCardCounts: (o, r) => `${o} ${o === 1 ? "otevřený návrh" : o < 5 && o > 0 ? "otevřené návrhy" : "otevřených návrhů"}, ${r} zkontrolovaných`,
       faqCardRunning: (d, n) => `Kontrola běží — ${d} z ${n} návrhů.`,
-      faqCardLast: when => `Poslední kontrola ${when}. Spouští se ve frontě návrhů.`,
+      faqCardLast: (when, who) => `Poslední kontrola ${when}, ${who}. Spouští se ve frontě návrhů.`,
       faqCardNever: "Proti dokumentům ještě nezkontrolováno. Kontrola se spouští ve frontě návrhů.",
       faqCardOpen: "Zkontrolovat ve frontě",
       references: "Referenční normy",
@@ -15986,10 +15991,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       toApprove: "Waiting for approval",
       new: "New",
       expiring: "Expiring",
+      compliance: "Compliance check",
     },
     soonNote: n => (n === 1 ? "1 urgent" : `${n} urgent`),
     mine: "for you",
     newNote: days => `documents in ${days} days`,
+    complianceNote: "awaiting check",
     expiringNote: days => `rules within ${days} days`,
     attention: "Needs your attention",
     news: "New in the library",
@@ -18468,7 +18475,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardTitle: ch => `FAQ proposals — ${ch}`,
       faqCardCounts: (o, r) => `${o} open ${o === 1 ? "proposal" : "proposals"}, ${r} checked`,
       faqCardRunning: (d, n) => `Check running — ${d} of ${n} proposals.`,
-      faqCardLast: when => `Last check ${when}. It is started in the proposal queue.`,
+      faqCardLast: (when, who) => `Last check ${when}, ${who}. It is started in the proposal queue.`,
       faqCardNever: "Not checked against documents yet. The check is started in the proposal queue.",
       faqCardOpen: "Check in the queue",
       references: "Reference rules",

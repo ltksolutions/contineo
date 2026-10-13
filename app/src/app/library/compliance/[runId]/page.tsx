@@ -14,6 +14,7 @@
  * Bez JavaScriptu funguje všetko okrem „Kopírovať znenie".
  */
 
+import { modelLabel } from "@/lib/aiSettings"
 import NormCitation from "@/components/NormCitation"
 import { loadNormPreview, type NormPreview } from "@/lib/normPreview"
 import { notFound, redirect } from "next/navigation"
@@ -148,7 +149,9 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   const dict = dictionary(language)
   const t = dict.library.compliance
   const branding = brandingView(ctx.tenant)
-  const [usage, model] = await Promise.all([runUsage(run), runModel(run)])
+  const [usage, modelId] = await Promise.all([runUsage(run), runModel(run)])
+  // Názov, nie identifikátor (`claude-opus-5-5` → „Claude Opus 5.5").
+  const model = modelId ? modelLabel(modelId) : null
   const when = formatDate(run.startedAt, language)
   const minutes = run.finishedAt ? Math.round((run.finishedAt.getTime() - run.startedAt.getTime()) / 60_000) : null
   const running = run.pending.length > 0
