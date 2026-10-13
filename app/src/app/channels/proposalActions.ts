@@ -140,7 +140,7 @@ export async function startReviewAction(fd: FormData) {
   try {
     // Len založiť — veľký výber noriem má viac krokov na dávku a akcia by nestihla
     // časový limit; prvú dávku hneď po odpovedi spustí reťaz na pozadí.
-    // Témy ako zaškrtnuté riadky; „Všetky" alebo žiadna vybraná = všetky otvorené návrhy.
+    // Vybrané témy; žiadna (alebo „*" zo staršieho formulára) = všetky otvorené návrhy.
     const topics = fd.getAll("topic").map(String).filter(Boolean)
     await startProposalReview(ctx.person.companyCode, key, fd.getAll("documentIds").map(String), topics.includes("*") ? [] : topics, ctx.person.email)
     const origin = originFromHeaders(await headers())

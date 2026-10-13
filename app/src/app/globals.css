@@ -1553,10 +1553,14 @@ html { scroll-padding-top: var(--chrome-h); }
   background: var(--surface-2);
   color: var(--ink);
   font-size: 15px;
-  white-space: nowrap;
+  /* Dlhý názov (téma, predpis) sa na telefóne zalomí v chipse, nepretečie
+     z poľa doprava (KANALY, 13. 10. 2026 — „Problémy s prihlásením…" na 390 px). */
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .multiselect-chip-remove {
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
   width: 26px;

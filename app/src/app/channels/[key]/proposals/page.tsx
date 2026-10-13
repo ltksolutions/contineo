@@ -483,32 +483,19 @@ export default async function ProposalsPage({ params, searchParams }: { params: 
               selected={run?.documentIds ?? []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
           </div>
           {/*
-            Témy ako zaškrtnuté riadky (`.select-row`, vzor ZAKLAD-vyber-skupin-
-            a-znaciek; Ján 13. 10. 2026) — dovtedy systémový `<select>` s jedinou
-            témou. Predvolená je téma, v ktorej človek práve je. „Všetky" má
-            prednosť pred ostatnými; bez výberu sa kontrolujú tiež všetky.
+            Témy tým istým výberom s hľadaním ako dokumenty nad nimi (Ján
+            13. 10. 2026; predtým `<select>` s jedinou témou, potom riadky so
+            zaškrtávaním). Predvolená je téma, v ktorej človek práve je;
+            prázdny výber = všetky otvorené návrhy.
           */}
           {stats.length > 1 && (
-            <fieldset className="form-group">
-              <legend className="form-group-head">{t.reviewScope}</legend>
-              <div className="card form-group-body form-group-body--rows">
-                <div className="form-list">
-                  <label className="form-row select-row">
-                    <input type="checkbox" name="topic" value="*" defaultChecked={!topic || topic.open === 0} />
-                    <span className="form-row-main">{t.reviewScopeAll}</span>
-                    <span className="form-row-sub">{openAll.length}</span>
-                  </label>
-                  {stats.filter(s => s.open > 0).map(x => (
-                    <label key={x.topicKey} className="form-row select-row">
-                      <input type="checkbox" name="topic" value={x.topicKey} defaultChecked={x.topicKey === topic?.topicKey} />
-                      <span className="form-row-main">{x.topicLabel}</span>
-                      <span className="form-row-sub">{x.open}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <p className="form-group-foot quiet">{t.reviewScopeHint}</p>
-            </fieldset>
+            <div className="field">
+              <span className="field-label">{t.reviewScope}</span>
+              <MultiSelect name="topic" placeholder={t.reviewScopeAll}
+                options={stats.filter(s => s.open > 0).map(x => ({ value: x.topicKey, label: `${x.topicLabel} (${x.open})` }))}
+                selected={topic && topic.open > 0 ? [topic.topicKey] : []} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+              <span className="quiet field-hint">{t.reviewScopeHint}</span>
+            </div>
           )}
           <div className="task-acts">
             <SubmitButton className="button button--quiet">{t.reviewStart}</SubmitButton>
