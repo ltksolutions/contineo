@@ -6,10 +6,10 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ### Kanály: kontrola návrhov FAQ pre viac tém naraz (2026-10-13)
 
-- „Čo kontrolovať" v kontrole proti dokumentom je zoznam tém so
-  zaškrtávacími políčkami a počtom otvorených návrhov (dovtedy rozbaľovací
-  zoznam s jedinou témou). Predvolená je téma, v ktorej človek práve je;
-  „Všetky otvorené návrhy" má prednosť.
+- „Čo kontrolovať" v kontrole proti dokumentom je ten istý výber s hľadaním
+  ako „Dokumenty, proti ktorým sa kontroluje" — viac tém naraz, pri každej
+  počet otvorených návrhov (dovtedy rozbaľovací zoznam s jedinou témou).
+  Predvolená je téma, v ktorej človek práve je; prázdne pole = všetky.
 
 ### Kuriér: správy medzi ľuďmi v organizácii (2026-10-12, ADR-033)
 
