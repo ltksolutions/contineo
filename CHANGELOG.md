@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola súladu: kto a kedy, dlaždica na Prehľade (2026-10-13)
+
+- V zozname kontrol je pri každej kontrole dátum a meno toho, kto ju
+  spustil (aj pri pomenovanej kontrole a pri kontrole návrhov FAQ).
+- Detail kontroly ukazuje model názvom („Claude Opus 5.5"), nie kódom.
+- Prehľad má pre rolu kontroly súladu dlaždicu „Kontrola súladu" s počtom
+  požiadaviek „Čaká na kontrolu" — priamy odkaz, dovtedy len cez ⋯ v Knižnici.
+
 ### Kanály: kontrola návrhov FAQ pre viac tém naraz (2026-10-13)
 
 - „Čo kontrolovať" v kontrole proti dokumentom je ten istý výber s hľadaním

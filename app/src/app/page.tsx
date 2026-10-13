@@ -31,6 +31,8 @@ import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor, documentTitles } from "@/lib/approvalsDb"
 import { libraryNews, expiringVersions, NEW_DAYS, EXPIRING_DAYS } from "@/lib/overview"
 import { dueState } from "@/lib/due"
+import { isComplianceReviewer } from "@/lib/complianceAccess"
+import { openRequests } from "@/lib/complianceRequests"
 
 export const dynamic = "force-dynamic"
 
@@ -75,13 +77,16 @@ export default async function OverviewPage({
   const language = person.language
   const t = dictionary(language).overview
 
-  const [pending, approvals, news, expiring, nav] = await Promise.all([
+  // Kontrola súladu (ADR-032) — dlaždica len s rolou `compliance`; bez nej by viedla na 404.
+  const reviewer = isComplianceReviewer(person)
+  const [pending, approvals, news, expiring, nav, complianceRequests] = await Promise.all([
     pendingForPerson(person),
     roundsWaitingFor(person.companyCode, person.email),
     libraryNews(person.companyCode),
     expiringVersions(person.companyCode),
     // Tie isté roly a počty ako shell — `cache()`, takže bez dotazov navyše.
     shellNavData(),
+    reviewer ? openRequests(person.companyCode) : Promise.resolve([]),
   ])
   /*
     Dlaždice sekcií (SHELL-rozcestnik): od 640 px nie je stále menu, sekcie
@@ -128,6 +133,18 @@ export default async function OverviewPage({
       note: t.expiringNote(EXPIRING_DAYS),
       tone: expiring.length > 0 ? "warn" : undefined,
     },
+    /*
+      Priamy odkaz na Kontrolu súladu (Ján 13. 10. 2026) — dovtedy len cez ⋯
+      v Knižnici. Číslo sú požiadavky „Čaká na kontrolu" (nové znenie
+      dokumentu v pevnej väzbe, D200).
+    */
+    ...(reviewer ? [{
+      key: "compliance",
+      href: complianceRequests.length > 0 ? "/library/compliance#requests" : "/library/compliance",
+      value: complianceRequests.length,
+      note: t.complianceNote,
+      tone: complianceRequests.length > 0 ? "warn" as const : undefined,
+    }] : []),
   ]
 
   /*
@@ -155,7 +172,7 @@ export default async function OverviewPage({
 
         {/* KPI pás. Každá dlaždica je odkaz na predfiltrovaný zoznam — číslo
             bez cesty k nemu je ozdoba. */}
-        <div className="kpi">
+        <div className={tiles.length === 5 ? "kpi kpi--5" : "kpi"}>
           {tiles.map(tile => (
             <Link key={tile.key} className="card kpi-tile" href={tile.href}>
               <span className="kpi-label">{t.tiles[tile.key]}</span>

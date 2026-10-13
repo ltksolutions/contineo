@@ -62,6 +62,19 @@ export const AI_MODELS: Record<AiPurpose, AiModelOption[]> = {
   ],
 }
 
+/**
+ * Názov modelu pre človeka („Claude Opus 5.5"), nie identifikátor
+ * (`claude-opus-5-5`). Neznámy model ostane identifikátorom — je to údaj
+ * z behu, nie z ponuky, a môže byť starší než dnešný zoznam.
+ */
+export function modelLabel(id: string): string {
+  for (const list of Object.values(AI_MODELS)) {
+    const hit = list.find(m => m.id === id)
+    if (hit) return hit.label
+  }
+  return id
+}
+
 /** Modely, ktoré platia, kým organizácia nevyberie iné — dnešné správanie. */
 export function defaultModels(): Record<AiPurpose, string> {
   return {

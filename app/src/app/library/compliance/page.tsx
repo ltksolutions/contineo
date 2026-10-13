@@ -21,6 +21,7 @@ import { complianceContext } from "@/lib/complianceAccess"
 import { documentRuns, reviewRunFor, proposalsScopeKey, MAX_FAILURES } from "@/lib/complianceCheck"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
+import { PERSONS_COLLECTION, type Person } from "@/lib/persons"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
@@ -59,6 +60,15 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
     ])
     return { key: ch.key, name: ch.name, open, reviewed, run }
   }))
+  /*
+   * Kto kontrolu spustil — menom, nie adresou (Ján 13. 10. 2026: v zozname
+   * nebolo vidieť dátum ani kto). Jeden dotaz na všetky behy naraz.
+   */
+  const starters = [...new Set([...runs.map(r => r.startedBy), ...faqQueues.map(f => f.run?.startedBy)].filter((e): e is string => Boolean(e)))]
+  const nameByEmail = new Map((await (await getCollection<Person>(PERSONS_COLLECTION))
+    .find({ companyCode: ctx.tenant.companyCode, email: { $in: starters } }, { projection: { _id: 0, email: 1, fullName: 1 } }).toArray())
+    .map(p => [p.email, p.fullName?.trim() || p.email]))
+  const who = (email: string) => nameByEmail.get(email) ?? email
 
   return (
     <AppShell language={language} title={t.heading} trail={{ "/library": dictionary(language).library.list.heading }}>
@@ -143,7 +153,7 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
                 <p className="quiet" style={{ margin: 0 }}>
                   {q.run && q.run.pending.length > 0
                     ? (q.run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span> : t.faqCardRunning(q.run.total - q.run.pending.length, q.run.total))
-                    : q.run ? t.faqCardLast(formatDate(q.run.finishedAt ?? q.run.updatedAt, language)) : t.faqCardNever}
+                    : q.run ? t.faqCardLast(formatDate(q.run.finishedAt ?? q.run.updatedAt, language), who(q.run.startedBy)) : t.faqCardNever}
                 </p>
               </div>
               <Link className="button button--quiet" href={`/channels/${encodeURIComponent(q.key)}/proposals#review`}>{t.faqCardOpen}</Link>
@@ -160,11 +170,13 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
             <section key={run.runId} className="card detail-block compliance-run">
               <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
                 <p style={{ margin: 0 }}>
-                  <b>{run.name || t.runMeta(formatDate(run.startedAt, language), run.startedBy)}</b>{" · "}
+                  <b>{run.name || t.runMeta(formatDate(run.startedAt, language), who(run.startedBy))}</b>{" · "}
                   {run.pending.length === 0 ? t.findingsCount(findings.length, open)
                     : run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span>
                     : t.progress(run.total - run.pending.length, run.total)}
                 </p>
+                {/* Pomenovaná kontrola má dátum a autora v riadku pod názvom; nepomenovaná ich má v názve. */}
+                {run.name && <p className="quiet" style={{ margin: 0 }}>{t.runMeta(formatDate(run.startedAt, language), who(run.startedBy))}</p>}
                 <p className="quiet" style={{ margin: 0 }}>
                   {run.scope.kind === "documents" ? run.scope.subjectIds.length : run.total} → {t.against(run.documents.map(d => d.title).join(", "))}
                 </p>
