@@ -491,7 +491,11 @@ export function parseDocReview(raw: unknown, pack: ReferencePack, newId: () => s
 // ── Beh ─────────────────────────────────────────────────────────────────────
 
 export type RunScope =
-  | { kind: "proposals"; channelKey: string; topicKey: string | null }
+  /*
+   * `topicKeys` — vybrané témy (výber viacerých, 13. 10. 2026); prázdne = všetky.
+   * `topicKey` ostáva kvôli behom uloženým predtým a pri jedinej téme sa plní ďalej.
+   */
+  | { kind: "proposals"; channelKey: string; topicKey: string | null; topicKeys?: string[] }
   | { kind: "documents"; subjectIds: string[] }
 
 export interface ComplianceRun {
@@ -639,11 +643,12 @@ export function isRunning(run: Pick<ComplianceRun, "pending" | "failures"> | nul
 }
 
 /**
- * Nový beh kontroly otvorených návrhov kanála (voliteľne jednej témy).
+ * Nový beh kontroly otvorených návrhov kanála — všetkých alebo vybraných tém
+ * (`topicKeys` prázdne = všetky).
  * Návrhy idú do verejného okna pomoci, preto len verejné referencie (D194).
  */
 export async function startProposalReview(
-  companyCode: string, channelKey: string, documentIds: string[], topicKey: string | null, actorEmail: string, now = new Date(),
+  companyCode: string, channelKey: string, documentIds: string[], topicKeys: string[], actorEmail: string, now = new Date(),
 ): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startProposalReview")
   // Druhé spustenie by beh prepísalo a rozbehnutá práca by sa zahodila (Ján 11. 10. 2026).
@@ -652,10 +657,10 @@ export async function startProposalReview(
   const ai = await aiForCompany(code)
   if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
   const open = await (await getCollection<FaqProposal>(PROPOSALS_COLLECTION))
-    .find({ companyCode: code, channelKey, status: "open", ...(topicKey ? { topicKey } : {}) }, { projection: { _id: 0, id: 1 } })
+    .find({ companyCode: code, channelKey, status: "open", ...(topicKeys.length ? { topicKey: { $in: topicKeys } } : {}) }, { projection: { _id: 0, id: 1 } })
     .sort({ threads: -1, lastMonth: -1, question: 1 }).toArray()
   if (!open.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otvorené návrhy na kontrolu.")
-  const run = newRun(code, proposalsScopeKey(channelKey), { kind: "proposals", channelKey, topicKey }, ids, packs, open.map(p => p.id), { email: actorEmail }, ai.models.compliance, now)
+  const run = newRun(code, proposalsScopeKey(channelKey), { kind: "proposals", channelKey, topicKey: topicKeys.length === 1 ? topicKeys[0] : null, topicKeys }, ids, packs, open.map(p => p.id), { email: actorEmail }, ai.models.compliance, now)
   await (await runs()).replaceOne({ companyCode: code, scopeKey: run.scopeKey }, run, { upsert: true })
   return run
 }

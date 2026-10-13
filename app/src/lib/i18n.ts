@@ -2802,6 +2802,7 @@ interface Dictionary {
     reviewDocuments: string
     reviewScope: string
     reviewScopeAll: string
+    reviewScopeHint: string
     reviewStart: string
     reviewRunningTitle: string
     reviewRunningNote: (when: string, who: string) => string
@@ -7977,10 +7978,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalsPrev: "Predchádzajúca strana",
     proposalsNext: "Ďalšia strana",
     review: "Kontrola proti dokumentom",
-    reviewIntro: "Umelá inteligencia porovná otvorené návrhy (alebo len zvolenú tému) s vybranými dokumentmi z knižnice a ku každému dá verdikt s citáciou. Odpovede sama nemení — výsledok prevezmete, alebo ponecháte pôvodné. Použiť možno len verejné dokumenty; dokument, ktorý ešte nemá zverejnené znenie, sa použije ako koncept a je tak označený.",
+    reviewIntro: "Umelá inteligencia porovná otvorené návrhy vybraných tém s vybranými dokumentmi z knižnice a ku každému dá verdikt s citáciou. Odpovede sama nemení — výsledok prevezmete, alebo ponecháte pôvodné. Použiť možno len verejné dokumenty; dokument, ktorý ešte nemá zverejnené znenie, sa použije ako koncept a je tak označený.",
     reviewDocuments: "Dokumenty, proti ktorým sa kontroluje",
     reviewScope: "Čo kontrolovať",
     reviewScopeAll: "Všetky otvorené návrhy",
+    reviewScopeHint: "Vyberte jednu alebo viac tém. Keď je zaškrtnuté „Všetky“ alebo nič, skontrolujú sa všetky otvorené návrhy.",
     reviewStart: "Skontrolovať proti dokumentom",
     reviewRunningTitle: "Kontrola beží na pozadí",
     reviewRunningNote: (when, who) => `Spustená ${when}, ${who}. Novú spustíte, keď dobehne — príde upozornenie a e-mail. Stav uvidíte po obnovení stránky.`,
@@ -13008,10 +13010,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalsPrev: "Předchozí strana",
     proposalsNext: "Další strana",
     review: "Kontrola proti dokumentům",
-    reviewIntro: "Umělá inteligence porovná otevřené návrhy (nebo jen zvolené téma) s vybranými dokumenty z knihovny a ke každému dá verdikt s citací. Odpovědi sama nemění — výsledek převezmete, nebo ponecháte původní. Použít lze jen veřejné dokumenty; dokument, který ještě nemá zveřejněné znění, se použije jako koncept a je tak označen.",
+    reviewIntro: "Umělá inteligence porovná otevřené návrhy vybraných témat s vybranými dokumenty z knihovny a ke každému dá verdikt s citací. Odpovědi sama nemění — výsledek převezmete, nebo ponecháte původní. Použít lze jen veřejné dokumenty; dokument, který ještě nemá zveřejněné znění, se použije jako koncept a je tak označen.",
     reviewDocuments: "Dokumenty, proti kterým se kontroluje",
     reviewScope: "Co kontrolovat",
     reviewScopeAll: "Všechny otevřené návrhy",
+    reviewScopeHint: "Vyberte jedno nebo více témat. Když je zaškrtnuto „Všechny“ nebo nic, zkontrolují se všechny otevřené návrhy.",
     reviewStart: "Zkontrolovat proti dokumentům",
     reviewRunningTitle: "Kontrola běží na pozadí",
     reviewRunningNote: (when, who) => `Spuštěna ${when}, ${who}. Novou spustíte, až doběhne — přijde upozornění a e-mail. Stav uvidíte po obnovení stránky.`,
@@ -18030,10 +18033,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     proposalsPrev: "Previous page",
     proposalsNext: "Next page",
     review: "Check against documents",
-    reviewIntro: "Artificial intelligence compares the open proposals (or just the selected topic) with the documents you choose from the library and gives each a verdict with a citation. It never changes the answers itself — you take over the result or keep the original. Only public documents can be used; a document without a published version is used as a draft and marked as such.",
+    reviewIntro: "Artificial intelligence compares the open proposals of the selected topics with the documents you choose from the library and gives each a verdict with a citation. It never changes the answers itself — you take over the result or keep the original. Only public documents can be used; a document without a published version is used as a draft and marked as such.",
     reviewDocuments: "Documents to check against",
     reviewScope: "What to check",
     reviewScopeAll: "All open proposals",
+    reviewScopeHint: "Pick one or more topics. With “All” or nothing selected, all open proposals are checked.",
     reviewStart: "Check against documents",
     reviewRunningTitle: "The check is running in the background",
     reviewRunningNote: (when, who) => `Started ${when}, ${who}. You can start a new one when it finishes — you will get a notification and an e-mail. Reload the page to see the state.`,
