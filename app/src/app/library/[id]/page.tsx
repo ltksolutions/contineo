@@ -14,7 +14,8 @@ import { basesOf } from "@/lib/versionResponsibility"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryDetail, displayStatus, versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
+import { libraryDetail, displayStatus, versionMetaSuggestions, tagOptions, hierarchyDocuments } from "@/lib/libraryRead"
+import { descendantsOf, parentsMapOf } from "@/lib/documentHierarchy"
 import VersionMetaFields from "@/components/VersionMetaFields"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -38,6 +39,7 @@ import { carryOverCandidates, audienceRef, audienceLabel } from "@/lib/assignmen
 import { codelistOptions, chunkingStrategyFor } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
+import MultiSelect from "@/components/MultiSelect"
 import ValueSelect, { SimilarWarning, withCodelistNote } from "@/components/ValueSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { documentProgress } from "@/lib/libraryProgress"
@@ -123,6 +125,15 @@ export default async function DocumentDetailPage({
   const folderTree = flattenTree(folders)
   const departments = await allDepartments(ctx.tenant.companyCode)
   const departmentRows = flattenDepartments(departments)
+  // Hierarchia dokumentov (ADR-034, D219): nadradené a podradené pri dokumente,
+  // v úprave výber nadradených bez vlastných potomkov (cyklus by neprešiel).
+  const hierDocs = await hierarchyDocuments(ctx.tenant.companyCode)
+  const hierTitle = new Map(hierDocs.map(x => [x.documentId, x.title]))
+  const parentDocs = (d.parentIds ?? []).filter(p => hierTitle.has(p))
+  const childDocs = hierDocs.filter(x => x.parentIds.includes(d.documentId)).map(x => x.documentId)
+  const below = new Set(descendantsOf(d.documentId, parentsMapOf(hierDocs)))
+  const parentChoices = hierDocs.filter(x => x.documentId !== d.documentId && !below.has(x.documentId) && x.category !== "faq")
+    .map(x => ({ value: x.documentId, label: x.title }))
   const draft = (d.draftMarkdown ?? "").trim()
   const date = (v: Date | string | null | undefined) => (v ? formatDate(new Date(v), language) : "")
   const base = `/library/${encodeURIComponent(documentId)}`
@@ -1044,6 +1055,8 @@ export default async function DocumentDetailPage({
   const docRows: [string, ReactNode][] = [
     [tv.rows.category, codeLabel("category", d.category)],
     [tv.rows.folder, folderName],
+    ...(parentDocs.length ? [[tv.rows.parents, <span key="parents">{parentDocs.map((p, i) => <span key={p}>{i > 0 && ", "}<Link href={`/library/${encodeURIComponent(p)}`}>{hierTitle.get(p)}</Link></span>)}</span>] as [string, ReactNode]] : []),
+    ...(childDocs.length ? [[tv.rows.children, <span key="children">{childDocs.map((p, i) => <span key={p}>{i > 0 && ", "}<Link href={`/library/${encodeURIComponent(p)}`}>{hierTitle.get(p)}</Link></span>)}</span>] as [string, ReactNode]] : []),
     [tv.rows.tags, d.tags.map(tag => codeLabel("tags", tag)).join(", ")],
     [tv.rows.access, codeLabel("accessLevel", d.accessLevel)],
     [tv.rows.language, codeLabel("language", d.language)],
@@ -1172,6 +1185,14 @@ export default async function DocumentDetailPage({
                     <span className="quiet field-hint">
                       {departmentRows.length === 0 ? tf.ownerDepartmentEmpty : tf.ownerDepartmentNote}
                     </span>
+                  </div>
+
+                  {/* Nadradené dokumenty (ADR-034, D219) — viac je v poriadku. */}
+                  <div className="field upload-wide">
+                    <span className="field-label">{tf.parents}</span>
+                    <input type="hidden" name="parentsEditable" value="1" />
+                    <MultiSelect name="parentIds" options={parentChoices} selected={parentDocs} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+                    <span className="quiet field-hint">{tf.parentsNote} <Link href="/library/hierarchy">{tf.parentsOverview}</Link></span>
                   </div>
 
                   <label className="field">

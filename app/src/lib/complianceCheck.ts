@@ -45,6 +45,7 @@ import { articleHash } from "./articleAnchors"
 import { textFingerprint } from "./chunkIdentity"
 import { categoryRank, documentRole } from "./codelists"
 import { tenantExtras } from "./codelistsTenant"
+import { ancestorsOf, parentsMapOf } from "./documentHierarchy"
 import { notify, notifyPeople } from "./notifications"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { tenantByCompanyCode, brandingView } from "./tenants"
@@ -686,6 +687,14 @@ export async function renameRun(companyCode: string, runId: string, name: string
   if (!r.matchedCount) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
 }
 
+/** Záväzní predkovia kontrolovaných dokumentov v hierarchii (ADR-034, D219), bez nich samých. */
+async function hierarchyReferences(code: string, subjects: string[], extras: ReturnType<typeof tenantExtras>): Promise<string[]> {
+  const docs = await (await getCollection(DOCUMENTS_COLLECTION)).find({ companyCode: code }, { projection: { _id: 0, documentId: 1, category: 1, parentIds: 1 } }).toArray() as unknown as { documentId: string; category?: string; parentIds?: string[] }[]
+  const map = parentsMapOf(docs)
+  const binding = new Set(docs.filter(d => documentRole(d.category, extras) === "binding").map(d => d.documentId))
+  return [...new Set(subjects.flatMap(s => ancestorsOf(s, map)))].filter(id => binding.has(id) && !subjects.includes(id))
+}
+
 /**
  * Nový beh kontroly dokumentov proti dokumentom (D196). Kontrolovaný
  * dokument nesmie byť zároveň referenčný; verejný sa kontroluje len
@@ -699,10 +708,13 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   const same = [...subjects].sort().join("|")
   const active = await (await runs()).find({ companyCode: code, "scope.kind": "documents", "pending.0": { $exists: true }, failures: { $lt: MAX_FAILURES } }, { projection: { _id: 0, scope: 1 } }).toArray()
   if (active.some(r => r.scope.kind === "documents" && [...r.scope.subjectIds].sort().join("|") === same)) throw new ComplianceError("compliance.alreadyRunning", "Kontrola už beží — počkajte, kým dobehne.")
-  const refs = documentIds.filter(id => !subjects.includes(id))
+  const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
+  let refs = documentIds.filter(id => !subjects.includes(id))
+  // Bez vybraných meradiel sa vezmú nadradené dokumenty kontrolovaných — celá
+  // cesta nahor, len záväzné (ADR-034, D219).
+  if (!refs.length) refs = await hierarchyReferences(code, subjects, extras)
   // Meradlom je len záväzný dokument (ADR-034, D218) — manuál nie je norma,
   // podľa ktorej by sa dal iný dokument opraviť.
-  const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
   const notBinding = (await loadDocuments(code, refs)).find(d => documentRole(d.category, extras) !== "binding")
   if (notBinding) throw new ComplianceError("compliance.referenceNotBinding", "Proti tomuto dokumentu sa kontrolovať nedá — nie je záväzný.", { title: String(notBinding.title ?? notBinding.documentId) })
   const subjectDocs = await loadDocuments(code, subjects)

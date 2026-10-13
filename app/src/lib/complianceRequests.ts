@@ -159,6 +159,24 @@ export async function upToDateSinceCheck(code: string, documentId: string): Prom
   return Boolean(res?.textHash && res.textHash === textFingerprint(text) && res.findings.every(f => f.status))
 }
 
+/**
+ * Hierarchia dokumentov ako väzby (ADR-034, D219): zverejnený dokument sa
+ * kontroluje proti svojim záväzným predkom a jeho potomkovia proti nemu
+ * (a ostatným svojim predkom). Pevné väzby (D200) ostávajú popri tom.
+ */
+async function hierarchyLinkRows(code: string, documentId: string): Promise<{ subjectId: string; referenceIds: string[] }[]> {
+  const { ancestorsOf, descendantsOf, parentsMapOf } = await import("./documentHierarchy")
+  const { documentRole } = await import("./codelists")
+  const { tenantExtras } = await import("./codelistsTenant")
+  const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
+  const docs = await (await getCollection(DOCUMENTS_COLLECTION)).find({ companyCode: code }, { projection: { _id: 0, documentId: 1, category: 1, parentIds: 1 } }).toArray() as unknown as { documentId: string; category?: string; parentIds?: string[] }[]
+  const map = parentsMapOf(docs)
+  const binding = new Set(docs.filter(d => documentRole(d.category, extras) === "binding").map(d => d.documentId))
+  return [documentId, ...descendantsOf(documentId, map)]
+    .map(id => ({ subjectId: id, referenceIds: ancestorsOf(id, map).filter(r => binding.has(r)) }))
+    .filter(r => r.referenceIds.length > 0)
+}
+
 interface FaqCitingRow {
   channelKey: string
   review?: { documents?: { documentId: string; textHash?: string }[] } | null
@@ -217,7 +235,8 @@ export async function requestOnPublish(companyCode: string, documentId: string, 
       ).toArray(),
     ])
     const history = runRows.map(r => ({ subjectIds: ((r.scope as { subjectIds?: string[] })?.subjectIds ?? []), referenceIds: (r.documentIds as string[]) ?? [] }))
-    const { subjectIds, referenceIds } = linkedChecks(documentId, linkRows, history, await upToDateSinceCheck(code, documentId))
+    const hierarchyRows = await hierarchyLinkRows(code, documentId)
+    const { subjectIds, referenceIds } = linkedChecks(documentId, [...linkRows, ...hierarchyRows], history, await upToDateSinceCheck(code, documentId))
     const faq = faqToCheck(documentId, faqRows, await publishedFingerprint(code, documentId))
     if (!subjectIds.length && !faq.length) return null
     const [documentTitle] = await titles(code, [documentId])

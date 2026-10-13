@@ -3124,6 +3124,10 @@ interface Dictionary {
       ownerDepartmentEmpty: string
       internalNumber: string
       internalNumberNote: string
+      /** Nadradené dokumenty (ADR-034, D219). */
+      parents: string
+      parentsNote: string
+      parentsOverview: string
       internalNumberPlaceholder: string
     }
     list: {
@@ -3512,6 +3516,16 @@ interface Dictionary {
       disabled: string
     }
 
+    /** Hierarchia dokumentov (ADR-034, D219). */
+    hierarchy: {
+      title: string
+      intro: string
+      emptyTitle: string
+      emptyText: string
+      alsoUnder: (names: string) => string
+      unplacedHeading: (n: number) => string
+      unplacedNote: string
+    }
     folders: {
       heading: string
       /** Odkaz z panela a nadpis stránky správy priečinkov (`/library/folders`). */
@@ -3903,7 +3917,7 @@ interface Dictionary {
         archivedPrep: string
       }
       docHeading: string
-      rows: { category: string; folder: string; tags: string; access: string; language: string; origin: string; identifier: string }
+      rows: { category: string; folder: string; tags: string; access: string; language: string; origin: string; identifier: string; parents: string; children: string }
       originManual: string
       originConnector: (name: string) => string
       textHeading: string
@@ -6602,6 +6616,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.uploadedFileNotFound": "Nahratý súbor sa nenašiel. Skús ho nahrať znova.",
     "library.draftPdfFailed": "Text je uložený, ale PDF konceptu sa nepodarilo vyrobiť — skúste to znova, kým sa koncept nepredloží na schválenie.",
     "library.documentNotFound": "Taký dokument tu nie je.",
+    "hierarchy.self": "Dokument nemôže byť nadradený sám sebe.",
+    "hierarchy.cycle": "Takto by bol dokument nadradený sám sebe cez iné dokumenty — vyber iný nadradený.",
     "chunking.unknownProfile": "Profil členenia „{value}“ neexistuje.",
     "chunking.labelRequired": "Profil potrebuje názov.",
     "chunking.aiNoText": "Dokument nemá text, nie je čo analyzovať.",
@@ -8278,6 +8294,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       ownerDepartmentEmpty: "Organizačná štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú v Nastavení organizácie.",
       internalNumber: "Interné číslo",
       internalNumberNote: "Nepovinné. Nie každý predpis ho má a do formulky potvrdenia nevstupuje.",
+      parents: "Nadradené dokumenty",
+      parentsNote: "Dokumenty, ktorým je tento podriadený — napríklad poriadok Stanovám, manuál poriadku. Môže ich byť viac. Kontrola súladu z nich predvyplní meradlá.",
+      parentsOverview: "Celá hierarchia",
       internalNumberPlaceholder: "12/2024",
     },
     list: {
@@ -8435,7 +8454,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardNever: "Proti dokumentom ešte neskontrolované. Kontrola sa spúšťa vo fronte návrhov.",
       faqCardOpen: "Skontrolovať vo fronte",
       references: "Referenčné normy",
-      referencesHint: "Ponúkajú sa len záväzné dokumenty — zákon, stanovy, poriadky a smernice — od najvyššieho, v platnom znení.",
+      referencesHint: "Ponúkajú sa len záväzné dokumenty — zákon, stanovy, poriadky a smernice — od najvyššieho, v platnom znení. Keď nevyberieš nič, použijú sa záväzné nadradené dokumenty kontrolovaných (Knižnica → Hierarchia dokumentov).",
       start: "Skontrolovať súlad",
       started: "Kontrola beží na pozadí — keď dobehne, príde vám upozornenie a e-mail.",
       none: "Kontrola dokumentov ešte neprebehla.",
@@ -8620,6 +8639,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disabled: "Trasa je vypnutá. Zostáva zapísaná na ľuďoch, ktorí ju už majú.",
     },
 
+    hierarchy: {
+      title: "Hierarchia dokumentov",
+      intro: "Čo je čomu nadradené — zákon, Stanovy, poriadky a pod nimi manuály. Dokument môže mať viac nadradených. Kontrola súladu z nich predvyplní meradlá. Nadradené sa nastavujú v úprave dokumentu.",
+      emptyTitle: "Hierarchia je prázdna",
+      emptyText: "Zatiaľ žiadny dokument nemá nadradený. Nastav ho v úprave dokumentu, pole „Nadradené dokumenty“.",
+      alsoUnder: names => `aj pod: ${names}`,
+      unplacedHeading: n => `Bez miesta v hierarchii (${n})`,
+      unplacedNote: "Kliknutím otvoríš úpravu dokumentu a doplníš nadradené.",
+    },
     folders: {
       heading: "Priečinky",
       manage: "Správa priečinkov",
@@ -8995,7 +9023,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         archivedPrep: "Nové znenie je v príprave — zverejnením predpis znova platí.",
       },
       docHeading: "Dokument",
-      rows: { category: "Druh", folder: "Priečinok", tags: "Značky", access: "Prístup", language: "Jazyk", origin: "Pôvod", identifier: "Identifikátor" },
+      rows: { category: "Druh", folder: "Priečinok", tags: "Značky", access: "Prístup", language: "Jazyk", origin: "Pôvod", identifier: "Identifikátor", parents: "Nadradené", children: "Podradené" },
       originManual: "Nahraté ručne",
       originConnector: (n) => `Z konektora ${n}`,
       textHeading: "Text",
@@ -11642,6 +11670,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.uploadedFileNotFound": "Nahraný soubor se nenašel. Zkus ho nahrát znovu.",
     "library.draftPdfFailed": "Text je uložen, ale PDF konceptu se nepodařilo vytvořit — zkuste to znovu, než se koncept předloží ke schválení.",
     "library.documentNotFound": "Takový dokument tu není.",
+    "hierarchy.self": "Dokument nemůže být nadřazený sám sobě.",
+    "hierarchy.cycle": "Takto by byl dokument nadřazený sám sobě přes jiné dokumenty — vyber jiný nadřazený.",
     "chunking.unknownProfile": "Profil členění „{value}“ neexistuje.",
     "chunking.labelRequired": "Profil potřebuje název.",
     "chunking.aiNoText": "Dokument nemá text, není co analyzovat.",
@@ -13316,6 +13346,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       ownerDepartmentEmpty: "Organizační struktura je zatím prázdná. Oddělení se zakládají v Nastavení organizace.",
       internalNumber: "Interní číslo",
       internalNumberNote: "Nepovinné. Ne každý předpis ho má a do formulky potvrzení nevstupuje.",
+      parents: "Nadřazené dokumenty",
+      parentsNote: "Dokumenty, kterým je tento podřízený — například řád Stanovám, manuál řádu. Může jich být víc. Kontrola souladu z nich předvyplní měřítka.",
+      parentsOverview: "Celá hierarchie",
       internalNumberPlaceholder: "12/2024",
     },
     list: {
@@ -13472,7 +13505,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardNever: "Proti dokumentům ještě nezkontrolováno. Kontrola se spouští ve frontě návrhů.",
       faqCardOpen: "Zkontrolovat ve frontě",
       references: "Referenční normy",
-      referencesHint: "Nabízejí se jen závazné dokumenty — zákon, stanovy, řády a směrnice — od nejvyššího, v platném znění.",
+      referencesHint: "Nabízejí se jen závazné dokumenty — zákon, stanovy, řády a směrnice — od nejvyššího, v platném znění. Když nevybereš nic, použijí se závazné nadřazené dokumenty kontrolovaných (Knihovna → Hierarchie dokumentů).",
       start: "Zkontrolovat soulad",
       started: "Kontrola běží na pozadí — až doběhne, přijde vám upozornění a e-mail.",
       none: "Kontrola dokumentů ještě neproběhla.",
@@ -13657,6 +13690,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disabled: "Trasa je vypnutá. Zůstává zapsaná u lidí, kteří ji už mají.",
     },
 
+    hierarchy: {
+      title: "Hierarchie dokumentů",
+      intro: "Co je čemu nadřazené — zákon, Stanovy, řády a pod nimi manuály. Dokument může mít víc nadřazených. Kontrola souladu z nich předvyplní měřítka. Nadřazené se nastavují v úpravě dokumentu.",
+      emptyTitle: "Hierarchie je prázdná",
+      emptyText: "Zatím žádný dokument nemá nadřazený. Nastav ho v úpravě dokumentu, pole „Nadřazené dokumenty“.",
+      alsoUnder: names => `i pod: ${names}`,
+      unplacedHeading: n => `Bez místa v hierarchii (${n})`,
+      unplacedNote: "Kliknutím otevřeš úpravu dokumentu a doplníš nadřazené.",
+    },
     folders: {
       heading: "Složky",
       manage: "Správa složek",
@@ -14032,7 +14074,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         archivedPrep: "Nové znění je v přípravě — zveřejněním předpis znovu platí.",
       },
       docHeading: "Dokument",
-      rows: { category: "Druh", folder: "Složka", tags: "Štítky", access: "Přístup", language: "Jazyk", origin: "Původ", identifier: "Identifikátor" },
+      rows: { category: "Druh", folder: "Složka", tags: "Štítky", access: "Přístup", language: "Jazyk", origin: "Původ", identifier: "Identifikátor", parents: "Nadřazené", children: "Podřízené" },
       originManual: "Nahráno ručně",
       originConnector: (n) => `Z konektoru ${n}`,
       textHeading: "Text",
@@ -16671,6 +16713,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.uploadedFileNotFound": "The uploaded file was not found. Try uploading it again.",
     "library.draftPdfFailed": "The text is saved, but the draft PDF could not be produced — try again before the draft is submitted for approval.",
     "library.documentNotFound": "There is no such document here.",
+    "hierarchy.self": "A document cannot be its own parent.",
+    "hierarchy.cycle": "This would make the document its own parent through other documents — choose a different parent.",
     "chunking.unknownProfile": "The chunking profile “{value}” does not exist.",
     "chunking.labelRequired": "The profile needs a name.",
     "chunking.aiNoText": "The document has no text, there is nothing to analyse.",
@@ -18345,6 +18389,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       ownerDepartmentEmpty: "The organisation chart is still empty. Departments are created in Organisation settings.",
       internalNumber: "Internal number",
       internalNumberNote: "Optional. Not every document has one, and it never appears in the acknowledgement statement.",
+      parents: "Parent documents",
+      parentsNote: "Documents this one is subordinate to — for example a regulation to the Statutes, a manual to a regulation. There can be several. The compliance check prefills its measures from them.",
+      parentsOverview: "Whole hierarchy",
       internalNumberPlaceholder: "12/2024",
     },
     list: {
@@ -18495,7 +18542,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       faqCardNever: "Not checked against documents yet. The check is started in the proposal queue.",
       faqCardOpen: "Check in the queue",
       references: "Reference rules",
-      referencesHint: "Only binding documents are offered — law, statutes, regulations and directives — highest first, in their valid version.",
+      referencesHint: "Only binding documents are offered — law, statutes, regulations and directives — highest first, in their valid version. If you select none, the binding parents of the checked documents are used (Library → Document hierarchy).",
       start: "Check compliance",
       started: "The check is running in the background — you will get a notification and an e-mail when it finishes.",
       none: "No document check has run yet.",
@@ -18680,6 +18727,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       disabled: "The track is off. It stays recorded for the people who already have it.",
     },
 
+    hierarchy: {
+      title: "Document hierarchy",
+      intro: "What is above what — the law, the Statutes, regulations and manuals below them. A document can have several parents. The compliance check prefills its measures from them. Parents are set when editing a document.",
+      emptyTitle: "The hierarchy is empty",
+      emptyText: "No document has a parent yet. Set one when editing a document, field “Parent documents”.",
+      alsoUnder: names => `also under: ${names}`,
+      unplacedHeading: n => `Not placed in the hierarchy (${n})`,
+      unplacedNote: "Click to open the document edit and add its parents.",
+    },
     folders: {
       heading: "Folders",
       manage: "Manage folders",
@@ -19055,7 +19111,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         archivedPrep: "A new version is being prepared — publishing it puts the document back in effect.",
       },
       docHeading: "Document",
-      rows: { category: "Type", folder: "Folder", tags: "Tags", access: "Access", language: "Language", origin: "Origin", identifier: "Identifier" },
+      rows: { category: "Type", folder: "Folder", tags: "Tags", access: "Access", language: "Language", origin: "Origin", identifier: "Identifier", parents: "Parents", children: "Children" },
       originManual: "Uploaded manually",
       originConnector: (n) => `From connector ${n}`,
       textHeading: "Text",

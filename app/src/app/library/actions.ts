@@ -21,7 +21,7 @@ import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
-  reindexVersion, reindexAllVersions, fixText, loadVersionIntoDraft, LibraryError, type UploadFiles, type IncomingFile,
+  reindexVersion, reindexAllVersions, fixText, loadVersionIntoDraft, saveDocumentParents, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile, fileInfo } from "@/lib/fileStore"
 import { renderDocumentPdf } from "@/lib/documentPdf"
@@ -911,6 +911,10 @@ export async function saveDocumentMetadataAction(fd: FormData) {
     // ten istý auditný záznam ako samostatný presun; bez zmeny nezapíše nič.
     if (fd.has("folderId")) {
       await assignDocument(self.companyCode, id, fieldText(fd, "folderId") || null, self.email)
+    }
+    // Nadradené dokumenty (ADR-034, D219) — len keď ich formulár nesie.
+    if (fd.has("parentsEditable")) {
+      await saveDocumentParents(self.companyCode, id, fd.getAll("parentIds").filter((v): v is string => typeof v === "string"), self.email)
     }
   } catch (e) {
     message = errorMessage(e, self.language)

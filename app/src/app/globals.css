@@ -8909,3 +8909,9 @@ a.pq-chip:hover { background: var(--surface-2); }
 .stage-tag { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
 .stage-tag--review, .stage-tag--publish { box-shadow: inset 0 0 0 1px var(--warn-fg); color: var(--warn-fg); }
 .stage-tag--assign { box-shadow: inset 0 0 0 1px var(--accent); }
+
+/* Hierarchia dokumentov (ADR-034, D219) — odsadenie podľa úrovne, ako strom oddelení. */
+.hier-list { list-style: none; margin: 0; padding: 6px 0; }
+.hier-row { padding: 9px 16px 9px calc(16px + var(--level, 0) * 22px); border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.hier-row:first-child { border-top: 0; }
+.hier-also { display: block; font-size: var(--fs-micro); margin-top: 2px; }
