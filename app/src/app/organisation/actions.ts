@@ -416,6 +416,7 @@ export async function addCodelistItemAction(fd: FormData) {
   try {
     await addCodelistItem(
       self.companyCode, fieldText(fd, "codelist"), keyOrFromLabel(fd), fieldText(fd, "label"), self.email,
+      fieldText(fd, "role"),
     )
     revalidatePath("/organisation", "layout")
     revalidatePath("/library")

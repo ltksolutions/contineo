@@ -7,9 +7,10 @@
  * identitu dokumentu a ostalo ako druhá škatuľka na to isté — ale mapovanie
  * treba vyrobiť, nie prepísať kľúč za kľúč.
  *
- * Pravidlo, podľa ktorého je poskladané: **poriadok je norma.** Súťažný,
- * disciplinárny, registračný aj revízny poriadok sú záväzné predpisy zväzu;
- * líšia sa predmetom, nie druhom. Zápisnica, zmluva a tlačivo normy nie sú
+ * Pravidlo, podľa ktorého je poskladané: **poriadok je poriadok** a Stanovy
+ * sú vlastný druh nad poriadkami (ADR-034, D217 — do 13. 10. 2026 bolo všetko
+ * „norma"). Súťažný, disciplinárny, registračný aj revízny poriadok sú záväzné
+ * predpisy zväzu; líšia sa predmetom, nie druhom. Zápisnica, zmluva a tlačivo normy nie sú
  * a druh pre ne v číselníku pribudol — bez nich by import zo zaradenia
  * musel klamať.
  *
@@ -19,18 +20,18 @@
 
 /** Čo z čoho vzniká. Kľúč je stará hodnota `sectionKey`, hodnota nový druh. */
 export const SECTION_TO_CATEGORY: Record<string, string> = {
-  // Predpisy zväzu — všetko sú to záväzné normy.
-  stanovy: "norma",
-  poriadky: "norma",
-  sutazny_poriadok: "norma",
-  disciplinarny_poriadok: "norma",
-  registracny_prestupovy_poriadok: "norma",
-  revizny_poriadok: "norma",
-  rokovaci_poriadok_konferencie: "norma",
-  volebny_poriadok: "norma",
-  poriadok_komory_sporov: "norma",
-  organizacny_navstevny_poriadok: "norma",
-  statuty_kodexy: "norma",
+  // Predpisy zväzu — Stanovy nad poriadkami (ADR-034, D217).
+  stanovy: "stanovy",
+  poriadky: "poriadok",
+  sutazny_poriadok: "poriadok",
+  disciplinarny_poriadok: "poriadok",
+  registracny_prestupovy_poriadok: "poriadok",
+  revizny_poriadok: "poriadok",
+  rokovaci_poriadok_konferencie: "poriadok",
+  volebny_poriadok: "poriadok",
+  poriadok_komory_sporov: "poriadok",
+  organizacny_navstevny_poriadok: "poriadok",
+  // Štatúty a kódexy nie sú poriadky ani stanovy — druh určí človek.
 
   zakony: "zakon",
   smernice: "smernica",

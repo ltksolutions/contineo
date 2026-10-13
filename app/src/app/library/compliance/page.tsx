@@ -28,6 +28,8 @@ import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { startDocumentReviewAction, dismissRequestAction, removeLinkAction } from "../complianceActions"
 import { openRequests, listLinks } from "@/lib/complianceRequests"
+import { categoryRank, documentRole } from "@/lib/codelists"
+import { tenantExtras } from "@/lib/codelistsTenant"
 
 export const dynamic = "force-dynamic"
 
@@ -48,7 +50,15 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; category?: string; accessLevel?: string }[]>,
   ])
   const [requests, links] = await Promise.all([openRequests(ctx.tenant.companyCode), listLinks(ctx.tenant.companyCode)])
-  const options = docs.map(d => ({ value: d.documentId, label: `${String(d.title ?? d.documentId)}${d.accessLevel === "internal" ? " · interný" : ""}` }))
+  const option = (d: (typeof docs)[number]) => ({ value: d.documentId, label: `${String(d.title ?? d.documentId)}${d.accessLevel === "internal" ? " · interný" : ""}` })
+  // Úloha dokumentu (ADR-034, D218): kontroluje sa výkladový aj záväzný
+  // (poriadok proti Stanovám), záznam nie; meradlom je len záväzný, od
+  // najvyššieho (zákon, stanovy, poriadky…).
+  const extras = tenantExtras(ctx.tenant)
+  const subjectOptions = docs.filter(d => documentRole(d.category, extras) !== "record").map(option)
+  const referenceOptions = docs.filter(d => documentRole(d.category, extras) === "binding")
+    .sort((a, b) => categoryRank(a.category, extras) - categoryRank(b.category, extras) || String(a.title ?? "").localeCompare(String(b.title ?? ""), "sk"))
+    .map(option)
   // Kontrola návrhov FAQ sa spúšťa vo fronte návrhov kanála, nie tu — odkaz tam, kde návrhy sú.
   const proposalChannels = new Set(await (await getCollection(PROPOSALS_COLLECTION)).distinct("channelKey", { companyCode: ctx.tenant.companyCode }) as string[])
   const faqQueues = await Promise.all((await listChannels(ctx.tenant.companyCode)).filter(ch => proposalChannels.has(ch.key)).map(async ch => {
@@ -129,12 +139,12 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
             <span className="field-label">{t.subjects}</span>
             {/* Prázdny výber (Ján 11. 10. 2026: „mám prednastavené posledné dokumenty, to nie je ok") —
                 zopakovanie kontroly je „Spustiť znova" na jej detaile. */}
-            <MultiSelect name="subjectIds" options={options} selected={[]} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+            <MultiSelect name="subjectIds" options={subjectOptions} selected={[]} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
             <span className="quiet field-hint">{t.subjectsHint}</span>
           </div>
           <div className="field" style={{ margin: 0 }}>
             <span className="field-label">{t.references}</span>
-            <MultiSelect name="documentIds" options={options} selected={[]} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
+            <MultiSelect name="documentIds" options={referenceOptions} selected={[]} emit="repeat" caseSensitive noscript="checkboxes" language={language} />
             <span className="quiet field-hint">{t.referencesHint}</span>
           </div>
           <div><SubmitButton className="button">{t.start}</SubmitButton></div>

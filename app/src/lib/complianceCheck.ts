@@ -43,6 +43,8 @@ import { PROPOSALS_COLLECTION, type FaqProposal, type ProposalSource } from "./f
 import type { TokenCounts } from "./pricing"
 import { articleHash } from "./articleAnchors"
 import { textFingerprint } from "./chunkIdentity"
+import { categoryRank, documentRole } from "./codelists"
+import { tenantExtras } from "./codelistsTenant"
 import { notify, notifyPeople } from "./notifications"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { tenantByCompanyCode, brandingView } from "./tenants"
@@ -66,10 +68,9 @@ export type ReviewVerdict = "agree" | "differs" | "not_covered" | "conflict"
 export const REVIEW_VERDICTS: ReviewVerdict[] = ["differs", "conflict", "not_covered", "agree"]
 
 /** Poradie záväznosti podľa druhu dokumentu (D198, kým nie je nastavenie organizácie). */
-const CATEGORY_RANK: Record<string, number> = { zakon: 0, norma: 1, smernica: 2, metodicky_pokyn: 3, manual: 4 }
-export function categoryRank(category: string | null | undefined): number {
-  return CATEGORY_RANK[category ?? ""] ?? 5
-}
+// Poradie záväznosti je vlastnosť druhu v číselníku (ADR-034, D216) — do
+// 13. 10. 2026 tu bolo napevno a vlastný druh „Poriadok" sa radil za manuál.
+export { categoryRank }
 
 const ACCESS_RANK: Record<string, number> = { public: 0, internal: 1 }
 /** Smie sa obsah s úrovňou `subject` kontrolovať dokumentom s úrovňou `reference`? */
@@ -699,6 +700,11 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   const active = await (await runs()).find({ companyCode: code, "scope.kind": "documents", "pending.0": { $exists: true }, failures: { $lt: MAX_FAILURES } }, { projection: { _id: 0, scope: 1 } }).toArray()
   if (active.some(r => r.scope.kind === "documents" && [...r.scope.subjectIds].sort().join("|") === same)) throw new ComplianceError("compliance.alreadyRunning", "Kontrola už beží — počkajte, kým dobehne.")
   const refs = documentIds.filter(id => !subjects.includes(id))
+  // Meradlom je len záväzný dokument (ADR-034, D218) — manuál nie je norma,
+  // podľa ktorej by sa dal iný dokument opraviť.
+  const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
+  const notBinding = (await loadDocuments(code, refs)).find(d => documentRole(d.category, extras) !== "binding")
+  if (notBinding) throw new ComplianceError("compliance.referenceNotBinding", "Proti tomuto dokumentu sa kontrolovať nedá — nie je záväzný.", { title: String(notBinding.title ?? notBinding.documentId) })
   const subjectDocs = await loadDocuments(code, subjects)
   if (subjectDocs.length !== subjects.length) throw new ComplianceError("compliance.unknownDocument", "Niektorý z vybraných dokumentov tu nie je.")
   if (subjectDocs.some(d => !documentText(d).text)) throw new ComplianceError("compliance.emptyDocuments", "Vybrané dokumenty nemajú text.")

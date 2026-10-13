@@ -11,10 +11,12 @@ import { categoryFromSection, SECTION_TO_CATEGORY } from "../src/lib/sectionToCa
 import categories from "../src/codelists/category.json"
 
 describe("zaradenie na druh", () => {
-  it("poriadok je norma — lisia sa predmetom, nie druhom", () => {
-    expect(categoryFromSection("sutazny_poriadok")).toBe("norma")
-    expect(categoryFromSection("disciplinarny_poriadok")).toBe("norma")
-    expect(categoryFromSection("stanovy")).toBe("norma")
+  // ADR-034, D217: poriadok je poriadok, Stanovy vlastný druh nad poriadkami.
+  it("poriadok je poriadok — lisia sa predmetom, nie druhom; stanovy su nad nimi", () => {
+    expect(categoryFromSection("sutazny_poriadok")).toBe("poriadok")
+    expect(categoryFromSection("disciplinarny_poriadok")).toBe("poriadok")
+    expect(categoryFromSection("stanovy")).toBe("stanovy")
+    expect(categoryFromSection("statuty_kodexy")).toBeUndefined()
   })
 
   it("zakon, smernica a manual maju vlastny druh", () => {

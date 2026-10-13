@@ -2,65 +2,95 @@
   "codelist": "category",
   "closed": false,
   "hierarchical": false,
-  "description": "Kategória dokumentu (úroveň documents). Rozšíriteľné cez governance. Zápisnica, zmluva a tlačivo pribudli 2026-09-22 so zlúčením Zaradenia do Druhu (O21 krok 2) — bez nich by sa dokumenty s týmto zaradením nemali kam preniesť. FAQ pribudlo 2026-10-06 (ADR-028, D164): prvý druh, ktorý sa nečlení po článkoch, ale po záznamoch (`chunking: \"entries\"`, ADR-027 krok 2).",
+  "description": "Kategória dokumentu (úroveň documents). Rozšíriteľné cez governance. Zápisnica, zmluva a tlačivo pribudli 2026-09-22 so zlúčením Zaradenia do Druhu (O21 krok 2) — bez nich by sa dokumenty s týmto zaradením nemali kam preniesť. FAQ pribudlo 2026-10-06 (ADR-028, D164): prvý druh, ktorý sa nečlení po článkoch, ale po záznamoch (`chunking: \"entries\"`, ADR-027 krok 2). Úloha a záväznosť druhu pribudli 2026-10-13 (ADR-034, D215–D218): `role` — `binding` (záväzný: mení ho len orgán novým znením), `guidance` (výkladový: manuál, návod; mení ho správca obsahu), `record` (záznam: nemení sa, nekontroluje sa); `rank` — poradie záväznosti, menšie číslo je vyššie. Norma sa delí na Stanovy a Poriadok a po migrácii zanikne.",
   "items": [
+    {
+      "key": "zakon",
+      "label": "Zákon",
+      "parent": null,
+      "sortOrder": 5,
+      "role": "binding",
+      "rank": 0
+    },
+    {
+      "key": "stanovy",
+      "label": "Stanovy",
+      "parent": null,
+      "sortOrder": 6,
+      "role": "binding",
+      "rank": 1
+    },
+    {
+      "key": "poriadok",
+      "label": "Poriadok",
+      "parent": null,
+      "sortOrder": 7,
+      "role": "binding",
+      "rank": 2
+    },
     {
       "key": "norma",
       "label": "Norma",
       "parent": null,
-      "sortOrder": 10
+      "sortOrder": 8,
+      "isActive": false,
+      "role": "binding",
+      "rank": 2
     },
     {
       "key": "smernica",
       "label": "Smernica",
       "parent": null,
-      "sortOrder": 20
-    },
-    {
-      "key": "zakon",
-      "label": "Zákon",
-      "parent": null,
-      "sortOrder": 30,
-      "isActive": false
+      "sortOrder": 20,
+      "role": "binding",
+      "rank": 3
     },
     {
       "key": "manual",
       "label": "Manuál",
       "parent": null,
       "sortOrder": 40,
-      "isActive": false
+      "role": "guidance",
+      "rank": 10
     },
     {
       "key": "metodicky_pokyn",
       "label": "Metodický pokyn",
       "parent": null,
       "sortOrder": 50,
-      "isActive": false
+      "isActive": false,
+      "role": "guidance",
+      "rank": 9
     },
     {
       "key": "zapisnica",
       "label": "Zápisnica",
       "parent": null,
-      "sortOrder": 60
+      "sortOrder": 60,
+      "role": "record"
     },
     {
       "key": "zmluva",
       "label": "Zmluva",
       "parent": null,
-      "sortOrder": 70
+      "sortOrder": 70,
+      "role": "record"
     },
     {
       "key": "tlacivo",
       "label": "Tlačivo a formulár",
       "parent": null,
-      "sortOrder": 80
+      "sortOrder": 80,
+      "role": "record"
     },
     {
       "key": "faq",
       "label": "FAQ – časté otázky",
       "parent": null,
       "sortOrder": 90,
-      "chunking": "entries"
+      "chunking": "entries",
+      "role": "guidance",
+      "rank": 11
     }
   ]
 }
