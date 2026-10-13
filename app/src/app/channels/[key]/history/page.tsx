@@ -7,7 +7,6 @@
  * len mesačný súhrn z `mailbox_analyses`.
  */
 
-import { isContentManager } from "@/lib/library"
 import { notFound, redirect } from "next/navigation"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
@@ -24,7 +23,7 @@ import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Link from "next/link"
 import { harvestFor, exclusionCount, MIN_THREADS } from "@/lib/faqHarvest"
-import { proposalCounts } from "@/lib/faqProposals"
+import { questionCounts } from "@/lib/helpdeskQuestions"
 import { startHistoryAnalysisAction, startHarvestAction, addHarvestExclusionsAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
@@ -59,11 +58,11 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
   const base = `${channelHref(c.key)}/history`
   const canTickets = c.kind === "widget" && c.tickets && isHelpdeskAgent(ctx.person) && raw.assigneeIds.includes(ctx.person.id)
 
-  const [analysis, harvest, excluded, pCounts] = await Promise.all([
+  const [analysis, harvest, excluded, qCounts] = await Promise.all([
     analysisFor(ctx.tenant.companyCode, c.key),
     harvestFor(ctx.tenant.companyCode, c.key),
     exclusionCount(ctx.tenant.companyCode, c.key),
-    proposalCounts(ctx.tenant.companyCode, c.key),
+    questionCounts(ctx.tenant.companyCode),
   ])
   const summary = analysis ? summarizeAnalysis(analysis) : null
   const doneMonths = analysis ? analysis.months.length - analysis.pending.length : 0
@@ -87,7 +86,7 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
         <span className="page-head-spacer" />
         <span className="tag">{c.name}</span>
       </div>
-      <ChannelPartTabs channelKey={c.key} current={channelHref(c.key, "settings")} canTickets={canTickets} canSettings canContent={isContentManager(ctx.person)} hasFaq={Boolean(raw.faqDocumentId)} language={language} />
+      <ChannelPartTabs channelKey={c.key} current={channelHref(c.key, "settings")} canTickets={canTickets} canSettings language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.historyIntro}</p>
       <Notice message={msg} error={error === "1"} back={base} language={language} />
 
@@ -237,8 +236,9 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
           </div>
           <div><SubmitButton className={analysis || harvest ? "button button--quiet" : "button"}>{harvest ? t.harvestRestart : t.harvestStart}</SubmitButton></div>
         </form>
-        {pCounts.open + pCounts.approved + pCounts.merged + pCounts.rejected > 0 && (
-          <div><Link className="button button--quiet" href={`${channelHref(c.key)}/proposals`}>{t.harvestOpenProposals(pCounts.open)}</Link></div>
+        {/* Otázky idú do návrhov na doplnenie manuálov (ADR-034, D221), nie do FAQ. */}
+        {(qCounts.get(c.key) ?? 0) > 0 && (
+          <div><Link className="button button--quiet" href="/library/compliance">{t.harvestOpenProposals(qCounts.get(c.key) ?? 0)}</Link></div>
         )}
       </section>
 

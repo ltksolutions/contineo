@@ -65,9 +65,25 @@ const PREFIXES: [string, string][] = [
 const MIDDLE = /^\/hr\/([^/]+)\/oznamit$/
 
 /** Nová cesta, alebo `null`, keď je adresa už v poriadku. */
+/**
+ * Stránky FAQ zanikli (ADR-034, D220, 14. 10. 2026). Staré odkazy (zvonček,
+ * e-maily, záložky) vedú na najbližšie miesto, nie na 404: fronta návrhov na
+ * návrhy z helpdesku do manuálov, FAQ kanála na kanál, editor FAQ na dokument.
+ */
+const FAQ_GONE: [RegExp, (m: RegExpExecArray) => string][] = [
+  [/^\/channels\/([^/]+)\/proposals$/, () => "/library/compliance"],
+  [/^\/channels\/([^/]+)\/faq$/, m => `/channels/${m[1]}`],
+  [/^\/library\/new\/faq$/, () => "/library/new"],
+  [/^\/library\/([^/]+)\/faq$/, m => `/library/${m[1]}`],
+]
+
 export function legacyRoute(pathname: string): string | null {
   const middle = MIDDLE.exec(pathname)
   if (middle) return `/hr/${middle[1]}/notify`
+  for (const [re, to] of FAQ_GONE) {
+    const m = re.exec(pathname)
+    if (m) return to(m)
+  }
 
   for (const [from, to] of PREFIXES) {
     if (pathname === from) return to

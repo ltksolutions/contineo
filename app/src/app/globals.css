@@ -977,9 +977,6 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   roztiahlo stĺpec a riadok by pretiekol cez okraj obrazovky.
 */
 .field-row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-/* Zdroj záznamu FAQ: dokument a článok vedľa seba, pod 640 px pod sebou (ADR-028). */
-.faq-source-row { grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 640px) { .faq-source-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
 @media (min-width: 640px) {
   .field-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
@@ -8645,35 +8642,10 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
   .connector-try { padding: 14px; }
 }
 
-/* Pomocník pri zázname FAQ (faqAssist.ts, 8. 10. 2026): hľadanie podkladu
-   v knižnici a v konektoroch. Prepínače zdrojov ako pilulky, výsledky ako
-   zoznam s dvomi akciami. */
-.faq-assist { display: grid; gap: 12px; margin: 0 0 8px; padding: 14px 16px; border: 1px solid var(--line, rgba(0,0,0,.12)); border-radius: 12px; min-width: 0; }
-.faq-assist > legend { padding: 0 6px; }
-.faq-assist-sources { display: flex; flex-wrap: wrap; gap: 8px; }
-.faq-assist-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line, rgba(0,0,0,.12)); border-radius: 999px; cursor: pointer; }
-.faq-assist-pill:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
-.faq-assist-group { display: grid; gap: 8px; }
-.faq-assist-group-title { margin: 4px 0 0; font-size: var(--fs-body); }
-.faq-assist-hits { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.faq-assist-hit { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--line, rgba(0,0,0,.12)); border-radius: 10px; min-width: 0; }
-.faq-assist-hit-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
-.faq-assist-excerpt { margin: 0; font-size: var(--fs-small); color: var(--muted); white-space: pre-line; overflow-wrap: anywhere; }
-.faq-assist-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-/* Hľadanie v záznamoch FAQ v editore. */
-.faq-find { display: grid; gap: 8px; margin: 0 0 16px; }
-.faq-find-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-
-/* ── Fronta kurátora: pôvodný návrh a zmeny (ADR-030 D185, 10. 10. 2026) ──
-   Porovnanie po slovách s pôvodným návrhom modelu. Farba nie je jediným
-   nosičom: vypadnuté je prečiarknuté, pribudnuté podčiarknuté. */
-.pr-original { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
-.pr-original > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
-.pr-original-body { display: grid; gap: 8px; padding-top: 4px; }
+/* Porovnanie po slovách (ADR-030 D185, 10. 10. 2026): farba nie je jediným
+   nosičom — vypadnuté je prečiarknuté, pribudnuté podčiarknuté. */
 .pr-diff ins { background: var(--ok-bg); color: var(--ok-fg); text-decoration: underline; text-decoration-thickness: 1px; }
 .pr-diff del { background: var(--bad-bg); color: var(--bad-fg); text-decoration: line-through; }
-/* Výsledok kontroly proti dokumentom pri návrhu FAQ (ADR-032, fáza 1). */
-.pr-review { display: grid; gap: 8px; border-left: 3px solid var(--warn-fg); padding: 4px 0 4px 12px; }
 /*
  * Rozhodnutie o náleze kontroly súladu (Ján 11. 10. 2026): dve voľby ako
  * segmented control zo SwiftUI — „ponechať" / „prijať a upraviť". Rádiá sú
@@ -8803,73 +8775,6 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
   .cf-dec .decision-option:has(input:checked) { background: none; box-shadow: none; font-weight: 400; }
   .cf-dec .decision-option > span:not(.decision-tick) { flex: 1 1 auto; }
   .cf-dec .decision-option:has(input:checked) .decision-tick { display: inline; color: var(--accent); font-weight: 700; }
-}
-
-/*
- * Fronta kurátora návrhov FAQ (návrh KANALY-navrhy-faq-kuracia, 11. 10. 2026).
- * Rozloženie (panel tém, riadok výberu, postup, zbalený / otvorený záznam)
- * je spoločné s detailom kontroly súladu (`.cf-*`); tu je len to, čo má
- * návrh navyše: čipy výsledku kontroly, blok kontroly, varianty, zdroje
- * a formuláre zamietnutia a zlúčenia v karte.
- */
-.pq-run { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 14px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
-.pq-run i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); flex: none; }
-.pq-meta-body { padding: 4px 20px 14px; display: grid; gap: 6px; }
-.pq-meta-body p { margin: 0; font-size: 14px; }
-.pq-topic-h { display: grid; gap: 12px; min-width: 0; }
-.pq-topic-t { display: flex; gap: 8px 12px; align-items: baseline; flex-wrap: wrap; }
-.pq-topic-t h2 { margin: 0; font-size: 21px; letter-spacing: -.01em; overflow-wrap: anywhere; }
-.pq-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.pq-chips > .quiet { font-size: var(--fs-small); margin-right: 2px; }
-.pq-chip { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); text-decoration: none; font-size: 13.5px; white-space: nowrap; }
-a.pq-chip:hover { background: var(--surface-2); }
-.pq-chip.is-on { border-color: var(--ink); font-weight: 600; }
-.pq-chip.is-off { color: var(--muted); }
-.pq-chip-n { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
-.pq-row { align-items: center; }
-.pq-q { flex: 1 1 300px; min-width: 0; display: grid; gap: 2px; }
-.pq-q b { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
-.pq-q > span { font-size: var(--fs-small); color: var(--muted); overflow-wrap: anywhere; }
-.pq-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.pq-tags:empty { display: none; }
-.pq-faq { font-size: 14px; min-height: 44px; display: inline-flex; align-items: center; }
-.pq-who { margin: -8px 0 0; font-size: var(--fs-small); }
-.pq-note { align-items: flex-start; }
-.pq-note .lnote-text b { display: block; font-weight: 650; }
-.pq-note-text { white-space: pre-line; overflow-wrap: anywhere; }
-.pq-rv { display: grid; gap: 12px; padding: 14px 16px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); min-width: 0; }
-.pq-rv-head { display: flex; gap: 6px 10px; align-items: center; flex-wrap: wrap; }
-.pq-rv-head b { font-size: 15px; font-weight: 650; }
-.pq-rv-head .quiet { font-size: var(--fs-small); }
-.pq-rv-note { margin: 0; font-size: 15px; max-width: 72ch; white-space: pre-line; }
-.pq-rv .cf-diff { background: var(--surface); }
-.pq-ext { font-size: 12px; margin-left: 3px; }
-.pq-edit { display: grid; gap: 14px; padding-top: 16px; border-top: 1px solid var(--line); min-width: 0; }
-.pq-edit-h { margin: 0; font-size: var(--fs-section); font-weight: 650; }
-.pq-intro { margin: -6px 0 0; max-width: 72ch; }
-.pq-edit textarea { resize: vertical; line-height: 1.5; }
-.pq-more { border-top: 1px solid var(--line); }
-.pq-more > summary { display: flex; align-items: center; min-height: 44px; padding: 0 14px; color: var(--accent); font-size: 14px; cursor: pointer; }
-.pq-src { display: grid; grid-template-columns: minmax(0, 1fr) 160px 44px; gap: 8px; align-items: center; }
-.pq-src > .select, .pq-src .field-input { min-width: 0; }
-.pq-src-x { position: relative; display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: 10px; color: var(--muted); cursor: pointer; }
-.pq-src-x input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.pq-src-x:has(input:checked) { background: var(--bad-bg); color: var(--bad-fg); }
-.pq-src-x:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
-.pq-nofaq { justify-self: start; }
-.pq-acts2 { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 14px; border-top: 1px solid var(--line); }
-.pq-sub { display: grid; gap: 12px; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--bg); min-width: 0; }
-.pq-cancel { min-height: 44px; display: inline-flex; align-items: center; }
-@media (max-width: 639px) {
-  .pq-src { grid-template-columns: minmax(0, 1fr) 44px; }
-  .pq-src > :first-child { grid-column: 1 / -1; }
-  .pq-chip { min-height: 40px; }
-  /* Štyri voľby pohľadu: počet pod popisom, popis sa smie zalomiť (cs/en). */
-  .pq-filter .view-switch-item { flex-direction: column; white-space: normal; line-height: 1.15; min-height: 44px; padding: 4px; font-size: 13px; text-align: center; }
-  .pq-filter .view-switch-count { margin-left: 0; }
-  .pq-acts2 .button, .pq-run { width: 100%; }
-  .pq-rv { padding: 12px; }
-  .pq-meta-body { padding: 4px 14px 12px; }
 }
 
 /* Riadok v zozname kontrol: text vľavo, „Otvoriť" vpravo. */

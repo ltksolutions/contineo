@@ -30,7 +30,7 @@ export default async function HierarchyPage() {
   const language = ctx.person.language
   const t = dictionary(language).library.hierarchy
   const branding = brandingView(ctx.tenant)
-  const docs = (await hierarchyDocuments(ctx.tenant.companyCode)).filter(d => d.category !== "faq")
+  const docs = await hierarchyDocuments(ctx.tenant.companyCode)
   const map = parentsMapOf(docs)
   const title = new Map(docs.map(d => [d.documentId, d.title]))
   const kinds = new Map(codelistFor("category", tenantExtras(ctx.tenant)).items.map(i => [i.key, i.label ?? i.key]))

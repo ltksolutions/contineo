@@ -10,7 +10,7 @@
  */
 
 import { listChannels } from "@/lib/channels"
-import { PROPOSALS_COLLECTION } from "@/lib/faqProposals"
+import { questionCounts } from "@/lib/helpdeskQuestions"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
@@ -18,7 +18,7 @@ import Notice from "@/components/Notice"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
 import { complianceContext } from "@/lib/complianceAccess"
-import { documentRuns, reviewRunFor, proposalsScopeKey, MAX_FAILURES } from "@/lib/complianceCheck"
+import { documentRuns, MAX_FAILURES } from "@/lib/complianceCheck"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { PERSONS_COLLECTION, type Person } from "@/lib/persons"
@@ -46,7 +46,7 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
   const [runs, docs] = await Promise.all([
     documentRuns(ctx.tenant.companyCode),
     (await getCollection(DOCUMENTS_COLLECTION))
-      .find({ companyCode: ctx.tenant.companyCode, category: { $ne: "faq" } }, { projection: { documentId: 1, title: 1, category: 1, accessLevel: 1 } })
+      .find({ companyCode: ctx.tenant.companyCode, }, { projection: { documentId: 1, title: 1, category: 1, accessLevel: 1 } })
       .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string; category?: string; accessLevel?: string }[]>,
   ])
   const [requests, links] = await Promise.all([openRequests(ctx.tenant.companyCode), listLinks(ctx.tenant.companyCode)])
@@ -59,22 +59,15 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
   const referenceOptions = docs.filter(d => documentRole(d.category, extras) === "binding")
     .sort((a, b) => categoryRank(a.category, extras) - categoryRank(b.category, extras) || String(a.title ?? "").localeCompare(String(b.title ?? ""), "sk"))
     .map(option)
-  // Kontrola návrhov FAQ sa spúšťa vo fronte návrhov kanála, nie tu — odkaz tam, kde návrhy sú.
-  const proposalChannels = new Set(await (await getCollection(PROPOSALS_COLLECTION)).distinct("channelKey", { companyCode: ctx.tenant.companyCode }) as string[])
-  const faqQueues = await Promise.all((await listChannels(ctx.tenant.companyCode)).filter(ch => proposalChannels.has(ch.key)).map(async ch => {
-    const proposalsCol = await getCollection(PROPOSALS_COLLECTION)
-    const [open, reviewed, run] = await Promise.all([
-      proposalsCol.countDocuments({ companyCode: ctx.tenant.companyCode, channelKey: ch.key, status: "open" }),
-      proposalsCol.countDocuments({ companyCode: ctx.tenant.companyCode, channelKey: ch.key, status: "open", review: { $exists: true } }),
-      reviewRunFor(ctx.tenant.companyCode, proposalsScopeKey(ch.key)),
-    ])
-    return { key: ch.key, name: ch.name, open, reviewed, run }
-  }))
+  // Kanály s otázkami z helpdesku (ADR-034, D221) — karta „Návrhy z helpdesku do manuálov".
+  const qCounts = await questionCounts(ctx.tenant.companyCode)
+  const helpdeskChannels = (await listChannels(ctx.tenant.companyCode)).filter(ch => (qCounts.get(ch.key) ?? 0) > 0)
+    .map(ch => ({ key: ch.key, name: ch.name, open: qCounts.get(ch.key) ?? 0 }))
   /*
    * Kto kontrolu spustil — menom, nie adresou (Ján 13. 10. 2026: v zozname
    * nebolo vidieť dátum ani kto). Jeden dotaz na všetky behy naraz.
    */
-  const starters = [...new Set([...runs.map(r => r.startedBy), ...faqQueues.map(f => f.run?.startedBy)].filter((e): e is string => Boolean(e)))]
+  const starters = [...new Set(runs.map(r => r.startedBy).filter((e): e is string => Boolean(e)))]
   const nameByEmail = new Map((await (await getCollection<Person>(PERSONS_COLLECTION))
     .find({ companyCode: ctx.tenant.companyCode, email: { $in: starters } }, { projection: { _id: 0, email: 1, fullName: 1 } }).toArray())
     .map(p => [p.email, p.fullName?.trim() || p.email]))
@@ -99,7 +92,6 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
               <p className="quiet" style={{ margin: 0 }}>{t.requestWhen(formatDate(r.publishedAt, language), r.publishedBy)}</p>
               {r.subjectIds.length > 0 && <p style={{ margin: 0 }}><b>{t.subjects}:</b> {r.subjectTitles.join(", ")}</p>}
               {r.referenceIds.length > 0 && <p style={{ margin: 0 }}><b>{t.references}:</b> {r.referenceTitles.join(", ")}</p>}
-              {r.faq.map(f => <p key={f.channelKey} style={{ margin: 0 }}><Link href={`/channels/${encodeURIComponent(f.channelKey)}/proposals#review`}>{t.requestFaq(f.proposals)}</Link></p>)}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
                 {r.subjectIds.length > 0 && (
                   <form action={startDocumentReviewAction}>
@@ -155,9 +147,9 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       {/* Návrhy z helpdesku do manuálov (ADR-034, D221) — namiesto kontroly návrhov FAQ.
           Otázky kanála sa skontrolujú proti verejným manuálom; výsledok je bežná
           kontrola dokumentov v zozname nižšie. */}
-      {faqQueues.filter(q => q.open > 0).length > 0 && (
+      {helpdeskChannels.filter(q => q.open > 0).length > 0 && (
         <div style={{ display: "grid", gap: 12, marginBottom: 12 }}>
-          {faqQueues.filter(q => q.open > 0).map(q => (
+          {helpdeskChannels.filter(q => q.open > 0).map(q => (
             <section key={q.key} className="card detail-block compliance-run">
               <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
                 <p style={{ margin: 0 }}><b>{t.helpdeskHeading(q.name)}</b></p>

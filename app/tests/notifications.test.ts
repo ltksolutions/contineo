@@ -41,8 +41,6 @@ describe("kam vedie upozornenie", () => {
     expect(notificationHref("objectionSubmitted", {})).toBe("/dpo#objections")
     expect(notificationHref("complianceDone", { runId: "ab12" })).toBe("/library/compliance/ab12")
     expect(notificationHref("complianceDone", {})).toBe("/library/compliance")
-    expect(notificationHref("faqReviewDone", { channelKey: "issf" })).toBe("/channels/issf/proposals")
-    expect(notificationHref("faqReviewDone", {})).toBeNull()
     expect(notificationHref("complianceRequested", { documentId: "sfz:rapp" })).toBe("/library/compliance#requests")
   })
 

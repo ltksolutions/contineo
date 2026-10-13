@@ -18,8 +18,6 @@
  * úloha cez adresu `?new=1`, nie vždy otvorený formulár.
  */
 
-import { DOCUMENTS_COLLECTION } from "@/lib/documents"
-import { getCollection } from "@/lib/mongodb"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
@@ -50,15 +48,6 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
   const branding = brandingView(ctx.tenant)
   const channels = ctx.visible.map(channelView)
   const counts = new Map(await Promise.all(channels.map(async c => [c.key, await ticketCounts(ctx.tenant.companyCode, c.key)] as const)))
-  // FAQ kanála (ADR-028, D201): počet záznamov v platnom znení, inak v koncepte.
-  const faqIds = ctx.visible.map(c => c.faqDocumentId).filter((x): x is string => Boolean(x))
-  const faqDocs = faqIds.length ? await (await getCollection(DOCUMENTS_COLLECTION)).find({ companyCode: ctx.tenant.companyCode, documentId: { $in: faqIds } }, { projection: { _id: 0, documentId: 1, draftFaq: 1, "versions.isActive": 1, "versions.faq": 1 } }).toArray() : []
-  const faqCount = new Map(ctx.visible.map(c => {
-    const d = faqDocs.find(x => x.documentId === c.faqDocumentId)
-    if (!d) return [c.key, null] as const
-    const active = ((d.versions ?? []) as { isActive?: boolean; faq?: unknown[] }[]).find(v => v.isActive)
-    return [c.key, (active?.faq ?? (d.draftFaq as unknown[] | undefined) ?? []).length] as const
-  }))
   const creating = ctx.isAdmin && openNew === "1"
   const pickedKind: ChannelKind = kind && (CHANNEL_KINDS as string[]).includes(kind) ? kind as ChannelKind : "widget"
   const now = new Date()
@@ -125,12 +114,10 @@ export default async function ChannelsPage({ searchParams }: { searchParams: Pro
                 const n = counts.get(c.key)
                 const open = n ? n.new + n.drafted + n.reopened : 0
                 const stalled = c.mailbox ? mailboxStalled(c.mailbox, now) : false
-                const faqN = faqCount.get(c.key)
                 const sub = [
                   t.kinds[c.kind],
                   c.mailbox?.address,
                   ctx.isAdmin ? t.levels[channelAccessLevel(c)] : null,
-                  faqN === null || faqN === undefined ? null : faqN ? t.faqListLine(faqN) : t.faqListNone,
                 ].filter(Boolean).join(" · ")
                 const stalledTitle = c.mailbox?.lastSyncError
                   ? t.syncError(c.mailbox.lastSyncError)

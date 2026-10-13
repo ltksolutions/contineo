@@ -10,7 +10,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
-import { toTicketMessage, questionText, lastIncoming, faqPrefillFromTicket, OPEN_STATES, type Ticket } from "../src/lib/tickets"
+import { toTicketMessage, questionText, lastIncoming, OPEN_STATES, type Ticket } from "../src/lib/tickets"
 
 const at = (h: number) => new Date(`2026-10-06T0${h}:00:00Z`)
 const ticket = (over: Partial<Ticket> = {}): Ticket => ({
@@ -53,17 +53,3 @@ describe("otazka a posledna sprava", () => {
   })
 })
 
-describe("faqPrefillFromTicket", () => {
-  it("otazka bez Re:, odpoved z odoslaneho textu, zdroje bez duplicit, povod s messageId", () => {
-    const p = faqPrefillFromTicket(ticket())
-    expect(p.question).toBe("Registrácia hráča")
-    expect(p.answer).toBe("Cez ISSF, maloletý so súhlasom rodiča.")
-    expect(p.sources).toEqual([{ documentId: "sfz:rp", articleRef: "čl. 12" }, { documentId: "sfz:faq", articleRef: null }])
-    expect(p.origin).toEqual({ channelKey: "issf", threadRefs: ["conv1"], messageIds: ["<1>", "sent:1", "<3>"] })
-  })
-  it("bez odoslanej odpovede berie navrh; bez predmetu prvy riadok spravy", () => {
-    const p = faqPrefillFromTicket(ticket({ sentAnswer: null, subject: "" }))
-    expect(p.answer).toBe("Návrh.")
-    expect(p.question).toBe("Ako registrovať hráča?")
-  })
-})

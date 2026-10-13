@@ -13,7 +13,7 @@
 import SectionTabs from "./SectionTabs"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
-export function channelHref(key: string, part?: "tickets" | "settings" | "proposals" | "faq"): string {
+export function channelHref(key: string, part?: "tickets" | "settings"): string {
   return `/channels/${encodeURIComponent(key)}${part ? `/${part}` : ""}`
 }
 
@@ -29,22 +29,16 @@ export function ChannelSectionTabs({ current, isAgent, language }: { current: st
   )
 }
 
-export function ChannelPartTabs({ channelKey, current, canTickets, canSettings, canContent = false, hasFaq = false, language }: {
+export function ChannelPartTabs({ channelKey, current, canTickets, canSettings, language }: {
   channelKey: string
   current: string
   canTickets: boolean
   canSettings: boolean
-  /** Správca obsahu: Návrhy FAQ a FAQ kanála (ADR-028, D201). */
-  canContent?: boolean
-  /** Kanál má FAQ dokument (D201) — inak by časť FAQ vrátila 404. */
-  hasFaq?: boolean
   language?: UiLanguage
 }) {
   const t = dictionary(language).channels
   const tabs = [
     ...(canTickets ? [{ href: channelHref(channelKey, "tickets"), label: t.tabTickets }] : []),
-    ...(canContent ? [{ href: channelHref(channelKey, "proposals"), label: t.tabProposals }] : []),
-    ...(canContent && hasFaq ? [{ href: channelHref(channelKey, "faq"), label: t.tabFaq }] : []),
     ...(canSettings ? [{ href: channelHref(channelKey, "settings"), label: t.tabSettings }] : []),
   ]
   if (tabs.length < 2) return null

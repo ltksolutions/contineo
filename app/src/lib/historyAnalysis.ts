@@ -26,7 +26,7 @@ import { AppError } from "./appError"
 import { requireCompanyCode } from "./tenantScope"
 import { channelByKey, mailboxFor } from "./channels"
 import { isBounce } from "./mailbox/bounce"
-import { scrubPersonalData } from "./faqMining"
+import { scrubPersonalData } from "./personalData"
 import type { MailHeader } from "./mailbox/types"
 
 export class HistoryAnalysisError extends AppError {}

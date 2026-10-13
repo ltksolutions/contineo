@@ -155,3 +155,14 @@ describe("časť obrazovky z parametra na vlastnú cestu (R4, 6. 10. 2026)", () 
     expect(go("/learning/tests", "new=1")).toBeNull()
   })
 })
+
+describe("zaniknuté stránky FAQ (ADR-034, D220)", () => {
+  it("vedú na najbližšie miesto, nie na 404", async () => {
+    const { legacyRoute } = await import("../src/lib/legacyRoutes")
+    expect(legacyRoute("/channels/abc/proposals")).toBe("/library/compliance")
+    expect(legacyRoute("/channels/abc/faq")).toBe("/channels/abc")
+    expect(legacyRoute("/library/new/faq")).toBe("/library/new")
+    expect(legacyRoute("/library/sfz%3Acaste/faq")).toBe("/library/sfz%3Acaste")
+    expect(legacyRoute("/library/sfz%3Acaste")).toBeNull()
+  })
+})

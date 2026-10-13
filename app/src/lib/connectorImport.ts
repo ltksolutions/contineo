@@ -180,7 +180,7 @@ async function importOne(
     const markdown = `# ${a.title}\n\n${a.text}\n`
     const pdf = await renderMarkdownPdf({
       title: a.title, markdown: a.text, author: c.name,
-      texts: { page: dictionary(language).library.faq.pdfPage, origin: originLine(c, a, language) },
+      texts: { page: dictionary(language).common.pdf.pageOf, origin: originLine(c, a, language) },
     })
     const file = slugifyKey(a.title) || "article"
     const r = await uploadDocument(

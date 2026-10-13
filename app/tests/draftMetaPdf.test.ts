@@ -109,13 +109,6 @@ describe("saveDraftMeta — PDF konceptu z .md", () => {
     expect(db.cols.approval_rounds.map(r => r.outcome)).toEqual(["cancelled", "rejected"])
   })
 
-  it("FAQ so zdrojom .md ostane so svojím PDF zo záznamov", async () => {
-    doc().category = "faq"
-    await saveDraftMeta("SFZ", "sfz:issf_01", normalizeMeta({ effectiveFrom: Y("2026-12-01") }), "jan@sfz.sk")
-    expect(db.rendered).toEqual([])
-    expect((doc().draftPdf as Row).id).toBe("pdf0")
-  })
-
   it("počas kola sa údaje meniť nedajú — PDF ani kolo sa nedotkne", async () => {
     db.cols.approval_rounds = [round(documentDraftIdentity(DOC))]
     await expect(saveDraftMeta("SFZ", "sfz:issf_01", normalizeMeta({ effectiveFrom: Y("2026-12-01") }), "jan@sfz.sk"))

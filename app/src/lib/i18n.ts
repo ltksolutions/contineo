@@ -135,6 +135,8 @@ interface Dictionary {
       loading: string
       failed: string
       page: string
+      /** Číslo strany v päte vyrobeného PDF. */
+      pageOf: (n: number, total: number) => string
     }
     /**
      * Text tlačidla, kým beží dlhšia akcia (`SubmitButton.pendingLabel`).
@@ -579,17 +581,11 @@ interface Dictionary {
     costLine: (usd: string) => string
     button: string
     note: string
-    /** Kontrola návrhov FAQ (rovnaký e-mail, iný predmet behu). */
-    subtitleProposals: string
-    introProposals: (proposals: number, changed: number) => string
-    buttonProposals: string
-    noteProposals: string
     /** Požiadavka na kontrolu pri novom znení (D200). */
     requestSubject: (title: string) => string
     requestSubtitle: string
     requestIntro: (title: string, label: string) => string
     requestDocuments: (n: number) => string
-    requestFaq: (n: number) => string
     requestButton: string
     requestNote: string
   }
@@ -2364,8 +2360,6 @@ interface Dictionary {
       complianceDone: (documents: number, findings: number) => string
       /** Prijaté znenie čaká na zápis do konceptu (D199) — správcom obsahu. */
       complianceToApply: (title: string) => string
-      /** Kontrola návrhov FAQ dobehla — tomu, kto ju spustil. */
-      faqReviewDone: (proposals: number, changed: number) => string
       /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (D200). */
       complianceRequested: (title: string, label: string, documents: number) => string
       /** Kolo zrušené, lebo sa koncept po predložení zmenil — schvaľovateľom. */
@@ -2499,12 +2493,6 @@ interface Dictionary {
     sentEdited: string
     close: string
     reopen: string
-    toFaq: string
-    toFaqIntro: string
-    toFaqDocument: string
-    toFaqSubmit: string
-    toFaqDone: string
-    noFaqDocuments: string
     noMailbox: string
     msgDrafted: string
     msgDraftSaved: string
@@ -2547,7 +2535,7 @@ interface Dictionary {
     /** Pred adresou správcu, keď widget nefunguje (Ján 8. 10. 2026). */
     contact: string
   }
-  /** Kanály (ADR-028, D161, D169): widget a portál — obsah, schránka, riešitelia, ťažba FAQ. */
+  /** Kanály (ADR-028, D161, D169): widget a portál — obsah, schránka, riešitelia, história schránky. */
   channels: {
     kinds: Record<"widget" | "portal", string>
     kindHints: Record<"widget" | "portal", string>
@@ -2562,20 +2550,6 @@ interface Dictionary {
     tabList: string
     tabMyTickets: string
     tabTickets: string
-    tabProposals: string
-    tabFaq: string
-    faqHeading: string
-    faqIntro: string
-    faqDocument: string
-    faqDraft: (n: number) => string
-    faqPublished: (label: string, n: number) => string
-    faqNotPublished: string
-    faqEdit: string
-    faqOpenDocument: string
-    faqProposalsOpen: (n: number) => string
-    faqListLine: (n: number) => string
-    faqListNone: string
-    faqBelongsTo: (channels: string) => string
     tabSettings: string
     agentsNote: string
     back: string
@@ -2692,13 +2666,6 @@ interface Dictionary {
     widgetSecretShown: string
     widgetSecretNone: string
     widgetSecretSet: (hint: string, when: string) => string
-    mining: string
-    miningIntro: string
-    miningDocument: string
-    miningLimit: string
-    miningRun: string
-    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => string
-    noFaqDocuments: string
     history: string
     historyIntro: string
     historyOpen: string
@@ -2759,138 +2726,6 @@ interface Dictionary {
     harvestExclusionsSave: string
     harvestExclusionsCount: (n: number) => string
     harvestExclusionsAdded: (n: number) => string
-    proposals: string
-    proposalsIntro: string
-    proposalsViewOpen: string
-    proposalsViewDecided: string
-    proposalsEmpty: string
-    proposalsNoFaq: string
-    proposalTopic: string
-    proposalThreads: (threads: string, first: string, last: string) => string
-    proposalChanged: string
-    proposalNormConflict: string
-    proposalNote: string
-    proposalSources: string
-    proposalQuestion: string
-    proposalVariants: string
-    proposalVariantsHint: string
-    proposalAnswer: string
-    proposalAudience: string
-    proposalAudienceHint: string
-    proposalDocument: string
-    proposalApprove: string
-    proposalReject: string
-    proposalMergeInto: string
-    proposalMerge: string
-    proposalApproved: string
-    proposalRejected: string
-    proposalMerged: string
-    proposalStatus: Record<"approved" | "merged" | "rejected", string>
-    proposalDecidedBy: (who: string, when: string) => string
-    proposalsMore: (n: number) => string
-    proposalSave: string
-    proposalSaved: string
-    proposalOriginal: string
-    proposalOriginalIntro: string
-    proposalNoChanges: string
-    proposalEdited: (who: string, when: string) => string
-    proposalsViewDecision: string
-    proposalsViewNoSource: string
-    proposalTopicFilter: string
-    proposalTopicAll: string
-    proposalTopicApply: string
-    proposalsPage: (page: number, pages: number) => string
-    proposalsPrev: string
-    proposalsNext: string
-    review: string
-    reviewIntro: string
-    reviewDocuments: string
-    reviewScope: string
-    reviewScopeAll: string
-    reviewScopeHint: string
-    reviewStart: string
-    reviewRunningTitle: string
-    reviewRunningNote: (when: string, who: string) => string
-    reviewStarted: string
-    reviewProgress: (done: number, total: number) => string
-    reviewDone: (when: string) => string
-    reviewStopped: string
-    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => string
-    reviewAgainst: (list: string) => string
-    reviewDraftMark: string
-    reviewVerdicts: Record<"agree" | "differs" | "not_covered" | "conflict", string>
-    reviewFilter: string
-    reviewFilterAll: string
-    reviewProposed: string
-    reviewCitations: string
-    reviewApply: string
-    reviewDismiss: string
-    reviewApplied: string
-    reviewDismissed: string
-    reviewDecision: Record<"applied" | "dismissed", string>
-    proposalsLead: (channel: string, open: number, period: string | null) => string
-    periodLabel: (months: number) => string
-    reviewRunningShort: (done: number, total: number) => string
-    proposalCancel: string
-    decidedOf: (decided: number, total: number) => string
-    remaining: (n: number) => string
-    reviewLabel: string
-    reviewVerdictsShort: Record<"differs" | "conflict" | "not_covered" | "agree", string>
-    reviewVerdictsChip: Record<"differs" | "conflict" | "not_covered" | "agree", string>
-    decisionCount: (n: number) => string
-    reviewLast: string
-    reviewLastSummary: (date: string, docs: number) => string
-    reviewRunningSince: (date: string) => string
-    topicsHeading: (open: number) => string
-    topicDiffers: (n: number) => string
-    topicNotCovered: string
-    topicDecision: (n: number) => string
-    topicDone: string
-    topicPosition: (i: number, n: number) => string
-    openInTopic: (n: number) => string
-    proposalsViewAll: string
-    threadsCount: (n: string) => string
-    decide: string
-    collapse: string
-    decisionNote: string
-    reviewHeading: string
-    reviewNorm: string
-    opensNewWindow: string
-    reviewChange: string
-    reviewQuestionChange: string
-    editHeading: string
-    variantsCount: (n: number) => string
-    variantRemoveHint: string
-    moreVariants: (n: number) => string
-    variantsAdd: string
-    variantsAddHint: string
-    markdownHint: string
-    sourcesLabel: string
-    sourceDocPlaceholder: string
-    sourceRef: string
-    sourceRemove: (title: string) => string
-    sourcesHint: string
-    noSourceTag: string
-    approveNext: string
-    approveOnly: string
-    saveShort: string
-    nextIs: (question: string) => string
-    lastOpen: string
-    rejectOpen: string
-    mergeOpen: string
-    rejectTitle: string
-    rejectReason: string
-    rejectReasonHint: string
-    mergeTitle: string
-    mergeExplain: string
-    proposalStatusTag: Record<"approved" | "merged" | "rejected", string>
-    mergedIntoLabel: string
-    faqLink: string
-    topicAllDecided: string
-    topicSummary: (approved: number, rejected: number, merged: number) => string
-    nextTopic: (topic: string) => string
-    reviewNotCoveredAgainst: (list: string) => string
-    decidedNone: string
     save: string
     saved: string
     created: string
@@ -3006,7 +2841,6 @@ interface Dictionary {
       textRowNote: string
       openTextEditor: string
       openChunks: string
-      openFaqEntries: string
       currentHeading: string
       /** Zverejnená novela, ktorá ešte neplatí (ADR-023 D143) — karta vedľa platného znenia. */
       upcomingHeading: string
@@ -3308,7 +3142,6 @@ interface Dictionary {
       requestTag: string
       requestTitle: (title: string, label: string) => string
       requestWhen: (when: string, who: string) => string
-      requestFaq: (n: number) => string
       requestRunName: (title: string, label: string) => string
       requestStart: string
       requestDismiss: string
@@ -3318,12 +3151,6 @@ interface Dictionary {
       linksIntro: string
       linksNone: string
       linkRemove: string
-      faqCardTitle: (channel: string) => string
-      faqCardCounts: (open: number, reviewed: number) => string
-      faqCardRunning: (done: number, total: number) => string
-      faqCardLast: (when: string, who: string) => string
-      faqCardNever: string
-      faqCardOpen: string
       references: string
       referencesHint: string
       start: string
@@ -3885,7 +3712,6 @@ interface Dictionary {
       carryOverFailed: string
       failed: string
     }
-    /** FAQ ako druh dokumentu (ADR-028, D164): založenie, editor záznamov, texty znenia a indexu. */
     /** Import článkov z MCP konektora (ADR-029, použitie B). */
     /** Detail dokumentu (KNIZ-detail-dokumentu, 12. 10. 2026). */
     docView: {
@@ -3933,7 +3759,6 @@ interface Dictionary {
       uploaded: (name: string, date: string) => string
       editor: string
       chunks: string
-      faqEntries: string
       noFiles: string
       now: string
       roundOf: (n: number, decided: number, total: number) => string
@@ -4045,81 +3870,6 @@ interface Dictionary {
       resyncUnchanged: string
       resyncVersion: string
     }
-    faq: {
-      newHeading: string
-      newIntro: string
-      /** Odkaz z nahrávania: FAQ sa nenahráva ako súbor. */
-      newLink: string
-      create: string
-      created: string
-      heading: string
-      intro: string
-      empty: string
-      addHeading: string
-      /** Pomocník pri písaní záznamu: hľadanie podkladu (faqAssist.ts). */
-      assist: {
-        heading: string
-        hint: string
-        query: string
-        sources: string
-        library: string
-        search: string
-        noSource: string
-        none: string
-        failed: (source: string) => string
-        useSource: string
-        insert: string
-        import: string
-        imported: string
-        internal: string
-      }
-      /** Hľadanie v záznamoch tohto FAQ (filterEntries). */
-      find: string
-      findButton: string
-      findClear: string
-      findCount: (shown: number, total: number) => string
-      findNone: string
-      editHeading: (n: number) => string
-      question: string
-      questionHint: string
-      variants: string
-      variantsHint: string
-      answer: string
-      answerHint: string
-      sources: string
-      sourcesHint: string
-      sourceDocument: string
-      sourceNone: string
-      sourceArticle: string
-      sourceArticlePlaceholder: string
-      audience: string
-      audienceHint: string
-      save: string
-      add: string
-      remove: string
-      saved: string
-      removed: string
-      stateNew: string
-      stateChanged: string
-      statePublished: string
-      stateSourceChanged: string
-      access: (level: string) => string
-      count: (n: number) => string
-      /** Hlavné tlačidlo na detaile FAQ namiesto „Nové znenie". */
-      editEntries: string
-      openEntries: string
-      pdfNote: string
-      publishNote: string
-      /** Texty v jazyku dokumentu — Markdown, PDF a úsek v indexe. */
-      mdIntro: string
-      mdQuestion: string
-      mdVariants: string
-      mdAnswer: string
-      mdSources: string
-      mdAudience: string
-      mdEmpty: string
-      pdfPage: (n: number, total: number) => string
-    }
     upload: {
       /** Číslované sekcie formulára — nie kroky sprievodcu, viď komentár v `new/page.tsx`. */
       sectionFile: string
@@ -4166,7 +3916,6 @@ interface Dictionary {
         heading: string
         intro: string
         file: { title: string; text: string; cta: string }
-        faq: { title: string; text: string; cta: string }
         connector: { title: string; text: string; cta: string }
       }
       /** Nadpis rozbaľovacej skupiny nepovinných polí (úloha 6). */
@@ -4952,6 +4701,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Načítavam PDF…",
       failed: "PDF sa nepodarilo zobraziť priamo na stránke. Otvor ho odkazom vyššie.",
       page: "Strana {page} z {pages}",
+      pageOf: (n: number, total: number) => `strana ${n} z ${total}`,
     },
     pending: {
       adding: "Pridávam…",
@@ -5267,15 +5017,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       costLine: usd => `Cena behu: ${usd} USD`,
       button: "Otvoriť nálezy",
       note: "Pri každom náleze rozhodnite, či znenie ponecháte, alebo prijmete odporúčanie. Prijaté znenie sa zapíše do konceptu dokumentu; platné znenie sa mení až zverejnením.",
-      subtitleProposals: "Kontrola návrhov FAQ",
-      introProposals: (n, c) => `Kontrola návrhov FAQ, ktorú ste spustili, dobehla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhov"}, ${c} sa odlišuje od dokumentov alebo s nimi koliduje.`,
-      buttonProposals: "Otvoriť návrhy FAQ",
-      noteProposals: "Pri každom návrhu prevezmite opravené znenie z kontroly alebo ponechajte pôvodné. Do FAQ ide návrh až po schválení.",
       requestSubject: title => `Treba skontrolovať súlad — ${title}`,
       requestSubtitle: "Požiadavka na kontrolu súladu",
       requestIntro: (title, label) => `Zverejnilo sa nové znenie „${label}" dokumentu „${title}". Dokumenty, ktoré sa proti nemu kontrolujú, treba skontrolovať znova.`,
       requestDocuments: n => `Prepojené dokumenty: ${n}`,
-      requestFaq: n => `Návrhy FAQ, ktoré ho citujú: ${n}`,
       requestButton: "Otvoriť požiadavku",
       requestNote: "Kontrola sa nespúšťa sama. Spustíte ju jedným kliknutím, alebo zapíšete, prečo netreba.",
     },
@@ -6559,12 +6304,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.kind": "Neznámy typ kanála.",
     "helpdesk.syncInterval": "Neznámy interval synchronizácie.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
-    "helpdesk.miningFailed": "Ťažba FAQ sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
-    "proposal.notFound": "Taký návrh tu nie je.",
-    "proposal.decided": "O návrhu už niekto rozhodol.",
-    "proposal.mergeSelf": "Návrh sa nedá zlúčiť sám so sebou.",
-    "proposal.noReview": "Návrh nemá výsledok kontroly na prevzatie.",
-    "proposal.reasonRequired": "Uveďte dôvod zamietnutia.",
+    "helpdesk.miningFailed": "Ťažba otázok sa nepodarila (dávka {batch}) — skúste to o chvíľu.",
     "compliance.noDocuments": "Vyberte aspoň jeden dokument.",
     "compliance.unknownDocument": "Niektorý z vybraných dokumentov tu nie je.",
     "compliance.referenceNotBinding": "Proti dokumentu „{title}\" sa kontrolovať nedá — nie je záväzný. Meradlom je zákon, stanovy, poriadok alebo smernica.",
@@ -6651,13 +6391,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.effectiveFromSourceRequired": "Zdroj dátumu platnosti je povinný — napíš, odkiaľ dátum je (napríklad uznesenie VV SFZ č. … z …). Po prvom potvrdení sa dátum už meniť nedá.",
     "library.documentHasNoText": "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.",
     "library.noChunks": "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
-    "library.faqNoEntries": "FAQ nemá ani jeden záznam — pridaj aspoň jednu otázku s odpoveďou.",
-    "library.faqQuestionRequired": "Otázka je povinná — bez nej záznam nemá čo zodpovedať.",
-    "library.faqAnswerRequired": "Odpoveď je povinná — otázka bez odpovede do FAQ nepatrí.",
-    "library.faqTooLong": "Záznam je príliš dlhý — otázka do {question} a odpoveď do {answer} znakov.",
-    "library.faqEntryNotFound": "Taký záznam v tomto FAQ nie je.",
-    "library.faqSourceUnknown": "Zdrojový dokument {documentId} tu nie je.",
-    "library.notFaq": "Tento dokument nie je FAQ.",
     "library.noPublishedVersion": "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
     "library.versionHasNoText": "Toto znenie nemá uložený text — nie je čo narezať.",
     "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.",
@@ -6971,7 +6704,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rewrite: "Prepis skenov PDF",
       rewriteNote: "Prepisuje skenované predpisy v knižnici do textu.",
       compliance: "Kontrola súladu dokumentov",
-      complianceNote: "Porovnáva dokumenty a návrhy FAQ s normami. Beží na pozadí a zriedka, preto sa oplatí najsilnejší model.",
+      complianceNote: "Porovnáva dokumenty s normami a navrhuje doplnenie manuálov z otázok helpdesku. Beží na pozadí a zriedka, preto sa oplatí najsilnejší model.",
       price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
       save: "Uložiť",
       saved: "Nastavenie AI je uložené.",
@@ -7013,8 +6746,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "pdf-rewrite": { label: "Prepis skenu PDF", why: "sken bez textovej vrstvy sa prepisuje do textu predpisu" },
         "markdown-clean": { label: "Úprava členenia textu", why: "obnovenie nadpisov a článkov v prevedenom texte" },
         "chunking-analysis": { label: "Analýza členenia", why: "návrh, ako dokument narezať na úseky pre vyhľadávanie" },
-        "faq-mining": { label: "Ťažba FAQ", why: "návrhy záznamov FAQ z histórie schránky helpdesku (ADR-028)" },
-        "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhov a záznamov FAQ proti dokumentom knižnice (ADR-032)" },
+        "faq-mining": { label: "Ťažba otázok", why: "otázky z histórie schránky helpdesku pre návrhy do manuálov (ADR-030, ADR-034)" },
+        "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhov FAQ proti dokumentom knižnice (ADR-032; zrušené 14. 10. 2026, ADR-034)" },
         "compliance-review": { label: "Kontrola súladu dokumentov", why: "kontrola dokumentov (manuály, rozpisy) proti normám knižnice (ADR-032, D196)" },
       },
     },
@@ -7248,7 +6981,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluator: "evaluator — posudzuje odpovede systému, keď niekto povie, že nesedia",
       dpo: "dpo — zodpovedná osoba: kontroluje právne základy, rozhoduje o námietkach",
       "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázok a testy",
-      helpdesk: "helpdesk — správca ticketov: odpovedá na tickety svojich kanálov a navrhuje záznamy do FAQ; kanály nenastavuje",
+      helpdesk: "helpdesk — správca ticketov: odpovedá na tickety svojich kanálov; kanály nenastavuje",
       compliance: "compliance — spúšťa kontroly súladu dokumentov s normami a rozhoduje o nálezoch",
     },
     list: {
@@ -7565,7 +7298,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       objectionSubmitted: () => "Nová námietka (čl. 21) čaká na vaše rozhodnutie.",
       complianceRequested: (title, label, d) => `Nové znenie „${label}" dokumentu „${title}" — treba skontrolovať súlad${d ? ` (${d} ${d === 1 ? "prepojený dokument" : d < 5 ? "prepojené dokumenty" : "prepojených dokumentov"})` : ""}.`,
       approvalCancelled: title => `Kolo schvaľovania dokumentu „${title}" bolo zrušené — koncept sa po predložení zmenil. Schváliť sa dá až nové predloženie.`,
-      faqReviewDone: (n, c) => `Kontrola návrhov FAQ dobehla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhov"}, ${c} na prevzatie alebo úpravu.`,
       complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
     },
@@ -7650,7 +7382,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   helpdesk: {
     heading: "Helpdesk",
-    intro: "Tickety kanálov, ktorých si správcom ticketov. Návrh odpovede pripraví asistent z noriem a FAQ kanála; odošleš ho ty, nikdy nie systém sám.",
+    intro: "Tickety kanálov, ktorých si správcom ticketov. Návrh odpovede pripraví asistent z dokumentov kanála; odošleš ho ty, nikdy nie systém sám.",
     noChannels: "Nie si správcom ticketov žiadneho kanála. Správca organizácie ťa pridá medzi správcov ticketov v Kanáloch.",
     viewOpen: "Otvorené",
     viewSent: "Odpovedané",
@@ -7680,7 +7412,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     fromAsker: (name: string) => name || "Pýtajúci sa",
     attachments: (n: number) => (n === 1 ? "1 príloha (v schránke)" : `${n} príloh (v schránke)`),
     draftHeading: "Odpoveď",
-    draftIntro: "Asistent navrhne odpoveď z noriem a FAQ kanála. Uprav ju a odošli — rozdiel medzi návrhom a odoslaným textom je to, z čoho sa systém učí.",
+    draftIntro: "Asistent navrhne odpoveď z dokumentov kanála. Uprav ju a odošli — rozdiel medzi návrhom a odoslaným textom je to, z čoho sa systém učí.",
     draftFromAi: "Navrhnúť odpoveď asistentom",
     draftMeta: (model: string, when: string) => `návrh ${model}, ${when}`,
     noDraft: "Zatiaľ bez návrhu.",
@@ -7695,12 +7427,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sentEdited: "návrh bol pred odoslaním upravený",
     close: "Zavrieť ticket",
     reopen: "Znovu otvoriť",
-    toFaq: "Pridať do FAQ",
-    toFaqIntro: "Z odoslanej odpovede vznikne záznam v koncepte FAQ dokumentu. Pred uložením odstráň mená a údaje konkrétnej osoby; schváli to správca obsahu.",
-    toFaqDocument: "FAQ dokument",
-    toFaqSubmit: "Uložiť do konceptu FAQ",
-    toFaqDone: "Záznam je v koncepte FAQ.",
-    noFaqDocuments: "V knižnici ešte nie je FAQ dokument.",
     noMailbox: "Kanál nemá schránku — odpoveď sa nedá odoslať e-mailom.",
     msgDrafted: "Návrh je pripravený. Skontroluj ho pred odoslaním.",
     msgDraftSaved: "Návrh je uložený.",
@@ -7754,20 +7480,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Časti kanálov",
     tabList: "Kanály",
     tabMyTickets: "Moje tickety",
-    tabProposals: "Návrhy FAQ",
-    tabFaq: "FAQ",
-    faqHeading: "FAQ kanála",
-    faqIntro: "Záznamy, ktoré kanál odpovedá v okne pomoci. Nové záznamy prichádzajú z návrhov FAQ; do okna pomoci idú až zverejnením znenia. Dokument je uložený v knižnici (verzie, schvaľovanie, vyhľadávanie), v jej zozname je skrytý.",
-    faqDocument: "Dokument",
-    faqDraft: n => `V koncepte ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamov"}`,
-    faqPublished: (label, n) => `Platné znenie ${label} · ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamov"}`,
-    faqNotPublished: "Zatiaľ bez zverejneného znenia — okno pomoci z FAQ ešte neodpovedá.",
-    faqEdit: "Upraviť záznamy",
-    faqOpenDocument: "Zverejniť a znenia",
-    faqProposalsOpen: n => `Otvorené návrhy FAQ: ${n}`,
-    faqListLine: n => `FAQ: ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamov"}`,
-    faqListNone: "FAQ: bez záznamov",
-    faqBelongsTo: ch => `Patrí ku kanálu ${ch}. V zozname knižnice je FAQ skryté — ukáže ho filter Druh: FAQ.`,
     tabTickets: "Tickety",
     tabSettings: "Nastavenie",
     agentsNote: "Správcovia ticketov majú zmysel, keď sú zapnuté tickety.",
@@ -7841,7 +7553,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncLast: (when: string) => `naposledy ${when}`,
     syncError: (code: string) => `posledná chyba: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplnené ${appended} · preskočené ${skipped}`,
-    syncSinceHint: "Prvé spustenie len označí začiatok: staršie správy sa ticketmi nestanú, história ide do ťažby FAQ.",
+    syncSinceHint: "Prvé spustenie len označí začiatok: staršie správy sa ticketmi nestanú, história ide do ťažby otázok.",
     syncInterval: "Interval synchronizácie",
     syncIntervalHint: "Ako často sa schránka kontroluje automaticky. Synchronizovať teraz funguje kedykoľvek.",
     syncIntervalOption: (m: number) => (m >= 1440 ? "raz denne" : m >= 60 ? "každú hodinu" : `každých ${m} minút`),
@@ -7883,7 +7595,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       given_name: "meno — správca ticketov ho vidí pri tickete",
       family_name: "priezvisko",
       name: "celé meno, len ak meno a priezvisko nemáte zvlášť",
-      roles: "zoznam rolí osoby; vyberá časté otázky pre publikum",
+      roles: "zoznam rolí osoby, napríklad hráč alebo tréner",
       club: "klub osoby",
       lang: "jazyk pomocníka: sk, cs alebo en",
       iat: "čas vydania — počet sekúnd od 1. 1. 1970 (Unix čas), teda „teraz“",
@@ -7901,15 +7613,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetSecretShown: "Nový tajný kľúč — skopíruj ho teraz, znova sa neukáže:",
     widgetSecretNone: "zatiaľ nevytvorený",
     widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvorený ${when}`,
-    mining: "Ťažba FAQ z histórie",
-    miningIntro: "Model prečíta posledné vlákna schránky, očistí ich od osobných údajov a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Telá správ sa neukladajú; návrhy schvaľuje správca obsahu postupom znenia.",
-    miningDocument: "FAQ dokument",
-    miningLimit: "Koľko posledných správ prečítať",
-    miningRun: "Navrhnúť záznamy FAQ",
-    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Ťažba prebehla: vlákien ${threads}, návrhov ${proposed}, uložených do konceptu ${saved}, duplicitných ${duplicates}.`,
-    noFaqDocuments: "V knižnici ešte nie je FAQ dokument — založ ho v Knižnici → Nový dokument → FAQ.",
     history: "Analýza histórie",
-    historyIntro: "Prehľad schránky za zvolené obdobie: koľko otázok prišlo, koľko dostalo odpoveď, ako rýchlo a o čom zhruba boli. Číta sa len hlavička správ (dátum, vlákno, odosielateľ, predmet) — telá sa nečítajú, umelej inteligencii nič neodchádza a do FAQ ani ticketov sa nič nezapíše. Ukladá sa len mesačný súhrn bez adries a mien.",
+    historyIntro: "Prehľad schránky za zvolené obdobie: koľko otázok prišlo, koľko dostalo odpoveď, ako rýchlo a o čom zhruba boli. Číta sa len hlavička správ (dátum, vlákno, odosielateľ, predmet) — telá sa nečítajú, umelej inteligencii nič neodchádza a do ticketov ani otázok sa nič nezapíše. Ukladá sa len mesačný súhrn bez adries a mien.",
     historyOpen: "Otvoriť analýzu",
     historyPeriod: "Obdobie",
     historyPeriodOption: (months: number) => `posledných ${months} mesiacov`,
@@ -7945,161 +7650,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     historyColJunk: "Nevyžiadané",
     historyMonthCard: (incoming: string, threads: string, answered: string) => `prijaté ${incoming} · otázky ${threads} · s odpoveďou ${answered}`,
     historyMonthNames: ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"],
-    harvest: "Ťažba FAQ z histórie",
-    harvestIntro: "Zo schránky za zvolené obdobie sa prečítajú otázky zvonku, ktoré dostali odpoveď; adresy, telefónne a iné čísla sa pred spracovaním odstránia. Umelá inteligencia ich roztriedi do tém a pre každú tému s aspoň 3 otázkami navrhne záznamy FAQ z najnovšej odpovede helpdesku a článok normy. Text e-mailov sa neukladá; návrhy schvaľuje správca obsahu (ADR-030, odpovede DPO 9. 10. 2026).",
-    harvestStart: "Spustiť ťažbu FAQ",
+    harvest: "Ťažba otázok z histórie",
+    harvestIntro: "Zo schránky za zvolené obdobie sa prečítajú otázky zvonku, ktoré dostali odpoveď; adresy, telefónne a iné čísla sa pred spracovaním odstránia. Umelá inteligencia ich roztriedi do tém a pre každú tému s aspoň 3 otázkami zhrnie otázku a najnovšiu odpoveď helpdesku. Z otázok potom kontrola súladu navrhne doplnenie manuálov (ADR-034). Text e-mailov sa neukladá (ADR-030, odpovede DPO 9. 10. 2026).",
+    harvestStart: "Spustiť ťažbu otázok",
     harvestRestart: "Spustiť ťažbu znova",
     harvestStarted: "Ťažba beží. Mesiace sa spracúvajú automaticky každých 5 minút — stránku stačí neskôr obnoviť.",
     harvestNone: "Ťažba ešte neprebehla.",
-    harvestStages: { collect: "Triedenie otázok do tém", merge: "Zlučovanie podobných tém", draft: "Písanie návrhov FAQ", done: "Hotovo" },
+    harvestStages: { collect: "Triedenie otázok do tém", merge: "Zlučovanie podobných tém", draft: "Zhrnutie otázok", done: "Hotovo" },
     harvestCollectProgress: (done: number, total: number) => `Roztriedené ${done} z ${total} mesiacov.`,
     harvestDraftProgress: (done: number, total: number) => `Návrhy pre ${done} z ${total} tém.`,
     harvestStopped: "Ťažba sa po opakovaných chybách zastavila. Skontroluj spojenie so schránkou a nastavenie umelej inteligencie a spusti ju znova.",
     harvestCounts: (threads: string, colleague: string, unanswered: string, excluded: string, noTopic: string) => `Otázok s odpoveďou: ${threads} · vynechané: od kolegov ${colleague}, bez odpovede ${unanswered}, po námietke ${excluded}, nie otázka ${noTopic}`,
     harvestTopics: "Témy",
-    harvestTopicsIntro: (min: number) => `Návrh FAQ dostane téma s aspoň ${min} otázkami. Menšie témy sú jednotlivé prípady.`,
+    harvestTopicsIntro: (min: number) => `Zhrnutie dostane téma s aspoň ${min} otázkami. Menšie témy sú jednotlivé prípady.`,
     harvestTopicMeta: (threads: string, first: string, last: string) => `${threads} otázok · ${first} – ${last}`,
-    harvestTopicProposals: (n: number) => `návrhov: ${n}`,
+    harvestTopicProposals: (n: number) => `otázok: ${n}`,
     harvestTopicsSmall: (topics: number, threads: string) => `Ďalších ${topics} malých tém (spolu ${threads} otázok) návrh nedostane.`,
-    harvestOpenProposals: (n: number) => `Otvoriť návrhy FAQ (${n})`,
+    harvestOpenProposals: (n: number) => `Navrhnúť doplnenie manuálov (${n} otázok)`,
     harvestExclusions: "Vylúčené adresy",
-    harvestExclusionsIntro: "Kto namietne proti použitiu svojich e-mailov na FAQ, toho adresu sem zapíšte; ťažba jeho e-maily preskočí. Ukladá sa len odtlačok adresy, nie adresa.",
+    harvestExclusionsIntro: "Kto namietne proti použitiu svojich e-mailov na ťažbu otázok, toho adresu sem zapíšte; ťažba jeho e-maily preskočí. Ukladá sa len odtlačok adresy, nie adresa.",
     harvestExclusionsField: "Adresy, každá na samostatnom riadku",
     harvestExclusionsSave: "Vylúčiť adresy",
     harvestExclusionsCount: (n: number) => `Vylúčených adries: ${n}.`,
     harvestExclusionsAdded: (n: number) => `Pridaných vylúčených adries: ${n}.`,
-    proposals: "Návrhy FAQ z helpdesku",
-    proposalsIntro: "Návrhy vznikli z odpovedí helpdesku za obdobie zvolené pri ťažbe. Pred schválením skontrolujte, že odpoveď neobsahuje meno ani iný údaj konkrétnej osoby a že platí dnes. Schválený záznam ide do konceptu vybraného FAQ dokumentu a zverejní sa až jeho schválením. Odkaz na e-maily sa po rozhodnutí zmaže.",
-    proposalsViewOpen: "Nerozhodnuté",
-    proposalsViewDecided: "Rozhodnuté",
-    proposalsEmpty: "Žiadne návrhy na rozhodnutie.",
-    proposalsNoFaq: "V knižnici kanála nie je FAQ dokument — založte ho v Knižnici → Nový dokument → FAQ.",
-    proposalTopic: "Téma",
-    proposalThreads: (threads: string, first: string, last: string) => `${threads} vlákien · ${first} – ${last}`,
-    proposalChanged: "odpoveď sa v čase menila",
-    proposalNormConflict: "rozchádza sa s normou",
-    proposalNote: "Poznámka pre kurátora",
-    proposalSources: "Navrhnuté zdroje",
-    proposalQuestion: "Otázka",
-    proposalVariants: "Iné znenia otázky",
-    proposalVariantsHint: "Každé na samostatnom riadku.",
-    proposalAnswer: "Odpoveď",
-    proposalAudience: "Komu je určená",
-    proposalAudienceHint: "Oddeľte čiarkou.",
-    proposalDocument: "Do FAQ dokumentu",
-    proposalApprove: "Schváliť do konceptu FAQ",
-    proposalReject: "Zamietnuť",
-    proposalMergeInto: "Zlúčiť s návrhom",
-    proposalMerge: "Zlúčiť",
-    proposalApproved: "Návrh je v koncepte FAQ.",
-    proposalRejected: "Návrh je zamietnutý.",
-    proposalMerged: "Návrh je zlúčený; jeho otázka pribudla k iným zneniam.",
-    proposalStatus: { approved: "schválený", merged: "zlúčený", rejected: "zamietnutý" },
-    proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
-    proposalsMore: (n: number) => `Ďalších ${n} návrhov sa ukáže po rozhodnutí o týchto.`,
-    proposalSave: "Uložiť úpravu",
-    proposalSaved: "Úprava je uložená, návrh ostáva vo fronte.",
-    proposalOriginal: "Pôvodný návrh a zmeny",
-    proposalOriginalIntro: "Prečiarknuté oproti pôvodnému návrhu vypadlo, podčiarknuté pribudlo.",
-    proposalNoChanges: "Bez zmien oproti pôvodnému návrhu.",
-    proposalEdited: (who: string, when: string) => `Upravené ${when}, ${who}`,
-    proposalsViewDecision: "Na rozhodnutie",
-    proposalsViewNoSource: "Bez zdroja",
-    proposalTopicFilter: "Téma",
-    proposalTopicAll: "Všetky témy",
-    proposalTopicApply: "Zobraziť",
-    proposalsPage: (page: number, pages: number) => `Strana ${page} z ${pages}`,
-    proposalsPrev: "Predchádzajúca strana",
-    proposalsNext: "Ďalšia strana",
-    review: "Kontrola proti dokumentom",
-    reviewIntro: "Umelá inteligencia porovná otvorené návrhy vybraných tém s vybranými dokumentmi z knižnice a ku každému dá verdikt s citáciou. Odpovede sama nemení — výsledok prevezmete, alebo ponecháte pôvodné. Použiť možno len verejné dokumenty; dokument, ktorý ešte nemá zverejnené znenie, sa použije ako koncept a je tak označený.",
-    reviewDocuments: "Dokumenty, proti ktorým sa kontroluje",
-    reviewScope: "Čo kontrolovať",
-    reviewScopeAll: "Všetky otvorené návrhy",
-    reviewScopeHint: "Jedna alebo viac tém. Prázdne pole = všetky otvorené návrhy.",
-    reviewStart: "Skontrolovať proti dokumentom",
-    reviewRunningTitle: "Kontrola beží na pozadí",
-    reviewRunningNote: (when, who) => `Spustená ${when}, ${who}. Novú spustíte, keď dobehne — príde upozornenie a e-mail. Stav uvidíte po obnovení stránky.`,
-    reviewStarted: "Kontrola beží na pozadí — dávky idú jedna za druhou, stránku stačí neskôr obnoviť.",
-    reviewProgress: (done: number, total: number) => `Skontrolované ${done} z ${total} návrhov.`,
-    reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
-    reviewStopped: "Kontrola sa po opakovaných chybách zastavila. Skúste ju spustiť znova.",
-    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => `rozchádza sa ${differs} · dokumenty si protirečia ${conflict} · nepokrývajú ${notCovered} · súhlasí ${agree}`,
-    reviewAgainst: (list: string) => `Proti: ${list}`,
-    reviewDraftMark: "koncept",
-    reviewVerdicts: { differs: "rozchádza sa s dokumentmi", conflict: "dokumenty si protirečia", not_covered: "dokumenty tému nepokrývajú", agree: "súhlasí s dokumentmi" },
-    reviewFilter: "Výsledok kontroly",
-    reviewFilterAll: "Všetky",
-    reviewProposed: "Návrh z kontroly",
-    reviewCitations: "Citácie",
-    reviewApply: "Prevziať návrh z kontroly",
-    reviewDismiss: "Ponechať pôvodné",
-    reviewApplied: "Návrh z kontroly je prevzatý; pôvodné znenie ostáva v porovnaní.",
-    reviewDismissed: "Ponechané pôvodné znenie.",
-    reviewDecision: { applied: "prevzaté", dismissed: "ponechané pôvodné" },
-    proposalsLead: (c, n, p) => [c, `${n} ${n === 1 ? "otvorený" : n >= 2 && n <= 4 ? "otvorené" : "otvorených"}`, p].filter(Boolean).join(" · "),
-    periodLabel: m => m >= 12 ? `${Math.round(m / 12)} ${Math.round(m / 12) === 1 ? "rok" : Math.round(m / 12) <= 4 ? "roky" : "rokov"} e-mailov` : `${m} ${m === 1 ? "mesiac" : m <= 4 ? "mesiace" : "mesiacov"} e-mailov`,
-    reviewRunningShort: (d, n) => `Kontrola beží · ${d} z ${n}`,
-    proposalCancel: "Zrušiť",
-    decidedOf: (d, n) => `${d} z ${n} rozhodnutých`,
-    remaining: n => `${n} ostáva`,
-    reviewLabel: "Kontrola:",
-    reviewVerdictsShort: { agree: "Sedí", differs: "Odlišuje sa", not_covered: "Dokumenty neriešia", conflict: "Rozpor" },
-    reviewVerdictsChip: { differs: "Odlišuje sa", conflict: "Rozpor", not_covered: "Neriešia", agree: "Sedí" },
-    decisionCount: n => `Na rozhodnutie ${n}`,
-    reviewLast: "Posledná kontrola",
-    reviewLastSummary: (d, n) => `${d} · ${n} ${n === 1 ? "dokument" : n <= 4 ? "dokumenty" : "dokumentov"}`,
-    reviewRunningSince: d => `beží od ${d}`,
-    topicsHeading: n => `Témy · ${n} ${n === 1 ? "otvorená" : n <= 4 ? "otvorené" : "otvorených"}`,
-    topicDiffers: n => `${n} odlišuje sa`,
-    topicNotCovered: "dokumenty neriešia",
-    topicDecision: n => `${n} na rozhodnutie`,
-    topicDone: "hotovo",
-    topicPosition: (i, n) => `Téma ${i} z ${n}`,
-    openInTopic: n => `${n} ${n === 1 ? "nerozhodnutý" : n <= 4 ? "nerozhodnuté" : "nerozhodnutých"}`,
-    proposalsViewAll: "Všetky",
-    threadsCount: n => `${n} vlákien`,
-    decide: "Rozhodnúť",
-    collapse: "Zbaliť",
-    decisionNote: "Na rozhodnutie",
-    reviewHeading: "Výsledok kontroly",
-    reviewNorm: "Norma",
-    opensNewWindow: "otvorí sa v novom okne",
-    reviewChange: "Zmena odpovede",
-    reviewQuestionChange: "Zmena otázky",
-    editHeading: "Úprava",
-    variantsCount: n => `Varianty otázky · ${n}`,
-    variantRemoveHint: "Odškrtnutý variant sa uložením odstráni.",
-    moreVariants: n => `Ďalších ${n} ${n === 1 ? "variant" : n <= 4 ? "varianty" : "variantov"}`,
-    variantsAdd: "Pridať varianty",
-    variantsAddHint: "Každý na nový riadok.",
-    markdownHint: "Markdown: **tučné**, zoznam začnite pomlčkou, odkaz [text](adresa).",
-    sourcesLabel: "Zdroje",
-    sourceDocPlaceholder: "Vyberte dokument",
-    sourceRef: "Článok alebo časť",
-    sourceRemove: t => `Odobrať zdroj ${t}`,
-    sourcesHint: "Dokument z knižnice a článok alebo časť. Prázdny riadok pridá zdroj.",
-    noSourceTag: "bez zdroja",
-    approveNext: "Schváliť do FAQ a ďalší",
-    approveOnly: "Schváliť do FAQ",
-    saveShort: "Uložiť",
-    nextIs: q => `Ďalší: ${q}`,
-    lastOpen: "Posledný nerozhodnutý návrh.",
-    rejectOpen: "Zamietnuť…",
-    mergeOpen: "Zlúčiť s…",
-    rejectTitle: "Zamietnuť návrh",
-    rejectReason: "Dôvod",
-    rejectReasonHint: "Povinné. Zapíše sa do auditu a ukáže sa v Rozhodnutých.",
-    mergeTitle: "Zlúčiť s návrhom tej istej témy",
-    mergeExplain: "Otázka a varianty prejdú medzi varianty vybraného návrhu, odpoveď do jeho poznámky a zdroje sa spoja. Tento návrh bude „Zlúčený“.",
-    proposalStatusTag: { approved: "Schválené do FAQ", merged: "Zlúčené", rejected: "Zamietnuté" },
-    mergedIntoLabel: "do",
-    faqLink: "FAQ",
-    topicAllDecided: "Všetky návrhy témy sú rozhodnuté.",
-    topicSummary: (a, r, m) => [a ? `${a} schválené` : "", r ? `${r} zamietnuté` : "", m ? `${m} zlúčené` : ""].filter(Boolean).join(", "),
-    nextTopic: t => `Ďalšia téma: ${t}`,
-    reviewNotCoveredAgainst: l => `Kontrolované proti: ${l}`,
-    decidedNone: "Zatiaľ nie je rozhodnutý žiadny návrh témy.",
     save: "Uložiť kanál",
     saved: "Kanál je uložený.",
     created: "Kanál je založený.",
@@ -8208,7 +7781,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       textRowNote: "Text, z ktorého čerpá asistent, a jeho členenie.",
       openTextEditor: "Otvoriť editor",
       openChunks: "Členenie pre asistenta",
-      openFaqEntries: "Záznamy FAQ",
       currentHeading: "Platné znenie",
       upcomingHeading: "Pripravované znenie",
       upcomingNote: d => `Zverejnené, platiť začne ${d}. Dovtedy ľudia čítajú a potvrdzujú platné znenie vyššie.`,
@@ -8444,7 +8016,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       requestTag: "nové znenie",
       requestTitle: (title, label) => `${title} — ${label}`,
       requestWhen: (when, who) => `Zverejnené ${when}, ${who}`,
-      requestFaq: n => `Návrhy FAQ, ktoré dokument citujú: ${n} — skontrolovať vo fronte`,
       requestRunName: (title, label) => `Kontrola po novom znení ${title} (${label})`,
       requestStart: "Skontrolovať",
       requestDismiss: "Netreba",
@@ -8454,12 +8025,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       linksIntro: "Ktoré dokumenty sa kontrolujú proti ktorým normám. Pri novom znení dokumentu alebo normy z väzby vznikne požiadavka na kontrolu a dostanú upozornenie zodpovedné osoby, správcovia obsahu a rola compliance. Väzby sa ukladajú z dobehnutej kontroly.",
       linksNone: "Zatiaľ žiadne. Uložíte ich na detaile dobehnutej kontroly tlačidlom „Uložiť ako pevné väzby“.",
       linkRemove: "Zrušiť",
-      faqCardTitle: ch => `Návrhy FAQ — ${ch}`,
-      faqCardCounts: (o, r) => `${o} ${o === 1 ? "otvorený návrh" : o < 5 && o > 0 ? "otvorené návrhy" : "otvorených návrhov"}, ${r} skontrolovaných`,
-      faqCardRunning: (d, n) => `Kontrola beží — ${d} z ${n} návrhov.`,
-      faqCardLast: (when, who) => `Posledná kontrola ${when}, ${who}. Spúšťa sa vo fronte návrhov.`,
-      faqCardNever: "Proti dokumentom ešte neskontrolované. Kontrola sa spúšťa vo fronte návrhov.",
-      faqCardOpen: "Skontrolovať vo fronte",
       references: "Referenčné normy",
       referencesHint: "Ponúkajú sa len záväzné dokumenty — zákon, stanovy, poriadky a smernice — od najvyššieho, v platnom znení. Keď nevyberieš nič, použijú sa záväzné nadradené dokumenty kontrolovaných (Knižnica → Hierarchia dokumentov).",
       start: "Skontrolovať súlad",
@@ -9045,7 +8610,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploaded: (name, d) => `nahraté ${d} · ${name}`,
       editor: "Editor textu",
       chunks: "Členenie",
-      faqEntries: "Záznamy FAQ",
       noFiles: "Zatiaľ bez súborov.",
       now: "Teraz",
       roundOf: (n, decided, total) => `kolo ${n} · ${decided} z ${total}`,
@@ -9154,76 +8718,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resyncUnchanged: "Na serveri sa nič nezmenilo.",
       resyncVersion: "Článok sa zmenil — koncept nového znenia je pripravený.",
     },
-    faq: {
-      newHeading: "Nové FAQ – časté otázky",
-      newIntro: "FAQ sa nenahráva ako súbor. Založ ho tu, potom pridávaj záznamy: otázku, odpoveď a predpis, z ktorého odpoveď vychádza. Zverejnenie prejde schválením ako každé iné znenie.",
-      newLink: "Časté otázky (FAQ) sa nenahrávajú ako súbor — založ ich tu →",
-      create: "Založiť FAQ",
-      created: "FAQ je založené. Pridaj prvý záznam.",
-      heading: "Záznamy FAQ",
-      intro: "Jeden záznam je jedna otázka a odpoveď. Asistent z každého záznamu urobí jeden úsek; prístup k záznamu je najprísnejší z prístupu tohto FAQ a jeho zdrojov.",
-      empty: "Zatiaľ žiadny záznam.",
-      addHeading: "Nový záznam",
-      assist: {
-        heading: "Hľadať podklad",
-        hint: "Nájdi odpoveď v knižnici alebo na pripojenom serveri a vlož ju do záznamu. To, čo máš rozpísané, sa pri hľadaní nestratí.",
-        query: "Čo hľadáš",
-        sources: "Kde hľadať",
-        library: "Knižnica",
-        search: "Hľadať",
-        noSource: "Vyber aspoň jedno miesto, kde hľadať.",
-        none: "Nič sa nenašlo.",
-        failed: source => `${source}: hľadanie sa nepodarilo.`,
-        useSource: "Použiť ako zdroj",
-        insert: "Vložiť do odpovede",
-        import: "Importovať článok →",
-        imported: "už v knižnici",
-        internal: "interný",
-      },
-      find: "Hľadať v záznamoch",
-      findButton: "Hľadať",
-      findClear: "Zrušiť",
-      findCount: (shown, total) => `Zobrazené ${shown} z ${total}`,
-      findNone: "Žiadny záznam nevyhovuje.",
-      editHeading: (n: number) => `Záznam ${n}`,
-      question: "Otázka",
-      questionHint: "Tak, ako ju ľudia kladú — jedna veta.",
-      variants: "Ďalšie znenia otázky",
-      variantsHint: "Každé na nový riadok. Pomáhajú nájsť odpoveď aj na inak položenú otázku.",
-      answer: "Odpoveď",
-      answerHint: "Úplná odpoveď, ktorú by helpdesk poslal e-mailom. Bez osobných údajov.",
-      sources: "Zdroje",
-      sourcesHint: "Predpisy, z ktorých odpoveď vychádza. Keď niektorý dostane nové znenie, záznam sa označí na kontrolu.",
-      sourceDocument: "Dokument",
-      sourceNone: "— bez zdroja —",
-      sourceArticle: "Článok",
-      sourceArticlePlaceholder: "napr. čl. 12 ods. 3",
-      audience: "Pre koho",
-      audienceHint: "Roly, ktorým je odpoveď určená, oddelené čiarkou: klubový manažér, rozhodca, tréner…",
-      save: "Uložiť záznam",
-      add: "Pridať záznam",
-      remove: "Odstrániť",
-      saved: "Záznam je uložený. Zverejní sa so znením po schválení.",
-      removed: "Záznam je odstránený z konceptu.",
-      stateNew: "nový, nezverejnený",
-      stateChanged: "zmenený oproti zverejnenému",
-      statePublished: "zverejnený",
-      stateSourceChanged: "zdroj dostal nové znenie — skontroluj odpoveď",
-      access: (level: string) => `prístup: ${level}`,
-      count: (n: number) => (n === 1 ? "1 záznam" : n >= 2 && n <= 4 ? `${n} záznamy` : `${n} záznamov`),
-      editEntries: "Upraviť záznamy",
-      openEntries: "záznamy FAQ →",
-      pdfNote: "PDF a text znenia sa skladajú zo záznamov pri každom uložení (ADR-011); nič sa nenahráva.",
-      publishNote: "Zmeny záznamov sú koncept. Zverejnia sa postupom znenia na detaile dokumentu: údaje o znení, schválenie, zverejnenie.",
-      mdIntro: "Časté otázky a odpovede. Odpoveď vychádza z uvedených predpisov v znení platnom ku dňu zverejnenia.",
-      mdQuestion: "Otázka",
-      mdVariants: "Ďalšie znenia otázky",
-      mdAnswer: "Odpoveď",
-      mdSources: "Zdroje",
-      mdAudience: "Pre koho",
-      mdEmpty: "Zatiaľ bez záznamov.",
-      pdfPage: (n: number, total: number) => `strana ${n} z ${total}`,
-    },
     upload: {
       sectionFile: "Súbor",
       sectionMeta: "Metadáta",
@@ -9253,7 +8747,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         heading: "Ako dokument vznikne",
         intro: "Dokumenty v knižnici vznikajú dvoma spôsobmi. Vyber ten, ktorý sedí na to, čo pridávaš.",
         file: { title: "Dokument zo súboru", text: "Predpis, smernica, zákon, manuál, zmluva… Nahráš PDF (schvaľuje a potvrdzuje sa) a upraviteľný zdroj (Word); z neho vznikne text, ktorý sa podľa druhu dokumentu rozdelí na úseky pre vyhľadávanie. Pri Markdowne (.md) stačí nahrať len ten — PDF s hlavičkou a pätou organizácie vyrobí Contineo.", cta: "Nahrať súbor ↓" },
-        faq: { title: "Časté otázky (FAQ)", text: "Bez súboru: záznamy otázka a odpoveď píšeš priamo tu. Každý záznam je jedna hotová odpoveď pre asistenta, môže odkazovať na predpisy a pri ich novom znení sa označí na kontrolu. PDF sa zloží samo.", cta: "Založiť FAQ →" },
         connector: { title: "Import zo servera", text: "Články z pripojeného servera (napríklad Sportnet) sa prevezmú aj s pôvodom a ďalej sa s nimi zaobchádza ako s dokumentom zo súboru. Napríklad popis procesu prestupu z dokumentácie Sportnetu pre správcov ticketov — ako interný dokument.", cta: "Importovať →" },
       },
       moreFields: "Ďalšie údaje",
@@ -10012,6 +9505,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Načítám PDF…",
       failed: "PDF se nepodařilo zobrazit přímo na stránce. Otevři ho odkazem výše.",
       page: "Strana {page} z {pages}",
+      pageOf: (n: number, total: number) => `strana ${n} z ${total}`,
     },
     pending: {
       adding: "Přidávám…",
@@ -10327,15 +9821,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       costLine: usd => `Cena běhu: ${usd} USD`,
       button: "Otevřít nálezy",
       note: "U každého nálezu rozhodněte, zda znění ponecháte, nebo přijmete doporučení. Přijaté znění se zapíše do konceptu dokumentu; platné znění se mění až zveřejněním.",
-      subtitleProposals: "Kontrola návrhů FAQ",
-      introProposals: (n, c) => `Kontrola návrhů FAQ, kterou jste spustili, doběhla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhů"}, ${c} se liší od dokumentů nebo s nimi koliduje.`,
-      buttonProposals: "Otevřít návrhy FAQ",
-      noteProposals: "U každého návrhu převezměte opravené znění z kontroly, nebo ponechte původní. Do FAQ jde návrh až po schválení.",
       requestSubject: title => `Je třeba zkontrolovat soulad — ${title}`,
       requestSubtitle: "Požadavek na kontrolu souladu",
       requestIntro: (title, label) => `Zveřejnilo se nové znění „${label}" dokumentu „${title}". Dokumenty, které se proti němu kontrolují, je třeba zkontrolovat znovu.`,
       requestDocuments: n => `Propojené dokumenty: ${n}`,
-      requestFaq: n => `Návrhy FAQ, které ho citují: ${n}`,
       requestButton: "Otevřít požadavek",
       requestNote: "Kontrola se nespouští sama. Spustíte ji jedním kliknutím, nebo zapíšete, proč netřeba.",
     },
@@ -11619,12 +11108,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.kind": "Neznámý typ kanálu.",
     "helpdesk.syncInterval": "Neznámý interval synchronizace.",
     "helpdesk.noTickets": "Kanál nemá zapnuté tickety.",
-    "helpdesk.miningFailed": "Těžba FAQ se nepodařila (dávka {batch}) — zkuste to za chvíli.",
-    "proposal.notFound": "Takový návrh tu není.",
-    "proposal.decided": "O návrhu už někdo rozhodl.",
-    "proposal.mergeSelf": "Návrh nelze sloučit sám se sebou.",
-    "proposal.noReview": "Návrh nemá výsledek kontroly k převzetí.",
-    "proposal.reasonRequired": "Uveďte důvod zamítnutí.",
+    "helpdesk.miningFailed": "Těžba otázek se nepodařila (dávka {batch}) — zkuste to za chvíli.",
     "compliance.noDocuments": "Vyberte alespoň jeden dokument.",
     "compliance.unknownDocument": "Některý z vybraných dokumentů tu není.",
     "compliance.referenceNotBinding": "Proti dokumentu „{title}\" nelze kontrolovat — není závazný. Měřítkem je zákon, stanovy, řád nebo směrnice.",
@@ -11711,13 +11195,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.effectiveFromSourceRequired": "Zdroj data platnosti je povinný — napiš, odkud datum je (například usnesení VV SFZ č. … z …). Po prvním potvrzení se datum už měnit nedá.",
     "library.documentHasNoText": "Dokument nemá text — nejprve nahraj soubor nebo napiš znění.",
     "library.noChunks": "Z textu nevznikl ani jeden úsek. Zkontroluj, jestli má dokument členění na články nebo nadpisy.",
-    "library.faqNoEntries": "FAQ nemá ani jeden záznam — přidej aspoň jednu otázku s odpovědí.",
-    "library.faqQuestionRequired": "Otázka je povinná — bez ní záznam nemá co zodpovědět.",
-    "library.faqAnswerRequired": "Odpověď je povinná — otázka bez odpovědi do FAQ nepatří.",
-    "library.faqTooLong": "Záznam je příliš dlouhý — otázka do {question} a odpověď do {answer} znaků.",
-    "library.faqEntryNotFound": "Takový záznam v tomto FAQ není.",
-    "library.faqSourceUnknown": "Zdrojový dokument {documentId} tady není.",
-    "library.notFaq": "Tento dokument není FAQ.",
     "library.noPublishedVersion": "Dokument nemá publikované znění — přeindexovat lze jen to, co už je venku.",
     "library.versionHasNoText": "Toto znění nemá uložený text — není co rozdělit.",
     "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontroluj profil členění.",
@@ -12031,7 +11508,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rewrite: "Přepis skenů PDF",
       rewriteNote: "Přepisuje skenované předpisy v knihovně do textu.",
       compliance: "Kontrola souladu dokumentů",
-      complianceNote: "Porovnává dokumenty a návrhy FAQ s normami. Běží na pozadí a zřídka, proto se vyplatí nejsilnější model.",
+      complianceNote: "Porovnává dokumenty s normami a navrhuje doplnění manuálů z otázek helpdesku. Běží na pozadí a zřídka, proto se vyplatí nejsilnější model.",
       price: (input, output) => `vstup ${input} $ · výstup ${output} $`,
       save: "Uložit",
       saved: "Nastavení AI je uloženo.",
@@ -12073,8 +11550,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "pdf-rewrite": { label: "Přepis skenu PDF", why: "sken bez textové vrstvy se přepisuje do textu předpisu" },
         "markdown-clean": { label: "Úprava členění textu", why: "obnovení nadpisů a článků v převedeném textu" },
         "chunking-analysis": { label: "Analýza členění", why: "návrh, jak dokument rozřezat na úseky pro vyhledávání" },
-        "faq-mining": { label: "Těžba FAQ", why: "návrhy záznamů FAQ z historie schránky helpdesku (ADR-028)" },
-        "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhů a záznamů FAQ proti dokumentům knihovny (ADR-032)" },
+        "faq-mining": { label: "Těžba otázek", why: "otázky z historie schránky helpdesku pro návrhy do manuálů (ADR-030, ADR-034)" },
+        "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhů FAQ proti dokumentům knihovny (ADR-032; zrušeno 14. 10. 2026, ADR-034)" },
         "compliance-review": { label: "Kontrola souladu dokumentů", why: "kontrola dokumentů (manuály, rozpisy) proti normám knihovny (ADR-032, D196)" },
       },
     },
@@ -12308,7 +11785,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluator: "evaluator — posuzuje odpovědi systému, když někdo řekne, že nesedí",
       dpo: "dpo — pověřenec: kontroluje právní základy, rozhoduje o námitkách",
       "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázek a testy",
-      helpdesk: "helpdesk — správce tiketů: odpovídá na tikety svých kanálů a navrhuje záznamy do FAQ; kanály nenastavuje",
+      helpdesk: "helpdesk — správce tiketů: odpovídá na tikety svých kanálů; kanály nenastavuje",
       compliance: "compliance — spouští kontroly souladu dokumentů s normami a rozhoduje o nálezech",
     },
     list: {
@@ -12623,7 +12100,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       objectionSubmitted: () => "Nová námitka (čl. 21) čeká na vaše rozhodnutí.",
       complianceRequested: (title, label, d) => `Nové znění „${label}" dokumentu „${title}" — je třeba zkontrolovat soulad${d ? ` (${d} ${d === 1 ? "propojený dokument" : d < 5 ? "propojené dokumenty" : "propojených dokumentů"})` : ""}.`,
       approvalCancelled: title => `Kolo schvalování dokumentu „${title}" bylo zrušeno — koncept se po předložení změnil. Schválit lze až nové předložení.`,
-      faqReviewDone: (n, c) => `Kontrola návrhů FAQ doběhla: ${n} ${n === 1 ? "návrh" : n < 5 ? "návrhy" : "návrhů"}, ${c} k převzetí nebo úpravě.`,
       complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
       complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
     },
@@ -12708,7 +12184,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   helpdesk: {
     heading: "Helpdesk",
-    intro: "Tikety kanálů, kterých jsi správcem tiketů. Návrh odpovědi připraví asistent z norem a FAQ kanálu; odešleš ho ty, nikdy ne systém sám.",
+    intro: "Tikety kanálů, kterých jsi správcem tiketů. Návrh odpovědi připraví asistent z dokumentů kanálu; odešleš ho ty, nikdy ne systém sám.",
     noChannels: "Nejsi správcem tiketů žádného kanálu. Správce organizace tě přidá mezi správce tiketů v Kanálech.",
     viewOpen: "Otevřené",
     viewSent: "Zodpovězené",
@@ -12738,7 +12214,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     fromAsker: (name: string) => name || "Tazatel",
     attachments: (n: number) => (n === 1 ? "1 příloha (ve schránce)" : `${n} příloh (ve schránce)`),
     draftHeading: "Odpověď",
-    draftIntro: "Asistent navrhne odpověď z norem a FAQ kanálu. Uprav ji a odešli — rozdíl mezi návrhem a odeslaným textem je to, z čeho se systém učí.",
+    draftIntro: "Asistent navrhne odpověď z dokumentů kanálu. Uprav ji a odešli — rozdíl mezi návrhem a odeslaným textem je to, z čeho se systém učí.",
     draftFromAi: "Navrhnout odpověď asistentem",
     draftMeta: (model: string, when: string) => `návrh ${model}, ${when}`,
     noDraft: "Zatím bez návrhu.",
@@ -12753,12 +12229,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sentEdited: "návrh byl před odesláním upraven",
     close: "Zavřít ticket",
     reopen: "Znovu otevřít",
-    toFaq: "Přidat do FAQ",
-    toFaqIntro: "Z odeslané odpovědi vznikne záznam v konceptu FAQ dokumentu. Před uložením odstraň jména a údaje konkrétní osoby; schválí to správce obsahu.",
-    toFaqDocument: "FAQ dokument",
-    toFaqSubmit: "Uložit do konceptu FAQ",
-    toFaqDone: "Záznam je v konceptu FAQ.",
-    noFaqDocuments: "V knihovně ještě není FAQ dokument.",
     noMailbox: "Kanál nemá schránku — odpověď se nedá odeslat e-mailem.",
     msgDrafted: "Návrh je připraven. Zkontroluj ho před odesláním.",
     msgDraftSaved: "Návrh je uložen.",
@@ -12812,20 +12282,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Části kanálů",
     tabList: "Kanály",
     tabMyTickets: "Moje tickety",
-    tabProposals: "Návrhy FAQ",
-    tabFaq: "FAQ",
-    faqHeading: "FAQ kanálu",
-    faqIntro: "Záznamy, kterými kanál odpovídá v okně nápovědy. Nové záznamy přicházejí z návrhů FAQ; do okna nápovědy jdou až zveřejněním znění. Dokument je uložen v knihovně (verze, schvalování, vyhledávání), v jejím seznamu je skrytý.",
-    faqDocument: "Dokument",
-    faqDraft: n => `V konceptu ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamů"}`,
-    faqPublished: (label, n) => `Platné znění ${label} · ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamů"}`,
-    faqNotPublished: "Zatím bez zveřejněného znění — okno nápovědy z FAQ ještě neodpovídá.",
-    faqEdit: "Upravit záznamy",
-    faqOpenDocument: "Zveřejnit a znění",
-    faqProposalsOpen: n => `Otevřené návrhy FAQ: ${n}`,
-    faqListLine: n => `FAQ: ${n} ${n === 1 ? "záznam" : n < 5 && n > 0 ? "záznamy" : "záznamů"}`,
-    faqListNone: "FAQ: bez záznamů",
-    faqBelongsTo: ch => `Patří ke kanálu ${ch}. V seznamu knihovny je FAQ skryté — ukáže ho filtr Druh: FAQ.`,
     tabTickets: "Tickety",
     tabSettings: "Nastavení",
     agentsNote: "Správci tiketů mají smysl, když jsou zapnuté tikety.",
@@ -12899,7 +12355,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncLast: (when: string) => `naposledy ${when}`,
     syncError: (code: string) => `poslední chyba: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `nové tickety ${created} · doplněné ${appended} · přeskočené ${skipped}`,
-    syncSinceHint: "První spuštění jen označí začátek: starší zprávy se tickety nestanou, historie jde do těžby FAQ.",
+    syncSinceHint: "První spuštění jen označí začátek: starší zprávy se tickety nestanou, historie jde do těžby otázek.",
     syncInterval: "Interval synchronizace",
     syncIntervalHint: "Jak často se schránka kontroluje automaticky. Synchronizovat teď funguje kdykoli.",
     syncIntervalOption: (m: number) => (m >= 1440 ? "jednou denně" : m >= 60 ? "každou hodinu" : `každých ${m} minut`),
@@ -12941,7 +12397,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       given_name: "jméno — správce tiketů ho vidí u tiketu",
       family_name: "příjmení",
       name: "celé jméno, jen pokud jméno a příjmení nemáte zvlášť",
-      roles: "seznam rolí osoby; vybírá časté dotazy pro publikum",
+      roles: "seznam rolí osoby, například hráč nebo trenér",
       club: "klub osoby",
       lang: "jazyk pomocníka: sk, cs nebo en",
       iat: "čas vydání — počet sekund od 1. 1. 1970 (Unix čas), tedy „teď“",
@@ -12959,15 +12415,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetSecretShown: "Nový tajný klíč — zkopíruj ho teď, znovu se neukáže:",
     widgetSecretNone: "zatím nevytvořený",
     widgetSecretSet: (hint: string, when: string) => `…${hint}, vytvořený ${when}`,
-    mining: "Těžba FAQ z historie",
-    miningIntro: "Model přečte poslední vlákna schránky, očistí je od osobních údajů a navrhne záznamy FAQ do konceptu vybraného FAQ dokumentu. Těla zpráv se neukládají; návrhy schvaluje správce obsahu postupem znění.",
-    miningDocument: "FAQ dokument",
-    miningLimit: "Kolik posledních zpráv přečíst",
-    miningRun: "Navrhnout záznamy FAQ",
-    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Těžba proběhla: vláken ${threads}, návrhů ${proposed}, uložených do konceptu ${saved}, duplicitních ${duplicates}.`,
-    noFaqDocuments: "V knihovně ještě není FAQ dokument — založ ho v Knihovně → Nový dokument → FAQ.",
     history: "Analýza historie",
-    historyIntro: "Přehled schránky za zvolené období: kolik otázek přišlo, kolik dostalo odpověď, jak rychle a o čem zhruba byly. Čte se jen hlavička zpráv (datum, vlákno, odesílatel, předmět) — těla se nečtou, umělé inteligenci nic neodchází a do FAQ ani ticketů se nic nezapíše. Ukládá se jen měsíční souhrn bez adres a jmen.",
+    historyIntro: "Přehled schránky za zvolené období: kolik otázek přišlo, kolik dostalo odpověď, jak rychle a o čem zhruba byly. Čte se jen hlavička zpráv (datum, vlákno, odesílatel, předmět) — těla se nečtou, umělé inteligenci nic neodchází a do tiketů ani otázek se nic nezapíše. Ukládá se jen měsíční souhrn bez adres a jmen.",
     historyOpen: "Otevřít analýzu",
     historyPeriod: "Období",
     historyPeriodOption: (months: number) => `posledních ${months} měsíců`,
@@ -13003,161 +12452,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     historyColJunk: "Nevyžádané",
     historyMonthCard: (incoming: string, threads: string, answered: string) => `přijaté ${incoming} · otázky ${threads} · s odpovědí ${answered}`,
     historyMonthNames: ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"],
-    harvest: "Těžba FAQ z historie",
-    harvestIntro: "Ze schránky za zvolené období se přečtou otázky zvenku, které dostaly odpověď; adresy, telefonní a jiná čísla se před zpracováním odstraní. Umělá inteligence je roztřídí do témat a pro každé téma s alespoň 3 otázkami navrhne záznamy FAQ z nejnovější odpovědi helpdesku a článek normy. Text e-mailů se neukládá; návrhy schvaluje správce obsahu (ADR-030, odpovědi DPO 9. 10. 2026).",
-    harvestStart: "Spustit těžbu FAQ",
+    harvest: "Těžba otázek z historie",
+    harvestIntro: "Ze schránky za zvolené období se přečtou otázky zvenku, které dostaly odpověď; adresy, telefonní a jiná čísla se před zpracováním odstraní. Umělá inteligence je roztřídí do témat a pro každé téma s alespoň 3 otázkami shrne otázku a nejnovější odpověď helpdesku. Z otázek pak kontrola souladu navrhne doplnění manuálů (ADR-034). Text e-mailů se neukládá (ADR-030, odpovědi DPO 9. 10. 2026).",
+    harvestStart: "Spustit těžbu otázek",
     harvestRestart: "Spustit těžbu znovu",
     harvestStarted: "Těžba běží. Měsíce se zpracovávají automaticky každých 5 minut — stránku stačí později obnovit.",
     harvestNone: "Těžba ještě neproběhla.",
-    harvestStages: { collect: "Třídění otázek do témat", merge: "Slučování podobných témat", draft: "Psaní návrhů FAQ", done: "Hotovo" },
+    harvestStages: { collect: "Třídění otázek do témat", merge: "Slučování podobných témat", draft: "Shrnutí otázek", done: "Hotovo" },
     harvestCollectProgress: (done: number, total: number) => `Roztříděno ${done} z ${total} měsíců.`,
     harvestDraftProgress: (done: number, total: number) => `Návrhy pro ${done} z ${total} témat.`,
     harvestStopped: "Těžba se po opakovaných chybách zastavila. Zkontroluj spojení se schránkou a nastavení umělé inteligence a spusť ji znovu.",
     harvestCounts: (threads: string, colleague: string, unanswered: string, excluded: string, noTopic: string) => `Otázek s odpovědí: ${threads} · vynechané: od kolegů ${colleague}, bez odpovědi ${unanswered}, po námitce ${excluded}, není otázka ${noTopic}`,
     harvestTopics: "Témata",
-    harvestTopicsIntro: (min: number) => `Návrh FAQ dostane téma s alespoň ${min} otázkami. Menší témata jsou jednotlivé případy.`,
+    harvestTopicsIntro: (min: number) => `Shrnutí dostane téma s alespoň ${min} otázkami. Menší témata jsou jednotlivé případy.`,
     harvestTopicMeta: (threads: string, first: string, last: string) => `${threads} otázek · ${first} – ${last}`,
-    harvestTopicProposals: (n: number) => `návrhů: ${n}`,
+    harvestTopicProposals: (n: number) => `otázek: ${n}`,
     harvestTopicsSmall: (topics: number, threads: string) => `Dalších ${topics} malých témat (celkem ${threads} otázek) návrh nedostane.`,
-    harvestOpenProposals: (n: number) => `Otevřít návrhy FAQ (${n})`,
+    harvestOpenProposals: (n: number) => `Navrhnout doplnění manuálů (${n} otázek)`,
     harvestExclusions: "Vyloučené adresy",
-    harvestExclusionsIntro: "Kdo vznese námitku proti použití svých e-mailů pro FAQ, toho adresu sem zapište; těžba jeho e-maily přeskočí. Ukládá se jen otisk adresy, ne adresa.",
+    harvestExclusionsIntro: "Kdo vznese námitku proti použití svých e-mailů pro těžbu otázek, toho adresu sem zapište; těžba jeho e-maily přeskočí. Ukládá se jen otisk adresy, ne adresa.",
     harvestExclusionsField: "Adresy, každá na samostatném řádku",
     harvestExclusionsSave: "Vyloučit adresy",
     harvestExclusionsCount: (n: number) => `Vyloučených adres: ${n}.`,
     harvestExclusionsAdded: (n: number) => `Přidaných vyloučených adres: ${n}.`,
-    proposals: "Návrhy FAQ z helpdesku",
-    proposalsIntro: "Návrhy vznikly z odpovědí helpdesku za období zvolené při těžbě. Před schválením zkontrolujte, že odpověď neobsahuje jméno ani jiný údaj konkrétní osoby a že platí dnes. Schválený záznam jde do konceptu vybraného FAQ dokumentu a zveřejní se až jeho schválením. Odkaz na e-maily se po rozhodnutí smaže.",
-    proposalsViewOpen: "Nerozhodnuté",
-    proposalsViewDecided: "Rozhodnuté",
-    proposalsEmpty: "Žádné návrhy k rozhodnutí.",
-    proposalsNoFaq: "V knihovně kanálu není FAQ dokument — založte ho v Knihovně → Nový dokument → FAQ.",
-    proposalTopic: "Téma",
-    proposalThreads: (threads: string, first: string, last: string) => `${threads} vláken · ${first} – ${last}`,
-    proposalChanged: "odpověď se v čase měnila",
-    proposalNormConflict: "rozchází se s normou",
-    proposalNote: "Poznámka pro kurátora",
-    proposalSources: "Navržené zdroje",
-    proposalQuestion: "Otázka",
-    proposalVariants: "Jiná znění otázky",
-    proposalVariantsHint: "Každé na samostatném řádku.",
-    proposalAnswer: "Odpověď",
-    proposalAudience: "Komu je určena",
-    proposalAudienceHint: "Oddělte čárkou.",
-    proposalDocument: "Do FAQ dokumentu",
-    proposalApprove: "Schválit do konceptu FAQ",
-    proposalReject: "Zamítnout",
-    proposalMergeInto: "Sloučit s návrhem",
-    proposalMerge: "Sloučit",
-    proposalApproved: "Návrh je v konceptu FAQ.",
-    proposalRejected: "Návrh je zamítnutý.",
-    proposalMerged: "Návrh je sloučený; jeho otázka přibyla k jiným zněním.",
-    proposalStatus: { approved: "schválený", merged: "sloučený", rejected: "zamítnutý" },
-    proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
-    proposalsMore: (n: number) => `Dalších ${n} návrhů se ukáže po rozhodnutí o těchto.`,
-    proposalSave: "Uložit úpravu",
-    proposalSaved: "Úprava je uložená, návrh zůstává ve frontě.",
-    proposalOriginal: "Původní návrh a změny",
-    proposalOriginalIntro: "Přeškrtnuté oproti původnímu návrhu vypadlo, podtržené přibylo.",
-    proposalNoChanges: "Beze změn oproti původnímu návrhu.",
-    proposalEdited: (who: string, when: string) => `Upraveno ${when}, ${who}`,
-    proposalsViewDecision: "K rozhodnutí",
-    proposalsViewNoSource: "Bez zdroje",
-    proposalTopicFilter: "Téma",
-    proposalTopicAll: "Všechna témata",
-    proposalTopicApply: "Zobrazit",
-    proposalsPage: (page: number, pages: number) => `Strana ${page} z ${pages}`,
-    proposalsPrev: "Předchozí strana",
-    proposalsNext: "Další strana",
-    review: "Kontrola proti dokumentům",
-    reviewIntro: "Umělá inteligence porovná otevřené návrhy vybraných témat s vybranými dokumenty z knihovny a ke každému dá verdikt s citací. Odpovědi sama nemění — výsledek převezmete, nebo ponecháte původní. Použít lze jen veřejné dokumenty; dokument, který ještě nemá zveřejněné znění, se použije jako koncept a je tak označen.",
-    reviewDocuments: "Dokumenty, proti kterým se kontroluje",
-    reviewScope: "Co kontrolovat",
-    reviewScopeAll: "Všechny otevřené návrhy",
-    reviewScopeHint: "Jedno nebo více témat. Prázdné pole = všechny otevřené návrhy.",
-    reviewStart: "Zkontrolovat proti dokumentům",
-    reviewRunningTitle: "Kontrola běží na pozadí",
-    reviewRunningNote: (when, who) => `Spuštěna ${when}, ${who}. Novou spustíte, až doběhne — přijde upozornění a e-mail. Stav uvidíte po obnovení stránky.`,
-    reviewStarted: "Kontrola běží na pozadí — dávky jdou jedna za druhou, stránku stačí později obnovit.",
-    reviewProgress: (done: number, total: number) => `Zkontrolováno ${done} z ${total} návrhů.`,
-    reviewDone: (when: string) => `Kontrola je hotová (${when}).`,
-    reviewStopped: "Kontrola se po opakovaných chybách zastavila. Zkuste ji spustit znovu.",
-    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => `rozchází se ${differs} · dokumenty si odporují ${conflict} · nepokrývají ${notCovered} · souhlasí ${agree}`,
-    reviewAgainst: (list: string) => `Proti: ${list}`,
-    reviewDraftMark: "koncept",
-    reviewVerdicts: { differs: "rozchází se s dokumenty", conflict: "dokumenty si odporují", not_covered: "dokumenty téma nepokrývají", agree: "souhlasí s dokumenty" },
-    reviewFilter: "Výsledek kontroly",
-    reviewFilterAll: "Všechny",
-    reviewProposed: "Návrh z kontroly",
-    reviewCitations: "Citace",
-    reviewApply: "Převzít návrh z kontroly",
-    reviewDismiss: "Ponechat původní",
-    reviewApplied: "Návrh z kontroly je převzatý; původní znění zůstává v porovnání.",
-    reviewDismissed: "Ponecháno původní znění.",
-    reviewDecision: { applied: "převzato", dismissed: "ponecháno původní" },
-    proposalsLead: (c, n, p) => [c, `${n} ${n === 1 ? "otevřený" : n >= 2 && n <= 4 ? "otevřené" : "otevřených"}`, p].filter(Boolean).join(" · "),
-    periodLabel: m => m >= 12 ? `${Math.round(m / 12)} ${Math.round(m / 12) === 1 ? "rok" : Math.round(m / 12) <= 4 ? "roky" : "let"} e-mailů` : `${m} ${m === 1 ? "měsíc" : m <= 4 ? "měsíce" : "měsíců"} e-mailů`,
-    reviewRunningShort: (d, n) => `Kontrola běží · ${d} z ${n}`,
-    proposalCancel: "Zrušit",
-    decidedOf: (d, n) => `${d} z ${n} rozhodnuto`,
-    remaining: n => `${n} zbývá`,
-    reviewLabel: "Kontrola:",
-    reviewVerdictsShort: { agree: "Sedí", differs: "Liší se", not_covered: "Dokumenty neřeší", conflict: "Rozpor" },
-    reviewVerdictsChip: { differs: "Liší se", conflict: "Rozpor", not_covered: "Neřeší", agree: "Sedí" },
-    decisionCount: n => `K rozhodnutí ${n}`,
-    reviewLast: "Poslední kontrola",
-    reviewLastSummary: (d, n) => `${d} · ${n} ${n === 1 ? "dokument" : n <= 4 ? "dokumenty" : "dokumentů"}`,
-    reviewRunningSince: d => `běží od ${d}`,
-    topicsHeading: n => `Témata · ${n} ${n === 1 ? "otevřené" : n <= 4 ? "otevřená" : "otevřených"}`,
-    topicDiffers: n => `${n} se liší`,
-    topicNotCovered: "dokumenty neřeší",
-    topicDecision: n => `${n} k rozhodnutí`,
-    topicDone: "hotovo",
-    topicPosition: (i, n) => `Téma ${i} z ${n}`,
-    openInTopic: n => `${n} ${n === 1 ? "nerozhodnutý" : n <= 4 ? "nerozhodnuté" : "nerozhodnutých"}`,
-    proposalsViewAll: "Všechny",
-    threadsCount: n => `${n} vláken`,
-    decide: "Rozhodnout",
-    collapse: "Sbalit",
-    decisionNote: "K rozhodnutí",
-    reviewHeading: "Výsledek kontroly",
-    reviewNorm: "Norma",
-    opensNewWindow: "otevře se v novém okně",
-    reviewChange: "Změna odpovědi",
-    reviewQuestionChange: "Změna otázky",
-    editHeading: "Úprava",
-    variantsCount: n => `Varianty otázky · ${n}`,
-    variantRemoveHint: "Odškrtnutá varianta se uložením odstraní.",
-    moreVariants: n => `Dalších ${n} ${n === 1 ? "varianta" : n <= 4 ? "varianty" : "variant"}`,
-    variantsAdd: "Přidat varianty",
-    variantsAddHint: "Každou na nový řádek.",
-    markdownHint: "Markdown: **tučně**, seznam začněte pomlčkou, odkaz [text](adresa).",
-    sourcesLabel: "Zdroje",
-    sourceDocPlaceholder: "Vyberte dokument",
-    sourceRef: "Článek nebo část",
-    sourceRemove: t => `Odebrat zdroj ${t}`,
-    sourcesHint: "Dokument z knihovny a článek nebo část. Prázdný řádek přidá zdroj.",
-    noSourceTag: "bez zdroje",
-    approveNext: "Schválit do FAQ a další",
-    approveOnly: "Schválit do FAQ",
-    saveShort: "Uložit",
-    nextIs: q => `Další: ${q}`,
-    lastOpen: "Poslední nerozhodnutý návrh.",
-    rejectOpen: "Zamítnout…",
-    mergeOpen: "Sloučit s…",
-    rejectTitle: "Zamítnout návrh",
-    rejectReason: "Důvod",
-    rejectReasonHint: "Povinné. Zapíše se do auditu a ukáže se v Rozhodnutých.",
-    mergeTitle: "Sloučit s návrhem stejného tématu",
-    mergeExplain: "Otázka a varianty přejdou mezi varianty vybraného návrhu, odpověď do jeho poznámky a zdroje se spojí. Tento návrh bude „Sloučený“.",
-    proposalStatusTag: { approved: "Schváleno do FAQ", merged: "Sloučeno", rejected: "Zamítnuto" },
-    mergedIntoLabel: "do",
-    faqLink: "FAQ",
-    topicAllDecided: "Všechny návrhy tématu jsou rozhodnuté.",
-    topicSummary: (a, r, m) => [a ? `${a} schválené` : "", r ? `${r} zamítnuté` : "", m ? `${m} sloučené` : ""].filter(Boolean).join(", "),
-    nextTopic: t => `Další téma: ${t}`,
-    reviewNotCoveredAgainst: l => `Kontrolováno proti: ${l}`,
-    decidedNone: "Zatím není rozhodnutý žádný návrh tématu.",
     save: "Uložit kanál",
     saved: "Kanál je uložen.",
     created: "Kanál je založen.",
@@ -13266,7 +12583,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       textRowNote: "Text, ze kterého čerpá asistent, a jeho členění.",
       openTextEditor: "Otevřít editor",
       openChunks: "Členění pro asistenta",
-      openFaqEntries: "Záznamy FAQ",
       currentHeading: "Platné znění",
       upcomingHeading: "Připravované znění",
       upcomingNote: d => `Zveřejněné, platit začne ${d}. Do té doby lidé čtou a potvrzují platné znění výše.`,
@@ -13501,7 +12817,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       requestTag: "nové znění",
       requestTitle: (title, label) => `${title} — ${label}`,
       requestWhen: (when, who) => `Zveřejněno ${when}, ${who}`,
-      requestFaq: n => `Návrhy FAQ, které dokument citují: ${n} — zkontrolovat ve frontě`,
       requestRunName: (title, label) => `Kontrola po novém znění ${title} (${label})`,
       requestStart: "Zkontrolovat",
       requestDismiss: "Netřeba",
@@ -13511,12 +12826,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       linksIntro: "Které dokumenty se kontrolují proti kterým normám. Při novém znění dokumentu nebo normy z vazby vznikne požadavek na kontrolu a upozornění dostanou odpovědné osoby, správci obsahu a role compliance. Vazby se ukládají z doběhnuté kontroly.",
       linksNone: "Zatím žádné. Uložíte je na detailu doběhnuté kontroly tlačítkem „Uložit jako pevné vazby“.",
       linkRemove: "Zrušit",
-      faqCardTitle: ch => `Návrhy FAQ — ${ch}`,
-      faqCardCounts: (o, r) => `${o} ${o === 1 ? "otevřený návrh" : o < 5 && o > 0 ? "otevřené návrhy" : "otevřených návrhů"}, ${r} zkontrolovaných`,
-      faqCardRunning: (d, n) => `Kontrola běží — ${d} z ${n} návrhů.`,
-      faqCardLast: (when, who) => `Poslední kontrola ${when}, ${who}. Spouští se ve frontě návrhů.`,
-      faqCardNever: "Proti dokumentům ještě nezkontrolováno. Kontrola se spouští ve frontě návrhů.",
-      faqCardOpen: "Zkontrolovat ve frontě",
       references: "Referenční normy",
       referencesHint: "Nabízejí se jen závazné dokumenty — zákon, stanovy, řády a směrnice — od nejvyššího, v platném znění. Když nevybereš nic, použijí se závazné nadřazené dokumenty kontrolovaných (Knihovna → Hierarchie dokumentů).",
       start: "Zkontrolovat soulad",
@@ -14102,7 +13411,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploaded: (name, d) => `nahráno ${d} · ${name}`,
       editor: "Editor textu",
       chunks: "Členění",
-      faqEntries: "Záznamy FAQ",
       noFiles: "Zatím bez souborů.",
       now: "Teď",
       roundOf: (n, decided, total) => `kolo ${n} · ${decided} z ${total}`,
@@ -14211,76 +13519,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resyncUnchanged: "Na serveru se nic nezměnilo.",
       resyncVersion: "Článek se změnil — koncept nového znění je připraven.",
     },
-    faq: {
-      newHeading: "Nové FAQ – časté otázky",
-      newIntro: "FAQ se nenahrává jako soubor. Založ ho tady, potom přidávej záznamy: otázku, odpověď a předpis, ze kterého odpověď vychází. Zveřejnění projde schválením jako každé jiné znění.",
-      newLink: "Časté otázky (FAQ) se nenahrávají jako soubor — založ je tady →",
-      create: "Založit FAQ",
-      created: "FAQ je založeno. Přidej první záznam.",
-      heading: "Záznamy FAQ",
-      intro: "Jeden záznam je jedna otázka a odpověď. Asistent z každého záznamu udělá jeden úsek; přístup k záznamu je nejpřísnější z přístupu tohoto FAQ a jeho zdrojů.",
-      empty: "Zatím žádný záznam.",
-      addHeading: "Nový záznam",
-      assist: {
-        heading: "Hledat podklad",
-        hint: "Najdi odpověď v knihovně nebo na připojeném serveru a vlož ji do záznamu. Co máš rozepsané, se při hledání neztratí.",
-        query: "Co hledáš",
-        sources: "Kde hledat",
-        library: "Knihovna",
-        search: "Hledat",
-        noSource: "Vyber alespoň jedno místo, kde hledat.",
-        none: "Nic se nenašlo.",
-        failed: source => `${source}: hledání se nepodařilo.`,
-        useSource: "Použít jako zdroj",
-        insert: "Vložit do odpovědi",
-        import: "Importovat článek →",
-        imported: "už v knihovně",
-        internal: "interní",
-      },
-      find: "Hledat v záznamech",
-      findButton: "Hledat",
-      findClear: "Zrušit",
-      findCount: (shown, total) => `Zobrazeno ${shown} z ${total}`,
-      findNone: "Žádný záznam nevyhovuje.",
-      editHeading: (n: number) => `Záznam ${n}`,
-      question: "Otázka",
-      questionHint: "Tak, jak ji lidé kladou — jedna věta.",
-      variants: "Další znění otázky",
-      variantsHint: "Každé na nový řádek. Pomáhají najít odpověď i na jinak položenou otázku.",
-      answer: "Odpověď",
-      answerHint: "Úplná odpověď, kterou by helpdesk poslal e-mailem. Bez osobních údajů.",
-      sources: "Zdroje",
-      sourcesHint: "Předpisy, ze kterých odpověď vychází. Když některý dostane nové znění, záznam se označí ke kontrole.",
-      sourceDocument: "Dokument",
-      sourceNone: "— bez zdroje —",
-      sourceArticle: "Článek",
-      sourceArticlePlaceholder: "např. čl. 12 odst. 3",
-      audience: "Pro koho",
-      audienceHint: "Role, kterým je odpověď určena, oddělené čárkou: klubový manažer, rozhodčí, trenér…",
-      save: "Uložit záznam",
-      add: "Přidat záznam",
-      remove: "Odstranit",
-      saved: "Záznam je uložen. Zveřejní se se zněním po schválení.",
-      removed: "Záznam je odstraněn z konceptu.",
-      stateNew: "nový, nezveřejněný",
-      stateChanged: "změněný oproti zveřejněnému",
-      statePublished: "zveřejněný",
-      stateSourceChanged: "zdroj dostal nové znění — zkontroluj odpověď",
-      access: (level: string) => `přístup: ${level}`,
-      count: (n: number) => (n === 1 ? "1 záznam" : n >= 2 && n <= 4 ? `${n} záznamy` : `${n} záznamů`),
-      editEntries: "Upravit záznamy",
-      openEntries: "záznamy FAQ →",
-      pdfNote: "PDF a text znění se skládají ze záznamů při každém uložení (ADR-011); nic se nenahrává.",
-      publishNote: "Změny záznamů jsou koncept. Zveřejní se postupem znění na detailu dokumentu: údaje o znění, schválení, zveřejnění.",
-      mdIntro: "Časté otázky a odpovědi. Odpověď vychází z uvedených předpisů ve znění platném ke dni zveřejnění.",
-      mdQuestion: "Otázka",
-      mdVariants: "Další znění otázky",
-      mdAnswer: "Odpověď",
-      mdSources: "Zdroje",
-      mdAudience: "Pro koho",
-      mdEmpty: "Zatím bez záznamů.",
-      pdfPage: (n: number, total: number) => `strana ${n} z ${total}`,
-    },
     upload: {
       sectionFile: "Soubor",
       sectionMeta: "Metadata",
@@ -14310,7 +13548,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         heading: "Jak dokument vznikne",
         intro: "Dokumenty v knihovně vznikají dvěma způsoby. Vyber ten, který odpovídá tomu, co přidáváš.",
         file: { title: "Dokument ze souboru", text: "Předpis, směrnice, zákon, manuál, smlouva… Nahraješ PDF (schvaluje a potvrzuje se) a upravitelný zdroj (Word); z něj vznikne text, který se podle druhu dokumentu rozdělí na úseky pro vyhledávání. U Markdownu (.md) stačí nahrát jen ten — PDF se záhlavím a zápatím organizace vyrobí Contineo.", cta: "Nahrát soubor ↓" },
-        faq: { title: "Časté otázky (FAQ)", text: "Bez souboru: záznamy otázka a odpověď píšeš přímo zde. Každý záznam je jedna hotová odpověď pro asistenta, může odkazovat na předpisy a při jejich novém znění se označí ke kontrole. PDF se složí samo.", cta: "Založit FAQ →" },
         connector: { title: "Import ze serveru", text: "Články z připojeného serveru (například Sportnet) se převezmou i s původem a dále se s nimi zachází jako s dokumentem ze souboru. Například popis procesu přestupu z dokumentace Sportnetu pro správce tiketů — jako interní dokument.", cta: "Importovat →" },
       },
       moreFields: "Další údaje",
@@ -15069,6 +14306,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       loading: "Loading PDF…",
       failed: "The PDF could not be shown on the page. Open it with the link above.",
       page: "Page {page} of {pages}",
+      pageOf: (n: number, total: number) => `page ${n} of ${total}`,
     },
     pending: {
       adding: "Adding…",
@@ -15378,15 +14616,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       costLine: usd => `Run cost: ${usd} USD`,
       button: "Open findings",
       note: "For each finding, decide whether to keep the wording or accept the recommendation. Accepted wording is written into the document draft; the valid version changes only when it is published.",
-      subtitleProposals: "FAQ proposal check",
-      introProposals: (n, c) => `The FAQ proposal check you started has finished: ${n} ${n === 1 ? "proposal" : "proposals"}, ${c} differ from or conflict with the documents.`,
-      buttonProposals: "Open FAQ proposals",
-      noteProposals: "For each proposal, take over the corrected wording from the check or keep the original. A proposal goes into the FAQ only after approval.",
       requestSubject: title => `Compliance check needed — ${title}`,
       requestSubtitle: "Compliance check request",
       requestIntro: (title, label) => `A new version “${label}” of “${title}” was published. Documents checked against it should be checked again.`,
       requestDocuments: n => `Linked documents: ${n}`,
-      requestFaq: n => `FAQ proposals citing it: ${n}`,
       requestButton: "Open request",
       requestNote: "The check does not start by itself. Start it with one click, or record why it is not needed.",
     },
@@ -16668,12 +15901,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "helpdesk.kind": "Unknown channel type.",
     "helpdesk.syncInterval": "Unknown sync interval.",
     "helpdesk.noTickets": "The channel has tickets switched off.",
-    "helpdesk.miningFailed": "FAQ mining failed (batch {batch}) — try again in a moment.",
-    "proposal.notFound": "There is no such proposal.",
-    "proposal.decided": "Someone has already decided on this proposal.",
-    "proposal.mergeSelf": "A proposal cannot be merged with itself.",
-    "proposal.noReview": "The proposal has no check result to take over.",
-    "proposal.reasonRequired": "Give a reason for rejecting.",
+    "helpdesk.miningFailed": "Question mining failed (batch {batch}) — try again in a moment.",
     "compliance.noDocuments": "Select at least one document.",
     "compliance.unknownDocument": "One of the selected documents does not exist here.",
     "compliance.referenceNotBinding": "You cannot check against “{title}” — it is not binding. The measure is a law, statutes, a regulation or a directive.",
@@ -16760,13 +15988,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.effectiveFromSourceRequired": "The source of the effective date is required — write down where the date comes from (for example board resolution no. … of …). After the first acknowledgement the date can no longer be changed.",
     "library.documentHasNoText": "The document has no text — upload a file or write the wording first.",
     "library.noChunks": "The text produced no chunks at all. Check whether the document is organised into articles or headings.",
-    "library.faqNoEntries": "The FAQ has no entries — add at least one question with an answer.",
-    "library.faqQuestionRequired": "The question is required — without it the entry has nothing to answer.",
-    "library.faqAnswerRequired": "The answer is required — a question without an answer does not belong in an FAQ.",
-    "library.faqTooLong": "The entry is too long — the question up to {question} and the answer up to {answer} characters.",
-    "library.faqEntryNotFound": "There is no such entry in this FAQ.",
-    "library.faqSourceUnknown": "The source document {documentId} is not here.",
-    "library.notFaq": "This document is not an FAQ.",
     "library.noPublishedVersion": "The document has no published version — only what is already out can be reindexed.",
     "library.versionHasNoText": "This version has no stored text — there is nothing to split.",
     "library.noChunksProfile": "The text produced no chunks at all — check the chunking profile.",
@@ -17080,7 +16301,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rewrite: "PDF scan transcription",
       rewriteNote: "Transcribes scanned regulations in the library into text.",
       compliance: "Document compliance check",
-      complianceNote: "Compares documents and FAQ proposals with norms. Runs in the background and rarely, so the strongest model pays off.",
+      complianceNote: "Compares documents with norms and proposes manual additions from helpdesk questions. Runs in the background and rarely, so the strongest model pays off.",
       price: (input, output) => `input $${input} · output $${output}`,
       save: "Save",
       saved: "The AI settings have been saved.",
@@ -17122,8 +16343,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "pdf-rewrite": { label: "PDF scan transcription", why: "a scan without a text layer is transcribed into the regulation text" },
         "markdown-clean": { label: "Text structure cleanup", why: "restoring headings and articles in converted text" },
         "chunking-analysis": { label: "Chunking analysis", why: "a proposal for splitting the document into chunks for search" },
-        "faq-mining": { label: "FAQ mining", why: "FAQ entry proposals from the helpdesk mailbox history (ADR-028)" },
-        "faq-review": { label: "FAQ review", why: "checking FAQ proposals and entries against library documents (ADR-032)" },
+        "faq-mining": { label: "Question mining", why: "questions from the helpdesk mailbox history for manual proposals (ADR-030, ADR-034)" },
+        "faq-review": { label: "FAQ review", why: "checking FAQ proposals against library documents (ADR-032; removed 14 Oct 2026, ADR-034)" },
         "compliance-review": { label: "Document compliance check", why: "checking documents (manuals, schedules) against library norms (ADR-032, D196)" },
       },
     },
@@ -17357,7 +16578,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       evaluator: "evaluator — reviews the system's answers when someone says they are wrong",
       dpo: "dpo — data protection officer: reviews legal bases, decides on objections",
       "learning-admin": "learning-admin — instructor: manages courses, the question bank and tests",
-      helpdesk: "helpdesk — ticket manager: answers tickets of their channels and proposes FAQ entries; does not configure channels",
+      helpdesk: "helpdesk — ticket manager: answers tickets of their channels; does not configure channels",
       compliance: "compliance — runs document compliance checks against norms and decides on findings",
     },
     list: {
@@ -17672,7 +16893,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       objectionSubmitted: () => "A new objection (Art. 21) is waiting for your decision.",
       complianceRequested: (title, label, d) => `New version “${label}” of “${title}” — a compliance check is needed${d ? ` (${d} linked ${d === 1 ? "document" : "documents"})` : ""}.`,
       approvalCancelled: title => `The approval round for “${title}” was cancelled — the draft changed after it was submitted. Only a new submission can be approved.`,
-      faqReviewDone: (n, c) => `FAQ proposal check finished: ${n} ${n === 1 ? "proposal" : "proposals"}, ${c} to take over or edit.`,
       complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
       complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,
     },
@@ -17757,7 +16977,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   helpdesk: {
     heading: "Helpdesk",
-    intro: "Tickets of the channels you are a ticket manager of. The assistant drafts an answer from the channel's regulations and FAQ; you send it, never the system on its own.",
+    intro: "Tickets of the channels you are a ticket manager of. The assistant drafts an answer from the channel's documents; you send it, never the system on its own.",
     noChannels: "You are not a ticket manager of any channel. The organisation administrator adds you as a ticket manager in Channels.",
     viewOpen: "Open",
     viewSent: "Answered",
@@ -17787,7 +17007,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     fromAsker: (name: string) => name || "Asker",
     attachments: (n: number) => (n === 1 ? "1 attachment (in the mailbox)" : `${n} attachments (in the mailbox)`),
     draftHeading: "Answer",
-    draftIntro: "The assistant drafts an answer from the channel's regulations and FAQ. Edit it and send — the difference between the draft and the sent text is what the system learns from.",
+    draftIntro: "The assistant drafts an answer from the channel's documents. Edit it and send — the difference between the draft and the sent text is what the system learns from.",
     draftFromAi: "Draft an answer with the assistant",
     draftMeta: (model: string, when: string) => `draft by ${model}, ${when}`,
     noDraft: "No draft yet.",
@@ -17802,12 +17022,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sentEdited: "the draft was edited before sending",
     close: "Close ticket",
     reopen: "Reopen",
-    toFaq: "Add to FAQ",
-    toFaqIntro: "The sent answer becomes an entry in the draft of an FAQ document. Remove names and personal details before saving; the content manager approves it.",
-    toFaqDocument: "FAQ document",
-    toFaqSubmit: "Save to FAQ draft",
-    toFaqDone: "The entry is in the FAQ draft.",
-    noFaqDocuments: "There is no FAQ document in the library yet.",
     noMailbox: "The channel has no mailbox — the answer cannot be sent by e-mail.",
     msgDrafted: "The draft is ready. Review it before sending.",
     msgDraftSaved: "The draft is saved.",
@@ -17837,7 +17051,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     notHelpful: "Not helpful",
     thanks: "Thank you.",
     tryAgain: "Try asking differently, or write to the helpdesk.",
-    noAnswer: "I could not find an answer in the regulations and FAQ.",
+    noAnswer: "I could not find an answer in the documents.",
     escalateIntro: "The assistant did not help. Write to the helpdesk — a person will reply by e-mail to your address.",
     escalateMessage: "What do you need to resolve",
     escalateSubmit: "Send to the helpdesk",
@@ -17861,20 +17075,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabsLabel: "Channel sections",
     tabList: "Channels",
     tabMyTickets: "My tickets",
-    tabProposals: "FAQ proposals",
-    tabFaq: "FAQ",
-    faqHeading: "Channel FAQ",
-    faqIntro: "Entries the channel answers with in the help window. New entries come from FAQ proposals; they reach the help window only when the version is published. The document is stored in the library (versions, approval, search) and hidden from its list.",
-    faqDocument: "Document",
-    faqDraft: n => `${n} ${n === 1 ? "entry" : "entries"} in the draft`,
-    faqPublished: (label, n) => `Valid version ${label} · ${n} ${n === 1 ? "entry" : "entries"}`,
-    faqNotPublished: "No published version yet — the help window does not answer from the FAQ yet.",
-    faqEdit: "Edit entries",
-    faqOpenDocument: "Publish and versions",
-    faqProposalsOpen: n => `Open FAQ proposals: ${n}`,
-    faqListLine: n => `FAQ: ${n} ${n === 1 ? "entry" : "entries"}`,
-    faqListNone: "FAQ: no entries",
-    faqBelongsTo: ch => `Belongs to the channel ${ch}. The FAQ is hidden from the library list — the filter Type: FAQ shows it.`,
     tabTickets: "Tickets",
     tabSettings: "Settings",
     agentsNote: "Ticket managers matter when tickets are on.",
@@ -17948,7 +17148,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     syncLast: (when: string) => `last ${when}`,
     syncError: (code: string) => `last error: ${code}`,
     syncCounts: (created: number, appended: number, skipped: number) => `new tickets ${created} · appended ${appended} · skipped ${skipped}`,
-    syncSinceHint: "The first run only marks the start: older messages do not become tickets, history goes to FAQ mining.",
+    syncSinceHint: "The first run only marks the start: older messages do not become tickets, history goes to question mining.",
     syncInterval: "Sync interval",
     syncIntervalHint: "How often the mailbox is checked automatically. Sync now works at any time.",
     syncIntervalOption: (m: number) => (m >= 1440 ? "once a day" : m >= 60 ? "every hour" : `every ${m} minutes`),
@@ -17990,7 +17190,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       given_name: "first name — the ticket manager sees it on the ticket",
       family_name: "last name",
       name: "full name, only if you don't have first and last name separately",
-      roles: "list of the person's roles; picks FAQ for the audience",
+      roles: "list of the person's roles, for example player or coach",
       club: "the person's club",
       lang: "assistant language: sk, cs or en",
       iat: "issued at — seconds since 1 Jan 1970 (Unix time), i.e. “now”",
@@ -18008,15 +17208,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetSecretShown: "New secret key — copy it now, it will not be shown again:",
     widgetSecretNone: "not created yet",
     widgetSecretSet: (hint: string, when: string) => `…${hint}, created ${when}`,
-    mining: "FAQ mining from history",
-    miningIntro: "The model reads the latest mailbox threads, strips personal data and proposes FAQ entries into the draft of the selected FAQ document. Message bodies are not stored; the content manager approves the proposals through the version flow.",
-    miningDocument: "FAQ document",
-    miningLimit: "How many recent messages to read",
-    miningRun: "Propose FAQ entries",
-    miningDone: (threads: number, proposed: number, saved: number, duplicates: number) => `Mining finished: threads ${threads}, proposals ${proposed}, saved to the draft ${saved}, duplicates ${duplicates}.`,
-    noFaqDocuments: "There is no FAQ document in the library yet — create one in Library → New document → FAQ.",
     history: "History analysis",
-    historyIntro: "An overview of the mailbox for the chosen period: how many questions came in, how many got an answer, how fast, and roughly what they were about. Only message headers are read (date, thread, sender, subject) — bodies are not read, nothing is sent to the AI and nothing is written to the FAQ or tickets. Only a monthly summary without addresses or names is stored.",
+    historyIntro: "An overview of the mailbox for the chosen period: how many questions came in, how many got an answer, how fast, and roughly what they were about. Only message headers are read (date, thread, sender, subject) — bodies are not read, nothing is sent to the AI and nothing is written to tickets or questions. Only a monthly summary without addresses or names is stored.",
     historyOpen: "Open analysis",
     historyPeriod: "Period",
     historyPeriodOption: (months: number) => `last ${months} months`,
@@ -18052,161 +17245,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     historyColJunk: "Junk",
     historyMonthCard: (incoming: string, threads: string, answered: string) => `received ${incoming} · questions ${threads} · answered ${answered}`,
     historyMonthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-    harvest: "FAQ mining from history",
-    harvestIntro: "For the chosen period, questions from outside that got an answer are read from the mailbox; addresses, phone and other numbers are removed before processing. Artificial intelligence sorts them into topics and, for every topic with at least 3 questions, proposes FAQ entries from the latest helpdesk answer together with an article of the rules. E-mail text is not stored; the content manager approves the proposals (ADR-030, DPO answers of 9 Oct 2026).",
-    harvestStart: "Run FAQ mining",
+    harvest: "Question mining from history",
+    harvestIntro: "For the chosen period, questions from outside that got an answer are read from the mailbox; addresses, phone and other numbers are removed before processing. Artificial intelligence sorts them into topics and, for every topic with at least 3 questions, summarises the question and the latest helpdesk answer. The compliance check then proposes manual additions from them (ADR-034). E-mail text is not stored (ADR-030, DPO answers of 9 Oct 2026).",
+    harvestStart: "Run question mining",
     harvestRestart: "Run mining again",
     harvestStarted: "Mining is running. Months are processed automatically every 5 minutes — just reload the page later.",
     harvestNone: "No mining has run yet.",
-    harvestStages: { collect: "Sorting questions into topics", merge: "Merging similar topics", draft: "Writing FAQ proposals", done: "Done" },
+    harvestStages: { collect: "Sorting questions into topics", merge: "Merging similar topics", draft: "Summarising questions", done: "Done" },
     harvestCollectProgress: (done: number, total: number) => `${done} of ${total} months sorted.`,
     harvestDraftProgress: (done: number, total: number) => `Proposals for ${done} of ${total} topics.`,
     harvestStopped: "Mining stopped after repeated errors. Check the mailbox connection and the AI settings and run it again.",
     harvestCounts: (threads: string, colleague: string, unanswered: string, excluded: string, noTopic: string) => `Answered questions: ${threads} · skipped: from colleagues ${colleague}, unanswered ${unanswered}, after objection ${excluded}, not a question ${noTopic}`,
     harvestTopics: "Topics",
-    harvestTopicsIntro: (min: number) => `A topic with at least ${min} questions gets an FAQ proposal. Smaller topics are one-off cases.`,
+    harvestTopicsIntro: (min: number) => `A topic with at least ${min} questions gets a summary. Smaller topics are one-off cases.`,
     harvestTopicMeta: (threads: string, first: string, last: string) => `${threads} questions · ${first} – ${last}`,
-    harvestTopicProposals: (n: number) => `proposals: ${n}`,
+    harvestTopicProposals: (n: number) => `questions: ${n}`,
     harvestTopicsSmall: (topics: number, threads: string) => `Another ${topics} small topics (${threads} questions in total) get no proposal.`,
-    harvestOpenProposals: (n: number) => `Open FAQ proposals (${n})`,
+    harvestOpenProposals: (n: number) => `Propose manual additions (${n} questions)`,
     harvestExclusions: "Excluded addresses",
-    harvestExclusionsIntro: "Enter the address of anyone who objects to their e-mails being used for the FAQ; mining will skip their e-mails. Only a fingerprint of the address is stored, not the address.",
+    harvestExclusionsIntro: "Enter the address of anyone who objects to their e-mails being used for question mining; mining will skip their e-mails. Only a fingerprint of the address is stored, not the address.",
     harvestExclusionsField: "Addresses, one per line",
     harvestExclusionsSave: "Exclude addresses",
     harvestExclusionsCount: (n: number) => `Excluded addresses: ${n}.`,
     harvestExclusionsAdded: (n: number) => `Excluded addresses added: ${n}.`,
-    proposals: "FAQ proposals from the helpdesk",
-    proposalsIntro: "The proposals come from helpdesk answers over the period chosen for mining. Before approving, check that the answer contains no name or other detail of a specific person and that it is still valid today. An approved entry goes to the draft of the selected FAQ document and is published only when that draft is approved. The reference to the e-mails is deleted after your decision.",
-    proposalsViewOpen: "Undecided",
-    proposalsViewDecided: "Decided",
-    proposalsEmpty: "No proposals to decide.",
-    proposalsNoFaq: "The channel library has no FAQ document — create one in Library → New document → FAQ.",
-    proposalTopic: "Topic",
-    proposalThreads: (threads: string, first: string, last: string) => `${threads} threads · ${first} – ${last}`,
-    proposalChanged: "the answer changed over time",
-    proposalNormConflict: "differs from the rules",
-    proposalNote: "Note for the curator",
-    proposalSources: "Suggested sources",
-    proposalQuestion: "Question",
-    proposalVariants: "Other wordings of the question",
-    proposalVariantsHint: "One per line.",
-    proposalAnswer: "Answer",
-    proposalAudience: "Intended for",
-    proposalAudienceHint: "Separate with commas.",
-    proposalDocument: "Into FAQ document",
-    proposalApprove: "Approve into FAQ draft",
-    proposalReject: "Reject",
-    proposalMergeInto: "Merge with proposal",
-    proposalMerge: "Merge",
-    proposalApproved: "The proposal is in the FAQ draft.",
-    proposalRejected: "The proposal was rejected.",
-    proposalMerged: "The proposal was merged; its question was added to the other wordings.",
-    proposalStatus: { approved: "approved", merged: "merged", rejected: "rejected" },
-    proposalDecidedBy: (who: string, when: string) => `${when}, ${who}`,
-    proposalsMore: (n: number) => `Another ${n} proposals will show once these are decided.`,
-    proposalSave: "Save changes",
-    proposalSaved: "The changes are saved; the proposal stays in the queue.",
-    proposalOriginal: "Original proposal and changes",
-    proposalOriginalIntro: "Struck-through text was removed from the original proposal, underlined text was added.",
-    proposalNoChanges: "No changes from the original proposal.",
-    proposalEdited: (who: string, when: string) => `Edited ${when} by ${who}`,
-    proposalsViewDecision: "To decide",
-    proposalsViewNoSource: "No source",
-    proposalTopicFilter: "Topic",
-    proposalTopicAll: "All topics",
-    proposalTopicApply: "Show",
-    proposalsPage: (page: number, pages: number) => `Page ${page} of ${pages}`,
-    proposalsPrev: "Previous page",
-    proposalsNext: "Next page",
-    review: "Check against documents",
-    reviewIntro: "Artificial intelligence compares the open proposals of the selected topics with the documents you choose from the library and gives each a verdict with a citation. It never changes the answers itself — you take over the result or keep the original. Only public documents can be used; a document without a published version is used as a draft and marked as such.",
-    reviewDocuments: "Documents to check against",
-    reviewScope: "What to check",
-    reviewScopeAll: "All open proposals",
-    reviewScopeHint: "One or more topics. Leave empty to check all open proposals.",
-    reviewStart: "Check against documents",
-    reviewRunningTitle: "The check is running in the background",
-    reviewRunningNote: (when, who) => `Started ${when}, ${who}. You can start a new one when it finishes — you will get a notification and an e-mail. Reload the page to see the state.`,
-    reviewStarted: "The check is running in the background — batches run one after another, just reload the page later.",
-    reviewProgress: (done: number, total: number) => `${done} of ${total} proposals checked.`,
-    reviewDone: (when: string) => `The check is complete (${when}).`,
-    reviewStopped: "The check stopped after repeated errors. Try running it again.",
-    reviewCounts: (differs: number, conflict: number, notCovered: number, agree: number) => `differs ${differs} · documents conflict ${conflict} · not covered ${notCovered} · agrees ${agree}`,
-    reviewAgainst: (list: string) => `Against: ${list}`,
-    reviewDraftMark: "draft",
-    reviewVerdicts: { differs: "differs from the documents", conflict: "the documents conflict", not_covered: "the documents do not cover the topic", agree: "agrees with the documents" },
-    reviewFilter: "Check result",
-    reviewFilterAll: "All",
-    reviewProposed: "Proposal from the check",
-    reviewCitations: "Citations",
-    reviewApply: "Take over the proposal from the check",
-    reviewDismiss: "Keep the original",
-    reviewApplied: "The proposal from the check was taken over; the original wording stays in the comparison.",
-    reviewDismissed: "The original wording was kept.",
-    reviewDecision: { applied: "taken over", dismissed: "original kept" },
-    proposalsLead: (c, n, p) => [c, `${n} open`, p].filter(Boolean).join(" · "),
-    periodLabel: m => m >= 12 ? `${Math.round(m / 12)} ${Math.round(m / 12) === 1 ? "year" : "years"} of e-mails` : `${m} ${m === 1 ? "month" : "months"} of e-mails`,
-    reviewRunningShort: (d, n) => `Check running · ${d} of ${n}`,
-    proposalCancel: "Cancel",
-    decidedOf: (d, n) => `${d} of ${n} decided`,
-    remaining: n => `${n} left`,
-    reviewLabel: "Check:",
-    reviewVerdictsShort: { agree: "Matches", differs: "Differs", not_covered: "Not covered", conflict: "Conflict" },
-    reviewVerdictsChip: { differs: "Differs", conflict: "Conflict", not_covered: "Not covered", agree: "Matches" },
-    decisionCount: n => `To decide ${n}`,
-    reviewLast: "Last check",
-    reviewLastSummary: (d, n) => `${d} · ${n} ${n === 1 ? "document" : "documents"}`,
-    reviewRunningSince: d => `running since ${d}`,
-    topicsHeading: n => `Topics · ${n} open`,
-    topicDiffers: n => `${n} differ`,
-    topicNotCovered: "not covered",
-    topicDecision: n => `${n} to decide`,
-    topicDone: "done",
-    topicPosition: (i, n) => `Topic ${i} of ${n}`,
-    openInTopic: n => `${n} undecided`,
-    proposalsViewAll: "All",
-    threadsCount: n => `${n} threads`,
-    decide: "Decide",
-    collapse: "Collapse",
-    decisionNote: "To decide",
-    reviewHeading: "Check result",
-    reviewNorm: "Rule",
-    opensNewWindow: "opens in a new window",
-    reviewChange: "Change of answer",
-    reviewQuestionChange: "Change of question",
-    editHeading: "Edit",
-    variantsCount: n => `Question variants · ${n}`,
-    variantRemoveHint: "An unticked variant is removed when you save.",
-    moreVariants: n => `${n} more ${n === 1 ? "variant" : "variants"}`,
-    variantsAdd: "Add variants",
-    variantsAddHint: "One per line.",
-    markdownHint: "Markdown: **bold**, start a list with a dash, link [text](address).",
-    sourcesLabel: "Sources",
-    sourceDocPlaceholder: "Choose a document",
-    sourceRef: "Article or section",
-    sourceRemove: t => `Remove source ${t}`,
-    sourcesHint: "A library document and an article or section. The empty row adds a source.",
-    noSourceTag: "no source",
-    approveNext: "Approve to FAQ and next",
-    approveOnly: "Approve to FAQ",
-    saveShort: "Save",
-    nextIs: q => `Next: ${q}`,
-    lastOpen: "Last undecided proposal.",
-    rejectOpen: "Reject…",
-    mergeOpen: "Merge with…",
-    rejectTitle: "Reject proposal",
-    rejectReason: "Reason",
-    rejectReasonHint: "Required. It is written to the audit log and shown under Decided.",
-    mergeTitle: "Merge with a proposal of the same topic",
-    mergeExplain: "The question and variants move to the chosen proposal's variants, the answer to its note, and the sources are combined. This proposal becomes “Merged”.",
-    proposalStatusTag: { approved: "Approved to FAQ", merged: "Merged", rejected: "Rejected" },
-    mergedIntoLabel: "into",
-    faqLink: "FAQ",
-    topicAllDecided: "All proposals of this topic are decided.",
-    topicSummary: (a, r, m) => [a ? `${a} approved` : "", r ? `${r} rejected` : "", m ? `${m} merged` : ""].filter(Boolean).join(", "),
-    nextTopic: t => `Next topic: ${t}`,
-    reviewNotCoveredAgainst: l => `Checked against: ${l}`,
-    decidedNone: "No proposal of this topic is decided yet.",
     save: "Save channel",
     saved: "The channel is saved.",
     created: "The channel is created.",
@@ -18315,7 +17376,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       textRowNote: "The text the assistant draws on, and how it is split.",
       openTextEditor: "Open editor",
       openChunks: "Split for the assistant",
-      openFaqEntries: "FAQ entries",
       currentHeading: "Current version",
       upcomingHeading: "Upcoming version",
       upcomingNote: d => `Published; it comes into force on ${d}. Until then people read and confirm the current version above.`,
@@ -18544,7 +17604,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       requestTag: "new version",
       requestTitle: (title, label) => `${title} — ${label}`,
       requestWhen: (when, who) => `Published ${when}, ${who}`,
-      requestFaq: n => `FAQ proposals citing the document: ${n} — check in the queue`,
       requestRunName: (title, label) => `Check after new version of ${title} (${label})`,
       requestStart: "Check",
       requestDismiss: "Not needed",
@@ -18554,12 +17613,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       linksIntro: "Which documents are checked against which norms. A new version of a document or norm in a link creates a check request and notifies responsible persons, content managers and the compliance role. Links are saved from a finished check.",
       linksNone: "None yet. Save them on a finished check with “Save as fixed links”.",
       linkRemove: "Remove",
-      faqCardTitle: ch => `FAQ proposals — ${ch}`,
-      faqCardCounts: (o, r) => `${o} open ${o === 1 ? "proposal" : "proposals"}, ${r} checked`,
-      faqCardRunning: (d, n) => `Check running — ${d} of ${n} proposals.`,
-      faqCardLast: (when, who) => `Last check ${when}, ${who}. It is started in the proposal queue.`,
-      faqCardNever: "Not checked against documents yet. The check is started in the proposal queue.",
-      faqCardOpen: "Check in the queue",
       references: "Reference rules",
       referencesHint: "Only binding documents are offered — law, statutes, regulations and directives — highest first, in their valid version. If you select none, the binding parents of the checked documents are used (Library → Document hierarchy).",
       start: "Check compliance",
@@ -19145,7 +18198,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploaded: (name, d) => `uploaded ${d} · ${name}`,
       editor: "Text editor",
       chunks: "Chunks",
-      faqEntries: "FAQ entries",
       noFiles: "No files yet.",
       now: "Now",
       roundOf: (n, decided, total) => `round ${n} · ${decided} of ${total}`,
@@ -19254,76 +18306,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resyncUnchanged: "Nothing changed on the server.",
       resyncVersion: "The article changed — a draft of a new version is ready.",
     },
-    faq: {
-      newHeading: "New FAQ",
-      newIntro: "An FAQ is not uploaded as a file. Create it here, then add entries: a question, the answer and the regulation it is based on. Publishing goes through approval like any other version.",
-      newLink: "Frequently asked questions (FAQ) are not uploaded as a file — create them here →",
-      create: "Create FAQ",
-      created: "The FAQ has been created. Add the first entry.",
-      heading: "FAQ entries",
-      intro: "One entry is one question and answer. The assistant turns each entry into one chunk; access to an entry is the strictest of this FAQ's access and its sources.",
-      empty: "No entries yet.",
-      addHeading: "New entry",
-      assist: {
-        heading: "Find source material",
-        hint: "Find the answer in the library or on a connected server and put it into the entry. What you have written so far is kept while you search.",
-        query: "What are you looking for",
-        sources: "Where to search",
-        library: "Library",
-        search: "Search",
-        noSource: "Choose at least one place to search.",
-        none: "Nothing found.",
-        failed: source => `${source}: the search failed.`,
-        useSource: "Use as source",
-        insert: "Insert into answer",
-        import: "Import article →",
-        imported: "already in the library",
-        internal: "internal",
-      },
-      find: "Search entries",
-      findButton: "Search",
-      findClear: "Clear",
-      findCount: (shown, total) => `Showing ${shown} of ${total}`,
-      findNone: "No entry matches.",
-      editHeading: (n: number) => `Entry ${n}`,
-      question: "Question",
-      questionHint: "The way people actually ask it — one sentence.",
-      variants: "Other wordings of the question",
-      variantsHint: "One per line. They help find the answer to a differently phrased question.",
-      answer: "Answer",
-      answerHint: "The full answer the helpdesk would send by e-mail. No personal data.",
-      sources: "Sources",
-      sourcesHint: "Regulations the answer is based on. When one of them gets a new version, the entry is flagged for review.",
-      sourceDocument: "Document",
-      sourceNone: "— no source —",
-      sourceArticle: "Article",
-      sourceArticlePlaceholder: "e.g. Art. 12(3)",
-      audience: "Audience",
-      audienceHint: "Roles the answer is meant for, comma-separated: club manager, referee, coach…",
-      save: "Save entry",
-      add: "Add entry",
-      remove: "Remove",
-      saved: "The entry is saved. It is published with the version after approval.",
-      removed: "The entry has been removed from the draft.",
-      stateNew: "new, unpublished",
-      stateChanged: "changed since publication",
-      statePublished: "published",
-      stateSourceChanged: "a source has a new version — review the answer",
-      access: (level: string) => `access: ${level}`,
-      count: (n: number) => (n === 1 ? "1 entry" : `${n} entries`),
-      editEntries: "Edit entries",
-      openEntries: "FAQ entries →",
-      pdfNote: "The PDF and the text of the version are built from the entries on every save (ADR-011); nothing is uploaded.",
-      publishNote: "Changes to entries are a draft. They are published through the version flow on the document page: version details, approval, publication.",
-      mdIntro: "Frequently asked questions and answers. Each answer is based on the regulations listed, as in force on the day of publication.",
-      mdQuestion: "Question",
-      mdVariants: "Other wordings",
-      mdAnswer: "Answer",
-      mdSources: "Sources",
-      mdAudience: "Audience",
-      mdEmpty: "No entries yet.",
-      pdfPage: (n: number, total: number) => `page ${n} of ${total}`,
-    },
     upload: {
       sectionFile: "File",
       sectionMeta: "Metadata",
@@ -19353,7 +18335,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         heading: "How a document is created",
         intro: "Documents in the library are created in two ways. Pick the one that fits what you are adding.",
         file: { title: "Document from a file", text: "Regulation, directive, law, manual, contract… You upload the PDF (that is what gets approved and acknowledged) and an editable source (Word); it becomes the text, split into sections for search according to the kind of document. With Markdown (.md) the source alone is enough — Contineo generates the PDF with the organisation's header and footer.", cta: "Upload a file ↓" },
-        faq: { title: "Frequently asked questions (FAQ)", text: "No file: you write question-and-answer entries right here. Each entry is one ready answer for the assistant, can refer to regulations and is flagged for review when they get a new version. The PDF is put together automatically.", cta: "Create FAQ →" },
         connector: { title: "Import from a server", text: "Articles from a connected server (for example Sportnet) are taken over with their origin and then treated like a document from a file. For example, the description of the transfer process from the Sportnet documentation for ticket managers — as an internal document.", cta: "Import →" },
       },
       moreFields: "More details",

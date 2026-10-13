@@ -427,26 +427,6 @@ export async function reopenTicket(companyCode: string, channelKeys: string[], i
   await writeAudit({ companyCode, subject: "ticket", action: "znovu-otvoreny", actor, targetId: id, targetLabel: t.subject })
 }
 
-/**
- * Predvyplnenie záznamu FAQ z ticketu: otázka z predmetu alebo prvej správy,
- * odpoveď z odoslaného textu (prednostne) alebo návrhu, zdroje z návrhu.
- * Osobné údaje v otázke riešiteľ pred uložením prepíše — preto je to návrh,
- * nie zápis.
- */
-export function faqPrefillFromTicket(t: Ticket): { question: string; answer: string; sources: { documentId: string; articleRef: string | null }[]; origin: { channelKey: string; threadRefs: string[]; messageIds: string[] } } {
-  const first = t.messages.find(m => m.direction === "in")
-  const question = (t.subject || first?.text.split("\n")[0] || "").replace(/^(re|fw|fwd):\s*/i, "").trim()
-  const answer = t.sentAnswer?.text ?? t.draft?.text ?? ""
-  const sources = (t.draft?.sources ?? [])
-    .map(s => s as { documentId?: string; articleRef?: string | null })
-    .filter(s => typeof s.documentId === "string")
-    .map(s => ({ documentId: String(s.documentId), articleRef: s.articleRef ?? null }))
-  return {
-    question, answer, sources: [...new Map(sources.map(s => [s.documentId, s])).values()].slice(0, 5),
-    origin: { channelKey: t.channelKey, threadRefs: t.threadRef ? [t.threadRef] : [], messageIds: t.messages.map(m => m.internetMessageId ?? m.providerId) },
-  }
-}
-
 // ── ticket z chatu (ADR-028 krok 5, D166) ───────────────────────────────────
 
 export interface ChatTicketInput {

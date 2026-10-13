@@ -15,7 +15,7 @@
  * `compliance`; súhrnný e-mail len rola `compliance`.
  *
  * Prepojené sú (D200): dokumenty v pevnej väzbe, dokumenty, ktoré sa proti
- * zmenenému už kontrolovali (história behov), a návrhy FAQ, ktoré ho citujú.
+ * zmenenému už kontrolovali (história behov), a podľa hierarchie dokumentov (D219).
  * Koncept požiadavku nevytvára — až zverejnenie.
  */
 
@@ -37,7 +37,6 @@ export const COMPLIANCE_LINKS_COLLECTION = "compliance_links"
 export const COMPLIANCE_REQUESTS_COLLECTION = "compliance_requests"
 /** Rovnaké ako v `complianceCheck.ts` — tu bez importu, aby nevznikol kruh cez `libraryWrite`. */
 const RUNS_COLLECTION = "compliance_runs"
-const PROPOSALS_COLLECTION = "faq_proposals"
 
 /** Pevná väzba: kontrolovaný dokument a normy, proti ktorým sa kontroluje. */
 export interface ComplianceLink {
@@ -67,8 +66,6 @@ export interface ComplianceRequest {
   subjectTitles: string[]
   referenceIds: string[]
   referenceTitles: string[]
-  /** Návrhy FAQ, ktoré zmenený dokument citujú, po kanáloch. */
-  faq: { channelKey: string; proposals: number }[]
   status: "open" | "started" | "dismissed"
   runId: string | null
   reason: string | null
@@ -177,38 +174,6 @@ async function hierarchyLinkRows(code: string, documentId: string): Promise<{ su
     .filter(r => r.referenceIds.length > 0)
 }
 
-interface FaqCitingRow {
-  channelKey: string
-  review?: { documents?: { documentId: string; textHash?: string }[] } | null
-}
-
-/**
- * Návrhy FAQ, ktoré treba skontrolovať proti novému zneniu — po kanáloch.
- *
- * Návrh, ktorý posledná kontrola preverila **proti tomu istému textu**, aký
- * sa práve zverejnil, sa nepočíta (Ján 12. 10. 2026). Bez toho zverejnenie
- * manuálov ISSF založilo šesť požiadaviek na kontrolu návrhov, ktoré deň
- * predtým prešli kontrolou proti nezmenenému textu. To isté pravidlo ako
- * pri dokumentoch (D200, `upToDateSinceCheck`). Staršie kontroly odtlačok
- * nemajú, takže pri nich požiadavka vznikne — radšej raz navyše než nikdy.
- */
-export function faqToCheck(documentId: string, rows: FaqCitingRow[], fingerprint: string | null): { channelKey: string; proposals: number }[] {
-  const counts = new Map<string, number>()
-  for (const r of rows) {
-    const checked = fingerprint !== null && (r.review?.documents ?? []).some(d => d.documentId === documentId && d.textHash === fingerprint)
-    if (!checked) counts.set(r.channelKey, (counts.get(r.channelKey) ?? 0) + 1)
-  }
-  return [...counts].map(([channelKey, proposals]) => ({ channelKey, proposals }))
-}
-
-/** Odtlačok zverejneného textu (platné znenie), `null` keď text nie je. */
-async function publishedFingerprint(code: string, documentId: string): Promise<string | null> {
-  const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne({ companyCode: code, documentId }, { projection: { _id: 0, versions: 1, markdown: 1 } })
-  const active = ((doc?.versions ?? []) as { isActive?: boolean; markdown?: string }[]).find(v => v.isActive)
-  const text = String(active?.markdown ?? doc?.markdown ?? "")
-  return text.trim() ? textFingerprint(text) : null
-}
-
 async function titles(code: string, ids: string[]): Promise<string[]> {
   const rows = await (await getCollection(DOCUMENTS_COLLECTION)).find({ companyCode: code, documentId: { $in: ids } }, { projection: { _id: 0, documentId: 1, title: 1 } }).toArray()
   return ids.map(id => String(rows.find(r => r.documentId === id)?.title ?? id))
@@ -216,35 +181,30 @@ async function titles(code: string, ids: string[]): Promise<string[]> {
 
 /**
  * Pri zverejnení nového znenia: požiadavka na kontrolu, ak je dokument
- * v nejakej väzbe alebo ho citujú návrhy FAQ. **Nikdy nevyhodí** —
+ * v nejakej väzbe (pevnej alebo v hierarchii). **Nikdy nevyhodí** —
  * zverejnenie sa nesmie pokaziť preto, že sa nepodarilo vytvoriť
  * pripomienku. Otvorená požiadavka k tomu istému dokumentu sa nahradí.
  */
 export async function requestOnPublish(companyCode: string, documentId: string, versionLabel: string, actor: string): Promise<ComplianceRequest | null> {
   try {
     const code = requireCompanyCode(companyCode, "requestOnPublish")
-    const [linkRows, runRows, faqRows] = await Promise.all([
+    const [linkRows, runRows] = await Promise.all([
       (await links()).find({ companyCode: code, $or: [{ subjectId: documentId }, { referenceIds: documentId }] }).toArray(),
       (await getCollection(RUNS_COLLECTION)).find(
         { companyCode: code, "scope.kind": "documents", $or: [{ documentIds: documentId }, { "scope.subjectIds": documentId }] },
         { projection: { _id: 0, documentIds: 1, "scope.subjectIds": 1 } },
       ).toArray(),
-      (await getCollection<FaqCitingRow>(PROPOSALS_COLLECTION)).find(
-        { companyCode: code, status: "open", "sources.documentId": documentId },
-        { projection: { _id: 0, channelKey: 1, "review.documents": 1 } },
-      ).toArray(),
     ])
     const history = runRows.map(r => ({ subjectIds: ((r.scope as { subjectIds?: string[] })?.subjectIds ?? []), referenceIds: (r.documentIds as string[]) ?? [] }))
     const hierarchyRows = await hierarchyLinkRows(code, documentId)
     const { subjectIds, referenceIds } = linkedChecks(documentId, [...linkRows, ...hierarchyRows], history, await upToDateSinceCheck(code, documentId))
-    const faq = faqToCheck(documentId, faqRows, await publishedFingerprint(code, documentId))
-    if (!subjectIds.length && !faq.length) return null
+    if (!subjectIds.length) return null
     const [documentTitle] = await titles(code, [documentId])
     const req: ComplianceRequest = {
       companyCode: code, id: randomBytes(6).toString("hex"), documentId, documentTitle, versionLabel,
       publishedAt: new Date(), publishedBy: actor,
       subjectIds, subjectTitles: await titles(code, subjectIds), referenceIds, referenceTitles: await titles(code, referenceIds),
-      faq, status: "open", runId: null, reason: null, decidedBy: null, decidedAt: null, createdAt: new Date(),
+      status: "open", runId: null, reason: null, decidedBy: null, decidedAt: null, createdAt: new Date(),
     }
     await (await requests()).updateMany({ companyCode: code, documentId, status: "open" }, { $set: { status: "dismissed", reason: `Nahradené novším znením ${versionLabel}.`, decidedBy: actor, decidedAt: new Date() } })
     await (await requests()).insertOne({ ...req })

@@ -515,18 +515,17 @@ export function approvalEmail(
 export function complianceDoneEmail(
   link: string,
   host: string,
-  run: { documents: number; findings: number; usd: number | null; proposals?: boolean },
+  run: { documents: number; findings: number; usd: number | null },
   language: UiLanguage = "sk",
   branding?: SignInBranding,
 ): Omit<Message, "to"> {
   const s = dictionary(language).complianceEmail
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
-  // Kontrola návrhov FAQ má ten istý e-mail s inými vetami (11. 10. 2026).
-  const intro = run.proposals ? s.introProposals(run.documents, run.findings) : s.intro(run.documents, run.findings)
-  const subtitle = run.proposals ? s.subtitleProposals : s.subtitle
-  const button = run.proposals ? s.buttonProposals : s.button
-  const note = run.proposals ? s.noteProposals : s.note
+  const intro = s.intro(run.documents, run.findings)
+  const subtitle = s.subtitle
+  const button = s.button
+  const note = s.note
   const cost = run.usd !== null ? s.costLine(formatAmount(run.usd, language)) : ""
   const text = [intro, ...(cost ? ["", cost] : []), "", link, "", note].join("\n")
   const html = `<!doctype html>
@@ -551,7 +550,7 @@ export function complianceDoneEmail(
 export function complianceRequestEmail(
   link: string,
   host: string,
-  req: { documentTitle: string; versionLabel: string; subjectIds: string[]; faq: { proposals: number }[] },
+  req: { documentTitle: string; versionLabel: string; subjectIds: string[] },
   language: UiLanguage = "sk",
   branding?: SignInBranding,
 ): Omit<Message, "to"> {
@@ -559,8 +558,7 @@ export function complianceRequestEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
   const intro = s.requestIntro(req.documentTitle, req.versionLabel)
-  const faqCount = req.faq.reduce((n, f) => n + f.proposals, 0)
-  const lines = [s.requestDocuments(req.subjectIds.length), ...(faqCount ? [s.requestFaq(faqCount)] : [])]
+  const lines = [s.requestDocuments(req.subjectIds.length)]
   const text = [intro, "", ...lines, "", link, "", s.requestNote].join("\n")
   const html = `<!doctype html>
 <html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">

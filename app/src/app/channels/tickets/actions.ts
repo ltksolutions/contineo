@@ -17,10 +17,9 @@ import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { helpdeskContext } from "@/lib/helpdeskAgents"
 import { mailboxFor } from "@/lib/channels"
 import {
-  ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, lastIncoming, faqPrefillFromTicket, importTicketThread, TicketError,
+  ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, lastIncoming, importTicketThread, TicketError,
 } from "@/lib/tickets"
 import { draftTicketAnswer } from "@/lib/ticketDraft"
-import { saveFaqEntry, checkEntry } from "@/lib/faq"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -148,33 +147,6 @@ export async function closeTicketAction(fd: FormData) {
   // na ticket, s ktorým už nič nerobí (Ján 8. 10. 2026).
   revalidatePath("/channels/tickets")
   redirect(`/channels/tickets?msg=${encodeURIComponent(ctx.t.msgClosed)}`)
-}
-
-/** Záznam do konceptu FAQ z odpovede (D164, D167) — schváli správca obsahu postupom znenia. */
-export async function ticketToFaqAction(fd: FormData) {
-  const ctx = await ready()
-  const id = fieldText(fd, "id")
-  try {
-    const ticket = await ticketById(ctx.person.companyCode, ctx.keys, id)
-    if (!ticket) throw new TicketError("ticket.notFound", "Taký ticket tu nie je.")
-    const prefill = faqPrefillFromTicket(ticket)
-    const entry = checkEntry({
-      question: fieldText(fd, "question"),
-      variants: fieldText(fd, "variants"),
-      answer: fieldText(fd, "answer"),
-      sources: prefill.sources,
-      audience: fieldText(fd, "audience").split(","),
-    })
-    await saveFaqEntry(ctx.person.companyCode, fieldText(fd, "documentId"), {
-      ...entry, id: null,
-      origin: { ...prefill.origin, minedAt: new Date(), model: ticket.draft?.model ?? "human" },
-    }, ctx.person.email)
-  } catch (e) {
-    if (isRedirect(e)) throw e
-    back(id, errorMessage(e, ctx.person.language), true)
-  }
-  revalidatePath("/library")
-  back(id, ctx.t.toFaqDone)
 }
 
 /** Najviac ticketov v jednej hromadnej akcii — zoznam ich aj tak viac neukáže. */

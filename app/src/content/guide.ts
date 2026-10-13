@@ -26,7 +26,7 @@ Tento návod hovorí, ako sa dokument dostane do systému a čo sa s ním po ces
 
 ## 1. Odporúčaný postup od nahratia dokumentu
 
-**Dokument vzniká dvoma spôsobmi.** Väčšina je **dokument zo súboru** — predpis, smernica, zákon, manuál, zmluva: nahrá sa PDF a upraviteľný zdroj a text sa rozdelí na úseky pre vyhľadávanie. Druhý spôsob sú **časté otázky (FAQ)**: nenahráva sa nič, záznamy otázka a odpoveď sa píšu priamo v aplikácii a každý je jedna hotová odpoveď pre asistenta. Oba spôsoby ponúka [Nahrať dokument](/library/new); tam je aj import článkov z pripojeného servera.
+**Dokument vzniká zo súboru.** Predpis, smernica, zákon, manuál, zmluva: nahrá sa PDF a upraviteľný zdroj a text sa rozdelí na úseky pre vyhľadávanie. Asistent potom odpovedá z platných znení týchto dokumentov. Nahrávanie ponúka [Nahrať dokument](/library/new); tam je aj import článkov z pripojeného servera.
 
 **Druh je typ dokumentu, značky sú témy.** Druh (norma, smernica, zákon, manuál…) má dokument práve jeden a riadi sa podľa neho, ako sa s dokumentom zaobchádza. Značiek môže mať viac (napríklad Registrácia, ISSF) a slúžia len na hľadanie a filtre — typ do nich nepatrí.
 

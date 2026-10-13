@@ -33,7 +33,6 @@ import { AppError } from "./appError"
 import { isBounce } from "./mailbox/bounce"
 import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { requireCompanyCode } from "./tenantScope"
-import { DOCUMENTS_COLLECTION } from "./documents"
 import { isUiLanguage, type UiLanguage } from "./i18n"
 import { GraphMailbox } from "./mailbox/graph"
 import type { MailboxAdapter, MailboxKind, MailFolder } from "./mailbox/types"
@@ -147,12 +146,6 @@ export interface HelpdeskChannel {
   name: string
   audience: string
   folderIds: string[]
-  /**
-   * FAQ dokument kanála (ADR-028, D201): vzniká s kanálom, záznamy doň idú
-   * z fronty návrhov. Úložisko ostáva v knižnici (verzie, schvaľovanie,
-   * vyhľadávanie, expirácia pri novom znení zdroja), v knižnici je skryté.
-   */
-  faqDocumentId?: string | null
   /**
    * Úroveň obsahu, z ktorého asistent kanála odpovedá (Ján 8. 10. 2026) —
    * vlastnosť typu kanála, nie prepínač: widget je verejný vždy (D9, D166),
@@ -545,35 +538,4 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
 export async function channelsWithMailbox(): Promise<HelpdeskChannel[]> {
   const col = await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)
   return col.find({ mailbox: { $ne: null } }).toArray()
-}
-
-/**
- * FAQ dokument kanála (ADR-028, D201). Kanál bez neho dostane nový — prázdny
- * zoznam záznamov, verejný (widget je verejný). V knižnici je
- * skrytý, priečinok netreba. Volá sa pri založení kanála; existujúcim kanálom ho priradil
- * jednorazový zápis 11. 10. 2026. Nikdy nevyhodí — kanál funguje aj bez FAQ.
- */
-export async function ensureChannelFaq(companyCode: string, channel: HelpdeskChannel, actor: string): Promise<string | null> {
-  try {
-    const code = requireCompanyCode(companyCode, "ensureChannelFaq")
-    const docs = await getCollection(DOCUMENTS_COLLECTION)
-    if (channel.faqDocumentId && await docs.countDocuments({ companyCode: code, documentId: channel.faqDocumentId }, { limit: 1 })) return channel.faqDocumentId
-    if (channel.kind !== "widget") return null
-    const { createFaqDocument } = await import("./faq")
-    const { documentId } = await createFaqDocument({
-      title: `FAQ — ${channel.name}`, documentKey: `faq-${channel.key.slice(0, 8)}`, sectionKey: "",
-      companyCode: code, scope: "company", accessLevel: "public", language: channel.languages[0] ?? "sk", category: "faq", tags: [],
-    }, actor)
-    await (await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)).updateOne({ companyCode: code, key: channel.key }, { $set: { faqDocumentId: documentId } })
-    return documentId
-  } catch (e) {
-    console.error(`[channels] FAQ kanála ${companyCode}/${channel.key} sa nepodarilo založiť:`, e)
-    return null
-  }
-}
-
-/** Kanály, ku ktorým FAQ dokument patrí — pre poznámku „patrí ku kanálu" v knižnici. */
-export async function channelsOfFaq(companyCode: string, documentId: string): Promise<HelpdeskChannel[]> {
-  const code = requireCompanyCode(companyCode, "channelsOfFaq")
-  return (await getCollection<HelpdeskChannel>(CHANNELS_COLLECTION)).find({ companyCode: code, faqDocumentId: documentId }).toArray()
 }

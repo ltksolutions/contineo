@@ -133,7 +133,7 @@ export async function renderDocumentPdf(input: {
     title,
     markdown: body,
     author: organisationName(input.tenant),
-    texts: { page: dictionary(input.language).library.faq.pdfPage },
+    texts: { page: dictionary(input.language).common.pdf.pageOf },
     letterhead: await letterheadFor(input.tenant, input.language, { createdOn: input.createdOn, effectiveFrom: input.effectiveFrom }, title),
   })
 }
