@@ -299,9 +299,13 @@ export interface ProposalReview {
 
 type StepResult = Omit<ProposalReview, "runId" | "at" | "model" | "documents" | "decision">
 
-function parseCitations(list: unknown, pack: ReferencePack): ReviewCitation[] {
+function parseCitations(list: unknown, pack: ReferencePack, helpdesk?: { channelKey: string; channelName: string }): ReviewCitation[] {
   return (Array.isArray(list) ? list : []).flatMap(c => {
     const cc = c as Record<string, unknown>
+    // `doc = 0` — doplnenie vychádza len z praxe helpdesku (ADR-034, D221).
+    if (helpdesk && Number(cc.doc) === 0) {
+      return [{ documentId: `helpdesk:${helpdesk.channelKey}`, title: helpdesk.channelName, articleRef: String(cc.ref ?? "").trim().slice(0, 120) || null, quote: String(cc.quote ?? "").trim().slice(0, 300) }]
+    }
     const d = pack.documents[Number(cc.doc) - 1]
     if (!d) return []
     return [{ documentId: d.documentId, title: d.title, articleRef: String(cc.ref ?? "").trim().slice(0, 120) || null, quote: String(cc.quote ?? "").trim().slice(0, 300) }]
@@ -368,6 +372,44 @@ export const DOC_REVIEW_SYSTEM = [
   "– „summary“ je jedna-dve vety pre autora. Ak nálezy nie sú, vráť prázdny zoznam.",
   "Vráť JSON podľa schémy.",
 ].join("\n")
+
+/**
+ * Návrhy na doplnenie výkladového dokumentu z otázok helpdesku (ADR-034,
+ * D221). Ten istý tvar nálezu ako kontrola súladu — rozhoduje sa a zapisuje
+ * do konceptu rovnako (D199) —, iná úloha: nie rozpor s normou, ale **čo sa
+ * ľudia pýtajú a manuál neodpovedá**.
+ */
+export const HELPDESK_REVIEW_SYSTEM = [
+  "Si metodik športového zväzu. Dostaneš referenčné dokumenty zväzu (stanovy, poriadky), jeden výkladový dokument (manuál, návod) a otázky, ktoré ľudia posielali na helpdesk, s odpoveďami helpdesku a počtom vlákien.",
+  "Úloha: navrhni doplnenie výkladového dokumentu tak, aby ľudia našli odpoveď v ňom. Pri každej otázke, ktorá patrí k téme dokumentu, rozhodni:",
+  "– manuál na ňu už odpovedá → nič nehlás,",
+  "– manuál na ňu neodpovedá → nález „missing“: kam doplniť a navrhnuté znenie,",
+  "– manuál odpovedá nejasne alebo neúplne → nález „unclear“ s upresnením,",
+  "– odpoveď helpdesku je v rozpore so záväzným dokumentom → nález „conflict“; „proposed“ nechaj prázdne a do „recommendation“ napíš, že ide o podnet pre legislatívu (prax verzus norma), alebo že treba opraviť prax.",
+  "Pravidlá:",
+  ...COMMON_RULES,
+  "– Otázku, ktorá k téme tohto dokumentu nepatrí, preskoč — patrí do iného manuálu.",
+  "– Odpoveď helpdesku nie je norma. Do manuálu prevezmi len to, čo je v súlade so záväznými dokumentmi; ak norma vec neupravuje, smieš prevziať postup v informačnom systéme z odpovede helpdesku.",
+  "– Viac otázok k tej istej veci = jeden nález. Väčší počet vlákien = dôležitejšie.",
+  "– „quote“ je miesto, za ktoré sa doplní: skopíruj z výkladového dokumentu presne, znak po znaku, vrátane Markdownu, jeden súvislý úsek (najlepšie posledný odsek alebo odrážku príslušnej časti). „proposed“ je ten istý úsek a za ním doplnený text v rovnakom štýle a Markdowne.",
+  "– „citation“: ak doplnenie vychádza zo záväzného dokumentu, uveď ho (doc = jeho číslo); ak vychádza len z praxe helpdesku, daj doc = 0, do „ref“ čísla otázok (napr. „otázky 3, 7“) a do „quote“ znenie najčastejšej otázky.",
+  "– „summary“ je jedna-dve vety pre autora: čo ľudia hľadajú a manuál nemá. Ak nálezy nie sú, vráť prázdny zoznam.",
+  "Vráť JSON podľa schémy.",
+].join("\n")
+
+/** Blok otázok z helpdesku k jednému dokumentu; číslovanie od 1 (citácia „otázky 3, 7“). */
+export function helpdeskBlock(items: HelpdeskItem[]): string {
+  return [
+    "",
+    "### Otázky z helpdesku",
+    ...items.map((it, i) => [`#### Otázka ${i + 1} · ${it.topic} · ${it.threads} vlákien`, it.question, "", `Odpoveď helpdesku: ${it.answer}`].join("\n")),
+  ].join("\n\n")
+}
+
+/** Otázky k dokumentu: tie, ktoré ho citovali, a tie, ktoré necitovali žiadny výkladový dokument. */
+export function helpdeskItemsFor(documentId: string, items: HelpdeskItem[], guidanceIds: Set<string>): HelpdeskItem[] {
+  return items.filter(it => it.documentIds.includes(documentId) || !it.documentIds.some(d => guidanceIds.has(d)))
+}
 
 export const DOC_REVIEW_SCHEMA = {
   type: "object",
@@ -471,13 +513,13 @@ export function docReviewPrompt(subject: { title: string; text: string }, prior:
   ].join("\n")
 }
 
-export function parseDocReview(raw: unknown, pack: ReferencePack, newId: () => string): { findings: DocumentFinding[]; summary: string } {
+export function parseDocReview(raw: unknown, pack: ReferencePack, newId: () => string, helpdesk?: { channelKey: string; channelName: string }): { findings: DocumentFinding[]; summary: string } {
   const r = raw as { findings?: unknown; summary?: unknown } | null
   const findings: DocumentFinding[] = []
   for (const f of Array.isArray(r?.findings) ? r!.findings as unknown[] : []) {
     const x = f as Record<string, unknown>
     const kind = (FINDING_KINDS as string[]).includes(String(x.kind)) ? (x.kind as FindingKind) : null
-    const [citation] = parseCitations([x.citation], pack)
+    const [citation] = parseCitations([x.citation], pack, helpdesk)
     if (!kind || !citation) continue
     findings.push({
       id: newId(), kind, citation, status: null,
@@ -498,7 +540,23 @@ export type RunScope =
    * `topicKey` ostáva kvôli behom uloženým predtým a pri jedinej téme sa plní ďalej.
    */
   | { kind: "proposals"; channelKey: string; topicKey: string | null; topicKeys?: string[] }
-  | { kind: "documents"; subjectIds: string[] }
+  /*
+   * `helpdesk` — návrhy na doplnenie výkladových dokumentov z otázok helpdesku
+   * (ADR-034, D221). Otázky sú **kópia** v behu: zdroj (návrhy FAQ, neskôr
+   * témy ťažby) sa zmaže, a beh má byť aj potom čitateľný.
+   */
+  | { kind: "documents"; subjectIds: string[]; helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] } }
+
+/** Otázka z helpdesku pre návrh doplnenia manuálu (ADR-034, D221). */
+export interface HelpdeskItem {
+  id: string
+  topic: string
+  question: string
+  answer: string
+  threads: number
+  /** Dokumenty, ktoré odpoveď citovala — podľa nich sa otázka dáva k manuálu. */
+  documentIds: string[]
+}
 
 export interface ComplianceRun {
   companyCode: string
@@ -667,6 +725,32 @@ export async function startProposalReview(
   return run
 }
 
+/**
+ * Návrhy na doplnenie manuálov z otázok helpdesku kanála (ADR-034, D221).
+ *
+ * Kontrolované sú všetky verejné výkladové dokumenty organizácie (kanál je
+ * verejný), meradlami ich záväzní predkovia z hierarchie (D219). Otázky sú
+ * otvorené návrhy kanála — do zrušenia FAQ (D220) jediný zdroj; uložia sa
+ * do behu ako kópia.
+ */
+export async function startHelpdeskReview(companyCode: string, channel: { key: string; name: string }, starter: RunStarter, name = "", now = new Date()): Promise<ComplianceRun> {
+  const code = requireCompanyCode(companyCode, "startHelpdeskReview")
+  const open = await (await getCollection<FaqProposal>(PROPOSALS_COLLECTION))
+    .find({ companyCode: code, channelKey: channel.key, status: "open" }, { projection: { _id: 0, id: 1, topicLabel: 1, question: 1, answer: 1, threads: 1, sources: 1 } })
+    .sort({ threads: -1 }).toArray()
+  if (!open.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otvorené návrhy na kontrolu.")
+  const items: HelpdeskItem[] = open.map(p => ({
+    id: p.id, topic: String(p.topicLabel ?? ""), question: String(p.question ?? ""), answer: String(p.answer ?? "").slice(0, 1500),
+    threads: Number(p.threads ?? 0), documentIds: [...new Set((p.sources ?? []).map(x => x.documentId))],
+  }))
+  const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
+  const guidance = (await (await getCollection(DOCUMENTS_COLLECTION))
+    .find({ companyCode: code, accessLevel: "public", category: { $ne: "faq" } }, { projection: { _id: 0, documentId: 1, category: 1 } }).toArray())
+    .filter(d => documentRole(d.category as string | undefined, extras) === "guidance").map(d => String(d.documentId))
+  if (!guidance.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
+  return startDocumentReview(code, guidance, [], starter, now, name, { channelKey: channel.key, channelName: channel.name, items })
+}
+
 /** Názov kontroly: jeden riadok, najviac 120 znakov; prázdny = podľa dátumu. */
 export function runTitle(name: string): string {
   return name.replace(/\s+/g, " ").trim().slice(0, 120)
@@ -700,7 +784,7 @@ async function hierarchyReferences(code: string, subjects: string[], extras: Ret
  * dokument nesmie byť zároveň referenčný; verejný sa kontroluje len
  * verejnými, interný akýmikoľvek.
  */
-export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date(), name = ""): Promise<ComplianceRun> {
+export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date(), name = "", helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] }): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startDocumentReview")
   const subjects = [...new Set(subjectIds.filter(Boolean))]
   if (!subjects.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
@@ -723,7 +807,7 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   const { ids, packs } = await prepareReferences(code, refs, subjectDocs.map(d => d.accessLevel ?? "public"))
   const ai = await aiForCompany(code)
   if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
-  const run = newRun(code, "", { kind: "documents", subjectIds: subjects }, ids, packs, subjects, starter, ai.models.compliance, now)
+  const run = newRun(code, "", { kind: "documents", subjectIds: subjects, ...(helpdesk ? { helpdesk } : {}) }, ids, packs, subjects, starter, ai.models.compliance, now)
   run.scopeKey = `documents:${run.runId}`
   const title = runTitle(name)
   if (title) run.name = title
@@ -842,15 +926,18 @@ export interface DocumentPartial {
  * nie celý dokument (11. 10. 2026) — pri Opus 5.5 by tri balíky za sebou
  * prekročili 300 s funkcie a dokument by sa začínal stále odznova.
  */
-async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject: RawDocument, partial: DocumentPartial, kept: KeptDecision[] = []): Promise<DocumentPartial> {
+async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject: RawDocument, partial: DocumentPartial, kept: KeptDecision[] = [], helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] }): Promise<DocumentPartial> {
   const { text } = documentText(subject)
   const title = String(subject.title ?? subject.documentId)
   const pack = packs[partial.step]
   let seq = partial.findings.length
   const newId = () => `f${(++seq).toString().padStart(3, "0")}`
   const last = partial.step === packs.length - 1
-  const raw = await callStep(ctx, DOC_REVIEW_SYSTEM, pack, docReviewPrompt({ title, text }, partial.findings, last && packs.length > 1, kept), DOC_REVIEW_SCHEMA, `kontrola dokumentu: ${title}`)
-  const r = parseDocReview(raw, pack, newId)
+  const prompt = docReviewPrompt({ title, text }, partial.findings, last && packs.length > 1, kept)
+  const raw = helpdesk
+    ? await callStep(ctx, HELPDESK_REVIEW_SYSTEM, pack, `${prompt}\n${helpdeskBlock(helpdesk.items)}`, DOC_REVIEW_SCHEMA, `návrhy z helpdesku: ${title}`)
+    : await callStep(ctx, DOC_REVIEW_SYSTEM, pack, prompt, DOC_REVIEW_SCHEMA, `kontrola dokumentu: ${title}`)
+  const r = parseDocReview(raw, pack, newId, helpdesk)
   return { documentId: partial.documentId, step: partial.step + 1, findings: [...partial.findings, ...r.findings], summaries: r.summary ? [...partial.summaries, r.summary] : partial.summaries }
 }
 
@@ -1027,7 +1114,9 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
         while (queue.length) {
           const cold = queue.find(it => !packWarm(warm, it.p.step))
           const group = cold ? [cold] : queue
-          const out = await Promise.all(group.map(it => reviewDocumentStep(ctx, packs, it.d, it.p, keptBy.get(it.d.documentId) ?? [])))
+          const hd = run.scope.kind === "documents" ? run.scope.helpdesk : undefined
+          const out = await Promise.all(group.map(it => reviewDocumentStep(ctx, packs, it.d, it.p, keptBy.get(it.d.documentId) ?? [],
+            hd ? { ...hd, items: helpdeskItemsFor(it.d.documentId, hd.items, new Set(hd.items.flatMap(x => x.documentIds).filter(id => run.scope.kind === "documents" && run.scope.subjectIds.includes(id)))) } : undefined)))
           stepped.push(...out)
           for (const it of group) warm = markWarm(warm, it.p.step)
           queue = queue.filter(it => !group.includes(it))

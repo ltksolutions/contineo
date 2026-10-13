@@ -26,7 +26,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { startDocumentReviewAction, dismissRequestAction, removeLinkAction } from "../complianceActions"
+import { startDocumentReviewAction, startHelpdeskReviewAction, dismissRequestAction, removeLinkAction } from "../complianceActions"
 import { openRequests, listLinks } from "@/lib/complianceRequests"
 import { categoryRank, documentRole } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
@@ -152,21 +152,21 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
       </section>
 
       <h2 className="detail-block-title" style={{ margin: "8px 0 10px" }}>{t.runsHeading}</h2>
-      {/* Kontrola návrhov FAQ ako karta v zozname kontrol (Ján 11. 10. 2026: riadok pod
-          úvodom bol „úplne prehliadnuteľný"). Spúšťa sa vo fronte návrhov kanála. */}
-      {faqQueues.length > 0 && (
+      {/* Návrhy z helpdesku do manuálov (ADR-034, D221) — namiesto kontroly návrhov FAQ.
+          Otázky kanála sa skontrolujú proti verejným manuálom; výsledok je bežná
+          kontrola dokumentov v zozname nižšie. */}
+      {faqQueues.filter(q => q.open > 0).length > 0 && (
         <div style={{ display: "grid", gap: 12, marginBottom: 12 }}>
-          {faqQueues.map(q => (
+          {faqQueues.filter(q => q.open > 0).map(q => (
             <section key={q.key} className="card detail-block compliance-run">
               <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
-                <p style={{ margin: 0 }}><b>{t.faqCardTitle(q.name)}</b>{" · "}{t.faqCardCounts(q.open, q.reviewed)}</p>
-                <p className="quiet" style={{ margin: 0 }}>
-                  {q.run && q.run.pending.length > 0
-                    ? (q.run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span> : t.faqCardRunning(q.run.total - q.run.pending.length, q.run.total))
-                    : q.run ? t.faqCardLast(formatDate(q.run.finishedAt ?? q.run.updatedAt, language), who(q.run.startedBy)) : t.faqCardNever}
-                </p>
+                <p style={{ margin: 0 }}><b>{t.helpdeskHeading(q.name)}</b></p>
+                <p className="quiet" style={{ margin: 0 }}>{t.helpdeskIntro(q.open)}</p>
               </div>
-              <Link className="button button--quiet" href={`/channels/${encodeURIComponent(q.key)}/proposals#review`}>{t.faqCardOpen}</Link>
+              <form action={startHelpdeskReviewAction}>
+                <input type="hidden" name="channelKey" value={q.key} />
+                <SubmitButton className="button button--quiet">{t.helpdeskStart}</SubmitButton>
+              </form>
             </section>
           ))}
         </div>

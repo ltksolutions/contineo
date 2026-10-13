@@ -15,8 +15,9 @@ import { complianceContext, complianceViewContext } from "@/lib/complianceAccess
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
-import { renameRun, startDocumentReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
+import { renameRun, startDocumentReview, startHelpdeskReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
+import { listChannels } from "@/lib/channels"
 import { setLinksFromRun, removeLink, dismissRequest, markRequestStarted } from "@/lib/complianceRequests"
 
 const PAGE = "/library/compliance"
@@ -62,6 +63,29 @@ export async function startDocumentReviewAction(fd: FormData) {
     // Spustené z požiadavky na kontrolu (D200) — požiadavka sa uzavrie s odkazom na beh.
     const requestId = fieldText(fd, "requestId")
     if (requestId) await markRequestStarted(ctx.person.companyCode, requestId, run.runId, ctx.person.email)
+    const origin = originFromHeaders(await headers())
+    after(() => kick(origin, "/api/cron/compliance"))
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(PAGE, failure(e, ctx.language), true)
+  }
+  back(`${PAGE}/${runId}`, ctx.t.started)
+}
+
+/**
+ * Návrhy na doplnenie manuálov z otázok helpdesku kanála (ADR-034, D221).
+ * Aj „Spustiť znova" na detaile takého behu prichádza sem.
+ */
+export async function startHelpdeskReviewAction(fd: FormData) {
+  const ctx = await ready()
+  let runId = ""
+  try {
+    const key = fieldText(fd, "channelKey")
+    const channel = (await listChannels(ctx.person.companyCode)).find(c => c.key === key)
+    if (!channel) throw new AppError("channel.notFound", "Taký kanál tu nie je.")
+    const run = await startHelpdeskReview(ctx.person.companyCode, { key: channel.key, name: channel.name }, { email: ctx.person.email, personId: ctx.person.id },
+      fieldText(fd, "name") || ctx.t.helpdeskRunName(channel.name))
+    runId = run.runId
     const origin = originFromHeaders(await headers())
     after(() => kick(origin, "/api/cron/compliance"))
   } catch (e) {

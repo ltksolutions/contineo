@@ -3441,6 +3441,12 @@ interface Dictionary {
       keptText: string
       savedPending: string
       metaSteps: string
+      /** Návrhy na doplnenie manuálov z helpdesku (ADR-034, D221). */
+      helpdeskRunName: (channel: string) => string
+      helpdeskHeading: (channel: string) => string
+      helpdeskIntro: (questions: number) => string
+      helpdeskStart: string
+      helpdeskSource: string
     }
     tracks: {
       heading: string
@@ -6616,6 +6622,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.uploadedFileNotFound": "Nahratý súbor sa nenašiel. Skús ho nahrať znova.",
     "library.draftPdfFailed": "Text je uložený, ale PDF konceptu sa nepodarilo vyrobiť — skúste to znova, kým sa koncept nepredloží na schválenie.",
     "library.documentNotFound": "Taký dokument tu nie je.",
+    "channel.notFound": "Taký kanál tu nie je.",
     "hierarchy.self": "Dokument nemôže byť nadradený sám sebe.",
     "hierarchy.cycle": "Takto by bol dokument nadradený sám sebe cez iné dokumenty — vyber iný nadradený.",
     "chunking.unknownProfile": "Profil členenia „{value}“ neexistuje.",
@@ -8570,6 +8577,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keptText: "Ponechané znenie",
       savedPending: "Rozhodnutie je uložené. Znenie do konceptu zapíše správca obsahu — dostal upozornenie.",
       metaSteps: "Kroky",
+      helpdeskRunName: channel => `Návrhy z helpdesku do manuálov — ${channel}`,
+      helpdeskHeading: channel => `Návrhy z helpdesku do manuálov — ${channel}`,
+      helpdeskIntro: questions => `${questions} otázok z helpdesku. Kontrola prejde verejné manuály a navrhne doplnenie tam, kde ľudia hľadajú odpoveď a manuál ju nemá. Nálezy rozhodneš ako pri kontrole súladu a zapíšu sa do konceptu manuálu.`,
+      helpdeskStart: "Navrhnúť doplnenie manuálov",
+      helpdeskSource: "Prax helpdesku",
     },
     tracks: {
       heading: "Trasy",
@@ -11670,6 +11682,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.uploadedFileNotFound": "Nahraný soubor se nenašel. Zkus ho nahrát znovu.",
     "library.draftPdfFailed": "Text je uložen, ale PDF konceptu se nepodařilo vytvořit — zkuste to znovu, než se koncept předloží ke schválení.",
     "library.documentNotFound": "Takový dokument tu není.",
+    "channel.notFound": "Takový kanál tu není.",
     "hierarchy.self": "Dokument nemůže být nadřazený sám sobě.",
     "hierarchy.cycle": "Takto by byl dokument nadřazený sám sobě přes jiné dokumenty — vyber jiný nadřazený.",
     "chunking.unknownProfile": "Profil členění „{value}“ neexistuje.",
@@ -13621,6 +13634,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keptText: "Ponechané znění",
       savedPending: "Rozhodnutí je uloženo. Znění do konceptu zapíše správce obsahu — dostal upozornění.",
       metaSteps: "Kroky",
+      helpdeskRunName: channel => `Návrhy z helpdesku do manuálů — ${channel}`,
+      helpdeskHeading: channel => `Návrhy z helpdesku do manuálů — ${channel}`,
+      helpdeskIntro: questions => `${questions} otázek z helpdesku. Kontrola projde veřejné manuály a navrhne doplnění tam, kde lidé hledají odpověď a manuál ji nemá. Nálezy rozhodneš jako při kontrole souladu a zapíšou se do konceptu manuálu.`,
+      helpdeskStart: "Navrhnout doplnění manuálů",
+      helpdeskSource: "Praxe helpdesku",
     },
     tracks: {
       heading: "Trasy",
@@ -16713,6 +16731,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.uploadedFileNotFound": "The uploaded file was not found. Try uploading it again.",
     "library.draftPdfFailed": "The text is saved, but the draft PDF could not be produced — try again before the draft is submitted for approval.",
     "library.documentNotFound": "There is no such document here.",
+    "channel.notFound": "There is no such channel here.",
     "hierarchy.self": "A document cannot be its own parent.",
     "hierarchy.cycle": "This would make the document its own parent through other documents — choose a different parent.",
     "chunking.unknownProfile": "The chunking profile “{value}” does not exist.",
@@ -18658,6 +18677,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keptText: "Kept wording",
       savedPending: "The decision is saved. A content manager will write the wording into the draft — they have been notified.",
       metaSteps: "Steps",
+      helpdeskRunName: channel => `Helpdesk proposals for manuals — ${channel}`,
+      helpdeskHeading: channel => `Helpdesk proposals for manuals — ${channel}`,
+      helpdeskIntro: questions => `${questions} helpdesk questions. The check goes through the public manuals and proposes additions where people look for an answer the manual does not have. You decide the findings as in a compliance check and they are written into the manual draft.`,
+      helpdeskStart: "Propose manual additions",
+      helpdeskSource: "Helpdesk practice",
     },
     tracks: {
       heading: "Tracks",

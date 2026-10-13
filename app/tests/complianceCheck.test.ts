@@ -252,3 +252,36 @@ describe("úloha a záväznosť druhu (ADR-034)", () => {
     expect(categoryRank("rozhodnutie", extras)).toBeLessThan(categoryRank("manual"))
   })
 })
+
+describe("návrhy z helpdesku do manuálov (ADR-034, D221)", () => {
+  const items = [
+    { id: "p1", topic: "Konto", question: "Ako zmením e-mail?", answer: "Na matrike.", threads: 2152, documentIds: ["m1"] },
+    { id: "p2", topic: "Prestup", question: "Aká je lehota?", answer: "15 dní.", threads: 80, documentIds: ["m2"] },
+    { id: "p3", topic: "Captcha", question: "Chyba kontrolného textu?", answer: "Obnovte stránku.", threads: 12, documentIds: [] },
+  ]
+
+  it("k manuálu otázky, ktoré ho citovali, a otázky bez výkladového zdroja", async () => {
+    const { helpdeskItemsFor } = await import("../src/lib/complianceCheck")
+    expect(helpdeskItemsFor("m1", items, new Set(["m1", "m2"])).map(i => i.id)).toEqual(["p1", "p3"])
+  })
+
+  it("blok otázok číslovaný od 1 s počtom vlákien", async () => {
+    const { helpdeskBlock } = await import("../src/lib/complianceCheck")
+    const b = helpdeskBlock(items.slice(0, 1))
+    expect(b).toContain("Otázka 1 · Konto · 2152 vlákien")
+    expect(b).toContain("Odpoveď helpdesku: Na matrike.")
+  })
+
+  it("citácia doc = 0 je prax helpdesku, nie dokument", async () => {
+    const { parseDocReview, buildPack } = await import("../src/lib/complianceCheck")
+    const pack = buildPack([rapp])
+    let n = 0
+    const r = parseDocReview({ findings: [
+      { kind: "missing", location: "4", quote: "x", citation: { doc: 0, ref: "otázky 1", quote: "Ako zmením e-mail?" }, recommendation: "doplniť", proposed: "x y" },
+      { kind: "missing", location: "4", quote: "x", citation: { doc: 0, ref: "", quote: "" }, recommendation: "", proposed: "" },
+    ], summary: "" }, pack, () => `f${++n}`, { channelKey: "issf", channelName: "ISSF Helpdesk" })
+    expect(r.findings[0].citation).toMatchObject({ documentId: "helpdesk:issf", title: "ISSF Helpdesk", articleRef: "otázky 1" })
+    // bez kanála (bežná kontrola súladu) sa doc = 0 zahodí
+    expect(parseDocReview({ findings: [{ kind: "missing", location: "", quote: "x", citation: { doc: 0, ref: "", quote: "" }, recommendation: "", proposed: "" }], summary: "" }, pack, () => "f").findings).toEqual([])
+  })
+})
