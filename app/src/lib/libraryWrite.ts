@@ -660,6 +660,15 @@ export async function saveDraftMeta(
     ),
     note: "údaje o znení (ADR-013)",
   })
+  // Dátum účinnosti je v päte PDF vyrobeného z `.md` (ADR-031) — bez nového PDF
+  // by na schválenie išla päta so starým dátumom (13. 10. 2026, ISSF-01).
+  // Kolo tu nevznikne neplatné nečakane: počas kola sú údaje zamknuté
+  // (`metaLocked`) a uzavreté kolá (`outcome` vyplnený) `closeStaleRounds` nechá tak.
+  if (day(before?.effectiveFrom) !== day(meta.effectiveFrom)) {
+    await regenerateDraftPdf(companyCode, documentId, actor)
+  }
+  // Údaje sú súčasť identity konceptu — kolo jeho staršej podoby sa uzavrie.
+  await closeStaleRounds(companyCode, documentId, actor)
 }
 
 /**
@@ -747,6 +756,8 @@ export async function saveDraftTitle(
     changes: diff({ draftTitle: before }, { draftTitle: next }),
     note: "nový názov v príprave znenia (ADR-015)",
   })
+  // Názov je v hlavičke PDF z `.md`, keď text nemá vlastný nadpis `# …` (ADR-031).
+  await regenerateDraftPdf(companyCode, documentId, actor)
   await closeStaleRounds(companyCode, documentId, actor)
   return true
 }
