@@ -37,7 +37,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction } from "../../complianceActions"
+import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction, startHelpdeskReviewAction } from "../../complianceActions"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +57,16 @@ function Diff({ before, after }: { before: string; after: string }) {
 
 /** Text citovaného článku na náhľad (voľba 1, Ján 11. 10. 2026) a záväzné PDF. */
 function Norm({ t, f, preview }: { t: T; f: DocumentFinding; preview?: NormPreview | null }) {
+  // Doplnenie len z praxe helpdesku (ADR-034, D221) — nie je dokument, na ktorý by sa dalo odkázať.
+  if (f.citation.documentId.startsWith("helpdesk:")) {
+    return (
+      <div className="cf-blk">
+        <span className="cf-blk-l">{t.helpdeskSource}</span>
+        <p>{f.citation.title}{f.citation.articleRef ? `, ${f.citation.articleRef}` : ""}</p>
+        {f.citation.quote && <blockquote className="quote">{f.citation.quote}</blockquote>}
+      </div>
+    )
+  }
   return <NormCitation citation={f.citation} preview={preview} labels={{ norm: t.norm, opensNewWindow: t.opensNewWindow, showArticle: t.showArticle, articleNote: t.articleNote, openPdf: t.openPdf }} />
 }
 
@@ -194,6 +204,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
     return `${base}${s ? `?${s}` : ""}${anchor ? `#${anchor}` : ""}`
   }
   const subjectIds = run.scope.kind === "documents" ? run.scope.subjectIds : []
+  const helpdesk = run.scope.kind === "documents" ? run.scope.helpdesk ?? null : null
 
   const docRow = (res: DocumentResult) => {
     const open = openCount(res)
@@ -362,7 +373,15 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
           )}
         </div>
         {/* „Spustiť znova" až po dobehnutí — počas behu by zdvojil prácu (Ján 11. 10. 2026). */}
-        {ctx.isReviewer && subjectIds.length > 0 && !isRunning(run) && (
+        {/* Návrhy z helpdesku (ADR-034, D221) sa spúšťajú znova ako návrhy z helpdesku — s aktuálnymi otázkami kanála. */}
+        {ctx.isReviewer && helpdesk && !isRunning(run) && (
+          <form action={startHelpdeskReviewAction} className="page-tools">
+            <input type="hidden" name="channelKey" value={helpdesk.channelKey} />
+            {run.name && <input type="hidden" name="name" value={run.name} />}
+            <SubmitButton className="button button--quiet">{t.runAgain}</SubmitButton>
+          </form>
+        )}
+        {ctx.isReviewer && subjectIds.length > 0 && !helpdesk && !isRunning(run) && (
           <form action={startDocumentReviewAction} className="page-tools">
             {subjectIds.map(id => <input key={id} type="hidden" name="subjectIds" value={id} />)}
             {run.documentIds.map(id => <input key={id} type="hidden" name="documentIds" value={id} />)}
@@ -371,7 +390,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
           </form>
         )}
         {/* Pevné väzby (D197): pri novom znení niektorej normy vznikne požiadavka na kontrolu (D200). */}
-        {ctx.isReviewer && subjectIds.length > 0 && run.pending.length === 0 && (
+        {ctx.isReviewer && subjectIds.length > 0 && !helpdesk && run.pending.length === 0 && (
           <form action={saveLinksAction} className="page-tools">
             <input type="hidden" name="runId" value={run.runId} />
             <SubmitButton className="button button--quiet">{t.saveLinks}</SubmitButton>
