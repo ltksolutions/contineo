@@ -2,7 +2,7 @@
   "codelist": "category",
   "closed": false,
   "hierarchical": false,
-  "description": "Kategória dokumentu (úroveň documents). Rozšíriteľné cez governance. Zápisnica, zmluva a tlačivo pribudli 2026-09-22 so zlúčením Zaradenia do Druhu (O21 krok 2) — bez nich by sa dokumenty s týmto zaradením nemali kam preniesť. FAQ pribudlo 2026-10-06 (ADR-028, D164): prvý druh, ktorý sa nečlení po článkoch, ale po záznamoch (`chunking: \"entries\"`, ADR-027 krok 2). Úloha a záväznosť druhu pribudli 2026-10-13 (ADR-034, D215–D218): `role` — `binding` (záväzný: mení ho len orgán novým znením), `guidance` (výkladový: manuál, návod; mení ho správca obsahu), `record` (záznam: nemení sa, nekontroluje sa); `rank` — poradie záväznosti, menšie číslo je vyššie. Norma sa delí na Stanovy a Poriadok a po migrácii zanikne.",
+  "description": "Kategória dokumentu (úroveň documents). Rozšíriteľné cez governance. Zápisnica, zmluva a tlačivo pribudli 2026-09-22 so zlúčením Zaradenia do Druhu (O21 krok 2) — bez nich by sa dokumenty s týmto zaradením nemali kam preniesť. Úloha a záväznosť druhu pribudli 2026-10-13 (ADR-034, D215–D218): `role` — `binding` (záväzný: mení ho len orgán novým znením), `guidance` (výkladový: manuál, návod; mení ho správca obsahu), `record` (záznam: nemení sa, nekontroluje sa); `rank` — poradie záväznosti, menšie číslo je vyššie. Norma sa delí na Stanovy a Poriadok a po migrácii zanikne. FAQ zaniklo 2026-10-14 (ADR-034, D220).",
   "items": [
     {
       "key": "zakon",
@@ -82,15 +82,6 @@
       "parent": null,
       "sortOrder": 80,
       "role": "record"
-    },
-    {
-      "key": "faq",
-      "label": "FAQ – časté otázky",
-      "parent": null,
-      "sortOrder": 90,
-      "chunking": "entries",
-      "role": "guidance",
-      "rank": 11
     }
   ]
 }

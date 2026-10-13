@@ -39,7 +39,7 @@ import { DOCUMENTS_COLLECTION } from "./documents"
 import { saveDraft } from "./libraryWrite"
 import { draftIsFree } from "./textFix"
 import { writeAudit } from "./audit"
-import { PROPOSALS_COLLECTION, type FaqProposal, type ProposalSource } from "./faqProposals"
+import { questionsFor } from "./helpdeskQuestions"
 import type { TokenCounts } from "./pricing"
 import { articleHash } from "./articleAnchors"
 import { textFingerprint } from "./chunkIdentity"
@@ -56,7 +56,6 @@ export class ComplianceError extends AppError {}
 
 export const COMPLIANCE_RUNS_COLLECTION = "compliance_runs"
 /** Návrhov v jednom volaní modelu. */
-export const REVIEW_BATCH = 4
 /** Strop jedného balíka (znaky, ~120 tisíc tokenov); väčší výber sa rozdelí na viac krokov. */
 export const PACK_MAX_CHARS = 400_000
 /** Strop celého výberu — nad ním by beh trval priveľa krokov. */
@@ -185,7 +184,7 @@ export function buildPack(docs: RawDocument[]): ReferencePack {
   return packs.length === 1 ? packs[0] : { documents: packs.flatMap(p => p.documents), text: packs.map(p => p.text).join("\n\n") }
 }
 
-// ── Návrhy FAQ: pokyn a schéma ──────────────────────────────────────────────
+// ── Spoločné: pravidlá a citácie ────────────────────────────────────────────
 
 const COMMON_RULES = [
   "– Kontroluj **len proti dodaným dokumentom**. Čo v nich nie je, nedomýšľaj.",
@@ -194,20 +193,6 @@ const COMMON_RULES = [
   "– Pri každom zistení uveď citáciu: číslo dokumentu z tohto kroku, článok alebo časť a krátky doslovný úryvok (najviac 200 znakov).",
   "– V textoch používaj úvodzovky „…“, nikdy znak \".",
 ]
-
-export const REVIEW_SYSTEM = [
-  "Si kurátor FAQ športového zväzu. Dostaneš referenčné dokumenty zväzu (normy, poriadky, manuály) a niekoľko návrhov záznamov FAQ (otázka, iné znenia, odpoveď).",
-  "Každý návrh skontroluj a vráť verdikt:",
-  "– „agree“ — odpoveď je s dokumentmi v súlade (drobné štylistické rozdiely nevadia),",
-  "– „differs“ — odpoveď niečo tvrdí inak než dokumenty, niečo podstatné chýba alebo je zastarané; vtedy napíš opravenú otázku a odpoveď,",
-  "– „not_covered“ — dokumenty tému nepokrývajú (odpoveď nemáš ako overiť),",
-  "– „conflict“ — dokumenty si v tejto veci protirečia tak, že poradie záväznosti nerozhodne.",
-  "Pravidlá:",
-  ...COMMON_RULES,
-  "– Opravená odpoveď je priama, vecná, pre člena zväzu (vykanie), bez „podľa helpdesku“ a bez mien a údajov konkrétnych osôb. Ponechaj z pôvodnej odpovede všetko, čo je správne; nič, čo v dokumentoch nie je, nepridávaj.",
-  "– „note“ je pre kurátora: v čom je rozdiel, čo treba rozhodnúť. Pri „agree“ môže byť prázdna.",
-  "Vráť JSON podľa schémy, jeden výsledok ku každému návrhu.",
-].join("\n")
 
 const CITATION_SCHEMA = {
   type: "object",
@@ -220,84 +205,7 @@ const CITATION_SCHEMA = {
   required: ["doc", "ref", "quote"],
 } as const
 
-export const REVIEW_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    results: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          item: { type: "integer", description: "Číslo návrhu." },
-          verdict: { type: "string", enum: ["agree", "differs", "not_covered", "conflict"] },
-          citations: { type: "array", items: CITATION_SCHEMA },
-          question: { type: "string", description: "Pri „differs“ opravená otázka, inak prázdne." },
-          answer: { type: "string", description: "Pri „differs“ opravená odpoveď, inak prázdne." },
-          note: { type: "string" },
-        },
-        required: ["item", "verdict", "citations", "question", "answer", "note"],
-      },
-    },
-  },
-  required: ["results"],
-} as const
-
-export interface ReviewItem { id: string; question: string; variants: string[]; answer: string }
-
 export interface ReviewCitation { documentId: string; title: string; articleRef: string | null; quote: string }
-
-/** Zistenia predošlých krokov k jednej položke — idú do ďalšieho kroku. */
-export interface PriorFindings { verdict: ReviewVerdict; citations: ReviewCitation[]; note: string }
-
-function priorText(prior: PriorFindings | undefined): string {
-  if (!prior || (prior.verdict === "not_covered" && !prior.citations.length)) return ""
-  return [
-    "Doterajšie zistenia z vyšších dokumentov (nemeniť, len doplniť):",
-    `verdikt: ${prior.verdict}`,
-    ...prior.citations.map(c => `– ${c.title}${c.articleRef ? `, ${c.articleRef}` : ""}: „${c.quote}“`),
-    ...(prior.note ? [`poznámka: ${prior.note}`] : []),
-  ].join("\n")
-}
-
-/**
- * Posledný krok kontroly návrhov FAQ (11. 10. 2026): poznámka za celý návrh
- * pre kurátora. Dovtedy sa spájali poznámky všetkých krokov a v poznámke
- * ostali vety typu „Doterajšie zistenie not_covered vychádzalo z vyšších
- * noriem; tento krok…" — o krokoch, nie o návrhu.
- */
-export const FINAL_REVIEW_NOTE = "Toto je posledný krok kontroly. „note“ pri každom návrhu napíš za celý návrh — zhrň aj doterajšie zistenia vyššie, jednou-tromi vetami pre kurátora. Nepíš o krokoch, o tom, ktoré normy v tomto kroku neboli, ani interné označenia verdiktov (agree, differs, not_covered, conflict)."
-
-export function reviewPrompt(items: ReviewItem[], prior?: Map<string, PriorFindings>, last = false): string {
-  const body = items.map((it, i) => [
-    `### Návrh ${i + 1}`,
-    `Otázka: ${it.question}`,
-    ...(it.variants.length ? [`Iné znenia: ${it.variants.join(" | ")}`] : []),
-    "Odpoveď:",
-    it.answer,
-    ...(priorText(prior?.get(it.id)) ? ["", priorText(prior?.get(it.id))] : []),
-  ].join("\n")).join("\n\n")
-  return last ? `${body}\n\n${FINAL_REVIEW_NOTE}` : body
-}
-
-export interface ProposalReview {
-  runId: string
-  at: Date
-  verdict: ReviewVerdict
-  citations: ReviewCitation[]
-  /** Navrhnuté znenie pri „differs“; zdroje sú dokumenty z citácií. */
-  proposed: { question: string; answer: string; sources: ProposalSource[] } | null
-  note: string
-  model: string
-  documents: Pick<PackDocument, "documentId" | "title" | "state" | "label" | "textHash">[]
-  /** Čo s výsledkom urobil kurátor; `null` kým nerozhodol. */
-  decision: "applied" | "dismissed" | null
-  decidedBy?: string | null
-  decidedAt?: Date | null
-}
-
-type StepResult = Omit<ProposalReview, "runId" | "at" | "model" | "documents" | "decision">
 
 function parseCitations(list: unknown, pack: ReferencePack, helpdesk?: { channelKey: string; channelName: string }): ReviewCitation[] {
   return (Array.isArray(list) ? list : []).flatMap(c => {
@@ -310,48 +218,6 @@ function parseCitations(list: unknown, pack: ReferencePack, helpdesk?: { channel
     if (!d) return []
     return [{ documentId: d.documentId, title: d.title, articleRef: String(cc.ref ?? "").trim().slice(0, 120) || null, quote: String(cc.quote ?? "").trim().slice(0, 300) }]
   }).slice(0, 8)
-}
-
-/** Odpoveď modelu jedného kroku → výsledok ku každému návrhu dávky. Chýbajúci výsledok = žiadny. */
-export function parseReview(raw: unknown, items: ReviewItem[], pack: ReferencePack): Map<string, StepResult> {
-  const out = new Map<string, StepResult>()
-  const list = (raw as { results?: unknown })?.results
-  for (const r of Array.isArray(list) ? list : []) {
-    const x = r as Record<string, unknown>
-    const i = Number(x.item) - 1
-    if (!Number.isInteger(i) || i < 0 || i >= items.length) continue
-    const verdict = (["agree", "differs", "not_covered", "conflict"] as string[]).includes(String(x.verdict)) ? (x.verdict as ReviewVerdict) : null
-    if (!verdict) continue
-    const citations = parseCitations(x.citations, pack)
-    const question = String(x.question ?? "").replace(/\s+/g, " ").trim()
-    const answer = String(x.answer ?? "").trim()
-    const proposed = verdict === "differs" && answer
-      ? {
-          question: (question || items[i].question).slice(0, 300),
-          answer: answer.slice(0, 4000),
-          sources: [...new Map(citations.map(c => [`${c.documentId}|${c.articleRef ?? ""}`, { documentId: c.documentId, title: c.title, articleRef: c.articleRef }])).values()],
-        }
-      : null
-    out.set(items[i].id, { verdict, citations, proposed, note: String(x.note ?? "").trim().slice(0, 2000) })
-  }
-  return out
-}
-
-/**
- * Zlúčenie výsledkov krokov jednej položky (kroky od najzáväznejšieho).
- * Rozpor alebo zmena z ktoréhokoľvek kroku prebije „súhlasí“; „nepokrýva“
- * platí, len keď nepokrýva žiadny krok. Navrhnuté znenie je z posledného
- * kroku, ktorý ho zmenil — ten už dostal zistenia predošlých.
- */
-export function mergeSteps(steps: StepResult[]): StepResult | null {
-  if (!steps.length) return null
-  const rank: Record<ReviewVerdict, number> = { conflict: 3, differs: 2, agree: 1, not_covered: 0 }
-  const verdict = steps.reduce<ReviewVerdict>((v, s) => (rank[s.verdict] > rank[v] ? s.verdict : v), "not_covered")
-  const proposed = [...steps].reverse().find(s => s.proposed)?.proposed ?? null
-  const citations = [...new Map(steps.flatMap(s => s.citations).map(c => [`${c.documentId}|${c.articleRef ?? ""}|${c.quote}`, c])).values()].slice(0, 12)
-  // Poznámku za celý návrh píše posledný krok (FINAL_REVIEW_NOTE); spájajú sa len pri jedinom kroku bez nej.
-  const note = ([...steps].reverse().find(s => s.note)?.note ?? "").slice(0, 4000)
-  return { verdict, citations, proposed: verdict === "differs" || verdict === "conflict" ? proposed : null, note }
 }
 
 // ── Dokument proti dokumentom: pokyn a schéma (D196) ────────────────────────
@@ -536,11 +402,6 @@ export function parseDocReview(raw: unknown, pack: ReferencePack, newId: () => s
 
 export type RunScope =
   /*
-   * `topicKeys` — vybrané témy (výber viacerých, 13. 10. 2026); prázdne = všetky.
-   * `topicKey` ostáva kvôli behom uloženým predtým a pri jedinej téme sa plní ďalej.
-   */
-  | { kind: "proposals"; channelKey: string; topicKey: string | null; topicKeys?: string[] }
-  /*
    * `helpdesk` — návrhy na doplnenie výkladových dokumentov z otázok helpdesku
    * (ADR-034, D221). Otázky sú **kópia** v behu: zdroj (návrhy FAQ, neskôr
    * témy ťažby) sa zmaže, a beh má byť aj potom čitateľný.
@@ -580,8 +441,6 @@ export interface ComplianceRun {
   partials?: DocumentPartial[]
   /** Kedy sa ktorý balík naposledy poslal modelu — či je ešte v cache (1 h). */
   warmPacks?: WarmPack[]
-  /** Kontrola návrhov FAQ: rozpracovaná dávka medzi kúskami behu. */
-  proposalBatch?: ProposalBatch | null
   startedAt: Date
   startedBy: string
   /** Osoba, ktorej príde upozornenie po skončení; behy pred 11. 10. 2026 ho nemajú. */
@@ -609,21 +468,12 @@ export interface RunUsage {
   usd: number
 }
 
-export function proposalsScopeKey(channelKey: string): string {
-  return `proposals:${channelKey}`
-}
-
 async function runs() { return getCollection<ComplianceRun>(COMPLIANCE_RUNS_COLLECTION) }
 
 async function loadDocuments(code: string, documentIds: string[]): Promise<RawDocument[]> {
   return (await getCollection(DOCUMENTS_COLLECTION))
     .find({ companyCode: code, documentId: { $in: documentIds } }, { projection: { _id: 0, documentId: 1, title: 1, category: 1, accessLevel: 1, draftMarkdown: 1, versions: 1 } })
     .toArray() as unknown as RawDocument[]
-}
-
-export async function reviewRunFor(companyCode: string, scopeKey: string): Promise<ComplianceRun | null> {
-  const code = requireCompanyCode(companyCode, "reviewRunFor")
-  return (await runs()).findOne({ companyCode: code, scopeKey }, { projection: { _id: 0 } })
 }
 
 /**
@@ -703,49 +553,23 @@ export function isRunning(run: Pick<ComplianceRun, "pending" | "failures"> | nul
 }
 
 /**
- * Nový beh kontroly otvorených návrhov kanála — všetkých alebo vybraných tém
- * (`topicKeys` prázdne = všetky).
- * Návrhy idú do verejného okna pomoci, preto len verejné referencie (D194).
- */
-export async function startProposalReview(
-  companyCode: string, channelKey: string, documentIds: string[], topicKeys: string[], actorEmail: string, now = new Date(),
-): Promise<ComplianceRun> {
-  const code = requireCompanyCode(companyCode, "startProposalReview")
-  // Druhé spustenie by beh prepísalo a rozbehnutá práca by sa zahodila (Ján 11. 10. 2026).
-  if (isRunning(await reviewRunFor(code, proposalsScopeKey(channelKey)))) throw new ComplianceError("compliance.alreadyRunning", "Kontrola už beží — počkajte, kým dobehne.")
-  const { ids, packs } = await prepareReferences(code, documentIds, ["public"])
-  const ai = await aiForCompany(code)
-  if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
-  const open = await (await getCollection<FaqProposal>(PROPOSALS_COLLECTION))
-    .find({ companyCode: code, channelKey, status: "open", ...(topicKeys.length ? { topicKey: { $in: topicKeys } } : {}) }, { projection: { _id: 0, id: 1 } })
-    .sort({ threads: -1, lastMonth: -1, question: 1 }).toArray()
-  if (!open.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otvorené návrhy na kontrolu.")
-  const run = newRun(code, proposalsScopeKey(channelKey), { kind: "proposals", channelKey, topicKey: topicKeys.length === 1 ? topicKeys[0] : null, topicKeys }, ids, packs, open.map(p => p.id), { email: actorEmail }, ai.models.compliance, now)
-  await (await runs()).replaceOne({ companyCode: code, scopeKey: run.scopeKey }, run, { upsert: true })
-  return run
-}
-
-/**
  * Návrhy na doplnenie manuálov z otázok helpdesku kanála (ADR-034, D221).
  *
  * Kontrolované sú všetky verejné výkladové dokumenty organizácie (kanál je
  * verejný), meradlami ich záväzní predkovia z hierarchie (D219). Otázky sú
- * otvorené návrhy kanála — do zrušenia FAQ (D220) jediný zdroj; uložia sa
- * do behu ako kópia.
+ * z ťažby histórie helpdesku (`helpdesk_questions`); do behu sa uložia ako
+ * kópia.
  */
 export async function startHelpdeskReview(companyCode: string, channel: { key: string; name: string }, starter: RunStarter, name = "", now = new Date()): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startHelpdeskReview")
-  const open = await (await getCollection<FaqProposal>(PROPOSALS_COLLECTION))
-    .find({ companyCode: code, channelKey: channel.key, status: "open" }, { projection: { _id: 0, id: 1, topicLabel: 1, question: 1, answer: 1, threads: 1, sources: 1 } })
-    .sort({ threads: -1 }).toArray()
-  if (!open.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otvorené návrhy na kontrolu.")
-  const items: HelpdeskItem[] = open.map(p => ({
-    id: p.id, topic: String(p.topicLabel ?? ""), question: String(p.question ?? ""), answer: String(p.answer ?? "").slice(0, 1500),
-    threads: Number(p.threads ?? 0), documentIds: [...new Set((p.sources ?? []).map(x => x.documentId))],
+  const questions = await questionsFor(code, channel.key)
+  if (!questions.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otázky na kontrolu.")
+  const items: HelpdeskItem[] = questions.map(q => ({
+    id: q.id, topic: q.topicLabel, question: q.question, answer: q.answer.slice(0, 1500), threads: q.threads, documentIds: q.documentIds,
   }))
   const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
   const guidance = (await (await getCollection(DOCUMENTS_COLLECTION))
-    .find({ companyCode: code, accessLevel: "public", category: { $ne: "faq" } }, { projection: { _id: 0, documentId: 1, category: 1 } }).toArray())
+    .find({ companyCode: code, accessLevel: "public" }, { projection: { _id: 0, documentId: 1, category: 1 } }).toArray())
     .filter(d => documentRole(d.category as string | undefined, extras) === "guidance").map(d => String(d.documentId))
   if (!guidance.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
   return startDocumentReview(code, guidance, [], starter, now, name, { channelKey: channel.key, channelName: channel.name, items })
@@ -859,46 +683,6 @@ async function callStep(ctx: CallCtx, system: string, pack: ReferencePack, user:
 }
 
 /** Dávka návrhov cez všetky kroky; výsledok zlúčený (`mergeSteps`). */
-/**
- * Rozpracovaná dávka návrhov FAQ (11. 10. 2026): kúsok behu je **jeden krok**
- * (jeden balík noriem), nie celá dávka — pri Opus 5.5 by štyri návrhy cez tri
- * balíky za sebou prekročili 300 s funkcie a dávka by sa začínala odznova,
- * až kým by sa beh po piatich pokusoch nezastavil. Rovnako ako pri
- * dokumentoch (`DocumentPartial`).
- */
-export interface ProposalBatch {
-  ids: string[]
-  /** Koľko balíkov je už hotových. */
-  step: number
-  /** Znenie, ktoré kontroluje ďalší krok — opravené, ak ho predošlý krok navrhol. */
-  current: ReviewItem[]
-  steps: { id: string; results: StepResult[] }[]
-}
-
-/** Jeden krok dávky návrhov: jeden balík noriem. */
-async function reviewProposalStep(ctx: CallCtx, packs: ReferencePack[], batch: ProposalBatch): Promise<ProposalBatch> {
-  const pack = packs[batch.step]
-  const prior = new Map<string, PriorFindings>()
-  for (const s of batch.steps) {
-    const merged = mergeSteps(s.results)
-    if (merged) prior.set(s.id, { verdict: merged.verdict, citations: merged.citations, note: merged.note })
-  }
-  const raw = await callStep(ctx, REVIEW_SYSTEM, pack, reviewPrompt(batch.current, prior, batch.step === packs.length - 1 && packs.length > 1), REVIEW_SCHEMA, `kontrola FAQ: ${batch.current.length} návrhov`)
-  const r = parseReview(raw, batch.current, pack)
-  const steps = batch.steps.map(s => ({ ...s, results: [...s.results] }))
-  for (const [id, res] of r) {
-    const row = steps.find(s => s.id === id)
-    if (row) row.results.push(res)
-    else steps.push({ id, results: [res] })
-  }
-  // Ďalší krok kontroluje už opravené znenie, ak ho tento krok navrhol.
-  const current = batch.current.map(it => {
-    const p = r.get(it.id)?.proposed
-    return p ? { ...it, question: p.question, answer: p.answer } : it
-  })
-  return { ids: batch.ids, step: batch.step + 1, current, steps }
-}
-
 export interface WarmPack { step: number; at: Date }
 
 /** Cache modelu drží balík hodinu; s rezervou 55 minút od posledného použitia. */
@@ -1040,7 +824,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
     client: new Anthropic({ apiKey: ai.apiKey, maxRetries: 0, timeout: 200_000 }),
     model: ai.models.compliance, keySource: ai.keySource,
     actor: actor ?? { companyCode: code, personId: run.startedById ?? null, personName: "Kontrola súladu (na pozadí)", email: run.startedBy },
-    purpose: run.scope.kind === "documents" ? "compliance-review" : "faq-review",
+    purpose: "compliance-review",
     onUsage: async rec => {
       await col.updateOne(mine, {
         $inc: {
@@ -1052,15 +836,12 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
       })
     },
   }
-  const proposals = await getCollection<FaqProposal>(PROPOSALS_COLLECTION)
   let done = 0
   try {
     const packs = buildPacks(await loadDocuments(code, run.documentIds))
-    const docMeta = packs.flatMap(p => p.documents).map(d => ({ documentId: d.documentId, title: d.title, state: d.state, label: d.label, textHash: d.textHash }))
     let pending = run.pending.slice()
     let partials: DocumentPartial[] = run.partials ?? []
     let warm: WarmPack[] = run.warmPacks ?? []
-    let batch: ProposalBatch | null = run.proposalBatch ?? null
     let longest = 0
     while (pending.length) {
       // Ďalší kúsok len vtedy, keď sa zmestí aj do tvrdej hranice — inak by ho funkcia zabila v polovici.
@@ -1068,39 +849,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
       const chunkStart = Date.now()
       const r0 = await col.updateOne(mine, { $inc: { failures: 1 }, $set: { updatedAt: new Date() } })
       if (!r0.matchedCount) break
-      if (run.scope.kind === "proposals") {
-        if (!batch) {
-          const ids = pending.slice(0, REVIEW_BATCH)
-          const rows = await proposals.find({ companyCode: code, id: { $in: ids }, status: "open" }, { projection: { _id: 0, id: 1, question: 1, variants: 1, answer: 1 } }).toArray()
-          const items: ReviewItem[] = ids.flatMap(id => {
-            const r = rows.find(x => x.id === id)
-            return r ? [{ id: r.id, question: r.question, variants: r.variants, answer: r.answer }] : []
-          })
-          batch = { ids, step: 0, current: items, steps: [] }
-        }
-        if (batch.current.length) batch = await reviewProposalStep(ctx, packs, batch)
-        if (!batch.current.length || batch.step >= packs.length) {
-          const ids = batch.ids
-          const counts: Partial<Record<ReviewVerdict, number>> = {}
-          for (const s of batch.steps) {
-            const r = mergeSteps(s.results)
-            if (!r) continue
-            const review: ProposalReview = { ...r, runId: run.runId, at: new Date(), model: ctx.model, documents: docMeta, decision: r.verdict === "agree" ? "applied" : null }
-            await proposals.updateOne({ companyCode: code, id: s.id, status: "open" }, { $set: { review } })
-            counts[r.verdict] = (counts[r.verdict] ?? 0) + 1
-          }
-          const finished = pending.every(id => ids.includes(id))
-          await col.updateOne(mine, {
-            $pull: { pending: { $in: ids } },
-            $inc: Object.fromEntries(Object.entries(counts).map(([k, v]) => [`counts.${k}`, v])) as Record<string, number>,
-            $set: { proposalBatch: null, failures: 0, error: null, updatedAt: new Date(), ...(finished ? { finishedAt: new Date() } : {}) },
-          })
-          pending = pending.filter(id => !ids.includes(id))
-          batch = null
-        } else {
-          await col.updateOne(mine, { $set: { proposalBatch: batch, failures: 0, error: null, updatedAt: new Date() } })
-        }
-      } else {
+      {
         // Dva dokumenty naraz, po jednom kroku: referenčný balík je v cache.
         const ids = pending.slice(0, DOC_PARALLEL)
         const subjects = await loadDocuments(code, ids)
@@ -1161,28 +910,21 @@ async function announceFinished(code: string, runId: string): Promise<void> {
   )
   if (!run) return
   try {
-    // Pri návrhoch FAQ sú „nálezy" návrhy, ktoré sa od dokumentov odlišujú alebo s nimi kolidujú.
-    const proposalsRun = run.scope.kind === "proposals"
-    const findings = proposalsRun
-      ? (run.counts?.differs ?? 0) + (run.counts?.conflict ?? 0)
-      : (run.results ?? []).reduce((n, r) => n + r.findings.length, 0)
+    const findings = (run.results ?? []).reduce((n, r) => n + r.findings.length, 0)
     const persons = await getCollection<Person>(PERSONS_COLLECTION)
     const person = run.startedById
       ? await persons.findOne({ companyCode: code, id: run.startedById })
       : await persons.findOne({ companyCode: code, email: run.startedBy })
     if (!person) return
-    const channelKey = run.scope.kind === "proposals" ? run.scope.channelKey : null
-    await notify(channelKey
-      ? { companyCode: code, personId: person.id, kind: "faqReviewDone", params: { channelKey, count: findings, total: run.total } }
-      : { companyCode: code, personId: person.id, kind: "complianceDone", params: { runId, count: findings, total: run.total } })
+    await notify({ companyCode: code, personId: person.id, kind: "complianceDone", params: { runId, count: findings, total: run.total } })
     const tenant = await tenantByCompanyCode(code)
     const host = tenant?.hostnames[0]
     if (!tenant || !host || !person.email) return
     await send({
       to: person.email,
       ...complianceDoneEmail(
-        channelKey ? `https://${host}/channels/${encodeURIComponent(channelKey)}/proposals` : `https://${host}/library/compliance/${runId}`,
-        host, { documents: run.total, findings, usd: run.usage?.usd ?? null, proposals: Boolean(channelKey) }, normalizeLanguage(person.language), brandingView(tenant),
+        `https://${host}/library/compliance/${runId}`,
+        host, { documents: run.total, findings, usd: run.usage?.usd ?? null }, normalizeLanguage(person.language), brandingView(tenant),
       ),
     })
   } catch (e) {

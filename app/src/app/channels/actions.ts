@@ -13,8 +13,7 @@ import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
-import { ensureChannelFaq, saveChannel, removeChannel, verifyMailbox, syncChannel, rotateWidgetSecret } from "@/lib/channels"
-import { mineFaqDrafts } from "@/lib/faqMining"
+import { saveChannel, removeChannel, verifyMailbox, syncChannel, rotateWidgetSecret } from "@/lib/channels"
 import { startAnalysis, continueAnalysis } from "@/lib/historyAnalysis"
 import { startHarvest, continueHarvest, addExclusions } from "@/lib/faqHarvest"
 
@@ -70,8 +69,6 @@ export async function saveChannelAction(fd: FormData) {
         : null,
     }, ctx.person.email)
     key = saved.key
-    // FAQ vzniká s kanálom (ADR-028, D201); pri úprave sa doplní, ak chýba.
-    await ensureChannelFaq(ctx.person.companyCode, saved, ctx.person.email)
   } catch (e) {
     if (isRedirect(e)) throw e
     if (isNew) {
@@ -138,24 +135,6 @@ export async function rotateWidgetSecretAction(fd: FormData) {
   }
   // Tajomstvo sa ukáže zo servera pri najbližšom zobrazení (`takeRevealedWidgetSecret`), nie cez adresu.
   back(key, ctx.t.saved)
-}
-
-export async function mineFaqAction(fd: FormData) {
-  const ctx = await ready()
-  const key = fieldText(fd, "key")
-  let message: string
-  try {
-    const r = await mineFaqDrafts(
-      { companyCode: ctx.person.companyCode, personId: ctx.person.id, personName: ctx.person.fullName, email: ctx.person.email },
-      { channelKey: key, documentId: fieldText(fd, "documentId"), limit: Number(fieldText(fd, "limit") || 300), language: ctx.language },
-    )
-    message = ctx.t.miningDone(r.threads, r.proposed, r.saved, r.duplicates)
-  } catch (e) {
-    if (isRedirect(e)) throw e
-    back(key, errorMessage(e, ctx.language), true)
-  }
-  revalidatePath("/library")
-  back(key, message)
 }
 
 /**

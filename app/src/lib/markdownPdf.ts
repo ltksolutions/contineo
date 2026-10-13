@@ -18,7 +18,8 @@ import path from "node:path"
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib"
 import fontkit from "@pdf-lib/fontkit"
 import { FONT_DIR, wrapText, PDF_FONT_OPTIONS } from "./certificatePdf"
-import { FAQ_PDF_DATE } from "./faqPdf"
+/** Pevný čas v metadátach PDF bez dátumu vzniku — ten istý text dá ten istý súbor (odtlačok znenia). */
+const FIXED_PDF_DATE = new Date("2026-01-01T00:00:00Z")
 
 const PAGE = { width: 595.28, height: 841.89 }
 const MARGIN = 56
@@ -154,8 +155,8 @@ export async function renderMarkdownPdf(input: { title: string; markdown: string
   doc.setCreator("Contineo")
   doc.setProducer("Contineo")
   const head = input.letterhead ?? null
-  doc.setCreationDate(head?.creationDate ?? FAQ_PDF_DATE)
-  doc.setModificationDate(head?.creationDate ?? FAQ_PDF_DATE)
+  doc.setCreationDate(head?.creationDate ?? FIXED_PDF_DATE)
+  doc.setModificationDate(head?.creationDate ?? FIXED_PDF_DATE)
 
   const W = PAGE.width - 2 * MARGIN
   // S hlavičkou sa text posúva pod jej pás a končí nad pätou.

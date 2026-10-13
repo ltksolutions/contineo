@@ -21,7 +21,6 @@ import UploadSubmit from "@/components/UploadSubmit"
 import FlowSteps from "@/components/FlowSteps"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions } from "@/lib/codelists"
-import { isFaqCategory } from "@/lib/faq"
 import { allDepartments, flattenTree } from "@/lib/departments"
 import { MAX_INTERNAL_NUMBER } from "@/lib/libraryWrite"
 import { tenantExtras } from "@/lib/codelistsTenant"
@@ -98,7 +97,6 @@ export default async function NewDocumentPage({
         <div className="new-kinds-grid">
           {([
             ["#upload-form", t.kinds.file],
-            ["/library/new/faq", t.kinds.faq],
             ["/library/new/connector", t.kinds.connector],
           ] as const).map(([href, k]) => (
             <Link key={href} href={href} className="card new-kind">
@@ -226,7 +224,7 @@ export default async function NewDocumentPage({
             searchable
             fieldLabel={tl.category}
             // FAQ nie je súbor — má vlastnú cestu (rozcestník vyššie, D179).
-            options={codelistOptions("category", extras).filter(o => !isFaqCategory(o.value))}
+            options={codelistOptions("category", extras)}
           />
           <span className="quiet field-hint">{t.categoryNote}</span>
         </label>

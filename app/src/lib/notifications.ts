@@ -75,8 +75,6 @@ export type NotificationKind =
   | "complianceDone"
   /** Prijaté znenie z kontroly súladu čaká na zápis do konceptu — všetkým správcom obsahu (D199). */
   | "complianceToApply"
-  /** Kontrola návrhov FAQ proti dokumentom dobehla (ADR-032) — tomu, kto ju spustil. */
-  | "faqReviewDone"
   /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (ADR-032, D200). */
   | "complianceRequested"
   /** Kolo schvaľovania sa zrušilo, lebo sa koncept po predložení zmenil — schvaľovateľom, ktorí ešte nerozhodli. */
@@ -91,10 +89,8 @@ export interface NotificationParams {
   count?: number
   /** Beh kontroly súladu (`complianceDone`). */
   runId?: string
-  /** Počet kontrolovaných dokumentov alebo návrhov (`complianceDone`, `faqReviewDone`). */
+  /** Počet kontrolovaných dokumentov (`complianceDone`). */
   total?: number
-  /** Kanál fronty návrhov FAQ (`faqReviewDone`). */
-  channelKey?: string
 }
 
 export interface Notification {
@@ -138,8 +134,6 @@ export function notificationHref(
       return "/dpo#objections"
     case "complianceRequested":
       return "/library/compliance#requests"
-    case "faqReviewDone":
-      return params.channelKey ? `/channels/${encodeURIComponent(params.channelKey)}/proposals` : null
     case "complianceDone":
       return params.runId ? `/library/compliance/${encodeURIComponent(params.runId)}` : "/library/compliance"
     case "complianceToApply":

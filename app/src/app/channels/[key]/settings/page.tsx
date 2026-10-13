@@ -8,7 +8,6 @@
  * nedostanú (`channelView`); nové tajomstvo widgetu sa ukáže raz zo servera.
  */
 
-import { isContentManager } from "@/lib/library"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
@@ -23,9 +22,6 @@ import { widgetFallbackContact, channelAccessLevel, channelByKey, channelView, t
 import { allFolders, flattenTree } from "@/lib/folders"
 import { listPeople } from "@/lib/people"
 import { treeOptions } from "@/lib/treeOptions"
-import { getCollection } from "@/lib/mongodb"
-import { DOCUMENTS_COLLECTION } from "@/lib/documents"
-import { DEFAULT_HISTORY_LIMIT } from "@/lib/faqMining"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary, formatDate } from "@/lib/i18n"
@@ -37,7 +33,7 @@ import CopyLink from "@/components/CopyLink"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import { listConnectors, scopeRef, connectorAllowed } from "@/lib/connectors"
-import { saveChannelAction, removeChannelAction, verifyMailboxAction, syncChannelAction, rotateWidgetSecretAction, mineFaqAction } from "../../actions"
+import { saveChannelAction, removeChannelAction, verifyMailboxAction, syncChannelAction, rotateWidgetSecretAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -60,12 +56,9 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   // Podmenu Tickety len riešiteľovi tohto kanála — správca ich nevidí (D170).
   const canTickets = isWidget && c.tickets && isHelpdeskAgent(ctx.person) && raw.assigneeIds.includes(ctx.person.id)
 
-  const [folders, people, faqDocs, revealed, connectors, preview] = await Promise.all([
+  const [folders, people, revealed, connectors, preview] = await Promise.all([
     allFolders(ctx.tenant.companyCode),
     listPeople(ctx.tenant.companyCode),
-    (await getCollection(DOCUMENTS_COLLECTION))
-      .find({ companyCode: ctx.tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1 } })
-      .sort({ title: 1 }).toArray() as unknown as Promise<{ documentId: string; title?: string }[]>,
     isWidget && c.widget.revealOnce ? takeRevealedWidgetSecret(ctx.tenant.companyCode, c.key) : Promise.resolve(null),
     listConnectors(ctx.tenant.companyCode),
     channelContentPreview(ctx.tenant.companyCode, raw),
@@ -85,7 +78,6 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   const categoryLabel = new Map(codelistOptions("category", tenantExtras(ctx.tenant)).map(o => [o.value, o.label]))
   const folderOptions = treeOptions(flattenTree(folders).map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level })))
   const agentOptions = people.filter(p => p.roles.includes(HELPDESK_ROLE)).map(p => ({ value: p.id, label: `${p.fullName} (${p.email})` }))
-  const faqOptions = faqDocs.map(x => ({ value: x.documentId, label: String(x.title ?? x.documentId) }))
 
   // Kód na vloženie (Ján 8. 10. 2026) — len widget; hostiteľ je doména,
   // na ktorej je nastavenie otvorené, teda doména organizácie.
@@ -110,7 +102,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
         <span className="page-head-spacer" />
         <span className="tag">{t.kinds[c.kind]}</span>
       </div>
-      <ChannelPartTabs channelKey={c.key} current={base} canTickets={canTickets} canSettings canContent={isContentManager(ctx.person)} hasFaq={Boolean(raw.faqDocumentId)} language={language} />
+      <ChannelPartTabs channelKey={c.key} current={base} canTickets={canTickets} canSettings language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.kindHints[c.kind]}</p>
       <Notice message={msg} error={error === "1"} back={base} language={language} />
 
@@ -342,30 +334,6 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
           <div className="set-sec-head"><h2>{t.history}</h2><p>{t.historyIntro}</p></div>
           <div className="set-sec-body">
             <div><Link className="button button--quiet" href={`${channelHref(c.key)}/history`}>{t.historyOpen}</Link></div>
-          </div>
-        </section>
-        )}
-
-        {isWidget && c.mailbox && (
-        <section className="set-sec">
-          <div className="set-sec-head"><h2>{t.mining}</h2><p>{t.miningIntro}</p></div>
-          <div className="set-sec-body">
-            {faqOptions.length === 0 ? (
-              <p className="quiet" style={{ margin: 0 }}>{t.noFaqDocuments}</p>
-            ) : (
-              <form action={mineFaqAction} style={{ display: "grid", gap: 12 }}>
-                <input type="hidden" name="key" value={c.key} />
-                <div className="field">
-                  <span className="field-label">{t.miningDocument}</span>
-                  <Select language={language} name="documentId" fieldLabel={t.miningDocument} options={faqOptions} initial={faqOptions[0].value} />
-                </div>
-                <label className="field">
-                  <span className="field-label">{t.miningLimit}</span>
-                  <input className="field-input" name="limit" type="number" min={10} max={2000} defaultValue={DEFAULT_HISTORY_LIMIT} style={{ maxWidth: 160 }} />
-                </label>
-                <div><SubmitButton className="button button--quiet">{t.miningRun}</SubmitButton></div>
-              </form>
-            )}
           </div>
         </section>
         )}

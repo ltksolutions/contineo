@@ -217,17 +217,9 @@ for (const ch of chunks.filter(c => c.sourceType !== "qa")) {
   z.add(ch.accessLevel ?? "(chýba)")
   byDocumentAccess.set(ch.documentId, z)
 }
-/*
- * Záznam FAQ (ADR-028, D164) je úsek `qa` s `faqVersionId`: patrí vlastnému
- * dokumentu, ktorého úroveň vstupuje do najprísnejšej strany spolu so
- * zdrojmi, a zdroj mať **nemusí** (postup v ISSF nemá článok normy).
- */
-const documentAccess = new Map(documents.map(d => [d.documentId, d.accessLevel ?? "(chýba)"]))
 for (const qa of qaChunks) {
-  const isFaq = Boolean(qa.faqVersionId)
-  const zdroje = qa.derivedFrom ?? (qa.documentId && !isFaq ? [qa.documentId] : [])
+  const zdroje = qa.derivedFrom ?? (qa.documentId ? [qa.documentId] : [])
   const urovne = zdroje.flatMap(d => [...(byDocumentAccess.get(d) ?? ["(chýba)"])])
-  if (isFaq) urovne.push(documentAccess.get(qa.documentId) ?? "(chýba)")
   const maByt = urovne.length && urovne.every(u => u === "public") ? "public" : "internal"
   check(
     qa.accessLevel !== maByt,
@@ -235,7 +227,7 @@ for (const qa of qaChunks) {
     "pár by sa ukázal tam, kde sa ukázať nesmie — alebo naopak nikde; oboje je chyba, prvé je únik",
   )
   check(
-    !zdroje.length && !isFaq,
+    !zdroje.length,
     `overená odpoveď ${qa._id} nemá ani jeden zdrojový dokument`,
     "nedá sa z nej odvodiť prístup ani ju archivovať, keď sa norma zmení",
   )

@@ -12,19 +12,16 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
-import Select from "@/components/Select"
 import FormattedText from "@/components/FormattedText"
 import SubmitButton from "@/components/SubmitButton"
 import { helpdeskContext } from "@/lib/helpdeskAgents"
-import { ticketById, faqPrefillFromTicket } from "@/lib/tickets"
+import { ticketById } from "@/lib/tickets"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { getCollection } from "@/lib/mongodb"
-import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { findPerson } from "@/lib/persons"
-import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, ticketToFaqAction, importThreadAction } from "../actions"
+import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, importThreadAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -45,11 +42,6 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const branding = brandingView(ctx.tenant)
   const base = `/channels/tickets/${encodeURIComponent(id)}`
   const assignee = ticket.assigneeId ? await findPerson(ctx.tenant.companyCode, ticket.assigneeId).catch(() => null) : null
-  const faqDocs = (await (await getCollection(DOCUMENTS_COLLECTION))
-    .find({ companyCode: ctx.tenant.companyCode, category: "faq" }, { projection: { documentId: 1, title: 1 } })
-    .sort({ title: 1 }).toArray() as unknown as { documentId: string; title?: string }[])
-    .map(x => ({ value: x.documentId, label: String(x.title ?? x.documentId) }))
-  const prefill = faqPrefillFromTicket(ticket)
   const draftText = ticket.draft?.text ?? ""
   const who = (m: (typeof ticket.messages)[number]) =>
     m.direction === "out" ? t.fromHelpdesk : t.fromAsker(m.from?.name ?? m.from?.address ?? ticket.asker.name ?? "")
@@ -192,7 +184,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
                   <li key={i}>
                     {/* Živý zdroj (ADR-029) nie je v knižnici — odkaz by viedol na 404. */}
                     {s.documentId && !s.live ? <Link href={`/documents/${encodeURIComponent(s.documentId)}`}>{s.title ?? s.documentId}</Link> : s.title}
-                    {s.articleRef ? ` (${s.articleRef})` : ""}{s.sourceType === "qa" ? " · FAQ" : ""}
+                    {s.articleRef ? ` (${s.articleRef})` : ""}
                     {s.live ? ` · ${s.live.connectorName}${s.live.group ? ` (${s.live.group})` : ""}` : ""}
                   </li>
                 ))}
@@ -200,40 +192,6 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
             </section>
           )}
 
-          {(ticket.sentAnswer || ticket.draft) && (
-            <section className="card detail-block" id="faq">
-              <h2 className="detail-block-title">{t.toFaq}</h2>
-              <p className="detail-block-note" style={{ margin: 0 }}>{t.toFaqIntro}</p>
-              {faqDocs.length === 0 ? (
-                <p className="quiet" style={{ margin: 0 }}>{t.noFaqDocuments}</p>
-              ) : (
-                <form action={ticketToFaqAction} style={{ display: "grid", gap: 10 }}>
-                  <input type="hidden" name="id" value={id} />
-                  <div className="field">
-                    <span className="field-label">{t.toFaqDocument}</span>
-                    <Select language={language} name="documentId" fieldLabel={t.toFaqDocument} options={faqDocs} initial={faqDocs[0].value} />
-                  </div>
-                  <label className="field">
-                    <span className="field-label">{dictionary(language).library.faq.question}</span>
-                    <input className="field-input" name="question" required defaultValue={prefill.question} />
-                  </label>
-                  <label className="field">
-                    <span className="field-label">{dictionary(language).library.faq.variants}</span>
-                    <textarea className="field-input" name="variants" rows={2} />
-                  </label>
-                  <label className="field">
-                    <span className="field-label">{dictionary(language).library.faq.answer}</span>
-                    <textarea className="field-input" name="answer" rows={6} required defaultValue={prefill.answer} />
-                  </label>
-                  <label className="field">
-                    <span className="field-label">{dictionary(language).library.faq.audience}</span>
-                    <input className="field-input" name="audience" defaultValue={ticket.asker.roles.join(", ")} />
-                  </label>
-                  <div><SubmitButton className="button button--quiet">{t.toFaqSubmit}</SubmitButton></div>
-                </form>
-              )}
-            </section>
-          )}
         </aside>
       </div>
     </div>

@@ -8,7 +8,6 @@
  * predtým `KNIZNICA-postup-znenia.md`.
  */
 
-import { channelsOfFaq } from "@/lib/channels"
 import { notFound, redirect } from "next/navigation"
 import { basesOf } from "@/lib/versionResponsibility"
 import { treeOptions } from "@/lib/treeOptions"
@@ -36,7 +35,7 @@ import { allFolders, flattenTree } from "@/lib/folders"
 import { allDepartments, flattenTree as flattenDepartments } from "@/lib/departments"
 import { MAX_INTERNAL_NUMBER } from "@/lib/libraryWrite"
 import { carryOverCandidates, audienceRef, audienceLabel } from "@/lib/assignments"
-import { codelistOptions, chunkingStrategyFor } from "@/lib/codelists"
+import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import MultiSelect from "@/components/MultiSelect"
@@ -132,7 +131,7 @@ export default async function DocumentDetailPage({
   const parentDocs = (d.parentIds ?? []).filter(p => hierTitle.has(p))
   const childDocs = hierDocs.filter(x => x.parentIds.includes(d.documentId)).map(x => x.documentId)
   const below = new Set(descendantsOf(d.documentId, parentsMapOf(hierDocs)))
-  const parentChoices = hierDocs.filter(x => x.documentId !== d.documentId && !below.has(x.documentId) && x.category !== "faq")
+  const parentChoices = hierDocs.filter(x => x.documentId !== d.documentId && !below.has(x.documentId))
     .map(x => ({ value: x.documentId, label: x.title }))
   const draft = (d.draftMarkdown ?? "").trim()
   const date = (v: Date | string | null | undefined) => (v ? formatDate(new Date(v), language) : "")
@@ -855,16 +854,6 @@ export default async function DocumentDetailPage({
     flow.step === 4 ? tflow.subAssign : "",
   ]
   const newVersionHref = `${base}/version`
-  /*
-   * FAQ (ADR-028, D164) nemá čo nahrávať: nové znenie vzniká úpravou záznamov,
-   * ktoré zložia PDF aj text. Hlavné tlačidlo preto vedie do editora
-   * záznamov a je dostupné vždy — aj počas prípravy, lebo úprava konceptu
-   * **je** príprava.
-   */
-  const isFaq = chunkingStrategyFor(d.category) === "entries"
-  // FAQ patrí ku kanálu (ADR-028, D201) — poznámka, ku ktorému.
-  const faqChannels = isFaq ? await channelsOfFaq(ctx.tenant.companyCode, d.documentId) : []
-  const tfaq = dictionary(language).library.faq
 
   /* ── KNIZ-detail-dokumentu (12. 10. 2026): hlavička, Stav, kontrolný zoznam ── */
   const flowOpen = query.open === "draftBasis" || query.open === "draftResponsible" ? query.open : null
@@ -1081,12 +1070,6 @@ export default async function DocumentDetailPage({
               trail={editDocument ? { [base]: d.title } : undefined}>
     <div className="detail-page" style={tenantStyle(branding)}>
       <Notice language={language} message={message} error={error === "1"} back={base} />
-      {editDocument && faqChannels.length > 0 && (
-        <p className="quiet" style={{ margin: "0 0 12px" }}>
-          {dictionary(language).channels.faqBelongsTo(faqChannels.map(ch => ch.name).join(", "))}{" "}
-          {faqChannels.map(ch => <Link key={ch.key} href={`/channels/${encodeURIComponent(ch.key)}/faq`}>{ch.name}</Link>)}
-        </p>
-      )}
 
       {/*
         Úprava dokumentu ako samostatný pohľad (rám KNIZNICA-uprava-dokumentu):
@@ -1312,12 +1295,9 @@ export default async function DocumentDetailPage({
             Hlavná akcia podľa kroku (Q6), posledná ako v `toolbar`. Kým sa
             znenie pripravuje, nové sa začať nedá — namiesto zošedeného
             tlačidla je tichý odkaz na kartu postupu, kde je ďalší krok; plné
-            tlačidlo kroku je tam (R2). FAQ (ADR-028) má editor záznamov,
-            dostupný vždy. Archivovaný predpis nové znenie mať smie (ADR-025).
+            tlačidlo kroku je tam (R2). Archivovaný predpis nové znenie mať smie (ADR-025).
           */}
-          {isFaq ? (
-            <Link className="button doc-primary" href={`${base}/faq`}>{tfaq.editEntries}</Link>
-          ) : flow?.step === 1 ? (
+          {flow?.step === 1 ? (
             <Link className="button button--quiet doc-primary" href="#flow">{tflow.continuePrep}</Link>
           ) : flow?.step === 2 ? (
             <Link className="button button--quiet doc-primary" href="#flow">{tv.statusLink}</Link>
@@ -1365,12 +1345,6 @@ export default async function DocumentDetailPage({
           <h2 className="insp-title" id="doc-stat-title">{tv.stateHeading}</h2>
           <b>{statusLine.title}</b>
           {statusLine.detail && <span>{statusLine.detail}</span>}
-          {faqChannels.length > 0 && (
-            <span>
-              {dictionary(language).channels.faqBelongsTo(faqChannels.map(ch => ch.name).join(", "))}{" "}
-              {faqChannels.map(ch => <Link key={ch.key} href={`/channels/${encodeURIComponent(ch.key)}/faq`}>{ch.name}</Link>)}
-            </span>
-          )}
         </section>
 
         <div className="doc-main">
@@ -1949,9 +1923,7 @@ export default async function DocumentDetailPage({
                 </ul>
               ) : null}
               <div className="insp-foot">
-                {isFaq
-                  ? <Link className="button button--quiet button--sm" href={`${base}/faq`}>{tv.faqEntries}</Link>
-                  : <Link className="button button--quiet button--sm" href={`${base}/text`}>{tv.editor}</Link>}
+                <Link className="button button--quiet button--sm" href={`${base}/text`}>{tv.editor}</Link>
                 <Link className="button button--quiet button--sm" href={`${base}/chunks`}>{tv.chunks}</Link>
               </div>
             </div>

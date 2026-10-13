@@ -140,3 +140,15 @@ znenie manuálu a jeho schválenie. Nová fronta nevzniká.
 3. **Analýza helpdesku → návrhy do manuálov** (D221); 54 otvorených
    návrhov FAQ sa preklopí na návrhy doplnenia manuálov.
 4. **Zrušenie FAQ** (D220) v kóde a zmazanie dát FAQ.
+
+## 5. Stav (14. 10. 2026)
+
+- Kroky 1–3 nasadené (#385, #386, #387). Prvý beh „Návrhy z helpdesku do
+  manuálov" nad 51 otázkami: 44 návrhov do 7 manuálov, 4,66 USD.
+- Krok 4: FAQ odstránené z kódu (druh, FAQ kanála, editor, fronta návrhov,
+  kontrola návrhov, „Pridať do FAQ" pri tickete, ťažba FAQ z posledných
+  e-mailov). Ťažba histórie (ADR-030) ukladá otázky do `helpdesk_questions`
+  — vstup pre návrhy do manuálov. Staré adresy (`/channels/…/proposals`,
+  `/channels/…/faq`, `/library/…/faq`) presmeruje `legacyRoutes.ts`. Dáta
+  zmaže `npm run migrate:remove-faq` (otvorené návrhy sa pred zmazaním
+  preklopia na otázky; kolá schvaľovania a audit ostávajú, D24).

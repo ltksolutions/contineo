@@ -9,7 +9,7 @@ import { describe, it, expect, vi } from "vitest"
 
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 
-import { buildPack, parseReview, reviewPrompt, categoryRank } from "../src/lib/complianceCheck"
+import { buildPack, categoryRank } from "../src/lib/complianceCheck"
 
 const manual = { documentId: "m1", title: "Konto a prihlásenie", category: "manual", draftMarkdown: "# Konto\nPrihlasovacie meno nie je e-mail.", versions: [] }
 const rapp = { documentId: "r1", title: "Registračný a prestupový poriadok SFZ", category: "norma", draftMarkdown: "koncept", versions: [{ versionId: "v1", label: "2026", isActive: true, markdown: "Čl. 15 ods. 11 — dva roky." }] }
@@ -26,33 +26,7 @@ describe("buildPack", () => {
   })
 })
 
-describe("parseReview", () => {
-  const pack = buildPack([manual, rapp])
-  const items = [
-    { id: "p1", question: "Kedy sa môže hráč znova registrovať?", variants: [], answer: "Po šiestich mesiacoch." },
-    { id: "p2", question: "Aké je prihlasovacie meno?", variants: ["login"], answer: "Registračné číslo." },
-  ]
-  it("rozchadza sa: navrhnute znenie a zdroje z citacii; suhlasi: bez navrhu; neznamy dokument sa zahodi", () => {
-    const r = parseReview({ results: [
-      { item: 1, verdict: "differs", citations: [{ doc: 1, ref: "čl. 15 ods. 11", quote: "dva roky" }, { doc: 9, ref: "x", quote: "y" }], question: "", answer: "Po dvoch rokoch v inom klube.", note: "RaPP čl. 15 ods. 11." },
-      { item: 2, verdict: "agree", citations: [{ doc: 2, ref: "časť 4", quote: "nie je e-mail" }], question: "", answer: "", note: "" },
-      { item: 7, verdict: "agree", citations: [], question: "", answer: "", note: "" },
-    ] }, items, pack)
-    expect(r.get("p1")).toMatchObject({
-      verdict: "differs",
-      proposed: { question: "Kedy sa môže hráč znova registrovať?", answer: "Po dvoch rokoch v inom klube.", sources: [{ documentId: "r1", articleRef: "čl. 15 ods. 11" }] },
-    })
-    expect(r.get("p1")!.citations).toHaveLength(1)
-    expect(r.get("p2")).toMatchObject({ verdict: "agree", proposed: null })
-    expect(r.size).toBe(2)
-    expect(parseReview({ results: [{ item: 1, verdict: "zle", citations: [], question: "", answer: "", note: "" }] }, items, pack).size).toBe(0)
-  })
-  it("prompt cisluje navrhy a nesie ine znenia", () => {
-    expect(reviewPrompt(items)).toContain("### Návrh 2\nOtázka: Aké je prihlasovacie meno?\nIné znenia: login")
-  })
-})
-
-import { buildPacks, splitText, mergeSteps, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS, currentWording, suggestOnCurrent, quotesOverlap, runTitle, carryKept, docReviewPrompt } from "../src/lib/complianceCheck"
+import { buildPacks, splitText, referenceAllowed, parseDocReview, replaceQuote, packWarm, markWarm, WARM_MS, currentWording, suggestOnCurrent, quotesOverlap, runTitle, carryKept, docReviewPrompt } from "../src/lib/complianceCheck"
 
 describe("viac krokov a dokument proti dokumentom", () => {
   const big = (id: string, cat: string, n: number) => ({ documentId: id, title: id, category: cat, versions: [{ versionId: "v", isActive: true, markdown: Array.from({ length: n }, (_, i) => `Odsek ${i} ${"x".repeat(90)}`).join("\n\n") }] })
@@ -63,16 +37,6 @@ describe("viac krokov a dokument proti dokumentom", () => {
     expect(packs[0].text).toContain("rapp (časť 1 z")
     expect(packs[packs.length - 1].documents.map(d => d.documentId)).toContain("manual")
     expect(splitText("a\n\nb", 100)).toEqual(["a\n\nb"])
-  })
-  it("zlucenie krokov: zmena prebije suhlas, nepokryva len ked nepokryva ziadny krok, navrh z posledneho meniaceho", () => {
-    const c = (q: string) => ({ documentId: "r", title: "RaPP", articleRef: "čl. 15", quote: q })
-    const m = mergeSteps([
-      { verdict: "differs", citations: [c("dva roky")], proposed: { question: "Q", answer: "A1", sources: [] }, note: "krok 1" },
-      { verdict: "agree", citations: [], proposed: null, note: "" },
-      { verdict: "not_covered", citations: [], proposed: null, note: "" },
-    ])!
-    expect(m).toMatchObject({ verdict: "differs", proposed: { answer: "A1" }, note: "krok 1" })
-    expect(mergeSteps([{ verdict: "not_covered", citations: [], proposed: null, note: "" }, { verdict: "agree", citations: [], proposed: null, note: "" }])!.verdict).toBe("agree")
   })
   it("pristup: verejny obsah len verejnymi, interny akymikolvek", () => {
     expect(referenceAllowed("public", "public")).toBe(true)
@@ -200,12 +164,9 @@ describe("pamäť ponechaných rozhodnutí (11. 10. 2026)", () => {
   })
 })
 
-describe("e-mail po kontrole návrhov FAQ", () => {
-  it("iné vety a tlačidlo ako pri dokumentoch", async () => {
+describe("e-mail po kontrole súladu", () => {
+  it("počty a tlačidlo na nálezy", async () => {
     const { complianceDoneEmail } = await import("../src/lib/ecomail")
-    const m = complianceDoneEmail("https://x/channels/k/proposals", "x", { documents: 54, findings: 12, usd: 8.5, proposals: true }, "sk")
-    expect(m.text).toContain("Kontrola návrhov FAQ, ktorú ste spustili, dobehla: 54 návrhov, 12")
-    expect(m.html).toContain("Otvoriť návrhy FAQ")
     const d = complianceDoneEmail("https://x/library/compliance/r", "x", { documents: 10, findings: 42, usd: 4.59 }, "sk")
     expect(d.html).toContain("Otvoriť nálezy")
   })
@@ -218,16 +179,6 @@ describe("beh, ktorý ešte pracuje", () => {
     expect(isRunning({ pending: [], failures: 0 })).toBe(false)
     expect(isRunning({ pending: ["p1"], failures: 5 })).toBe(false)
     expect(isRunning(null)).toBe(false)
-  })
-})
-
-describe("poznámka kontroly návrhu FAQ za celý návrh", () => {
-  it("platí poznámka posledného kroku, nie zlepené kroky", () => {
-    const m = mergeSteps([
-      { verdict: "not_covered", citations: [], proposed: null, note: "Doterajšie zistenie not_covered…" },
-      { verdict: "differs", citations: [], proposed: { question: "Q", answer: "A", sources: [] }, note: "Odpoveď treba doplniť o matriku SFZ." },
-    ])!
-    expect(m.note).toBe("Odpoveď treba doplniť o matriku SFZ.")
   })
 })
 

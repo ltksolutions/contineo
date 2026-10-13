@@ -36,9 +36,9 @@ import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
 import { channelByKey, mailboxFor, type HelpdeskChannel } from "./channels"
 import { isBounce } from "./mailbox/bounce"
 import { stripQuotedHistory, type MailMessage, type MailHeader } from "./mailbox/types"
-import { scrubPersonalData } from "./faqMining"
+import { scrubPersonalData } from "./personalData"
 import { monthsBack, monthRange, normalizeSubject, MARGIN_DAYS, ANALYSIS_PERIODS, DEFAULT_ANALYSIS_MONTHS, MAX_FAILURES } from "./historyAnalysis"
-import { saveProposals, removeOpenProposals, type NewProposal } from "./faqProposals"
+import { saveQuestions, removeQuestions, type NewHelpdeskQuestion } from "./helpdeskQuestions"
 import { getTenantProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
 import { hybridSearch, type ChunkResult, type SearchOptions } from "./mongoSearch"
@@ -580,7 +580,7 @@ export async function startHarvest(companyCode: string, channelKey: string, mont
   const period = (ANALYSIS_PERIODS as readonly number[]).includes(months) ? months : DEFAULT_ANALYSIS_MONTHS
   const plan = monthsBack(now, period)
   await (await threadsCol()).deleteMany({ companyCode: code, channelKey })
-  await removeOpenProposals(code, channelKey)
+  await removeQuestions(code, channelKey)
   await (await harvests()).replaceOne(
     { companyCode: code, channelKey },
     {
@@ -785,19 +785,17 @@ async function draftTopic(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<vo
       const chunks = await topicChunks(ctx.code, ctx.channel, `${topic.label}. ${topic.description}\n${threads[0].question.slice(0, 600)}`)
       const raw = await callJson(ctx.client, ctx.answerModel, DRAFT_SYSTEM, draftPrompt(topic, threads, chunks, plan.maxEntries), DRAFT_SCHEMA, 16000, usageFor(ctx, ctx.answerModel, topic.label), "medium")
       const entries = parseDraft(raw, chunks.length, plan.maxEntries)
-      const proposals: NewProposal[] = entries.map(e => ({
-        topicKey: key, topicLabel: topic.label,
-        question: e.question, variants: e.variants, answer: e.answer, audience: e.audience,
-        sources: [...new Map(e.sourceIndexes.map(i => chunks[i - 1]).map(c => [`${c.documentId}|${c.articleRef ?? ""}`, { documentId: c.documentId, title: c.title, articleRef: c.articleRef }])).values()],
+      // Otázky pre návrhy do manuálov (ADR-034, D221) — bez pôvodu (vlákien).
+      const questions: NewHelpdeskQuestion[] = entries.map(e => ({
+        topicKey: key, topicLabel: topic.label, question: e.question, answer: e.answer,
         threads: topic.threads, firstMonth: topic.firstMonth, lastMonth: topic.lastMonth,
-        flags: { changedOverTime: e.changedOverTime, normConflict: e.normConflict }, note: e.note,
-        origin: { threadRefs: all.map(t => t.threadRef) }, model: ctx.answerModel,
+        documentIds: [...new Set(e.sourceIndexes.map(i => chunks[i - 1]?.documentId).filter((d): d is string => Boolean(d)))],
       }))
       // Beh mohol byť medzitým nahradený novým — jeho návrhy by boli duplicitné.
       if (!(await (await harvests()).findOne(runFilter(ctx), { projection: { _id: 1 } }))) {
         throw new FaqHarvestError("harvest.superseded", "Ťažbu medzitým niekto spustil znova.")
       }
-      made = await saveProposals(ctx.code, ctx.channel.key, proposals)
+      made = await saveQuestions(ctx.code, ctx.channel.key, questions)
     }
   }
   const last = doc.draftPending.length === 1
@@ -807,7 +805,7 @@ async function draftTopic(ctx: RunCtx, doc: FaqHarvest, key: string): Promise<vo
     { $set: { topics, updatedAt: new Date(), error: null, failures: 0, ...(last ? { stage: "done", finishedAt: new Date() } : {}) }, $pull: { draftPending: key } },
   )
   if (last) {
-    // Pôvod nesú už návrhy; záznamy vlákien nie sú potrebné (minimalizácia).
+    // Otázky pôvod nenesú; záznamy vlákien nie sú potrebné (minimalizácia).
     // Len tohto behu — dobiehajúci starý beh nesmie zmazať vlákna nového.
     // Pár vlákien, ktoré starý beh zapíše po reštarte, zmaže ďalší štart.
     await col.deleteMany(runFilter(ctx))
