@@ -4,6 +4,41 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### FAQ zaniká, analýza helpdesku navrhuje doplnenie manuálov (2026-10-13 – 2026-10-14, ADR-034)
+
+- **Návrhy z helpdesku do manuálov** — na stránke Kontrola súladu karta pre
+  kanál s otázkami z helpdesku; kontrola prejde verejné manuály a navrhne
+  doplnenie (čo a kam), upresnenie, alebo podnet pre legislatívu, keď sa prax
+  rozchádza s normou. Nálezy sa rozhodujú a zapisujú do konceptu manuálu
+  ako pri kontrole súladu.
+- **FAQ je zrušené**: druh FAQ, FAQ kanála, editor, fronta návrhov
+  a „Pridať do FAQ" pri tickete. Asistent kanála odpovedá z dokumentov.
+  Staré odkazy vedú na najbližšie miesto, nie na chybu.
+- Ťažba histórie helpdesku ukladá otázky pre návrhy do manuálov.
+
+### Hierarchia dokumentov (2026-10-13, ADR-034, D219)
+
+- Dokument môže mať **jeden alebo viac nadradených** (Stanovy → poriadky →
+  manuály); nastavuje sa v úprave dokumentu, prehľad je v Knižnici → ⋯ →
+  Hierarchia dokumentov. Cyklus sa uložiť nedá.
+- Kontrola súladu bez vybraných meradiel použije záväzné nadradené
+  dokumenty; nové znenie dokumentu založí požiadavku aj pre podradené.
+
+### Druhy dokumentov: úloha a záväznosť; Stanovy, Poriadok, Zákon (2026-10-13, ADR-034)
+
+- Každý druh je **záväzný** (zákon, stanovy, poriadok, smernica),
+  **výkladový** (manuál, metodický pokyn) alebo **záznam** (zápisnica,
+  zmluva, tlačivo); vlastný druh dostane úlohu pri pridaní.
+- Poradie záväznosti zákon › stanovy › poriadok › smernica › manuál.
+- Druh **Norma** sa rozdelil na **Stanovy** a **Poriadok**; poriadky SFZ sú
+  v priečinku „Poriadky SFZ".
+- Kontrola súladu ponúka za meradlo len záväzné dokumenty.
+
+### Údaje o znení pregenerujú PDF konceptu (2026-10-13, #380)
+
+- Zmena dátumu účinnosti alebo názvu v príprave znenia vyrobí PDF z `.md`
+  nanovo — päta PDF už neukazuje starý dátum.
+
 ### Kontrola súladu: kto a kedy, dlaždica na Prehľade (2026-10-13)
 
 - V zozname kontrol je pri každej kontrole dátum a meno toho, kto ju

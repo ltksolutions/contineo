@@ -10,6 +10,38 @@
 
 ---
 
+## 2026-10-13 – 2026-10-14 — FAQ zaniká, typizácia a hierarchia dokumentov (ADR-034, #385–#388)
+
+**Čo sa zmenilo:** po kontrole FAQ proti novému zneniu ISSF-01 sa Ján opýtal,
+či FAQ vôbec dáva zmysel, keď asistent kanála odpovedá z dokumentov. Nedáva:
+42 z 54 návrhov sa opieralo o manuály a FAQ bola ich druhá kópia, ktorú
+treba po každej novele kontrolovať. Rozhodnutie ADR-034 (D215–D221):
+druh dokumentu nesie úlohu (záväzný / výkladový / záznam) a poradie
+záväznosti (#385); Norma sa delí na Stanovy a Poriadok, pribudol Zákon;
+dokument má hierarchiu s **viacerými** nadradenými (sieť bez cyklov, #386);
+analýza helpdesku navrhuje doplnenie manuálov (#387) a FAQ zaniká celé
+(#388, dáta zmazané migráciou). Pri ISSF-01 vzniklo nové znenie so zmenou
+e-mailu (Môj účet → Zmena emailu, alebo osobne na matrike, odkaz 24 h)
+a s upresnenou lehotou registrácie hráča.
+
+**Ako to šlo:** prvý beh „Návrhy z helpdesku do manuálov" nad 51 otázkami
+dal za 9 minút a 4,66 USD 44 návrhov do 7 manuálov — polovica z praxe
+helpdesku bez opory v norme (napr. „e-mail s heslom chodí len na adresu
+v ISSF", 1 889 vlákien). To je presne to, čo FAQ skrývala: odpoveď bola
+v e-mailoch, nie v manuáli.
+
+**Čo nevyšlo:** pri ISSF-01 sa PDF konceptu vyrobilo skôr, než sa uložil
+nový dátum účinnosti — päta hlásila starý dátum. Opravené ručne a v kóde
+v #380 (údaje o znení pregenerujú PDF). Prvý kandidát na hierarchiu bol
+strom ako pri oddeleniach; Ján chcel viac nadradených, preto sieť — ťahanie
+myšou sa pri nej nerobí (nebolo by jasné, či presúva, alebo pridáva).
+
+**Nabudúce:** súbor s 1 000 riadkami textov FAQ sa dal odstrániť len preto,
+že každý kľúč mal jasného vlastníka — pri novom module držať texty v jednej
+sekcii slovníka, nie roztrúsené po `channels` a `library`.
+
+---
+
 ## 2026-10-12 — Kuriér: interný messenger (ADR-033, #376–#379)
 
 **Čo sa zmenilo:** Ján chcel „posielať formátované správy osobám, nie
