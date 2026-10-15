@@ -177,6 +177,14 @@ export function boundariesFromChunks(blocks: TextBlock[], chunkTexts: string[]):
       if (nb.startsWith(probe) || (nb.length >= 8 && probe.startsWith(nb.slice(0, 60)))) { found = b; break }
       if (nb.includes(probe)) { found = b; approximate = true; break }
     }
+    // Úsek začína uprostred dlhého odseku a jeho zlúčený text siaha cez
+    // hranicu bloku — skúsi sa kratšia vzorka (začiatok vety).
+    if (found < 0 && probe.length > 24) {
+      const short = probe.slice(0, 24)
+      for (let b = Math.max(cursor, 0); b < normBlocks.length; b++) {
+        if (normBlocks[b].includes(short)) { found = Math.max(b, 1); approximate = true; break }
+      }
+    }
     if (found < 0) { approximate = true; continue }
     out.push(found)
     cursor = found

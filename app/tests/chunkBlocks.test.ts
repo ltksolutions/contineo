@@ -100,6 +100,12 @@ describe("boundariesFromChunks", () => {
     ]
     expect(boundariesFromChunks(blocks, stored)).toEqual({ boundaries: [7], approximate: false })
   })
+  it("úsek začínajúci uprostred dlhého odseku so zlúčeným textom cez hranicu bloku sa nájde kratšou vzorkou", () => {
+    const blocks = splitBlocks(manual)
+    // Druhý úsek začína v odseku bloku 3 a pokračuje cez nadpis bloku 4 (zlúčené).
+    const r = boundariesFromChunks(blocks, ["…", "Druhý riadok toho istého odseku. ### 1.1 Prílohy - PDF do 10 MB"])
+    expect(r).toEqual({ boundaries: [3], approximate: true })
+  })
   it("tokeny skupín", () => {
     const blocks = splitBlocks(manual)
     const t = groupTokens(blocks, [7])

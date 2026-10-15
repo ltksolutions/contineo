@@ -21,7 +21,7 @@ import type { ReactNode } from "react"
 import { libraryContext } from "@/lib/library"
 import { OVERSIZE_FACTOR } from "@/lib/chunkingInspect"
 import { cutterState } from "@/lib/chunkCutter"
-import { splitBlocks, groupBlocks, boundaryDiff, groupTokens, headingText, type TextBlock } from "@/lib/chunkBlocks"
+import { groupBlocks, boundaryDiff, groupTokens, headingText, type TextBlock } from "@/lib/chunkBlocks"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Notice from "@/components/Notice"
 import FormattedText from "@/components/FormattedText"
@@ -105,7 +105,7 @@ export default async function ChunksPage({
    * nájsť presne, ukáže sa uložený text, ako je.
    */
   const todayGroups = groupBlocks(state.blocks.length, state.current)
-  const todayFromBlocks = !state.approximate && todayGroups.length === state.todayChunks.length
+  const todayFromBlocks = todayGroups.length === state.todayChunks.length
   const todayView = (
     <article className="cut-doc card" aria-label={c.docLabel}>
       {state.todayChunks.map((ch, i) => {
@@ -128,7 +128,7 @@ export default async function ChunksPage({
             <div className="cut-body">
               {todayFromBlocks
                 ? todayGroups[i].map(b => <BlockView key={b} block={state.blocks[b]} />)
-                : splitBlocks(ch.text).map(b => <BlockView key={b.index} block={b} />)}
+                : <p className="cut-flat">{ch.text}</p>}
             </div>
           </section>
         )
@@ -250,6 +250,10 @@ export default async function ChunksPage({
               <span className="lnote-mark" aria-hidden="true">!</span>
               <span className="lnote-text">{t.outdated(r.stats.count, r.today.count)} {t.reindexHint}</span>
             </div>
+          )}
+
+          {view === "today" && todayFromBlocks && state.approximate && (
+            <p className="quiet cut-approx">{c.approximate}</p>
           )}
 
           {view === "diff" && round && diff && (
