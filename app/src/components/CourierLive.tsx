@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react"
 import FormattedText from "./FormattedText"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import type { LiveEvent } from "@/lib/courierLive"
+import LinkPreviews from "@/components/LinkPreviews"
 import { SEARCH_TIME_ZONE } from "@/lib/versionContext"
 
 /** Meno udalosti, ktorou obálka v hlavičke dostane nový počet. */
@@ -93,7 +94,8 @@ export default function CourierLive({
         return (
           <article key={m.id} className={`thread-msg${mine ? " thread-msg--out" : ""}`}>
             <p className="quiet thread-msg-head"><b>{mine ? t.you : m.author.name}</b> · {when(m.at, language)}</p>
-            <div style={{ lineHeight: 1.6, overflowWrap: "anywhere" }}><FormattedText text={m.text} /></div>
+            <div style={{ lineHeight: 1.6, overflowWrap: "anywhere" }}><FormattedText text={m.text} external /></div>
+            <LinkPreviews previews={m.previews} />
           </article>
         )
       })}

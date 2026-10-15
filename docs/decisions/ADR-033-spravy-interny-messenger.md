@@ -124,6 +124,9 @@ cron s dávkou najviac 100 adresátov na beh a pokračovaním v ďalšom behu.
 
 ### D208 — Formátovanie je ľahký Markdown cez `formatText.ts`; prílohy nahrádzajú karty obsahu
 
+> **Doplnené 16. 10. 2026 (D222):** v Kuriéri sú povolené aj odkazy von
+> (`https://`) s doménou, ↗ a náhľadom uloženým pri odoslaní.
+
 Správa sa píše v ľahkom Markdowne (tučné, nadpisy, odrážky, číslovanie,
 odkazy) a vykresľuje **tou istou cestou ako odpoveď asistenta**
 (`lib/formatText.ts` → `Answer`-ové bloky). Nič sa nikdy nestane HTML
@@ -230,6 +233,34 @@ Obálka, nie bublina rozhovoru: sedí k názvu (kuriér nosí listy), Kuriér je
 v prvom rade oznamy a rozhovor až druhá vrstva, a bublina by bola vizuálne
 blízko ikone „Spýtať sa", ktorá v hlavičke už je. Živé spojenie (D210)
 prekresľuje štítok na obálke; zvonček sa Kuriéra netýka.
+
+### D222 — Odkazy von s náhľadom, len v Kuriéri (dodatok 16. 10. 2026)
+
+Ján 16. 10. 2026: „povolil by som aj externé odkazy s náhľadom, ak majú OG
+a podobne, zíde sa to." Štyri otázky zodpovedal odporúčanými možnosťami.
+Mení D208 v jednom bode — odkaz von, ktorý D208 odkladal na „samostatný
+druh segmentu s viditeľným označením":
+
+1. **Len Kuriér.** Spoločný rozklad `formatText.ts` ostáva s vnútornými
+   odkazmi; ide ním výstup jazykového modelu a ten nesmie vedieť vyrobiť
+   odkaz von. Odkaz von je samostatný krok (`lib/courierLinks.ts`), ktorý
+   zapína len zobrazenie správy (`FormattedText external`).
+2. **Len `https://`**, bez mena a hesla v adrese. V texte sa ukladá ako
+   `[text](https://…)` — ten istý ľahký Markdown, nič sa nestane HTML.
+3. **Označenie:** doména a ↗ pri odkaze, otvára sa v novej karte
+   (`noopener noreferrer nofollow ugc`). Bez potvrdenia pred odchodom.
+4. **Náhľad pri odoslaní, uložený so správou** (`messages.previews[]`,
+   najviac tri na správu): názov, popis, názov webu, doména z Open Graph,
+   Twitter karty alebo `<title>`. Kópia, nie odkaz — náhľad sa spätne nemení
+   a prežije zmazanú stránku. Zlyhanie = správa bez náhľadu, nikdy chyba.
+5. **Obrázok** sa pri odoslaní zmenší (WebP, šírka 480 px, najviac 80 kB)
+   a uloží k správe. Čitateľ cudzí server nevolá — ten sa nedozvie, kto
+   a kedy správu čítal.
+6. **Stráž pred vnútornou sieťou (SSRF)** v `lib/safeFetch.ts`: doména sa
+   preloží raz a spojenie ide na overenú adresu; súkromné, lokálne,
+   rezervované a multicast adresy (IPv4 aj IPv6) sú zakázané; najviac tri
+   presmerovania, každé overené znova; limit 5 s, HTML najviac 512 kB,
+   obrázok najviac 3 MB; žiadne cookies ani prihlásenie.
 
 ## 3. Čo tým vzniká
 
