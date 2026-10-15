@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="sk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>Detail dokumentu — karta postupu s krokom Skontrolovať členenie (telefón)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/styles.css">
+<link rel="stylesheet" href="cut.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--ink)}a:hover{color:var(--accent)}
+.flow-step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:12px 14px;align-items:start}
+.flow-step + .flow-step{border-top:1px solid var(--line)}
+.flow-dot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;border:2px solid var(--line-strong);font-size:12px;font-weight:700}
+.flow-dot.is-done{background:var(--ok-fg);border-color:var(--ok-fg);color:#0b1220}
+.flow-dot.is-now{border-color:var(--accent);color:var(--accent)}
+.flow-title{font-weight:650}
+.flow-sub{font-size:13px;margin-top:2px}
+.flow-act{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</helmet>
+<div class="cut-page" style="--accent:{{accent}}; --accent-soft:#1e2a4a; --on-accent:#ffffff; width: 100%; max-width: 390px; margin: 0 auto; padding: 16px 16px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+
+  <nav aria-label="Cesta" class="quiet" style="font-size: 13px; display: flex; gap: 6px; white-space: nowrap; overflow: hidden">
+    <a href="#">Knižnica</a><span>›</span><strong>Podania na komisie…</strong>
+  </nav>
+
+  <div class="page-head" style="display: flex; flex-direction: column; gap: 6px">
+    <h1 class="page-title" style="margin: 0; font-size: 22px; line-height: 1.25">Podania na komisie a centrálny register zmlúv</h1>
+    <p class="quiet" style="margin: 0; font-size: 13px">Manuál · Manuály k ISSF · koncept nového znenia</p>
+  </div>
+
+  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+    <a class="button button--quiet" href="#" style="min-height: 44px; display: inline-flex; align-items: center">Upraviť dokument</a>
+    <a class="button" href="#" style="min-height: 44px; display: inline-flex; align-items: center">Predložiť na schválenie</a>
+  </div>
+
+  <section class="card" aria-labelledby="flow-h" style="padding: 0; overflow: hidden">
+    <div style="padding: 12px 14px 8px; display: flex; flex-direction: column; gap: 2px">
+      <h2 id="flow-h" style="margin: 0; font-size: 15px">Nové znenie od 1. 11. 2026</h2>
+      <p class="quiet" style="margin: 0; font-size: 13px">Teraz · Pred zverejnením · História</p>
+    </div>
+
+    <div class="flow-step">
+      <span class="flow-dot is-done" aria-hidden="true">✓</span>
+      <div>
+        <div class="flow-title">Text nahratý a prevedený</div>
+        <div class="flow-sub quiet">ISSF-08.docx · 15. 10. 2026 09:12 · bez upozornení prevodu</div>
+      </div>
+    </div>
+
+    <div class="flow-step" aria-current="step">
+      <span class="flow-dot is-now" aria-hidden="true">2</span>
+      <div>
+        <div class="flow-title">Skontrolovať členenie</div>
+        <div class="flow-sub quiet">Návrh AI je hotový: 7 úsekov, bez nálezov. Dnešný rez má 2 úseky, ktoré nesedia (veľký, úlomok).</div>
+        <div class="flow-act">
+          <a class="button button--quiet button--sm" href="Mobil-navrh.dc.html" style="min-height: 44px; display: inline-flex; align-items: center">Otvoriť Členenie</a>
+          <a class="button button--quiet button--sm" href="#" style="min-height: 44px; display: inline-flex; align-items: center">Odložiť</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <span class="flow-dot" aria-hidden="true">3</span>
+      <div>
+        <div class="flow-title">Pred zverejnením</div>
+        <div class="flow-sub quiet">Schválenie · zodpovedná osoba (Ján Letko) · právny základ ✓ · dátum účinnosti 1. 11. 2026</div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <span class="flow-dot" aria-hidden="true">4</span>
+      <div>
+        <div class="flow-title">Zverejnenie a pridelenie</div>
+        <div class="flow-sub quiet">Zverejnenie sa nebráni; členenie je odporúčanie, nie brána.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="st-h" style="padding: 12px 14px; display: grid; gap: 6px">
+    <h2 id="st-h" class="quiet" style="margin: 0; font-size: 13px; font-weight: 650">Stav</h2>
+    <div style="font-weight: 650">Platí od 11. 10. 2026</div>
+    <div class="quiet" style="font-size: 13px">Pripravuje sa nové znenie · zodpovedá Ján Letko</div>
+  </section>
+
+  <section class="card" aria-labelledby="tx-h" style="padding: 12px 14px; display: grid; gap: 8px">
+    <h2 id="tx-h" class="quiet" style="margin: 0; font-size: 13px; font-weight: 650">Text</h2>
+    <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px"><span>Zdroj</span><a href="#">ISSF-08.docx</a></div>
+    <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px"><span>PDF</span><a href="#">ISSF-08.pdf</a></div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; padding-top: 4px">
+      <a class="button button--quiet button--sm" href="#" style="min-height: 44px; display: inline-flex; align-items: center">Editor textu</a>
+      <a class="button button--quiet button--sm" href="Mobil-navrh.dc.html" style="min-height: 44px; display: inline-flex; align-items: center">Členenie</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7aa2ff","options":["#7aa2ff","#5eead4","#fbbf24"]},"$preview":{"width":390,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#7aa2ff' };
+  }
+}
+</script>
+</body>
+</html>

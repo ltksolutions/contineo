@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="sk" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Členenie na úseky — fáza 2: ťahanie hraníc (neskôr)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/styles.css">
+<link rel="stylesheet" href="cut.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--ink)}a:hover{color:var(--accent)}
+</style>
+</helmet>
+<div class="cut-page" style="--accent:{{accent}}; --accent-soft:#e8eefb; --on-accent:#ffffff; max-width: 1180px; margin: 0 auto; padding: 24px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+
+  <div class="lnote lnote--warn" style="display: flex; gap: 10px; align-items: flex-start">
+    <span class="lnote-mark" aria-hidden="true">!</span>
+    <span class="lnote-text"><strong>Neskôr — fáza 2.</strong> Ručný posun hranice myšou. Vyžaduje JavaScript (prípadne Tiptap z editora chatu, keď bude v `main`); základ z fázy 1 funguje aj bez neho. Hranica leží len medzi blokmi textu (odsek, nadpis, položka, riadok tabuľky), nikdy uprostred odseku.</span>
+  </div>
+
+  <div class="page-head" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+    <div class="page-head-main" style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+      <h1 class="page-title" style="margin: 0">Členenie na úseky</h1>
+      <p class="quiet page-lead" style="margin: 0; max-width: 72ch">Pohľad Návrh s úchytmi: hranicu ťaháte za úchyt, nový rez vložíte znakom + na okraji bloku. Každá zmena je nové kolo s poznámkou „ručne“.</p>
+    </div>
+    <span class="page-head-spacer" style="flex: 1 1 auto"></span>
+    <nav class="view-switch" aria-label="Pohľad">
+      <a class="view-switch-item" href="Main.dc.html">Dnes</a>
+      <a class="view-switch-item is-on" href="#" aria-current="page">Návrh</a>
+      <a class="view-switch-item" href="Rozdiel.dc.html">Rozdiel</a>
+    </nav>
+  </div>
+
+  <article class="cut-doc card" aria-label="Text znenia s úchytmi hraníc" style="padding: 0; overflow: hidden">
+
+    <section class="cut-block cut-tone-2" aria-label="Úsek 2">
+      <header class="cut-head"><span class="cut-no">2</span><span class="cut-ref">1 Podania na komisie</span><span class="cut-tokens quiet">310</span></header>
+      <div class="cut-body">
+        <h2>1 Podania na komisie</h2>
+        <p>Podanie na komisiu je úkon, ktorým klub, hráč alebo funkcionár žiada komisiu o rozhodnutie, vyjadrenie alebo o zaradenie bodu do programu. Podanie sa podáva výlučne cez ISSF; e-mail ani listová zásielka sa za podanie nepovažujú.</p>
+        <div class="cut-handle-add-row" style="display: flex; align-items: center; gap: 10px; height: 28px; margin: -4px 0 2px">
+          <span class="cut-handle-add" role="img" aria-label="Sem možno vložiť hranicu">+</span>
+          <span class="quiet" style="font-size: 12px">vložiť hranicu pred 1.1 Nové podanie</span>
+        </div>
+        <h3>1.1 Nové podanie</h3>
+        <p>V ponuke <strong>Podania</strong> zvoľte <strong>Nové podanie</strong>, vyberte komisiu podľa vecnej príslušnosti a druh podania. Do textu uveďte, čoho sa podanie týka, a označte stretnutie alebo osobu, ak sa ich podanie týka.</p>
+      </div>
+    </section>
+
+    <div class="cut-handle" role="separator" aria-label="Hranica medzi úsekmi 2 a 3 — ťahaním posuniete" aria-orientation="horizontal">
+      <span class="cut-handle-line" aria-hidden="true"></span>
+      <span class="cut-handle-grip" aria-hidden="true">⋯</span>
+      <span class="cut-handle-line" aria-hidden="true"></span>
+    </div>
+
+    <section class="cut-block cut-tone-3" aria-label="Úsek 3">
+      <header class="cut-head"><span class="cut-no">3</span><span class="cut-ref">1.2 Prílohy</span><span class="cut-tokens quiet">560</span></header>
+      <div class="cut-body">
+        <h3>1.2 Prílohy</h3>
+        <p>K podaniu možno pripojiť prílohy vo formáte PDF, JPG alebo PNG, najviac 10 MB na súbor. Príloha sa pripája pred odoslaním podania; po odoslaní sa dá doplniť len novým podaním s odkazom na pôvodné.</p>
+        <p>Pri podaní týkajúcom sa stretnutia sa odporúča pripojiť zápis o stretnutí a videozáznam ako odkaz, nie ako súbor. Odkaz musí byť prístupný bez prihlásenia aspoň 30 dní.</p>
+      </div>
+    </section>
+
+    <div class="cut-handle" role="separator" aria-label="Hranica medzi úsekmi 3 a 4 — práve sa ťahá" aria-orientation="horizontal" style="background: var(--accent-soft)">
+      <span class="cut-handle-line" aria-hidden="true"></span>
+      <span class="cut-handle-grip" aria-hidden="true" style="background: var(--accent); color: var(--on-accent)">⋯</span>
+      <span class="cut-handle-line" aria-hidden="true"></span>
+      <span class="quiet" style="font-size: 12px; white-space: nowrap">pustite nad odsekom, kde má úsek 4 začať</span>
+    </div>
+
+    <section class="cut-block cut-tone-4" aria-label="Úsek 4">
+      <header class="cut-head"><span class="cut-no">4</span><span class="cut-ref">1.3 Stav podania</span><span class="cut-tokens quiet">860</span></header>
+      <div class="cut-body">
+        <h3>1.3 Stav podania</h3>
+        <p>Po odoslaní má podanie stav <strong>Prijaté</strong>. Komisia ho zaradí do programu najbližšieho zasadnutia; stav sa zmení na <strong>V riešení</strong>. Po rozhodnutí sa stav zmení na <strong>Rozhodnuté</strong> a rozhodnutie je dostupné v detaile podania aj v úradnej správe.</p>
+        <div class="cut-handle-add-row" style="display: flex; align-items: center; gap: 10px; height: 28px; margin: -4px 0 2px">
+          <span class="cut-handle-add" role="img" aria-label="Sem možno vložiť hranicu">+</span>
+          <span class="quiet" style="font-size: 12px">vložiť hranicu pred 1.4 Poplatky</span>
+        </div>
+        <h3>1.4 Poplatky</h3>
+        <p>Niektoré druhy podania sú spoplatnené podľa sadzobníka. Poplatok sa pripíše na mesačnú zbernú faktúru klubu; pri podaní fyzickej osoby sa uhrádza vopred cez platobnú bránu a podanie sa odošle až po úhrade.</p>
+      </div>
+    </section>
+
+  </article>
+
+  <div class="card" style="padding: 14px 16px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap">
+    <div style="flex: 1 1 320px; min-width: 0">
+      <div style="font-weight: 650">Ručné zmeny: 1 posunutá hranica</div>
+      <div class="quiet" style="font-size: 13px">Uloží sa ako kolo 3 s poznámkou „ručne“; prijatie je to isté tlačidlo ako pri návrhu AI.</div>
+    </div>
+    <button type="button" class="button button--quiet">Zahodiť zmeny</button>
+    <button type="button" class="button">Prijať a preindexovať</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2b5cd6","options":["#2b5cd6","#0f766e","#b45309","#6d28d9"]},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#2b5cd6' };
+  }
+}
+</script>
+</body>
+</html>
