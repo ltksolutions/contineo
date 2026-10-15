@@ -9,6 +9,7 @@
  * tejto adrese ako druhá voľba, nie ako iná stránka.
  */
 
+import RichTextField from "@/components/RichTextField"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
@@ -79,11 +80,14 @@ export default async function NewMessagePage({
             <input className="field-input" name="subject" required maxLength={SUBJECT_MAX} defaultValue={q.subject ?? ""} autoComplete="off" />
           </label>
 
-          <label className="field">
-            <span className="field-label">{t.text}</span>
-            <textarea className="field-input" name="text" required rows={10} maxLength={TEXT_MAX} defaultValue={q.text ?? ""} style={{ resize: "vertical", lineHeight: 1.5 }} />
+          {/* Editor „čo vidíš, to dostaneš" (KURIER-editor, 15. 10. 2026); do poľa
+              `text` píše ten istý Markdown ako doteraz. `<div>`, nie `<label>` —
+              klik do editora by inak presúval fokus na skryté pole. */}
+          <div className="field field--required">
+            <label className="field-label" id="courier-text-label" htmlFor="courier-text">{t.text}</label>
+            <RichTextField id="courier-text" name="text" required rows={10} maxLength={TEXT_MAX} defaultValue={q.text ?? ""} labels={t.editor} />
             <span className="quiet field-hint">{t.textHint}</span>
-          </label>
+          </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <SubmitButton className="button" pendingLabel={d.common.pending.sending}>{t.send}</SubmitButton>

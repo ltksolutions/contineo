@@ -266,6 +266,10 @@ const PATHS: Record<string, React.ReactNode> = {
   edit: <path d="M11.8 3.2l3 3L6.4 14.6l-3.6.6.6-3.6zM10.4 4.6l3 3" />,
   download: <path d="M9 2.8v8.4M5.4 7.8 9 11.4l3.6-3.6M3 14.6h12" />,
   fullscreen: <path d="M2.8 6.4V2.8h3.6M11.6 2.8h3.6v3.6M15.2 11.6v3.6h-3.6M6.4 15.2H2.8v-3.6" />,
+  // Lišta editora správy (KURIER-editor, 15. 10. 2026).
+  link: <path d="M7.6 10.4a3 3 0 0 0 4.2 0l2.4-2.4a3 3 0 0 0-4.2-4.2l-1 1M10.4 7.6a3 3 0 0 0-4.2 0L3.8 10a3 3 0 0 0 4.2 4.2l1-1" />,
+  bullets: <path d="M7 4.5h8M7 9h8M7 13.5h8M3.4 4.5h.2M3.4 9h.2M3.4 13.5h.2" />,
+  numbered: <path d="M7.6 4.5h7.6M7.6 9h7.6M7.6 13.5h7.6M2.8 3.4l1-.6v3.4M2.6 8.2a1 1 0 0 1 1.8.5c0 .9-1.8 1.4-1.8 2.3h1.9" />,
   more: (
     <>
       <circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none" />

@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kuriér: editor správy „čo vidíš, to dostaneš" (2026-10-15)
+
+- Správa, odpoveď aj oznam sa píšu v editore s lištou **Tučné · Nadpis ·
+  Odrážky · Číslovanie · Odkaz** (⌘B, ⌘K) namiesto hviezdičiek a pomlčiek.
+- **Odkaz** hľadá dokument podľa názvu a vloží odkaz naň; odkaz von sa
+  vytvoriť nedá. Text vložený z Wordu alebo webu sa oreže na povolené
+  formátovanie (kurzíva, farby, tabuľky, obrázky a odkazy von odpadnú).
+- Ukladá sa ďalej ten istý ľahký Markdown (D208) — zobrazenie ani staré
+  správy sa nemenia. Bez JavaScriptu ostáva obyčajné pole.
+
 ### FAQ zaniká, analýza helpdesku navrhuje doplnenie manuálov (2026-10-13 – 2026-10-14, ADR-034)
 
 - **Návrhy z helpdesku do manuálov** — na stránke Kontrola súladu karta pre

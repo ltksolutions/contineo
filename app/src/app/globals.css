@@ -1595,6 +1595,46 @@ html { scroll-padding-top: var(--chrome-h); }
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Editor správy Kuriéra (KURIER-editor, 15. 10. 2026) ────────────────
+   Lišta formátovania nad poľom a pole, ktoré vyzerá ako `.field-input`.
+   Tlačidlá 44 px (dotyk), od 1024 px 36 px ako ostatné nástroje. */
+.rte { display: grid; gap: 6px; min-width: 0; }
+.rte-toolbar { display: flex; flex-wrap: wrap; gap: 4px; }
+.rte-btn {
+  display: grid; place-items: center; min-width: 44px; height: 44px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface);
+  color: var(--ink); font: inherit; font-size: 15px; cursor: pointer;
+}
+.rte-btn:hover { background: var(--surface-2); }
+.rte-btn.is-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.rte-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rte-h { font-weight: 700; letter-spacing: -0.02em; }
+@media (min-width: 1024px) { .rte-btn { min-width: 36px; height: 36px; } }
+.rte-editor { padding: 0; cursor: text; overflow-wrap: anywhere; }
+.rte-editor:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rte-content { min-height: inherit; padding: 10px 12px; line-height: 1.5; }
+/* Rámček fokusu nesie celé pole (`.rte-editor:focus-within`), nie vnútorná plocha. */
+.rte-content:focus, .rte-content:focus-visible { outline: none; }
+.rte-content p, .rte-content h2, .rte-content ul, .rte-content ol { margin: 0; }
+.rte-content > :is(p, h2, ul, ol) + :is(p, h2, ul, ol) { margin-top: 0.6em; }
+.rte-content li + li { margin-top: 0.2em; }
+.rte-content h2 { font-size: var(--fs-section); margin-top: 0.4em; }
+.rte-content ul, .rte-content ol { padding-left: 1.4em; }
+.rte-content a { color: var(--accent); text-decoration: underline; }
+.rte-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder); float: left; height: 0; color: var(--muted); pointer-events: none;
+}
+.rte-link { display: grid; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.rte-link-row { display: flex; gap: 8px; align-items: center; }
+.rte-link-row .field-input { flex: 1 1 auto; min-width: 0; }
+.rte-link-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.rte-link-list button {
+  width: 100%; min-height: 44px; padding: 8px 10px; border: 0; border-radius: 7px; background: none;
+  font: inherit; text-align: left; color: var(--ink); cursor: pointer;
+}
+.rte-link-list button:hover, .rte-link-list button:focus-visible { background: var(--surface-2); outline: none; }
+.rte-link-none { margin: 0; padding: 6px 10px; font-size: var(--fs-small); }
+
 .multiselect-list {
   position: absolute;
   top: calc(100% + 4px);

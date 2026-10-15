@@ -11,6 +11,7 @@
  * (D206) — pri ozname ostáva len počet, ten je na zozname.
  */
 
+import RichTextField from "@/components/RichTextField"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
@@ -122,16 +123,19 @@ export default async function ThreadPage({
             prečítaní vlákna, nie v `.page-head` (R2). */}
         <form action={replyAction} className="card" style={{ marginTop: 16, padding: "18px 20px", display: "grid", gap: 12 }}>
           <input type="hidden" name="id" value={id} />
-          <label className="field">
-            <span className="field-label">
+          {/* Editor „čo vidíš, to dostaneš" (KURIER-editor, 15. 10. 2026); do poľa
+              `text` píše ten istý Markdown ako doteraz. `<div>`, nie `<label>` —
+              klik do editora by inak presúval fokus na skryté pole. */}
+          <div className="field field--required">
+            <label className="field-label" id="courier-reply-label" htmlFor="courier-reply">
               {announcement ? (isAuthor ? t.followUp : t.replyPrivately(thread.createdBy.name)) : t.reply}
-            </span>
-            <textarea id="courier-reply" className="field-input" name="text" required rows={5} maxLength={TEXT_MAX} placeholder={t.replyPlaceholder} style={{ resize: "vertical", lineHeight: 1.5 }} />
+            </label>
+            <RichTextField id="courier-reply" name="text" required rows={5} maxLength={TEXT_MAX} placeholder={t.replyPlaceholder} labels={t.editor} />
             {thread.kind === "direct" && <TypingSignal threadId={id} fieldId="courier-reply" />}
             <span className="quiet field-hint">
               {announcement && !isAuthor ? t.replyGoesTo(thread.createdBy.name) : t.textHint}
             </span>
-          </label>
+          </div>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <SubmitButton className="button" pendingLabel={d.common.pending.sending}>{t.send}</SubmitButton>
           </div>

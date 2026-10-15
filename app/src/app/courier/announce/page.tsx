@@ -12,6 +12,7 @@
  * nepoznajú. Rola ako publikum zatiaľ nie je — pridelenia ju nemajú tiež.
  */
 
+import RichTextField from "@/components/RichTextField"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { onboardingContext } from "@/lib/session"
@@ -113,11 +114,14 @@ export default async function AnnouncePage({
                   <span className="field-label">{t.subject}</span>
                   <input className="field-input" name="subject" required maxLength={SUBJECT_MAX} defaultValue={draft?.subject ?? ""} autoComplete="off" />
                 </label>
-                <label className="field">
-                  <span className="field-label">{t.text}</span>
-                  <textarea className="field-input" name="text" required rows={12} maxLength={TEXT_MAX} defaultValue={draft?.text ?? ""} style={{ resize: "vertical", lineHeight: 1.5 }} />
+                {/* Editor „čo vidíš, to dostaneš" (KURIER-editor, 15. 10. 2026); do poľa
+              `text` píše ten istý Markdown ako doteraz. `<div>`, nie `<label>` —
+              klik do editora by inak presúval fokus na skryté pole. */}
+                <div className="field field--required">
+                  <label className="field-label" id="courier-text-label" htmlFor="courier-text">{t.text}</label>
+                  <RichTextField id="courier-text" name="text" required rows={12} maxLength={TEXT_MAX} defaultValue={draft?.text ?? ""} labels={t.editor} />
                   <span className="quiet field-hint">{t.textHint}</span>
-                </label>
+                </div>
               </div>
             </fieldset>
 
