@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, vi } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
-import { splitBlocks } from "../src/lib/chunkBlocks"
+import { splitBlocks, groupTokens } from "../src/lib/chunkBlocks"
 
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") }, redirect: (to: string) => { throw new Error(`redirect ${to}`) } }))
 vi.mock("@/components/AppShell", () => ({
@@ -49,7 +49,11 @@ Matrika zmluvu zverejní.
 | Vloženie | 10 dní |`
 
 const blocks = splitBlocks(text)
-const profile = { key: "zakladny", label: "Základný", values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 300, maxTokens: 800 } }
+// Skutočné veľkosti skupín blokov — stránka kreslí bloky, len keď sedia s uloženými úsekmi.
+const [t1, t2] = groupTokens(blocks, [6])
+// Malý cieľ, aby prvý úsek (t1) bol „veľký" a druhý nie: limit = max × 1,5.
+const max = Math.floor((t1 - 1) / 1.5)
+const profile = { key: "zakladny", label: "Základný", values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 1, maxTokens: max } }
 const base = (over: Record<string, unknown> = {}) => ({
   inspection: {
     documentId: "sfz:issf_08", title: "Podania na komisie",
@@ -61,8 +65,8 @@ const base = (over: Record<string, unknown> = {}) => ({
   // Dnes: dva úseky — druhý veľký.
   current: [6],
   todayChunks: [
-    { chunkIndex: 0, heading: "Podania na komisie", articleRef: "Podania na komisie", text: blocks.slice(0, 6).map(b => b.text).join("\n\n"), tokens: 420, complete: true },
-    { chunkIndex: 1, heading: "2.2 Zverejnenie", articleRef: "2.2 Zverejnenie", text: blocks.slice(6).map(b => b.text).join("\n\n"), tokens: 1420, complete: true },
+    { chunkIndex: 0, heading: "Podania na komisie", articleRef: "Podania na komisie", text: blocks.slice(0, 6).map(b => b.text).join("\n\n"), tokens: t1, complete: true },
+    { chunkIndex: 1, heading: "2.2 Zverejnenie", articleRef: "2.2 Zverejnenie", text: blocks.slice(6).map(b => b.text).join("\n\n"), tokens: t2, complete: true },
   ],
   rounds: [],
   ...over,
@@ -89,10 +93,10 @@ describe("Členenie — rezač blokov", () => {
     cutter.state = base()
     const html = await render("sfz:issf_08")
     expect(html).toContain("[title:Členenie na úseky]")
-    expect(html).toContain('class="cut-block cut-tone-1"')
-    expect(html).toContain('class="cut-block cut-tone-2 is-oversized"')
-    expect(html).toContain("1420 tokenov")
-    expect(html).toContain("nad 1200 — asistent z neho dostane priveľa naraz")
+    expect(t1 > Math.round(max * 1.5) && t2 <= Math.round(max * 1.5)).toBe(true)
+    expect(html).toContain('class="cut-block cut-tone-1 is-oversized"')
+    expect(html).toContain('class="cut-block cut-tone-2"')
+    expect(html).toContain(`nad ${Math.round(max * 1.5)} — asistent z neho dostane priveľa naraz`)
     expect(html).toContain("1 úsek nesedí")
     expect(html).toContain('<pre class="cut-pre">| Úkon | Lehota |')
     expect(html).toContain("<h2>1.2 Prílohy</h2>")
@@ -103,6 +107,19 @@ describe("Členenie — rezač blokov", () => {
     expect(html).not.toContain("view-switch")
     // Pomenovaný profil ostáva v rozbaľovači.
     expect(html).toContain("Zákon (§)")
+  })
+
+  it("Dnes: keď nájdené hranice nesedia s veľkosťou uložených úsekov, ukáže sa uložený text, nie zavádzajúce bloky", async () => {
+    cutter.state = base({
+      current: [1], approximate: true,
+      todayChunks: [
+        { chunkIndex: 0, heading: "", articleRef: null, text: "Zlúčený text prvého úseku.", tokens: 1204 },
+        { chunkIndex: 1, heading: "", articleRef: null, text: "Zlúčený text druhého úseku.", tokens: 1017 },
+      ],
+    })
+    const html = await render("sfz:issf_08")
+    expect(html).toContain('<p class="cut-flat">Zlúčený text prvého úseku.</p>')
+    expect(html).not.toContain("cut-approx")
   })
 
   it("Rozdiel: nová hranica so zdôvodnením, zhodná tichá, súhrn kola a jediné plné Prijať", async () => {
