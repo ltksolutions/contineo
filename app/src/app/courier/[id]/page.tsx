@@ -11,6 +11,7 @@
  * (D206) — pri ozname ostáva len počet, ten je na zozname.
  */
 
+import LinkPreviews from "@/components/LinkPreviews"
 import RichTextField from "@/components/RichTextField"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
@@ -95,8 +96,9 @@ export default async function ThreadPage({
                   <b>{mine ? t.you : m.author.name}</b> · {messageTime(m.at, language)}
                 </p>
                 <div style={{ lineHeight: 1.6, overflowWrap: "anywhere" }}>
-                  <FormattedText text={m.text} />
+                  <FormattedText text={m.text} external />
                 </div>
+                <LinkPreviews previews={m.previews} />
               </article>
             )
           })}

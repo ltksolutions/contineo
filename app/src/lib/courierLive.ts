@@ -20,9 +20,12 @@ import {
   type Thread, type Message,
 } from "./courier"
 
+/** Náhľad odkazu tak, ako ide klientovi (D222). */
+export type PreviewView = { url: string; host: string; title: string; description: string; siteName: string; image: string }
+
 export type LiveEvent =
   | { type: "unread"; count: number }
-  | { type: "message"; id: string; author: { personId: string; name: string }; text: string; at: string }
+  | { type: "message"; id: string; author: { personId: string; name: string }; text: string; at: string; previews?: PreviewView[] }
   | { type: "status"; others: { personId: string; name: string; typing: boolean; lastReadAt: string | null }[] }
 
 /** Stav spojenia — čo už odišlo, aby odišiel len rozdiel. */
@@ -48,7 +51,11 @@ export function othersStatus(thread: Pick<Thread, "participants">, personId: str
 }
 
 export function messageEvent(m: Message): LiveEvent {
-  return { type: "message", id: String(m._id), author: { personId: m.author.personId, name: m.author.name }, text: m.text, at: m.at.toISOString() }
+  return {
+    type: "message", id: String(m._id), author: { personId: m.author.personId, name: m.author.name }, text: m.text, at: m.at.toISOString(),
+    // Náhľady odkazov von (D222) — bez dátumu stiahnutia, ten klient nepotrebuje.
+    ...(m.previews?.length ? { previews: m.previews.map(({ url, host, title, description, siteName, image }) => ({ url, host, title, description, siteName, image })) } : {}),
+  }
 }
 
 /**

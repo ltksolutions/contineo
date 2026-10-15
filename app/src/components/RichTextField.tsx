@@ -28,6 +28,7 @@ import { BulletList, OrderedList, ListItem, ListKeymap } from "@tiptap/extension
 import { Placeholder, UndoRedo } from "@tiptap/extensions"
 import Icon from "@/components/Icon"
 import { markdownToDoc, docToMarkdown, isInternalHref, type RichNode } from "@/lib/richText"
+import { isExternalHref, hostOf } from "@/lib/courierLinks"
 
 export interface RichTextLabels {
   toolbar: string
@@ -39,6 +40,8 @@ export interface RichTextLabels {
   linkSearch: string
   linkNone: string
   linkClose: string
+  /** S `{host}` — funkcia by sa zo servera do klienta nepreniesla. */
+  linkExternal: string
   markdownHint: string
 }
 
@@ -83,9 +86,14 @@ export default function RichTextField({
       Document, Paragraph, Text, Bold, HardBreak, UndoRedo,
       Heading.configure({ levels: [2] }),
       BulletList, OrderedList, ListItem, ListKeymap,
-      // Len vnútorné cesty (rovnako ako `LINK` vo formatText.ts); odkaz von
-      // z vloženého textu sa zahodí a ostane z neho text.
-      Link.configure({ openOnClick: false, autolink: false, linkOnPaste: false, isAllowedUri: url => isInternalHref(url) }),
+      // Vnútorné cesty a od D222 aj `https://` odkazy von (s náhľadom pri
+      // odoslaní). Iné adresy (`http:`, `javascript:` …) sa zahodia a ostane
+      // z nich text. Napísaná alebo vložená `https://` adresa sa stane odkazom.
+      Link.configure({
+        openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: "https",
+        isAllowedUri: url => isInternalHref(url) || isExternalHref(url),
+        shouldAutoLink: url => isExternalHref(url),
+      }),
       Placeholder.configure({ placeholder: placeholder ?? "" }),
     ],
     content: markdownToDoc(defaultValue) as never,
@@ -142,10 +150,13 @@ function LinkPicker({ editor, labels, onClose }: { editor: Editor; labels: RichT
 
   // Pod dvomi znakmi sa nehľadá a starý výsledok sa neukazuje.
   const shown = q.trim().length < 2 ? null : items
+  // Napísaná adresa `https://…` — odkaz von (D222), náhľad sa stiahne pri odoslaní.
+  const typed = q.trim()
+  const outside = isExternalHref(typed) ? { title: hostOf(typed), href: typed } : null
 
   useEffect(() => { input.current?.focus() }, [])
   useEffect(() => {
-    if (q.trim().length < 2) return
+    if (q.trim().length < 2 || /^https?:\/\//i.test(q.trim())) return
     const ctrl = new AbortController()
     const timer = setTimeout(() => {
       fetch(`/api/courier/links?q=${encodeURIComponent(q.trim())}`, { signal: ctrl.signal })
@@ -157,7 +168,7 @@ function LinkPicker({ editor, labels, onClose }: { editor: Editor; labels: RichT
   }, [q])
 
   function insert(f: Found) {
-    if (!isInternalHref(f.href)) return
+    if (!isInternalHref(f.href) && !isExternalHref(f.href)) return
     const { empty } = editor.state.selection
     const chain = editor.chain().focus()
     if (empty) chain.insertContent({ type: "text", text: f.title, marks: [{ type: "link", attrs: { href: f.href } }] }).insertContent(" ").run()
@@ -172,7 +183,12 @@ function LinkPicker({ editor, labels, onClose }: { editor: Editor; labels: RichT
                placeholder={labels.linkSearch} aria-label={labels.linkSearch} />
         <button type="button" className="button button--quiet button--sm" onClick={() => { onClose(); editor.commands.focus() }}>{labels.linkClose}</button>
       </div>
-      {shown && (
+      {outside && (
+        <ul className="rte-link-list">
+          <li><button type="button" onClick={() => insert(outside)}>{labels.linkExternal.replace("{host}", outside.title)}</button></li>
+        </ul>
+      )}
+      {!outside && shown && (
         shown.length === 0
           ? <p className="quiet rte-link-none">{labels.linkNone}</p>
           : <ul className="rte-link-list">

@@ -17,11 +17,13 @@ describe("richText — Markdown správy ↔ editor (D208)", () => {
     expect(toBlocks(round(md))).toEqual(toBlocks(md))
   })
 
-  it("odkaz von editor nezapíše ako odkaz — ostane len text", () => {
-    const doc = { type: "doc", content: [{ type: "paragraph", content: [
-      { type: "text", text: "klik", marks: [{ type: "link", attrs: { href: "https://zly.web" } }] },
-    ] }] }
-    expect(docToMarkdown(doc)).toBe("klik")
+  it("nepovolenú adresu (http, javascript) editor nezapíše ako odkaz — ostane len text; https áno (D222)", () => {
+    const one = (href: string) => docToMarkdown({ type: "doc", content: [{ type: "paragraph", content: [
+      { type: "text", text: "klik", marks: [{ type: "link", attrs: { href } }] },
+    ] }] })
+    expect(one("http://zly.web")).toBe("klik")
+    expect(one("javascript:alert(1)")).toBe("klik")
+    expect(one("https://futbalnet.sk/a")).toBe("[klik](https://futbalnet.sk/a)")
   })
 
   it("tučné s medzerou na okraji drží medzeru mimo hviezdičiek", () => {
