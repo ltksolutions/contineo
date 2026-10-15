@@ -2295,6 +2295,8 @@ interface Dictionary {
     text: string
     /** Čo z Markdownu prejde — jedna veta pod poľom (D208). */
     textHint: string
+    /** Editor správy (KURIER-editor, 15. 10. 2026). `markdownHint` len bez JavaScriptu. */
+    editor: { toolbar: string; bold: string; heading: string; bullets: string; numbered: string; link: string; linkSearch: string; linkNone: string; linkClose: string; markdownHint: string }
     send: string
     reply: string
     replyPlaceholder: string
@@ -7247,7 +7249,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toList: "Osoby",
     subject: "Predmet",
     text: "Správa",
-    textHint: "Tučné **takto**, odrážky „- “, číslovanie „1. “ a odkazy na obsah v Contineo [názov](/library/…). Prílohy sa neposielajú — vložte odkaz.",
+    textHint: "Prílohy sa neposielajú — vložte odkaz na dokument v Contineo (tlačidlo Odkaz alebo ⌘K).",
+    editor: {
+      toolbar: "Formátovanie",
+      bold: "Tučné (⌘B)",
+      heading: "Nadpis",
+      bullets: "Odrážky",
+      numbered: "Číslovanie",
+      link: "Odkaz na dokument (⌘K)",
+      linkSearch: "Hľadať dokument podľa názvu…",
+      linkNone: "Žiadny dokument s takým názvom.",
+      linkClose: "Zavrieť",
+      markdownHint: "Tučné **takto**, odrážky „- “, číslovanie „1. “ a odkazy na obsah v Contineo [názov](/library/…). Prílohy sa neposielajú — vložte odkaz.",
+    },
     send: "Odoslať",
     reply: "Odpovedať",
     replyPlaceholder: "Napíšte odpoveď…",
@@ -12052,7 +12066,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toList: "Osoby",
     subject: "Předmět",
     text: "Zpráva",
-    textHint: "Tučně **takto**, odrážky „- “, číslování „1. “ a odkazy na obsah v Contineu [název](/library/…). Přílohy se neposílají — vložte odkaz.",
+    textHint: "Přílohy se neposílají — vložte odkaz na dokument v Contineu (tlačítko Odkaz nebo ⌘K).",
+    editor: {
+      toolbar: "Formátování",
+      bold: "Tučně (⌘B)",
+      heading: "Nadpis",
+      bullets: "Odrážky",
+      numbered: "Číslování",
+      link: "Odkaz na dokument (⌘K)",
+      linkSearch: "Hledat dokument podle názvu…",
+      linkNone: "Žádný dokument s takovým názvem.",
+      linkClose: "Zavřít",
+      markdownHint: "Tučně **takto**, odrážky „- “, číslování „1. “ a odkazy na obsah v Contineu [název](/library/…). Přílohy se neposílají — vložte odkaz.",
+    },
     send: "Odeslat",
     reply: "Odpovědět",
     replyPlaceholder: "Napište odpověď…",
@@ -16846,7 +16872,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toList: "People",
     subject: "Subject",
     text: "Message",
-    textHint: "Bold **like this**, bullets “- ”, numbering “1. ” and links to content in Contineo [title](/library/…). Attachments are not sent — insert a link.",
+    textHint: "Attachments are not sent — insert a link to a document in Contineo (Link button or ⌘K).",
+    editor: {
+      toolbar: "Formatting",
+      bold: "Bold (⌘B)",
+      heading: "Heading",
+      bullets: "Bullets",
+      numbered: "Numbering",
+      link: "Link to a document (⌘K)",
+      linkSearch: "Search a document by title…",
+      linkNone: "No document with that title.",
+      linkClose: "Close",
+      markdownHint: "Bold **like this**, bullets “- ”, numbering “1. ” and links to content in Contineo [title](/library/…). Attachments are not sent — insert a link.",
+    },
     send: "Send",
     reply: "Reply",
     replyPlaceholder: "Write a reply…",
