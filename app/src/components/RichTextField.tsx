@@ -21,6 +21,9 @@ import Document from "@tiptap/extension-document"
 import Paragraph from "@tiptap/extension-paragraph"
 import Text from "@tiptap/extension-text"
 import Bold from "@tiptap/extension-bold"
+import Italic from "@tiptap/extension-italic"
+import Underline from "@tiptap/extension-underline"
+import Strike from "@tiptap/extension-strike"
 import Heading from "@tiptap/extension-heading"
 import HardBreak from "@tiptap/extension-hard-break"
 import Link from "@tiptap/extension-link"
@@ -33,6 +36,10 @@ import { isExternalHref, hostOf } from "@/lib/courierLinks"
 export interface RichTextLabels {
   toolbar: string
   bold: string
+  italic: string
+  underline: string
+  strike: string
+  emoji: string
   heading: string
   bullets: string
   numbered: string
@@ -68,6 +75,7 @@ export default function RichTextField({
 }) {
   const area = useRef<HTMLTextAreaElement>(null)
   const [linkOpen, setLinkOpen] = useState(false)
+  const [emojiOpen, setEmojiOpen] = useState(false)
 
   /*
    * Markdown do skrytého poľa. Udalosť `input` ho nesie ďalej — počúva ju
@@ -83,7 +91,7 @@ export default function RichTextField({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      Document, Paragraph, Text, Bold, HardBreak, UndoRedo,
+      Document, Paragraph, Text, Bold, Italic, Underline, Strike, HardBreak, UndoRedo,
       Heading.configure({ levels: [2] }),
       BulletList, OrderedList, ListItem, ListKeymap,
       // Vnútorné cesty a od D222 aj `https://` odkazy von (s náhľadom pri
@@ -112,8 +120,15 @@ export default function RichTextField({
   })
 
   const ready = Boolean(editor)
-  const button = (label: string, active: boolean, run: () => void, mark: ReactNode) => (
-    <button type="button" className={`rte-btn${active ? " is-on" : ""}`} aria-pressed={active} title={label} aria-label={label}
+  /*
+   * Formátovanie má na tlačidle **slovo**, nie písmeno (Ján 16. 10. 2026:
+   * „ikona H a B nech je slovom") — a slovo samo ukazuje, ako formátuje.
+   * Skratka je v `title`. Odrážky, číslovanie, odkaz a emotikony ostávajú
+   * ikonami s `aria-label`.
+   */
+  const button = (label: string, active: boolean, run: () => void, mark: ReactNode, shortcut = "", word = false) => (
+    <button type="button" className={`rte-btn${word ? " rte-btn--word" : ""}${active ? " is-on" : ""}`} aria-pressed={active}
+            title={shortcut ? `${label} (${shortcut})` : label} aria-label={word ? undefined : label}
             onMouseDown={e => e.preventDefault()} onClick={run}>
       {mark}
     </button>
@@ -123,14 +138,19 @@ export default function RichTextField({
     <div className={`rte${ready ? " is-ready" : ""}`}>
       {editor && (
         <div className="rte-toolbar" role="toolbar" aria-label={labels.toolbar}>
-          {button(labels.bold, editor.isActive("bold"), () => editor.chain().focus().toggleBold().run(), <b aria-hidden="true">B</b>)}
-          {button(labels.heading, editor.isActive("heading"), () => editor.chain().focus().toggleHeading({ level: 2 }).run(), <span aria-hidden="true" className="rte-h">H</span>)}
+          {button(labels.bold, editor.isActive("bold"), () => editor.chain().focus().toggleBold().run(), <b>{labels.bold}</b>, "⌘B", true)}
+          {button(labels.italic, editor.isActive("italic"), () => editor.chain().focus().toggleItalic().run(), <i>{labels.italic}</i>, "⌘I", true)}
+          {button(labels.underline, editor.isActive("underline"), () => editor.chain().focus().toggleUnderline().run(), <u>{labels.underline}</u>, "⌘U", true)}
+          {button(labels.strike, editor.isActive("strike"), () => editor.chain().focus().toggleStrike().run(), <s>{labels.strike}</s>, "⌘⇧S", true)}
+          {button(labels.heading, editor.isActive("heading"), () => editor.chain().focus().toggleHeading({ level: 2 }).run(), <span className="rte-h">{labels.heading}</span>, "", true)}
           {button(labels.bullets, editor.isActive("bulletList"), () => editor.chain().focus().toggleBulletList().run(), <Icon name="bullets" size={18} />)}
           {button(labels.numbered, editor.isActive("orderedList"), () => editor.chain().focus().toggleOrderedList().run(), <Icon name="numbered" size={18} />)}
-          {button(labels.link, editor.isActive("link") || linkOpen, () => setLinkOpen(o => !o), <Icon name="link" size={18} />)}
+          {button(labels.link, editor.isActive("link") || linkOpen, () => { setEmojiOpen(false); setLinkOpen(o => !o) }, <Icon name="link" size={18} />)}
+          {button(labels.emoji, emojiOpen, () => { setLinkOpen(false); setEmojiOpen(o => !o) }, <span aria-hidden="true" className="rte-emoji-icon">😊</span>)}
         </div>
       )}
       {editor && linkOpen && <LinkPicker editor={editor} labels={labels} onClose={() => setLinkOpen(false)} />}
+      {editor && emojiOpen && <EmojiPicker editor={editor} label={labels.emoji} onClose={() => setEmojiOpen(false)} />}
       {editor && <EditorContent editor={editor} className="rte-editor field-input" style={{ minHeight: `${rows * 1.5 + 1}em` }} />}
       {/* Pole, ktoré odchádza s formulárom. S editorom skryté a bez `required`
           (skrytý povinný prvok prehliadač neodošle ani neoznačí); prázdnu
@@ -138,6 +158,35 @@ export default function RichTextField({
       <textarea ref={area} id={id} className="field-input" name={name} required={required && !ready} rows={rows} maxLength={maxLength}
                 defaultValue={defaultValue} placeholder={placeholder} hidden={ready} style={{ resize: "vertical", lineHeight: 1.5 }} />
       {!ready && <span className="quiet field-hint rte-md-hint">{labels.markdownHint}</span>}
+    </div>
+  )
+}
+
+/*
+ * Emotikony — krátky výber najčastejších, bez knižnice (stovky kB za celý
+ * katalóg sa pre správu kolegovi neoplatia). Ukladajú sa ako obyčajné znaky
+ * Unicode; celý systémový výber ostáva v ponuke systému (⌃⌘Medzera na Macu,
+ * Win+. vo Windows).
+ */
+const EMOJI = [
+  "😀", "😃", "😄", "😁", "😊", "🙂", "😉", "😍", "🥰", "😘", "😎", "🤔",
+  "🙄", "😅", "😂", "🤣", "😢", "😭", "😡", "🤯", "😴", "🤝", "👍", "👎",
+  "👏", "🙌", "🙏", "💪", "👀", "👋", "✌️", "👌", "🎉", "🎂", "🎁", "✅",
+  "❌", "⚠️", "❗", "❓", "💡", "📌", "📅", "⏰", "🔥", "⭐", "❤️", "⚽",
+  "🏆", "🥅", "🟨", "🟥",
+]
+
+function EmojiPicker({ editor, label, onClose }: { editor: Editor; label: string; onClose: () => void }) {
+  return (
+    <div className="rte-emoji" role="group" aria-label={label}
+         onKeyDown={e => { if (e.key === "Escape") { e.preventDefault(); onClose(); editor.commands.focus() } }}>
+      {EMOJI.map(e => (
+        <button key={e} type="button" className="rte-emoji-btn" aria-label={e}
+                onMouseDown={ev => ev.preventDefault()}
+                onClick={() => { editor.chain().focus().insertContent(e).run(); onClose() }}>
+          {e}
+        </button>
+      ))}
     </div>
   )
 }

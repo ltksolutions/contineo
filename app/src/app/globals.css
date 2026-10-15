@@ -1609,6 +1609,18 @@ html { scroll-padding-top: var(--chrome-h); }
 .rte-btn.is-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .rte-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .rte-h { font-weight: 700; letter-spacing: -0.02em; }
+/* Tlačidlo so slovom (Tučné, Kurzíva …) — slovo samo ukazuje formát. */
+.rte-btn--word { padding: 0 12px; font-size: 14px; }
+.rte-emoji-icon { font-size: 18px; line-height: 1; }
+.rte-emoji {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 2px; padding: 6px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+}
+.rte-emoji-btn {
+  display: grid; place-items: center; height: 44px; border: 0; border-radius: 8px; background: none;
+  font-size: 22px; line-height: 1; cursor: pointer;
+}
+.rte-emoji-btn:hover, .rte-emoji-btn:focus-visible { background: var(--surface-2); outline: none; }
 @media (min-width: 1024px) { .rte-btn { min-width: 36px; height: 36px; } }
 .rte-editor { padding: 0; cursor: text; overflow-wrap: anywhere; }
 .rte-editor:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }

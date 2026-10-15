@@ -20,24 +20,34 @@ import { blockAnchors } from "@/lib/articleAnchors"
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { toBlocks, markCitations, CITE_TOKEN, type Segment } from "@/lib/formatText"
-import { splitExternal } from "@/lib/courierLinks"
+import { splitCourierInline, type InlinePart } from "@/lib/courierInline"
+
+/** Úsek s kurzívou, podčiarknutím a prečiarknutím (len Kuriér). */
+function marked(p: InlinePart, key: number) {
+  let node: ReactNode = p.text
+  if (p.marks.includes("italic")) node = <em>{node}</em>
+  if (p.marks.includes("strike")) node = <s>{node}</s>
+  if (p.marks.includes("underline")) node = <u>{node}</u>
+  return <span key={key}>{node}</span>
+}
 
 /**
- * Odkaz von (`[text](https://…)`) — **len pri `external`**, teda v správe
- * Kuriéra (ADR-033, D222). Viditeľne označený doménou a ↗, otvára sa v novej
- * karte bez odovzdania adresy (`noreferrer`). V odpovedi asistenta ani
- * v texte predpisu sa takýto úsek nikdy nevykreslí ako odkaz.
+ * Text správy Kuriéra — **len pri `external`** (ADR-033, D222): odkaz von
+ * (`[text](https://…)`) viditeľne označený doménou a ↗, v novej karte bez
+ * odovzdania adresy (`noreferrer`); a kurzíva `_x_`, prečiarknuté `~~x~~`,
+ * podčiarknuté `++x++`. V odpovedi asistenta ani v texte predpisu sa nič
+ * z toho nevykreslí — tam ostáva obyčajný text.
  */
-function TextWithExternal({ text }: { text: string }) {
+function CourierInline({ text }: { text: string }) {
   return (
     <>
-      {splitExternal(text).map((p, i) => p.druh === "text"
-        ? <span key={i}>{p.text}</span>
-        : (
+      {splitCourierInline(text).map((p, i) => p.href
+        ? (
           <a key={i} className="ext-link" href={p.href} target="_blank" rel="noopener noreferrer nofollow ugc">
             {p.text}<span className="ext-link-host"> {p.host}&nbsp;↗</span>
           </a>
-        ))}
+        )
+        : marked(p, i))}
     </>
   )
 }
@@ -57,10 +67,10 @@ export function Segments({ segments: segments, external = false }: { segments: S
     <>
       {segments.map((u, i) =>
         u.druh === "tucne"
-          ? <strong key={i}>{u.text}</strong>
+          ? <strong key={i}>{external ? <CourierInline text={u.text} /> : u.text}</strong>
           : u.druh === "odkaz"
             ? <Link key={i} href={u.href}>{u.text}</Link>
-            : external ? <TextWithExternal key={i} text={u.text} /> : <span key={i}>{u.text}</span>
+            : external ? <CourierInline key={i} text={u.text} /> : <span key={i}>{u.text}</span>
       )}
     </>
   )

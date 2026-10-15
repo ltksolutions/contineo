@@ -2296,7 +2296,7 @@ interface Dictionary {
     /** Čo z Markdownu prejde — jedna veta pod poľom (D208). */
     textHint: string
     /** Editor správy (KURIER-editor, 15. 10. 2026). `markdownHint` len bez JavaScriptu. */
-    editor: { toolbar: string; bold: string; heading: string; bullets: string; numbered: string; link: string; linkSearch: string; linkNone: string; linkClose: string; linkExternal: string; markdownHint: string }
+    editor: { toolbar: string; bold: string; italic: string; underline: string; strike: string; emoji: string; heading: string; bullets: string; numbered: string; link: string; linkSearch: string; linkNone: string; linkClose: string; linkExternal: string; markdownHint: string }
     send: string
     reply: string
     replyPlaceholder: string
@@ -7314,7 +7314,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     textHint: "Prílohy sa neposielajú — vložte odkaz na dokument v Contineo alebo adresu https://… (tlačidlo Odkaz alebo ⌘K). Pri odkaze von sa pri odoslaní pripojí náhľad.",
     editor: {
       toolbar: "Formátovanie",
-      bold: "Tučné (⌘B)",
+      bold: "Tučné",
+      italic: "Kurzíva",
+      underline: "Podčiarknuté",
+      strike: "Prečiarknuté",
+      emoji: "Emotikony",
       heading: "Nadpis",
       bullets: "Odrážky",
       numbered: "Číslovanie",
@@ -7323,7 +7327,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       linkNone: "Žiadny dokument s takým názvom.",
       linkClose: "Zavrieť",
       linkExternal: "Vložiť odkaz na {host} ↗",
-      markdownHint: "Tučné **takto**, odrážky „- “, číslovanie „1. “ a odkazy na obsah v Contineo [názov](/library/…). Prílohy sa neposielajú — vložte odkaz.",
+      markdownHint: "Tučné **takto**, kurzíva _takto_, podčiarknuté ++takto++, prečiarknuté ~~takto~~, odrážky „- “, číslovanie „1. “ a odkazy na obsah v Contineo [názov](/library/…). Prílohy sa neposielajú — vložte odkaz.",
     },
     send: "Odoslať",
     reply: "Odpovedať",
@@ -12192,7 +12196,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     textHint: "Přílohy se neposílají — vložte odkaz na dokument v Contineu nebo adresu https://… (tlačítko Odkaz nebo ⌘K). U odkazu ven se při odeslání připojí náhled.",
     editor: {
       toolbar: "Formátování",
-      bold: "Tučně (⌘B)",
+      bold: "Tučně",
+      italic: "Kurzíva",
+      underline: "Podtržené",
+      strike: "Přeškrtnuté",
+      emoji: "Emotikony",
       heading: "Nadpis",
       bullets: "Odrážky",
       numbered: "Číslování",
@@ -12201,7 +12209,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       linkNone: "Žádný dokument s takovým názvem.",
       linkClose: "Zavřít",
       linkExternal: "Vložit odkaz na {host} ↗",
-      markdownHint: "Tučně **takto**, odrážky „- “, číslování „1. “ a odkazy na obsah v Contineu [název](/library/…). Přílohy se neposílají — vložte odkaz.",
+      markdownHint: "Tučně **takto**, kurzíva _takto_, podtržené ++takto++, přeškrtnuté ~~takto~~, odrážky „- “, číslování „1. “ a odkazy na obsah v Contineu [název](/library/…). Přílohy se neposílají — vložte odkaz.",
     },
     send: "Odeslat",
     reply: "Odpovědět",
@@ -17059,7 +17067,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     textHint: "Attachments are not sent — insert a link to a document in Contineo or an https://… address (Link button or ⌘K). External links get a preview when sent.",
     editor: {
       toolbar: "Formatting",
-      bold: "Bold (⌘B)",
+      bold: "Bold",
+      italic: "Italic",
+      underline: "Underline",
+      strike: "Strikethrough",
+      emoji: "Emoji",
       heading: "Heading",
       bullets: "Bullets",
       numbered: "Numbering",
@@ -17068,7 +17080,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       linkNone: "No document with that title.",
       linkClose: "Close",
       linkExternal: "Insert a link to {host} ↗",
-      markdownHint: "Bold **like this**, bullets “- ”, numbering “1. ” and links to content in Contineo [title](/library/…). Attachments are not sent — insert a link.",
+      markdownHint: "Bold **like this**, italic _like this_, underline ++like this++, strikethrough ~~like this~~, bullets “- ”, numbering “1. ” and links to content in Contineo [title](/library/…). Attachments are not sent — insert a link.",
     },
     send: "Send",
     reply: "Reply",
