@@ -14,9 +14,9 @@
  * členenia sa prejaví až tým, že model odcituje nesprávny článok.
  *
  * **Názvy sú jeho, nie naše.** Parametre aj výstup sú po slovensky, lebo tak
- * ich má chunker. Zvyšok aplikácie ich nevidí: prekladá sa v
- * `chunkingProfile.ts` (`toChunkerProfile()`), ktorý je jediné miesto, kde sa
- * tieto názvy vyslovujú. Skripty ho importujú cez preberací bod
+ * ich má chunker. Od ADR-035 (16. 10. 2026) sa volá len s predvolenými
+ * hodnotami — pre text bez nadpisov (`chunkCut.ts`) a pre porovnanie znení
+ * podľa článkov (`comparison.ts`); profily členenia zanikli. Skripty ho importujú cez preberací bod
  * `scripts/lib/chunker.mjs`, takže definícia je jedna — obrazovka knižnice
  * a `import.mjs` musia rezať rovnako; dve kópie by sa rozišli presne pri
  * novele, keď na tom najviac záleží.

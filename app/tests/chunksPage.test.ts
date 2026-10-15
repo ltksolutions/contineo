@@ -32,7 +32,7 @@ const text = `# Podania na komisie
 
 ## 1.2 Prílohy
 
-Prílohy vo formáte PDF.
+Prílohy vo formáte PDF. ${"Dlhý opis príloh. ".repeat(400)}
 
 ## 1.3 Stav podania
 
@@ -51,17 +51,15 @@ Matrika zmluvu zverejní.
 const blocks = splitBlocks(text)
 // Skutočné veľkosti skupín blokov — stránka kreslí bloky, len keď sedia s uloženými úsekmi.
 const [t1, t2] = groupTokens(blocks, [6])
-// Malý cieľ, aby prvý úsek (t1) bol „veľký" a druhý nie: limit = max × 1,5.
-const max = Math.floor((t1 - 1) / 1.5)
-const profile = { key: "zakladny", label: "Základný", values: { articleWord: "Článok", annexWord: "PRÍLOHA", headerRepeats: 3, minTokens: 1, maxTokens: max } }
+// Cieľ je pravidlo (ADR-035): limit „veľký" = 900 × 1,5 = 1350 tokenov.
+const limit = 1350
 const base = (over: Record<string, unknown> = {}) => ({
   inspection: {
     documentId: "sfz:issf_08", title: "Podania na komisie",
     version: { versionId: "v1", label: "znenie účinné od 11. 10. 2026" },
-    profile, profiles: [profile, { ...profile, key: "zakon", label: "Zákon (§)" }],
     stored: [], stats: { count: 2 }, warnings: [], today: { count: 2, withArticlePercent: 100, outdated: false },
   },
-  blocks, text, draft: false, manual: false, approximate: false, category: "manual", reviewed: false,
+  blocks, text, draft: false, manual: false, method: "headings", approximate: false, category: "manual", reviewed: false,
   // Dnes: dva úseky — druhý veľký.
   current: [6],
   todayChunks: [
@@ -93,10 +91,11 @@ describe("Členenie — rezač blokov", () => {
     cutter.state = base()
     const html = await render("sfz:issf_08")
     expect(html).toContain("[title:Členenie na úseky]")
-    expect(t1 > Math.round(max * 1.5) && t2 <= Math.round(max * 1.5)).toBe(true)
+    expect(t1 > limit && t2 <= limit).toBe(true)
     expect(html).toContain('class="cut-block cut-tone-1 is-oversized"')
     expect(html).toContain('class="cut-block cut-tone-2"')
-    expect(html).toContain(`nad ${Math.round(max * 1.5)} — asistent z neho dostane priveľa naraz`)
+    expect(html).toContain("nad 1350 — asistent z neho dostane priveľa naraz")
+    expect(html).toContain("podľa nadpisov")
     expect(html).toContain("1 úsek nesedí")
     expect(html).toContain('<pre class="cut-pre">| Úkon | Lehota |')
     expect(html).toContain("<h2>1.2 Prílohy</h2>")
@@ -105,8 +104,8 @@ describe("Členenie — rezač blokov", () => {
     expect(html).toContain("Návrh rezov od AI")
     expect(html).not.toContain("Prijať a preindexovať")
     expect(html).not.toContain("view-switch")
-    // Pomenovaný profil ostáva v rozbaľovači.
-    expect(html).toContain("Zákon (§)")
+    // Profily zanikli (ADR-035).
+    expect(html).not.toContain("profileKey")
   })
 
   it("Dnes: keď nájdené hranice nesedia s veľkosťou uložených úsekov, ukáže sa uložený text, nie zavádzajúce bloky", async () => {
@@ -133,7 +132,8 @@ describe("Členenie — rezač blokov", () => {
     expect(html).toContain("Rozdelil som prvý úsek pred 1.3.")
     expect(html).toContain("Tabuľka nemá nadpis stĺpca Kto.")
     expect(html).toContain('class="view-switch-item is-on" aria-current="page" href="/library/sfz%3Aissf_08/chunks?view=diff&amp;round=2"')
-    expect(html).toContain("bez nálezov")
+    // Dlhý opis príloh ostáva v prvom úseku návrhu — veľký.
+    expect(html).toContain("1 úsek nesedí")
     expect(html).toContain('name="round" value="2"')
     expect(html).toContain("Prijať návrh (kolo 2) a preindexovať")
     // Kolá: aktuálne zobrazené, staršie s odkazom; automatické kolo pomenované.

@@ -29,10 +29,8 @@ import { formatAddress, normalizePostalCode } from "./address"
 const ADDRESS_PART_KEYS = ["street", "streetNumber", "postalCode", "city"] as const
 import { encrypt, encryptionAvailable } from "./secrets"
 import type { OAuthProviderName } from "./oauth"
-import { DEFAULT_CHUNKING, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
 import { retentionSettings, type RetentionSettings } from "./retention"
 import { AppError } from "./appError"
-import { KEY_PATTERN } from "./codelists"
 
 /**
  * `Tenant` plus polia, ktoré nesie len správa: kto zmenu spravil a kedy boli
@@ -117,9 +115,6 @@ export interface TenantChange {
   contactWeb?: string
   contactEmail?: string
   contactPhone?: string
-  chunking?: Partial<ChunkingProfile>
-  /** Pomenované profily členenia (D79). */
-  chunkingProfiles?: ChunkingProfileDef[]
   /** Modul Vzdelávanie (ADR-018). `undefined` = nemeniť. */
   learning?: boolean
   /** Po koľkých dňoch je nepotvrdené „meškajúce" (3. 10. 2026). */
@@ -336,28 +331,6 @@ function toSet(change: TenantChange): Record<string, unknown> {
     // Ochrana osobných údajov uviedla cudzí úrad.
     set["controller.country"] = change.controllerCountry === "CZ" ? "CZ" : "SK"
   }
-  if (change.chunking !== undefined) {
-    // Pole sa volá `chunking`, nie `chunkovanie`: po migrácii na anglické
-    // názvy sa zapisovalo do starého poľa, ktoré už nikto nečítal, takže
-    // uloženie profilu nemalo žiadny účinok.
-    set.chunking = clampChunking(change.chunking)
-  }
-  if (change.chunkingProfiles !== undefined) {
-    // Prepisuje sa celý zoznam. Kľúč je identita — normalizuje sa, ale
-    // nedopĺňa: profil bez kľúča by dokumenty nenašli a zoznam by potichu
-    // stratil ich členenie.
-    set.chunkingProfiles = change.chunkingProfiles.map(p => {
-      const key = String(p.key ?? "").trim().toLowerCase()
-      if (!KEY_PATTERN.test(key)) {
-        throw new TenantValidationError(
-          "tenant.profileKeyShape",
-          `Kľúč profilu členenia „${key}" nemá správny tvar.`,
-          { key },
-        )
-      }
-      return { key, label: String(p.label ?? "").trim() || key, ...clampChunking(p) }
-    })
-  }
   // Bodková cesta, aby zapnutie jedného modulu nezmazalo ostatné.
   if (change.learning !== undefined) set["modules.learning"] = change.learning
   if (change.overdueDays !== undefined) {
@@ -368,26 +341,6 @@ function toSet(change: TenantChange): Record<string, unknown> {
     set["acknowledgement.overdueDays"] = Math.floor(n)
   }
   return set
-}
-
-/**
- * Udrží čísla profilu v rozumnom rozsahu.
- *
- * **Tu, nie v chunkeri.** Chunker hodnotu dostane a poslúchne ju, aj keby bola
- * nezmyselná. Úsek na 20 tokenov znamená tisíce úryvkov bez významu, na 5000
- * zas jeden úsek na celý dokument — v oboch prípadoch vyhľadávanie prestane
- * fungovať a nikto to nespojí s číslom v nastavení.
- */
-export function clampChunking(c: Partial<ChunkingProfile>): ChunkingProfile {
-  const between = (v: number | undefined, min: number, max: number, previous: number) =>
-    v === undefined || Number.isNaN(v) ? previous : Math.min(Math.max(Math.round(v), min), max)
-  return {
-    articleWord: (c.articleWord ?? DEFAULT_CHUNKING.articleWord).trim() || DEFAULT_CHUNKING.articleWord,
-    annexWord: (c.annexWord ?? DEFAULT_CHUNKING.annexWord).trim() || DEFAULT_CHUNKING.annexWord,
-    headerRepeats: between(c.headerRepeats, 2, 50, DEFAULT_CHUNKING.headerRepeats),
-    minTokens: between(c.minTokens, 50, 2000, DEFAULT_CHUNKING.minTokens),
-    maxTokens: between(c.maxTokens, 100, 4000, DEFAULT_CHUNKING.maxTokens),
-  }
 }
 
 /**

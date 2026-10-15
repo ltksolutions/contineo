@@ -9,8 +9,8 @@
  *
  * Model navrhuje len hranice, text nemení (`lib/chunkProposal.ts`). Nič sa
  * neuloží bez „Prijať a preindexovať" — jediné plné tlačidlo, na konci (R2).
- * Formulár skúšobného rezu so štyrmi poľami zanikol; pomenovaný profil (D79)
- * sa dá vybrať v rozbaľovači na konci.
+ * Formulár skúšobného rezu aj profily členenia zanikli (ADR-035): prvý rez je
+ * vždy zo štruktúry Markdownu, dolaďuje návrh AI alebo človek.
  *
  * Vidí ho správca obsahu (`libraryContext`). Bez JavaScriptu.
  */
@@ -26,7 +26,8 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Notice from "@/components/Notice"
 import FormattedText from "@/components/FormattedText"
 import SubmitButton from "@/components/SubmitButton"
-import { applyChunkingProfileAction, proposeChunkCutAction, acceptChunkRoundAction } from "../../actions"
+import { proposeChunkCutAction, acceptChunkRoundAction } from "../../actions"
+import { CUT_MIN, CUT_MAX } from "@/lib/chunkHeadings"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -71,8 +72,10 @@ export default async function ChunksPage({
   const t = dictionary(language).library.chunks
   const c = t.cut
   const branding = brandingView(ctx.tenant)
-  const limit = Math.round(r.profile.values.maxTokens * OVERSIZE_FACTOR)
-  const min = r.profile.values.minTokens
+  // Cieľ rezu je pravidlo, nie nastavenie (ADR-035 D223).
+  const limit = Math.round(CUT_MAX * OVERSIZE_FACTOR)
+  const min = CUT_MIN
+  const methodLabel = { manual: c.methodManual, headings: c.methodHeadings, plain: c.methodPlain }[state.method]
 
   // Kolo: z adresy, inak najnovšie. Bez kola je len pohľad Dnes.
   const round = state.rounds.find(x => String(x.no) === q.round) ?? state.rounds[0] ?? null
@@ -232,11 +235,11 @@ export default async function ChunksPage({
         <>
           <div className="cut-summary card">
             <span><span className="quiet">{t.version}</span> <strong>{state.draft ? c.draftVersion : (r.version?.label ?? "—")}</strong></span>
-            <span><span className="quiet">{c.method}</span> <strong>{state.manual ? c.methodManual : r.profile.label}</strong></span>
+            <span><span className="quiet">{c.method}</span> <strong>{methodLabel}</strong></span>
             {view === "today" ? (
               <>
                 <span><span className="quiet">{t.statsCount}</span> <strong>{state.todayChunks.length}</strong></span>
-                <span><span className="quiet">{t.statsTokens}</span> <strong>{stat(todayTokens)}</strong> <span className="quiet">({t.target(min, r.profile.values.maxTokens)})</span></span>
+                <span><span className="quiet">{t.statsTokens}</span> <strong>{stat(todayTokens)}</strong> <span className="quiet">({t.target(CUT_MIN, CUT_MAX)})</span></span>
                 <span className={`tag ${badToday ? "tag--draft" : "tag--published"}`}>{badToday ? c.badCount(badToday) : c.noBad}</span>
               </>
             ) : (
@@ -260,6 +263,13 @@ export default async function ChunksPage({
             <div className="lnote lnote--warn" style={{ marginBottom: 14 }}>
               <span className="lnote-mark" aria-hidden="true">!</span>
               <span className="lnote-text">{t.outdated(r.stats.count, r.today.count)} {t.reindexHint}</span>
+            </div>
+          )}
+
+          {view === "today" && state.method === "plain" && (
+            <div className="lnote lnote--warn" style={{ marginBottom: 14 }}>
+              <span className="lnote-mark" aria-hidden="true">!</span>
+              <span className="lnote-text">{c.plainNote}</span>
             </div>
           )}
 
@@ -344,27 +354,6 @@ export default async function ChunksPage({
             </section>
           )}
 
-          {/* Pomenovaný profil (D79) — rez profilom ostáva pre dokumenty bez ručných hraníc. */}
-          {r.profiles.length > 1 && (
-            <details className="card chunks-block cut-profile">
-              <summary>{t.saveHeading} · {r.profile.label}</summary>
-              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.saveIntro}</p>
-              <form action={applyChunkingProfileAction} className="chunks-row">
-                <input type="hidden" name="documentId" value={documentId} />
-                <label className="field">
-                  <span className="field-label">{t.useProfile}</span>
-                  <select className="field-input" name="profileKey" defaultValue={r.profile.key}>
-                    {r.profiles.map(p => (
-                      <option key={p.key} value={p.key}>
-                        {p.label} · „{p.values.articleWord}“{p.key === r.profile.key ? ` (${t.currentProfile})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div><SubmitButton className="button button--quiet">{t.useProfileButton}</SubmitButton></div>
-              </form>
-            </details>
-          )}
         </>
       )}
     </div>

@@ -33,8 +33,6 @@ import { saveFile, deleteFile, fileInfo, loadFile } from "./fileStore"
 import { convert, detectFileType, FILE_TYPE_LABEL, type FileType } from "./conversion"
 import { writeAudit, diff } from "./audit"
 import type { Chunk } from "./chunker.mjs"
-import { toChunkerProfile, chunkingFor, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
-import { TENANTS_COLLECTION } from "./tenants"
 import { AppError } from "./appError"
 import { publishBlock, APPROVALS_COLLECTION } from "./approvals"
 import { documentDraftIdentity, normalizeMeta, isEmptyMeta, suggestMetaFromMarkdown, metaLocked, type VersionMeta } from "./versionMeta"
@@ -45,26 +43,6 @@ import { legalBasisFromDraft, type DraftLegalBasis } from "./versionResponsibili
 import { autoVersionLabel } from "./versionLabel"
 
 export const CHUNKS_COLLECTION = "document_chunks"
-
-/** Organizácia len v tom rozsahu, v akom ju potrebuje členenie (D79). */
-type ChunkingTenant = {
-  chunkingProfiles?: ChunkingProfileDef[]
-  chunking?: Partial<ChunkingProfile>
-}
-
-/**
- * Načíta profily členenia organizácie.
- *
- * **Číta sa tu, nie sa podáva zvonku.** Dovtedy profil prišiel ako parameter
- * z obrazovky — a to znamenalo, že dávkové preindexovanie prerezalo **všetky**
- * dokumenty profilom organizácie, aj tie, ktoré majú vlastný. Jedným kliknutím
- * by sa tak zahodilo celé ladenie a zistilo by sa to až tým, že model odcituje
- * nesprávny článok.
- */
-export async function chunkingTenant(companyCode: string): Promise<ChunkingTenant | null> {
-  const col = await getCollection(TENANTS_COLLECTION)
-  return await col.findOne({ companyCode }) as unknown as ChunkingTenant | null
-}
 
 /** Technický stav — čo s dokumentom urobili stroje. */
 export type ProcessingState = "uploaded" | "converted" | "indexed" | "failed"
@@ -876,10 +854,8 @@ export async function publish(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const profile = chunkingFor(await chunkingTenant(companyCode), doc.chunkingProfile as string | undefined)
-  const forChunker = toChunkerProfile(profile)
-  // Ručné hranice kurátora pre presne tento text majú prednosť (KNIZ-rezac-blokov, Q3 A).
-  const cut = cutForIndex(markdown, meta.title, forChunker, doc.chunkCuts as ChunkCut[] | undefined)
+  // Ručné hranice → štruktúra Markdownu → chunker (ADR-035 D225). Bez profilu.
+  const cut = cutForIndex(markdown, meta.title, doc.chunkCuts as ChunkCut[] | undefined)
   const chunks = cut.chunks
   if (!chunks.length) {
     throw new LibraryError(
@@ -1321,12 +1297,10 @@ export async function reindexVersion(
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
   // Profil **tohto dokumentu**, nie organizácie (D79).
-  const profile = chunkingFor(await chunkingTenant(companyCode), doc.chunkingProfile as string | undefined)
-  const forChunker = toChunkerProfile(profile)
-  const cut = cutForIndex(markdown, meta.title, forChunker, doc.chunkCuts as ChunkCut[] | undefined)
+  const cut = cutForIndex(markdown, meta.title, doc.chunkCuts as ChunkCut[] | undefined)
   const chunks = cut.chunks
   if (!chunks.length) {
-    throw new LibraryError("library.noChunksProfile", "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
+    throw new LibraryError("library.noChunksProfile", "Z textu nevznikol ani jeden úsek — skontrolujte text v editore.")
   }
 
   const chunkingId = chunkingFingerprint(chunks, cut.fingerprintProfile)
@@ -1362,7 +1336,7 @@ export async function reindexVersion(
   const afterWithArticle = chunks.filter(ch => ch.articleRef).length
   const share = (withArticle: number, total: number) => (total > 0 ? withArticle / total : 0)
   // Ručný rez prijal kurátor vedome a nad celým textom — poistka chráni pred
-  // tichým zhoršením rezu profilom, nie pred rozhodnutím človeka.
+  // tichým zhoršením automatického rezu, nie pred rozhodnutím človeka.
   const wouldLose =
     !cut.manual &&
     before > 0 &&
@@ -1830,12 +1804,12 @@ export async function loadVersionIntoDraft(
 export interface ReindexState {
   /** Dokumenty s platným znením — teda tie, ktoré vôbec majú čo indexovať. */
   celkom: number
-  /** Z nich tie, ktorých členenie nesedí s aktuálnym profilom. */
+  /** Z nich tie, ktorých členenie nesedí s dnešným rezom (ADR-035). */
   neaktualnych: number
 }
 
 /**
- * Koľko dokumentov by nový profil preindexoval.
+ * Koľko dokumentov treba preindexovať — uložené úseky nesedia s dnešným rezom.
  *
  * Počíta sa **naozajstným narezaním** každého dokumentu, nie odhadom: to je
  * jediný spôsob, ako povedať, či zmena parametra na tomto obsahu vôbec niečo
@@ -1845,7 +1819,6 @@ export interface ReindexState {
 export async function reindexState(
   companyCode: string,
 ): Promise<ReindexState> {
-  const tenant = await chunkingTenant(companyCode)
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const documents = await col
     .find(
@@ -1854,11 +1827,11 @@ export async function reindexState(
       // výber odmieta („Path collision at versions") — celá záložka Členenie
       // padala. Positional `$` sa navyše bez podmienky na to pole ani použiť
       // nedá; potrebujeme celé pole a platné znenie sa vyberá v kóde.
-      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, versions: 1, chunkingProfile: 1, chunkCuts: 1 } },
+      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, versions: 1, chunkCuts: 1 } },
     )
     .toArray() as unknown as {
       documentId: string; title?: string; chunkingId?: string; markdown?: string
-      chunkingProfile?: string; chunkCuts?: ChunkCut[]
+      chunkCuts?: ChunkCut[]
       versions?: { isActive?: boolean; markdown?: string }[]
     }[]
 
@@ -1871,8 +1844,7 @@ export async function reindexState(
     if (!text) continue
     total++
 
-    const forChunker = toChunkerProfile(chunkingFor(tenant, d.chunkingProfile))
-    const cut = cutForIndex(text, d.title ?? "", forChunker, d.chunkCuts)
+    const cut = cutForIndex(text, d.title ?? "", d.chunkCuts)
     const chunks = cut.chunks
     if (!chunks.length) { outdated++; continue }
     const chunkingId = chunkingFingerprint(chunks, cut.fingerprintProfile)
@@ -1883,7 +1855,7 @@ export async function reindexState(
 }
 
 /**
- * Preindexuje všetky dokumenty, ktorých členenie nesedí s profilom (D57).
+ * Preindexuje všetky dokumenty, ktorých členenie nesedí s dnešným rezom (D57, ADR-035).
  *
  * **V dávkach, nie naraz.** Funkcia na Verceli má strop na čas behu a
  * preindexovanie stovky dokumentov by doň nezmestilo — a čo je horšie,

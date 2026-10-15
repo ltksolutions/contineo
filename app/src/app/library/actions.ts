@@ -46,7 +46,6 @@ import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
-import { setDocumentChunkingProfile } from "@/lib/chunkingProfilesDb"
 import { proposeChunkCut, acceptChunkRound, deferChunkReview } from "@/lib/chunkProposal"
 import { cutterState } from "@/lib/chunkCutter"
 import { codelistOptions } from "@/lib/codelists"
@@ -1552,29 +1551,11 @@ export async function restoreDocumentAction(fd: FormData) {
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
-// ── profil členenia pri dokumente (ADR-027, krok B) ──────────────────────────
+// ── Členenie (KNIZ-rezac-blokov, ADR-035) ────────────────────────────────────
 
 /** Späť na stránku Členenie s hlásením; skúšobné hodnoty sa nenesú — sú uložené. */
 function backToChunks(id: string, message: string, error: boolean): never {
   redirect(`/library/${encodeURIComponent(id)}/chunks?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
-}
-
-/** Dokument dostane existujúci pomenovaný profil. Nepreindexuje sa (D58). */
-export async function applyChunkingProfileAction(fd: FormData) {
-  const self = await actor()
-  if (!self) redirect("/")
-  const id = fieldText(fd, "documentId")
-  let message = ""
-  let error = false
-  try {
-    const { label } = await setDocumentChunkingProfile(self.companyCode, id, fieldText(fd, "profileKey"), self.email)
-    message = say(self.language).chunkingProfileSet(label)
-  } catch (e) {
-    message = errorMessage(e, self.language)
-    error = true
-  }
-  revalidatePath(`/library/${id}`)
-  backToChunks(id, message, error)
 }
 
 // ── rezač blokov: návrh AI, prijatie, odloženie (KNIZ-rezac-blokov) ─────────

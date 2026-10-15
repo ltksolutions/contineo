@@ -70,7 +70,8 @@ describe("cutByBoundaries", () => {
     expect(chunks.map(c => c.articleRef)).toEqual(["Podania na komisie", "1 Podania", "1.1 Prílohy", "2 Lehoty"])
     // Úsek 3 začína položkou, nie nadpisom — pokračuje v 1.1 Prílohy.
     expect(chunks[2].uplnaJednotka).toBe(false)
-    expect(chunks[2].text).toBe("- PDF do 10 MB\n- JPG alebo PNG\n  pokračovanie položky")
+    // Riadok kontextu (nadradené nadpisy), potom telo úseku.
+    expect(chunks[2].text).toBe("Podania na komisie › 1 Podania › 1.1 Prílohy\n\n- PDF do 10 MB\n- JPG alebo PNG\n  pokračovanie položky")
     expect(chunks[3].obsahujeTabulku).toBe(true)
     expect(chunks[3].text).toContain("Lehoty sú v tabuľke:\n\n| Úkon | Lehota |")
     expect(chunks.map(c => c.chunkIndex)).toEqual([0, 1, 2, 3])
@@ -118,25 +119,26 @@ describe("cutForIndex — voľba rezu (Q3 A)", () => {
   const cut = (boundaries: number[], text = manual): ChunkCut => ({ textHash: textFingerprint(text), boundaries, round: 1, at: new Date(), by: "Ján" })
 
   it("ručné hranice pre presne tento text majú prednosť pred profilom", () => {
-    const r = cutForIndex(manual, "Manuál", undefined, [cut([7])])
+    const r = cutForIndex(manual, "Manuál", [cut([7])])
     expect(r.manual?.boundaries).toEqual([7])
     expect(r.chunks).toHaveLength(2)
     expect(r.fingerprintProfile).toEqual({ rucne: [7] })
   })
   it("iný text (nové znenie) ručné hranice nepoužije — reže profil", () => {
-    const r = cutForIndex(`${manual}\n\nNový odsek.`, "Manuál", undefined, [cut([7])])
+    const r = cutForIndex(`${manual}\n\nNový odsek.`, "Manuál", [cut([7])])
     expect(r.manual).toBeNull()
   })
   it("najnovší rez k textu vyhráva; iný rez dá iný odtlačok členenia", () => {
     const a = cut([7]); const b = { ...cut([2, 7]), round: 2 }
     expect(manualCutFor([a, b], manual)?.round).toBe(2)
-    const fa = cutForIndex(manual, "M", undefined, [a]); const fb = cutForIndex(manual, "M", undefined, [b])
+    const fa = cutForIndex(manual, "M", [a]); const fb = cutForIndex(manual, "M", [b])
     expect(chunkingFingerprint(fa.chunks, fa.fingerprintProfile)).not.toBe(chunkingFingerprint(fb.chunks, fb.fingerprintProfile))
   })
-  it("bez ručných hraníc ostáva odtlačok profilu ako doteraz", () => {
-    const r = cutForIndex(manual, "M", undefined, [])
+  it("bez ručných hraníc: text s nadpismi ide zo štruktúry (ADR-035)", () => {
+    const r = cutForIndex(manual, "M", [])
     expect(r.manual).toBeNull()
-    expect((r.fingerprintProfile as Record<string, unknown>).slovoClanok).toBeDefined()
+    expect(r.method).toBe("headings")
+    expect(r.fingerprintProfile).toMatchObject({ nadpisy: 1 })
   })
 })
 
