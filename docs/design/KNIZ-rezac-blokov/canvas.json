@@ -1,0 +1,24 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-15T12:40:00Z" },
+  "title": "KNIZ-rezac-blokov",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 1560, "title": "1440 svetlá — Dnes (bloky so štítkami)", "expand": "fill" },
+    "Rozdiel.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 2040, "title": "1440 svetlá — Rozdiel (návrh AI, Čo nesedí, Prijať)", "expand": "fill" },
+    "Mobil-navrh.dc.html": { "x": 0, "y": 2280, "w": 390, "h": 1560, "title": "390 tmavá — Návrh + Čo nesedí", "expand": "fill" },
+    "Mobil-karta.dc.html": { "x": 470, "y": 2280, "w": 390, "h": 1180, "title": "390 tmavá — karta postupu: Skontrolovať členenie", "expand": "fill" },
+    "Faza2.dc.html": { "x": 940, "y": 2280, "w": 1440, "h": 980, "title": "NESKÔR — fáza 2: ťahanie hraníc", "expand": "fill" }
+  },
+  "order": ["Main.dc.html", "Rozdiel.dc.html", "Mobil-navrh.dc.html", "Mobil-karta.dc.html", "Faza2.dc.html"],
+  "notes": {
+    "row1": { "x": 0, "y": -240, "text": "KNIZ-rezac-blokov — Členenie na úseky ako vizuálny rezač (fáza 1)", "kind": "title1", "maxW": 2960 },
+    "row2": { "x": 0, "y": 2040, "text": "Telefón, karta postupu a fáza 2 (neskôr)", "kind": "title1", "maxW": 2380 },
+    "s1": { "x": 3040, "y": 0, "w": 360, "text": "Rozhodnuté (Ján 15. 10.): Q1 A — modelu ide celý text znenia cez kľúč organizácie. Q3 A — rez mimo profilu sa uloží ako „ručné hranice“ pri znení (index bloku, história kôl).\n\nNa návrh s odporúčaním A: Q2 návrh beží automaticky pri nahratí; Q4 fáza 1 serverovo bez Tiptapu; Q5 krok „Skontrolovať členenie“ v karte postupu.", "fill": "blue" },
+    "s2": { "x": 3040, "y": 420, "w": 360, "text": "Pravidlá: jedno plné tlačidlo (Prijať a preindexovať, na konci — R2); .view-switch Dnes · Návrh · Rozdiel sivý, stav v adrese; AI navrhuje len hranice, text nemení; bez JavaScriptu okrem fázy 2; farby organizácie; terč 44 px.", "fill": "gray" }
+  },
+  "designSystems": [
+    { "title": "Contineo — design system", "namespace": "contineo", "artifact": "https://claude.ai/artifact/AGZnHYA4nCDzqsXZvw7Lzh", "version": "1792100706-70f9", "copiedAt": "2026-10-15T12:40:00Z" }
+  ]
+}
