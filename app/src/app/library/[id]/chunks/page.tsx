@@ -105,7 +105,18 @@ export default async function ChunksPage({
    * nájsť presne, ukáže sa uložený text, ako je.
    */
   const todayGroups = groupBlocks(state.blocks.length, state.current)
-  const todayFromBlocks = todayGroups.length === state.todayChunks.length
+  /*
+   * Hranice uložených úsekov sa hľadajú podľa textu a pri zlúčenom texte
+   * môžu sedieť vedľa. Bloky sa kreslia, len keď veľkosť každej skupiny
+   * zodpovedá uloženému úseku (±40 %) — inak by pri bloku stálo číslo,
+   * ktoré k nemu nepatrí (ISSF-08, 16. 10. 2026: nadpis s „1 204 tokenmi").
+   */
+  const todayGroupTokens = groupTokens(state.blocks, state.current)
+  const todayFromBlocks = todayGroups.length === state.todayChunks.length &&
+    state.todayChunks.every((ch, i) => {
+      const ratio = (todayGroupTokens[i] || 1) / Math.max(1, ch.tokens)
+      return ratio > 0.6 && ratio < 1.4
+    })
   const todayView = (
     <article className="cut-doc card" aria-label={c.docLabel}>
       {state.todayChunks.map((ch, i) => {
