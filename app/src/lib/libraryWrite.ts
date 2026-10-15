@@ -23,7 +23,7 @@
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type VersionFile } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
-import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
+import { cutForIndex, type ChunkCut } from "./chunkCut"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, versionFixProblem, fixableVersions, closestVersion, draftIsFree, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
@@ -878,7 +878,9 @@ export async function publish(
 
   const profile = chunkingFor(await chunkingTenant(companyCode), doc.chunkingProfile as string | undefined)
   const forChunker = toChunkerProfile(profile)
-  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
+  // Ručné hranice kurátora pre presne tento text majú prednosť (KNIZ-rezac-blokov, Q3 A).
+  const cut = cutForIndex(markdown, meta.title, forChunker, doc.chunkCuts as ChunkCut[] | undefined)
+  const chunks = cut.chunks
   if (!chunks.length) {
     throw new LibraryError(
       "library.noChunks",
@@ -914,7 +916,7 @@ export async function publish(
   const draftSource = (doc.draftSource as VersionFile | null | undefined) ?? null
   const versionId = documentDraftIdentity({ draftMarkdown: markdown, draftPdf, draftMeta, draftTitle })
   const now = new Date()
-  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
+  const chunkingId = chunkingFingerprint(chunks, cut.fingerprintProfile)
   const chunkCount = chunks.length
   // Právny základ určený v príprave (ADR-023, D139) — kópia z okamihu výberu.
   const draftBasis = legalBasisFromDraft(doc.draftLegalBasis as DraftLegalBasis | null | undefined)
@@ -1321,12 +1323,13 @@ export async function reindexVersion(
   // Profil **tohto dokumentu**, nie organizácie (D79).
   const profile = chunkingFor(await chunkingTenant(companyCode), doc.chunkingProfile as string | undefined)
   const forChunker = toChunkerProfile(profile)
-  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
+  const cut = cutForIndex(markdown, meta.title, forChunker, doc.chunkCuts as ChunkCut[] | undefined)
+  const chunks = cut.chunks
   if (!chunks.length) {
     throw new LibraryError("library.noChunksProfile", "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
   }
 
-  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
+  const chunkingId = chunkingFingerprint(chunks, cut.fingerprintProfile)
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
   // Platné členenie tohto znenia — `superseded: false`, bez ohľadu na `isActive`.
   const mine = { companyCode, documentId, versionId, superseded: false }
@@ -1358,7 +1361,10 @@ export async function reindexVersion(
   const beforeWithArticle = await chunkCol.countDocuments({ ...mine, articleRef: { $ne: null } })
   const afterWithArticle = chunks.filter(ch => ch.articleRef).length
   const share = (withArticle: number, total: number) => (total > 0 ? withArticle / total : 0)
+  // Ručný rez prijal kurátor vedome a nad celým textom — poistka chráni pred
+  // tichým zhoršením rezu profilom, nie pred rozhodnutím človeka.
   const wouldLose =
+    !cut.manual &&
     before > 0 &&
     share(beforeWithArticle, before) >= 0.5 &&
     share(afterWithArticle, chunks.length) < 0.5
@@ -1848,11 +1854,11 @@ export async function reindexState(
       // výber odmieta („Path collision at versions") — celá záložka Členenie
       // padala. Positional `$` sa navyše bez podmienky na to pole ani použiť
       // nedá; potrebujeme celé pole a platné znenie sa vyberá v kóde.
-      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, versions: 1, chunkingProfile: 1 } },
+      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, versions: 1, chunkingProfile: 1, chunkCuts: 1 } },
     )
     .toArray() as unknown as {
       documentId: string; title?: string; chunkingId?: string; markdown?: string
-      chunkingProfile?: string
+      chunkingProfile?: string; chunkCuts?: ChunkCut[]
       versions?: { isActive?: boolean; markdown?: string }[]
     }[]
 
@@ -1866,9 +1872,10 @@ export async function reindexState(
     total++
 
     const forChunker = toChunkerProfile(chunkingFor(tenant, d.chunkingProfile))
-    const { chunky: chunks } = chunkText(text, { nazovDokumentu: d.title ?? "", profil: forChunker })
+    const cut = cutForIndex(text, d.title ?? "", forChunker, d.chunkCuts)
+    const chunks = cut.chunks
     if (!chunks.length) { outdated++; continue }
-    const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
+    const chunkingId = chunkingFingerprint(chunks, cut.fingerprintProfile)
     if (needsReindex(d.chunkingId, chunkingId)) outdated++
   }
 

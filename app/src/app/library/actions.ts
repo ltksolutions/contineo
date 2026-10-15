@@ -46,8 +46,11 @@ import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
-import { setDocumentChunkingProfile, createChunkingProfileForDocument } from "@/lib/chunkingProfilesDb"
-import { requestChunkingAdvice } from "@/lib/chunkingAdvice"
+import { setDocumentChunkingProfile } from "@/lib/chunkingProfilesDb"
+import { proposeChunkCut, acceptChunkRound, deferChunkReview } from "@/lib/chunkProposal"
+import { cutterState } from "@/lib/chunkCutter"
+import { codelistOptions } from "@/lib/codelists"
+import { after } from "next/server"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { archiveDocument, restoreDocument, ArchiveError } from "@/lib/documentArchive"
 import { AppError } from "@/lib/appError"
@@ -252,6 +255,7 @@ export async function uploadAction(fd: FormData) {
       companyCode: self.companyCode, language: self.language, title: meta.title,
       documentLanguage: meta.language, effectiveFrom: versionMeta.effectiveFrom,
     }), self.email, "new", versionMeta)
+    scheduleChunkProposal(self, v.documentId)
 
     revalidatePath("/library")
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
@@ -326,6 +330,7 @@ export async function uploadVersionAction(fd: FormData) {
       companyCode: self.companyCode, language: self.language, title: meta.title,
       documentLanguage: meta.language, effectiveFrom: versionMeta.effectiveFrom,
     }), self.email, "version", versionMeta)
+    scheduleChunkProposal(self, v.documentId)
 
     // **Porovnanie s platným znením hneď, nie až v editore.** Bez neho sa nedá
     // odlíšiť novela od znovunahratia toho istého PDF — a to je presne tá
@@ -1572,29 +1577,83 @@ export async function applyChunkingProfileAction(fd: FormData) {
   backToChunks(id, message, error)
 }
 
+// ── rezač blokov: návrh AI, prijatie, odloženie (KNIZ-rezac-blokov) ─────────
+
+/** Kto spúšťa návrh — do výkazu spotreby AI (ADR-026). */
+async function usageActorOf(self: { companyCode: string; personId: string; email: string }) {
+  const who = await findPerson(self.companyCode, self.email)
+  return { companyCode: self.companyCode, personId: self.personId, personName: who?.fullName ?? self.email, email: self.email }
+}
+
+/** Návrh AI nad dnešným rezom; `note` = poznámka kurátora pre ďalšie kolo. */
+async function runChunkProposal(
+  self: { companyCode: string; personId: string; email: string; extras: CodelistExtras },
+  documentId: string,
+  note: string | null,
+  source: "ai" | "auto",
+) {
+  const state = await cutterState(self.companyCode, documentId)
+  if (!state) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  const kindLabel = state.category
+    ? codelistOptions("category", self.extras).find(o => o.value === state.category)?.label ?? state.category
+    : null
+  return proposeChunkCut(await usageActorOf(self), documentId, { current: state.current, note, source, kindLabel })
+}
+
 /**
- * Nový pomenovaný profil z hodnôt skúšobného rezu (D79: žiadne vlastné
- * hodnoty na dokumente — odchýlka sa zapíše raz, s menom a viditeľne).
+ * Návrh rezu hneď po nahratí (Q2 A) — **po odpovedi**, v `after()`: kurátor
+ * ide do editora textu a nečaká na model. Keď sa návrh nepodarí (bez kľúča
+ * AI, chyba modelu), nič sa nedeje — na stránke Členenie je tlačidlo.
  */
-export async function saveChunkingProfileAction(fd: FormData) {
+function scheduleChunkProposal(
+  self: { companyCode: string; personId: string; email: string; extras: CodelistExtras },
+  documentId: string,
+) {
+  after(async () => {
+    try {
+      await runChunkProposal(self, documentId, null, "auto")
+    } catch (e) {
+      if (!(e instanceof AppError)) console.error("[návrh rezu] automatický návrh zlyhal:", e)
+    }
+  })
+}
+
+/** „Navrhnúť rezy" / „Navrhnúť znova" s poznámkou „Čo nesedí". */
+export async function proposeChunkCutAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
   const id = fieldText(fd, "documentId")
-  const number = (name: string) => {
-    const v = Number(fieldText(fd, name))
-    return Number.isFinite(v) && fieldText(fd, name) !== "" ? v : undefined
-  }
+  const note = fieldText(fd, "note") || null
   let message = ""
   let error = false
   try {
-    const { label } = await createChunkingProfileForDocument(self.companyCode, id, fieldText(fd, "label"), {
-      articleWord: fieldText(fd, "articleWord"),
-      annexWord: fieldText(fd, "annexWord"),
-      headerRepeats: number("headerRepeats"),
-      minTokens: number("minTokens"),
-      maxTokens: number("maxTokens"),
-    }, self.email)
-    message = say(self.language).chunkingProfileCreated(label)
+    const round = await runChunkProposal(self, id, note, "ai")
+    message = say(self.language).chunkRoundReady(round.no)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}/chunks?view=diff&msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/** „Prijať a preindexovať" — rez kola sa uloží ako ručné hranice (Q3 A). */
+export async function acceptChunkRoundAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  const roundNo = Number(fieldText(fd, "round"))
+  let message = ""
+  let error = false
+  try {
+    const { reindexVersionId, round } = await acceptChunkRound(self.companyCode, id, roundNo, self.email)
+    const t = say(self.language)
+    if (reindexVersionId) {
+      const v = await reindexVersion(self.companyCode, id, reindexVersionId, self.email)
+      message = t.chunkRoundAccepted(round.no, v.chunks)
+    } else {
+      message = t.chunkRoundAcceptedDraft(round.no)
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
@@ -1603,29 +1662,22 @@ export async function saveChunkingProfileAction(fd: FormData) {
   backToChunks(id, message, error)
 }
 
-/**
- * Návrh členenia od AI (krok C). Pošle štruktúru, nie celý text; návrh sa
- * uloží pri dokumente a nič iné sa nemení.
- */
-export async function requestChunkingAdviceAction(fd: FormData) {
+/** „Odložiť" v karte postupu — krok Skontrolovať členenie zmizne pre tento text. */
+export async function deferChunkReviewAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
   const id = fieldText(fd, "documentId")
   let message = ""
   let error = false
   try {
-    const who = await findPerson(self.companyCode, self.email)
-    await requestChunkingAdvice({
-      companyCode: self.companyCode, personId: self.personId,
-      personName: who?.fullName ?? self.email, email: self.email,
-    }, id)
-    message = say(self.language).chunkingAdviceReady
+    await deferChunkReview(self.companyCode, id, self.email)
+    message = say(self.language).chunkReviewDeferred
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
   }
   revalidatePath(`/library/${id}`)
-  backToChunks(id, message, error)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 // ── Import z MCP konektora (ADR-029, použitie B) ────────────────────────────

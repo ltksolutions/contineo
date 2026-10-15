@@ -1,23 +1,32 @@
 /**
- * Členenie dokumentu na úseky — editor členenia, krok A (ADR-027, Ján 5. 10. 2026).
+ * Členenie na úseky — vizuálny rezač blokov (KNIZ-rezac-blokov, 15. 10. 2026).
  *
- * Uložené úseky platného znenia (z tých odpovedá asistent), súhrn,
- * upozornenia a rozbor textu analyzátorom (krok A). **Skúšobný rez** s inými
- * hodnotami je GET — nič neukladá, hodnoty sú v adrese; uloží sa až výber
- * profilu: existujúci, alebo nový pomenovaný z hodnôt skúšky (krok B, D79).
- * Analýza modelom je krok C. Preindexovanie ostáva v detaile dokumentu.
+ * Text znenia celý na obrazovke, úseky ako farebné bloky (`.cut-block`).
+ * Tri pohľady v adrese (`?view=`): **Dnes** — úseky, z ktorých asistent
+ * odpovedá (pri koncepte: ako by sa narezal pri zverejnení); **Návrh** —
+ * rez podľa kola návrhu AI; **Rozdiel** — návrh ako prekrytie s novými
+ * a zrušenými hranicami a zdôvodnením.
  *
- * Vidí ho správca obsahu (`libraryContext`), ten istý, ktorý smie preindexovať.
+ * Model navrhuje len hranice, text nemení (`lib/chunkProposal.ts`). Nič sa
+ * neuloží bez „Prijať a preindexovať" — jediné plné tlačidlo, na konci (R2).
+ * Formulár skúšobného rezu so štyrmi poľami zanikol; pomenovaný profil (D79)
+ * sa dá vybrať v rozbaľovači na konci.
+ *
+ * Vidí ho správca obsahu (`libraryContext`). Bez JavaScriptu.
  */
 
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
+import type { ReactNode } from "react"
 import { libraryContext } from "@/lib/library"
-import { inspectChunking, OVERSIZE_FACTOR, type ChunkWarning, type InspectedChunk } from "@/lib/chunkingInspect"
-import { clampChunking } from "@/lib/tenantAdmin"
+import { OVERSIZE_FACTOR } from "@/lib/chunkingInspect"
+import { cutterState } from "@/lib/chunkCutter"
+import { splitBlocks, groupBlocks, boundaryDiff, groupTokens, headingText, type TextBlock } from "@/lib/chunkBlocks"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Notice from "@/components/Notice"
-import { applyChunkingProfileAction, saveChunkingProfileAction, requestChunkingAdviceAction } from "../../actions"
+import FormattedText from "@/components/FormattedText"
 import SubmitButton from "@/components/SubmitButton"
+import { applyChunkingProfileAction, proposeChunkCutAction, acceptChunkRoundAction } from "../../actions"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -25,8 +34,19 @@ import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
-/** Koľko znakov z úseku ukázať v zbalenom riadku. */
-const PREVIEW_CHARS = 180
+type View = "today" | "proposal" | "diff"
+
+/** Tón bloku — šesť jemných odtieňov farby organizácie, nie dúha. */
+const tone = (i: number) => `cut-tone-${(i % 6) + 1}`
+
+/** Jeden blok textu — nadpis, tabuľka v rámiku, ostatné ako formátovaný text. */
+function BlockView({ block }: { block: TextBlock }) {
+  if (block.kind === "heading") {
+    return block.level <= 2 ? <h2>{headingText(block)}</h2> : <h3>{headingText(block)}</h3>
+  }
+  if (block.kind === "table") return <pre className="cut-pre">{block.text}</pre>
+  return <FormattedText text={block.text} />
+}
 
 export default async function ChunksPage({
   params,
@@ -41,307 +61,282 @@ export default async function ChunksPage({
     notFound()
   }
   const documentId = decodeURIComponent((await params).id)
-  const q = normalizeQuery<{
-    msg?: string; error?: string; trial?: string
-    articleWord?: string; annexWord?: string; minTokens?: string; maxTokens?: string
-  }>(await searchParams)
-  const base = await inspectChunking(ctx.tenant.companyCode, documentId)
-  if (!base) notFound()
-  // Skúška: hodnoty z adresy, orezané tak ako pri uložení profilu.
-  const num = (v?: string) => (v && Number.isFinite(Number(v)) ? Number(v) : undefined)
-  const trialValues = q.trial === "1"
-    ? clampChunking({
-        ...base.profile.values,
-        ...(q.articleWord !== undefined ? { articleWord: q.articleWord } : {}),
-        ...(q.annexWord !== undefined ? { annexWord: q.annexWord } : {}),
-        ...(num(q.minTokens) !== undefined ? { minTokens: num(q.minTokens) } : {}),
-        ...(num(q.maxTokens) !== undefined ? { maxTokens: num(q.maxTokens) } : {}),
-      })
-    : null
-  const r = trialValues ? (await inspectChunking(ctx.tenant.companyCode, documentId, trialValues))! : base
+  const q = normalizeQuery<{ msg?: string; error?: string; view?: string; round?: string }>(await searchParams)
+  const state = await cutterState(ctx.tenant.companyCode, documentId)
+  if (!state) notFound()
+  const r = state.inspection
   const here = `/library/${encodeURIComponent(documentId)}/chunks`
 
   const language = ctx.person.language
   const t = dictionary(language).library.chunks
+  const c = t.cut
   const branding = brandingView(ctx.tenant)
   const limit = Math.round(r.profile.values.maxTokens * OVERSIZE_FACTOR)
+  const min = r.profile.values.minTokens
 
-  const warningText = (w: ChunkWarning) => {
-    switch (w.code) {
-      case "oneBlock": return t.warnings.oneBlock
-      case "fewArticles": return t.warnings.fewArticles(w.percent)
-      case "oversized": return t.warnings.oversized(w.count, w.limit)
-      case "fragments": return t.warnings.fragments(w.count)
-    }
+  // Kolo: z adresy, inak najnovšie. Bez kola je len pohľad Dnes.
+  const round = state.rounds.find(x => String(x.no) === q.round) ?? state.rounds[0] ?? null
+  const view: View = round && (q.view === "proposal" || q.view === "diff") ? q.view : "today"
+  const href = (v: View, no = round?.no) => `${here}?view=${v}${no ? `&round=${no}` : ""}`
+
+  const todayTokens = state.todayChunks.map(x => x.tokens)
+  const stat = (tokens: number[]) => tokens.length
+    ? `${Math.min(...tokens)} – ${Math.round(tokens.reduce((a, b) => a + b, 0) / tokens.length)} – ${Math.max(...tokens)}`
+    : "—"
+  const badToday = state.todayChunks.filter(x => x.tokens > limit || (x.complete === false && x.tokens < min / 2)).length
+  const proposalTokens = round ? groupTokens(state.blocks, round.boundaries) : []
+  // Pri návrhu len veľké úseky: krátka celá časť je prirodzená jednotka,
+  // úlomok vzniká len delením (to isté pravidlo ako v pohľade Dnes).
+  const badProposal = proposalTokens.filter(n => n > limit).length
+  const diff = round ? boundaryDiff(state.current, round.boundaries) : null
+  const reasonOf = (b: number) => round?.reasons.find(x => x.block === b)?.why ?? ""
+  const label = (b: number) => {
+    const block = state.blocks[b]
+    if (!block) return ""
+    return block.kind === "heading" ? headingText(block) : block.text.replace(/\s+/g, " ").slice(0, 60)
   }
 
-  // Zoznam úsekov — uložených, alebo po skúšobnom reze.
-  // Natívne `<details>`: rozbalí sa bez JavaScriptu a prehliadač v zbalenom
-  // texte vie hľadať (rovnako ako reťaz dôkazov).
-  const chunkList = (heading: string, chunks: InspectedChunk[], max: number) => chunks.length > 0 && (
-    <>
-      <h2 className="chunks-list-heading">{heading}</h2>
-      <ol className="chunks-list">
-        {chunks.map(c => (
-          <li key={c.chunkIndex}>
-            <details className="card chunk-item">
-              <summary>
-                <span className="quiet chunk-no">{c.chunkIndex + 1}</span>
-                <span className="chunk-head">
-                  <strong>{c.articleRef ?? t.noArticle}</strong>
-                  {c.heading && <span className="quiet"> · {c.heading}</span>}
-                </span>
-                <span className="quiet chunk-size">
-                  {t.tokens(c.tokens)}
-                  {c.tokens > max && <> <span className="tag tag--expired">{t.oversizedTag}</span></>}
-                </span>
-                <span className="quiet chunk-preview">
-                  {c.text.slice(0, PREVIEW_CHARS)}{c.text.length > PREVIEW_CHARS ? "…" : ""}
-                </span>
-              </summary>
-              <pre className="chunk-text">{c.text}</pre>
-            </details>
-          </li>
-        ))}
-      </ol>
-    </>
+  /* ── pohľad Dnes: uložené úseky (pri koncepte rez pri zverejnení) ── */
+  const todayView = (
+    <article className="cut-doc card" aria-label={c.docLabel}>
+      {state.todayChunks.map((ch, i) => {
+        const oversized = ch.tokens > limit
+        const fragment = !oversized && ch.complete === false && ch.tokens < min / 2
+        return (
+          <section key={ch.chunkIndex} className={`cut-block ${tone(i)}${oversized ? " is-oversized" : ""}${fragment ? " is-fragment" : ""}`}
+                   aria-label={c.chunkLabel(ch.chunkIndex + 1)}>
+            <header className="cut-head">
+              <span className="cut-no">{ch.chunkIndex + 1}</span>
+              <span className="cut-ref">{ch.articleRef ?? t.noArticle}</span>
+              <span className="cut-tokens quiet">{t.tokens(ch.tokens)}</span>
+              {oversized && <><span className="tag tag--expired">{t.oversizedTag}</span><span className="cut-note quiet">{c.oversizedNote(limit)}</span></>}
+              {fragment && <><span className="tag tag--draft">{c.fragmentTag}</span><span className="cut-note quiet">{c.fragmentNote}</span></>}
+            </header>
+            <div className="cut-body">
+              {splitBlocks(ch.text).map(b => <BlockView key={b.index} block={b} />)}
+            </div>
+          </section>
+        )
+      })}
+    </article>
   )
 
-  // Rozbor: sedí profil, iné slovo, alebo nič (voľný text).
-  const best = r.analysis?.suggestions[0]
-  const analysisVerdict = !r.analysis ? null
-    : !r.analysis.confident || !best?.articleWord ? t.analysisPlain
-    : best.articleWord === r.profile.values.articleWord ? t.analysisFits(best.articleWord)
-    : t.analysisOther(best.articleWord)
+  /* ── pohľad Návrh a Rozdiel: bloky textu podľa hraníc kola ── */
+  const groups = round ? groupBlocks(state.blocks.length, round.boundaries) : []
+  const proposalView = (withDiff: boolean) => (
+    <article className="cut-doc card" aria-label={c.docLabel}>
+      {groups.map((g, i) => {
+        const start = g[0]
+        const added = withDiff && diff!.added.includes(start)
+        const tokens = proposalTokens[i]
+        const nodes: ReactNode[] = []
+        g.forEach(b => {
+          if (withDiff && b !== start && diff!.removed.includes(b)) {
+            nodes.push(
+              <div key={`rm-${b}`} className="cut-boundary cut-boundary--removed cut-boundary--inside" role="note">
+                <span className="cut-boundary-label">{c.removedBoundary(label(b))}</span>
+                <span className="cut-boundary-line" aria-hidden="true" />
+                {reasonOf(b) && <span className="cut-boundary-why">{reasonOf(b)}</span>}
+              </div>,
+            )
+          }
+          nodes.push(<BlockView key={b} block={state.blocks[b]} />)
+        })
+        return (
+          <div key={start} className="cut-group">
+            {added && (
+              <div className="cut-boundary cut-boundary--new" role="note">
+                <span className="cut-boundary-label">{c.newBoundary(label(start))}</span>
+                <span className="cut-boundary-line" aria-hidden="true" />
+                {reasonOf(start) && <span className="cut-boundary-why">{reasonOf(start)}</span>}
+              </div>
+            )}
+            <section className={`cut-block ${tone(i)}${tokens > limit ? " is-oversized" : ""}`} aria-label={c.chunkLabel(i + 1)}>
+              <header className="cut-head">
+                <span className="cut-no">{i + 1}</span>
+                <span className="cut-ref">{state.blocks[start].kind === "heading" ? headingText(state.blocks[start]) : c.continuation}</span>
+                <span className="cut-tokens quiet">{t.tokens(tokens)}</span>
+                {added && <span className="tag tag--new">{c.newChunkTag}</span>}
+                {tokens > limit && <span className="tag tag--expired">{t.oversizedTag}</span>}
+              </header>
+              <div className="cut-body">{nodes}</div>
+            </section>
+          </div>
+        )
+      })}
+    </article>
+  )
 
   return (
     <AppShell language={language} title={t.heading} trail={{ [`/library/${documentId}`]: r.title }}>
-    <div className="chunks-page" style={{ maxWidth: 900, ...tenantStyle(branding) }}>
+    <div className="cut-page" style={{ maxWidth: 1180, ...tenantStyle(branding) }}>
       <Notice language={language} message={q.msg} error={q.error === "1"} back={here} />
-      <h1 className="page-title" style={{ margin: "0 0 4px" }}>{t.heading}</h1>
-      <p className="quiet page-lead" style={{ margin: "0 0 18px", maxWidth: 680 }}>{t.intro}</p>
 
-      <section className="card chunks-summary">
-        <dl className="detail-meta" style={{ margin: 0 }}>
-          <div className="detail-meta-row">
-            <dt className="quiet detail-meta-key">{t.profile}</dt>
-            <dd className="detail-meta-value">
-              {r.profile.label} · {`„${r.profile.values.articleWord}“`} · {t.target(r.profile.values.minTokens, r.profile.values.maxTokens)}
-            </dd>
-          </div>
-          {r.version && (
-            <div className="detail-meta-row">
-              <dt className="quiet detail-meta-key">{t.version}</dt>
-              <dd className="detail-meta-value">{r.version.label}</dd>
-            </div>
-          )}
-        </dl>
-
-        {!r.version ? (
-          <p className="quiet" style={{ margin: 0 }}>{t.noVersion}</p>
-        ) : (
-          <>
-            <div className="chunks-stats">
-              <div><span className="quiet">{t.statsCount}</span><strong>{r.stats.count}</strong></div>
-              <div><span className="quiet">{t.statsArticles}</span><strong>{r.stats.withArticlePercent} %</strong></div>
-              <div>
-                <span className="quiet">{t.statsTokens}</span>
-                <strong>{t.tokensRange(r.stats.tokensMin, r.stats.tokensAvg, r.stats.tokensMax)}</strong>
-              </div>
-            </div>
-            {r.today && (
-              r.today.outdated ? (
-                <div className="lnote lnote--warn">
-                  <span className="lnote-mark" aria-hidden="true">!</span>
-                  <span className="lnote-text">
-                    {t.outdated(r.stats.count, r.today.count)} {t.reindexHint}
-                  </span>
-                </div>
-              ) : (
-                <p className="quiet" style={{ margin: 0 }}>{t.upToDate}</p>
-              )
-            )}
-          </>
-        )}
-      </section>
-
-      {r.version && (
-        <section className="card chunks-block">
-          <h2>{t.warningsHeading}</h2>
-          {r.warnings.length === 0 ? (
-            <p className="quiet" style={{ margin: 0 }}>{t.noWarnings}</p>
-          ) : (
-            <ul className="chunks-warnings">
-              {r.warnings.map(w => <li key={w.code}>{warningText(w)}</li>)}
-            </ul>
-          )}
-        </section>
-      )}
-
-      {r.analysis && (
-        <section className="card chunks-block">
-          <h2>{t.analysisHeading}</h2>
-          <p style={{ margin: 0 }}>{analysisVerdict}</p>
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>
-            {t.analysisFound(
-              r.analysis.signals.lines, r.analysis.signals.articleWord, r.analysis.signals.paragraphSign,
-              r.analysis.signals.pointWord, r.analysis.signals.markdownHeadings,
-            )}
+      <div className="page-head">
+        <div className="page-head-main">
+          <h1 className="page-title">{t.heading}</h1>
+          <p className="quiet page-lead">
+            {round && view !== "today"
+              ? c.roundLead(formatDate(new Date(round.at), language), round.model, round.no)
+              : t.intro}
           </p>
-        </section>
+        </div>
+        <span className="page-head-spacer" aria-hidden="true" />
+        {!round && state.text && (
+          <form action={proposeChunkCutAction} className="page-tools">
+            <input type="hidden" name="documentId" value={documentId} />
+            <SubmitButton className="button button--quiet" pendingLabel={c.proposing}>{c.propose}</SubmitButton>
+          </form>
+        )}
+      </div>
+
+      {state.draft && (
+        <div className="lnote lnote--warn" style={{ marginBottom: 14 }}>
+          <span className="lnote-mark" aria-hidden="true">!</span>
+          <span className="lnote-text">{c.draftNote}</span>
+        </div>
       )}
 
-      {/*
-        Návrh AI (krok C): štruktúra dokumentu ide modelu, posledný návrh je
-        uložený pri dokumente. „Skúsiť tento rez" vedie na skúšobný rez
-        z kroku B s navrhnutými hodnotami — uloženie ide tou istou cestou.
-      */}
-      {r.analysis && (
-        <section className="card chunks-block">
-          <h2>{t.adviceHeading}</h2>
-          {r.advice ? (
+      {!state.text ? (
+        <div className="empty">
+          <div className="empty-title">{c.noTextTitle}</div>
+          <div className="empty-text">{t.noVersion}</div>
+        </div>
+      ) : (
+        <>
+          <div className="cut-summary card">
+            <span><span className="quiet">{t.version}</span> <strong>{state.draft ? c.draftVersion : (r.version?.label ?? "—")}</strong></span>
+            <span><span className="quiet">{c.method}</span> <strong>{state.manual ? c.methodManual : r.profile.label}</strong></span>
+            {view === "today" ? (
+              <>
+                <span><span className="quiet">{t.statsCount}</span> <strong>{state.todayChunks.length}</strong></span>
+                <span><span className="quiet">{t.statsTokens}</span> <strong>{stat(todayTokens)}</strong> <span className="quiet">({t.target(min, r.profile.values.maxTokens)})</span></span>
+                <span className={`tag ${badToday ? "tag--draft" : "tag--published"}`}>{badToday ? c.badCount(badToday) : c.noBad}</span>
+              </>
+            ) : (
+              <>
+                <span><span className="quiet">{c.today}</span> <strong>{c.chunksCount(state.current.length + 1)}</strong></span>
+                <span><span className="quiet">{c.proposal}</span> <strong>{c.chunksCount(groups.length)}</strong> <span className="quiet">· {stat(proposalTokens)}</span></span>
+                <span className={`tag ${badProposal ? "tag--draft" : "tag--published"}`}>{badProposal ? c.badCount(badProposal) : c.noBad}</span>
+              </>
+            )}
+            <span className="page-head-spacer" aria-hidden="true" />
+            {round && (
+              <nav className="view-switch" aria-label={c.viewLabel}>
+                <Link className={`view-switch-item${view === "today" ? " is-on" : ""}`} href={href("today")} aria-current={view === "today" ? "page" : undefined}>{c.viewToday}</Link>
+                <Link className={`view-switch-item${view === "proposal" ? " is-on" : ""}`} href={href("proposal")} aria-current={view === "proposal" ? "page" : undefined}>{c.viewProposal}</Link>
+                <Link className={`view-switch-item${view === "diff" ? " is-on" : ""}`} href={href("diff")} aria-current={view === "diff" ? "page" : undefined}>{c.viewDiff}</Link>
+              </nav>
+            )}
+          </div>
+
+          {view === "today" && r.today?.outdated && !state.draft && (
+            <div className="lnote lnote--warn" style={{ marginBottom: 14 }}>
+              <span className="lnote-mark" aria-hidden="true">!</span>
+              <span className="lnote-text">{t.outdated(r.stats.count, r.today.count)} {t.reindexHint}</span>
+            </div>
+          )}
+
+          {view === "diff" && round && diff && (
+            <div className="lnote" style={{ marginBottom: 14 }}>
+              <span className="lnote-mark" aria-hidden="true">✓</span>
+              <span className="lnote-text">
+                {c.diffLead(diff.added.length, diff.removed.length)}
+                {round.summary && <> {round.summary}</>}
+                {state.approximate && <> {c.approximate}</>}
+              </span>
+            </div>
+          )}
+
+          {view === "today" ? todayView : proposalView(view === "diff")}
+
+          {round && round.issues.length > 0 && view !== "today" && (
+            <section className="card chunks-block">
+              <h2>{c.issuesHeading}</h2>
+              <ul className="chunks-warnings">{round.issues.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            </section>
+          )}
+
+          {round && (
             <>
-              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>
-                {t.adviceMeta(formatDate(new Date(r.advice.at), language), r.advice.model, r.advice.by)} · {t.adviceConfidence[r.advice.confidence]}
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>
-                  {r.advice.strategy === "headings"
-                    ? t.adviceStrategyHeadings
-                    : t.adviceStrategyArticles(r.advice.values.articleWord, r.advice.values.minTokens, r.advice.values.maxTokens)}
-                </strong>
-              </p>
-              {r.advice.reasoning && <p style={{ margin: 0 }}>{r.advice.reasoning}</p>}
-              {r.advice.issues.length > 0 && (
-                <>
-                  <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.adviceIssues}</p>
-                  <ul className="chunks-warnings">{r.advice.issues.map((x, i) => <li key={i}>{x}</li>)}</ul>
-                </>
-              )}
-              {r.advice.strategy === "articles" && (
-                <p style={{ margin: 0 }}>
-                  <a href={`${here}?${new URLSearchParams({
-                    trial: "1",
-                    articleWord: r.advice.values.articleWord,
-                    annexWord: r.advice.values.annexWord,
-                    minTokens: String(r.advice.values.minTokens),
-                    maxTokens: String(r.advice.values.maxTokens),
-                  }).toString()}`}>{t.adviceTry} →</a>
-                </p>
-              )}
+              <form action={proposeChunkCutAction} className="form-group cut-form">
+                <input type="hidden" name="documentId" value={documentId} />
+                <h2 className="form-group-head">{c.noteHeading}</h2>
+                <div className="card form-group-body cut-form-body">
+                  <label className="field">
+                    <span className="field-label">{c.noteLabel}</span>
+                    <textarea className="field-input" name="note" rows={3} maxLength={2000} placeholder={c.notePlaceholder} />
+                    <span className="quiet field-hint">{c.noteHint}</span>
+                  </label>
+                  <div><SubmitButton className="button button--quiet" pendingLabel={c.proposing}>{c.proposeAgain}</SubmitButton></div>
+                </div>
+              </form>
+
+              <section className="form-group cut-form" aria-labelledby="cut-rounds">
+                <h2 className="form-group-head" id="cut-rounds">{c.roundsHeading}</h2>
+                <div className="card cut-rounds">
+                  {state.rounds.map(x => (
+                    <div key={x.no} className="cut-round">
+                      <span className="cut-round-no">{x.no}</span>
+                      <div>
+                        <div className="cut-round-meta">
+                          <strong>{x.source === "auto" ? c.roundAuto : x.by}</strong> · {formatDate(new Date(x.at), language)} · {x.model}
+                        </div>
+                        {x.note
+                          ? <p className="cut-round-note">„{x.note}“</p>
+                          : <p className="cut-round-note quiet">{c.roundNoNote}</p>}
+                        {x.summary && <p className="cut-round-change quiet">{x.summary}</p>}
+                      </div>
+                      {x.no === round.no
+                        ? <span className="tag tag--new">{c.roundShown}</span>
+                        : <Link className="button button--quiet button--sm" href={href("diff", x.no)}>{c.roundShow}</Link>}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <form action={acceptChunkRoundAction} className="card cut-accept">
+                <input type="hidden" name="documentId" value={documentId} />
+                <input type="hidden" name="round" value={round.no} />
+                <div className="cut-accept-main">
+                  <div className="cut-accept-title">{c.acceptTitle(round.no)}</div>
+                  <div className="quiet cut-accept-note">{state.draft ? c.acceptNoteDraft(groups.length) : c.acceptNote(groups.length)}</div>
+                </div>
+                <SubmitButton className="button" pendingLabel={c.accepting}>{c.accept}</SubmitButton>
+              </form>
             </>
-          ) : (
-            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.adviceIntro}</p>
           )}
-          <form action={requestChunkingAdviceAction}>
-            <input type="hidden" name="documentId" value={documentId} />
-            <SubmitButton className="button button--quiet">{r.advice ? t.adviceAgain : t.adviceButton}</SubmitButton>
-          </form>
-        </section>
+
+          {!round && (
+            <section className="card chunks-block">
+              <h2>{c.proposeHeading}</h2>
+              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{c.proposeIntro}</p>
+            </section>
+          )}
+
+          {/* Pomenovaný profil (D79) — rez profilom ostáva pre dokumenty bez ručných hraníc. */}
+          {r.profiles.length > 1 && (
+            <details className="card chunks-block cut-profile">
+              <summary>{t.saveHeading} · {r.profile.label}</summary>
+              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.saveIntro}</p>
+              <form action={applyChunkingProfileAction} className="chunks-row">
+                <input type="hidden" name="documentId" value={documentId} />
+                <label className="field">
+                  <span className="field-label">{t.useProfile}</span>
+                  <select className="field-input" name="profileKey" defaultValue={r.profile.key}>
+                    {r.profiles.map(p => (
+                      <option key={p.key} value={p.key}>
+                        {p.label} · „{p.values.articleWord}“{p.key === r.profile.key ? ` (${t.currentProfile})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div><SubmitButton className="button button--quiet">{t.useProfileButton}</SubmitButton></div>
+              </form>
+            </details>
+          )}
+        </>
       )}
-
-      {/* Skúšobný rez — GET, nič sa neukladá; hodnoty sú v adrese. */}
-      {r.analysis && (
-        <form action={here} method="get" className="card chunks-block">
-          <input type="hidden" name="trial" value="1" />
-          <h2>{t.trialHeading}</h2>
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.trialIntro}</p>
-          <div className="chunks-fields">
-            <label className="field">
-              <span className="field-label">{t.fieldArticleWord}</span>
-              <input className="field-input" name="articleWord" defaultValue={(r.trial?.values ?? r.profile.values).articleWord} />
-              <span className="quiet field-hint">{t.fieldArticleWordHint}</span>
-            </label>
-            <label className="field">
-              <span className="field-label">{t.fieldAnnexWord}</span>
-              <input className="field-input" name="annexWord" defaultValue={(r.trial?.values ?? r.profile.values).annexWord} />
-            </label>
-            <label className="field">
-              <span className="field-label">{t.fieldMinTokens}</span>
-              <input className="field-input" type="number" name="minTokens" min={50} max={2000} inputMode="numeric"
-                     defaultValue={(r.trial?.values ?? r.profile.values).minTokens} />
-            </label>
-            <label className="field">
-              <span className="field-label">{t.fieldMaxTokens}</span>
-              <input className="field-input" type="number" name="maxTokens" min={100} max={4000} inputMode="numeric"
-                     defaultValue={(r.trial?.values ?? r.profile.values).maxTokens} />
-            </label>
-          </div>
-          <div className="chunks-actions">
-            <button className="button button--quiet" type="submit">{t.trialShow}</button>
-            {r.trial && <a href={here}>{t.trialReset}</a>}
-          </div>
-        </form>
-      )}
-
-      {r.trial && (
-        <section className="card chunks-block">
-          <h2>{t.compareHeading}</h2>
-          <table className="chunks-compare">
-            <thead><tr><th /><th>{t.compareNow}</th><th>{t.compareTrial}</th></tr></thead>
-            <tbody>
-              <tr><th scope="row">{t.statsCount}</th><td>{r.stats.count}</td><td>{r.trial.stats.count}</td></tr>
-              <tr><th scope="row">{t.statsArticles}</th><td>{r.stats.withArticlePercent} %</td><td>{r.trial.stats.withArticlePercent} %</td></tr>
-              <tr><th scope="row">{t.compareMax}</th><td>{r.stats.tokensMax}</td><td>{r.trial.stats.tokensMax}</td></tr>
-            </tbody>
-          </table>
-          {r.trial.warnings.length > 0 && (
-            <ul className="chunks-warnings">
-              {r.trial.warnings.map(w => <li key={w.code}>{warningText(w)}</li>)}
-            </ul>
-          )}
-          {r.trial.sameAsCurrent && !r.trial.matchesProfile && (
-            <p className="quiet" style={{ margin: 0 }}>{t.trialSameAsCurrent}</p>
-          )}
-          {r.trial.matchesProfile && (
-            <p className="quiet" style={{ margin: 0 }}>
-              {t.trialMatches(r.profiles.find(p => p.key === r.trial!.matchesProfile)?.label ?? r.trial.matchesProfile)}
-            </p>
-          )}
-        </section>
-      )}
-
-      {/* Profil pre dokument (D79): existujúci, alebo nový pomenovaný z hodnôt skúšky. */}
-      <section className="card chunks-block">
-        <h2>{t.saveHeading}</h2>
-        <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{t.saveIntro}</p>
-        {r.profiles.length > 1 && (
-          <form action={applyChunkingProfileAction} className="chunks-row">
-            <input type="hidden" name="documentId" value={documentId} />
-            <label className="field">
-              <span className="field-label">{t.useProfile}</span>
-              <select className="field-input" name="profileKey" defaultValue={r.trial?.matchesProfile ?? r.profile.key}>
-                {r.profiles.map(p => (
-                  <option key={p.key} value={p.key}>
-                    {p.label} · „{p.values.articleWord}“{p.key === r.profile.key ? ` (${t.currentProfile})` : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div><SubmitButton className="button button--quiet">{t.useProfileButton}</SubmitButton></div>
-          </form>
-        )}
-        {r.trial && !r.trial.matchesProfile && !r.trial.sameAsCurrent && (
-          <form action={saveChunkingProfileAction} className="chunks-row">
-            <input type="hidden" name="documentId" value={documentId} />
-            <input type="hidden" name="articleWord" value={r.trial.values.articleWord} />
-            <input type="hidden" name="annexWord" value={r.trial.values.annexWord} />
-            <input type="hidden" name="headerRepeats" value={r.trial.values.headerRepeats} />
-            <input type="hidden" name="minTokens" value={r.trial.values.minTokens} />
-            <input type="hidden" name="maxTokens" value={r.trial.values.maxTokens} />
-            <label className="field">
-              <span className="field-label">{t.newProfile}</span>
-              <input className="field-input" name="label" required maxLength={60} placeholder={t.newProfileLabel} aria-label={t.newProfileLabel} />
-              <span className="quiet field-hint">{t.newProfileHint}</span>
-            </label>
-            <div><SubmitButton className="button">{t.newProfileButton}</SubmitButton></div>
-          </form>
-        )}
-      </section>
-
-      {r.trial
-        ? chunkList(t.trialListHeading, r.trial.chunks, Math.round(r.trial.values.maxTokens * OVERSIZE_FACTOR))
-        : chunkList(t.listHeading, r.stored, limit)}
     </div>
     </AppShell>
   )

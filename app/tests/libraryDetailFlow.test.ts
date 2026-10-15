@@ -22,6 +22,8 @@ const state = vi.hoisted(() => ({
   acks: [] as { versionId: string }[],
 }))
 
+const chunkCutter = vi.hoisted(() => ({ state: null as unknown }))
+vi.mock("@/lib/chunkCutter", () => ({ cutterState: async () => chunkCutter.state }))
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
   redirect: (to: string) => { throw new Error(`redirect ${to}`) },
@@ -66,7 +68,7 @@ vi.mock("@/lib/libraryRead", async importOriginal => ({
 }))
 vi.mock("@/app/documents/[documentId]/actions", () => stubs(["acknowledgeAction","setLegalBasisAction"]))
 vi.mock("@/lib/session", () => ({}))
-vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","reindexVersionAction","loadTextForFixAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction","archiveDocumentAction","restoreDocumentAction"]))
+vi.mock("../src/app/library/actions", () => stubs(["uploadAction","uploadVersionAction","saveTextAction","saveDraftMetaAction","prepareDraftAction","publishVersionAction","previewId","sendToModelAction","decideOnDraftAction","carryOverAssignmentsAction","saveDocumentMetadataAction","createFolderAction","renameFolderAction","moveFolderAction","deleteFolderAction","assignToFolderAction","moveManyAction","assignManyAction","reindexDocumentAction","reindexVersionAction","loadTextForFixAction","fixVersionAction","setResponsibleAction","revokeVersionAction","fixTextAction","shiftFolderAction","saveFolderOrderAction","submitForApprovalAction","cancelApprovalAction","archiveDocumentAction","restoreDocumentAction","deferChunkReviewAction"]))
 
 const pdf = (id: string) => ({ id, name: `${id}.pdf`, bytes: 1_300_000, sha256: id, type: "pdf", uploadedAt: new Date(), uploadedBy: "jan@sfz.sk" })
 const effective = {
@@ -132,6 +134,23 @@ describe("detail — postup znenia", () => {
     // (KNIZNICA-akcie-dokumentu, 8. 10. 2026).
     expect(html).not.toContain('aria-disabled="true"')
     expect(html).toContain('<a class="button button--quiet doc-primary" href="#flow">Pokračovať v príprave</a>')
+  })
+
+  it("krok 1: Skontrolovať členenie s návrhom AI, odkazom na Rozdiel a Odložiť (KNIZ-rezac-blokov, Q5 A)", async () => {
+    chunkCutter.state = { text: "# A", reviewed: false, manual: false, rounds: [{ no: 1, boundaries: [3, 7] }] }
+    try {
+      const html = await render()
+      expect(html).toContain("Skontrolovať členenie")
+      expect(html).toContain("Návrh AI je hotový: 3 úseky")
+      expect(html).toContain("/chunks?view=diff")
+      expect(html).toContain(">Odložiť</button>")
+      chunkCutter.state = { text: "# A", reviewed: true, manual: true, rounds: [] }
+      const done = await render()
+      expect(done).toContain("rez je prijatý — uplatní sa pri zverejnení")
+      expect(done).not.toContain(">Odložiť</button>")
+    } finally {
+      chunkCutter.state = null
+    }
   })
 
   it("krok 1 po zamietnutí ukáže dôvod doslova", async () => {

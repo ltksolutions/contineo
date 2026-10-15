@@ -26,7 +26,9 @@ import {
   resyncConnectorDocumentAction,
   fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction, archiveDocumentAction, restoreDocumentAction, setDraftResponsibleAction,
+  deferChunkReviewAction,
 } from "../actions"
+import { cutterState } from "@/lib/chunkCutter"
 import { cancelInfo, roundEvents, sortTimeline, timelineWorthShowing, TIMELINE_SHOWN, type TimelineEvent } from "@/lib/documentTimeline"
 import { allFolders, flattenTree } from "@/lib/folders"
 // Strom oddelení a strom priečinkov majú rovnaké pomenovanie funkcií —
@@ -322,6 +324,12 @@ export default async function DocumentDetailPage({
     carryOverCount: carryOver.length,
   })
   const running = draftRounds.find(r => r.outcome === null) ?? null
+  /*
+    Krok „Skontrolovať členenie" (KNIZ-rezac-blokov, Q5 A) — len v príprave
+    (krok 1), kým kurátor rez konceptu neprijme alebo neodloží. Zverejnenie
+    sa nebráni: členenie je odporúčanie, nie brána.
+  */
+  const chunkReview = flow?.step === 1 ? await cutterState(ctx.tenant.companyCode, documentId).catch(() => null) : null
   /*
     Archivácia (ADR-025, D156). Stav sa odvodzuje zo záznamu pri poslednom
     zverejnenom znení; prečo sa archivovať nedá, povie karta vopred — server
@@ -1428,6 +1436,27 @@ export default async function DocumentDetailPage({
                   </div>
                   <Link className="button button--quiet button--sm" href={`${base}/text`}>{tflow.showText}</Link>
                 </div>
+                {chunkReview && chunkReview.text && (
+                  <div className="flow-check-row">
+                    <span className={`flow-check-ico ${chunkReview.reviewed ? "is-ok" : "is-opt"}`} aria-hidden="true">{chunkReview.reviewed ? "✓" : "–"}</span>
+                    <div className="flow-check-main">
+                      {tflow.checkChunks}
+                      <div className="flow-check-note">
+                        {chunkReview.reviewed
+                          ? (chunkReview.manual ? tflow.checkChunksAccepted : tflow.checkChunksDeferred)
+                          : chunkReview.rounds[0]
+                            ? tflow.checkChunksReady(chunkReview.rounds[0].boundaries.length + 1)
+                            : tflow.checkChunksPending}
+                      </div>
+                    </div>
+                    <Link className="button button--quiet button--sm" href={`${base}/chunks${chunkReview.rounds[0] ? "?view=diff" : ""}`}>{tflow.openChunksStep}</Link>
+                    {!chunkReview.reviewed && (
+                      <button type="submit" className="button button--quiet button--sm" formAction={deferChunkReviewAction} formNoValidate>
+                        {tflow.deferChunks}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Názov dokumentu (ADR-015, D112): pri platnom znení sa mení len novým znením. */}

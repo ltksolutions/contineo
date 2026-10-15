@@ -8883,3 +8883,64 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
 .hier-row { padding: 9px 16px 9px calc(16px + var(--level, 0) * 22px); border-top: 1px solid var(--line); overflow-wrap: anywhere; }
 .hier-row:first-child { border-top: 0; }
 .hier-also { display: block; font-size: var(--fs-micro); margin-top: 2px; }
+
+/* ── Rezač blokov: Členenie na úseky (KNIZ-rezac-blokov, 15. 10. 2026) ──────
+   Text znenia ako bloky úsekov. Šesť tónov z farby organizácie (nie dúha),
+   ľavý pruh; nález (veľký, úlomok) farbí pruh. Hranice návrhu AI ako pruhy
+   medzi blokmi: nová zelená, zrušená červená a prečiarknutá. */
+.cut-page { display: block; }
+.cut-summary { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 12px 18px; margin: 0 0 14px; font-size: var(--fs-small); }
+.cut-summary strong { font-variant-numeric: tabular-nums; }
+.cut-doc { display: flex; flex-direction: column; padding: 0; overflow: hidden; margin: 0 0 18px; }
+.cut-group + .cut-group > .cut-block, .cut-block + .cut-block { border-top: 1px solid var(--line); }
+.cut-block { position: relative; border-left: 4px solid var(--line-strong); padding: 10px 20px 16px; min-width: 0; }
+.cut-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: var(--fs-small); margin: 0 0 6px; min-height: 28px; }
+.cut-no { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line-strong); font-weight: 700; font-variant-numeric: tabular-nums; }
+.cut-ref { font-weight: 650; overflow-wrap: anywhere; }
+.cut-tokens { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cut-note { font-size: var(--fs-micro); }
+.cut-body { line-height: 1.6; max-width: 78ch; overflow-wrap: anywhere; }
+.cut-body h2 { margin: 6px 0 8px; font-size: 18px; font-weight: 700; }
+.cut-body h3 { margin: 12px 0 6px; font-size: 15.5px; font-weight: 650; }
+.cut-body p { margin: 0 0 10px; }
+.cut-pre { margin: 6px 0 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 13px; line-height: 1.45; overflow-x: auto; white-space: pre; }
+.cut-tone-1 { background: color-mix(in oklab, var(--accent) 6%, var(--surface)); border-left-color: color-mix(in oklab, var(--accent) 55%, var(--surface)); }
+.cut-tone-2 { background: color-mix(in oklab, var(--accent) 10%, var(--surface)); border-left-color: color-mix(in oklab, var(--accent) 70%, var(--surface)); }
+.cut-tone-3 { background: color-mix(in oklab, var(--accent) 4%, var(--surface)); border-left-color: color-mix(in oklab, var(--accent) 45%, var(--surface)); }
+.cut-tone-4 { background: color-mix(in oklab, var(--accent) 12%, var(--surface)); border-left-color: color-mix(in oklab, var(--accent) 80%, var(--surface)); }
+.cut-tone-5 { background: color-mix(in oklab, var(--accent) 7%, var(--surface)); border-left-color: color-mix(in oklab, var(--accent) 60%, var(--surface)); }
+.cut-tone-6 { background: color-mix(in oklab, var(--accent) 3%, var(--surface)); border-left-color: color-mix(in oklab, var(--accent) 40%, var(--surface)); }
+.cut-block.is-oversized { border-left-color: var(--bad-fg); }
+.cut-block.is-fragment { border-left-color: var(--warn-fg); }
+.cut-boundary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; padding: 6px 20px; font-size: var(--fs-small); min-height: 40px; }
+.cut-boundary--inside { margin: 6px -20px; }
+.cut-boundary-line { flex: 1 1 40px; height: 0; border-top: 2px dashed var(--line-strong); }
+.cut-boundary-label { font-weight: 650; }
+.cut-boundary-why { flex: 1 1 100%; min-width: 0; }
+.cut-boundary--new { background: var(--ok-bg); color: var(--ok-fg); }
+.cut-boundary--new .cut-boundary-line { border-top: 2px solid var(--ok-fg); }
+.cut-boundary--removed { background: var(--bad-bg); color: var(--bad-fg); }
+.cut-boundary--removed .cut-boundary-line { border-top-color: var(--bad-fg); }
+.cut-boundary--removed .cut-boundary-label { text-decoration: line-through; }
+.cut-form { margin: 0 0 18px; }
+.cut-form-body { padding: 14px 16px; display: grid; gap: 10px; }
+.cut-rounds { padding: 0; }
+.cut-round { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; padding: 12px 16px; align-items: start; }
+.cut-round + .cut-round { border-top: 1px solid var(--line); }
+.cut-round-no { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 999px; background: var(--surface-2); font-size: 12px; font-weight: 700; }
+.cut-round-meta { font-size: var(--fs-small); }
+.cut-round-note { margin: 4px 0 0; font-size: 14px; line-height: 1.5; }
+.cut-round-change { margin: 4px 0 0; font-size: var(--fs-small); }
+.cut-accept { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 14px 16px; margin: 0 0 18px; }
+.cut-accept-main { flex: 1 1 320px; min-width: 0; }
+.cut-accept-title { font-weight: 650; }
+.cut-accept-note { font-size: var(--fs-small); }
+.cut-profile > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 650; }
+@media (max-width: 639px) {
+  .cut-block { padding: 8px 12px 14px; }
+  .cut-boundary { padding: 6px 12px; }
+  .cut-boundary--inside { margin: 6px -12px; }
+  .cut-round { grid-template-columns: 24px minmax(0, 1fr); }
+  .cut-round > :last-child { grid-column: 2; justify-self: start; }
+  .cut-accept .button { width: 100%; min-height: 44px; }
+}
