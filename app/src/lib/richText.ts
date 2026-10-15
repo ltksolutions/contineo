@@ -12,6 +12,7 @@
  */
 
 import { toBlocks, type Segment } from "./formatText"
+import { isExternalHref, splitExternal } from "./courierLinks"
 
 /** Uzol dokumentu editora (tvar JSON z Tiptap / ProseMirror). */
 export interface RichNode {
@@ -34,11 +35,15 @@ export function isInternalHref(href: unknown): href is string {
 function inline(segments: Segment[]): RichNode[] {
   return segments
     .filter(s => s.text !== "")
-    .map(s => s.druh === "tucne"
-      ? { type: "text", text: s.text, marks: [{ type: "bold" }] }
+    .flatMap((s): RichNode[] => s.druh === "tucne"
+      ? [{ type: "text", text: s.text, marks: [{ type: "bold" }] }]
       : s.druh === "odkaz"
-        ? { type: "text", text: s.text, marks: [{ type: "link", attrs: { href: s.href } }] }
-        : { type: "text", text: s.text })
+        ? [{ type: "text", text: s.text, marks: [{ type: "link", attrs: { href: s.href } }] }]
+        // Odkaz von (D222) ostáva v spoločnom rozklade obyčajným textom;
+        // editor Kuriéra ho z textu vytiahne sám.
+        : splitExternal(s.text).filter(p => p.text !== "").map(p => p.druh === "von"
+          ? { type: "text", text: p.text, marks: [{ type: "link", attrs: { href: p.href } }] }
+          : { type: "text", text: p.text }))
 }
 
 const paragraph = (segments: Segment[]): RichNode => {
@@ -65,7 +70,7 @@ function inlineMarkdown(nodes: RichNode[] | undefined): string {
     const link = n.marks?.find(m => m.type === "link")
     const href = link?.attrs?.href
     // Odkaz má prednosť pred tučným — `[**x**](/cesta)` rozklad nepozná.
-    if (link && isInternalHref(href)) return `[${n.text.replace(/[[\]]/g, "")}](${href})`
+    if (link && (isInternalHref(href) || isExternalHref(href))) return `[${n.text.replace(/[[\]]/g, "")}](${href})`
     if (n.marks?.some(m => m.type === "bold")) {
       const inner = n.text.trim()
       if (!inner) return n.text

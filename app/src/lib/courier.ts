@@ -30,6 +30,8 @@
  * `unreadFor` je len index pre počet a mení sa na tých istých miestach.
  */
 
+import { externalLinksOf } from "./courierLinks"
+import { fetchPreviews, type LinkPreview } from "./linkPreview"
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
@@ -121,6 +123,11 @@ export interface Message {
   author: PersonRef
   /** Ľahký Markdown; vykresľuje `formatText.ts`, nikdy HTML (D208). */
   text: string
+  /**
+   * Náhľady odkazov von, získané raz pri odoslaní a uložené ako kópia
+   * (D222). Chýba pri správach spred D222 a pri správe bez odkazov von.
+   */
+  previews?: LinkPreview[]
   at: Date
   editedAt: Date | null
 }
@@ -181,8 +188,19 @@ export function previewOf(text: string): string {
     .replace(/^#+\s*/, "")
     .replace(/^\s*[-*•]\s+/, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // vnútorné aj vonkajšie odkazy (D222)
   return plain.length > 120 ? `${plain.slice(0, 119).trimEnd()}…` : plain
+}
+
+/**
+ * Náhľady odkazov von pri odoslaní (D222) — prázdny objekt, keď v texte
+ * odkaz von nie je, aby sa pole `previews` neukladalo zbytočne.
+ */
+async function previewsFor(text: string, now: Date): Promise<{ previews?: LinkPreview[] }> {
+  const links = externalLinksOf(text)
+  if (!links.length) return {}
+  const previews = await fetchPreviews(links, now)
+  return previews.length ? { previews } : {}
 }
 
 /** Prázdny predmet alebo text sa neposiela; dlhý sa neukladá potichu skrátený. */
@@ -238,7 +256,7 @@ export async function createDirectThread(input: {
   const r = await col.insertOne(thread)
   const threadId = String(r.insertedId)
   const msgs = await messages()
-  await msgs.insertOne({ companyCode: input.companyCode, threadId, author: input.from, text, at: now, editedAt: null })
+  await msgs.insertOne({ companyCode: input.companyCode, threadId, author: input.from, text, ...await previewsFor(text, now), at: now, editedAt: null })
   await writeAudit({
     companyCode: input.companyCode,
     subject: "courier",
@@ -287,7 +305,7 @@ export async function postMessage(input: {
   const now = input.now ?? new Date()
 
   const msgs = await messages()
-  await msgs.insertOne({ companyCode: input.companyCode, threadId: input.threadId, author: input.author, text, at: now, editedAt: null })
+  await msgs.insertOne({ companyCode: input.companyCode, threadId: input.threadId, author: input.author, text, ...await previewsFor(text, now), at: now, editedAt: null })
 
   const others = participantsOf(thread).map(p => p.personId).filter(id => id !== input.author.personId)
   const col = await threads()
@@ -429,7 +447,7 @@ export async function createAnnouncement(input: {
   const r = await col.insertOne(thread)
   const threadId = String(r.insertedId)
   const msgs = await messages()
-  await msgs.insertOne({ companyCode: input.companyCode, threadId, author: input.from, text, at: now, editedAt: null })
+  await msgs.insertOne({ companyCode: input.companyCode, threadId, author: input.from, text, ...await previewsFor(text, now), at: now, editedAt: null })
   await writeAudit({
     companyCode: input.companyCode,
     subject: "courier",

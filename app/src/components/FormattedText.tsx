@@ -20,6 +20,27 @@ import { blockAnchors } from "@/lib/articleAnchors"
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { toBlocks, markCitations, CITE_TOKEN, type Segment } from "@/lib/formatText"
+import { splitExternal } from "@/lib/courierLinks"
+
+/**
+ * Odkaz von (`[text](https://…)`) — **len pri `external`**, teda v správe
+ * Kuriéra (ADR-033, D222). Viditeľne označený doménou a ↗, otvára sa v novej
+ * karte bez odovzdania adresy (`noreferrer`). V odpovedi asistenta ani
+ * v texte predpisu sa takýto úsek nikdy nevykreslí ako odkaz.
+ */
+function TextWithExternal({ text }: { text: string }) {
+  return (
+    <>
+      {splitExternal(text).map((p, i) => p.druh === "text"
+        ? <span key={i}>{p.text}</span>
+        : (
+          <a key={i} className="ext-link" href={p.href} target="_blank" rel="noopener noreferrer nofollow ugc">
+            {p.text}<span className="ext-link-host"> {p.host}&nbsp;↗</span>
+          </a>
+        ))}
+    </>
+  )
+}
 
 /**
  * Riadok rozložený na bežné, tučné a odkazujúce úseky.
@@ -27,7 +48,7 @@ import { toBlocks, markCitations, CITE_TOKEN, type Segment } from "@/lib/formatT
  * Odkaz smeruje len dovnútra aplikácie — vzor v `formatText.ts` cudziu
  * adresu neprepustí, takže `<Link>` je bezpečný.
  */
-export function Segments({ segments: segments }: { segments: Segment[] }) {
+export function Segments({ segments: segments, external = false }: { segments: Segment[]; external?: boolean }) {
   // Zarážky citácií (`markCitations`) — len v odpovedi s citáciami zo streamu.
   if (segments.some(u => u.text.includes("\uE000") || u.text.includes("\uE002"))) {
     return <CitedSegments segments={segments} />
@@ -39,7 +60,7 @@ export function Segments({ segments: segments }: { segments: Segment[] }) {
           ? <strong key={i}>{u.text}</strong>
           : u.druh === "odkaz"
             ? <Link key={i} href={u.href}>{u.text}</Link>
-            : <span key={i}>{u.text}</span>
+            : external ? <TextWithExternal key={i} text={u.text} /> : <span key={i}>{u.text}</span>
       )}
     </>
   )
@@ -101,8 +122,11 @@ export default function FormattedText({
   citations,
   anchors = false,
   highlight,
+  external = false,
 }: {
   text: string
+  /** Odkazy von s doménou a ↗ — len správa Kuriéra (D222), nikdy výstup modelu. */
+  external?: boolean
   /**
    * Kotvy na články a odseky normy (`#cl-18-ods-8`, `lib/articleAnchors.ts`) —
    * len pri texte predpisu v čitateľskom pohľade, nie v odpovediach či kurzoch.
@@ -133,19 +157,19 @@ export default function FormattedText({
               margin: i === 0 ? "0 0 8px" : "18px 0 8px",
             }}
           >
-            <Segments segments={b.segments} />
+            <Segments segments={b.segments} external={external} />
           </div>
         ) : b.druh === "odsek" ? (
           <p key={i} id={ids[i] ?? undefined} className={ids[i] ? `norm-anchor${cited.has(ids[i]!) ? " is-cited" : ""}` : undefined} style={{ margin: "0 0 12px" }}>
-            <Segments segments={b.segments} />
+            <Segments segments={b.segments} external={external} />
           </p>
         ) : b.numbered ? (
           <ol key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.items.map((p, j) => <li key={j}><Segments segments={p} /></li>)}
+            {b.items.map((p, j) => <li key={j}><Segments segments={p} external={external} /></li>)}
           </ol>
         ) : (
           <ul key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.items.map((p, j) => <li key={j}><Segments segments={p} /></li>)}
+            {b.items.map((p, j) => <li key={j}><Segments segments={p} external={external} /></li>)}
           </ul>
         )
       )}

@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kuriér: odkazy von s náhľadom (2026-10-16, D222)
+
+- Do správy sa dá vložiť aj adresa `https://…` — cez Odkaz / ⌘K, napísaním
+  alebo prilepením. Odkaz ukazuje doménu a ↗ a otvára sa v novej karte.
+- Pri odoslaní sa pod správu pripojí **náhľad** (názov, popis, obrázok)
+  z Open Graph stránky, najviac tri na správu. Náhľad sa uloží so správou;
+  obrázok je zmenšená kópia v Contineo, takže cudzí web nevidí čitateľov.
+- Server pri sťahovaní náhľadu nikdy nejde na vnútorné adresy siete
+  a má limit času aj veľkosti. Odpovede asistenta odkazy von nepovoľujú.
+
 ### Kuriér: editor správy „čo vidíš, to dostaneš" (2026-10-15)
 
 - Správa, odpoveď aj oznam sa píšu v editore s lištou **Tučné · Nadpis ·
