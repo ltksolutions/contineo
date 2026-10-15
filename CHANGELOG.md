@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kuriér: kurzíva, podčiarknuté, prečiarknuté, emotikony (2026-10-16, D223)
+
+- Lišta editora má slová namiesto písmen: **Tučné**, _Kurzíva_,
+  Podčiarknuté, Prečiarknuté, Nadpis (skratky ⌘B, ⌘I, ⌘U, ⌘⇧S).
+- Tlačidlo 😊 ponúka výber najčastejších emotikonov.
+- Formátovanie sa ukladá v ľahkom Markdowne (`_…_`, `++…++`, `~~…~~`)
+  a zobrazí sa len v Kuriéri; odpovede asistenta a predpisy sa nemenia.
+
 ### Kuriér: odkazy von s náhľadom (2026-10-16, D222)
 
 - Do správy sa dá vložiť aj adresa `https://…` — cez Odkaz / ⌘K, napísaním

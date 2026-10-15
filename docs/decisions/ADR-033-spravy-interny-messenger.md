@@ -262,6 +262,22 @@ druh segmentu s viditeľným označením":
    presmerovania, každé overené znova; limit 5 s, HTML najviac 512 kB,
    obrázok najviac 3 MB; žiadne cookies ani prihlásenie.
 
+### D223 — Kurzíva, podčiarknuté, prečiarknuté a emotikony v Kuriéri (16. 10. 2026)
+
+Ján 16. 10. 2026 k editoru: „chýbajú mi emotikony, naklonené písmo,
+podčiarknuté, prečiarknuté písmo a ikona H a B nech je slovom". Rozširuje
+D208 rovnako ako D222 — **len v Kuriéri** (`lib/courierInline.ts`,
+`FormattedText external`); spoločný rozklad pre odpoveď asistenta a text
+predpisov sa nemení.
+
+- Zápis: kurzíva `_text_` (na hranici slova, `snake_case` ostane),
+  prečiarknuté `~~text~~`, podčiarknuté `++text++` — Markdown pre
+  podčiarknutie štandard nemá, `++` je zaužívané rozšírenie; nikdy HTML.
+- Emotikony sú obyčajné znaky Unicode; editor ponúka krátky výber
+  najčastejších bez knižnice.
+- Tlačidlá formátovania nesú slovo (Tučné, Kurzíva, Podčiarknuté,
+  Prečiarknuté, Nadpis), ktoré samo ukazuje formát; skratka je v popise.
+
 ## 3. Čo tým vzniká
 
 **Kolekcie** (`companyCode` všade v podmienke, D32):
