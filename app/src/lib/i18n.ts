@@ -3830,6 +3830,8 @@ interface Dictionary {
       reindexItem: string
       reindexNote: string
       reindexAllNote: string
+      /** Odkaz za poznámkou pri Preindexovať — kto chce preindexovať, chce vidieť úseky. */
+      reindexChunksLink: string
       reindexShort: string
       restoreNote: string
     }
@@ -8681,6 +8683,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexItem: "Preindexovať toto znenie",
       reindexNote: "Text sa nemení, potvrdenia ostávajú.",
       reindexAllNote: "Text sa nemení, potvrdenia ostávajú.",
+      reindexChunksLink: "Ako je text rozdelený na úseky, ukáže Členenie.",
       reindexShort: "Preindexovať",
       restoreNote: "Predpis znova platí. Odvolané pridelenia sa neobnovia.",
     },
@@ -13482,6 +13485,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexItem: "Přeindexovat toto znění",
       reindexNote: "Text se nemění, potvrzení zůstávají.",
       reindexAllNote: "Text se nemění, potvrzení zůstávají.",
+      reindexChunksLink: "Jak je text rozdělen na úseky, ukáže Členění.",
       reindexShort: "Přeindexovat",
       restoreNote: "Předpis znovu platí. Odvolaná přidělení se neobnoví.",
     },
@@ -18269,6 +18273,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexItem: "Re-index this version",
       reindexNote: "The text does not change, acknowledgements stay.",
       reindexAllNote: "The text does not change, acknowledgements stay.",
+      reindexChunksLink: "Chunking shows how the text is split into chunks.",
       reindexShort: "Re-index",
       restoreNote: "The document is in effect again. Revoked assignments are not restored.",
     },

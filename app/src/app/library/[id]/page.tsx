@@ -820,6 +820,10 @@ export default async function DocumentDetailPage({
               {buttonLabel[p]}
             </Link>
           ))}
+          {/* Členenie na úseky je vec práve tohto znenia (z neho asistent
+              odpovedá) — tu ho človek hľadá prvý raz, v pravom stĺpci pod
+              Dokumentom ho dvakrát nenašiel (Ján, 15. 10. 2026). Ostáva aj tam. */}
+          <Link className="button button--quiet button--sm" href={`${base}/chunks`}>{tv.chunks}</Link>
         </div>
         {versionPanel(v)}
         {fixBlock(v)}
@@ -1779,7 +1783,7 @@ export default async function DocumentDetailPage({
           <input type="hidden" name="documentId" value={d.documentId} />
           <div className="more-main">
             <b>{t.reindexHeading}</b>
-            <span>{tv.reindexAllNote}</span>
+            <span>{tv.reindexAllNote} <Link href={`${base}/chunks`}>{tv.reindexChunksLink}</Link></span>
           </div>
           <SubmitButton className="button button--quiet">{tv.reindexShort}</SubmitButton>
         </form>

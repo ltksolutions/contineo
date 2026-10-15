@@ -344,6 +344,13 @@ describe("detail — staršie znenia (DETAIL-starsie-znenia)", () => {
     expect(html).toContain('<section class="card versions" id="versions">')
     expect(html).not.toContain('id="older"')
   })
+  it("Členenie je medzi tlačidlami platného znenia aj pri Preindexovať (15. 10. 2026)", async () => {
+    const html = await render()
+    const chunks = html.match(/href="\/library\/sfz%3App\/chunks"/g) ?? []
+    // Pravý stĺpec (Text), tlačidlá znenia a odkaz pri Preindexovať.
+    expect(chunks.length).toBeGreaterThanOrEqual(3)
+    expect(html).toContain("Ako je text rozdelený na úseky, ukáže Členenie.")
+  })
 })
 
 describe("detail — platné a pripravované znenie (novela vopred)", () => {
