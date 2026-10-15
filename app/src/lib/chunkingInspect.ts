@@ -19,6 +19,7 @@ import { chunkingFor, toChunkerProfile, DEFAULT_PROFILE_KEY, DEFAULT_CHUNKING, t
 import { chunkingFingerprint, needsReindex } from "./chunkIdentity"
 import { analyseChunking, type ChunkingAnalysis } from "./chunkingAnalysis"
 import type { ChunkingAdvice } from "./chunkingAdvice"
+import { cutForIndex, type ChunkCut } from "./chunkCut"
 
 /** Úsek tak, ako sa zobrazí. Text celý — obrazovka ho skryje do rozbaľovača. */
 export interface InspectedChunk {
@@ -166,6 +167,10 @@ export interface ChunkingInspection {
   trial: ChunkingTrial | null
   /** Posledný návrh AI uložený pri dokumente (krok C). */
   advice: ChunkingAdvice | null
+  /** Text, z ktorého sa reže (platné znenie, inak koncept) — rezač blokov. */
+  text: string
+  /** Prijaté ručné hranice pri dokumente (KNIZ-rezac-blokov). */
+  chunkCuts: ChunkCut[]
 }
 
 /** Rovnaké parametre rezu? (kľúč a menovka nehrajú rolu) */
@@ -196,10 +201,10 @@ export async function inspectChunking(
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne(
     { companyCode, documentId },
-    { projection: { documentId: 1, title: 1, versions: 1, chunkingProfile: 1, draftMarkdown: 1, chunkingAdvice: 1 } },
+    { projection: { documentId: 1, title: 1, versions: 1, chunkingProfile: 1, draftMarkdown: 1, chunkingAdvice: 1, chunkCuts: 1 } },
   ) as {
     documentId: string; title?: string; versions?: VersionRow[]; chunkingProfile?: string; draftMarkdown?: string
-    chunkingAdvice?: ChunkingAdvice
+    chunkingAdvice?: ChunkingAdvice; chunkCuts?: ChunkCut[]
   } | null
   if (!doc) return null
 
@@ -234,7 +239,11 @@ export async function inspectChunking(
 
   let today: ChunkingInspection["today"] = null
   if (effective && text) {
-    const cut = cutWith(text, doc.title ?? "", params)
+    // Ručné hranice kurátora (KNIZ-rezac-blokov) — tá istá voľba ako pri zápise.
+    const index = cutForIndex(text, doc.title ?? "", toChunkerProfile(params), doc.chunkCuts)
+    const cut = index.manual
+      ? { chunks: index.chunks.map(c => ({ chunkIndex: c.chunkIndex, heading: c.heading, articleRef: c.articleRef, chunkType: c.typ, text: c.text, tokens: estimateTokens(c.text), complete: c.uplnaJednotka })), fingerprint: chunkingFingerprint(index.chunks, index.fingerprintProfile) }
+      : cutWith(text, doc.title ?? "", params)
     const outdated = needsReindex(raw[0]?.chunkingId, cut.fingerprint)
     today = { count: cut.chunks.length, withArticlePercent: chunkStats(cut.chunks).withArticlePercent, outdated }
     // Uložené úseky nevedia, či sú celý článok — keď sedia s dnešným rezom,
@@ -276,5 +285,7 @@ export async function inspectChunking(
     profiles,
     trial,
     advice: doc.chunkingAdvice ?? null,
+    text,
+    chunkCuts: doc.chunkCuts ?? [],
   }
 }

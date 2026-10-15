@@ -2783,6 +2783,14 @@ interface Dictionary {
       checkSource: string
       checkSourceNote: string
       checkSourceMissing: string
+      /** Krok „Skontrolovať členenie" v príprave (KNIZ-rezac-blokov, Q5 A). */
+      checkChunks: string
+      checkChunksReady: (chunks: number) => string
+      checkChunksPending: string
+      checkChunksAccepted: string
+      checkChunksDeferred: string
+      openChunksStep: string
+      deferChunks: string
       replace: string
       showText: string
       metaHeading: string
@@ -3625,6 +3633,55 @@ interface Dictionary {
       newProfileLabel: string
       newProfileHint: string
       newProfileButton: string
+      /** Rezač blokov (KNIZ-rezac-blokov, 15. 10. 2026). */
+      cut: {
+        docLabel: string
+        chunkLabel: (n: number) => string
+        oversizedNote: (limit: number) => string
+        fragmentTag: string
+        fragmentNote: string
+        continuation: string
+        newChunkTag: string
+        newBoundary: (at: string) => string
+        removedBoundary: (at: string) => string
+        roundLead: (date: string, model: string, no: number) => string
+        propose: string
+        proposeAgain: string
+        proposing: string
+        proposeHeading: string
+        proposeIntro: string
+        draftNote: string
+        draftVersion: string
+        noTextTitle: string
+        method: string
+        methodManual: string
+        today: string
+        proposal: string
+        chunksCount: (n: number) => string
+        badCount: (n: number) => string
+        noBad: string
+        viewLabel: string
+        viewToday: string
+        viewProposal: string
+        viewDiff: string
+        diffLead: (added: number, removed: number) => string
+        approximate: string
+        issuesHeading: string
+        noteHeading: string
+        noteLabel: string
+        notePlaceholder: string
+        noteHint: string
+        roundsHeading: string
+        roundAuto: string
+        roundNoNote: string
+        roundShown: string
+        roundShow: string
+        acceptTitle: (no: number) => string
+        acceptNote: (chunks: number) => string
+        acceptNoteDraft: (chunks: number) => string
+        accept: string
+        accepting: string
+      }
       adviceHeading: string
       adviceIntro: string
       adviceButton: string
@@ -3697,6 +3754,10 @@ interface Dictionary {
       chunkingProfileSet: (label: string) => string
       chunkingProfileCreated: (label: string) => string
       chunkingAdviceReady: string
+      chunkRoundReady: (no: number) => string
+      chunkRoundAccepted: (no: number, chunks: number) => string
+      chunkRoundAcceptedDraft: (no: number) => string
+      chunkReviewDeferred: string
       reindexed: (chunks: number, archived: number) => string
       /** Súhrn „Preindexovať všetky znenia": koľko sa preindexovalo a koľko bolo bez zmeny. */
       reindexAllResult: (done: number, unchanged: number) => string
@@ -6375,6 +6436,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "chunking.aiNoKey": "Umelá inteligencia nemá nastavený kľúč — nastavte ho v Organizácia → Umelá inteligencia.",
     "chunking.aiFailed": "Analýza sa nepodarila — skúste to o chvíľu.",
     "chunking.labelTaken": "Profil s názvom „{value}“ už existuje — použite ho, alebo zvoľte iný názov.",
+    "chunking.roundStale": "Návrh patrí k inému textu — text sa medzitým zmenil. Dajte navrhnúť znova.",
     "library.titleLocked": "Názov dokumentu so zverejneným znením sa mení len novým znením — zmeň ho v príprave nového znenia, schváli sa s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znenie sa nahráva na jeho detaile, nie ako nový dokument — táto obrazovka zakladá nový dokument.",
     "library.documentKeyShape": "Kľúč dokumentu „{key}“ nemá správny tvar — smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
@@ -7738,6 +7800,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkSource: "Upraviteľný zdroj",
       checkSourceNote: "text na vyhľadávanie vznikol z neho",
       checkSourceMissing: "bez zdroja — text na vyhľadávanie vznikol z PDF",
+      checkChunks: "Skontrolovať členenie",
+      checkChunksReady: n => `Návrh AI je hotový: ${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úsekov"}. Zverejnenie sa nebráni — členenie je odporúčanie.`,
+      checkChunksPending: "Návrh AI sa pripravuje po nahratí, alebo ho dajte navrhnúť v Členení.",
+      checkChunksAccepted: "rez je prijatý — uplatní sa pri zverejnení",
+      checkChunksDeferred: "odložené — reže sa profilom",
+      openChunksStep: "Otvoriť Členenie",
+      deferChunks: "Odložiť",
       replace: "Vymeniť",
       showText: "Zobraziť text",
       metaHeading: "Údaje o znení",
@@ -8491,6 +8560,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newProfileLabel: "Názov profilu",
       newProfileHint: "Napríklad „Zákon (§)“. Existujúce profily sa tu nemenia — zmena by ticho prerezala všetky dokumenty, ktoré ich používajú.",
       newProfileButton: "Uložiť profil",
+      cut: {
+        docLabel: "Text znenia rozdelený na úseky",
+        chunkLabel: n => `Úsek ${n}`,
+        oversizedNote: limit => `nad ${limit} — asistent z neho dostane priveľa naraz`,
+        fragmentTag: "úlomok",
+        fragmentNote: "kúsok rozdelenej časti — má málo kontextu",
+        continuation: "pokračovanie",
+        newChunkTag: "nový úsek",
+        newBoundary: at => `nová hranica · pred ${at}`,
+        removedBoundary: at => `zrušená hranica · pred ${at}`,
+        roundLead: (date, model, no) => `Návrh AI z ${date} (${model}, ${no}. kolo). Model navrhol len hranice; text znenia sa nemení.`,
+        propose: "Navrhnúť rezy",
+        proposeAgain: "Navrhnúť znova",
+        proposing: "Model číta text…",
+        proposeHeading: "Návrh rezov od AI",
+        proposeIntro: "Model prečíta celé znenie a druh dokumentu a navrhne, kde má začínať každý úsek. Text nemení; nič sa neuloží, kým návrh neprijmete.",
+        draftNote: "Reže sa koncept nového znenia. Prijatý rez sa uplatní pri zverejnení; dovtedy asistent odpovedá z úsekov platného znenia.",
+        draftVersion: "koncept nového znenia",
+        noTextTitle: "Dokument zatiaľ nemá text",
+        method: "Spôsob",
+        methodManual: "ručné hranice",
+        today: "Dnes",
+        proposal: "Návrh",
+        chunksCount: n => (n === 1 ? "1 úsek" : n < 5 ? `${n} úseky` : `${n} úsekov`),
+        badCount: n => (n === 1 ? "1 úsek nesedí" : n < 5 ? `${n} úseky nesedia` : `${n} úsekov nesedí`),
+        noBad: "bez nálezov",
+        viewLabel: "Pohľad",
+        viewToday: "Dnes",
+        viewProposal: "Návrh",
+        viewDiff: "Rozdiel",
+        diffLead: (added, removed) => `Návrh pridáva ${added} ${added === 1 ? "hranicu" : added > 1 && added < 5 ? "hranice" : "hraníc"} a ruší ${removed}. Zhodné hranice sú bez zvýraznenia.`,
+        approximate: "Dnešný rez niekde delil uprostred odseku — jeho hranice sú vyznačené na najbližšom bloku.",
+        issuesHeading: "Čo model v texte našiel",
+        noteHeading: "Čo nesedí",
+        noteLabel: "Poznámka pre ďalšie kolo",
+        notePlaceholder: "Napríklad: úseky 7 až 9 patria k sebe; časť 1.4 Poplatky má byť samostatná.",
+        noteHint: "Model dostane posledný návrh a vašu poznámku; vráti opravené hranice a napíše, čo zmenil. Text znenia sa nemení.",
+        roundsHeading: "Kolá návrhu",
+        roundAuto: "automaticky pri nahratí",
+        roundNoNote: "Bez poznámky — prvý návrh podľa druhu dokumentu.",
+        roundShown: "zobrazené",
+        roundShow: "Ukázať",
+        acceptTitle: no => `Prijať návrh (kolo ${no}) a preindexovať`,
+        acceptNote: n => `Rez sa uloží k tomuto zneniu ako ručné hranice (${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úsekov"}). Asistent odpovedá z nových úsekov hneď po preindexovaní; text a potvrdenia sa nemenia.`,
+        acceptNoteDraft: n => `Rez sa uloží ku konceptu ako ručné hranice (${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úsekov"}) a uplatní sa pri zverejnení. Text a potvrdenia sa nemenia.`,
+        accept: "Prijať a preindexovať",
+        accepting: "Ukladá sa…",
+      },
       adviceHeading: "Návrh AI",
       adviceIntro: "Model dostane štruktúru dokumentu — nadpisy, články a začiatky odsekov, nie celý text — a navrhne, ako ho narezať. Nič sa nezmení; návrh si môžete skúsiť a uložiť ako profil. Volanie sa zapíše do spotreby AI.",
       adviceButton: "Analyzovať pomocou AI",
@@ -8561,6 +8678,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       chunkingProfileSet: label => `Dokument má profil „${label}“. Ešte ho preindexujte — dovtedy asistent odpovedá zo starých úsekov.`,
       chunkingProfileCreated: label => `Profil „${label}“ je uložený a priradený dokumentu. Ešte dokument preindexujte.`,
       chunkingAdviceReady: "Návrh AI je hotový — nižšie. Nič sa nezmenilo.",
+      chunkRoundReady: no => `Návrh AI (kolo ${no}) je hotový — rozdiel je nižšie. Nič sa nezmenilo.`,
+      chunkRoundAccepted: (no, chunks) => `Rez z kola ${no} je prijatý a dokument preindexovaný (${chunks} úsekov).`,
+      chunkRoundAcceptedDraft: no => `Rez z kola ${no} je prijatý ku konceptu — uplatní sa pri zverejnení.`,
+      chunkReviewDeferred: "Kontrola členenia je odložená. Rez profilom ostáva; Členenie je dostupné kedykoľvek pri znení.",
       reindexAllResult: (done, unchanged) => `Preindexované znenia: ${done}, bez zmeny: ${unchanged}. Znenia ani potvrdenia sa nedotklo.`,
       reindexed: (chunks, archived) =>
         `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
@@ -11192,6 +11313,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "chunking.aiNoKey": "Umělá inteligence nemá nastavený klíč — nastavte ho v Organizace → Umělá inteligence.",
     "chunking.aiFailed": "Analýza se nepodařila — zkuste to za chvíli.",
     "chunking.labelTaken": "Profil s názvem „{value}“ už existuje — použijte ho, nebo zvolte jiný název.",
+    "chunking.roundStale": "Návrh patří k jinému textu — text se mezitím změnil. Nechte navrhnout znovu.",
     "library.titleLocked": "Název dokumentu se zveřejněným zněním se mění jen novým zněním — změň ho v přípravě nového znění, schválí se s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znění se nahrává na jeho detailu, ne jako nový dokument — tato obrazovka zakládá nový dokument.",
     "library.documentKeyShape": "Klíč dokumentu „{key}“ nemá správný tvar — smí mít jen malá písmena bez diakritiky, číslice a podtržítka.",
@@ -12553,6 +12675,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkSource: "Upravitelný zdroj",
       checkSourceNote: "text pro vyhledávání vznikl z něj",
       checkSourceMissing: "bez zdroje — text pro vyhledávání vznikl z PDF",
+      checkChunks: "Zkontrolovat členění",
+      checkChunksReady: n => `Návrh AI je hotový: ${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úseků"}. Zveřejnění se nebrání — členění je doporučení.`,
+      checkChunksPending: "Návrh AI se připravuje po nahrání, nebo ho nechte navrhnout v Členění.",
+      checkChunksAccepted: "řez je přijat — uplatní se při zveřejnění",
+      checkChunksDeferred: "odloženo — řeže se profilem",
+      openChunksStep: "Otevřít Členění",
+      deferChunks: "Odložit",
       replace: "Vyměnit",
       showText: "Zobrazit text",
       metaHeading: "Údaje o znění",
@@ -13305,6 +13434,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newProfileLabel: "Název profilu",
       newProfileHint: "Například „Zákon (§)“. Existující profily se zde nemění — změna by potichu přeřezala všechny dokumenty, které je používají.",
       newProfileButton: "Uložit profil",
+      cut: {
+        docLabel: "Text znění rozdělený na úseky",
+        chunkLabel: n => `Úsek ${n}`,
+        oversizedNote: limit => `nad ${limit} — asistent z něj dostane příliš mnoho najednou`,
+        fragmentTag: "úlomek",
+        fragmentNote: "kousek rozdělené části — má málo kontextu",
+        continuation: "pokračování",
+        newChunkTag: "nový úsek",
+        newBoundary: at => `nová hranice · před ${at}`,
+        removedBoundary: at => `zrušená hranice · před ${at}`,
+        roundLead: (date, model, no) => `Návrh AI z ${date} (${model}, ${no}. kolo). Model navrhl jen hranice; text znění se nemění.`,
+        propose: "Navrhnout řezy",
+        proposeAgain: "Navrhnout znovu",
+        proposing: "Model čte text…",
+        proposeHeading: "Návrh řezů od AI",
+        proposeIntro: "Model přečte celé znění a druh dokumentu a navrhne, kde má začínat každý úsek. Text nemění; nic se neuloží, dokud návrh nepřijmete.",
+        draftNote: "Řeže se koncept nového znění. Přijatý řez se uplatní při zveřejnění; do té doby asistent odpovídá z úseků platného znění.",
+        draftVersion: "koncept nového znění",
+        noTextTitle: "Dokument zatím nemá text",
+        method: "Způsob",
+        methodManual: "ruční hranice",
+        today: "Dnes",
+        proposal: "Návrh",
+        chunksCount: n => (n === 1 ? "1 úsek" : n < 5 ? `${n} úseky` : `${n} úseků`),
+        badCount: n => (n === 1 ? "1 úsek nesedí" : n < 5 ? `${n} úseky nesedí` : `${n} úseků nesedí`),
+        noBad: "bez nálezů",
+        viewLabel: "Pohled",
+        viewToday: "Dnes",
+        viewProposal: "Návrh",
+        viewDiff: "Rozdíl",
+        diffLead: (added, removed) => `Návrh přidává ${added} ${added === 1 ? "hranici" : added > 1 && added < 5 ? "hranice" : "hranic"} a ruší ${removed}. Shodné hranice jsou bez zvýraznění.`,
+        approximate: "Dnešní řez někde dělil uprostřed odstavce — jeho hranice jsou vyznačeny na nejbližším bloku.",
+        issuesHeading: "Co model v textu našel",
+        noteHeading: "Co nesedí",
+        noteLabel: "Poznámka pro další kolo",
+        notePlaceholder: "Například: úseky 7 až 9 patří k sobě; část 1.4 Poplatky má být samostatná.",
+        noteHint: "Model dostane poslední návrh a vaši poznámku; vrátí opravené hranice a napíše, co změnil. Text znění se nemění.",
+        roundsHeading: "Kola návrhu",
+        roundAuto: "automaticky při nahrání",
+        roundNoNote: "Bez poznámky — první návrh podle druhu dokumentu.",
+        roundShown: "zobrazeno",
+        roundShow: "Ukázat",
+        acceptTitle: no => `Přijmout návrh (kolo ${no}) a přeindexovat`,
+        acceptNote: n => `Řez se uloží k tomuto znění jako ruční hranice (${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úseků"}). Asistent odpovídá z nových úseků hned po přeindexování; text a potvrzení se nemění.`,
+        acceptNoteDraft: n => `Řez se uloží ke konceptu jako ruční hranice (${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úseků"}) a uplatní se při zveřejnění. Text a potvrzení se nemění.`,
+        accept: "Přijmout a přeindexovat",
+        accepting: "Ukládá se…",
+      },
       adviceHeading: "Návrh AI",
       adviceIntro: "Model dostane strukturu dokumentu — nadpisy, články a začátky odstavců, ne celý text — a navrhne, jak ho rozřezat. Nic se nezmění; návrh si můžete vyzkoušet a uložit jako profil. Volání se zapíše do spotřeby AI.",
       adviceButton: "Analyzovat pomocí AI",
@@ -13375,6 +13552,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       chunkingProfileSet: label => `Dokument má profil „${label}“. Ještě ho přeindexujte — do té doby asistent odpovídá ze starých úseků.`,
       chunkingProfileCreated: label => `Profil „${label}“ je uložen a přiřazen dokumentu. Ještě dokument přeindexujte.`,
       chunkingAdviceReady: "Návrh AI je hotový — níže. Nic se nezměnilo.",
+      chunkRoundReady: no => `Návrh AI (kolo ${no}) je hotový — rozdíl je níže. Nic se nezměnilo.`,
+      chunkRoundAccepted: (no, chunks) => `Řez z kola ${no} je přijat a dokument přeindexován (${chunks} úseků).`,
+      chunkRoundAcceptedDraft: no => `Řez z kola ${no} je přijat ke konceptu — uplatní se při zveřejnění.`,
+      chunkReviewDeferred: "Kontrola členění je odložena. Řez profilem zůstává; Členění je dostupné kdykoli u znění.",
       reindexAllResult: (done, unchanged) => `Přeindexovaná znění: ${done}, beze změny: ${unchanged}. Znění ani potvrzení se to nedotklo.`,
       reindexed: (chunks, archived) =>
         `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
@@ -15998,6 +16179,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "chunking.aiNoKey": "Artificial intelligence has no key set — set it in Organisation → Artificial intelligence.",
     "chunking.aiFailed": "The analysis failed — try again in a moment.",
     "chunking.labelTaken": "A profile named “{value}” already exists — use it or choose another name.",
+    "chunking.roundStale": "The proposal belongs to a different text — the text has changed since. Ask for a new proposal.",
     "library.titleLocked": "The title of a document with a published version changes only with a new version — change it when preparing the new version; it is approved with it.",
     "library.documentExists": "The document \u201C{title}\u201D ({documentId}) already exists. A new version is uploaded on its detail page, not as a new document — this screen creates a new document.",
     "library.documentKeyShape": "The document key \u201C{key}\u201D has the wrong shape — only lowercase letters without diacritics, digits and underscores are allowed.",
@@ -17359,6 +17541,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkSource: "Editable source",
       checkSourceNote: "the search text was made from it",
       checkSourceMissing: "no source — the search text was made from the PDF",
+      checkChunks: "Check the chunking",
+      checkChunksReady: n => `The AI proposal is ready: ${n} ${n === 1 ? "chunk" : "chunks"}. Publication is not blocked — chunking is a recommendation.`,
+      checkChunksPending: "The AI proposal is prepared after upload, or ask for one in Chunking.",
+      checkChunksAccepted: "the cut is accepted — it applies on publication",
+      checkChunksDeferred: "postponed — the profile cut is used",
+      openChunksStep: "Open Chunking",
+      deferChunks: "Postpone",
       replace: "Replace",
       showText: "Show text",
       metaHeading: "Version details",
@@ -18106,6 +18295,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newProfileLabel: "Profile name",
       newProfileHint: "For example “Act (§)”. Existing profiles are not changed here — a change would silently re-split every document that uses them.",
       newProfileButton: "Save profile",
+      cut: {
+        docLabel: "Version text split into chunks",
+        chunkLabel: n => `Chunk ${n}`,
+        oversizedNote: limit => `over ${limit} — the assistant gets too much at once`,
+        fragmentTag: "fragment",
+        fragmentNote: "a piece of a split section — little context",
+        continuation: "continuation",
+        newChunkTag: "new chunk",
+        newBoundary: at => `new boundary · before ${at}`,
+        removedBoundary: at => `removed boundary · before ${at}`,
+        roundLead: (date, model, no) => `AI proposal of ${date} (${model}, round ${no}). The model proposed boundaries only; the text does not change.`,
+        propose: "Propose cuts",
+        proposeAgain: "Propose again",
+        proposing: "The model is reading…",
+        proposeHeading: "Cut proposal from AI",
+        proposeIntro: "The model reads the whole version and the document kind and proposes where each chunk should start. It does not change the text; nothing is saved until you accept the proposal.",
+        draftNote: "The draft of a new version is being cut. An accepted cut applies on publication; until then the assistant answers from the chunks of the current version.",
+        draftVersion: "draft of a new version",
+        noTextTitle: "The document has no text yet",
+        method: "Method",
+        methodManual: "manual boundaries",
+        today: "Today",
+        proposal: "Proposal",
+        chunksCount: n => (n === 1 ? "1 chunk" : `${n} chunks`),
+        badCount: n => (n === 1 ? "1 chunk does not fit" : `${n} chunks do not fit`),
+        noBad: "no findings",
+        viewLabel: "View",
+        viewToday: "Today",
+        viewProposal: "Proposal",
+        viewDiff: "Difference",
+        diffLead: (added, removed) => `The proposal adds ${added} ${added === 1 ? "boundary" : "boundaries"} and removes ${removed}. Unchanged boundaries are not highlighted.`,
+        approximate: "Today's cut split mid-paragraph in places — those boundaries are marked on the nearest block.",
+        issuesHeading: "What the model found in the text",
+        noteHeading: "What does not fit",
+        noteLabel: "Note for the next round",
+        notePlaceholder: "For example: chunks 7 to 9 belong together; section 1.4 Fees should be separate.",
+        noteHint: "The model gets the last proposal and your note; it returns corrected boundaries and says what it changed. The text does not change.",
+        roundsHeading: "Proposal rounds",
+        roundAuto: "automatically on upload",
+        roundNoNote: "No note — first proposal by document kind.",
+        roundShown: "shown",
+        roundShow: "Show",
+        acceptTitle: no => `Accept proposal (round ${no}) and reindex`,
+        acceptNote: n => `The cut is saved to this version as manual boundaries (${n} ${n === 1 ? "chunk" : "chunks"}). The assistant answers from the new chunks right after reindexing; the text and acknowledgements do not change.`,
+        acceptNoteDraft: n => `The cut is saved to the draft as manual boundaries (${n} ${n === 1 ? "chunk" : "chunks"}) and applies on publication. The text and acknowledgements do not change.`,
+        accept: "Accept and reindex",
+        accepting: "Saving…",
+      },
       adviceHeading: "AI proposal",
       adviceIntro: "The model receives the document structure — headings, articles and paragraph openings, not the full text — and proposes how to split it. Nothing changes; you can try the proposal and save it as a profile. The call is recorded in AI usage.",
       adviceButton: "Analyse with AI",
@@ -18175,6 +18412,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       chunkingProfileSet: label => `The document now has the profile “${label}”. Reindex it — until then the assistant answers from the old chunks.`,
       chunkingProfileCreated: label => `The profile “${label}” was saved and assigned to the document. Reindex the document next.`,
       chunkingAdviceReady: "The AI proposal is ready — see below. Nothing has changed.",
+      chunkRoundReady: no => `The AI proposal (round ${no}) is ready — the difference is below. Nothing has changed.`,
+      chunkRoundAccepted: (no, chunks) => `The cut from round ${no} is accepted and the document reindexed (${chunks} chunks).`,
+      chunkRoundAcceptedDraft: no => `The cut from round ${no} is accepted for the draft — it applies on publication.`,
+      chunkReviewDeferred: "The chunking review is postponed. The profile cut stays; Chunking is available at any time for the version.",
       reindexAllResult: (done, unchanged) => `Versions reindexed: ${done}, unchanged: ${unchanged}. No version or acknowledgement was touched.`,
       reindexed: (chunks, archived) =>
         `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +

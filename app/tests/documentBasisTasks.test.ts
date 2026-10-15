@@ -21,6 +21,8 @@ const state = vi.hoisted(() => ({
 
 const GARANT = { personId: "p-garant", fullName: "Garant Predpisu", email: "garant@sfz.sk" }
 
+const chunkCutter = vi.hoisted(() => ({ state: null as unknown }))
+vi.mock("@/lib/chunkCutter", () => ({ cutterState: async () => chunkCutter.state }))
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
   redirect: (to: string) => { throw new Error(`redirect ${to}`) },
