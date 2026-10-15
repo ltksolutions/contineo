@@ -164,13 +164,18 @@ export function boundariesFromChunks(blocks: TextBlock[], chunkTexts: string[]):
   let cursor = 0
   let approximate = false
   for (let c = 1; c < chunkTexts.length; c++) {
-    const first = String(chunkTexts[c] ?? "").split("\n").map(l => l.trim()).find(Boolean) ?? ""
+    // Uložený úsek môže začínať riadkom kontextu („Názov › Oddiel") a jeho
+    // telo býva zlúčené do jedného riadku — hľadá sa prvý riadok bez „›".
+    const lines = String(chunkTexts[c] ?? "").split("\n").map(l => l.trim()).filter(Boolean)
+    const first = lines.find(l => !l.includes(" › ")) ?? lines[0] ?? ""
     const probe = norm(first).slice(0, 60)
     if (!probe) { approximate = true; continue }
     let found = -1
     for (let b = Math.max(cursor, 1); b < normBlocks.length; b++) {
-      if (normBlocks[b].startsWith(probe)) { found = b; break }
-      if (normBlocks[b].includes(probe)) { found = b; approximate = true; break }
+      const nb = normBlocks[b]
+      // Blok začína úsekom, alebo zlúčený úsek začína celým (krátkym) blokom — nadpisom.
+      if (nb.startsWith(probe) || (nb.length >= 8 && probe.startsWith(nb.slice(0, 60)))) { found = b; break }
+      if (nb.includes(probe)) { found = b; approximate = true; break }
     }
     if (found < 0) { approximate = true; continue }
     out.push(found)

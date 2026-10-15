@@ -96,7 +96,16 @@ export default async function ChunksPage({
     return block.kind === "heading" ? headingText(block) : block.text.replace(/\s+/g, " ").slice(0, 60)
   }
 
-  /* ── pohľad Dnes: uložené úseky (pri koncepte rez pri zverejnení) ── */
+  /*
+   * ── pohľad Dnes: uložené úseky (pri koncepte rez pri zverejnení) ──
+   *
+   * Uložený text úseku je zlúčený do jedného riadku (chunker spája riadky),
+   * takže sa vykresľujú **bloky znenia** podľa hraníc uložených úsekov —
+   * s nadpismi a tabuľkami tak, ako sú v texte. Len keď sa hranice nedajú
+   * nájsť presne, ukáže sa uložený text, ako je.
+   */
+  const todayGroups = groupBlocks(state.blocks.length, state.current)
+  const todayFromBlocks = !state.approximate && todayGroups.length === state.todayChunks.length
   const todayView = (
     <article className="cut-doc card" aria-label={c.docLabel}>
       {state.todayChunks.map((ch, i) => {
@@ -107,13 +116,19 @@ export default async function ChunksPage({
                    aria-label={c.chunkLabel(ch.chunkIndex + 1)}>
             <header className="cut-head">
               <span className="cut-no">{ch.chunkIndex + 1}</span>
-              <span className="cut-ref">{ch.articleRef ?? t.noArticle}</span>
+              <span className="cut-ref">
+                {ch.articleRef
+                  ?? (todayFromBlocks ? todayGroups[i].map(b => state.blocks[b]).find(b => b.kind === "heading") : undefined)?.text.replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "")
+                  ?? t.noArticle}
+              </span>
               <span className="cut-tokens quiet">{t.tokens(ch.tokens)}</span>
               {oversized && <><span className="tag tag--expired">{t.oversizedTag}</span><span className="cut-note quiet">{c.oversizedNote(limit)}</span></>}
               {fragment && <><span className="tag tag--draft">{c.fragmentTag}</span><span className="cut-note quiet">{c.fragmentNote}</span></>}
             </header>
             <div className="cut-body">
-              {splitBlocks(ch.text).map(b => <BlockView key={b.index} block={b} />)}
+              {todayFromBlocks
+                ? todayGroups[i].map(b => <BlockView key={b} block={state.blocks[b]} />)
+                : splitBlocks(ch.text).map(b => <BlockView key={b.index} block={b} />)}
             </div>
           </section>
         )

@@ -92,6 +92,14 @@ describe("boundariesFromChunks", () => {
     const r = boundariesFromChunks(blocks, ["…", "Druhý riadok toho istého odseku."])
     expect(r).toEqual({ boundaries: [3], approximate: true })
   })
+  it("uložený úsek s riadkom kontextu a zlúčeným telom nájde svoj nadpis", () => {
+    const blocks = splitBlocks(manual)
+    const stored = [
+      "Podania na komisie › Úvod\n# Podania na komisie Tento manuál opisuje podania.",
+      "Podania na komisie › 2 Lehoty\n## 2 Lehoty Lehoty sú v tabuľke: | Úkon | Lehota |",
+    ]
+    expect(boundariesFromChunks(blocks, stored)).toEqual({ boundaries: [7], approximate: false })
+  })
   it("tokeny skupín", () => {
     const blocks = splitBlocks(manual)
     const t = groupTokens(blocks, [7])
