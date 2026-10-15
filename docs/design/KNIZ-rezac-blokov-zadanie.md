@@ -120,6 +120,17 @@ sa to nedá — preto je základ (body 1–4) formulármi a toto je vrstva navy�
 - Rozhranie: najviac jedno plné `.button`; `.view-switch` pre pohľad;
   stav v adrese (`?view=proposal`, `?round=3`); mobile first, 390 a 1440.
 
+## Rozhodnuté (Ján, 15. 10. 2026)
+
+- **Q1 A** — modelu ide **celý text znenia** cez kľúč organizácie
+  (ADR-026); mení rozhodnutie z 5. 10. 2026 (len štruktúra) pre návrh
+  rezov. `chunkingAdvice.ts` sa prepíše, nie obíde.
+- **Q3 A** — rez, ktorý nie je profil, sa uloží ako spôsob členenia
+  **„ručné hranice"** pri znení: index bloku v Markdowne, história kôl;
+  nové znenie začína bez nich.
+
+Q2, Q4 a Q5 ostávajú na návrh s odporúčaním A.
+
 ## Otázky (každá s odporúčaním, odporúčaná prvá)
 
 **Q1 — čo ide modelu.**
@@ -237,8 +248,8 @@ a Prijať; 390 tmavá — Návrh, Čo nesedí, karta postupu s krokom.
 
 Výstup ako doteraz: KNIZ-rezac-blokov.html + .md so sekciami Čo sa mení,
 Kde, Prečo, Rozhodnutia v repozitári, Rámy, Údaje, ktoré v modeli
-neexistujú, Rozhodnuté, Otázky (každá s odporúčaním, odporúčaná prvá:
-Q1 celý text modelu, Q2 automaticky pri nahratí, Q3 ručné hranice pri
-znení ako index bloku, Q4 fáza 1 serverovo bez Tiptapu, Q5 krok v karte
-postupu) a Prompt pre Claude Code.
+neexistujú, Rozhodnuté (Q1 A: celý text modelu; Q3 A: ručné hranice pri
+znení ako index bloku — rozhodol Ján 15. 10. 2026), Otázky (každá
+s odporúčaním, odporúčaná prvá: Q2 automaticky pri nahratí, Q4 fáza 1
+serverovo bez Tiptapu, Q5 krok v karte postupu) a Prompt pre Claude Code.
 ```
