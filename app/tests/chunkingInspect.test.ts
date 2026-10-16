@@ -40,9 +40,8 @@ describe("dnešný rez bez profilu (ADR-035)", () => {
     const text = "§ 1 Predmet\n\n(1) Text prvý.\n\n§ 2 Pojmy\n\n(1) Text druhý.\n\n§ 3 Záver\n\n(1) Koniec."
     const cut = inspectedCut(text, "Zákon")
     expect(cut.method).toBe("headings")
-    // Krátky zákon sa zmestí do jedného úseku (cieľ 900 tokenov).
-    expect(cut.chunks).toHaveLength(1)
-    expect(cut.chunks[0].articleRef).toBe("§ 1")
+    // Každý § je samostatná jednotka, aj keď je krátky (ADR-035, porovnanie 16. 10.).
+    expect(cut.chunks.map(c => c.articleRef)).toEqual(["§ 1", "§ 2", "§ 3"])
   })
   it("text bez nadpisov ide chunkerom s predvolenými hodnotami", () => {
     expect(inspectedCut("Len odsek.\n\nDruhý odsek.", "Zápisnica").method).toBe("plain")

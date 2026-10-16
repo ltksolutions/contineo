@@ -78,10 +78,32 @@ describe("headingBoundaries", () => {
   it("úsek z rezu nesie kontext a citáciu článku", () => {
     const text = ["# Smernica", "## Článok 1 – Predmet", para(140), "## Článok 2 – Pojmy", para(140)].join("\n\n")
     const chunks = cutByBoundaries(text, headingBoundaries(text)!, "Finančná smernica")
-    // Názov dokumentu (malý) sa pripojil k článku 1; článok 2 je samostatný.
-    expect(chunks.map(c => c.articleRef)).toEqual(["Smernica", "čl. 2"])
+    // Názov dokumentu stojí hneď nad článkom 1 — patrí k nemu, citácia je čl. 1.
+    expect(chunks.map(c => c.articleRef)).toEqual(["čl. 1", "čl. 2"])
     const art2 = chunks.find(c => c.articleRef === "čl. 2")!
     expect(art2.text.startsWith("Finančná smernica › Smernica\n\n## Článok 2 – Pojmy")).toBe(true)
     expect(art2.typ).toBe("clanok")
+  })
+
+  it("norma: krátke články sa nezlučujú, časť sa pripojí k prvému článku (porovnanie 16. 10. 2026)", () => {
+    const text = [
+      "# Poriadok", "## PRVÁ ČASŤ", "### Článok 1 – Predmet", "(1) Krátky.",
+      "### Článok 2 – Pojmy", "(1) Krátky.", "## DRUHÁ ČASŤ", "### Článok 3 – Konanie", "(1) Krátky.",
+    ].join("\n\n")
+    const chunks = cutByBoundaries(text, headingBoundaries(text)!, "Poriadok")
+    expect(chunks.map(c => c.articleRef)).toEqual(["čl. 1", "čl. 2", "čl. 3"])
+    expect(chunks[2].text).toContain("## DRUHÁ ČASŤ\n\n### Článok 3")
+  })
+
+  it("dlhý článok sa delí medzi odsekmi a citácia nesie odseky", () => {
+    const ods = (n: number) => `(${n}) ${para(60)}`
+    const text = ["# Poriadok", "## Článok 1 – Krátky", "(1) Text.", "## Článok 12 – Dlhý", ...[1, 2, 3, 4, 5, 6].map(ods), "## Článok 13 – Ďalší", "(1) Text."].join("\n\n")
+    const refs = cutByBoundaries(text, headingBoundaries(text)!, "Poriadok").map(c => c.articleRef)
+    expect(refs[0]).toBe("čl. 1")
+    expect(refs.at(-1)).toBe("čl. 13")
+    const parts = refs.filter(r => r?.startsWith("čl. 12"))
+    expect(parts.length).toBeGreaterThan(1)
+    expect(parts.every(r => /^čl\. 12 ods\. \d+(–\d+)?$/.test(r!))).toBe(true)
+    expect(parts[0]).toMatch(/^čl\. 12 ods\. 1/)
   })
 })

@@ -138,7 +138,7 @@ describe("cutForIndex — voľba rezu (Q3 A)", () => {
     const r = cutForIndex(manual, "M", [])
     expect(r.manual).toBeNull()
     expect(r.method).toBe("headings")
-    expect(r.fingerprintProfile).toMatchObject({ nadpisy: 1 })
+    expect(r.fingerprintProfile).toMatchObject({ nadpisy: 2 })
   })
 })
 

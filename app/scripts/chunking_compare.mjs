@@ -70,8 +70,11 @@ try {
       wouldLose ? `${BAD} stratil by citácie` : stale ? `${INFO} áno` : `${OK} nie`,
     ].join(" "))
     if (showRefs) {
-      const now = new Set(cut.chunks.map(c => c.articleRef).filter(Boolean))
-      const gone = [...new Set(stored.map(c => c.articleRef).filter(Boolean))].filter(r => !now.has(r) && !now.has(String(r).replace(/ ods\. .*$/, "")))
+      // Porovnáva sa článok bez odsekov: „čl. 12 ods. 1–9" a „čl. 12 ods. 1–5"
+      // sú ten istý článok; chýba len článok, ktorý prišiel o vlastný úsek.
+      const base = (r) => String(r).replace(/ ods\. .*$/, "")
+      const now = new Set(cut.chunks.map(c => c.articleRef).filter(Boolean).map(base))
+      const gone = [...new Set(stored.map(c => c.articleRef).filter(Boolean).map(base))].filter(r => !now.has(r))
       if (gone.length) console.log(`   zmiznú citácie: ${gone.slice(0, 20).join(", ")}${gone.length > 20 ? " …" : ""}`)
     }
   }

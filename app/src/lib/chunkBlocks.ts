@@ -126,6 +126,18 @@ export function headingText(block: Pick<TextBlock, "text">): string {
   return stripHeadingEmphasis(block.text).replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "").trim()
 }
 
+/** Nadpis článku, § alebo prílohy — jednotka normy, ktorá má vlastný úsek (ADR-035). */
+export function isUnitHeading(block: Pick<TextBlock, "kind" | "text">): boolean {
+  return block.kind === "heading" && /^(?:čl\.|§|príloha)/.test(refFromHeading(headingText(block)))
+}
+
+/** Čísla odsekov „(1)" v blokoch úseku — pre citáciu delenej jednotky („čl. 12 ods. 1–9"). */
+function paragraphRange(part: TextBlock[]): string | null {
+  const nums = part.map(b => /^\((\d+[a-z]?)\)/.exec(b.text.trim())?.[1]).filter((x): x is string => Boolean(x))
+  if (!nums.length) return null
+  return nums.length === 1 || nums[0] === nums[nums.length - 1] ? nums[0] : `${nums[0]}–${nums[nums.length - 1]}`
+}
+
 /**
  * Citácia z nadpisu (ADR-035, D223 bod 5): článok, § a príloha v tvare
  * chunkera („čl. 5", „§ 5", „príloha č. 2") — tak ich citujú odpovede aj
@@ -205,13 +217,22 @@ export function cutByBoundaries(markdown: string, boundaries: number[], title = 
     return out
   }
   let lastHeading: string | null = null
+  // Úsek, ktorý nemá vlastný článok, pokračuje v predošlom — pri delenom
+  // článku sa do citácie pridajú odseky (ako pri chunkeri).
+  const hasUnit = groups.map(g => g.some(i => isUnitHeading(blocks[i])))
   return groups.map((g, chunkIndex) => {
     const part = g.map(i => blocks[i])
     const startsWithHeading = part[0].kind === "heading"
     const firstHeading = part.find(b => b.kind === "heading")
-    const heading = startsWithHeading ? headingText(part[0]) : lastHeading
+    // Článok v úseku má prednosť pred nadpisom časti nad ním („PRVÁ ČASŤ" + „Článok 1" → čl. 1).
+    const unit = part.find(b => isUnitHeading(b))
+    const heading = unit ? headingText(unit) : startsWithHeading ? headingText(part[0]) : lastHeading
     for (const b of part) if (b.kind === "heading") lastHeading = headingText(b)
     const name = heading ?? (firstHeading ? headingText(firstHeading) : null)
+    const continued = !hasUnit[chunkIndex] && chunkIndex > 0
+    const continuesNext = chunkIndex + 1 < groups.length && !hasUnit[chunkIndex + 1]
+    const baseRef = name ? refFromHeading(name) : null
+    const ods = baseRef && /^(?:čl\.|§)/.test(baseRef) && (continued || continuesNext) ? paragraphRange(part) : null
     // Kontext: názov dokumentu a nadradené nadpisy pred úsekom (bez nadpisu,
     // ktorým úsek začína — ten je v texte). Rovnaký tvar ako pri chunkeri.
     const context = [title, ...pathBefore(g[0])].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i)
@@ -220,7 +241,7 @@ export function cutByBoundaries(markdown: string, boundaries: number[], title = 
       chunkIndex,
       text: context.length ? `${context.join(" › ")}\n\n${body}` : body,
       heading: name ?? "",
-      articleRef: name ? refFromHeading(name) : null,
+      articleRef: baseRef ? (ods ? `${baseRef} ods. ${ods}` : baseRef) : null,
       cast: null,
       typ: name ? (/^príloha/.test(refFromHeading(name)) ? "priloha" : "clanok") : "preambula",
       uplnaJednotka: startsWithHeading,

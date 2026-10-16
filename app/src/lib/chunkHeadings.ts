@@ -18,14 +18,14 @@
  */
 
 import { estimateTokens } from "./chunker.mjs"
-import { splitBlocks, joinBlocks, normalizeBoundaries, type TextBlock } from "./chunkBlocks"
+import { splitBlocks, joinBlocks, normalizeBoundaries, isUnitHeading, type TextBlock } from "./chunkBlocks"
 
 /** Cieľová veľkosť úseku v tokenoch (ADR-035). Nie je to nastavenie. */
 export const CUT_MIN = 300
 export const CUT_MAX = 900
 
 /** Verzia pravidla — vstupuje do odtlačku členenia; zvýši ju človek pri zmene výsledku. */
-export const HEADINGS_CUT_VERSION = 1
+export const HEADINGS_CUT_VERSION = 2
 
 /** Koľko nadpisov treba, aby text mal štruktúru (inak chunker pre text bez nadpisov). */
 const MIN_HEADINGS = 2
@@ -81,8 +81,8 @@ function cutRange(blocks: TextBlock[], from: number, to: number): number[] {
 /** Úroveň, ktorou úsek začína — nadpis, inak „pokračovanie" (najnižšia). */
 const startLevel = (blocks: TextBlock[], b: number) => (blocks[b]?.kind === "heading" ? blocks[b].level : 7)
 
-/** Malé úseky k nasledujúcim (bod 3). */
-function mergeSmall(blocks: TextBlock[], boundaries: number[]): number[] {
+/** Malé úseky k nasledujúcim (bod 3). Pevné hranice (`hard`) sa nerušia. */
+function mergeSmall(blocks: TextBlock[], boundaries: number[], hard: Set<number> = new Set()): number[] {
   const cuts = [...boundaries]
   let changed = true
   while (changed) {
@@ -94,7 +94,7 @@ function mergeSmall(blocks: TextBlock[], boundaries: number[]): number[] {
       // Nasledujúci úsek nesmie začínať vyššou úrovňou než tento — inak by sa
       // koniec jednej časti zlepil so začiatkom inej.
       const sameOrDeeper = startLevel(blocks, b) >= startLevel(blocks, a)
-      if (small && sameOrDeeper && tokensOf(blocks, a, c) <= CUT_MAX) {
+      if (small && sameOrDeeper && !hard.has(b) && tokensOf(blocks, a, c) <= CUT_MAX) {
         cuts.splice(cuts.indexOf(b), 1)
         changed = true
         break
@@ -106,7 +106,7 @@ function mergeSmall(blocks: TextBlock[], boundaries: number[]): number[] {
     for (let i = 1; i < edges.length - 1; i++) {
       const [p, a, b] = [edges[i - 1], edges[i], edges[i + 1]]
       if (tokensOf(blocks, a, b) >= CUT_MIN) continue
-      if (startLevel(blocks, a) >= startLevel(blocks, p) && tokensOf(blocks, p, b) <= CUT_MAX) {
+      if (!hard.has(a) && startLevel(blocks, a) >= startLevel(blocks, p) && tokensOf(blocks, p, b) <= CUT_MAX) {
         cuts.splice(cuts.indexOf(a), 1)
         changed = true
         break
@@ -116,9 +116,36 @@ function mergeSmall(blocks: TextBlock[], boundaries: number[]): number[] {
   return cuts
 }
 
+/**
+ * Pevné hranice noriem: **článok, § a príloha sú samostatná jednotka**
+ * (porovnanie 16. 10. 2026 — zlučovanie krátkych článkov by z úseku
+ * s čl. 2 a čl. 3 citovalo len jeden). Hranica sa posunie nad nadpisy,
+ * ktoré stoja hneď nad článkom („PRVÁ ČASŤ" → „Článok 1"), aby nadpis časti
+ * nevisel na konci predošlého článku.
+ */
+export function unitBoundaries(blocks: TextBlock[]): number[] {
+  const out: number[] = []
+  blocks.forEach((b, i) => {
+    if (!isUnitHeading(b)) return
+    let start = i
+    while (start > 0 && blocks[start - 1].kind === "heading" && !isUnitHeading(blocks[start - 1])) start--
+    out.push(start)
+  })
+  return normalizeBoundaries(out, blocks.length)
+}
+
 /** Hranice prvého rezu zo štruktúry. Text bez štruktúry → `null` (chunker). */
 export function headingBoundaries(markdown: string): number[] | null {
   const blocks = splitBlocks(markdown)
   if (!hasStructure(blocks)) return null
-  return normalizeBoundaries(mergeSmall(blocks, cutRange(blocks, 0, blocks.length)), blocks.length)
+  const units = unitBoundaries(blocks)
+  if (!units.length) {
+    return normalizeBoundaries(mergeSmall(blocks, cutRange(blocks, 0, blocks.length)), blocks.length)
+  }
+  // Norma: každý článok svoj úsek; dlhý článok sa delí vnútri (podnadpisy,
+  // inak medzi odsekmi). Text pred prvým článkom (preambula) podľa nadpisov.
+  const edges = [0, ...units, blocks.length]
+  const cuts: number[] = [...units]
+  for (let i = 0; i < edges.length - 1; i++) cuts.push(...cutRange(blocks, edges[i], edges[i + 1]))
+  return normalizeBoundaries(mergeSmall(blocks, normalizeBoundaries(cuts, blocks.length), new Set(units)), blocks.length)
 }
