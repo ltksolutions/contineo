@@ -21,7 +21,7 @@ import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
-  reindexVersion, reindexAllVersions, fixText, loadVersionIntoDraft, saveDocumentParents, LibraryError, type UploadFiles, type IncomingFile,
+  reindexVersion, reindexAllVersions, stagePendingText, pendingText, clearPendingText, fixText, loadVersionIntoDraft, saveDocumentParents, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile, fileInfo } from "@/lib/fileStore"
 import { renderDocumentPdf } from "@/lib/documentPdf"
@@ -48,6 +48,8 @@ import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
 import { proposeChunkCut, acceptChunkRound, deferChunkReview } from "@/lib/chunkProposal"
 import { cutterState } from "@/lib/chunkCutter"
+import { markupChanges, restoreMarkup } from "@/lib/markupGuard"
+import { libraryDetail } from "@/lib/libraryRead"
 import { codelistOptions } from "@/lib/codelists"
 import { after } from "next/server"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
@@ -363,16 +365,42 @@ export async function saveTextAction(fd: FormData) {
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
+  const choice = fieldText(fd, "markupChoice")
   let message = say(self.language).saved
   let error = false
+  let held = false
   try {
-    await saveDraft(self.companyCode, id, String(fd.get("markdown") ?? ""), self.email)
+    /*
+     * Strážca zmien zápisu (16. 10. 2026): editor vo vizuálnom režime
+     * prepisuje Markdown aj v riadkoch, ktoré človek nepísal — a pri
+     * hviezdičkách mení obsah. Porovnáva sa s textom, z ktorého editor
+     * vyšiel (`editableText`), nie s ničím iným.
+     */
+    const base = (await libraryDetail(self.companyCode, id))?.editableText ?? ""
+    if (choice === "original" || choice === "accept") {
+      const pending = await pendingText(self.companyCode, id)
+      if (!pending) throw new LibraryError("library.pendingTextGone", "Text na rozhodnutie už nie je — uložte ho znova.")
+      const text = choice === "original" ? restoreMarkup(pending, markupChanges(base, pending)) : pending
+      await saveDraft(self.companyCode, id, text, self.email)
+      await clearPendingText(self.companyCode, id)
+      if (choice === "original") message = say(self.language).savedMarkupRestored
+    } else {
+      const text = String(fd.get("markdown") ?? "").replace(/\r\n?/g, "\n")
+      if (markupChanges(base, text).length) {
+        await stagePendingText(self.companyCode, id, text, self.email)
+        held = true
+      } else {
+        await saveDraft(self.companyCode, id, text, self.email)
+        await clearPendingText(self.companyCode, id)
+      }
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
   }
 
   revalidatePath(`/library/${id}`)
+  if (held) redirect(`/library/${encodeURIComponent(id)}/text?markup=1#markup`)
   redirect(`/library/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 

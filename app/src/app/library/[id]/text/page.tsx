@@ -26,6 +26,7 @@ import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../ac
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
+import { markupChanges } from "@/lib/markupGuard"
 
 export const dynamic = "force-dynamic"
 
@@ -63,9 +64,22 @@ export default async function EditorPage({
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const raw = (await col.findOne(
     { companyCode: ctx.tenant.companyCode, documentId },
-    { projection: { llmDraft: 1 } },
-  )) as { llmDraft?: { text: string; model: string; mode: string; at: Date } } | null
+    { projection: { llmDraft: 1, pendingText: 1 } },
+  )) as { llmDraft?: { text: string; model: string; mode: string; at: Date }; pendingText?: { text?: string } } | null
   const draft = raw?.llmDraft
+  /*
+   * Uloženie zastavené strážcom zápisu (`markupGuard.ts`, 16. 10. 2026).
+   * Zoznam sa počíta znova z uloženého textu, nie z adresy — keby sa koncept
+   * medzitým zmenil, ukáže sa to, čo naozaj platí.
+   */
+  const pending = raw?.pendingText?.text
+  const markup = pending ? markupChanges(d.editableText, pending) : []
+  /*
+   * Dokument s platným znením sa otvára v režime Markdown. Vizuálny režim
+   * pri uložení prepisuje zápis (escapuje hviezdičky, z `***` urobil `*`)
+   * a pri platnej norme je každá taká zmena oprava textu (ADR-007).
+   */
+  const editorMode = d.versions?.some(v => v.isActive) ? "markdown" : "wysiwyg"
 
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
@@ -101,6 +115,35 @@ export default async function EditorPage({
         <ul className="card" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: "var(--fs-body)" }}>
           {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
         </ul>
+      ) : null}
+
+      {markup.length ? (
+        <section id="markup" className="card" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
+          <div className="lnote lnote--warn">
+            <span className="lnote-mark" aria-hidden="true">!</span>
+            <div className="lnote-text">
+              <strong>{t.markupHeading}</strong><br />
+              {t.markupNote(markup.length)}
+            </div>
+          </div>
+          <ul className="markup-list">
+            {markup.map(c => (
+              <li key={c.line}>
+                <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
+                  {t.markupLine(c.line + 1)}
+                  {c.stars ? <> · <span className="tag">{t.markupStars}</span></> : null}
+                </div>
+                <div><span className="quiet">{t.markupBefore}: </span><code>{c.before}</code></div>
+                <div><span className="quiet">{t.markupAfter}: </span><code>{c.after}</code></div>
+              </li>
+            ))}
+          </ul>
+          <form action={saveTextAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <input type="hidden" name="documentId" value={documentId} />
+            <SubmitButton className="button" name="markupChoice" value="original">{t.markupKeep}</SubmitButton>
+            <SubmitButton className="button button--quiet" name="markupChoice" value="accept">{t.markupAccept}</SubmitButton>
+          </form>
+        </section>
       ) : null}
 
       {draft ? (
@@ -182,10 +225,11 @@ export default async function EditorPage({
               key={textKey(d.editableText)}
               name="markdown"
               initial={d.editableText}
+              mode={editorMode}
             />
             {/* Kým čaká návrh na rozhodnutie, plné je „Použiť ako koncept"
                 vyššie; uloženie vlastného textu je vtedy tiché (jedno plné). */}
-            <div><SubmitButton className={draft ? "button button--quiet" : "button"}>{t.saveText}</SubmitButton></div>
+            <div><SubmitButton className={draft || markup.length ? "button button--quiet" : "button"}>{t.saveText}</SubmitButton></div>
           </form>
         </section>
       </div>

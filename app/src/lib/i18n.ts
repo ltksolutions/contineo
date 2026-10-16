@@ -3724,6 +3724,15 @@ interface Dictionary {
       switchNoteModes: string
       switchNoteAfter: string
       saveText: string
+      /** Strážca zmien zápisu pri uložení (16. 10. 2026). */
+      markupHeading: string
+      markupNote: (count: number) => string
+      markupStars: string
+      markupLine: (line: number) => string
+      markupBefore: string
+      markupAfter: string
+      markupKeep: string
+      markupAccept: string
       llmHeading: string
       llmNoteBefore: string
       llmNoteHighlight: string
@@ -3741,6 +3750,7 @@ interface Dictionary {
       convertedWithWarnings: (warnings: string) => string
       versionSameAsPublished: string
       versionDiffers: (added: number, removed: number) => string
+      savedMarkupRestored: string
       saved: string
       changesSaved: string
       alreadyPublished: string
@@ -6450,6 +6460,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noDraft": "Žiadny návrh tu nie je.",
     "library.titleRequired": "Názov dokumentu je povinný — bez neho je v zozname len kľúč.",
     "library.emptyText": "Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.",
+    "library.pendingTextGone": "Text na rozhodnutie už nie je — uložte ho znova.",
     "library.labelRequired": "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
     "library.effectiveFromRequired": "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).",
     "meta.badDate": "Dátum v údajoch o znení nie je platný dátum.",
@@ -8656,6 +8667,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       switchNoteModes: "Markdown / WYSIWYG",
       switchNoteAfter: " je dole v editore",
       saveText: "Uložiť text",
+      markupHeading: "Editor zmenil zápis textu, ktorý ste neupravovali",
+      markupNote: (count) => `Text zatiaľ nie je uložený. V ${count === 1 ? "1 riadku" : `${count} riadkoch`} sa nezmenilo ani jedno písmeno, len značky Markdownu — takto ich prepísal vizuálny režim editora. Vaše úpravy sa uložia v oboch prípadoch.`,
+      markupStars: "mení počet hviezdičiek — môže to byť iná poznámka pod čiarou",
+      markupLine: (line) => `Riadok ${line}`,
+      markupBefore: "Bolo",
+      markupAfter: "Editor uložil",
+      markupKeep: "Uložiť s pôvodným zápisom",
+      markupAccept: "Uložiť aj tak",
       llmHeading: "Pomoc pri texte",
       llmNoteBefore: "Volá sa len takto — kliknutím. Výsledok sa uloží ako ",
       llmNoteHighlight: "návrh vedľa textu",
@@ -8671,6 +8690,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertedWithWarnings: (warnings) => `Prevedené. ${warnings}`,
       versionSameAsPublished: "Pozor: prevedený text je zhodný s platným znením — nahratý súbor neprináša žiadnu zmenu.",
       versionDiffers: (added, removed) => `Oproti platnému zneniu: ${added} pridaných, ${removed} odobraných riadkov.`,
+      savedMarkupRestored: "Text je uložený, zápis Markdownu ostal pôvodný.",
       saved: "Uložené.",
       changesSaved: "Zmeny boli uložené.",
       alreadyPublished: "Toto znenie už publikované je — nič sa nezmenilo.",
@@ -11335,6 +11355,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noDraft": "Žádný návrh tu není.",
     "library.titleRequired": "Název dokumentu je povinný — bez něj je v seznamu jen klíč.",
     "library.emptyText": "Prázdný text uložit nelze — dokument by neměl co obsahovat.",
+    "library.pendingTextGone": "Text k rozhodnutí už není — uložte ho znovu.",
     "library.labelRequired": "Označení znění je povinné — objeví se doslovně v každém záznamu o potvrzení. Napiš to, co je v dokumentu (například: úplné znění z 27. 2. 2026), ne vymyšlené číslo.",
     "library.effectiveFromRequired": "Datum platnosti je povinné — bez něj znění nelze potvrdit (D6).",
     "meta.badDate": "Datum v údajích o znění není platné datum.",
@@ -13538,6 +13559,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       switchNoteModes: "Markdown / WYSIWYG",
       switchNoteAfter: " je dole v editoru",
       saveText: "Uložit text",
+      markupHeading: "Editor změnil zápis textu, který jste neupravovali",
+      markupNote: (count) => `Text zatím není uložen. V ${count === 1 ? "1 řádku" : `${count} řádcích`} se nezměnilo ani jedno písmeno, jen značky Markdownu — takto je přepsal vizuální režim editoru. Vaše úpravy se uloží v obou případech.`,
+      markupStars: "mění počet hvězdiček — může to být jiná poznámka pod čarou",
+      markupLine: (line) => `Řádek ${line}`,
+      markupBefore: "Bylo",
+      markupAfter: "Editor uložil",
+      markupKeep: "Uložit s původním zápisem",
+      markupAccept: "Uložit i tak",
       llmHeading: "Pomoc při textu",
       llmNoteBefore: "Volá se jen takto — kliknutím. Výsledek se uloží jako ",
       llmNoteHighlight: "návrh vedle textu",
@@ -13553,6 +13582,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertedWithWarnings: (warnings) => `Převedeno. ${warnings}`,
       versionSameAsPublished: "Pozor: převedený text je shodný s platným zněním — nahraný soubor nepřináší žádnou změnu.",
       versionDiffers: (added, removed) => `Oproti platnému znění: ${added} přidaných, ${removed} odebraných řádků.`,
+      savedMarkupRestored: "Text je uložen, zápis Markdownu zůstal původní.",
       saved: "Uloženo.",
       changesSaved: "Změny byly uloženy.",
       alreadyPublished: "Toto znění už publikované je — nic se nezměnilo.",
@@ -16209,6 +16239,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noDraft": "There is no draft here.",
     "library.titleRequired": "The document title is required — without it the list shows only the key.",
     "library.emptyText": "Empty text cannot be saved — the document would have no content.",
+    "library.pendingTextGone": "The text awaiting a decision is gone — please save it again.",
     "library.labelRequired": "The version label is required — it appears verbatim in every acknowledgement record. Write what the document says (for example: consolidated text of 27 February 2026), not an invented number.",
     "library.effectiveFromRequired": "The effective date is required — without it the version cannot be acknowledged (D6).",
     "meta.badDate": "A date in the version details is not a valid date.",
@@ -18407,6 +18438,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       switchNoteModes: "Markdown / WYSIWYG",
       switchNoteAfter: " switch is at the bottom of the editor",
       saveText: "Save text",
+      markupHeading: "The editor changed markup you did not edit",
+      markupNote: (count) => `The text is not saved yet. In ${count === 1 ? "1 line" : `${count} lines`} not a single letter changed, only Markdown marks — the editor's visual mode rewrote them. Your own edits are saved either way.`,
+      markupStars: "changes the number of asterisks — it may be a different footnote",
+      markupLine: (line) => `Line ${line}`,
+      markupBefore: "Was",
+      markupAfter: "Editor saved",
+      markupKeep: "Save with original markup",
+      markupAccept: "Save anyway",
       llmHeading: "Text helpers",
       llmNoteBefore: "It runs only like this — on a click. The result is saved as a ",
       llmNoteHighlight: "draft beside the text",
@@ -18422,6 +18461,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertedWithWarnings: (warnings) => `Converted. ${warnings}`,
       versionSameAsPublished: "Note: the converted text is identical to the published version — the uploaded file brings no change.",
       versionDiffers: (added, removed) => `Against the published version: ${added} lines added, ${removed} removed.`,
+      savedMarkupRestored: "The text is saved, the Markdown markup stayed as it was.",
       saved: "Saved.",
       changesSaved: "Changes saved.",
       alreadyPublished: "This version is already published — nothing changed.",
