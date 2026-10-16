@@ -1611,6 +1611,19 @@ html { scroll-padding-top: var(--chrome-h); }
 .rte-h { font-weight: 700; letter-spacing: -0.02em; }
 /* Tlačidlo so slovom (Tučné, Kurzíva …) — slovo samo ukazuje formát. */
 .rte-btn--word { padding: 0 12px; font-size: 14px; }
+.rte-glyph { display: none; font-size: 16px; }
+/*
+  Telefón (Ján 16. 10. 2026): lišta v jednom riadku — písmená namiesto slov
+  a tlačidlá sa delia o šírku rovnakým dielom. Výška ostáva 44 px; šírka
+  na 390 px vychádza ~35 px — vedomá odchýlka od 44 × 44, tlačidlá ležia
+  tesne vedľa seba, takže dotyk nepadne do prázdna.
+*/
+@media (max-width: 639px) {
+  .rte-toolbar { flex-wrap: nowrap; gap: 2px; }
+  .rte-toolbar .rte-btn { flex: 1 1 0; min-width: 0; padding: 0; }
+  .rte-word { display: none; }
+  .rte-glyph { display: inline; }
+}
 .rte-emoji-icon { font-size: 18px; line-height: 1; }
 .rte-emoji {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 2px; padding: 6px;
