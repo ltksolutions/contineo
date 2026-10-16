@@ -36,7 +36,9 @@ const TABLE = /^\s*\|/
 const PSEUDO_MAX = 120
 // Bez `\b`: v JavaScripte nepozná „Ť" ako písmeno a „ČASŤ PRVÁ" by neprešla.
 const PART = /^(?:ČASŤ|Časť|HLAVA|Hlava|DIEL|Diel)(?=\s|$)/
-const ARTICLE = /^(?:Článok|ČLÁNOK|Čl\.|§|Príloha|PRÍLOHA)\s*(?:č\.\s*)?\d+[a-z]?\b/
+// Veľkosť písmen nehrá rolu: texty noriem v databáze majú „## čl. 5 — Názov"
+// (porovnanie 16. 10. 2026), iné „Článok 5" alebo „ČLÁNOK 5".
+const ARTICLE = /^(?:článok|čl\.|§|príloha)\s*(?:č\.\s*)?\d+[a-z]?(?![0-9])/iu
 const NUMBERED = /^(\d+(?:\.\d+)*)\.?\s+\S/
 
 /**
@@ -145,11 +147,11 @@ function paragraphRange(part: TextBlock[]): string | null {
  */
 export function refFromHeading(heading: string): string {
   const h = heading.trim()
-  const article = /^(?:Článok|ČLÁNOK|Čl\.)\s*(\d+[a-z]?)/.exec(h)
+  const article = /^(?:článok|čl\.)\s*(\d+[a-z]?)/iu.exec(h)
   if (article) return `čl. ${article[1]}`
   const paragraph = /^§\s*(\d+[a-z]?)/.exec(h)
   if (paragraph) return `§ ${paragraph[1]}`
-  const annex = /^(?:Príloha|PRÍLOHA)\s*(?:č\.\s*)?(\d+)/.exec(h)
+  const annex = /^príloha\s*(?:č\.\s*)?(\d+)/iu.exec(h)
   if (annex) return `príloha č. ${annex[1]}`
   return h
 }
