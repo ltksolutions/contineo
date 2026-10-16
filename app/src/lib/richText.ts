@@ -12,7 +12,8 @@
  */
 
 import { toBlocks, type Segment } from "./formatText"
-import { isExternalHref, splitExternal } from "./courierLinks"
+import { isExternalHref } from "./courierLinks"
+import { splitCourierInline, wrapMarks } from "./courierInline"
 
 /** Uzol dokumentu editora (tvar JSON z Tiptap / ProseMirror). */
 export interface RichNode {
@@ -35,15 +36,18 @@ export function isInternalHref(href: unknown): href is string {
 function inline(segments: Segment[]): RichNode[] {
   return segments
     .filter(s => s.text !== "")
-    .flatMap((s): RichNode[] => s.druh === "tucne"
-      ? [{ type: "text", text: s.text, marks: [{ type: "bold" }] }]
-      : s.druh === "odkaz"
-        ? [{ type: "text", text: s.text, marks: [{ type: "link", attrs: { href: s.href } }] }]
-        // Odkaz von (D222) ostáva v spoločnom rozklade obyčajným textom;
-        // editor Kuriéra ho z textu vytiahne sám.
-        : splitExternal(s.text).filter(p => p.text !== "").map(p => p.druh === "von"
-          ? { type: "text", text: p.text, marks: [{ type: "link", attrs: { href: p.href } }] }
-          : { type: "text", text: p.text }))
+    .flatMap((s): RichNode[] => s.druh === "odkaz"
+      ? [{ type: "text", text: s.text, marks: [{ type: "link", attrs: { href: s.href } }] }]
+      // Odkaz von (D222), kurzíva, podčiarknuté a prečiarknuté ostávajú
+      // v spoločnom rozklade obyčajným textom; editor Kuriéra ich vytiahne sám.
+      : splitCourierInline(s.text).filter(p => p.text !== "").map(p => {
+          const marks = [
+            ...(s.druh === "tucne" ? [{ type: "bold" }] : []),
+            ...p.marks.map(type => ({ type })),
+            ...(p.href ? [{ type: "link", attrs: { href: p.href } }] : []),
+          ]
+          return marks.length ? { type: "text", text: p.text, marks } : { type: "text", text: p.text }
+        }))
 }
 
 const paragraph = (segments: Segment[]): RichNode => {
@@ -71,15 +75,14 @@ function inlineMarkdown(nodes: RichNode[] | undefined): string {
     const href = link?.attrs?.href
     // Odkaz má prednosť pred tučným — `[**x**](/cesta)` rozklad nepozná.
     if (link && (isInternalHref(href) || isExternalHref(href))) return `[${n.text.replace(/[[\]]/g, "")}](${href})`
-    if (n.marks?.some(m => m.type === "bold")) {
-      const inner = n.text.trim()
-      if (!inner) return n.text
-      // Medzery mimo hviezdičiek, inak by `** x**` nebol tučný text.
-      const lead = n.text.slice(0, n.text.indexOf(inner))
-      const tail = n.text.slice(n.text.indexOf(inner) + inner.length)
-      return `${lead}**${inner}**${tail}`
-    }
-    return n.text
+    const has = (type: string) => Boolean(n.marks?.some(m => m.type === type))
+    const inner = n.text.trim()
+    if (!inner || !(has("bold") || has("italic") || has("underline") || has("strike"))) return n.text
+    // Značky tesne okolo textu, medzery mimo nich — inak by `** x**` nebolo tučné.
+    const lead = n.text.slice(0, n.text.indexOf(inner))
+    const tail = n.text.slice(n.text.indexOf(inner) + inner.length)
+    const wrapped = wrapMarks(inner, { italic: has("italic"), strike: has("strike"), underline: has("underline") })
+    return `${lead}${has("bold") ? `**${wrapped}**` : wrapped}${tail}`
   }).join("")
 }
 

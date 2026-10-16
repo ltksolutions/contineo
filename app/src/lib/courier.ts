@@ -188,6 +188,8 @@ export function previewOf(text: string): string {
     .replace(/^#+\s*/, "")
     .replace(/^\s*[-*•]\s+/, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/(\+\+|~~)(\S[^\n]*?)\1/g, "$2")
+    .replace(/(^|[^\p{L}\p{N}_])_(\S[^_\n]*?)_(?![\p{L}\p{N}_])/gu, "$1$2")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // vnútorné aj vonkajšie odkazy (D222)
   return plain.length > 120 ? `${plain.slice(0, 119).trimEnd()}…` : plain
 }
