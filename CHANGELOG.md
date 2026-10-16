@@ -4,6 +4,11 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kuriér: lišta editora na telefóne v jednom riadku (2026-10-16)
+
+- Pod 640 px sú namiesto slov písmená B, I, U, S, H a všetkých deväť
+  tlačidiel sa zmestí do jedného riadku.
+
 ### Kuriér: kurzíva, podčiarknuté, prečiarknuté, emotikony (2026-10-16, D223)
 
 - Lišta editora má slová namiesto písmen: **Tučné**, _Kurzíva_,

@@ -124,11 +124,19 @@ export default function RichTextField({
    * Formátovanie má na tlačidle **slovo**, nie písmeno (Ján 16. 10. 2026:
    * „ikona H a B nech je slovom") — a slovo samo ukazuje, ako formátuje.
    * Skratka je v `title`. Odrážky, číslovanie, odkaz a emotikony ostávajú
-   * ikonami s `aria-label`.
+   * ikonami s `aria-label`. Pod 640 px namiesto slova písmeno (B, I, U, S, H),
+   * aby sa celá lišta zmestila do jedného riadku (Ján 16. 10. 2026) — CSS
+   * ukáže jedno z dvoch; `aria-label` nesie slovo vždy.
    */
-  const button = (label: string, active: boolean, run: () => void, mark: ReactNode, shortcut = "", word = false) => (
-    <button type="button" className={`rte-btn${word ? " rte-btn--word" : ""}${active ? " is-on" : ""}`} aria-pressed={active}
-            title={shortcut ? `${label} (${shortcut})` : label} aria-label={word ? undefined : label}
+  const word = (full: ReactNode, glyph: ReactNode) => (
+    <>
+      <span className="rte-word" aria-hidden="true">{full}</span>
+      <span className="rte-glyph" aria-hidden="true">{glyph}</span>
+    </>
+  )
+  const button = (label: string, active: boolean, run: () => void, mark: ReactNode, shortcut = "", isWord = false) => (
+    <button type="button" className={`rte-btn${isWord ? " rte-btn--word" : ""}${active ? " is-on" : ""}`} aria-pressed={active}
+            title={shortcut ? `${label} (${shortcut})` : label} aria-label={label}
             onMouseDown={e => e.preventDefault()} onClick={run}>
       {mark}
     </button>
@@ -138,11 +146,11 @@ export default function RichTextField({
     <div className={`rte${ready ? " is-ready" : ""}`}>
       {editor && (
         <div className="rte-toolbar" role="toolbar" aria-label={labels.toolbar}>
-          {button(labels.bold, editor.isActive("bold"), () => editor.chain().focus().toggleBold().run(), <b>{labels.bold}</b>, "⌘B", true)}
-          {button(labels.italic, editor.isActive("italic"), () => editor.chain().focus().toggleItalic().run(), <i>{labels.italic}</i>, "⌘I", true)}
-          {button(labels.underline, editor.isActive("underline"), () => editor.chain().focus().toggleUnderline().run(), <u>{labels.underline}</u>, "⌘U", true)}
-          {button(labels.strike, editor.isActive("strike"), () => editor.chain().focus().toggleStrike().run(), <s>{labels.strike}</s>, "⌘⇧S", true)}
-          {button(labels.heading, editor.isActive("heading"), () => editor.chain().focus().toggleHeading({ level: 2 }).run(), <span className="rte-h">{labels.heading}</span>, "", true)}
+          {button(labels.bold, editor.isActive("bold"), () => editor.chain().focus().toggleBold().run(), word(<b>{labels.bold}</b>, <b>B</b>), "⌘B", true)}
+          {button(labels.italic, editor.isActive("italic"), () => editor.chain().focus().toggleItalic().run(), word(<i>{labels.italic}</i>, <i>I</i>), "⌘I", true)}
+          {button(labels.underline, editor.isActive("underline"), () => editor.chain().focus().toggleUnderline().run(), word(<u>{labels.underline}</u>, <u>U</u>), "⌘U", true)}
+          {button(labels.strike, editor.isActive("strike"), () => editor.chain().focus().toggleStrike().run(), word(<s>{labels.strike}</s>, <s>S</s>), "⌘⇧S", true)}
+          {button(labels.heading, editor.isActive("heading"), () => editor.chain().focus().toggleHeading({ level: 2 }).run(), word(<span className="rte-h">{labels.heading}</span>, <span className="rte-h">H</span>), "", true)}
           {button(labels.bullets, editor.isActive("bulletList"), () => editor.chain().focus().toggleBulletList().run(), <Icon name="bullets" size={18} />)}
           {button(labels.numbered, editor.isActive("orderedList"), () => editor.chain().focus().toggleOrderedList().run(), <Icon name="numbered" size={18} />)}
           {button(labels.link, editor.isActive("link") || linkOpen, () => { setEmojiOpen(false); setLinkOpen(o => !o) }, <Icon name="link" size={18} />)}
