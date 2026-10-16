@@ -151,7 +151,8 @@ export function refFromHeading(heading: string): string {
   if (article) return `čl. ${article[1]}`
   const paragraph = /^§\s*(\d+[a-z]?)/.exec(h)
   if (paragraph) return `§ ${paragraph[1]}`
-  const annex = /^príloha\s*(?:č\.\s*)?(\d+)/iu.exec(h)
+  // Príloha môže mať písmeno („Príloha č. 1a" v RaPP) — bez neho by splynula s prílohou 1.
+  const annex = /^príloha\s*(?:č\.\s*)?(\d+[a-z]?)/iu.exec(h)
   if (annex) return `príloha č. ${annex[1]}`
   return h
 }

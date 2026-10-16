@@ -33,6 +33,7 @@ describe("nadpisy bez mriežok", () => {
     expect(refFromHeading("čl. 5 — Predmet úpravy")).toBe("čl. 5")
     expect(refFromHeading("ČLÁNOK 13a – Prechodné")).toBe("čl. 13a")
     expect(refFromHeading("PRÍLOHA č. 2")).toBe("príloha č. 2")
+    expect(refFromHeading("Príloha č. 1a – Vzor")).toBe("príloha č. 1a")
   })
 })
 
