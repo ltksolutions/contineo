@@ -14,8 +14,7 @@
 
 import { inspectChunking, type ChunkingInspection } from "./chunkingInspect"
 import { splitBlocks, boundariesFromChunks, groupTokens, type TextBlock } from "./chunkBlocks"
-import { cutForIndex, manualCutFor } from "./chunkCut"
-import { toChunkerProfile } from "./chunkingProfile"
+import { cutForIndex, manualCutFor, type CutMethod } from "./chunkCut"
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
 import { roundsFor, proposalText, type ChunkRound } from "./chunkProposal"
@@ -28,8 +27,10 @@ export interface CutterState {
   /** Dnešné hranice v indexoch blokov. */
   current: number[]
   approximate: boolean
-  /** Rez je prijatý ručne (nie profilom). */
+  /** Rez je prijatý ručne. */
   manual: boolean
+  /** Spôsob dnešného rezu (ADR-035): ručné hranice, zo štruktúry, bez štruktúry. */
+  method: CutMethod
   rounds: ChunkRound[]
   /** Druh dokumentu (kľúč číselníka `category`) — pre návrh AI. */
   category: string | null
@@ -63,9 +64,10 @@ export async function cutterState(companyCode: string, documentId: string): Prom
   let approximate = false
   // „Dnes": pri platnom znení uložené úseky (z tých asistent odpovedá),
   // pri koncepte to, ako by sa narezal pri zverejnení.
+  const todayCut = cutForIndex(text, inspection.title, inspection.chunkCuts)
   const todayChunks = !draft && inspection.stored.length
     ? inspection.stored
-    : cutForIndex(text, inspection.title, toChunkerProfile(inspection.profile.values), inspection.chunkCuts).chunks.map(c => ({
+    : todayCut.chunks.map(c => ({
         chunkIndex: c.chunkIndex, heading: c.heading, articleRef: c.articleRef, text: c.text,
         tokens: estimateTokens(c.text), complete: c.uplnaJednotka,
       }))
@@ -83,6 +85,7 @@ export async function cutterState(companyCode: string, documentId: string): Prom
     current,
     approximate,
     manual: Boolean(manualCut),
+    method: todayCut.method,
     rounds: roundsFor(doc?.chunkRounds, text),
     category: doc?.category ?? null,
     reviewed: Boolean(manualCut) || (Boolean(hash) && doc?.chunkingDeferredHash === hash),

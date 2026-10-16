@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { chunkStats, chunkWarnings, cutWith } from "@/lib/chunkingInspect"
-import { freeProfileKey } from "@/lib/chunkingProfilesDb"
+import { chunkStats, chunkWarnings, inspectedCut } from "@/lib/chunkingInspect"
 
 const profile = { minTokens: 300, maxTokens: 800 }
 const c = (tokens: number, articleRef: string | null = "čl. 1", chunkType = "clanok", complete?: boolean) => ({ tokens, articleRef, chunkType, complete })
@@ -36,19 +35,15 @@ describe("chunkingInspect — súhrn a upozornenia rezu (ADR-027, krok A)", () =
   })
 })
 
-describe("skúšobný rez a nový profil (krok B)", () => {
-  it("rez inými hodnotami — slovo § namiesto Článok", () => {
-    const text = "§ 1 – Predmet\n(1) Text prvý.\n§ 2 – Pojmy\n(1) Text druhý.\n§ 3 – Záver\n(1) Koniec."
-    const clanok = cutWith(text, "Zákon", { articleWord: "Článok" }).chunks
-    const paragraf = cutWith(text, "Zákon", { articleWord: "§" }).chunks
-    expect(clanok.filter(x => x.articleRef).length).toBe(0)
-    expect(paragraf.filter(x => x.articleRef).length).toBe(3)
-    expect(paragraf.every(x => x.complete === true)).toBe(true)
+describe("dnešný rez bez profilu (ADR-035)", () => {
+  it("§ ako nadpis bez mriežok: rez zo štruktúry a citácia „§ N“", () => {
+    const text = "§ 1 Predmet\n\n(1) Text prvý.\n\n§ 2 Pojmy\n\n(1) Text druhý.\n\n§ 3 Záver\n\n(1) Koniec."
+    const cut = inspectedCut(text, "Zákon")
+    expect(cut.method).toBe("headings")
+    // Každý § je samostatná jednotka, aj keď je krátky (ADR-035, porovnanie 16. 10.).
+    expect(cut.chunks.map(c => c.articleRef)).toEqual(["§ 1", "§ 2", "§ 3"])
   })
-
-  it("kľúč nového profilu z názvu, bez kolízie", () => {
-    expect(freeProfileKey("Zákon (§)", ["zakladny"])).toBe("zakon")
-    expect(freeProfileKey("Zákon (§)", ["zakladny", "zakon"])).toBe("zakon_2")
-    expect(freeProfileKey("§", [])).toBe("profil")
+  it("text bez nadpisov ide chunkerom s predvolenými hodnotami", () => {
+    expect(inspectedCut("Len odsek.\n\nDruhý odsek.", "Zápisnica").method).toBe("plain")
   })
 })

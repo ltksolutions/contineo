@@ -4,6 +4,8 @@
 > **Rozhodol:** Ján Letko (2026-10-05) — „áno, súhlasím, začni krokom 1".
 > **Nadväzuje na:** D58 (profil členenia per organizácia), D79 (pomenované
 > profily, plán `docs/D79_plan_clenenie_per_dokument.md`), D57 (`versionId` ≠ `chunkingId`)
+> **Prekonané v časti:** [ADR-035](ADR-035-rez-zo-struktury-markdownu.md) (16. 10. 2026) — prvý rez je vždy zo štruktúry
+> Markdownu, profily členenia a voľba spôsobu podľa druhu dokumentu zanikajú.
 > **Implementácia:** krok 1 — časť `/organisation/chunking` zrušená, skript
 > `npm run chunking:reindex`; krok 2 — `docs/TODO.md`, O5.
 

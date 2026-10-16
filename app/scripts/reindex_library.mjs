@@ -10,8 +10,10 @@
  * nie správcu organizácie. Jeden dokument sa dá preindexovať v jeho detaile.
  *
  * Beží tou istou funkciou ako tlačidlo (`reindexAll`), po dávkach po 25,
- * kým nie je hotovo. Každý dokument sa reže **svojím** profilom (D79);
- * znenia (`versions[]`) a potvrdenia sa nemenia (D57).
+ * kým nie je hotovo. Každý dokument sa reže dnešným rezom (`cutForIndex()`:
+ * ručné hranice, štruktúra Markdownu, chunker pre text bez nadpisov —
+ * ADR-035); znenia (`versions[]`) a potvrdenia sa nemenia (D57). Pred ostrým
+ * behom: `npm run chunking:compare`.
  *
  * **Predvolene beží nasucho.** `companyCode` je v podmienke každého dotazu (D32).
  */
