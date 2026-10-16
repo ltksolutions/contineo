@@ -1,16 +1,16 @@
 /**
  * chunkCut.ts — ktorým spôsobom sa znenie nareže pri indexovaní
- * (KNIZ-rezac-blokov Q3 A, ADR-035 D225).
+ * (KNIZ-rezac-blokov Q3 A, ADR-035 D232).
  *
  * Jedno miesto rozhodnutia, v tomto poradí:
  *
  *   1. **ručné hranice** prijaté kurátorom (`documents.chunkCuts`) — keď sedí
  *      odtlačok textu;
- *   2. **rez zo štruktúry Markdownu** (`chunkHeadings.ts`, ADR-035 D223) —
+ *   2. **rez zo štruktúry Markdownu** (`chunkHeadings.ts`, ADR-035 D230) —
  *      text s nadpismi, teda takmer každý;
  *   3. **chunker s predvolenými hodnotami** — text bez nadpisov (starý prepis).
  *
- * Profily členenia (D58, D79) zanikli (ADR-035 D224) — nič z organizácie
+ * Profily členenia (D58, D79) zanikli (ADR-035 D231) — nič z organizácie
  * ani z dokumentu sem nevstupuje.
  *
  * Všetky miesta, ktoré režú na zápis (`publish`, `reindexVersion`, stav

@@ -6,7 +6,7 @@
  * štruktúra Markdownu, chunker pre text bez nadpisov) narezal to isté. Nič
  * nemení: preindexovanie je samostatný, vedomý krok v detaile dokumentu.
  *
- * Profily členenia, skúšobný rez a návrh profilu zanikli (ADR-035 D224).
+ * Profily členenia, skúšobný rez a návrh profilu zanikli (ADR-035 D231).
  */
 
 import { getCollection } from "./mongodb"

@@ -72,7 +72,7 @@ export default async function ChunksPage({
   const t = dictionary(language).library.chunks
   const c = t.cut
   const branding = brandingView(ctx.tenant)
-  // Cieľ rezu je pravidlo, nie nastavenie (ADR-035 D223).
+  // Cieľ rezu je pravidlo, nie nastavenie (ADR-035 D230).
   const limit = Math.round(CUT_MAX * OVERSIZE_FACTOR)
   const min = CUT_MIN
   const methodLabel = { manual: c.methodManual, headings: c.methodHeadings, plain: c.methodPlain }[state.method]

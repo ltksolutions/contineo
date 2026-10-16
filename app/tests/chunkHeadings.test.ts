@@ -1,5 +1,5 @@
 /**
- * chunkHeadings.test.ts — prvý rez zo štruktúry Markdownu (ADR-035, D223).
+ * chunkHeadings.test.ts — prvý rez zo štruktúry Markdownu (ADR-035, D230).
  */
 import { describe, it, expect } from "vitest"
 import { headingBoundaries, hasStructure, CUT_MAX } from "../src/lib/chunkHeadings"

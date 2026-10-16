@@ -854,7 +854,7 @@ export async function publish(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  // Ručné hranice → štruktúra Markdownu → chunker (ADR-035 D225). Bez profilu.
+  // Ručné hranice → štruktúra Markdownu → chunker (ADR-035 D232). Bez profilu.
   const cut = cutForIndex(markdown, meta.title, doc.chunkCuts as ChunkCut[] | undefined)
   const chunks = cut.chunks
   if (!chunks.length) {

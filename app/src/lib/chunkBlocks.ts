@@ -42,7 +42,7 @@ const ARTICLE = /^(?:článok|čl\.|§|príloha)\s*(?:č\.\s*)?\d+[a-z]?(?![0-9]
 const NUMBERED = /^(\d+(?:\.\d+)*)\.?\s+\S/
 
 /**
- * Úroveň nadpisu, ktorý je nadpisom bez mriežok (ADR-035, D223 bod 2) —
+ * Úroveň nadpisu, ktorý je nadpisom bez mriežok (ADR-035, D230 bod 2) —
  * prevod PDF ich často dá ako tučný riadok alebo „Článok 5". `0` = nie je.
  *
  * - „ČASŤ / HLAVA / DIEL" → 2; „Článok 5", „§ 5", „Príloha č. 2" → 3;
@@ -141,7 +141,7 @@ function paragraphRange(part: TextBlock[]): string | null {
 }
 
 /**
- * Citácia z nadpisu (ADR-035, D223 bod 5): článok, § a príloha v tvare
+ * Citácia z nadpisu (ADR-035, D230 bod 5): článok, § a príloha v tvare
  * chunkera („čl. 5", „§ 5", „príloha č. 2") — tak ich citujú odpovede aj
  * porovnanie znení; inak text nadpisu („1.2 Spracovanie").
  */

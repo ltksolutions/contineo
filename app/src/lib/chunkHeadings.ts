@@ -1,5 +1,5 @@
 /**
- * chunkHeadings.ts — prvý rez úsekov zo štruktúry Markdownu (ADR-035, D223).
+ * chunkHeadings.ts — prvý rez úsekov zo štruktúry Markdownu (ADR-035, D230).
  *
  * Bez nastavenia, pre každý dokument rovnako. Štruktúru nesie text sám —
  * nadpisy podľa úrovne a číslovanie; prevod PDF, nahratý `.md` aj editor

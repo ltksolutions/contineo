@@ -1,6 +1,6 @@
 /**
  * chunking_compare.mjs — porovnanie uložených úsekov s dnešným rezom
- * (ADR-035, D226). Nič nemení — iba číta a počíta.
+ * (ADR-035, D233). Nič nemení — iba číta a počíta.
  *
  *     npm run chunking:compare -- --company SFZ
  *     npm run chunking:compare -- --company SFZ --refs    aj zoznam citácií, ktoré by zmizli

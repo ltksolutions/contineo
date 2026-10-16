@@ -169,7 +169,7 @@ export interface Tenant {
   }
 
   // Profily členenia (`chunking`, `chunkingProfiles`, D58, D79) zanikli —
-  // ADR-035 D224. Polia v uložených dátach ostávajú, kód ich nečíta.
+  // ADR-035 D231. Polia v uložených dátach ostávajú, kód ich nečíta.
 
   /**
    * Domény, z ktorých sa človek **založí sám** pri prvom prihlásení

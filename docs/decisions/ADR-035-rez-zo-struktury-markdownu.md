@@ -7,6 +7,7 @@
 > číslovania… aj PDF prevádzame do markdown, to isté ako keď markdown rovno
 > nahrám, alebo vytvorím v editore"; „navrhujem úplne vyhodiť nastavenie,
 > čo má hľadať prvý rez… každý dokument je iný"; „áno, rozhodni a urob to".
+> **Čísla rozhodnutí:** D230–D233 (D223 medzitým použil ADR-033 pre Kuriér).
 > **Prekonáva:** D58 (profil členenia organizácie), D79 (pomenované profily
 > členenia per dokument) a ADR-027 D160 v časti „spôsob členenia podľa druhu
 > dokumentu" — druh dokumentu už nevolí spôsob rezu.
@@ -35,7 +36,7 @@ už nemáme. Každý dokument je iný; nastavenie, ktoré pre jeden sedí, druh�
 
 ## 2. Rozhodnutie
 
-### D223 — Prvý rez je vždy zo štruktúry Markdownu
+### D230 — Prvý rez je vždy zo štruktúry Markdownu
 
 Bez nastavenia, pre každý dokument rovnako (`lib/chunkHeadings.ts`):
 
@@ -58,7 +59,7 @@ Bez nastavenia, pre každý dokument rovnako (`lib/chunkHeadings.ts`):
 Text **bez nadpisov** (starý prepis, zápisnica bez štruktúry) sa reže
 doterajším chunkerom s predvolenými hodnotami — bez profilu, bez nastavenia.
 
-### D224 — Profily členenia zanikajú
+### D231 — Profily členenia zanikajú
 
 - Pomenované profily organizácie (`tenants.chunkingProfiles`,
   `tenants.chunking`) a profil dokumentu (`documents.chunkingProfile`) kód
@@ -69,14 +70,14 @@ doterajším chunkerom s predvolenými hodnotami — bez profilu, bez nastavenia
 - Návrh profilu od AI zo štruktúry (`chunkingAdvice.ts`, 5. 10. 2026) zaniká;
   nahradil ho návrh hraníc s celým textom (KNIZ-rezac-blokov).
 
-### D225 — Doladenie je návrh AI alebo človek, nie nastavenie
+### D232 — Doladenie je návrh AI alebo človek, nie nastavenie
 
 Poradie pri zápise (`cutForIndex()`): **ručné hranice** prijaté pre presne
 tento text → **rez zo štruktúry** → chunker pre text bez nadpisov. Návrh AI
 a poznámka „Čo nesedí" dolaďujú prvý rez; ťahanie hraníc (fáza 2 rezača) je
 ďalšia cesta k ručným hraniciam.
 
-### D226 — Prechod: nové znenia hneď, existujúce po porovnaní
+### D233 — Prechod: nové znenia hneď, existujúce po porovnaní
 
 Rez zo štruktúry má vlastný odtlačok, takže každý dokument s nadpismi ukáže
 „treba preindexovať". Nové a novo nahraté znenia sa režú novo hneď.
