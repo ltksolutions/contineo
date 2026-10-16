@@ -3655,6 +3655,10 @@ interface Dictionary {
         noTextTitle: string
         method: string
         methodManual: string
+        methodHeadings: string
+        methodPlain: string
+        /** Text bez nadpisov — rez nevie, kde začínajú časti (ADR-035). */
+        plainNote: string
         today: string
         proposal: string
         chunksCount: (n: number) => string
@@ -6459,7 +6463,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noChunks": "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
     "library.noPublishedVersion": "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
     "library.versionHasNoText": "Toto znenie nemá uložený text — nie je čo narezať.",
-    "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.",
+    "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontrolujte text v editore.",
     "library.reindexWouldLoseArticles": "Preindexovanie by tento dokument pokazilo: dnes má {before} z {beforeTotal} úsekov s rozpoznaným článkom, po narezaní by ich malo {after} z {afterTotal}. Text v databáze má hlavičky v inom tvare, než aký chunker pozná — kým sa to neopraví, staré členenie je lepšie než nové.",
     "library.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
     "textFix.notContentManager": "Text znenia opravuje správca obsahu.",
@@ -8516,7 +8520,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noVersion: "Dokument zatiaľ nemá platné znenie, preto nemá úseky. Nižšie je len rozbor konceptu.",
       upToDate: "Úseky zodpovedajú dnešnému členeniu.",
       outdated: (stored, today) => `Úseky sú narezané starším spôsobom (${stored} ${stored === 1 ? "úsek" : stored >= 2 && stored <= 4 ? "úseky" : "úsekov"}); dnes by ich vzniklo ${today}.`,
-      reindexHint: "Preindexovať sa dá v detaile dokumentu (Správa → Preindexovať). Znenie ani potvrdenia sa nemenia.",
+      reindexHint: "Preindexovať sa dá v detaile dokumentu (Ďalšie akcie → Preindexovať). Znenie ani potvrdenia sa nemenia.",
       statsCount: "Úsekov",
       statsArticles: "S článkom",
       statsTokens: "Veľkosť (tokeny)",
@@ -8586,6 +8590,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         noTextTitle: "Dokument zatiaľ nemá text",
         method: "Spôsob",
         methodManual: "ručné hranice",
+        methodHeadings: "podľa nadpisov",
+        methodPlain: "bez štruktúry",
+        plainNote: "Text nemá nadpisy, preto sa reže len podľa dĺžky. Doplňte nadpisy v editore textu (# a ##), alebo dajte navrhnúť rezy.",
         today: "Dnes",
         proposal: "Návrh",
         chunksCount: n => (n === 1 ? "1 úsek" : n < 5 ? `${n} úseky` : `${n} úsekov`),
@@ -11341,7 +11348,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noChunks": "Z textu nevznikl ani jeden úsek. Zkontroluj, jestli má dokument členění na články nebo nadpisy.",
     "library.noPublishedVersion": "Dokument nemá publikované znění — přeindexovat lze jen to, co už je venku.",
     "library.versionHasNoText": "Toto znění nemá uložený text — není co rozdělit.",
-    "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontroluj profil členění.",
+    "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontrolujte text v editoru.",
     "library.reindexWouldLoseArticles": "Přeindexování by tento dokument pokazilo: dnes má {before} z {beforeTotal} úseků s rozpoznaným článkem, po nařezání by jich mělo {after} z {afterTotal}. Text v databázi má hlavičky v jiném tvaru, než jaký chunker zná — dokud se to neopraví, staré členění je lepší než nové.",
     "library.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
     "textFix.notContentManager": "Text znění opravuje správce obsahu.",
@@ -13395,7 +13402,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noVersion: "Dokument zatím nemá platné znění, proto nemá úseky. Níže je jen rozbor konceptu.",
       upToDate: "Úseky odpovídají dnešnímu členění.",
       outdated: (stored, today) => `Úseky jsou rozřezané starším způsobem (${stored} ${stored === 1 ? "úsek" : stored >= 2 && stored <= 4 ? "úseky" : "úseků"}); dnes by jich vzniklo ${today}.`,
-      reindexHint: "Přeindexovat lze v detailu dokumentu (Správa → Přeindexovat). Znění ani potvrzení se nemění.",
+      reindexHint: "Přeindexovat lze v detailu dokumentu (Další akce → Přeindexovat). Znění ani potvrzení se nemění.",
       statsCount: "Úseků",
       statsArticles: "S článkem",
       statsTokens: "Velikost (tokeny)",
@@ -13465,6 +13472,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         noTextTitle: "Dokument zatím nemá text",
         method: "Způsob",
         methodManual: "ruční hranice",
+        methodHeadings: "podle nadpisů",
+        methodPlain: "bez struktury",
+        plainNote: "Text nemá nadpisy, proto se řeže jen podle délky. Doplňte nadpisy v editoru textu (# a ##), nebo nechte navrhnout řezy.",
         today: "Dnes",
         proposal: "Návrh",
         chunksCount: n => (n === 1 ? "1 úsek" : n < 5 ? `${n} úseky` : `${n} úseků`),
@@ -16212,7 +16222,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noChunks": "The text produced no chunks at all. Check whether the document is organised into articles or headings.",
     "library.noPublishedVersion": "The document has no published version — only what is already out can be reindexed.",
     "library.versionHasNoText": "This version has no stored text — there is nothing to split.",
-    "library.noChunksProfile": "The text produced no chunks at all — check the chunking profile.",
+    "library.noChunksProfile": "The text produced no chunks at all — check the text in the editor.",
     "library.reindexWouldLoseArticles": "Reindexing would damage this document: it currently has {before} of {beforeTotal} chunks with a recognised article, and re-chunking would leave {after} of {afterTotal}. The text in the database uses a heading form the chunker does not know — until that is fixed, the existing chunking is better than the new one.",
     "library.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
     "textFix.notContentManager": "Correcting the text of a version is the content manager's job.",
@@ -18261,7 +18271,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noVersion: "The document has no effective version yet, so it has no chunks. Below is only an analysis of the draft.",
       upToDate: "The chunks match today's splitting.",
       outdated: (stored, today) => `The chunks were split the older way (${stored} chunks); today ${today} would be created.`,
-      reindexHint: "Reindex in the document detail (Manage → Reindex). Neither the text nor acknowledgements change.",
+      reindexHint: "Reindex in the document detail (More actions → Reindex). Neither the text nor acknowledgements change.",
       statsCount: "Chunks",
       statsArticles: "With an article",
       statsTokens: "Size (tokens)",
@@ -18331,6 +18341,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         noTextTitle: "The document has no text yet",
         method: "Method",
         methodManual: "manual boundaries",
+        methodHeadings: "by headings",
+        methodPlain: "no structure",
+        plainNote: "The text has no headings, so it is cut by length only. Add headings in the text editor (# and ##), or ask for a cut proposal.",
         today: "Today",
         proposal: "Proposal",
         chunksCount: n => (n === 1 ? "1 chunk" : `${n} chunks`),

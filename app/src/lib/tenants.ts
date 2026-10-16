@@ -27,7 +27,6 @@ import type { RetentionSettings } from "./retention"
 import type { Person } from "./persons"
 import type { TenantOAuth } from "./oauth"
 import type { TenantAi } from "./aiSettings"
-import type { ChunkingProfile, ChunkingProfileDef } from "./chunkingProfile"
 import type { TenantLegalBasis } from "./legalBases"
 
 export const TENANTS_COLLECTION = "tenants"
@@ -169,27 +168,8 @@ export interface Tenant {
     phone?: string
   }
 
-  /**
-   * Profil členenia dokumentov na úseky (D58).
-   *
-   * Jeden algoritmus, parametre navonok. Vlastný chunker per zákazník by
-   * znamenal N kópií jedného pravidla — a chyba v jednej by sa neprejavila
-   * pádom, ale tým, že model odcituje nesprávny článok u jedného zákazníka
-   * o pol roka.
-   *
-   * Chýbajúci profil znamená predvolený, nie „nič" — a predvolený reže presne
-   * tak, ako sa rezalo doteraz (overené na deviatich normách).
-   */
-  chunking?: Partial<ChunkingProfile>
-
-  /**
-   * Pomenované profily členenia (D79). Dokument nesie **len kľúč** jedného
-   * z nich — vlastné hodnoty na dokumente zámerne neexistujú.
-   *
-   * `chunking` vyššie zostáva ako záchyt pre organizácie spred D79, ktoré
-   * profily ešte nemajú. Kým ich nemajú, správajú sa presne ako predtým.
-   */
-  chunkingProfiles?: ChunkingProfileDef[]
+  // Profily členenia (`chunking`, `chunkingProfiles`, D58, D79) zanikli —
+  // ADR-035 D231. Polia v uložených dátach ostávajú, kód ich nečíta.
 
   /**
    * Domény, z ktorých sa človek **založí sám** pri prvom prihlásení

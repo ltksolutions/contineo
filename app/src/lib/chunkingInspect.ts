@@ -1,25 +1,21 @@
 /**
- * chunkingInspect.ts — ako je dokument narezaný na úseky (editor členenia, krok A;
- * ADR-027, rozhodnutie Jána 5. 10. 2026).
+ * chunkingInspect.ts — ako je dokument narezaný na úseky (stránka Členenie).
  *
  * Ukazuje **uložené úseky** platného znenia — presne to, z čoho asistent
- * odpovedá — a vedľa toho, či by dnešný kód s profilom dokumentu narezal to
- * isté. Nič nemení: preindexovanie je samostatný, vedomý krok v detaile
- * dokumentu (D58).
+ * odpovedá — a vedľa toho, či by dnešný rez (`cutForIndex()`: ručné hranice,
+ * štruktúra Markdownu, chunker pre text bez nadpisov) narezal to isté. Nič
+ * nemení: preindexovanie je samostatný, vedomý krok v detaile dokumentu.
  *
- * Návrh profilu dáva analyzátor (`chunkingAnalysis.ts`), nie model — zadarmo
- * a opakovateľne. Analýza modelom je krok C.
+ * Profily členenia, skúšobný rez a návrh profilu zanikli (ADR-035 D231).
  */
 
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
-import { CHUNKS_COLLECTION, chunkingTenant } from "./libraryWrite"
-import { chunkText, DEFAULT_PROFILE, estimateTokens } from "./chunker.mjs"
-import { chunkingFor, toChunkerProfile, DEFAULT_PROFILE_KEY, DEFAULT_CHUNKING, type ChunkingProfile } from "./chunkingProfile"
+import { CHUNKS_COLLECTION } from "./libraryWrite"
+import { estimateTokens } from "./chunker.mjs"
 import { chunkingFingerprint, needsReindex } from "./chunkIdentity"
-import { analyseChunking, type ChunkingAnalysis } from "./chunkingAnalysis"
-import type { ChunkingAdvice } from "./chunkingAdvice"
-import { cutForIndex, type ChunkCut } from "./chunkCut"
+import { cutForIndex, type ChunkCut, type CutMethod } from "./chunkCut"
+import { CUT_MIN, CUT_MAX } from "./chunkHeadings"
 
 /** Úsek tak, ako sa zobrazí. Text celý — obrazovka ho skryje do rozbaľovača. */
 export interface InspectedChunk {
@@ -88,7 +84,7 @@ export function chunkStats(chunks: Pick<InspectedChunk, "articleRef" | "tokens">
  */
 export function chunkWarnings(
   chunks: Pick<InspectedChunk, "articleRef" | "tokens" | "chunkType" | "complete">[],
-  profile: Pick<ChunkingProfile, "minTokens" | "maxTokens">,
+  profile: { minTokens: number; maxTokens: number } = { minTokens: CUT_MIN, maxTokens: CUT_MAX },
 ): ChunkWarning[] {
   const out: ChunkWarning[] = []
   if (!chunks.length) return out
@@ -108,75 +104,19 @@ export function chunkWarnings(
   return out
 }
 
-type RawChunk = {
-  chunkIndex: number; heading?: string; articleRef?: string | null; typ?: string; text: string; uplnaJednotka?: boolean
-}
-
-/** Rez textu danými parametrami — to isté, čo by urobilo preindexovanie. */
-export function cutWith(
-  text: string,
-  title: string,
-  params: Partial<ChunkingProfile> | undefined,
-): { chunks: InspectedChunk[]; fingerprint: string } {
-  const forChunker = toChunkerProfile(params)
-  const { chunky } = chunkText(text, { nazovDokumentu: title, profil: forChunker }) as { chunky: RawChunk[] }
-  return {
-    chunks: chunky.map(c => ({
-      chunkIndex: c.chunkIndex,
-      heading: c.heading ?? "",
-      articleRef: c.articleRef ?? null,
-      chunkType: c.typ ?? "clanok",
-      text: c.text,
-      tokens: estimateTokens(c.text),
-      complete: Boolean(c.uplnaJednotka),
-    })),
-    fingerprint: chunkingFingerprint(chunky as never, { ...DEFAULT_PROFILE, ...forChunker }),
-  }
-}
-
-export interface ChunkingTrial {
-  values: ChunkingProfile
-  chunks: InspectedChunk[]
-  stats: ChunkStats
-  warnings: ChunkWarning[]
-  /** Skúšobné hodnoty sú zhodné s niektorým pomenovaným profilom. */
-  matchesProfile: string | null
-  /**
-   * Skúšobný rez dá **tie isté úseky** ako dnešný rez profilom dokumentu —
-   * iné hodnoty, rovnaký výsledok (napr. „PRÍLOHA" proti „PRÍLOHA č." v texte
-   * bez príloh). Vtedy nie je čo ukladať.
-   */
-  sameAsCurrent: boolean
-}
-
 export interface ChunkingInspection {
   documentId: string
   title: string
   version: { versionId: string; label: string } | null
-  /** Kľúč a menovka profilu, ktorým sa dokument reže. */
-  profile: { key: string; label: string; values: ChunkingProfile }
   stored: InspectedChunk[]
   stats: ChunkStats
   warnings: ChunkWarning[]
-  /** Dnešný rez tým istým profilom — koľko úsekov a či sa líši od uloženého. */
-  today: { count: number; withArticlePercent: number; outdated: boolean } | null
-  analysis: ChunkingAnalysis | null
-  /** Pomenované profily organizácie — na výber „Použiť profil". */
-  profiles: { key: string; label: string; values: ChunkingProfile }[]
-  /** Skúšobný rez, keď prišli skúšobné parametre (krok B). */
-  trial: ChunkingTrial | null
-  /** Posledný návrh AI uložený pri dokumente (krok C). */
-  advice: ChunkingAdvice | null
+  /** Dnešný rez — koľko úsekov, spôsob a či sa líši od uloženého. */
+  today: { count: number; withArticlePercent: number; outdated: boolean; method: CutMethod } | null
   /** Text, z ktorého sa reže (platné znenie, inak koncept) — rezač blokov. */
   text: string
   /** Prijaté ručné hranice pri dokumente (KNIZ-rezac-blokov). */
   chunkCuts: ChunkCut[]
-}
-
-/** Rovnaké parametre rezu? (kľúč a menovka nehrajú rolu) */
-function sameValues(a: ChunkingProfile, b: ChunkingProfile): boolean {
-  return a.articleWord === b.articleWord && a.annexWord === b.annexWord &&
-    a.headerRepeats === b.headerRepeats && a.minTokens === b.minTokens && a.maxTokens === b.maxTokens
 }
 
 interface VersionRow {
@@ -186,34 +126,32 @@ interface VersionRow {
   markdown?: string
 }
 
+/** Úseky dnešného rezu v tvare obrazovky. */
+export function inspectedCut(text: string, title: string, cuts?: ChunkCut[] | null) {
+  const index = cutForIndex(text, title, cuts)
+  return {
+    method: index.method,
+    chunks: index.chunks.map(c => ({
+      chunkIndex: c.chunkIndex, heading: c.heading ?? "", articleRef: c.articleRef ?? null, chunkType: c.typ ?? "clanok",
+      text: c.text, tokens: estimateTokens(c.text), complete: Boolean(c.uplnaJednotka),
+    })) as InspectedChunk[],
+    fingerprint: chunkingFingerprint(index.chunks, index.fingerprintProfile),
+  }
+}
+
 /**
  * Rez platného znenia dokumentu. `null`, keď dokument v organizácii nie je (D32).
  *
  * Platné znenie = `isActive` — to, z ktorého odpovedá asistent. Dokument bez
- * neho (koncept) nemá uložené úseky; ukáže sa len návrh analyzátora nad
- * konceptom, aby sa členenie dalo posúdiť ešte pred zverejnením.
+ * neho (koncept) nemá uložené úseky.
  */
-export async function inspectChunking(
-  companyCode: string,
-  documentId: string,
-  trialValues?: ChunkingProfile | null,
-): Promise<ChunkingInspection | null> {
+export async function inspectChunking(companyCode: string, documentId: string): Promise<ChunkingInspection | null> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne(
     { companyCode, documentId },
-    { projection: { documentId: 1, title: 1, versions: 1, chunkingProfile: 1, draftMarkdown: 1, chunkingAdvice: 1, chunkCuts: 1 } },
-  ) as {
-    documentId: string; title?: string; versions?: VersionRow[]; chunkingProfile?: string; draftMarkdown?: string
-    chunkingAdvice?: ChunkingAdvice; chunkCuts?: ChunkCut[]
-  } | null
+    { projection: { documentId: 1, title: 1, versions: 1, draftMarkdown: 1, chunkCuts: 1 } },
+  ) as { documentId: string; title?: string; versions?: VersionRow[]; draftMarkdown?: string; chunkCuts?: ChunkCut[] } | null
   if (!doc) return null
-
-  const tenant = await chunkingTenant(companyCode)
-  const key = doc.chunkingProfile ?? DEFAULT_PROFILE_KEY
-  const params = chunkingFor(tenant, doc.chunkingProfile)
-  // Na obrazovku úplné hodnoty; do chunkera ide `params` tak, ako je (odtlačok).
-  const values: ChunkingProfile = { ...DEFAULT_CHUNKING, ...params }
-  const label = (tenant?.chunkingProfiles ?? []).find(p => p.key === key)?.label ?? key
 
   const effective = (doc.versions ?? []).find(v => v.isActive) ?? null
   const text = String(effective?.markdown ?? doc.draftMarkdown ?? "").trim()
@@ -239,52 +177,22 @@ export async function inspectChunking(
 
   let today: ChunkingInspection["today"] = null
   if (effective && text) {
-    // Ručné hranice kurátora (KNIZ-rezac-blokov) — tá istá voľba ako pri zápise.
-    const index = cutForIndex(text, doc.title ?? "", toChunkerProfile(params), doc.chunkCuts)
-    const cut = index.manual
-      ? { chunks: index.chunks.map(c => ({ chunkIndex: c.chunkIndex, heading: c.heading, articleRef: c.articleRef, chunkType: c.typ, text: c.text, tokens: estimateTokens(c.text), complete: c.uplnaJednotka })), fingerprint: chunkingFingerprint(index.chunks, index.fingerprintProfile) }
-      : cutWith(text, doc.title ?? "", params)
+    const cut = inspectedCut(text, doc.title ?? "", doc.chunkCuts)
     const outdated = needsReindex(raw[0]?.chunkingId, cut.fingerprint)
-    today = { count: cut.chunks.length, withArticlePercent: chunkStats(cut.chunks).withArticlePercent, outdated }
+    today = { count: cut.chunks.length, withArticlePercent: chunkStats(cut.chunks).withArticlePercent, outdated, method: cut.method }
     // Uložené úseky nevedia, či sú celý článok — keď sedia s dnešným rezom,
     // vezme sa to z neho (rovnaké poradie, rovnaký text).
     if (!outdated) for (const c of stored) c.complete = cut.chunks[c.chunkIndex]?.complete
-  }
-
-  const profiles = (tenant?.chunkingProfiles ?? []).map(p => {
-    const { key: k, label: l, ...rest } = p
-    return { key: k, label: l || k, values: { ...DEFAULT_CHUNKING, ...rest } as ChunkingProfile }
-  })
-
-  let trial: ChunkingTrial | null = null
-  if (trialValues && text) {
-    const cut = cutWith(text, doc.title ?? "", trialValues)
-    const current = cutWith(text, doc.title ?? "", params).chunks
-    const sameAsCurrent = current.length === cut.chunks.length &&
-      current.every((c, i) => c.text === cut.chunks[i].text && c.articleRef === cut.chunks[i].articleRef)
-    trial = {
-      values: trialValues,
-      chunks: cut.chunks,
-      stats: chunkStats(cut.chunks),
-      warnings: chunkWarnings(cut.chunks, trialValues),
-      matchesProfile: profiles.find(p => sameValues(p.values, trialValues))?.key ?? null,
-      sameAsCurrent,
-    }
   }
 
   return {
     documentId,
     title: doc.title ?? documentId,
     version: effective ? { versionId: effective.versionId, label: effective.label ?? "" } : null,
-    profile: { key, label, values },
     stored,
     stats: chunkStats(stored),
-    warnings: chunkWarnings(stored, values),
+    warnings: chunkWarnings(stored),
     today,
-    analysis: text ? analyseChunking(text) : null,
-    profiles,
-    trial,
-    advice: doc.chunkingAdvice ?? null,
     text,
     chunkCuts: doc.chunkCuts ?? [],
   }

@@ -3,18 +3,17 @@
  * (plán „znenia v indexe", krok 7). Pravidlá sú v `versionCompare.ts`;
  * tu je načítanie z databázy a úseky pre model.
  *
- * Obe znenia sa režú **nanovo** tým istým chunkerom a profilom dokumentu,
- * ako ich reže knižnica — uložené úseky staršieho znenia môžu mať staršie
- * členenie a párovali by sa zle.
+ * Obe znenia sa režú **nanovo** chunkerom podľa článkov s predvolenými
+ * hodnotami — páruje sa podľa čísla článku, nie podľa nadpisu (ADR-035,
+ * Dôsledky). Uložené úseky staršieho znenia môžu mať staršie členenie
+ * a párovali by sa zle.
  */
 
 import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
 import { DOCUMENTS_COLLECTION } from "./documents"
 import type { DocumentRecord, Version } from "./documents"
-import { TENANTS_COLLECTION } from "./tenants"
 import { chunkText } from "./chunker.mjs"
-import { chunkingFor, toChunkerProfile, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
 import { compareArticles, comparePair, selectDetail, versionText } from "./versionCompare"
 import type { ArticleChange } from "./versionCompare"
 import type { ChunkResult, ChunkVersion } from "./mongoSearch"
@@ -95,11 +94,7 @@ export async function buildComparison(
   const after = textOf(pair.to)
   if (!before || !after) return { ok: false, reason: "missing-text" }
 
-  const tenants = await getCollection(TENANTS_COLLECTION)
-  const tenant = await tenants.findOne({ companyCode: code }) as unknown as
-    { chunkingProfiles?: ChunkingProfileDef[]; chunking?: Partial<ChunkingProfile> } | null
-  const profil = toChunkerProfile(chunkingFor(tenant, doc.chunkingProfile))
-  const cut = (text: string) => chunkText(text, { nazovDokumentu: doc.title, profil }).chunky
+  const cut = (text: string) => chunkText(text, { nazovDokumentu: doc.title }).chunky
 
   const changes = compareArticles(cut(before), cut(after))
   if (!changes.length) return { ok: false, reason: "identical" }

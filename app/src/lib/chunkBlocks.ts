@@ -32,6 +32,36 @@ const HEADING = /^(#{1,6})\s+\S/
 const ITEM = /^\s*(?:[-*•+]|\d+[.)]|[a-z][.)])\s+\S/
 const TABLE = /^\s*\|/
 
+/** Najdlhší riadok, ktorý ešte môže byť nadpisom bez mriežok. */
+const PSEUDO_MAX = 120
+// Bez `\b`: v JavaScripte nepozná „Ť" ako písmeno a „ČASŤ PRVÁ" by neprešla.
+const PART = /^(?:ČASŤ|Časť|HLAVA|Hlava|DIEL|Diel)(?=\s|$)/
+// Veľkosť písmen nehrá rolu: texty noriem v databáze majú „## čl. 5 — Názov"
+// (porovnanie 16. 10. 2026), iné „Článok 5" alebo „ČLÁNOK 5".
+const ARTICLE = /^(?:článok|čl\.|§|príloha)\s*(?:č\.\s*)?\d+[a-z]?(?![0-9])/iu
+const NUMBERED = /^(\d+(?:\.\d+)*)\.?\s+\S/
+
+/**
+ * Úroveň nadpisu, ktorý je nadpisom bez mriežok (ADR-035, D230 bod 2) —
+ * prevod PDF ich často dá ako tučný riadok alebo „Článok 5". `0` = nie je.
+ *
+ * - „ČASŤ / HLAVA / DIEL" → 2; „Článok 5", „§ 5", „Príloha č. 2" → 3;
+ * - celý tučný krátky riadok: podľa číslovania (`1` → 2, `1.2` → 3,
+ *   `1.2.3` → 4), bez čísla 3.
+ * Riadok končiaci bodkou je veta, nie nadpis.
+ */
+export function pseudoHeadingLevel(line: string): number {
+  const raw = line.trim()
+  if (!raw || raw.length > PSEUDO_MAX || /[.;:,]$/.test(raw.replace(/\*+$/, ""))) return 0
+  const bold = /^\*\*[^*].*\*\*$/.test(raw)
+  const text = raw.replace(/^\*\*|\*\*$/g, "").trim()
+  if (PART.test(text)) return 2
+  if (ARTICLE.test(text)) return 3
+  if (!bold) return 0
+  const n = NUMBERED.exec(text)
+  return n ? Math.min(6, n[1].split(".").length + 1) : 3
+}
+
 /**
  * Markdown → bloky. Čistá funkcia.
  *
@@ -46,7 +76,14 @@ export function splitBlocks(markdown: string): TextBlock[] {
   let cur: { kind: BlockKind; level: number; lines: string[] } | null = null
   const flush = () => {
     if (cur && cur.lines.some(l => l.trim())) {
-      out.push({ index: out.length, kind: cur.kind, level: cur.level, text: cur.lines.join("\n").replace(/\s+$/, "") })
+      // Jednoriadkový odsek, ktorý je nadpisom bez mriežok, je nadpis.
+      const pseudo = cur.kind === "paragraph" && cur.lines.length === 1 ? pseudoHeadingLevel(cur.lines[0]) : 0
+      out.push({
+        index: out.length,
+        kind: pseudo ? "heading" : cur.kind,
+        level: pseudo || cur.level,
+        text: cur.lines.join("\n").replace(/\s+$/, ""),
+      })
     }
     cur = null
   }
@@ -71,6 +108,14 @@ export function splitBlocks(markdown: string): TextBlock[] {
     }
     // Odsadené pokračovanie položky zoznamu ostáva v položke.
     if (cur?.kind === "item" && /^\s{2,}\S/.test(raw)) { cur.lines.push(line); continue }
+    // Nadpis bez mriežok aj bez prázdneho riadku za ním (prevod PDF). Uprostred
+    // odseku len tučný alebo krátky riadok — zalomená veta „§ 5 sa…" nadpis nie je.
+    const pseudo = pseudoHeadingLevel(line)
+    if (pseudo && (line.trim().startsWith("**") || line.trim().length <= 60)) {
+      flush()
+      out.push({ index: out.length, kind: "heading", level: pseudo, text: line })
+      continue
+    }
     if (!cur || cur.kind !== "paragraph") { flush(); cur = { kind: "paragraph", level: 0, lines: [] } }
     cur.lines.push(line)
   }
@@ -81,6 +126,35 @@ export function splitBlocks(markdown: string): TextBlock[] {
 /** Nadpis bez mriežok a tučného písma — „## **1.3 Stav**" → „1.3 Stav". */
 export function headingText(block: Pick<TextBlock, "text">): string {
   return stripHeadingEmphasis(block.text).replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "").trim()
+}
+
+/** Nadpis článku, § alebo prílohy — jednotka normy, ktorá má vlastný úsek (ADR-035). */
+export function isUnitHeading(block: Pick<TextBlock, "kind" | "text">): boolean {
+  return block.kind === "heading" && /^(?:čl\.|§|príloha)/.test(refFromHeading(headingText(block)))
+}
+
+/** Čísla odsekov „(1)" v blokoch úseku — pre citáciu delenej jednotky („čl. 12 ods. 1–9"). */
+function paragraphRange(part: TextBlock[]): string | null {
+  const nums = part.map(b => /^\((\d+[a-z]?)\)/.exec(b.text.trim())?.[1]).filter((x): x is string => Boolean(x))
+  if (!nums.length) return null
+  return nums.length === 1 || nums[0] === nums[nums.length - 1] ? nums[0] : `${nums[0]}–${nums[nums.length - 1]}`
+}
+
+/**
+ * Citácia z nadpisu (ADR-035, D230 bod 5): článok, § a príloha v tvare
+ * chunkera („čl. 5", „§ 5", „príloha č. 2") — tak ich citujú odpovede aj
+ * porovnanie znení; inak text nadpisu („1.2 Spracovanie").
+ */
+export function refFromHeading(heading: string): string {
+  const h = heading.trim()
+  const article = /^(?:článok|čl\.)\s*(\d+[a-z]?)/iu.exec(h)
+  if (article) return `čl. ${article[1]}`
+  const paragraph = /^§\s*(\d+[a-z]?)/.exec(h)
+  if (paragraph) return `§ ${paragraph[1]}`
+  // Príloha môže mať písmeno („Príloha č. 1a" v RaPP) — bez neho by splynula s prílohou 1.
+  const annex = /^príloha\s*(?:č\.\s*)?(\d+[a-z]?)/iu.exec(h)
+  if (annex) return `príloha č. ${annex[1]}`
+  return h
 }
 
 /** Hranice v poradí, bez duplicít, len platné indexy (1 … počet − 1). */
@@ -125,24 +199,54 @@ export function joinBlocks(blocks: TextBlock[]): string {
  * - `typ`: `clanok`, keď úsek patrí pod nadpis, inak `preambula`;
  * - `uplnaJednotka`: úsek začína nadpisom (nie je to pokračovanie).
  */
-export function cutByBoundaries(markdown: string, boundaries: number[]): Chunk[] {
+export function cutByBoundaries(markdown: string, boundaries: number[], title = ""): Chunk[] {
   const blocks = splitBlocks(markdown)
   const groups = groupBlocks(blocks.length, boundaries)
+  // Cesta nadpisov podľa úrovne — riadok kontextu úseku („Názov › Časť › Oddiel").
+  const path: { level: number; text: string }[] = []
+  const pathBefore = (i: number) => {
+    for (let b = 0; b < i; b++) {
+      const x = blocks[b]
+      if (x.kind !== "heading") continue
+      while (path.length && path[path.length - 1].level >= x.level) path.pop()
+      path.push({ level: x.level, text: headingText(x) })
+    }
+    // Úsek, ktorý začína nadpisom, nemá v kontexte súrodencov ani nižšie
+    // úrovne pred sebou — len nadradené („Článok 2" nie pod „Článok 1").
+    const first = blocks[i]
+    if (first?.kind === "heading") while (path.length && path[path.length - 1].level >= first.level) path.pop()
+    const out = path.map(p => p.text)
+    path.length = 0
+    return out
+  }
   let lastHeading: string | null = null
+  // Úsek, ktorý nemá vlastný článok, pokračuje v predošlom — pri delenom
+  // článku sa do citácie pridajú odseky (ako pri chunkeri).
+  const hasUnit = groups.map(g => g.some(i => isUnitHeading(blocks[i])))
   return groups.map((g, chunkIndex) => {
     const part = g.map(i => blocks[i])
     const startsWithHeading = part[0].kind === "heading"
     const firstHeading = part.find(b => b.kind === "heading")
-    const heading = startsWithHeading ? headingText(part[0]) : lastHeading
+    // Článok v úseku má prednosť pred nadpisom časti nad ním („PRVÁ ČASŤ" + „Článok 1" → čl. 1).
+    const unit = part.find(b => isUnitHeading(b))
+    const heading = unit ? headingText(unit) : startsWithHeading ? headingText(part[0]) : lastHeading
     for (const b of part) if (b.kind === "heading") lastHeading = headingText(b)
-    const ref = heading ?? (firstHeading ? headingText(firstHeading) : null)
+    const name = heading ?? (firstHeading ? headingText(firstHeading) : null)
+    const continued = !hasUnit[chunkIndex] && chunkIndex > 0
+    const continuesNext = chunkIndex + 1 < groups.length && !hasUnit[chunkIndex + 1]
+    const baseRef = name ? refFromHeading(name) : null
+    const ods = baseRef && /^(?:čl\.|§)/.test(baseRef) && (continued || continuesNext) ? paragraphRange(part) : null
+    // Kontext: názov dokumentu a nadradené nadpisy pred úsekom (bez nadpisu,
+    // ktorým úsek začína — ten je v texte). Rovnaký tvar ako pri chunkeri.
+    const context = [title, ...pathBefore(g[0])].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i)
+    const body = joinBlocks(part)
     return {
       chunkIndex,
-      text: joinBlocks(part),
-      heading: ref ?? "",
-      articleRef: ref,
+      text: context.length ? `${context.join(" › ")}\n\n${body}` : body,
+      heading: name ?? "",
+      articleRef: baseRef ? (ods ? `${baseRef} ods. ${ods}` : baseRef) : null,
       cast: null,
-      typ: ref ? "clanok" : "preambula",
+      typ: name ? (/^príloha/.test(refFromHeading(name)) ? "priloha" : "clanok") : "preambula",
       uplnaJednotka: startsWithHeading,
       obsahujeTabulku: part.some(b => b.kind === "table"),
     }
@@ -166,16 +270,28 @@ export function boundariesFromChunks(blocks: TextBlock[], chunkTexts: string[]):
   for (let c = 1; c < chunkTexts.length; c++) {
     // Uložený úsek môže začínať riadkom kontextu („Názov › Oddiel") a jeho
     // telo býva zlúčené do jedného riadku — hľadá sa prvý riadok bez „›".
+    // Prvé dva riadky: prvý môže byť riadok kontextu („Názov › Oddiel", pri
+    // dokumente bez nadradeného nadpisu len „Názov") — ten v blokoch nie je.
     const lines = String(chunkTexts[c] ?? "").split("\n").map(l => l.trim()).filter(Boolean)
-    const first = lines.find(l => !l.includes(" › ")) ?? lines[0] ?? ""
-    const probe = norm(first).slice(0, 60)
-    if (!probe) { approximate = true; continue }
+    const candidates = lines.slice(0, 2).filter(l => !l.includes(" › "))
+    if (!candidates.length && lines[0]) candidates.push(lines[0])
+    let probe = ""
     let found = -1
-    for (let b = Math.max(cursor, 1); b < normBlocks.length; b++) {
-      const nb = normBlocks[b]
-      // Blok začína úsekom, alebo zlúčený úsek začína celým (krátkym) blokom — nadpisom.
-      if (nb.startsWith(probe) || (nb.length >= 8 && probe.startsWith(nb.slice(0, 60)))) { found = b; break }
-      if (nb.includes(probe)) { found = b; approximate = true; break }
+    for (const line of candidates) {
+      probe = norm(line).slice(0, 60)
+      if (!probe) continue
+      for (let b = Math.max(cursor, 1); b < normBlocks.length; b++) {
+        const nb = normBlocks[b]
+        // Blok začína úsekom, alebo zlúčený úsek začína celým (krátkym) blokom — nadpisom.
+        if (nb.startsWith(probe) || (nb.length >= 8 && probe.startsWith(nb.slice(0, 60)))) { found = b; break }
+      }
+      if (found >= 0) break
+    }
+    if (!probe) { approximate = true; continue }
+    if (found < 0) {
+      for (let b = Math.max(cursor, 1); b < normBlocks.length; b++) {
+        if (normBlocks[b].includes(probe)) { found = b; approximate = true; break }
+      }
     }
     // Úsek začína uprostred dlhého odseku a jeho zlúčený text siaha cez
     // hranicu bloku — skúsi sa kratšia vzorka (začiatok vety).
