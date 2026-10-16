@@ -229,7 +229,13 @@ export function cutByBoundaries(markdown: string, boundaries: number[], title = 
     const firstHeading = part.find(b => b.kind === "heading")
     // Článok v úseku má prednosť pred nadpisom časti nad ním („PRVÁ ČASŤ" + „Článok 1" → čl. 1).
     const unit = part.find(b => isUnitHeading(b))
-    const heading = unit ? headingText(unit) : startsWithHeading ? headingText(part[0]) : lastHeading
+    // Úsek, ktorý začína nadpisom dokumentu (`#`) a obsahuje hlbší nadpis,
+    // cituje prvý oddiel — nie názov dokumentu (ISSF-08, 16. 10. 2026:
+    // citácia „1.1 Odkiaľ…" vyšla ako názov manuálu).
+    const section = startsWithHeading && part[0].level === 1 ? part.slice(1).find(b => b.kind === "heading") : undefined
+    const heading = unit ? headingText(unit)
+      : section ? headingText(section)
+      : startsWithHeading ? headingText(part[0]) : lastHeading
     for (const b of part) if (b.kind === "heading") lastHeading = headingText(b)
     const name = heading ?? (firstHeading ? headingText(firstHeading) : null)
     const continued = !hasUnit[chunkIndex] && chunkIndex > 0

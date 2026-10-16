@@ -111,4 +111,10 @@ describe("headingBoundaries", () => {
     expect(parts.every(r => /^čl\. 12 ods\. \d+(–\d+)?$/.test(r!))).toBe(true)
     expect(parts[0]).toMatch(/^čl\. 12 ods\. 1/)
   })
+
+  it("úsek s nadpisom dokumentu a oddielom cituje oddiel, nie názov dokumentu", () => {
+    const text = ["# Podania na komisie", "Úvod.", "## 1. Podania na komisie", "### 1.1 Odkiaľ", para(20), "## 2. Register", para(20)].join("\n\n")
+    const chunks = cutByBoundaries(text, [5], "Podania")
+    expect(chunks.map(c => c.articleRef)).toEqual(["1. Podania na komisie", "2. Register"])
+  })
 })
