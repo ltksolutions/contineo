@@ -3579,60 +3579,24 @@ interface Dictionary {
     chunks: {
       heading: string
       intro: string
-      openLink: string
       profile: string
       version: string
       noVersion: string
-      upToDate: string
       outdated: (stored: number, today: number) => string
       reindexHint: string
       statsCount: string
-      statsArticles: string
       statsTokens: string
-      tokensRange: (min: number, avg: number, max: number) => string
       target: (min: number, max: number) => string
-      warningsHeading: string
       warnings: {
         oneBlock: string
         fewArticles: (percent: number) => string
         oversized: (count: number, limit: number) => string
         fragments: (count: number) => string
       }
-      noWarnings: string
-      analysisHeading: string
-      analysisFound: (lines: number, articles: number, paragraphs: number, points: number, headings: number) => string
-      analysisFits: (word: string) => string
-      analysisOther: (word: string) => string
-      analysisPlain: string
       listHeading: string
       noArticle: string
       tokens: (n: number) => string
       oversizedTag: string
-      trialHeading: string
-      trialIntro: string
-      fieldArticleWord: string
-      fieldArticleWordHint: string
-      fieldAnnexWord: string
-      fieldMinTokens: string
-      fieldMaxTokens: string
-      trialShow: string
-      trialReset: string
-      compareHeading: string
-      compareNow: string
-      compareTrial: string
-      compareMax: string
-      trialMatches: (label: string) => string
-      trialSameAsCurrent: string
-      trialListHeading: string
-      saveHeading: string
-      saveIntro: string
-      useProfile: string
-      useProfileButton: string
-      currentProfile: string
-      newProfile: string
-      newProfileLabel: string
-      newProfileHint: string
-      newProfileButton: string
       /** Rezač blokov (KNIZ-rezac-blokov, 15. 10. 2026). */
       cut: {
         docLabel: string
@@ -3686,16 +3650,6 @@ interface Dictionary {
         accept: string
         accepting: string
       }
-      adviceHeading: string
-      adviceIntro: string
-      adviceButton: string
-      adviceAgain: string
-      adviceMeta: (date: string, model: string, by: string) => string
-      adviceStrategyArticles: (word: string, min: number, max: number) => string
-      adviceStrategyHeadings: string
-      adviceConfidence: Record<"low" | "medium" | "high", string>
-      adviceIssues: string
-      adviceTry: string
     }
     editor: {
       intro: string
@@ -3765,9 +3719,6 @@ interface Dictionary {
       bulkMoved: (moved: number, total: number) => string
       bulkMovedPartly: (moved: number, total: number, failed: string) => string
       reindexUpToDate: string
-      chunkingProfileSet: (label: string) => string
-      chunkingProfileCreated: (label: string) => string
-      chunkingAdviceReady: string
       chunkRoundReady: (no: number) => string
       chunkRoundAccepted: (no: number, chunks: number) => string
       chunkRoundAcceptedDraft: (no: number) => string
@@ -8525,61 +8476,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     chunks: {
       heading: "Členenie na úseky",
       intro: "Asistent nečíta celý dokument naraz — dostane niekoľko úsekov a odpovedá z nich. Tu vidíte, ako je platné znenie narezané a či to sedí.",
-      openLink: "členenie na úseky →",
       profile: "Profil členenia",
       version: "Znenie",
       noVersion: "Dokument zatiaľ nemá platné znenie, preto nemá úseky. Nižšie je len rozbor konceptu.",
-      upToDate: "Úseky zodpovedajú dnešnému členeniu.",
       outdated: (stored, today) => `Úseky sú narezané starším spôsobom (${stored} ${stored === 1 ? "úsek" : stored >= 2 && stored <= 4 ? "úseky" : "úsekov"}); dnes by ich vzniklo ${today}.`,
       reindexHint: "Preindexovať sa dá v detaile dokumentu (Ďalšie akcie → Preindexovať). Znenie ani potvrdenia sa nemenia.",
       statsCount: "Úsekov",
-      statsArticles: "S článkom",
       statsTokens: "Veľkosť (tokeny)",
-      tokensRange: (min, avg, max) => `${min} – ${avg} – ${max}`,
       target: (min, max) => `cieľ ${min}–${max}`,
-      warningsHeading: "Čo nesedí",
       warnings: {
         oneBlock: "Celý text je v jednom úseku — nenašiel sa ani jeden článok. Asistent z neho nevie citovať konkrétne miesto. Typické pre manuál alebo zmluvu; pomôže členenie podľa nadpisov.",
         fewArticles: percent => `Článok má len ${percent} % úsekov — členenie dokumentu profil takmer nerozpoznal.`,
         oversized: (count, limit) => `${count} ${count === 1 ? "úsek je väčší" : count <= 4 ? "úseky sú väčšie" : "úsekov je väčších"} než ${limit} tokenov — asistent z ${count === 1 ? "neho" : "nich"} dostane priveľa naraz.`,
         fragments: count => count === 1 ? "1 krátky úlomok rozdeleného článku — má málo kontextu." : `${count} ${count <= 4 ? "krátke úlomky" : "krátkych úlomkov"} rozdelených článkov — majú málo kontextu.`,
       },
-      noWarnings: "Bez nálezov.",
-      analysisHeading: "Rozbor textu",
-      analysisFound: (lines, articles, paragraphs, points, headings) =>
-        `${lines} riadkov · „Článok“ ${articles}× · „§“ ${paragraphs}× · „Bod“ ${points}× · nadpisov ${headings}`,
-      analysisFits: word => `Text je členený na „${word}“ — profil sedí.`,
-      analysisOther: word => `Text je členený skôr na „${word}“ než podľa profilu — zvážte iný profil.`,
-      analysisPlain: "Text nemá články ani paragrafy. Potrebuje členenie podľa nadpisov.",
       listHeading: "Úseky",
       noArticle: "bez článku",
       tokens: n => `${n} ${n === 1 ? "token" : n >= 2 && n <= 4 ? "tokeny" : "tokenov"}`,
       oversizedTag: "veľký",
-      trialHeading: "Skúsiť iný rez",
-      trialIntro: "Zmeňte hodnoty a pozrite sa, ako by sa text narezal. Nič sa neuloží, kým nižšie nezvolíte profil.",
-      fieldArticleWord: "Slovo článku",
-      fieldArticleWordHint: "Slovo, ktorým začína nadpis článku: Článok, § alebo Bod.",
-      fieldAnnexWord: "Slovo prílohy",
-      fieldMinTokens: "Úsek od (tokenov)",
-      fieldMaxTokens: "Úsek do (tokenov)",
-      trialShow: "Ukázať rez",
-      trialReset: "Zrušiť skúšku",
-      compareHeading: "Porovnanie",
-      compareNow: "teraz",
-      compareTrial: "skúška",
-      compareMax: "Najväčší úsek",
-      trialMatches: label => `Tieto hodnoty má profil „${label}“.`,
-      trialSameAsCurrent: "Skúšobný rez je rovnaký ako súčasný — netreba nič meniť.",
-      trialListHeading: "Úseky po skúšobnom reze",
-      saveHeading: "Profil pre tento dokument",
-      saveIntro: "Dokument nesie len pomenovaný profil — ten sa dá použiť aj pri ďalších dokumentoch. Po zmene profilu treba dokument preindexovať; dovtedy asistent odpovedá zo starých úsekov.",
-      useProfile: "Použiť existujúci profil",
-      useProfileButton: "Použiť",
-      currentProfile: "súčasný",
-      newProfile: "Uložiť hodnoty skúšky ako nový profil",
-      newProfileLabel: "Názov profilu",
-      newProfileHint: "Napríklad „Zákon (§)“. Existujúce profily sa tu nemenia — zmena by ticho prerezala všetky dokumenty, ktoré ich používajú.",
-      newProfileButton: "Uložiť profil",
       cut: {
         docLabel: "Text znenia rozdelený na úseky",
         chunkLabel: n => `Úsek ${n}`,
@@ -8631,16 +8545,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         accept: "Prijať a preindexovať",
         accepting: "Ukladá sa…",
       },
-      adviceHeading: "Návrh AI",
-      adviceIntro: "Model dostane štruktúru dokumentu — nadpisy, články a začiatky odsekov, nie celý text — a navrhne, ako ho narezať. Nič sa nezmení; návrh si môžete skúsiť a uložiť ako profil. Volanie sa zapíše do spotreby AI.",
-      adviceButton: "Analyzovať pomocou AI",
-      adviceAgain: "Analyzovať znova",
-      adviceMeta: (date, model, by) => `${date} · ${model} · ${by}`,
-      adviceStrategyArticles: (word, min, max) => `Po článkoch — slovo „${word}“, úsek ${min}–${max} tokenov.`,
-      adviceStrategyHeadings: "Podľa nadpisov — dokument nemá články. Tento spôsob členenia zatiaľ nie je k dispozícii (ADR-027, krok 2).",
-      adviceConfidence: { low: "istota nízka", medium: "istota stredná", high: "istota vysoká" },
-      adviceIssues: "Čo nesedí",
-      adviceTry: "Skúsiť tento rez",
     },
     editor: {
       intro: "Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.",
@@ -8707,9 +8611,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Presunuté ${moved} z ${total}. Neprešli: ${failed}`,
       reindexUpToDate: "Členenie je už aktuálne — nič sa nemenilo.",
-      chunkingProfileSet: label => `Dokument má profil „${label}“. Ešte ho preindexujte — dovtedy asistent odpovedá zo starých úsekov.`,
-      chunkingProfileCreated: label => `Profil „${label}“ je uložený a priradený dokumentu. Ešte dokument preindexujte.`,
-      chunkingAdviceReady: "Návrh AI je hotový — nižšie. Nič sa nezmenilo.",
       chunkRoundReady: no => `Návrh AI (kolo ${no}) je hotový — rozdiel je nižšie. Nič sa nezmenilo.`,
       chunkRoundAccepted: (no, chunks) => `Rez z kola ${no} je prijatý a dokument preindexovaný (${chunks} úsekov).`,
       chunkRoundAcceptedDraft: no => `Rez z kola ${no} je prijatý ku konceptu — uplatní sa pri zverejnení.`,
@@ -13417,61 +13318,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     chunks: {
       heading: "Členění na úseky",
       intro: "Asistent nečte celý dokument najednou — dostane několik úseků a odpovídá z nich. Zde vidíte, jak je platné znění rozřezané a zda to sedí.",
-      openLink: "členění na úseky →",
       profile: "Profil členění",
       version: "Znění",
       noVersion: "Dokument zatím nemá platné znění, proto nemá úseky. Níže je jen rozbor konceptu.",
-      upToDate: "Úseky odpovídají dnešnímu členění.",
       outdated: (stored, today) => `Úseky jsou rozřezané starším způsobem (${stored} ${stored === 1 ? "úsek" : stored >= 2 && stored <= 4 ? "úseky" : "úseků"}); dnes by jich vzniklo ${today}.`,
       reindexHint: "Přeindexovat lze v detailu dokumentu (Další akce → Přeindexovat). Znění ani potvrzení se nemění.",
       statsCount: "Úseků",
-      statsArticles: "S článkem",
       statsTokens: "Velikost (tokeny)",
-      tokensRange: (min, avg, max) => `${min} – ${avg} – ${max}`,
       target: (min, max) => `cíl ${min}–${max}`,
-      warningsHeading: "Co nesedí",
       warnings: {
         oneBlock: "Celý text je v jednom úseku — nenašel se ani jeden článek. Asistent z něj neumí citovat konkrétní místo. Typické pro manuál nebo smlouvu; pomůže členění podle nadpisů.",
         fewArticles: percent => `Článek má jen ${percent} % úseků — členění dokumentu profil téměř nerozpoznal.`,
         oversized: (count, limit) => `${count} ${count === 1 ? "úsek je větší" : count <= 4 ? "úseky jsou větší" : "úseků je větších"} než ${limit} tokenů — asistent z ${count === 1 ? "něj" : "nich"} dostane příliš mnoho najednou.`,
         fragments: count => count === 1 ? "1 krátký úlomek rozděleného článku — má málo kontextu." : `${count} ${count <= 4 ? "krátké úlomky" : "krátkých úlomků"} rozdělených článků — mají málo kontextu.`,
       },
-      noWarnings: "Bez nálezů.",
-      analysisHeading: "Rozbor textu",
-      analysisFound: (lines, articles, paragraphs, points, headings) =>
-        `${lines} řádků · „Článok“ ${articles}× · „§“ ${paragraphs}× · „Bod“ ${points}× · nadpisů ${headings}`,
-      analysisFits: word => `Text je členěný na „${word}“ — profil sedí.`,
-      analysisOther: word => `Text je členěný spíše na „${word}“ než podle profilu — zvažte jiný profil.`,
-      analysisPlain: "Text nemá články ani paragrafy. Potřebuje členění podle nadpisů.",
       listHeading: "Úseky",
       noArticle: "bez článku",
       tokens: n => `${n} ${n === 1 ? "token" : n >= 2 && n <= 4 ? "tokeny" : "tokenů"}`,
       oversizedTag: "velký",
-      trialHeading: "Zkusit jiný řez",
-      trialIntro: "Změňte hodnoty a podívejte se, jak by se text rozřezal. Nic se neuloží, dokud níže nezvolíte profil.",
-      fieldArticleWord: "Slovo článku",
-      fieldArticleWordHint: "Slovo, kterým začíná nadpis článku: Článek, § nebo Bod.",
-      fieldAnnexWord: "Slovo přílohy",
-      fieldMinTokens: "Úsek od (tokenů)",
-      fieldMaxTokens: "Úsek do (tokenů)",
-      trialShow: "Ukázat řez",
-      trialReset: "Zrušit zkoušku",
-      compareHeading: "Porovnání",
-      compareNow: "teď",
-      compareTrial: "zkouška",
-      compareMax: "Největší úsek",
-      trialMatches: label => `Tyto hodnoty má profil „${label}“.`,
-      trialSameAsCurrent: "Zkušební řez je stejný jako současný — není třeba nic měnit.",
-      trialListHeading: "Úseky po zkušebním řezu",
-      saveHeading: "Profil pro tento dokument",
-      saveIntro: "Dokument nese jen pojmenovaný profil — ten lze použít i u dalších dokumentů. Po změně profilu je třeba dokument přeindexovat; do té doby asistent odpovídá ze starých úseků.",
-      useProfile: "Použít existující profil",
-      useProfileButton: "Použít",
-      currentProfile: "současný",
-      newProfile: "Uložit hodnoty zkoušky jako nový profil",
-      newProfileLabel: "Název profilu",
-      newProfileHint: "Například „Zákon (§)“. Existující profily se zde nemění — změna by potichu přeřezala všechny dokumenty, které je používají.",
-      newProfileButton: "Uložit profil",
       cut: {
         docLabel: "Text znění rozdělený na úseky",
         chunkLabel: n => `Úsek ${n}`,
@@ -13523,16 +13387,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         accept: "Přijmout a přeindexovat",
         accepting: "Ukládá se…",
       },
-      adviceHeading: "Návrh AI",
-      adviceIntro: "Model dostane strukturu dokumentu — nadpisy, články a začátky odstavců, ne celý text — a navrhne, jak ho rozřezat. Nic se nezmění; návrh si můžete vyzkoušet a uložit jako profil. Volání se zapíše do spotřeby AI.",
-      adviceButton: "Analyzovat pomocí AI",
-      adviceAgain: "Analyzovat znovu",
-      adviceMeta: (date, model, by) => `${date} · ${model} · ${by}`,
-      adviceStrategyArticles: (word, min, max) => `Po článcích — slovo „${word}“, úsek ${min}–${max} tokenů.`,
-      adviceStrategyHeadings: "Podle nadpisů — dokument nemá články. Tento způsob členění zatím není k dispozici (ADR-027, krok 2).",
-      adviceConfidence: { low: "jistota nízká", medium: "jistota střední", high: "jistota vysoká" },
-      adviceIssues: "Co nesedí",
-      adviceTry: "Zkusit tento řez",
     },
     editor: {
       intro: "Porovnej text s originálem. Publikování je samostatný krok — tady se nic nepouští ven.",
@@ -13599,9 +13453,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Přesunuto ${moved} z ${total}. Neprošly: ${failed}`,
       reindexUpToDate: "Členění je už aktuální — nic se neměnilo.",
-      chunkingProfileSet: label => `Dokument má profil „${label}“. Ještě ho přeindexujte — do té doby asistent odpovídá ze starých úseků.`,
-      chunkingProfileCreated: label => `Profil „${label}“ je uložen a přiřazen dokumentu. Ještě dokument přeindexujte.`,
-      chunkingAdviceReady: "Návrh AI je hotový — níže. Nic se nezměnilo.",
       chunkRoundReady: no => `Návrh AI (kolo ${no}) je hotový — rozdíl je níže. Nic se nezměnilo.`,
       chunkRoundAccepted: (no, chunks) => `Řez z kola ${no} je přijat a dokument přeindexován (${chunks} úseků).`,
       chunkRoundAcceptedDraft: no => `Řez z kola ${no} je přijat ke konceptu — uplatní se při zveřejnění.`,
@@ -18296,61 +18147,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     chunks: {
       heading: "Splitting into chunks",
       intro: "The assistant does not read the whole document at once — it gets a few chunks and answers from them. Here you can see how the current version is split and whether it fits.",
-      openLink: "splitting into chunks →",
       profile: "Splitting profile",
       version: "Version",
       noVersion: "The document has no effective version yet, so it has no chunks. Below is only an analysis of the draft.",
-      upToDate: "The chunks match today's splitting.",
       outdated: (stored, today) => `The chunks were split the older way (${stored} chunks); today ${today} would be created.`,
       reindexHint: "Reindex in the document detail (More actions → Reindex). Neither the text nor acknowledgements change.",
       statsCount: "Chunks",
-      statsArticles: "With an article",
       statsTokens: "Size (tokens)",
-      tokensRange: (min, avg, max) => `${min} – ${avg} – ${max}`,
       target: (min, max) => `target ${min}–${max}`,
-      warningsHeading: "What does not fit",
       warnings: {
         oneBlock: "The whole text is in one chunk — not a single article was found. The assistant cannot cite a specific place from it. Typical for a manual or a contract; splitting by headings will help.",
         fewArticles: percent => `Only ${percent} % of chunks have an article — the profile barely recognised the document's structure.`,
         oversized: (count, limit) => `${count} ${count === 1 ? "chunk is" : "chunks are"} larger than ${limit} tokens — the assistant gets too much at once.`,
         fragments: count => `${count} short ${count === 1 ? "fragment of a split article" : "fragments of split articles"} — little context.`,
       },
-      noWarnings: "No findings.",
-      analysisHeading: "Text analysis",
-      analysisFound: (lines, articles, paragraphs, points, headings) =>
-        `${lines} lines · “Článok” ${articles}× · “§” ${paragraphs}× · “Bod” ${points}× · ${headings} headings`,
-      analysisFits: word => `The text is structured by “${word}” — the profile fits.`,
-      analysisOther: word => `The text is structured by “${word}” rather than by the profile — consider another profile.`,
-      analysisPlain: "The text has no articles or paragraphs. It needs splitting by headings.",
       listHeading: "Chunks",
       noArticle: "no article",
       tokens: n => `${n} ${n === 1 ? "token" : "tokens"}`,
       oversizedTag: "large",
-      trialHeading: "Try a different split",
-      trialIntro: "Change the values and see how the text would be split. Nothing is saved until you choose a profile below.",
-      fieldArticleWord: "Article word",
-      fieldArticleWordHint: "The word an article heading starts with: Článok, § or Bod.",
-      fieldAnnexWord: "Annex word",
-      fieldMinTokens: "Chunk from (tokens)",
-      fieldMaxTokens: "Chunk to (tokens)",
-      trialShow: "Show split",
-      trialReset: "Cancel trial",
-      compareHeading: "Comparison",
-      compareNow: "now",
-      compareTrial: "trial",
-      compareMax: "Largest chunk",
-      trialMatches: label => `These values belong to the profile “${label}”.`,
-      trialSameAsCurrent: "The trial split is the same as the current one — nothing needs to change.",
-      trialListHeading: "Chunks after the trial split",
-      saveHeading: "Profile for this document",
-      saveIntro: "A document carries only a named profile — it can be used for other documents too. After changing the profile the document must be reindexed; until then the assistant answers from the old chunks.",
-      useProfile: "Use an existing profile",
-      useProfileButton: "Use",
-      currentProfile: "current",
-      newProfile: "Save the trial values as a new profile",
-      newProfileLabel: "Profile name",
-      newProfileHint: "For example “Act (§)”. Existing profiles are not changed here — a change would silently re-split every document that uses them.",
-      newProfileButton: "Save profile",
       cut: {
         docLabel: "Version text split into chunks",
         chunkLabel: n => `Chunk ${n}`,
@@ -18402,16 +18216,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         accept: "Accept and reindex",
         accepting: "Saving…",
       },
-      adviceHeading: "AI proposal",
-      adviceIntro: "The model receives the document structure — headings, articles and paragraph openings, not the full text — and proposes how to split it. Nothing changes; you can try the proposal and save it as a profile. The call is recorded in AI usage.",
-      adviceButton: "Analyse with AI",
-      adviceAgain: "Analyse again",
-      adviceMeta: (date, model, by) => `${date} · ${model} · ${by}`,
-      adviceStrategyArticles: (word, min, max) => `By articles — word “${word}”, chunk ${min}–${max} tokens.`,
-      adviceStrategyHeadings: "By headings — the document has no articles. This splitting method is not available yet (ADR-027, step 2).",
-      adviceConfidence: { low: "low confidence", medium: "medium confidence", high: "high confidence" },
-      adviceIssues: "What does not fit",
-      adviceTry: "Try this split",
     },
     editor: {
       intro: "Compare the text with the original. Publishing is a separate step — nothing goes out from here.",
@@ -18477,9 +18281,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       bulkMovedPartly: (moved, total, failed) =>
         `Moved ${moved} of ${total}. Failed: ${failed}`,
       reindexUpToDate: "The chunking is already up to date — nothing changed.",
-      chunkingProfileSet: label => `The document now has the profile “${label}”. Reindex it — until then the assistant answers from the old chunks.`,
-      chunkingProfileCreated: label => `The profile “${label}” was saved and assigned to the document. Reindex the document next.`,
-      chunkingAdviceReady: "The AI proposal is ready — see below. Nothing has changed.",
       chunkRoundReady: no => `The AI proposal (round ${no}) is ready — the difference is below. Nothing has changed.`,
       chunkRoundAccepted: (no, chunks) => `The cut from round ${no} is accepted and the document reindexed (${chunks} chunks).`,
       chunkRoundAcceptedDraft: no => `The cut from round ${no} is accepted for the draft — it applies on publication.`,

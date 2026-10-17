@@ -10,6 +10,48 @@
 
 ---
 
+## 2026-10-15 – 2026-10-17 — členenie zo štruktúry Markdownu, rezač blokov, strážca zápisu (ADR-035, #389–#397)
+
+**Čo sa zmenilo:** Ján sa nevedel dostať k tomu, ako je dokument narezaný
+do indexu — Členenie pribudlo medzi tlačidlá znenia (#389). Z jeho podnetu
+„wysiwyg rezač blokov aj s návrhom" vznikol cez Claude Design návrh
+KNIZ-rezac-blokov a z neho rezač (#392): text s farebnými blokmi, návrh AI
+nad celým textom, pole na pripomienky a kolá, ručné hranice viazané na
+odtlačok textu. Pri ňom Ján povedal podstatnú vec — Markdown s nadpismi
+a číslovaním **je** členenie, profil „Základný" hľadajúci slovo „Článok"
+manuálom nič nedá. **ADR-035** (D230–D233, #394): prvý rez z úrovní nadpisov
+(najvyššia úroveň, ktorá drží úseky do 900 tokenov, menšie ako 300 sa
+zlúčia), články, § a prílohy sú celky, profily členenia zanikli celé.
+Preindexovaných 23 z 23 dokumentov, citácie „čl. 85" na `/ask` sedia.
+
+**Oprava Súťažného poriadku a strážca zápisu:** v texte bolo 57 zvyškov
+„Stránka | N" z prevodu PDF. Oprava textu (ADR-007) ukázala +658 / −660
+riadkov — dve príčiny: LCS so stropom 400 riadkov prepadol do hrubého
+režimu a vizuálny režim editora pri uložení escapoval hviezdičky
+a z poznámky `***` urobil `*`. Opravené Myersovým rozdielom a strážcom
+zápisu (#396): riadok bez zmeny písmen, len značiek, zastaví uloženie.
+Prvé ostré použitie strážcu hlásilo 216 riadkov — porovnával s konceptom,
+ktorý editor pokazil už skôr, a vložený text ich vracal do platného znenia;
+„Uložiť s pôvodným zápisom" by vrátilo chybu. Do hodiny #397: riadok
+zo zverejneného znenia a rozdiel len v medzerách sa nehlásia. Oprava
+Súťažného poriadku zapísaná 17. 10., členenie bez jedinej značky.
+
+**Čo nevyšlo:** porovnanie starého a nového rezu na normách bežalo
+trikrát — najprv sa zlučovali krátke články (114 → 83 úsekov), potom
+sa stratili citácie „čl. N" (nadpisy v databáze sú malými písmenami),
+potom písmená príloh („1a"). Bez skriptu `chunking:compare` nad ostrými
+normami by sa každá z troch chýb ukázala až v citáciách asistenta.
+Čísla rozhodnutí sa zrazili s druhou session (D223) — preto D230–D233.
+
+**Nabudúce:** strážca porovnáva s tým, čo editor dostal, a to môže byť
+samo pokazené. Pri kontrole „čo zmenil stroj" mať vždy aj nezávislú
+referenciu (tu zverejnené znenie), inak kontrola chráni chybu.
+
+Kuriér dostal v druhej session editor s lištou, odkazy von s náhľadom
+a ďalšie formátovanie (#390, #391, #393, #395) — podrobne v `CHANGELOG.md`.
+
+---
+
 ## 2026-10-13 – 2026-10-14 — FAQ zaniká, typizácia a hierarchia dokumentov (ADR-034, #385–#388)
 
 **Čo sa zmenilo:** po kontrole FAQ proti novému zneniu ISSF-01 sa Ján opýtal,

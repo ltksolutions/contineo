@@ -4,6 +4,39 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Editor textu: strážca zápisu a Markdown pre platné znenie (2026-10-17, #396, #397)
+
+- Keď editor pri uložení zmení len značky Markdownu v riadkoch, ktoré
+  človek neupravoval (escapované hviezdičky, `***` → `*`), uloženie sa
+  zastaví a ukáže zoznam takých riadkov. **Uložiť s pôvodným zápisom**
+  vráti pôvodný zápis a úpravy nechá, **Uložiť aj tak** uloží text tak,
+  ako prišiel. Zmena počtu hviezdičiek je označená zvlášť.
+- Riadok, ktorý je doslova v zverejnenom znení, a rozdiel len v medzerách
+  sa nehlásia.
+- Dokument s platným znením sa otvára v režime Markdown.
+- Náhľad opravy textu ukazuje jednotlivé zmenené miesta aj pri desiatkach
+  roztrúsených opráv; do hrubého porovnania prepadne až nad 1 000 zmien.
+
+### Členenie zo štruktúry Markdownu, profily členenia zanikajú (2026-10-16, ADR-035, #394)
+
+- Prvý rez úsekov sa berie z nadpisov podľa úrovne a z číslovania:
+  najvyššia úroveň, pri ktorej úseky nepresiahnu 900 tokenov, nižšie
+  úrovne pri priveľkých častiach, úseky pod 300 tokenov sa zlúčia.
+- Článok, § a príloha sú celok; nadpis časti sa pripojí k článku pod ním.
+  Citácia nesie rozsah odsekov („čl. 12 ods. 1–9") a úsek s nadpisom
+  dokumentu cituje prvý oddiel.
+- Poradie: ručné hranice z rezača → štruktúra textu → rez pre text bez
+  nadpisov. Profily členenia, rozbor knižnice a ich skripty sú zrušené;
+  porovnanie pred preindexovaním je `npm run chunking:compare`.
+
+### Členenie ako rezač blokov (2026-10-15, #389, #392, KNIZ-rezac-blokov)
+
+- Členenie je na karte dokumentu medzi tlačidlami znenia a pri Preindexovať.
+- Stránka Členenie ukazuje text s farebnými úsekmi v pohľadoch **Dnes**,
+  **Návrh** a **Rozdiel**. Návrh AI dostane celý text, človek k nemu
+  napíše pripomienky a pýta ďalšie kolo; prijatý návrh sa uloží ako ručné
+  hranice k danému textu.
+
 ### Kuriér: lišta editora na telefóne v jednom riadku (2026-10-16)
 
 - Pod 640 px sú namiesto slov písmená B, I, U, S, H a všetkých deväť

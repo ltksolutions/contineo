@@ -6,11 +6,24 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-14** (ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-17** (ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Členenie (ADR-035, 15.–17. 10., #389–#397).** Prvý rez úsekov sa berie
+zo štruktúry Markdownu — úrovne nadpisov a číslovanie, cieľ 300–900
+tokenov, článok, § a príloha sú celok; profily členenia zanikli celé.
+Stránka **Členenie** (karta dokumentu) je rezač blokov: pohľady Dnes,
+Návrh, Rozdiel, návrh AI nad celým textom s pripomienkami a kolami,
+prijatý návrh = ručné hranice k textu. Preindexované 23 z 23 dokumentov
+(16. 10.) a 10 manuálov ISSF po oprave citácie prvého oddielu (17. 10.).
+**Editor textu** má strážcu zápisu: zmena len značiek Markdownu zastaví
+uloženie (Uložiť s pôvodným zápisom / Uložiť aj tak); dokument s platným
+znením sa otvára v Markdowne. **Súťažný poriadok** má od 17. 10. opravený
+text bez 57 značiek „Stránka | N" (ADR-007). Strážca bol naostro zatiaľ
+použitý raz — pred opravou #397.
 
 **Kuriér (ADR-033, 12. 10., #376–#379) je v `main` celý vo fáze 1** —
 interný messenger: obálka v hlavičke oddelená od zvončeka (D214), 1:1
@@ -283,8 +296,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (14. 10.): **0 errors, 41 warnings,
-2733 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
+Baseline, proti ktorej sa porovnáva (17. 10.): **0 errors, 39 warnings,
+2805 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
 na 390 px — #321 prešiel štyrmi brzdami a typ otázky aj tak pretekal o 65 px. Pri paralelnej session pred zlúčením PR
 zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
 `main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže
