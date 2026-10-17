@@ -538,6 +538,32 @@ export async function saveDraft(
 }
 
 /**
+ * Text, ktorý čaká na rozhodnutie o zmenách zápisu (`markupGuard.ts`,
+ * 16. 10. 2026). Uloženie sa zastavilo, lebo editor zmenil zápis riadkov,
+ * ktoré človek nepísal; text je pri dokumente, kým človek nevyberie, či
+ * pôvodný zápis vrátiť. Je to stav editora, nie dokumentu — po rozhodnutí
+ * zmizne.
+ */
+export async function stagePendingText(companyCode: string, documentId: string, markdown: string, actor: string): Promise<void> {
+  const text = (markdown ?? "").replace(/\r\n?/g, "\n").trim()
+  if (!text) throw new LibraryError("library.emptyText", "Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.")
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const r = await col.updateOne({ documentId, companyCode }, { $set: { pendingText: { text, at: new Date(), by: actor } } })
+  if (!r.matchedCount) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+}
+
+export async function pendingText(companyCode: string, documentId: string): Promise<string | null> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }, { projection: { pendingText: 1 } }) as { pendingText?: { text?: string } } | null
+  return doc?.pendingText?.text ?? null
+}
+
+export async function clearPendingText(companyCode: string, documentId: string): Promise<void> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  await col.updateOne({ documentId, companyCode }, { $unset: { pendingText: "" } })
+}
+
+/**
  * PDF a zdroj `.md` konceptu z aktuálneho textu (ADR-031, Ján 11. 10. 2026).
  *
  * Schvaľuje a zverejňuje sa PDF (ADR-011, D94). Keď PDF vzniklo z nahratého

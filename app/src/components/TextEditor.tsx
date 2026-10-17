@@ -33,12 +33,18 @@ export default function TextEditor({
   initial: initial,
   compact = false,
   label,
+  mode = "wysiwyg",
 }: {
   name: string
   initial: string
   compact?: boolean
   /** Názov poľa pre čítačky, keď editor nie je v `<label>`. */
   label?: string
+  /**
+   * V akom režime sa editor otvorí. Platné znenie ide do Markdownu —
+   * vizuálny režim pri uložení prepisuje zápis (16. 10. 2026).
+   */
+  mode?: "markdown" | "wysiwyg"
 }) {
   const wrap = useRef<HTMLDivElement>(null)
   const editor = useRef<Editor | null>(null)
@@ -64,7 +70,7 @@ export default function TextEditor({
       const e = new ToastEditor({
         el: wrap.current,
         initialValue: initial,
-        initialEditType: "wysiwyg",
+        initialEditType: mode,
         previewStyle: "vertical",
         height: compact ? "220px" : "70vh",
         usageStatistics: false,

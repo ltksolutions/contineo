@@ -110,12 +110,32 @@ describe("textDiff", () => {
   })
 
   it("pri obrovskej zmene sa neporovnáva po riadkoch, ale poctivo po blokoch", () => {
-    const before = Array.from({ length: 500 }, (_, i) => `x${i}`).join("\n")
-    const after = Array.from({ length: 500 }, (_, i) => `y${i}`).join("\n")
+    const before = Array.from({ length: 600 }, (_, i) => `x${i}`).join("\n")
+    const after = Array.from({ length: 600 }, (_, i) => `y${i}`).join("\n")
     const d = textDiff(before, after)
     expect(d.coarse).toBe(true)
-    expect(d.removed).toBe(500)
-    expect(d.added).toBe(500)
+    expect(d.removed).toBe(600)
+    expect(d.added).toBe(600)
+  })
+
+  it("57 roztrúsených opráv v 660 riadkoch ukáže 57 miest, nie celý text (16. 10. 2026)", () => {
+    const lines = Array.from({ length: 660 }, (_, i) => `Odsek ${i} predpisu.`)
+    const before = lines.map((l, i) => (i % 11 === 1 ? `${l} Stránka | ${i}` : l)).join("\n")
+    const after = lines.join("\n")
+    const d = textDiff(before, after)
+    expect(d.coarse).toBe(false)
+    expect(d.removed).toBe(60)
+    expect(d.added).toBe(60)
+    expect(d.lines.filter(l => l.kind === "gap").length).toBeGreaterThan(50)
+  })
+
+  it("posun o prázdny riadok nerobí zo zvyšku textu zmenu", () => {
+    const body = Array.from({ length: 300 }, (_, i) => `r${i}`)
+    const before = ["a", "", "Stránka | 5", "", ...body].join("\n")
+    const after = ["a", "", ...body].join("\n")
+    const d = textDiff(before, after)
+    expect(d.removed).toBe(2)
+    expect(d.added).toBe(0)
   })
 })
 

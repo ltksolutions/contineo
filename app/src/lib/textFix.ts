@@ -105,8 +105,14 @@ export interface TextDiff {
   coarse: boolean
 }
 
-/** Nad týmto počtom zmenených riadkov sa už po riadkoch neporovnáva. */
-const LCS_LIMIT = 400
+/**
+ * Nad týmto počtom úprav (pridaný alebo zmazaný riadok) sa už po riadkoch
+ * neporovnáva. Myersov rozdiel trvá úmerne počtu **zmien**, nie dĺžke textu:
+ * 57 roztrúsených opráv v 660 riadkoch (Súťažný poriadok, 16. 10. 2026) je
+ * zlomok milisekundy. Dovtedy tabuľka LCS s limitom 400 × 400 riadkov ukázala
+ * „+658 / −660" a varovanie, hoci sa menilo 57 miest.
+ */
+const EDIT_LIMIT = 1000
 
 const toLines = (s: string) => normalizeMarkdown(s).split("\n")
 
@@ -132,14 +138,15 @@ export function textDiff(before: string, after: string, context = 2): TextDiff {
 
   const midA = a.slice(start, endA)
   const midB = b.slice(start, endB)
-  const coarse = midA.length * midB.length > LCS_LIMIT * LCS_LIMIT
+  const edits = lineEdits(midA, midB)
+  const coarse = edits === null
 
-  const middle: DiffLine[] = coarse
+  const middle: DiffLine[] = edits === null
     ? [
         ...midA.map(text => ({ kind: "removed" as const, text })),
         ...midB.map(text => ({ kind: "added" as const, text })),
       ]
-    : lcsDiff(midA, midB)
+    : edits.map(e => ({ kind: e.kind, text: e.text }))
 
   /*
    * Kontext: pár riadkov pred zmenou a za ňou. Rozdiel bez okolia sa nedá
@@ -186,43 +193,62 @@ function collapse(lines: DiffLine[], context: number): DiffLine[] {
   return out
 }
 
+/** Jedna položka rozdielu po riadkoch s pozíciou v starom (`a`) a novom (`b`) texte. */
+export interface LineEdit {
+  kind: "same" | "added" | "removed"
+  text: string
+  /** Index v starom texte (pri `same` a `removed`). */
+  a: number | null
+  /** Index v novom texte (pri `same` a `added`). */
+  b: number | null
+}
+
 /**
- * Najdlhšia spoločná podpostupnosť riadkov — klasická tabuľka.
+ * Myersov rozdiel riadkov (O(ND)). `null`, keď je úprav viac než
+ * `EDIT_LIMIT` — vtedy volajúci ukáže celý starý a celý nový blok.
  *
- * Beží až na **odkrojenom strede**, nie na celom texte; horná hranica veľkosti
- * je `LCS_LIMIT` a rieši ju volajúci.
+ * Postup: pre každý počet úprav `d` sa pamätá najďalší dosiahnutý bod na
+ * každej diagonále (`v`); po nájdení konca sa cesta prejde späť cez uložené
+ * stavy. Rovnaké riadky („hady") sa prechádzajú bez úprav, preto pri pár
+ * zmenách v dlhom texte stačí pár krokov.
  */
-function lcsDiff(a: string[], b: string[]): DiffLine[] {
+export function lineEdits(a: string[], b: string[]): LineEdit[] | null {
   const n = a.length
   const m = b.length
-  const table: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0))
-  for (let i = n - 1; i >= 0; i--) {
-    for (let j = m - 1; j >= 0; j--) {
-      table[i][j] = a[i] === b[j]
-        ? table[i + 1][j + 1] + 1
-        : Math.max(table[i + 1][j], table[i][j + 1])
+  const max = n + m
+  const limit = Math.min(max, EDIT_LIMIT)
+  const offset = max + 1
+  let v = new Int32Array(2 * max + 3)
+  const trace: Int32Array[] = []
+  let found = -1
+  outer: for (let d = 0; d <= limit; d++) {
+    trace.push(v)
+    v = v.slice()
+    for (let k = -d; k <= d; k += 2) {
+      let x = k === -d || (k !== d && v[k - 1 + offset] < v[k + 1 + offset]) ? v[k + 1 + offset] : v[k - 1 + offset] + 1
+      let y = x - k
+      while (x < n && y < m && a[x] === b[y]) { x++; y++ }
+      v[k + offset] = x
+      if (x >= n && y >= m) { found = d; break outer }
     }
   }
+  if (found < 0) return null
 
-  const out: DiffLine[] = []
-  let i = 0
-  let j = 0
-  while (i < n && j < m) {
-    if (a[i] === b[j]) {
-      out.push({ kind: "same", text: a[i] })
-      i++
-      j++
-    } else if (table[i + 1][j] >= table[i][j + 1]) {
-      out.push({ kind: "removed", text: a[i] })
-      i++
-    } else {
-      out.push({ kind: "added", text: b[j] })
-      j++
-    }
+  const out: LineEdit[] = []
+  let x = n
+  let y = m
+  for (let d = found; d >= 0; d--) {
+    const prev = trace[d]
+    const k = x - y
+    const prevK = k === -d || (k !== d && prev[k - 1 + offset] < prev[k + 1 + offset]) ? k + 1 : k - 1
+    const prevX = d === 0 ? 0 : prev[prevK + offset]
+    const prevY = d === 0 ? 0 : prevX - prevK
+    while (x > prevX && y > prevY) { x--; y--; out.push({ kind: "same", text: a[x], a: x, b: y }) }
+    if (d === 0) break
+    if (x === prevX) { y--; out.push({ kind: "added", text: b[y], a: null, b: y }) }
+    else { x--; out.push({ kind: "removed", text: a[x], a: x, b: null }) }
   }
-  while (i < n) out.push({ kind: "removed", text: a[i++] })
-  while (j < m) out.push({ kind: "added", text: b[j++] })
-  return out
+  return out.reverse()
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
