@@ -3,7 +3,8 @@
  */
 import { describe, it, expect } from "vitest"
 import { headingBoundaries, hasStructure, CUT_MAX } from "../src/lib/chunkHeadings"
-import { splitBlocks, pseudoHeadingLevel, cutByBoundaries, groupTokens, refFromHeading } from "../src/lib/chunkBlocks"
+import { splitBlocks, pseudoHeadingLevel, cutByBoundaries, groupTokens, refFromHeading, splitTable } from "../src/lib/chunkBlocks"
+import { estimateTokens } from "../src/lib/chunker.mjs"
 
 const para = (n: number) => `${"Slovo vety v odseku. ".repeat(n)}`.trim()
 
@@ -116,5 +117,34 @@ describe("headingBoundaries", () => {
     const text = ["# Podania na komisie", "Úvod.", "## 1. Podania na komisie", "### 1.1 Odkiaľ", para(20), "## 2. Register", para(20)].join("\n\n")
     const chunks = cutByBoundaries(text, [5], "Podania")
     expect(chunks.map(c => c.articleRef)).toEqual(["1. Podania na komisie", "2. Register"])
+  })
+})
+
+describe("dlhá tabuľka sa delí po riadkoch (17. 10. 2026)", () => {
+  // Príloha č. 4a Registračného poriadku: tabuľka 3 909 tokenov v jednom úseku.
+  const header = ["| Úkon | Lehota | Poplatok |", "| --- | --- | --- |"]
+  const rows = Array.from({ length: 160 }, (_, i) => `| Matričný úkon číslo ${i} pre klub a hráča | ${i % 30} dní | ${i % 40} EUR |`)
+  const md = ["# Registračný poriadok", "", "## Príloha č. 4a — Sadzobník", "", ...header, ...rows, "", "## Príloha č. 5", "", "Krátky text prílohy."].join("\n")
+
+  it("splitTable: každá časť má hlavičku, riadky sa nestratia ani nezdvoja", () => {
+    const parts = splitTable([...header, ...rows])
+    expect(parts.length).toBeGreaterThan(3)
+    for (const p of parts) expect(p.slice(0, 2)).toEqual(header)
+    expect(parts.flatMap(p => p.slice(2))).toEqual(rows)
+  })
+
+  it("krátka tabuľka ostáva jeden blok", () => {
+    expect(splitTable([...header, ...rows.slice(0, 5)])).toHaveLength(1)
+  })
+
+  it("rez z nadpisov: úseky prílohy pod hranicou, každý s hlavičkou a citáciou prílohy", () => {
+    const boundaries = headingBoundaries(md)!
+    const chunks = cutByBoundaries(md, boundaries, "Registračný poriadok")
+    const annex = chunks.filter(c => /príloha č\. 4a/.test(c.articleRef ?? ""))
+    expect(annex.length).toBeGreaterThan(1)
+    for (const c of annex) {
+      expect(estimateTokens(c.text)).toBeLessThanOrEqual(CUT_MAX + 120)
+      expect(c.text).toContain(header[0])
+    }
   })
 })

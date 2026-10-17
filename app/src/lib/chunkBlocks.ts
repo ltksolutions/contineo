@@ -63,10 +63,45 @@ export function pseudoHeadingLevel(line: string): number {
 }
 
 /**
+ * Tabuľka nad touto veľkosťou sa delí po riadkoch (17. 10. 2026). Prílohy
+ * Registračného poriadku mali úseky do 3 909 tokenov a asistent z nich
+ * dostal len začiatok. Rovnaká hranica ako `CUT_MAX` v `chunkHeadings.ts`
+ * (tam sa importovať nedá — ten súbor importuje tento).
+ */
+export const TABLE_SPLIT_TOKENS = 900
+/** Cieľová veľkosť jednej časti delenej tabuľky; rez ich potom skladá do úsekov. */
+const TABLE_PART_TOKENS = 300
+const TABLE_SEPARATOR = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/
+
+/**
+ * Dlhá tabuľka → časti po riadkoch, každá s hlavičkou (riadky po oddeľovač
+ * `|---|`). Každá časť je sama platná tabuľka, takže úsek z nej je čitateľný
+ * aj bez predošlého — stĺpce majú v každom úseku meno.
+ */
+export function splitTable(lines: string[]): string[][] {
+  if (estimateTokens(lines.join("\n")) <= TABLE_SPLIT_TOKENS) return [lines]
+  const sep = lines.findIndex(l => TABLE_SEPARATOR.test(l))
+  const header = sep >= 0 && sep < 3 ? lines.slice(0, sep + 1) : []
+  const rows = lines.slice(header.length)
+  const parts: string[][] = []
+  let cur: string[] = []
+  for (const row of rows) {
+    if (cur.length && estimateTokens([...header, ...cur, row].join("\n")) > TABLE_PART_TOKENS) {
+      parts.push([...header, ...cur])
+      cur = []
+    }
+    cur.push(row)
+  }
+  if (cur.length) parts.push([...header, ...cur])
+  return parts
+}
+
+/**
  * Markdown → bloky. Čistá funkcia.
  *
  * - nadpis (`#`…`######`) je blok sám, aj keď za ním nie je prázdny riadok;
- * - súvislé riadky tabuľky (`|`) sú jeden blok — tabuľka sa nedelí;
+ * - súvislé riadky tabuľky (`|`) sú jeden blok; tabuľka nad
+ *   `TABLE_SPLIT_TOKENS` sa delí na viac blokov, každý s hlavičkou;
  * - položka zoznamu je blok aj so svojimi odsadenými pokračovaniami;
  * - ostatné súvislé riadky sú odsek; prázdny riadok blok ukončí.
  */
@@ -75,6 +110,11 @@ export function splitBlocks(markdown: string): TextBlock[] {
   const out: TextBlock[] = []
   let cur: { kind: BlockKind; level: number; lines: string[] } | null = null
   const flush = () => {
+    if (cur?.kind === "table" && cur.lines.length) {
+      for (const part of splitTable(cur.lines)) out.push({ index: out.length, kind: "table", level: 0, text: part.join("\n") })
+      cur = null
+      return
+    }
     if (cur && cur.lines.some(l => l.trim())) {
       // Jednoriadkový odsek, ktorý je nadpisom bez mriežok, je nadpis.
       const pseudo = cur.kind === "paragraph" && cur.lines.length === 1 ? pseudoHeadingLevel(cur.lines[0]) : 0
