@@ -61,3 +61,20 @@ describe("letters", () => {
     expect(letters("## **Článok 5**  –  Pojmy")).toBe("Článok 5 – Pojmy")
   })
 })
+
+describe("návrat k platnému zneniu (17. 10. 2026)", () => {
+  const published = "***Uvedie sa po mene.\n(1)  Tento  poriadok  upravuje."
+  const mangled = "*Uvedie sa po mene.\n(1) Tento poriadok upravuje."
+
+  it("riadok doslova zo zverejneného znenia nie je zmena zápisu", () => {
+    expect(markupChanges(mangled, published, [published])).toEqual([])
+  })
+
+  it("rozdiel len v medzerách nie je zmena zápisu", () => {
+    expect(markupChanges("a  b  c", "a b c")).toEqual([])
+  })
+
+  it("bez zverejneného znenia sa *** ↔ * hlási ďalej", () => {
+    expect(markupChanges(mangled, published)).toHaveLength(1)
+  })
+})

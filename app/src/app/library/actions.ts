@@ -376,17 +376,19 @@ export async function saveTextAction(fd: FormData) {
      * hviezdičkách mení obsah. Porovnáva sa s textom, z ktorého editor
      * vyšiel (`editableText`), nie s ničím iným.
      */
-    const base = (await libraryDetail(self.companyCode, id))?.editableText ?? ""
+    const detail = await libraryDetail(self.companyCode, id)
+    const base = detail?.editableText ?? ""
+    const published = (detail?.versions ?? []).map(v => v.markdown ?? "")
     if (choice === "original" || choice === "accept") {
       const pending = await pendingText(self.companyCode, id)
       if (!pending) throw new LibraryError("library.pendingTextGone", "Text na rozhodnutie už nie je — uložte ho znova.")
-      const text = choice === "original" ? restoreMarkup(pending, markupChanges(base, pending)) : pending
+      const text = choice === "original" ? restoreMarkup(pending, markupChanges(base, pending, published)) : pending
       await saveDraft(self.companyCode, id, text, self.email)
       await clearPendingText(self.companyCode, id)
       if (choice === "original") message = say(self.language).savedMarkupRestored
     } else {
       const text = String(fd.get("markdown") ?? "").replace(/\r\n?/g, "\n")
-      if (markupChanges(base, text).length) {
+      if (markupChanges(base, text, published).length) {
         await stagePendingText(self.companyCode, id, text, self.email)
         held = true
       } else {

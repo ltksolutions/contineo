@@ -73,7 +73,7 @@ export default async function EditorPage({
    * medzitým zmenil, ukáže sa to, čo naozaj platí.
    */
   const pending = raw?.pendingText?.text
-  const markup = pending ? markupChanges(d.editableText, pending) : []
+  const markup = pending ? markupChanges(d.editableText, pending, (d.versions ?? []).map(v => v.markdown ?? "")) : []
   /*
    * Dokument s platným znením sa otvára v režime Markdown. Vizuálny režim
    * pri uložení prepisuje zápis (escapuje hviezdičky, z `***` urobil `*`)
