@@ -32,7 +32,7 @@ const text = `# Podania na komisie
 
 ## 1.2 Prílohy
 
-Prílohy vo formáte PDF. ${"Dlhý opis príloh. ".repeat(400)}
+Prílohy vo formáte PDF ${"dlhý opis príloh, ".repeat(400)}
 
 ## 1.3 Stav podania
 

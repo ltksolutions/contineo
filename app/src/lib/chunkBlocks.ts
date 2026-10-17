@@ -63,11 +63,69 @@ export function pseudoHeadingLevel(line: string): number {
 }
 
 /**
+ * Tabuľka nad touto veľkosťou sa delí po riadkoch (17. 10. 2026). Prílohy
+ * Registračného poriadku mali úseky do 3 909 tokenov a asistent z nich
+ * dostal len začiatok. Rovnaká hranica ako `CUT_MAX` v `chunkHeadings.ts`
+ * (tam sa importovať nedá — ten súbor importuje tento).
+ */
+export const TABLE_SPLIT_TOKENS = 900
+/** Cieľová veľkosť jednej časti delenej tabuľky; rez ich potom skladá do úsekov. */
+const TABLE_PART_TOKENS = 300
+const TABLE_SEPARATOR = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/
+
+/**
+ * Dlhá tabuľka → časti po riadkoch, každá s hlavičkou (riadky po oddeľovač
+ * `|---|`). Každá časť je sama platná tabuľka, takže úsek z nej je čitateľný
+ * aj bez predošlého — stĺpce majú v každom úseku meno.
+ */
+export function splitTable(lines: string[]): string[][] {
+  if (estimateTokens(lines.join("\n")) <= TABLE_SPLIT_TOKENS) return [lines]
+  const sep = lines.findIndex(l => TABLE_SEPARATOR.test(l))
+  const header = sep >= 0 && sep < 3 ? lines.slice(0, sep + 1) : []
+  const rows = lines.slice(header.length)
+  const parts: string[][] = []
+  let cur: string[] = []
+  for (const row of rows) {
+    if (cur.length && estimateTokens([...header, ...cur, row].join("\n")) > TABLE_PART_TOKENS) {
+      parts.push([...header, ...cur])
+      cur = []
+    }
+    cur.push(row)
+  }
+  if (cur.length) parts.push([...header, ...cur])
+  return parts
+}
+
+/**
+ * Priveľký odsek → časti po vetách (17. 10. 2026). Prevod PDF dal vzor
+ * zmluvy v prílohe Registračného poriadku do odsekov po tisíc a viac
+ * tokenov; rez medzi blokmi do odseku nevidí. Delí sa len za koncom vety
+ * (bodka, otáznik, výkričník, bodkočiarka pred veľkým písmenom alebo
+ * číslom), nikdy uprostred vety. Text sa nemení, len pribudnú hranice.
+ */
+export function splitLongText(text: string): string[] {
+  if (estimateTokens(text) <= TABLE_SPLIT_TOKENS) return [text]
+  const sentences = text.split(/(?<=[.!?;])\s+(?=[\p{Lu}\d(„"])/u)
+  const parts: string[] = []
+  let cur = ""
+  for (const sentence of sentences) {
+    if (cur && estimateTokens(`${cur} ${sentence}`) > TABLE_PART_TOKENS) {
+      parts.push(cur)
+      cur = sentence
+    } else cur = cur ? `${cur} ${sentence}` : sentence
+  }
+  if (cur) parts.push(cur)
+  return parts
+}
+
+/**
  * Markdown → bloky. Čistá funkcia.
  *
  * - nadpis (`#`…`######`) je blok sám, aj keď za ním nie je prázdny riadok;
- * - súvislé riadky tabuľky (`|`) sú jeden blok — tabuľka sa nedelí;
+ * - súvislé riadky tabuľky (`|`) sú jeden blok; tabuľka nad
+ *   `TABLE_SPLIT_TOKENS` sa delí na viac blokov, každý s hlavičkou;
  * - položka zoznamu je blok aj so svojimi odsadenými pokračovaniami;
+ * - odsek alebo položka nad `TABLE_SPLIT_TOKENS` sa delí po vetách;
  * - ostatné súvislé riadky sú odsek; prázdny riadok blok ukončí.
  */
 export function splitBlocks(markdown: string): TextBlock[] {
@@ -75,15 +133,22 @@ export function splitBlocks(markdown: string): TextBlock[] {
   const out: TextBlock[] = []
   let cur: { kind: BlockKind; level: number; lines: string[] } | null = null
   const flush = () => {
+    if (cur?.kind === "table" && cur.lines.length) {
+      for (const part of splitTable(cur.lines)) out.push({ index: out.length, kind: "table", level: 0, text: part.join("\n") })
+      cur = null
+      return
+    }
     if (cur && cur.lines.some(l => l.trim())) {
       // Jednoriadkový odsek, ktorý je nadpisom bez mriežok, je nadpis.
       const pseudo = cur.kind === "paragraph" && cur.lines.length === 1 ? pseudoHeadingLevel(cur.lines[0]) : 0
-      out.push({
-        index: out.length,
-        kind: pseudo ? "heading" : cur.kind,
-        level: pseudo || cur.level,
-        text: cur.lines.join("\n").replace(/\s+$/, ""),
-      })
+      const text = cur.lines.join("\n").replace(/\s+$/, "")
+      if (pseudo) {
+        out.push({ index: out.length, kind: "heading", level: pseudo, text })
+      } else {
+        // Pokračovanie rozdelenej položky je odsek — inak by sa naň vzťahovalo
+        // „nereže sa medzi položkami" a delenie by nemalo účinok.
+        splitLongText(text).forEach((part, i) => out.push({ index: out.length, kind: i === 0 ? cur!.kind : "paragraph", level: cur!.level, text: part }))
+      }
     }
     cur = null
   }

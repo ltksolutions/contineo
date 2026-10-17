@@ -47,12 +47,21 @@ function glued(blocks: TextBlock[], b: number): boolean {
   return false
 }
 
+/**
+ * Nad touto veľkosťou sa reže aj medzi zlepenými blokmi (položka za
+ * položkou, tabuľka za dvojbodkou) — 17. 10. 2026: čl. 17 Pracovného
+ * poriadku je zoznam na 2 057 tokenov, ktorý sa inak nedal rozdeliť.
+ * Rovnaká hranica, nad ktorou Členenie hlási „veľký".
+ */
+export const CUT_HARD = 1350
+
 /** Delenie časti bez podnadpisov medzi blokmi — chamtivo do cieľa. */
 function splitByBlocks(blocks: TextBlock[], from: number, to: number): number[] {
   const out: number[] = []
   let start = from
   for (let b = from + 1; b < to; b++) {
-    if (tokensOf(blocks, start, b + 1) > CUT_MAX && !glued(blocks, b) && tokensOf(blocks, start, b) >= CUT_MIN / 2) {
+    const size = tokensOf(blocks, start, b + 1)
+    if (size > CUT_MAX && (!glued(blocks, b) || size > CUT_HARD) && tokensOf(blocks, start, b) >= CUT_MIN / 2) {
       out.push(b)
       start = b
     }
