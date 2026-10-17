@@ -97,12 +97,35 @@ export function splitTable(lines: string[]): string[][] {
 }
 
 /**
+ * Priveľký odsek → časti po vetách (17. 10. 2026). Prevod PDF dal vzor
+ * zmluvy v prílohe Registračného poriadku do odsekov po tisíc a viac
+ * tokenov; rez medzi blokmi do odseku nevidí. Delí sa len za koncom vety
+ * (bodka, otáznik, výkričník, bodkočiarka pred veľkým písmenom alebo
+ * číslom), nikdy uprostred vety. Text sa nemení, len pribudnú hranice.
+ */
+export function splitLongText(text: string): string[] {
+  if (estimateTokens(text) <= TABLE_SPLIT_TOKENS) return [text]
+  const sentences = text.split(/(?<=[.!?;])\s+(?=[\p{Lu}\d(„"])/u)
+  const parts: string[] = []
+  let cur = ""
+  for (const sentence of sentences) {
+    if (cur && estimateTokens(`${cur} ${sentence}`) > TABLE_PART_TOKENS) {
+      parts.push(cur)
+      cur = sentence
+    } else cur = cur ? `${cur} ${sentence}` : sentence
+  }
+  if (cur) parts.push(cur)
+  return parts
+}
+
+/**
  * Markdown → bloky. Čistá funkcia.
  *
  * - nadpis (`#`…`######`) je blok sám, aj keď za ním nie je prázdny riadok;
  * - súvislé riadky tabuľky (`|`) sú jeden blok; tabuľka nad
  *   `TABLE_SPLIT_TOKENS` sa delí na viac blokov, každý s hlavičkou;
  * - položka zoznamu je blok aj so svojimi odsadenými pokračovaniami;
+ * - odsek alebo položka nad `TABLE_SPLIT_TOKENS` sa delí po vetách;
  * - ostatné súvislé riadky sú odsek; prázdny riadok blok ukončí.
  */
 export function splitBlocks(markdown: string): TextBlock[] {
@@ -118,12 +141,14 @@ export function splitBlocks(markdown: string): TextBlock[] {
     if (cur && cur.lines.some(l => l.trim())) {
       // Jednoriadkový odsek, ktorý je nadpisom bez mriežok, je nadpis.
       const pseudo = cur.kind === "paragraph" && cur.lines.length === 1 ? pseudoHeadingLevel(cur.lines[0]) : 0
-      out.push({
-        index: out.length,
-        kind: pseudo ? "heading" : cur.kind,
-        level: pseudo || cur.level,
-        text: cur.lines.join("\n").replace(/\s+$/, ""),
-      })
+      const text = cur.lines.join("\n").replace(/\s+$/, "")
+      if (pseudo) {
+        out.push({ index: out.length, kind: "heading", level: pseudo, text })
+      } else {
+        // Pokračovanie rozdelenej položky je odsek — inak by sa naň vzťahovalo
+        // „nereže sa medzi položkami" a delenie by nemalo účinok.
+        splitLongText(text).forEach((part, i) => out.push({ index: out.length, kind: i === 0 ? cur!.kind : "paragraph", level: cur!.level, text: part }))
+      }
     }
     cur = null
   }

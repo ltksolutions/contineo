@@ -2,8 +2,8 @@
  * chunkHeadings.test.ts — prvý rez zo štruktúry Markdownu (ADR-035, D230).
  */
 import { describe, it, expect } from "vitest"
-import { headingBoundaries, hasStructure, CUT_MAX } from "../src/lib/chunkHeadings"
-import { splitBlocks, pseudoHeadingLevel, cutByBoundaries, groupTokens, refFromHeading, splitTable } from "../src/lib/chunkBlocks"
+import { headingBoundaries, hasStructure, CUT_MAX, CUT_HARD } from "../src/lib/chunkHeadings"
+import { splitBlocks, pseudoHeadingLevel, cutByBoundaries, groupTokens, refFromHeading, splitTable, splitLongText } from "../src/lib/chunkBlocks"
 import { estimateTokens } from "../src/lib/chunker.mjs"
 
 const para = (n: number) => `${"Slovo vety v odseku. ".repeat(n)}`.trim()
@@ -146,5 +146,32 @@ describe("dlhá tabuľka sa delí po riadkoch (17. 10. 2026)", () => {
       expect(estimateTokens(c.text)).toBeLessThanOrEqual(CUT_MAX + 120)
       expect(c.text).toContain(header[0])
     }
+  })
+})
+
+describe("priveľký odsek a dlhý zoznam (17. 10. 2026)", () => {
+  it("odsek nad hranicou sa delí len za koncom vety a text sa nestratí", () => {
+    const text = Array.from({ length: 120 }, (_, i) => `Article ${i} The Club undertakes to pay the Sportsman his wage under this Contract.`).join(" ")
+    const parts = splitLongText(text)
+    expect(parts.length).toBeGreaterThan(3)
+    for (const p of parts) expect(p).toMatch(/\.$/)
+    expect(parts.join(" ")).toBe(text)
+  })
+
+  it("vzor zmluvy v prílohe: úseky pod tvrdou hranicou", () => {
+    const contract = Array.from({ length: 4 }, (_, k) =>
+      Array.from({ length: 40 }, (_, i) => `Bod ${k}.${i} Klub sa zaväzuje vyplácať športovcovi mzdu podľa tejto zmluvy.`).join(" "))
+    const md = ["# Poriadok", "", "## Príloha č. 4a", "", ...contract.flatMap(p => [p, ""]), "## Príloha č. 5", "", para(30)].join("\n")
+    const chunks = cutByBoundaries(md, headingBoundaries(md)!, "Poriadok")
+    for (const c of chunks) expect(estimateTokens(c.text)).toBeLessThanOrEqual(CUT_MAX + 150)
+  })
+
+  it("dlhý zoznam sa rozreže medzi položkami, keď by úsek prerástol tvrdú hranicu", () => {
+    const items = Array.from({ length: 90 }, (_, i) => `    ${i + 1}.  právo zamestnanca na rovnaké zaobchádzanie pri odmeňovaní a pracovnom postupe číslo ${i},`)
+    const md = ["# Pracovný poriadok", "", "## Článok 17 – Práva zamestnancov", "", "1.  Zamestnanci majú právo najmä na", ...items, "", "## Článok 18 – Iné", "", para(30)].join("\n")
+    const chunks = cutByBoundaries(md, headingBoundaries(md)!, "Pracovný poriadok")
+    const art = chunks.filter(c => /čl\. 17/.test(c.articleRef ?? ""))
+    expect(art.length).toBeGreaterThan(1)
+    for (const c of art) expect(estimateTokens(c.text)).toBeLessThanOrEqual(CUT_HARD + 100)
   })
 })
