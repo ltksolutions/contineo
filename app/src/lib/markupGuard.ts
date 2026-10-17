@@ -37,13 +37,23 @@ export function letters(s: string): string {
 }
 
 const stars = (s: string) => (s.match(/\*/g) ?? []).length
+const spaces = (s: string) => s.replace(/\s+/g, " ").trim()
 
 /**
  * Riadky zmenené len v zápise. Páruje sa vo vnútri každého úseku zmien:
  * i-ty zmazaný riadok s i-tym pridaným (editor mení riadok na mieste, nie
  * presúva). Pridaný alebo zmazaný riadok bez páru je skutočná úprava.
+ *
+ * Dve výnimky (17. 10. 2026, Súťažný poriadok — strážca hlásil 216 riadkov
+ * pri texte, ktorý ich vracal do platného znenia):
+ *  - **len medzery** nie sú zmena zápisu; Markdown ich zobrazí rovnako;
+ *  - **riadok, ktorý je doslova v zverejnenom znení** (`published`), je
+ *    návrat k nemu, nie prepis editorom. Koncept, s ktorým sa porovnáva,
+ *    mohol vizuálny režim pokaziť už skôr — vrátiť „pôvodný zápis" by
+ *    potom vrátilo chybu.
  */
-export function markupChanges(before: string, after: string): MarkupChange[] {
+export function markupChanges(before: string, after: string, published: string[] = []): MarkupChange[] {
+  const known = new Set(published.flatMap(t => String(t ?? "").replace(/\r\n?/g, "\n").split("\n").map(l => l.trimEnd())))
   const a = String(before ?? "").replace(/\r\n?/g, "\n").split("\n")
   const b = String(after ?? "").replace(/\r\n?/g, "\n").split("\n")
   const edits = lineEdits(a, b)
@@ -56,7 +66,8 @@ export function markupChanges(before: string, after: string): MarkupChange[] {
     for (let i = 0; i < n; i++) {
       const old = removed[i].text
       const neu = added[i].text
-      if (old !== neu && letters(old) === letters(neu) && letters(old) !== "") {
+      if (old !== neu && letters(old) === letters(neu) && letters(old) !== ""
+        && spaces(old) !== spaces(neu) && !known.has(neu.trimEnd())) {
         out.push({ line: added[i].b, before: old, after: neu, stars: stars(old) !== stars(neu) })
       }
     }
