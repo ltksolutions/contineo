@@ -83,3 +83,14 @@ export function isFindingView(x: unknown): x is FindingView {
 export function filterFindings(findings: DocumentFinding[], view: FindingView): DocumentFinding[] {
   return view === "all" ? findings : findings.filter(f => (view === "open" ? !f.status : Boolean(f.status)))
 }
+
+/**
+ * „dokument:nález" z poľa `next` formulára rozhodnutia. Delí sa podľa
+ * **poslednej** dvojbodky — identifikátor dokumentu ju má sám
+ * („sfz:issf_00_prehlad"). `split(":")` posielal „Uložiť a ďalší" na
+ * `?doc=sfz` (zistené 18. 10. 2026 pri rozhodovaní návrhov z helpdesku).
+ */
+export function parseNextFinding(next: string): { documentId: string; findingId: string } {
+  const cut = String(next ?? "").lastIndexOf(":")
+  return cut > 0 ? { documentId: next.slice(0, cut), findingId: next.slice(cut + 1) } : { documentId: "", findingId: "" }
+}

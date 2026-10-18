@@ -17,6 +17,7 @@ import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
 import { renameRun, startDocumentReview, startHelpdeskReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
+import { parseNextFinding } from "@/lib/complianceView"
 import { listChannels } from "@/lib/channels"
 import { setLinksFromRun, removeLink, dismissRequest, markRequestStarted } from "@/lib/complianceRequests"
 
@@ -125,7 +126,7 @@ export async function decideFindingAction(fd: FormData) {
   }
   // „Uložiť a ďalší": ďalší nerozhodnutý nález, aj v ďalšom dokumente. Stránka
   // ho poslala ako `dokument:nález`; keď už nie je, ostane sa pri tomto.
-  const [nextDoc, nextFinding] = fieldText(fd, "next").split(":")
+  const { documentId: nextDoc, findingId: nextFinding } = parseNextFinding(fieldText(fd, "next"))
   if (nextDoc && nextFinding) back(path, message, false, `${nextDoc}-${nextFinding}`, { ...viewOf(fd, nextDoc), f: nextFinding })
   back(path, message, false, anchor, keep)
 }

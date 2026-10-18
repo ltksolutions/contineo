@@ -109,7 +109,7 @@ function DecisionForm({ t, run, res, f, ctx, view, next, nextLabel, overlap }: {
           Nie `<label>`: editor je viacero ovládačov, názov nesie `label`. */}
       <div className="field decision-text">
         <span className="field-label">{t.proposed}</span>
-        <TextEditor name="text" initial={overlap ? (f.status ? overlap.text : suggestOnCurrent(f, overlap.text)) : f.acceptedText ?? f.proposed ?? f.quote} compact label={t.proposed} />
+        <TextEditor name="text" initial={overlap ? (f.status ? overlap.text : suggestOnCurrent(f, overlap.text)) : f.acceptedText ?? f.proposed ?? f.quote} compact label={t.proposed} mode="markdown" />
         {overlap && <span className="quiet field-hint">{t.overlapNote(overlap.via.location, !f.status && suggestOnCurrent(f, overlap.text) !== overlap.text)}</span>}
         <span className="quiet field-hint">{f.proposed || f.acceptedText ? hint : `${t.proposedMissing} ${hint}`}</span>
       </div>
