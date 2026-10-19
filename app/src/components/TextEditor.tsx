@@ -71,7 +71,13 @@ export default function TextEditor({
         el: wrap.current,
         initialValue: initial,
         initialEditType: mode,
-        previewStyle: "vertical",
+        /*
+         * Náhľad v záložke, nie vedľa (Ján 19. 10. 2026). Editor textu stojí
+         * vedľa originálu PDF a má polovicu šírky; náhľad vedľa z nej bral
+         * ďalšiu polovicu a riadky sa lámali po pár slovách. Originál je
+         * vizuálna kontrola sám, náhľad je o klik ďalej.
+         */
+        previewStyle: "tab",
         height: compact ? "220px" : "70vh",
         usageStatistics: false,
         hideModeSwitch: false,
