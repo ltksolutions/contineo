@@ -55,7 +55,7 @@ export default async function ConfirmRunPage({ searchParams }: { searchParams: P
   const name = check ? check.name : one(sp.name)
   const nextRound = check ? (await roundsOf(ctx.tenant.companyCode, check.checkId)).length + 1 : 1
   const runHref = (runId: string) => `/library/compliance/${encodeURIComponent(check?.checkId ?? runId)}`
-  const p = await previewRun(ctx.tenant.companyCode, { subjectIds, documentIds, channel: channel ? { key: channel.key, name: channel.name } : null })
+  const p = await previewRun(ctx.tenant.companyCode, { subjectIds, documentIds, channel: channel ? { key: channel.key, name: channel.name } : null, checkId: check?.checkId ?? null })
   const action = helpdesk ? startHelpdeskReviewAction : startDocumentReviewAction
   const canStart = !p.running && p.subjects.length > 0 && p.references.length > 0
 
