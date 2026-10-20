@@ -209,10 +209,10 @@ export interface Version {
  *     po redukcii — server nedáva dátum zmeny, takže „zmenilo sa to?" povie
  *     len hash. Názov konektora je **kópia**: konektor sa dá premenovať aj
  *     odstrániť a dokument má o rok povedať, odkiaľ bol.
- *   • `web` — sledovaný zdroj s adaptérom (ADR-037, D244); dnes Slov-Lex.
+ *   • `web` — sledovaný zdroj s adaptérom (ADR-037, D245); dnes Slov-Lex.
  *     `externalId` je identifikátor predpisu (`SK/ZZ/2015/440`), `timepoint`
  *     časová verzia znenia (`YYYYMMDD`), ktoré je v knižnici naposledy
- *     stiahnuté — kontrola zdroja porovnáva s ňou históriu predpisu (D242).
+ *     stiahnuté — kontrola zdroja porovnáva s ňou históriu predpisu (D243).
  */
 export interface McpDocumentSource {
   type: "mcp"

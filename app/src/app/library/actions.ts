@@ -1817,7 +1817,7 @@ export async function importWebDocumentAction(fd: FormData) {
   }
 }
 
-/** Kontrola sledovaného zdroja (D242): novšie znenie zo Slov-Lexu ako koncept. */
+/** Kontrola sledovaného zdroja (D243): novšie znenie zo Slov-Lexu ako koncept. */
 export async function checkWebSourceAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")

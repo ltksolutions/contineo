@@ -6,7 +6,8 @@
 > a pravidelne ho aktualizovať je dôležité, zákony sa v čase menia
 > a dopĺňajú"; k analýze možností: „Rozhodni — sprav ADR podľa odporúčania
 > (sledovaný zdroj slov-lex v dvoch krokoch) a začni krokom B".
-> **Čísla rozhodnutí:** D241–D246.
+> **Čísla rozhodnutí:** D242–D247 (D241 medzitým použil dodatok 3 ADR-036
+> pre požiadavky z hierarchie).
 > **Nadväzuje na:** ADR-029 (import z konektora: pôvod `documents.source`,
 > koncept, re-sync ako nové znenie), ADR-011 (schvaľuje a potvrdzuje sa
 > PDF), ADR-034 (druh `zakon` s najvyššou záväznosťou D216, hierarchia
@@ -58,7 +59,7 @@ overené odpovede.
 
 ## 2. Rozhodnutia
 
-### D241 — Adaptér pre Slov-Lex, nie generický web
+### D242 — Adaptér pre Slov-Lex, nie generický web
 
 Štvrtá cesta zápisu je **sledovaný zdroj s adaptérom**, prvý adaptér je
 Slov-Lex. Predpis identifikuje adresa v tvare `SK/ZZ/<rok>/<číslo>`
@@ -67,7 +68,7 @@ portál. Generický import ľubovoľnej adresy a RSS ostávajú „pripravujeme"
 Slov-Lex RSS nemá a porovnávanie celého HTML je krehké, lebo obal stránky
 sa mení nezávisle od textu.
 
-### D242 — Zmena znenia je nový riadok v histórii, nie iný odtlačok
+### D243 — Zmena znenia je nový riadok v histórii, nie iný odtlačok
 
 Dokument nesie **časovú verziu** (`timepoint`, `YYYYMMDD`) znenia, ktoré
 je v knižnici naposledy stiahnuté. Kontrola zdroja prečíta tabuľku
@@ -81,7 +82,7 @@ chytila oprava textu na portáli.
 Pri importe sa berie znenie **účinné v deň importu**; neskoršie znenia
 hlási kontrola zdroja.
 
-### D243 — Záväzné PDF zo Slov-Lexu je PDF znenia; Markdown z HTML je text
+### D244 — Záväzné PDF zo Slov-Lexu je PDF znenia; Markdown z HTML je text
 
 Schvaľuje a potvrdzuje sa PDF (ADR-011). Pri zákone máme originál, preto
 sa PDF znenia **sťahuje zo Slov-Lexu**, nevysádza u nás. Markdown vzniká
@@ -91,7 +92,7 @@ a bod sú odseky so svojím označením, prílohy a poznámky pod čiarou sú
 vlastné časti. Rez podľa ADR-035 tak dostane § ako jednotku a citácia
 z nadpisu je „§ 58".
 
-### D244 — Pôvod `source.type: "web"` rozširuje dnešný pôvod
+### D245 — Pôvod `source.type: "web"` rozširuje dnešný pôvod
 
 `documents.source` dostáva druhý tvar popri `mcp`: adaptér (`slov-lex`),
 adresa zadaná človekom, identifikátor predpisu (`SK/ZZ/2015/440`), časová
@@ -102,7 +103,7 @@ a doplnení niektorých zákonov"; druh, prístup, jazyk, priečinok a útvar
 volí človek pri importe ako pri konektore. Jeden predpis má v organizácii
 jeden dokument — druhý import tej istej adresy vedie na existujúci.
 
-### D245 — Schvaľuje správca obsahu štandardným postupom
+### D246 — Schvaľuje správca obsahu štandardným postupom
 
 Znenie zákona ide štandardným postupom (ADR-006, ADR-014). Schvaľovateľ
 nerozhoduje o obsahu — potvrdzuje, že stiahnuté znenie je to, ktoré
@@ -112,7 +113,7 @@ schválenia orgánom sa nevypĺňa, lebo konsolidované znenie ho nemá.
 Nové znenie ide cestou `publish()`, takže overené odpovede z neho
 odvodené expirujú ako pri každom inom predpise (`lib/curation.ts`).
 
-### D246 — Dva kroky: ručná kontrola, potom cron
+### D247 — Dva kroky: ručná kontrola, potom cron
 
 - **Krok B (teraz):** import z adresy na `/library/new/web` a tlačidlo
   „Skontrolovať zdroj" na detaile dokumentu. Nič sa nedeje bez človeka.

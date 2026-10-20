@@ -1,6 +1,6 @@
 /**
  * slovLex.ts — čítanie predpisu zo Slov-Lexu a prevod na Markdown
- * (ADR-037, D241–D243).
+ * (ADR-037, D242–D244).
  *
  * Hlavný portál www.slov-lex.sk je aplikácia v JavaScripte a bez neho vráti
  * len obal; nemá RSS ani API. Číta sa **statická verzia portálu**
@@ -105,7 +105,7 @@ export function effectiveRow(rows: HistoryRow[], today: Date): HistoryRow | null
   return found
 }
 
-/** Znenia po danej časovej verzii — aj tie, ktorých účinnosť ešte nenastala (D242). */
+/** Znenia po danej časovej verzii — aj tie, ktorých účinnosť ešte nenastala (D243). */
 export function newerRows(rows: HistoryRow[], timepoint: string): HistoryRow[] {
   return rows.filter(r => r.timepoint > timepoint)
 }

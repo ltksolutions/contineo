@@ -6,7 +6,7 @@
  * a funguje bez skriptu) a ukáže, čo sa našlo: názov, znenie účinné dnes,
  * neskoršie vyhlásené znenia a či predpis v knižnici už je. **Import** je
  * `POST` s metadátami; vznikne koncept so záväzným PDF zo Slov-Lexu
- * a textom na vyhľadávanie (D243).
+ * a textom na vyhľadávanie (D244).
  */
 
 import { notFound, redirect } from "next/navigation"

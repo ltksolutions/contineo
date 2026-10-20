@@ -1833,7 +1833,7 @@ export default async function DocumentDetailPage({
           </form>
         )}
 
-        {/* Sledovaný zdroj Slov-Lex (ADR-037, D242): novšie znenie ako koncept. */}
+        {/* Sledovaný zdroj Slov-Lex (ADR-037, D243): novšie znenie ako koncept. */}
         {d.source && d.source.type === "web" && (
           <form action={checkWebSourceAction} className="more-row" id="source">
             <input type="hidden" name="documentId" value={d.documentId} />

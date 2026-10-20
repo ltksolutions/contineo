@@ -1,11 +1,11 @@
 /**
  * webImport.ts — sledovaný zdroj: predpis zo Slov-Lexu do knižnice
- * a kontrola zmien (ADR-037, krok B; D241–D245).
+ * a kontrola zmien (ADR-037, krok B; D242–D246).
  *
  * Tá istá cesta ako import z konektora (ADR-029, `connectorImport.ts`):
  * z predpisu vznikne **koncept dokumentu** cez `uploadDocument()`. Rozdiel
  * je v súboroch — PDF je **záväzné PDF zo Slov-Lexu**, nie sadzba u nás
- * (D243), a Markdown z HTML znenia je zdroj textu na vyhľadávanie (D95).
+ * (D244), a Markdown z HTML znenia je zdroj textu na vyhľadávanie (D95).
  * Ďalej je to bežný dokument: metadáta, schválenie (ADR-006), zverejnenie,
  * hierarchia (D219).
  *
@@ -13,7 +13,7 @@
  * identifikátor predpisu a **časovú verziu** znenia, ktoré je v knižnici.
  * Kontrola zdroja porovná históriu predpisu s ňou: novšie znenie — aj
  * s účinnosťou v budúcnosti — je koncept nového znenia s tou účinnosťou
- * (D242). Nič zverejnené sa neprepisuje (D24).
+ * (D243). Nič zverejnené sa neprepisuje (D24).
  *
  * Krok C (cron a upozornenie) volá to isté, čo tlačidlo; zatiaľ nie je.
  */
@@ -37,7 +37,7 @@ export class WebImportError extends AppError {}
 /** Strop na jeden súbor — stránka znenia má 1,5 MB, PDF okolo 11 MB. */
 const FETCH_TIMEOUT_MS = 30_000
 const USER_AGENT = "Contineo/1 (+https://contineo.app; kniznica)"
-/** Orgán, ktorý zákon prijal — do údajov o znení (ADR-013, D245). */
+/** Orgán, ktorý zákon prijal — do údajov o znení (ADR-013, D246). */
 const PARLIAMENT = "Národná rada Slovenskej republiky"
 
 async function fetchUrl(url: string): Promise<Response> {
@@ -93,7 +93,7 @@ function files(ref: ActRef, row: HistoryRow, f: Fetched) {
   }
 }
 
-/** Údaje o znení (ADR-013): prijal parlament, účinnosť z histórie; dátum schválenia konsolidované znenie nemá (D245). */
+/** Údaje o znení (ADR-013): prijal parlament, účinnosť z histórie; dátum schválenia konsolidované znenie nemá (D246). */
 function versionMeta(row: HistoryRow): VersionMeta {
   return { author: null, approvedBy: PARLIAMENT, approvedOn: null, effectiveFrom: new Date(row.effectiveFrom) }
 }
@@ -111,7 +111,7 @@ interface ExistingDoc {
   timepoint: string
 }
 
-/** Dokument organizácie, ktorý z tohto predpisu už vznikol — jeden predpis, jeden dokument (D244). */
+/** Dokument organizácie, ktorý z tohto predpisu už vznikol — jeden predpis, jeden dokument (D245). */
 async function existingByAct(companyCode: string, externalId: string): Promise<ExistingDoc | null> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne(
@@ -172,7 +172,7 @@ export interface WebImportOutcome {
   later: HistoryRow[]
 }
 
-/** Predpis zo Slov-Lexu → koncept dokumentu so záväzným PDF a textom (D243, D244). */
+/** Predpis zo Slov-Lexu → koncept dokumentu so záväzným PDF a textom (D244, D245). */
 export async function importFromSlovLex(
   companyCode: string, input: WebImportInput, actor: string, extras: CodelistExtras | undefined, now: Date = new Date(),
 ): Promise<WebImportOutcome> {
@@ -209,7 +209,7 @@ export interface WebCheckOutcome {
 }
 
 /**
- * Kontrola zdroja (D242): najbližšie znenie po tom, ktoré je v knižnici,
+ * Kontrola zdroja (D243): najbližšie znenie po tom, ktoré je v knižnici,
  * ide ako koncept nového znenia s účinnosťou zo Slov-Lexu. Keď novšie nie
  * je, porovná sa text tej istej časovej verzie — oprava na portáli je
  * tiež nové znenie. Rozpracovaný koncept sa prepíše ako pri konektore.
