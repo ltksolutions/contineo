@@ -3307,6 +3307,83 @@ interface Dictionary {
       helpdeskIntro: (questions: number) => string
       helpdeskStart: string
       helpdeskSource: string
+      /** Kontroly a kolá (ADR-036, D239; KNIZ-kontroly-a-kola, 20. 10. 2026). */
+      ck: {
+        introChecks: string
+        newCheck: string
+        groupAttention: string
+        groupDone: string
+        groupLegacy: string
+        legacyNote: string
+        kindDocuments: string
+        kindHelpdesk: string
+        openCount: (n: number) => string
+        ofFindings: (total: number, round: number) => string
+        roundRunning: (round: number, done: number, total: number) => string
+        roundStopped: (round: number) => string
+        roundFailed: (round: number) => string
+        allDecided: (n: number) => string
+        notStarted: string
+        scopeDocs: (subjects: number, refs: number) => string
+        scopeHelpdesk: (questions: number, channel: string, manuals: number) => string
+        rounds: (n: number) => string
+        lastRound: (date: string, who: string) => string
+        requestFor: (name: string) => string
+        requestStartRound: (n: number) => string
+        requestStartNew: string
+        requestDismissShort: string
+        linkFrom: (name: string) => string
+        linkFromArchived: string
+        noneTitle: string
+        noneText: string
+        newHeading: string
+        newLead: string
+        kindLabel: string
+        kindDocumentsSub: string
+        kindHelpdeskTitle: string
+        kindHelpdeskSub: string
+        channelLabel: string
+        channelHasCheck: (name: string, rounds: string) => string
+        startRoundThere: (n: number) => string
+        newCheckNoCarry: string
+        helpdeskSubjectsNote: string
+        referencesInherited: string
+        continueToConfirm: string
+        nothingStarts: string
+        noChannels: string
+        confirmCheck: (name: string, round: number) => string
+        roundN: (n: number) => string
+        olderRounds: string
+        roundsAll: string
+        roundsLabel: string
+        roundMeta: (date: string, who: string) => string
+        roundStates: { running: string; stopped: string; failed: string; open: string; done: string }
+        runningNote: string
+        usageMore: string
+        usageLess: string
+        deltaNew: (n: number) => string
+        deltaCarried: (n: number) => string
+        deltaGone: (n: number, round: number) => string
+        showNew: string
+        newInRound: (n: number) => string
+        carriedFrom: (n: number) => string
+        olderReadOnly: string
+        goToLatest: (n: number) => string
+        legacyReadOnly: string
+        newRound: string
+        linksSavedShort: string
+        cancel: string
+        cancelCheck: string
+        cancelCheckNote: string
+        cancelTitle: (name: string) => string
+        cancelEffects: string[]
+        cancelRunning: string
+        cancelReason: string
+        keep: string
+        checkArchived: string
+        checkRenamed: string
+        failedNote: string
+      }
     }
     tracks: {
       heading: string
@@ -6370,6 +6447,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.reasonRequired": "Uveďte dôvod rozhodnutia.",
     "compliance.alreadyRunning": "Kontrola už beží — počkajte, kým dobehne.",
     "compliance.notRunning": "Kontrola už nebeží.",
+    "compliance.olderRound": "Rozhoduje sa len v poslednom kole kontroly.",
     "compliance.textRequired": "Prijaté znenie nemôže byť prázdne.",
     "compliance.nothingToApply": "Pri tomto náleze nie je čo zapísať.",
     "compliance.unknownRun": "Taká kontrola tu nie je.",
@@ -8249,6 +8327,87 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       helpdeskIntro: questions => `${questions} otázok z helpdesku. Kontrola prejde verejné manuály a navrhne doplnenie tam, kde ľudia hľadajú odpoveď a manuál ju nemá. Nálezy rozhodneš ako pri kontrole súladu a zapíšu sa do konceptu manuálu.`,
       helpdeskStart: "Navrhnúť doplnenie manuálov",
       helpdeskSource: "Prax helpdesku",
+      ck: {
+        introChecks: "Kontroly dokumentov proti normám a návrhy z helpdesku do manuálov. Každá kontrola má svoje kolá.",
+        newCheck: "Nová kontrola",
+        groupAttention: "Na rozhodnutie",
+        groupDone: "Uzavreté",
+        groupLegacy: "Staršie behy",
+        legacyNote: "Behy spred 20. 10. 2026 — len na čítanie.",
+        kindDocuments: "Súlad dokumentov",
+        kindHelpdesk: "Návrhy z helpdesku",
+        openCount: n => `${n} ${n === 1 ? "nerozhodnutý" : n >= 2 && n <= 4 ? "nerozhodnuté" : "nerozhodnutých"}`,
+        ofFindings: (total, round) => `z ${total} ${total === 1 ? "nálezu" : "nálezov"} · kolo ${round} dobehlo`,
+        roundRunning: (round, done, total) => `Kolo ${round} beží · ${done} z ${total} dokumentov`,
+        roundStopped: round => `Kolo ${round} zastavené`,
+        roundFailed: round => `Kolo ${round} zlyhalo`,
+        allDecided: n => n === 0 ? "Bez nálezov" : n === 1 ? "Jediný nález rozhodnutý" : `Všetkých ${n} nálezov rozhodnutých`,
+        notStarted: "Zatiaľ bez kola",
+        scopeDocs: (subjects, refs) => `${subjects} ${subjects === 1 ? "dokument" : subjects >= 2 && subjects <= 4 ? "dokumenty" : "dokumentov"} proti ${refs === 0 ? "normám z hierarchie" : `${refs} ${refs === 1 ? "norme" : "normám"}`}`,
+        scopeHelpdesk: (questions, channel, manuals) => `${questions} ${questions === 1 ? "otázka" : questions >= 2 && questions <= 4 ? "otázky" : "otázok"} kanála ${channel} proti ${manuals} ${manuals === 1 ? "manuálu" : "manuálom"}`,
+        rounds: n => `${n} ${n === 1 ? "kolo" : n >= 2 && n <= 4 ? "kolá" : "kôl"}`,
+        lastRound: (date, who) => `posledné ${date}, ${who}`,
+        requestFor: name => `v pevnej väzbe s kontrolou „${name}“`,
+        requestStartRound: n => `Spustiť kolo ${n}…`,
+        requestStartNew: "Spustiť kontrolu…",
+        requestDismissShort: "Netreba",
+        linkFrom: name => `z kontroly „${name}“`,
+        linkFromArchived: "(zrušená)",
+        noneTitle: "Zatiaľ žiadna kontrola",
+        noneText: "Kontrolu spustíte tlačidlom vpravo hore.",
+        newHeading: "Nová kontrola",
+        newLead: "Vyberte, čo sa skontroluje. Pred spustením uvidíte rekapituláciu s odhadom ceny.",
+        kindLabel: "Druh",
+        kindDocumentsSub: "dokumenty proti normám",
+        kindHelpdeskTitle: "Návrhy z helpdesku do manuálov",
+        kindHelpdeskSub: "otázky kanála proti verejným manuálom",
+        channelLabel: "Kanál",
+        channelHasCheck: (name, rounds) => `Kanál už má kontrolu „${name}“ (${rounds}).`,
+        startRoundThere: n => `Spustiť v nej kolo ${n}`,
+        newCheckNoCarry: "Nová kontrola začne bez prenesených ponechaní.",
+        helpdeskSubjectsNote: "Pri návrhoch z helpdesku sa kontrolujú všetky verejné manuály; výber dokumentov a noriem nižšie sa nepoužije.",
+        referencesInherited: "Prázdne = nadradené z hierarchie. Presný zoznam uvidíte v rekapitulácii.",
+        continueToConfirm: "Pokračovať na rekapituláciu",
+        nothingStarts: "Nič sa ešte nespustí.",
+        noChannels: "Žiadny kanál zatiaľ nemá otázky z helpdesku.",
+        confirmCheck: (name, round) => `${name} · kolo ${round}`,
+        roundN: n => `Kolo ${n}`,
+        olderRounds: "Staršie…",
+        roundsAll: "Všetky kolá",
+        roundsLabel: "Kolá kontroly",
+        roundMeta: (date, who) => `${date}, ${who}`,
+        roundStates: { running: "beží", stopped: "zastavené", failed: "zlyhalo", open: "na rozhodnutie", done: "uzavreté" },
+        runningNote: "Stránku môžete zavrieť, kolo beží ďalej. Keď dobehne, príde upozornenie.",
+        usageMore: "Údaje o kole",
+        usageLess: "Skryť údaje o kole",
+        deltaNew: n => `${n} ${n === 1 ? "nový nález" : n >= 2 && n <= 4 ? "nové nálezy" : "nových nálezov"}`,
+        deltaCarried: n => `${n} ${n === 1 ? "ponechanie prenesené" : n >= 2 && n <= 4 ? "ponechania prenesené" : "ponechaní prenesených"} — už rozhodnuté, nepýta sa znova`,
+        deltaGone: (n, round) => `${n} ${n === 1 ? "nález prijatý" : n >= 2 && n <= 4 ? "nálezy prijaté" : "nálezov prijatých"} v kole ${round} sa už nehlási`,
+        showNew: "Zobraziť nové",
+        newInRound: n => `Nový v kole ${n}`,
+        carriedFrom: n => `Ponechané v kole ${n}`,
+        olderReadOnly: "Staršie kolo — len na čítanie.",
+        goToLatest: n => `Prejsť na kolo ${n}`,
+        legacyReadOnly: "Beh spred zmeny na kontroly a kolá (20. 10. 2026) — len na čítanie.",
+        newRound: "Nové kolo",
+        linksSavedShort: "Pevné väzby ✓",
+        cancel: "Zrušiť",
+        cancelCheck: "Zrušiť kontrolu",
+        cancelCheckNote: "Kontrola zmizne zo zoznamu; kolá a rozhodnutia ostanú zapísané.",
+        cancelTitle: name => `Zrušiť kontrolu „${name}“?`,
+        cancelEffects: [
+          "Kontrola zmizne zo zoznamu a presunie sa do archívu.",
+          "Kolá a rozhodnutia ostanú zapísané v audite.",
+          "Prijaté zmeny v konceptoch dokumentov ostávajú.",
+          "Ponechania sa do ďalších kontrol neprenesú.",
+        ],
+        cancelRunning: "Bežiace kolo sa zastaví.",
+        cancelReason: "Dôvod (nepovinné)",
+        keep: "Ponechať",
+        checkArchived: "Kontrola je zrušená.",
+        checkRenamed: "Názov kontroly je uložený.",
+        failedNote: "Kolo sa po opakovaných chybách zastavilo.",
+      },
     },
     tracks: {
       heading: "Trasy",
@@ -11238,6 +11397,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.reasonRequired": "Uveďte důvod rozhodnutí.",
     "compliance.alreadyRunning": "Kontrola už běží — počkejte, až doběhne.",
     "compliance.notRunning": "Kontrola už neběží.",
+    "compliance.olderRound": "Rozhoduje se jen v posledním kole kontroly.",
     "compliance.textRequired": "Přijaté znění nemůže být prázdné.",
     "compliance.nothingToApply": "U tohoto nálezu není co zapsat.",
     "compliance.unknownRun": "Taková kontrola tu není.",
@@ -13114,6 +13274,87 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       helpdeskIntro: questions => `${questions} otázek z helpdesku. Kontrola projde veřejné manuály a navrhne doplnění tam, kde lidé hledají odpověď a manuál ji nemá. Nálezy rozhodneš jako při kontrole souladu a zapíšou se do konceptu manuálu.`,
       helpdeskStart: "Navrhnout doplnění manuálů",
       helpdeskSource: "Praxe helpdesku",
+      ck: {
+        introChecks: "Kontroly dokumentů proti normám a návrhy z helpdesku do manuálů. Každá kontrola má svá kola.",
+        newCheck: "Nová kontrola",
+        groupAttention: "K rozhodnutí",
+        groupDone: "Uzavřené",
+        groupLegacy: "Starší běhy",
+        legacyNote: "Běhy před 20. 10. 2026 — jen ke čtení.",
+        kindDocuments: "Soulad dokumentů",
+        kindHelpdesk: "Návrhy z helpdesku",
+        openCount: n => `${n} ${n === 1 ? "nerozhodnutý" : n >= 2 && n <= 4 ? "nerozhodnuté" : "nerozhodnutých"}`,
+        ofFindings: (total, round) => `z ${total} ${total === 1 ? "nálezu" : "nálezů"} · kolo ${round} doběhlo`,
+        roundRunning: (round, done, total) => `Kolo ${round} běží · ${done} z ${total} dokumentů`,
+        roundStopped: round => `Kolo ${round} zastaveno`,
+        roundFailed: round => `Kolo ${round} selhalo`,
+        allDecided: n => n === 0 ? "Bez nálezů" : n === 1 ? "Jediný nález rozhodnut" : `Všech ${n} nálezů rozhodnuto`,
+        notStarted: "Zatím bez kola",
+        scopeDocs: (subjects, refs) => `${subjects} ${subjects === 1 ? "dokument" : subjects >= 2 && subjects <= 4 ? "dokumenty" : "dokumentů"} proti ${refs === 0 ? "normám z hierarchie" : `${refs} ${refs === 1 ? "normě" : "normám"}`}`,
+        scopeHelpdesk: (questions, channel, manuals) => `${questions} ${questions === 1 ? "otázka" : questions >= 2 && questions <= 4 ? "otázky" : "otázek"} kanálu ${channel} proti ${manuals} ${manuals === 1 ? "manuálu" : "manuálům"}`,
+        rounds: n => `${n} ${n === 1 ? "kolo" : n >= 2 && n <= 4 ? "kola" : "kol"}`,
+        lastRound: (date, who) => `poslední ${date}, ${who}`,
+        requestFor: name => `v pevné vazbě s kontrolou „${name}“`,
+        requestStartRound: n => `Spustit kolo ${n}…`,
+        requestStartNew: "Spustit kontrolu…",
+        requestDismissShort: "Netřeba",
+        linkFrom: name => `z kontroly „${name}“`,
+        linkFromArchived: "(zrušená)",
+        noneTitle: "Zatím žádná kontrola",
+        noneText: "Kontrolu spustíte tlačítkem vpravo nahoře.",
+        newHeading: "Nová kontrola",
+        newLead: "Vyberte, co se zkontroluje. Před spuštěním uvidíte rekapitulaci s odhadem ceny.",
+        kindLabel: "Druh",
+        kindDocumentsSub: "dokumenty proti normám",
+        kindHelpdeskTitle: "Návrhy z helpdesku do manuálů",
+        kindHelpdeskSub: "otázky kanálu proti veřejným manuálům",
+        channelLabel: "Kanál",
+        channelHasCheck: (name, rounds) => `Kanál už má kontrolu „${name}“ (${rounds}).`,
+        startRoundThere: n => `Spustit v ní kolo ${n}`,
+        newCheckNoCarry: "Nová kontrola začne bez přenesených ponechání.",
+        helpdeskSubjectsNote: "U návrhů z helpdesku se kontrolují všechny veřejné manuály; výběr dokumentů a norem níže se nepoužije.",
+        referencesInherited: "Prázdné = nadřazené z hierarchie. Přesný seznam uvidíte v rekapitulaci.",
+        continueToConfirm: "Pokračovat na rekapitulaci",
+        nothingStarts: "Nic se ještě nespustí.",
+        noChannels: "Žádný kanál zatím nemá otázky z helpdesku.",
+        confirmCheck: (name, round) => `${name} · kolo ${round}`,
+        roundN: n => `Kolo ${n}`,
+        olderRounds: "Starší…",
+        roundsAll: "Všechna kola",
+        roundsLabel: "Kola kontroly",
+        roundMeta: (date, who) => `${date}, ${who}`,
+        roundStates: { running: "běží", stopped: "zastaveno", failed: "selhalo", open: "k rozhodnutí", done: "uzavřeno" },
+        runningNote: "Stránku můžete zavřít, kolo běží dál. Až doběhne, přijde upozornění.",
+        usageMore: "Údaje o kole",
+        usageLess: "Skrýt údaje o kole",
+        deltaNew: n => `${n} ${n === 1 ? "nový nález" : n >= 2 && n <= 4 ? "nové nálezy" : "nových nálezů"}`,
+        deltaCarried: n => `${n} ${n === 1 ? "ponechání přeneseno" : "ponechání přeneseno"} — už rozhodnuto, neptá se znovu`,
+        deltaGone: (n, round) => `${n} ${n === 1 ? "nález přijatý" : n >= 2 && n <= 4 ? "nálezy přijaté" : "nálezů přijatých"} v kole ${round} se už nehlásí`,
+        showNew: "Zobrazit nové",
+        newInRound: n => `Nový v kole ${n}`,
+        carriedFrom: n => `Ponecháno v kole ${n}`,
+        olderReadOnly: "Starší kolo — jen ke čtení.",
+        goToLatest: n => `Přejít na kolo ${n}`,
+        legacyReadOnly: "Běh před změnou na kontroly a kola (20. 10. 2026) — jen ke čtení.",
+        newRound: "Nové kolo",
+        linksSavedShort: "Pevné vazby ✓",
+        cancel: "Zrušit",
+        cancelCheck: "Zrušit kontrolu",
+        cancelCheckNote: "Kontrola zmizí ze seznamu; kola a rozhodnutí zůstanou zapsaná.",
+        cancelTitle: name => `Zrušit kontrolu „${name}“?`,
+        cancelEffects: [
+          "Kontrola zmizí ze seznamu a přesune se do archivu.",
+          "Kola a rozhodnutí zůstanou zapsaná v auditu.",
+          "Přijaté změny v konceptech dokumentů zůstávají.",
+          "Ponechání se do dalších kontrol nepřenesou.",
+        ],
+        cancelRunning: "Běžící kolo se zastaví.",
+        cancelReason: "Důvod (nepovinné)",
+        keep: "Ponechat",
+        checkArchived: "Kontrola je zrušena.",
+        checkRenamed: "Název kontroly je uložen.",
+        failedNote: "Kolo se po opakovaných chybách zastavilo.",
+      },
     },
     tracks: {
       heading: "Trasy",
@@ -16095,6 +16336,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.reasonRequired": "Give a reason for the decision.",
     "compliance.alreadyRunning": "A check is already running — wait until it finishes.",
     "compliance.notRunning": "The check is no longer running.",
+    "compliance.olderRound": "Decisions are made only in the latest round of the check.",
     "compliance.textRequired": "The accepted wording cannot be empty.",
     "compliance.nothingToApply": "There is nothing to write for this finding.",
     "compliance.unknownRun": "There is no such check.",
@@ -17965,6 +18207,87 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       helpdeskIntro: questions => `${questions} helpdesk questions. The check goes through the public manuals and proposes additions where people look for an answer the manual does not have. You decide the findings as in a compliance check and they are written into the manual draft.`,
       helpdeskStart: "Propose manual additions",
       helpdeskSource: "Helpdesk practice",
+      ck: {
+        introChecks: "Checks of documents against standards and helpdesk suggestions for manuals. Each check has its rounds.",
+        newCheck: "New check",
+        groupAttention: "To decide",
+        groupDone: "Closed",
+        groupLegacy: "Older runs",
+        legacyNote: "Runs before 20 Oct 2026 — read only.",
+        kindDocuments: "Document compliance",
+        kindHelpdesk: "Helpdesk suggestions",
+        openCount: n => `${n} undecided`,
+        ofFindings: (total, round) => `of ${total} ${total === 1 ? "finding" : "findings"} · round ${round} finished`,
+        roundRunning: (round, done, total) => `Round ${round} running · ${done} of ${total} documents`,
+        roundStopped: round => `Round ${round} stopped`,
+        roundFailed: round => `Round ${round} failed`,
+        allDecided: n => n === 0 ? "No findings" : n === 1 ? "The only finding decided" : `All ${n} findings decided`,
+        notStarted: "No round yet",
+        scopeDocs: (subjects, refs) => `${subjects} ${subjects === 1 ? "document" : "documents"} against ${refs === 0 ? "standards from the hierarchy" : `${refs} ${refs === 1 ? "standard" : "standards"}`}`,
+        scopeHelpdesk: (questions, channel, manuals) => `${questions} ${questions === 1 ? "question" : "questions"} of ${channel} against ${manuals} ${manuals === 1 ? "manual" : "manuals"}`,
+        rounds: n => `${n} ${n === 1 ? "round" : "rounds"}`,
+        lastRound: (date, who) => `last ${date}, ${who}`,
+        requestFor: name => `linked to the check “${name}”`,
+        requestStartRound: n => `Start round ${n}…`,
+        requestStartNew: "Start a check…",
+        requestDismissShort: "Not needed",
+        linkFrom: name => `from the check “${name}”`,
+        linkFromArchived: "(cancelled)",
+        noneTitle: "No check yet",
+        noneText: "Start a check with the button at the top right.",
+        newHeading: "New check",
+        newLead: "Choose what to check. Before starting you will see a summary with a cost estimate.",
+        kindLabel: "Kind",
+        kindDocumentsSub: "documents against standards",
+        kindHelpdeskTitle: "Helpdesk suggestions for manuals",
+        kindHelpdeskSub: "channel questions against public manuals",
+        channelLabel: "Channel",
+        channelHasCheck: (name, rounds) => `The channel already has the check “${name}” (${rounds}).`,
+        startRoundThere: n => `Start round ${n} there`,
+        newCheckNoCarry: "A new check starts without carried-over keeps.",
+        helpdeskSubjectsNote: "Helpdesk suggestions check all public manuals; the document and standard selection below is not used.",
+        referencesInherited: "Empty = parents from the hierarchy. The exact list is shown in the summary.",
+        continueToConfirm: "Continue to summary",
+        nothingStarts: "Nothing starts yet.",
+        noChannels: "No channel has helpdesk questions yet.",
+        confirmCheck: (name, round) => `${name} · round ${round}`,
+        roundN: n => `Round ${n}`,
+        olderRounds: "Older…",
+        roundsAll: "All rounds",
+        roundsLabel: "Rounds of the check",
+        roundMeta: (date, who) => `${date}, ${who}`,
+        roundStates: { running: "running", stopped: "stopped", failed: "failed", open: "to decide", done: "closed" },
+        runningNote: "You can close the page; the round keeps running. You will be notified when it finishes.",
+        usageMore: "Round details",
+        usageLess: "Hide round details",
+        deltaNew: n => `${n} new ${n === 1 ? "finding" : "findings"}`,
+        deltaCarried: n => `${n} ${n === 1 ? "keep" : "keeps"} carried over — already decided, not asked again`,
+        deltaGone: (n, round) => `${n} ${n === 1 ? "finding" : "findings"} accepted in round ${round} no longer reported`,
+        showNew: "Show new",
+        newInRound: n => `New in round ${n}`,
+        carriedFrom: n => `Kept in round ${n}`,
+        olderReadOnly: "Older round — read only.",
+        goToLatest: n => `Go to round ${n}`,
+        legacyReadOnly: "Run from before checks and rounds (20 Oct 2026) — read only.",
+        newRound: "New round",
+        linksSavedShort: "Fixed links ✓",
+        cancel: "Cancel",
+        cancelCheck: "Cancel check",
+        cancelCheckNote: "The check leaves the list; its rounds and decisions stay recorded.",
+        cancelTitle: name => `Cancel the check “${name}”?`,
+        cancelEffects: [
+          "The check leaves the list and moves to the archive.",
+          "Rounds and decisions stay in the audit.",
+          "Accepted changes in document drafts remain.",
+          "Keeps are not carried over to other checks.",
+        ],
+        cancelRunning: "The running round stops.",
+        cancelReason: "Reason (optional)",
+        keep: "Keep",
+        checkArchived: "The check is cancelled.",
+        checkRenamed: "The check name is saved.",
+        failedNote: "The round stopped after repeated errors.",
+      },
     },
     tracks: {
       heading: "Tracks",

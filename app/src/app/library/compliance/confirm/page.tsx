@@ -15,6 +15,8 @@ import SubmitButton from "@/components/SubmitButton"
 import { complianceContext } from "@/lib/complianceAccess"
 import { previewRun } from "@/lib/complianceCheck"
 import { listChannels } from "@/lib/channels"
+import { checkById, roundsOf } from "@/lib/complianceChecks"
+import { requestById } from "@/lib/complianceRequests"
 import { modelLabel } from "@/lib/aiSettings"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -36,14 +38,23 @@ export default async function ConfirmRunPage({ searchParams }: { searchParams: P
   const sp = await searchParams
   const language: UiLanguage = ctx.person.language
   const t = dictionary(language).library.compliance
-  const helpdesk = one(sp.kind) === "helpdesk"
-  const channelKey = one(sp.channelKey)
+  /*
+   * Ďalšie kolo existujúcej kontroly (`?check=`, ADR-036 D239): zadanie je
+   * z kontroly; pri požiadavke (Q2) normy z požiadavky, inak uložené.
+   */
+  const check = one(sp.check) ? await checkById(ctx.tenant.companyCode, one(sp.check)) : null
+  if (one(sp.check) && (!check || check.archivedAt)) notFound()
+  const requestId = one(sp.requestId)
+  const request = requestId ? await requestById(ctx.tenant.companyCode, requestId) : null
+  const helpdesk = check ? check.kind === "helpdesk" : one(sp.kind) === "helpdesk"
+  const channelKey = check?.channelKey ?? one(sp.channelKey)
   const channel = helpdesk ? (await listChannels(ctx.tenant.companyCode)).find(c => c.key === channelKey) ?? null : null
   if (helpdesk && !channel) notFound()
-  const subjectIds = list(sp.subjectIds)
-  const documentIds = list(sp.documentIds)
-  const name = one(sp.name)
-  const requestId = one(sp.requestId)
+  const subjectIds = check ? check.subjectIds : list(sp.subjectIds)
+  const documentIds = check ? (request?.referenceIds.length ? request.referenceIds : check.referenceIds) : list(sp.documentIds)
+  const name = check ? check.name : one(sp.name)
+  const nextRound = check ? (await roundsOf(ctx.tenant.companyCode, check.checkId)).length + 1 : 1
+  const runHref = (runId: string) => `/library/compliance/${encodeURIComponent(check?.checkId ?? runId)}`
   const p = await previewRun(ctx.tenant.companyCode, { subjectIds, documentIds, channel: channel ? { key: channel.key, name: channel.name } : null })
   const action = helpdesk ? startHelpdeskReviewAction : startDocumentReviewAction
   const canStart = !p.running && p.subjects.length > 0 && p.references.length > 0
@@ -59,18 +70,20 @@ export default async function ConfirmRunPage({ searchParams }: { searchParams: P
       {p.running && (
         <div className="lnote lnote--warn" style={{ marginBottom: 12 }}>
           <span className="lnote-mark" aria-hidden="true">!</span>
-          <div className="lnote-text">{t.confirmRunning} <Link href={`/library/compliance/${encodeURIComponent(p.running.runId)}`}>{t.openRun}</Link></div>
+          <div className="lnote-text">{t.confirmRunning} <Link href={runHref(p.running.runId)}>{t.openRun}</Link></div>
         </div>
       )}
       {!p.running && p.openInLast && (
         <div className="lnote lnote--warn" style={{ marginBottom: 12 }}>
           <span className="lnote-mark" aria-hidden="true">!</span>
-          <div className="lnote-text">{t.confirmOpenInLast(p.openInLast.open)} <Link href={`/library/compliance/${encodeURIComponent(p.openInLast.runId)}`}>{t.openRun}</Link></div>
+          <div className="lnote-text">{t.confirmOpenInLast(p.openInLast.open)} <Link href={runHref(p.openInLast.runId)}>{t.openRun}</Link></div>
         </div>
       )}
 
       <section className="card detail-block" style={{ display: "grid", gap: 10, marginBottom: 16 }}>
-        {name && <p style={{ margin: 0 }}><b>{t.nameLabel}:</b> {name}</p>}
+        {check
+          ? <p style={{ margin: 0 }}><b>{t.nameLabel}:</b> {t.ck.confirmCheck(check.name || t.runDefaultName(formatDate(check.createdAt, language)), nextRound)}</p>
+          : name && <p style={{ margin: 0 }}><b>{t.nameLabel}:</b> {name}</p>}
         <p style={{ margin: 0 }}><b>{t.confirmKind}:</b> {channel ? t.confirmKindHelpdesk(channel.name, p.questions) : t.confirmKindDocuments}</p>
         <div>
           <p style={{ margin: "0 0 4px" }}><b>{t.subjects}</b> · {p.subjects.length}</p>
@@ -90,10 +103,11 @@ export default async function ConfirmRunPage({ searchParams }: { searchParams: P
       {canStart && (
         <form action={action} style={{ display: "grid", gap: 8, justifyItems: "start" }}>
           <input type="hidden" name="confirmed" value="1" />
-          {name && <input type="hidden" name="name" value={name} />}
+          {check && <input type="hidden" name="checkId" value={check.checkId} />}
+          {!check && name && <input type="hidden" name="name" value={name} />}
           {requestId && <input type="hidden" name="requestId" value={requestId} />}
           {channel && <input type="hidden" name="channelKey" value={channel.key} />}
-          {!channel && subjectIds.map(id => <input key={id} type="hidden" name="subjectIds" value={id} />)}
+          {!channel && !check && subjectIds.map(id => <input key={id} type="hidden" name="subjectIds" value={id} />)}
           {!channel && documentIds.map(id => <input key={id} type="hidden" name="documentIds" value={id} />)}
           <p className="quiet" style={{ margin: 0 }}>{t.confirmBackground}</p>
           <SubmitButton className="button">{t.confirmStart}</SubmitButton>

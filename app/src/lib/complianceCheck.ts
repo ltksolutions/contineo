@@ -469,6 +469,12 @@ export interface ComplianceRun {
    */
   archivedAt?: Date | null
   archivedBy?: string | null
+  /**
+   * Kontrola, ktorej je beh kolom (ADR-036, D239), a poradie kola od 1.
+   * Behy spred D239 ich nemajú — sú zrušené a čitateľné v starom tvare.
+   */
+  checkId?: string | null
+  round?: number
 }
 
 export interface RunUsage {
@@ -574,7 +580,7 @@ export function isRunning(run: Pick<ComplianceRun, "pending" | "failures" | "sto
  * z ťažby histórie helpdesku (`helpdesk_questions`); do behu sa uložia ako
  * kópia.
  */
-export async function startHelpdeskReview(companyCode: string, channel: { key: string; name: string }, starter: RunStarter, name = "", now = new Date()): Promise<ComplianceRun> {
+export async function startHelpdeskReview(companyCode: string, channel: { key: string; name: string }, starter: RunStarter, name = "", now = new Date(), link?: RoundLink): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startHelpdeskReview")
   const questions = await questionsFor(code, channel.key)
   if (!questions.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otázky na kontrolu.")
@@ -586,7 +592,7 @@ export async function startHelpdeskReview(companyCode: string, channel: { key: s
     .find({ companyCode: code, accessLevel: "public" }, { projection: { _id: 0, documentId: 1, category: 1 } }).toArray())
     .filter(d => documentRole(d.category as string | undefined, extras) === "guidance").map(d => String(d.documentId))
   if (!guidance.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
-  return startDocumentReview(code, guidance, [], starter, now, name, { channelKey: channel.key, channelName: channel.name, items })
+  return startDocumentReview(code, guidance, [], starter, now, name, { channelKey: channel.key, channelName: channel.name, items }, link)
 }
 
 /** Názov kontroly: jeden riadok, najviac 120 znakov; prázdny = podľa dátumu. */
@@ -622,7 +628,10 @@ async function hierarchyReferences(code: string, subjects: string[], extras: Ret
  * dokument nesmie byť zároveň referenčný; verejný sa kontroluje len
  * verejnými, interný akýmikoľvek.
  */
-export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date(), name = "", helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] }): Promise<ComplianceRun> {
+/** Kolo kontroly, ktorému beh patrí (ADR-036, D239). */
+export interface RoundLink { checkId: string; round: number }
+
+export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date(), name = "", helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] }, link?: RoundLink): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startDocumentReview")
   const subjects = [...new Set(subjectIds.filter(Boolean))]
   if (!subjects.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
@@ -649,6 +658,7 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   run.scopeKey = `documents:${run.runId}`
   const title = runTitle(name)
   if (title) run.name = title
+  if (link) { run.checkId = link.checkId; run.round = link.round }
   await (await runs()).insertOne(run)
   return run
 }

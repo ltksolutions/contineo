@@ -46,6 +46,16 @@ vi.mock("@/lib/complianceCheck", async importOriginal => ({
   startHelpdeskReview: async () => { state.started++; return { runId: "r9" } },
 }))
 
+// Kontrola a kolá (D239): spustenie založí kontrolu a jej prvé kolo.
+vi.mock("@/lib/complianceChecks", () => ({
+  createCheck: async () => ({ checkId: "c1" }),
+  startCheckRound: async () => { state.started++; return { runId: "r9" } },
+  archiveCheck: async () => {},
+  renameCheck: async () => {},
+  roundsOf: async () => [],
+  checkById: async () => null,
+}))
+
 import { startDocumentReviewAction, startHelpdeskReviewAction } from "../src/app/library/complianceActions"
 import { stopRun, archiveRun, sameTask } from "../src/lib/complianceCheck"
 
@@ -85,9 +95,9 @@ describe("spustenie len po potvrdení", () => {
     expect(state.started).toBe(0)
   })
 
-  it("s potvrdením sa spustí", async () => {
+  it("s potvrdením sa založí kontrola a spustí jej prvé kolo", async () => {
     const to = await redirectOf(startHelpdeskReviewAction(form([["channelKey", "issf"], ["confirmed", "1"]])))
-    expect(to).toContain("/library/compliance/r9")
+    expect(to).toContain("/library/compliance/c1")
     expect(state.started).toBe(1)
   })
 })

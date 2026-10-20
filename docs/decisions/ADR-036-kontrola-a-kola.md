@@ -8,7 +8,7 @@
 > „navrhujem to celé prerobiť, aby som sa lepšie orientoval v kontrolách
 > toho istého zadania"; „áno, súhlasím a všetky behy a kontroly manuálov
 > rovno zrušme… spravíme to nanovo v novom riešení".
-> **Čísla rozhodnutí:** D234–D238.
+> **Čísla rozhodnutí:** D234–D238, dodatok D239 (20. 10. 2026).
 > **Nadväzuje na:** ADR-032 (kontrola súladu, D196–D200), ADR-034 (návrhy
 > z helpdesku, D221), D24 (dôkazné záznamy sa nemažú).
 > **Implementácia:** krok 1 — `/library/compliance/confirm`, `stopRun`,
@@ -64,6 +64,33 @@ nastaví `archivedAt`: kontrola zmizne zo zoznamu, bežiace kolo sa zastaví
 a jej rozhodnutia sa do ďalších kôl **neprenášajú** (`keptDecisions`
 ju vynechá). Záznam ostáva — prijaté nálezy sú zapísané v audite
 dokumentov a odkazujú naň (D24). Koncepty dokumentov sa zrušením nemenia.
+
+### Dodatok 20. 10. 2026 — D239: kontrola je uložený záznam (mení D234)
+
+Ján 20. 10. 2026 pri návrhu KNIZ-kontroly-a-kola: „Podľa návrhu, nová
+kolekcia compliance_checks, ale bez migrácie: všetky staré behy sú od 20. 10.
+zrušené (archivedAt), ostávajú v starom tvare len na čítanie. Nové kolá majú
+checkId. D234 sa zmení dodatkom k ADR-036."
+
+**D239 — Kontrola je záznam `compliance_checks`, kolo je beh s `checkId`
+a `round`.** Kontrola nesie zadanie (druh, kontrolované dokumenty, vybrané
+normy, pri helpdesku kanál), **názov** a zrušenie (`archivedAt`, `archivedBy`,
+`archiveReason`). Kolo je `compliance_runs` ako doteraz, s `checkId`
+a poradím `round` — výsledky, rozhodnutia a spotreba ostávajú pri behu.
+
+- **Bez migrácie.** Behy spred D239 nemajú `checkId`; sú zrušené (D238)
+  a na svojej adrese sa ukážu v starom tvare, len na čítanie. Kolo kontroly
+  na adrese behu presmeruje na `/library/compliance/<checkId>?round=n`.
+- **D234 sa mení** v bode „zadanie sa odvodí, neukladá": ukladá sa, lebo
+  kontrola potrebuje vlastný názov a identitu (zvážené a zamietnuté
+  v časti 4 — teraz prijaté). `sameTask` ostáva pre zákaz súbežného behu
+  a odhad ceny.
+- Rozhoduje sa **len v poslednom kole** (návrh Q3); server to stráži
+  (`compliance.olderRound`).
+- **Požiadavka na kontrolu** (D200) spustí ďalšie kolo kontroly, ktorá
+  kontroluje všetky dokumenty požiadavky (Q2); bez takej založí novú.
+  Pevná väzba nesie `fromCheckId`.
+- **Zrušenie kontroly** zruší aj všetky jej kolá; pevné väzby ostávajú (Q5).
 
 ## 3. Dôsledky
 
