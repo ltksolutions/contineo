@@ -167,3 +167,37 @@ fungovalo.
   „platné znenie" — že sa kontroluje iný text, než človek čaká, musí byť
   vidieť pred spustením.
 
+
+---
+
+## Dodatok 3 — Požiadavky len z hierarchie, pevné väzby zrušené (D241, 2026-10-20)
+
+> **Rozhodol:** Ján Letko (2026-10-20) — „áno, urob to, Kreditom daj RaPP
+> a Stanovy" na možnosť C po otázke, prečo sa pevné väzby nedajú upraviť.
+
+Pevné väzby (D197 v prvej podobe, D200 bod 1) sa ukladali naraz z celej
+kontroly: každý kontrolovaný dokument proti **všetkým** jej normám. Upraviť
+sa nedali, len zrušiť. Rozbor 20. 10. 2026 (len čítanie): 10 väzieb, každá
+so siedmimi normami; hierarchia dokumentov (D219) dáva pri tých istých
+dokumentoch 2–4 normy a **nič, čo je v hierarchii, vo väzbách nechýba**.
+Väzby teda len pridávali normy, ktoré s dokumentom nesúvisia — a s nimi
+požiadavky na kontrolu, ktoré treba zamietať „Netreba".
+
+### D241 — Požiadavka na kontrolu vzniká len z hierarchie dokumentov
+
+- Pri zverejnení nového znenia (D200 bod 2) sú prepojené **len** dokumenty
+  podľa hierarchie: zverejnený dokument proti svojim záväzným predkom,
+  jeho potomkovia proti nemu a ostatným svojim záväzným predkom.
+- **Pevné väzby sa rušia** — sekcia na `/library/compliance` aj tlačidlo
+  „Uložiť ako pevné väzby" na detaile kontroly zmizli. Mení D197 (prvá
+  podoba) a D200 bod 1; časť implementačnej poznámky D239 o `fromCheckId`
+  pevnej väzby (Q5) neplatí.
+- **História behov sa ako zdroj nepoužíva** (mení D200 bod 2) — staré behy
+  mali ten istý plošný výber noriem.
+- Väzba, ktorá v hierarchii chýba, sa dopĺňa **nadradenými dokumentmi** na
+  detaile dokumentu (D219), nie zvlášť pri kontrole. Jediný chýbajúci prípad
+  pri rozbore — „Kredity — prerozdelenie a e-shop" nemal nadradené — Ján
+  doplnil na RaPP a Stanovy (20. 10. 2026, auditované).
+- Kolekcia `compliance_links` **ostáva v databáze nepoužitá**; nič sa nemaže
+  ani nemigruje (D24). Požiadavka naďalej spustí ďalšie kolo kontroly, ktorá
+  kontroluje všetky jej dokumenty (Q2), inak novú.

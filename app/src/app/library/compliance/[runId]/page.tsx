@@ -27,7 +27,6 @@ import TextEditor from "@/components/TextEditor"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
 import { isRunning, documentRun, draftBase, currentWording, suggestOnCurrent, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
 import { checkById, roundsOf } from "@/lib/complianceChecks"
-import { listLinks } from "@/lib/complianceRequests"
 import {
   defaultDocument, filterFindings, findingAnchor, findingState, isFindingView, nextOpen, openCount, orderedFindings, runProgress,
   roundDelta, roundTabs, roundState, type FindingView,
@@ -39,7 +38,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, stopRunAction, archiveRunAction } from "../../complianceActions"
+import { renameRunAction, decideFindingAction, applyFindingAction, stopRunAction, archiveRunAction } from "../../complianceActions"
 
 export const dynamic = "force-dynamic"
 
@@ -394,10 +393,6 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
     : t.runScope(subjectIds.length || run.total, run.documents.length, startedByName, when)
   const anyRunning = rounds.some(r => isRunning(r))
   const manageable = Boolean(check && ctx.isReviewer && !check.archivedAt)
-  // Pevné väzby z tejto kontroly už sú pri všetkých jej dokumentoch → len odkaz.
-  const linked = check && check.kind === "documents"
-    ? (await listLinks(ctx.tenant.companyCode)).filter(l => l.fromCheckId === check.checkId).length >= subjectIds.length && subjectIds.length > 0
-    : false
   const tabs = check ? roundTabs(rounds.map(r => r.round ?? 1), run.round ?? 1) : { shown: [], older: false }
   const delta = check && prevRound ? roundDelta(prevRound, run) : null
   const roundHref = (n: number) => n === (latestRun.round ?? 1) ? base : `${base}?round=${n}`
@@ -411,18 +406,10 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
           <h1 className="page-title">{title}</h1>
           <p className="quiet page-lead">{lead}</p>
         </div>
-        {/* Akcie kontroly (`toolbar`): Premenovať, Pevné väzby, plné „Nové kolo" — kým nič nebeží. */}
+        {/* Akcie kontroly (`toolbar`): Premenovať a plné „Nové kolo" — kým nič nebeží. */}
         {manageable && (
           <div className="page-tools">
             <Link className="button button--quiet" href={`${base}?rename=1`}>{t.rename}</Link>
-            {check!.kind === "documents" && !isRunning(latestRun) && (linked
-              ? <Link className="button button--quiet" href="/library/compliance#links">{t.ck.linksSavedShort}</Link>
-              : (
-                <form action={saveLinksAction}>
-                  <input type="hidden" name="runId" value={latestRun.runId} />
-                  <SubmitButton className="button button--quiet">{t.saveLinks}</SubmitButton>
-                </form>
-              ))}
             {!anyRunning && <Link className="button" href={`/library/compliance/confirm?check=${encodeURIComponent(check!.checkId)}`}>{t.ck.newRound}</Link>}
           </div>
         )}
