@@ -469,6 +469,12 @@ export interface ComplianceRun {
    */
   archivedAt?: Date | null
   archivedBy?: string | null
+  /**
+   * Kontrola, ktorej je beh kolom (ADR-036, D239), a poradie kola od 1.
+   * Behy spred D239 ich nemajú — sú zrušené a čitateľné v starom tvare.
+   */
+  checkId?: string | null
+  round?: number
 }
 
 export interface RunUsage {
@@ -574,7 +580,7 @@ export function isRunning(run: Pick<ComplianceRun, "pending" | "failures" | "sto
  * z ťažby histórie helpdesku (`helpdesk_questions`); do behu sa uložia ako
  * kópia.
  */
-export async function startHelpdeskReview(companyCode: string, channel: { key: string; name: string }, starter: RunStarter, name = "", now = new Date()): Promise<ComplianceRun> {
+export async function startHelpdeskReview(companyCode: string, channel: { key: string; name: string }, starter: RunStarter, name = "", now = new Date(), link?: RoundLink): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startHelpdeskReview")
   const questions = await questionsFor(code, channel.key)
   if (!questions.length) throw new ComplianceError("compliance.nothingToCheck", "Nie sú tu otázky na kontrolu.")
@@ -586,7 +592,7 @@ export async function startHelpdeskReview(companyCode: string, channel: { key: s
     .find({ companyCode: code, accessLevel: "public" }, { projection: { _id: 0, documentId: 1, category: 1 } }).toArray())
     .filter(d => documentRole(d.category as string | undefined, extras) === "guidance").map(d => String(d.documentId))
   if (!guidance.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
-  return startDocumentReview(code, guidance, [], starter, now, name, { channelKey: channel.key, channelName: channel.name, items })
+  return startDocumentReview(code, guidance, [], starter, now, name, { channelKey: channel.key, channelName: channel.name, items }, link)
 }
 
 /** Názov kontroly: jeden riadok, najviac 120 znakov; prázdny = podľa dátumu. */
@@ -622,7 +628,10 @@ async function hierarchyReferences(code: string, subjects: string[], extras: Ret
  * dokument nesmie byť zároveň referenčný; verejný sa kontroluje len
  * verejnými, interný akýmikoľvek.
  */
-export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date(), name = "", helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] }): Promise<ComplianceRun> {
+/** Kolo kontroly, ktorému beh patrí (ADR-036, D239). */
+export interface RoundLink { checkId: string; round: number }
+
+export async function startDocumentReview(companyCode: string, subjectIds: string[], documentIds: string[], starter: RunStarter, now = new Date(), name = "", helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] }, link?: RoundLink): Promise<ComplianceRun> {
   const code = requireCompanyCode(companyCode, "startDocumentReview")
   const subjects = [...new Set(subjectIds.filter(Boolean))]
   if (!subjects.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
@@ -649,6 +658,7 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   run.scopeKey = `documents:${run.runId}`
   const title = runTitle(name)
   if (title) run.name = title
+  if (link) { run.checkId = link.checkId; run.round = link.round }
   await (await runs()).insertOne(run)
   return run
 }
@@ -710,7 +720,7 @@ export function sameTask(run: Pick<ComplianceRun, "scope">, subjects: string[], 
   return (run.scope.helpdesk?.channelKey ?? null) === channelKey && key(run.scope.subjectIds) === key(subjects)
 }
 
-export async function previewRun(companyCode: string, input: { subjectIds: string[]; documentIds: string[]; channel?: { key: string; name: string } | null }): Promise<RunPreview> {
+export async function previewRun(companyCode: string, input: { subjectIds: string[]; documentIds: string[]; channel?: { key: string; name: string } | null; checkId?: string | null }): Promise<RunPreview> {
   const code = requireCompanyCode(companyCode, "previewRun")
   const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
   let subjectIds = [...new Set(input.subjectIds.filter(Boolean))]
@@ -729,8 +739,11 @@ export async function previewRun(companyCode: string, input: { subjectIds: strin
   const channelKey = input.channel?.key ?? null
   const same = (await (await runs()).find(
     { companyCode: code, "scope.kind": "documents", archivedAt: null },
-    { projection: { _id: 0, runId: 1, scope: 1, pending: 1, failures: 1, stoppedAt: 1, results: 1, usage: 1, startedAt: 1, finishedAt: 1 } },
-  ).sort({ startedAt: -1 }).limit(50).toArray()).filter(r => sameTask(r, subjectIds, channelKey))
+    { projection: { _id: 0, runId: 1, checkId: 1, scope: 1, pending: 1, failures: 1, stoppedAt: 1, results: 1, usage: 1, startedAt: 1, finishedAt: 1 } },
+  ).sort({ startedAt: -1 }).limit(50).toArray())
+    // Kolá tej istej kontroly (D239: zhoda `checkId` nahrádza zhodu zadania);
+    // nová kontrola ešte kolá nemá — beží len zhoda zadania (súbežný beh, D236).
+    .filter(r => input.checkId ? r.checkId === input.checkId : sameTask(r, subjectIds, channelKey))
   const running = same.find(r => isRunning(r))
   const last = same.find(r => !isRunning(r))
   const done = same.find(r => r.finishedAt && !r.stoppedAt && (r.usage?.usd ?? 0) > 0)
@@ -881,11 +894,12 @@ export function carryKept(findings: DocumentFinding[], kept: KeptDecision[]): Do
  * najnovšie rozhodnutie pre to isté miesto vyhráva. Prevzaté ponechanie sa
  * znova nepreberá zo seba samého — nesie odkaz na pôvodné.
  */
-export async function keptDecisions(companyCode: string, documentId: string, exceptRunId: string): Promise<KeptDecision[]> {
+export async function keptDecisions(companyCode: string, documentId: string, exceptRunId: string, checkId?: string | null): Promise<KeptDecision[]> {
   const code = requireCompanyCode(companyCode, "keptDecisions")
   const list = await (await runs()).find(
-    // Zrušená kontrola (ADR-036) sa nepočíta — začína sa nanovo.
-    { companyCode: code, "scope.kind": "documents", runId: { $ne: exceptRunId }, "results.documentId": documentId, archivedAt: null },
+    // Zrušená kontrola (ADR-036) sa nepočíta — začína sa nanovo. Ponechania sa
+    // prenášajú len medzi kolami tej istej kontroly (D239).
+    { companyCode: code, "scope.kind": "documents", runId: { $ne: exceptRunId }, "results.documentId": documentId, archivedAt: null, ...(checkId ? { checkId } : {}) },
     { projection: { _id: 0, runId: 1, startedAt: 1, results: 1 } },
   ).sort({ startedAt: -1 }).toArray()
   // Od najnovšieho behu: prvé rozhodnutie o mieste platí (aj prijatie), staršie sa preskočia.
@@ -970,7 +984,7 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
         // Dva dokumenty naraz, po jednom kroku: referenčný balík je v cache.
         const ids = pending.slice(0, DOC_PARALLEL)
         const subjects = await loadDocuments(code, ids)
-        const keptBy = new Map(await Promise.all(subjects.map(async d => [d.documentId, await keptDecisions(code, d.documentId, run.runId)] as const)))
+        const keptBy = new Map(await Promise.all(subjects.map(async d => [d.documentId, await keptDecisions(code, d.documentId, run.runId, run.checkId)] as const)))
         const items = subjects.map(d => ({ d, p: partials.find(p => p.documentId === d.documentId) ?? { documentId: d.documentId, step: 0, findings: [], summaries: [] } }))
         const stepped: DocumentPartial[] = []
         // Studený balík (v cache ešte nie je) ide najprv s jedným dokumentom;

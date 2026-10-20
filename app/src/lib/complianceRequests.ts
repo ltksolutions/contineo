@@ -50,6 +50,8 @@ export interface ComplianceLink {
   setAt: Date
   /** Beh, z ktorého sa väzba uložila. */
   fromRunId: string | null
+  /** Kontrola toho behu (ADR-036, D239) — požiadavka spustí jej ďalšie kolo (Q2). */
+  fromCheckId?: string | null
 }
 
 export interface ComplianceRequest {
@@ -87,7 +89,7 @@ export async function listLinks(companyCode: string): Promise<ComplianceLink[]> 
  * jej normám. Existujúca väzba toho istého dokumentu sa nahradí — platí
  * posledné rozhodnutie, nie súčet.
  */
-export async function setLinksFromRun(companyCode: string, run: { runId: string; scope: { kind: string; subjectIds?: string[] }; documentIds: string[]; results?: { documentId: string; title: string }[]; documents: { documentId: string; title: string }[] }, actor: string): Promise<number> {
+export async function setLinksFromRun(companyCode: string, run: { runId: string; checkId?: string | null; scope: { kind: string; subjectIds?: string[] }; documentIds: string[]; results?: { documentId: string; title: string }[]; documents: { documentId: string; title: string }[] }, actor: string): Promise<number> {
   const code = requireCompanyCode(companyCode, "setLinksFromRun")
   if (run.scope.kind !== "documents" || !run.scope.subjectIds?.length) throw new ComplianceRequestError("compliance.unknownRun", "Taká kontrola tu nie je.")
   const refTitles = run.documentIds.map(id => run.documents.find(d => d.documentId === id)?.title ?? id)
@@ -97,7 +99,7 @@ export async function setLinksFromRun(companyCode: string, run: { runId: string;
     const subjectTitle = run.results?.find(r => r.documentId === subjectId)?.title ?? subjectId
     await col.replaceOne(
       { companyCode: code, subjectId },
-      { companyCode: code, subjectId, subjectTitle, referenceIds: run.documentIds, referenceTitles: refTitles, setBy: actor, setAt: now, fromRunId: run.runId },
+      { companyCode: code, subjectId, subjectTitle, referenceIds: run.documentIds, referenceTitles: refTitles, setBy: actor, setAt: now, fromRunId: run.runId, fromCheckId: run.checkId ?? null },
       { upsert: true },
     )
   }

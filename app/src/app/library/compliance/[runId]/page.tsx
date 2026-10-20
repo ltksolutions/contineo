@@ -26,9 +26,11 @@ import CopyLink from "@/components/CopyLink"
 import TextEditor from "@/components/TextEditor"
 import { complianceViewContext, type ComplianceViewContext } from "@/lib/complianceAccess"
 import { isRunning, documentRun, draftBase, currentWording, suggestOnCurrent, runUsage, runModel, MAX_FAILURES, type DocumentFinding, type DocumentResult, type ComplianceRun } from "@/lib/complianceCheck"
+import { checkById, roundsOf } from "@/lib/complianceChecks"
+import { listLinks } from "@/lib/complianceRequests"
 import {
   defaultDocument, filterFindings, findingAnchor, findingState, isFindingView, nextOpen, openCount, orderedFindings, runProgress,
-  type FindingView,
+  roundDelta, roundTabs, roundState, type FindingView,
 } from "@/lib/complianceView"
 import { wordDiff, readableInline } from "@/lib/wordDiff"
 import { getCollection } from "@/lib/mongodb"
@@ -37,7 +39,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction, startHelpdeskReviewAction, stopRunAction, archiveRunAction } from "../../complianceActions"
+import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, stopRunAction, archiveRunAction } from "../../complianceActions"
 
 export const dynamic = "force-dynamic"
 
@@ -148,13 +150,38 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
     if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
   }
-  const { runId } = await params
-  const run = await documentRun(ctx.tenant.companyCode, decodeURIComponent(runId))
+  /*
+   * Adresa je kontrola (ADR-036, D239) alebo beh. Kolo kontroly na svojej
+   * adrese presmeruje na kontrolu s `?round=` (odkazy z upozornení a e-mailov
+   * platia ďalej); beh spred D239 bez kontroly sa ukáže v starom tvare, len
+   * na čítanie (zrušený 20. 10. 2026).
+   */
+  const { runId: idParam } = await params
+  const id = decodeURIComponent(idParam)
+  const sp = await searchParams
+  const check = await checkById(ctx.tenant.companyCode, id)
+  const rounds = check ? await roundsOf(ctx.tenant.companyCode, check.checkId) : []
+  if (check && !rounds.length) redirect(`/library/compliance/confirm?check=${encodeURIComponent(check.checkId)}`)
+  const wantRound = Number(Array.isArray(sp.round) ? sp.round[0] : sp.round)
+  const run = check ? (rounds.find(r => r.round === wantRound) ?? rounds[rounds.length - 1]) : await documentRun(ctx.tenant.companyCode, id)
   if (!run) notFound()
+  if (!check && run.checkId) {
+    const keep = new URLSearchParams()
+    for (const [k, v] of Object.entries(sp)) for (const x of Array.isArray(v) ? v : [v]) if (x !== undefined) keep.append(k, String(x))
+    keep.set("round", String(run.round ?? 1))
+    redirect(`/library/compliance/${encodeURIComponent(run.checkId)}?${keep.toString()}`)
+  }
+  const latestRun = check ? rounds[rounds.length - 1] : run
+  const isLatest = run.runId === latestRun.runId
+  // Rozhoduje sa len v poslednom kole nezrušenej kontroly (Q3); beh spred D239 je na čítanie.
+  const readOnly = !check || !isLatest || Boolean(check.archivedAt)
+  const canDecide = ctx.isReviewer && !readOnly
+  const roundOfRun = new Map(rounds.map(r => [r.runId, r.round ?? 1]))
+  const prevRound = check ? rounds[rounds.indexOf(run) - 1] ?? null : null
   // Meno, nie e-mail: beh nesie len adresu toho, kto ho spustil (kópia v čase spustenia).
   const starter = await (await getCollection<Person>(PERSONS_COLLECTION)).findOne({ companyCode: ctx.tenant.companyCode, email: run.startedBy }, { projection: { _id: 0, fullName: 1 } })
   const startedByName = starter?.fullName?.trim() || run.startedBy
-  const q = normalizeQuery<{ msg?: string; error?: string; doc?: string; view?: string; f?: string; change?: string; docs?: string }>(await searchParams)
+  const q = normalizeQuery<{ msg?: string; error?: string; doc?: string; view?: string; f?: string; change?: string; docs?: string; rounds?: string; rename?: string; cancel?: string; usage?: string }>(sp)
   const language: UiLanguage = ctx.person.language
   const dict = dictionary(language)
   const t = dict.library.compliance
@@ -179,7 +206,9 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   ]
   const metaSummary = [model, minutes === null ? null : t.duration(minutes), usage ? `${formatAmount(usage.usd, language)} USD` : null].filter(Boolean).join(" · ")
 
-  const base = `/library/compliance/${encodeURIComponent(run.runId)}`
+  const base = `/library/compliance/${encodeURIComponent(check?.checkId ?? run.runId)}`
+  // Staršie kolo nesie `?round=` vo všetkých odkazoch; posledné je predvolené.
+  const roundQuery = check && !isLatest ? `round=${run.round ?? 1}` : ""
   const results = run.results ?? []
   const progress = runProgress(run)
   const view: FindingView = isFindingView(q.view) ? q.view : "open"
@@ -200,6 +229,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
     if (o.f) p.set("f", o.f)
     if (o.change) p.set("change", "1")
     if (o.docs) p.set("docs", "1")
+    if (roundQuery) p.set("round", String(run.round ?? 1))
     const s = p.toString()
     return `${base}${s ? `?${s}` : ""}${anchor ? `#${anchor}` : ""}`
   }
@@ -229,11 +259,15 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
     </div>
   )
 
+  // Nález nový v tomto kole (bez prenesenia) — od kola 2 (návrh, „Nový v kole n").
+  const newTag = (f: DocumentFinding) => check && (run.round ?? 1) > 1 && !f.carriedFrom
+    ? <span className="tag tag--review">{t.ck.newInRound(run.round ?? 1)}</span> : null
+
   const findingCard = (res: DocumentResult, f: DocumentFinding) => {
     const anchor = findingAnchor(res.documentId, f.id)
     const state = findingState(f)
     const isOpen = q.f === f.id && res.documentId === selected?.documentId
-    const editing = isOpen && (state === "open" || q.change === "1") && ctx.isReviewer
+    const editing = isOpen && (state === "open" || q.change === "1") && canDecide
     if (editing) {
       const next = nextOpen(results, res.documentId, f.id)
       const nextFinding = next ? results.find(r => r.documentId === next.documentId)?.findings.find(x => x.id === next.findingId) : null
@@ -244,6 +278,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
         <article key={f.id} id={anchor} className="card cf is-open">
           <div className="cf-head">
             <KindTag t={t} f={f} />
+            {newTag(f)}
             <b>{f.location}</b>
             <Link href={href({ doc: res.documentId, view }, anchor)}>{t.collapse}</Link>
           </div>
@@ -262,19 +297,20 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
         <div key={f.id} id={anchor} className="card cf-row">
           <KindTag t={t} f={f} />
           <span className="cf-loc">{f.location}</span>
-          {ctx.isReviewer && <Link className="button button--quiet button--sm" href={href({ doc: res.documentId, view, f: f.id }, anchor)}>{t.decide}</Link>}
+          {newTag(f)}
+          {canDecide && <Link className="button button--quiet button--sm" href={href({ doc: res.documentId, view, f: f.id }, anchor)}>{t.decide}</Link>}
         </div>
       )
     }
     const who = t.decidedWhoWhen(f.decidedBy ?? "—", f.decidedAt ? formatDate(f.decidedAt, language) : "—")
     const openDraft = <Link className="button button--quiet" href={`/library/${encodeURIComponent(res.documentId)}/text`}>{t.openDraft}</Link>
-    const changeLink = ctx.isReviewer && <Link className="button button--quiet" href={href({ doc: res.documentId, view, f: f.id, change: true }, anchor)}>{t.changeDecision}</Link>
+    const changeLink = canDecide && <Link className="button button--quiet" href={href({ doc: res.documentId, view, f: f.id, change: true }, anchor)}>{t.changeDecision}</Link>
     const accepted = f.acceptedText ?? f.proposed ?? f.quote
     return (
       <article key={f.id} id={anchor} className="card cf">
-        <div className="cf-head"><KindTag t={t} f={f} /><b>{f.location}</b></div>
+        <div className="cf-head"><KindTag t={t} f={f} />{newTag(f)}<b>{f.location}</b></div>
         {state === "draft" && <StateNote t={t} f={f} cls="" mark="✓" title={t.stateDraft} who={who} />}
-        {state === "kept" && <StateNote t={t} f={f} cls="lnote--info" mark="–" title={t.stateKept} who={who} note={f.carriedFrom ? t.carriedNote : undefined} />}
+        {state === "kept" && <StateNote t={t} f={f} cls="lnote--info" mark="–" title={t.stateKept} who={who} note={f.carriedFrom ? (roundOfRun.has(f.carriedFrom.runId) ? t.ck.carriedFrom(roundOfRun.get(f.carriedFrom.runId)!) : t.carriedNote) : undefined} />}
         {state === "pending" && (
           <StateNote t={t} f={f} cls="lnote--warn" mark="!" title={t.stateWaiting}
                      who={t.acceptedBy(f.decidedBy ?? "—", f.decidedAt ? formatDate(f.decidedAt, language) : "—")} note={t.waitingNote} />
@@ -292,7 +328,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
           </label>
         )}
         <div className="cf-acts">
-          {state === "pending" && (ctx.canEditDrafts ? (
+          {state === "pending" && (ctx.canEditDrafts && !readOnly ? (
             <form action={applyFindingAction}>
               <input type="hidden" name="runId" value={run.runId} />
               <input type="hidden" name="documentId" value={res.documentId} />
@@ -349,96 +385,171 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
     </div>
   )
 
+  /* ── Kontrola a kolá (KNIZ-kontroly-a-kola, 20. 10. 2026) ─────────────── */
+  const title = check ? (check.name || t.runDefaultName(formatDate(check.createdAt, language))) : run.name || t.runDefaultName(when)
+  const lead = check
+    ? `${check.kind === "helpdesk" ? t.ck.kindHelpdesk : t.ck.kindDocuments} · ${check.kind === "helpdesk"
+        ? t.ck.scopeHelpdesk(helpdesk?.items.length ?? 0, check.channelName ?? "", subjectIds.length)
+        : t.ck.scopeDocs(subjectIds.length, run.documentIds.length)}`
+    : t.runScope(subjectIds.length || run.total, run.documents.length, startedByName, when)
+  const anyRunning = rounds.some(r => isRunning(r))
+  const manageable = Boolean(check && ctx.isReviewer && !check.archivedAt)
+  // Pevné väzby z tejto kontroly už sú pri všetkých jej dokumentoch → len odkaz.
+  const linked = check && check.kind === "documents"
+    ? (await listLinks(ctx.tenant.companyCode)).filter(l => l.fromCheckId === check.checkId).length >= subjectIds.length && subjectIds.length > 0
+    : false
+  const tabs = check ? roundTabs(rounds.map(r => r.round ?? 1), run.round ?? 1) : { shown: [], older: false }
+  const delta = check && prevRound ? roundDelta(prevRound, run) : null
+  const roundHref = (n: number) => n === (latestRun.round ?? 1) ? base : `${base}?round=${n}`
+  const state = roundState(run).state
+
   return (
-    <AppShell language={language} title={run.name || t.runDefaultName(when)} trail={ctx.isReviewer ? { "/library": dict.library.list.heading, "/library/compliance": t.heading } : { "/library": dict.library.list.heading }}>
+    <AppShell language={language} title={title} trail={ctx.isReviewer ? { "/library": dict.library.list.heading, "/library/compliance": t.heading } : { "/library": dict.library.list.heading }}>
     <div className="cf-page" style={tenantStyle(branding)}>
       <div className="page-head">
         <div className="page-head-main">
-          <h1 className="page-title">{run.name || t.runDefaultName(when)}</h1>
-          <p className="quiet page-lead">{t.runScope(subjectIds.length || run.total, run.documents.length, startedByName, when)}</p>
-          {/* Premenovanie (Ján 11. 10. 2026) — názov sa dal zadať len pri spustení. */}
-          {ctx.isReviewer && (
-            <details className="cf-rename">
-              <summary>{t.rename}</summary>
-              <form action={renameRunAction} className="cf-rename-form">
-                <input type="hidden" name="runId" value={run.runId} />
-                <label className="field" style={{ margin: 0 }}>
-                  <span className="field-label">{t.nameLabel}</span>
-                  <input className="field-input" name="name" defaultValue={run.name ?? ""} maxLength={120} placeholder={t.runDefaultName(when)} />
-                  <span className="quiet field-hint">{t.nameHint}</span>
-                </label>
-                <div><SubmitButton className="button button--quiet">{t.saveName}</SubmitButton></div>
-              </form>
-            </details>
-          )}
+          <h1 className="page-title">{title}</h1>
+          <p className="quiet page-lead">{lead}</p>
         </div>
-        {/* „Spustiť znova" až po dobehnutí — počas behu by zdvojil prácu (Ján 11. 10. 2026). */}
-        {/* Návrhy z helpdesku (ADR-034, D221) sa spúšťajú znova ako návrhy z helpdesku — s aktuálnymi otázkami kanála. */}
-        {/* Omylom spustené kolo sa nemusí dobehnúť a zaplatiť (ADR-036). */}
-        {ctx.isReviewer && isRunning(run) && (
-          <form action={stopRunAction} className="page-tools">
-            <input type="hidden" name="runId" value={run.runId} />
-            <SubmitButton className="button button--quiet">{t.stopRun}</SubmitButton>
-          </form>
-        )}
-        {ctx.isReviewer && helpdesk && !isRunning(run) && !run.archivedAt && (
-          <form action={startHelpdeskReviewAction} className="page-tools">
-            <input type="hidden" name="channelKey" value={helpdesk.channelKey} />
-            {run.name && <input type="hidden" name="name" value={run.name} />}
-            <SubmitButton className="button button--quiet">{t.runAgain}</SubmitButton>
-          </form>
-        )}
-        {ctx.isReviewer && subjectIds.length > 0 && !helpdesk && !isRunning(run) && !run.archivedAt && (
-          <form action={startDocumentReviewAction} className="page-tools">
-            {subjectIds.map(id => <input key={id} type="hidden" name="subjectIds" value={id} />)}
-            {run.documentIds.map(id => <input key={id} type="hidden" name="documentIds" value={id} />)}
-            {run.name && <input type="hidden" name="name" value={run.name} />}
-            <SubmitButton className="button button--quiet">{t.runAgain}</SubmitButton>
-          </form>
-        )}
-        {/* Pevné väzby (D197): pri novom znení niektorej normy vznikne požiadavka na kontrolu (D200). */}
-        {ctx.isReviewer && subjectIds.length > 0 && !helpdesk && run.pending.length === 0 && (
-          <form action={saveLinksAction} className="page-tools">
-            <input type="hidden" name="runId" value={run.runId} />
-            <SubmitButton className="button button--quiet">{t.saveLinks}</SubmitButton>
-          </form>
+        {/* Akcie kontroly (`toolbar`): Premenovať, Pevné väzby, plné „Nové kolo" — kým nič nebeží. */}
+        {manageable && (
+          <div className="page-tools">
+            <Link className="button button--quiet" href={`${base}?rename=1`}>{t.rename}</Link>
+            {check!.kind === "documents" && !isRunning(latestRun) && (linked
+              ? <Link className="button button--quiet" href="/library/compliance#links">{t.ck.linksSavedShort}</Link>
+              : (
+                <form action={saveLinksAction}>
+                  <input type="hidden" name="runId" value={latestRun.runId} />
+                  <SubmitButton className="button button--quiet">{t.saveLinks}</SubmitButton>
+                </form>
+              ))}
+            {!anyRunning && <Link className="button" href={`/library/compliance/confirm?check=${encodeURIComponent(check!.checkId)}`}>{t.ck.newRound}</Link>}
+          </div>
         )}
       </div>
+      {manageable && q.rename === "1" && (
+        <form action={renameRunAction} className="card task-card ck-rename">
+          <input type="hidden" name="checkId" value={check!.checkId} />
+          <label className="field" style={{ margin: 0 }}>
+            <span className="field-label">{t.nameLabel}</span>
+            <input className="field-input" name="name" defaultValue={check!.name} maxLength={120} placeholder={t.runDefaultName(formatDate(check!.createdAt, language))} />
+            <span className="quiet field-hint">{t.nameHint}</span>
+          </label>
+          <div className="task-acts">
+            <SubmitButton className="button button--quiet">{t.saveName}</SubmitButton>
+            <Link href={base}>{t.ck.cancel}</Link>
+          </div>
+        </form>
+      )}
       <Notice message={q.msg} error={q.error === "1"} back={href({ doc: q.doc, view, f: q.f })} language={language} />
-      {run.archivedAt && (
+      {(check?.archivedAt ?? (!check ? run.archivedAt : null)) && (
         <div className="lnote lnote--warn" style={{ marginBottom: 12 }}>
           <span className="lnote-mark" aria-hidden="true">!</span>
-          <div className="lnote-text">{t.archivedBanner(formatDate(run.archivedAt, language), run.archivedBy ?? "")}</div>
+          <div className="lnote-text">{t.archivedBanner(formatDate((check?.archivedAt ?? run.archivedAt)!, language), (check?.archivedBy ?? run.archivedBy) ?? "")}</div>
+        </div>
+      )}
+      {!check && (
+        <div className="lnote lnote--info" style={{ marginBottom: 12 }}>
+          <span className="lnote-mark" aria-hidden="true">i</span>
+          <div className="lnote-text">{t.ck.legacyReadOnly}</div>
         </div>
       )}
 
+      {/* Kolá (Q1, `Picker(.segmented)`): posledné predvolené, staršie cez `?round=`. */}
+      {check && (
+        <div className="ck-rounds">
+          {rounds.length > 1 && (
+            <nav className="view-switch" aria-label={t.ck.roundsLabel}>
+              {tabs.shown.map(n => (
+                <Link key={n} className={`view-switch-item${n === (run.round ?? 1) && q.rounds !== "all" ? " is-on" : ""}`} href={roundHref(n)}
+                      aria-current={n === (run.round ?? 1) ? "page" : undefined}>{t.ck.roundN(n)}</Link>
+              ))}
+              {tabs.older && <Link className={`view-switch-item${q.rounds === "all" ? " is-on" : ""}`} href={`${base}?rounds=all`}>{t.ck.olderRounds}</Link>}
+            </nav>
+          )}
+          <span className="quiet">{rounds.length === 1 && `${t.ck.roundN(run.round ?? 1)} · `}{t.ck.roundMeta(when, startedByName)}</span>
+        </div>
+      )}
+      {check && q.rounds === "all" && (
+        <div className="card form-group-body form-group-body--rows ck-all-rounds">
+          <div className="form-list">
+            {[...rounds].reverse().map(r => (
+              <Link key={r.runId} className="form-row" href={roundHref(r.round ?? 1)}>
+                <span className="form-row-main">
+                  <b>{t.ck.roundN(r.round ?? 1)}</b>
+                  <span className="form-row-sub">{formatDate(r.startedAt, language)} · {t.ck.roundStates[roundState(r).state]}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+      {check && !isLatest && (
+        <div className="lnote lnote--info" style={{ marginBottom: 12 }}>
+          <span className="lnote-mark" aria-hidden="true">i</span>
+          <div className="lnote-text"><b>{t.ck.olderReadOnly}</b> <Link href={base}>{t.ck.goToLatest(latestRun.round ?? 1)}</Link></div>
+        </div>
+      )}
+
+      {/* Pás priebehu kola. */}
       <section className="card cf-prog">
         <div className="cf-prog-body">
           {running ? (
             <>
-              <div className="cf-prog-top"><b className={stopped ? "bad-fg" : undefined}>{stopped ? t.stopped : t.progress(run.total - run.pending.length, run.total)}</b></div>
+              <div className="cf-prog-top">
+                <b className={stopped ? "bad-fg" : undefined}>{stopped ? t.stopped : t.progress(run.total - run.pending.length, run.total)}</b>
+                {metaSummary && <span className="quiet">{metaSummary}</span>}
+              </div>
               <div className="cf-bar" role="progressbar" aria-valuemin={0} aria-valuemax={run.total} aria-valuenow={run.total - run.pending.length}>
                 <i style={{ width: `${run.total ? ((run.total - run.pending.length) / run.total) * 100 : 0}%` }} />
               </div>
+              {!stopped && <p className="quiet" style={{ margin: 0 }}>{t.ck.runningNote}</p>}
+              {/* Omylom spustené kolo sa nemusí dobehnúť a zaplatiť (ADR-036, D237). */}
+              {ctx.isReviewer && isRunning(run) && (
+                <form action={stopRunAction}>
+                  <input type="hidden" name="runId" value={run.runId} />
+                  <SubmitButton className="button button--quiet">{t.stopRun}</SubmitButton>
+                </form>
+              )}
             </>
           ) : (
             <>
-              <div className="cf-prog-top"><b>{t.decidedOf(progress.decided, progress.total)}</b>{progress.total > progress.decided && <span className="quiet">{t.remaining(progress.total - progress.decided)}</span>}{run.stoppedAt && <span className="tag tag--warn">{t.stoppedNote(formatDate(run.stoppedAt, language))}</span>}</div>
+              <div className="cf-prog-top">
+                <b>{t.decidedOf(progress.decided, progress.total)}</b>
+                {progress.total > progress.decided && <span className="quiet">{t.remaining(progress.total - progress.decided)}</span>}
+                {run.stoppedAt && <span className="tag tag--warn">{t.stoppedNote(formatDate(run.stoppedAt, language))}</span>}
+                {metaSummary && <span className="quiet ck-usage">{metaSummary}</span>}
+              </div>
               <div className="cf-bar" role="progressbar" aria-valuemin={0} aria-valuemax={progress.total} aria-valuenow={progress.decided}>
                 <i style={{ width: `${progress.total ? (progress.decided / progress.total) * 100 : 0}%` }} />
               </div>
             </>
+          )}
+          {state === "failed" && (
+            <div className="lnote lnote--bad">
+              <span className="lnote-mark" aria-hidden="true">✕</span>
+              <div className="lnote-text">{t.ck.failedNote}{run.error && <small>{run.error}</small>}</div>
+            </div>
           )}
           {progress.byKind.length > 0 && (
             <div className="cf-kinds">
               {progress.byKind.map(k => <span key={k.kind} className={k.kind === "conflict" ? "tag tag--warn" : "tag"}>{t.kindsShort[k.kind]} {k.count}</span>)}
             </div>
           )}
+          <Link className="ck-usage-toggle" href={q.usage === "1" ? href({ doc: q.doc, view }) : `${href({ doc: q.doc, view })}${href({ doc: q.doc, view }).includes("?") ? "&" : "?"}usage=1`}>
+            {q.usage === "1" ? t.ck.usageLess : t.ck.usageMore}
+          </Link>
+          {q.usage === "1" && <div className="ck-usage-rows">{meta.map(([k, v]) => <div key={k} className="labeled-row"><span>{k}</span><span>{v}</span></div>)}</div>}
         </div>
-        <details className="cf-meta">
-          <summary><span className="quiet">{t.metaHeading}</span>{metaSummary && <span>{metaSummary}</span>}</summary>
-          {meta.map(([k, v]) => <div key={k} className="labeled-row"><span>{k}</span><span>{v}</span></div>)}
-        </details>
+        {/* Zmena oproti predošlému kolu (od kola 2) — odvodená z prenesených ponechaní a prijatí. */}
+        {delta && prevRound && !running && (
+          <div className="delta">
+            <span><b>{t.ck.deltaNew(delta.fresh)}</b></span>
+            {delta.carried > 0 && <span>{t.ck.deltaCarried(delta.carried)}</span>}
+            {delta.gone > 0 && <span>{t.ck.deltaGone(delta.gone, prevRound.round ?? 1)}</span>}
+            {delta.fresh > 0 && <Link href={href({ doc: q.doc, view: "new" })}>{t.ck.showNew}</Link>}
+          </div>
+        )}
       </section>
 
       {results.length > 0 && (
@@ -466,16 +577,36 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
         </div>
       )}
 
-      {/* Zrušenie kontroly (ADR-036) — na konci, za rozbaľovacím blokom: nie je to bežná akcia. */}
-      {ctx.isReviewer && !run.archivedAt && (
-        <details className="cf-rename" style={{ marginTop: 24 }}>
-          <summary>{t.archiveRun}</summary>
-          <form action={archiveRunAction} className="cf-rename-form">
-            <input type="hidden" name="runId" value={run.runId} />
-            <p className="quiet" style={{ margin: 0 }}>{t.archiveNote}</p>
-            <div><SubmitButton className="button button--quiet">{t.archiveConfirm}</SubmitButton></div>
-          </form>
-        </details>
+      {/* Ďalšie akcie: Zrušiť kontrolu (D238) — na konci, potvrdenie v adrese (`confirmationDialog`). */}
+      {manageable && (
+        <section className="card more ck-more" id="more">
+          <div className="more-head"><h2>{dict.common.moreActions}</h2></div>
+          <div className="more-row">
+            <div className="more-main">
+              <b>{t.ck.cancelCheck}</b>
+              <span>{t.ck.cancelCheckNote}</span>
+            </div>
+            {q.cancel !== "1" && <Link className="button button--danger" href={`${base}?cancel=1#more`}>{t.ck.cancelCheck}</Link>}
+          </div>
+          {q.cancel === "1" && (
+            <form action={archiveRunAction} className="more-confirm">
+              <input type="hidden" name="checkId" value={check!.checkId} />
+              <h3>{t.ck.cancelTitle(title)}</h3>
+              <ul className="ck-effects">
+                {t.ck.cancelEffects.map(e => <li key={e}>{e}</li>)}
+                {anyRunning && <li>{t.ck.cancelRunning}</li>}
+              </ul>
+              <label className="field" style={{ margin: 0 }}>
+                <span className="field-label">{t.ck.cancelReason}</span>
+                <textarea className="field-input" name="reason" rows={2} maxLength={1000} />
+              </label>
+              <div className="more-acts">
+                <SubmitButton className="button button--danger">{t.ck.cancelCheck}</SubmitButton>
+                <Link className="button button--quiet" href={`${base}#more`}>{t.ck.keep}</Link>
+              </div>
+            </form>
+          )}
+        </section>
       )}
     </div>
     </AppShell>

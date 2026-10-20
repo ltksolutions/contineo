@@ -8795,6 +8795,71 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 .cf-prog-top { display: flex; gap: 6px 16px; align-items: baseline; flex-wrap: wrap; }
 .cf-prog-top b { font-size: var(--fs-section); font-weight: 650; }
 .cf-prog-top .quiet { font-size: var(--fs-small); }
+
+/* ── Kontroly a kolá (KNIZ-kontroly-a-kola, 20. 10. 2026; ADR-036 D239) ────
+   Zoznam: sekcie `.grp` (Na rozhodnutie / Uzavreté) s kartami `.ck` — celá
+   karta je odkaz. Stav nesie ikona aj slovo, nie len farba. */
+.ck-page { display: grid; gap: 18px; }
+.ck-page > .page-head { margin: 0; }
+.grp { display: grid; gap: 10px; }
+.grp-h { display: grid; gap: 2px; }
+.grp-h h2 { margin: 0; }
+.grp-h p { margin: 0; font-size: var(--fs-small); color: var(--muted); }
+.ck-list { display: grid; padding: 0; overflow: hidden; }
+.ck-list > .ck + .ck { border-top: 1px solid var(--line); }
+.ck {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center;
+  min-height: 44px; padding: 14px 10px 14px 14px; text-decoration: none; color: var(--ink);
+}
+.ck:hover { background: var(--surface-2); }
+.ck:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ck.is-open { background: linear-gradient(90deg, var(--warn-bg), transparent 60%); }
+.ck-ico {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 13px; font-weight: 800; line-height: 1; grid-row: span 2; align-self: start;
+}
+.ck-ico.open { background: var(--warn-bg); color: var(--warn-fg); box-shadow: inset 0 0 0 1.5px var(--warn-fg); }
+.ck-ico.run { box-shadow: inset 0 0 0 2px var(--accent); color: var(--accent); font-size: 11px; }
+.ck-ico.done { background: var(--ok-fg); color: var(--surface); }
+.ck-ico.bad { background: var(--bad-fg); color: var(--surface); }
+.ck-t { display: flex; gap: 6px 10px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.ck-t b { font-size: 16px; font-weight: 650; overflow-wrap: anywhere; }
+.ck.is-done .ck-t b { font-weight: 600; }
+.ck-s { grid-column: 2; display: grid; gap: 2px; font-size: var(--fs-small); color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.ck-s .st { color: var(--ink); font-size: 14px; }
+.ck-s .st b { color: var(--warn-fg); }
+.ck-r { grid-row: 1 / span 2; grid-column: 3; display: flex; align-items: center; gap: 10px; }
+.ck-chev { color: var(--muted); font-size: 20px; }
+.ck-req { display: grid; gap: 8px; }
+.ck-dismiss { display: grid; gap: 10px; padding-top: 6px; border-top: 1px solid var(--line); }
+.ck-links-intro { margin: 0; padding: 0 22px 8px; font-size: var(--fs-small); }
+/* Nová kontrola: kanály pod druhom helpdesk. */
+.ck-channels { display: grid; gap: 8px; padding: 0 16px 14px; }
+.ck-channel { display: grid; gap: 6px; }
+.ck-channel-row { display: flex; gap: 10px; align-items: center; min-height: 44px; cursor: pointer; }
+.ck-channel-row input { width: 18px; height: 18px; flex: 0 0 auto; }
+.ck-channel .lnote-text small { display: block; }
+.ck-new-foot { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+/* Detail: kolá, údaje o kole, zmena oproti predošlému kolu. */
+.ck-rounds { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 0 0 12px; }
+.ck-rounds .quiet { font-size: var(--fs-small); }
+.ck-all-rounds { margin: 0 0 12px; }
+.ck-rename { display: grid; gap: 10px; margin: 0 0 12px; }
+.ck-usage { margin-left: auto; }
+.ck-usage-toggle { font-size: var(--fs-small); justify-self: start; }
+.ck-usage-rows { border-top: 1px solid var(--line); }
+.delta { display: flex; gap: 10px 18px; flex-wrap: wrap; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); font-size: 14px; }
+.delta b { font-weight: 650; }
+.delta a { min-height: 36px; display: inline-flex; align-items: center; }
+.ck-more { margin-top: 24px; }
+.ck-effects { margin: 0; padding-left: 20px; font-size: 13.5px; display: grid; gap: 2px; }
+@media (max-width: 639px) {
+  .ck-page .page-tools { width: 100%; }
+  .ck-page .page-tools .button { flex: 1 1 auto; justify-content: center; }
+  .ck-rounds .view-switch { width: 100%; }
+  .ck-usage { margin-left: 0; }
+  .delta { padding: 12px 14px; }
+}
 .cf-bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .cf-bar i { display: block; height: 100%; background: var(--ok-fg); border-radius: 999px; }
 .cf-kinds { display: flex; gap: 6px; flex-wrap: wrap; }

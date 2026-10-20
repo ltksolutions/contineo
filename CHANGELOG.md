@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola súladu: kontroly a kolá (2026-10-20, KNIZ-kontroly-a-kola, D239)
+
+- **Zoznam** má jednu kartu na kontrolu, nie na beh: sekcie „Na rozhodnutie"
+  a „Uzavreté", pri každej stav posledného kola, počet kôl a kto a kedy.
+  Požiadavky na kontrolu hore spustia ďalšie kolo kontroly, z ktorej väzba
+  vznikla. Jediné plné tlačidlo je „Nová kontrola".
+- **Nová kontrola** (`/library/compliance/new`) je jeden vstup pre súlad
+  dokumentov aj návrhy z helpdesku; pri kanáli, ktorý už kontrolu má,
+  ponúkne nové kolo v nej. Pokračuje na rekapituláciu.
+- **Detail kontroly** prepína kolá (`?round=`), staršie kolá sú len na
+  čítanie, ukáže zmenu oproti predošlému kolu (nové nálezy, prenesené
+  ponechania, prijaté v predošlom) a štítok „Nový v kole n". Premenovať,
+  Uložiť ako pevné väzby, Nové kolo, Zastaviť kolo a Zrušiť kontrolu
+  s potvrdením.
+- Kontrola je nový záznam `compliance_checks`; staré behy ostávajú zrušené
+  a čitateľné na svojej adrese.
+
 ### Editor textu: strážca zápisu a Markdown pre platné znenie (2026-10-17, #396, #397)
 
 - Keď editor pri uložení zmení len značky Markdownu v riadkoch, ktoré

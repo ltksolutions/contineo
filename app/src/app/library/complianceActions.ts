@@ -15,11 +15,12 @@ import { complianceContext, complianceViewContext } from "@/lib/complianceAccess
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
-import { renameRun, startDocumentReview, startHelpdeskReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun, stopRun, archiveRun } from "@/lib/complianceCheck"
+import { decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun, stopRun } from "@/lib/complianceCheck"
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
 import { parseNextFinding } from "@/lib/complianceView"
 import { listChannels } from "@/lib/channels"
-import { setLinksFromRun, removeLink, dismissRequest, markRequestStarted } from "@/lib/complianceRequests"
+import { setLinksFromRun, removeLink, dismissRequest, markRequestStarted, requestById } from "@/lib/complianceRequests"
+import { createCheck, startCheckRound, renameCheck, archiveCheck, roundsOf } from "@/lib/complianceChecks"
 
 const PAGE = "/library/compliance"
 
@@ -63,53 +64,79 @@ function failure(e: unknown, language: string): string {
  */
 function toConfirm(fd: FormData, kind: "documents" | "helpdesk"): never {
   const q = new URLSearchParams({ kind })
-  for (const key of ["name", "requestId", "channelKey"]) { const v = fieldText(fd, key); if (v) q.set(key, v) }
+  for (const key of ["name", "requestId", "channelKey", "checkId"]) { const v = fieldText(fd, key); if (v) q.set(key === "checkId" ? "check" : key, v) }
   for (const key of ["subjectIds", "documentIds"]) for (const v of fd.getAll(key)) if (String(v).trim()) q.append(key, String(v).trim())
   redirect(`${PAGE}/confirm?${q.toString()}`)
 }
 
-export async function startDocumentReviewAction(fd: FormData) {
-  const ctx = await ready()
-  if (fieldText(fd, "confirmed") !== "1") toConfirm(fd, "documents")
-  let runId = ""
-  try {
-    // „Spustiť znova" na detaile posiela ten istý výber aj názov (Q4).
-    const run = await startDocumentReview(ctx.person.companyCode, fd.getAll("subjectIds").map(String), fd.getAll("documentIds").map(String), { email: ctx.person.email, personId: ctx.person.id }, new Date(), fieldText(fd, "name"))
-    runId = run.runId
-    // Spustené z požiadavky na kontrolu (D200) — požiadavka sa uzavrie s odkazom na beh.
-    const requestId = fieldText(fd, "requestId")
-    if (requestId) await markRequestStarted(ctx.person.companyCode, requestId, run.runId, ctx.person.email)
-    const origin = originFromHeaders(await headers())
-    after(() => kick(origin, "/api/cron/compliance"))
-  } catch (e) {
-    if (isRedirect(e)) throw e
-    back(PAGE, failure(e, ctx.language), true)
-  }
-  back(`${PAGE}/${runId}`, ctx.t.started)
+/**
+ * Adresa behu: kolo kontroly je na adrese kontroly (ADR-036, D239), beh
+ * spred D239 na svojej. Rozhoduje sa len v poslednom kole, takže kolo sa do
+ * adresy nedáva.
+ */
+async function runPath(companyCode: string, runId: string): Promise<string> {
+  const run = await documentRun(companyCode, runId)
+  return `${PAGE}/${encodeURIComponent(run?.checkId ?? runId)}`
 }
 
 /**
- * Návrhy na doplnenie manuálov z otázok helpdesku kanála (ADR-034, D221).
- * Aj „Spustiť znova" na detaile takého behu prichádza sem.
+ * Spustenie kola po rekapitulácii (ADR-036). S `checkId` je to ďalšie kolo
+ * existujúcej kontroly (aj z požiadavky na kontrolu, Q2), bez neho nová
+ * kontrola a jej prvé kolo.
  */
-export async function startHelpdeskReviewAction(fd: FormData) {
+async function startRound(fd: FormData, kind: "documents" | "helpdesk") {
   const ctx = await ready()
-  if (fieldText(fd, "confirmed") !== "1") toConfirm(fd, "helpdesk")
+  if (fieldText(fd, "confirmed") !== "1") toConfirm(fd, kind)
+  let checkId = fieldText(fd, "checkId")
   let runId = ""
   try {
-    const key = fieldText(fd, "channelKey")
-    const channel = (await listChannels(ctx.person.companyCode)).find(c => c.key === key)
-    if (!channel) throw new AppError("channel.notFound", "Taký kanál tu nie je.")
-    const run = await startHelpdeskReview(ctx.person.companyCode, { key: channel.key, name: channel.name }, { email: ctx.person.email, personId: ctx.person.id },
-      fieldText(fd, "name") || ctx.t.helpdeskRunName(channel.name))
-    runId = run.runId
+    const starter = { email: ctx.person.email, personId: ctx.person.id }
+    const requestId = fieldText(fd, "requestId")
+    const request = requestId ? await requestById(ctx.person.companyCode, requestId) : null
+    if (!checkId) {
+      let channel: { key: string; name: string } | null = null
+      if (kind === "helpdesk") {
+        const key = fieldText(fd, "channelKey")
+        const found = (await listChannels(ctx.person.companyCode)).find(c => c.key === key)
+        if (!found) throw new AppError("channel.notFound", "Taký kanál tu nie je.")
+        channel = { key: found.key, name: found.name }
+      }
+      const check = await createCheck(ctx.person.companyCode, {
+        kind, channel,
+        name: fieldText(fd, "name") || (channel ? ctx.t.helpdeskRunName(channel.name) : ""),
+        subjectIds: kind === "helpdesk" ? [] : fd.getAll("subjectIds").map(String),
+        referenceIds: kind === "helpdesk" ? [] : fd.getAll("documentIds").map(String),
+      }, ctx.person.email)
+      checkId = check.checkId
+      try {
+        runId = (await startCheckRound(ctx.person.companyCode, checkId, starter)).runId
+      } catch (e) {
+        // Prvé kolo sa nespustilo — prázdna kontrola v zozname by mýlila.
+        await archiveCheck(ctx.person.companyCode, checkId, ctx.person.email, "Prvé kolo sa nespustilo.").catch(() => {})
+        throw e
+      }
+    } else {
+      // Požiadavka nesie normy aj s novým znením (D200) — majú prednosť pred uloženými.
+      runId = (await startCheckRound(ctx.person.companyCode, checkId, starter, { referenceIds: request?.referenceIds ?? fd.getAll("documentIds").map(String) })).runId
+    }
+    // Spustené z požiadavky na kontrolu (D200) — požiadavka sa uzavrie s odkazom na kolo.
+    if (requestId) await markRequestStarted(ctx.person.companyCode, requestId, runId, ctx.person.email)
     const origin = originFromHeaders(await headers())
     after(() => kick(origin, "/api/cron/compliance"))
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(PAGE, failure(e, ctx.language), true)
+    back(checkId ? `${PAGE}/${encodeURIComponent(checkId)}` : PAGE, failure(e, ctx.language), true)
   }
-  back(`${PAGE}/${runId}`, ctx.t.started)
+  back(`${PAGE}/${encodeURIComponent(checkId)}`, ctx.t.started)
+}
+
+export async function startDocumentReviewAction(fd: FormData) {
+  await startRound(fd, "documents")
+}
+
+/** Návrhy na doplnenie manuálov z otázok helpdesku kanála (ADR-034, D221) — druh kontroly. */
+export async function startHelpdeskReviewAction(fd: FormData) {
+  await startRound(fd, "helpdesk")
 }
 
 export async function decideFindingAction(fd: FormData) {
@@ -119,10 +146,15 @@ export async function decideFindingAction(fd: FormData) {
   const findingId = fieldText(fd, "findingId")
   const decision = fieldText(fd, "decision") === "kept" ? "kept" : "accepted"
   const anchor = `${documentId}-${findingId}`
-  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  const path = await runPath(ctx.person.companyCode, runId)
   const keep = viewOf(fd, documentId)
   let message = ""
   try {
+    // Rozhoduje sa len v poslednom kole kontroly (Q3) a nie v behu spred D239.
+    const current = await documentRun(ctx.person.companyCode, runId)
+    if (!current?.checkId) throw new AppError("compliance.olderRound", "Rozhoduje sa len v poslednom kole kontroly.")
+    const rounds = await roundsOf(ctx.person.companyCode, current.checkId)
+    if (rounds.at(-1)?.runId !== runId) throw new AppError("compliance.olderRound", "Rozhoduje sa len v poslednom kole kontroly.")
     // Kto nemá aj content-admin, koncept nemení — rozhodnutie sa uloží a znenie vloží správca obsahu.
     // Posledná hodnota: bez JavaScriptu editor pošle skryté pole s pôvodným textom
     // aj `<noscript>` pole s úpravou — platí úprava.
@@ -155,7 +187,7 @@ export async function applyFindingAction(fd: FormData) {
   const runId = fieldText(fd, "runId")
   const documentId = fieldText(fd, "documentId")
   const findingId = fieldText(fd, "findingId")
-  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  const path = await runPath(ctx.person.companyCode, runId)
   const anchor = `${documentId}-${findingId}`
   const keep = viewOf(fd, documentId)
   let message = ""
@@ -169,25 +201,25 @@ export async function applyFindingAction(fd: FormData) {
   back(path, message, false, anchor, keep)
 }
 
-/** Premenovanie kontroly na jej detaile (rola `compliance`). */
+/** Premenovanie kontroly na jej detaile (rola `compliance`); názov patrí kontrole (D239). */
 export async function renameRunAction(fd: FormData) {
   const ctx = await ready()
-  const runId = fieldText(fd, "runId")
-  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  const checkId = fieldText(fd, "checkId")
+  const path = `${PAGE}/${encodeURIComponent(checkId)}`
   try {
-    await renameRun(ctx.person.companyCode, runId, fieldText(fd, "name"))
+    await renameCheck(ctx.person.companyCode, checkId, fieldText(fd, "name"))
   } catch (e) {
     if (isRedirect(e)) throw e
     back(path, failure(e, ctx.language), true)
   }
-  back(path, ctx.t.renamed)
+  back(path, ctx.t.ck.checkRenamed)
 }
 
 /** Pevné väzby z dobehnutej kontroly (D197): každý kontrolovaný dokument proti jej normám. */
 export async function saveLinksAction(fd: FormData) {
   const ctx = await ready()
   const runId = fieldText(fd, "runId")
-  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  const path = await runPath(ctx.person.companyCode, runId)
   let message = ""
   try {
     const run = await documentRun(ctx.person.companyCode, runId)
@@ -227,7 +259,7 @@ export async function dismissRequestAction(fd: FormData) {
 export async function stopRunAction(fd: FormData) {
   const ctx = await ready()
   const runId = fieldText(fd, "runId")
-  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  const path = await runPath(ctx.person.companyCode, runId)
   try {
     await stopRun(ctx.person.companyCode, runId, ctx.person.email)
   } catch (e) {
@@ -237,15 +269,15 @@ export async function stopRunAction(fd: FormData) {
   back(path, ctx.t.stoppedByPerson)
 }
 
-/** Zruší kontrolu (ADR-036): zo zoznamu zmizne, záznam ostáva (D24). */
+/** Zruší kontrolu (ADR-036, D238) aj s jej kolami: zo zoznamu zmizne, záznam ostáva (D24). */
 export async function archiveRunAction(fd: FormData) {
   const ctx = await ready()
-  const runId = fieldText(fd, "runId")
+  const checkId = fieldText(fd, "checkId")
   try {
-    await archiveRun(ctx.person.companyCode, runId, ctx.person.email)
+    await archiveCheck(ctx.person.companyCode, checkId, ctx.person.email, fieldText(fd, "reason"))
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(`${PAGE}/${encodeURIComponent(runId)}`, failure(e, ctx.language), true)
+    back(`${PAGE}/${encodeURIComponent(checkId)}`, failure(e, ctx.language), true)
   }
-  back(PAGE, ctx.t.archived)
+  back(PAGE, ctx.t.ck.checkArchived)
 }

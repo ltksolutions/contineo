@@ -133,3 +133,11 @@ odvodené zoskupenie nevie:
   nahrádza zhodou `checkId`.
 - Rozhodnutia „ponechať" sa prenášajú medzi kolami **tej istej kontroly**.
 
+
+**Implementácia (krok 2, návrh KNIZ-kontroly-a-kola, PR #402):**
+`lib/complianceChecks.ts`; kolo nesie aj poradie `round`. Rozhoduje sa len
+v poslednom kole (Q3) — server to stráži (`compliance.olderRound`).
+Požiadavka na kontrolu (D200) spustí ďalšie kolo nezrušenej kontroly, ktorá
+kontroluje všetky dokumenty požiadavky (Q2), inak založí novú; pevná väzba
+nesie `fromCheckId` a po zrušení kontroly ostáva (Q5). Kolo kontroly na
+adrese behu presmeruje na `/library/compliance/<checkId>?round=n`.

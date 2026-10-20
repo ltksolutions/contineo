@@ -7,7 +7,7 @@
  * dali testovať bez databázy.
  */
 
-import { FINDING_KINDS, type ComplianceRun, type DocumentFinding, type DocumentResult, type FindingKind } from "./complianceCheck"
+import { FINDING_KINDS, MAX_FAILURES, type ComplianceRun, type DocumentFinding, type DocumentResult, type FindingKind } from "./complianceCheck"
 
 /**
  * Stav karty nálezu: `open` nerozhodnuté, `draft` prijaté a zapísané do
@@ -74,14 +74,67 @@ export function nextOpen(results: DocumentResult[], documentId: string, findingI
   return hit ? { documentId: hit.documentId, findingId: hit.f.id } : null
 }
 
-export type FindingView = "open" | "decided" | "all"
+/** `new` — nálezy nové v tomto kole, bez prenesených ponechaní (KNIZ-kontroly-a-kola, „Zobraziť nové"). */
+export type FindingView = "open" | "decided" | "all" | "new"
 
 export function isFindingView(x: unknown): x is FindingView {
-  return x === "open" || x === "decided" || x === "all"
+  return x === "open" || x === "decided" || x === "all" || x === "new"
 }
 
 export function filterFindings(findings: DocumentFinding[], view: FindingView): DocumentFinding[] {
-  return view === "all" ? findings : findings.filter(f => (view === "open" ? !f.status : Boolean(f.status)))
+  if (view === "all") return findings
+  if (view === "new") return findings.filter(f => !f.carriedFrom)
+  return findings.filter(f => (view === "open" ? !f.status : Boolean(f.status)))
+}
+
+// ── Kontrola a kolá (ADR-036, D239; KNIZ-kontroly-a-kola, 20. 10. 2026) ─────
+
+/**
+ * Stav posledného kola kontroly: beží, zastavené človekom, zlyhalo po
+ * opakovaných chybách, dobehlo s nerozhodnutými nálezmi, alebo uzavreté.
+ */
+export type RoundState = "running" | "stopped" | "failed" | "open" | "done"
+
+export function roundState(run: Pick<ComplianceRun, "pending" | "failures" | "stoppedAt" | "results">): { state: RoundState; open: number; total: number } {
+  const all = (run.results ?? []).flatMap(r => r.findings)
+  const open = all.filter(f => !f.status).length
+  const state: RoundState = run.pending.length > 0 && !run.stoppedAt
+    ? (run.failures >= MAX_FAILURES ? "failed" : "running")
+    : run.stoppedAt ? "stopped" : open > 0 ? "open" : "done"
+  return { state, open, total: all.length }
+}
+
+/** Kontrola patrí do „Na rozhodnutie", kým jej posledné kolo nie je uzavreté (zoznam). */
+export function needsAttention(state: RoundState): boolean {
+  return state !== "done"
+}
+
+/**
+ * Zmena oproti predošlému kolu: nové nálezy (bez prenesenia), prenesené
+ * ponechania (`carriedFrom`, už rozhodnuté — nepýta sa znova) a nálezy,
+ * ktoré v predošlom kole skončili prijatím (v koncepte sú, nahlásiť sa
+ * nemajú). Odvodené, neukladá sa (D27).
+ */
+export function roundDelta(prev: Pick<ComplianceRun, "results"> | null, cur: Pick<ComplianceRun, "results">): { fresh: number; carried: number; gone: number } {
+  const now = (cur.results ?? []).flatMap(r => r.findings)
+  const before = (prev?.results ?? []).flatMap(r => r.findings)
+  return {
+    fresh: now.filter(f => !f.carriedFrom).length,
+    carried: now.filter(f => f.carriedFrom).length,
+    gone: before.filter(f => f.status === "accepted").length,
+  }
+}
+
+/**
+ * Prepínač kôl (Q1): do štyroch kôl všetky, nad to posledné tri a „Staršie…".
+ * Vybrané staršie kolo mimo troch sa ukáže tiež, aby prepínač vedel, kde človek je.
+ */
+export function roundTabs(rounds: number[], selected: number): { shown: number[]; older: boolean } {
+  const desc = [...rounds].sort((a, b) => b - a)
+  if (desc.length <= 4) return { shown: desc, older: false }
+  const shown = desc.slice(0, 3)
+  if (!shown.includes(selected)) shown.push(selected)
+  return { shown, older: true }
 }
 
 /**

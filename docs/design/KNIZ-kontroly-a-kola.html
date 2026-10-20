@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>KNIZ — kontroly a kolá</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--line-strong:rgba(20,28,42,.26);--accent:#2443c4;--on-accent:#fff;--accent-soft:rgba(36,67,196,.09);--ok-fg:#15803d;--ok-bg:#f0fdf4;--warn-bg:#fffbeb;--warn-fg:#b45309;--bad-fg:#b91c1c;--bad-bg:#fef2f2;--seg-bg:rgba(118,118,128,.12);--seg-thumb:#fff;--seg-shadow:0 1px 3px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.06);--radius:12px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-small:13px;--fs-micro:12px}
+.dark{color-scheme:dark;--bg:#0e1116;--surface:#171b22;--surface-2:#20252e;--ink:#e8ebf0;--muted:#9aa3b2;--line:rgba(255,255,255,.1);--line-strong:rgba(255,255,255,.24);--accent:#7d93ff;--on-accent:#0e1116;--accent-soft:rgba(125,147,255,.14);--ok-fg:#4ade80;--ok-bg:rgba(74,222,128,.1);--bad-fg:#f87171;--bad-bg:rgba(248,113,113,.12);--warn-fg:#fbbf24;--warn-bg:rgba(251,191,36,.1);--seg-bg:rgba(118,118,128,.24);--seg-thumb:#3a3f48;--seg-shadow:0 1px 3px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;color:#161b22}
+a{color:var(--accent)} a:hover{color:#1a3299}
+.sheet{padding:28px 32px 60px;background:#f5f6f8}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:100ch}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.sec{margin:40px 0 0}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 8px}
+.spec{width:100%;max-width:1300px;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12)}
+.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.spec td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.spec td.old{color:#b91c1c}.spec td.new{color:#15803d}
+.row-frames{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px;max-width:390px}
+.notes{display:grid;gap:6px;max-width:110ch;margin:14px 0 0;font-size:13px;color:#33404f}
+.notes p{margin:0;display:flex;gap:8px}
+.ann{position:absolute;width:22px;height:22px;border-radius:50%;background:#e11d48;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;z-index:9;box-shadow:0 0 0 3px #fff;line-height:1}
+.notes .ann{position:static;flex:none;box-shadow:none}
+.rel{position:relative}
+.frame{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12);position:relative;display:flex;flex-direction:column}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.ask{flex:1;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;font-size:13.5px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs b{color:var(--ink);font-weight:600}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px 18px;flex:none;margin-top:auto}
+.tabbar span{display:grid;justify-items:center;gap:3px;font-size:10.5px;color:var(--muted);min-height:44px;align-content:center}
+.tabbar span::before{content:"";width:22px;height:22px;border-radius:6px;background:var(--surface-2)}
+.tabbar span.on{color:var(--accent);font-weight:600}.tabbar span.on::before{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.body{padding:22px 28px 32px;display:grid;gap:20px;align-content:start}
+.page-head{display:flex;align-items:flex-start;gap:10px 16px;flex-wrap:wrap}
+.page-head-main{flex:1 1 380px;min-width:0;display:grid;gap:4px}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0;text-wrap:pretty}
+.page-lead{font-size:var(--fs-lead);color:var(--muted);margin:0;text-wrap:pretty}
+.page-tools{display:flex;gap:8px;flex-wrap:wrap}
+.quiet{color:var(--muted)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:600;white-space:nowrap;font-family:inherit;text-decoration:none}
+.button--quiet{background:var(--surface);color:var(--ink);border-color:var(--line-strong);font-weight:500}
+.button--danger{background:var(--surface);color:var(--bad-fg);border-color:var(--bad-fg);font-weight:600}
+.button--sm{min-height:36px;padding:0 14px;font-size:14px}
+.tag{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:var(--fs-micro);font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.tag--published,.tag--ok{background:var(--ok-bg);color:var(--ok-fg)}
+.tag--warn,.tag--draft{background:var(--warn-bg);color:var(--warn-fg)}
+.tag--bad{background:var(--bad-bg);color:var(--bad-fg)}
+.tag--info{background:var(--accent-soft);color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0}
+.h2{margin:0;font-size:var(--fs-section);font-weight:650;display:flex;gap:8px;align-items:baseline}
+.h2 .n{font-weight:400}
+.grp{display:grid;gap:10px}
+.grp-h{display:grid;gap:2px}
+.grp-h p{margin:0;font-size:var(--fs-small);color:var(--muted)}
+/* požiadavka */
+.task-card{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;padding:14px 12px 14px 18px;border-color:var(--warn-fg);background:linear-gradient(var(--warn-bg),var(--warn-bg)),var(--surface)}
+.task-main{flex:1 1 360px;min-width:0;display:grid;gap:3px}
+.task-main b{font-size:15.5px;font-weight:650}
+.task-main span{font-size:var(--fs-small);color:var(--muted);text-wrap:pretty}
+.task-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.task-acts a.l{font-size:14px;min-height:44px;display:inline-flex;align-items:center;padding:0 6px}
+/* karta kontroly */
+.ck{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:14px 12px 14px 16px;text-decoration:none;color:var(--ink)}
+.ck-ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;line-height:1;grid-row:span 2;align-self:start}
+.ck-ico.open{background:var(--warn-bg);color:var(--warn-fg);box-shadow:inset 0 0 0 1.5px var(--warn-fg)}
+.ck-ico.run{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent);font-size:11px}
+.ck-ico.done{background:var(--ok-fg);color:var(--surface)}
+.ck-ico.bad{background:var(--bad-fg);color:var(--surface)}
+.ck-t{display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap;min-width:0}
+.ck-t b{font-size:16px;font-weight:650;text-wrap:pretty}
+.ck-s{grid-column:2;display:grid;gap:2px;font-size:var(--fs-small);color:var(--muted);min-width:0}
+.ck-s .st{color:var(--ink);font-size:14px}
+.ck-s .st b{color:var(--warn-fg)}
+.ck-r{grid-row:1 / span 2;grid-column:3;display:flex;align-items:center;gap:10px}
+.chev{color:var(--line-strong);font-size:22px;line-height:1}
+.ck.is-done .ck-t b{font-weight:600}
+.ck-list{display:grid}
+.ck-list > .ck + .ck{border-top:1px solid var(--line)}
+.ck.is-open{background:linear-gradient(90deg,var(--warn-bg),transparent 60%)}
+/* väzby / ďalšie akcie */
+.more{display:grid}
+.more-head{padding:14px 20px 4px}
+.more-head h2{margin:0;font-size:var(--fs-section)}
+.more-row{position:relative;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;padding:12px 12px 12px 20px;min-height:64px}
+.more-row + .more-row,.more-confirm + .more-row{border-top:1px solid var(--line)}
+.more-main{flex:1 1 300px;min-width:0;display:grid;gap:1px}
+.more-main b{font-size:15px;font-weight:600}
+.more-main span{font-size:var(--fs-small);color:var(--muted);text-wrap:pretty}
+.more-confirm{display:grid;gap:12px;margin:0 16px 16px 20px;padding:14px 16px;border-radius:10px;border:1px solid var(--bad-fg);background:var(--bad-bg)}
+.more-confirm h3{margin:0;font-size:15.5px;color:var(--bad-fg)}
+.more-confirm ul{margin:0;padding-left:18px;font-size:14px;color:var(--ink);display:grid;gap:2px}
+.more-confirm .field-input{background:var(--surface)}
+/* prepínač pohľadu */
+.view-switch{display:inline-flex;padding:2px;border-radius:9px;background:var(--seg-bg);justify-self:start;max-width:100%}
+.view-switch-item{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 14px;border-radius:7px;color:var(--ink);text-decoration:none;font-size:14px;white-space:nowrap;flex:1}
+.view-switch-item + .view-switch-item::before{content:"";position:absolute;left:0;top:8px;bottom:8px;border-left:1px solid var(--line-strong)}
+.view-switch-item.is-on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.view-switch-item.is-on::before,.view-switch-item.is-on + .view-switch-item::before{opacity:0}
+.view-switch-count{margin-left:5px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.rounds{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap}
+.rounds .quiet{font-size:var(--fs-small)}
+/* pás priebehu */
+.prog{display:grid;gap:10px;padding:16px 20px}
+.prog-top{display:flex;gap:8px 16px;align-items:baseline;flex-wrap:wrap}
+.prog-top b{font-size:var(--fs-section);font-weight:650}
+.prog-top .sp{flex:1}
+.bar{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok-fg);border-radius:999px}
+.bar.run i{background:var(--accent)}
+.kinds{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:var(--fs-small);color:var(--muted)}
+.usage{font-size:var(--fs-small);color:var(--muted);display:flex;gap:4px 8px;flex-wrap:wrap}
+.usage i{font-style:normal;color:var(--line-strong)}
+.delta{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;padding:12px 20px;border-top:1px solid var(--line);font-size:14px}
+.delta b{font-weight:650}
+.delta a{font-size:14px;min-height:36px;display:inline-flex;align-items:center}
+/* rozdelenie */
+.split{display:grid;grid-template-columns:320px minmax(0,1fr);gap:28px;align-items:start}
+.side{display:grid;gap:6px;position:sticky;top:0}
+.side-h{padding:0 4px;font-size:var(--fs-small);font-weight:600;color:var(--muted)}
+.form-list{display:grid}
+.form-row{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 16px;color:var(--ink);text-decoration:none;font-size:15px}
+.form-list > .form-row + .form-row::before,.form-list > .form-row + .choice-field::before,.form-list > .choice-field + .form-row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--line)}
+.form-row-main{flex:1;display:grid;gap:1px;min-width:0}
+.form-row-main b{font-weight:600;font-size:15px}
+.form-row-sub{font-size:var(--fs-small);color:var(--muted);overflow-wrap:anywhere}
+.form-row.on{background:var(--accent-soft)}
+.form-row.on b{color:var(--accent)}
+.form-row.on::after{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.n{font-size:var(--fs-small);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pick{min-height:60px}
+.pick .k{font-size:var(--fs-micro);color:var(--accent);font-weight:600}
+.pick b{color:var(--accent)}
+.main{display:grid;gap:16px;min-width:0;max-width:880px}
+.doc-head{display:grid;gap:6px}
+.doc-head .t{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.doc-head h2{margin:0;font-size:21px;letter-spacing:-.01em}
+.doc-head p{margin:0;font-size:15px;max-width:72ch;text-wrap:pretty}
+.doc-head .open{font-size:14px;min-height:44px;display:inline-flex;align-items:center;margin-left:auto}
+/* nález */
+.flist{display:grid;gap:10px}
+.fc-row{display:flex;align-items:center;gap:10px 12px;padding:8px 8px 8px 16px;min-height:56px;flex-wrap:wrap}
+.fc-row .loc{flex:1 1 240px;min-width:0;font-size:15px}
+.fc{display:grid;gap:16px;padding:16px 20px 20px}
+.fc.is-open{border-color:var(--line-strong);box-shadow:0 2px 10px rgba(20,28,42,.06)}
+.fc-head{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.fc-head b{font-size:16px;font-weight:650;flex:1 1 260px;min-width:0}
+.fc-head a{font-size:14px}
+.blk{display:grid;gap:5px}
+.blk-l{font-size:var(--fs-small);font-weight:600;color:var(--muted)}
+.blk p{margin:0;font-size:15px;max-width:72ch;text-wrap:pretty}
+.diff{padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:15px;line-height:1.65;max-width:72ch}
+.diff del{background:var(--bad-bg);color:var(--bad-fg);text-decoration:line-through}
+.diff ins{background:var(--ok-bg);color:var(--ok-fg);text-decoration:underline;text-decoration-thickness:1px}
+.quote{margin:0;padding:2px 0 2px 14px;border-left:3px solid var(--line-strong);font-size:15px;color:var(--ink);max-width:72ch}
+.dec{display:grid;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
+.decision-switch{display:grid;grid-template-columns:1fr 1fr;padding:2px;border-radius:10px;background:var(--seg-bg);max-width:560px}
+.decision-option{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;min-height:40px;padding:4px 12px;border-radius:8px;font-size:14.5px;line-height:1.25}
+.decision-option.on{background:var(--seg-thumb);font-weight:600;box-shadow:var(--seg-shadow)}
+.field{display:grid;gap:5px;min-width:0}
+.field-label{font-size:var(--fs-small);font-weight:600}
+.field-input{font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;width:100%;min-width:0;line-height:1.5;min-height:40px}
+.field-input.ph{color:var(--muted)}
+.ta3{min-height:calc(3 * 1.5em + 20px)}
+.ta2{min-height:calc(2 * 1.5em + 20px)}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.acts{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
+.acts .quiet{font-size:var(--fs-small)}
+.acts a.l{font-size:14.5px;min-height:44px;display:inline-flex;align-items:center}
+.lnote{display:flex;gap:10px;padding:12px 14px;border-radius:10px;font-size:14px;align-items:flex-start;background:var(--ok-bg);color:var(--ok-fg)}
+.lnote-mark{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--surface);color:inherit;margin-top:1px}
+.lnote-text{flex:1 1 300px;min-width:0;line-height:1.45}
+.lnote-text b{font-weight:650}
+.lnote-text small{display:block;margin-top:3px;font-size:var(--fs-small);color:var(--muted)}
+.lnote--info{background:var(--surface-2);color:var(--ink)}
+.lnote--warn{background:var(--warn-bg);color:var(--warn-fg)}
+/* formulár */
+.form-group{border:0;margin:0;padding:0;display:grid;gap:6px;min-width:0}
+.form-group-head{padding:0 4px;font-size:var(--fs-small);font-weight:650;color:var(--muted);text-transform:none}
+.form-group-head--step{font-size:var(--fs-section);color:var(--ink);display:flex;gap:10px;align-items:center;padding:0 2px}
+.form-group-head--step .num{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:13px;font-weight:700}
+.form-group-body{padding:14px 16px;display:grid;gap:12px}
+.form-group-body--rows{padding:0}
+.form-group-foot{margin:0;padding:0 4px;font-size:var(--fs-small)}
+.choice-row .tick{width:18px;flex:none;color:var(--accent);font-weight:700;text-align:center;margin-left:auto}
+.choice-field{position:relative;padding:4px 16px 14px 16px;display:grid;gap:8px}
+.choice-field .form-list{border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.cb{width:20px;height:20px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:800;border:1.5px solid var(--line-strong)}
+.cb.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.rd{width:20px;height:20px;border-radius:50%;flex:none;border:1.5px solid var(--line-strong);display:grid;place-items:center}
+.rd.on{border:6px solid var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);min-height:44px;align-items:center}
+.chip{display:inline-flex;gap:6px;align-items:center;min-height:30px;padding:0 6px 0 10px;border-radius:8px;background:var(--surface-2);font-size:14px}
+.chip i{font-style:normal;color:var(--muted);font-size:13px;width:20px;text-align:center}
+.chips .ph{color:var(--muted);font-size:14px}
+.inh{display:grid;gap:2px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px dashed var(--line-strong);font-size:14px}
+.inh span{font-size:var(--fs-small);color:var(--muted)}
+.state-l{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 0 -8px 4px}
+/* mobil a tablet */
+.m .hdr{padding:0 12px;gap:10px}
+.m .crumbs{padding:9px 14px}
+.m .body{padding:16px 14px 24px;gap:16px}
+.m .page-title{font-size:22px}
+.m .page-head-main{flex-basis:100%}
+.m .page-tools{width:100%}
+.m .button{min-height:44px}
+.m .prog{padding:14px}
+.m .delta{padding:12px 14px}
+.m .view-switch{display:flex;justify-self:stretch;width:100%}
+.m .view-switch-item{min-height:36px;padding:0 6px;font-size:13.5px}
+.m .fc{padding:14px 14px 16px}
+.m .fc-row{padding:8px 8px 8px 14px}
+.m .acts .button{width:100%}
+.m .task-card{padding:14px}
+.m .task-acts{width:100%}
+.m .task-acts .button{flex:1}
+.m .ck{padding:14px 10px 14px 14px;gap:4px 12px}
+.m .more-row{padding:12px 14px}
+.m .more-row .button{width:100%}
+.m .more-confirm{margin:0 14px 14px}
+.m .more-confirm .button{width:100%}
+.t .body{padding:20px 24px 28px;max-width:760px}
+.t .form-group-body{padding:14px 16px}
+</style></head>
+<body><div class="sheet">
+
+<h1 class="doc">KNIZ — kontroly a kolá (<code>/library/compliance</code>)</h1>
+<p class="doc">Prestavba Kontroly súladu dokumentov na model <b>kontrola → kolá</b>: kontrola je zadanie (druh, dokumenty, normy, pri helpdesku kanál, názov), beh je jej kolo. V zozname je jedna karta na kontrolu, na detaile prepínač kôl. Tri obrazovky: zoznam, Nová kontrola (<code>/library/compliance/new</code>), detail (<code>/library/compliance/&lt;checkId&gt;?round=n</code>). Dvojstĺpec nálezov a rozhodovanie (KNIZ-kontrola-suladu-detail, D199) ostávajú. Popis: <code>KNIZ-kontroly-a-kola.md</code>.</p>
+<p class="doc">Vzory SwiftUI: <code>List</code> so sekciami (zoznam), <code>Form</code> + <code>Section</code> (Nová kontrola), <code>Picker(.segmented)</code> (kolá aj filter — <code>.view-switch</code>), <code>NavigationSplitView</code> (dokumenty / nálezy), <code>toolbar</code> (akcie kontroly), <code>confirmationDialog</code> (<code>?cancel=1</code>).</p>
+
+<div class="sec">
+<p class="sec-h">Dnes → nové</p>
+<table class="spec">
+<tr><th>Časť</th><th>Dnes</th><th>Nové</th></tr>
+<tr><td>Zoznam</td><td class="old">karta na každý beh — 20. 10. štyri karty „Návrhy z helpdesku do manuálov — ISSF Helpdesk"</td><td class="new">karta na kontrolu: stav posledného kola, počet kôl, dátum; sekcie „Na rozhodnutie" a „Uzavreté"</td></tr>
+<tr><td>Spustenie</td><td class="old">formulár na zozname + samostatná karta „Navrhnúť doplnenie manuálov" na kanál</td><td class="new">jedno plné „Nová kontrola" → <code>/library/compliance/new</code> s voľbou druhu; karta helpdesku zaniká</td></tr>
+<tr><td>Požiadavka na kontrolu</td><td class="old">spustí nový samostatný beh</td><td class="new">spustí <b>nové kolo</b> kontroly, z ktorej väzba vznikla (Q2)</td></tr>
+<tr><td>Detail</td><td class="old">jeden beh, „Spustiť znova" vytvorí ďalší beh</td><td class="new">prepínač kôl, pás priebehu kola, zmena oproti predošlému, „Nové kolo" (plné); staršie kolá len na čítanie</td></tr>
+<tr><td>Premenovať, väzby</td><td class="old"><code>&lt;details&gt;</code> „Premenovať", formulár väzieb v <code>.page-tools</code></td><td class="new">tiché „Premenovať" (<code>?rename=1</code>) a „Uložiť ako pevné väzby" v <code>.page-tools</code>; „Zrušiť kontrolu" v Ďalších akciách na konci</td></tr>
+</table>
+</div>
+
+<!-- ============ 1 · zoznam 1440 ============ -->
+<div class="sec">
+<p class="sec-h">1 · 1440 svetlá — zoznam kontrol</p>
+<div class="frame" style="width:1440px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa na predpisy organizácie…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><b>Kontrola súladu dokumentov</b></div>
+  <div class="body" style="max-width:1040px">
+    <div class="page-head rel">
+      <div class="page-head-main">
+        <h1 class="page-title">Kontrola súladu dokumentov</h1>
+        <p class="page-lead">Kontrola porovná dokumenty s normami a navrhne zmeny. Každé ďalšie kolo nadviaže na predošlé rozhodnutia.</p>
+      </div>
+      <div class="page-tools rel"><span class="ann" style="left:-30px;top:8px">1</span><a class="button" href="#">Nová kontrola</a></div>
+    </div>
+
+    <div class="grp rel" id="requests">
+      <span class="ann" style="left:-30px;top:0">2</span>
+      <div class="grp-h"><h2 class="h2">Čaká na kontrolu <span class="n quiet">1</span></h2></div>
+      <div class="card task-card">
+        <span class="task-main"><b>Nové znenie: Registračný a prestupový poriadok od 1. 11. 2026</b><span>Zverejnila Michaela Žikavská 19. 10. 2026 · v pevnej väzbe s kontrolou „Kontrola manuálov ISSF voči platným normám SFZ"</span></span>
+        <span class="task-acts"><a class="button button--quiet" href="#">Spustiť kolo 4…</a><a class="l" href="#">Netreba</a></span>
+      </div>
+    </div>
+
+    <div class="grp rel">
+      <span class="ann" style="left:-30px;top:0">3</span>
+      <div class="grp-h"><h2 class="h2">Na rozhodnutie <span class="n quiet">1</span></h2></div>
+      <div class="card ck-list">
+        <a class="ck is-open" href="#">
+          <span class="ck-ico open">!</span>
+          <span class="ck-t"><b>Kontrola manuálov ISSF voči platným normám SFZ</b><span class="tag">Súlad dokumentov</span></span>
+          <span class="ck-s"><span class="st"><b>14 nerozhodnutých</b> z 62 nálezov · kolo 3 dobehlo</span><span>8 manuálov ISSF proti 3 normám · 3 kolá · posledné 18. 10. 2026, Ján Letko</span></span>
+          <span class="ck-r"><span class="chev">›</span></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="grp-h"><h2 class="h2">Uzavreté <span class="n quiet">1</span></h2><p>Všetky nálezy posledného kola sú rozhodnuté.</p></div>
+      <div class="card ck-list">
+        <a class="ck is-done rel" href="#">
+          <span class="ann" style="left:-12px;top:14px">4</span>
+          <span class="ck-ico done">✓</span>
+          <span class="ck-t"><b>Návrhy z helpdesku do manuálov — ISSF Helpdesk</b><span class="tag">Návrhy z helpdesku</span></span>
+          <span class="ck-s"><span class="st">Všetkých 23 návrhov rozhodnutých · kolo 2</span><span>51 otázok kanála ISSF Helpdesk proti 8 manuálom · 2 kolá · posledné 20. 10. 2026, Ján Letko</span></span>
+          <span class="ck-r"><span class="chev">›</span></span>
+        </a>
+      </div>
+    </div>
+
+    <section class="card more rel" id="links">
+      <span class="ann" style="left:-12px;top:14px">5</span>
+      <div class="more-head"><h2>Pevné väzby</h2></div>
+      <p class="quiet" style="margin:0;padding:0 20px 6px;font-size:13px">Keď vyjde nové znenie normy, vznikne hore požiadavka na nové kolo.</p>
+      <div class="more-row"><span class="more-main"><b>Manuály ISSF (8)</b><span>proti Registračnému a prestupovému poriadku, Stanovám SFZ, Sadzobníku poplatkov · z kontroly <a href="#">Kontrola manuálov ISSF…</a></span></span><a class="button button--quiet" href="#">Zrušiť väzbu</a></div>
+      <div class="more-row"><span class="more-main"><b>Rozpis súťaží 2026/27</b><span>proti Súťažnému poriadku, Stanovám SFZ · z kontroly <a href="#">Rozpis súťaží proti normám</a> (zrušená)</span></span><a class="button button--quiet" href="#">Zrušiť väzbu</a></div>
+    </section>
+  </div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Jediné plné tlačidlo „Nová kontrola" → <code>/library/compliance/new</code>. Formulár spustenia na zozname zaniká, karta helpdesku tiež.</p>
+  <p><span class="ann">2</span>Požiadavka (<code>.task-card</code>, D200) hovorí, ku ktorej kontrole patrí. „Spustiť kolo 4…" vedie na rekapituláciu <code>/library/compliance/confirm?check=…</code> s tými istými dokumentmi (Q2). „Netreba" → <code>?dismiss=&lt;id&gt;#requests</code> s povinným dôvodom (dnešný <code>&lt;details&gt;</code> sa ruší).</p>
+  <p><span class="ann">3</span>Sekcie podľa stavu posledného kola: <b>Na rozhodnutie</b> (nerozhodnuté, beží, zastavené, zlyhalo) a <b>Uzavreté</b>. Na rozhodnutie má výstražnú ikonu, počet nerozhodnutých tučne vo farbe <code>--warn-fg</code> a jemný podklad — líši sa aj bez farby (ikona „!", slovo „nerozhodnutých", sekcia). Celá karta je odkaz, 44 px+.</p>
+  <p><span class="ann">4</span>Uzavretá: zelená fajka, bežná váha písma, veta „Všetkých 23 … rozhodnutých". Pod 1024 px rovnaké karty (2–3 údaje → karty, nie tabuľka).</p>
+  <p><span class="ann">5</span>Pevné väzby dole ako <code>.more-row</code>, s odkazom na kontrolu, z ktorej vznikli. Zrušená kontrola sa v zozname nekreslí, no jej väzba ostáva (Q5).</p>
+</div>
+</div>
+
+<!-- ============ 2 · detail kolo 3 ============ -->
+<div class="sec">
+<p class="sec-h">2 · 1440 svetlá — detail kontroly, Kolo 3 (predvolené), zmena oproti kolu 2</p>
+<div class="frame" style="width:1440px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa na predpisy organizácie…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Kontrola súladu dokumentov</a><span>›</span><b>Kontrola manuálov ISSF voči platným normám SFZ</b></div>
+  <div class="body">
+    <div class="page-head rel">
+      <span class="ann" style="left:-12px;top:-6px">1</span>
+      <div class="page-head-main">
+        <h1 class="page-title">Kontrola manuálov ISSF voči platným normám SFZ</h1>
+        <p class="page-lead">Súlad dokumentov · 8 manuálov ISSF proti Registračnému a prestupovému poriadku, Stanovám SFZ a Sadzobníku poplatkov</p>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Premenovať</a><a class="button button--quiet" href="#">Uložiť ako pevné väzby</a><a class="button" href="#">Nové kolo</a></div>
+    </div>
+    <div class="rounds rel">
+      <span class="ann" style="left:-30px;top:6px">2</span>
+      <nav class="view-switch"><a class="view-switch-item is-on" href="#">Kolo 3</a><a class="view-switch-item" href="#">Kolo 2</a><a class="view-switch-item" href="#">Kolo 1</a></nav>
+      <span class="quiet">18. 10. 2026 · spustil Ján Letko</span>
+    </div>
+    <section class="card rel">
+      <span class="ann" style="left:-12px;top:14px">3</span>
+      <div class="prog">
+        <div class="prog-top"><b>48 z 62 nálezov rozhodnutých</b><span class="quiet">14 ostáva</span><span class="sp"></span><span class="usage"><span>Opus 5.5</span><i>·</i><span>23 min</span><i>·</i><span>4,80 USD</span></span></div>
+        <div class="bar" role="progressbar" aria-valuenow="77"><i style="width:77%"></i></div>
+        <div class="kinds"><span class="tag tag--warn">Rozpor 15</span><span class="tag">Chýba 34</span><span class="tag">Nejasné 13</span></div>
+      </div>
+      <div class="delta rel">
+        <span class="ann" style="left:-12px;top:12px">4</span>
+        <span class="quiet">Oproti kolu 2:</span>
+        <span><b>5 nových nálezov</b></span><span class="quiet">·</span>
+        <span><b>9 ponechaní prenesených</b> <span class="quiet">— už rozhodnuté, nepýta sa znova</span></span><span class="quiet">·</span>
+        <span>4 nálezy zmizli <span class="quiet">(prijaté v kole 2)</span></span>
+        <a href="#" style="margin-left:auto">Zobraziť nové</a>
+      </div>
+    </section>
+    <div class="split">
+      <aside class="side">
+        <p class="side-h">Dokumenty · 8</p>
+        <div class="card form-list">
+          <a class="form-row on" href="#"><span class="form-row-main"><b>ISSF-07 Elektronické konto klubu</b><span class="form-row-sub">manuál · koncept</span></span><span class="n">5 z 12</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-01 Prihlásenie a účet</b><span class="form-row-sub">manuál · platné</span></span><span class="n">4 z 9</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-03 Registrácia hráča</b><span class="form-row-sub">manuál · koncept</span></span><span class="n">3 z 14</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-04 Prestupy a hosťovania</b><span class="form-row-sub">manuál · koncept</span></span><span class="n">2 z 11</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-02 Členská základňa</b><span class="form-row-sub">manuál · platné</span></span><span class="tag tag--published">hotovo</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-05 Delegované osoby</b><span class="form-row-sub">manuál · platné</span></span><span class="tag tag--published">hotovo</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-06 Matrika</b><span class="form-row-sub">manuál · platné</span></span><span class="tag tag--published">hotovo</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-08 Platby</b><span class="form-row-sub">manuál · platné</span></span><span class="tag">bez nálezov</span></a>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="doc-head">
+          <div class="t"><h2>ISSF-07 Elektronické konto klubu</h2><span class="tag tag--draft">koncept</span><a class="open" href="#">Otvoriť koncept</a></div>
+          <p>Manuál opisuje poplatky a správu konta podľa praxe z roku 2024; sadzobník platný od 1. 7. 2026 ich mení. Dve časti o zmene e-mailu chýbajú.</p>
+        </div>
+        <nav class="view-switch"><a class="view-switch-item is-on" href="#">Nerozhodnuté<span class="view-switch-count">5</span></a><a class="view-switch-item" href="#">Rozhodnuté<span class="view-switch-count">7</span></a><a class="view-switch-item" href="#">Všetky<span class="view-switch-count">12</span></a></nav>
+        <div class="flist">
+          <article class="card fc is-open rel">
+            <span class="ann" style="left:-12px;top:16px">5</span>
+            <div class="fc-head"><span class="tag tag--warn">Rozpor</span><span class="tag tag--info">Nový v kole 3</span><b>6.4 Poplatok za správu konta</b><a href="#">Zbaliť</a></div>
+            <div class="blk"><span class="blk-l">Zmena znenia</span><div class="diff">Za správu elektronického konta klubu sa účtuje poplatok <del>0,50 € mesačne</del> <ins>1 € ročne</ins>, splatný k 31. januáru.</div></div>
+            <div class="blk"><span class="blk-l">Norma</span><a href="#" style="font-size:15px">Sadzobník poplatkov, príloha č. 2, bod 4</a><blockquote class="quote">Správa elektronického konta klubu — 1 € za kalendárny rok.</blockquote></div>
+            <div class="blk"><span class="blk-l">Odporúčanie</span><p>Zjednotiť sumu so sadzobníkom; ak platí prax ISSF, treba zmeniť sadzobník.</p></div>
+            <form class="dec">
+              <div class="field"><span class="field-label">Rozhodnutie</span><div class="decision-switch"><label class="decision-option">Ponechať existujúce znenie</label><label class="decision-option on">Prijať a upraviť</label></div></div>
+              <label class="field"><span class="field-label">Dôvod</span><span class="field-input ta2 ph">Prečo — zapíše sa do auditu dokumentu</span><span class="field-hint">Povinné pri oboch voľbách.</span></label>
+              <div class="acts"><a class="button button--quiet" href="#">Uložiť a ďalší</a><span class="quiet">Ďalší: 7.1 Zmena e-mailu konta</span></div>
+            </form>
+          </article>
+          <article class="card fc-row"><span class="tag">Chýba</span><span class="tag tag--info">Nový v kole 3</span><span class="loc">7.1 Zmena e-mailu konta</span><a class="button button--quiet button--sm" href="#">Rozhodnúť</a></article>
+          <article class="card fc-row"><span class="tag">Chýba</span><span class="loc">7.2 Obnova zabudnutého hesla</span><a class="button button--quiet button--sm" href="#">Rozhodnúť</a></article>
+          <article class="card fc-row"><span class="tag">Nejasné</span><span class="loc">3.2 Kto smie pridať správcu konta</span><a class="button button--quiet button--sm" href="#">Rozhodnúť</a></article>
+        </div>
+      </div>
+    </div>
+    <section class="card more rel" id="more">
+      <span class="ann" style="left:-12px;top:14px">6</span>
+      <div class="more-head"><h2>Ďalšie akcie</h2></div>
+      <div class="more-row"><span class="more-main"><b>Zrušiť kontrolu</b><span>Kontrola zmizne zo zoznamu a presunie sa do archívu. Rozhodnutia a zmeny v konceptoch ostávajú.</span></span><a class="button button--danger" href="#">Zrušiť kontrolu…</a></div>
+    </section>
+  </div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Hlavička nesie kontrolu: názov + zadanie (druh · čo proti čomu). Akcie kontroly v <code>.page-tools</code>: tiché Premenovať (<code>?rename=1</code> → pole názvu pod hlavičkou), tiché Uložiť ako pevné väzby (<code>saveLinksAction</code>; keď už sú, „Pevné väzby uložené ✓" ako text), plné „Nové kolo" posledné → rekapitulácia. Počas behu kola „Nové kolo" chýba (vždy jedno bežiace kolo).</p>
+  <p><span class="ann">2</span>Kolá = <code>.view-switch</code> (sivý; je to pohľad, nie časť sekcie). Odkazy <code>?round=n</code>; posledné kolo je predvolené a v adrese sa vynecháva. Nad 4 kolá: posledné tri + „Staršie…" → <code>?rounds=all</code> so zoznamom (Q1).</p>
+  <p><span class="ann">3</span>Pás priebehu kola: rozhodnuté z celku, <code>.bar</code>, druhy nálezov (len na čítanie), model · minúty · cena v jednom riadku. Dnešné „Údaje o behu" (<code>&lt;details&gt;</code>) ostávajú pod týmto riadkom ako odkaz <code>?usage=1</code>, nie tu.</p>
+  <p><span class="ann">4</span>Zmena oproti predošlému kolu: nové nálezy, prenesené ponechania (D199: „Ponechať" sa prenáša, prijaté sú v koncepte). „Zobraziť nové" → <code>?view=new</code> — štvrtá voľba filtra sa nepridáva, je to odkaz na tie isté nálezy so štítkom „Nový v kole 3". V kole 1 sa riadok nekreslí.</p>
+  <p><span class="ann">5</span>Dvojstĺpec <code>.cf-*</code> ako dnes (KNIZ-kontrola-suladu-detail): dokumenty <code>?doc=</code>, filter Nerozhodnuté · Rozhodnuté · Všetky, jeden otvorený nález <code>?f=</code>, „Uložiť a ďalší" tiché. Nový: štítok <code>.tag--info</code> „Nový v kole 3".</p>
+  <p><span class="ann">6</span>„Zrušiť kontrolu" na konci stránky, <code>.more-row</code> → <code>?cancel=1#more</code> (rám 7). Akcia kola „Zastaviť kolo" je v páse priebehu, kým beží (rám 6).</p>
+</div>
+</div>
+
+<!-- ============ 3 · kolo 1 len na čítanie ============ -->
+<div class="sec">
+<p class="sec-h">3 · 1440 svetlá — Kolo 1 len na čítanie (<code>?round=1</code>), výrez</p>
+<div class="frame" style="width:1440px">
+  <div class="body">
+    <div class="page-head">
+      <div class="page-head-main">
+        <h1 class="page-title">Kontrola manuálov ISSF voči platným normám SFZ</h1>
+        <p class="page-lead">Súlad dokumentov · 8 manuálov ISSF proti Registračnému a prestupovému poriadku, Stanovám SFZ a Sadzobníku poplatkov</p>
+      </div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Premenovať</a><a class="button button--quiet" href="#">Uložiť ako pevné väzby</a><a class="button" href="#">Nové kolo</a></div>
+    </div>
+    <div class="rounds">
+      <nav class="view-switch"><a class="view-switch-item" href="#">Kolo 3</a><a class="view-switch-item" href="#">Kolo 2</a><a class="view-switch-item is-on" href="#">Kolo 1</a></nav>
+      <span class="quiet">11. 10. 2026 · spustil Ján Letko</span>
+    </div>
+    <div class="lnote lnote--info rel"><span class="ann" style="left:-26px;top:10px">1</span><span class="lnote-mark">i</span><span class="lnote-text"><b>Staršie kolo — len na čítanie.</b> Rozhoduje sa v kole 3; ponechania odtiaľto sa preniesli. <a href="#">Prejsť na kolo 3</a></span></div>
+    <section class="card">
+      <div class="prog">
+        <div class="prog-top"><b>58 z 58 nálezov rozhodnutých</b><span class="quiet">dobehlo 11. 10. 2026</span><span class="sp"></span><span class="usage"><span>Opus 5.5</span><i>·</i><span>27 min</span><i>·</i><span>5,40 USD</span></span></div>
+        <div class="bar"><i style="width:100%"></i></div>
+        <div class="kinds"><span class="tag tag--warn">Rozpor 17</span><span class="tag">Chýba 29</span><span class="tag">Nejasné 12</span></div>
+      </div>
+    </section>
+    <div class="split">
+      <aside class="side">
+        <p class="side-h">Dokumenty · 8</p>
+        <div class="card form-list">
+          <a class="form-row on" href="#"><span class="form-row-main"><b>ISSF-07 Elektronické konto klubu</b><span class="form-row-sub">manuál</span></span><span class="n">9</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-01 Prihlásenie a účet</b><span class="form-row-sub">manuál</span></span><span class="n">8</span></a>
+          <a class="form-row" href="#"><span class="form-row-main"><b>ISSF-03 Registrácia hráča</b><span class="form-row-sub">manuál</span></span><span class="n">12</span></a>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="doc-head"><div class="t"><h2>ISSF-07 Elektronické konto klubu</h2><span class="tag">platné 2.0</span></div></div>
+        <nav class="view-switch rel"><a class="view-switch-item" href="#">Nerozhodnuté<span class="view-switch-count">0</span></a><a class="view-switch-item is-on" href="#">Rozhodnuté<span class="view-switch-count">9</span></a><a class="view-switch-item" href="#">Všetky<span class="view-switch-count">9</span></a></nav>
+        <div class="flist">
+          <article class="card fc rel">
+            <span class="ann" style="left:-12px;top:16px">2</span>
+            <div class="fc-head"><span class="tag tag--warn">Rozpor</span><b>2.1 Prihlasovacie meno</b></div>
+            <div class="lnote"><span class="lnote-mark">✓</span><span class="lnote-text"><b>Prijaté a zapísané do konceptu</b> · Ján Letko 11. 10. 2026<small>Prihlasovacie meno nie je e-mail — oprava podľa časti 4.</small></span></div>
+          </article>
+          <article class="card fc">
+            <div class="fc-head"><span class="tag tag--warn">Rozpor</span><b>6.4 Poplatok za správu konta</b></div>
+            <div class="lnote lnote--info"><span class="lnote-mark">=</span><span class="lnote-text"><b>Ponechané existujúce znenie</b> · Ján Letko 11. 10. 2026 · prenesené do kola 2 a 3<small>Manuál opisuje skutočnú prax ISSF; podnet pre legislatívu.</small></span></div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Staršie kolo: <code>.lnote--info</code> hneď pod prepínačom, odkaz na posledné kolo. Akcie kontroly ostávajú (patria kontrole, nie kolu).</p>
+  <p><span class="ann">2</span>Nálezy len so stavom rozhodnutia, bez „Rozhodnúť", bez formulára a bez „Zmeniť rozhodnutie" (Q3). Predvolený filter v starom kole: Všetky, ak nič nie je nerozhodnuté (inak Nerozhodnuté — kolo, ktoré skončilo nerozhodnuté, ukáže, čo sa neuzavrelo).</p>
+</div>
+</div>
+
+<!-- ============ 4 · nová kontrola 834 ============ -->
+<div class="sec">
+<p class="sec-h">4 · 834 svetlá — Nová kontrola (<code>/library/compliance/new</code>), druh „Návrhy z helpdesku"</p>
+<div class="frame m t" style="width:834px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Kontrola súladu dokumentov</a><span>›</span><b>Nová kontrola</b></div>
+  <form class="body">
+    <div class="page-head"><div class="page-head-main"><h1 class="page-title">Nová kontrola</h1><p class="page-lead">Pred spustením uvidíte rekapituláciu s odhadom ceny.</p></div></div>
+    <fieldset class="form-group rel">
+      <span class="ann" style="left:-30px;top:0">1</span>
+      <legend class="form-group-head">Druh</legend>
+      <div class="card form-group-body form-group-body--rows"><div class="form-list">
+        <label class="form-row choice-row"><span class="form-row-main"><span>Súlad dokumentov</span><span class="form-row-sub">dokumenty proti normám</span></span></label>
+        <label class="form-row choice-row"><span class="form-row-main"><b style="color:var(--ink)">Návrhy z helpdesku do manuálov</b><span class="form-row-sub">otázky kanála proti verejným manuálom</span></span><span class="tick">✓</span></label>
+        <div class="choice-field rel">
+          <span class="ann" style="left:-40px;top:6px">2</span>
+          <span class="field-label">Kanál</span>
+          <div class="form-list">
+            <label class="form-row"><span class="rd on"></span><span class="form-row-main"><span>ISSF Helpdesk</span><span class="form-row-sub">51 otázok · kontrola už existuje</span></span></label>
+            <label class="form-row"><span class="rd"></span><span class="form-row-main"><span>Matrika</span><span class="form-row-sub">18 otázok</span></span></label>
+            <label class="form-row"><span class="rd"></span><span class="form-row-main"><span>Rozhodcovia</span><span class="form-row-sub">7 otázok</span></span></label>
+          </div>
+          <div class="lnote lnote--warn"><span class="lnote-mark">!</span><span class="lnote-text">Pre ISSF Helpdesk už je kontrola „Návrhy z helpdesku do manuálov — ISSF Helpdesk" (2 kolá). <a href="#">Spustiť v nej kolo 3</a><small>Nová kontrola začne bez prenesených ponechaní.</small></span></div>
+        </div>
+      </div></div>
+    </fieldset>
+    <fieldset class="form-group">
+      <legend class="form-group-head">Názov</legend>
+      <div class="card form-group-body"><label class="field"><span class="field-input">Návrhy z helpdesku do manuálov — ISSF Helpdesk</span></label></div>
+      <p class="form-group-foot quiet">Predvyplnené podľa druhu a kanála; môžete prepísať.</p>
+    </fieldset>
+    <fieldset class="form-group rel">
+      <span class="ann" style="left:-30px;top:0">3</span>
+      <legend class="form-group-head">Kontrolované dokumenty</legend>
+      <div class="card form-group-body"><div class="chips"><span class="chip">ISSF-01 Prihlásenie a účet<i>✕</i></span><span class="chip">ISSF-03 Registrácia hráča<i>✕</i></span><span class="chip">ISSF-07 Elektronické konto<i>✕</i></span><span class="chip quiet">+5</span></div></div>
+      <p class="form-group-foot quiet">Predvyplnené: verejné manuály, na ktoré kanál odkazuje.</p>
+    </fieldset>
+    <fieldset class="form-group">
+      <legend class="form-group-head">Normy</legend>
+      <div class="card form-group-body">
+        <div class="chips"><span class="ph">Vyberte normy…</span></div>
+        <div class="inh"><b>Prázdne = nadradené z hierarchie</b><span>Registračný a prestupový poriadok, Stanovy SFZ, Sadzobník poplatkov</span></div>
+      </div>
+    </fieldset>
+    <div class="acts rel"><span class="ann" style="left:-30px;top:10px">4</span><a class="button" href="#">Pokračovať na rekapituláciu</a><span class="quiet">Nič sa ešte nespustí.</span></div>
+  </form>
+  <div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span><code>Form</code> + <code>Section</code>: druh ako <code>.choice-row</code> (jedna z 2, natívny <code>radio name="kind"</code>). Pole voľby v <code>div.choice-field</code> hneď za riadkom.</p>
+  <p><span class="ann">2</span>Kanál len pri druhu helpdesk (<code>:has</code>; bez JS sa ukáže vždy a pri súlade sa ignoruje). Ak kontrola pre kanál už existuje, <code>.lnote--warn</code> ponúkne nové kolo v nej — rovnaký dôvod ako Q2: neplodiť štyri karty jedného kanála.</p>
+  <p><span class="ann">3</span>Dokumenty <code>MultiSelect</code> ako dnes. Normy prázdne = nadradené z hierarchie (D219) + pevné väzby; výsledok sa ukáže pod poľom. Pri helpdesku sa normy používajú len na odkazy, nie ako meradlo — veta podľa <code>compliance.referenceNotBinding</code>.</p>
+  <p><span class="ann">4</span>Jediné plné „Pokračovať na rekapituláciu" na konci formulára (výnimka ako „Odoslať" po náhľade). Ďalej existujúca <code>/library/compliance/confirm</code> s odhadom ceny.</p>
+</div>
+</div>
+
+<!-- ============ 5, 6, 7 · 390 tmavá ============ -->
+<div class="sec">
+<p class="sec-h">5 · 390 tmavá — zoznam · 6 · detail počas behu (4 z 10) · 7 · <code>?cancel=1</code></p>
+<div class="row-frames">
+
+<div>
+<p class="cap">5 · Zoznam</p>
+<div class="frame m dark" style="width:390px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><b>Kontrola súladu</b></div>
+  <div class="body">
+    <div class="page-head">
+      <div class="page-head-main"><h1 class="page-title">Kontrola súladu dokumentov</h1></div>
+      <div class="page-tools"><a class="button" href="#" style="width:100%">Nová kontrola</a></div>
+    </div>
+    <div class="grp">
+      <h2 class="h2">Čaká na kontrolu <span class="n quiet">1</span></h2>
+      <div class="card task-card">
+        <span class="task-main"><b>Nové znenie: Registračný a prestupový poriadok od 1. 11. 2026</b><span>19. 10. · Michaela Žikavská · pre „Kontrola manuálov ISSF…"</span></span>
+        <span class="task-acts"><a class="button button--quiet" href="#">Spustiť kolo 4…</a><a class="l" href="#">Netreba</a></span>
+      </div>
+    </div>
+    <div class="grp">
+      <h2 class="h2">Na rozhodnutie <span class="n quiet">1</span></h2>
+      <div class="card ck-list">
+        <a class="ck is-open" href="#"><span class="ck-ico open">!</span><span class="ck-t"><b>Kontrola manuálov ISSF voči platným normám SFZ</b></span><span class="ck-s"><span class="st"><b>14 nerozhodnutých</b> z 62</span><span>Súlad · 8 manuálov proti 3 normám · 3 kolá · 18. 10.</span></span><span class="ck-r"><span class="chev">›</span></span></a>
+      </div>
+    </div>
+    <div class="grp">
+      <h2 class="h2">Uzavreté <span class="n quiet">1</span></h2>
+      <div class="card ck-list">
+        <a class="ck is-done" href="#"><span class="ck-ico done">✓</span><span class="ck-t"><b>Návrhy z helpdesku do manuálov — ISSF Helpdesk</b></span><span class="ck-s"><span class="st">Všetkých 23 rozhodnutých</span><span>Helpdesk · 51 otázok proti 8 manuálom · 2 kolá · 20. 10.</span></span><span class="ck-r"><span class="chev">›</span></span></a>
+      </div>
+    </div>
+    <section class="card more">
+      <div class="more-head"><h2>Pevné väzby</h2></div>
+      <div class="more-row"><span class="more-main"><b>Manuály ISSF (8)</b><span>proti RaPP, Stanovám, Sadzobníku</span></span><a class="button button--quiet" href="#">Zrušiť väzbu</a></div>
+      <div class="more-row"><span class="more-main"><b>Rozpis súťaží 2026/27</b><span>proti Súťažnému poriadku, Stanovám</span></span><a class="button button--quiet" href="#">Zrušiť väzbu</a></div>
+    </section>
+  </div>
+  <div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>
+</div>
+</div>
+
+<div>
+<p class="cap">6 · Detail počas behu kola 4</p>
+<div class="frame m dark" style="width:390px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Kontrola súladu</a><span>›</span><b>Kontrola manuálov ISSF…</b></div>
+  <div class="body">
+    <div class="page-head">
+      <div class="page-head-main"><h1 class="page-title">Kontrola manuálov ISSF voči platným normám SFZ</h1><p class="page-lead">Súlad · 10 dokumentov proti 3 normám</p></div>
+      <div class="page-tools"><a class="button button--quiet" href="#">Premenovať</a><a class="button button--quiet" href="#">Pevné väzby ✓</a></div>
+    </div>
+    <nav class="view-switch"><a class="view-switch-item is-on" href="#">Kolo 4</a><a class="view-switch-item" href="#">Kolo 3</a><a class="view-switch-item" href="#">Kolo 2</a><a class="view-switch-item" href="#">Staršie…</a></nav>
+    <section class="card rel">
+      <span class="ann" style="left:-12px;top:14px">1</span>
+      <div class="prog">
+        <div class="prog-top"><b>Beží · 4 z 10 dokumentov</b><span class="quiet">od 20. 10. 19:12</span></div>
+        <div class="bar run"><i style="width:40%"></i></div>
+        <span class="usage"><span>Opus 5.5</span><i>·</i><span>zatiaľ 9 min</span><i>·</i><span>1,90 USD</span></span>
+        <span class="quiet" style="font-size:13px">Stránku môžete zavrieť, kolo beží ďalej. Hotové dokumenty sa dajú rozhodovať hneď.</span>
+        <a class="button button--quiet" href="#">Zastaviť kolo</a>
+      </div>
+    </section>
+    <a class="card form-row pick" href="#"><span class="form-row-main"><span class="k">Dokument 1 z 4 hotových</span><b>ISSF-07 Elektronické konto klubu</b></span><span class="n">3 z 5</span><span class="chev">›</span></a>
+    <nav class="view-switch"><a class="view-switch-item is-on" href="#">Nerozhodnuté<span class="view-switch-count">3</span></a><a class="view-switch-item" href="#">Rozhodnuté<span class="view-switch-count">2</span></a><a class="view-switch-item" href="#">Všetky</a></nav>
+    <div class="flist">
+      <article class="card fc-row"><span class="tag tag--warn">Rozpor</span><span class="tag tag--info">Nový</span><span class="loc">4.2 Lehota na prestup</span><a class="button button--quiet button--sm" href="#">Rozhodnúť</a></article>
+      <article class="card fc-row"><span class="tag">Chýba</span><span class="loc">7.3 Zánik konta</span><a class="button button--quiet button--sm" href="#">Rozhodnúť</a></article>
+    </div>
+    <p class="state-l">… Ďalšie akcie: Zrušiť kontrolu …</p>
+  </div>
+  <div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>
+</div>
+</div>
+
+<div>
+<p class="cap">7 · Zrušiť kontrolu (<code>?cancel=1#more</code>)</p>
+<div class="frame m dark" style="width:390px">
+  <div class="hdr"><span class="logo"></span><span class="ask">Opýtajte sa…</span><span class="av"></span></div>
+  <div class="crumbs"><a href="#">Knižnica</a><span>›</span><a href="#">Kontrola súladu</a><span>›</span><b>Návrhy z helpdesku…</b></div>
+  <div class="body">
+    <p class="state-l">… hlavička, kolá, nálezy …</p>
+    <section class="card more rel" id="more">
+      <span class="ann" style="left:-12px;top:14px">2</span>
+      <div class="more-head"><h2>Ďalšie akcie</h2></div>
+      <div class="more-row"><span class="more-main"><b>Zrušiť kontrolu</b><span>Presunie sa do archívu.</span></span></div>
+      <form class="more-confirm">
+        <h3>Zrušiť kontrolu „Návrhy z helpdesku do manuálov — ISSF Helpdesk"?</h3>
+        <ul><li>Zmizne zo zoznamu; 2 kolá a 23 rozhodnutí ostanú v archíve a v audite dokumentov.</li><li>Prijaté zmeny v konceptoch manuálov ostávajú.</li><li>Ponechania sa do novej kontroly neprenesú.</li></ul>
+        <label class="field"><span class="field-label">Dôvod</span><span class="field-input ta2 ph">Napr. nahradená novou kontrolou</span><span class="field-hint">Nepovinné. Uvidí ho každý s rolou compliance.</span></label>
+        <a class="button button--danger" href="#">Zrušiť kontrolu</a>
+        <a href="#more" style="font-size:14.5px;min-height:44px;display:flex;align-items:center;justify-content:center">Ponechať</a>
+      </form>
+    </section>
+  </div>
+  <div class="tabbar"><span>Prehľad</span><span>Opýtať sa</span><span class="on">Knižnica</span><span>Viac</span></div>
+</div>
+</div>
+</div>
+<div class="notes">
+  <p><span class="ann">1</span>Kým kolo beží: pás ukazuje „Beží · 4 z 10 dokumentov" (pruh farbou organizácie), model a priebežnú cenu, tiché „Zastaviť kolo" (existujúca akcia) — pod 640 px cez celú šírku. „Nové kolo" chýba. Zastavené: „Zastavené · 4 z 10" + tiché „Pokračovať"; zlyhalo: <code>.lnote--bad</code> s chybou.</p>
+  <p><span class="ann">2</span><code>?cancel=1#more</code>: <code>form.more-confirm</code> pod riadkom — čo sa stane, nepovinný dôvod, <code>.button--danger</code>, odkaz „Ponechať" (adresa bez <code>cancel</code>). Pri bežiacom kole navyše „Bežiace kolo sa zastaví." Žiadne modálne okno.</p>
+</div>
+</div>
+
+<div class="sec">
+<p class="sec-h">Stavy karty v zozname</p>
+<table class="spec">
+<tr><th>Posledné kolo</th><th>Sekcia</th><th>Ikona</th><th>Riadok stavu</th></tr>
+<tr><td>dobehlo, nerozhodnuté &gt; 0</td><td>Na rozhodnutie</td><td>„!" výstražná</td><td><b>14 nerozhodnutých</b> z 62 nálezov · kolo 3 dobehlo</td></tr>
+<tr><td>beží</td><td>Na rozhodnutie</td><td>krúžok farbou organizácie</td><td>Beží kolo 4 · 4 z 10 dokumentov</td></tr>
+<tr><td>zastavené</td><td>Na rozhodnutie</td><td>„!" výstražná</td><td>Kolo 4 zastavené pri 4 z 10</td></tr>
+<tr><td>zlyhalo</td><td>Na rozhodnutie</td><td>„✕" červená</td><td>Kolo 4 zlyhalo · skúste znova</td></tr>
+<tr><td>dobehlo, všetko rozhodnuté</td><td>Uzavreté</td><td>„✓" zelená</td><td>Všetkých 23 rozhodnutých · kolo 2</td></tr>
+<tr><td>dobehlo bez nálezov</td><td>Uzavreté</td><td>„✓" zelená</td><td>Bez nálezov · kolo 1</td></tr>
+</table>
+</div>
+
+</div></body></html>

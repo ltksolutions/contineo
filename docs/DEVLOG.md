@@ -10,6 +10,26 @@
 
 ---
 
+
+## 2026-10-20 — kontroly a kolá (KNIZ-kontroly-a-kola, ADR-036 D239)
+
+**Čo sa zmenilo:** zoznam, nová kontrola a detail podľa návrhu (Q1–Q6 A).
+Návrh chcel kolekciu `compliance_checks`, ADR-036 D234 ju zamietol — Ján
+rozhodol pre kolekciu bez migrácie (dodatok D239): kolo je beh s `checkId`
+a `round`, staré behy sú zrušené a čitateľné v starom tvare. Nové
+`lib/complianceChecks.ts` (založenie, ďalšie kolo, premenovanie, zrušenie
+s kolami), v `complianceView.ts` čisté `roundState`, `roundDelta`,
+`roundTabs` a filter `new` s testom. Akcie spúšťajú cez kontrolu; rozhodovať
+sa dá len v poslednom kole (server stráži `compliance.olderRound`).
+
+**Odchýlky od návrhu:** priečinok trasy ostal `[runId]` (adresa je tá istá,
+parameter je kontrola aj beh). Pri helpdesku sa dokumenty nepredvypĺňajú —
+kontrolujú sa vždy všetky verejné manuály a výber sa ignoruje (veta pod
+kanálom). Zoznam noriem z hierarchie pod poľom nie je — ukáže ho až
+rekapitulácia. „Pokračovať" pri zastavenom kole nie je: zastavenie zahodí
+zvyšok práce (D237), pokračuje sa novým kolom. Podnadpisy sekcií zoznamu
+vynechané. Údaje o kole sú odkaz `?usage=1` namiesto rozbaľovačky.
+
 ## 2026-10-15 – 2026-10-17 — členenie zo štruktúry Markdownu, rezač blokov, strážca zápisu (ADR-035, #389–#397)
 
 **Čo sa zmenilo:** Ján sa nevedel dostať k tomu, ako je dokument narezaný
