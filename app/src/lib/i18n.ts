@@ -3165,6 +3165,29 @@ interface Dictionary {
       referencesHint: string
       start: string
       started: string
+      /** Potvrdenie pred spustením, zastavenie a zrušenie kontroly (ADR-036). */
+      confirmHeading: string
+      confirmLead: string
+      confirmKindDocuments: string
+      confirmKindHelpdesk: (channel: string, questions: number) => string
+      confirmKind: string
+      confirmFromHierarchy: string
+      confirmModel: string
+      confirmEstimate: string
+      confirmEstimateValue: (usd: string, minutes: number, date: string) => string
+      confirmNoEstimate: string
+      confirmRunning: string
+      confirmOpenInLast: (open: number) => string
+      confirmStart: string
+      confirmBackground: string
+      stopRun: string
+      stoppedByPerson: string
+      stoppedNote: (date: string) => string
+      archiveRun: string
+      archiveNote: string
+      archiveConfirm: string
+      archived: string
+      archivedBanner: (date: string, who: string) => string
       none: string
       runMeta: (when: string, who: string) => string
       against: (list: string) => string
@@ -6346,6 +6369,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.noSubjects": "Vyberte aspoň jeden dokument na kontrolu.",
     "compliance.reasonRequired": "Uveďte dôvod rozhodnutia.",
     "compliance.alreadyRunning": "Kontrola už beží — počkajte, kým dobehne.",
+    "compliance.notRunning": "Kontrola už nebeží.",
     "compliance.textRequired": "Prijaté znenie nemôže byť prázdne.",
     "compliance.nothingToApply": "Pri tomto náleze nie je čo zapísať.",
     "compliance.unknownRun": "Taká kontrola tu nie je.",
@@ -8085,6 +8109,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       referencesHint: "Ponúkajú sa len záväzné dokumenty — zákon, stanovy, poriadky a smernice — od najvyššieho, v platnom znení. Keď nevyberieš nič, použijú sa záväzné nadradené dokumenty kontrolovaných (Knižnica → Hierarchia dokumentov).",
       start: "Skontrolovať súlad",
       started: "Kontrola beží na pozadí — keď dobehne, príde vám upozornenie a e-mail.",
+      confirmHeading: "Spustiť kontrolu?",
+      confirmLead: "Kontrola volá umelú inteligenciu a stojí peniaze. Skontrolujte, čo sa spustí — až tlačidlo na konci ju naozaj spustí.",
+      confirmKindDocuments: "Kontrola súladu dokumentov",
+      confirmKindHelpdesk: (channel, questions) => `Návrhy z helpdesku do manuálov — ${channel} (${questions} otázok)`,
+      confirmKind: "Druh",
+      confirmFromHierarchy: "Nevybrali ste žiadne normy — použijú sa záväzné nadradené dokumenty z hierarchie.",
+      confirmModel: "Model",
+      confirmEstimate: "Odhad",
+      confirmEstimateValue: (usd, minutes, date) => `približne ${usd} USD a ${minutes} min — podľa kola z ${date}`,
+      confirmNoEstimate: "bez odhadu — toto zadanie ešte nedobehlo",
+      confirmRunning: "Toto zadanie práve beží. Druhé kolo sa spustiť nedá — počkajte, kým dobehne, alebo ho zastavte.",
+      confirmOpenInLast: open => `Posledné kolo tohto zadania má ${open} nerozhodnutých nálezov. Nové kolo ich neprenesie — rozhodnite ich najprv, alebo kontrolu zrušte.`,
+      confirmStart: "Spustiť kontrolu",
+      confirmBackground: "Kontrola pobeží na pozadí; keď dobehne, príde vám upozornenie a e-mail.",
+      stopRun: "Zastaviť kolo",
+      stoppedByPerson: "Kolo je zastavené. Hotové dokumenty ostali, zvyšok sa nekontroloval.",
+      stoppedNote: date => `Zastavené ${date}`,
+      archiveRun: "Zrušiť kontrolu",
+      archiveNote: "Kontrola zmizne zo zoznamu a jej rozhodnutia sa do ďalších kontrol neprenesú. Bežiace kolo sa zastaví. Záznam ostane — prijaté nálezy sú v audite dokumentov.",
+      archiveConfirm: "Zrušiť túto kontrolu",
+      archived: "Kontrola je zrušená.",
+      archivedBanner: (date, who) => `Kontrola je zrušená ${date} (${who}). V zozname nie je a jej rozhodnutia sa neprenášajú.`,
       none: "Kontrola dokumentov ešte neprebehla.",
       runMeta: (when: string, who: string) => `Spustené ${when}, ${who}`,
       against: (list: string) => `Proti: ${list}`,
@@ -11191,6 +11237,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.noSubjects": "Vyberte alespoň jeden dokument ke kontrole.",
     "compliance.reasonRequired": "Uveďte důvod rozhodnutí.",
     "compliance.alreadyRunning": "Kontrola už běží — počkejte, až doběhne.",
+    "compliance.notRunning": "Kontrola už neběží.",
     "compliance.textRequired": "Přijaté znění nemůže být prázdné.",
     "compliance.nothingToApply": "U tohoto nálezu není co zapsat.",
     "compliance.unknownRun": "Taková kontrola tu není.",
@@ -12927,6 +12974,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       referencesHint: "Nabízejí se jen závazné dokumenty — zákon, stanovy, řády a směrnice — od nejvyššího, v platném znění. Když nevybereš nic, použijí se závazné nadřazené dokumenty kontrolovaných (Knihovna → Hierarchie dokumentů).",
       start: "Zkontrolovat soulad",
       started: "Kontrola běží na pozadí — až doběhne, přijde vám upozornění a e-mail.",
+      confirmHeading: "Spustit kontrolu?",
+      confirmLead: "Kontrola volá umělou inteligenci a stojí peníze. Zkontrolujte, co se spustí — až tlačítko na konci ji opravdu spustí.",
+      confirmKindDocuments: "Kontrola souladu dokumentů",
+      confirmKindHelpdesk: (channel, questions) => `Návrhy z helpdesku do manuálů — ${channel} (${questions} otázek)`,
+      confirmKind: "Druh",
+      confirmFromHierarchy: "Nevybrali jste žádné normy — použijí se závazné nadřazené dokumenty z hierarchie.",
+      confirmModel: "Model",
+      confirmEstimate: "Odhad",
+      confirmEstimateValue: (usd, minutes, date) => `přibližně ${usd} USD a ${minutes} min — podle kola z ${date}`,
+      confirmNoEstimate: "bez odhadu — toto zadání ještě nedoběhlo",
+      confirmRunning: "Toto zadání právě běží. Druhé kolo spustit nelze — počkejte, až doběhne, nebo ho zastavte.",
+      confirmOpenInLast: open => `Poslední kolo tohoto zadání má ${open} nerozhodnutých nálezů. Nové kolo je nepřenese — rozhodněte je nejdřív, nebo kontrolu zrušte.`,
+      confirmStart: "Spustit kontrolu",
+      confirmBackground: "Kontrola poběží na pozadí; až doběhne, přijde vám upozornění a e-mail.",
+      stopRun: "Zastavit kolo",
+      stoppedByPerson: "Kolo je zastaveno. Hotové dokumenty zůstaly, zbytek se nekontroloval.",
+      stoppedNote: date => `Zastaveno ${date}`,
+      archiveRun: "Zrušit kontrolu",
+      archiveNote: "Kontrola zmizí ze seznamu a její rozhodnutí se do dalších kontrol nepřenesou. Běžící kolo se zastaví. Záznam zůstane — přijaté nálezy jsou v auditu dokumentů.",
+      archiveConfirm: "Zrušit tuto kontrolu",
+      archived: "Kontrola je zrušena.",
+      archivedBanner: (date, who) => `Kontrola je zrušena ${date} (${who}). V seznamu není a její rozhodnutí se nepřenášejí.`,
       none: "Kontrola dokumentů ještě neproběhla.",
       runMeta: (when: string, who: string) => `Spuštěno ${when}, ${who}`,
       against: (list: string) => `Proti: ${list}`,
@@ -16025,6 +16094,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "compliance.noSubjects": "Select at least one document to check.",
     "compliance.reasonRequired": "Give a reason for the decision.",
     "compliance.alreadyRunning": "A check is already running — wait until it finishes.",
+    "compliance.notRunning": "The check is no longer running.",
     "compliance.textRequired": "The accepted wording cannot be empty.",
     "compliance.nothingToApply": "There is nothing to write for this finding.",
     "compliance.unknownRun": "There is no such check.",
@@ -17755,6 +17825,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       referencesHint: "Only binding documents are offered — law, statutes, regulations and directives — highest first, in their valid version. If you select none, the binding parents of the checked documents are used (Library → Document hierarchy).",
       start: "Check compliance",
       started: "The check is running in the background — you will get a notification and an e-mail when it finishes.",
+      confirmHeading: "Start the check?",
+      confirmLead: "The check calls AI and costs money. Review what will run — only the button at the end actually starts it.",
+      confirmKindDocuments: "Document compliance check",
+      confirmKindHelpdesk: (channel, questions) => `Helpdesk suggestions for manuals — ${channel} (${questions} questions)`,
+      confirmKind: "Kind",
+      confirmFromHierarchy: "You selected no norms — the binding parent documents from the hierarchy will be used.",
+      confirmModel: "Model",
+      confirmEstimate: "Estimate",
+      confirmEstimateValue: (usd, minutes, date) => `about ${usd} USD and ${minutes} min — based on the round of ${date}`,
+      confirmNoEstimate: "no estimate — this task has not finished before",
+      confirmRunning: "This task is running right now. A second round cannot start — wait until it finishes, or stop it.",
+      confirmOpenInLast: open => `The last round of this task has ${open} undecided findings. A new round will not carry them over — decide them first, or cancel the check.`,
+      confirmStart: "Start the check",
+      confirmBackground: "The check runs in the background; you will get a notification and an e-mail when it finishes.",
+      stopRun: "Stop the round",
+      stoppedByPerson: "The round is stopped. Finished documents stayed, the rest was not checked.",
+      stoppedNote: date => `Stopped ${date}`,
+      archiveRun: "Cancel the check",
+      archiveNote: "The check disappears from the list and its decisions are not carried into later checks. A running round stops. The record stays — accepted findings are in the documents' audit.",
+      archiveConfirm: "Cancel this check",
+      archived: "The check is cancelled.",
+      archivedBanner: (date, who) => `The check was cancelled on ${date} (${who}). It is not in the list and its decisions are not carried over.`,
       none: "No document check has run yet.",
       runMeta: (when: string, who: string) => `Started ${when} by ${who}`,
       against: (list: string) => `Against: ${list}`,

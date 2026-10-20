@@ -37,7 +37,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, formatAmount, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction, startHelpdeskReviewAction } from "../../complianceActions"
+import { saveLinksAction, renameRunAction, decideFindingAction, applyFindingAction, startDocumentReviewAction, startHelpdeskReviewAction, stopRunAction, archiveRunAction } from "../../complianceActions"
 
 export const dynamic = "force-dynamic"
 
@@ -374,14 +374,21 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
         </div>
         {/* „Spustiť znova" až po dobehnutí — počas behu by zdvojil prácu (Ján 11. 10. 2026). */}
         {/* Návrhy z helpdesku (ADR-034, D221) sa spúšťajú znova ako návrhy z helpdesku — s aktuálnymi otázkami kanála. */}
-        {ctx.isReviewer && helpdesk && !isRunning(run) && (
+        {/* Omylom spustené kolo sa nemusí dobehnúť a zaplatiť (ADR-036). */}
+        {ctx.isReviewer && isRunning(run) && (
+          <form action={stopRunAction} className="page-tools">
+            <input type="hidden" name="runId" value={run.runId} />
+            <SubmitButton className="button button--quiet">{t.stopRun}</SubmitButton>
+          </form>
+        )}
+        {ctx.isReviewer && helpdesk && !isRunning(run) && !run.archivedAt && (
           <form action={startHelpdeskReviewAction} className="page-tools">
             <input type="hidden" name="channelKey" value={helpdesk.channelKey} />
             {run.name && <input type="hidden" name="name" value={run.name} />}
             <SubmitButton className="button button--quiet">{t.runAgain}</SubmitButton>
           </form>
         )}
-        {ctx.isReviewer && subjectIds.length > 0 && !helpdesk && !isRunning(run) && (
+        {ctx.isReviewer && subjectIds.length > 0 && !helpdesk && !isRunning(run) && !run.archivedAt && (
           <form action={startDocumentReviewAction} className="page-tools">
             {subjectIds.map(id => <input key={id} type="hidden" name="subjectIds" value={id} />)}
             {run.documentIds.map(id => <input key={id} type="hidden" name="documentIds" value={id} />)}
@@ -398,6 +405,12 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
         )}
       </div>
       <Notice message={q.msg} error={q.error === "1"} back={href({ doc: q.doc, view, f: q.f })} language={language} />
+      {run.archivedAt && (
+        <div className="lnote lnote--warn" style={{ marginBottom: 12 }}>
+          <span className="lnote-mark" aria-hidden="true">!</span>
+          <div className="lnote-text">{t.archivedBanner(formatDate(run.archivedAt, language), run.archivedBy ?? "")}</div>
+        </div>
+      )}
 
       <section className="card cf-prog">
         <div className="cf-prog-body">
@@ -410,7 +423,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
             </>
           ) : (
             <>
-              <div className="cf-prog-top"><b>{t.decidedOf(progress.decided, progress.total)}</b>{progress.total > progress.decided && <span className="quiet">{t.remaining(progress.total - progress.decided)}</span>}</div>
+              <div className="cf-prog-top"><b>{t.decidedOf(progress.decided, progress.total)}</b>{progress.total > progress.decided && <span className="quiet">{t.remaining(progress.total - progress.decided)}</span>}{run.stoppedAt && <span className="tag tag--warn">{t.stoppedNote(formatDate(run.stoppedAt, language))}</span>}</div>
               <div className="cf-bar" role="progressbar" aria-valuemin={0} aria-valuemax={progress.total} aria-valuenow={progress.decided}>
                 <i style={{ width: `${progress.total ? (progress.decided / progress.total) * 100 : 0}%` }} />
               </div>
@@ -451,6 +464,18 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
             )}
           </div>
         </div>
+      )}
+
+      {/* Zrušenie kontroly (ADR-036) — na konci, za rozbaľovacím blokom: nie je to bežná akcia. */}
+      {ctx.isReviewer && !run.archivedAt && (
+        <details className="cf-rename" style={{ marginTop: 24 }}>
+          <summary>{t.archiveRun}</summary>
+          <form action={archiveRunAction} className="cf-rename-form">
+            <input type="hidden" name="runId" value={run.runId} />
+            <p className="quiet" style={{ margin: 0 }}>{t.archiveNote}</p>
+            <div><SubmitButton className="button button--quiet">{t.archiveConfirm}</SubmitButton></div>
+          </form>
+        </details>
       )}
     </div>
     </AppShell>

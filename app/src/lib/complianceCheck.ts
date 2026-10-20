@@ -456,6 +456,19 @@ export interface ComplianceRun {
   error: string | null
   failures: number
   leaseUntil: Date | null
+  /**
+   * Zastavené človekom (ADR-036, Ján 20. 10. 2026) — omylom spustené kolo
+   * sa nemusí dobehnúť a zaplatiť. Hotové dokumenty ostávajú, zvyšok nie.
+   */
+  stoppedAt?: Date | null
+  stoppedBy?: string | null
+  /**
+   * Zrušená kontrola (ADR-036) — zmizne zo zoznamu a jej rozhodnutia sa
+   * do ďalších kôl neprenášajú. Nemaže sa: prijaté nálezy sú zapísané
+   * v audite dokumentov a odkazujú na beh (D24).
+   */
+  archivedAt?: Date | null
+  archivedBy?: string | null
 }
 
 export interface RunUsage {
@@ -482,7 +495,8 @@ async function loadDocuments(code: string, documentIds: string[]): Promise<RawDo
  */
 export async function documentRuns(companyCode: string, limit = 30): Promise<ComplianceRun[]> {
   const code = requireCompanyCode(companyCode, "documentRuns")
-  return (await runs()).find({ companyCode: code, "scope.kind": "documents" }, { projection: { _id: 0 } }).sort({ startedAt: -1 }).limit(limit).toArray()
+  // Zrušené kontroly (ADR-036) v zozname nie sú; ich detail sa otvorí z odkazu.
+  return (await runs()).find({ companyCode: code, "scope.kind": "documents", archivedAt: null }, { projection: { _id: 0 } }).sort({ startedAt: -1 }).limit(limit).toArray()
 }
 
 /**
@@ -547,9 +561,9 @@ function newRun(code: string, scopeKey: string, scope: RunScope, ids: string[], 
   }
 }
 
-/** Beh ešte pracuje (nie je hotový ani zastavený po opakovaných chybách). */
-export function isRunning(run: Pick<ComplianceRun, "pending" | "failures"> | null | undefined): boolean {
-  return Boolean(run && run.pending.length > 0 && run.failures < MAX_FAILURES)
+/** Beh ešte pracuje (nie je hotový, zastavený človekom ani po opakovaných chybách). */
+export function isRunning(run: Pick<ComplianceRun, "pending" | "failures" | "stoppedAt"> | null | undefined): boolean {
+  return Boolean(run && run.pending.length > 0 && run.failures < MAX_FAILURES && !run.stoppedAt)
 }
 
 /**
@@ -614,7 +628,7 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   if (!subjects.length) throw new ComplianceError("compliance.noSubjects", "Vyberte aspoň jeden dokument na kontrolu.")
   // Tie isté dokumenty už kontroluje rozbehnutý beh — druhý by len zdvojil prácu a cenu.
   const same = [...subjects].sort().join("|")
-  const active = await (await runs()).find({ companyCode: code, "scope.kind": "documents", "pending.0": { $exists: true }, failures: { $lt: MAX_FAILURES } }, { projection: { _id: 0, scope: 1 } }).toArray()
+  const active = await (await runs()).find({ companyCode: code, "scope.kind": "documents", "pending.0": { $exists: true }, failures: { $lt: MAX_FAILURES }, stoppedAt: null, archivedAt: null }, { projection: { _id: 0, scope: 1 } }).toArray()
   if (active.some(r => r.scope.kind === "documents" && [...r.scope.subjectIds].sort().join("|") === same)) throw new ComplianceError("compliance.alreadyRunning", "Kontrola už beží — počkajte, kým dobehne.")
   const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
   let refs = documentIds.filter(id => !subjects.includes(id))
@@ -637,6 +651,102 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   if (title) run.name = title
   await (await runs()).insertOne(run)
   return run
+}
+
+/**
+ * Zastaví bežiace kolo (ADR-036). Nedokončené dokumenty sa zahodia,
+ * hotové výsledky ostávajú. Upozornenie „kontrola dobehla" neodíde —
+ * `notifiedAt` sa nastaví hneď.
+ */
+export async function stopRun(companyCode: string, runId: string, by: string, now = new Date()): Promise<void> {
+  const code = requireCompanyCode(companyCode, "stopRun")
+  const r = await (await runs()).updateOne(
+    { companyCode: code, runId, "scope.kind": "documents", "pending.0": { $exists: true }, stoppedAt: null },
+    { $set: { pending: [], partials: [], stoppedAt: now, stoppedBy: by, finishedAt: now, notifiedAt: now, leaseUntil: null, updatedAt: now } },
+  )
+  if (!r.matchedCount) throw new ComplianceError("compliance.notRunning", "Kontrola už nebeží.")
+}
+
+/**
+ * Zrušenie kontroly (ADR-036): zmizne zo zoznamu, jej rozhodnutia sa do
+ * ďalších kôl neprenášajú. Bežiace kolo sa najprv zastaví. Nemaže sa (D24).
+ */
+export async function archiveRun(companyCode: string, runId: string, by: string, now = new Date()): Promise<void> {
+  const code = requireCompanyCode(companyCode, "archiveRun")
+  const col = await runs()
+  await col.updateOne(
+    { companyCode: code, runId, "scope.kind": "documents", "pending.0": { $exists: true }, stoppedAt: null },
+    { $set: { pending: [], partials: [], stoppedAt: now, stoppedBy: by, finishedAt: now, notifiedAt: now, leaseUntil: null } },
+  )
+  const r = await col.updateOne(
+    { companyCode: code, runId, "scope.kind": "documents", archivedAt: null },
+    { $set: { archivedAt: now, archivedBy: by, updatedAt: now } },
+  )
+  if (!r.matchedCount) throw new ComplianceError("compliance.unknownRun", "Taká kontrola tu nie je.")
+}
+
+/** Rekapitulácia pred spustením (ADR-036) — čo sa skontroluje proti čomu a čo to asi bude stáť. */
+export interface RunPreview {
+  kind: "documents" | "helpdesk"
+  subjects: { documentId: string; title: string }[]
+  references: { documentId: string; title: string }[]
+  /** Referencie sa vezmú z hierarchie — človek žiadne nevybral. */
+  fromHierarchy: boolean
+  /** Pri návrhoch z helpdesku: počet otázok. */
+  questions: number
+  model: string | null
+  /** Odhad podľa posledného dobehnutého kola tej istej kontroly, inak `null`. */
+  estimate: { usd: number; minutes: number; from: Date } | null
+  /** To isté zadanie práve beží — spustiť sa nedá. */
+  running: { runId: string } | null
+  /** Posledné kolo toho istého zadania má nerozhodnuté nálezy. */
+  openInLast: { runId: string; open: number } | null
+}
+
+/** Rovnaké zadanie: druh, kontrolované dokumenty a pri helpdesku kanál (ADR-036). */
+export function sameTask(run: Pick<ComplianceRun, "scope">, subjects: string[], channelKey: string | null): boolean {
+  if (run.scope.kind !== "documents") return false
+  const key = (ids: string[]) => [...new Set(ids)].sort().join("|")
+  return (run.scope.helpdesk?.channelKey ?? null) === channelKey && key(run.scope.subjectIds) === key(subjects)
+}
+
+export async function previewRun(companyCode: string, input: { subjectIds: string[]; documentIds: string[]; channel?: { key: string; name: string } | null }): Promise<RunPreview> {
+  const code = requireCompanyCode(companyCode, "previewRun")
+  const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
+  let subjectIds = [...new Set(input.subjectIds.filter(Boolean))]
+  let questions = 0
+  if (input.channel) {
+    questions = (await questionsFor(code, input.channel.key)).length
+    subjectIds = (await (await getCollection(DOCUMENTS_COLLECTION))
+      .find({ companyCode: code, accessLevel: "public" }, { projection: { _id: 0, documentId: 1, category: 1 } }).toArray())
+      .filter(d => documentRole(d.category as string | undefined, extras) === "guidance").map(d => String(d.documentId))
+  }
+  let refIds = [...new Set(input.documentIds.filter(id => id && !subjectIds.includes(id)))]
+  const fromHierarchy = !refIds.length
+  if (fromHierarchy) refIds = await hierarchyReferences(code, subjectIds, extras)
+  const docs = await loadDocuments(code, [...subjectIds, ...refIds])
+  const title = (id: string) => String(docs.find(d => d.documentId === id)?.title ?? id)
+  const channelKey = input.channel?.key ?? null
+  const same = (await (await runs()).find(
+    { companyCode: code, "scope.kind": "documents", archivedAt: null },
+    { projection: { _id: 0, runId: 1, scope: 1, pending: 1, failures: 1, stoppedAt: 1, results: 1, usage: 1, startedAt: 1, finishedAt: 1 } },
+  ).sort({ startedAt: -1 }).limit(50).toArray()).filter(r => sameTask(r, subjectIds, channelKey))
+  const running = same.find(r => isRunning(r))
+  const last = same.find(r => !isRunning(r))
+  const done = same.find(r => r.finishedAt && !r.stoppedAt && (r.usage?.usd ?? 0) > 0)
+  const open = last ? (last.results ?? []).flatMap(r => r.findings).filter(f => !f.status).length : 0
+  const ai = await aiForCompany(code)
+  return {
+    kind: input.channel ? "helpdesk" : "documents",
+    subjects: subjectIds.map(id => ({ documentId: id, title: title(id) })),
+    references: refIds.sort((a, b) => categoryRank(docs.find(d => d.documentId === a)?.category, extras) - categoryRank(docs.find(d => d.documentId === b)?.category, extras))
+      .map(id => ({ documentId: id, title: title(id) })),
+    fromHierarchy, questions,
+    model: ai.models.compliance ?? null,
+    estimate: done ? { usd: done.usage!.usd, minutes: Math.max(1, Math.round((done.finishedAt!.getTime() - done.startedAt.getTime()) / 60_000)), from: done.startedAt } : null,
+    running: running ? { runId: running.runId } : null,
+    openInLast: last && open ? { runId: last.runId, open } : null,
+  }
 }
 
 export interface ReviewBudget { budgetMs: number; hardMs: number }
@@ -774,7 +884,8 @@ export function carryKept(findings: DocumentFinding[], kept: KeptDecision[]): Do
 export async function keptDecisions(companyCode: string, documentId: string, exceptRunId: string): Promise<KeptDecision[]> {
   const code = requireCompanyCode(companyCode, "keptDecisions")
   const list = await (await runs()).find(
-    { companyCode: code, "scope.kind": "documents", runId: { $ne: exceptRunId }, "results.documentId": documentId },
+    // Zrušená kontrola (ADR-036) sa nepočíta — začína sa nanovo.
+    { companyCode: code, "scope.kind": "documents", runId: { $ne: exceptRunId }, "results.documentId": documentId, archivedAt: null },
     { projection: { _id: 0, runId: 1, startedAt: 1, results: 1 } },
   ).sort({ startedAt: -1 }).toArray()
   // Od najnovšieho behu: prvé rozhodnutie o mieste platí (aj prijatie), staršie sa preskočia.
@@ -807,14 +918,20 @@ export async function continueReview(companyCode: string, scopeKey: string, budg
   const now = new Date()
   const run = await col.findOneAndUpdate(
     {
-      companyCode: code, scopeKey, "pending.0": { $exists: true }, failures: { $lt: MAX_FAILURES },
+      companyCode: code, scopeKey, "pending.0": { $exists: true }, failures: { $lt: MAX_FAILURES }, stoppedAt: null,
       $or: [{ leaseUntil: null }, { leaseUntil: { $exists: false } }, { leaseUntil: { $lt: now } }],
     },
     { $set: { leaseUntil: new Date(now.getTime() + budget.hardMs + 60_000) } },
     { returnDocument: "after" },
   )
   if (!run) return 0
-  const mine = { companyCode: code, scopeKey, runId: run.runId }
+  /*
+   * `stoppedAt: null` v podmienke každého zápisu: keď človek kolo zastaví
+   * (ADR-036), ďalšia dávka sa už nezapíše a slučka skončí na `matchedCount`.
+   * Spotreba (`onUsage`) ide cez `mine` tiež — rozpracované volanie sa
+   * do behu nepripíše, v `ai_usage` je.
+   */
+  const mine = { companyCode: code, scopeKey, runId: run.runId, stoppedAt: null }
   const ai = await aiForCompany(code)
   if (!ai.apiKey) { await col.updateOne(mine, { $set: { leaseUntil: null } }); return 0 }
   const began = Date.now()

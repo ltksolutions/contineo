@@ -47,6 +47,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-033](ADR-033-spravy-interny-messenger.md) | Kuriér: interný messenger s vláknami — formátované správy (Markdown, karty obsahu namiesto príloh), hromadne len role, 1:1 ktokoľvek, odpoveď na oznam súkromne, prečítanie len počtom, ranný súhrn e-mailom bez tela, živý rozhovor v Kuriérovi cez SSE + change stream, účastníci do 500 vo vlákne, vlastná obálka v hlavičke oddelená od zvončeka (D204–D214) | ✅ prijaté · fáza 1 plánovaná |
 | [ADR-034](ADR-034-uloha-dokumentu-a-navrhy-do-manualov.md) | Úloha dokumentu (záväzný / výkladový / záznam) a poradie záväznosti druhu; Stanovy, Poriadok, Zákon namiesto Normy; hierarchia dokumentov s viacerými nadradenými; FAQ zaniká, analýza helpdesku navrhuje doplnenie manuálov | ✅ prijaté · kroky 1–4 (typizácia, hierarchia, návrhy z helpdesku, FAQ zrušené) |
 | [ADR-035](ADR-035-rez-zo-struktury-markdownu.md) | Prvý rez úsekov zo štruktúry Markdownu (nadpisy podľa úrovne, číslovanie), bez profilov členenia; poradie ručné hranice → štruktúra → chunker pre text bez nadpisov; preindexovanie existujúcich po porovnaní na normách (D230–D233) · prekonáva D58, D79, časť ADR-027 | ✅ prijaté |
+| [ADR-036](ADR-036-kontrola-a-kola.md) | Kontrola súladu: kontrola je zadanie (druh, kontrolované dokumenty, kanál), beh je jej kolo; spustenie len po rekapitulácii s odhadom ceny; druhé kolo počas behu nie; zastavenie kola; zrušenie kontroly je archív, nie mazanie (D234–D238) | ✅ prijaté · krok 1 (potvrdenie, zastavenie, zrušenie) |
 
 ## Čo sem nepatrí
 
@@ -59,6 +60,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-036**. Súbor `ADR-036-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-037**. Súbor `ADR-037-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
