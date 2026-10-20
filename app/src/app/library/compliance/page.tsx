@@ -173,7 +173,8 @@ export default async function ComplianceRunsPage({ searchParams }: { searchParam
               <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
                 <p style={{ margin: 0 }}>
                   <b>{run.name || t.runMeta(formatDate(run.startedAt, language), who(run.startedBy))}</b>{" · "}
-                  {run.pending.length === 0 ? t.findingsCount(findings.length, open)
+                  {run.stoppedAt ? <>{t.findingsCount(findings.length, open)} · <span className="tag tag--warn">{t.stoppedNote(formatDate(run.stoppedAt, language))}</span></>
+                    : run.pending.length === 0 ? t.findingsCount(findings.length, open)
                     : run.failures >= MAX_FAILURES ? <span className="bad-fg">{t.stopped}</span>
                     : t.progress(run.total - run.pending.length, run.total)}
                 </p>

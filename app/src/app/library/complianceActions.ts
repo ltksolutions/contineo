@@ -15,7 +15,7 @@ import { complianceContext, complianceViewContext } from "@/lib/complianceAccess
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
-import { renameRun, startDocumentReview, startHelpdeskReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun } from "@/lib/complianceCheck"
+import { renameRun, startDocumentReview, startHelpdeskReview, decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun, stopRun, archiveRun } from "@/lib/complianceCheck"
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
 import { parseNextFinding } from "@/lib/complianceView"
 import { listChannels } from "@/lib/channels"
@@ -54,8 +54,23 @@ function failure(e: unknown, language: string): string {
   return errorText(e, language)
 }
 
+/**
+ * Každé spustenie ide najprv na rekapituláciu (ADR-036, Ján 20. 10. 2026:
+ * „Navrhnúť doplnenie manuálov" spustilo kontrolu hneď a vznikli zbytočné
+ * behy). Formulár bez `confirmed` sa nespustí, ale presmeruje na
+ * `/library/compliance/confirm` s tým istým zadaním — platí aj pre stránky
+ * otvorené pred nasadením.
+ */
+function toConfirm(fd: FormData, kind: "documents" | "helpdesk"): never {
+  const q = new URLSearchParams({ kind })
+  for (const key of ["name", "requestId", "channelKey"]) { const v = fieldText(fd, key); if (v) q.set(key, v) }
+  for (const key of ["subjectIds", "documentIds"]) for (const v of fd.getAll(key)) if (String(v).trim()) q.append(key, String(v).trim())
+  redirect(`${PAGE}/confirm?${q.toString()}`)
+}
+
 export async function startDocumentReviewAction(fd: FormData) {
   const ctx = await ready()
+  if (fieldText(fd, "confirmed") !== "1") toConfirm(fd, "documents")
   let runId = ""
   try {
     // „Spustiť znova" na detaile posiela ten istý výber aj názov (Q4).
@@ -79,6 +94,7 @@ export async function startDocumentReviewAction(fd: FormData) {
  */
 export async function startHelpdeskReviewAction(fd: FormData) {
   const ctx = await ready()
+  if (fieldText(fd, "confirmed") !== "1") toConfirm(fd, "helpdesk")
   let runId = ""
   try {
     const key = fieldText(fd, "channelKey")
@@ -205,4 +221,31 @@ export async function dismissRequestAction(fd: FormData) {
     back(PAGE, failure(e, ctx.language), true, "requests")
   }
   back(PAGE, ctx.t.requestDismissed, false, "requests")
+}
+
+/** Zastaví bežiace kolo (ADR-036) — hotové dokumenty ostanú. */
+export async function stopRunAction(fd: FormData) {
+  const ctx = await ready()
+  const runId = fieldText(fd, "runId")
+  const path = `${PAGE}/${encodeURIComponent(runId)}`
+  try {
+    await stopRun(ctx.person.companyCode, runId, ctx.person.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(path, failure(e, ctx.language), true)
+  }
+  back(path, ctx.t.stoppedByPerson)
+}
+
+/** Zruší kontrolu (ADR-036): zo zoznamu zmizne, záznam ostáva (D24). */
+export async function archiveRunAction(fd: FormData) {
+  const ctx = await ready()
+  const runId = fieldText(fd, "runId")
+  try {
+    await archiveRun(ctx.person.companyCode, runId, ctx.person.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(`${PAGE}/${encodeURIComponent(runId)}`, failure(e, ctx.language), true)
+  }
+  back(PAGE, ctx.t.archived)
 }
