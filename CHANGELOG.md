@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola súladu: požiadavky len z hierarchie, bez pevných väzieb (2026-10-20, D241)
+
+- Požiadavka na kontrolu pri novom znení vzniká len podľa nadradených
+  dokumentov (hierarchia, D219) — nie z pevných väzieb ani zo starých
+  kontrol, ktoré pridávali normy s dokumentom nesúvisiace.
+- Sekcia „Pevné väzby" v zozname kontrol a tlačidlo „Uložiť ako pevné
+  väzby" na detaile kontroly zmizli. Uložené väzby ostávajú v databáze
+  nepoužité.
+- „Kredity — prerozdelenie a e-shop" má nadradené RaPP a Stanovy.
+
 ### Kontrola súladu: kontroly a kolá (2026-10-20, KNIZ-kontroly-a-kola, D239)
 
 - **Zoznam** má jednu kartu na kontrolu, nie na beh: sekcie „Na rozhodnutie"

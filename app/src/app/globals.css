@@ -8832,7 +8832,6 @@ a.form-row.channel-row:hover { background: var(--surface-2); }
 .ck-chev { color: var(--muted); font-size: 20px; }
 .ck-req { display: grid; gap: 8px; }
 .ck-dismiss { display: grid; gap: 10px; padding-top: 6px; border-top: 1px solid var(--line); }
-.ck-links-intro { margin: 0; padding: 0 22px 8px; font-size: var(--fs-small); }
 /* Nová kontrola: kanály pod druhom helpdesk. */
 .ck-channels { display: grid; gap: 8px; padding: 0 16px 14px; }
 .ck-channel { display: grid; gap: 6px; }

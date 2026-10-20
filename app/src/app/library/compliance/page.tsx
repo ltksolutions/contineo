@@ -6,8 +6,9 @@
  * Jedna karta na **kontrolu** (zadanie), nie na beh — 20. 10. boli v zozname
  * štyri karty „Návrhy z helpdesku do manuálov — ISSF Helpdesk" a nebolo jasné,
  * ktorá platí. Poradie: požiadavky na kontrolu, „Na rozhodnutie" (posledné
- * kolo má nerozhodnuté nálezy, beží, je zastavené alebo zlyhalo), „Uzavreté",
- * pevné väzby. Jediné plné tlačidlo je „Nová kontrola" v hlavičke.
+ * kolo má nerozhodnuté nálezy, beží, je zastavené alebo zlyhalo), „Uzavreté".
+ * Pevné väzby tu boli do 20. 10. 2026 — požiadavky sú len z hierarchie
+ * (D241). Jediné plné tlačidlo je „Nová kontrola" v hlavičke.
  *
  * Ján 10. 10. 2026: „spravme kontrolu manuálov voči platným dokumentom… nech
  * vieme, že návody sú OK voči nadradeným normám".
@@ -20,7 +21,7 @@ import Notice from "@/components/Notice"
 import SubmitButton from "@/components/SubmitButton"
 import { complianceContext } from "@/lib/complianceAccess"
 import { documentRuns, type ComplianceRun } from "@/lib/complianceCheck"
-import { listChecks, latestRounds, checkForSubjects, roundsOf, checkById, type ComplianceCheck } from "@/lib/complianceChecks"
+import { listChecks, latestRounds, checkForSubjects, roundsOf, type ComplianceCheck } from "@/lib/complianceChecks"
 import { roundState, needsAttention, type RoundState } from "@/lib/complianceView"
 import { getCollection } from "@/lib/mongodb"
 import { PERSONS_COLLECTION, type Person } from "@/lib/persons"
@@ -28,8 +29,8 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { dismissRequestAction, removeLinkAction } from "../complianceActions"
-import { openRequests, listLinks } from "@/lib/complianceRequests"
+import { dismissRequestAction } from "../complianceActions"
+import { openRequests } from "@/lib/complianceRequests"
 
 export const dynamic = "force-dynamic"
 
@@ -63,8 +64,8 @@ export default async function ComplianceChecksPage({ searchParams }: { searchPar
   const t = dict.library.compliance
   const code = ctx.tenant.companyCode
   const branding = brandingView(ctx.tenant)
-  const [checks, requests, links, legacy] = await Promise.all([
-    listChecks(code), openRequests(code), listLinks(code),
+  const [checks, requests, legacy] = await Promise.all([
+    listChecks(code), openRequests(code),
     // Behy spred D239 bez kontroly — od 20. 10. 2026 zrušené; nezrušený by sa inak stratil.
     documentRuns(code).then(rs => rs.filter(r => !r.checkId)),
   ])
@@ -76,16 +77,12 @@ export default async function ComplianceChecksPage({ searchParams }: { searchPar
   const who = (email: string) => nameByEmail.get(email) ?? email
   const checkName = (c: ComplianceCheck) => c.name || t.runDefaultName(formatDate(c.createdAt, language))
 
-  // Požiadavka spustí ďalšie kolo kontroly, z ktorej väzba vznikla (Q2); bez nej novú kontrolu.
+  // Požiadavka spustí ďalšie kolo kontroly s tými istými dokumentmi (Q2); bez nej novú kontrolu.
   const requestRows = await Promise.all(requests.map(async r => {
     const check = await checkForSubjects(code, r.subjectIds)
     const rounds = check ? (await roundsOf(code, check.checkId)).length : 0
     return { r, check, rounds }
   }))
-  // Kontrola, z ktorej je pevná väzba (D239) — aj zrušená, aby bolo vidieť pôvod.
-  const linkChecks = new Map(await Promise.all([...new Set(links.map(l => l.fromCheckId).filter((x): x is string => Boolean(x)))]
-    .map(async id => [id, await checkById(code, id)] as const)))
-
   const rows = checks.map(c => ({ c, info: latest.get(c.checkId) ?? null }))
   const attention = rows.filter(x => !x.info || needsAttention(roundState(x.info.latest).state))
   const done = rows.filter(x => x.info && !needsAttention(roundState(x.info.latest).state))
@@ -201,30 +198,6 @@ export default async function ComplianceChecksPage({ searchParams }: { searchPar
         </section>
       )}
 
-      {/* Pevné väzby (D197) — pri novom znení normy vznikne požiadavka na nové kolo. */}
-      <section className="card more ck-links" id="links">
-        <div className="more-head"><h2>{t.linksHeading}</h2></div>
-        <p className="quiet ck-links-intro">{t.linksIntro}</p>
-        {links.length === 0 && <p className="quiet ck-links-intro">{t.linksNone}</p>}
-        {links.map(l => {
-          const from = l.fromCheckId ? linkChecks.get(l.fromCheckId) ?? null : null
-          return (
-            <form key={l.subjectId} action={removeLinkAction} className="more-row">
-              <input type="hidden" name="subjectId" value={l.subjectId} />
-              <div className="more-main">
-                <b>{l.subjectTitle}</b>
-                <span>
-                  {t.against(l.referenceTitles.join(", "))}
-                  {from && <> · {from.archivedAt
-                    ? <>{t.ck.linkFrom(checkName(from))} {t.ck.linkFromArchived}</>
-                    : <Link href={`/library/compliance/${encodeURIComponent(from.checkId)}`}>{t.ck.linkFrom(checkName(from))}</Link>}</>}
-                </span>
-              </div>
-              <SubmitButton className="button button--quiet">{t.linkRemove}</SubmitButton>
-            </form>
-          )
-        })}
-      </section>
     </div>
     </AppShell>
   )

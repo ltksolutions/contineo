@@ -2362,7 +2362,7 @@ interface Dictionary {
       complianceDone: (documents: number, findings: number) => string
       /** Prijaté znenie čaká na zápis do konceptu (D199) — správcom obsahu. */
       complianceToApply: (title: string) => string
-      /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (D200). */
+      /** Nové znenie dokumentu v hierarchii — treba skontrolovať súlad (D200, D241). */
       complianceRequested: (title: string, label: string, documents: number) => string
       /** Kolo zrušené, lebo sa koncept po predložení zmenil — schvaľovateľom. */
       approvalCancelled: (title: string) => string
@@ -3144,9 +3144,6 @@ interface Dictionary {
       intro: string
       subjects: string
       subjectsHint: string
-      saveLinks: string
-      linksSaved: (n: number) => string
-      linkRemoved: string
       requestDismissed: string
       requestsHeading: string
       requestTag: string
@@ -3157,10 +3154,6 @@ interface Dictionary {
       requestDismiss: string
       requestDismissPlaceholder: string
       requestDismissSave: string
-      linksHeading: string
-      linksIntro: string
-      linksNone: string
-      linkRemove: string
       references: string
       referencesHint: string
       start: string
@@ -3190,7 +3183,6 @@ interface Dictionary {
       archivedBanner: (date: string, who: string) => string
       none: string
       runMeta: (when: string, who: string) => string
-      against: (list: string) => string
       steps: (n: number) => string
       progress: (done: number, total: number) => string
       done: string
@@ -3334,8 +3326,6 @@ interface Dictionary {
         requestStartRound: (n: number) => string
         requestStartNew: string
         requestDismissShort: string
-        linkFrom: (name: string) => string
-        linkFromArchived: string
         noneTitle: string
         noneText: string
         newHeading: string
@@ -3373,7 +3363,6 @@ interface Dictionary {
         goToLatest: (n: number) => string
         legacyReadOnly: string
         newRound: string
-        linksSavedShort: string
         cancel: string
         cancelCheck: string
         cancelCheckNote: string
@@ -8205,9 +8194,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Umelá inteligencia porovná vybrané dokumenty (napríklad manuály alebo rozpis súťaží) s referenčnými normami a vypíše nálezy — rozpor, zastarané, chýba, nejasné — s citáciou článku a odporúčaním. Dokument sama nemení. Normy idú od najzáväznejšej; veľký výber sa skontroluje v niekoľkých krokoch a výsledky sa spoja. Verejný dokument sa kontroluje len verejnými normami.",
       subjects: "Dokumenty na kontrolu",
       subjectsHint: "Dokument bez zverejneného znenia sa skontroluje v koncepte.",
-      saveLinks: "Uložiť ako pevné väzby",
-      linksSaved: n => `Pevné väzby sú uložené: ${n} ${n === 1 ? "dokument" : n < 5 ? "dokumenty" : "dokumentov"}. Pri novom znení niektorej normy vznikne požiadavka na kontrolu.`,
-      linkRemoved: "Pevná väzba je zrušená.",
       requestDismissed: "Požiadavka je uzavretá s dôvodom.",
       requestsHeading: "Čaká na kontrolu",
       requestTag: "nové znenie",
@@ -8218,10 +8204,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       requestDismiss: "Netreba",
       requestDismissPlaceholder: "Prečo kontrola netreba — napríklad „len oprava preklepov“.",
       requestDismissSave: "Uzavrieť požiadavku",
-      linksHeading: "Pevné väzby",
-      linksIntro: "Ktoré dokumenty sa kontrolujú proti ktorým normám. Pri novom znení dokumentu alebo normy z väzby vznikne požiadavka na kontrolu a dostanú upozornenie zodpovedné osoby, správcovia obsahu a rola compliance. Väzby sa ukladajú z dobehnutej kontroly.",
-      linksNone: "Zatiaľ žiadne. Uložíte ich na detaile dobehnutej kontroly tlačidlom „Uložiť ako pevné väzby“.",
-      linkRemove: "Zrušiť",
       references: "Referenčné normy",
       referencesHint: "Ponúkajú sa len záväzné dokumenty — zákon, stanovy, poriadky a smernice — od najvyššieho, v platnom znení. Keď nevyberieš nič, použijú sa záväzné nadradené dokumenty kontrolovaných (Knižnica → Hierarchia dokumentov).",
       start: "Skontrolovať súlad",
@@ -8250,7 +8232,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       archivedBanner: (date, who) => `Kontrola je zrušená ${date} (${who}). V zozname nie je a jej rozhodnutia sa neprenášajú.`,
       none: "Kontrola dokumentov ešte neprebehla.",
       runMeta: (when: string, who: string) => `Spustené ${when}, ${who}`,
-      against: (list: string) => `Proti: ${list}`,
       steps: (n: number) => `${n} ${n === 1 ? "krok" : n < 5 ? "kroky" : "krokov"} na dokument`,
       progress: (done: number, total: number) => `Skontrolované ${done} z ${total} dokumentov.`,
       done: "Hotovo.",
@@ -8387,12 +8368,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         scopeHelpdesk: (questions, channel, manuals) => `${questions} ${questions === 1 ? "otázka" : questions >= 2 && questions <= 4 ? "otázky" : "otázok"} kanála ${channel} proti ${manuals} ${manuals === 1 ? "manuálu" : "manuálom"}`,
         rounds: n => `${n} ${n === 1 ? "kolo" : n >= 2 && n <= 4 ? "kolá" : "kôl"}`,
         lastRound: (date, who) => `posledné ${date}, ${who}`,
-        requestFor: name => `v pevnej väzbe s kontrolou „${name}“`,
+        requestFor: name => `ďalšie kolo kontroly „${name}“`,
         requestStartRound: n => `Spustiť kolo ${n}…`,
         requestStartNew: "Spustiť kontrolu…",
         requestDismissShort: "Netreba",
-        linkFrom: name => `z kontroly „${name}“`,
-        linkFromArchived: "(zrušená)",
         noneTitle: "Zatiaľ žiadna kontrola",
         noneText: "Kontrolu spustíte tlačidlom vpravo hore.",
         newHeading: "Nová kontrola",
@@ -8430,7 +8409,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         goToLatest: n => `Prejsť na kolo ${n}`,
         legacyReadOnly: "Beh spred zmeny na kontroly a kolá (20. 10. 2026) — len na čítanie.",
         newRound: "Nové kolo",
-        linksSavedShort: "Pevné väzby ✓",
         cancel: "Zrušiť",
         cancelCheck: "Zrušiť kontrolu",
         cancelCheckNote: "Kontrola zmizne zo zoznamu; kolá a rozhodnutia ostanú zapísané.",
@@ -13188,9 +13166,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Umělá inteligence porovná vybrané dokumenty (například manuály nebo rozpis soutěží) s referenčními normami a vypíše nálezy — rozpor, zastaralé, chybí, nejasné — s citací článku a doporučením. Dokument sama nemění. Normy jdou od nejzávaznější; velký výběr se zkontroluje v několika krocích a výsledky se spojí. Veřejný dokument se kontroluje jen veřejnými normami.",
       subjects: "Dokumenty ke kontrole",
       subjectsHint: "Dokument bez zveřejněného znění se zkontroluje v konceptu.",
-      saveLinks: "Uložit jako pevné vazby",
-      linksSaved: n => `Pevné vazby jsou uloženy: ${n} ${n === 1 ? "dokument" : n < 5 ? "dokumenty" : "dokumentů"}. Při novém znění některé normy vznikne požadavek na kontrolu.`,
-      linkRemoved: "Pevná vazba je zrušena.",
       requestDismissed: "Požadavek je uzavřen s důvodem.",
       requestsHeading: "Čeká na kontrolu",
       requestTag: "nové znění",
@@ -13201,10 +13176,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       requestDismiss: "Netřeba",
       requestDismissPlaceholder: "Proč kontrola netřeba — například „jen oprava překlepů“.",
       requestDismissSave: "Uzavřít požadavek",
-      linksHeading: "Pevné vazby",
-      linksIntro: "Které dokumenty se kontrolují proti kterým normám. Při novém znění dokumentu nebo normy z vazby vznikne požadavek na kontrolu a upozornění dostanou odpovědné osoby, správci obsahu a role compliance. Vazby se ukládají z doběhnuté kontroly.",
-      linksNone: "Zatím žádné. Uložíte je na detailu doběhnuté kontroly tlačítkem „Uložit jako pevné vazby“.",
-      linkRemove: "Zrušit",
       references: "Referenční normy",
       referencesHint: "Nabízejí se jen závazné dokumenty — zákon, stanovy, řády a směrnice — od nejvyššího, v platném znění. Když nevybereš nic, použijí se závazné nadřazené dokumenty kontrolovaných (Knihovna → Hierarchie dokumentů).",
       start: "Zkontrolovat soulad",
@@ -13233,7 +13204,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       archivedBanner: (date, who) => `Kontrola je zrušena ${date} (${who}). V seznamu není a její rozhodnutí se nepřenášejí.`,
       none: "Kontrola dokumentů ještě neproběhla.",
       runMeta: (when: string, who: string) => `Spuštěno ${when}, ${who}`,
-      against: (list: string) => `Proti: ${list}`,
       steps: (n: number) => `${n} ${n === 1 ? "krok" : n < 5 ? "kroky" : "kroků"} na dokument`,
       progress: (done: number, total: number) => `Zkontrolováno ${done} z ${total} dokumentů.`,
       done: "Hotovo.",
@@ -13370,12 +13340,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         scopeHelpdesk: (questions, channel, manuals) => `${questions} ${questions === 1 ? "otázka" : questions >= 2 && questions <= 4 ? "otázky" : "otázek"} kanálu ${channel} proti ${manuals} ${manuals === 1 ? "manuálu" : "manuálům"}`,
         rounds: n => `${n} ${n === 1 ? "kolo" : n >= 2 && n <= 4 ? "kola" : "kol"}`,
         lastRound: (date, who) => `poslední ${date}, ${who}`,
-        requestFor: name => `v pevné vazbě s kontrolou „${name}“`,
+        requestFor: name => `další kolo kontroly „${name}“`,
         requestStartRound: n => `Spustit kolo ${n}…`,
         requestStartNew: "Spustit kontrolu…",
         requestDismissShort: "Netřeba",
-        linkFrom: name => `z kontroly „${name}“`,
-        linkFromArchived: "(zrušená)",
         noneTitle: "Zatím žádná kontrola",
         noneText: "Kontrolu spustíte tlačítkem vpravo nahoře.",
         newHeading: "Nová kontrola",
@@ -13413,7 +13381,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         goToLatest: n => `Přejít na kolo ${n}`,
         legacyReadOnly: "Běh před změnou na kontroly a kola (20. 10. 2026) — jen ke čtení.",
         newRound: "Nové kolo",
-        linksSavedShort: "Pevné vazby ✓",
         cancel: "Zrušit",
         cancelCheck: "Zrušit kontrolu",
         cancelCheckNote: "Kontrola zmizí ze seznamu; kola a rozhodnutí zůstanou zapsaná.",
@@ -18157,9 +18124,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Artificial intelligence compares the selected documents (for example manuals or competition rules for a season) with the reference rules and lists the findings — conflict, outdated, missing, unclear — with the cited article and a recommendation. It never changes the document itself. Rules are ordered from the most binding; a large selection is checked in several steps and the results are combined. A public document is checked only against public rules.",
       subjects: "Documents to check",
       subjectsHint: "A document without a published version is checked as a draft.",
-      saveLinks: "Save as fixed links",
-      linksSaved: n => `Fixed links saved: ${n} ${n === 1 ? "document" : "documents"}. A new version of one of the norms will create a check request.`,
-      linkRemoved: "The fixed link is removed.",
       requestDismissed: "The request is closed with a reason.",
       requestsHeading: "Waiting for a check",
       requestTag: "new version",
@@ -18170,10 +18134,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       requestDismiss: "Not needed",
       requestDismissPlaceholder: "Why no check is needed — e.g. “typo fixes only”.",
       requestDismissSave: "Close request",
-      linksHeading: "Fixed links",
-      linksIntro: "Which documents are checked against which norms. A new version of a document or norm in a link creates a check request and notifies responsible persons, content managers and the compliance role. Links are saved from a finished check.",
-      linksNone: "None yet. Save them on a finished check with “Save as fixed links”.",
-      linkRemove: "Remove",
       references: "Reference rules",
       referencesHint: "Only binding documents are offered — law, statutes, regulations and directives — highest first, in their valid version. If you select none, the binding parents of the checked documents are used (Library → Document hierarchy).",
       start: "Check compliance",
@@ -18202,7 +18162,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       archivedBanner: (date, who) => `The check was cancelled on ${date} (${who}). It is not in the list and its decisions are not carried over.`,
       none: "No document check has run yet.",
       runMeta: (when: string, who: string) => `Started ${when} by ${who}`,
-      against: (list: string) => `Against: ${list}`,
       steps: (n: number) => `${n} ${n === 1 ? "step" : "steps"} per document`,
       progress: (done: number, total: number) => `${done} of ${total} documents checked.`,
       done: "Done.",
@@ -18339,12 +18298,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         scopeHelpdesk: (questions, channel, manuals) => `${questions} ${questions === 1 ? "question" : "questions"} of ${channel} against ${manuals} ${manuals === 1 ? "manual" : "manuals"}`,
         rounds: n => `${n} ${n === 1 ? "round" : "rounds"}`,
         lastRound: (date, who) => `last ${date}, ${who}`,
-        requestFor: name => `linked to the check “${name}”`,
+        requestFor: name => `next round of the check “${name}”`,
         requestStartRound: n => `Start round ${n}…`,
         requestStartNew: "Start a check…",
         requestDismissShort: "Not needed",
-        linkFrom: name => `from the check “${name}”`,
-        linkFromArchived: "(cancelled)",
         noneTitle: "No check yet",
         noneText: "Start a check with the button at the top right.",
         newHeading: "New check",
@@ -18382,7 +18339,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         goToLatest: n => `Go to round ${n}`,
         legacyReadOnly: "Run from before checks and rounds (20 Oct 2026) — read only.",
         newRound: "New round",
-        linksSavedShort: "Fixed links ✓",
         cancel: "Cancel",
         cancelCheck: "Cancel check",
         cancelCheckNote: "The check leaves the list; its rounds and decisions stay recorded.",

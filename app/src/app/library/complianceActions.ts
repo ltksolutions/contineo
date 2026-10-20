@@ -19,7 +19,7 @@ import { decideFinding, applyAcceptedFinding, notifyContentManagers, documentRun
 import { kick, originFromHeaders } from "@/lib/backgroundKick"
 import { parseNextFinding } from "@/lib/complianceView"
 import { listChannels } from "@/lib/channels"
-import { setLinksFromRun, removeLink, dismissRequest, markRequestStarted, requestById } from "@/lib/complianceRequests"
+import { dismissRequest, markRequestStarted, requestById } from "@/lib/complianceRequests"
 import { createCheck, startCheckRound, renameCheck, archiveCheck, roundsOf } from "@/lib/complianceChecks"
 
 const PAGE = "/library/compliance"
@@ -213,34 +213,6 @@ export async function renameRunAction(fd: FormData) {
     back(path, failure(e, ctx.language), true)
   }
   back(path, ctx.t.ck.checkRenamed)
-}
-
-/** Pevné väzby z dobehnutej kontroly (D197): každý kontrolovaný dokument proti jej normám. */
-export async function saveLinksAction(fd: FormData) {
-  const ctx = await ready()
-  const runId = fieldText(fd, "runId")
-  const path = await runPath(ctx.person.companyCode, runId)
-  let message = ""
-  try {
-    const run = await documentRun(ctx.person.companyCode, runId)
-    if (!run) throw new AppError("compliance.unknownRun", "Taká kontrola tu nie je.")
-    message = ctx.t.linksSaved(await setLinksFromRun(ctx.person.companyCode, run, ctx.person.email))
-  } catch (e) {
-    if (isRedirect(e)) throw e
-    back(path, failure(e, ctx.language), true)
-  }
-  back(path, message)
-}
-
-export async function removeLinkAction(fd: FormData) {
-  const ctx = await ready()
-  try {
-    await removeLink(ctx.person.companyCode, fieldText(fd, "subjectId"))
-  } catch (e) {
-    if (isRedirect(e)) throw e
-    back(PAGE, failure(e, ctx.language), true, "links")
-  }
-  back(PAGE, ctx.t.linkRemoved, false, "links")
 }
 
 /** „Netreba" pri požiadavke na kontrolu (D200) — s dôvodom. */

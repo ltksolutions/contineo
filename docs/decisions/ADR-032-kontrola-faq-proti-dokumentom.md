@@ -242,6 +242,10 @@ Z prvej kontroly 10 manuálov ISSF proti 7 normám (42 nálezov, 3,05 USD,
 
 ### D200 — Požiadavka na kontrolu pri novom znení; pevné väzby (11. 10. 2026)
 
+> **Zmenené** ADR-036 dodatkom 3 (D241, 20. 10. 2026): pevné väzby (bod 1)
+> sú zrušené a požiadavka vzniká len z hierarchie dokumentov (D219), nie
+> z väzieb ani z histórie behov.
+
 Ján 11. 10. 2026: „ak do budúcna automaticky pri nahratí novej verzie normy
 vznikne požiadavka na zistenie súladu s prepojenými normami, bolo by fajn to
 nájsť na jednom mieste… a notifikovať zodpovedné osoby a content-admin";
