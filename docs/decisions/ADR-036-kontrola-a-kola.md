@@ -8,7 +8,7 @@
 > „navrhujem to celé prerobiť, aby som sa lepšie orientoval v kontrolách
 > toho istého zadania"; „áno, súhlasím a všetky behy a kontroly manuálov
 > rovno zrušme… spravíme to nanovo v novom riešení".
-> **Čísla rozhodnutí:** D234–D238.
+> **Čísla rozhodnutí:** D234–D238; Dodatok 1: D239 (mení D234).
 > **Nadväzuje na:** ADR-032 (kontrola súladu, D196–D200), ADR-034 (návrhy
 > z helpdesku, D221), D24 (dôkazné záznamy sa nemažú).
 > **Implementácia:** krok 1 — `/library/compliance/confirm`, `stopRun`,
@@ -35,7 +35,8 @@ beh vznikol až po dobehnutí prvého.
 
 ## 2. Rozhodnutie
 
-**D234 — Kontrola je zadanie, beh je jej kolo.** Zadanie tvorí druh
+**D234 — Kontrola je zadanie, beh je jej kolo.** *(Zmenené Dodatkom 1,
+D239: kontrola je vlastný záznam, nie odvodená skupina behov.)* Zadanie tvorí druh
 (súlad dokumentov / návrhy z helpdesku), kontrolované dokumenty a pri
 helpdesku kanál. Rovnaké zadanie (`sameTask`) určuje stav, neukladá sa
 (D27): behy sa zoskupia podľa zadania bez migrácie. Zoznam bude mať jednu
@@ -83,6 +84,52 @@ dokumentov a odkazujú naň (D24). Koncepty dokumentov sa zrušením nemenia.
   zmenil (D24).
 - **Uložené zadanie ako samostatná kolekcia.** Dalo by kontrole vlastný názov
   a identitu, ale vyžaduje migráciu existujúcich behov. Zadanie sa dá odvodiť
-  z behu; ak bude treba niečo, čo odvodiť nejde, pridá sa neskôr.
+  z behu; ak bude treba niečo, čo odvodiť nejde, pridá sa neskôr. *(Prekonané Dodatkom 1, D239: migrácia nie je potrebná, staré behy sú zrušené.)*
 - **Potvrdenie dialógom v prehliadači (`confirm()`).** Nefunguje bez
   JavaScriptu a neukáže, čo sa spustí ani za koľko.
+
+---
+
+## Dodatok 1 — Kontrola je vlastný záznam (D239, 2026-10-20)
+
+> **Rozhodol:** Ján Letko (2026-10-20) — pri implementácii návrhu
+> KNIZ-kontroly-a-kola: „áno, napíš dodatok k ADR-036" na odporúčanie
+> „nová kolekcia, bez migrácie".
+> **Mení:** D234 v časti „zadanie sa neukladá, behy sa zoskupia podľa
+> zadania" a bod „Uložené zadanie ako samostatná kolekcia" v časti 4.
+
+### Prečo sa rozhodnutie mení
+
+D234 odvodil kontrolu z behov hlavne preto, aby nebolo treba migrovať
+existujúce behy v ostrej databáze. Ten dôvod 20. 10. 2026 zanikol: všetkých
+sedem kontrol manuálov je zrušených (D238, `archivedAt`) a v zozname nie
+je ani jedna živá kontrola. Návrh KNIZ-kontroly-a-kola zároveň ukázal, čo
+odvodené zoskupenie nevie:
+
+- **zmeniť zadanie** — pridaný alebo odobraný dokument by založil inú
+  kontrolu a kolá by sa rozpadli presne tak, ako sa rozpadali behy;
+- **stabilnú identitu a adresu** — odvodená kontrola by mala adresu
+  prvého kola a názov by sa musel zapisovať do všetkých kôl;
+- **naviazať požiadavku na kontrolu a pevné väzby** na konkrétnu kontrolu,
+  nie na zhodu zoznamu dokumentov.
+
+### D239 — Kontrola je vlastný záznam, kolo nesie `checkId`
+
+- Kolekcia **`compliance_checks`**: `checkId`, `companyCode`, názov, druh
+  (súlad dokumentov / návrhy z helpdesku), kontrolované dokumenty, normy
+  (prázdne = nadradené z hierarchie), pri helpdesku kanál, kto a kedy
+  založil, `archivedAt` / `archivedBy`.
+- **Kolo** ostáva záznam v `compliance_runs` a dostane `checkId`. Zadanie
+  kola (dokumenty, normy, otázky helpdesku) je v ňom **kópiou** v čase
+  behu, ako doteraz — o rok má byť čitateľné, proti čomu sa kontrolovalo,
+  aj keď sa zadanie kontroly medzitým zmenilo.
+- **Bez migrácie.** Behy bez `checkId` (všetky do 20. 10. 2026, všetky
+  zrušené) ostávajú v starom tvare a otvárajú sa z odkazu len na čítanie.
+  Nová kolekcia začína prázdna.
+- **Zrušenie (D238) platí pre kontrolu:** `archivedAt` na kontrole skryje
+  ju aj všetky jej kolá; bežiace kolo sa zastaví. Nič sa nemaže (D24).
+- **D235–D237 platia bez zmeny** — potvrdenie pred každým kolom, druhé
+  kolo počas behu nie, zastavenie kola. Zhoda zadania (`sameTask`) sa
+  nahrádza zhodou `checkId`.
+- Rozhodnutia „ponechať" sa prenášajú medzi kolami **tej istej kontroly**.
+
