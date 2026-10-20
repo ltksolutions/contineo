@@ -75,7 +75,7 @@ export type NotificationKind =
   | "complianceDone"
   /** Prijaté znenie z kontroly súladu čaká na zápis do konceptu — všetkým správcom obsahu (D199). */
   | "complianceToApply"
-  /** Nové znenie dokumentu v pevnej väzbe — treba skontrolovať súlad (ADR-032, D200). */
+  /** Nové znenie dokumentu v hierarchii — treba skontrolovať súlad (ADR-032, D200, D241). */
   | "complianceRequested"
   /** Kolo schvaľovania sa zrušilo, lebo sa koncept po predložení zmenil — schvaľovateľom, ktorí ešte nerozhodli. */
   | "approvalCancelled"

@@ -11,6 +11,28 @@
 ---
 
 
+## 2026-10-20 — požiadavky len z hierarchie (ADR-036 D241)
+
+**Čo sa zmenilo:** Ján sa pýtal, prečo sa pevné väzby nedajú upraviť.
+Namiesto editora väzieb (A) alebo väzieb podľa druhu (B) vybral C: väzby
+zrušiť a požiadavky brať len z hierarchie dokumentov. `requestOnPublish`
+volá `linkedChecks` len s riadkami z `hierarchyLinkRows` a s prázdnou
+históriou; `listLinks`, `setLinksFromRun`, `removeLink`, obe akcie, sekcia
+v zozname, tlačidlo na detaile a ich texty v troch jazykoch sú preč.
+
+**Prečo to bolo bezpečné:** rozbor ostrej databázy (len čítanie) — 10
+väzieb, každá so 7 normami, hierarchia pri tých istých dokumentoch 2–4
+normy a žiadna norma z hierarchie vo väzbách nechýbala. Jediný dokument
+bez predkov (Kredity) dostal so súhlasom RaPP a Stanovy cez
+`saveDocumentParents` (audit).
+
+**Na čo pozor:** D240 medzitým obsadila iná session (koncept v kontrole),
+preto D241. História behov sa ako zdroj vypla tiež — inak by staré plošné
+behy vracali tie isté zbytočné normy.
+
+---
+
+
 ## 2026-10-20 — kontroly a kolá (KNIZ-kontroly-a-kola, ADR-036 D239)
 
 **Čo sa zmenilo:** zoznam, nová kontrola a detail podľa návrhu (Q1–Q6 A).

@@ -1,22 +1,19 @@
 /**
- * complianceRequests.ts — pevné väzby a požiadavky na kontrolu súladu
- * (ADR-032, D197 v prvej podobe a D200, Ján 11. 10. 2026).
- *
- * **Pevná väzba** hovorí „tento dokument sa kontroluje proti týmto normám"
- * (napríklad manuál ISSF proti RaPP, SP, DP, Stanovám…). Nastaví sa jedným
- * kliknutím z dobehnutej kontroly („Uložiť ako pevné väzby") a dá sa zrušiť.
+ * complianceRequests.ts — požiadavky na kontrolu súladu (ADR-032, D200,
+ * Ján 11. 10. 2026; zdroj väzieb ADR-036 dodatok 3, D241).
  *
  * **Požiadavka** vznikne pri zverejnení nového znenia dokumentu, ktorý je
- * v nejakej väzbe — ako norma alebo ako kontrolovaný dokument. Nespúšťa sa
+ * v hierarchii dokumentov (D219) — ako záväzný predok alebo ako potomok,
+ * ktorý sa proti predkom kontroluje. Nespúšťa sa
  * sama (kontrola stojí jednotky USD a nie každá novela ju potrebuje): na
  * `/library/compliance` je pod „Čaká na kontrolu" s predvyplneným výberom
  * a „Skontrolovať", alebo „Netreba" s dôvodom. Upozornenie dostanú
  * zodpovedné osoby prepojených dokumentov, správcovia obsahu a rola
  * `compliance`; súhrnný e-mail len rola `compliance`.
  *
- * Prepojené sú (D200): dokumenty v pevnej väzbe, dokumenty, ktoré sa proti
- * zmenenému už kontrolovali (história behov), a podľa hierarchie dokumentov (D219).
- * Koncept požiadavku nevytvára — až zverejnenie.
+ * Prepojené sú len podľa hierarchie (D241): pevné väzby a história behov
+ * mali plošný výber noriem a zakladali požiadavky aj tam, kde norma
+ * s dokumentom nesúvisí. Koncept požiadavku nevytvára — až zverejnenie.
  */
 
 import { randomBytes } from "node:crypto"
@@ -33,26 +30,14 @@ import { textFingerprint } from "./chunkIdentity"
 
 export class ComplianceRequestError extends AppError {}
 
-export const COMPLIANCE_LINKS_COLLECTION = "compliance_links"
+/*
+ * Pevné väzby (`compliance_links`, D197) sú od 20. 10. 2026 zrušené (ADR-036,
+ * dodatok 3, D241): požiadavky vznikajú len z hierarchie dokumentov (D219).
+ * Kolekcia ostáva v databáze nepoužitá — nič sa nemaže.
+ */
 export const COMPLIANCE_REQUESTS_COLLECTION = "compliance_requests"
 /** Rovnaké ako v `complianceCheck.ts` — tu bez importu, aby nevznikol kruh cez `libraryWrite`. */
 const RUNS_COLLECTION = "compliance_runs"
-
-/** Pevná väzba: kontrolovaný dokument a normy, proti ktorým sa kontroluje. */
-export interface ComplianceLink {
-  companyCode: string
-  subjectId: string
-  /** Kópia názvu v čase nastavenia — dokument sa môže premenovať. */
-  subjectTitle: string
-  referenceIds: string[]
-  referenceTitles: string[]
-  setBy: string
-  setAt: Date
-  /** Beh, z ktorého sa väzba uložila. */
-  fromRunId: string | null
-  /** Kontrola toho behu (ADR-036, D239) — požiadavka spustí jej ďalšie kolo (Q2). */
-  fromCheckId?: string | null
-}
 
 export interface ComplianceRequest {
   companyCode: string
@@ -76,44 +61,11 @@ export interface ComplianceRequest {
   createdAt: Date
 }
 
-async function links() { return getCollection<ComplianceLink>(COMPLIANCE_LINKS_COLLECTION) }
 async function requests() { return getCollection<ComplianceRequest>(COMPLIANCE_REQUESTS_COLLECTION) }
-
-export async function listLinks(companyCode: string): Promise<ComplianceLink[]> {
-  const code = requireCompanyCode(companyCode, "listLinks")
-  return (await links()).find({ companyCode: code }, { projection: { _id: 0 } }).sort({ subjectTitle: 1 }).toArray()
-}
-
-/**
- * Uloží pevné väzby z dobehnutej kontroly: každý kontrolovaný dokument proti
- * jej normám. Existujúca väzba toho istého dokumentu sa nahradí — platí
- * posledné rozhodnutie, nie súčet.
- */
-export async function setLinksFromRun(companyCode: string, run: { runId: string; checkId?: string | null; scope: { kind: string; subjectIds?: string[] }; documentIds: string[]; results?: { documentId: string; title: string }[]; documents: { documentId: string; title: string }[] }, actor: string): Promise<number> {
-  const code = requireCompanyCode(companyCode, "setLinksFromRun")
-  if (run.scope.kind !== "documents" || !run.scope.subjectIds?.length) throw new ComplianceRequestError("compliance.unknownRun", "Taká kontrola tu nie je.")
-  const refTitles = run.documentIds.map(id => run.documents.find(d => d.documentId === id)?.title ?? id)
-  const col = await links()
-  const now = new Date()
-  for (const subjectId of run.scope.subjectIds) {
-    const subjectTitle = run.results?.find(r => r.documentId === subjectId)?.title ?? subjectId
-    await col.replaceOne(
-      { companyCode: code, subjectId },
-      { companyCode: code, subjectId, subjectTitle, referenceIds: run.documentIds, referenceTitles: refTitles, setBy: actor, setAt: now, fromRunId: run.runId, fromCheckId: run.checkId ?? null },
-      { upsert: true },
-    )
-  }
-  return run.scope.subjectIds.length
-}
-
-export async function removeLink(companyCode: string, subjectId: string): Promise<void> {
-  const code = requireCompanyCode(companyCode, "removeLink")
-  await (await links()).deleteOne({ companyCode: code, subjectId })
-}
 
 /**
  * Čo treba skontrolovať, keď sa zmení `documentId` (čistá funkcia):
- * dokumenty, ktoré sa proti nemu kontrolujú (väzby a história), a pri
+ * dokumenty, ktoré sa proti nemu kontrolujú (riadky väzieb), a pri
  * zmene kontrolovaného dokumentu on sám proti svojim normám.
  */
 export function linkedChecks(
@@ -161,7 +113,7 @@ export async function upToDateSinceCheck(code: string, documentId: string): Prom
 /**
  * Hierarchia dokumentov ako väzby (ADR-034, D219): zverejnený dokument sa
  * kontroluje proti svojim záväzným predkom a jeho potomkovia proti nemu
- * (a ostatným svojim predkom). Pevné väzby (D200) ostávajú popri tom.
+ * (a ostatným svojim predkom). Jediný zdroj požiadaviek (D241).
  */
 async function hierarchyLinkRows(code: string, documentId: string): Promise<{ subjectId: string; referenceIds: string[] }[]> {
   const { ancestorsOf, descendantsOf, parentsMapOf } = await import("./documentHierarchy")
@@ -183,23 +135,18 @@ async function titles(code: string, ids: string[]): Promise<string[]> {
 
 /**
  * Pri zverejnení nového znenia: požiadavka na kontrolu, ak je dokument
- * v nejakej väzbe (pevnej alebo v hierarchii). **Nikdy nevyhodí** —
+ * v hierarchii (D219, D241). **Nikdy nevyhodí** —
  * zverejnenie sa nesmie pokaziť preto, že sa nepodarilo vytvoriť
  * pripomienku. Otvorená požiadavka k tomu istému dokumentu sa nahradí.
  */
 export async function requestOnPublish(companyCode: string, documentId: string, versionLabel: string, actor: string): Promise<ComplianceRequest | null> {
   try {
     const code = requireCompanyCode(companyCode, "requestOnPublish")
-    const [linkRows, runRows] = await Promise.all([
-      (await links()).find({ companyCode: code, $or: [{ subjectId: documentId }, { referenceIds: documentId }] }).toArray(),
-      (await getCollection(RUNS_COLLECTION)).find(
-        { companyCode: code, "scope.kind": "documents", $or: [{ documentIds: documentId }, { "scope.subjectIds": documentId }] },
-        { projection: { _id: 0, documentIds: 1, "scope.subjectIds": 1 } },
-      ).toArray(),
-    ])
-    const history = runRows.map(r => ({ subjectIds: ((r.scope as { subjectIds?: string[] })?.subjectIds ?? []), referenceIds: (r.documentIds as string[]) ?? [] }))
+    // Len hierarchia (D219, D241) — pevné väzby a história behov mali plošný
+    // výber všetkých noriem a zakladali požiadavky aj tam, kde norma s manuálom
+    // nesúvisí (overené 20. 10. 2026: 10 väzieb, každá so 7 normami, hierarchia 2–4).
     const hierarchyRows = await hierarchyLinkRows(code, documentId)
-    const { subjectIds, referenceIds } = linkedChecks(documentId, [...linkRows, ...hierarchyRows], history, await upToDateSinceCheck(code, documentId))
+    const { subjectIds, referenceIds } = linkedChecks(documentId, hierarchyRows, [], await upToDateSinceCheck(code, documentId))
     if (!subjectIds.length) return null
     const [documentTitle] = await titles(code, [documentId])
     const req: ComplianceRequest = {
