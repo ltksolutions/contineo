@@ -71,7 +71,7 @@ function form(fields: [string, string][]): FormData {
 
 const basePreview = {
   kind: "helpdesk", questions: 51, model: "claude-opus-5-5", fromHierarchy: true,
-  subjects: [{ documentId: "m1", title: "Konto a prihlásenie" }],
+  subjects: [{ documentId: "m1", title: "Konto a prihlásenie", state: "draft" }],
   references: [{ documentId: "s1", title: "Stanovy SFZ" }],
   estimate: { usd: 4.66, minutes: 9, from: new Date("2026-10-13") },
   running: null, openInLast: null,
@@ -112,6 +112,7 @@ describe("stránka potvrdenia", () => {
     const html = await render({ kind: "helpdesk", channelKey: "issf" })
     expect(html).toContain("Návrhy z helpdesku do manuálov — ISSF Helpdesk (51 otázok)")
     expect(html).toContain("Konto a prihlásenie")
+    expect(html).toContain("· koncept")
     expect(html).toContain("Stanovy SFZ")
     expect(html).toContain("Claude Opus 5.5")
     expect(html).toContain("približne 4,66 USD a 9 min")

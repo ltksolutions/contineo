@@ -8,7 +8,7 @@
 > „navrhujem to celé prerobiť, aby som sa lepšie orientoval v kontrolách
 > toho istého zadania"; „áno, súhlasím a všetky behy a kontroly manuálov
 > rovno zrušme… spravíme to nanovo v novom riešení".
-> **Čísla rozhodnutí:** D234–D238; Dodatok 1: D239 (mení D234).
+> **Čísla rozhodnutí:** D234–D238; Dodatok 1: D239 (mení D234); Dodatok 2: D240.
 > **Nadväzuje na:** ADR-032 (kontrola súladu, D196–D200), ADR-034 (návrhy
 > z helpdesku, D221), D24 (dôkazné záznamy sa nemažú).
 > **Implementácia:** krok 1 — `/library/compliance/confirm`, `stopRun`,
@@ -141,3 +141,29 @@ Požiadavka na kontrolu (D200) spustí ďalšie kolo nezrušenej kontroly, ktor�
 kontroluje všetky dokumenty požiadavky (Q2), inak založí novú; pevná väzba
 nesie `fromCheckId` a po zrušení kontroly ostáva (Q5). Kolo kontroly na
 adrese behu presmeruje na `/library/compliance/<checkId>?round=n`.
+
+---
+
+## Dodatok 2 — Kontroluje sa koncept nového znenia (D240, 2026-10-20)
+
+> **Rozhodol:** Ján Letko (2026-10-20) — „ok" na návrh po prvom kole
+> kontroly „Manuály ISSF — nové znenia (október 2026)".
+
+Kolo 1 (20. 10. 2026, 27 nálezov, 3,94 USD) skontrolovalo **zverejnené**
+znenia siedmich manuálov, nie koncepty s prijatými doplneniami z helpdesku.
+Kontrolovaný dokument bral platné znenie a koncept len vtedy, keď platné
+znenie nemal — 11. 10. manuály ešte zverejnené neboli, preto to vtedy
+fungovalo.
+
+### D240 — Kontrolovaný dokument sa kontroluje v koncepte, ak sa líši
+
+- Kontrolovaný dokument s **konceptom odlišným od platného znenia** sa
+  kontroluje v koncepte (`subjectText`). Kontrola súladu sa robí pred
+  schválením nového znenia, nie po ňom.
+- Koncept zhodný s platným znením (podľa `textFingerprint`) sa za koncept
+  nepovažuje.
+- **Normy (referencie) sa kontrolujú v platnom znení** ako doteraz.
+- Rekapitulácia pri každom kontrolovanom dokumente ukáže „koncept" alebo
+  „platné znenie" — že sa kontroluje iný text, než človek čaká, musí byť
+  vidieť pred spustením.
+
