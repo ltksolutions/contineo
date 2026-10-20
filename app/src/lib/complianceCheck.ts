@@ -117,6 +117,21 @@ function documentText(d: RawDocument): { text: string; state: "valid" | "draft";
     : { text: (d.draftMarkdown ?? "").trim(), state: "draft", label: null }
 }
 
+/**
+ * Text **kontrolovaného** dokumentu (ADR-036 Dodatok 2, D240): rozpracovaný
+ * koncept má prednosť pred platným znením. Kontrola sa robí pred schválením
+ * nového znenia — 20. 10. 2026 kolo 1 kontroly manuálov preverilo zverejnené
+ * znenia a doplnenia z helpdesku v konceptoch ním neprešli. Koncept zhodný
+ * s platným znením sa za koncept nepovažuje. Normy (referencie) sa ďalej
+ * berú v platnom znení (`documentText`).
+ */
+export function subjectText(d: RawDocument): { text: string; state: "valid" | "draft"; label: string | null } {
+  const draft = (d.draftMarkdown ?? "").trim()
+  const valid = documentText(d)
+  if (draft && (valid.state === "draft" || textFingerprint(draft) !== textFingerprint(valid.text))) return { text: draft, state: "draft", label: null }
+  return valid
+}
+
 /** Text dlhší než `max` → časti po odsekoch (prázdny riadok), každá najviac `max`. */
 export function splitText(text: string, max: number): string[] {
   if (text.length <= max) return [text]
@@ -650,7 +665,7 @@ export async function startDocumentReview(companyCode: string, subjectIds: strin
   if (notBinding) throw new ComplianceError("compliance.referenceNotBinding", "Proti tomuto dokumentu sa kontrolovať nedá — nie je záväzný.", { title: String(notBinding.title ?? notBinding.documentId) })
   const subjectDocs = await loadDocuments(code, subjects)
   if (subjectDocs.length !== subjects.length) throw new ComplianceError("compliance.unknownDocument", "Niektorý z vybraných dokumentov tu nie je.")
-  if (subjectDocs.some(d => !documentText(d).text)) throw new ComplianceError("compliance.emptyDocuments", "Vybrané dokumenty nemajú text.")
+  if (subjectDocs.some(d => !subjectText(d).text)) throw new ComplianceError("compliance.emptyDocuments", "Vybrané dokumenty nemajú text.")
   const { ids, packs } = await prepareReferences(code, refs, subjectDocs.map(d => d.accessLevel ?? "public"))
   const ai = await aiForCompany(code)
   if (!ai.apiKey) throw new ComplianceError("chunking.aiNoKey", "Umelá inteligencia nemá nastavený kľúč.")
@@ -698,7 +713,8 @@ export async function archiveRun(companyCode: string, runId: string, by: string,
 /** Rekapitulácia pred spustením (ADR-036) — čo sa skontroluje proti čomu a čo to asi bude stáť. */
 export interface RunPreview {
   kind: "documents" | "helpdesk"
-  subjects: { documentId: string; title: string }[]
+  /** `draft` = kontroluje sa koncept nového znenia (D240), `valid` = platné znenie. */
+  subjects: { documentId: string; title: string; state: "valid" | "draft" }[]
   references: { documentId: string; title: string }[]
   /** Referencie sa vezmú z hierarchie — človek žiadne nevybral. */
   fromHierarchy: boolean
@@ -751,7 +767,10 @@ export async function previewRun(companyCode: string, input: { subjectIds: strin
   const ai = await aiForCompany(code)
   return {
     kind: input.channel ? "helpdesk" : "documents",
-    subjects: subjectIds.map(id => ({ documentId: id, title: title(id) })),
+    subjects: subjectIds.map(id => {
+      const doc = docs.find(d => d.documentId === id)
+      return { documentId: id, title: title(id), state: doc ? subjectText(doc).state : "valid" as const }
+    }),
     references: refIds.sort((a, b) => categoryRank(docs.find(d => d.documentId === a)?.category, extras) - categoryRank(docs.find(d => d.documentId === b)?.category, extras))
       .map(id => ({ documentId: id, title: title(id) })),
     fromHierarchy, questions,
@@ -834,7 +853,7 @@ export interface DocumentPartial {
  * prekročili 300 s funkcie a dokument by sa začínal stále odznova.
  */
 async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject: RawDocument, partial: DocumentPartial, kept: KeptDecision[] = [], helpdesk?: { channelKey: string; channelName: string; items: HelpdeskItem[] }): Promise<DocumentPartial> {
-  const { text } = documentText(subject)
+  const { text } = subjectText(subject)
   const title = String(subject.title ?? subject.documentId)
   const pack = packs[partial.step]
   let seq = partial.findings.length
@@ -849,9 +868,9 @@ async function reviewDocumentStep(ctx: CallCtx, packs: ReferencePack[], subject:
 }
 
 function documentResult(subject: RawDocument, partial: DocumentPartial, kept: KeptDecision[] = []): DocumentResult {
-  const { state, label } = documentText(subject)
+  const { state, label } = subjectText(subject)
   // Zhrnutie za dokument napísal posledný krok (Q3); medzikroky sa nespájajú.
-  return { documentId: subject.documentId, textHash: textFingerprint(documentText(subject).text), title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.at(-1) ?? "", findings: carryKept(partial.findings, kept) }
+  return { documentId: subject.documentId, textHash: textFingerprint(subjectText(subject).text), title: String(subject.title ?? subject.documentId), state, label, at: new Date(), summary: partial.summaries.at(-1) ?? "", findings: carryKept(partial.findings, kept) }
 }
 
 /** Vedome ponechané miesto z predchádzajúcej kontroly — pamäť rozhodnutí (Ján 11. 10. 2026). */

@@ -3196,6 +3196,8 @@ interface Dictionary {
       done: string
       stopped: string
       draftMark: string
+      /** Kontrolovaný dokument v platnom znení (rekapitulácia, D240). */
+      validMark: string
       noFindings: string
       kinds: Record<"conflict" | "outdated" | "missing" | "unclear", string>
       location: string
@@ -8217,6 +8219,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       done: "Hotovo.",
       stopped: "Kontrola sa po opakovaných chybách zastavila. Skúste ju spustiť znova.",
       draftMark: "koncept",
+      validMark: "platné znenie",
       noFindings: "Bez nálezov — dokument je s normami v súlade.",
       kinds: { conflict: "Rozpor s normou", outdated: "Zastarané", missing: "Chýba podmienka", unclear: "Nejasné" },
       location: "Miesto",
@@ -13164,6 +13167,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       done: "Hotovo.",
       stopped: "Kontrola se po opakovaných chybách zastavila. Zkuste ji spustit znovu.",
       draftMark: "koncept",
+      validMark: "platné znění",
       noFindings: "Bez nálezů — dokument je s normami v souladu.",
       kinds: { conflict: "Rozpor s normou", outdated: "Zastaralé", missing: "Chybí podmínka", unclear: "Nejasné" },
       location: "Místo",
@@ -18097,6 +18101,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       done: "Done.",
       stopped: "The check stopped after repeated errors. Try running it again.",
       draftMark: "draft",
+      validMark: "published version",
       noFindings: "No findings — the document complies with the rules.",
       kinds: { conflict: "Conflicts with a rule", outdated: "Outdated", missing: "Missing condition", unclear: "Unclear" },
       location: "Where",

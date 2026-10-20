@@ -87,7 +87,7 @@ export default async function ConfirmRunPage({ searchParams }: { searchParams: P
         <p style={{ margin: 0 }}><b>{t.confirmKind}:</b> {channel ? t.confirmKindHelpdesk(channel.name, p.questions) : t.confirmKindDocuments}</p>
         <div>
           <p style={{ margin: "0 0 4px" }}><b>{t.subjects}</b> · {p.subjects.length}</p>
-          <ul style={{ margin: 0, paddingLeft: 20 }}>{p.subjects.map(d => <li key={d.documentId}>{d.title}</li>)}</ul>
+          <ul style={{ margin: 0, paddingLeft: 20 }}>{p.subjects.map(d => <li key={d.documentId}>{d.title} <span className="quiet">· {d.state === "draft" ? t.draftMark : t.validMark}</span></li>)}</ul>
         </div>
         <div>
           <p style={{ margin: "0 0 4px" }}><b>{t.references}</b> · {p.references.length}</p>

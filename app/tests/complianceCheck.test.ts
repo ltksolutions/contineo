@@ -236,3 +236,21 @@ describe("návrhy z helpdesku do manuálov (ADR-034, D221)", () => {
     expect(parseDocReview({ findings: [{ kind: "missing", location: "", quote: "x", citation: { doc: 0, ref: "", quote: "" }, recommendation: "", proposed: "" }], summary: "" }, pack, () => "f").findings).toEqual([])
   })
 })
+
+import { subjectText } from "../src/lib/complianceCheck"
+
+describe("text kontrolovaného dokumentu (D240, 20. 10. 2026)", () => {
+  const valid = { versionId: "v1", label: "2026", isActive: true, markdown: "# Manuál\nStarý text." }
+  it("koncept odlišný od platného znenia má prednosť", () => {
+    const r = subjectText({ documentId: "m", draftMarkdown: "# Manuál\nNový text z helpdesku.", versions: [valid] })
+    expect(r.state).toBe("draft")
+    expect(r.text).toContain("Nový text")
+  })
+  it("koncept zhodný s platným znením sa za koncept nepovažuje", () => {
+    expect(subjectText({ documentId: "m", draftMarkdown: "# Manuál\nStarý text.  \n", versions: [valid] }).state).toBe("valid")
+  })
+  it("bez konceptu platné znenie, bez platného znenia koncept", () => {
+    expect(subjectText({ documentId: "m", draftMarkdown: "", versions: [valid] }).state).toBe("valid")
+    expect(subjectText({ documentId: "m", draftMarkdown: "Návrh", versions: [] }).state).toBe("draft")
+  })
+})
