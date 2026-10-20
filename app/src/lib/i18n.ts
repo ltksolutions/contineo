@@ -3849,6 +3849,7 @@ interface Dictionary {
       proposedFrom: (date: string) => string
       invalidFrom: (date: string) => string
       fromConnector: (name: string) => string
+      fromWeb: string
       processingRunning: string
       processingFailed: string
       processingFailedNote: string
@@ -3882,6 +3883,7 @@ interface Dictionary {
       rows: { category: string; folder: string; tags: string; access: string; language: string; origin: string; identifier: string; parents: string; children: string }
       originManual: string
       originConnector: (name: string) => string
+      originWeb: string
       textHeading: string
       files: { draftPdf: string; draftSource: string; pdf: string; source: string; original: string }
       draftPdfNote: string
@@ -4002,6 +4004,34 @@ interface Dictionary {
       resyncUnchanged: string
       resyncVersion: string
     }
+    /** Sledovaný zdroj: predpis zo Slov-Lexu (ADR-037). */
+    webImport: {
+      heading: string
+      intro: string
+      address: string
+      addressPlaceholder: string
+      addressHint: string
+      load: string
+      errorBefore: string
+      found: string
+      number: string
+      effectiveSince: (date: string) => string
+      later: (n: number) => string
+      laterRow: (date: string, amendment: string | null) => string
+      exists: string
+      open: string
+      metaNote: string
+      import: string
+      afterNote: string
+      done: (date: string, later: number) => string
+      /** Detail dokumentu: blok „Zdroj" a tlačidlo kontroly. */
+      sourceLine: (effective: string, fetched: string) => string
+      check: string
+      checkHint: string
+      unchanged: string
+      version: (date: string) => string
+      corrected: string
+    }
     upload: {
       /** Číslované sekcie formulára — nie kroky sprievodcu, viď komentár v `new/page.tsx`. */
       sectionFile: string
@@ -4049,6 +4079,7 @@ interface Dictionary {
         intro: string
         file: { title: string; text: string; cta: string }
         connector: { title: string; text: string; cta: string }
+        web: { title: string; text: string; cta: string }
       }
       /** Nadpis rozbaľovacej skupiny nepovinných polí (úloha 6). */
       moreFields: string
@@ -6432,6 +6463,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.noImportProfile": "Profil tohto servera import nepodporuje.",
     "connector.nothingSelected": "Nie je vybraný žiadny článok.",
     "library.notFromConnector": "Tento dokument nevznikol z konektora.",
+    "library.notFromWeb": "Tento dokument nevznikol zo sledovaného zdroja.",
+    "web.badAddress": "Adresa nie je predpis na Slov-Lexe — čaká sa tvar …/SK/ZZ/rok/číslo alebo číslo ako 440/2015.",
+    "web.fetchFailed": "Slov-Lex neodpovedal alebo vrátil chybu; skús o chvíľu.",
+    "web.noVersion": "Predpis nemá na Slov-Lexe znenie účinné k dnešnému dňu.",
+    "web.parseFailed": "Stránku Slov-Lexu sa nepodarilo prečítať — zmenilo sa jej značkovanie.",
+    "web.pdfFailed": "Záväzné PDF znenia sa zo Slov-Lexu nepodarilo stiahnuť.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
     "helpdesk.kind": "Neznámy typ kanála.",
     "helpdesk.syncInterval": "Neznámy interval synchronizácie.",
@@ -8848,6 +8885,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       proposedFrom: (d) => `navrhovaná účinnosť ${d}`,
       invalidFrom: (d) => `neplatí od ${d}`,
       fromConnector: (n) => `z konektora ${n}`,
+      fromWeb: "zo Slov-Lexu",
       processingRunning: "Spracúva sa",
       processingFailed: "Chyba spracovania",
       processingFailedNote: "Text sa nepodarilo spracovať — asistent z neho zatiaľ neodpovedá.",
@@ -8881,6 +8919,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rows: { category: "Druh", folder: "Priečinok", tags: "Značky", access: "Prístup", language: "Jazyk", origin: "Pôvod", identifier: "Identifikátor", parents: "Nadradené", children: "Podradené" },
       originManual: "Nahraté ručne",
       originConnector: (n) => `Z konektora ${n}`,
+      originWeb: "Zo Slov-Lexu (sledovaný zdroj)",
       textHeading: "Text",
       files: { draftPdf: "PDF konceptu", draftSource: "Zdroj konceptu", pdf: "Platné PDF", source: "Zdroj", original: "Pôvodný súbor" },
       draftPdfNote: "schvaľuje sa",
@@ -8997,6 +9036,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resyncUnchanged: "Na serveri sa nič nezmenilo.",
       resyncVersion: "Článok sa zmenil — koncept nového znenia je pripravený.",
     },
+    webImport: {
+      heading: "Predpis zo Slov-Lexu",
+      intro: "Vlož adresu predpisu na slov-lex.sk. Stiahne sa znenie účinné dnes aj jeho záväzné PDF a vznikne koncept dokumentu; ďalej ide bežnou cestou: metadáta, schválenie, zverejnenie. Novely potom nájde tlačidlo Skontrolovať zdroj na detaile dokumentu.",
+      address: "Adresa predpisu",
+      addressPlaceholder: "https://www.slov-lex.sk/pravne-predpisy/SK/ZZ/2015/440/",
+      addressHint: "Adresa z hlavného alebo statického portálu, alebo číslo v tvare 440/2015.",
+      load: "Načítať",
+      errorBefore: "Načítanie zlyhalo: ",
+      found: "Nájdený predpis",
+      number: "Číslo predpisu",
+      effectiveSince: date => `Znenie účinné od ${date}`,
+      later: n => n === 1 ? "Na Slov-Lexe je už vyhlásené 1 neskoršie znenie:" : n < 5 ? `Na Slov-Lexe sú už vyhlásené ${n} neskoršie znenia:` : `Na Slov-Lexe je už vyhlásených ${n} neskorších znení:`,
+      laterRow: (date, amendment) => `od ${date}${amendment ? ` (novela ${amendment})` : ""}`,
+      exists: "Tento predpis v knižnici už je — novely nájde Skontrolovať zdroj na jeho detaile.",
+      open: "Otvoriť",
+      metaNote: "Názov sa berie z portálu; druh, prístup a jazyk volíš tu.",
+      import: "Importovať do knižnice",
+      afterNote: "Vznikne koncept so záväzným PDF zo Slov-Lexu a textom na vyhľadávanie; otvor ho, skontroluj a pošli na schválenie.",
+      done: (date, later) => `Koncept je pripravený: znenie účinné od ${date}.${later ? " Slov-Lex už má vyhlásené neskoršie znenie — nájde ho Skontrolovať zdroj." : ""}`,
+      sourceLine: (effective, fetched) => `Sledovaný zdroj Slov-Lex: znenie účinné od ${effective}, stiahnuté ${fetched}.`,
+      check: "Skontrolovať zdroj",
+      checkHint: "Prečíta históriu predpisu na Slov-Lexe; keď je vyhlásené novšie znenie, vznikne koncept nového znenia s jeho účinnosťou. Zverejnené sa nemení.",
+      unchanged: "Na Slov-Lexe nie je novšie znenie ani zmena textu.",
+      version: date => `Slov-Lex má novšie znenie účinné od ${date} — koncept nového znenia je pripravený.`,
+      corrected: "Text toho istého znenia sa na Slov-Lexe zmenil — koncept s opraveným textom je pripravený.",
+    },
     upload: {
       sectionFile: "Súbor",
       sectionMeta: "Metadáta",
@@ -9027,6 +9092,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         intro: "Dokumenty v knižnici vznikajú dvoma spôsobmi. Vyber ten, ktorý sedí na to, čo pridávaš.",
         file: { title: "Dokument zo súboru", text: "Predpis, smernica, zákon, manuál, zmluva… Nahráš PDF (schvaľuje a potvrdzuje sa) a upraviteľný zdroj (Word); z neho vznikne text, ktorý sa podľa druhu dokumentu rozdelí na úseky pre vyhľadávanie. Pri Markdowne (.md) stačí nahrať len ten — PDF s hlavičkou a pätou organizácie vyrobí Contineo.", cta: "Nahrať súbor ↓" },
         connector: { title: "Import zo servera", text: "Články z pripojeného servera (napríklad Sportnet) sa prevezmú aj s pôvodom a ďalej sa s nimi zaobchádza ako s dokumentom zo súboru. Napríklad popis procesu prestupu z dokumentácie Sportnetu pre správcov ticketov — ako interný dokument.", cta: "Importovať →" },
+        web: { title: "Predpis zo Slov-Lexu", text: "Zákon alebo vyhláška zo Zbierky zákonov sa stiahne aj so záväzným PDF a sleduje sa: po novele vznikne koncept nového znenia. Napríklad zákon o športe, ktorému sú podradené Stanovy.", cta: "Načítať predpis →" },
       },
       moreFields: "Ďalšie údaje",
       scope: "Pôsobnosť",
@@ -11383,6 +11449,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.noImportProfile": "Profil tohoto serveru import nepodporuje.",
     "connector.nothingSelected": "Není vybrán žádný článek.",
     "library.notFromConnector": "Tento dokument nevznikl z konektoru.",
+    "library.notFromWeb": "Tento dokument nevznikl ze sledovaného zdroje.",
+    "web.badAddress": "Adresa není předpis na Slov-Lexu — čeká se tvar …/SK/ZZ/rok/číslo nebo číslo jako 440/2015.",
+    "web.fetchFailed": "Slov-Lex neodpověděl nebo vrátil chybu; zkus to za chvíli.",
+    "web.noVersion": "Předpis nemá na Slov-Lexu znění účinné k dnešnímu dni.",
+    "web.parseFailed": "Stránku Slov-Lexu se nepodařilo přečíst — změnilo se její značkování.",
+    "web.pdfFailed": "Závazné PDF znění se ze Slov-Lexu nepodařilo stáhnout.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
     "helpdesk.kind": "Neznámý typ kanálu.",
     "helpdesk.syncInterval": "Neznámý interval synchronizace.",
@@ -13796,6 +13868,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       proposedFrom: (d) => `navrhovaná účinnost ${d}`,
       invalidFrom: (d) => `neplatí od ${d}`,
       fromConnector: (n) => `z konektoru ${n}`,
+      fromWeb: "ze Slov-Lexu",
       processingRunning: "Zpracovává se",
       processingFailed: "Chyba zpracování",
       processingFailedNote: "Text se nepodařilo zpracovat — asistent z něj zatím neodpovídá.",
@@ -13829,6 +13902,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rows: { category: "Druh", folder: "Složka", tags: "Štítky", access: "Přístup", language: "Jazyk", origin: "Původ", identifier: "Identifikátor", parents: "Nadřazené", children: "Podřízené" },
       originManual: "Nahráno ručně",
       originConnector: (n) => `Z konektoru ${n}`,
+      originWeb: "Ze Slov-Lexu (sledovaný zdroj)",
       textHeading: "Text",
       files: { draftPdf: "PDF konceptu", draftSource: "Zdroj konceptu", pdf: "Platné PDF", source: "Zdroj", original: "Původní soubor" },
       draftPdfNote: "schvaluje se",
@@ -13945,6 +14019,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resyncUnchanged: "Na serveru se nic nezměnilo.",
       resyncVersion: "Článek se změnil — koncept nového znění je připraven.",
     },
+    webImport: {
+      heading: "Předpis ze Slov-Lexu",
+      intro: "Vlož adresu předpisu na slov-lex.sk. Stáhne se znění účinné dnes i jeho závazné PDF a vznikne koncept dokumentu; dál jde běžnou cestou: metadata, schválení, zveřejnění. Novely pak najde tlačítko Zkontrolovat zdroj na detailu dokumentu.",
+      address: "Adresa předpisu",
+      addressPlaceholder: "https://www.slov-lex.sk/pravne-predpisy/SK/ZZ/2015/440/",
+      addressHint: "Adresa z hlavního nebo statického portálu, nebo číslo ve tvaru 440/2015.",
+      load: "Načíst",
+      errorBefore: "Načtení selhalo: ",
+      found: "Nalezený předpis",
+      number: "Číslo předpisu",
+      effectiveSince: date => `Znění účinné od ${date}`,
+      later: n => n === 1 ? "Na Slov-Lexu je už vyhlášeno 1 pozdější znění:" : n < 5 ? `Na Slov-Lexu jsou už vyhlášena ${n} pozdější znění:` : `Na Slov-Lexu je už vyhlášeno ${n} pozdějších znění:`,
+      laterRow: (date, amendment) => `od ${date}${amendment ? ` (novela ${amendment})` : ""}`,
+      exists: "Tento předpis v knihovně už je — novely najde Zkontrolovat zdroj na jeho detailu.",
+      open: "Otevřít",
+      metaNote: "Název se bere z portálu; druh, přístup a jazyk volíš tady.",
+      import: "Importovat do knihovny",
+      afterNote: "Vznikne koncept se závazným PDF ze Slov-Lexu a textem pro vyhledávání; otevři ho, zkontroluj a pošli ke schválení.",
+      done: (date, later) => `Koncept je připraven: znění účinné od ${date}.${later ? " Slov-Lex už má vyhlášeno pozdější znění — najde ho Zkontrolovat zdroj." : ""}`,
+      sourceLine: (effective, fetched) => `Sledovaný zdroj Slov-Lex: znění účinné od ${effective}, staženo ${fetched}.`,
+      check: "Zkontrolovat zdroj",
+      checkHint: "Přečte historii předpisu na Slov-Lexu; když je vyhlášeno novější znění, vznikne koncept nového znění s jeho účinností. Zveřejněné se nemění.",
+      unchanged: "Na Slov-Lexu není novější znění ani změna textu.",
+      version: date => `Slov-Lex má novější znění účinné od ${date} — koncept nového znění je připraven.`,
+      corrected: "Text téhož znění se na Slov-Lexu změnil — koncept s opraveným textem je připraven.",
+    },
     upload: {
       sectionFile: "Soubor",
       sectionMeta: "Metadata",
@@ -13975,6 +14075,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         intro: "Dokumenty v knihovně vznikají dvěma způsoby. Vyber ten, který odpovídá tomu, co přidáváš.",
         file: { title: "Dokument ze souboru", text: "Předpis, směrnice, zákon, manuál, smlouva… Nahraješ PDF (schvaluje a potvrzuje se) a upravitelný zdroj (Word); z něj vznikne text, který se podle druhu dokumentu rozdělí na úseky pro vyhledávání. U Markdownu (.md) stačí nahrát jen ten — PDF se záhlavím a zápatím organizace vyrobí Contineo.", cta: "Nahrát soubor ↓" },
         connector: { title: "Import ze serveru", text: "Články z připojeného serveru (například Sportnet) se převezmou i s původem a dále se s nimi zachází jako s dokumentem ze souboru. Například popis procesu přestupu z dokumentace Sportnetu pro správce tiketů — jako interní dokument.", cta: "Importovat →" },
+        web: { title: "Předpis ze Slov-Lexu", text: "Zákon nebo vyhláška ze slovenské Sbírky zákonů se stáhne i se závazným PDF a sleduje se: po novele vznikne koncept nového znění. Například zákon o sportu, kterému jsou podřízeny Stanovy.", cta: "Načíst předpis →" },
       },
       moreFields: "Další údaje",
       scope: "Působnost",
@@ -16323,6 +16424,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "connector.noImportProfile": "This server profile does not support import.",
     "connector.nothingSelected": "No article is selected.",
     "library.notFromConnector": "This document did not come from a connector.",
+    "library.notFromWeb": "This document did not come from a watched source.",
+    "web.badAddress": "The address is not an act on Slov-Lex — expected …/SK/ZZ/year/number or a number such as 440/2015.",
+    "web.fetchFailed": "Slov-Lex did not respond or returned an error; try again in a moment.",
+    "web.noVersion": "The act has no version in force on Slov-Lex as of today.",
+    "web.parseFailed": "The Slov-Lex page could not be read — its markup has changed.",
+    "web.pdfFailed": "The binding PDF of the version could not be downloaded from Slov-Lex.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
     "helpdesk.kind": "Unknown channel type.",
     "helpdesk.syncInterval": "Unknown sync interval.",
@@ -18730,6 +18837,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       proposedFrom: (d) => `proposed effective date ${d}`,
       invalidFrom: (d) => `not in effect since ${d}`,
       fromConnector: (n) => `from connector ${n}`,
+      fromWeb: "from Slov-Lex",
       processingRunning: "Processing",
       processingFailed: "Processing failed",
       processingFailedNote: "The text could not be processed — the assistant does not answer from it yet.",
@@ -18763,6 +18871,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rows: { category: "Type", folder: "Folder", tags: "Tags", access: "Access", language: "Language", origin: "Origin", identifier: "Identifier", parents: "Parents", children: "Children" },
       originManual: "Uploaded manually",
       originConnector: (n) => `From connector ${n}`,
+      originWeb: "From Slov-Lex (watched source)",
       textHeading: "Text",
       files: { draftPdf: "Draft PDF", draftSource: "Draft source", pdf: "Current PDF", source: "Source", original: "Original file" },
       draftPdfNote: "under approval",
@@ -18879,6 +18988,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       resyncUnchanged: "Nothing changed on the server.",
       resyncVersion: "The article changed — a draft of a new version is ready.",
     },
+    webImport: {
+      heading: "Act from Slov-Lex",
+      intro: "Paste the address of an act on slov-lex.sk. The version in force today is fetched together with its binding PDF and becomes a draft document; from there it follows the usual path: metadata, approval, publication. Amendments are later found by the Check source button on the document detail.",
+      address: "Act address",
+      addressPlaceholder: "https://www.slov-lex.sk/pravne-predpisy/SK/ZZ/2015/440/",
+      addressHint: "An address from the main or the static portal, or a number in the form 440/2015.",
+      load: "Load",
+      errorBefore: "Loading failed: ",
+      found: "Act found",
+      number: "Act number",
+      effectiveSince: date => `Version in force since ${date}`,
+      later: n => n === 1 ? "Slov-Lex has already published 1 later version:" : `Slov-Lex has already published ${n} later versions:`,
+      laterRow: (date, amendment) => `from ${date}${amendment ? ` (amendment ${amendment})` : ""}`,
+      exists: "This act is already in the library — amendments are found by Check source on its detail.",
+      open: "Open",
+      metaNote: "The title comes from the portal; kind, access and language are chosen here.",
+      import: "Import into the library",
+      afterNote: "A draft with the binding PDF from Slov-Lex and text for search is created; open it, check it and send it for approval.",
+      done: (date, later) => `The draft is ready: version in force since ${date}.${later ? " Slov-Lex has already published a later version — Check source will find it." : ""}`,
+      sourceLine: (effective, fetched) => `Watched source Slov-Lex: version in force since ${effective}, fetched ${fetched}.`,
+      check: "Check source",
+      checkHint: "Reads the act's history on Slov-Lex; if a newer version has been published, a draft of a new version with its effective date is created. Published versions stay as they are.",
+      unchanged: "Slov-Lex has no newer version and no text change.",
+      version: date => `Slov-Lex has a newer version in force since ${date} — a draft of a new version is ready.`,
+      corrected: "The text of the same version changed on Slov-Lex — a draft with the corrected text is ready.",
+    },
     upload: {
       sectionFile: "File",
       sectionMeta: "Metadata",
@@ -18909,6 +19044,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         intro: "Documents in the library are created in two ways. Pick the one that fits what you are adding.",
         file: { title: "Document from a file", text: "Regulation, directive, law, manual, contract… You upload the PDF (that is what gets approved and acknowledged) and an editable source (Word); it becomes the text, split into sections for search according to the kind of document. With Markdown (.md) the source alone is enough — Contineo generates the PDF with the organisation's header and footer.", cta: "Upload a file ↓" },
         connector: { title: "Import from a server", text: "Articles from a connected server (for example Sportnet) are taken over with their origin and then treated like a document from a file. For example, the description of the transfer process from the Sportnet documentation for ticket managers — as an internal document.", cta: "Import →" },
+        web: { title: "Act from Slov-Lex", text: "An act or decree from the Slovak Collection of Laws is fetched with its binding PDF and watched: after an amendment a draft of the new version is created. For example the Sports Act, to which the Statutes are subordinate.", cta: "Load act →" },
       },
       moreFields: "More details",
       scope: "Scope",

@@ -86,8 +86,8 @@ export default async function NewDocumentPage({
       </p>
       {/*
         Rozcestník (D179, 8. 10. 2026): dva základné spôsoby, ako dokument
-        vzniká — zo súboru a ako FAQ (ADR-028, D164) — a import zo servera
-        (ADR-029). Formulár na súbor ostáva pod ním na tej istej adrese,
+        vzniká — zo súboru a ako FAQ (ADR-028, D164) — import zo servera
+        (ADR-029) a predpis zo Slov-Lexu (ADR-037). Formulár na súbor ostáva pod ním na tej istej adrese,
         takže bežné nahratie nestojí ani klik navyše. Odkazy, nie tlačidlá:
         každá voľba je iná stránka.
       */}
@@ -98,6 +98,7 @@ export default async function NewDocumentPage({
           {([
             ["#upload-form", t.kinds.file],
             ["/library/new/connector", t.kinds.connector],
+            ["/library/new/web", t.kinds.web],
           ] as const).map(([href, k]) => (
             <Link key={href} href={href} className="card new-kind">
               <span className="new-kind-title">{k.title}</span>

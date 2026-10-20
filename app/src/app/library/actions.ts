@@ -58,6 +58,7 @@ import { AppError } from "@/lib/appError"
 import { assignHref, summarize, type BulkOutcome } from "@/lib/libraryBulk"
 import { submitForApproval, cancelRound, markNotified } from "@/lib/approvalsDb"
 import { importArticles, resyncDocument } from "@/lib/connectorImport"
+import { importFromSlovLex, checkWebSource } from "@/lib/webImport"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { approvalEmail, send } from "@/lib/ecomail"
 import { requestHostname, currentTenant } from "@/lib/session"
@@ -1782,4 +1783,59 @@ export async function setDraftResponsibleAction(fd: FormData) {
   }
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#flow`)
+}
+
+/**
+ * Predpis zo Slov-Lexu do knižnice (ADR-037, krok B). Adresa ide späť do
+ * adresy stránky, aby sa po chybe dala opraviť; úspech vedie na koncept.
+ */
+export async function importWebDocumentAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).library.webImport
+  const address = fieldText(fd, "address")
+  const back = `/library/new/web?${new URLSearchParams(address ? { address } : {}).toString()}`
+  try {
+    const out = await importFromSlovLex(self.companyCode, {
+      address,
+      folderId: fieldText(fd, "folderId") || null,
+      category: fieldText(fd, "category"),
+      accessLevel: fieldText(fd, "accessLevel") || "internal",
+      language: fieldText(fd, "language") || "sk",
+      scope: fieldText(fd, "scope") || "company",
+      ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
+      tags: fd.getAll("tags").filter((x): x is string => typeof x === "string"),
+    }, self.email, self.extras)
+    revalidatePath("/library")
+    const message = out.result === "exists"
+      ? t.exists
+      : t.done(out.effectiveFrom ? formatDate(new Date(out.effectiveFrom), self.language) : "", out.later.length)
+    redirect(`/library/${encodeURIComponent(out.documentId)}?msg=${encodeURIComponent(message)}`)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    redirect(`${back}&error=${encodeURIComponent(errorMessage(e, self.language))}`)
+  }
+}
+
+/** Kontrola sledovaného zdroja (D242): novšie znenie zo Slov-Lexu ako koncept. */
+export async function checkWebSourceAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).library.webImport
+  const id = fieldText(fd, "documentId")
+  let message: string
+  let failed = false
+  try {
+    const r = await checkWebSource(self.companyCode, id, self.email, self.extras)
+    message = r.result === "unchanged" ? t.unchanged
+      : r.result === "corrected" ? t.corrected
+      : t.version(r.effectiveFrom ? formatDate(new Date(r.effectiveFrom), self.language) : "")
+    revalidatePath("/library")
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, self.language); failed = true
+  }
+  const q = new URLSearchParams({ msg: message })
+  if (failed) q.set("error", "1")
+  redirect(`/library/${encodeURIComponent(id)}?${q.toString()}`)
 }
