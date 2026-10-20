@@ -19,11 +19,13 @@ import VersionMetaFields from "@/components/VersionMetaFields"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { timepointDate } from "@/lib/slovLex"
 import { AppError } from "@/lib/appError"
 import Notice from "@/components/Notice"
 import {
   publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction, reindexVersionAction, loadTextForFixAction,
   resyncConnectorDocumentAction,
+  checkWebSourceAction,
   fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction, archiveDocumentAction, restoreDocumentAction, setDraftResponsibleAction,
   deferChunkReviewAction,
@@ -118,6 +120,7 @@ export default async function DocumentDetailPage({
   const tf = dictionary(language).library.fields
   const tflow = dictionary(language).library.flow
   const tci = dictionary(language).library.connectorImport
+  const tw = dictionary(language).library.webImport
   const tv = dictionary(language).library.docView
   const extras = tenantExtras(ctx.tenant)
   // Značky s počtami len pre úpravu dokumentu — inde sa nekreslia.
@@ -905,7 +908,7 @@ export default async function DocumentDetailPage({
       : current?.effectiveFrom ? t.effectiveFromOn(date(current.effectiveFrom))
       : draftEffectiveFrom ? tv.proposedFrom(date(draftEffectiveFrom))
       : "",
-    d.source?.type === "mcp" ? tv.fromConnector(d.source.connectorName) : "",
+    d.source?.type === "mcp" ? tv.fromConnector(d.source.connectorName) : d.source?.type === "web" ? tv.fromWeb : "",
   ].filter(Boolean)
 
   /*
@@ -1061,7 +1064,7 @@ export default async function DocumentDetailPage({
     [tv.rows.tags, d.tags.map(tag => codeLabel("tags", tag)).join(", ")],
     [tv.rows.access, codeLabel("accessLevel", d.accessLevel)],
     [tv.rows.language, codeLabel("language", d.language)],
-    [tv.rows.origin, d.source?.type === "mcp" ? tv.originConnector(d.source.connectorName) : tv.originManual],
+    [tv.rows.origin, d.source?.type === "mcp" ? tv.originConnector(d.source.connectorName) : d.source?.type === "web" ? tv.originWeb : tv.originManual],
     [tv.rows.identifier, <code key="id">{d.documentId}</code>],
   ]
   const textRows: { label: string; file: VersionFile; download?: boolean; note?: string }[] = [
@@ -1827,6 +1830,20 @@ export default async function DocumentDetailPage({
               <span><code>{d.source.externalId}</code></span>
             </div>
             <SubmitButton className="button button--quiet">{tci.resync}</SubmitButton>
+          </form>
+        )}
+
+        {/* Sledovaný zdroj Slov-Lex (ADR-037, D243): novšie znenie ako koncept. */}
+        {d.source && d.source.type === "web" && (
+          <form action={checkWebSourceAction} className="more-row" id="source">
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <div className="more-main">
+              <b>{tw.check}</b>
+              <span>{tw.sourceLine(formatDate(timepointDate(d.source.timepoint), language), formatDate(new Date(d.source.fetchedAt), language))}</span>
+              <span>{tw.checkHint}</span>
+              <span><a href={d.source.url} target="_blank" rel="noreferrer">{d.source.url}</a></span>
+            </div>
+            <SubmitButton className="button button--quiet">{tw.check}</SubmitButton>
           </form>
         )}
 

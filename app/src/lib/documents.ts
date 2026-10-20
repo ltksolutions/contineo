@@ -202,13 +202,19 @@ export interface Version {
 
 /** Len tá časť `documents`, ktorú potrebuje onboarding. */
 /**
- * Pôvod obsahu, ktorý neprišiel ako súbor (ADR-029, použitie B). `externalId`
- * je cesta na serveri — na opätovné stiahnutie; `contentHash` odtlačok textu
- * po redukcii — server nedáva dátum zmeny, takže „zmenilo sa to?" povie len
- * hash. Názov konektora je **kópia**: konektor sa dá premenovať aj odstrániť
- * a dokument má o rok povedať, odkiaľ bol.
+ * Pôvod obsahu, ktorý neprišiel ako súbor. Dva tvary:
+ *
+ *   • `mcp` — import z konektora (ADR-029, použitie B). `externalId` je
+ *     cesta na serveri (na opätovné stiahnutie), `contentHash` odtlačok textu
+ *     po redukcii — server nedáva dátum zmeny, takže „zmenilo sa to?" povie
+ *     len hash. Názov konektora je **kópia**: konektor sa dá premenovať aj
+ *     odstrániť a dokument má o rok povedať, odkiaľ bol.
+ *   • `web` — sledovaný zdroj s adaptérom (ADR-037, D245); dnes Slov-Lex.
+ *     `externalId` je identifikátor predpisu (`SK/ZZ/2015/440`), `timepoint`
+ *     časová verzia znenia (`YYYYMMDD`), ktoré je v knižnici naposledy
+ *     stiahnuté — kontrola zdroja porovnáva s ňou históriu predpisu (D243).
  */
-export interface DocumentSource {
+export interface McpDocumentSource {
   type: "mcp"
   connector: string
   connectorName: string
@@ -219,10 +225,24 @@ export interface DocumentSource {
   adapterVersion: string
 }
 
+export interface WebDocumentSource {
+  type: "web"
+  adapter: "slov-lex"
+  /** Adresa pre človeka — hlavný portál. */
+  url: string
+  externalId: string
+  timepoint: string
+  fetchedAt: Date
+  contentHash: string
+  adapterVersion: string
+}
+
+export type DocumentSource = McpDocumentSource | WebDocumentSource
+
 export interface DocumentRecord {
   documentId: string
   title: string
-  /** Odkiaľ obsah je, keď neprišiel ako súbor (ADR-029). */
+  /** Odkiaľ obsah je, keď neprišiel ako súbor (ADR-029, ADR-037). */
   source?: DocumentSource
   /**
    * Identita dokumentu v rámci organizácie (D80) — z nej sa skladá
