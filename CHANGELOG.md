@@ -15,6 +15,8 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Hierarchia** je tretí pohľad Knižnice: „Tabuľka · Karty · Hierarchia“.
   Na telefóne „Karty · Hierarchia“.
 - Ponuka „⋯“ v Knižnici je preč.
+- Oprava po nasadení: cesta a názov v záložke na Kontrole súladu
+  a Overených odpovediach mali prázdny názov sekcie.
 
 ### Kontrola súladu: požiadavky len z hierarchie, bez pevných väzieb (2026-10-20, D241)
 

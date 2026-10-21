@@ -412,6 +412,13 @@ const SECTION_HREF: Record<NavKey, string> = {
 }
 
 /**
+ * Všetky kľúče navigácie — z `SECTION_HREF`, ktorý ich typ vynúti úplne.
+ * Ručné zoznamy v `AppShell` a `pageTitle` 21. 10. 2026 nepoznali nové
+ * `compliance` a `curation` a cesta na Kontrole súladu mala prázdny krok.
+ */
+export const NAV_KEYS = Object.keys(SECTION_HREF) as NavKey[]
+
+/**
  * Hlavička požiadavky, v ktorej `proxy.ts` podáva adresu stránky
  * `AppShell`-u. Serverový komponent ju od Nextu inak nedostane a cesta sa
  * z nej skladá.
