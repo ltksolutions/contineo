@@ -19,9 +19,9 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { libraryContext } from "@/lib/library"
-import { OVERSIZE_FACTOR } from "@/lib/chunkingInspect"
+import { CHUNK_LIMIT, measureCut, chunkFinding } from "@/lib/chunkSize"
 import { cutterState } from "@/lib/chunkCutter"
-import { groupBlocks, boundaryDiff, groupTokens, headingText, type TextBlock } from "@/lib/chunkBlocks"
+import { groupBlocks, boundaryDiff, headingText, type TextBlock } from "@/lib/chunkBlocks"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Notice from "@/components/Notice"
 import FormattedText from "@/components/FormattedText"
@@ -75,9 +75,9 @@ export default async function ChunksPage({
   const t = dictionary(language).library.chunks
   const c = t.cut
   const branding = brandingView(ctx.tenant)
-  // Cieľ rezu je pravidlo, nie nastavenie (ADR-035 D230).
-  const limit = Math.round(CUT_MAX * OVERSIZE_FACTOR)
-  const min = CUT_MIN
+  // Cieľ rezu je pravidlo, nie nastavenie (ADR-035 D230). Strop a zlomok
+  // sú tie isté pre Dnes, Návrh aj odmietnutie návrhu (`chunkSize.ts`).
+  const limit = CHUNK_LIMIT
   const methodLabel = { manual: c.methodManual, headings: c.methodHeadings, plain: c.methodPlain }[state.method]
 
   // Kolo: z adresy, inak najnovšie. Bez kola je len pohľad Dnes.
@@ -89,11 +89,13 @@ export default async function ChunksPage({
   const stat = (tokens: number[]) => tokens.length
     ? `${Math.min(...tokens)} – ${Math.round(tokens.reduce((a, b) => a + b, 0) / tokens.length)} – ${Math.max(...tokens)}`
     : "—"
-  const badToday = state.todayChunks.filter(x => x.tokens > limit || (x.complete === false && x.tokens < min / 2)).length
-  const proposalTokens = round ? groupTokens(state.blocks, round.boundaries) : []
-  // Pri návrhu len veľké úseky: krátka celá časť je prirodzená jednotka,
-  // úlomok vzniká len delením (to isté pravidlo ako v pohľade Dnes).
-  const badProposal = proposalTokens.filter(n => n > limit).length
+  const badToday = state.todayChunks.filter(x => chunkFinding(x)).length
+  // Návrh sa meria rovnako ako Dnes: úsek po reze, s riadkom kontextu, a hlási
+  // veľké úseky aj zlomky — inak by návrh ukázal „bez nálezov" a po prijatí
+  // ten istý rez „nesedí" (zákon o športe, 21. 10. 2026).
+  const proposalMeasured = round ? measureCut(state.text, round.boundaries, r.title) : []
+  const proposalTokens = proposalMeasured.map(m => m.tokens)
+  const badProposal = proposalMeasured.filter(m => chunkFinding(m)).length
   const diff = round ? boundaryDiff(state.current, round.boundaries) : null
   const reasonOf = (b: number) => round?.reasons.find(x => x.block === b)?.why ?? ""
   const label = (b: number) => {
@@ -117,7 +119,7 @@ export default async function ChunksPage({
    * zodpovedá uloženému úseku (±40 %) — inak by pri bloku stálo číslo,
    * ktoré k nemu nepatrí (ISSF-08, 16. 10. 2026: nadpis s „1 204 tokenmi").
    */
-  const todayGroupTokens = groupTokens(state.blocks, state.current)
+  const todayGroupTokens = measureCut(state.text, state.current, r.title).map(m => m.tokens)
   const todayFromBlocks = todayGroups.length === state.todayChunks.length &&
     state.todayChunks.every((ch, i) => {
       const ratio = (todayGroupTokens[i] || 1) / Math.max(1, ch.tokens)
@@ -126,8 +128,9 @@ export default async function ChunksPage({
   const todayView = (
     <article className="cut-doc card" aria-label={c.docLabel}>
       {state.todayChunks.map((ch, i) => {
-        const oversized = ch.tokens > limit
-        const fragment = !oversized && ch.complete === false && ch.tokens < min / 2
+        const finding = chunkFinding(ch)
+        const oversized = finding === "oversized"
+        const fragment = finding === "fragment"
         return (
           <section key={ch.chunkIndex} className={`cut-block ${tone(i)}${oversized ? " is-oversized" : ""}${fragment ? " is-fragment" : ""}`}
                    aria-label={c.chunkLabel(ch.chunkIndex + 1)}>
@@ -163,6 +166,7 @@ export default async function ChunksPage({
         const start = g[0]
         const added = withDiff && diff!.added.includes(start)
         const tokens = proposalTokens[i]
+        const finding = proposalMeasured[i] ? chunkFinding(proposalMeasured[i]) : null
         const nodes: ReactNode[] = []
         g.forEach(b => {
           if (withDiff && b !== start && diff!.removed.includes(b)) {
@@ -185,13 +189,14 @@ export default async function ChunksPage({
                 {reasonOf(start) && <span className="cut-boundary-why">{reasonOf(start)}</span>}
               </div>
             )}
-            <section className={`cut-block ${tone(i)}${tokens > limit ? " is-oversized" : ""}`} aria-label={c.chunkLabel(i + 1)}>
+            <section className={`cut-block ${tone(i)}${finding === "oversized" ? " is-oversized" : ""}${finding === "fragment" ? " is-fragment" : ""}`} aria-label={c.chunkLabel(i + 1)}>
               <header className="cut-head">
                 <span className="cut-no">{i + 1}</span>
                 <span className="cut-ref">{state.blocks[start].kind === "heading" ? headingText(state.blocks[start]) : c.continuation}</span>
                 <span className="cut-tokens quiet">{t.tokens(tokens)}</span>
                 {added && <span className="tag tag--new">{c.newChunkTag}</span>}
-                {tokens > limit && <span className="tag tag--expired">{t.oversizedTag}</span>}
+                {finding === "oversized" && <><span className="tag tag--expired">{t.oversizedTag}</span><span className="cut-note quiet">{c.oversizedNote(limit)}</span></>}
+                {finding === "fragment" && <><span className="tag tag--draft">{c.fragmentTag}</span><span className="cut-note quiet">{c.fragmentNote}</span></>}
               </header>
               <div className="cut-body">{nodes}</div>
             </section>

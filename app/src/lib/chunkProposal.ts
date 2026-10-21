@@ -15,8 +15,9 @@
  * vynechaná hranica tak zlepila 65 úsekov do jedného s 30 170 tokenmi.
  * Pri zmenách vynechanie znamená „nemením", nie „ruším".
  *
- * **Návrh s novým úsekom nad strop sa odmieta** (`CUT_HARD`, rovnaká
- * hranica, nad ktorou Členenie hlási „veľký") a neuloží sa. Úsek nad strop,
+ * **Návrh s novým úsekom nad strop sa odmieta** (`CHUNK_LIMIT`, rovnaká
+ * hranica a rovnaké meranie s riadkom kontextu, ako keď Členenie hlási
+ * „veľký" — `chunkSize.ts`) a neuloží sa. Úsek nad strop,
  * ktorý už je v súčasnom reze s tými istými hranicami, prejde — niektorý
  * článok sa rozumne rozdeliť nedá (§ 3 zákona o športe, výpočet pojmov).
  * Kolo 2 a ďalšie dostanú predošlý návrh a poznámku kurátora („Čo nesedí").
@@ -33,8 +34,8 @@ import { aiForCompany } from "./aiSettings"
 import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
 import { AppError } from "./appError"
 import { textFingerprint } from "./chunkIdentity"
-import { splitBlocks, normalizeBoundaries, groupTokens, groupBlocks, type TextBlock } from "./chunkBlocks"
-import { CUT_HARD } from "./chunkHeadings"
+import { splitBlocks, normalizeBoundaries, groupBlocks, type TextBlock } from "./chunkBlocks"
+import { CHUNK_LIMIT, measureCut } from "./chunkSize"
 import { CUTS_KEPT, type ChunkCut } from "./chunkCut"
 import { writeAudit } from "./audit"
 
@@ -150,7 +151,7 @@ Pravidlá:
 
 Vráť LEN ZMENY oproti súčasnému rezu — súčasné hranice, ktoré neuvedieš, ostávajú:
 - add: indexy blokov, na ktorých má ZAČAŤ nový úsek a dnes nezačína (vzostupne); prázdne, keď nepridávaš;
-- remove: súčasné hranice, ktoré RUŠÍŠ — úsek sa spojí s predošlým (vzostupne); prázdne, keď nerušíš. Spojením nesmie vzniknúť úsek nad ${CUT_HARD} tokenov;
+- remove: súčasné hranice, ktoré RUŠÍŠ — úsek sa spojí s predošlým (vzostupne); prázdne, keď nerušíš. Spojením nesmie vzniknúť úsek nad ${CHUNK_LIMIT} tokenov;
 - keď súčasný rez sedí, add aj remove sú prázdne;
 - reasons: ku každej hranici z add a remove jednu krátku vetu prečo (block = index); najviac 40 — pri veľkom dokumente len najdôležitejšie zmeny, ostatné zhrň v summary;
 - summary: 1–2 vety po slovensky, čo si zmenil oproti súčasnému rezu (pri ďalšom kole oproti predošlému návrhu a podľa poznámky kurátora);
@@ -202,15 +203,18 @@ export interface OversizedChunk {
 }
 
 /**
- * Nové úseky nad strop. Úsek s rovnakým začiatkom aj koncom, aký už je
- * v súčasnom reze, sa nepočíta — návrh ho nevytvoril, len ponechal.
- * Čistá funkcia.
+ * Nové úseky nad strop, zmerané ako pri indexovaní (`measureCut()`, s riadkom
+ * kontextu). Úsek s rovnakým začiatkom aj koncom, aký už je v súčasnom
+ * reze, sa nepočíta — návrh ho nevytvoril, len ponechal. Čistá funkcia.
  */
-export function oversizedNewChunks(blocks: TextBlock[], current: number[], proposed: number[], limit: number = CUT_HARD): OversizedChunk[] {
+export function oversizedNewChunks(
+  markdown: string, title: string, current: number[], proposed: number[], limit: number = CHUNK_LIMIT,
+): OversizedChunk[] {
+  const blocks: TextBlock[] = splitBlocks(markdown)
   const span = (g: number[]) => `${g[0]}-${g[g.length - 1] + 1}`
   const existing = new Set(groupBlocks(blocks.length, current).map(span))
   const groups = groupBlocks(blocks.length, proposed)
-  const tokens = groupTokens(blocks, proposed)
+  const tokens = measureCut(markdown, proposed, title).map(m => m.tokens)
   return groups
     .map((g, i) => ({ start: g[0], end: g[g.length - 1] + 1, tokens: tokens[i], key: span(g) }))
     .filter(c => c.tokens > limit && !existing.has(c.key))
@@ -259,7 +263,8 @@ export async function proposeChunkCut(
   const textHash = textFingerprint(text)
   const previous = roundsFor(doc.chunkRounds, text)[0] ?? null
   const note = input.note?.trim() ? input.note.trim().slice(0, 2000) : null
-  const tokens = groupTokens(blocks, input.current)
+  // Ten istý meter ako Členenie a odmietnutie — úsek tak, ako ho dostane asistent.
+  const tokens = measureCut(text, input.current, String(doc.title ?? documentId)).map(m => m.tokens)
 
   const facts = [
     `Dokument: ${doc.title ?? documentId}`,
@@ -325,12 +330,12 @@ export async function proposeChunkCut(
     note,
   }, input.current)
   // Odmietnutý návrh sa neukladá — prijať by sa nemal dať ani omylom.
-  const oversized = oversizedNewChunks(blocks, input.current, round.boundaries)
+  const oversized = oversizedNewChunks(text, String(doc.title ?? documentId), input.current, round.boundaries)
   if (oversized.length) {
     const worst = oversized.reduce((a, b) => (b.tokens > a.tokens ? b : a))
-    console.warn(`[návrh rezu] odmietnutý: ${oversized.length} nových úsekov nad ${CUT_HARD} tokenov, najväčší ${worst.tokens} (bloky ${worst.start}–${worst.end - 1})`)
+    console.warn(`[návrh rezu] odmietnutý: ${oversized.length} nových úsekov nad ${CHUNK_LIMIT} tokenov, najväčší ${worst.tokens} (bloky ${worst.start}–${worst.end - 1})`)
     throw new ChunkProposalError("chunking.aiOversized", "Návrh by vytvoril priveľký úsek, neuložil sa.", {
-      tokens: worst.tokens, block: worst.start, count: oversized.length, limit: CUT_HARD,
+      tokens: worst.tokens, block: worst.start, count: oversized.length, limit: CHUNK_LIMIT,
     })
   }
   await col.updateOne(
