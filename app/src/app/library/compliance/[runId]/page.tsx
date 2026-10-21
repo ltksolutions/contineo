@@ -399,7 +399,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
   const state = roundState(run).state
 
   return (
-    <AppShell language={language} title={title} trail={ctx.isReviewer ? { "/library": dict.library.list.heading, "/library/compliance": t.heading } : { "/library": dict.library.list.heading }}>
+    <AppShell language={language} title={title}>
     <div className="cf-page" style={tenantStyle(branding)}>
       <div className="page-head">
         <div className="page-head-main">

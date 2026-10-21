@@ -714,7 +714,7 @@ interface Dictionary {
     escCloses: string
     sheetHint: string
     /** Jedna veta pod názvom dlaždice — čo v sekcii je. */
-    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "dpo" | "channels" | "learningManage" | "learningTests", string>
+    desc: Record<"toAcknowledge" | "toApprove" | "directory" | "library" | "learning" | "assigned" | "evidence" | "people" | "evaluation" | "curation" | "tracks" | "dpo" | "channels" | "compliance" | "learningManage" | "learningTests", string>
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
     toAcknowledge: string
@@ -724,6 +724,12 @@ interface Dictionary {
     people: string
     directory: string
     library: string
+    /** Overené odpovede na zverejnenie (D11) — v Správe, nie v Knižnici (21. 10. 2026). */
+    curation: string
+    /** Trasy pre správcu obsahu bez roly personalistu — inak sú v Pridelených dokumentoch. */
+    tracks: string
+    /** Kontrola súladu dokumentov (ADR-032) — rola `compliance`. */
+    compliance: string
     organisation: string
     tenants: string
     openMenu: string
@@ -1238,7 +1244,6 @@ interface Dictionary {
     soonNote: (n: number) => string
     mine: string
     newNote: (days: number) => string
-    complianceNote: string
     expiringNote: (days: number) => string
     attention: string
     news: string
@@ -3036,6 +3041,8 @@ interface Dictionary {
       /** „Čaká na schválenie“ nad knižnicou (ADR-006, krok 6). */
       viewTable: string
       viewCards: string
+      /** Tretia voľba prepínača — vedie na `/library/hierarchy` (21. 10. 2026). */
+      viewHierarchy: string
       /** Hromadné akcie nad označenými dokumentmi. */
       bulk: {
         heading: string
@@ -5375,6 +5382,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       channels: "Widget a portál; tickety kanálov, ktorých si správcom ticketov",
       learningManage: "Kurzy, časti a pridelenie",
       learningTests: "Banka otázok a výsledky pokusov",
+      curation: "Odpovede pripravené hodnotiteľom na zverejnenie",
+      tracks: "Dokumenty, ktoré sa prideľujú spolu",
+      compliance: "Dokumenty proti normám a návrhy z helpdesku do manuálov",
     },
     waiting: n => (n === 1 ? "čaká 1" : n <= 4 ? `čakajú ${n}` : `čaká ${n}`),
     toAcknowledge: "Na potvrdenie",
@@ -5389,6 +5399,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     people: "Osoby",
     directory: "Adresár",
     library: "Knižnica",
+    curation: "Overené odpovede",
+    tracks: "Trasy",
+    compliance: "Kontrola súladu",
     organisation: "Nastavenie organizácie",
     tenants: "Správa tenantov",
     openMenu: "Otvoriť menu",
@@ -5851,12 +5864,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       toApprove: "Čaká na schválenie",
       new: "Nové",
       expiring: "Expiruje",
-      compliance: "Kontrola súladu",
     },
     soonNote: n => (n === 1 ? "1 súrne" : n <= 4 ? `${n} súrne` : `${n} súrnych`),
     mine: "na mňa",
     newNote: days => `dokumentov za ${days} dní`,
-    complianceNote: "čaká na kontrolu",
     expiringNote: days => `predpisov do ${days} dní`,
     attention: "Vyžaduje vašu pozornosť",
     news: "Novinky v knižnici",
@@ -8103,6 +8114,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       moreActions: "Ďalšie akcie",
       viewTable: "Tabuľka",
       viewCards: "Karty",
+      viewHierarchy: "Hierarchia",
       bulk: {
         heading: "S označenými",
         pickColumn: "Výber",
@@ -10350,6 +10362,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       channels: "Widget a portál; tikety kanálů, kterých jsi správcem tiketů",
       learningManage: "Kurzy, části a přidělení",
       learningTests: "Banka otázek a výsledky pokusů",
+      curation: "Odpovědi připravené hodnotitelem ke zveřejnění",
+      tracks: "Dokumenty, které se přidělují společně",
+      compliance: "Dokumenty proti normám a návrhy z helpdesku do manuálů",
     },
     waiting: n => (n === 1 ? "čeká 1" : n <= 4 ? `čekají ${n}` : `čeká ${n}`),
     toAcknowledge: "K potvrzení",
@@ -10364,6 +10379,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     people: "Osoby",
     directory: "Adresář",
     library: "Knihovna",
+    curation: "Ověřené odpovědi",
+    tracks: "Trasy",
+    compliance: "Kontrola souladu",
     organisation: "Nastavení organizace",
     tenants: "Správa tenantů",
     openMenu: "Otevřít menu",
@@ -10826,12 +10844,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       toApprove: "Čeká na schválení",
       new: "Nové",
       expiring: "Expiruje",
-      compliance: "Kontrola souladu",
     },
     soonNote: n => (n === 1 ? "1 spěchá" : `${n} spěchá`),
     mine: "na mě",
     newNote: days => `dokumentů za ${days} dní`,
-    complianceNote: "čeká na kontrolu",
     expiringNote: days => `předpisů do ${days} dní`,
     attention: "Vyžaduje vaši pozornost",
     news: "Novinky v knihovně",
@@ -13076,6 +13092,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       moreActions: "Další akce",
       viewTable: "Tabulka",
       viewCards: "Karty",
+      viewHierarchy: "Hierarchie",
       bulk: {
         heading: "S označenými",
         pickColumn: "Výběr",
@@ -15316,6 +15333,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       channels: "Widget and portal; tickets of the channels you are a ticket manager of",
       learningManage: "Courses, parts and assignment",
       learningTests: "Question bank and attempt results",
+      curation: "Answers prepared by an evaluator for publishing",
+      tracks: "Documents assigned together",
+      compliance: "Documents against standards and helpdesk suggestions for manuals",
     },
     waiting: n => `${n} waiting`,
     toAcknowledge: "To acknowledge",
@@ -15330,6 +15350,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     people: "People",
     directory: "Directory",
     library: "Library",
+    curation: "Verified answers",
+    tracks: "Tracks",
+    compliance: "Compliance check",
     organisation: "Organisation settings",
     tenants: "Tenant administration",
     openMenu: "Open menu",
@@ -15790,12 +15813,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       toApprove: "Waiting for approval",
       new: "New",
       expiring: "Expiring",
-      compliance: "Compliance check",
     },
     soonNote: n => (n === 1 ? "1 urgent" : `${n} urgent`),
     mine: "for you",
     newNote: days => `documents in ${days} days`,
-    complianceNote: "awaiting check",
     expiringNote: days => `rules within ${days} days`,
     attention: "Needs your attention",
     news: "New in the library",
@@ -18040,6 +18061,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       moreActions: "More actions",
       viewTable: "Table",
       viewCards: "Cards",
+      viewHierarchy: "Hierarchy",
       bulk: {
         heading: "With selected",
         pickColumn: "Select",

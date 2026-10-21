@@ -132,6 +132,29 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="m6.3 9.1 1.9 1.9 3.5-3.9" />
     </>
   ),
+  // Overené odpovede (D11) — bublina odpovede s odškrtnutím; hodnotenie má
+  // odškrtnutie v kruhu, toto je odpoveď, ktorá už prešla.
+  curation: (
+    <>
+      <path d="M3 4.2A1.7 1.7 0 0 1 4.7 2.5h8.6A1.7 1.7 0 0 1 15 4.2v6.1a1.7 1.7 0 0 1-1.7 1.7H8l-3.4 3v-3h0A1.6 1.6 0 0 1 3 10.4z" />
+      <path d="m6.4 7.3 1.7 1.7 3.4-3.5" />
+    </>
+  ),
+  // Trasy — dva body spojené cestou: dokumenty, ktoré idú po sebe.
+  tracks: (
+    <>
+      <circle cx="4.5" cy="4.5" r="1.8" />
+      <circle cx="13.5" cy="13.5" r="1.8" />
+      <path d="M6.3 4.5h5.2a2.3 2.3 0 0 1 0 4.5h-5a2.3 2.3 0 0 0 0 4.5h5.2" />
+    </>
+  ),
+  // Kontrola súladu (ADR-032) — váhy: dokument vážený proti norme.
+  compliance: (
+    <>
+      <path d="M9 2.5v13M5.5 15.5h7M3.5 5h11" />
+      <path d="m3.5 5-2 4.6a2 2 0 0 0 4 0zM14.5 5l-2 4.6a2 2 0 0 0 4 0z" />
+    </>
+  ),
   // Ochrana údajov — štít. Nie zámok (ten znamená prihlásenie).
   dpo: (
     <>

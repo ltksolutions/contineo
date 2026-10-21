@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica bez ponuky „⋯“; Kontrola súladu a Overené odpovede v Správe (2026-10-21)
+
+- **Kontrola súladu** (rola compliance) a **Overené odpovede** (správca
+  obsahu) sú dlaždice v Správe na Prehľade, s počtom toho, čo čaká. Cesta
+  je „Správa › Kontrola súladu“. Piata dlaždica v hornom páse Prehľadu
+  zmizla.
+- **Trasy** ostávajú v Pridelených dokumentoch; správca obsahu bez roly
+  personalistu ich má ako dlaždicu v Správe.
+- **Hierarchia** je tretí pohľad Knižnice: „Tabuľka · Karty · Hierarchia“.
+  Na telefóne „Karty · Hierarchia“.
+- Ponuka „⋯“ v Knižnici je preč.
+
 ### Kontrola súladu: požiadavky len z hierarchie, bez pevných väzieb (2026-10-20, D241)
 
 - Požiadavka na kontrolu pri novom znení vzniká len podľa nadradených

@@ -6,6 +6,9 @@
  * ešte stojí. Nadradené sa nastavujú v úprave dokumentu — tam, kde sa
  * dokument spravuje; ťahanie myšou ako pri oddeleniach by pri viacerých
  * nadradených nebolo jednoznačné (presunúť, alebo pridať?).
+ *
+ * Od 21. 10. 2026 je to tretí pohľad Knižnice („Tabuľka · Karty ·
+ * Hierarchia"), nie položka ponuky „⋯" — tie isté dokumenty, iné zoskupenie.
  */
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
@@ -29,6 +32,7 @@ export default async function HierarchyPage() {
   }
   const language = ctx.person.language
   const t = dictionary(language).library.hierarchy
+  const tl = dictionary(language).library.list
   const branding = brandingView(ctx.tenant)
   const docs = await hierarchyDocuments(ctx.tenant.companyCode)
   const map = parentsMapOf(docs)
@@ -44,6 +48,13 @@ export default async function HierarchyPage() {
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
         <div className="page-head">
           <h1 className="page-title">{t.title}</h1>
+          <span className="page-head-spacer" aria-hidden="true" />
+          {/* Ten istý prepínač ako v Knižnici; „Tabuľka" pod 640 px nie je (karty). */}
+          <span className="view-switch" role="group" aria-label={tl.viewSwitch}>
+            <Link href="/library?view=table" className="view-switch-item view-switch-item--wide-only">{tl.viewTable}</Link>
+            <Link href="/library?view=cards" className="view-switch-item">{tl.viewCards}</Link>
+            <Link href="/library/hierarchy" className="view-switch-item is-on" aria-current="true">{tl.viewHierarchy}</Link>
+          </span>
         </div>
         <p className="quiet" style={{ marginTop: 0 }}>{t.intro}</p>
 

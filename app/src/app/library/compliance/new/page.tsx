@@ -61,7 +61,7 @@ export default async function NewCheckPage({ searchParams }: { searchParams: Pro
   const chosenChannel = channels.find(c => c.key === q.channel)?.key ?? (channels.length === 1 ? channels[0].key : "")
 
   return (
-    <AppShell language={language} title={t.ck.newHeading} trail={{ "/library": dict.library.list.heading, "/library/compliance": t.heading }}>
+    <AppShell language={language} title={t.ck.newHeading}>
     <div className="detail-page ck-new" style={{ maxWidth: 760, ...tenantStyle(brandingView(ctx.tenant)) }}>
       <div className="page-head">
         <div className="page-head-main">

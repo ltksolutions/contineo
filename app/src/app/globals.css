@@ -3678,48 +3678,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   border: 0;
 }
 
-/* Ponuka „⋯" so zvyšnými akciami hlavičky (NASADENIE, PR 4). `<details>`
-   ako prepad navigácie: primárna akcia je jedna, zvyšok sa neroztláča
-   do riadkov tlačidiel. */
-.page-more { position: relative; display: inline-flex; }
-
-.page-more-toggle {
-  cursor: pointer;
-  list-style: none;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.page-more-toggle::-webkit-details-marker { display: none; }
-
-.page-more-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 24;
-  display: grid;
-  min-width: 210px;
-  padding: 6px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-}
-
-.page-more-item {
-  display: flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 11px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink);
-}
-
-.page-more-item:hover { background: var(--surface-2); }
-.page-more-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-
 /*
  * Prepínač pohľadu — „ako to vidím". Odkazy v jednom rámiku: vyzerá to ako
  * prepínač, ale je to navigácia, takže funguje aj bez skriptu.
@@ -3798,13 +3756,13 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .view-switch-item--auto-cards { background: var(--seg-thumb); font-weight: 600; box-shadow: var(--seg-shadow); }
 .view-switch-item--auto-cards + .view-switch-item::before { opacity: 0; }
 
-/* Knižnica pod 640 px ukazuje len karty a prepínač skrýva (NASADENIE,
-   PR 4): tabuľka má min-width ~1160 px a na 390 px z nej ostane názov.
-   Výslovná voľba `view=table` v adrese sa ctí ďalej — odkaz je odkaz.
-   Ostatné prepínače (DPO, Pripomienky, Výkaz) prepínajú len zoskupenie,
-   takže ostávajú aj na telefóne. */
+/* Knižnica pod 640 px ukazuje len karty (NASADENIE, PR 4): tabuľka má
+   min-width ~1160 px a na 390 px z nej ostane názov. Voľba „Tabuľka" sa
+   preto skryje; „Karty · Hierarchia" ostávajú (21. 10. 2026). Výslovná
+   voľba `view=table` v adrese sa ctí ďalej — odkaz je odkaz. */
 @media (max-width: 639px) {
-  .view-switch--wide-only { display: none; }
+  .view-switch-item--wide-only { display: none; }
+  .view-switch-item--wide-only + .view-switch-item::before { opacity: 0; }
 }
 
 @media (min-width: 1024px) {
@@ -5371,13 +5329,6 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 @media (min-width: 1024px) {
   .kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-/* Piata dlaždica (Kontrola súladu, len s rolou) — na telefóne cez celú šírku,
-   aby neostala osamelá v polovici riadku; od 1024 px päť v rade. */
-.kpi--5 > :last-child { grid-column: 1 / -1; }
-@media (min-width: 1024px) {
-  .kpi--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .kpi--5 > :last-child { grid-column: auto; }
 }
 
 .kpi-tile {

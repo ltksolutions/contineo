@@ -109,7 +109,7 @@ describe("počty pri položkách", () => {
 describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
   const ALL = {
     isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true, isDpo: true, isHelpdesk: true,
-    learning: true, isLearningAdmin: true,
+    isCompliance: true, learning: true, isLearningAdmin: true,
   }
 
   it("skupiny Organizácia a Správa; hlavné položky nie sú dlaždice", () => {
@@ -117,8 +117,22 @@ describe("dlaždice sekcií (SHELL-rozcestnik)", () => {
     expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
     expect(groups.map(g => g.items.map(o => o.key))).toEqual([
       ["directory", "library", "learning"],
-      ["assigned", "evidence", "people", "evaluation", "dpo", "channels", "learningManage", "learningTests"],
+      ["assigned", "evidence", "people", "evaluation", "curation", "compliance", "dpo", "channels", "learningManage", "learningTests"],
     ])
+  })
+
+  it("Overené odpovede, Trasy a Kontrola súladu sú v Správe (21. 10. 2026), nie v Knižnici", () => {
+    const keys = (f: Parameters<typeof navItems>[0]) => navItems(f).map(o => o.key)
+    // Trasy samostatne len správca obsahu bez personalistu — inak sú v Pridelených dokumentoch.
+    expect(keys({ isContentManager: true })).toEqual(expect.arrayContaining(["curation", "tracks"]))
+    expect(keys({ isContentManager: true, isHr: true })).not.toContain("tracks")
+    expect(keys({ isCompliance: true })).toContain("compliance")
+    expect(keys({ isContentManager: true })).not.toContain("compliance")
+    const names = { overview: "Prehľad", groups: { organisation: "Organizácia", management: "Správa" }, sections: Object.fromEntries(navItems(ALL).map(o => [o.key, o.key])) as never }
+    expect(breadcrumbs("/library/compliance/abc", { ...names, pages: { "/library/compliance/abc": "Kolo" } }).map(c => c.label))
+      .toEqual(["Prehľad", "Správa", "compliance", "Kolo"])
+    expect(breadcrumbs("/hr/tracks", { ...names, pages: { "/hr/tracks": "Trasy" } }).map(c => c.label))
+      .toEqual(["Prehľad", "Správa", "assigned", "Trasy"])
   })
 
   it("bežná osoba: prázdna Správa sa nevykreslí", () => {

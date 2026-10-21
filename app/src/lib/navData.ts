@@ -32,6 +32,9 @@ import { currentPerson } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
 import { unreadThreadCount } from "@/lib/courier"
+import { isComplianceReviewer } from "@/lib/complianceAccess"
+import { openRequests } from "@/lib/complianceRequests"
+import { pendingCurations } from "@/lib/curation"
 
 export interface ShellNavData {
   flags: NavFlags
@@ -59,6 +62,12 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
     flags.isEvaluator = (await evaluationContext()).state === "ready"
   } catch (e) {
     console.error("[shell] rolu hodnotiteľa sa nepodarilo overiť:", e)
+  }
+  try {
+    const person = await currentPerson()
+    flags.isCompliance = Boolean(person && isComplianceReviewer(person))
+  } catch (e) {
+    console.error("[shell] rolu compliance sa nepodarilo overiť:", e)
   }
   try {
     flags.isDpo = (await dpoContext()).state === "ready"
@@ -104,6 +113,10 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
       // Počíta sa len tomu, kto frontu vôbec vidí — cudzie čakajúce
       // odpovede nikomu inému nič nehovoria a je to dotaz navyše.
       if (flags.isEvaluator) counts.evaluation = await queueCount(person.companyCode)
+      // Overené odpovede na zverejnenie (D11) a požiadavky „Čaká na kontrolu"
+      // (D200) — to isté číslo, ktoré bolo do 21. 10. 2026 v dlaždici Prehľadu.
+      if (flags.isContentManager) counts.curation = (await pendingCurations(person.companyCode)).length
+      if (flags.isCompliance) counts.compliance = (await openRequests(person.companyCode)).length
       // Otvorené tickety kanálov riešiteľa (ADR-028, D170) — tá istá fronta
       // ako „Moje tickety" na `/channels/tickets`. Správcovi bez riešiteľstva
       // sa nepočíta: nie je to jeho práca.
