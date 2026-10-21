@@ -248,9 +248,17 @@
 
 ### E. Source-adaptéry + provenance (Fáza 4/6)
 - [ ] Rozhranie `SourceAdapter` + refaktor existujúceho file (PDF/MD) adaptéra
-- [ ] Provenance polia v `documents` (`source.{type,connector,externalId,url,fetchedAt,contentHash,adapterVersion}`)
-- [ ] Adaptér: web link (jednorazové URL → MD)
+- [x] ~~Provenance polia v `documents`~~ ✅ — `documents.source` má dva tvary: `mcp` (ADR-029) a `web` (ADR-037, s časovou verziou `timepoint`).
+- [ ] Adaptér: web link (jednorazové URL → MD) — **pre Slov-Lex hotový** (ADR-037, D242); generický web a RSS ostávajú otvorené (Slov-Lex RSS nemá, hash celého HTML je krehký).
 - [ ] ~~Adaptéry: MCP / API~~ → **MCP konektor nie je adaptér zdroja, ale pripojenie s použitiami (ADR-029, 2026-10-07).** Fáza 1 (živý zdroj) je v `main`; import do knižnice je použitie B (nižšie). API/DB zostáva otvorené.
+
+### E3. Sledovaný zdroj legislatívy — Slov-Lex (ADR-037)
+- [ ] **Krok C — cron a upozornenie** (D247): denne prejsť dokumenty s `source.type: "web"`, urobiť to isté ako „Skontrolovať zdroj" a správcovi obsahu poslať upozornenie o koncepte novely. **Spúšťač:** prvá skutočná novela zákona o športe prejde krokom B (21. 10. Slov-Lex nemá vyhlásené neskoršie znenie).
+- [ ] **Rozpracovaný koncept a nové stiahnutie:** dnes Skontrolovať zdroj prepíše koncept, ktorý človek medzitým upravil (rovnako ako re-sync konektora). Pred krokom C rozhodnúť: zastaviť sa a ohlásiť, alebo založiť koncept vedľa.
+- [ ] **Vykonávacie predpisy** (vyhlášky k zákonu o športe) ako samostatné dokumenty pod zákonom — portál ich vypisuje vo „Vzťahoch predpisu".
+- [ ] **Odkazy na citované predpisy** v texte (DOCX zo Slov-Lexu ich má, HTML tiež) — len ak budú v odpovediach chýbať; v texte na vyhľadávanie sú adresy šum.
+- [ ] **Český adaptér** (Sbírka zákonů) — až s českým tenantom.
+- [ ] **Návrh rezov pri veľkom dokumente:** kolo 3 nad zákonom má 5 nálezov (§ 3 a § 83 nad strop, tri zlomky). Ak budú odpovede z týchto miest slabé, nové kolo s poznámkou kurátora.
 
 ### E2. MCP konektory — ďalšie fázy (ADR-029)
 - [x] ~~**Použitie B — import do knižnice**~~ ✅ 2026-10-08 (PR #311): Knižnica → Nahrať → Import zo servera; výber z výsledkov hľadania, `uploadDocument()` s Markdownom a PDF vysádzaným u nás (`markdownPdf.ts`), `documents.source.*`, blok Zdroj na detaile s kontrolou zmien cez `contentHash` (nové znenie ako koncept). PDF ostáva povinné aj pre MCP (rozhodnutie Jána 8. 10.: automatické, nie výnimka z ADR-011).
@@ -906,7 +914,7 @@ len práca, ktorá z nich plynie.
 - [x] ~~**Štítok „overená odpoveď"**~~ — pár je v zozname zdrojov označený a je pri ňom napísané, čo to znamená: *znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu*. `sourceType` prechádza z indexu cez `buildSources()` až na obrazovku.
 - [x] ~~**Zmena úrovne predpisu párom nepretečie**~~ — `saveMetadata()` menila `accessLevel` na všetkých úsekoch dokumentu naraz, **vrátane párov**. Pár odvodený z troch predpisov by tak prevzal úroveň jedného z nich a zverejnenie toho jedného by odkrylo aj to, čo v ňom zaznelo z interného. Páry sa z hromadnej zmeny vynímajú a úroveň sa im počíta znova zo všetkých zdrojov; pri zlyhaní sa sťahujú na `internal`.
 - [ ] **Pár môže prebiť normu v poradí** — kurovaná odpoveď je krátka a presná, takže vo vyhľadávaní často vyhrá nad článkom predpisu. **Ranku sme sa nedotkli zámerne:** pri nule párov by to bol odhad, nie rozhodnutie. Štítok problém zviditeľňuje, nerieši. **Spúšťač:** po prvých desiatich zverejnených pároch pozrieť, v koľkých odpovediach je pár medzi top 3 zdrojmi — a podľa toho rozhodnúť.
-- [ ] **Štvrtá cesta zápisu do knižnice** (RSS, e-mail, ISSF) zatiaľ neexistuje. Až vznikne, musí sa rozhodnúť, či mení význam predpisu — a podľa toho zavolať `expireCurationFor()` alebo `reconcileCurationAccess()`. Tri dnešné cesty a ich dôsledky sú popísané v hlavičke `lib/curation.ts`.
+- [x] ~~**Štvrtá cesta zápisu do knižnice**~~ ✅ 2026-10-21 — prišla ako predpis zo Slov-Lexu (ADR-037). Nič navyše netreba: import aj Skontrolovať zdroj zakladajú **koncept** cez `uploadDocument()` a význam predpisu sa mení až zverejnením cez `publish()`, ktoré páry expiruje (`expireCurationFor()`). Rovnako import a re-sync z MCP konektora. Hlavička `lib/curation.ts` to hovorí. E-mail a ISSF ako cesta zápisu zatiaľ nie sú.
 - [x] ~~**`spravca-obsahu` → `content-admin`**~~ — posledné slovenské označenie roly je preč; identifikátory sú `hr`, `people-admin`, `content-admin`, `evaluator`.
       Dva kroky zámerne: najprv kód, ktorý uznával obe naraz, potom migrácia osôb, až potom odstránenie prechodu. Opačné poradie by každého nezmigrovaného pripravilo o prístup v okamihu nasadenia.
       `npm run check` odteraz ohlási aj rolu, ktorú kód nepozná — rola je obyčajný reťazec, takže preklep nikde nevyhodí chybu, len ticho neplatí.

@@ -11,6 +11,47 @@
 ---
 
 
+## 2026-10-20 – 21 — Zákon o športe zo Slov-Lexu a Členenie veľkého dokumentu
+
+**Čo sa zmenilo:** Zákon č. 440/2015 Z. z. je v knižnici SFZ ako koncept
+(`sfz:zakon_440_2015`) a Stanovy ho majú ako nadradený. Cesta je **ADR-037**
+(D242–D247): adaptér pre statický portál Slov-Lexu, nie generický web ani RSS
+— Slov-Lex RSS ani API nemá. História znení dáva dátumy účinnosti, HTML znenia
+sémantické triedy, záväzné PDF sa sťahuje ako PDF znenia (#405). Po nej šesť
+opráv, ktoré vyplávali až na 2 000-blokovom zákone: číslovanie zoznamov
+z textu (#406), nadpisy do štvrtej úrovne a pohľad Dnes kreslený (#408),
+návrh rezov aj po importe (#410), strop výstupu a limit funkcie 300 s (#411),
+návrh bez premýšľania (#412), návrh len ako zmeny hraníc s odmietnutím
+úseku nad strop (#413) a jedno meranie úseku pre Dnes, Návrh aj odmietnutie
+(#414). Kolo 3 je prijaté ku konceptu: 176 úsekov, 5 nálezov.
+
+**Čo nevyšlo a stálo čas:** „Navrhnúť rezy" zlyhalo trikrát, zakaždým inak,
+a dvakrát som príčinu najprv odhadol zle. Prvý raz výstup presne 8 000 tokenov
+(vyzeralo to na časový limit funkcie, lebo v logu nebolo nič). Druhý raz
+16 000 tokenov a nula znakov textu — Sonnet 5 pri 88 000 tokenoch vstupu sám
+premýšľal a minul celý rozpočet. Odhalila to až lokálna reprodukcia s tým
+istým pokynom; prehľad spotreby AI (`/organisation/ai/usage`) bol pri tom
+najlepší zdroj. Tretí raz model vrátil 107 zo 172 hraníc, tvrdil „bez zmeny"
+a zlepil 65 úsekov do jedného s 30 170 tokenmi — celý zoznam od modelu nie je
+spoľahlivý, zmeny áno. A po prijatí kola 3 sa ukázalo, že Návrh a Dnes merali
+rozdielne (holé bloky vs. úsek s riadkom kontextu, +30–35 tokenov).
+
+Ján chcel text zo stiahnutého DOCX namiesto HTML. DOCX je export tej istej
+stránky bez štýlov nadpisov (2 479 odsekov „Normal") a bez prehliadača sa
+stiahnuť nedá; chyby, ktoré videl, boli v kreslení, nie v prevode.
+
+Vercel pri #412 nasadenie nezaložil vôbec (webhook neprišiel); ručné
+nasadenie cez MCP zablokoval automatický režim, kým ho Ján výslovne nepovolil.
+Testy padali na limit 5 s pri záťaži stroja (Safari nad 100 % CPU) a raz
+celé, keď sa `vitest` spustil z koreňa repa namiesto `app/`.
+
+**Nabudúce:** pri chybe AI najprv prehľad spotreby (výstup = strop?), potom
+lokálna reprodukcia, až potom oprava. Pri veľkom dokumente premýšľanie
+vypnúť vždy, keď úloha je mechanická. Po zlúčení overiť, že Vercel nasadenie
+naozaj založil (`list_deployments` so `sha`), nie len čakať.
+
+---
+
 ## 2026-10-21 — ponuka „⋯“ v Knižnici zrušená
 
 **Čo sa zmenilo:** Ján: celé menu vpravo hore „vôbec nepatrí do Knižnice“.
