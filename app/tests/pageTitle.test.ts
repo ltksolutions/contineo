@@ -14,6 +14,11 @@ describe("názov v záložke", () => {
     expect(pageTitle("/", "Intranet SFZ", t)).toBe("Prehľad · Intranet SFZ")
   })
 
+  it("Kontrola súladu a Overené odpovede majú názov sekcie (21. 10. 2026 chýbal)", () => {
+    expect(pageTitle("/library/compliance", "Intranet SFZ", t)).toBe(`${t.nav.compliance} · Intranet SFZ`)
+    expect(pageTitle("/library/curation", "Intranet SFZ", t)).toBe(`${t.nav.curation} · Intranet SFZ`)
+  })
+
   it("sekcia a jej podstránka nesú názov sekcie", () => {
     expect(pageTitle("/ask", "Intranet SFZ", t)).toBe(`${t.nav.ask} · Intranet SFZ`)
     expect(pageTitle("/hr/assign", "Intranet SFZ", t)).toBe(`${t.nav.assigned} · Intranet SFZ`)

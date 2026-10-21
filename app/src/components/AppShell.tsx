@@ -27,14 +27,11 @@ import type { ReactNode } from "react"
 import { headers } from "next/headers"
 import AppNav from "./AppNav"
 import Breadcrumbs from "./Breadcrumbs"
-import { PATHNAME_HEADER, breadcrumbs, menuColumns, navItems, type NavKey } from "@/lib/appNav"
+import { PATHNAME_HEADER, NAV_KEYS, breadcrumbs, menuColumns, navItems, type NavKey } from "@/lib/appNav"
 import { shellNavData } from "@/lib/navData"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
-const ALL_KEYS: NavKey[] = [
-  "overview", "ask", "toAcknowledge", "toApprove", "directory", "library", "learning",
-  "assigned", "evidence", "people", "evaluation", "dpo", "channels", "courier", "learningManage", "learningTests",
-]
+const ALL_KEYS: NavKey[] = NAV_KEYS
 
 export default async function AppShell({
   language,

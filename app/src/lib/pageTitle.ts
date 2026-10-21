@@ -13,16 +13,13 @@
  * majú názov v `pages`; bez adresy je v záložke len organizácia.
  */
 
-import { breadcrumbs, type NavKey } from "./appNav"
+import { NAV_KEYS, breadcrumbs, type NavKey } from "./appNav"
 import type { dictionary } from "./i18n"
 import { ORG_SECTIONS } from "./orgSections"
 
 type Dictionary = ReturnType<typeof dictionary>
 
-const SECTION_KEYS: NavKey[] = [
-  "overview", "ask", "toAcknowledge", "toApprove", "directory", "library", "learning",
-  "assigned", "evidence", "people", "evaluation", "dpo", "channels", "courier", "learningManage", "learningTests",
-]
+const SECTION_KEYS: NavKey[] = NAV_KEYS
 
 export function pageTitle(pathname: string | null | undefined, organisation: string, t: Dictionary): string {
   if (!pathname) return organisation
