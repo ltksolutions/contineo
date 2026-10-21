@@ -19,7 +19,7 @@
  */
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "channels" | "courier" | "learning" | "learningManage" | "learningTests"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "curation" | "tracks" | "dpo" | "channels" | "compliance" | "courier" | "learning" | "learningManage" | "learningTests"
 
 export interface NavItem {
   href: string
@@ -47,6 +47,8 @@ export interface NavFlags {
   isPeopleAdmin?: boolean
   isContentManager?: boolean
   isEvaluator?: boolean
+  /** Rola `compliance` (ADR-032) — vidí Kontrolu súladu. */
+  isCompliance?: boolean
   isDpo?: boolean
   /** Riešiteľ aspoň jedného kanála (rola `helpdesk`, ADR-028 D167) — vidí Kanály (D170). */
   isHelpdesk?: boolean
@@ -109,9 +111,19 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // Fronta hodnotiteľa. Podmienená rolou zámerne: nie je to zoznam vecí
     // na prečítanie, ale pracovný stôl s cudzími otázkami a odpoveďami.
     ...(flags.isEvaluator ? [{ href: "/evaluation", key: "evaluation" as const }] : []),
+    /*
+     * Overené odpovede, Trasy a Kontrola súladu bývali v ponuke „⋯" Knižnice;
+     * od 21. 10. 2026 sú dlaždice v Správe (Ján: „vôbec nepatria do Knižnice").
+     * Overené odpovede zverejňuje správca obsahu (D11). Trasy má personalista
+     * v Pridelených dokumentoch — samostatná dlaždica je len pre správcu
+     * obsahu bez tej roly, inak by sa k nim po odchode z Knižnice nedostal.
+     */
+    ...(flags.isContentManager ? [{ href: "/library/curation", key: "curation" as const }] : []),
+    ...(flags.isContentManager && !flags.isHr ? [{ href: "/hr/tracks", key: "tracks" as const }] : []),
     // Ochrana údajov (ADR-012, D104) — výkaz právnych základov a námietky.
     // Len pre rolu `dpo`: námietka je osobný údaj o konkrétnom človeku.
     ...(flags.isDpo ? [{ href: "/dpo", key: "dpo" as const }] : []),
+    ...(flags.isCompliance ? [{ href: "/library/compliance", key: "compliance" as const }] : []),
     /*
      * Vzdelávanie (ADR-018, D123) — **pre každého** (SHELL-menu-v-hlavicke,
      * Q5): položka je na tom istom mieste u všetkých, aj keď organizácia
@@ -274,7 +286,7 @@ export const MAIN_KEYS: NavKey[] = ["overview", "ask", "toAcknowledge", "toAppro
  */
 const SECTION_GROUPS: { key: SectionGroupKey; keys: NavKey[] }[] = [
   { key: "organisation", keys: ["directory", "library", "learning"] },
-  { key: "management", keys: ["assigned", "evidence", "people", "evaluation", "dpo", "channels", "learningManage", "learningTests"] },
+  { key: "management", keys: ["assigned", "tracks", "evidence", "people", "evaluation", "curation", "compliance", "dpo", "channels", "learningManage", "learningTests"] },
 ]
 
 export interface SectionGroup {
@@ -387,6 +399,11 @@ const SECTION_HREF: Record<NavKey, string> = {
   evidence: "/hr/evidence",
   people: "/people",
   evaluation: "/evaluation",
+  curation: "/library/curation",
+  // Trasy sú časť Pridelených dokumentov — cesta ostáva „Pridelené dokumenty ›
+  // Trasy" (`find()` vráti prvý kľúč s `/hr`, teda `assigned`).
+  tracks: "/hr",
+  compliance: "/library/compliance",
   dpo: "/dpo",
   channels: "/channels",
   courier: "/courier",

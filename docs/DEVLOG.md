@@ -11,6 +11,25 @@
 ---
 
 
+## 2026-10-21 — ponuka „⋯“ v Knižnici zrušená
+
+**Čo sa zmenilo:** Ján: celé menu vpravo hore „vôbec nepatrí do Knižnice“.
+Kontrola súladu a Overené odpovede sú nové kľúče navigácie (`compliance`,
+`curation`) v skupine Správa — dlaždica, plachta 9 bodiek, `/more` aj cesta
+idú z toho istého `navItems()`. Počty v `navData.ts` (`openRequests`,
+`pendingCurations`). Hierarchia je tretí odkaz prepínača pohľadu, nie
+sekcia — tie isté dokumenty, iné zoskupenie.
+
+**Na čo pozor:** Trasy pre správcu obsahu bez roly HR by po zrušení ponuky
+nemali vchod, preto kľúč `tracks` len pre neho; v ceste má `SECTION_HREF`
+`/hr`, aby ostala „Pridelené dokumenty › Trasy“. Pod 640 px bol celý
+prepínač Knižnice skrytý — teraz sa skrýva len „Tabuľka“, inak by sa
+k hierarchii z telefónu nedalo dostať. Testy pri záťaži stroja (load ~60)
+padali na limit 5 s; s `--testTimeout=30000` 2849/2849.
+
+---
+
+
 ## 2026-10-20 — požiadavky len z hierarchie (ADR-036 D241)
 
 **Čo sa zmenilo:** Ján sa pýtal, prečo sa pevné väzby nedajú upraviť.

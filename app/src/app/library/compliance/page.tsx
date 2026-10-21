@@ -119,7 +119,7 @@ export default async function ComplianceChecksPage({ searchParams }: { searchPar
   )
 
   return (
-    <AppShell language={language} title={t.heading} trail={{ "/library": dict.library.list.heading }}>
+    <AppShell language={language} title={t.heading}>
     <div className="detail-page ck-page" style={{ maxWidth: 1040, ...tenantStyle(branding) }}>
       <div className="page-head">
         <div className="page-head-main">

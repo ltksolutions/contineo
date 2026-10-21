@@ -6,7 +6,6 @@
  * nevie nahrať sám a pri každej zmene predpisu musí čakať na nás.
  */
 
-import { isComplianceReviewer } from "@/lib/complianceAccess"
 import { notFound, redirect } from "next/navigation"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
@@ -560,7 +559,7 @@ export default async function LibraryPage({
         <span className="page-head-spacer" aria-hidden="true" />
 
         {/*
-          Prepínač pohľadu. Sú to dva odkazy, nie tlačidlá s JavaScriptom:
+          Prepínač pohľadu. Sú to odkazy, nie tlačidlá s JavaScriptom:
           pohľad je súčasť adresy, takže sa dá poslať aj s ním — a funguje bez
           skriptu. Aktívny odkaz zostáva odkazom (vedie sám na seba), lebo
           `aria-current` povie čítačke to isté a nemusí sa riešiť dvojaký tvar.
@@ -569,23 +568,26 @@ export default async function LibraryPage({
           ukázali to isté prázdno.
         */}
         {!emptyLibrary && (
-        <span className="view-switch view-switch--wide-only" role="group" aria-label={t.viewSwitch}>
+        <span className="view-switch" role="group" aria-label={t.viewSwitch}>
           {([["table", t.viewTable], ["cards", t.viewCards]] as const).map(([key, label]) => (
             <Link
               key={key}
               href={toQuery(setView(filters, key))}
-              className={`view-switch-item${viewSwitchClass(key)}`}
+              className={`view-switch-item${viewSwitchClass(key)}${key === "table" ? " view-switch-item--wide-only" : ""}`}
               aria-current={view === key ? "true" : undefined}
             >
               {label}
             </Link>
           ))}
+          {/* Hierarchia je tie isté dokumenty inak zoskupené (ADR-034, D219) — preto
+              prepínač, nie položka v ponuke „⋯", ktorá z Knižnice 21. 10. 2026 odišla. */}
+          <Link href="/library/hierarchy" className="view-switch-item">{t.viewHierarchy}</Link>
         </span>
         )}
         {/*
-          Poradie akcií je z rámu 1: tiché akcie (Export CSV, ⋯) obklopujú
-          primárnu (Nahrať dokument), nie naopak. Primárna akcia takto nie je
-          prvá v rade zľava, ale je jediná plná — to ju odlíši.
+          Tichá akcia (Export CSV) pred primárnou (Nahrať dokument). Ponuka „⋯"
+          (Trasy, Overené odpovede, Hierarchia, Kontrola súladu) odišla
+          21. 10. 2026: tri položky sú dlaždice v Správe, hierarchia je pohľad.
 
           Export nesie **tie isté filtre**, aké sú na obrazovke — preto
           `toQuery(filters, …)` a nie holá adresa. Kto si vyfiltruje osem
@@ -597,38 +599,6 @@ export default async function LibraryPage({
         </Link>
         )}
         <Link className="button" href="/library/new">{t.upload}</Link>
-        {/*
-          Zvyšné akcie v ponuke „⋯" (NASADENIE, PR 4). Primárna akcia je
-          jedna — nahrať dokument; šesť tlačidiel vedľa seba sa na telefóne
-          lámalo do troch riadkov a všetky vyzerali rovnako dôležité.
-          `<details>`, takže bez JavaScriptu; vzor ako „Viac" v navigácii.
-        */}
-        <details className="page-more">
-          <summary className="button button--quiet page-more-toggle" aria-label={t.moreActions}>⋯</summary>
-          <div className="page-more-menu">
-            {/* Trasy sú od 2. 10. 2026 v Pridelených dokumentoch; správca
-                obsahu ich smie spravovať aj bez roly personalistu, tak ich
-                nájde aj tu. */}
-            <Link className="page-more-item" href="/hr/tracks">
-              {dictionary(uiLanguage).library.tracks.heading}
-            </Link>
-            {/* Kurácia: overené odpovede pripravené hodnotiteľom (D11). */}
-            <Link className="page-more-item" href="/library/curation">
-              {dictionary(uiLanguage).curation.open}
-            </Link>
-            {/* Hierarchia dokumentov — čo je čomu nadradené (ADR-034, D219). */}
-            <Link className="page-more-item" href="/library/hierarchy">
-              {dictionary(uiLanguage).library.hierarchy.title}
-            </Link>
-            {/* Kontrola súladu dokumentov proti normám (ADR-032, D196) — len s rolou
-                `compliance`; bez nej by odkaz viedol na 404. */}
-            {isComplianceReviewer(ctx.person) && (
-              <Link className="page-more-item" href="/library/compliance">
-                {dictionary(uiLanguage).library.compliance.open}
-              </Link>
-            )}
-          </div>
-        </details>
       </div>
 
 

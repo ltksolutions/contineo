@@ -60,7 +60,7 @@ export default async function ConfirmRunPage({ searchParams }: { searchParams: P
   const canStart = !p.running && p.subjects.length > 0 && p.references.length > 0
 
   return (
-    <AppShell language={language} title={t.confirmHeading} trail={{ "/library": dictionary(language).library.list.heading, "/library/compliance": t.heading }}>
+    <AppShell language={language} title={t.confirmHeading}>
     <div className="detail-page" style={{ maxWidth: 880, ...tenantStyle(brandingView(ctx.tenant)) }}>
       <div className="page-head">
         <h1 className="page-title">{t.confirmHeading}</h1>
