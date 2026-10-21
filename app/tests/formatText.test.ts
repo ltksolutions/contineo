@@ -392,3 +392,19 @@ const staryMac = toBlocks("1. Prvý\r2. Druhý")
 t("osamotené \\r je tiež koniec riadku",
   staryMac.length === 1 && staryMac[0].druh === "zoznam" && staryMac[0].items.length === 2,
   JSON.stringify(staryMac))
+
+// ── číslo položky ostáva z textu (zákon o športe, § 107, 21. 10. 2026) ──────
+const zrusovacie = toBlocks("Zrušuje sa:\n\n1. Zákon č. 226/1994 Z. z.,\n\n2. Zákon č. 288/1997 Z. z.,\n\n3. Zákon č. 300/2008 Z. z.")
+t("položky oddelené prázdnym riadkom nesú svoje čísla",
+  zrusovacie.filter(b => b.druh === "zoznam").map(b => b.druh === "zoznam" ? b.values[0] : null).join(",") === "1,2,3",
+  JSON.stringify(zrusovacie))
+
+const odTroch = toBlocks("3. tretí\n4. štvrtý")
+t("zoznam, ktorý začína od tretieho bodu, drží 3 a 4",
+  odTroch[0].druh === "zoznam" && odTroch[0].values.join(",") === "3,4",
+  JSON.stringify(odTroch))
+
+const odrazky = toBlocks("- jedna\n- dve")
+t("odrážky nemajú číslo",
+  odrazky[0].druh === "zoznam" && odrazky[0].values.every(v => v === null),
+  JSON.stringify(odrazky))

@@ -21,7 +21,20 @@ export type Segment =
 export type Block =
   | { druh: "odsek"; segments: Segment[] }
   | { druh: "nadpis"; segments: Segment[]; level: number }
-  | { druh: "zoznam"; items: Segment[][]; numbered: boolean }
+  | {
+      druh: "zoznam"
+      items: Segment[][]
+      numbered: boolean
+      /**
+       * Číslo položky tak, ako stojí v texte (`null` pri odrážke). Zoznam
+       * v predpise sa **neprečíslúva**: body zrušovacích ustanovení alebo
+       * prechodných ustanovení sú často oddelené prázdnym riadkom a každý
+       * by inak začínal od „1." (zákon o športe, § 107, 21. 10. 2026) —
+       * a vynechané či vložené číslo („1a.") po novele je bežné. Rovnaký
+       * dôvod ako pri odseku `(4a)` vyššie.
+       */
+      values: (number | null)[]
+    }
 
 const BULLET = /^\s*[-*•]\s+(.*)$/
 const NUMBERED = /^\s*(\d+)[.)]\s+(.*)$/
@@ -137,7 +150,7 @@ export function toBlocks(text: string): Block[] {
   const lines = text.split(/\r\n|\r|\n/)
 
   let paragraph: string[] = []
-  let list: { items: string[]; numbered: boolean } | null = null
+  let list: { items: string[]; numbered: boolean; values: (number | null)[] } | null = null
 
   const closeParagraph = () => {
     if (!paragraph.length) return
@@ -150,6 +163,7 @@ export function toBlocks(text: string): Block[] {
       druh: "zoznam",
       items: list.items.map(splitInline),
       numbered: list.numbered,
+      values: list.values,
     })
     list = null
   }
@@ -208,8 +222,9 @@ export function toBlocks(text: string): Block[] {
       const content = (bullet?.[1] ?? number?.[2] ?? "").trim()
       // Zmena typu zoznamu uprostred = nový zoznam.
       if (list && list.numbered !== numbered) closeList()
-      if (!list) list = { items: [], numbered: numbered }
+      if (!list) list = { items: [], numbered: numbered, values: [] }
       list.items.push(content)
+      list.values.push(number ? Number(number[1]) : null)
       continue
     }
 

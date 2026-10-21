@@ -175,7 +175,8 @@ export default function FormattedText({
           </p>
         ) : b.numbered ? (
           <ol key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.items.map((p, j) => <li key={j}><Segments segments={p} external={external} /></li>)}
+            {/* `value` drží číslo z textu — zoznam predpisu sa neprečíslúva (viď `Block` v `formatText.ts`). */}
+            {b.items.map((p, j) => <li key={j} value={b.values[j] ?? undefined}><Segments segments={p} external={external} /></li>)}
           </ol>
         ) : (
           <ul key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
