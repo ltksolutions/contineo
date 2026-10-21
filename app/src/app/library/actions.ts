@@ -1616,6 +1616,10 @@ async function runChunkProposal(
  * Návrh rezu hneď po nahratí (Q2 A) — **po odpovedi**, v `after()`: kurátor
  * ide do editora textu a nečaká na model. Keď sa návrh nepodarí (bez kľúča
  * AI, chyba modelu), nič sa nedeje — na stránke Členenie je tlačidlo.
+ *
+ * Rovnako po importe z konektora, zo Slov-Lexu a po kontrole zdroja
+ * (Ján 21. 10. 2026): koncept z importu je koncept ako každý iný a karta
+ * postupu už sľubovala, že sa návrh pripravuje.
  */
 function scheduleChunkProposal(
   self: { companyCode: string; personId: string; email: string; extras: CodelistExtras },
@@ -1712,6 +1716,8 @@ export async function importConnectorArticlesAction(fd: FormData) {
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       tags: fd.getAll("tags").filter((x): x is string => typeof x === "string"),
     }, self.email, self.language, self.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
+    // Návrh rezov ako po nahratí súboru (Q2 A) — pre každý nový koncept.
+    for (const o of out) if ((o.result === "created" || o.result === "version") && o.documentId) scheduleChunkProposal(self, o.documentId)
     const n = (r: string) => out.filter(o => o.result === r).length
     message = t.done(n("created"), n("version"), n("unchanged"), n("failed"))
     const failed = out.filter(o => o.result === "failed")
@@ -1742,6 +1748,7 @@ export async function resyncConnectorDocumentAction(fd: FormData) {
     const r = await resyncDocument(self.companyCode, id, self.email, self.language, self.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
     if (r.result === "failed") { message = `${t.errorBefore}${r.error ?? ""}`; failed = true }
     else message = r.result === "unchanged" ? t.resyncUnchanged : t.resyncVersion
+    if (r.result === "version") scheduleChunkProposal(self, id)
     revalidatePath("/library")
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -1806,6 +1813,7 @@ export async function importWebDocumentAction(fd: FormData) {
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       tags: fd.getAll("tags").filter((x): x is string => typeof x === "string"),
     }, self.email, self.extras)
+    if (out.result === "created") scheduleChunkProposal(self, out.documentId)
     revalidatePath("/library")
     const message = out.result === "exists"
       ? t.exists
@@ -1830,6 +1838,7 @@ export async function checkWebSourceAction(fd: FormData) {
     message = r.result === "unchanged" ? t.unchanged
       : r.result === "corrected" ? t.corrected
       : t.version(r.effectiveFrom ? formatDate(new Date(r.effectiveFrom), self.language) : "")
+    if (r.result !== "unchanged") scheduleChunkProposal(self, id)
     revalidatePath("/library")
   } catch (e) {
     if (isRedirect(e)) throw e
