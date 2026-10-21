@@ -13,7 +13,7 @@
  */
 
 import { inspectChunking, type ChunkingInspection } from "./chunkingInspect"
-import { splitBlocks, boundariesFromChunks, groupTokens, type TextBlock } from "./chunkBlocks"
+import { splitBlocks, boundariesFromChunks, type TextBlock } from "./chunkBlocks"
 import { cutForIndex, manualCutFor, type CutMethod } from "./chunkCut"
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
@@ -93,9 +93,4 @@ export async function cutterState(companyCode: string, documentId: string): Prom
     draft,
     todayChunks,
   }
-}
-
-/** Tokeny dnešného rezu po blokoch — pre súhrn v pohľade Návrh/Rozdiel. */
-export function currentTokens(state: Pick<CutterState, "blocks" | "current">): number[] {
-  return groupTokens(state.blocks, state.current)
 }

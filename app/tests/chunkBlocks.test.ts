@@ -175,10 +175,9 @@ describe("návrh AI — čisté funkcie", () => {
     const para = (n: number) => `${"slovo ".repeat(n)}`.trim()
     // Bloky: 0 nadpis, 1–3 po ~600 tokenov, 4 nadpis, 5 ~1 500 tokenov (dnes samostatný úsek).
     const md = ["# A", para(450), para(450), para(450), "# B", para(1150)].join("\n\n")
-    const blocks = splitBlocks(md)
     const current = [2, 3, 4]
-    expect(oversizedNewChunks(blocks, current, current)).toEqual([])
-    const merged = oversizedNewChunks(blocks, current, [4])
+    expect(oversizedNewChunks(md, "Manuál", current, current)).toEqual([])
+    const merged = oversizedNewChunks(md, "Manuál", current, [4])
     expect(merged).toHaveLength(1)
     expect(merged[0]).toMatchObject({ start: 0, end: 4 })
     expect(merged[0].tokens).toBeGreaterThan(1350)
