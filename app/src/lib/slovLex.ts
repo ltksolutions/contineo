@@ -315,7 +315,11 @@ function renderGroup(w: Writer, e: El, depth: number, quoted: boolean): void {
   const asHeading = !quoted && (STRUCTURAL.has(kind) || kind === "paragraf" || kind === "priloha")
   if (asHeading) {
     const parts = [label ? inlineOf(label) : "", title ? inlineOf(title) : ""].map(collapse).filter(Boolean)
-    w.heading(2 + depth, parts.join(kind === "paragraf" ? " " : " — "))
+    // Najviac štyri úrovne: článok, časť, hlava, §. Hlbšie členenie (hlava
+    // v časti, skupina paragrafov) ostáva na úrovni 4 — rez podľa ADR-035
+    // berie § ako jednotku bez ohľadu na úroveň a nadpis tesne nad § ide
+    // s ním; päť a šesť mriežok by zvyšok systému (editor, PDF) nepoznal.
+    w.heading(Math.min(2 + depth, 4), parts.join(kind === "paragraf" ? " " : " — "))
     renderChildren(w, e, STRUCTURAL.has(kind) ? depth + 1 : depth, skip, quoted)
     return
   }

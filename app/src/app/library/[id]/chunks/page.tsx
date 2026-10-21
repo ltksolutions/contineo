@@ -142,7 +142,9 @@ export default async function ChunksPage({
             <div className="cut-body">
               {todayFromBlocks
                 ? todayGroups[i].map(b => <BlockView key={b} block={state.blocks[b]} />)
-                : <p className="cut-flat">{ch.text}</p>}
+                // Aj uložený text je Markdown — surové mriežky nadpisov
+                // na obrazovku nepatria (zákon o športe, 21. 10. 2026).
+                : <div className="cut-rendered"><FormattedText text={ch.text} /></div>}
             </div>
           </section>
         )

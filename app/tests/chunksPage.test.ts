@@ -117,7 +117,9 @@ describe("Členenie — rezač blokov", () => {
       ],
     })
     const html = await render("sfz:issf_08")
-    expect(html).toContain('<p class="cut-flat">Zlúčený text prvého úseku.</p>')
+    // Uložený text sa kreslí ako Markdown (odsek), nie surovo — mriežky nadpisov na obrazovku nepatria.
+    expect(html).toMatch(/<div class="cut-rendered"><p[^>]*><span>Zlúčený text prvého úseku\.<\/span><\/p><\/div>/)
+    expect(html).not.toContain("cut-flat")
     expect(html).not.toContain("cut-approx")
   })
 

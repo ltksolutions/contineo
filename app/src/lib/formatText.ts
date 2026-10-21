@@ -69,7 +69,8 @@ const SUBHEADING = /^\*\*(?!\s)(.+?)\*\*[:：]?$/
  * v tej istej odpovedi vedľa seba. Bez tohto vzoru sa v texte objavilo
  * doslovné „## Hráči“, čo vyzerá ako chyba systému.
  */
-const HEADING = /^(#{1,4})\s+(.+?)\s*#*$/
+// Šesť úrovní ako Markdown: text zo Slov-Lexu má § pod časťou a hlavou (ADR-037).
+const HEADING = /^(#{1,6})\s+(.+?)\s*#*$/
 
 /**
  * Odkaz v tvare `[text](/cesta)`.
