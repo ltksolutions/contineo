@@ -24,8 +24,9 @@
  * ## Čo sa stane, keď sa dotkneme predpisu
  *
  * Do knižnice sa dnes zapisuje troma cestami a každá znamená pre pár niečo
- * iné. Je to tu napísané, lebo to nie je zrejmé a pri štvrtej ceste (RSS,
- * e-mail, ISSF) sa na to bude treba pozrieť znova:
+ * iné. Import z MCP konektora a predpis zo Slov-Lexu (ADR-037) idú cez
+ * koncept a `publish()`, takže sú prvou cestou. Pri ďalšej ceste (e-mail,
+ * ISSF) sa na to bude treba pozrieť znova:
  *
  *   • **nové znenie** (`publish()`) — význam predpisu sa zmenil, takže pár
  *     z neho odvodený **expiruje** (`expireCurationFor()`);

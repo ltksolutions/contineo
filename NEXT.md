@@ -6,11 +6,25 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-17** (ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-22** (ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Zákon o športe zo Slov-Lexu (ADR-037, 20.–21. 10., #405–#414).** Knižnica →
+Nahrať → **Predpis zo Slov-Lexu**: adresa alebo číslo (440/2015), stiahne sa
+znenie účinné dnes, záväzné PDF zo Slov-Lexu a text z HTML znenia (§ ako
+jednotka rezu); na detaile **Skontrolovať zdroj** založí koncept novely
+s účinnosťou zo Slov-Lexu. Zákon č. 440/2015 Z. z. je v SFZ ako **koncept**
+(`sfz:zakon_440_2015`), verejný, druh Zákon, **nadradený Stanovám**;
+prijatý rez je kolo 3 (176 úsekov, 5 nálezov — dva veľké paragrafy a tri
+zlomky). **Zverejnený zatiaľ nie je**, asistent z neho neodpovedá. Krok C
+(cron a upozornenie na novelu) podľa D247 až po prvej skutočnej novele.
+**Návrh rezov AI** beží bez premýšľania, vracia len pridané a zrušené
+hranice a nový úsek nad 1 350 tokenov odmietne; Návrh, Rozdiel aj Dnes
+merajú úsek rovnako, s riadkom kontextu (`chunkSize.ts`). Pohľad Dnes
+kreslí text ako Markdown, zoznamy v predpise sa neprečíslúvajú.
 
 **Členenie (ADR-035, 15.–17. 10., #389–#397).** Prvý rez úsekov sa berie
 zo štruktúry Markdownu — úrovne nadpisov a číslovanie, cieľ 300–900
@@ -46,9 +60,9 @@ rozhodnuté a zapísané do konceptov), PDF sú vyrobené z aktuálneho textu
 #372 sa kolo starej podoby konceptu ruší samo a druhé kolo vedľa bežiaceho
 sa predložiť nedá; zrušené kolo nie je zamietnutie a „Schválil“ je „Prijal
 (orgán)“ (#373, D202, D203). Zverejnenie založilo šesť požiadaviek „Čaká na
-kontrolu“ len cez návrhy FAQ — od #375 sa pri nezmenenom texte nezakladajú. Medzi manuálmi a normami sú **pevné väzby** (D200) — nové
-znenie normy alebo manuálu založí požiadavku „Čaká na kontrolu" v Knižnica →
-Kontrola súladu.
+kontrolu“ len cez návrhy FAQ — od #375 sa pri nezmenenom texte nezakladajú. Pevné väzby (D200) sú od 20. 10. zrušené
+(D241, #404) — nové znenie založí požiadavku „Čaká na kontrolu" len podľa
+nadradených dokumentov v hierarchii; Kontrola súladu je od #407 v Správe.
 
 **Kontrola súladu (ADR-032)** je v prevádzke: dokument proti záväzným
 dokumentom, beh na pozadí, rola `compliance`, Opus 5.5, cena pri behu.
@@ -56,7 +70,7 @@ dokumentom, beh na pozadí, rola `compliance`, Opus 5.5, cena pri behu.
 (záväzný / výkladový / záznam) a poradie záväznosti (zákon › stanovy ›
 poriadok › smernica › manuál); Norma sa rozdelila na Stanovy a Poriadok
 (poriadky v priečinku „Poriadky SFZ"); **hierarchia dokumentov** s viacerými
-nadradenými je naplnená (19 dokumentov, Knižnica → ⋯ → Hierarchia) a
+nadradenými je naplnená (20 dokumentov aj so zákonom; Knižnica → pohľad Hierarchia, ponuka „⋯“ od #407 nie je) a
 kontrola si z nej berie meradlá. **FAQ je zrušené** aj s dátami; ťažba
 histórie helpdesku (ADR-030) ukladá otázky do `helpdesk_questions` a z nich
 **„Návrhy z helpdesku do manuálov"** (Kontrola súladu) navrhnú doplnenie
@@ -276,9 +290,10 @@ počty v `retention[].helpdesk`).
 
 1. **Rozhodnúť 44 návrhov z helpdesku** a nové znenia dotknutých manuálov
    (ISSF-00, 01, 02, 03, 04, 05, 07) poslať na schválenie naraz.
-2. **Nahrať Zákon o športe a licenčnú normu trénerov** do knižnice a zaradiť
-   ich do hierarchie (Zákon nad Stanovy) — päť otázok o trénerských
-   licenciách dnes nepokryje žiadny dokument.
+2. **Zverejniť Zákon o športe** (koncept je pripravený, nadradený Stanovám;
+   schvaľuje správca obsahu podľa D246) a potom pustiť kontrolu súladu
+   Stanov proti nemu. **Nahrať licenčnú normu trénerov** — päť otázok
+   o trénerských licenciách dnes nepokryje žiadny dokument.
 3. **Kuriér naostro:** živý rozhovor dvoch ľudí, ranný súhrn v logu
    `courier-digest`, prvý oznam oddeleniu.
 
@@ -296,8 +311,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (17. 10.): **0 errors, 39 warnings,
-2805 testov.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
+Baseline, proti ktorej sa porovnáva (21. 10.): **0 errors, 39 warnings,
+2858 testov v 246 súboroch.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
 na 390 px — #321 prešiel štyrmi brzdami a typ otázky aj tak pretekal o 65 px. Pri paralelnej session pred zlúčením PR
 zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
 `main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže
@@ -339,8 +354,8 @@ naživo skúšajú len so súhlasom Jána.
 cd web && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline: **0 errors, 0 warnings, 13 testov v 2 súboroch, 62 predgenerovaných
-stránok** (z toho 18 OG a Twitter obrázkov). `next lint` tu už neexistuje —
+Baseline (21. 10.): **0 errors, 0 warnings, 13 testov v 2 súboroch,
+71 predgenerovaných stránok**. `next lint` tu už neexistuje —
 volá sa priamo `eslint`.
 
 ## Mapa dokumentácie

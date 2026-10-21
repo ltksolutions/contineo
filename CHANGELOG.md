@@ -4,6 +4,41 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Členenie: návrh rezov pri veľkom dokumente a jedno meranie úseku (2026-10-21, #410–#414)
+
+- **Navrhnúť rezy** funguje aj pri dokumente s tisíckami blokov (zákon
+  o športe): model nepremýšľa a vracia len hranice, ktoré pridáva a ruší
+  oproti súčasnému rezu. Návrh, ktorý by vytvoril nový úsek nad 1 350
+  tokenov, sa odmietne a neuloží. Odrezaná odpoveď modelu má vlastnú
+  hlášku a v prehľade spotreby je zlyhaním.
+- **Návrh, Rozdiel aj Dnes** merajú úsek rovnako — tak, ako ho dostane
+  asistent, aj s riadkom kontextu — a hlásia veľké úseky aj zlomky.
+  Predtým návrh ukazoval „bez nálezov" a po prijatí ten istý rez nesedel.
+- Návrh rezov sa pripraví sám aj po importe zo Slov-Lexu, po Skontrolovať
+  zdroj a po importe z konektora, nielen po nahratí súboru.
+- Stránky knižnice s dlhou prácou (návrh rezov, importy) majú limit 300 s.
+
+### Text predpisu: číslovanie a nadpisy podľa zákona (2026-10-21, #406, #408)
+
+- Body zoznamu nesú číslo z textu: zrušovacie ustanovenia § 107 ukazujú
+  1. až 7., nie sedemkrát „1.". Platí pre každý predpis a odpovede asistenta.
+- Text zo Slov-Lexu má nadpisy najviac do štvrtej úrovne (článok, časť,
+  hlava, §); text predpisu pozná šesť úrovní nadpisov.
+- Členenie, pohľad Dnes: text úseku je kreslený, nie surový Markdown
+  s „##### § 107".
+
+### Predpis zo Slov-Lexu (2026-10-20, ADR-037, #405)
+
+- Knižnica → Nahrať dokument → **Predpis zo Slov-Lexu**: adresa predpisu
+  alebo číslo (440/2015). Stiahne sa znenie účinné dnes, záväzné PDF zo
+  Slov-Lexu a text na vyhľadávanie; vznikne koncept, ďalej bežné
+  schválenie. Druh Zákon a verejný prístup sú predvolené.
+- Detail dokumentu: blok Zdroj so **Skontrolovať zdroj** — keď Slov-Lex
+  vyhlási novelu, vznikne koncept nového znenia s jej účinnosťou, aj
+  budúcou. Zverejnené sa nemení.
+- Zákon č. 440/2015 Z. z. o športe je v knižnici SFZ ako koncept,
+  nadradený Stanovám.
+
 ### Knižnica bez ponuky „⋯“; Kontrola súladu a Overené odpovede v Správe (2026-10-21)
 
 - **Kontrola súladu** (rola compliance) a **Overené odpovede** (správca
