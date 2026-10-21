@@ -36,6 +36,9 @@ import { AppError } from "@/lib/appError"
 import { importConnectorArticlesAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
+// Import až 10 článkov a návrh rezov pre každý v `after()`.
+// Serverové akcie bežia pod limitom stránky, z ktorej sa volajú.
+export const maxDuration = 300
 
 export default async function ConnectorImportPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
   const ctx = await libraryContext()

@@ -35,6 +35,9 @@ import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
+// Prevod súboru a návrh rezov v `after()` pri dlhom dokumente — predvolených 15 s na Verceli nestačí.
+// Serverové akcie bežia pod limitom stránky, z ktorej sa volajú.
+export const maxDuration = 300
 
 export default async function NewDocumentPage({
   searchParams,

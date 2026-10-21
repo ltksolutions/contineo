@@ -76,6 +76,9 @@ import SubmitButton from "@/components/SubmitButton"
 import Icon from "@/components/Icon"
 
 export const dynamic = "force-dynamic"
+// Skontrolovať zdroj sťahuje 12 MB PDF a po ňom beží návrh rezov v `after()` — predvolených 15 s na Verceli nestačí.
+// Serverové akcie bežia pod limitom stránky, z ktorej sa volajú.
+export const maxDuration = 300
 
 /** Ktorý panel pri znení je otvorený (`?open=…`). Bez JavaScriptu — server ho vykreslí otvorený. */
 type Panel = "responsible" | "basis" | "revoke" | "fixText" | "reindex" | "history"

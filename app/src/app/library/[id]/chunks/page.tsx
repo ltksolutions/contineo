@@ -34,6 +34,9 @@ import { dictionary, formatDate } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
+// Návrh rezov AI nad celým znením — zákon o športe má 2 000 blokov a model odpovedá dlhšie než 15 s predvolených na Verceli (21. 10. 2026).
+// Serverové akcie bežia pod limitom stránky, z ktorej sa volajú.
+export const maxDuration = 300
 
 type View = "today" | "proposal" | "diff"
 
