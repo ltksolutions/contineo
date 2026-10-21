@@ -7,8 +7,18 @@
  * sa bez obsahu nedajú navrhnúť dobre — tabuľka patrí k vete nad ňou, odsek
  * k predošlému nadpisu.
  *
- * **Model navrhuje len hranice, text nikdy nemení.** Vracia indexy blokov,
- * pri zmenených hraniciach zdôvodnenie a jednu vetu „čo som zmenil".
+ * **Model navrhuje len hranice, text nikdy nemení.** Vracia **len zmeny**
+ * oproti súčasnému rezu — hranice, ktoré pridáva (`add`), a ktoré ruší
+ * (`remove`) — so zdôvodnením a jednou vetou „čo som zmenil". Nový rez
+ * skladá tento modul. Celý zoznam hraníc model pri zákone o športe
+ * (172 hraníc, 21. 10. 2026) potichu skrátil na 107 a tvrdil „bez zmeny";
+ * vynechaná hranica tak zlepila 65 úsekov do jedného s 30 170 tokenmi.
+ * Pri zmenách vynechanie znamená „nemením", nie „ruším".
+ *
+ * **Návrh s novým úsekom nad strop sa odmieta** (`CUT_HARD`, rovnaká
+ * hranica, nad ktorou Členenie hlási „veľký") a neuloží sa. Úsek nad strop,
+ * ktorý už je v súčasnom reze s tými istými hranicami, prejde — niektorý
+ * článok sa rozumne rozdeliť nedá (§ 3 zákona o športe, výpočet pojmov).
  * Kolo 2 a ďalšie dostanú predošlý návrh a poznámku kurátora („Čo nesedí").
  *
  * Kolá sa držia pri dokumente (`documents.chunkRounds`), viazané na odtlačok
@@ -23,7 +33,8 @@ import { aiForCompany } from "./aiSettings"
 import { recordAiUsage, usageRecord, type UsageActor } from "./aiUsage"
 import { AppError } from "./appError"
 import { textFingerprint } from "./chunkIdentity"
-import { splitBlocks, normalizeBoundaries, groupTokens, type TextBlock } from "./chunkBlocks"
+import { splitBlocks, normalizeBoundaries, groupTokens, groupBlocks, type TextBlock } from "./chunkBlocks"
+import { CUT_HARD } from "./chunkHeadings"
 import { CUTS_KEPT, type ChunkCut } from "./chunkCut"
 import { writeAudit } from "./audit"
 
@@ -104,9 +115,10 @@ export function numberedBlocks(blocks: TextBlock[]): { text: string; trimmed: bo
 export const PROPOSAL_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["boundaries", "reasons", "summary", "issues", "confidence"],
+  required: ["add", "remove", "reasons", "summary", "issues", "confidence"],
   properties: {
-    boundaries: { type: "array", items: { type: "integer" } },
+    add: { type: "array", items: { type: "integer" } },
+    remove: { type: "array", items: { type: "integer" } },
     reasons: {
       type: "array",
       items: {
@@ -136,22 +148,32 @@ Pravidlá:
 - Pri norme (články, paragrafy) je úsek článok; dlhý článok rozdeľ medzi odsekmi. Pri manuáli a zmluve rež podľa nadpisov časti a podčastí.
 - Text nemeň a nevymýšľaj; vraciaš len indexy.
 
-Vráť:
-- boundaries: všetky hranice nového rezu (vzostupne);
-- reasons: pre hranicu, ktorú PRIDÁVAŠ alebo RUŠÍŠ oproti súčasnému rezu, jednu krátku vetu prečo (block = index); zhodné hranice nezdôvodňuj; najviac 40 zdôvodnení — pri veľkom dokumente len najdôležitejšie zmeny, ostatné zhrň v summary;
+Vráť LEN ZMENY oproti súčasnému rezu — súčasné hranice, ktoré neuvedieš, ostávajú:
+- add: indexy blokov, na ktorých má ZAČAŤ nový úsek a dnes nezačína (vzostupne); prázdne, keď nepridávaš;
+- remove: súčasné hranice, ktoré RUŠÍŠ — úsek sa spojí s predošlým (vzostupne); prázdne, keď nerušíš. Spojením nesmie vzniknúť úsek nad ${CUT_HARD} tokenov;
+- keď súčasný rez sedí, add aj remove sú prázdne;
+- reasons: ku každej hranici z add a remove jednu krátku vetu prečo (block = index); najviac 40 — pri veľkom dokumente len najdôležitejšie zmeny, ostatné zhrň v summary;
 - summary: 1–2 vety po slovensky, čo si zmenil oproti súčasnému rezu (pri ďalšom kole oproti predošlému návrhu a podľa poznámky kurátora);
 - issues: krátky zoznam toho, čo v texte nesedí (prázdny, keď nič);
 - confidence: ako veľmi si si istý.
 Píš po slovensky, vecne. Úvodzovky výhradne „…“ — nikdy rovné ("), tie by ukončili reťazec v JSON.`
 
-/** Odpoveď modelu → kolo. Hranice sa očistia; zdôvodnenia len k platným blokom. */
+/**
+ * Odpoveď modelu → kolo. Nový rez = súčasné hranice bez `remove` a s `add`.
+ * Hranice sa očistia (mimo textu, blok 0, duplicity); `remove`, ktorá dnes
+ * nie je hranicou, a `add`, ktorá už je, nič nemenia. Zdôvodnenia len
+ * k platným blokom.
+ */
 export function parseProposal(
   raw: unknown,
   blockCount: number,
   meta: Omit<ChunkRound, "boundaries" | "reasons" | "summary" | "issues" | "confidence">,
+  current: number[],
 ): ChunkRound {
   const o = (raw ?? {}) as Record<string, unknown>
-  const boundaries = normalizeBoundaries(o.boundaries, blockCount)
+  const remove = new Set(normalizeBoundaries(o.remove, blockCount))
+  const add = normalizeBoundaries(o.add, blockCount)
+  const boundaries = normalizeBoundaries([...normalizeBoundaries(current, blockCount).filter(b => !remove.has(b)), ...add], blockCount)
   const reasons: BoundaryReason[] = Array.isArray(o.reasons)
     ? (o.reasons as unknown[])
         .map(r => r as { block?: unknown; why?: unknown })
@@ -168,6 +190,31 @@ export function parseProposal(
     issues: Array.isArray(o.issues) ? o.issues.map(x => String(x).trim()).filter(Boolean).slice(0, 8).map(x => x.slice(0, 300)) : [],
     confidence,
   }
+}
+
+/** Úsek nového rezu nad strop, ktorý v súčasnom reze nie je (s rovnakými hranicami). */
+export interface OversizedChunk {
+  /** Prvý blok úseku. */
+  start: number
+  /** Blok za koncom úseku. */
+  end: number
+  tokens: number
+}
+
+/**
+ * Nové úseky nad strop. Úsek s rovnakým začiatkom aj koncom, aký už je
+ * v súčasnom reze, sa nepočíta — návrh ho nevytvoril, len ponechal.
+ * Čistá funkcia.
+ */
+export function oversizedNewChunks(blocks: TextBlock[], current: number[], proposed: number[], limit: number = CUT_HARD): OversizedChunk[] {
+  const span = (g: number[]) => `${g[0]}-${g[g.length - 1] + 1}`
+  const existing = new Set(groupBlocks(blocks.length, current).map(span))
+  const groups = groupBlocks(blocks.length, proposed)
+  const tokens = groupTokens(blocks, proposed)
+  return groups
+    .map((g, i) => ({ start: g[0], end: g[g.length - 1] + 1, tokens: tokens[i], key: span(g) }))
+    .filter(c => c.tokens > limit && !existing.has(c.key))
+    .map(({ start, end, tokens }) => ({ start, end, tokens }))
 }
 
 /** Kolá pre daný text — tie, ktoré k inému textu nepatria, sa neukazujú. */
@@ -276,7 +323,16 @@ export async function proposeChunkCut(
     model,
     textHash,
     note,
-  })
+  }, input.current)
+  // Odmietnutý návrh sa neukladá — prijať by sa nemal dať ani omylom.
+  const oversized = oversizedNewChunks(blocks, input.current, round.boundaries)
+  if (oversized.length) {
+    const worst = oversized.reduce((a, b) => (b.tokens > a.tokens ? b : a))
+    console.warn(`[návrh rezu] odmietnutý: ${oversized.length} nových úsekov nad ${CUT_HARD} tokenov, najväčší ${worst.tokens} (bloky ${worst.start}–${worst.end - 1})`)
+    throw new ChunkProposalError("chunking.aiOversized", "Návrh by vytvoril priveľký úsek, neuložil sa.", {
+      tokens: worst.tokens, block: worst.start, count: oversized.length, limit: CUT_HARD,
+    })
+  }
   await col.updateOne(
     { companyCode, documentId },
     { $push: { chunkRounds: { $each: [round], $slice: -ROUNDS_KEPT } } } as never,

@@ -8,7 +8,7 @@ import {
 } from "../src/lib/chunkBlocks"
 import { cutForIndex, manualCutFor, type ChunkCut } from "../src/lib/chunkCut"
 import { textFingerprint, chunkingFingerprint } from "../src/lib/chunkIdentity"
-import { numberedBlocks, parseProposal, roundsFor, TEXT_MAX_CHARS, type ChunkRound } from "../src/lib/chunkProposal"
+import { numberedBlocks, parseProposal, roundsFor, oversizedNewChunks, TEXT_MAX_CHARS, type ChunkRound } from "../src/lib/chunkProposal"
 
 const manual = `# Podania na komisie
 
@@ -155,13 +155,33 @@ describe("návrh AI — čisté funkcie", () => {
     expect(r.text).toContain("[0] # Nadpis")
     expect(r.text).toContain("[…]")
   })
-  it("parseProposal očistí hranice a zdôvodnenia", () => {
+  it("parseProposal skladá rez zo súčasného, pridaných a zrušených hraníc a očistí zdôvodnenia", () => {
     const meta = { no: 2, at: new Date(), by: "Ján", source: "ai" as const, model: "m", textHash: "h", note: "x" }
     const r = parseProposal({
-      boundaries: [7, 2, 2, 0, 99], reasons: [{ block: 7, why: " nová téma " }, { block: 50, why: "mimo" }, { block: 2, why: "" }],
+      add: [7, 2, 2, 0, 99], remove: [4, 5],
+      reasons: [{ block: 7, why: " nová téma " }, { block: 50, why: "mimo" }, { block: 2, why: "" }],
       summary: " Rozdelil som. ", issues: ["", "tabuľka"], confidence: "zle",
-    }, 10, meta)
-    expect(r).toMatchObject({ boundaries: [2, 7], reasons: [{ block: 7, why: "nová téma" }], summary: "Rozdelil som.", issues: ["tabuľka"], confidence: "medium", no: 2 })
+    }, 10, meta, [4, 8])
+    // 4 zrušená, 8 ostáva (nespomenutá), 2 a 7 pridané; 5 nebola hranicou, 0 a 99 sú mimo.
+    expect(r).toMatchObject({ boundaries: [2, 7, 8], reasons: [{ block: 7, why: "nová téma" }], summary: "Rozdelil som.", issues: ["tabuľka"], confidence: "medium", no: 2 })
+  })
+  it("parseProposal: prázdne zmeny = súčasný rez, nič sa nestratí vynechaním", () => {
+    const meta = { no: 3, at: new Date(), by: "Ján", source: "ai" as const, model: "m", textHash: "h", note: null }
+    const current = Array.from({ length: 171 }, (_, i) => i + 1)
+    const r = parseProposal({ add: [], remove: [], reasons: [], summary: "Bez zmeny.", issues: [], confidence: "high" }, 200, meta, current)
+    expect(r.boundaries).toEqual(current)
+  })
+  it("oversizedNewChunks: nový úsek nad strop áno, ponechaný z dnešného rezu nie", () => {
+    const para = (n: number) => `${"slovo ".repeat(n)}`.trim()
+    // Bloky: 0 nadpis, 1–3 po ~600 tokenov, 4 nadpis, 5 ~1 500 tokenov (dnes samostatný úsek).
+    const md = ["# A", para(450), para(450), para(450), "# B", para(1150)].join("\n\n")
+    const blocks = splitBlocks(md)
+    const current = [2, 3, 4]
+    expect(oversizedNewChunks(blocks, current, current)).toEqual([])
+    const merged = oversizedNewChunks(blocks, current, [4])
+    expect(merged).toHaveLength(1)
+    expect(merged[0]).toMatchObject({ start: 0, end: 4 })
+    expect(merged[0].tokens).toBeGreaterThan(1350)
   })
   it("roundsFor: len kolá k tomuto textu, najnovšie hore", () => {
     const h = textFingerprint(manual)
