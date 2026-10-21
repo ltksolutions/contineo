@@ -35,10 +35,13 @@ export const ROUNDS_KEPT = 20
 /** Strop na text pre model — dlhší dokument sa pošle s orezanými blokmi. */
 export const TEXT_MAX_CHARS = 180_000
 /**
- * Strop výstupu modelu. Zákon o športe (21. 10. 2026, 2 000 blokov) narazil
- * na pôvodných 8 000: model zdôvodňoval stovky zmien, JSON sa odrezal
- * a nedal sa prečítať. Hranice pre 170 úsekov sú pod 1 000 tokenov,
- * 40 zdôvodnení do 3 000 — 16 000 je rezerva, nie cieľ.
+ * Strop výstupu modelu. Hranice pre 170 úsekov sú pod 1 000 tokenov,
+ * 40 zdôvodnení do 3 000 — 16 000 je rezerva, nie cieľ. Zákon o športe
+ * (21. 10. 2026, 2 000 blokov) narazil aj na tento strop bez jediného
+ * znaku textu: Sonnet 5 pri takom vstupe sám od seba **premýšľal** a minul
+ * celý rozpočet skôr, než začal písať JSON. Preto je premýšľanie pri
+ * návrhu vypnuté (`thinking: disabled`) — pravidlá rezu sú v pokyne,
+ * úloha je mechanická; bez premýšľania odpovedal za 23 s a 1 400 tokenov.
  */
 export const MAX_OUTPUT_TOKENS = 16_000
 
@@ -231,6 +234,8 @@ export async function proposeChunkCut(
     answer = await new Anthropic({ apiKey: ai.apiKey, maxRetries: 1, timeout: 240_000 }).messages.create({
       model,
       max_tokens: MAX_OUTPUT_TOKENS,
+      // Bez premýšľania — viď `MAX_OUTPUT_TOKENS`.
+      thinking: { type: "disabled" },
       system: PROPOSAL_SYSTEM,
       messages: [{ role: "user", content: `${facts}\n\nText dokumentu po blokoch:\n\n${numbered}` }],
       output_config: { format: { type: "json_schema", schema: PROPOSAL_SCHEMA as unknown as Record<string, unknown> } },
