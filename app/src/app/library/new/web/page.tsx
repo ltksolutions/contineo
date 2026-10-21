@@ -32,6 +32,9 @@ import { AppError } from "@/lib/appError"
 import { importWebDocumentAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
+// Import zo Slov-Lexu sťahuje 1,5 MB HTML a 12 MB PDF a po ňom beží návrh rezov v `after()`.
+// Serverové akcie bežia pod limitom stránky, z ktorej sa volajú.
+export const maxDuration = 300
 
 export default async function WebImportPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
   const ctx = await libraryContext()

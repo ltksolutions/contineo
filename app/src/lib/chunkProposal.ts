@@ -34,6 +34,13 @@ export const ROUNDS_KEPT = 20
 
 /** Strop na text pre model — dlhší dokument sa pošle s orezanými blokmi. */
 export const TEXT_MAX_CHARS = 180_000
+/**
+ * Strop výstupu modelu. Zákon o športe (21. 10. 2026, 2 000 blokov) narazil
+ * na pôvodných 8 000: model zdôvodňoval stovky zmien, JSON sa odrezal
+ * a nedal sa prečítať. Hranice pre 170 úsekov sú pod 1 000 tokenov,
+ * 40 zdôvodnení do 3 000 — 16 000 je rezerva, nie cieľ.
+ */
+export const MAX_OUTPUT_TOKENS = 16_000
 
 /** Strop na jeden blok, keď celok presiahne `TEXT_MAX_CHARS`. */
 const BLOCK_TRIM_CHARS = 1_200
@@ -128,7 +135,7 @@ Pravidlá:
 
 Vráť:
 - boundaries: všetky hranice nového rezu (vzostupne);
-- reasons: pre každú hranicu, ktorú PRIDÁVAŠ alebo RUŠÍŠ oproti súčasnému rezu, jednu vetu prečo (block = index); zhodné hranice nezdôvodňuj;
+- reasons: pre hranicu, ktorú PRIDÁVAŠ alebo RUŠÍŠ oproti súčasnému rezu, jednu krátku vetu prečo (block = index); zhodné hranice nezdôvodňuj; najviac 40 zdôvodnení — pri veľkom dokumente len najdôležitejšie zmeny, ostatné zhrň v summary;
 - summary: 1–2 vety po slovensky, čo si zmenil oproti súčasnému rezu (pri ďalšom kole oproti predošlému návrhu a podľa poznámky kurátora);
 - issues: krátky zoznam toho, čo v texte nesedí (prázdny, keď nič);
 - confidence: ako veľmi si si istý.
@@ -223,7 +230,7 @@ export async function proposeChunkCut(
   try {
     answer = await new Anthropic({ apiKey: ai.apiKey, maxRetries: 1, timeout: 240_000 }).messages.create({
       model,
-      max_tokens: 8000,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system: PROPOSAL_SYSTEM,
       messages: [{ role: "user", content: `${facts}\n\nText dokumentu po blokoch:\n\n${numbered}` }],
       output_config: { format: { type: "json_schema", schema: PROPOSAL_SCHEMA as unknown as Record<string, unknown> } },
@@ -233,12 +240,19 @@ export async function proposeChunkCut(
     console.error("[návrh rezu] volanie zlyhalo:", e)
     throw new ChunkProposalError("chunking.aiFailed", "Analýza sa nepodarila — skúste to o chvíľu.")
   }
+  // Odrezaná odpoveď je zlyhanie, nie „skúste o chvíľu": spotreba sa zapíše
+  // ako neúspešná a človek sa dozvie, čo sa stalo.
+  const truncated = answer.stop_reason === "max_tokens"
   usage({
     input: answer.usage.input_tokens,
     output: answer.usage.output_tokens,
     cacheWrite: answer.usage.cache_creation_input_tokens ?? 0,
     cacheRead: answer.usage.cache_read_input_tokens ?? 0,
-  })
+  }, truncated)
+  if (truncated) {
+    console.error("[návrh rezu] odpoveď modelu narazila na strop výstupu:", answer.usage.output_tokens)
+    throw new ChunkProposalError("chunking.aiTruncated", "Odpoveď modelu bola pridlhá a odrezala sa.")
+  }
 
   const out = answer.content.find(b => b.type === "text")
   let parsed: unknown
