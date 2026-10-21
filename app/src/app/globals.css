@@ -9030,6 +9030,8 @@ a.form-row.cf-pick { min-height: 60px; color: var(--ink); text-decoration: none;
 .cut-accept-title { font-weight: 650; }
 .cut-accept-note { font-size: var(--fs-small); }
 .cut-flat { margin: 0; white-space: pre-wrap; font-size: 14px; }
+/* Uložený text úseku kreslený ako Markdown (bez pre-wrap, odseky robí FormattedText). */
+.cut-rendered { font-size: 14px; }
 .cut-approx { margin: 0 0 10px; font-size: var(--fs-small); }
 .cut-profile > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 650; }
 @media (max-width: 639px) {

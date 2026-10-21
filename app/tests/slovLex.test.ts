@@ -88,6 +88,24 @@ describe("parseVersion", () => {
     expect(headingBoundaries(md)).not.toBeNull()
   })
 
+  it("nadpisy nejdú pod úroveň 4 — hlava v časti a skupina paragrafov ostávajú na štvorke", () => {
+    const deep = `<div id="predpis" class="predpis Skupina"><div class="predpisTyp">ZÁKON</div><div class="predpisNadpis NADPIS">o niečom</div>
+      <div class="clanok Skupina"><div class="clanokOznacenie">Čl. I</div>
+        <div class="cast Skupina"><div class="castOznacenie">PRVÁ ČASŤ</div><div class="castNadpis NADPIS">VŠEOBECNÉ</div>
+          <div class="hlava Skupina"><div class="hlavaOznacenie">PRVÁ HLAVA</div><div class="hlavaNadpis NADPIS">OSOBY</div>
+            <div class="skupinaParagrafov Skupina"><div class="skupinaParagrafovOznacenie">Športovec</div>
+              <div class="paragraf Skupina" id="paragraf-4"><div class="paragrafOznacenie">§ 4</div>
+                <div class="odsek Skupina"><div class="odsekOznacenie">(1)</div><div class="text">Text.</div></div>
+              </div></div></div></div></div></div>`
+    const md = parseVersion(deep, ref, "20260101").markdown
+    expect(md).toContain("\n## Čl. I\n")
+    expect(md).toContain("\n### PRVÁ ČASŤ — VŠEOBECNÉ\n")
+    expect(md).toContain("\n#### PRVÁ HLAVA — OSOBY\n")
+    expect(md).toContain("\n#### Športovec\n")
+    expect(md).toContain("\n#### § 4\n")
+    expect(md).not.toMatch(/^#{5,}/m)
+  })
+
   it("odsek, písmeno a bod sú odseky s označením; odkaz na poznámku ostáva v texte", () => {
     const md = v.markdown
     expect(md).toContain("\n(1) Verejným záujmom v športe je podpora a rozvoj športu mládeže")

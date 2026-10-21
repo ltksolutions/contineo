@@ -408,3 +408,9 @@ const odrazky = toBlocks("- jedna\n- dve")
 t("odrážky nemajú číslo",
   odrazky[0].druh === "zoznam" && odrazky[0].values.every(v => v === null),
   JSON.stringify(odrazky))
+
+// ── nadpisy piatej a šiestej úrovne (text zo Slov-Lexu, ADR-037) ────────────
+const hlboke = toBlocks("##### § 107 Zrušovacie ustanovenia\n\nZrušuje sa:")
+t("päť mriežok je nadpis, nie odsek s mriežkami",
+  hlboke[0].druh === "nadpis" && hlboke[0].level === 5 && text(hlboke[0].segments) === "§ 107 Zrušovacie ustanovenia",
+  JSON.stringify(hlboke))
