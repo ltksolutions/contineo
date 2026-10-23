@@ -32,18 +32,27 @@ describe("povod", () => {
   })
 })
 
-async function run(events: unknown[]): Promise<string> {
+async function run(events: unknown[], extra: Partial<Parameters<typeof recordingTransform>[0]> = {}): Promise<string> {
   const enc = new TextEncoder()
   const src = new ReadableStream<Uint8Array>({
     start(c) { for (const e of events) c.enqueue(enc.encode(`data: ${JSON.stringify(e)}\n\n`)); c.close() },
   })
-  const out = src.pipeThrough(recordingTransform({ question: "Q?", personId: "p1", companyCode: "SFZ", startedAt: Date.now() }))
+  const out = src.pipeThrough(recordingTransform({ question: "Q?", personId: "p1", companyCode: "SFZ", startedAt: Date.now(), ...extra }))
   const reader = out.getReader(); const dec = new TextDecoder(); let s = ""
   for (;;) { const r = await reader.read(); if (r.done) break; s += dec.decode(r.value) }
   return s
 }
 
 describe("recordingTransform", () => {
+  it("zdroje behu idú ako prvá udalosť a uložia sa so záznamom (KANAL-widget-zdroje)", async () => {
+    recordAnswer.mockClear()
+    const scopeEvent = { type: "scope", ids: ["library"], kicker: "Odpoveď z dokumentov SFZ", from: "z dokumentov SFZ" }
+    const s = await run([{ type: "token", token: "A" }, { type: "done", sources: [{ title: "RP" }] }],
+      { searchedScope: { library: true, live: [] }, scopeEvent })
+    expect(s.indexOf('"type":"scope"')).toBe(s.indexOf("data: ") + 6 + 1)
+    const [rec] = recordAnswer.mock.calls[0] as unknown as [{ searchedScope: unknown }]
+    expect(rec.searchedScope).toEqual({ library: true, live: [] })
+  })
   it("prepusti udalosti, po done so zdrojmi zapise odpoved a prida recorded", async () => {
     recordAnswer.mockClear()
     const s = await run([{ type: "token", token: "Odp" }, { type: "token", token: "oveď." }, { type: "done", sources: [{ title: "RP" }], model: "m", provider: "anthropic" }])

@@ -103,6 +103,10 @@ export function recordingTransform(input: {
   personId: string
   companyCode: string
   startedAt: number
+  /** V čom sa hľadalo — uloží sa so záznamom ako na `/ask` (KANAL-widget-zdroje). */
+  searchedScope?: { library: boolean; live: string[] }
+  /** Prvá udalosť streamu: zdroje behu a hotová hlavička odpovede pre widget. */
+  scopeEvent?: Record<string, unknown>
 }): TransformStream<Uint8Array, Uint8Array> {
   const dec = new TextDecoder()
   const enc = new TextEncoder()
@@ -124,6 +128,7 @@ export function recordingTransform(input: {
           model: String(ev.model ?? ""), provider: String(ev.provider ?? ""), verifiedCitations: Boolean(ev.verifiedCitations),
           ttftMs: firstTokenAt ? firstTokenAt - input.startedAt : null, totalMs: Date.now() - input.startedAt,
           timings: ev.timings as never, tokens: ev.tokens as never, cost: ev.cost as never, time: ev.time as never,
+          searchedScope: input.searchedScope,
         }, input.personId, input.companyCode, "public")
         controller.enqueue(enc.encode(`data: ${JSON.stringify({ type: "recorded", id })}\n\n`))
       } catch (e) {
@@ -132,6 +137,9 @@ export function recordingTransform(input: {
     }
   }
   return new TransformStream<Uint8Array, Uint8Array>({
+    start(controller) {
+      if (input.scopeEvent) controller.enqueue(enc.encode(`data: ${JSON.stringify(input.scopeEvent)}\n\n`))
+    },
     async transform(chunk, controller) {
       controller.enqueue(chunk)
       buffer += dec.decode(chunk, { stream: true })
