@@ -11,6 +11,25 @@
 ---
 
 
+## 2026-10-23 — výber zdrojov na Opýtať sa (ASK-zdroje-hladania)
+
+**Čo sa zmenilo:** `.view-switch` s tlačidlami zdrojov nahradil `<details>`
+s GET formulárom a riadkami `.select-row` (Q1 A). `Search` má dva stavy:
+`pending` (plachta) a `askedScope` (nastaví `send()`), hlavička aj oznam idú
+z `askedScope`. `?src=` vzniká len odoslaním (Q2 A). Rozbor `src` je
+v `lib/askScope.ts` — čiarky aj opakované hodnoty, neznáme id preč.
+
+**Rozhodnutia Jána:** Q3 — hlavička ostáva „z dokumentov SFZ“ (návrh chcel
+„z Knižnice“ a genitív názvu konektora, ktorý aplikácia nemá). O1 a O2 do
+design systému (`globals.css` + `conventions.md`).
+
+**Na čo pozor:** snímky tmavej témy treba robiť až po prechode farby
+tlačidla (0,15 s) — inak tiché tlačidlo vyjde biele a vyzerá ako chyba.
+Testy pri vyťaženom stroji len s `--testTimeout=30000`.
+
+---
+
+
 ## 2026-10-18 – 23 — kontrola manuálov nanovo: potvrdenie, koncept, kontext (#398–#403, #419)
 
 **Čo sa zmenilo:** 42 návrhov z helpdesku sme 18. 10. rozhodli a zapísali

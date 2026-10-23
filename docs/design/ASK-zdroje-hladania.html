@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ASK — zdroje hľadania</title>
+<link rel="stylesheet" href="../_ds/contineo-design-system-f95a5ca5-9a29-4e6d-8915-5818da1a2b0e/styles.css" />
+<style>
+/* ── Lešenie dokumentu (nie je súčasť návrhu) ───────────────────────────── */
+body.board{margin:0;background:#e6e8ec;color:#161b22;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5}
+.board a{color:#2443c4}.board a:hover{color:#1a3299}
+.board .sheet{padding:28px 32px 60px;background:#f5f6f8}
+.board h1{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+.board p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:100ch}
+.board code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#eceef1;padding:1px 5px;border-radius:4px}
+.board .sec{margin:44px 0 0}
+.board .sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.board .sec-t{font-size:17px;font-weight:650;margin:0 0 14px}
+.board .row{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.board .cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+.board iframe{display:block;border:1px solid rgba(20,28,42,.18);border-radius:12px;box-shadow:0 20px 44px rgba(0,0,0,.12);background:#fff}
+.board .notes{display:grid;gap:6px;max-width:110ch;margin:16px 0 0;font-size:13px;color:#33404f}
+.board .notes p{margin:0;display:flex;gap:8px}
+.board .notes b.n{flex:none;width:20px;height:20px;border-radius:50%;background:#e11d48;color:#fff;font-size:11px;display:grid;place-items:center}
+.board table{border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid rgba(20,28,42,.12);max-width:1200px;width:100%}
+.board th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+.board td{padding:7px 10px;border-bottom:1px solid rgba(20,28,42,.12);vertical-align:top}
+.board td.old{color:#b91c1c}.board td.new{color:#15803d}
+
+/* ── Lešenie rámu: zjednodušená hlavička a hlavná lišta (z AppShell) ────── */
+body.frame{margin:0;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+.x-hdr{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;height:56px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.x-logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.x-ask{flex:1;max-width:560px;height:38px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;overflow:hidden}
+.x-sp{flex:1}.x-av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.x-main{flex:1;padding:var(--pad-main)}
+.x-tabbar{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px 18px}
+.x-tabbar span{display:grid;justify-items:center;gap:3px;font-size:10.5px;color:var(--muted);min-height:44px;align-content:center}
+.x-tabbar span::before{content:"";width:22px;height:22px;border-radius:6px;background:var(--surface-2)}
+.x-tabbar span.on{color:var(--accent);font-weight:600}
+@media (min-width:640px){.x-tabbar{display:none}}
+body:has(.ask-scope[open]) .x-tabbar{display:none}
+
+/* ── ODCHÝLKA O1: výber zdrojov ako plachta / popover (pozri .md) ───────── */
+.ask-scope > summary{list-style:none;cursor:pointer}
+.ask-scope > summary::-webkit-details-marker{display:none}
+.ask-scope{position:relative;justify-self:start}
+@media (min-width:640px){
+  .ask-scope .ask-scrim{display:none}
+  .ask-scope .filter-sheet-body{position:absolute;left:0;right:auto;bottom:auto;top:calc(100% + 4px);z-index:5;width:360px;max-width:calc(100vw - 40px);max-height:none;padding:12px;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(20,28,42,.14)}
+  .ask-scope .sheet-grip{display:none}
+  .ask-scope .filter-sheet-apply{position:static;min-height:var(--control-h)}
+}
+/* ── ODCHÝLKA O2: .lnote s tlačidlom ──────────────────────────────────────── */
+.lnote--action{align-items:center;flex-wrap:wrap}
+.lnote--action .lnote-text{flex:1 1 220px}
+</style>
+</head>
+<body>
+<script>
+(function(){
+const P=new URLSearchParams(location.search);
+const F=P.get('f');
+const SRC={library:{n:'Knižnica',g:'Knižnice',sub:'Dokumenty organizácie v Contineo'},sportnet:{n:'Sportnet dokumentácia',g:'Sportnet dokumentácie',sub:'Živý zdroj — hľadá sa priamo v ňom, obsah neprešiel kurátorom'}};
+const ALL=['library','sportnet'];
+const STATES={
+  default:{asked:['library'],pending:['library']},
+  sheet:{asked:['library'],pending:['library','sportnet'],open:true},
+  changed:{asked:['library'],pending:['library','sportnet']},
+  running:{asked:['library','sportnet'],pending:['library','sportnet'],running:true},
+  both:{asked:['library','sportnet'],pending:['library','sportnet']},
+  nolive:{asked:['library'],pending:['library'],nolive:true}
+};
+const same=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
+const join=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' a '+a[a.length-1];
+const label=p=>p.length===ALL.length?'všetky':p.length===1?SRC[p[0]].n:p.length+' z '+ALL.length;
+function kicker(s){
+  if(s.nolive) return 'Odpoveď z dokumentov SFZ';
+  const g=s.asked.map(x=>SRC[x].g);
+  return (s.asked[0]==='sportnet'?'Odpoveď zo ':'Odpoveď z ')+join(g);
+}
+function noteText(asked){
+  const g=asked.map(x=>SRC[x].g);
+  return 'Zdroje sa zmenili. Odpoveď nižšie je '+(asked.length===1?'len ':'')+(asked[0]==='sportnet'?'zo ':'z ')+join(g)+'.';
+}
+
+if(!F){ board(); return; }
+frame();
+
+function frame(){
+  document.body.className='frame';
+  if(P.get('theme')==='dark') document.documentElement.dataset.theme='dark';
+  const s=Object.assign({},STATES[F]||STATES.default);
+  if(P.get('src')){ s.asked=P.get('src').split(',').filter(x=>SRC[x]); s.pending=s.asked.slice(); }
+  const q='Ako zapíšem striedanie hráča do zápisu o stretnutí?';
+  const live=s.asked.includes('sportnet');
+  const lib=s.asked.includes('library');
+  const cites=[];
+  if(lib){cites.push(['Striedanie hráča zaznamená delegát stretnutia do zápisu bezodkladne po prerušení hry, v ktorom k nemu došlo.','Súťažný poriadok futbalu · čl. 52 ods. 3 · znenie od 1. 7. 2026',1]);
+          cites.push(['Dodatočnú opravu údajov v zápise o stretnutí potvrdzuje rozhodca stretnutia.','Súťažný poriadok futbalu · čl. 54 ods. 1 · znenie od 1. 7. 2026',1]);}
+  if(live) cites.push(['Striedanie zadáte v karte Priebeh stretnutia tlačidlom Striedanie. Bez pripojenia sa záznam uloží v zariadení.','Sportnet dokumentácia · Elektronický zápis › Striedanie',0]);
+  const c=n=>'<button type="button" class="cite" data-cite="'+n+'">'+n+'</button>';
+  let paras=[];
+  if(lib){paras.push('Striedanie zapisuje do elektronického zápisu delegát stretnutia, a to hneď po prerušení hry, v ktorom striedanie prebehlo.'+c(1));
+          paras.push('V zápise sa uvedie minúta, hráč, ktorý odchádza, a hráč, ktorý nastupuje. Opravu zápisu po stretnutí potvrdzuje rozhodca.'+c(2));}
+  if(live) paras.push('V Sportnete sa striedanie zadáva v karte Priebeh stretnutia tlačidlom Striedanie; bez pripojenia sa záznam uloží a odošle po obnovení spojenia.'+c(lib?3:1));
+  let shownCites=cites;
+  if(s.running){ paras=[paras[0].replace(/<button.*$/,'').split(' ').slice(0,11).join(' ')]; shownCites=cites.slice(0,0); }
+
+  const rows=ALL.map(id=>'<label class="form-row select-row"><input type="checkbox" name="src" value="'+id+'"'+(s.pending.includes(id)?' checked':'')+' /><span class="form-row-main"><span>'+SRC[id].n+'</span><span class="form-row-sub">'+SRC[id].sub+'</span></span></label>').join('');
+  let scope='';
+  if(!s.nolive){
+    scope = s.running
+      ? '<div class="ask-scope"><button type="button" class="button button--quiet button--sm" disabled aria-disabled="true">Zdroje: '+label(s.pending)+' ▾</button></div>'
+      : '<details class="ask-scope"'+(s.open?' open':'')+'>'+
+          '<summary class="button button--quiet button--sm" aria-haspopup="dialog">Zdroje: <span data-label>'+label(s.pending)+'</span> ▾</summary>'+
+          '<div class="ask-scrim" data-close></div>'+
+          '<form class="filter-sheet-body" method="get" action="/ask" role="dialog" aria-label="Zdroje hľadania">'+
+            '<div class="sheet-grip" aria-hidden="true"></div>'+
+            '<div class="sheet-h"><strong>Zdroje hľadania</strong><a class="sheet-clear" href="#" data-close>Zavrieť</a></div>'+
+            '<input type="hidden" name="q" value="'+q+'" />'+
+            '<fieldset class="form-group"><legend class="form-group-head">Hľadať v</legend>'+
+              '<div class="card form-group-body form-group-body--rows"><div class="form-list">'+rows+'</div></div>'+
+              '<p class="form-group-foot quiet" data-foot>Zmena sa prejaví, až keď sa opýtate znova.</p>'+
+            '</fieldset>'+
+            '<button class="button filter-sheet-apply" type="submit" data-submit>Opýtať sa znova</button>'+
+          '</form>'+
+        '</details>';
+  }
+  const note = s.nolive||s.running?'':
+    '<div class="lnote lnote--info lnote--action" role="status" data-note'+(same(s.pending,s.asked)||s.open?' hidden':'')+'>'+
+      '<span class="lnote-mark" aria-hidden="true">!</span><span class="lnote-text">'+noteText(s.asked)+'</span>'+
+      '<button type="button" class="button button--sm" data-reask>Opýtať sa znova</button></div>';
+
+  const citeHtml = shownCites.length?shownCites.map((x,i)=>'<li class="answer-citation" data-cite="'+(i+1)+'"><span class="answer-citation-n" aria-hidden="true">'+(i+1)+'</span><div class="answer-citation-body"><q class="answer-citation-text">'+x[0]+'</q><div class="answer-citation-meta">'+x[1]+'</div>'+(x[2]?'<a class="answer-citation-open" href="#">Otvoriť v knižnici</a>':'')+'</div></li>').join(''):'';
+  const aside='<aside class="ask-aside"><div class="answer-aside"><section class="answer-aside-section"><h2 class="answer-aside-title">Doslovné citácie ('+shownCites.length+')</h2><ol class="answer-citations">'+citeHtml+'</ol>'+(s.running?'<div class="answer-citations-pending">Citácie pribudnú počas písania</div>':'')+'</section></div></aside>';
+
+  document.body.innerHTML=
+    '<header class="x-hdr"><span class="x-logo"></span><span class="x-ask">'+q+'</span><span class="x-sp"></span><span class="x-av"></span></header>'+
+    '<main class="x-main"><div class="ask-page"><div class="ask-layout is-split">'+
+      '<div class="ask-main">'+
+        '<div class="ask-asked"><h1 class="ask-asked-title">'+q+'</h1>'+
+          '<div class="ask-asked-meta"><label class="ask-edit"><svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.8 3.2l3 3L6.6 14.4H3.6v-3z"/></svg>Upraviť otázku</label><span class="quiet">Opýtali ste sa o 18:08</span></div>'+
+          scope+
+        '</div>'+
+        note+
+        '<div class="card"><div class="answer-head"><span class="answer-mark" aria-hidden="true"></span><span class="answer-kicker">'+kicker(s)+'</span><span class="answer-time">K dnešku, 23. 10. 2026</span></div>'+
+          '<div class="answer'+(s.running?' caret':'')+'">'+paras.map(p=>'<p>'+p+'</p>').join('')+'</div></div>'+
+      '</div>'+aside+
+    '</div></div></main>'+
+    '<nav class="x-tabbar" aria-hidden="true"><span>Prehľad</span><span class="on">Opýtať sa</span><span>Dokumenty</span><span>Viac</span></nav>';
+
+  const d=document.querySelector('.ask-scope');
+  if(!d||s.running){ if(s.running&&P.get('auto')) setTimeout(()=>{location.search='?f=both&src='+s.asked.join(',')+(P.get('theme')?'&theme='+P.get('theme'):'')},2600); return; }
+  if(d.tagName!=='DETAILS') return;
+  const noteEl=document.querySelector('[data-note]');
+  const pend=()=>[...d.querySelectorAll('input[name=src]:checked')].map(i=>i.value);
+  const sync=()=>{
+    const p=pend();
+    d.querySelector('[data-label]').textContent=p.length?label(p):'žiadne';
+    d.querySelector('[data-submit]').disabled=!p.length;
+    d.querySelector('[data-foot]').textContent=p.length?'Zmena sa prejaví, až keď sa opýtate znova.':'Vyberte aspoň jeden zdroj.';
+    if(noteEl) noteEl.hidden=d.open||!p.length||same(p,s.asked);
+  };
+  d.addEventListener('change',sync);
+  d.addEventListener('toggle',sync);
+  d.querySelectorAll('[data-close]').forEach(x=>x.addEventListener('click',e=>{e.preventDefault();d.open=false;}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')d.open=false;});
+  const go=()=>{const p=pend(); if(!p.length) return; location.search='?f=running&auto=1&src='+p.join(',')+(P.get('theme')?'&theme='+P.get('theme'):'');};
+  d.querySelector('form').addEventListener('submit',e=>{e.preventDefault();go();});
+  const r=document.querySelector('[data-reask]'); if(r) r.addEventListener('click',go);
+  sync();
+}
+
+function board(){
+  document.body.className='board';
+  const fr=(f,w,h,t)=>'<div><p class="cap">'+w+' px'+(t?' · tmavá':'')+'</p><iframe src="?f='+f+(t?'&theme=dark':'')+'" width="'+w+'" height="'+h+'" title="'+f+' '+w+'"></iframe></div>';
+  const trio=(f,t)=>fr(f,390,844,t)+fr(f,834,1000,t)+fr(f,1440,820,t);
+  const sec=(n,f,title,notes,extra)=>'<section class="sec" id="'+f+'"><p class="sec-h">Stav '+n+'</p><h2 class="sec-t">'+title+'</h2><div class="row">'+trio(f)+'</div>'+(extra||'')+'<div class="notes">'+notes.map((x,i)=>'<p><b class="n">'+(i+1)+'</b><span>'+x+'</span></p>').join('')+'</div></section>';
+  document.body.innerHTML='<div class="sheet">'+
+    '<h1>ASK — zdroje hľadania</h1>'+
+    '<p class="doc">Obrazovka odpovede <code>/ask</code>. Výber, kde sa hľadá (Knižnica a živé zdroje organizácie, ADR-029), pod otázkou. Popis, otázky Q1–Q3 a odchýlky v <code>ASK-zdroje-hladania.md</code>. Rámy sú živé: zaškrtnite zdroj, zavrite plachtu, opýtajte sa znova.</p>'+
+    '<section class="sec"><p class="sec-h">Čo sa mení</p><table><tr><th>Prvok</th><th>Dnes</th><th>Návrh</th></tr>'+
+      '<tr><td>Ovládač</td><td class="old"><code>.view-switch</code> s tlačidlami Knižnica · Sportnet dokumentácia</td><td class="new">tiché tlačidlo „Zdroje: Knižnica ▾" → plachta s <code>.form-row.select-row</code> (natívne checkboxy)</td></tr>'+
+      '<tr><td>Zmena zdroja</td><td class="old">každý klik položí otázku znova (volanie modelu)</td><td class="new">nič nespúšťa; odpoveď zostáva, nad ňou <code>.lnote--info</code> s „Opýtať sa znova"</td></tr>'+
+      '<tr><td>Hlavička odpovede</td><td class="old">podľa zapnutých piluliek — po prepnutí pred odpoveďou by klamala</td><td class="new">podľa zdrojov, z ktorých odpoveď <b>naozaj je</b> („Odpoveď z Knižnice a Sportnet dokumentácie")</td></tr>'+
+      '<tr><td>Adresa</td><td class="old"><code>?src=</code> sa zapíše pri každom kliknutí</td><td class="new"><code>?src=library,&lt;id&gt;</code> až odoslaním „Opýtať sa znova" (GET, funguje bez JS)</td></tr>'+
+    '</table></section>'+
+    sec(1,'default','Predvolene — len Knižnica',['Ovládač je pod riadkom „Upraviť otázku · Opýtali ste sa o 18:08", tiché <code>.button--quiet.button--sm</code>; na telefóne 44 px (pravidlo <code>.button--sm</code> pod 640 px).','Hodnota v tlačidle hovorí, čo je zapnuté — vzor SwiftUI <code>Menu</code> / <code>Picker(.menu)</code>: popis a aktuálna hodnota. Viac zdrojov: „všetky" alebo „2 z 3".','Predvolený výber = Knižnica + konektory s „používať predvolene" (Ján 8. 10. 2026). Tu má Sportnet predvolené vypnuté.']) +
+    sec(2,'sheet','Plachta otvorená — človek pridal Sportnet',['Pod 640 px spodná plachta (<code>.filter-sheet-body</code>, <code>.sheet-grip</code>, <code>.sheet-h</code>) nad <code>.ask-scrim</code>; hlavná lišta sa skryje. Od 640 px rovnaký obsah ako popover pod tlačidlom (odchýlka O1).','Karta riadkov <code>.form-group</code> &gt; <code>.form-row.select-row</code> — niekoľko zo zoznamu = kruh vľavo, natívny <code>checkbox name="src"</code>.','Jediné plné tlačidlo „Opýtať sa znova" (<code>.filter-sheet-apply</code>). Kým je plachta otvorená, oznam nad odpoveďou sa nekreslí — plné je len jedno.','Bez JavaScriptu: <code>&lt;details&gt;</code> + <code>&lt;form method="get" action="/ask"&gt;</code> s <code>q</code> a <code>src</code>; server prijme <code>src</code> opakovane aj čiarkami.','Odškrtnutý posledný zdroj: tlačidlo nedostupné, pod kartou „Vyberte aspoň jeden zdroj." Checkbox sa nezamyká (zamknutý by sa neodoslal).'], '<div class="row" style="margin-top:20px">'+fr('sheet',390,844,1)+fr('sheet',1440,820,1)+'</div>') +
+    sec(3,'changed','Zdroje zmenené, ešte sa nepýtal',['Plachta zatvorená bez opýtania: tlačidlo ukazuje nový výber, odpoveď je stará. <code>.lnote.lnote--info</code> to povie a ponúkne „Opýtať sa znova" — jediné plné tlačidlo na obrazovke.','Hlavička odpovede ostáva „Odpoveď z Knižnice" — menuje, odkiaľ odpoveď je, nie čo je zaškrtnuté.','Návrat k pôvodnému výberu oznam skryje. Adresa sa nemení (Q2).'], '<div class="row" style="margin-top:20px">'+fr('changed',390,844,1)+fr('changed',1440,820,1)+'</div>') +
+    sec(4,'running','Počas písania odpovede',['Výber je nedostupný (<code>disabled</code>) — beh sa nedá zmeniť uprostred, iba prerušiť novou otázkou v hlavičke.','Hlavička už menuje oba zdroje, z ktorých sa práve odpovedá. Rám sa po chvíli prepne na stav 5.']) +
+    sec(5,'both','Po opýtaní s oboma zdrojmi',['„Odpoveď z Knižnice a Sportnet dokumentácie" (<code>answerKicker</code>, spojka „a" ako dnes).','Citácia zo živého zdroja nemá „Otvoriť v knižnici" (ako dnes). Adresa po zápise <code>/ask/a/{id}</code>.']) +
+    sec(6,'nolive','Organizácia bez živého zdroja',['Ovládač sa nekreslí — jediná voľba nie je voľba (ako „podmenu s jedinou položkou sa nekreslí").','Hlavička ostáva „Odpoveď z dokumentov SFZ" (Q3).']) +
+  '</div>';
+}
+})();
+</script>
+</body></html>

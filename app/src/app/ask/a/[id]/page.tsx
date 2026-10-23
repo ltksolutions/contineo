@@ -99,7 +99,8 @@ export default async function SavedAnswerPage({ params }: { params: Promise<{ id
             <div className="ask-asked">
               <h1 className="ask-asked-title">{record.question}</h1>
             </div>
-            <AnswerBody state={state} organisation={short} language={language} />
+            {/* V čom sa hľadalo (ASK-zdroje-hladania); starší záznam bez neho → z obsahu. */}
+            <AnswerBody state={state} organisation={short} language={language} scope={record.searchedScope} />
           </div>
           <aside className="ask-aside">
             <AnswerAside state={state} canEvaluate={canEvaluate} language={language} />

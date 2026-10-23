@@ -16,6 +16,7 @@
  */
 
 import { sanitizeQueryTime } from "@/lib/queryTime"
+import { sanitizeSearchedScope } from "@/lib/askScope"
 import { NextRequest, NextResponse } from "next/server"
 import { recordAnswer, saveVerdict, saveReaderFeedback } from "@/lib/ratings"
 import type { NewRating, RatingEdit, ReaderFeedback, Verdict } from "@/lib/ratings"
@@ -104,6 +105,7 @@ export async function POST(req: NextRequest) {
         tokens: body.tokens,
         cost: body.cost,
         time: sanitizeQueryTime(body.time),
+        searchedScope: sanitizeSearchedScope(body.searchedScope),
       },
       who.person.id,
       who.companyCode,

@@ -26,6 +26,12 @@ import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import Rating from "./Rating"
 import { HEADER_ASK_ID } from "./HeaderAsk"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { answerFrom } from "@/lib/answerKicker"
+
+/** Id zdrojov → knižnica a názvy živých zdrojov (hlavička, oznam, uložený záznam). */
+function scopeOf(ids: string[], liveSources: { id: string; name: string }[] | undefined) {
+  return { library: ids.includes("library"), live: (liveSources ?? []).filter(l => ids.includes(l.id)).map(l => l.name) }
+}
 
 const EMPTY: AnswerState = {
   question: "", text: "", citations: [], done: null, running: false,
@@ -55,8 +61,8 @@ export default function Search({
   language?: UiLanguage
   /**
    * Živé zdroje, ktoré sa pri otázke volajú popri knižnici (ADR-029).
-   * Pilulky rozsahu sa kreslia, len keď je čo prepínať — s prázdnym
-   * zoznamom je vstup jediný a štyri tlačidlá by nič nemenili.
+   * Výber zdrojov sa kreslí, len keď je čo vyberať — s prázdnym zoznamom
+   * je vstup jediný a jediná voľba nie je voľba.
    */
   liveSources?: { id: string; name: string; defaultOn?: boolean }[]
   /** Rozsah z adresy (`?src=`); prázdny = knižnica a zdroje s „používať predvolene". */
@@ -65,13 +71,19 @@ export default function Search({
   const t = dictionary(language).ask
   const [state, setState] = useState<AnswerState>(EMPTY)
   /**
-   * Rozsah z piluliek: `"library"` a id konektorov — vždy výslovný zoznam.
-   * Predvolene len knižnica a konektory s „používať predvolene" (Ján
-   * 8. 10. 2026); čo sa hľadá, má byť vidieť ešte pred odpoveďou.
+   * Rozsah: `"library"` a id konektorov — vždy výslovný zoznam. Predvolene
+   * len knižnica a konektory s „používať predvolene" (Ján 8. 10. 2026).
+   *
+   * Dva stavy (ASK-zdroje-hladania, 23. 10. 2026): `pending` je výber
+   * v plachte a **nič nespúšťa** — každé opýtanie je volanie modelu;
+   * `askedScope` sú zdroje, s ktorými sa naozaj pýtalo, a nesie ich
+   * hlavička odpovede. Keď sa líšia, nad odpoveďou je oznam.
    */
-  const [only, setOnly] = useState<string[]>(() =>
-    initialScope?.length ? initialScope : ["library", ...(liveSources ?? []).filter(l => l.defaultOn).map(l => l.id)],
-  )
+  const initial = initialScope?.length ? initialScope : ["library", ...(liveSources ?? []).filter(l => l.defaultOn).map(l => l.id)]
+  const [pending, setPending] = useState<string[]>(initial)
+  const [askedScope, setAskedScope] = useState<string[]>(initial)
+  const [open, setOpen] = useState(false)
+  const scopeRef = useRef<HTMLDetailsElement>(null)
   /** Kedy sa beh spustil — „Opýtali ste sa o 10:42". Len v prehliadači. */
   const [askedAt, setAskedAt] = useState<Date | null>(null)
   const [recordId, setRecordId] = useState<string | null>(null)
@@ -84,7 +96,7 @@ export default function Search({
    * spočítať aj z neposúdených odpovedí. Keby sa záznam zakladal až pri
    * kliknutí na hodnotenie, prišli by sme o dáta z každej preskočenej otázky.
    */
-  async function record(q: string, v: AskResult) {
+  async function record(q: string, v: AskResult, scope: string[]) {
     try {
       const r = await fetch("/api/rating", {
         method: "POST",
@@ -102,6 +114,8 @@ export default function Search({
           verifiedCitations: v.verifiedCitations,
           ttftMs: v.ttftMs, totalMs: v.totalMs, timings: v.timings,
           tokens: v.tokens, cost: v.cost, time: v.time,
+          // V čom sa hľadalo — uložená odpoveď ho menuje rovnako ako táto (Q3, A 23. 10.).
+          searchedScope: scopeOf(scope, liveSources),
         }),
       })
       if (!r.ok) return
@@ -122,9 +136,10 @@ export default function Search({
     }
   }
 
-  async function send(text: string, scope: string[] = only) {
+  async function send(text: string, scope: string[] = askedScope) {
     const q = text.trim()
     if (!q) return
+    setAskedScope(scope)
 
     abort.current?.abort()
     const ctrl = new AbortController()
@@ -141,7 +156,7 @@ export default function Search({
         { signal: ctrl.signal, language, only: scope }
       )
       setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time, comparison: v.comparison })
-      if (!v.error && v.text) void record(q, v)
+      if (!v.error && v.text) void record(q, v, scope)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.
       if ((e as Error)?.name === "AbortError") return
@@ -171,26 +186,53 @@ export default function Search({
   const time = askedAt?.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })
 
   /*
-   * Pilulky rozsahu (ADR-029): knižnica a každý živý zdroj zvlášť. Prepnutie
-   * položí otázku znova v novom rozsahu — iný rozsah je iná odpoveď, nie
-   * filter nad tou istou. Aspoň jedna ostáva zapnutá.
+   * Výber zdrojov (ADR-029, ASK-zdroje-hladania). Zmena v plachte mení len
+   * `pending`; opýtať sa znova je jediné, čo volá model. Adresa `?src=`
+   * vzniká až odoslaním (Q2) — `replaceState` pri každom kliknutí by po
+   * obnovení stránky položil otázku znova a zaplatil druhé volanie.
    */
   const scopeIds = ["library", ...(liveSources ?? []).map(l => l.id)]
-  const isOn = (id: string) => only.includes(id)
-  const toggleScope = (id: string) => {
-    const scope = scopeIds.filter(x => (x === id ? !isOn(x) : isOn(x)))
-    if (scope.length === 0) return
-    setOnly(scope)
-    // Voľba do adresy, aby prežila obnovenie a dala sa poslať odkazom.
+  const sourceName = (id: string) => (id === "library" ? t.scopeLibrary : liveSources?.find(l => l.id === id)?.name ?? id)
+  const sameScope = (a: string[], b: string[]) => a.length === b.length && a.every(x => b.includes(x))
+  // Zdroje sa menujú, neskrývajú za „všetky" ani „2 z 3" — má byť jasné,
+  // v čom sa hľadá (Ján 23. 10. 2026).
+  const scopeValue = pending.length === 0 ? t.scopeNone : pending.map(sourceName).join(", ")
+  const togglePending = (id: string) =>
+    setPending(p => scopeIds.filter(x => (x === id ? !p.includes(x) : p.includes(x))))
+  const reask = () => {
+    if (pending.length === 0) return
+    setOpen(false)
     try {
       const u = new URL(window.location.href)
       u.pathname = "/ask"
+      u.search = ""
       u.searchParams.set("q", preset)
-      u.searchParams.set("src", scope.join(","))
+      u.searchParams.set("src", pending.join(","))
       window.history.replaceState(null, "", u.toString())
     } catch { /* bez adresy sa dá žiť — rozsah je v stave */ }
-    void send(preset, scope)
+    void send(preset, pending)
   }
+  const scopeChanged = !open && !state.running && pending.length > 0 && !sameScope(pending, askedScope)
+
+  // Esc zavrie plachtu a vráti fokus na tlačidlo; od 640 px ju zavrie aj
+  // klik mimo nej (popover nemá závoj).
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      setOpen(false)
+      scopeRef.current?.querySelector("summary")?.focus()
+    }
+    const onDown = (e: PointerEvent) => {
+      if (!scopeRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("keydown", onKey)
+    document.addEventListener("pointerdown", onDown)
+    return () => {
+      document.removeEventListener("keydown", onKey)
+      document.removeEventListener("pointerdown", onDown)
+    }
+  }, [open])
 
   /*
    * Prepojenie značiek `[n]` v texte s citáciami (ASK-odpoved-dva-stlpce).
@@ -261,22 +303,56 @@ export default function Search({
           </label>
           {time && <span className="quiet">{t.askedAt(time)}</span>}
         </div>
-        {liveSources && liveSources.length > 0 && (
-          <nav className="view-switch ask-scope" aria-label={t.scopeLabel}>
-            {[{ id: "library", name: t.scopeLibrary }, ...liveSources].map(l => (
-              <button
-                key={l.id}
-                type="button"
-                className={`view-switch-item${isOn(l.id) ? " is-on" : ""}`}
-                aria-pressed={isOn(l.id)}
-                disabled={state.running}
-                onClick={() => toggleScope(l.id)}
-              >
-                {l.name}
-              </button>
-            ))}
-          </nav>
-        )}
+        {/*
+          Výber zdrojov (ASK-zdroje-hladania, Q1 A): tiché tlačidlo s hodnotou
+          a plachta s riadkami výberu (`.select-row`) — vzor SwiftUI `Menu`
+          s `Toggle`. Pod 640 px spodná plachta, od 640 px popover
+          (`.ask-scope-pop`). Bez JavaScriptu je to `<details>` + GET
+          formulár, ktorý odošle `q` a `src`. Počas písania sa výber nemení.
+        */}
+        {liveSources && liveSources.length > 0 && (state.running ? (
+          <div className="ask-scope">
+            <button type="button" className="button button--quiet button--sm" disabled>{`${t.scopeButton(scopeValue)} ▾`}</button>
+          </div>
+        ) : (
+          <details ref={scopeRef} className="ask-scope" open={open} onToggle={e => setOpen(e.currentTarget.open)}>
+            <summary className="button button--quiet button--sm" aria-haspopup="dialog">{`${t.scopeButton(scopeValue)} ▾`}</summary>
+            <div className="ask-scrim ask-scope-scrim" aria-hidden="true" onClick={() => setOpen(false)} />
+            <form
+              className="filter-sheet-body ask-scope-pop"
+              method="get"
+              action="/ask"
+              role="dialog"
+              aria-label={t.scopeTitle}
+              onSubmit={e => { e.preventDefault(); reask() }}
+            >
+              <div className="sheet-grip" aria-hidden="true" />
+              <div className="sheet-h">
+                <strong>{t.scopeTitle}</strong>
+                <button type="button" className="sheet-clear" onClick={() => setOpen(false)}>{t.scopeClose}</button>
+              </div>
+              <input type="hidden" name="q" value={preset} />
+              <fieldset className="form-group">
+                <legend className="form-group-head">{t.scopeLabel}</legend>
+                <div className="card form-group-body form-group-body--rows">
+                  <div className="form-list">
+                    {scopeIds.map(id => (
+                      <label key={id} className="form-row select-row">
+                        <input type="checkbox" name="src" value={id} checked={pending.includes(id)} onChange={() => togglePending(id)} />
+                        <span className="form-row-main">
+                          <span>{sourceName(id)}</span>
+                          <span className="form-row-sub">{id === "library" ? t.scopeLibrarySub : t.scopeLiveSub}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <p className="form-group-foot quiet">{pending.length ? t.scopeFoot : t.scopeEmpty}</p>
+              </fieldset>
+              <button className="button filter-sheet-apply" type="submit" disabled={pending.length === 0}>{t.reask}</button>
+            </form>
+          </details>
+        ))}
       </div>
 
       {/*
@@ -300,8 +376,17 @@ export default function Search({
         </div>
       )}
 
-      <AnswerBody state={state} organisation={organisation} language={language}
-                  scope={{ library: only.includes("library"), live: (liveSources ?? []).filter(l => only.includes(l.id)).map(l => l.name) }} />
+      {/* Výber ≠ zdroje zobrazenej odpovede (ASK-zdroje-hladania, bod 4). Kým je
+          plachta otvorená, oznam nie je — plné tlačidlo má byť jedno. */}
+      {scopeChanged && (
+        <div className="lnote lnote--info lnote--action ask-scope-note" role="status">
+          <span className="lnote-mark" aria-hidden="true">!</span>
+          <span className="lnote-text">{t.scopeChanged(answerFrom(scopeOf(askedScope, liveSources), organisation, language), askedScope.length === 1)}</span>
+          <button type="button" className="button button--sm" onClick={reask}>{t.reask}</button>
+        </div>
+      )}
+
+      <AnswerBody state={state} organisation={organisation} language={language} scope={scopeOf(askedScope, liveSources)} />
       </div>
 
       {/* Vpravo od karty (≥ 1180 px), inak pod ňou — poradie určuje CSS mriežka. */}

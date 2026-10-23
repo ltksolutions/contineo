@@ -97,6 +97,13 @@ export interface RatingRecord {
   cost?: Cost
   /** Ku ktorému dňu sa odpovedalo (krok 6 „znení v indexe"). Chýba pri starších záznamoch. */
   time?: QueryTime
+  /**
+   * V čom sa hľadalo: knižnica a **názvy** živých zdrojov (ASK-zdroje-hladania,
+   * Ján 23. 10. 2026 — hlavička menuje, v čom sa hľadalo, aj keď z niektorého
+   * zdroja nič neprišlo). Kópia názvu, nie id: o rok má byť čitateľné, aj keď
+   * konektor zmizne. Starší záznam pole nemá — zdroje sa odvodia z obsahu.
+   */
+  searchedScope?: { library: boolean; live: string[] }
 
   // To, čo vie povedať len človek (D9, kapitola 3).
   correct: Verdict
@@ -225,6 +232,13 @@ export interface NewRating {
    * o stave k dátumu, na ktorý sa niekto pýtal.
    */
   time?: QueryTime
+  /**
+   * V čom sa hľadalo: knižnica a **názvy** živých zdrojov (ASK-zdroje-hladania,
+   * Ján 23. 10. 2026 — hlavička menuje, v čom sa hľadalo, aj keď z niektorého
+   * zdroja nič neprišlo). Kópia názvu, nie id: o rok má byť čitateľné, aj keď
+   * konektor zmizne. Starší záznam pole nemá — zdroje sa odvodia z obsahu.
+   */
+  searchedScope?: { library: boolean; live: string[] }
 }
 
 /** Polia, ktoré smie hodnotiteľ meniť. Nič iné sa cez API prepísať nedá. */

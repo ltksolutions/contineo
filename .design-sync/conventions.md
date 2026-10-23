@@ -73,6 +73,12 @@ sú len doplnok. Texty sú po slovensky.
   a odkazom „Zrušiť". Žiadne modálne okno.
 - Hláška v obsahu: `div.lnote` (+ `.lnote--warn` / `.lnote--bad`) > `span.lnote-mark` („!", „✓")
   + `span.lnote-text`. Nie `.notice` (to je modálne okno).
+  S akciou: `.lnote.lnote--action` + `button.button.button--sm` za textom (zalomí sa pod text).
+- Krátky výber nad obrazovkou (popover): `<details>` > `summary.button.button--quiet.button--sm`
+  s hodnotou („Zdroje: Knižnica ▾") + `form.filter-sheet-body.ask-scope-pop` s `.sheet-h`,
+  riadkami `.form-row.select-row` a jediným plným `button.filter-sheet-apply`. Pod 640 px
+  spodná plachta nad `.ask-scrim`, od 640 px popover 360 px pod tlačidlom. Zmena výberu
+  nič nespúšťa, akcia je až tlačidlo.
 - Nástroje v hlavičke: `.page-head` > `.page-head-main` (`h1.page-title` + `p.page-lead`)
   + `.page-tools` (tiché tlačidlá, hlavná akcia posledná).
 - Jediná výnimka z „`.view-switch` do formulára nepatrí": áno/nie s významom v posudku je
