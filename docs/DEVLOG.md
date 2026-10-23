@@ -29,6 +29,39 @@ Testy pri vyťaženom stroji len s `--testTimeout=30000`.
 
 ---
 
+
+## 2026-10-18 – 23 — kontrola manuálov nanovo: potvrdenie, koncept, kontext (#398–#403, #419)
+
+**Čo sa zmenilo:** 42 návrhov z helpdesku sme 18. 10. rozhodli a zapísali
+do konceptov. Potom Ján kliknutím na „Navrhnúť doplnenie manuálov" omylom
+spustil dva ďalšie platené behy a v zozname bolo sedem kariet, štyri
+s rovnakým názvom: „už sa v tom nevyznám". Z toho vzniklo **ADR-036**:
+spustenie len po rekapitulácii s odhadom ceny, zastavenie kola, zrušenie
+ako archív (#401); všetkých sedem kontrol manuálov je zrušených
+a prestavbu zoznamu na kontroly s kolami dokončila druhá session (#402,
+dodatok D239). Popri tom: dlhý odsek a zoznam sa delia na úseky (#398,
+príloha č. 4a RaPP z 3 909 na 1 323 tokenov), „Uložiť a ďalší" pri
+dokumente s dvojbodkou a editor nálezu v Markdowne (#399), náhľad
+Markdownu v záložke (#400), podnet pre legislatívu (štyri rozpory RaPP
+a Stanov s praxou ISSF, Word pre LPO).
+
+**Čo nevyšlo:** prvé kolo novej kontroly (3,94 USD) preverilo
+**zverejnené** znenia manuálov, nie koncepty s doplneniami — kód bral
+koncept len pri dokumente bez platného znenia; 11. 10. to fungovalo, lebo
+manuály ešte zverejnené neboli. Opravené **D240** (#403), kolo 2 (41
+nálezov, 2,28 USD) už nad konceptmi. Pri delení veľkých úsekov som
+najprv opravil tabuľky; porovnanie na normách ukázalo nulovú zmenu —
+veľké úseky boli vzor zmluvy v dlhých odsekoch a zoznam v čl. 17
+Pracovného poriadku. Bez `chunking:compare` by sa to ukázalo až
+v odpovediach asistenta.
+
+**Nabudúce:** rekapitulácia pred platenou akciou má ukazovať presne ten
+vstup, ktorý pôjde modelu (dnes „koncept / platné znenie" pri každom
+dokumente). Ján po 23. 10. rozhoduje nálezy s kolegami z oddelení — preto
+pri náleze celý odsek s okolím (#419), nie pol vety.
+
+---
+
 ## 2026-10-20 – 21 — Zákon o športe zo Slov-Lexu a Členenie veľkého dokumentu
 
 **Čo sa zmenilo:** Zákon č. 440/2015 Z. z. je v knižnici SFZ ako koncept
