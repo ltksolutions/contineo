@@ -26,6 +26,7 @@ import { PERSONS_COLLECTION, type Person } from "./persons"
 import { tenantByCompanyCode, brandingView } from "./tenants"
 import { send, complianceRequestEmail } from "./ecomail"
 import { normalizeLanguage } from "./i18n"
+import { ancestorsOf, childrenOf, parentsMapOf, type ParentsMap } from "./documentHierarchy"
 import { textFingerprint } from "./chunkIdentity"
 
 export class ComplianceRequestError extends AppError {}
@@ -111,21 +112,27 @@ export async function upToDateSinceCheck(code: string, documentId: string): Prom
 }
 
 /**
- * Hierarchia dokumentov ako väzby (ADR-034, D219): zverejnený dokument sa
- * kontroluje proti svojim záväzným predkom a jeho potomkovia proti nemu
- * (a ostatným svojim predkom). Jediný zdroj požiadaviek (D241).
+ * Riadky väzieb z hierarchie (čistá funkcia): zverejnený dokument proti
+ * svojim záväzným predkom a jeho **priamo podradené** dokumenty proti
+ * svojim záväzným predkom (ADR-036 D248, mení D241). Vnuci sa do požiadavky
+ * nedostanú — po novele zákona sa kontrolujú Stanovy, nie celá vetva
+ * (21 dokumentov vrátane manuálov ISSF, 23. 10. 2026); poriadky príde rad,
+ * keď sa po kontrole zmenia Stanovy.
  */
+export function hierarchyRequestRows(documentId: string, parents: ParentsMap, binding: Set<string>): { subjectId: string; referenceIds: string[] }[] {
+  return [documentId, ...childrenOf(documentId, parents)]
+    .map(id => ({ subjectId: id, referenceIds: ancestorsOf(id, parents).filter(r => binding.has(r)) }))
+    .filter(r => r.referenceIds.length > 0)
+}
+
+/** Hierarchia dokumentov ako väzby (ADR-034, D219) — jediný zdroj požiadaviek (D241, D248). */
 async function hierarchyLinkRows(code: string, documentId: string): Promise<{ subjectId: string; referenceIds: string[] }[]> {
-  const { ancestorsOf, descendantsOf, parentsMapOf } = await import("./documentHierarchy")
   const { documentRole } = await import("./codelists")
   const { tenantExtras } = await import("./codelistsTenant")
   const extras = tenantExtras((await tenantByCompanyCode(code)) ?? {})
   const docs = await (await getCollection(DOCUMENTS_COLLECTION)).find({ companyCode: code }, { projection: { _id: 0, documentId: 1, category: 1, parentIds: 1 } }).toArray() as unknown as { documentId: string; category?: string; parentIds?: string[] }[]
-  const map = parentsMapOf(docs)
   const binding = new Set(docs.filter(d => documentRole(d.category, extras) === "binding").map(d => d.documentId))
-  return [documentId, ...descendantsOf(documentId, map)]
-    .map(id => ({ subjectId: id, referenceIds: ancestorsOf(id, map).filter(r => binding.has(r)) }))
-    .filter(r => r.referenceIds.length > 0)
+  return hierarchyRequestRows(documentId, parentsMapOf(docs), binding)
 }
 
 async function titles(code: string, ids: string[]): Promise<string[]> {

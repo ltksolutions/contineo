@@ -39,6 +39,16 @@ export function ancestorsOf(documentId: string, parents: ParentsMap): string[] {
   return out
 }
 
+/**
+ * Priamo podradené — dokumenty, ktoré majú tento medzi nadradenými. Bez
+ * vnukov: Stanovy pod zákonom áno, poriadky pod Stanovami nie.
+ */
+export function childrenOf(documentId: string, parents: ParentsMap): string[] {
+  const out: string[] = []
+  for (const [child, ps] of parents) if (child !== documentId && ps.includes(documentId)) out.push(child)
+  return out
+}
+
 /** Všetci potomkovia — dokumenty, ktorým je tento nadradený (aj cez iné). */
 export function descendantsOf(documentId: string, parents: ParentsMap): string[] {
   const children = new Map<string, string[]>()
