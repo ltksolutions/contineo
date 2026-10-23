@@ -188,10 +188,9 @@ export default function Search({
   const sourceName = (id: string) => (id === "library" ? t.scopeLibrary : liveSources?.find(l => l.id === id)?.name ?? id)
   const toScope = (ids: string[]) => ({ library: ids.includes("library"), live: (liveSources ?? []).filter(l => ids.includes(l.id)).map(l => l.name) })
   const sameScope = (a: string[], b: string[]) => a.length === b.length && a.every(x => b.includes(x))
-  const scopeValue = pending.length === 0 ? t.scopeNone
-    : pending.length === 1 ? sourceName(pending[0])
-    : pending.length === scopeIds.length ? t.scopeAll
-    : t.scopeSome(pending.length, scopeIds.length)
+  // Zdroje sa menujú, neskrývajú za „všetky" ani „2 z 3" — má byť jasné,
+  // v čom sa hľadá (Ján 23. 10. 2026).
+  const scopeValue = pending.length === 0 ? t.scopeNone : pending.map(sourceName).join(", ")
   const togglePending = (id: string) =>
     setPending(p => scopeIds.filter(x => (x === id ? !p.includes(x) : p.includes(x))))
   const reask = () => {

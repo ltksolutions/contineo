@@ -819,8 +819,6 @@ interface Dictionary {
     scopeLibrary: string
     /** Tlačidlo výberu: „Zdroje: Knižnica ▾". */
     scopeButton: (value: string) => string
-    scopeAll: string
-    scopeSome: (n: number, m: number) => string
     scopeNone: string
     scopeTitle: string
     scopeLibrarySub: string
@@ -5505,8 +5503,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeLabel: "Hľadať v",
     scopeLibrary: "Knižnica",
     scopeButton: v => `Zdroje: ${v}`,
-    scopeAll: "všetky",
-    scopeSome: (n, m) => `${n} z ${m}`,
     scopeNone: "žiadne",
     scopeTitle: "Zdroje hľadania",
     scopeLibrarySub: "Dokumenty organizácie v Contineo",
@@ -10502,8 +10498,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeLabel: "Hledat v",
     scopeLibrary: "Knihovna",
     scopeButton: v => `Zdroje: ${v}`,
-    scopeAll: "všechny",
-    scopeSome: (n, m) => `${n} z ${m}`,
     scopeNone: "žádné",
     scopeTitle: "Zdroje hledání",
     scopeLibrarySub: "Dokumenty organizace v Contineo",
@@ -15490,8 +15484,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeLabel: "Search in",
     scopeLibrary: "Library",
     scopeButton: v => `Sources: ${v}`,
-    scopeAll: "all",
-    scopeSome: (n, m) => `${n} of ${m}`,
     scopeNone: "none",
     scopeTitle: "Search sources",
     scopeLibrarySub: "Your organisation’s documents in Contineo",

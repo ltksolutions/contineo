@@ -60,7 +60,7 @@ describe("Search: výber zdrojov", () => {
   })
   it("predvolený výber podľa „používať predvolene“ a z adresy", () => {
     const on = renderToString(createElement(Search, { ...props, liveSources: [{ id: "c1", name: "Sportnet", defaultOn: true }] }))
-    expect(on).toContain("Zdroje: všetky ▾")
+    expect(on).toContain("Zdroje: Knižnica, Sportnet ▾")
     const url = renderToString(createElement(Search, { ...props, liveSources: [{ id: "c1", name: "Sportnet" }], initialScope: ["c1"] }))
     expect(url).toContain("Zdroje: Sportnet ▾")
   })

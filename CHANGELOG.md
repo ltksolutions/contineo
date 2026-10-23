@@ -6,7 +6,8 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ### Opýtať sa: výber zdrojov bez automatického opýtania (2026-10-23, ASK-zdroje-hladania)
 
-- Pod otázkou je tiché tlačidlo „Zdroje: Knižnica ▾“. Otvorí plachtu (na
+- Pod otázkou je tiché tlačidlo „Zdroje: Knižnica ▾“ — zapnuté zdroje sú
+  v ňom vymenované, nie „všetky“. Otvorí plachtu (na
   telefóne zospodu, od 640 px pod tlačidlom) so zaškrtávacími riadkami
   Knižnica a živé zdroje a s tlačidlom „Opýtať sa znova“.
 - **Zmena zdrojov nič nespúšťa.** Odpoveď ostane a nad ňou je oznam
