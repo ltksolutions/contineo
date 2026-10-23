@@ -29,8 +29,7 @@ import { isRunning, documentRun, draftBase, currentWording, suggestOnCurrent, ru
 import { checkById, roundsOf } from "@/lib/complianceChecks"
 import {
   defaultDocument, filterFindings, findingAnchor, findingState, isFindingView, nextOpen, openCount, orderedFindings, runProgress,
-  roundDelta, roundTabs, roundState, type FindingView,
-} from "@/lib/complianceView"
+  roundDelta, roundTabs, roundState, type FindingView, findingContext } from "@/lib/complianceView"
 import { wordDiff, readableInline } from "@/lib/wordDiff"
 import { getCollection } from "@/lib/mongodb"
 import { PERSONS_COLLECTION, type Person } from "@/lib/persons"
@@ -51,6 +50,40 @@ function Diff({ before, after }: { before: string; after: string }) {
     <div className="pr-diff cf-diff">
       {wordDiff(readableInline(before), readableInline(after)).map((part, i) =>
         part.kind === "removed" ? <del key={i}>{part.text}</del> : part.kind === "added" ? <ins key={i}>{part.text}</ins> : <span key={i}>{part.text}</span>,
+      )}
+    </div>
+  )
+}
+
+/**
+ * Zmena znenia v celom odseku (Ján 23. 10. 2026: „potrebujem vidieť viac
+ * súvislostí, aby som nezmenil význam celého bloku textu"). Nadpis oddielu
+ * a bloky pred a za sú sivé; blok s úryvkom ukazuje zmenu. Keď úryvok
+ * v koncepte nie je (zmenil ho iný nález), ostane samotný rozdiel s poznámkou.
+ */
+function ChangeInContext({ t, f, base }: { t: T; f: DocumentFinding; base: string | null }) {
+  const only = f.proposed ? <Diff before={f.quote} after={f.proposed} /> : <div className="pr-diff cf-diff">{readableInline(f.quote)}</div>
+  const c = base ? findingContext(base, f.quote, f.proposed) : null
+  return (
+    <div className="cf-blk">
+      <span className="cf-blk-l">{t.change}</span>
+      {c ? (
+        <>
+          {/* Len triedy z design systému: okolie je `.cf-diff` s `.quiet`, nadpis oddielu `.cf-blk-l`. */}
+          {c.heading && <span className="cf-blk-l">{c.heading}</span>}
+          {c.before && <div className="cf-diff quiet">{readableInline(c.before)}</div>}
+          {c.blockAfter ? <Diff before={c.block} after={c.blockAfter} /> : <>
+            <div className="pr-diff cf-diff">{readableInline(c.block)}</div>
+            {f.proposed && only}
+          </>}
+          {c.after && <div className="cf-diff quiet">{readableInline(c.after)}</div>}
+          <span className="quiet field-hint">{t.contextNote}</span>
+        </>
+      ) : (
+        <>
+          {only}
+          {base !== null && <span className="quiet field-hint">{t.contextMissing}</span>}
+        </>
       )}
     </div>
   )
@@ -281,10 +314,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
             <b>{f.location}</b>
             <Link href={href({ doc: res.documentId, view }, anchor)}>{t.collapse}</Link>
           </div>
-          <div className="cf-blk">
-            <span className="cf-blk-l">{t.change}</span>
-            {f.proposed ? <Diff before={f.quote} after={f.proposed} /> : <div className="pr-diff cf-diff">{readableInline(f.quote)}</div>}
-          </div>
+          <ChangeInContext t={t} f={f} base={openBase} />
           <Norm t={t} f={f} preview={normPreview} />
           {f.recommendation && <div className="cf-blk"><span className="cf-blk-l">{t.recommendation}</span><p>{f.recommendation}</p></div>}
           <DecisionForm t={t} run={run} res={res} f={f} ctx={ctx} view={view} next={next} nextLabel={nextLabel} overlap={overlap} />

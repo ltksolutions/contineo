@@ -3282,6 +3282,9 @@ interface Dictionary {
       decide: string
       collapse: string
       change: string
+      /** Okolie nálezu v koncepte (23. 10. 2026). */
+      contextNote: string
+      contextMissing: string
       saveNext: string
       nextIs: (location: string) => string
       nextInDoc: (title: string) => string
@@ -8337,6 +8340,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       decide: "Rozhodnúť",
       collapse: "Zbaliť",
       change: "Zmena znenia",
+      contextNote: "Celý odsek v koncepte so zmenou; sivé je okolie, ktoré sa nemení.",
+      contextMissing: "Úryvok sa v aktuálnom koncepte nenašiel — mohol ho zmeniť iný nález alebo úprava textu. Ukazuje sa len samotná zmena.",
       saveNext: "Uložiť a ďalší",
       nextIs: loc => `Ďalší: ${loc}`,
       nextInDoc: title => `Ďalší v dokumente ${title}`,
@@ -13316,6 +13321,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       decide: "Rozhodnout",
       collapse: "Sbalit",
       change: "Změna znění",
+      contextNote: "Celý odstavec v konceptu se změnou; šedé je okolí, které se nemění.",
+      contextMissing: "Úryvek se v aktuálním konceptu nenašel — mohl ho změnit jiný nález nebo úprava textu. Zobrazuje se jen samotná změna.",
       saveNext: "Uložit a další",
       nextIs: loc => `Další: ${loc}`,
       nextInDoc: title => `Další v dokumentu ${title}`,
@@ -18281,6 +18288,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       decide: "Decide",
       collapse: "Collapse",
       change: "Change of wording",
+      contextNote: "The whole paragraph in the draft with the change; the grey text around it does not change.",
+      contextMissing: "The excerpt was not found in the current draft — another finding or a text edit may have changed it. Only the change itself is shown.",
       saveNext: "Save and next",
       nextIs: loc => `Next: ${loc}`,
       nextInDoc: title => `Next in ${title}`,
