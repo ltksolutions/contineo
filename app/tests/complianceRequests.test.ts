@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { linkedChecks } from "../src/lib/complianceRequests"
+import { linkedChecks, hierarchyRequestRows } from "../src/lib/complianceRequests"
+import { parentsMapOf } from "../src/lib/documentHierarchy"
 
 const MANUALS = ["m0", "m1"]
 const NORMS = ["rapp", "sp", "dp"]
@@ -32,5 +33,27 @@ describe("nové znenie, ktoré je výsledkom kontroly", () => {
   it("ak je zároveň normou iných, ich kontrola ostáva", () => {
     const links = [{ subjectId: "m1", referenceIds: ["rapp"] }, { subjectId: "rozpis", referenceIds: ["m1"] }]
     expect(linkedChecks("m1", links, [], true)).toEqual({ subjectIds: ["rozpis"], referenceIds: ["m1"] })
+  })
+})
+
+describe("požiadavka z hierarchie (D248): len priamo podradené", () => {
+  const map = parentsMapOf([
+    { documentId: "zakon" },
+    { documentId: "stanovy", parentIds: ["zakon"] },
+    { documentId: "rapp", parentIds: ["stanovy"] },
+    { documentId: "sp", parentIds: ["stanovy"] },
+    { documentId: "issf04", parentIds: ["rapp", "sp"] },
+  ])
+  const binding = new Set(["zakon", "stanovy", "rapp", "sp"])
+
+  it("nový zákon: kontrolujú sa Stanovy, nie celá vetva", () => {
+    const r = linkedChecks("zakon", hierarchyRequestRows("zakon", map, binding), [])
+    expect(r).toEqual({ subjectIds: ["stanovy"], referenceIds: ["zakon"] })
+  })
+
+  it("nové Stanovy: samy proti zákonu a poriadky proti svojim predkom, manuál nie", () => {
+    const r = linkedChecks("stanovy", hierarchyRequestRows("stanovy", map, binding), [])
+    expect(r.subjectIds.sort()).toEqual(["rapp", "sp", "stanovy"])
+    expect(r.subjectIds).not.toContain("issf04")
   })
 })

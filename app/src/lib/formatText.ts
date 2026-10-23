@@ -245,11 +245,27 @@ export function toBlocks(text: string): Block[] {
 }
 
 /**
+ * Značky Markdownu z úryvku, ktorý sa ukazuje ako obyčajný text (citácia
+ * v úvodzovkách): nadpisy `#`–`######` kdekoľvek v riadku a tučné `**`, `__`.
+ * Úsek v indexe je Markdown a model ho cituje doslovne — pod odpoveďou tak
+ * stálo „#### Profesionálne vykonávanie športu #### § 32" (zákon o športe,
+ * 23. 10. 2026). Mriežka uprostred slova ani „#" bez medzery za ním nie je
+ * nadpis a ostáva.
+ */
+export function stripMarkdownMarks(text: string): string {
+  return text
+    .replace(/(^|\s)#{1,6}[ \t]+/gm, "$1")
+    .replace(/\*\*|__/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+}
+
+/**
  * Očistí doslovnú citáciu na zobrazenie.
  *
- * Dve veci: chunker vkladá do textu navigačný breadcrumb (D17), takže model
- * ho niekedy odcituje spolu s normou — a citovaný úsek býva ukončený
- * zalomením, po ktorom v úvodzovkách zostane medzera.
+ * Tri veci: chunker vkladá do textu navigačný breadcrumb (D17), takže model
+ * ho niekedy odcituje spolu s normou; úsek je Markdown, takže v citácii by
+ * ostali značky nadpisov (`stripMarkdownMarks`); a citovaný úsek býva
+ * ukončený zalomením, po ktorom v úvodzovkách zostane medzera.
  *
  * Breadcrumb sa iba skryje pri zobrazení. Neodstraňujeme ho zo zdroja:
  * v kontexte modelu má zmysel, lebo hovorí, z ktorej časti predpisu úryvok
@@ -268,7 +284,7 @@ export function cleanCitation(text: string): string {
     t = paragraph ? rest.slice(paragraph.index).trim() : rest
   }
 
-  return t.replace(/\s+$/, "")
+  return stripMarkdownMarks(t).trim()
 }
 
 /**

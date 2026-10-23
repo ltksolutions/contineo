@@ -3,7 +3,7 @@
  * cyklov, viac nadradených, predkovia od najbližších.
  */
 import { describe, it, expect } from "vitest"
-import { ancestorsOf, descendantsOf, parentsMapOf, parentsProblem, hierarchyRows } from "../src/lib/documentHierarchy"
+import { ancestorsOf, descendantsOf, childrenOf, parentsMapOf, parentsProblem, hierarchyRows } from "../src/lib/documentHierarchy"
 
 const map = parentsMapOf([
   { documentId: "zakon" },
@@ -21,6 +21,12 @@ describe("hierarchia dokumentov", () => {
 
   it("potomkovia", () => {
     expect(descendantsOf("stanovy", map).sort()).toEqual(["issf04", "rapp", "sp"])
+  })
+
+  it("priamo podradené — bez vnukov", () => {
+    expect(childrenOf("zakon", map)).toEqual(["stanovy"])
+    expect(childrenOf("stanovy", map).sort()).toEqual(["rapp", "sp"])
+    expect(childrenOf("issf04", map)).toEqual([])
   })
 
   it("cyklus a sám sebe nadradený sa odmietne", () => {

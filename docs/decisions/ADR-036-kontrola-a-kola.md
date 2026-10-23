@@ -201,3 +201,33 @@ požiadavky na kontrolu, ktoré treba zamietať „Netreba".
 - Kolekcia `compliance_links` **ostáva v databáze nepoužitá**; nič sa nemaže
   ani nemigruje (D24). Požiadavka naďalej spustí ďalšie kolo kontroly, ktorá
   kontroluje všetky jej dokumenty (Q2), inak novú.
+
+## Dodatok 4 — Požiadavka len pre priamo podradené dokumenty (D248, 2026-10-23)
+
+> **Rozhodol:** Ján Letko (2026-10-23) — „kontrolu len priamo podradených
+> dokumentov, nie celej vetvy, súhlasím ako automatické systémové pravidlo,
+> len nech sa vytvorí požiadavka s prepojením, spustiť to musí osoba sama".
+> **Mení:** D241 v časti „jeho potomkovia".
+
+### Kontext
+
+Zverejnenie zákona o športe (23. 10. 2026) založilo požiadavku na kontrolu
+**21 dokumentov** proti zákonu — Stanovy, deväť poriadkov a smerníc a desať
+manuálov ISSF, teda celú vetvu pod zákonom. Manuály ISSF opisujú prácu
+v informačnom systéme a proti zákonu v nich nie je čo kontrolovať;
+poriadky sa merajú proti Stanovám. Zákon má 88 000 tokenov, takže taká
+kontrola by stála desiatky USD, a odhad ceny rekapitulácia nemala.
+
+### D248 — Požiadavka zahŕňa len priamo podradené dokumenty
+
+- Pri zverejnení nového znenia sú prepojené zverejnený dokument proti svojim
+  záväzným predkom a jeho **priamo podradené** dokumenty (`childrenOf()`),
+  nie všetci potomkovia. Vnuci prídu na rad, keď sa po kontrole zmení ich
+  nadradený dokument a zverejní sa jeho nové znenie.
+- Požiadavka sa **len vytvorí** a ohlási (zvonček, e-mail roly compliance)
+  s odkazom „Spustiť kontrolu…" na rekapituláciu; spustí ju človek (D235).
+  Automaticky sa nič nespúšťa.
+- Požiadavky založené pred týmto dodatkom ostávajú, ako sú; požiadavku
+  zákona o športe na 21 dokumentov treba zamietnuť „Netreba" a kontrolu
+  Stanov pustiť cez „Nová kontrola".
+
