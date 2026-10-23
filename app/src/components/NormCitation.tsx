@@ -9,6 +9,7 @@
 import FormattedText from "./FormattedText"
 import ScrollToCited from "./ScrollToCited"
 import { articleHash, articleLabel } from "@/lib/articleAnchors"
+import { stripMarkdownMarks } from "@/lib/formatText"
 import type { NormPreview } from "@/lib/normPreview"
 
 export interface NormCitationLabels {
@@ -34,7 +35,7 @@ export default function NormCitation({ citation, preview, labels }: {
           <span className="sr-only"> {labels.opensNewWindow}</span>
         </a>
       </p>
-      {citation.quote && <blockquote className="quote">{citation.quote}</blockquote>}
+      {citation.quote && <blockquote className="quote">{stripMarkdownMarks(citation.quote)}</blockquote>}
       {preview && (
         <details className="norm-preview">
           <summary>{labels.showArticle(articleLabel(citation.articleRef))}</summary>

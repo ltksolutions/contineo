@@ -5,7 +5,7 @@
  * dokumentmi. Preto sú tu aj testy na to, čo sa stane pri poškodenom
  * formátovaní: useknutá odpoveď nesmie zmiznúť.
  */
-import { splitInline, toBlocks, cleanCitation, mergeCitations } from "../src/lib/formatText"
+import { splitInline, toBlocks, cleanCitation, mergeCitations, stripMarkdownMarks } from "../src/lib/formatText"
 
 import { t } from "./helper"
 
@@ -414,3 +414,11 @@ const hlboke = toBlocks("##### § 107 Zrušovacie ustanovenia\n\nZrušuje sa:")
 t("päť mriežok je nadpis, nie odsek s mriežkami",
   hlboke[0].druh === "nadpis" && hlboke[0].level === 5 && text(hlboke[0].segments) === "§ 107 Zrušovacie ustanovenia",
   JSON.stringify(hlboke))
+
+// ── citácia bez značiek Markdownu (zákon o športe, 23. 10. 2026) ────────────
+const zakonCitacia = cleanCitation("TRETIA ČASŤ — PRÁVNE VZŤAHY #### Profesionálne vykonávanie športu #### § 32 Základné povinnosti športovca Športovec, ktorý vykonáva **šport** na základe zmluvy")
+t("citácia bez mriežok nadpisov a hviezdičiek",
+  !zakonCitacia.includes("#") && !zakonCitacia.includes("**") && zakonCitacia.includes("Profesionálne vykonávanie športu § 32 Základné povinnosti športovca"),
+  zakonCitacia)
+t("nadpis na začiatku riadku tiež", stripMarkdownMarks("## čl. 5 — Názov\nText") === "čl. 5 — Názov\nText", stripMarkdownMarks("## čl. 5 — Názov\nText"))
+t("mriežka, ktorá nie je nadpis, ostáva", stripMarkdownMarks("kanál #ISSF a C# kód") === "kanál #ISSF a C# kód", stripMarkdownMarks("kanál #ISSF a C# kód"))
