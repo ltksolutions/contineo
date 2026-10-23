@@ -25,9 +25,8 @@ import { brandingView } from "@/lib/tenants"
 import { dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
 import { evaluationContext } from "@/lib/evaluation"
-import { liveConnectorsFor } from "@/lib/liveSources"
-import { accessLevelFor } from "@/lib/accessLevel"
 import { scopeFromQuery } from "@/lib/askScope"
+import { askLiveSources } from "@/lib/askSources"
 
 // Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
@@ -56,7 +55,6 @@ export default async function AskPage({
   const person = ctx.state === "ready" ? ctx.person : null
   const t = dictionary(person?.language).ask
   const branding = brandingView(ctx.tenant)
-  const organisation = branding.displayName
   const short = branding.shortName?.trim() || branding.displayName
 
   /*
@@ -68,8 +66,7 @@ export default async function AskPage({
   const canEvaluate = (await evaluationContext()).state === "ready"
   // Živé zdroje (ADR-029): len tie, ktoré sa pri otázke naozaj zavolajú —
   // s úrovňou pýtajúceho sa a bez volania servera.
-  const liveSources = (await liveConnectorsFor(ctx.tenant.companyCode, accessLevelFor(ctx)))
-    .map(c => ({ id: c.id, name: c.name, defaultOn: Boolean(c.uses.retrieval.defaultOn) }))
+  const liveSources = await askLiveSources(ctx)
   // Rozsah z adresy — oba tvary `src` (so skriptom aj bez neho), `askScope.ts`.
   const initialScope = scopeFromQuery(q?.src, liveSources.map(l => l.id))
 
@@ -79,8 +76,9 @@ export default async function AskPage({
         {asked ? (
           // `key` mení identitu komponentu s otázkou: nová otázka z hlavičky
           // je nová adresa a má byť aj nový beh, nie pokračovanie starého.
+          // Aj iný výber zdrojov k tej istej otázke (plachta, ASK-zdroje-v-plachte).
           <Search
-            key={asked}
+            key={`${asked}\u0000${initialScope.join(",")}`}
             preset={asked}
             organisation={short}
             language={person?.language}
@@ -92,7 +90,8 @@ export default async function AskPage({
           <>
             <h1 className="page-title">{t.heading}</h1>
             <p className="quiet page-lead ask-empty-lead">{t.emptyLead}</p>
-            <AskSheet mode="inline" organisation={organisation} language={person?.language} />
+            {/* Zdroje zo servera — vložená plachta ich má aj bez JS (ASK-zdroje-v-plachte). */}
+            <AskSheet mode="inline" organisation={short} live={liveSources} language={person?.language} />
           </>
         )}
       </div>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ASK — zdroje v plachte</title>
+<link rel="stylesheet" href="../_ds/contineo-design-system-f95a5ca5-9a29-4e6d-8915-5818da1a2b0e/styles.css" />
+<style>
+/* ── Lešenie dokumentu ─────────────────────────────────────────────────── */
+body.board{margin:0;background:#e6e8ec;color:#161b22;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5}
+.board a{color:#2443c4}.board a:hover{color:#1a3299}
+.board .sheet{padding:28px 32px 60px;background:#f5f6f8}
+.board h1{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+.board p.doc{font-size:14px;color:#5c6675;margin:0 0 8px;max-width:100ch}
+.board code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#eceef1;padding:1px 5px;border-radius:4px}
+.board .sec{margin:44px 0 0}
+.board .sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#5c6675;margin:0 0 4px}
+.board .sec-t{font-size:17px;font-weight:650;margin:0 0 14px}
+.board .row{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.board .cap{font-size:12px;font-weight:650;color:#5c6675;margin:0 0 8px}
+.board iframe{display:block;border:1px solid rgba(20,28,42,.18);border-radius:12px;box-shadow:0 20px 44px rgba(0,0,0,.12);background:#fff}
+.board .notes{display:grid;gap:6px;max-width:110ch;margin:16px 0 0;font-size:13px;color:#33404f}
+.board .notes p{margin:0;display:flex;gap:8px}
+.board .notes b.n{flex:none;width:20px;height:20px;border-radius:50%;background:#e11d48;color:#fff;font-size:11px;display:grid;place-items:center}
+
+/* ── Lešenie rámu: zjednodušená hlavička a stránka pod plachtou ─────────── */
+body.frame{margin:0;background:var(--bg);color:var(--ink);min-height:100vh}
+body.frame a{color:var(--accent)}
+.x-hdr{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;height:64px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.x-logo{width:30px;height:30px;border-radius:50%;background:var(--accent);flex:none}
+.x-field-wrap{position:relative;flex:0 1 600px;min-width:0}
+.x-field{height:40px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;align-items:center;padding:0 14px}
+.x-sp{flex:1}.x-av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);flex:none}
+.x-page{padding:28px 20px;display:grid;gap:14px;max-width:1100px}
+.x-blk{height:90px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.x-inline{max-width:760px;margin:0 auto;padding:28px 20px;display:grid;gap:14px}
+.x-inline h1{margin:0;font-size:24px;font-weight:640;letter-spacing:-.01em}
+.x-inline p{margin:0;color:var(--muted);font-size:14px}
+@media (max-width:639px){.x-hdr{height:56px;padding:0 12px;gap:10px}.x-av{display:none}.x-inline h1{font-size:19px}}
+
+/* ── Z PR #418 (ASK-zdroje-hladania): summary ako tlačidlo ─────────────── */
+.ask-scope > summary{list-style:none;cursor:pointer}
+.ask-scope > summary::-webkit-details-marker{display:none}
+/* ── ODCHÝLKA S1: rozbalenie výberu v plachte pod lištou ────────────────── */
+.ask-sheet-scope{flex:none}
+.ask-sheet-scope > summary{max-width:100%;gap:6px}
+.ask-sheet-scope-pane{display:none;padding:0 18px 14px}
+.ask-sheet:has(.ask-sheet-scope[open]) .ask-sheet-scope-pane{display:grid;gap:6px}
+.ask-sheet-scope-pane .form-group-foot{margin:0}
+.ask-sheet-bar-button{flex:none}
+.ask-sheet-bar:has(.ask-sheet-scope) .ask-sheet-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:1023px){.ask-sheet-bar:has(.ask-sheet-scope) .ask-sheet-hint{visibility:hidden}}
+@media (max-width:639px){
+  .ask-sheet--overlay .ask-sheet-bar{padding:6px 12px 12px 12px}
+  .ask-sheet-scope-pane{padding:0 12px 14px}
+}
+</style>
+</head>
+<body>
+<script>
+(function(){
+const P=new URLSearchParams(location.search), F=P.get('f');
+const SRC=[{id:'library',n:'Knižnica',sub:'Predpisy a dokumenty SFZ',from:'z dokumentov SFZ'},
+           {id:'sportnet',n:'Sportnet dokumentácia',sub:'Živý zdroj — hľadá sa priamo v ňom, obsah neprešiel kurátorom',from:'zo zdroja Sportnet dokumentácia'}];
+const ST={default:{on:['library']},open:{on:['library','sportnet'],open:true},live:{on:['sportnet'],open:true},
+  nolive:{on:['library'],nolive:true},inline:{on:['library'],mode:'inline'},
+  edit:{on:['library','sportnet'],q:'Ako zapíšem striedanie hráča do zápisu o stretnutí?'}};
+if(!F){board();return}
+frame();
+
+function fromText(on){
+  const lib=on.includes('library'), live=SRC.filter(s=>s.id!=='library'&&on.includes(s.id));
+  if(!live.length) return 'z dokumentov SFZ';
+  const ln='zo zdroja '+live.map(s=>s.n).join(', ');
+  return lib?'z dokumentov SFZ a '+ln:ln;
+}
+function names(on){return SRC.filter(s=>on.includes(s.id)).map(s=>s.n).join(', ')}
+
+function frame(){
+  document.body.className='frame';
+  if(P.get('theme')==='dark') document.documentElement.dataset.theme='dark';
+  const s=Object.assign({mode:'overlay'},ST[F]||ST.default);
+  const q=s.q||'';
+  const rows=SRC.map(x=>'<label class="form-row select-row"><input type="checkbox" name="src" value="'+x.id+'"'+(s.on.includes(x.id)?' checked':'')+' /><span class="form-row-main"><span>'+x.n+'</span><span class="form-row-sub">'+x.sub+'</span></span></label>').join('');
+  const scope=s.nolive?'':'<details class="ask-scope ask-sheet-scope"'+(s.open?' open':'')+'><summary class="button button--quiet button--sm" aria-controls="scope-pane">Zdroje: <span data-val>'+names(s.on)+'</span><span aria-hidden="true">▾</span></summary></details>';
+  const pane=s.nolive?'':'<fieldset class="ask-sheet-scope-pane form-group" id="scope-pane"><legend class="form-group-head">Hľadať v</legend><div class="card form-group-body form-group-body--rows"><div class="form-list">'+rows+'</div></div><p class="form-group-foot quiet" data-foot>Platí pre túto otázku. Aspoň jeden zdroj ostáva zapnutý.</p></fieldset>';
+  const submit='<button type="submit" class="ask-sheet-submit">Opýtať sa<svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9h11M10 4.5 14.5 9 10 13.5"/></svg></button>';
+  const examples=q?'':'<div class="ask-sheet-examples"><h3>Napríklad</h3>'+['Kedy musí klub nahlásiť štartovú listinu?','Aké sú podmienky prestupu amatéra?','Kto potvrdzuje opravu zápisu o stretnutí?'].map(e=>'<button type="button"><svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4.5h12v7H8l-3 2.5v-2.5H3z"/></svg><span>'+e+'</span><i aria-hidden="true">vložiť</i></button>').join('')+'</div>';
+  const sheet='<form class="ask-sheet ask-sheet--'+s.mode+'" method="get" action="/ask"'+(s.mode==='overlay'?' role="dialog" aria-label="Opýtať sa"':'')+'>'+
+    (s.mode==='overlay'?'<div class="ask-sheet-head"><button type="button" class="ask-sheet-close" aria-label="Zavrieť"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l9 9M13.5 4.5l-9 9"/></svg></button><b>Opýtať sa</b></div>':'')+
+    '<div class="ask-sheet-scroll">'+
+      '<div class="ask-sheet-top"><span class="ask-sheet-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="6"/><path d="M9 14v3"/></svg></span><textarea name="q" class="ask-sheet-field" rows="3" maxlength="1000" placeholder="Opýtajte sa svojich dokumentov…" aria-label="Otázka">'+q+'</textarea></div>'+
+      '<div class="ask-sheet-bar">'+scope+'<span class="ask-sheet-hint">Enter odošle · Shift+Enter nový riadok · Esc zavrie</span><span class="ask-sheet-bar-button">'+submit+'</span></div>'+
+      pane+
+      '<p class="ask-sheet-info"><svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"/><path d="M9 8.2v4.2M9 5.6v.1"/></svg><span><b data-info>Odpoveď sa skladá len '+fromText(s.on)+'.</b> Pri každom tvrdení je odkaz na zdroj. Ak to v dokumentoch nie je, systém to povie a nič si nevymyslí.</span></p>'+
+      examples+
+    '</div>'+
+    (s.mode==='overlay'?'<div class="ask-sheet-foot">'+submit+'</div>':'')+
+  '</form>';
+  document.body.innerHTML=
+    '<header class="x-hdr"><span class="x-logo"></span><div class="x-field-wrap"><div class="x-field">'+(q||'Opýtajte sa svojich dokumentov…')+'</div>'+(s.mode==='overlay'?sheet:'')+'</div><span class="x-sp"></span><span class="x-av"></span></header>'+
+    (s.mode==='overlay'?'<div class="ask-scrim"></div><div class="x-page"><div class="x-blk"></div><div class="x-blk"></div><div class="x-blk"></div></div>'
+      :'<main class="x-inline"><h1>Opýtať sa</h1><p>Odpoveď nájde v dokumentoch a pri každom tvrdení ukáže zdroj.</p>'+sheet+'</main>');
+  if(s.nolive) return;
+  const det=document.querySelector('.ask-sheet-scope'), boxes=[...document.querySelectorAll('input[name=src]')];
+  const sync=()=>{const on=boxes.filter(b=>b.checked).map(b=>b.value);
+    document.querySelector('[data-val]').textContent=names(on);
+    document.querySelector('[data-info]').textContent='Odpoveď sa skladá len '+fromText(on)+'.';};
+  boxes.forEach(b=>b.addEventListener('click',e=>{ if(!b.checked&&!boxes.some(x=>x!==b&&x.checked)){e.preventDefault();const f=document.querySelector('[data-foot]');f.style.color='var(--ink)';setTimeout(()=>f.style.color='',1200)} }));
+  boxes.forEach(b=>b.addEventListener('change',sync));
+  document.querySelector('form').addEventListener('keydown',e=>{if(e.key==='Escape'&&det.open){e.preventDefault();det.open=false;det.querySelector('summary').focus()}});
+  document.querySelector('form').addEventListener('submit',e=>e.preventDefault());
+}
+
+function board(){
+  document.body.className='board';
+  const fr=(f,w,h,t)=>'<div><p class="cap">'+w+' px'+(t?' · tmavá':'')+'</p><iframe src="?f='+f+(t?'&theme=dark':'')+'" width="'+w+'" height="'+h+'" title="'+f+' '+w+'"></iframe></div>';
+  const sec=(n,f,t,frames,notes)=>'<section class="sec" id="'+f+'"><p class="sec-h">Stav '+n+'</p><h2 class="sec-t">'+t+'</h2><div class="row">'+frames.map(x=>fr(f,x[0],x[1],x[2])).join('')+'</div><div class="notes">'+notes.map((x,i)=>'<p><b class="n">'+(i+1)+'</b><span>'+x+'</span></p>').join('')+'</div></section>';
+  const all=[[390,844],[834,760],[1440,760]];
+  document.body.innerHTML='<div class="sheet"><h1>ASK — zdroje v plachte otázky</h1>'+
+  '<p class="doc">Plachta otázky (<code>AskSheet</code>, tvary <code>overlay</code> a <code>inline</code>). Výber zdrojov ešte pred prvou odpoveďou, rovnakým tvarom ako na obrazovke odpovede (<code>ASK-zdroje-hladania</code>, PR #418). Zadanie: <code>docs/design/ASK-zdroje-v-plachte-zadanie.md</code>. Popis, Q1–Q4 a odchýlky sú v <code>ASK-zdroje-v-plachte.md</code>. Rámy sú živé.</p>'+
+  sec(1,'default','Predvolene — overlay, len Knižnica',all,['V lište vľavo tiché <code>.button--quiet.button--sm</code> „Zdroje: Knižnica ▾" (Q1 A), vpravo nápoveda klávesov a plné „Opýtať sa". Pod 640 px je nápoveda skrytá, tlačidlo zdrojov má 44 px a „Opýtať sa" je dole nad klávesnicou.','Predvolený výber = Knižnica + konektory s „používať predvolene" (Ján 8. 10. 2026). Tu Sportnet predvolene vypnutý.','Veta podľa výberu: „Odpoveď sa skladá len z dokumentov SFZ." (<code>answerFrom</code>, Q4 A).'])+
+  sec(2,'open','Výber rozbalený — pridaný Sportnet',all.concat([[390,844,1],[1440,760,1]]),['Riadky sa rozbalia v plachte pod lištou (Q2 A), nie druhý popover nad plachtou. <code>&lt;details&gt;</code> drží len tlačidlo, riadky sú v <code>fieldset</code> hneď pod lištou (odchýlka S1).','<code>.form-group</code> &gt; <code>.form-row.select-row</code> s natívnym <code>checkbox name="src"</code> v tom istom GET formulári. Bez JS sa odošle <code>?q=…&amp;src=library&amp;src=sportnet</code>, s JS <code>?q=…&amp;src=library,sportnet</code>.','Zmena nič nespúšťa, mení len text v tlačidle a vetu: „… z dokumentov SFZ a zo zdroja Sportnet dokumentácia".','Esc najprv zbalí riadky, druhé Esc zavrie plachtu. Enter v poli odošle aj s výberom.'])+
+  sec(3,'live','Len živý zdroj',[[390,844],[1440,760]],['Knižnica odškrtnutá: „Zdroje: Sportnet dokumentácia", veta „Odpoveď sa skladá len zo zdroja Sportnet dokumentácia."','Posledný zapnutý riadok sa nedá odškrtnúť. Klik sa zastaví a pätka „Aspoň jeden zdroj ostáva zapnutý." stmavne. Riadok nie je <code>disabled</code>, inak by sa neodoslal.'])+
+  sec(4,'nolive','Organizácia bez živého zdroja',[[390,844],[1440,760]],['Tlačidlo zdrojov ani riadky sa nekreslia. Lišta a veta sú ako dnes.'])+
+  sec(5,'inline','Inline — /ask bez otázky',[[390,844],[1440,760]],['Tá istá lišta vo vloženej plachte. Pod 640 px sa lišta zalomí: zdroje hore, „Opýtať sa" na celú šírku pod nimi (dnešné pravidlo <code>.ask-sheet--inline</code>).'])+
+  sec(6,'edit','Upraviť otázku — nadväznosť s odpoveďou',[[390,844],[1440,760]],['Plachta z „Upraviť otázku" na <code>/ask</code> dostane otázku aj aktuálny výber z obrazovky odpovede (prop <code>initialSources</code>). Odoslaním ide <code>/ask?q=&amp;src=</code> a obrazovka odpovede začne s tým istým výberom v <code>details.ask-scope</code>.','Výber v plachte a na obrazovke odpovede je jeden stav, adresa. Plachta mimo <code>/ask</code> začína predvoleným výberom (Q3 A).'])+
+  '</div>';
+}
+})();
+</script>
+</body></html>

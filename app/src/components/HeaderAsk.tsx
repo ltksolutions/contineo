@@ -25,6 +25,7 @@ import { createPortal } from "react-dom"
 import AskSheet from "./AskSheet"
 import { ContineoMark } from "./ContineoMark"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { askScope } from "@/lib/askScopeStore"
 
 export const HEADER_ASK_ID = "header-q"
 
@@ -43,6 +44,8 @@ export default function HeaderAsk({
   const t = dictionary(language)
   const [draft, setDraft] = useState(initial)
   const [open, setOpen] = useState(false)
+  // Výber zdrojov z obrazovky odpovede pri „Upraviť otázku"; mimo `/ask` nič → predvolený (Q3 A).
+  const [sources, setSources] = useState<string[] | undefined>(undefined)
   const wrap = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLInputElement>(null)
 
@@ -68,6 +71,7 @@ export default function HeaderAsk({
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "k" || !(e.metaKey || e.ctrlKey)) return
       e.preventDefault()
+      setSources(askScope() ?? undefined)
       setOpen(true)
     }
     document.addEventListener("keydown", onKey)
@@ -86,7 +90,11 @@ export default function HeaderAsk({
     return () => document.removeEventListener("mousedown", onDown)
   })
 
-  const openSheet = () => { if (!reopenGuard.current) setOpen(true) }
+  const openSheet = () => {
+    if (reopenGuard.current) return
+    setSources(askScope() ?? undefined)
+    setOpen(true)
+  }
 
   return (
     <div className="header-search-wrap" ref={wrap}>
@@ -126,6 +134,7 @@ export default function HeaderAsk({
           organisation={organisation}
           language={language}
           onClose={close}
+          initialSources={sources}
         />
       )}
       {/* Závoj pod hlavičkou (tá má `z-index` 10, závoj 9) — hlavička ostáva

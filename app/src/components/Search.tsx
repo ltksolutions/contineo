@@ -27,6 +27,7 @@ import Rating from "./Rating"
 import { HEADER_ASK_ID } from "./HeaderAsk"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { answerFrom } from "@/lib/answerKicker"
+import { setAskScope } from "@/lib/askScopeStore"
 
 /** Id zdrojov → knižnica a názvy živých zdrojov (hlavička, oznam, uložený záznam). */
 function scopeOf(ids: string[], liveSources: { id: string; name: string }[] | undefined) {
@@ -213,6 +214,12 @@ export default function Search({
     void send(preset, pending)
   }
   const scopeChanged = !open && !state.running && pending.length > 0 && !sameScope(pending, askedScope)
+
+  // „Upraviť otázku" otvorí plachtu v hlavičke s týmto výberom (ASK-zdroje-v-plachte, bod 8).
+  useEffect(() => {
+    setAskScope(liveSources?.length ? pending : null)
+    return () => setAskScope(null)
+  }, [pending, liveSources])
 
   // Esc zavrie plachtu a vráti fokus na tlačidlo; od 640 px ju zavrie aj
   // klik mimo nej (popover nemá závoj).
