@@ -424,7 +424,7 @@ export default async function ComplianceRunPage({ params, searchParams }: { para
           </label>
           <div className="task-acts">
             <SubmitButton className="button button--quiet">{t.saveName}</SubmitButton>
-            <Link href={base}>{t.ck.cancel}</Link>
+            <Link className="button button--quiet" href={base}>{t.ck.cancel}</Link>
           </div>
         </form>
       )}

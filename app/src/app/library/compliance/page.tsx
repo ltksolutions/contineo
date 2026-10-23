@@ -153,7 +153,8 @@ export default async function ComplianceChecksPage({ searchParams }: { searchPar
                     {check ? t.ck.requestStartRound(rounds + 1) : t.ck.requestStartNew}
                   </Link>
                 )}
-                {q.dismiss !== r.id && <Link href={`/library/compliance?dismiss=${encodeURIComponent(r.id)}#requests`}>{t.ck.requestDismissShort}</Link>}
+                {/* Akcia, nie navigácia — tiché tlačidlo ako „Spustiť kontrolu…“ (R1), terč 44 px. Ostáva odkazom: len otvorí formulár s dôvodom. */}
+                {q.dismiss !== r.id && <Link className="button button--quiet" href={`/library/compliance?dismiss=${encodeURIComponent(r.id)}#requests`}>{t.ck.requestDismissShort}</Link>}
               </div>
               {q.dismiss === r.id && (
                 <form action={dismissRequestAction} className="ck-dismiss">
@@ -164,7 +165,7 @@ export default async function ComplianceChecksPage({ searchParams }: { searchPar
                   </label>
                   <div className="task-acts">
                     <SubmitButton className="button button--quiet">{t.requestDismissSave}</SubmitButton>
-                    <Link href="/library/compliance#requests">{t.ck.cancel}</Link>
+                    <Link className="button button--quiet" href="/library/compliance#requests">{t.ck.cancel}</Link>
                   </div>
                 </form>
               )}
