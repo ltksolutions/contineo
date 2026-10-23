@@ -17,6 +17,14 @@ a farbami aplikácie, nie s vlastným odhadom.
 
 - Návrhy: https://claude.ai/design/p/5f2e4189-f298-4a85-8936-1b45f9d34ae1
 - Design system: https://claude.ai/design/p/f95a5ca5-9a29-4e6d-8915-5818da1a2b0e
+  (od 15. 10. 2026 aj ako artefakt https://claude.ai/artifact/AGZnHYA4nCDzqsXZvw7Lzh,
+  len na čítanie)
+
+**Design system je záväzný** pre každú zmenu frontendu (`CLAUDE.md`, sekcia
+„Design system Contineo je záväzný"). Jeho zdroj je tento repozitár:
+`.design-sync/conventions.md` (pravidlá), `app/src/app/globals.css`
+(tokeny a triedy) a `app/src/components/` (komponenty). Claude Design
+dostáva ich kópiu.
 
 ## Ako navrhnúť novú obrazovku
 

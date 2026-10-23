@@ -128,6 +128,40 @@ byť jedno slovo („áno", „B"), nie rešerš.
 
 Platí aj pre otázky v návrhoch z Claude Design (sekcia „Rozhodnuté" v `.md`).
 
+## Design system Contineo je záväzný
+
+**Každá požiadavka na dizajn a UX pri vývoji frontendu musí splniť design
+system Contineo** (rozhodnutie Jána 23. 10. 2026). Platí pre nové obrazovky,
+úpravy, opravy aj zadania pre Claude Design, pre každú session a každého
+asistenta.
+
+**Kde je** (zdroj pravdy je tento repozitár, nie Claude Design):
+
+| čo | kde |
+|---|---|
+| pravidlá a triedy (brand book) | `.design-sync/conventions.md` |
+| tokeny a triedy | `app/src/app/globals.css` |
+| komponenty knižnice | `app/src/components/` (zoznam: `.design-sync/config.json`) |
+| ako sa synchronizuje, čo sa kde mení | `docs/DESIGN.md` |
+| známe odchýlky obrazoviek | `docs/DESIGN_ODCHYLKY.md` |
+
+Zrkadlo v Claude Design je „Contineo — design system"
+(https://claude.ai/artifact/AGZnHYA4nCDzqsXZvw7Lzh). Vzniká z repozitára
+cez `/design-sync` (spúšťa ho len Ján) a **ručne sa nikdy neupravuje**.
+
+- **Najprv systém, potom obrazovka.** Prvok, ktorý v systéme nie je, sa
+  nekreslí vlastnými triedami, farbami ani rozmermi. Najprv sa pridá do
+  `globals.css` a opíše v `conventions.md` (s Jánovým súhlasom), až potom
+  sa použije.
+- **Rozpor sa nerieši potichu.** Keď požiadavka alebo návrh odporuje
+  systému, práca sa zastaví a Ján rozhodne, s odporúčaním. Schválená
+  odchýlka sa zapíše do `docs/DESIGN_ODCHYLKY.md`.
+- **Zadanie pre Claude Design** výslovne odkazuje na design system
+  a žiada, aby to, čo v ňom chýba, návrh pomenoval ako odchýlku.
+- **`docs/design/README.md` nie je design system.** Je to archív prvej vlny
+  (`docs/design/INDEX.md`) a jeho rozmery a prvky (napr. „pilulky
+  rozsahu") neplatia.
+
 ## Dizajn: Apple HIG a SwiftUI na všetkých šírkach
 
 Vzorom rozhrania sú **Apple Human Interface Guidelines a prvky SwiftUI** —
