@@ -46,6 +46,10 @@ k návrhovému projektu „Contineo.app responzivny design".
   `ariaPressed`, `disabled`, `pendingLabel`, `formAction`, `form`). Pred
   každou synchronizáciou porovnať s `git log --since=<posledná> -- <súbory
   z componentSrcMap>`; driver to nevidí, lebo náhľady sa nezmenili.
+  23. 10. 2026 znova: chýbalo 7 ikon (`courier`, `link`, `bullets`,
+  `numbered` z Kuriéra, `curation`, `tracks`, `compliance` zo Správy).
+  Rýchla kontrola: porovnať kľúče `PATHS` v `Icon.tsx` so zoznamom
+  v `dtsPropsFor.Icon` (krátky `node -e` skript nad oboma súbormi).
 - `SubmitButton` importuje `@/lib/formPending` — ak by tam pribudla závislosť
   od Nextu alebo DB, balík pre Claude Design sa nezostaví.
 - `conventions.md` od 8. 10. nesie aj `.set-savebar`, `.more`, `.lnote`,
