@@ -147,3 +147,48 @@ export function parseNextFinding(next: string): { documentId: string; findingId:
   const cut = String(next ?? "").lastIndexOf(":")
   return cut > 0 ? { documentId: next.slice(0, cut), findingId: next.slice(cut + 1) } : { documentId: "", findingId: "" }
 }
+
+/**
+ * Okolie nálezu v koncepte (Ján 23. 10. 2026: „v návrhoch zmeny znenia je
+ * málo kontextu… potrebujem vidieť viac súvislostí, aby som nezmenil význam
+ * celého bloku textu"). Úryvok nálezu býva pol vety; rozhoduje sa však
+ * o celom odseku alebo zozname.
+ *
+ * Blok = súvislé riadky medzi prázdnymi riadkami (odsek, celý zoznam,
+ * tabuľka). Vráti nadpis oddielu, blok pred, blok s úryvkom pred a po
+ * zmene a blok za. Úryvok sa hľadá doslova, inak bez Markdownu a medzier;
+ * keď sa nenájde (zmenil ho iný nález alebo úprava textu), vráti `null`.
+ */
+export interface FindingContext {
+  heading: string | null
+  before: string | null
+  block: string
+  /** Blok s navrhnutým znením namiesto úryvku; `null` = úryvok v bloku nie je doslova, zmenu ukáže samostatný rozdiel. */
+  blockAfter: string | null
+  after: string | null
+}
+
+const looseText = (s: string) => s.replace(/\*\*|__|`/g, "").replace(/\s+/g, " ").trim()
+
+export function findingContext(base: string, quote: string, proposed: string | null | undefined): FindingContext | null {
+  const blocks = String(base ?? "").replace(/\r\n?/g, "\n").split(/\n[ \t]*\n/).map(b => b.trim()).filter(Boolean)
+  const q = String(quote ?? "").trim()
+  if (!q || !blocks.length) return null
+  let i = blocks.findIndex(b => b.includes(q))
+  if (i < 0) {
+    const lq = looseText(q)
+    const probe = lq.length > 80 ? lq.slice(0, 80) : lq
+    if (probe.length < 12) return null
+    i = blocks.findIndex(b => looseText(b).includes(probe))
+  }
+  if (i < 0) return null
+  const isHeading = (b: string) => /^#{1,6}\s/.test(b)
+  let heading: string | null = null
+  for (let h = i - 1; h >= 0; h--) if (isHeading(blocks[h])) { heading = blocks[h].split("\n")[0].replace(/^#{1,6}\s+/, ""); break }
+  const block = blocks[i]
+  const prev = i > 0 && !isHeading(blocks[i - 1]) ? blocks[i - 1] : null
+  const next = i + 1 < blocks.length && !isHeading(blocks[i + 1]) ? blocks[i + 1] : null
+  const p = (proposed ?? "").trim()
+  const blockAfter = p && block.includes(q) ? block.replace(q, p) : null
+  return { heading, before: prev, block, blockAfter, after: next }
+}
