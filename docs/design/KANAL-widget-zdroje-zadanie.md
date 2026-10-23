@@ -45,9 +45,12 @@ neprešiel kurátorom (D174).
 2. **Zmena nič nespúšťa.** Platí od ďalšej otázky. Keď je posledná odpoveď
    z iných zdrojov, pri nej je „Opýtať sa znova“ (tá istá otázka, nové
    zdroje).
-3. **Hlavička každej odpovede** menuje zdroje, z ktorých je: „Odpoveď
-   z dokumentov SFZ“ / „… a zo zdroja Sportnet dokumentácia“ / „Odpoveď zo
-   zdroja Sportnet dokumentácia“. Rovnaké znenie ako na `/ask`.
+3. **Hlavička každej odpovede** menuje, **v čom sa hľadalo** (Ján 23. 10.
+   2026, A), aj keď z niektorého zdroja nič neprišlo: „Odpoveď z dokumentov
+   SFZ“ / „… a zo zdroja Sportnet dokumentácia“ / „Odpoveď zo zdroja
+   Sportnet dokumentácia“. Rovnaké znenie ako na `/ask`. Z čoho odpoveď
+   naozaj je, ukazuje zoznam „Zdroje“ (dokumenty a články) pod ňou.
+   Záznam odpovede kanála ukladá `searchedScope` ako `/ask` (PR #418).
 4. **Nastavenie kanála.** Čo správca povolí a čo je zapnuté predvolene (Q3).
 5. Stavy: predvolene, výber otvorený, zmenené zdroje pri poslednej odpovedi,
    počas písania (výber nedostupný), kanál s jediným zdrojom. Panel 400 px aj
@@ -103,7 +106,8 @@ neprešiel kurátorom (D174).
 >    zdroj ostáva zapnutý. Pri jedinom zdroji sa ovládač nekreslí.
 > 2. **Zmena nič nespúšťa** a platí od ďalšej otázky. Keď posledná odpoveď
 >    vznikla z iných zdrojov, pri nej je tiché „Opýtať sa znova“.
-> 3. **Hlavička každej odpovede** v rozhovore menuje zdroje: „Odpoveď
+> 3. **Hlavička každej odpovede** v rozhovore menuje, **v čom sa hľadalo**
+>    (aj zdroj, z ktorého nič neprišlo): „Odpoveď
 >    z dokumentov SFZ“, „Odpoveď z dokumentov SFZ a zo zdroja Sportnet
 >    dokumentácia“, „Odpoveď zo zdroja Sportnet dokumentácia“. Pod
 >    odpoveďou ostáva zoznam zdrojov a palce ako dnes.
