@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Widget kanála: výber zdrojov a hlavička odpovede (2026-10-23, KANAL-widget-zdroje)
+
+- Pod hlavičkou panela je „Zdroje: Knižnica, Sportnet dokumentácia ▾“ —
+  zdroje sú vždy vymenované. Rozbalí sa v paneli so zaškrtávacími riadkami
+  a „Hotovo“; posledný zapnutý zdroj sa nedá odškrtnúť. Ponúknu sa len
+  zdroje, ktoré správca kanála povolil, predvolene všetky.
+- Zmena nič nespúšťa, platí od ďalšej otázky. Pri poslednej odpovedi
+  z iných zdrojov je oznam s „Opýtať sa znova“.
+- Každá odpoveď má hlavičku, v čom sa hľadalo („Odpoveď z dokumentov SFZ
+  a zo zdroja Sportnet dokumentácia“); ukladá sa aj so záznamom.
+- Štýly widgetu prevzali tokeny a tlačidlá, riadky a hlášky z design
+  systému; palce majú 44 px.
+
 ### Opýtať sa: výber zdrojov bez automatického opýtania (2026-10-23, ASK-zdroje-hladania)
 
 - Pod otázkou je tiché tlačidlo „Zdroje: Knižnica ▾“ — zapnuté zdroje sú

@@ -13,6 +13,8 @@ import { channelByKey, widgetFallbackContact } from "@/lib/channels"
 import { dictionary } from "@/lib/i18n"
 import { brandingView } from "@/lib/tenants"
 import { widgetScript } from "@/lib/widgetScript"
+import { widgetSources } from "@/lib/widgetSources"
+import { accentVars } from "@/components/TenantHeader"
 
 export const dynamic = "force-dynamic"
 
@@ -24,10 +26,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ channel
   if (!channel || channel.kind !== "widget" || !channel.widget.origins.length) return new Response(null, { status: 404 })
   const language = channel.languages[0] ?? tenant.defaultLanguage
   const host = await requestHostname()
+  const tw = dictionary(language).widget
+  const branding = brandingView(tenant)
+  const accent = branding.accentColor ?? "#1f6feb"
+  const org = branding.shortName?.trim() || branding.displayName
+  // Povolené zdroje kanála (KANAL-widget-zdroje): Knižnica a verejné konektory
+  // z `connectorScopes`, jeden za konektor. Podnadpis riadku je hotový text.
+  const sources = (await widgetSources(tenant.companyCode, channel, tw.scopeLibrary))
+    .map(s => ({ ...s, sub: s.id === "library" ? tw.scopeLibrarySub.replace("{org}", org) : tw.scopeLiveSub }))
   const js = widgetScript({
     apiBase: `https://${host}`,
     channel: channel.key,
-    accent: brandingView(tenant).accentColor ?? "#1f6feb",
+    accent,
+    // Hover plného tlačidla ako v aplikácii (`--accent-strong` z `accentVars`).
+    accentStrong: accentVars(accent)["--accent-strong"] ?? accent,
+    sources,
     texts: { ...dictionary(language).widget, rateLimited: dictionary(language).errors["widget.rateLimited"] ?? "" } as Record<string, string>,
     language,
     contact: widgetFallbackContact(channel, tenant.branding?.supportEmail),

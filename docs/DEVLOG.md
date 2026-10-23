@@ -11,6 +11,28 @@
 ---
 
 
+## 2026-10-23 — widget kanála: výber zdrojov (KANAL-widget-zdroje)
+
+**Čo sa zmenilo:** widget dostáva v konfigurácii povolené zdroje kanála
+(`lib/widgetSources.ts`: Knižnica + verejné konektory z `connectorScopes`,
+jeden za konektor). Chat prijme `sources`, overí ich proti povoleným
+(prázdne/neznáme = všetky — starý skript nič neposiela) a zúži hľadanie cez
+`only`. Hlavičku odpovede skladá server (`answerKicker`/`answerFrom`) a pošle
+ju ako prvú udalosť `scope`; skript ju len vypíše — skloňovanie ostáva v i18n.
+`searchedScope` sa ukladá so záznamom ako na `/ask`.
+
+**Design system v Shadow DOM:** `WIDGET_TOKENS` a doslova prenesené
+`.button*`, `.form-row*`, `.select-row`, `.lnote*`; test porovná tokeny
+s `:root` v `globals.css`. `.btn` je preč (W1).
+
+**Na čo pozor:** v Shadow DOM `.lnote{display:flex}` prebije atribút
+`hidden` — bez `[hidden]{display:none!important}` ostal oznam viditeľný.
+Staré `textarea,input{…}` sploštilo checkbox; platí už len pre `textarea`.
+Overené v Playwrighte so simulovaným SSE (výber, zamknutý posledný zdroj,
+Esc, oznam, opätovné opýtanie), nie proti živému serveru.
+
+---
+
 ## 2026-10-23 — výber zdrojov na Opýtať sa (ASK-zdroje-hladania)
 
 **Čo sa zmenilo:** `.view-switch` s tlačidlami zdrojov nahradil `<details>`

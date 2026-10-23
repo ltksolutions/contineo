@@ -2558,6 +2558,21 @@ interface Dictionary {
     poweredBy: string
     /** Pred adresou správcu, keď widget nefunguje (Ján 8. 10. 2026). */
     contact: string
+    /**
+     * Výber zdrojov (KANAL-widget-zdroje, 23. 10. 2026). Reťazce so `{…}`
+     * dopĺňa skript widgetu — funkcia sa do JSON konfigurácie poslať nedá.
+     */
+    scopeButton: string
+    scopeLabel: string
+    scopeLibrary: string
+    scopeLibrarySub: string
+    scopeLiveSub: string
+    scopeHint: string
+    scopeLast: string
+    scopeDone: string
+    scopeChanged: string
+    scopeChangedOnly: string
+    reask: string
   }
   /** Kanály (ADR-028, D161, D169): widget a portál — obsah, schránka, riešitelia, história schránky. */
   channels: {
@@ -7690,6 +7705,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expired: "Prihlásenie vypršalo — obnov stránku.",
     poweredBy: "Contineo",
     contact: "Ak to nepôjde ani neskôr, napíš správcovi:",
+    scopeButton: "Zdroje: {names}",
+    scopeLabel: "Zdroje hľadania",
+    scopeLibrary: "Knižnica",
+    scopeLibrarySub: "Predpisy a dokumenty {org}",
+    scopeLiveSub: "Živý zdroj — neprešiel kurátorom",
+    scopeHint: "Platí od ďalšej otázky.",
+    scopeLast: "Aspoň jeden zdroj ostáva zapnutý.",
+    scopeDone: "Hotovo",
+    scopeChanged: "Zdroje sa zmenili. Táto odpoveď je {from}.",
+    scopeChangedOnly: "Zdroje sa zmenili. Táto odpoveď je len {from}.",
+    reask: "Opýtať sa znova",
   },
   channels: {
     heading: "Kanály",
@@ -12685,6 +12711,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expired: "Přihlášení vypršelo — obnov stránku.",
     poweredBy: "Contineo",
     contact: "Pokud to nepůjde ani později, napiš správci:",
+    scopeButton: "Zdroje: {names}",
+    scopeLabel: "Zdroje hledání",
+    scopeLibrary: "Knihovna",
+    scopeLibrarySub: "Předpisy a dokumenty {org}",
+    scopeLiveSub: "Živý zdroj — neprošel kurátorem",
+    scopeHint: "Platí od další otázky.",
+    scopeLast: "Alespoň jeden zdroj zůstává zapnutý.",
+    scopeDone: "Hotovo",
+    scopeChanged: "Zdroje se změnily. Tato odpověď je {from}.",
+    scopeChangedOnly: "Zdroje se změnily. Tato odpověď je jen {from}.",
+    reask: "Zeptat se znovu",
   },
   channels: {
     heading: "Kanály",
@@ -17671,6 +17708,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expired: "Your session expired — reload the page.",
     poweredBy: "Contineo",
     contact: "If it still does not work later, write to the administrator:",
+    scopeButton: "Sources: {names}",
+    scopeLabel: "Search sources",
+    scopeLibrary: "Library",
+    scopeLibrarySub: "{org} regulations and documents",
+    scopeLiveSub: "Live source — not curated",
+    scopeHint: "Applies from the next question.",
+    scopeLast: "At least one source stays on.",
+    scopeDone: "Done",
+    scopeChanged: "Sources changed. This answer is {from}.",
+    scopeChangedOnly: "Sources changed. This answer is only {from}.",
+    reask: "Ask again",
   },
   channels: {
     heading: "Channels",
