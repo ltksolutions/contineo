@@ -4,6 +4,44 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola súladu: zmena znenia v celom odseku (2026-10-23, #419)
+
+- Otvorený nález ukáže v „Zmena znenia" celý odsek, zoznam alebo tabuľku
+  so zmenou, nad ním nadpis oddielu a sivé okolie z aktuálneho konceptu.
+- Keď úryvok v koncepte už nie je (zmenil ho iný prijatý nález), ostane
+  samotný rozdiel s poznámkou prečo.
+
+### Kontrola súladu: tiché tlačidlá a požiadavky len pre priamo podradené (2026-10-23, #416, #417)
+
+- „Netreba" pri požiadavke a „Zrušiť" pri odvolaní pridelenia sú tiché
+  tlačidlá; požiadavka na kontrolu vzniká len pre priamo podradené
+  dokumenty a citácie sú bez značiek Markdownu.
+
+### Kontrola súladu: rekapitulácia pred spustením, zastavenie, kontrola konceptu (2026-10-20, ADR-036, #401, #403)
+
+- Každé spustenie kontroly ide najprv na rekapituláciu: druh, dokumenty
+  (pri každom „koncept" alebo „platné znenie"), normy, model a odhad ceny
+  a času podľa posledného kola. Až tlačidlo na konci kontrolu spustí.
+- Kým kolo beží, druhé sa spustiť nedá; bežiace kolo sa dá **zastaviť**.
+- **Zrušiť kontrolu** ju skryje zo zoznamu a jej rozhodnutia sa ďalej
+  neprenášajú; nič sa nemaže.
+- Kontrolovaný dokument s rozpracovaným konceptom sa kontroluje
+  v koncepte, nie v platnom znení (D240). Normy ostávajú v platnom znení.
+
+### Editor: náhľad v záložke, nález v Markdowne, „Uložiť a ďalší" (2026-10-18 – 19, #399, #400)
+
+- V režime Markdown je zdroj na celú šírku a náhľad v záložke Preview.
+- Editor nového znenia v nálezoch sa otvára v Markdowne — vizuálny režim
+  pri uložení escapoval hviezdičky.
+- „Uložiť a ďalší" v kontrole súladu vedie na ďalší nález aj pri
+  identifikátore dokumentu s dvojbodkou.
+
+### Členenie: dlhý odsek, zoznam a tabuľka sa delia (2026-10-18, #398)
+
+- Odsek alebo položka nad 900 tokenov sa delí za koncom vety, zoznam nad
+  1 350 tokenov aj medzi položkami, dlhá tabuľka po riadkoch s hlavičkou.
+  Najväčší úsek knižnice klesol z 3 909 na 1 335 tokenov.
+
 ### Členenie: návrh rezov pri veľkom dokumente a jedno meranie úseku (2026-10-21, #410–#414)
 
 - **Navrhnúť rezy** funguje aj pri dokumente s tisíckami blokov (zákon

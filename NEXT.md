@@ -6,11 +6,23 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-22** (ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-23** (kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Manuály ISSF — nové znenia (20.–23. 10.).** Koncepty ISSF-00, 01, 02,
+03, 04, 05 a 07 obsahujú prijaté doplnenia z helpdesku (18. 10.), e-mail
+Oddelenia vzdelávania trénerov a podnadpisy 4.1/4.2 v ISSF-05. Kontrola
+„Manuály ISSF — nové znenia (október 2026)" má **kolo 2 nad konceptmi:
+41 nálezov** (2,28 USD); Ján ich rozhoduje s kolegami z oddelení
+(odporúčania: 30 prijať, 1 upraviť, 10 ponechať — z toho 7 rozporov
+z podnetu pre legislatívu). Kolo 1 (zverejnené znenia) sa nerozhoduje.
+Staré kontroly manuálov z 10.–20. 10. sú zrušené (ADR-036 D238).
+**Podnet pre legislatívu** (poplatok 0,50 €, preukaz „sám pre seba",
+fotografia, oznámenie klubového ISSF manažéra) je pripravený ako Word
+pre LPO, odoslanie je na Jánovi.
 
 **Zákon o športe zo Slov-Lexu (ADR-037, 20.–21. 10., #405–#414).** Knižnica →
 Nahrať → **Predpis zo Slov-Lexu**: adresa alebo číslo (440/2015), stiahne sa
@@ -241,14 +253,14 @@ nastaví v Nastaveniach, záložka GDPR (D154). Otvorená karta po nasadení pon
 
 ## Čo čaká na rozhodnutie Jána
 
-**44 návrhov z helpdesku do manuálov** — rozhodnúť v Kontrole súladu
-(„Návrhy z helpdesku do manuálov — ISSF Helpdesk"); prijaté sa zapíšu do
-konceptov a manuály pôjdu na schválenie. Dva nálezy sú podnet pre
-legislatívu (prax verzus norma).
+**41 nálezov kola 2 kontroly manuálov** — rozhoduje Ján s oddeleniami
+v Kontrole súladu; pri zápisoch pre laikov (ISSF-05) overiť so ŠTK, kto
+zápis uzatvára. Lehotu „žiadosť o predĺženie licencie najskôr 30 dní pred
+skončením" (ISSF-00) overiť s Oddelením vzdelávania trénerov.
 
-**Podnet legislatíve: RaPP verzus prax ISSF** — tri vedome ponechané nálezy
-(poplatok 0,50 € mesačne, žiadosť o preukaz „sám pre seba", fotografia
-v žiadosti), `docs/TODO.md`.
+**Podnet legislatíve: RaPP a Stanovy verzus prax ISSF** — štyri body,
+dokument pripravený 20. 10.; poslať LPO a pri poplatku 0,50 € zistiť,
+na základe čoho ho ISSF účtuje.
 
 **🔴 Ako DPO: súhlas s účelom „história otázok“** (H1) — nasadené 30. 9.
 pred súhlasom, na pokyn Jána; záznam o spracúvaní a `/privacy` sú doplnené.
@@ -288,8 +300,8 @@ počty v `retention[].helpdesk`).
 
 ## Najbližšie kroky
 
-1. **Rozhodnúť 44 návrhov z helpdesku** a nové znenia dotknutých manuálov
-   (ISSF-00, 01, 02, 03, 04, 05, 07) poslať na schválenie naraz.
+1. **Rozhodnúť 41 nálezov kola 2** a nové znenia siedmich manuálov
+   (ISSF-00, 01, 02, 03, 04, 05, 07) poslať na schválenie v jednom kole.
 2. **Zverejniť Zákon o športe** (koncept je pripravený, nadradený Stanovám;
    schvaľuje správca obsahu podľa D246) a potom pustiť kontrolu súladu
    Stanov proti nemu. **Nahrať licenčnú normu trénerov** — päť otázok
@@ -311,8 +323,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (21. 10.): **0 errors, 39 warnings,
-2858 testov v 246 súboroch.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
+Baseline, proti ktorej sa porovnáva (23. 10.): **0 errors, 39 warnings,
+2867 testov v 247 súboroch.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
 na 390 px — #321 prešiel štyrmi brzdami a typ otázky aj tak pretekal o 65 px. Pri paralelnej session pred zlúčením PR
 zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
 `main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže
