@@ -81,10 +81,12 @@ export default async function RevokeAssignmentPage({
       </section>
 
       {assignment.revokedAt ? (
-        <p className="card" style={{ padding: "12px 16px", fontSize: "var(--fs-body)" }}>
-          {t.alreadyRevoked}{" "}
-          <Link href="/hr">{t.cancel}</Link>
-        </p>
+        <div className="card" style={{ padding: "12px 16px", fontSize: "var(--fs-body)" }}>
+          <p style={{ margin: "0 0 10px" }}>{t.alreadyRevoked}</p>
+          <div className="task-acts">
+            <Link className="button button--quiet" href="/hr">{t.cancel}</Link>
+          </div>
+        </div>
       ) : (
         <>
           <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.whatHappensHeading}</h2>
