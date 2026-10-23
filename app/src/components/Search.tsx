@@ -28,6 +28,11 @@ import { HEADER_ASK_ID } from "./HeaderAsk"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { answerFrom } from "@/lib/answerKicker"
 
+/** Id zdrojov → knižnica a názvy živých zdrojov (hlavička, oznam, uložený záznam). */
+function scopeOf(ids: string[], liveSources: { id: string; name: string }[] | undefined) {
+  return { library: ids.includes("library"), live: (liveSources ?? []).filter(l => ids.includes(l.id)).map(l => l.name) }
+}
+
 const EMPTY: AnswerState = {
   question: "", text: "", citations: [], done: null, running: false,
 }
@@ -91,7 +96,7 @@ export default function Search({
    * spočítať aj z neposúdených odpovedí. Keby sa záznam zakladal až pri
    * kliknutí na hodnotenie, prišli by sme o dáta z každej preskočenej otázky.
    */
-  async function record(q: string, v: AskResult) {
+  async function record(q: string, v: AskResult, scope: string[]) {
     try {
       const r = await fetch("/api/rating", {
         method: "POST",
@@ -109,6 +114,8 @@ export default function Search({
           verifiedCitations: v.verifiedCitations,
           ttftMs: v.ttftMs, totalMs: v.totalMs, timings: v.timings,
           tokens: v.tokens, cost: v.cost, time: v.time,
+          // V čom sa hľadalo — uložená odpoveď ho menuje rovnako ako táto (Q3, A 23. 10.).
+          searchedScope: scopeOf(scope, liveSources),
         }),
       })
       if (!r.ok) return
@@ -149,7 +156,7 @@ export default function Search({
         { signal: ctrl.signal, language, only: scope }
       )
       setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time, comparison: v.comparison })
-      if (!v.error && v.text) void record(q, v)
+      if (!v.error && v.text) void record(q, v, scope)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.
       if ((e as Error)?.name === "AbortError") return
@@ -186,7 +193,6 @@ export default function Search({
    */
   const scopeIds = ["library", ...(liveSources ?? []).map(l => l.id)]
   const sourceName = (id: string) => (id === "library" ? t.scopeLibrary : liveSources?.find(l => l.id === id)?.name ?? id)
-  const toScope = (ids: string[]) => ({ library: ids.includes("library"), live: (liveSources ?? []).filter(l => ids.includes(l.id)).map(l => l.name) })
   const sameScope = (a: string[], b: string[]) => a.length === b.length && a.every(x => b.includes(x))
   // Zdroje sa menujú, neskrývajú za „všetky" ani „2 z 3" — má byť jasné,
   // v čom sa hľadá (Ján 23. 10. 2026).
@@ -375,12 +381,12 @@ export default function Search({
       {scopeChanged && (
         <div className="lnote lnote--info lnote--action ask-scope-note" role="status">
           <span className="lnote-mark" aria-hidden="true">!</span>
-          <span className="lnote-text">{t.scopeChanged(answerFrom(toScope(askedScope), organisation, language), askedScope.length === 1)}</span>
+          <span className="lnote-text">{t.scopeChanged(answerFrom(scopeOf(askedScope, liveSources), organisation, language), askedScope.length === 1)}</span>
           <button type="button" className="button button--sm" onClick={reask}>{t.reask}</button>
         </div>
       )}
 
-      <AnswerBody state={state} organisation={organisation} language={language} scope={toScope(askedScope)} />
+      <AnswerBody state={state} organisation={organisation} language={language} scope={scopeOf(askedScope, liveSources)} />
       </div>
 
       {/* Vpravo od karty (≥ 1180 px), inak pod ňou — poradie určuje CSS mriežka. */}

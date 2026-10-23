@@ -7,7 +7,7 @@
 import { describe, it, expect } from "vitest"
 import { createElement } from "react"
 import { renderToString } from "react-dom/server"
-import { scopeFromQuery } from "../src/lib/askScope"
+import { scopeFromQuery, sanitizeSearchedScope } from "../src/lib/askScope"
 import { answerFrom, answerKicker, type KickerScope } from "../src/lib/answerKicker"
 import { dictionary, type UiLanguage } from "../src/lib/i18n"
 import Search from "../src/components/Search"
@@ -23,6 +23,15 @@ describe("rozsah z adresy", () => {
     expect(scopeFromQuery("library,zmizol", ids)).toEqual(["library"])
     expect(scopeFromQuery(undefined, ids)).toEqual([])
     expect(scopeFromQuery("", ids)).toEqual([])
+  })
+})
+
+describe("v čom sa hľadalo — uložené pri odpovedi (A, 23. 10.)", () => {
+  it("uloží len knižnicu a názvy", () => {
+    expect(sanitizeSearchedScope({ library: true, live: ["Sportnet", 3, ""], extra: 1 })).toEqual({ library: true, live: ["Sportnet"] })
+    expect(sanitizeSearchedScope({ library: "yes" })).toEqual({ library: false, live: [] })
+    expect(sanitizeSearchedScope(undefined)).toBeUndefined()
+    expect(sanitizeSearchedScope({ live: Array(20).fill("x".repeat(200)) })!.live).toHaveLength(10)
   })
 })
 

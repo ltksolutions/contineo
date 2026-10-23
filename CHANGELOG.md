@@ -15,6 +15,9 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
   „Opýtať sa znova“. Doteraz každý klik položil otázku znova.
 - Hlavička odpovede menuje zdroje, s ktorými sa naozaj pýtalo, nie to, čo
   je práve zaškrtnuté. Znenie ostáva z 8. 10.
+- Hlavička menuje, **v čom sa hľadalo**, aj keď z niektorého zdroja nič
+  neprišlo. Uložená odpoveď (`/ask/a/…`) si to pamätá (`searchedScope`),
+  staršie záznamy ho odvodia z obsahu ako doteraz.
 - Bez JavaScriptu je výber obyčajný GET formulár (`?src=` aj opakovane).
 - Design system: popover `.ask-scope-pop` a hláška s akciou `.lnote--action`.
 
