@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Opýtať sa: výber zdrojov bez automatického opýtania (2026-10-23, ASK-zdroje-hladania)
+
+- Pod otázkou je tiché tlačidlo „Zdroje: Knižnica ▾“. Otvorí plachtu (na
+  telefóne zospodu, od 640 px pod tlačidlom) so zaškrtávacími riadkami
+  Knižnica a živé zdroje a s tlačidlom „Opýtať sa znova“.
+- **Zmena zdrojov nič nespúšťa.** Odpoveď ostane a nad ňou je oznam
+  „Zdroje sa zmenili. Odpoveď nižšie je len z dokumentov SFZ.“ s tlačidlom
+  „Opýtať sa znova“. Doteraz každý klik položil otázku znova.
+- Hlavička odpovede menuje zdroje, s ktorými sa naozaj pýtalo, nie to, čo
+  je práve zaškrtnuté. Znenie ostáva z 8. 10.
+- Bez JavaScriptu je výber obyčajný GET formulár (`?src=` aj opakovane).
+- Design system: popover `.ask-scope-pop` a hláška s akciou `.lnote--action`.
+
 ### Členenie: návrh rezov pri veľkom dokumente a jedno meranie úseku (2026-10-21, #410–#414)
 
 - **Navrhnúť rezy** funguje aj pri dokumente s tisíckami blokov (zákon

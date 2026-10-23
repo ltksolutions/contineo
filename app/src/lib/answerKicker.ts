@@ -4,7 +4,9 @@
  * Hlavička hovorí, odkiaľ odpoveď je. Keď je okrem knižnice zapnutý aj živý
  * zdroj (ADR-029) alebo len on, „Odpoveď z dokumentov SFZ" by klamala.
  *
- * Na `/ask` rozhodujú zapnuté pilulky. Uložená odpoveď výber nepozná — tam
+ * Na `/ask` rozhodujú zdroje, **s ktorými sa naozaj pýtalo** (`askedScope`
+ * v `Search`), nie živý výber v plachte — inak by po zmene výberu hlavička
+ * klamala (ASK-zdroje-hladania, 23. 10. 2026). Uložená odpoveď výber nepozná — tam
  * sa zdroje odvodia z toho, čo v nej naozaj je (D27): živé podľa
  * `source.live`, knižnica, keď je aspoň jeden zdroj z nej alebo žiadny živý.
  */
@@ -45,4 +47,19 @@ export function answerKicker(scope: KickerScope, organisation: string | undefine
   const names = joinNames(live, lang)
   if (!scope.library) return tAsk.answerKickerLive(names, live.length)
   return tAsk.answerKickerBoth(organisation ?? "", names, live.length)
+}
+
+/**
+ * „z dokumentov SFZ a zo zdroja …" — odkiaľ zobrazená odpoveď je, do oznamu
+ * „Zdroje sa zmenili" (ASK-zdroje-hladania). Tie isté pravidlá ako
+ * `answerKicker`; Ján 23. 10. 2026 ponechal znenie z 8. 10. (Q3).
+ */
+export function answerFrom(scope: KickerScope, organisation: string | undefined, language: UiLanguage | undefined): string {
+  const lang: UiLanguage = language ?? "sk"
+  const tAsk = dictionary(lang).ask
+  const live = scope.live.filter(Boolean)
+  if (live.length === 0) return tAsk.fromLibrary(organisation ?? "")
+  const names = joinNames(live, lang)
+  if (!scope.library) return tAsk.fromLive(names, live.length)
+  return tAsk.fromBoth(organisation ?? "", names, live.length)
 }

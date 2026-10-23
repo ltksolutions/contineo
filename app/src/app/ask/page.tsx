@@ -27,6 +27,7 @@ import AppShell from "@/components/AppShell"
 import { evaluationContext } from "@/lib/evaluation"
 import { liveConnectorsFor } from "@/lib/liveSources"
 import { accessLevelFor } from "@/lib/accessLevel"
+import { scopeFromQuery } from "@/lib/askScope"
 
 // Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
@@ -69,10 +70,8 @@ export default async function AskPage({
   // s úrovňou pýtajúceho sa a bez volania servera.
   const liveSources = (await liveConnectorsFor(ctx.tenant.companyCode, accessLevelFor(ctx)))
     .map(c => ({ id: c.id, name: c.name, defaultOn: Boolean(c.uses.retrieval.defaultOn) }))
-  // Rozsah z adresy (`?src=library,<id>`): voľba z piluliek prežije obnovenie
-  // stránky aj odkaz. Bez nej knižnica a konektory s „používať predvolene".
-  const srcRaw = Array.isArray(q?.src) ? q?.src[0] : q?.src
-  const initialScope = (srcRaw ?? "").split(",").map(x => x.trim()).filter(x => x === "library" || liveSources.some(l => l.id === x))
+  // Rozsah z adresy — oba tvary `src` (so skriptom aj bez neho), `askScope.ts`.
+  const initialScope = scopeFromQuery(q?.src, liveSources.map(l => l.id))
 
   return (
     <AppShell language={person?.language}>

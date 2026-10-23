@@ -3995,6 +3995,35 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .filter-sheet { display: none; }
 }
 
+/*
+ * Plachta ako popover (ASK-zdroje-hladania O1, 23. 10. 2026): ten istý
+ * obsah ako spodná plachta `.filter-sheet-body` (riadky výberu, jedno plné
+ * tlačidlo), od 640 px ukotvený pod tlačidlom, ktoré ho otvorilo
+ * (`position: relative` na obale). Vzor SwiftUI `.popover` na iPade a Macu.
+ * Šírka 360 px: dva riadky s podnadpisom sa pri 230 px z `.more-menu`
+ * lámali na štyri. Závoj od 640 px nie je.
+ */
+@media (min-width: 640px) {
+  .ask-scope-pop.filter-sheet-body {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: auto;
+    bottom: auto;
+    z-index: 20;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    max-height: none;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+  .ask-scope-pop .sheet-grip { display: none; }
+  .ask-scope-pop .filter-sheet-apply { position: static; min-height: var(--control-h); }
+  .ask-scope-scrim { display: none; }
+}
+
 .library-count { font-size: 14px; font-variant-numeric: tabular-nums; }
 
 .library-chips {
@@ -4391,12 +4420,22 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   gap: 4px 14px;
   font-size: 13px;
 }
-/* Pilulky rozsahu hľadania (ADR-029) — segmentový prepínač z tlačidiel, nie odkazov:
-   prepnutie položí otázku znova, nie je to adresa. */
-.ask-scope { margin-top: 10px; }
-button.view-switch-item { border: 0; background: transparent; font: inherit; cursor: pointer; }
-button.view-switch-item.is-on { background: var(--seg-thumb); }
-button.view-switch-item:disabled { cursor: default; opacity: .7; }
+/* Výber zdrojov hľadania (ADR-029, ASK-zdroje-hladania 23. 10. 2026): tiché
+   tlačidlo s hodnotou a plachta s riadkami `.select-row`. Pod 640 px spodná
+   plachta (`.filter-sheet-body`) nad závojom a bez hlavnej lišty, od 640 px
+   popover `.ask-scope-pop`. Zmena výberu nič nespúšťa — opýta sa až
+   „Opýtať sa znova". */
+.ask-scope { position: relative; justify-self: start; margin-top: 10px; }
+.ask-scope > summary { list-style: none; cursor: pointer; }
+.ask-scope > summary::-webkit-details-marker { display: none; }
+.ask-scope .form-group { margin: 0; }
+.ask-scope-note { margin: 0 0 12px; }
+@media (max-width: 639px) {
+  body:has(.ask-scope[open]) .app-nav-tabbar { display: none; }
+}
+/* Zavrieť v hlavičke plachty je tlačidlo (zavrie bez skriptu nič nemá
+   odkazovať), vyzerá ako `.sheet-clear` odkaz. */
+button.sheet-clear { border: 0; background: none; padding: 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer; }
 /* „Upraviť otázku" je `<label>` poľa v hlavičke — vyzerá ako odkaz. */
 .ask-edit {
   display: inline-flex;
@@ -7067,6 +7106,10 @@ span.domain-end { font-size: 12.5px; }
 .lnote--info .lnote-mark { background: var(--surface-2); color: var(--ink); }
 .lnote--info .lnote-text { color: var(--ink); }
 .lnote--warn { background: var(--warn-bg); }
+/* Hláška s akciou (ASK-zdroje-hladania O2, 23. 10. 2026): tlačidlo vpravo
+   od textu, pod 640 px sa zalomí pod text (44 px z `.button--sm`). */
+.lnote--action { align-items: center; flex-wrap: wrap; }
+.lnote--action .lnote-text { flex: 1 1 220px; }
 .lnote--warn .lnote-mark, .lnote--warn .lnote-text { color: var(--warn-fg); }
 /* Strážca zápisu na editore textu (16. 10. 2026) — riadky, ktoré editor prepísal. */
 .markup-list { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow: auto; border: 1px solid var(--line); border-radius: 9px; }

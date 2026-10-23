@@ -814,9 +814,28 @@ interface Dictionary {
     examplesLabel: string
     examples: string[]
     unknownError: string
-    /** Pilulky rozsahu hľadania — len keď je okrem knižnice aj živý zdroj (ADR-029). */
+    /** Výber zdrojov — len keď je okrem knižnice aj živý zdroj (ADR-029, ASK-zdroje-hladania). */
     scopeLabel: string
     scopeLibrary: string
+    /** Tlačidlo výberu: „Zdroje: Knižnica ▾". */
+    scopeButton: (value: string) => string
+    scopeAll: string
+    scopeSome: (n: number, m: number) => string
+    scopeNone: string
+    scopeTitle: string
+    scopeLibrarySub: string
+    /** Živý zdroj obsah neprešiel kurátorom (D174). */
+    scopeLiveSub: string
+    scopeFoot: string
+    scopeEmpty: string
+    reask: string
+    scopeClose: string
+    /** Oznam nad odpoveďou: výber ≠ zdroje zobrazenej odpovede. `from` je „z dokumentov SFZ"… */
+    scopeChanged: (from: string, single: boolean) => string
+    /** Odkiaľ odpoveď je — to isté ako `answerKicker*`, bez slova „Odpoveď". */
+    fromLibrary: (organisation: string) => string
+    fromLive: (names: string, count: number) => string
+    fromBoth: (organisation: string, names: string, count: number) => string
     /** Bez JavaScriptu odpovedanie nefunguje — SSE sa formulárom nenahradí. */
     noScript: string
     noScriptLink: string
@@ -5485,6 +5504,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznáma chyba",
     scopeLabel: "Hľadať v",
     scopeLibrary: "Knižnica",
+    scopeButton: v => `Zdroje: ${v}`,
+    scopeAll: "všetky",
+    scopeSome: (n, m) => `${n} z ${m}`,
+    scopeNone: "žiadne",
+    scopeTitle: "Zdroje hľadania",
+    scopeLibrarySub: "Dokumenty organizácie v Contineo",
+    scopeLiveSub: "Živý zdroj — hľadá sa priamo v ňom, obsah neprešiel kurátorom",
+    scopeFoot: "Zmena sa prejaví, až keď sa opýtate znova.",
+    scopeEmpty: "Vyberte aspoň jeden zdroj.",
+    reask: "Opýtať sa znova",
+    scopeClose: "Zavrieť",
+    scopeChanged: (from, single) => `Zdroje sa zmenili. Odpoveď nižšie je ${single ? "len " : ""}${from}.`,
+    fromLibrary: org => (org ? `z dokumentov ${org}` : "z dokumentov"),
+    fromLive: (names, count) => `${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
+    fromBoth: (org, names, count) => `z dokumentov ${org} a ${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
     noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
     noScriptLink: "prejsť na dokumenty",
     history: {
@@ -10467,6 +10501,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznámá chyba",
     scopeLabel: "Hledat v",
     scopeLibrary: "Knihovna",
+    scopeButton: v => `Zdroje: ${v}`,
+    scopeAll: "všechny",
+    scopeSome: (n, m) => `${n} z ${m}`,
+    scopeNone: "žádné",
+    scopeTitle: "Zdroje hledání",
+    scopeLibrarySub: "Dokumenty organizace v Contineo",
+    scopeLiveSub: "Živý zdroj — hledá se přímo v něm, obsah neprošel kurátorem",
+    scopeFoot: "Změna se projeví, až když se zeptáte znovu.",
+    scopeEmpty: "Vyberte alespoň jeden zdroj.",
+    reask: "Zeptat se znovu",
+    scopeClose: "Zavřít",
+    scopeChanged: (from, single) => `Zdroje se změnily. Odpověď níže je ${single ? "jen " : ""}${from}.`,
+    fromLibrary: org => (org ? `z dokumentů ${org}` : "z dokumentů"),
+    fromLive: (names, count) => `${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
+    fromBoth: (org, names, count) => `z dokumentů ${org} a ${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
     noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
     noScriptLink: "přejít na dokumenty",
     history: {
@@ -15440,6 +15489,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Unknown error",
     scopeLabel: "Search in",
     scopeLibrary: "Library",
+    scopeButton: v => `Sources: ${v}`,
+    scopeAll: "all",
+    scopeSome: (n, m) => `${n} of ${m}`,
+    scopeNone: "none",
+    scopeTitle: "Search sources",
+    scopeLibrarySub: "Your organisation’s documents in Contineo",
+    scopeLiveSub: "Live source — searched directly, content not curated",
+    scopeFoot: "The change applies when you ask again.",
+    scopeEmpty: "Choose at least one source.",
+    reask: "Ask again",
+    scopeClose: "Close",
+    scopeChanged: (from, single) => `Sources changed. The answer below is ${single ? "only " : ""}${from}.`,
+    fromLibrary: org => (org ? `from ${org} documents` : "from documents"),
+    fromLive: names => `from ${names}`,
+    fromBoth: (org, names) => `from ${org} documents and ${names}`,
     noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
     noScriptLink: "go to documents",
     history: {
