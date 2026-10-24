@@ -79,6 +79,9 @@ sú len doplnok. Texty sú po slovensky.
   riadkami `.form-row.select-row` a jediným plným `button.filter-sheet-apply`. Pod 640 px
   spodná plachta nad `.ask-scrim`, od 640 px popover 360 px pod tlačidlom. Zmena výberu
   nič nespúšťa, akcia je až tlačidlo.
+- Výber vnútri plachty, ktorá už je nad obrazovkou (plachta otázky): bez druhého popoveru —
+  `details.ask-scope.ask-sheet-scope` v lište drží len tlačidlo, riadky sú sesterský
+  `fieldset.ask-sheet-scope-pane.form-group` pod lištou, zobrazený cez `:has([open])`.
 - Nástroje v hlavičke: `.page-head` > `.page-head-main` (`h1.page-title` + `p.page-lead`)
   + `.page-tools` (tiché tlačidlá, hlavná akcia posledná).
 - Jediná výnimka z „`.view-switch` do formulára nepatrí": áno/nie s významom v posudku je

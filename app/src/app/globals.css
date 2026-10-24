@@ -4198,6 +4198,28 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 .ask-sheet-hint { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); }
 .ask-sheet-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+/*
+ * Zdroje hľadania v plachte (ASK-zdroje-v-plachte S1, S2, 23. 10. 2026).
+ * `<details>` v lište drží len tlačidlo; riadky sú sesterský `fieldset` pod
+ * lištou — v riadku flexu by obsah `<details>` sedel vedľa tlačidla. Zobrazí
+ * ho `:has([open])`, takže to funguje aj bez JS. Nápoveda klávesov sa vedľa
+ * tlačidla skráti (≥ 1024) alebo skryje (640–1023), aby sa lišta nezalomila.
+ */
+.ask-sheet-scope { flex: none; margin-top: 0; }
+.ask-sheet-scope > summary { max-width: 100%; gap: 6px; }
+/* `.ask-sheet` pred triedou: `.form-group` je v súbore neskôr a inak by prebil display aj odsadenie. */
+.ask-sheet .ask-sheet-scope-pane { display: none; padding: 0 18px 14px; margin: 0; min-width: 0; border: 0; }
+.ask-sheet:has(.ask-sheet-scope[open]) .ask-sheet-scope-pane { display: grid; gap: 6px; }
+.ask-sheet .ask-sheet-scope-pane .form-group-foot { margin: 0; }
+.ask-sheet-scope-pane .form-group-foot.is-warn { color: var(--ink); }
+.ask-sheet-bar-button { flex: none; }
+.ask-sheet-bar:has(.ask-sheet-scope) .ask-sheet-hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1023px) {
+  .ask-sheet-bar:has(.ask-sheet-scope) .ask-sheet-hint { visibility: hidden; }
+}
+@media (max-width: 639px) {
+  .ask-sheet .ask-sheet-scope-pane { padding: 0 12px 14px; }
+}
 
 .ask-sheet-submit {
   display: inline-flex;

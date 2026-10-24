@@ -11,6 +11,24 @@
 ---
 
 
+## 2026-10-23 — zdroje v plachte otázky (ASK-zdroje-v-plachte)
+
+**Čo sa zmenilo:** `AskSheet` má výber zdrojov v lište (`details.ask-sheet-scope`)
+a riadky pod lištou (`fieldset.ask-sheet-scope-pane`, zobrazené cez `:has([open])`,
+S1). Plachta v hlavičke si živé zdroje načíta pri prvom otvorení
+(`/api/ask/sources`, raz za kartu) — layout ich na každej stránke nepýta;
+vložená plachta na `/ask` ich má zo servera (aj bez JS). `lib/askSources.ts`
+je serverový zoznam, `defaultScope` a typ sú v čistom `askScope.ts`, lebo ich
+importuje klient. „Upraviť otázku“ odovzdá výber cez `askScopeStore.ts`.
+`Search` má `key` aj s výberom — tá istá otázka s iným `src` je nový beh.
+
+**Na čo pozor:** `.form-group` je v `globals.css` neskôr než pravidlá plachty
+a prebil `display: none` aj odsadenie — v zbalenom stave boli riadky vidieť.
+Pravidlá preto začínajú `.ask-sheet`. Klávesnica (Esc v dvoch krokoch,
+zamknutý posledný zdroj) je v kóde, v prehliadači nevyskúšaná.
+
+---
+
 ## 2026-10-23 — widget kanála: výber zdrojov (KANAL-widget-zdroje)
 
 **Čo sa zmenilo:** widget dostáva v konfigurácii povolené zdroje kanála

@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Opýtať sa: zdroje už v plachte otázky (2026-10-23, ASK-zdroje-v-plachte)
+
+- V plachte otázky (pole v hlavičke aj `/ask` bez otázky) je pri „Opýtať
+  sa“ tlačidlo „Zdroje: Knižnica ▾“; riadky so zdrojmi sa rozbalia v plachte.
+  Výber ide s otázkou — zdroje sa dajú zvoliť ešte pred prvou odpoveďou.
+- Veta pod lištou menuje vybrané zdroje („Odpoveď sa skladá len z dokumentov
+  SFZ a zo zdroja Sportnet dokumentácia.“).
+- „Upraviť otázku“ otvorí plachtu s výberom z obrazovky odpovede; otázka
+  s iným výberom spustí nový beh.
+
 ### Widget kanála: výber zdrojov a hlavička odpovede (2026-10-23, KANAL-widget-zdroje)
 
 - Pod hlavičkou panela je „Zdroje: Knižnica, Sportnet dokumentácia ▾“ —

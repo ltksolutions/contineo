@@ -19,6 +19,11 @@
  * Je to `<form method="get" action="/ask">` s `<textarea name="q">`, takže
  * vložená plachta odošle otázku aj bez JavaScriptu. So skriptom ide
  * odoslanie cez router (bez načítania stránky) a `/ask` spustí beh hneď.
+ *
+ * **Zdroje hľadania** (ASK-zdroje-v-plachte, 23. 10. 2026): keď má
+ * organizácia živý zdroj, v lište je „Zdroje: Knižnica ▾" a pod lištou riadky
+ * `.select-row` s `checkbox name="src"` — výber ide s otázkou ešte pred prvou
+ * odpoveďou. Zmena nič nespúšťa. Veta pod lištou menuje vybrané zdroje.
  */
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
@@ -27,6 +32,8 @@ import { useRouter } from "next/navigation"
 import Icon from "./Icon"
 import { ContineoMark } from "./ContineoMark"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { answerFrom } from "@/lib/answerKicker"
+import { defaultScope, type AskLiveSource } from "@/lib/askScope"
 
 /** Rovnaký strop ako API (`/api/chat`) a ako doterajšie pole na `/ask`. */
 export const QUESTION_MAX = 1000
@@ -36,6 +43,18 @@ const COUNTER_FROM = 800
 const MAX_HEIGHT = 6 * 17 * 1.5
 /** `useSyncExternalStore` bez odberu — len rozlíšenie server / prehliadač. */
 const noop = () => () => {}
+
+/**
+ * Živé zdroje pre plachtu v hlavičke — načítajú sa raz za kartu, pri prvom
+ * otvorení (layout ich na každej stránke nepýta).
+ */
+let sourcesOnce: Promise<{ live: AskLiveSource[]; organisation: string } | null> | null = null
+function loadSources() {
+  sourcesOnce ??= fetch("/api/ask/sources")
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null)
+  return sourcesOnce
+}
 
 /** Riadok vlastnej otázky z `/api/ask/history`. */
 interface Mine {
@@ -50,11 +69,17 @@ export default function AskSheet({
   organisation,
   language,
   onClose,
+  live: liveProp,
+  initialSources,
 }: {
   mode: "overlay" | "inline"
   initial?: string
-  /** Názov organizácie do vety o tom, z čoho sa odpovedá. */
+  /** Skratka organizácie do vety o tom, z čoho sa odpovedá („z dokumentov SFZ"). */
   organisation: string
+  /** Živé zdroje zo servera (vložená plachta na `/ask`); bez nich ich plachta načíta sama. */
+  live?: AskLiveSource[]
+  /** Výber z obrazovky odpovede („Upraviť otázku"); inak predvolený (Q3 A). */
+  initialSources?: string[]
   language?: UiLanguage
   /**
    * Len `overlay`: zavretie Esc, „×" alebo odoslaním — s tým, čo je v poli.
@@ -68,6 +93,39 @@ export default function AskSheet({
   const router = useRouter()
   const [value, setValue] = useState(initial)
   const field = useRef<HTMLTextAreaElement>(null)
+
+  // Zdroje: zo servera, alebo načítané pri otvorení plachty v hlavičke.
+  const [loaded, setLoaded] = useState<{ live: AskLiveSource[]; organisation: string } | null>(null)
+  useEffect(() => {
+    if (liveProp) return
+    let alive = true
+    void loadSources().then(d => { if (alive && d) setLoaded(d) })
+    return () => { alive = false }
+  }, [liveProp])
+  const live = liveProp ?? loaded?.live ?? []
+  const org = loaded?.organisation ?? organisation
+  const scopeIds = ["library", ...live.map(l => l.id)]
+  const [picked, setPicked] = useState<string[] | null>(null)
+  const fromStart = initialSources?.filter(id => scopeIds.includes(id))
+  const selected = picked ?? (fromStart?.length ? fromStart : defaultScope(live))
+  const [scopeOpen, setScopeOpen] = useState(false)
+  const [lastWarn, setLastWarn] = useState(false)
+  const scopeRef = useRef<HTMLDetailsElement>(null)
+  const sourceName = (id: string) => (id === "library" ? ta.scopeLibrary : live.find(l => l.id === id)?.name ?? id)
+  // Posledný zapnutý zdroj sa neodškrtne (bod 4) — riadok nie je `disabled`, inak by sa neodoslal.
+  const toggle = (id: string) => {
+    const next = scopeIds.filter(x => (x === id ? !selected.includes(x) : selected.includes(x)))
+    if (next.length === 0) { setLastWarn(true); setTimeout(() => setLastWarn(false), 1200); return }
+    setPicked(next)
+  }
+  const closeScope = () => {
+    setScopeOpen(false)
+    scopeRef.current?.querySelector("summary")?.focus()
+  }
+  const from = answerFrom(
+    { library: selected.includes("library"), live: live.filter(l => selected.includes(l.id)).map(l => l.name) },
+    org, language,
+  )
 
   /*
    * Vlastné otázky (ASK-historia-otazok): pri prázdnom poli posledné, pri
@@ -144,7 +202,9 @@ export default function AskSheet({
     const q = value.trim()
     if (!q) return
     onClose?.(q, true)
-    router.push(`/ask?q=${encodeURIComponent(q)}`)
+    // Výber ide s otázkou (`?src=`, PR #418); bez živého zdroja nie je čo poslať.
+    const src = live.length ? `&src=${encodeURIComponent(selected.join(","))}` : ""
+    router.push(`/ask?q=${encodeURIComponent(q)}${src}`)
   }
 
   const pick = (example: string) => {
@@ -181,6 +241,14 @@ export default function AskSheet({
       role={mode === "overlay" ? "dialog" : undefined}
       aria-label={mode === "overlay" ? ta.submit : undefined}
       onSubmit={e => { e.preventDefault(); submit() }}
+      onKeyDown={e => {
+        // Esc najprv zbalí výber zdrojov, až druhé zavrie plachtu (bod 7).
+        if (e.key === "Escape" && scopeOpen && e.target !== field.current) {
+          e.preventDefault()
+          e.stopPropagation()
+          closeScope()
+        }
+      }}
     >
       {/* Telefón (overlay): hlavička celej obrazovky. Na širšej sa skrýva. */}
       {mode === "overlay" && (
@@ -222,6 +290,11 @@ export default function AskSheet({
                 if (active >= 0 && mine[active]) openMine(mine[active])
                 else submit()
               }
+              if (e.key === "Escape" && scopeOpen) {
+                e.preventDefault()
+                closeScope()
+                return
+              }
               if (e.key === "Escape" && mode === "overlay") {
                 e.preventDefault()
                 onClose?.(value)
@@ -231,6 +304,15 @@ export default function AskSheet({
         </div>
 
         <div className="ask-sheet-bar">
+          {/* Výber zdrojov (Q1 A): `<details>` drží len tlačidlo, riadky sú pod
+              lištou a ukáže ich `:has([open])` — funguje aj bez JS (S1). */}
+          {live.length > 0 && (
+            <details ref={scopeRef} className="ask-scope ask-sheet-scope" open={scopeOpen} onToggle={e => setScopeOpen(e.currentTarget.open)}>
+              <summary className="button button--quiet button--sm" aria-controls="ask-sheet-scope-pane">
+                {`${ta.scopeButton(selected.map(sourceName).join(", "))} ▾`}
+              </summary>
+            </details>
+          )}
           <span className="ask-sheet-hint">
             {mine.length > 0 ? ta.sheet.hintHistory : mode === "overlay" ? ta.sheet.hint : ta.sheet.hintInline}
           </span>
@@ -240,12 +322,32 @@ export default function AskSheet({
           <span className="ask-sheet-bar-button">{button}</span>
         </div>
 
+        {live.length > 0 && (
+          <fieldset className="ask-sheet-scope-pane form-group" id="ask-sheet-scope-pane">
+            <legend className="form-group-head">{ta.scopeLabel}</legend>
+            <div className="card form-group-body form-group-body--rows">
+              <div className="form-list">
+                {scopeIds.map(id => (
+                  <label key={id} className="form-row select-row">
+                    <input type="checkbox" name="src" value={id} checked={selected.includes(id)} onChange={() => toggle(id)} />
+                    <span className="form-row-main">
+                      <span>{sourceName(id)}</span>
+                      <span className="form-row-sub">{id === "library" ? ta.scopeLibrarySub : ta.scopeLiveSub}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <p className={`form-group-foot quiet${lastWarn ? " is-warn" : ""}`} role="status">{ta.sheet.scopeFoot}</p>
+          </fieldset>
+        )}
+
         <p className="ask-sheet-info">
           <svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
                strokeLinecap="round" aria-hidden="true">
             <circle cx="9" cy="9" r="7" /><path d="M9 8.2v4.2M9 5.6v.1" />
           </svg>
-          <span><b>{ta.sheet.infoLead(organisation)}</b> {ta.sheet.infoRest}</span>
+          <span><b>{ta.sheet.infoLead(from)}</b> {ta.sheet.infoRest}</span>
         </p>
 
         {(mine.length > 0 || removed) && (

@@ -26,3 +26,15 @@ export function sanitizeSearchedScope(v: unknown): { library: boolean; live: str
     : []
   return { library: o.library === true, live }
 }
+
+/** Živý zdroj pre výber na `/ask` a v plachte otázky (ASK-zdroje-v-plachte). */
+export interface AskLiveSource {
+  id: string
+  name: string
+  defaultOn: boolean
+}
+
+/** Predvolený výber: Knižnica a konektory s „používať predvolene" (Ján 8. 10. 2026). */
+export function defaultScope(live: { id: string; defaultOn?: boolean }[]): string[] {
+  return ["library", ...live.filter(l => l.defaultOn).map(l => l.id)]
+}

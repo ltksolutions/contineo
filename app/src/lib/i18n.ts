@@ -842,7 +842,9 @@ interface Dictionary {
      * (ASK-otazka-z-hlavicky). Prvá veta vysvetlenia je tučná, preto dve časti.
      */
     sheet: {
-      infoLead: (organisation: string) => string
+      /** `from` je „z dokumentov SFZ a zo zdroja …" podľa výberu (`answerFrom`, ASK-zdroje-v-plachte). */
+      infoLead: (from: string) => string
+      scopeFoot: string
       infoRest: string
       hint: string
       /** Vložená plachta na `/ask` sa nezatvára — bez „Esc zavrie". */
@@ -5571,7 +5573,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       askAgain: "Opýtať sa znova",
     },
     sheet: {
-      infoLead: org => `Odpoveď sa skladá len z dokumentov organizácie ${org}.`,
+      infoLead: from => `Odpoveď sa skladá len ${from}.`,
+      scopeFoot: "Platí pre túto otázku. Aspoň jeden zdroj ostáva zapnutý.",
       infoRest: "Pri každom tvrdení je odkaz na zdroj. Ak to v dokumentoch nie je, systém to povie a nič si nevymyslí.",
       hint: "Enter odošle · Shift+Enter nový riadok · Esc zavrie",
       hintInline: "Enter odošle · Shift+Enter nový riadok",
@@ -10579,7 +10582,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       askAgain: "Zeptat se znovu",
     },
     sheet: {
-      infoLead: org => `Odpověď se skládá jen z dokumentů organizace ${org}.`,
+      infoLead: from => `Odpověď se skládá jen ${from}.`,
+      scopeFoot: "Platí pro tuto otázku. Alespoň jeden zdroj zůstává zapnutý.",
       infoRest: "U každého tvrzení je odkaz na zdroj. Pokud to v dokumentech není, systém to řekne a nic si nevymyslí.",
       hint: "Enter odešle · Shift+Enter nový řádek · Esc zavře",
       hintInline: "Enter odešle · Shift+Enter nový řádek",
@@ -15578,7 +15582,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       askAgain: "Ask again",
     },
     sheet: {
-      infoLead: org => `The answer is built only from ${org} documents.`,
+      infoLead: from => `The answer is built only ${from}.`,
+      scopeFoot: "Applies to this question. At least one source stays on.",
       infoRest: "Every statement links to its source. If it is not in the documents, the system says so and makes nothing up.",
       hint: "Enter sends · Shift+Enter new line · Esc closes",
       hintInline: "Enter sends · Shift+Enter new line",
