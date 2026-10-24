@@ -6,11 +6,33 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-24** (výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-24 večer** (Prehľad spotreby AI #425, #426 — prvý návrh z artefaktu *Design*; Contineo ako MCP server fáza 1, ADR-038, #422, #424; oprava textu znenia a PDF konceptu #427–#429; design system ako artefakt v Claude, `/design-sync` 24. 10.; predtým výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Prehľad spotreby AI (24. 10., #425, #426).** Organizácia → Umelá
+inteligencia → **Prehľad** (`/organisation/ai/overview`): obdobie Od–Do
+ako Spotreba s rýchlym výberom, pohľady Osoby / Účely / Modely, graf po
+mesiacoch alebo rebríček, matica položka × mesiac, porovnanie s minulým
+rokom, Excel. Každé číslo vedie do Spotreby s filtrom (`person=none`,
+`model=`, `unpriced=1`). Osoby sú podľa `personId` s menom z registra —
+kontrola súladu, ktorú niekto spustil, je pod ním. Na produkcii rok 2026:
+$59.77, 594 volaní, len október (zápis od 5. 10.). Prvý návrh vytvorený
+**ako artefakt *Design* v Claude** — postup a poznatky v `docs/DESIGN.md`;
+nové prvky systému `.chart-*`, `.matrix-*`, `.spark` sú v artefakte design
+systému (verzia 9).
+
+**Contineo ako MCP server (ADR-038, 24. 10., #422, #424, druhá session).**
+Fáza 1: AI asistenti sa pripoja na `/mcp` (OAuth vydáva Contineo, súhlas ako
+dôkazný záznam) a čítajú knižnicu (`search_library`, `get_document`,
+`ask`…). V SFZ predvolene vypnuté — Organizácia → Prístup → AI asistenti.
+Fázy 2 a 3 v `docs/TODO.md`.
+
+**Oprava textu znenia (24. 10., #427–#429, druhá session).** Po oprave
+ISSF-00 a ISSF-05 už karta nehlási „Nové znenie v príprave" a koncept bez
+vlastného zdroja dostane PDF zo zdroja zverejneného znenia.
 
 **Zdroje hľadania (23.–24. 10., #418, #420, #421).** Na Opýtať sa sa zdroje
 vyberajú tichým tlačidlom „Zdroje: Knižnica ▾" s riadkami `.select-row` —
@@ -283,11 +305,6 @@ skončením" (ISSF-00) overiť s Oddelením vzdelávania trénerov.
 (Organizácia › Konektory, potom „Živé zdroje" kanála ISSF); výber zdrojov
 sa vo widgete objaví do hodiny bez nasadenia.
 
-**Design system v Claude Design po 14. 12. 2026** — samostatný Claude Design
-končí; `/design-sync` dnes plní projekt `f95a5ca5…`, artefakt
-`AGZnHYA4nCDzqsXZvw7Lzh` z `CLAUDE.md` je kópia z 15. 10. Rozhodnúť, ktorý
-je zdroj pre návrhy, a upraviť odkazy v `CLAUDE.md` a `docs/DESIGN.md`.
-
 **Podnet legislatíve: RaPP a Stanovy verzus prax ISSF** — štyri body,
 dokument pripravený 20. 10.; poslať LPO a pri poplatku 0,50 € zistiť,
 na základe čoho ho ISSF účtuje.
@@ -338,7 +355,10 @@ počty v `retention[].helpdesk`).
    o trénerských licenciách dnes nepokryje žiadny dokument.
 3. **Kuriér naostro:** živý rozhovor dvoch ľudí, ranný súhrn v logu
    `courier-digest`, prvý oznam oddeleniu.
-4. **Zdroje hľadania naostro:** jedna otázka so zaškrtnutým Sportnetom
+4. **Prehľad AI:** zjednotiť meno procesov na pozadí pri zápise spotreby
+   (`docs/TODO.md`, „Spotreba AI: jedno meno"); **MCP server** zapnúť v SFZ
+   a skúsiť pripojenie z Claude, ak to Ján chce.
+5. **Zdroje hľadania naostro:** jedna otázka so zaškrtnutým Sportnetom
    z plachty — hlavička „… a zo zdroja Sportnet dokumentácia", oznam po
    zmene výberu bez nového volania.
 
@@ -356,8 +376,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (23. 10.): **0 errors, 39 warnings,
-2867 testov v 247 súboroch.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
+Baseline, proti ktorej sa porovnáva (24. 10.): **0 errors, 39 warnings,
+2951 testov v 255 súboroch.** Pri zmene rozhrania aj „mechanickej" aspoň jedna snímka
 na 390 px — #321 prešiel štyrmi brzdami a typ otázky aj tak pretekal o 65 px. Pri paralelnej session pred zlúčením PR
 zmergovať `main` do vetvy a pustiť `tsc` — 6. 10. prešiel zelený PR a build
 `main` padol na zmene z druhej vetvy (`Notice` s povinným `language`). Pri veľkej záťaži stroja pomôže

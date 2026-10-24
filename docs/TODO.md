@@ -266,7 +266,7 @@
 - [ ] **Použitie C — nástroje asistenta:** až keď generačný adaptér vie tool-use (Claude áno, vLLM/Qwen neisto); `uses.agentTools.allowed` už v schéme.
 - [ ] **Sportnet ako verejný zdroj pre widget ISSF** — widget má výber zdrojov a hlavičku odpovede (#420), ale verejný kanál dostane len verejný konektor (D174); Ján prepne Sportnet na verejný a pridá ho do „Živé zdroje" kanála ISSF sám.
 - [x] **Design system po zániku samostatného Claude Design (14. 12. 2026)** ✅ 2026-10-24 — Ján: artefakt `AGZnHYA4nCDzqsXZvw7Lzh` synchronizovaný z kódu cez `.design-sync/export-artifact.mjs` (prvý export verzia 7), návrhy v Claude ako artefakty *Design* (`docs/DESIGN.md`, „Prechod do Claude").
-- [ ] **Prvý návrh ako artefakt *Design*** — vyskúšať postup zadanie → artefakt s pripojeným design systémom → „stiahni design" z artefaktu; doplniť `docs/DESIGN.md`. Starý projekt `5f2e4189…` do 14. 12.
+- [x] **Prvý návrh ako artefakt *Design*** ✅ 2026-10-24 — ORG-ai-prehlad (#425, #426): zadanie → artefakt `3o62dJ7o…` s pripojeným design systémom → „stiahni design" z artefaktu; poznatky v `docs/DESIGN.md` (sekcia „Rozhodnuté" v artefakte nevzniká, rozhoduje Ján pri stiahnutí). Starý projekt `5f2e4189…` beží do 14. 12.
 - [ ] **Servisný účet Sportnetu:** vyžiadať aplikáciu s `client_credentials` (ako `issfconnector`); dnes pilot pod osobným účtom Jána — mení sa len `auth` na konektore.
 - [ ] **Rerank živých úsekov v cloude:** `$rerank` beží v pipeline a živé úseky v nej nie sú — idú za knižnicou v poradí servera. Keď to bude prekážať, aplikačný rerank nad zlúčeným zoznamom.
 - [ ] **Identita `person`** (každý si pripojí vlastný účet) — nutné pre C pri nástrojoch typu „moje členstvá"; schéma to nesie, kód nie.

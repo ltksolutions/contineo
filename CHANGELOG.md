@@ -4,6 +4,30 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Oprava textu znenia: karta po oprave a PDF konceptu (2026-10-24, #427–#429)
+
+- Po oprave textu zverejneného znenia (ISSF-00, ISSF-05) sa karta už
+  netvári ako „Nové znenie v príprave“: koncept sa po oprave vyprázdni
+  a PDF vyrobené z textu konceptu (ADR-031) nové znenie nerobí, kým sa
+  text nezmení.
+- Koncept bez vlastného zdroja `.md` dostane PDF zo zdroja naposledy
+  zverejneného znenia — „Koncept nemá PDF“ pri predložení na schválenie
+  zmizlo. Záväzné ostáva PDF znenia (ADR-007).
+
+### Contineo ako MCP server — fáza 1 (2026-10-24, ADR-038, #422, #424)
+
+- AI asistenti (Claude Code, Claude.ai a ďalší) sa môžu pripojiť na
+  `/mcp` a čítať knižnicu organizácie: `whoami`, `search_library`,
+  `list_documents`, `get_document`, `document_hierarchy` a `ask`
+  (odpoveď asistenta Continea, strop 60 za hodinu). Zoznam nástrojov
+  je prienik rozsahu tokenu a rolí osoby.
+- Token vydáva Contineo samo (OAuth 2.1, PKCE, dynamická registrácia aj
+  Client ID Metadata Document); súhlas sa ukladá ako dôkazný záznam
+  s doslovným znením (D249).
+- Organizácia → Prístup → **AI asistenti**: predvolene vypnuté, voľba
+  „len verejný obsah“, súhlasy s odvolaním; v plachte účtu **Pripojené
+  aplikácie**. On-prem a air-gap zapnutie nedovolia (D251).
+
 ### Prehľad spotreby AI: osoby podľa osoby, mesiace bez záznamov prázdne (2026-10-24)
 
 - Pohľad Osoby zoskupuje podľa osoby, nie podľa mena v zázname: kontrola

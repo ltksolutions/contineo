@@ -11,6 +11,21 @@
 ---
 
 
+## 2026-10-24 — Poupratuj: MCP server, oprava textu, Prehľad
+
+**Druhá session** zaviedla ADR-038 (Contineo ako MCP server, D249–D256)
+a fázu 1 (#422, #424) a opravila tri nadväzujúce chyby opravy textu
+(#427–#429): karta po oprave ISSF-00 a ISSF-05 hlásila „Nové znenie
+v príprave", lebo PDF vyrobené z textu konceptu sa rátalo ako nové znenie;
+prvá oprava zahodila aj PDF a zdroj konceptu, takže ISSF-00 nešiel na
+schválenie. Zápisy v CHANGELOG k nim chýbali, doplnené z commitov.
+
+**Táto session:** Prehľad spotreby AI (#425, #426) a `/design-sync`
+s exportom do artefaktu (verzia 9) — popis nižšie. Baseline testov
+po dni: 0 errors, 39 warnings, 2951 testov v 255 súboroch.
+
+---
+
 ## 2026-10-24 — Prehľad spotreby AI, prvý návrh po novom
 
 **Po nasadení (kontrola na produkcii):** Osoby ukazovali procesy, nie
