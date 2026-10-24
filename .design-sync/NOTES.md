@@ -74,5 +74,10 @@ k návrhovému projektu „Contineo.app responzivny design".
   bundle.css, react.js a bundle.js (Playwright), svetlá aj tmavá téma.
   Pozor pri skladaní: vkladať cez funkciu `replace(x, () => …)` — v kóde
   Reactu je `$&` a reťazcová náhrada ho rozbije.
-- Vstavaný prehliadač nie je prihlásený do claude.ai — stránku artefaktu
-  pozrie Ján.
+- Zobrazovač brand booku nepozná zalomené pokračovanie odrážky — každý riadok
+  by bol odsek. Export ich spája (`joinListContinuations`); `conventions.md`
+  ostáva zalomený na 90 znakov.
+- Stránku artefaktu skontroloval Claude 24. 10. po Jánovom prihlásení
+  vo vstavanom prehliadači: pás „synced from code", obálka, farby v oboch
+  témach s kontrastom, živé náhľady všetkých 12 komponentov (spodné sa
+  načítajú až pri posunutí).

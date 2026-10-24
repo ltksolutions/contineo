@@ -161,7 +161,28 @@ put("tokens.css", tcss)
 /* ── Brand book: conventions.md bez nadpisu (stránka nesie názov systému) ── */
 
 const conventions = read(CONVENTIONS).replace(/^# [^\n]*\n+/, "")
-put("README.md", conventions.trimEnd() + "\n")
+put("README.md", joinListContinuations(conventions).trimEnd() + "\n")
+
+/**
+ * Zobrazovač brand booku v artefakte nepozná pokračovací riadok odrážky
+ * (zalomenie v `conventions.md` na 90 znakov) — každý by bol samostatný
+ * odsek. Spojí ich do jedného riadka; kód v ``` a tabuľky ostanú.
+ */
+function joinListContinuations(md) {
+  const out = []
+  let inCode = false
+  let inItem = false
+  for (const line of md.split("\n")) {
+    if (/^\s*```/.test(line)) { inCode = !inCode; inItem = false; out.push(line); continue }
+    if (inCode) { out.push(line); continue }
+    const isItem = /^\s*(?:[-*]|\d+\.)\s/.test(line)
+    const isCont = /^\s{2,}\S/.test(line) && !isItem && !/^\s*\|/.test(line)
+    if (isCont && inItem) { out[out.length - 1] += " " + line.trim(); continue }
+    inItem = isItem || (inItem && isCont)
+    out.push(line)
+  }
+  return out.join("\n")
+}
 
 /* ── Komponenty z ds-bundle ── */
 
