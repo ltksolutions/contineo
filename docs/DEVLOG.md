@@ -11,6 +11,26 @@
 ---
 
 
+## 2026-10-24 — Poupratuj po dni zdrojov hľadania
+
+**Čo sa stalo 23. 10. okrem PR:** Ján chcel design system Contineo „súčasťou
+repozitára" — ukázalo sa, že už je (`.design-sync/conventions.md`,
+`globals.css`, komponenty), len nikde nebolo napísané, že je záväzný.
+Dopísané do `CLAUDE.md` priamo v `main`. Pri prvom náhľade výberu zdrojov
+som citoval „pilulky rozsahu" z `docs/design/README.md` — to je archív prvej
+vlny; odvtedy to `CLAUDE.md` hovorí výslovne.
+
+**Čo by som nabudúce urobil inak:** výber zdrojov mal ísť do plachty otázky
+hneď v prvom návrhu — Ján ho tam hľadal deň po nasadení #418. Zadanie
+ASK-zdroje-hladania riešilo len obrazovku odpovede, lebo tam boli pilulky.
+
+**Poupratuj:** `NEXT.md` doplnený o #418, #420, #421 a design system,
+staré „pilulky" v opise MCP prepísané; v `docs/TODO.md` uzavretá položka
+„Pilulky rozsahu hľadania", pridané Sportnet pre widget ISSF a design system
+po 14. 12. Nové TODO/FIXME v kóde od 20. 10. žiadne.
+
+---
+
 ## 2026-10-23 — zdroje v plachte otázky (ASK-zdroje-v-plachte)
 
 **Čo sa zmenilo:** `AskSheet` má výber zdrojov v lište (`details.ask-sheet-scope`)

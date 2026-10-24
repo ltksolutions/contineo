@@ -6,11 +6,32 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-23** (kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-24** (výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Zdroje hľadania (23.–24. 10., #418, #420, #421).** Na Opýtať sa sa zdroje
+vyberajú tichým tlačidlom „Zdroje: Knižnica ▾" s riadkami `.select-row` —
+**v plachte otázky už pred prvou odpoveďou** (#421) aj na obrazovke
+odpovede (#418). Zdroje sú vždy vymenované, zmena nič nespúšťa (volanie
+modelu je až „Opýtať sa (znova)"), oznam „Zdroje sa zmenili…" pri odpovedi
+z iných zdrojov. Hlavička odpovede menuje, **v čom sa hľadalo**, aj keď zo
+zdroja nič neprišlo; uložená odpoveď si to pamätá (`searchedScope`). Znenie
+„Odpoveď z dokumentov SFZ" ostáva (Ján, Q3). **Widget kanála** (#420) má to
+isté — výber z povolených zdrojov kanála, hlavičku pri každej odpovedi
+a tokeny design systému v Shadow DOM. V ISSF sa výber zatiaľ nekreslí:
+Sportnet je interný konektor (D174) a kanál má jediný zdroj; Ján ho prepne
+na verejný neskôr sám. Platené overenie naostro (otázka so Sportnetom)
+ešte neprebehlo.
+
+**Design system Contineo je záväzný (Ján 23. 10.).** `CLAUDE.md` má sekciu,
+podľa ktorej každá zmena frontendu a každé zadanie pre Claude Design musí
+splniť design system; zdroj pravdy je repozitár (`.design-sync/conventions.md`,
+`globals.css`, `app/src/components/`), Claude Design je zrkadlo cez
+`/design-sync` (23. 10. dvakrát: ikony, `.ask-scope-pop`, `.lnote--action`).
+`docs/design/README.md` je archív a neplatí.
 
 **Manuály ISSF — nové znenia (20.–23. 10.).** Koncepty ISSF-00, 01, 02,
 03, 04, 05 a 07 obsahujú prijaté doplnenia z helpdesku (18. 10.), e-mail
@@ -93,11 +114,11 @@ alebo na matrike, lehota registrácie hráča).
 **MCP konektory (ADR-029, 7.–8. 10., PR #307) sú v `main`.** Konektor je
 pripojenie organizácie k cudziemu MCP serveru s viacerými použitiami; fáza 1
 je **živý zdroj**: pri otázke sa predvolene hľadá len v knižnici, konektor
-sa zapína pilulkou alebo nastavením *Používať predvolene* (PR #313); vtedy
+sa zapína výberom zdrojov (od #418 tlačidlo „Zdroje: … ▾") alebo nastavením *Používať predvolene* (PR #313); vtedy
 sa hľadá súbežne v knižnici aj na serveri, citácia
 nesie štítok „Živý zdroj — neoverené kurátorom", prístupová úroveň je
 vlastnosť konektora (interný sa do e-mailov nedostane), rozsahy per kanál,
-pilulky Knižnica / Sportnet na `/ask`, stopa volaní v `connector_calls`.
+výber zdrojov na `/ask` aj v plachte otázky (#418, #421), stopa volaní v `connector_calls`.
 Prvý server `mcp.sportnet.online` je **založený a pripojený v SFZ** pod
 Jánovým účtom (zapísaná odchýlka od servisného účtu). **Overené naostro 8. 10.:** pripojené,
 otázka „Ako si zmením heslo v ISSF?" odpovedala z 5 citácií zo Sportnetu so
@@ -258,6 +279,15 @@ v Kontrole súladu; pri zápisoch pre laikov (ISSF-05) overiť so ŠTK, kto
 zápis uzatvára. Lehotu „žiadosť o predĺženie licencie najskôr 30 dní pred
 skončením" (ISSF-00) overiť s Oddelením vzdelávania trénerov.
 
+**Sportnet ako verejný zdroj pre widget ISSF** — Ján prepne sám neskôr
+(Organizácia › Konektory, potom „Živé zdroje" kanála ISSF); výber zdrojov
+sa vo widgete objaví do hodiny bez nasadenia.
+
+**Design system v Claude Design po 14. 12. 2026** — samostatný Claude Design
+končí; `/design-sync` dnes plní projekt `f95a5ca5…`, artefakt
+`AGZnHYA4nCDzqsXZvw7Lzh` z `CLAUDE.md` je kópia z 15. 10. Rozhodnúť, ktorý
+je zdroj pre návrhy, a upraviť odkazy v `CLAUDE.md` a `docs/DESIGN.md`.
+
 **Podnet legislatíve: RaPP a Stanovy verzus prax ISSF** — štyri body,
 dokument pripravený 20. 10.; poslať LPO a pri poplatku 0,50 € zistiť,
 na základe čoho ho ISSF účtuje.
@@ -308,6 +338,9 @@ počty v `retention[].helpdesk`).
    o trénerských licenciách dnes nepokryje žiadny dokument.
 3. **Kuriér naostro:** živý rozhovor dvoch ľudí, ranný súhrn v logu
    `courier-digest`, prvý oznam oddeleniu.
+4. **Zdroje hľadania naostro:** jedna otázka so zaškrtnutým Sportnetom
+   z plachty — hlavička „… a zo zdroja Sportnet dokumentácia", oznam po
+   zmene výberu bez nového volania.
 
 Ďalej podľa staršieho plánu: prvý kurz naostro s certifikátom a `/verify`
 z telefónu; prvé ostré nové znenie normy cez kartu (nový názov, základ

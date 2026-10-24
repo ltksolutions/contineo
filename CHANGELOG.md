@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dokumentácia: design system Contineo je záväzný (2026-10-23)
+
+- `CLAUDE.md`: každá požiadavka na dizajn a UX pri vývoji frontendu musí
+  splniť design system; kde je (repozitár je zdroj pravdy), čo robiť s
+  chýbajúcim prvkom a s rozporom; `docs/design/README.md` je archív.
+- `/design-sync` 23. 10. dvakrát: typy `Icon` (7 nových ikon) a nové prvky
+  `.ask-scope-pop`, `.lnote--action`.
+
 ### Opýtať sa: zdroje už v plachte otázky (2026-10-23, ASK-zdroje-v-plachte)
 
 - V plachte otázky (pole v hlavičke aj `/ask` bez otázky) je pri „Opýtať
