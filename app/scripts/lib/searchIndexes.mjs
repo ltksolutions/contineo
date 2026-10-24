@@ -73,6 +73,50 @@ export function wantedIndexes() {
   ]
 }
 
+// ── Katalóg legislatívy (ADR-039, D258) ──────────────────────────────────────
+//
+// Druhá kolekcia s vlastnými indexmi: `law_chunks` nemá `companyCode`
+// (menovitá výnimka z D90) a filtruje sa podľa znenia (`versionKey`)
+// a druhu zdroja. Rovnaký model embeddingu ako knižnica — vektory sa pri
+// odpovedi radia spolu (`embeddingGuard.ts`).
+
+export const LAW_COLLECTION = "law_chunks"
+export const LAW_VECTOR_INDEX = process.env.LAW_VECTOR_INDEX ?? "law_vector_index"
+export const LAW_TEXT_INDEX = process.env.LAW_TEXT_INDEX ?? "law_text_index"
+
+/** Polia, podľa ktorých `lawSearch.ts` filtruje — rovnaké v oboch indexoch. */
+export const LAW_FILTER_PATHS = ["versionKey", "actId", "sourceType"]
+
+export function lawVectorDefinition(model = process.env.EMBEDDING_MODEL ?? "voyage-4", path = process.env.VECTOR_PATH ?? "text") {
+  return {
+    fields: [
+      { type: "autoEmbed", modality: "text", path, model },
+      ...LAW_FILTER_PATHS.map(p => ({ type: "filter", path: p })),
+    ],
+  }
+}
+
+export const LAW_TEXT_DEFINITION = {
+  mappings: {
+    dynamic: false,
+    fields: {
+      text: { type: "string", analyzer: "lucene.standard" },
+      heading: { type: "string", analyzer: "lucene.standard" },
+      articleRef: { type: "string", analyzer: "lucene.keyword" },
+      versionKey: TOKEN,
+      actId: TOKEN,
+      sourceType: TOKEN,
+    },
+  },
+}
+
+export function wantedLawIndexes() {
+  return [
+    { name: LAW_VECTOR_INDEX, type: "vectorSearch", definition: lawVectorDefinition() },
+    { name: LAW_TEXT_INDEX, type: "search", definition: LAW_TEXT_DEFINITION },
+  ]
+}
+
 /**
  * Líši sa živá definícia od požadovanej? Porovnáva sa význam, nie poradie:
  * polia vektorového indexu ako množina, mapovanie ako objekt s zoradenými

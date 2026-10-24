@@ -23,11 +23,14 @@ SPDX-License-Identifier: EUPL-1.2
 > záznamy sa nemenia), D27 (stav sa odvodzuje), D32 a D90 (`companyCode`
 > v podmienke dotazu).
 > **Prekonáva:** D247 v časti „krok C až po prvej novele" (§ 2, D261).
-> **Implementácia:** fáza 1 — `lib/lawCatalog.ts` (katalóg a znenia),
-> `lib/lawSearch.ts` (hľadanie a úseky pre odpoveď), cron
-> `/api/cron/law-catalog`, správa katalógu v `/admin/law`, zdroj
-> „Legislatíva" vo výbere zdrojov na `/ask`, v plachte otázky a v nástroji
-> `ask` MCP servera. Fáza 2 — odber do knižnice (§ 2, D260, D262).
+> **Implementácia:** fáza 1 (25. 10. 2026) — `lib/lawCatalog.ts` (katalóg,
+> znenia, úseky, odbery), `lib/lawSearch.ts` (hľadanie a úseky pre
+> odpoveď), cron `/api/cron/law-catalog` (denne 4:15), správa katalógu
+> `/admin/law`, odber v Organizácia → Umelá inteligencia → Legislatíva
+> (`/organisation/ai/law`), zdroj „Legislatíva" vo výbere zdrojov na `/ask`,
+> v plachte otázky, vo widgete kanála a v nástroji `ask` MCP servera;
+> indexy `law_vector_index` a `law_text_index` v `scripts/lib/searchIndexes.mjs`
+> (zakladá `atlas_init.mjs`). Fáza 2 — odber do knižnice (§ 2, D260, D262).
 
 ---
 

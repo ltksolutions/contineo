@@ -20,7 +20,7 @@
  */
 
 import { MongoClient } from "mongodb"
-import { COLLECTION as COL, VECTOR_INDEX, TEXT_INDEX, wantedIndexes, definitionDiff } from "./lib/searchIndexes.mjs"
+import { COLLECTION as COL, VECTOR_INDEX, TEXT_INDEX, wantedIndexes, definitionDiff, LAW_COLLECTION, wantedLawIndexes } from "./lib/searchIndexes.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
@@ -52,7 +52,8 @@ try {
 
   // ── 1. kolekcie ──
   const existing = (await db.listCollections().toArray()).map(c => c.name)
-  for (const name of ["documents", COL, "tenant_profiles"]) {
+  // `law_chunks` — katalóg legislatívy (ADR-039); indexy sa zakladajú nižšie rovnako ako nad knižnicou.
+  for (const name of ["documents", COL, "tenant_profiles", LAW_COLLECTION]) {
     if (existing.includes(name)) {
       console.log(`${INFO} kolekcia ${name} už existuje`)
     } else {
@@ -74,7 +75,15 @@ try {
   }
 
   let changed = false
-  for (const { name, type, definition } of wantedIndexes()) {
+  // Knižnica aj katalóg legislatívy (ADR-039) prechádzajú tou istou slučkou:
+  // každý index vie, nad ktorou kolekciou stojí.
+  const lawCol = db.collection(LAW_COLLECTION)
+  const lawExisting = await lawCol.listSearchIndexes().toArray()
+  const wanted = [
+    ...wantedIndexes().map(w => ({ ...w, col, existing: existingIndexes })),
+    ...wantedLawIndexes().map(w => ({ ...w, col: lawCol, existing: lawExisting })),
+  ]
+  for (const { name, type, definition, col, existing: existingIndexes } of wanted) {
     const uz = existingIndexes.find(i => i.name === name)
     if (!uz && update && !confirmed) {
       console.log(`${INFO} index ${name} neexistuje — vytvorí sa s --naozaj`)

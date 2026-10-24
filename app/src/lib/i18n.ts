@@ -826,6 +826,9 @@ interface Dictionary {
     scopeLibrarySub: string
     /** Živý zdroj obsah neprešiel kurátorom (D174). */
     scopeLiveSub: string
+    /** Katalóg legislatívy (ADR-039, D259) — vstavaný zdroj za konektormi. */
+    scopeLaw: string
+    scopeLawSub: string
     scopeFoot: string
     scopeEmpty: string
     reask: string
@@ -947,6 +950,9 @@ interface Dictionary {
     liveNote: (connector: string, group: string | null) => string
     /** Pod odpoveďou: konektor nestihol alebo zlyhal — odpoveď je bez neho. */
     liveFailed: (names: string) => string
+    /** Zdroj z katalógu legislatívy (ADR-039, D259): text zákona zo Slov-Lexu, nie predpis organizácie. */
+    law: string
+    lawNote: (number: string) => string
     /**
      * Znenie zdroja pod odpoveďou (plán „znenia v indexe", krok 5). Dátumy
      * prichádzajú už naformátované; koniec účinnosti len keď je známy.
@@ -1475,6 +1481,25 @@ interface Dictionary {
       withoutVersion: string
       instructionsSent: (when: string, to: string) => string
     }
+    /** Katalóg legislatívy — správa platformy (ADR-039, D257). */
+    law: {
+      heading: string
+      link: string
+      intro: string
+      empty: string
+      versions: (n: number) => string
+      subscribers: (n: number) => string
+      checked: (when: string) => string
+      neverChecked: string
+      error: (message: string) => string
+      check: string
+      remove: string
+      addLabel: string
+      addButton: string
+      result: (added: number, refreshed: number) => string
+      removed: string
+      added: (title: string) => string
+    }
     create: {
       heading: string
       /** Veta okolo `contineo.app` a `CNAME` — tie zostávajú v JSX. */
@@ -1788,6 +1813,32 @@ interface Dictionary {
       saved: string
       keyDeleted: string
     }
+    /** Legislatíva — odber predpisov zo Slov-Lexu pre Opýtať sa (ADR-039, D259). */
+    law: {
+      heading: string
+      intro: string
+      /** Rezidencia nedovoľuje čítať katalóg z cloudu (D257). */
+      blocked: (residency: string) => string
+      defaultOn: string
+      defaultOnHint: string
+      listHeading: string
+      empty: string
+      /** „znenie účinné od 1. 1. 2026" / „· novela 354/2016 Z. z." */
+      current: (date: string) => string
+      amendment: (number: string) => string
+      later: (n: number) => string
+      pending: string
+      remove: string
+      addHeading: string
+      addLabel: string
+      addHint: string
+      addButton: string
+      suggestedHeading: string
+      suggestedHint: string
+      subscribed: (title: string) => string
+      unsubscribed: string
+      saved: string
+    }
     aiUsage: {
       tabSettings: string
       tabUsage: string
@@ -1819,6 +1870,8 @@ interface Dictionary {
       note: string
       /** Prehľad po mesiacoch (ORG-ai-prehlad, 24. 10. 2026). */
       tabOverview: string
+      /** Legislatíva — odber predpisov z katalógu (ADR-039). */
+      tabLaw: string
       overviewTitle: (period: string) => string
       overviewLead: string
       fromHint: string
@@ -5621,6 +5674,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeTitle: "Zdroje hľadania",
     scopeLibrarySub: "Dokumenty organizácie v Contineo",
     scopeLiveSub: "Živý zdroj — hľadá sa priamo v ňom, obsah neprešiel kurátorom",
+    scopeLaw: "Legislatíva",
+    scopeLawSub: "Zákony zo Slov-Lexu, ktoré organizácia odoberá — znenie účinné v deň otázky",
     scopeFoot: "Zmena sa prejaví, až keď sa opýtate znova.",
     scopeEmpty: "Vyberte aspoň jeden zdroj.",
     reask: "Opýtať sa znova",
@@ -5722,6 +5777,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     live: "Živý zdroj",
     liveNote: (connector, group) => `priamo zo zdroja ${connector}${group ? ` (${group})` : ""} — neoverené kurátorom`,
     liveFailed: names => `Živý zdroj neodpovedal (${names}) — odpoveď je bez neho.`,
+    law: "Zákon",
+    lawNote: number => `zákon č. ${number} zo Slov-Lexu — text zákona, nie predpis organizácie`,
     sourceVersion: (label, from, to) =>
       [label && `znenie ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `podľa znení platných dnes, ${d}`,
@@ -6203,6 +6260,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       withoutVersion: "bez platného znenia",
       instructionsSent: (when, to) => `Pokyny k doméne poslané ${when} na ${to}`,
     },
+    law: {
+      heading: "Katalóg legislatívy",
+      link: "Legislatíva",
+      intro: "Predpisy zo Slov-Lexu, ktoré Contineo drží raz pre všetky organizácie. Pridáva ich organizácia odberom alebo správca tu; denná kontrola dopĺňa znenia. Odstrániť sa dá len predpis, ktorý nikto neodoberá.",
+      empty: "Katalóg je prázdny.",
+      versions: n => `${n} ${n === 1 ? "znenie" : n < 5 ? "znenia" : "znení"}`,
+      subscribers: n => `${n} ${n === 1 ? "organizácia" : n < 5 ? "organizácie" : "organizácií"}`,
+      checked: when => `kontrola ${when}`,
+      neverChecked: "bez kontroly",
+      error: message => `Posledná kontrola zlyhala: ${message}`,
+      check: "Skontrolovať",
+      remove: "Odstrániť",
+      addLabel: "Adresa na Slov-Lexe alebo číslo predpisu",
+      addButton: "Pridať do katalógu",
+      result: (added, refreshed) => added || refreshed ? `Kontrola prebehla: ${added} nových znení, ${refreshed} opravených.` : "Kontrola prebehla, bez zmeny.",
+      removed: "Predpis odstránený z katalógu.",
+      added: title => `Pridané do katalógu: ${title}.`,
+    },
     create: {
       heading: "Nová organizácia",
       introBefore: "Subdoména pod ",
@@ -6614,6 +6689,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "web.noVersion": "Predpis nemá na Slov-Lexe znenie účinné k dnešnému dňu.",
     "web.parseFailed": "Stránku Slov-Lexu sa nepodarilo prečítať — zmenilo sa jej značkovanie.",
     "web.pdfFailed": "Záväzné PDF znenia sa zo Slov-Lexu nepodarilo stiahnuť.",
+    "law.inUse": "Predpis odoberá aspoň jedna organizácia — odstrániť sa dá, až keď odber zrušia.",
+    "law.badAddress": "Adresa nie je predpis na Slov-Lexe — čaká sa tvar …/SK/ZZ/rok/číslo alebo číslo ako 440/2015.",
+    "law.blocked": "V tomto režime rezidencie sa katalóg legislatívy nepoužíva.",
     "helpdesk.hasTickets": "Kanál má tickety — odstrániť sa nedá, len prestať používať.",
     "helpdesk.kind": "Neznámy typ kanála.",
     "helpdesk.syncInterval": "Neznámy interval synchronizácie.",
@@ -7031,6 +7109,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavenie AI je uložené.",
       keyDeleted: "Kľúč organizácie je odstránený.",
     },
+    law: {
+      heading: "Legislatíva",
+      intro: "Zákony zo Slov-Lexu, z ktorých asistent odpovedá popri dokumentoch organizácie. Text sa drží v spoločnom katalógu Continea a dopĺňa sa z portálu každý deň; v odpovedi je označený ako zákon s odkazom na paragraf.",
+      blocked: residency => `V režime ${residency} sa katalóg legislatívy nečíta — text otázky by opustil perimeter organizácie.`,
+      defaultOn: "Používať predvolene",
+      defaultOnHint: "Legislatíva je vo výbere zdrojov zapnutá, kým si ju človek nevypne. Inak si ju musí zapnúť pri otázke.",
+      listHeading: "Odoberané predpisy",
+      empty: "Organizácia zatiaľ neodoberá žiadny predpis. Pridajte prvý adresou alebo číslom.",
+      current: date => `znenie účinné od ${date}`,
+      amendment: number => `novela ${number}`,
+      later: n => `${n} ${n === 1 ? "znenie vyhlásené na neskôr" : n < 5 ? "znenia vyhlásené na neskôr" : "znení vyhlásených na neskôr"}`,
+      pending: "znenie sa dopĺňa z portálu",
+      remove: "Zrušiť odber",
+      addHeading: "Pridať predpis",
+      addLabel: "Adresa na Slov-Lexe alebo číslo predpisu",
+      addHint: "Napríklad 440/2015 alebo https://www.slov-lex.sk/pravne-predpisy/SK/ZZ/2015/440/. Stiahne sa znenie účinné dnes; staršie a pripravené znenia doplní denná kontrola.",
+      addButton: "Pridať",
+      suggestedHeading: "Pre športovú organizáciu",
+      suggestedHint: "Návrh, nie nastavenie — predpis sa odoberá až po kliknutí.",
+      subscribed: title => `Pridané: ${title}.`,
+      unsubscribed: "Odber zrušený. Predpis ostáva v katalógu pre ostatné organizácie.",
+      saved: "Nastavenie legislatívy uložené.",
+    },
     aiUsage: {
       tabSettings: "Nastavenie",
       tabUsage: "Spotreba",
@@ -7072,6 +7173,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "compliance-review": { label: "Kontrola súladu dokumentov", why: "kontrola dokumentov (manuály, rozpisy) proti normám knižnice (ADR-032, D196)" },
       },
       tabOverview: "Prehľad",
+      tabLaw: "Legislatíva",
       overviewTitle: period => `Prehľad: ${period}`,
       overviewLead: "Kto, na čo a akým modelom míňa. Každé číslo vedie do Spotreby na jednotlivé volania.",
       fromHint: "Prázdne = aktuálny mesiac",
@@ -10723,6 +10825,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeTitle: "Zdroje hledání",
     scopeLibrarySub: "Dokumenty organizace v Contineo",
     scopeLiveSub: "Živý zdroj — hledá se přímo v něm, obsah neprošel kurátorem",
+    scopeLaw: "Legislativa",
+    scopeLawSub: "Zákony ze Slov-Lexu, které organizace odebírá — znění účinné v den otázky",
     scopeFoot: "Změna se projeví, až když se zeptáte znovu.",
     scopeEmpty: "Vyberte alespoň jeden zdroj.",
     reask: "Zeptat se znovu",
@@ -10824,6 +10928,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     live: "Živý zdroj",
     liveNote: (connector, group) => `přímo ze zdroje ${connector}${group ? ` (${group})` : ""} — neověřeno kurátorem`,
     liveFailed: names => `Živý zdroj neodpověděl (${names}) — odpověď je bez něj.`,
+    law: "Zákon",
+    lawNote: number => `zákon č. ${number} ze Slov-Lexu — text zákona, nikoli předpis organizace`,
     sourceVersion: (label, from, to) =>
       [label && `znění ${label}`, from && `účinné od ${from}${to ? ` do ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `podle znění platných dnes, ${d}`,
@@ -11305,6 +11411,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       withoutVersion: "bez platného znění",
       instructionsSent: (when, to) => `Pokyny k doméně poslány ${when} na ${to}`,
     },
+    law: {
+      heading: "Katalog legislativy",
+      link: "Legislativa",
+      intro: "Předpisy ze Slov-Lexu, které Contineo drží jednou pro všechny organizace. Přidává je organizace odběrem nebo správce zde; denní kontrola doplňuje znění. Odstranit lze jen předpis, který nikdo neodebírá.",
+      empty: "Katalog je prázdný.",
+      versions: n => `${n} ${n === 1 ? "znění" : "znění"}`,
+      subscribers: n => `${n} ${n === 1 ? "organizace" : n < 5 ? "organizace" : "organizací"}`,
+      checked: when => `kontrola ${when}`,
+      neverChecked: "bez kontroly",
+      error: message => `Poslední kontrola selhala: ${message}`,
+      check: "Zkontrolovat",
+      remove: "Odstranit",
+      addLabel: "Adresa na Slov-Lexu nebo číslo předpisu",
+      addButton: "Přidat do katalogu",
+      result: (added, refreshed) => added || refreshed ? `Kontrola proběhla: ${added} nových znění, ${refreshed} opravených.` : "Kontrola proběhla, beze změny.",
+      removed: "Předpis odstraněn z katalogu.",
+      added: title => `Přidáno do katalogu: ${title}.`,
+    },
     create: {
       heading: "Nová organizace",
       introBefore: "Subdoména pod ",
@@ -11716,6 +11840,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "web.noVersion": "Předpis nemá na Slov-Lexu znění účinné k dnešnímu dni.",
     "web.parseFailed": "Stránku Slov-Lexu se nepodařilo přečíst — změnilo se její značkování.",
     "web.pdfFailed": "Závazné PDF znění se ze Slov-Lexu nepodařilo stáhnout.",
+    "law.inUse": "Předpis odebírá alespoň jedna organizace — odstranit lze, až odběr zruší.",
+    "law.badAddress": "Adresa není předpis na Slov-Lexu — čeká se tvar …/SK/ZZ/rok/číslo nebo číslo jako 440/2015.",
+    "law.blocked": "V tomto režimu rezidence se katalog legislativy nepoužívá.",
     "helpdesk.hasTickets": "Kanál má tickety — odstranit se nedá, jen přestat používat.",
     "helpdesk.kind": "Neznámý typ kanálu.",
     "helpdesk.syncInterval": "Neznámý interval synchronizace.",
@@ -12133,6 +12260,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavení AI je uloženo.",
       keyDeleted: "Klíč organizace je odstraněn.",
     },
+    law: {
+      heading: "Legislativa",
+      intro: "Zákony ze Slov-Lexu, ze kterých asistent odpovídá vedle dokumentů organizace. Text se drží ve společném katalogu Continea a doplňuje se z portálu každý den; v odpovědi je označen jako zákon s odkazem na paragraf.",
+      blocked: residency => `V režimu ${residency} se katalog legislativy nečte — text otázky by opustil perimetr organizace.`,
+      defaultOn: "Používat jako výchozí",
+      defaultOnHint: "Legislativa je ve výběru zdrojů zapnutá, dokud si ji člověk nevypne. Jinak si ji musí zapnout u otázky.",
+      listHeading: "Odebírané předpisy",
+      empty: "Organizace zatím neodebírá žádný předpis. Přidejte první adresou nebo číslem.",
+      current: date => `znění účinné od ${date}`,
+      amendment: number => `novela ${number}`,
+      later: n => `${n} ${n === 1 ? "znění vyhlášené na později" : n < 5 ? "znění vyhlášená na později" : "znění vyhlášených na později"}`,
+      pending: "znění se doplňuje z portálu",
+      remove: "Zrušit odběr",
+      addHeading: "Přidat předpis",
+      addLabel: "Adresa na Slov-Lexu nebo číslo předpisu",
+      addHint: "Například 440/2015 nebo https://www.slov-lex.sk/pravne-predpisy/SK/ZZ/2015/440/. Stáhne se znění účinné dnes; starší a připravená znění doplní denní kontrola.",
+      addButton: "Přidat",
+      suggestedHeading: "Pro sportovní organizaci",
+      suggestedHint: "Návrh, nikoli nastavení — předpis se odebírá až po kliknutí.",
+      subscribed: title => `Přidáno: ${title}.`,
+      unsubscribed: "Odběr zrušen. Předpis zůstává v katalogu pro ostatní organizace.",
+      saved: "Nastavení legislativy uloženo.",
+    },
     aiUsage: {
       tabSettings: "Nastavení",
       tabUsage: "Spotřeba",
@@ -12174,6 +12324,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "compliance-review": { label: "Kontrola souladu dokumentů", why: "kontrola dokumentů (manuály, rozpisy) proti normám knihovny (ADR-032, D196)" },
       },
       tabOverview: "Přehled",
+      tabLaw: "Legislativa",
       overviewTitle: period => `Přehled: ${period}`,
       overviewLead: "Kdo, na co a jakým modelem utrácí. Každé číslo vede do Spotřeby na jednotlivá volání.",
       fromHint: "Prázdné = aktuální měsíc",
@@ -15816,6 +15967,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeTitle: "Search sources",
     scopeLibrarySub: "Your organisation’s documents in Contineo",
     scopeLiveSub: "Live source — searched directly, content not curated",
+    scopeLaw: "Legislation",
+    scopeLawSub: "Acts from Slov-Lex the organisation subscribes to — the wording in force on the day of the question",
     scopeFoot: "The change applies when you ask again.",
     scopeEmpty: "Choose at least one source.",
     reask: "Ask again",
@@ -15917,6 +16070,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     live: "Live source",
     liveNote: (connector, group) => `straight from ${connector}${group ? ` (${group})` : ""} — not reviewed by a curator`,
     liveFailed: names => `A live source did not answer (${names}) — the answer is without it.`,
+    law: "Act",
+    lawNote: number => `Act No. ${number} from Slov-Lex — the text of the law, not an organisation rule`,
     sourceVersion: (label, from, to) =>
       [label && `version ${label}`, from && `in force from ${from}${to ? ` until ${to}` : ""}`].filter(Boolean).join(" · "),
     timeToday: (d) => `per versions in force today, ${d}`,
@@ -16396,6 +16551,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       withoutVersion: "no effective version",
       instructionsSent: (when, to) => `Domain instructions sent ${when} to ${to}`,
     },
+    law: {
+      heading: "Legislation catalogue",
+      link: "Legislation",
+      intro: "Acts from Slov-Lex that Contineo keeps once for all organisations. An organisation adds one by subscribing, or an administrator here; the daily check adds wordings. Only an act nobody subscribes to can be removed.",
+      empty: "The catalogue is empty.",
+      versions: n => `${n} ${n === 1 ? "wording" : "wordings"}`,
+      subscribers: n => `${n} ${n === 1 ? "organisation" : "organisations"}`,
+      checked: when => `checked ${when}`,
+      neverChecked: "never checked",
+      error: message => `The last check failed: ${message}`,
+      check: "Check now",
+      remove: "Remove",
+      addLabel: "Slov-Lex address or act number",
+      addButton: "Add to catalogue",
+      result: (added, refreshed) => added || refreshed ? `Check finished: ${added} new wordings, ${refreshed} corrected.` : "Check finished, nothing changed.",
+      removed: "Act removed from the catalogue.",
+      added: title => `Added to the catalogue: ${title}.`,
+    },
     create: {
       heading: "New organisation",
       introBefore: "A subdomain under ",
@@ -16807,6 +16980,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "web.noVersion": "The act has no version in force on Slov-Lex as of today.",
     "web.parseFailed": "The Slov-Lex page could not be read — its markup has changed.",
     "web.pdfFailed": "The binding PDF of the version could not be downloaded from Slov-Lex.",
+    "law.inUse": "At least one organisation subscribes to this act — it can be removed once they unsubscribe.",
+    "law.badAddress": "The address is not an act on Slov-Lex — expected …/SK/ZZ/year/number or a number like 440/2015.",
+    "law.blocked": "The legislation catalogue is not used in this residency mode.",
     "helpdesk.hasTickets": "The channel has tickets — it cannot be removed, only left unused.",
     "helpdesk.kind": "Unknown channel type.",
     "helpdesk.syncInterval": "Unknown sync interval.",
@@ -17224,6 +17400,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "The AI settings have been saved.",
       keyDeleted: "The organisation's key has been removed.",
     },
+    law: {
+      heading: "Legislation",
+      intro: "Acts from Slov-Lex the assistant answers from alongside the organisation's documents. The text lives in Contineo's shared catalogue and is refreshed from the portal daily; in an answer it is labelled as an act with a link to the section.",
+      blocked: residency => `In the ${residency} mode the legislation catalogue is not read — the question would leave the organisation's perimeter.`,
+      defaultOn: "Use by default",
+      defaultOnHint: "Legislation is switched on in the source picker until a person turns it off. Otherwise they switch it on per question.",
+      listHeading: "Subscribed acts",
+      empty: "The organisation subscribes to no act yet. Add the first one by address or number.",
+      current: date => `wording in force since ${date}`,
+      amendment: number => `amendment ${number}`,
+      later: n => `${n} ${n === 1 ? "wording published for later" : "wordings published for later"}`,
+      pending: "wording is being fetched from the portal",
+      remove: "Unsubscribe",
+      addHeading: "Add an act",
+      addLabel: "Slov-Lex address or act number",
+      addHint: "For example 440/2015 or https://www.slov-lex.sk/pravne-predpisy/SK/ZZ/2015/440/. The wording in force today is fetched; older and upcoming wordings follow with the daily check.",
+      addButton: "Add",
+      suggestedHeading: "For a sports organisation",
+      suggestedHint: "A suggestion, not a setting — the act is subscribed only when clicked.",
+      subscribed: title => `Added: ${title}.`,
+      unsubscribed: "Unsubscribed. The act stays in the catalogue for other organisations.",
+      saved: "Legislation settings saved.",
+    },
     aiUsage: {
       tabSettings: "Settings",
       tabUsage: "Usage",
@@ -17265,6 +17464,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "compliance-review": { label: "Document compliance check", why: "checking documents (manuals, schedules) against library norms (ADR-032, D196)" },
       },
       tabOverview: "Overview",
+      tabLaw: "Legislation",
       overviewTitle: period => `Overview: ${period}`,
       overviewLead: "Who spends, on what and with which model. Every number leads to Usage with the individual calls.",
       fromHint: "Empty = current month",

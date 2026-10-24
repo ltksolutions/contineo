@@ -33,6 +33,8 @@ export default async function TenantAdminPage() {
       <div className="page-head">
         <h1 className="page-title">{t.heading}</h1>
         <span className="page-head-spacer" aria-hidden="true" />
+        {/* Katalóg legislatívy (ADR-039) — tiché, plné je len zakladanie organizácie. */}
+        <Link className="button button--quiet" href="/admin/law">{dictionary(language).admin.law.link}</Link>
         <Link className="button" href="/admin/new">{t.newTenant}</Link>
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>

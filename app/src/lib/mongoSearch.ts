@@ -139,6 +139,19 @@ export interface ChunkResult {
    * na serveri, podľa ktorej sa dá článok neskôr importovať (fáza 2).
    */
   live?: { connectorId: string; connectorName: string; externalId: string; group?: string }
+  /**
+   * Úsek z **katalógu legislatívy** (ADR-039, D259) — text zákona zo
+   * Slov-Lexu, nie predpis organizácie. `url` vedie na znenie na portáli
+   * s kotvou paragrafu; `number` je „440/2015 Z. z.".
+   */
+  law?: LawChunkMeta
+}
+
+export interface LawChunkMeta {
+  actId: string
+  number: string
+  timepoint: string
+  url: string
 }
 
 // ── Shared $lookup + $project appended to every pipeline ─────────────────────
@@ -330,7 +343,11 @@ function withoutPreamble(opts: SearchOptions): Document[] {
     : [{ $match: { chunkType: { $ne: "preambula" } } }]
 }
 
-function rerankStages(opts: SearchOptions, candidateCount: number, resultCount: number): Document[] {
+/**
+ * Exportované pre katalóg legislatívy (`lawSearch.ts`, ADR-039): ten istý
+ * rerank nad inou kolekciou, aby sa úseky zákona a knižnice radili rovnako.
+ */
+export function rerankStages(opts: Pick<SearchOptions, "useStageRerank" | "rerankModel" | "query">, candidateCount: number, resultCount: number): Document[] {
   if (opts.useStageRerank === false) return []
   return [
     {

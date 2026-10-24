@@ -51,6 +51,8 @@ import { getTenantProfile } from "@/lib/tenantProfile"
 import { grantsForCompany } from "@/lib/oauthServer"
 import { RESIDENCY_LABEL } from "@/lib/residency"
 import { saveAssistantsAction, revokeGrantAdminAction } from "../actions"
+import { subscribeLawAction, unsubscribeLawAction, saveLawSettingsAction } from "../actions"
+import { subscribedActs, lawSourceState, SUGGESTED_ACTS } from "@/lib/lawCatalog"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageFilterQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { overviewGroup, previousYearUsd, unpricedCalls, usageOverview } from "@/lib/aiOverview"
 import AiOverview from "../AiOverview"
@@ -285,7 +287,8 @@ export default async function OrganisationSectionPage({
   const tr = d.responsibility
 
   // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
-  const aiView: "settings" | "usage" | "overview" = query.view === "usage" ? "usage" : query.view === "overview" ? "overview" : "settings"
+  const aiView: "settings" | "usage" | "overview" | "law" =
+    query.view === "usage" ? "usage" : query.view === "overview" ? "overview" : query.view === "law" ? "law" : "settings"
   const ai = now === "ai" && aiView === "settings" ? aiSettingsView(tenant.ai) : null
   const tu = t.aiUsage
   // Spotreba (D158): súčty za celé obdobie, na obrazovke najnovších 500.
@@ -312,6 +315,13 @@ export default async function OrganisationSectionPage({
           unpricedCalls(tenant.companyCode, filter),
         ])
         return { filter, by, data, previous, unpriced }
+      })()
+    : null
+  // Legislatíva (ADR-039, D259): odoberané predpisy a stav zdroja — len pre svoju záložku.
+  const law = now === "ai" && aiView === "law"
+    ? await (async () => {
+        const [acts, state] = await Promise.all([subscribedActs(tenant.companyCode), lawSourceState(tenant.companyCode)])
+        return { acts, state }
       })()
     : null
   const locale = language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK"
@@ -343,7 +353,7 @@ export default async function OrganisationSectionPage({
 
   return (
     <AppShell language={ctx.person.language}
-              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : connector ? connector.name : t.tabs[now]}
+              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : now === "ai" && aiView === "law" ? tu.tabLaw : connector ? connector.name : t.tabs[now]}
               trail={now === "ai" && aiView !== "settings"
                 ? { "/organisation": t.heading, "/organisation/ai": t.tabs.ai }
                 : connector
@@ -366,7 +376,7 @@ export default async function OrganisationSectionPage({
       </div>
 
       {/* Spotreba a Prehľad majú široké tabuľky — telo bez hranice 720 px (ORG-ai-prehlad). */}
-      <div className={single ? "org-grid org-grid--single" : now === "ai" && aiView !== "settings" ? "org-grid org-grid--wide" : "org-grid"}>
+      <div className={single ? "org-grid org-grid--single" : now === "ai" && (aiView === "usage" || aiView === "overview") ? "org-grid org-grid--wide" : "org-grid"}>
       {!single && <OrgNav current={now} label={t.tabsLabel} groups={t.groups} sections={t.tabs} />}
 
       <div className="org-body">
@@ -1300,6 +1310,7 @@ export default async function OrganisationSectionPage({
             <TabLink href="/organisation/ai" active={aiView === "settings"}>{tu.tabSettings}</TabLink>
             <TabLink href="/organisation/ai/usage" active={aiView === "usage"}>{tu.tabUsage}</TabLink>
             <TabLink href="/organisation/ai/overview" active={aiView === "overview"}>{tu.tabOverview}</TabLink>
+            <TabLink href="/organisation/ai/law" active={aiView === "law"}>{tu.tabLaw}</TabLink>
           </TabsBar>
         </nav>
 
@@ -1399,6 +1410,116 @@ export default async function OrganisationSectionPage({
         <FormPendingSignal form="remove-ai-key" />
         <input type="hidden" name="tab" value="ai" />
       </form>
+      </>
+      )}
+
+      {/*
+        Legislatíva (ADR-039, D259): odber predpisov z katalógu zo Slov-Lexu.
+        Zdroj „Legislatíva" sa na Opýtať sa ponúkne, keď je aspoň jeden
+        predpis a rezidencia dovoľuje čítať katalóg (D257).
+      */}
+      {aiView === "law" && law && (
+      <>
+        <form action={saveLawSettingsAction} className="card set-form">
+          <section className="set-sec" id="law">
+            <div className="set-sec-head">
+              <h2>
+                {t.law.heading}{" "}
+                <span className={law.state.active ? "tag tag--published" : "tag"}>{law.state.active ? t.signIn.stateOn : t.signIn.stateOff}</span>
+              </h2>
+              <p>{t.law.intro}</p>
+            </div>
+            <div className="set-sec-body">
+              {!law.state.allowed ? (
+                <div className="lnote lnote--bad" role="status">
+                  <span className="lnote-mark" aria-hidden="true">!</span>
+                  <span className="lnote-text">{t.law.blocked(RESIDENCY_LABEL[law.state.residency])}</span>
+                </div>
+              ) : (
+                <div className="form-list">
+                  <label className="form-row select-row">
+                    <input type="checkbox" name="defaultOn" defaultChecked={law.state.defaultOn} />
+                    <span className="form-row-main">
+                      {t.law.defaultOn}
+                      <span className="quiet field-hint" style={{ display: "block" }}>{t.law.defaultOnHint}</span>
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </section>
+          {law.state.allowed && (
+            <div className="set-savebar">
+              <SubmitButton className="button">{t.branding.save}</SubmitButton>
+              <span className="quiet">{d.common.saveBarNote}</span>
+            </div>
+          )}
+        </form>
+
+        <section className="card more">
+          <div className="more-head"><h2>{t.law.listHeading}</h2></div>
+          {law.acts.length === 0 ? (
+            <div className="more-row"><div className="more-main"><span>{t.law.empty}</span></div></div>
+          ) : law.acts.map(a => (
+            <div key={a.actId} className="more-row">
+              <div className="more-main">
+                <b>{a.title}</b>
+                <span>
+                  {[
+                    a.current ? t.law.current(formatDate(a.current.effectiveFrom, language)) : t.law.pending,
+                    a.current?.amendment ? t.law.amendment(a.current.amendment) : null,
+                    a.laterCount ? t.law.later(a.laterCount) : null,
+                  ].filter(Boolean).join(" · ")}
+                  {" · "}
+                  <a href={`https://www.slov-lex.sk/pravne-predpisy/${a.actId}/`} target="_blank" rel="noopener noreferrer">Slov-Lex</a>
+                </span>
+              </div>
+              {/* Karty s vlastnou akciou majú tlačidlá tiché (DESIGN_ODCHYLKY R1). */}
+              <form action={unsubscribeLawAction}>
+                <input type="hidden" name="actId" value={a.actId} />
+                <SubmitButton className="button button--quiet">{t.law.remove}</SubmitButton>
+              </form>
+            </div>
+          ))}
+        </section>
+
+        {law.state.allowed && (
+        <>
+          <form action={subscribeLawAction} className="card set-form">
+            <section className="set-sec">
+              <div className="set-sec-head"><h2>{t.law.addHeading}</h2></div>
+              <div className="set-sec-body">
+                <label className="field">
+                  <span className="field-label">{t.law.addLabel}</span>
+                  <input className="field-input" name="address" required placeholder="440/2015" />
+                  <span className="quiet field-hint">{t.law.addHint}</span>
+                </label>
+              </div>
+            </section>
+            <div className="set-savebar">
+              <SubmitButton className="button button--quiet">{t.law.addButton}</SubmitButton>
+            </div>
+          </form>
+
+          {SUGGESTED_ACTS.some(s => !law.acts.some(a => a.actId.endsWith(`/${s.address.split("/")[1]}/${s.address.split("/")[0]}`))) && (
+          <section className="card more">
+            <div className="more-head"><h2>{t.law.suggestedHeading}</h2></div>
+            <div className="more-row"><div className="more-main"><span>{t.law.suggestedHint}</span></div></div>
+            {SUGGESTED_ACTS
+              .filter(s => !law.acts.some(a => a.actId.endsWith(`/${s.address.split("/")[1]}/${s.address.split("/")[0]}`)))
+              .map(s => (
+                <div key={s.address} className="more-row">
+                  <div className="more-main"><b>{s.title}</b><span>{s.address} Z. z.</span></div>
+                  <form action={subscribeLawAction}>
+                    <input type="hidden" name="address" value={s.address} />
+                    <SubmitButton className="button button--quiet">{t.law.addButton}</SubmitButton>
+                  </form>
+                </div>
+              ))}
+          </section>
+          )}
+        </>
+        )}
       </>
       )}
 

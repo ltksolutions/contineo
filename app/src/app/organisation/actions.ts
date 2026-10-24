@@ -44,6 +44,7 @@ import { tenantByCompanyCode } from "@/lib/tenants"
 import { RESIDENCY_LABEL } from "@/lib/residency"
 import { revokeGrant } from "@/lib/oauthServer"
 import { writeAudit } from "@/lib/audit"
+import { subscribe as subscribeLaw, unsubscribe as unsubscribeLaw, saveLawSettings, lawSourceState } from "@/lib/lawCatalog"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -834,4 +835,72 @@ export async function revokeGrantAdminAction(fd: FormData) {
   }
   revalidatePath("/organisation", "layout")
   back(fd, ok ? t.revokedMessage : t.notFound, !ok)
+}
+
+// ── Legislatíva (ADR-039, D259) ──────────────────────────────────────────────
+
+/** Návrat na záložku Legislatíva — má vlastnú adresu, `back()` by viedol na nastavenie AI. */
+function backToLaw(message: string, error = false): never {
+  revalidatePath("/organisation", "layout")
+  const q = new URLSearchParams({ msg: message })
+  if (error) q.set("error", "1")
+  redirect(`/organisation/ai/law?${q.toString()}`)
+}
+
+export async function saveLawSettingsAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).org.law
+  try {
+    const state = await lawSourceState(self.companyCode)
+    if (!state.allowed) throw new AppError("law.blocked", t.blocked(RESIDENCY_LABEL[state.residency]))
+    await saveLawSettings(self.companyCode, fd.get("defaultOn") === "on", self.email)
+    await writeAudit({
+      companyCode: self.companyCode, subject: "organisation", action: "changed", actor: self.email,
+      changes: { lawDefaultOn: { from: state.defaultOn, to: fd.get("defaultOn") === "on" } },
+    })
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    backToLaw(errorMessage(e, self.language), true)
+  }
+  backToLaw(t.saved)
+}
+
+/** Odber predpisu: keď v katalógu nie je, pridá sa (D257) — jedno stiahnutie znenia účinného dnes. */
+export async function subscribeLawAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).org.law
+  try {
+    const state = await lawSourceState(self.companyCode)
+    if (!state.allowed) throw new AppError("law.blocked", t.blocked(RESIDENCY_LABEL[state.residency]))
+    const act = await subscribeLaw(self.companyCode, fieldText(fd, "address"), self.email)
+    await writeAudit({
+      companyCode: self.companyCode, subject: "organisation", action: "changed", actor: self.email,
+      changes: { lawSubscription: { from: null, to: act.actId } },
+    })
+    backToLaw(t.subscribed(act.title))
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    backToLaw(errorMessage(e, self.language), true)
+  }
+}
+
+export async function unsubscribeLawAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).org.law
+  const actId = fieldText(fd, "actId")
+  try {
+    if (await unsubscribeLaw(self.companyCode, actId)) {
+      await writeAudit({
+        companyCode: self.companyCode, subject: "organisation", action: "changed", actor: self.email,
+        changes: { lawSubscription: { from: actId, to: null } },
+      })
+    }
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    backToLaw(errorMessage(e, self.language), true)
+  }
+  backToLaw(t.unsubscribed)
 }

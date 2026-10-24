@@ -29,6 +29,8 @@ import { getProviders }       from "./providers/factory"
 import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "./embeddingGuard"
 import { dictionary } from "./i18n"
 import { liveSearch } from "./liveSources"
+import { lawSearch } from "./lawSearch"
+import { LAW_SOURCE_ID } from "./lawCatalog"
 import type { CallContext } from "./mcp/client"
 
 export interface ChatStreamInput {
@@ -176,7 +178,10 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
           actor: { personId: usageActor.personId, personName: usageActor.personName },
           channelKey: input.channelKey ?? null,
         }
-        const [libraryChunks, live] = await Promise.all([
+        // Katalóg legislatívy (ADR-039, D259): výslovný výber pilulkou, alebo
+        // bez piluliek len keď má organizácia „používať predvolene".
+        const askLaw = only ? only.includes(LAW_SOURCE_ID) : true
+        const [libraryChunks, live, law] = await Promise.all([
           askLibrary
             ? searchWithSubQueries(
                 () =>
@@ -191,14 +196,22 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
             ? liveSearch({
                 companyCode, query: searchQuery, accessLevel, scopeRefs: liveScopes,
                 redirectUrl: input.callbackUrl ?? "", ctx: callCtx,
-                only: only ? only.filter(x => x !== "library") : undefined,
+                only: only ? only.filter(x => x !== "library" && x !== LAW_SOURCE_ID) : undefined,
               })
             : Promise.resolve({ chunks: [], failed: [], asked: [] }),
+          askLaw
+            ? lawSearch({
+                companyCode, query: searchQuery, asOf: searchInstant(time, now), byDefault: !only,
+                useStageRerank: providers.rerank.isPipelineStage, rerankModel: profile.providers.rerank.model,
+                vectorPath: profile.providers.embedding.vectorPath,
+              })
+            : Promise.resolve({ chunks: [], asked: false, failed: false }),
         ])
         // Živé úseky za knižnicou: v cloude beží rerank v pipeline a tieto
         // v nej neboli, takže ich poradie je poradie servera (D174). Model
         // dostane oboje; citácia povie, čo je odkiaľ.
-        let chunks = [...libraryChunks, ...live.chunks]
+        // Legislatíva za nimi: zákon dopĺňa predpisy organizácie, nie naopak (D259).
+        let chunks = [...libraryChunks, ...live.chunks, ...law.chunks]
 
         // Pozor na pomenovanie: pri `atlas-stage` je $rerank stupňom agregačnej
         // pipeline, takže sa počíta TU, nie v kroku 6c. Kľúč to musí povedať,
@@ -233,7 +246,8 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
         let comparisonMeta: Record<string, unknown> | undefined
         let answerChunks = attachVersions(chunks, scope.versions)
         if (time.kind === "compare") {
-          const top = chunks.find(c => c.sourceType !== "qa")
+          // Porovnať sa dá dokument knižnice — overená odpoveď ani zákon z katalógu znenia v `documents` nemajú.
+          const top = chunks.find(c => c.sourceType !== "qa" && c.sourceType !== "law")
           const cmp = top
             ? await buildComparison(
                 companyCode, top.documentId, now,
@@ -270,7 +284,9 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
           preprocessed: shouldPreprocess,
           chunks: chunks.length,
           // Konektor, ktorý nestihol alebo zlyhal — odpoveď je bez neho (D174).
-          liveFailed: live.failed.length ? live.failed.map(f => f.name) : undefined,
+          liveFailed: live.failed.length || law.failed
+            ? [...live.failed.map(f => f.name), ...(law.failed ? [dictionary(language).ask.scopeLaw] : [])]
+            : undefined,
         })
 
         // 6d. Strážca vektorového priestoru (ADR-001, sekcia 4).

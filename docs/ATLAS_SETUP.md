@@ -136,6 +136,19 @@ Typ **Search** (nie Vector Search):
 
 > **Poznámka k slovenčine:** `lucene.standard` nerobí stemming. Pre lepšie výsledky pri skloňovaní zváž neskôr vlastný analyzátor. Na PoC to nerieš — hybridné vyhľadávanie to z veľkej časti dorovná vektorovou vetvou.
 
+### Katalóg legislatívy — `law_chunks`, `law_vector_index`, `law_text_index` (ADR-039)
+
+Druhá kolekcia s vlastnými dvoma indexmi, definície v tom istom
+`scripts/lib/searchIndexes.mjs` (`wantedLawIndexes()`); `atlas_init.mjs` ich
+zakladá a upravuje tou istou slučkou ako indexy knižnice. Rozdiel: úseky
+zákona nemajú `companyCode` (menovitá výnimka z D90 — katalóg je spoločný
+pre všetky organizácie), filtruje sa podľa znenia `versionKey`
+(`SK/ZZ/2015/440@20260101`), `actId` a `sourceType: "law"`. Model embeddingu
+je ten istý ako pri knižnici — úseky zákona a knižnice sa pri odpovedi radia
+spolu a `embeddingGuard.ts` iný model odmietne. Bez indexov hľadanie
+v katalógu **ticho vráti prázdny výsledok** a odpoveď je bez legislatívy —
+preto po nasadení fázy 1 ADR-039 treba `atlas_init.mjs` spustiť.
+
 ---
 
 ## 4. Rerank — `$rerank` (overené proti serveru 2026-07-26)

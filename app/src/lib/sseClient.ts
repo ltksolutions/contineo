@@ -50,6 +50,8 @@ export interface AnswerSource {
   version?: { label: string; effectiveFrom: string | null; effectiveTo: string | null }
   /** Zdroj z MCP konektora (ADR-029, D174) — obišiel kurátora; štítok to povie. */
   live?: { connectorId: string; connectorName: string; externalId: string; group?: string }
+  /** Zdroj z katalógu legislatívy (ADR-039, D259): text zákona zo Slov-Lexu; `url` vedie na paragraf na portáli. */
+  law?: { actId: string; number: string; timepoint: string; url: string }
 }
 
 export interface Citation {
