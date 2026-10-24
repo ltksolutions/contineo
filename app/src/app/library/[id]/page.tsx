@@ -295,7 +295,8 @@ export default async function DocumentDetailPage({
     // Koncept zhodný s textom niektorého zverejneného znenia nie je príprava
     // nového — to je stav hneď po „Opraviť text" pri znení (fáza 3).
     (draft !== published && !draftIsFree(draft, [...d.versions, { versionId: "", markdown: published }])) ||
-    Boolean(d.draftPdf && latest && latest.pdf?.id !== d.draftPdf.id &&
+    // PDF vyrobené z textu konceptu robí nové znenie len s iným textom (prvá podmienka).
+    Boolean(d.draftPdf && !d.draftPdf.generatedFromMarkdown && latest && latest.pdf?.id !== d.draftPdf.id &&
       !d.versions.some(v => v.versionId === draftVersionId))
   )
   // Údaje o znení (ADR-013): uložené, návrh z prvej strany a zámok po predložení.

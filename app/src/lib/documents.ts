@@ -40,6 +40,12 @@ export interface VersionFile {
   type: string
   uploadedAt: Date
   uploadedBy: string
+  /**
+   * PDF vyrobené z textu konceptu (ADR-031). Nie je to nový dokument zvonku:
+   * keď je text konceptu textom zverejneného znenia (oprava textu, ADR-007),
+   * takéto PDF nové znenie nerobí (24. 10. 2026).
+   */
+  generatedFromMarkdown?: boolean
 }
 
 export interface Version {
