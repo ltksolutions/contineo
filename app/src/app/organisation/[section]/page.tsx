@@ -1424,12 +1424,9 @@ export default async function OrganisationSectionPage({
             <select className="field-input" name="person" defaultValue={usage.filter.personId ?? ""}>
               <option value="">{tu.all}</option>
               {usage.people.filter(p => !p.background).map(p => <option key={p.personId} value={p.personId}>{p.personName}</option>)}
-              {/* Práca na pozadí (bez osoby) — vedie na ňu bunka Prehľadu (ORG-ai-prehlad). */}
-              {usage.people.some(p => p.background) && (
-                <optgroup label={tu.backgroundGroup}>
-                  {usage.people.filter(p => p.background).map(p => <option key={p.personId} value={p.personId}>{p.personName}</option>)}
-                </optgroup>
-              )}
+              {/* Práca bez osoby (cron, ťažba FAQ) — riadok „Automaticky" v Prehľade (ORG-ai-prehlad). */}
+              {usage.people.some(p => p.background) && <option value="none">{tu.noPerson}</option>}
+              {usage.filter.backgroundName && <option value={`bg:${usage.filter.backgroundName}`}>{usage.filter.backgroundName}</option>}
             </select>
           </label>
           <label className="field">
@@ -1527,8 +1524,7 @@ export default async function OrganisationSectionPage({
           itemName={it => overview.by === "purposes"
             ? tu.purposes[it.key as keyof typeof tu.purposes]?.label ?? it.key
             : overview.by === "models" ? modelName(it.key)
-            // Štítok „na pozadí" to už hovorí — zátvorka z kópie mena by sa opakovala.
-            : it.background ? it.name.replace(/\s*\(na pozadí\)$/, "") : it.name}
+            : it.key === "none" ? tu.noPerson : it.name}
         />
       )}
       </div>

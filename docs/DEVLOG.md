@@ -13,6 +13,16 @@
 
 ## 2026-10-24 — Prehľad spotreby AI, prvý návrh po novom
 
+**Po nasadení (kontrola na produkcii):** Osoby ukazovali procesy, nie
+ľudí — kontrola súladu má `personId` toho, kto ju spustil, ale v kópii
+mena „Kontrola súladu (na pozadí)"; ďalšie dva staré tvary mena boli bez
+osoby. Prvá verzia zoskupovala prácu bez osoby podľa mena a ostatné podľa
+`personId` s menom z riadku — preto tri riadky kontroly súladu. Oprava:
+skupina podľa `personId`, meno z registra osôb, všetko bez osoby jeden
+riadok. Druhý nález: rok 2026 delil sumu desiatimi mesiacmi, z ktorých
+deväť je pred prvým zápisom (5. 10.). Ilustračné dáta návrhu oboje
+skryli — mali mená ľudí a dáta za každý mesiac.
+
 **Postup:** zadanie `ORG-ai-prehlad-zadanie.md` → Ján vytvoril v Claude
 artefakt *Design* s pripojeným design systémom → „stiahni design" som
 prečítal z artefaktu (`canvas.json` + plochy `.dc.html`). Funguje; čo sa

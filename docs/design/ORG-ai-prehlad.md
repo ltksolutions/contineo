@@ -41,12 +41,15 @@ Návrh `.md` so sekciou „Rozhodnuté" neobsahoval; rozhodol Ján pri stiahnut�
 - Triedy `.ai-*` → všeobecné triedy systému (rozhodnutie vyššie).
 - Pohľad je v adrese `?by=people|purposes|models`, nie `?view=` —
   `view` už rozlišuje časti sekcie.
-- Bunky vedú do Spotreby cez skutočné filtre: osoba `person=<id>`, práca na
-  pozadí `person=bg:<meno>` (nemá `personId`), účel `purpose=`, model
+- Bunky vedú do Spotreby cez skutočné filtre: osoba `person=<id>`, práca
+  bez osoby `person=none` (jeden riadok „Automaticky (bez osoby)", oprava
+  po nasadení 24. 10.; staršie `bg:<meno>` Spotreba ešte prečíta), účel `purpose=`, model
   `model=<presný identifikátor>`, model mimo cenníka `unpriced=1`. Spotreba
   ich vie; model a „mimo cenníka" ukáže vetou s „Zrušiť", prácu na pozadí
   ako skupinu v zozname Osoba.
-- Pri práci na pozadí sa z mena vynecháva „(na pozadí)" — hovorí to štítok.
+- Osoby sú zoskupené podľa `personId` s menom z registra osôb, nie podľa
+  kópie mena v zázname (tá býva meno procesu). Štítok „na pozadí" odpadol.
+- Mesiace pred prvým zapísaným volaním sú prázdne ako budúce.
 - Tokeny po mesiacoch v pohľade Modely sú v miliónoch bez jednotky
   („vstup (mil.)"), plný tvar sa do 12 stĺpcov nezmestil.
 - Hlavička stĺpca tokenov je „Tokeny" (celý popis v `title` a v súčtoch).

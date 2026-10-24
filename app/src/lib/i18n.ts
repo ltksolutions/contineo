@@ -1835,7 +1835,6 @@ interface Dictionary {
       tokensAll: string
       share: string
       colTotal: string
-      background: string
       others: (n: number) => string
       chartMonths: string
       chartRank: Record<"people" | "purposes" | "models", (period: string) => string>
@@ -1857,7 +1856,7 @@ interface Dictionary {
       onlyModel: (name: string) => string
       onlyUnpriced: string
       clearFilter: string
-      backgroundGroup: string
+      noPerson: string
       purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining" | "faq-review" | "compliance-review", { label: string; why: string }>
     }
     branding: {
@@ -7089,7 +7088,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tokensAll: "Tokeny vstup / výstup / cache",
       share: "Podiel",
       colTotal: "Spolu",
-      background: "na pozadí",
       others: n => `Ostatné (${n})`,
       chartMonths: "Suma po mesiacoch",
       chartRank: {
@@ -7115,7 +7113,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onlyModel: name => `Len model ${name}`,
       onlyUnpriced: "Len volania s modelom mimo cenníka",
       clearFilter: "Zrušiť",
-      backgroundGroup: "Na pozadí",
+      noPerson: "Automaticky (bez osoby)",
     },
     branding: {
       name: "Názov portálu",
@@ -12192,7 +12190,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tokensAll: "Tokeny vstup / výstup / cache",
       share: "Podíl",
       colTotal: "Celkem",
-      background: "na pozadí",
       others: n => `Ostatní (${n})`,
       chartMonths: "Částka po měsících",
       chartRank: {
@@ -12218,7 +12215,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onlyModel: name => `Jen model ${name}`,
       onlyUnpriced: "Jen volání s modelem mimo ceník",
       clearFilter: "Zrušit",
-      backgroundGroup: "Na pozadí",
+      noPerson: "Automaticky (bez osoby)",
     },
     branding: {
       name: "Název portálu",
@@ -17284,7 +17281,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tokensAll: "Tokens input / output / cache",
       share: "Share",
       colTotal: "Total",
-      background: "background",
       others: n => `Other (${n})`,
       chartMonths: "Amount by month",
       chartRank: {
@@ -17310,7 +17306,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onlyModel: name => `Only model ${name}`,
       onlyUnpriced: "Only calls with a model outside the price list",
       clearFilter: "Clear",
-      backgroundGroup: "Background",
+      noPerson: "Automatic (no person)",
     },
     branding: {
       name: "Portal name",

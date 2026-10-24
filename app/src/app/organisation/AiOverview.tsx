@@ -92,7 +92,7 @@ export default function AiOverview({
 
   const exportHref = `/api/ai-overview?${new URLSearchParams({ format: "xlsx", from: fromText, to: toText, by })}`
   const empty = totals.calls === 0
-  const pastMonths = months.filter(m => !m.future).length
+  const pastMonths = months.filter(m => !m.blank).length
   const pct = previousUsd ? (totals.usd - previousUsd) / previousUsd : null
 
   // Séria grafu: 5 najväčších a Ostatné.
@@ -101,7 +101,7 @@ export default function AiOverview({
     ...top.map((it, i) => ({ name: itemName(it), cls: `series-${i + 1}`, byMonth: it.byMonth, usd: it.usd, item: it as OverviewItem | undefined })),
     ...(rest.length ? [{
       name: tu.others(rest.length), cls: "series-6", item: undefined,
-      byMonth: months.map((m, i) => (m.future ? null : rest.reduce((s, it) => s + (it.byMonth[i] ?? 0), 0))),
+      byMonth: months.map((m, i) => (m.blank ? null : rest.reduce((s, it) => s + (it.byMonth[i] ?? 0), 0))),
       usd: rest.reduce((s, it) => s + it.usd, 0),
     }] : []),
   ]
@@ -109,7 +109,7 @@ export default function AiOverview({
   const rankMax = Math.max(0.0001, ...series.map(s => s.usd))
   const chartAlt = single
     ? series.map(s => `${s.name} ${formatUsd(s.usd)}`).join(", ")
-    : months.filter(m => !m.future).map((m, i) => `${monthName(m.year, m.month)} ${formatUsd(totals.byMonth[i] ?? 0)}`).join(", ")
+    : months.filter(m => !m.blank).map((m, i) => `${monthName(m.year, m.month)} ${formatUsd(totals.byMonth[i] ?? 0)}`).join(", ")
 
   const cols = single
     ? "minmax(150px, 1fr) 96px 72px 84px 220px"
@@ -119,14 +119,9 @@ export default function AiOverview({
   const heads = months.map((m, i) => (crossYear && (i === 0 || m.month === 0) ? `${tu.monthHeads[m.month]} ${String(m.year).slice(2)}` : tu.monthHeads[m.month]))
   // Tokeny po mesiacoch v miliónoch bez jednotky — jednotka je v názve riadku.
   const millions = (n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: n >= 10_000_000 ? 0 : 1 }).format(n / 1_000_000)
-  const lastIdx = months.reduce((last, m, i) => (m.future ? last : i), 0)
+  const lastIdx = months.reduce((last, m, i) => (m.blank ? last : i), 0)
   const share = (usd: number) => `${totals.usd ? Math.round((usd / totals.usd) * 100) : 0} %`
-  const nameCell = (it: OverviewItem) => (
-    <>
-      <a href={usageHref(fromText, toText, it)}>{itemName(it)}</a>
-      {it.background && <span className="tag tag--archived">{tu.background}</span>}
-    </>
-  )
+  const nameCell = (it: OverviewItem) => <a href={usageHref(fromText, toText, it)}>{itemName(it)}</a>
 
   return (
     <>
@@ -228,7 +223,7 @@ export default function AiOverview({
                   <div className="chart-gridline" style={{ top: 0 }}><span>{formatUsd(chartMax)}</span></div>
                   <div className="chart-gridline" style={{ top: "50%" }}><span>{formatUsd(chartMax / 2)}</span></div>
                   <div className="chart-cols">
-                    {months.map((m, i) => m.future ? (
+                    {months.map((m, i) => m.blank ? (
                       <div key={m.key} className="chart-col is-future" />
                     ) : (
                       <a key={m.key} className="chart-col" tabIndex={-1} href={usageHref(m.fromText, m.toText)}
@@ -243,7 +238,7 @@ export default function AiOverview({
                   </div>
                 </div>
                 <div className="chart-labels" aria-hidden="true" style={{ "--chart-cols": months.length } as CSSProperties}>
-                  {months.map((m, i) => <span key={m.key} className={m.future ? "is-future" : undefined}>{heads[i]}</span>)}
+                  {months.map((m, i) => <span key={m.key} className={m.blank ? "is-future" : undefined}>{heads[i]}</span>)}
                 </div>
                 <ul className="chart-legend">
                   {series.map(s => <li key={s.cls}><span className={`chart-swatch ${s.cls}`} aria-hidden="true" /><span>{s.name}</span></li>)}
@@ -268,8 +263,8 @@ export default function AiOverview({
                   <div className="matrix-row" role="row">
                     <span className="matrix-name" role="rowheader">{nameCell(it)}</span>
                     {!single && months.map((m, i) => (
-                      <span key={m.key} className={`matrix-cell${m.future ? " is-future" : ""}`} role="cell">
-                        {m.future ? "" : <a href={usageHref(m.fromText, m.toText, it)}>{formatUsd(it.byMonth[i] ?? 0)}</a>}
+                      <span key={m.key} className={`matrix-cell${m.blank ? " is-future" : ""}`} role="cell">
+                        {m.blank ? "" : <a href={usageHref(m.fromText, m.toText, it)}>{formatUsd(it.byMonth[i] ?? 0)}</a>}
                       </span>
                     ))}
                     <span className="matrix-cell matrix-total" role="cell"><a href={usageHref(fromText, toText, it)}>{formatUsd(it.usd)}</a></span>
@@ -295,8 +290,8 @@ export default function AiOverview({
               <div className="matrix-row matrix-foot" role="row">
                 <span className="matrix-name" role="rowheader">{tu.colTotal}</span>
                 {!single && months.map((m, i) => (
-                  <span key={m.key} className={`matrix-cell${m.future ? " is-future" : ""}`} role="cell">
-                    {m.future ? "" : formatUsd(totals.byMonth[i] ?? 0)}
+                  <span key={m.key} className={`matrix-cell${m.blank ? " is-future" : ""}`} role="cell">
+                    {m.blank ? "" : formatUsd(totals.byMonth[i] ?? 0)}
                   </span>
                 ))}
                 <span className="matrix-cell matrix-total" role="cell">{formatUsd(totals.usd)}</span>
@@ -321,7 +316,7 @@ export default function AiOverview({
                     <span className="spark" aria-hidden="true" style={{ "--chart-cols": months.length } as CSSProperties}>
                       {months.map((m, i) => {
                         const max = Math.max(0.0001, ...it.byMonth.map(v => v ?? 0))
-                        return m.future
+                        return m.blank
                           ? <span key={m.key} className="is-future" />
                           : <span key={m.key} style={{ height: `${Math.max(5, ((it.byMonth[i] ?? 0) / max) * 100)}%` }} />
                       })}

@@ -993,6 +993,20 @@ nie táto sekcia.
 - [ ] **N8 — `.env.local.example` zastaraný**: zosúladiť so skutočnými premennými (bez Ollama/Blob; doplniť CRON_SECRET, ALLOWED_EMAILS, OAUTH_SECRET_ENCRYPTION_KEY, PLATFORM_TENANT, VERCEL_TOKEN, ECOMAIL_*).
 - [ ] **N5/N7 — rate limiting a timingSafeEqual pre CRON_SECRET**: widget už je (ADR-028, 2026-10-06) a má vlastný strop na osobu a hodinu z `evaluations`; CRON_SECRET sa stále porovnáva `!==` — doplniť `timingSafeEqual` v oboch cron routách.
 
+### Spotreba AI: jedno meno pre prácu na pozadí (2026-10-24, z Prehľadu)
+
+- [ ] **Proces na pozadí sa zapisuje pod rôznymi menami** — v `ai_usage` je
+  tá istá kontrola súladu ako „Kontrola súladu (na pozadí)" (s `personId`
+  toho, kto ju spustil, `complianceCheck.ts`), „Kontrola súladu" a
+  „Kontrola súladu (cron)" (staršie verzie kódu), ťažba ako „Ťažba FAQ
+  (cron)". Prehľad od PR opravy zoskupuje Osoby podľa `personId` a meno berie
+  z registra, takže to nevadí tam; Spotreba v stĺpci OSOBA ukazuje kópiu
+  mena. **Odporúčanie:** pri zápise dať do `personName` meno osoby
+  (z registra) a proces nechať na účel (`purpose`); staré riadky sa
+  nemenia (prevádzkový výkaz, 25 mesiacov ich zmaže TTL). Ak treba aj
+  v Spotrebe zjednotiť staré mená, zobrazovať meno z registra podľa
+  `personId` ako v Prehľade.
+
 ## P. Vzdelávanie — modul `learning` (zaradené 2026-09-27)
 
 > **Rozhodnutie:** `docs/decisions/ADR-018-modul-learning.md` (D117–D123) ·

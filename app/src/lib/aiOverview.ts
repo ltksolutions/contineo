@@ -13,10 +13,19 @@
 
 import { getCollection } from "./mongodb"
 import {
-  AI_USAGE_COLLECTION, BACKGROUND_PERSON, usageQuery, usageTotals,
+  AI_USAGE_COLLECTION, NO_PERSON, usageQuery, usageTotals,
   type AiUsageRecord, type UsageFilter,
 } from "./aiUsage"
 import { EMPTY_TOKENS, type TokenCounts } from "./pricing"
+import { PERSONS_COLLECTION, type Person } from "./persons"
+
+/** Celé mená osôb podľa `personId` (`persons.id`) v rámci organizácie. */
+async function personNames(companyCode: string, ids: string[]): Promise<Map<string, string>> {
+  if (!ids.length) return new Map()
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const rows = await col.find({ companyCode, id: { $in: [...new Set(ids)] } }, { projection: { id: 1, fullName: 1 } }).toArray()
+  return new Map(rows.map(p => [p.id, p.fullName]))
+}
 
 export const OVERVIEW_GROUPS = ["people", "purposes", "models"] as const
 export type OverviewGroup = (typeof OVERVIEW_GROUPS)[number]
@@ -35,12 +44,19 @@ export interface OverviewMonth {
   /** Prvý a posledný deň mesiaca orezaný na obdobie, `YYYY-MM-DD` — do odkazu na Spotrebu. */
   fromText: string
   toText: string
-  /** Mesiac sa ešte nezačal — prázdne miesto, nie nula. */
-  future: boolean
+  /**
+   * Za mesiac nemôžu byť dáta — ešte sa nezačal, alebo je pred prvým
+   * zapísaným volaním organizácie (spotreba sa zapisuje od 5. 10. 2026).
+   * Prázdne miesto, nie nula, a do priemeru sa nepočíta.
+   */
+  blank: boolean
 }
 
-/** Mesiace, ktoré obdobie zasahuje (`to` je exkluzívne ako v `UsageFilter`). */
-export function overviewMonths(from: Date, to: Date, now: Date = new Date()): OverviewMonth[] {
+/**
+ * Mesiace, ktoré obdobie zasahuje (`to` je exkluzívne ako v `UsageFilter`).
+ * `since` = prvé zapísané volanie; mesiace pred ním sú prázdne.
+ */
+export function overviewMonths(from: Date, to: Date, now: Date = new Date(), since: Date | null = null): OverviewMonth[] {
   const iso = (d: Date) => d.toISOString().slice(0, 10)
   const last = new Date(to.getTime() - 24 * 3600 * 1000)
   const out: OverviewMonth[] = []
@@ -54,7 +70,7 @@ export function overviewMonths(from: Date, to: Date, now: Date = new Date()): Ov
       month: m,
       fromText: iso(start < from ? from : start),
       toText: iso(end > last ? last : end),
-      future: start > now,
+      blank: start > now || (since !== null && end < new Date(Date.UTC(since.getUTCFullYear(), since.getUTCMonth(), 1))),
     })
     if (++m === 12) { m = 0; y++ }
   }
@@ -77,7 +93,7 @@ export interface OverviewItem {
   key: string
   name: string
   background: boolean
-  /** Suma po mesiacoch v poradí `months`; budúci mesiac je `null`. */
+  /** Suma po mesiacoch v poradí `months`; mesiac bez dát (`blank`) je `null`. */
   byMonth: (number | null)[]
   /** Tokeny po mesiacoch — pohľad Modely ich ukazuje pod sumou. */
   tokensByMonth: (TokenCounts | null)[]
@@ -102,7 +118,7 @@ const addTokens = (a: TokenCounts, b: TokenCounts): TokenCounts => ({
 export function shapeOverview(group: OverviewGroup, months: OverviewMonth[], buckets: OverviewBucket[]): Overview {
   const index = new Map(months.map((m, i) => [m.key, i]))
   const items = new Map<string, OverviewItem>()
-  const blank = () => months.map(m => (m.future ? null : 0))
+  const blank = () => months.map(m => (m.blank ? null : 0))
   for (const b of buckets) {
     const i = index.get(b.month)
     if (i === undefined) continue
@@ -110,7 +126,7 @@ export function shapeOverview(group: OverviewGroup, months: OverviewMonth[], buc
     if (!it) {
       it = {
         key: b.key, name: b.name, background: b.background,
-        byMonth: blank(), tokensByMonth: months.map(m => (m.future ? null : { ...EMPTY_TOKENS })),
+        byMonth: blank(), tokensByMonth: months.map(m => (m.blank ? null : { ...EMPTY_TOKENS })),
         usd: 0, calls: 0, tokens: { ...EMPTY_TOKENS },
       }
       items.set(b.key, it)
@@ -130,7 +146,7 @@ export function shapeOverview(group: OverviewGroup, months: OverviewMonth[], buc
       usd: list.reduce((s, it) => s + it.usd, 0),
       calls: list.reduce((s, it) => s + it.calls, 0),
       tokens: list.reduce((s, it) => addTokens(s, it.tokens), { ...EMPTY_TOKENS }),
-      byMonth: months.map((m, i) => (m.future ? null : list.reduce((s, it) => s + (it.byMonth[i] ?? 0), 0))),
+      byMonth: months.map((m, i) => (m.blank ? null : list.reduce((s, it) => s + (it.byMonth[i] ?? 0), 0))),
     },
   }
 }
@@ -140,19 +156,26 @@ export function topWithRest(items: OverviewItem[], top = 5): { top: OverviewItem
   return { top: items.slice(0, top), rest: items.slice(top) }
 }
 
+/**
+ * Osoby sa zoskupujú podľa `personId`, nie podľa kópie mena: kontrola súladu
+ * spustená človekom má jeho `personId`, ale meno procesu („Kontrola súladu
+ * (na pozadí)") — Osoby by inak ukazovali procesy (Ján 24. 10. 2026). Práca
+ * bez osoby je jeden riadok `none`.
+ */
 const KEY: Record<OverviewGroup, unknown> = {
-  people: { $ifNull: ["$personId", { $concat: [BACKGROUND_PERSON, "$personName"] }] },
+  people: { $ifNull: ["$personId", NO_PERSON] },
   purposes: "$purpose",
   models: "$model",
 }
 
 /** Matica za obdobie filtra; osoba, účel a model filtra sa neberú — Prehľad ich rozkladá. */
 export async function usageOverview(companyCode: string, f: UsageFilter, group: OverviewGroup, now: Date = new Date()): Promise<Overview> {
-  const months = overviewMonths(f.from, f.to, now)
   const col = await getCollection<AiUsageRecord>(AI_USAGE_COLLECTION)
+  const first = await col.find({ companyCode }, { projection: { at: 1 } }).sort({ at: 1 }).limit(1).next()
+  const months = overviewMonths(f.from, f.to, now, first?.at ?? null)
   const rows = await col.aggregate<{
     _id: { k: string | null; m: string }
-    name: string; bg: boolean; usd: number; calls: number
+    name: string; usd: number; calls: number
     input: number; output: number; cacheWrite: number; cacheRead: number
   }>([
     { $match: usageQuery(companyCode, { from: f.from, to: f.to }) },
@@ -162,7 +185,6 @@ export async function usageOverview(companyCode: string, f: UsageFilter, group: 
         _id: { k: KEY[group], m: { $dateToString: { date: "$at", format: "%Y-%m", timezone: "UTC" } } },
         // Najnovšia kópia mena — premenovaná osoba sa ukáže pod dnešným menom.
         name: { $first: group === "people" ? "$personName" : group === "purposes" ? "$purpose" : "$model" },
-        bg: { $first: { $eq: [{ $ifNull: ["$personId", null] }, null] } },
         usd: { $sum: "$usd" },
         calls: { $sum: 1 },
         input: { $sum: "$tokens.input" },
@@ -172,12 +194,14 @@ export async function usageOverview(companyCode: string, f: UsageFilter, group: 
       },
     },
   ]).toArray()
+  // Meno osoby z registra, nie z kópie v riadku spotreby (tá môže byť meno procesu).
+  const names = group === "people" ? await personNames(companyCode, rows.map(r => r._id.k).filter((k): k is string => !!k && k !== NO_PERSON)) : new Map<string, string>()
   const buckets: OverviewBucket[] = rows
     .filter(r => typeof r._id.k === "string")
     .map(r => ({
       key: r._id.k as string,
-      name: r.name,
-      background: group === "people" && r.bg,
+      name: names.get(r._id.k as string) ?? r.name,
+      background: group === "people" && r._id.k === NO_PERSON,
       month: r._id.m,
       usd: r.usd,
       calls: r.calls,

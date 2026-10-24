@@ -12,10 +12,19 @@ describe("aiOverview — Prehľad po mesiacoch (ORG-ai-prehlad)", () => {
     const f = usageFilterFromQuery({ from: "2026-01-15", to: "2026-12-31" }, NOW)
     const m = overviewMonths(f.from, f.to, NOW)
     expect(m).toHaveLength(12)
-    expect(m[0]).toMatchObject({ key: "2026-01", fromText: "2026-01-15", toText: "2026-01-31", future: false })
-    expect(m[9]).toMatchObject({ key: "2026-10", future: false })
-    expect(m[10]).toMatchObject({ key: "2026-11", future: true })
+    expect(m[0]).toMatchObject({ key: "2026-01", fromText: "2026-01-15", toText: "2026-01-31", blank: false })
+    expect(m[9]).toMatchObject({ key: "2026-10", blank: false })
+    expect(m[10]).toMatchObject({ key: "2026-11", blank: true })
     expect(m[11].toText).toBe("2026-12-31")
+  })
+
+  it("mesiace pred prvým zapísaným volaním sú prázdne, nie nula", () => {
+    const f = usageFilterFromQuery({ from: "2026-01-01", to: "2026-12-31" }, NOW)
+    const m = overviewMonths(f.from, f.to, NOW, new Date("2026-10-05T08:00:00Z"))
+    expect(m.filter(x => !x.blank).map(x => x.key)).toEqual(["2026-10"])
+    const o = shapeOverview("people", m, [b("p1", "2026-10", 4)])
+    expect(o.totals.byMonth[0]).toBeNull()
+    expect(o.totals.byMonth[9]).toBe(4)
   })
 
   it("jeden mesiac a prechod cez rok", () => {
@@ -66,6 +75,14 @@ describe("aiOverview — Prehľad po mesiacoch (ORG-ai-prehlad)", () => {
 })
 
 describe("filter Spotreby z buniek Prehľadu", () => {
+  it("práca bez osoby: `person=none` hľadá všetko bez personId", () => {
+    const f = usageFilterFromQuery({ person: "none" }, NOW)
+    expect(f).toMatchObject({ noPerson: true })
+    expect(f.personId).toBeUndefined()
+    expect(usageQuery("SFZ", f)).toMatchObject({ personId: null })
+    expect(usageFilterQuery(f).get("person")).toBe("none")
+  })
+
   it("práca na pozadí: osoba `bg:<meno>` hľadá bez personId podľa mena", () => {
     const f = usageFilterFromQuery({ person: "bg:Ťažba FAQ (cron)" }, NOW)
     expect(f.personId).toBeUndefined()

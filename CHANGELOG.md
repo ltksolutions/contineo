@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prehľad spotreby AI: osoby podľa osoby, mesiace bez záznamov prázdne (2026-10-24)
+
+- Pohľad Osoby zoskupuje podľa osoby, nie podľa mena v zázname: kontrola
+  súladu spustená človekom je pod jeho menom; všetka práca bez osoby je
+  jeden riadok „Automaticky (bez osoby)“ (`?person=none` v Spotrebe).
+  Mená sú z registra osôb — aj vo výbere Osoba v Spotrebe.
+- Mesiace pred prvým zapísaným volaním sú v grafe aj matici prázdne, nie
+  $0, a nepočítajú sa do priemeru na mesiac.
+
 ### Umelá inteligencia: Prehľad spotreby po mesiacoch (2026-10-24, ORG-ai-prehlad)
 
 - Nová časť **Prehľad** (`/organisation/ai/overview`) za Spotrebou: suma,
