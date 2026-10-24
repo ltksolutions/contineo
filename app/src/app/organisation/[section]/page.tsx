@@ -46,6 +46,11 @@ import ConnectorList from "../_connectors/ConnectorList"
 import ConnectorDetail from "../_connectors/ConnectorDetail"
 import { listConnectors, connectorById, connectorView, channelsUsingConnector } from "@/lib/connectors"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
+import { assistantsState } from "@/lib/mcpServer/access"
+import { getTenantProfile } from "@/lib/tenantProfile"
+import { grantsForCompany } from "@/lib/oauthServer"
+import { RESIDENCY_LABEL } from "@/lib/residency"
+import { saveAssistantsAction, revokeGrantAdminAction } from "../actions"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { ratesForDate, formatUsd } from "@/lib/pricing"
 
@@ -242,6 +247,9 @@ export default async function OrganisationSectionPage({
     : []
   const retention = retentionSettings(tenant.privacy?.retention)
   const tt = d.dpo.retention
+  // AI asistenti (ADR-038): stav podľa rezidencie a súhlasy celej organizácie — len pre svoju časť.
+  const assistants = now === "assistants" ? assistantsState(tenant, (await getTenantProfile(tenant.companyCode)).dataResidency) : null
+  const grants = now === "assistants" ? await grantsForCompany(tenant.companyCode) : []
 
   // Strom sa načítava len pre svoju záložku. Na ostatných by to bol dotaz
   // navyše za nič.
@@ -874,6 +882,94 @@ export default async function OrganisationSectionPage({
             ))}
           </section>
         )}
+      </>
+      )}
+
+      {/*
+        AI asistenti (ADR-038, D251, D252): Contineo ako MCP server. Prepínač
+        organizácie, „len verejný obsah", adresa servera a súhlasy všetkých
+        ľudí s možnosťou odvolať. V režime, ktorý zapnutie nedovolí, sa
+        formulár neukazuje — len veta prečo.
+      */}
+      {now === "assistants" && assistants && (
+      <>
+        <form action={saveAssistantsAction} className="card set-form">
+          <input type="hidden" name="tab" value="assistants" />
+          <section className="set-sec" id="assistants">
+            <div className="set-sec-head">
+              <h2>
+                {d.mcp.org.heading}{" "}
+                <span className={assistants.active ? "tag tag--published" : "tag"}>{assistants.active ? t.signIn.stateOn : t.signIn.stateOff}</span>
+              </h2>
+              <p>{d.mcp.org.intro}</p>
+            </div>
+            <div className="set-sec-body">
+              {!assistants.allowed ? (
+                <div className="lnote lnote--bad" role="status">
+                  <span className="lnote-mark" aria-hidden="true">!</span>
+                  <span className="lnote-text">{d.mcp.org.blocked(RESIDENCY_LABEL[assistants.residency])}</span>
+                </div>
+              ) : (
+                <div className="form-list">
+                  <label className="form-row select-row">
+                    <input type="checkbox" name="enabled" defaultChecked={assistants.enabled} />
+                    <span className="form-row-main">
+                      {d.mcp.org.enable}
+                      <span className="quiet field-hint" style={{ display: "block" }}>{d.mcp.org.enableHint}</span>
+                    </span>
+                  </label>
+                  <label className="form-row select-row">
+                    <input type="checkbox" name="publicOnly" defaultChecked={assistants.publicOnly} />
+                    <span className="form-row-main">
+                      {d.mcp.org.publicOnly}
+                      <span className="quiet field-hint" style={{ display: "block" }}>{d.mcp.org.publicOnlyHint}</span>
+                    </span>
+                  </label>
+                </div>
+              )}
+              {assistants.allowed && assistants.note && <p className="quiet field-hint" style={{ margin: 0 }}>{d.mcp.org.note}</p>}
+              <div className="set-callback">
+                <span className="quiet field-hint">{d.mcp.org.address}</span>
+                <code>{`https://${tenant.hostnames[0] ?? "<…>"}/mcp`}</code>
+                <span className="quiet field-hint">{d.mcp.org.addressHint}</span>
+              </div>
+            </div>
+          </section>
+          {assistants.allowed && (
+            <div className="set-savebar">
+              <SubmitButton className="button">{t.branding.save}</SubmitButton>
+              <span className="quiet">{d.common.saveBarNote}</span>
+            </div>
+          )}
+        </form>
+        <section className="card more">
+          <div className="more-head"><h2>{d.mcp.org.clientsHeading}</h2></div>
+          <div className="more-row"><div className="more-main"><span>{d.mcp.org.clientsIntro}</span></div></div>
+          {grants.length === 0 ? (
+            <div className="more-row"><div className="more-main"><span>{d.mcp.org.noClients}</span></div></div>
+          ) : grants.map(g => (
+            <div key={g.grantId} className="more-row" style={g.revokedAt ? { opacity: 0.65 } : undefined}>
+              <div className="more-main">
+                <b>{g.clientName} — {g.personName}</b>
+                <span>
+                  {g.revokedAt
+                    ? d.mcp.apps.revoked(formatDate(new Date(g.revokedAt), language))
+                    : `${d.mcp.apps.granted(formatDate(new Date(g.grantedAt), language))} · ${g.lastUsedAt ? d.mcp.apps.lastUsed(formatDate(new Date(g.lastUsedAt), language)) : d.mcp.apps.neverUsed}`}
+                  {" · "}{d.mcp.apps.scopesLabel}: {g.scopes.map(sc => d.mcp.scopes[sc]?.title ?? sc).join(", ")}
+                </span>
+              </div>
+              {!g.revokedAt && (
+                <form action={revokeGrantAdminAction}>
+                  <input type="hidden" name="tab" value="assistants" />
+                  <input type="hidden" name="grantId" value={g.grantId} />
+                  <input type="hidden" name="clientName" value={g.clientName} />
+                  <input type="hidden" name="personName" value={g.personName} />
+                  <SubmitButton className="button button--quiet">{d.mcp.apps.revoke}</SubmitButton>
+                </form>
+              )}
+            </div>
+          ))}
+        </section>
       </>
       )}
 

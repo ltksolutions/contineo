@@ -69,6 +69,8 @@ export type AuditSubject =
   | "connector"
   /** Kuriér (ADR-033) — kto, kedy, komu a predmet; nikdy text (D209). */
   | "courier"
+  /** Prístup pre AI asistentov — nastavenie MCP servera a odvolanie súhlasu (ADR-038). */
+  | "assistants"
 
 export interface AuditRecord {
   _id?: ObjectId

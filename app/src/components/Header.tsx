@@ -516,6 +516,20 @@ export default function Header({
                     {t.myAcknowledgements.heading}
                   </Link>
 
+                  {/* Pripojené aplikácie (ADR-038): aké AI asistenty človek pustil k svojmu Contineu. */}
+                  <Link
+                    href="/account/apps"
+                    role="menuitem"
+                    className="account-item"
+                    onClick={() => setPersonalOpen(false)}
+                  >
+                    <svg {...iconProps()}>
+                      <rect x="2.5" y="4" width="13" height="10" rx="1.6" />
+                      <path d="M6 7.5 4.3 9l1.7 1.5M12 7.5 13.7 9 12 10.5M10 7l-2 4" />
+                    </svg>
+                    {t.nav.connectedApps}
+                  </Link>
+
                   <div className="account-divider" />
 
                   {ADMIN_ITEMS.map(o => (

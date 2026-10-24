@@ -31,6 +31,15 @@ describe("brána prihlásenia", () => {
     expect(isPublicPath("/privacy")).toBe(true)
   })
 
+  it("MCP server a OAuth prejdú — bránou je token a klient, nie cookie (ADR-038)", () => {
+    expect(isPublicPath("/mcp")).toBe(true)
+    expect(isPublicPath("/.well-known/oauth-protected-resource")).toBe(true)
+    expect(isPublicPath("/.well-known/oauth-authorization-server")).toBe(true)
+    expect(isPublicPath("/oauth/token")).toBe(true)
+    expect(isPublicPath("/oauth/authorize")).toBe(true)
+    expect(isPublicPath("/oauth/consent")).toBe(true)
+  })
+
   it("obsah noriem neprejde", () => {
     // Toto je ten dôvod, pre ktorý brána existuje: bez nej by ktokoľvek na
     // internete dostal odpovede nad korpusom.
@@ -66,7 +75,10 @@ describe("brána prihlásenia", () => {
     // 80-bitovým hashom v adrese, nie prihlásením.
     // 8. položka: widget cudzieho systému (ADR-028, D166) — chránený
     // podpísaným tokenom kanála a povoleným pôvodom, overuje každá route.
-    expect(PUBLIC_PATHS.length).toBeLessThanOrEqual(8)
+    // 9.–11. položka: Contineo ako MCP server (ADR-038) — `/mcp` chráni
+    // OAuth token, `/.well-known/` sú verejné metadáta, `/oauth/` má bránou
+    // klienta a kód; obrazovka súhlasu si prihlásenie overuje sama.
+    expect(PUBLIC_PATHS.length).toBeLessThanOrEqual(11)
   })
 })
 

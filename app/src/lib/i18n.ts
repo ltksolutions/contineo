@@ -743,6 +743,8 @@ interface Dictionary {
     themeLabel: string
     /** Prepínač ranného súhrnu Kuriéra v plachte účtu (ADR-033, D207). */
     courierDigest: (on: boolean) => string
+    /** Odkaz na pripojené aplikácie v plachte účtu (ADR-038). */
+    connectedApps: string
     theme: Record<"system" | "light" | "dark", string>
     /** Popis pre čítačku obrazovky — hovorí aj to, čo sa stane po kliknutí. */
     themeToggle: (now: string, next: string) => string
@@ -2539,6 +2541,57 @@ interface Dictionary {
     aiFailed: string
   }
   /** Widget pre cudzí systém (ADR-028, D166) — texty idú do skriptu widgetu podľa jazyka z tokenu. */
+  /**
+   * Contineo ako MCP server (ADR-038): obrazovka súhlasu, pripojené
+   * aplikácie v plachte účtu a nastavenie organizácie. Opisy nástrojov
+   * sem nepatria — tie číta model a sú anglické (D254).
+   */
+  mcp: {
+    /** Rozsahy tokenu, ako ich vidí človek na obrazovke súhlasu. */
+    scopes: Record<"library.read" | "ask", { title: string; text: string }>
+    consent: {
+      heading: (client: string) => string
+      intro: (client: string, org: string) => string
+      asPerson: (name: string, email: string) => string
+      scopesHeading: string
+      note: string
+      allow: string
+      deny: string
+      expired: string
+      expiredText: string
+      /** Doslovné znenie súhlasu — ukladá sa do záznamu v jazyku, v ktorom ho človek videl (D28). */
+      statement: (date: string, name: string, email: string, client: string, org: string, scopes: string) => string
+    }
+    apps: {
+      heading: string
+      intro: string
+      none: string
+      granted: (date: string) => string
+      lastUsed: (date: string) => string
+      neverUsed: string
+      revoked: (date: string) => string
+      revoke: string
+      revokedMessage: string
+      notFound: string
+      scopesLabel: string
+    }
+    org: {
+      heading: string
+      intro: string
+      enable: string
+      enableHint: string
+      publicOnly: string
+      publicOnlyHint: string
+      blocked: (residency: string) => string
+      note: string
+      address: string
+      addressHint: string
+      clientsHeading: string
+      clientsIntro: string
+      noClients: string
+      saved: string
+    }
+  }
   widget: {
     open: string
     title: string
@@ -5450,6 +5503,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     signOut: "Odhlásiť",
     themeLabel: "Téma:",
     courierDigest: (on) => `Ranný súhrn Kuriéra e-mailom: ${on ? "zapnutý" : "vypnutý"}`,
+    connectedApps: "Pripojené aplikácie",
     theme: { system: "podľa systému", light: "svetlá", dark: "tmavá" },
     themeToggle: (now, next) => `Téma ${now}. Prepnúť na: ${next}`,
     themeState: (now) => `Téma ${now}`,
@@ -6765,6 +6819,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       ai: "Umelá inteligencia",
       connectors: "Konektory",
+      assistants: "AI asistenti",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
       gdpr: "GDPR",
@@ -7687,6 +7742,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     bulkDone: (op, ok, failed) => `${op === "close" ? "Zavreté" : op === "take" ? "Prevzaté" : "Znovu otvorené"}: ${ok}${failed ? ` · nepodarilo sa: ${failed}` : ""}.`,
     msgReopened: "Ticket je znovu otvorený.",
     aiFailed: "Asistent návrh nepripravil — skús to o chvíľu alebo napíš odpoveď sám.",
+  },
+  mcp: {
+    scopes: {
+      "library.read": { title: "Čítať knižnicu", text: "Hľadať v dokumentoch, čítať platné znenia a zoznam dokumentov organizácie — to, čo vidíte na portáli." },
+      ask: { title: "Pýtať sa asistenta", text: "Položiť otázku a dostať odpoveď Continea s citáciami. Platí ju organizácia a otázka sa zapíše do vašej histórie." },
+    },
+    consent: {
+      heading: client => `${client} žiada prístup do Continea`,
+      intro: (client, org) => `Aplikácia ${client} chce vo vašom mene pracovať s Contineom organizácie ${org}. Dostane len to, čo smiete vy, a len v rozsahu, ktorý tu povolíte.`,
+      asPerson: (name, email) => `Prihlásený: ${name} (${email})`,
+      scopesHeading: "Čo aplikácia smie",
+      note: "Prístup kedykoľvek odvoláte v účte → Pripojené aplikácie. Obsah, ktorý aplikácia prečíta, spracúva model, ktorý ste si vybrali vy — nie Contineo.",
+      allow: "Povoliť",
+      deny: "Zamietnuť",
+      expired: "Žiadosť vypršala",
+      expiredText: "Aplikácia čakala na povolenie príliš dlho alebo žiadosť už bola vybavená. Skúste pripojenie z aplikácie znova.",
+      statement: (date, name, email, client, org, scopes) =>
+        `Dňa ${date} som ja, ${name} (${email}), povolil(a) aplikácii „${client}" prístup do Continea organizácie ${org} v mojom mene v rozsahu: ${scopes}.`,
+    },
+    apps: {
+      heading: "Pripojené aplikácie",
+      intro: "Aplikácie a AI asistenti, ktorým ste povolili pracovať s Contineom vo vašom mene. Odvolanie okamžite zneplatní ich prístup; záznam o súhlase zostáva.",
+      none: "Žiadna aplikácia nemá prístup.",
+      granted: date => `Povolené ${date}`,
+      lastUsed: date => `naposledy použité ${date}`,
+      neverUsed: "zatiaľ nepoužité",
+      revoked: date => `Odvolané ${date}`,
+      revoke: "Odvolať prístup",
+      revokedMessage: "Prístup aplikácie bol odvolaný.",
+      notFound: "Taký súhlas tu nie je alebo už bol odvolaný.",
+      scopesLabel: "Rozsah",
+    },
+    org: {
+      heading: "AI asistenti",
+      intro: "Contineo ako MCP server: ľudia organizácie si môžu pripojiť vlastného AI asistenta (Claude Code, Cowork, Claude.ai…) a ten za nich hľadá v knižnici a pýta sa Continea. Dostane len to, čo smie prihlásená osoba.",
+      enable: "Prístup pre AI asistentov je zapnutý",
+      enableHint: "Predvolene vypnuté. Obsah knižnice odchádza do modelu, ktorý si vybral človek — nie do modelu organizácie. Zapnite vedome.",
+      publicOnly: "Cez asistentov ide len verejný obsah",
+      publicOnlyHint: "Interné dokumenty sa asistentom neukážu, aj keď ich prihlásená osoba na portáli vidí.",
+      blocked: residency => `V režime rezidencie „${residency}" sa prístup pre AI asistentov zapnúť nedá: obsah by opustil perimeter organizácie.`,
+      note: `Režim „eu-full": klienta si vyberá človek a organizácia ručí za to, kde jeho model beží.`,
+      address: "Adresa servera",
+      addressHint: "Túto adresu človek zadá vo svojom asistentovi; prihlási sa ako na portáli a povolí rozsah.",
+      clientsHeading: "Pripojené aplikácie v organizácii",
+      clientsIntro: "Kto má pripojeného asistenta a odkedy. Správca osôb smie prístup odvolať komukoľvek; záznam o súhlase zostáva.",
+      noClients: "Nikto zatiaľ nemá pripojenú aplikáciu.",
+      saved: "Nastavenie asistentov bolo uložené.",
+    },
   },
   widget: {
     open: "Opýtať sa",
@@ -10459,6 +10562,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     signOut: "Odhlásit",
     themeLabel: "Motiv:",
     courierDigest: (on) => `Ranní souhrn Kurýra e-mailem: ${on ? "zapnutý" : "vypnutý"}`,
+    connectedApps: "Připojené aplikace",
     theme: { system: "podle systému", light: "světlý", dark: "tmavý" },
     themeToggle: (now, next) => `Motiv ${now}. Přepnout na: ${next}`,
     themeState: (now) => `Motiv ${now}`,
@@ -11774,6 +11878,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       ai: "Umělá inteligence",
       connectors: "Konektory",
+      assistants: "AI asistenti",
       acknowledgements: "Potvrzování",
       audit: "Audit",
       gdpr: "GDPR",
@@ -12694,6 +12799,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     bulkDone: (op, ok, failed) => `${op === "close" ? "Zavřeno" : op === "take" ? "Převzato" : "Znovu otevřeno"}: ${ok}${failed ? ` · nepodařilo se: ${failed}` : ""}.`,
     msgReopened: "Ticket je znovu otevřen.",
     aiFailed: "Asistent návrh nepřipravil — zkus to za chvíli nebo napiš odpověď sám.",
+  },
+  mcp: {
+    scopes: {
+      "library.read": { title: "Číst knihovnu", text: "Hledat v dokumentech, číst platná znění a seznam dokumentů organizace — to, co vidíte na portálu." },
+      ask: { title: "Ptát se asistenta", text: "Položit otázku a dostat odpověď Continea s citacemi. Platí ji organizace a otázka se zapíše do vaší historie." },
+    },
+    consent: {
+      heading: client => `${client} žádá o přístup do Continea`,
+      intro: (client, org) => `Aplikace ${client} chce vaším jménem pracovat s Contineem organizace ${org}. Dostane jen to, co smíte vy, a jen v rozsahu, který tu povolíte.`,
+      asPerson: (name, email) => `Přihlášen: ${name} (${email})`,
+      scopesHeading: "Co aplikace smí",
+      note: "Přístup kdykoli odvoláte v účtu → Připojené aplikace. Obsah, který aplikace přečte, zpracovává model, který jste si vybrali vy — ne Contineo.",
+      allow: "Povolit",
+      deny: "Zamítnout",
+      expired: "Žádost vypršela",
+      expiredText: "Aplikace čekala na povolení příliš dlouho nebo žádost už byla vyřízena. Zkuste připojení z aplikace znovu.",
+      statement: (date, name, email, client, org, scopes) =>
+        `Dne ${date} jsem já, ${name} (${email}), povolil(a) aplikaci „${client}" přístup do Continea organizace ${org} svým jménem v rozsahu: ${scopes}.`,
+    },
+    apps: {
+      heading: "Připojené aplikace",
+      intro: "Aplikace a AI asistenti, kterým jste povolili pracovat s Contineem vaším jménem. Odvolání okamžitě zneplatní jejich přístup; záznam o souhlasu zůstává.",
+      none: "Žádná aplikace nemá přístup.",
+      granted: date => `Povoleno ${date}`,
+      lastUsed: date => `naposledy použito ${date}`,
+      neverUsed: "zatím nepoužito",
+      revoked: date => `Odvoláno ${date}`,
+      revoke: "Odvolat přístup",
+      revokedMessage: "Přístup aplikace byl odvolán.",
+      notFound: "Takový souhlas tu není nebo už byl odvolán.",
+      scopesLabel: "Rozsah",
+    },
+    org: {
+      heading: "AI asistenti",
+      intro: "Contineo jako MCP server: lidé organizace si mohou připojit vlastního AI asistenta (Claude Code, Cowork, Claude.ai…) a ten za ně hledá v knihovně a ptá se Continea. Dostane jen to, co smí přihlášená osoba.",
+      enable: "Přístup pro AI asistenty je zapnutý",
+      enableHint: "Ve výchozím stavu vypnuto. Obsah knihovny odchází do modelu, který si vybral člověk — ne do modelu organizace. Zapněte vědomě.",
+      publicOnly: "Přes asistenty jde jen veřejný obsah",
+      publicOnlyHint: "Interní dokumenty se asistentům neukážou, i když je přihlášená osoba na portálu vidí.",
+      blocked: residency => `V režimu rezidence „${residency}" se přístup pro AI asistenty zapnout nedá: obsah by opustil perimetr organizace.`,
+      note: `Režim „eu-full": klienta si vybírá člověk a organizace ručí za to, kde jeho model běží.`,
+      address: "Adresa serveru",
+      addressHint: "Tuto adresu člověk zadá ve svém asistentovi; přihlásí se jako na portálu a povolí rozsah.",
+      clientsHeading: "Připojené aplikace v organizaci",
+      clientsIntro: "Kdo má připojeného asistenta a odkdy. Správce osob smí přístup odvolat komukoli; záznam o souhlasu zůstává.",
+      noClients: "Nikdo zatím nemá připojenou aplikaci.",
+      saved: "Nastavení asistentů bylo uloženo.",
+    },
   },
   widget: {
     open: "Zeptat se",
@@ -15459,6 +15612,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     signOut: "Sign out",
     themeLabel: "Theme:",
     courierDigest: (on) => `Morning Courier digest by e-mail: ${on ? "on" : "off"}`,
+    connectedApps: "Connected apps",
     theme: { system: "system", light: "light", dark: "dark" },
     themeToggle: (now, next) => `Theme ${now}. Switch to: ${next}`,
     themeState: (now) => `Theme ${now}`,
@@ -16772,6 +16926,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Code lists",
       ai: "Artificial intelligence",
       connectors: "Connectors",
+      assistants: "AI assistants",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
       gdpr: "GDPR",
@@ -17692,6 +17847,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     bulkDone: (op, ok, failed) => `${op === "close" ? "Closed" : op === "take" ? "Taken" : "Reopened"}: ${ok}${failed ? ` · failed: ${failed}` : ""}.`,
     msgReopened: "The ticket is reopened.",
     aiFailed: "The assistant did not produce a draft — try again in a moment or write the answer yourself.",
+  },
+  mcp: {
+    scopes: {
+      "library.read": { title: "Read the library", text: "Search the documents, read the versions in force and list the organisation's documents — what you see on the portal." },
+      ask: { title: "Ask the assistant", text: "Ask a question and get Contineo's cited answer. The organisation pays for it and the question is recorded in your history." },
+    },
+    consent: {
+      heading: client => `${client} is requesting access to Contineo`,
+      intro: (client, org) => `${client} wants to work with ${org}'s Contineo on your behalf. It gets only what you are allowed to see, and only within the scope you grant here.`,
+      asPerson: (name, email) => `Signed in: ${name} (${email})`,
+      scopesHeading: "What the application may do",
+      note: "You can revoke access at any time under Account → Connected apps. Whatever the application reads is processed by the model you chose — not by Contineo.",
+      allow: "Allow",
+      deny: "Deny",
+      expired: "The request has expired",
+      expiredText: "The application waited too long for permission, or the request was already handled. Start the connection again from the application.",
+      statement: (date, name, email, client, org, scopes) =>
+        `On ${date} I, ${name} (${email}), allowed the application "${client}" to access ${org}'s Contineo on my behalf with the scope: ${scopes}.`,
+    },
+    apps: {
+      heading: "Connected apps",
+      intro: "Applications and AI assistants you have allowed to work with Contineo on your behalf. Revoking invalidates their access immediately; the consent record stays.",
+      none: "No application has access.",
+      granted: date => `Granted ${date}`,
+      lastUsed: date => `last used ${date}`,
+      neverUsed: "not used yet",
+      revoked: date => `Revoked ${date}`,
+      revoke: "Revoke access",
+      revokedMessage: "The application's access has been revoked.",
+      notFound: "No such consent exists, or it was already revoked.",
+      scopesLabel: "Scope",
+    },
+    org: {
+      heading: "AI assistants",
+      intro: "Contineo as an MCP server: people in the organisation can connect their own AI assistant (Claude Code, Cowork, Claude.ai…) which searches the library and asks Contineo on their behalf. It gets only what the signed-in person may see.",
+      enable: "Access for AI assistants is on",
+      enableHint: "Off by default. Library content leaves for a model the person chose — not the organisation's model. Turn it on deliberately.",
+      publicOnly: "Only public content goes through assistants",
+      publicOnlyHint: "Internal documents are not shown to assistants, even when the signed-in person sees them on the portal.",
+      blocked: residency => `In the "${residency}" residency mode, access for AI assistants cannot be enabled: content would leave the organisation's perimeter.`,
+      note: "Mode \"eu-full\": the person chooses the client and the organisation vouches for where its model runs.",
+      address: "Server address",
+      addressHint: "The person enters this address in their assistant, signs in as on the portal and grants the scope.",
+      clientsHeading: "Connected apps in the organisation",
+      clientsIntro: "Who has an assistant connected and since when. The people administrator may revoke anyone's access; the consent record stays.",
+      noClients: "Nobody has connected an application yet.",
+      saved: "Assistant settings were saved.",
+    },
   },
   widget: {
     open: "Ask",

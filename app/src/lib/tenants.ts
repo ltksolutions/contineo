@@ -243,6 +243,21 @@ export interface Tenant {
     updatedBy?: string
   }
 
+  /**
+   * Prístup pre AI asistentov — Contineo ako MCP server (ADR-038, D251).
+   *
+   * **Predvolene vypnuté.** Obsah knižnice ide do modelu, ktorý si vybral
+   * človek (Claude Code, Cowork…), a organizácia to má zapnúť vedome.
+   * Rezidencia `on-prem` a `air-gap` zapnutie nedovolí (`lib/mcpServer/access.ts`).
+   * `publicOnly` (D252): cez MCP ide len verejný obsah bez ohľadu na úroveň osoby.
+   */
+  assistants?: {
+    enabled: boolean
+    publicOnly?: boolean
+    updatedAt?: Date
+    updatedBy?: string
+  }
+
   createdAt?: Date
   updatedAt?: Date
 }
