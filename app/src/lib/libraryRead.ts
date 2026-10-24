@@ -20,6 +20,7 @@ import { conditionQuery, type Condition, type MatchMode } from "./libraryConditi
 import { openRounds, stateOf } from "./approvalsDb"
 import { APPROVALS_COLLECTION, type ApprovalRound } from "./approvals"
 import { documentDraftIdentity } from "./versionMeta"
+import { textFingerprint } from "./chunkIdentity"
 import { versionFlow, versionStage, lastPreparationRound, type VersionStage } from "./versionFlow"
 import { archiveState } from "./documentArchiveState"
 import { allDepartments } from "./departments"
@@ -492,13 +493,32 @@ function sortCounts(rows: { _id: unknown; n: number }[]): FacetCount[] {
     .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value, "sk"))
 }
 
+/**
+ * Pripravuje sa nové znenie? Koncept, ktorý je niektorým zverejneným
+ * znením, nie je príprava nového:
+ * - identita konceptu je identita znenia;
+ * - koncept je len PDF niektorého znenia;
+ * - text konceptu je text opraveného znenia (`contentHash` = odtlačok
+ *   textu po „Opraviť text", D57 — `versionId` sa opravou nemení) a nemá
+ *   vlastné PDF ani názov (24. 10. 2026: ISSF-00 a ISSF-05 po oprave).
+ */
+export function isPreparingDraft(d: StageRecord, identity: string): boolean {
+  const versions = d.versions ?? []
+  const text = String(d.draftMarkdown ?? "").trim()
+  if (versions.some(v => v.versionId === identity)) return false
+  if (d.draftPdf?.id && versions.some(v => v.pdf?.id === d.draftPdf!.id) && !text) return false
+  const ownPdf = Boolean(d.draftPdf?.id) && !versions.some(v => v.pdf?.id === d.draftPdf!.id)
+  if (text && !ownPdf && !String(d.draftTitle ?? "").trim() && versions.some(v => v.contentHash === textFingerprint(text))) return false
+  return true
+}
+
 interface StageRecord {
   documentId: string
   draftMarkdown?: string | null
   draftPdf?: { id?: string; sha256?: string | null } | null
   draftMeta?: Record<string, unknown> | null
   draftTitle?: string | null
-  versions?: { versionId: string; isActive?: boolean; effectiveFrom?: Date; effectiveTo?: Date | null; pdf?: { id?: string }; publishedAt?: Date }[]
+  versions?: { versionId: string; isActive?: boolean; effectiveFrom?: Date; effectiveTo?: Date | null; pdf?: { id?: string }; publishedAt?: Date; contentHash?: string }[]
 }
 
 /**
@@ -518,9 +538,7 @@ async function listStages(companyCode: string, records: StageRecord[]): Promise<
     const versions = d.versions ?? []
     const hasDraft = Boolean(String(d.draftMarkdown ?? "").trim() || d.draftPdf?.id)
     const identity = hasDraft ? documentDraftIdentity(d) : ""
-    // Koncept, ktorý je niektorým zverejneným znením (napr. po „Opraviť text"), nie je príprava nového.
-    const preparing = hasDraft && !versions.some(v => v.versionId === identity) &&
-      !(d.draftPdf?.id && versions.some(v => v.pdf?.id === d.draftPdf!.id) && !String(d.draftMarkdown ?? "").trim())
+    const preparing = hasDraft && isPreparingDraft(d, identity)
     const docRounds = byDoc.get(d.documentId) ?? []
     const draftState = stateOf(docRounds.filter(r => r.versionId === identity))
     const lastPublishedAt = versions.reduce<Date | null>((acc, v) => (v.publishedAt && (!acc || new Date(v.publishedAt) > acc) ? new Date(v.publishedAt) : acc), null)
@@ -667,6 +685,8 @@ export async function libraryList(
         "versions.archives": 1,
         // Krok postupu znenia: identita konceptu (text + PDF + údaje + názov) a PDF znení.
         "draftPdf.id": 1, "draftPdf.sha256": 1, draftMeta: 1, draftTitle: 1, "versions.pdf.id": 1, "versions.publishedAt": 1,
+        // Odtlačok textu opraveného znenia — koncept po „Opraviť text" nie je príprava.
+        "versions.contentHash": 1,
       },
     })
     .sort({ updatedAt: -1, title: 1 })

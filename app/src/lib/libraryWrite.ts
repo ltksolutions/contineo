@@ -1758,6 +1758,10 @@ export async function fixText(
     { arrayFilters: [{ "v.versionId": target.versionId }] },
   )
 
+  // Text konceptu je teraz v znení — koncept sa vyprázdni, aby karta po oprave
+  // nehlásila prípravu nového znenia (24. 10. 2026).
+  await col.updateOne({ documentId, companyCode, draftMarkdown: doc.draftMarkdown }, { $unset: { draftMarkdown: "" } })
+
   await writeAudit({
     companyCode, subject: "document", action: "text-fix", actor: actor,
     targetId: documentId, targetLabel: `${String(doc.title ?? documentId)} — ${target.label}`,
@@ -1819,9 +1823,19 @@ export async function loadVersionIntoDraft(
   const text = String(target.markdown ?? (target.isActive ? doc.markdown : "") ?? "").trim()
   if (!text) throw new LibraryError("library.versionHasNoText", "Toto znenie nemá uložený text — nie je čo narezať.")
 
+  /*
+   * Koncept je voľný (žiadne nové znenie sa nepripravuje), takže PDF, zdroj,
+   * údaje o znení a názov, ktoré pri ňom ostali, patria už zverejnenému
+   * zneniu. Keby ostali, karta by opravu textu spojila so starým PDF
+   * a ukázala ju ako „nové znenie v príprave" (ISSF-00 a ISSF-05,
+   * 24. 10. 2026).
+   */
   await col.updateOne(
     { documentId, companyCode },
-    { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor } },
+    {
+      $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor },
+      $unset: { draftPdf: "", draftSource: "", draftMeta: "", draftTitle: "" },
+    },
   )
   await closeStaleRounds(companyCode, documentId, actor)
   return { label: target.label }
