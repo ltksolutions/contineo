@@ -50,6 +50,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-036](ADR-036-kontrola-a-kola.md) | Kontrola súladu: kontrola je zadanie (druh, kontrolované dokumenty, kanál), beh je jej kolo; spustenie len po rekapitulácii s odhadom ceny; druhé kolo počas behu nie; zastavenie kola; zrušenie kontroly je archív, nie mazanie (D234–D238) · Dodatok 1: kontrola je vlastný záznam `compliance_checks`, kolo nesie `checkId`, bez migrácie (D239) · Dodatok 2: kontrolovaný dokument sa kontroluje v koncepte, ak sa líši od platného znenia (D240) · Dodatok 3: požiadavky len z hierarchie, pevné väzby zrušené (D241) · Dodatok 4: požiadavka len pre priamo podradené dokumenty, spúšťa človek (D248) | ✅ prijaté · krok 1 (potvrdenie, zastavenie, zrušenie) |
 | [ADR-037](ADR-037-sledovany-zdroj-slov-lex.md) | Sledovaný zdroj legislatívy: predpis zo Slov-Lexu ako dokument druhu zákon — adaptér pre statický portál, nie generický web; zmena = nový riadok v histórii znení (aj s účinnosťou v budúcnosti); záväzné PDF zo Slov-Lexu, Markdown z HTML; pôvod `source.type: "web"`; krok B ručne (import, Skontrolovať zdroj), krok C cron (D242–D247) | ✅ prijaté · krok B |
 | [ADR-038](ADR-038-contineo-ako-mcp-server.md) | Contineo ako MCP server: Contineo vydáva OAuth token (súhlas je dôkazný záznam), nástroje podľa rolí a rozsahov, fáza 1 len čítanie, zapínateľné nastavenie organizácie obmedzené rezidenciou, zápis osôb nikdy (D249–D256) | ✅ prijaté · fáza 1 |
+| [ADR-039](ADR-039-katalog-legislativy-slov-lex.md) | Katalóg legislatívy: predpisy zo Slov-Lexu ako zdieľaný obsah platformy (menovitá výnimka z D90), všetky znenia a § ako úsek, vstavaný zdroj „Legislatíva" na Opýtať sa s výberom predpisov organizácie, odber do knižnice z katalógu namiesto druhého stiahnutia, jeden cron platformy namiesto kroku C per organizácia (D257–D262) · prekonáva čakaciu podmienku D247 | ✅ prijaté · fáza 1 |
 
 ## Čo sem nepatrí
 
@@ -62,6 +63,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-038**. Súbor `ADR-038-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-040**. Súbor `ADR-040-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
