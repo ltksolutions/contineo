@@ -8191,7 +8191,9 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
   .usage-table { gap: 0; }
   .usage-row, .usage-row.usage-head {
     display: grid;
-    grid-template-columns: 130px minmax(0, 1fr) minmax(0, 2.2fr) 130px 130px 80px;
+    /* Osoba má spodnú hranicu a láme sa len na medzerách — „Kontrola súladu
+       (na pozadí)" sa inak lámala po písmenách (ORG-ai-prehlad Q6, 24. 10. 2026). */
+    grid-template-columns: 130px minmax(150px, 1.1fr) minmax(0, 2fr) 120px 130px 80px;
     grid-template-areas: "when person what model tokens sum";
     gap: 12px; align-items: baseline;
   }
@@ -8206,8 +8208,133 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
   .usage-head > span:nth-child(5) { grid-area: tokens; }
   .usage-head > span:nth-child(6) { grid-area: sum; }
   .usage-row { padding: 10px 16px; border-radius: 0; border-width: 0 0 1px; box-shadow: none; }
-  .usage-person { font-weight: 500; }
+  .usage-person { font-weight: 500; overflow-wrap: normal; }
 }
+.usage-filter-extra { grid-column: 1 / -1; margin: 0; font-size: var(--fs-small); }
+.usage-filter-extra a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── Grafy, rebríček a matica (ORG-ai-prehlad, 24. 10. 2026) ─────────────────
+   Všeobecné prvky systému, nie len pre AI (Ján 24. 10.): vykresľuje ich server
+   z CSS, bez knižnice a bez JavaScriptu. Séria `.series-1` až `.series-6` sú
+   odtiene farby organizácie — líšia sa svetlosťou, nie odtieňom, takže sa
+   dajú rozlíšiť aj bez farebného videnia; posledná („Ostatné") je sivá. */
+@media (min-width: 1024px) {
+  /* Obsah s 12 stĺpcami mesiacov sa do 720 px nezmestí. */
+  .org-grid.org-grid--wide { grid-template-columns: 220px minmax(0, 1fr); }
+}
+:root { --series-base: var(--surface); }
+/* V tmavej téme by miešanie s tmavou plochou dalo takmer čierne odtiene —
+   séria sa preto zosvetľuje k textu, nie k ploche. */
+html[data-theme="dark"] { --series-base: var(--ink); }
+.series-1 { background: var(--accent); }
+.series-2 { background: color-mix(in srgb, var(--accent) 76%, var(--series-base)); }
+.series-3 { background: color-mix(in srgb, var(--accent) 56%, var(--series-base)); }
+.series-4 { background: color-mix(in srgb, var(--accent) 40%, var(--series-base)); }
+.series-5 { background: color-mix(in srgb, var(--accent) 26%, var(--series-base)); }
+.series-6 { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.chart-card { padding: 14px 18px 16px; }
+.chart-card h2 { font-size: var(--fs-section); margin: 0; }
+/* Stĺpcový graf: `.chart-plot` > `.chart-gridline` + `.chart-cols` > `a.chart-col` > `.chart-seg`. */
+.chart-plot { position: relative; height: 200px; margin-top: 24px; }
+.chart-cols { z-index: 1; }
+.chart-gridline { position: absolute; left: 0; right: 0; z-index: 0; border-top: 1px dashed var(--line); font-size: 10.5px; color: var(--muted); line-height: 1; }
+.chart-gridline span { position: absolute; right: 0; bottom: 3px; font-variant-numeric: tabular-nums; }
+.chart-cols {
+  /* Vpravo miesto pre popis osi, aby neprekryl súčet posledného stĺpca. */
+  position: absolute; inset: 0 52px 0 0; display: grid; gap: 6px;
+  grid-template-columns: repeat(var(--chart-cols, 12), minmax(0, 1fr));
+  border-bottom: 1px solid var(--line-strong);
+}
+.chart-col { position: relative; display: flex; flex-direction: column-reverse; height: 100%; min-width: 0; padding: 0 12%; border-radius: 4px; }
+a.chart-col:hover { background: var(--accent-soft); }
+.chart-col.is-future::after { content: ""; position: absolute; left: 30%; right: 30%; bottom: -1px; border-bottom: 2px dotted var(--line-strong); }
+.chart-seg { display: block; width: 100%; min-height: 1px; }
+.chart-col .chart-seg:last-of-type { border-radius: 3px 3px 0 0; }
+.chart-col-total {
+  position: absolute; left: -20%; right: -20%; bottom: 100%; margin-bottom: 3px; text-align: center;
+  font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.chart-labels {
+  display: grid; gap: 6px; margin: 6px 52px 0 0; font-size: 11.5px; color: var(--muted); text-align: center;
+  grid-template-columns: repeat(var(--chart-cols, 12), minmax(0, 1fr));
+}
+.chart-labels .is-future { opacity: 0.55; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none; font-size: var(--fs-small); }
+.chart-legend li { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.chart-swatch { flex: none; width: 11px; height: 11px; border-radius: 3px; }
+@media (max-width: 639px) {
+  .chart-col-total { display: none; }
+  .chart-plot { height: 160px; margin-top: 10px; }
+  .chart-cols, .chart-labels { gap: 3px; }
+  .chart-cols { right: 40px; }
+  .chart-labels { margin-right: 40px; }
+}
+/* Rebríček (jedno obdobie): `a.chart-rank-row` > názov, pás, suma. */
+.chart-rank { display: grid; gap: 8px; margin-top: 12px; }
+.chart-rank-row {
+  display: grid; grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) 70px; gap: 10px;
+  align-items: center; min-height: 32px; border-radius: 6px; font-size: var(--fs-small);
+}
+a.chart-rank-row:hover { background: var(--accent-soft); }
+.chart-rank-name { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.chart-rank-name b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chart-rank-fill { display: block; height: 16px; border-radius: 4px; }
+.chart-rank-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+@media (max-width: 639px) {
+  .chart-rank-row { grid-template-columns: minmax(0, 1fr) 70px; min-height: 44px; }
+  .chart-rank-track { grid-column: 1 / -1; }
+  .chart-rank-val { grid-row: 1; grid-column: 2; }
+}
+/* Matica položka × obdobie: tabuľka od 1024 px (`.matrix-wrap`), karty pod ňou
+   (`.matrix-cards`). Stĺpce riadkov nesie `--matrix-cols` na `.matrix`. */
+.matrix-wrap { display: none; padding: 6px 8px 8px; }
+.matrix { display: grid; font-size: 12.5px; }
+.matrix-row { display: grid; grid-template-columns: var(--matrix-cols); gap: 0 4px; align-items: center; border-top: 1px solid var(--line); }
+.matrix-head { border-top: 0; }
+.matrix-head > span {
+  padding: 8px 6px; font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.matrix-head > .matrix-name { text-align: left; }
+.matrix-name { text-align: left; padding: 7px 8px; font-weight: 500; min-width: 0; }
+.matrix-name a:hover, .matrix-card-name a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.matrix-name .tag, .matrix-card-name .tag { margin-left: 6px; vertical-align: 1px; }
+.matrix-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 0; padding: 7px 6px; }
+.matrix-cell:has(> a) { padding: 0; }
+.matrix-cell > a { display: block; padding: 7px 6px; border-radius: 6px; }
+.matrix-cell > a:hover { background: var(--accent-soft); }
+.matrix-cell.is-future { color: var(--muted); }
+.matrix .matrix-total { font-weight: 600; border-left: 1px solid var(--line-strong); }
+.matrix-meta { color: var(--muted); font-size: 11.5px; padding: 7px 8px; text-align: right; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.matrix-foot { font-weight: 600; border-top: 2px solid var(--line-strong); }
+.matrix-sub { border-top: 0; color: var(--muted); font-size: 11.5px; }
+.matrix-sub .matrix-name { padding: 1px 8px 1px 22px; font-weight: 400; }
+.matrix-sub .matrix-cell { padding: 1px 6px; }
+.matrix-sub .matrix-total { font-weight: 500; }
+.matrix-cards { display: grid; gap: 8px; }
+.matrix-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 14px; align-items: baseline; }
+.matrix-card-name { font-weight: 600; min-width: 0; }
+.matrix-card-sum { font-weight: 600; font-variant-numeric: tabular-nums; }
+.matrix-card-meta { font-size: var(--fs-small); color: var(--muted); }
+.matrix-card-last { font-size: var(--fs-small); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.matrix-card-last a { text-decoration: underline; text-underline-offset: 2px; }
+.matrix-card-wide { grid-column: 1 / -1; font-size: var(--fs-small); color: var(--muted); }
+.matrix-cards-foot { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; font-weight: 600; }
+@media (min-width: 1024px) { .matrix-wrap { display: block; } .matrix-cards { display: none; } }
+/* Malý graf v karte: 12 stĺpikov, budúci mesiac bodkovaný. */
+.spark {
+  grid-column: 1 / -1; display: grid; gap: 3px; height: 36px; align-items: end; margin: 8px 0 2px;
+  grid-template-columns: repeat(var(--chart-cols, 12), minmax(0, 1fr)); border-bottom: 1px solid var(--line);
+}
+.spark > span { display: block; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; }
+.spark > span.is-future { background: transparent; border-bottom: 2px dotted var(--line-strong); min-height: 0; }
+/* Rýchly výber obdobia pod filtrom: odkazy, zvolený bez podčiarknutia. */
+.quick-ranges { grid-column: 1 / -1; margin: 0; font-size: var(--fs-small); }
+.quick-ranges a { text-decoration: underline; text-underline-offset: 2px; }
+.quick-ranges a.is-on { font-weight: 650; text-decoration: none; color: var(--ink); }
+.usage-filter--period { align-items: end; }
+@media (min-width: 640px) { .usage-filter.usage-filter--period { grid-template-columns: 170px 170px auto; } }
+@media (max-width: 639px) { .usage-filter--period .button { min-height: 44px; } }
 
 /* ── Členenie dokumentu na úseky (ADR-027, 5. 10. 2026) ───────────────────── */
 .chunks-summary, .chunks-block { padding: 16px 18px; display: grid; gap: 12px; margin: 0 0 14px; }

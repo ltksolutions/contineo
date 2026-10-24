@@ -11,6 +11,28 @@
 ---
 
 
+## 2026-10-24 — Prehľad spotreby AI, prvý návrh po novom
+
+**Postup:** zadanie `ORG-ai-prehlad-zadanie.md` → Ján vytvoril v Claude
+artefakt *Design* s pripojeným design systémom → „stiahni design" som
+prečítal z artefaktu (`canvas.json` + plochy `.dc.html`). Funguje; čo sa
+ukázalo inak, je v `docs/DESIGN.md`. Hlavne: `.md` so sekciou „Rozhodnuté"
+v artefakte nie je, takže rozpor so zadaním (Od–Do namiesto výberu roka)
+rozhodol Ján až pri stiahnutí.
+
+**Čo stálo čas:** snímky odhalili, čo návrh na ilustračných dátach skryl —
+tokeny po mesiacoch sa do 12 stĺpcov nezmestia, popis osi prekrýval súčet
+posledného mesiaca, odtiene série v tmavej téme miešané s plochou boli
+takmer čierne a rebríček na telefóne mal sumu pod pásom.
+
+**Čo by som nabudúce:** práca na pozadí nemá `personId`, rozlišuje ju len
+kópia mena — odkaz do Spotreby preto ide cez `person=bg:<meno>`. Ak sa
+meno procesu na pozadí zmení, staré a nové sa v Prehľade ukážu ako dve
+položky.
+
+---
+
+
 ## 2026-10-24 — design system ako artefakt v Claude
 
 **Čo sa zmenilo:** samostatný Claude Design končí 14. 12. a `/design-sync`
