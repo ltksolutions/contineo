@@ -1760,7 +1760,13 @@ export async function fixText(
 
   // Text konceptu je teraz v znení — koncept sa vyprázdni, aby karta po oprave
   // nehlásila prípravu nového znenia (24. 10. 2026).
-  await col.updateOne({ documentId, companyCode, draftMarkdown: doc.draftMarkdown }, { $unset: { draftMarkdown: "" } })
+  // PDF a zdroj vyrobené z konceptu sa zahodia tiež: záväzné ostáva PDF znenia,
+  // oprava textu ho nemení (ADR-007).
+  const generated = Boolean((doc.draftPdf as { generatedFromMarkdown?: boolean } | null | undefined)?.generatedFromMarkdown)
+  await col.updateOne(
+    { documentId, companyCode, draftMarkdown: doc.draftMarkdown },
+    { $unset: generated ? { draftMarkdown: "", draftPdf: "", draftSource: "" } : { draftMarkdown: "" } },
+  )
 
   await writeAudit({
     companyCode, subject: "document", action: "text-fix", actor: actor,
@@ -1813,7 +1819,9 @@ export async function loadVersionIntoDraft(
   if (!fixableVersions(versions, current.ok ? current.version.versionId : undefined).includes(target)) {
     throw new LibraryError("textFix.pastVersion", TEXT_FIX_MESSAGE["textFix.pastVersion"])
   }
-  const draftPdf = (doc.draftPdf as { id?: string } | null | undefined)?.id ?? null
+  // PDF vyrobené z textu konceptu nie je nové znenie samo o sebe — rozhoduje text (24. 10. 2026).
+  const pdf = doc.draftPdf as { id?: string; generatedFromMarkdown?: boolean } | null | undefined
+  const draftPdf = pdf?.generatedFromMarkdown ? null : pdf?.id ?? null
   if (!draftIsFree(doc.draftMarkdown as string | undefined, versions, draftPdf, versions.map(v => v.pdf?.id ?? "").filter(Boolean))) {
     throw new LibraryError(
       "textFix.draftBusy",

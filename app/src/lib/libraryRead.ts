@@ -507,7 +507,7 @@ export function isPreparingDraft(d: StageRecord, identity: string): boolean {
   const text = String(d.draftMarkdown ?? "").trim()
   if (versions.some(v => v.versionId === identity)) return false
   if (d.draftPdf?.id && versions.some(v => v.pdf?.id === d.draftPdf!.id) && !text) return false
-  const ownPdf = Boolean(d.draftPdf?.id) && !versions.some(v => v.pdf?.id === d.draftPdf!.id)
+  const ownPdf = Boolean(d.draftPdf?.id) && !d.draftPdf?.generatedFromMarkdown && !versions.some(v => v.pdf?.id === d.draftPdf!.id)
   if (text && !ownPdf && !String(d.draftTitle ?? "").trim() && versions.some(v => v.contentHash === textFingerprint(text))) return false
   return true
 }
@@ -515,7 +515,7 @@ export function isPreparingDraft(d: StageRecord, identity: string): boolean {
 interface StageRecord {
   documentId: string
   draftMarkdown?: string | null
-  draftPdf?: { id?: string; sha256?: string | null } | null
+  draftPdf?: { id?: string; sha256?: string | null; generatedFromMarkdown?: boolean } | null
   draftMeta?: Record<string, unknown> | null
   draftTitle?: string | null
   versions?: { versionId: string; isActive?: boolean; effectiveFrom?: Date; effectiveTo?: Date | null; pdf?: { id?: string }; publishedAt?: Date; contentHash?: string }[]
@@ -684,7 +684,7 @@ export async function libraryList(
         // Záznam o archivácii — pre pilulku „Archivovaný" (ADR-025).
         "versions.archives": 1,
         // Krok postupu znenia: identita konceptu (text + PDF + údaje + názov) a PDF znení.
-        "draftPdf.id": 1, "draftPdf.sha256": 1, draftMeta: 1, draftTitle: 1, "versions.pdf.id": 1, "versions.publishedAt": 1,
+        "draftPdf.id": 1, "draftPdf.sha256": 1, "draftPdf.generatedFromMarkdown": 1, draftMeta: 1, draftTitle: 1, "versions.pdf.id": 1, "versions.publishedAt": 1,
         // Odtlačok textu opraveného znenia — koncept po „Opraviť text" nie je príprava.
         "versions.contentHash": 1,
       },

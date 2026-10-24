@@ -27,4 +27,7 @@ describe("isPreparingDraft", () => {
     expect(isPreparingDraft({ documentId: "d", draftMarkdown: "x", versions: [version] }, "v-old-identity")).toBe(false)
     expect(isPreparingDraft({ documentId: "d", draftPdf: { id: "pdf-v" }, versions: [version] }, "y")).toBe(false)
   })
+  it("PDF vyrobené z textu opraveného znenia nové znenie nerobí", () => {
+    expect(isPreparingDraft({ documentId: "d", draftMarkdown: text, draftPdf: { id: "pdf-z-textu", generatedFromMarkdown: true }, versions: [version] }, "x")).toBe(false)
+  })
 })
