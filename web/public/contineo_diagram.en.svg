@@ -15,6 +15,9 @@
     <marker id="arrowPink" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L7,3 L0,6 Z" fill="#AD1457"/>
     </marker>
+    <marker id="arrowVio" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#6B46C1"/>
+    </marker>
   </defs>
 
   <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architecture and data flow</text>
@@ -25,9 +28,13 @@
   <path d="M760,130 L760,228" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
 
   <!-- KONEKTORY (ADR-029) — živý zdroj pri otázke, nejde cez CMS -->
-  <rect x="919" y="88" width="557" height="54" rx="14" fill="#FCE4EC" stroke="#AD1457" stroke-width="1.5"/>
-  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="328" lengthAdjust="spacingAndGlyphs">CONNECTORS (MCP) — live source, outside the library</text>
-  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="367" lengthAdjust="spacingAndGlyphs">on by pill or by default · alongside the library · cited as “live source, unverified”</text>
+  <rect x="919" y="88" width="275" height="54" rx="14" fill="#FCE4EC" stroke="#AD1457" stroke-width="1.5"/>
+  <rect x="1212" y="88" width="264" height="54" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="1232" y="110" font-size="12.5" font-weight="700" fill="#54309E" textLength="194" lengthAdjust="spacingAndGlyphs">CONTINEO AS AN MCP SERVER</text>
+  <text x="1232" y="129" font-size="10.5" fill="#5f6368" textLength="224" lengthAdjust="spacingAndGlyphs">AI assistant reads the library · OAuth · read-only</text>
+  <path d="M1344,142 L1344,228" stroke="#6B46C1" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowVio)"/>
+  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="213" lengthAdjust="spacingAndGlyphs">CONNECTORS (MCP) — live source</text>
+  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="209" lengthAdjust="spacingAndGlyphs">by pill or by default · “live source, unverified”</text>
   <path d="M1051,142 L1051,228" stroke="#AD1457" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowPink)"/>
 
   <!-- CMS ako vrstva nad kanálmi a workerom -->
@@ -39,11 +46,11 @@
   <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
   <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6" textLength="74" lengthAdjust="spacingAndGlyphs">SOURCES</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="181" lengthAdjust="spacingAndGlyphs">today: files, FAQ, mailbox, connector</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="204" lengthAdjust="spacingAndGlyphs">today: files, Slov-Lex, mailbox, connector</text>
   <g font-size="12.5" fill="#202124">
     <text x="60" y="316" textLength="210" lengthAdjust="spacingAndGlyphs">• Uploaded files — PDF + Word/Excel</text>
     <text x="60" y="342" fill="#9aa0a6" textLength="154" lengthAdjust="spacingAndGlyphs">• RSS / web (in preparation)</text>
-    <text x="60" y="368" textLength="133" lengthAdjust="spacingAndGlyphs">• FAQ · verified answers</text>
+    <text x="60" y="368" textLength="209" lengthAdjust="spacingAndGlyphs">• Act from Slov-Lex · verified answers</text>
     <text x="60" y="394" textLength="169" lengthAdjust="spacingAndGlyphs">• Helpdesk mailbox (Graph) ⇅</text>
     <text x="60" y="420" textLength="144" lengthAdjust="spacingAndGlyphs">• Import from a connector</text>
     <text x="74" y="440" font-size="11" fill="#5f6368" textLength="186" lengthAdjust="spacingAndGlyphs">article as a draft with PDF → approval</text>
@@ -57,11 +64,11 @@
   <text x="353" y="285" font-size="11" fill="#5f6368" textLength="230" lengthAdjust="spacingAndGlyphs">processing outside the DB · no language model</text>
   <g font-size="12.5" fill="#202124">
     <text x="353" y="316" textLength="92" lengthAdjust="spacingAndGlyphs">• File conversion</text>
-    <text x="367" y="334" font-size="10.5" fill="#5f6368" textLength="203" lengthAdjust="spacingAndGlyphs">the PDF is approved · text from Word/Excel</text>
+    <text x="367" y="334" font-size="10.5" fill="#5f6368" textLength="202" lengthAdjust="spacingAndGlyphs">approved PDF · built from .md by Contineo</text>
     <text x="367" y="349" font-size="10.5" fill="#5f6368" textLength="199" lengthAdjust="spacingAndGlyphs">scan → manual transcription by the model</text>
-    <text x="353" y="377" textLength="126" lengthAdjust="spacingAndGlyphs">• Splitting by article / §</text>
-    <text x="367" y="395" font-size="10.5" fill="#5f6368" textLength="204" lengthAdjust="spacingAndGlyphs">the analyser proposes a profile from signals</text>
-    <text x="367" y="410" font-size="10.5" fill="#5f6368" textLength="154" lengthAdjust="spacingAndGlyphs">FAQ by entry · a person confirms</text>
+    <text x="353" y="377" textLength="198" lengthAdjust="spacingAndGlyphs">• Splitting from Markdown structure</text>
+    <text x="367" y="395" font-size="10.5" fill="#5f6368" textLength="190" lengthAdjust="spacingAndGlyphs">headings by level · numbering · Article, §</text>
+    <text x="367" y="410" font-size="10.5" fill="#5f6368" textLength="166" lengthAdjust="spacingAndGlyphs">no profiles · manual boundaries win</text>
     <text x="353" y="438" textLength="100" lengthAdjust="spacingAndGlyphs">• Chunk metadata</text>
     <text x="367" y="456" font-size="10.5" fill="#5f6368" textLength="187" lengthAdjust="spacingAndGlyphs">companyCode · accessLevel · language</text>
     <text x="367" y="471" font-size="10.5" fill="#5f6368" textLength="201" lengthAdjust="spacingAndGlyphs">versionId · articleRef · type from a code list</text>
@@ -98,9 +105,9 @@
   <text x="646" y="500" font-size="10" fill="#3c4043" textLength="138" lengthAdjust="spacingAndGlyphs">People: persons · departments</text>
   <text x="646" y="513" font-size="10" fill="#3c4043" textLength="206" lengthAdjust="spacingAndGlyphs">Assignment: onboarding_tracks · assignments</text>
   <text x="646" y="526" font-size="10" fill="#3c4043" textLength="176" lengthAdjust="spacingAndGlyphs">Acknowledgement: acknowledgements</text>
-  <text x="646" y="539" font-size="10" fill="#3c4043" textLength="171" lengthAdjust="spacingAndGlyphs">Helpdesk: helpdesk_channels · tickets</text>
+  <text x="646" y="539" font-size="10" fill="#3c4043" textLength="203" lengthAdjust="spacingAndGlyphs">Channels: channels · tickets · courier_threads</text>
   <text x="646" y="552" font-size="10" fill="#3c4043" textLength="163" lengthAdjust="spacingAndGlyphs">Training: courses · tests · certificates</text>
-  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="178" lengthAdjust="spacingAndGlyphs">Oversight: audit · evaluations · ai_usage</text>
+  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="203" lengthAdjust="spacingAndGlyphs">Oversight: audit · ai_usage · compliance_runs</text>
   <line x1="646" y1="574" x2="870" y2="574" stroke="#A8D5B5" stroke-width="1"/>
   <text x="646" y="586" font-size="10" fill="#0B6E2E" textLength="189" lengthAdjust="spacingAndGlyphs">Evidence records are never changed (D24)</text>
   <text x="646" y="598" font-size="9.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">correction = new record · revocation = revokedAt</text>
@@ -132,7 +139,7 @@
   <text x="1240" y="354" font-size="12" fill="#202124" textLength="187" lengthAdjust="spacingAndGlyphs">• Assistant — question and answer</text>
   <text x="1254" y="369" font-size="10.5" fill="#5f6368" textLength="140" lengthAdjust="spacingAndGlyphs">always · signed identity (ISSF)</text>
   <text x="1240" y="390" font-size="12" fill="#202124" textLength="99" lengthAdjust="spacingAndGlyphs">• Tickets (optional)</text>
-  <text x="1254" y="405" font-size="10.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">escalation from chat · agent queue · into FAQ</text>
+  <text x="1254" y="405" font-size="10.5" fill="#5f6368" textLength="202" lengthAdjust="spacingAndGlyphs">escalation from chat · queue · into manuals</text>
   <text x="1240" y="426" font-size="12" fill="#202124" textLength="172" lengthAdjust="spacingAndGlyphs">• Helpdesk mailbox ⇅ (optional)</text>
   <text x="1254" y="441" font-size="10.5" fill="#5f6368" textLength="182" lengthAdjust="spacingAndGlyphs">e-mail = ticket · reply by e-mail (Graph)</text>
   <line x1="1232" y1="458" x2="1456" y2="458" stroke="#D7CCF0" stroke-width="1"/>
@@ -166,7 +173,7 @@
   <rect x="776" y="820" width="700" height="88" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
   <text x="796" y="848" font-size="15" font-weight="700" fill="#B31412" textLength="209" lengthAdjust="spacingAndGlyphs">② ESCALATION — to a ticket</text>
   <text x="796" y="872" font-size="12.5" fill="#3c4043" textLength="567" lengthAdjust="spacingAndGlyphs">After two negative ratings the assistant offers a ticket; an e-mail to the channel mailbox is a ticket too.</text>
-  <text x="796" y="892" font-size="12.5" fill="#3c4043" textLength="453" lengthAdjust="spacingAndGlyphs">The agent gets a draft reply, edits it, sends it by e-mail and can add it to the FAQ.</text>
+  <text x="796" y="892" font-size="12.5" fill="#3c4043" textLength="624" lengthAdjust="spacingAndGlyphs">The agent gets a draft reply, edits it and sends it by e-mail; questions become proposals to extend the manuals.</text>
 
   <text x="40" y="944" font-size="11.5" fill="#9aa0a6">Cloud: MongoDB Atlas EU · Voyage voyage-4 + rerank-2 · Claude API (Citations)  │  On-prem: MongoDB Community 8.2 · Infinity / TEI · vLLM (Qwen3 / EuroLLM)</text>
   <text x="40" y="964" font-size="11.5" fill="#9aa0a6">The core is identical in both modes — $rankFusion runs self-hosted too. Only three adapters differ: embedding, rerank, generation (ADR-001).</text>

@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: Technológia a obrázok podľa ADR-030–038 (2026-10-24)
+
+Stránka Technológia dostala piliere **Hierarchia a záväznosť dokumentov**
+(ADR-034), **Kontrola súladu** (ADR-032, ADR-036) a **Contineo ako MCP
+server** (ADR-038); členenie je zo štruktúry Markdownu bez profilov
+(ADR-035); integrácie majú MCP server a predpis zo Slov-Lexu (ADR-037).
+FAQ z webu zmizlo (zrušené ADR-034) — helpdesk vedie k doplneniu manuálov.
+V obrázku: blok **Contineo ako MCP server** nad Kanálmi, Slov-Lex v Zdrojoch,
+členenie podľa ADR-035, kolekcie `channels`, `courier_threads`,
+`compliance_runs`. sk, cs, en; PNG a kópia v docs.
+
 ### Oprava textu znenia: karta po oprave a PDF konceptu (2026-10-24, #427–#429)
 
 - Po oprave textu zverejneného znenia (ISSF-00, ISSF-05) sa karta už
