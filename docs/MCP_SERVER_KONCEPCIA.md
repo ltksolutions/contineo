@@ -340,3 +340,48 @@ Po rozhodnutí: ADR-038 (D249+), vetva `mcp/server-phase-1`, jeden PR na fázu.
   server opýta klienta (a ten človeka) priamo v protokole, namiesto chyby.
 - **Export do Cowork:** `get_document` ako PDF (binárny zdroj) — Cowork
   vie pracovať so súborom.
+
+---
+
+## 9. Fáza 1 v kóde (2026-10-24) a ako sa pripojiť
+
+**Čo je hotové** (vetva `claude/mcp-server-contineo-4dbcd8`):
+
+| Časť | Kde |
+|---|---|
+| OAuth 2.1 server: klienti, žiadosti, kódy, tokeny (hash), súhlasy (dôkazné) | `lib/oauthServer.ts` |
+| metadáta RFC 9728 a RFC 8414 | `app/.well-known/oauth-protected-resource[/mcp]`, `app/.well-known/oauth-authorization-server` |
+| registrácia, povolenie, token, odvolanie | `app/oauth/{register,authorize,token,revoke}/route.ts` |
+| obrazovka súhlasu (Povoliť plné, Zamietnuť tiché; znenie súhlasu sa ukladá doslovne, D28) | `app/oauth/consent/` |
+| MCP server bez stavu (Streamable HTTP, JSON odpoveď) | `app/mcp/route.ts`, `lib/mcpServer/server.ts` |
+| brána: organizácia z domény, zapnutie a rezidencia, token, aktívna osoba | `lib/mcpServer/auth.ts`, `lib/mcpServer/access.ts` |
+| nástroje `whoami`, `search_library`, `list_documents`, `get_document`, `document_hierarchy`, `ask` | `lib/mcpServer/tools.ts`, `lib/mcpServer/ask.ts` |
+| zdroje `contineo://documents/{documentId}[/versions/{versionId}]` | `lib/mcpServer/server.ts` |
+| stopa volaní `mcp_calls` (bez znenia) | `lib/mcpServer/calls.ts` |
+| nastavenie organizácie **Prístup → AI asistenti** (zapnutie, len verejný obsah, adresa, pripojené aplikácie všetkých) | `app/organisation/[section]/page.tsx`, `organisation/actions.ts` |
+| plachta účtu → **Pripojené aplikácie** (vlastné súhlasy, Odvolať) | `app/account/apps/` |
+| testy: PKCE, návratové adresy, rozsahy, `resource`, metadáta klienta, zoznam nástrojov podľa rolí, rezidencia, len verejný obsah | `tests/oauthServer.test.ts`, `tests/mcpServer.test.ts` |
+
+**Čo fáza 1 zámerne nemá:** osobné tokeny (D255, fáza 3), `my_acknowledgements`
+a `list_notifications` (pribudnú s fázou 2 alebo 3), zdroje konektorov
+v `ask` idú len cez `includeLiveSources`.
+
+**Ako sa pripojiť (po zapnutí v Organizácii → Prístup → AI asistenti):**
+
+```bash
+claude mcp add --transport http contineo https://intranet.futbalsfz.sk/mcp
+```
+
+Potom v Claude Code `/mcp` → Contineo → *Authenticate*: otvorí sa
+prihlásenie Continea (ako na portáli), obrazovka súhlasu, a späť.
+V Claude.ai / Cowork: Nastavenia → Konektory → *Add custom connector*
+s tou istou adresou (bez client id — klient sa zaregistruje sám).
+Lokálne proti `http://localhost:3000/mcp` ide Claude Code aj
+`npx @modelcontextprotocol/inspector`; Cowork a Claude.ai potrebujú
+verejnú adresu.
+
+**Overenie naostro (otvorené):** celý tok s prihlásením sa dá vyskúšať
+len s človekom pri prehliadači — zapnutie a vydanie tokenu sú zápisy do
+databázy, ktoré asistent v tejto session nerobil. Overené bez zápisu:
+vypnutý server odpovedá na metadáta aj `/mcp` kódom 404; `tsc`, `eslint`,
+`vitest` (2 933 testov) a `next build` prešli.

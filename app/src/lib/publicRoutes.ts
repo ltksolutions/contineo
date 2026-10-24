@@ -58,6 +58,20 @@ export const PUBLIC_PATHS = [
    * kanála — bez toho route odpovie 403 skôr, než sa čohokoľvek dotkne.
    */
   "/api/widget/",
+  /*
+   * Contineo ako MCP server (ADR-038). Tri cesty, jedna brána: `/mcp` pustí
+   * len platný OAuth token (`lib/mcpServer/auth.ts`), bez neho odpovie 401
+   * s odkazom na metadáta; `/.well-known/` sú verejné metadáta chráneného
+   * zdroja a autorizačného servera (RFC 9728, RFC 8414) — klient ich číta
+   * skôr, než má čím sa prihlásiť; `/oauth/` je registrácia klienta, výmena
+   * kódu za token a odvolanie — ich brána je klient a kód, nie cookie.
+   * Jediná stránka pre človeka, `/oauth/consent`, si prihlásenie overuje
+   * sama a presmeruje na `/sign-in` **s celou adresou** vrátane parametrov —
+   * proxy by do `callbackUrl` uložila len cestu a žiadosť by sa stratila.
+   */
+  "/mcp",
+  "/.well-known/",
+  "/oauth/",
 ] as const
 
 /** Je táto cesta prístupná bez prihlásenia? */

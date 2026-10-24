@@ -38,6 +38,12 @@ import { saveConnector, removeConnector, disconnectConnector, connectorById, typ
 import { pathPattern } from "@/lib/connectorReduction"
 import { startAuthorization } from "@/lib/mcp/client"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
+import { assistantsState } from "@/lib/mcpServer/access"
+import { getTenantProfile } from "@/lib/tenantProfile"
+import { tenantByCompanyCode } from "@/lib/tenants"
+import { RESIDENCY_LABEL } from "@/lib/residency"
+import { revokeGrant } from "@/lib/oauthServer"
+import { writeAudit } from "@/lib/audit"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -778,4 +784,54 @@ export async function applySuggestionsAction(fd: FormData) {
   }
   revalidatePath("/organisation", "layout")
   backToConnector(id, dictionary(self.language).org.connectors.suggestionsAdded, false, keep, "#try")
+}
+
+// ── AI asistenti — Contineo ako MCP server (ADR-038, D251, D252) ─────────────
+
+/**
+ * Zapnutie a „len verejný obsah". Rezidencia sa kontroluje **aj tu**, nie
+ * len na obrazovke: formulár mohol vzniknúť pred sprísnením profilu.
+ */
+export async function saveAssistantsAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const enabled = fd.get("enabled") === "on"
+  const publicOnly = fd.get("publicOnly") === "on"
+  const t = dictionary(self.language).mcp.org
+  try {
+    const profile = await getTenantProfile(self.companyCode)
+    const state = assistantsState({ assistants: { enabled } }, profile.dataResidency)
+    if (enabled && !state.allowed) throw new AppError("mcp.blocked", t.blocked(RESIDENCY_LABEL[profile.dataResidency]))
+    const before = (await tenantByCompanyCode(self.companyCode))?.assistants
+    await saveTenant(self.companyCode, { assistantsEnabled: enabled, assistantsPublicOnly: publicOnly }, self.email)
+    await writeAudit({
+      companyCode: self.companyCode, subject: "assistants", action: "changed", actor: self.email,
+      changes: {
+        enabled: { from: Boolean(before?.enabled), to: enabled },
+        publicOnly: { from: Boolean(before?.publicOnly), to: publicOnly },
+      },
+    })
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+  revalidatePath("/organisation", "layout")
+  back(fd, t.saved)
+}
+
+/** Správca osôb odvolá súhlas komukoľvek v organizácii (D252). Záznam ostáva (D24). */
+export async function revokeGrantAdminAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const t = dictionary(self.language).mcp.apps
+  const grantId = fieldText(fd, "grantId")
+  const ok = await revokeGrant(self.companyCode, grantId, self.email)
+  if (ok) {
+    await writeAudit({
+      companyCode: self.companyCode, subject: "assistants", action: "revoked", actor: self.email,
+      targetId: grantId, targetLabel: fieldText(fd, "clientName") || null, note: fieldText(fd, "personName") || undefined,
+    })
+  }
+  revalidatePath("/organisation", "layout")
+  back(fd, ok ? t.revokedMessage : t.notFound, !ok)
 }
