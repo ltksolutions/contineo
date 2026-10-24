@@ -582,7 +582,16 @@ export async function clearPendingText(companyCode: string, documentId: string):
 export async function regenerateDraftPdf(companyCode: string, documentId: string, actor: string): Promise<boolean> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  const source = doc?.draftSource as VersionFile | null | undefined
+  /*
+   * Koncept bez vlastného zdroja (napr. po načítaní textu na opravu) si
+   * vezme zdroj `.md` naposledy zverejneného znenia — dokument vznikol
+   * z Markdownu a PDF sa má vyrobiť rovnako (24. 10. 2026: ISSF-00 išiel
+   * na schválenie bez PDF).
+   */
+  const versionSource = [...((doc?.versions ?? []) as { source?: VersionFile | null; publishedAt?: Date }[])]
+    .filter(v => v.source && /\.md$/i.test(v.source.name))
+    .sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime())[0]?.source
+  const source = (doc?.draftSource as VersionFile | null | undefined) ?? versionSource
   const markdown = String(doc?.draftMarkdown ?? "").trim()
   if (!doc || !source || !/\.md$/i.test(source.name) || !markdown) return false
   const { renderDocumentPdf } = await import("./documentPdf")
@@ -1760,12 +1769,9 @@ export async function fixText(
 
   // Text konceptu je teraz v znení — koncept sa vyprázdni, aby karta po oprave
   // nehlásila prípravu nového znenia (24. 10. 2026).
-  // PDF a zdroj vyrobené z konceptu sa zahodia tiež: záväzné ostáva PDF znenia,
-  // oprava textu ho nemení (ADR-007).
-  const generated = Boolean((doc.draftPdf as { generatedFromMarkdown?: boolean } | null | undefined)?.generatedFromMarkdown)
   await col.updateOne(
     { documentId, companyCode, draftMarkdown: doc.draftMarkdown },
-    { $unset: generated ? { draftMarkdown: "", draftPdf: "", draftSource: "" } : { draftMarkdown: "" } },
+    { $unset: { draftMarkdown: "" } },
   )
 
   await writeAudit({
@@ -1832,17 +1838,19 @@ export async function loadVersionIntoDraft(
   if (!text) throw new LibraryError("library.versionHasNoText", "Toto znenie nemá uložený text — nie je čo narezať.")
 
   /*
-   * Koncept je voľný (žiadne nové znenie sa nepripravuje), takže PDF, zdroj,
-   * údaje o znení a názov, ktoré pri ňom ostali, patria už zverejnenému
-   * zneniu. Keby ostali, karta by opravu textu spojila so starým PDF
-   * a ukázala ju ako „nové znenie v príprave" (ISSF-00 a ISSF-05,
-   * 24. 10. 2026).
+   * Koncept je voľný (žiadne nové znenie sa nepripravuje), takže údaje
+   * o znení a názov, ktoré pri ňom ostali, patria už zverejnenému zneniu
+   * a zahodia sa. PDF a zdroj `.md` ostávajú — zo zdroja sa vyrába PDF
+   * ďalšieho konceptu (24. 10. 2026: bez neho ISSF-00 išiel na schválenie
+   * bez PDF).
    */
   await col.updateOne(
     { documentId, companyCode },
     {
       $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor },
-      $unset: { draftPdf: "", draftSource: "", draftMeta: "", draftTitle: "" },
+      // PDF a zdroj ostávajú: zo zdroja `.md` sa vyrába PDF ďalšieho konceptu
+      // a PDF vyrobené z textu nové znenie nerobí (#428).
+      $unset: { draftMeta: "", draftTitle: "" },
     },
   )
   await closeStaleRounds(companyCode, documentId, actor)
