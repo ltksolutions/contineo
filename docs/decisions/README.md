@@ -51,6 +51,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-037](ADR-037-sledovany-zdroj-slov-lex.md) | Sledovaný zdroj legislatívy: predpis zo Slov-Lexu ako dokument druhu zákon — adaptér pre statický portál, nie generický web; zmena = nový riadok v histórii znení (aj s účinnosťou v budúcnosti); záväzné PDF zo Slov-Lexu, Markdown z HTML; pôvod `source.type: "web"`; krok B ručne (import, Skontrolovať zdroj), krok C cron (D242–D247) | ✅ prijaté · krok B |
 | [ADR-038](ADR-038-contineo-ako-mcp-server.md) | Contineo ako MCP server: Contineo vydáva OAuth token (súhlas je dôkazný záznam), nástroje podľa rolí a rozsahov, fáza 1 len čítanie, zapínateľné nastavenie organizácie obmedzené rezidenciou, zápis osôb nikdy (D249–D256) | ✅ prijaté · fáza 1 |
 | [ADR-039](ADR-039-katalog-legislativy-slov-lex.md) | Katalóg legislatívy: predpisy zo Slov-Lexu ako zdieľaný obsah platformy (menovitá výnimka z D90), všetky znenia a § ako úsek, vstavaný zdroj „Legislatíva" na Opýtať sa s výberom predpisov organizácie, odber do knižnice z katalógu namiesto druhého stiahnutia, jeden cron platformy namiesto kroku C per organizácia (D257–D262) · prekonáva čakaciu podmienku D247 | ✅ prijaté · fáza 1 |
+| [ADR-040](ADR-040-register-zdrojov.md) | Register zdrojov: zdroje obsahu ako vlastná sekcia Organizácia → Zdroje (umelá inteligencia si nechá kľúč, modely, spotrebu), druh zdroja zo spoločnej schémy (súbor, schránka, MCP konektor, web/RSS) určuje, čo zdroj vie, adaptér je vlastnosť zdroja web (Legislatíva = web s adaptérom slov-lex, nie vlastný druh), register je spoločný tvar nad existujúcimi dátami a jediný vstup pre výber zdrojov, adresy sa prekladajú (D263–D267) | ✅ prijaté · krok 1 |
 
 ## Čo sem nepatrí
 
@@ -63,6 +64,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-040**. Súbor `ADR-040-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-041**. Súbor `ADR-041-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.

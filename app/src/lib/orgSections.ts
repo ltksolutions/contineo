@@ -14,7 +14,8 @@ import { tabValue } from "./urlParams"
 
 export const ORG_SECTION_GROUPS = [
   // Konektory (ADR-029): pripojenia organizácie k cudzím MCP serverom.
-  { key: "org", sections: ["general", "departments", "codelists", "ai", "connectors"] },
+  // Zdroje (ADR-040): register zdrojov obsahu; konektory doň prejdú v kroku 2.
+  { key: "org", sections: ["general", "departments", "codelists", "ai", "sources", "connectors"] },
   // Asistenti (ADR-038): Contineo ako MCP server — zapnutie a pripojené aplikácie.
   { key: "access", sections: ["domains", "signin", "assistants"] },
   // Členenie (`chunking`) tu do 5. 10. 2026 bolo; od D160 sa nenastavuje

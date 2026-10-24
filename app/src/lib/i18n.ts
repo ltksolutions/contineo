@@ -1813,6 +1813,25 @@ interface Dictionary {
       saved: string
       keyDeleted: string
     }
+    /** Register zdrojov obsahu (ADR-040, D263–D266). */
+    sources: {
+      heading: string
+      intro: string
+      tabRegister: string
+      tabLaw: string
+      kind: Record<"file" | "mailbox" | "mcp" | "web", string>
+      useRetrieval: string
+      useImport: string
+      useTools: string
+      publicOnly: string
+      defaultOn: string
+      stateOn: string
+      stateOff: string
+      stateDisconnected: string
+      stateBlocked: string
+      open: string
+      actCount: (n: number) => string
+    }
     /** Legislatíva — odber predpisov zo Slov-Lexu pre Opýtať sa (ADR-039, D259). */
     law: {
       heading: string
@@ -1870,8 +1889,6 @@ interface Dictionary {
       note: string
       /** Prehľad po mesiacoch (ORG-ai-prehlad, 24. 10. 2026). */
       tabOverview: string
-      /** Legislatíva — odber predpisov z katalógu (ADR-039). */
-      tabLaw: string
       overviewTitle: (period: string) => string
       overviewLead: string
       fromHint: string
@@ -6937,6 +6954,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       ai: "Umelá inteligencia",
       connectors: "Konektory",
+      sources: "Zdroje",
       assistants: "AI asistenti",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
@@ -7109,6 +7127,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavenie AI je uložené.",
       keyDeleted: "Kľúč organizácie je odstránený.",
     },
+    sources: {
+      heading: "Zdroje obsahu",
+      intro: "Odkiaľ organizácia berie obsah: knižnica, pripojené konektory a legislatíva. Každý zdroj má druh, ktorý určuje, čo vie — import do knižnice, živé hľadanie pri otázke, nástroje agenta.",
+      tabRegister: "Register",
+      tabLaw: "Legislatíva",
+      kind: { file: "Súbory", mailbox: "Schránka helpdesku", mcp: "MCP konektor", web: "Web / RSS" },
+      useRetrieval: "živý zdroj pri otázke",
+      useImport: "import do knižnice",
+      useTools: "nástroje agenta",
+      publicOnly: "len verejný obsah",
+      defaultOn: "predvolene na Opýtať sa",
+      stateOn: "zapnutý",
+      stateOff: "vypnutý",
+      stateDisconnected: "nepripojený",
+      stateBlocked: "blokuje rezidencia",
+      open: "Otvoriť",
+      actCount: n => `${n} ${n === 1 ? "predpis" : n < 5 ? "predpisy" : "predpisov"}`,
+    },
     law: {
       heading: "Legislatíva",
       intro: "Zákony zo Slov-Lexu, z ktorých asistent odpovedá popri dokumentoch organizácie. Text sa drží v spoločnom katalógu Continea a dopĺňa sa z portálu každý deň; v odpovedi je označený ako zákon s odkazom na paragraf.",
@@ -7173,7 +7209,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "compliance-review": { label: "Kontrola súladu dokumentov", why: "kontrola dokumentov (manuály, rozpisy) proti normám knižnice (ADR-032, D196)" },
       },
       tabOverview: "Prehľad",
-      tabLaw: "Legislatíva",
       overviewTitle: period => `Prehľad: ${period}`,
       overviewLead: "Kto, na čo a akým modelom míňa. Každé číslo vedie do Spotreby na jednotlivé volania.",
       fromHint: "Prázdne = aktuálny mesiac",
@@ -12088,6 +12123,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       ai: "Umělá inteligence",
       connectors: "Konektory",
+      sources: "Zdroje",
       assistants: "AI asistenti",
       acknowledgements: "Potvrzování",
       audit: "Audit",
@@ -12260,6 +12296,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavení AI je uloženo.",
       keyDeleted: "Klíč organizace je odstraněn.",
     },
+    sources: {
+      heading: "Zdroje obsahu",
+      intro: "Odkud organizace bere obsah: knihovna, připojené konektory a legislativa. Každý zdroj má druh, který určuje, co umí — import do knihovny, živé hledání u otázky, nástroje agenta.",
+      tabRegister: "Registr",
+      tabLaw: "Legislativa",
+      kind: { file: "Soubory", mailbox: "Schránka helpdesku", mcp: "MCP konektor", web: "Web / RSS" },
+      useRetrieval: "živý zdroj u otázky",
+      useImport: "import do knihovny",
+      useTools: "nástroje agenta",
+      publicOnly: "jen veřejný obsah",
+      defaultOn: "výchozí na Zeptat se",
+      stateOn: "zapnutý",
+      stateOff: "vypnutý",
+      stateDisconnected: "nepřipojený",
+      stateBlocked: "blokuje rezidence",
+      open: "Otevřít",
+      actCount: n => `${n} ${n === 1 ? "předpis" : n < 5 ? "předpisy" : "předpisů"}`,
+    },
     law: {
       heading: "Legislativa",
       intro: "Zákony ze Slov-Lexu, ze kterých asistent odpovídá vedle dokumentů organizace. Text se drží ve společném katalogu Continea a doplňuje se z portálu každý den; v odpovědi je označen jako zákon s odkazem na paragraf.",
@@ -12324,7 +12378,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "compliance-review": { label: "Kontrola souladu dokumentů", why: "kontrola dokumentů (manuály, rozpisy) proti normám knihovny (ADR-032, D196)" },
       },
       tabOverview: "Přehled",
-      tabLaw: "Legislativa",
       overviewTitle: period => `Přehled: ${period}`,
       overviewLead: "Kdo, na co a jakým modelem utrácí. Každé číslo vede do Spotřeby na jednotlivá volání.",
       fromHint: "Prázdné = aktuální měsíc",
@@ -17228,6 +17281,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Code lists",
       ai: "Artificial intelligence",
       connectors: "Connectors",
+      sources: "Sources",
       assistants: "AI assistants",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
@@ -17400,6 +17454,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "The AI settings have been saved.",
       keyDeleted: "The organisation's key has been removed.",
     },
+    sources: {
+      heading: "Content sources",
+      intro: "Where the organisation takes its content from: the library, connected connectors and legislation. Each source has a kind that says what it can do — import into the library, live search on a question, agent tools.",
+      tabRegister: "Register",
+      tabLaw: "Legislation",
+      kind: { file: "Files", mailbox: "Helpdesk mailbox", mcp: "MCP connector", web: "Web / RSS" },
+      useRetrieval: "live source on a question",
+      useImport: "import into the library",
+      useTools: "agent tools",
+      publicOnly: "public content only",
+      defaultOn: "on by default in Ask",
+      stateOn: "on",
+      stateOff: "off",
+      stateDisconnected: "not connected",
+      stateBlocked: "blocked by residency",
+      open: "Open",
+      actCount: n => `${n} ${n === 1 ? "act" : "acts"}`,
+    },
     law: {
       heading: "Legislation",
       intro: "Acts from Slov-Lex the assistant answers from alongside the organisation's documents. The text lives in Contineo's shared catalogue and is refreshed from the portal daily; in an answer it is labelled as an act with a link to the section.",
@@ -17464,7 +17536,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "compliance-review": { label: "Document compliance check", why: "checking documents (manuals, schedules) against library norms (ADR-032, D196)" },
       },
       tabOverview: "Overview",
-      tabLaw: "Legislation",
       overviewTitle: period => `Overview: ${period}`,
       overviewLead: "Who spends, on what and with which model. Every number leads to Usage with the individual calls.",
       fromHint: "Empty = current month",

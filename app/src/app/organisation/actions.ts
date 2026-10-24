@@ -839,12 +839,12 @@ export async function revokeGrantAdminAction(fd: FormData) {
 
 // ── Legislatíva (ADR-039, D259) ──────────────────────────────────────────────
 
-/** Návrat na záložku Legislatíva — má vlastnú adresu, `back()` by viedol na nastavenie AI. */
+/** Návrat na Legislatívu v Zdrojoch (ADR-040) — má vlastnú adresu, `back()` by viedol na koreň sekcie. */
 function backToLaw(message: string, error = false): never {
   revalidatePath("/organisation", "layout")
   const q = new URLSearchParams({ msg: message })
   if (error) q.set("error", "1")
-  redirect(`/organisation/ai/law?${q.toString()}`)
+  redirect(`/organisation/sources/law?${q.toString()}`)
 }
 
 export async function saveLawSettingsAction(fd: FormData) {

@@ -10,6 +10,10 @@ import { legacyRoute, legacyQueryRoute } from "../src/lib/legacyRoutes"
 import { legacyOrgSection } from "../src/lib/orgSections"
 
 describe("stare cesty", () => {
+  it("Legislatíva z Umelej inteligencie do Zdrojov (ADR-040)", () => {
+    expect(legacyRoute("/organisation/ai/law")).toBe("/organisation/sources/law")
+    expect(legacyRoute("/organisation/ai/usage")).toBeNull()
+  })
   it("prelozi korene", () => {
     expect(legacyRoute("/dokumenty")).toBe("/documents")
     expect(legacyRoute("/kniznica")).toBe("/library")
