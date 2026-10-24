@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: Kontrola súladu, koniec FAQ, Kuriér a Slov-Lex na predajných stránkach (2026-10-24)
+
+Úvod má novú sekciu **Kontrola súladu** (proti nadradeným normám, nález
+s citáciou a rozhodnutím, z helpdesku do manuálov) a výrazný odsek **Prečo
+v Contineu nie sú FAQ** — FAQ ako také strácajú zmysel, nahrádzajú ich
+manuály dopĺňané z otázok. Sekcia Verzie presunula do „Dnes" záväznosť
+druhov, kontrolu súladu a zákon zo Slov-Lexu. Potvrdzovanie má otázku
+o Kuriérovi, Bezpečnosť v bloku GDPR Kuriéra, analýzu helpdesku bez
+zápisu textu a súhlas s MCP asistentom, Pre koho pri zväzoch kontrolu
+poriadkov proti zákonu o športe. sk, cs, en.
+
 ### Web contineo.app: Technológia a obrázok podľa ADR-030–038 (2026-10-24)
 
 Stránka Technológia dostala piliere **Hierarchia a záväznosť dokumentov**
