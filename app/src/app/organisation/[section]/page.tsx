@@ -53,6 +53,7 @@ import { RESIDENCY_LABEL } from "@/lib/residency"
 import { saveAssistantsAction, revokeGrantAdminAction } from "../actions"
 import { subscribeLawAction, unsubscribeLawAction, saveLawSettingsAction } from "../actions"
 import { subscribedActs, lawSourceState, SUGGESTED_ACTS } from "@/lib/lawCatalog"
+import { sourcesRegister } from "@/lib/sourcesRegister"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageFilterQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { overviewGroup, previousYearUsd, unpricedCalls, usageOverview } from "@/lib/aiOverview"
 import AiOverview from "../AiOverview"
@@ -287,8 +288,9 @@ export default async function OrganisationSectionPage({
   const tr = d.responsibility
 
   // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
-  const aiView: "settings" | "usage" | "overview" | "law" =
-    query.view === "usage" ? "usage" : query.view === "overview" ? "overview" : query.view === "law" ? "law" : "settings"
+  const aiView: "settings" | "usage" | "overview" = query.view === "usage" ? "usage" : query.view === "overview" ? "overview" : "settings"
+  // Zdroje (ADR-040): register, alebo Legislatíva ako podstránka (`/organisation/sources/law`).
+  const sourcesView: "register" | "law" = query.view === "law" ? "law" : "register"
   const ai = now === "ai" && aiView === "settings" ? aiSettingsView(tenant.ai) : null
   const tu = t.aiUsage
   // Spotreba (D158): súčty za celé obdobie, na obrazovke najnovších 500.
@@ -317,8 +319,9 @@ export default async function OrganisationSectionPage({
         return { filter, by, data, previous, unpriced }
       })()
     : null
-  // Legislatíva (ADR-039, D259): odoberané predpisy a stav zdroja — len pre svoju záložku.
-  const law = now === "ai" && aiView === "law"
+  const register = now === "sources" && sourcesView === "register" ? await sourcesRegister(tenant.companyCode, language) : null
+  // Legislatíva (ADR-039, D259): odoberané predpisy a stav zdroja — len pre svoju podstránku.
+  const law = now === "sources" && sourcesView === "law"
     ? await (async () => {
         const [acts, state] = await Promise.all([subscribedActs(tenant.companyCode), lawSourceState(tenant.companyCode)])
         return { acts, state }
@@ -353,9 +356,11 @@ export default async function OrganisationSectionPage({
 
   return (
     <AppShell language={ctx.person.language}
-              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : now === "ai" && aiView === "law" ? tu.tabLaw : connector ? connector.name : t.tabs[now]}
+              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : now === "sources" && sourcesView === "law" ? t.sources.tabLaw : connector ? connector.name : t.tabs[now]}
               trail={now === "ai" && aiView !== "settings"
                 ? { "/organisation": t.heading, "/organisation/ai": t.tabs.ai }
+                : now === "sources" && sourcesView === "law"
+                ? { "/organisation": t.heading, "/organisation/sources": t.tabs.sources }
                 : connector
                 ? { "/organisation": t.heading, "/organisation/connectors": t.tabs.connectors }
                 : { "/organisation": t.heading }}>
@@ -1297,120 +1302,49 @@ export default async function OrganisationSectionPage({
       )}
 
       {/*
-        Umelá inteligencia (D157, 5. 10. 2026): kľúč a modely. Kľúč sa nikdy
-        neukazuje — ani zašifrovaný; obrazovka vie len, či je nastavený,
-        jeho koncovku a kto ho kedy zadal.
+        Zdroje (ADR-040, D263–D266): register zdrojov obsahu — knižnica,
+        konektory, legislatíva — s rovnakými stĺpcami, a Legislatíva ako
+        podstránka. Konektory sa tu zatiaľ len vypisujú a vedú do svojej
+        sekcie (krok 2 ich presunie).
       */}
-      {now === "ai" && (
+      {now === "sources" && (
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "minmax(0, 1fr)" }}>
-        {/* Nastavenie a Spotreba (ADR-026) — dve časti tej istej sekcie. Spotreba
-            má od 6. 10. 2026 vlastnú adresu `/organisation/ai/usage` (R5). */}
-        <nav className="tabs" aria-label={t.tabs.ai}>
+        <nav className="tabs" aria-label={t.tabs.sources}>
           <TabsBar>
-            <TabLink href="/organisation/ai" active={aiView === "settings"}>{tu.tabSettings}</TabLink>
-            <TabLink href="/organisation/ai/usage" active={aiView === "usage"}>{tu.tabUsage}</TabLink>
-            <TabLink href="/organisation/ai/overview" active={aiView === "overview"}>{tu.tabOverview}</TabLink>
-            <TabLink href="/organisation/ai/law" active={aiView === "law"}>{tu.tabLaw}</TabLink>
+            <TabLink href="/organisation/sources" active={sourcesView === "register"}>{t.sources.tabRegister}</TabLink>
+            <TabLink href="/organisation/sources/law" active={sourcesView === "law"}>{t.sources.tabLaw}</TabLink>
           </TabsBar>
         </nav>
 
-      {aiView === "settings" && ai && (
-      <>
-      <form action={saveAiSettingsAction} className="card set-form">
-        <input type="hidden" name="tab" value="ai" />
-        <p className="quiet" style={{ margin: 0, padding: "18px 20px 0", maxWidth: 680 }}>{t.ai.intro}</p>
-
-        <section className="set-sec">
-          <div className="set-sec-head">
-            <h2>{t.ai.secProvider}</h2>
-            <p>{t.ai.providerNote}</p>
-          </div>
-          <div className="set-sec-body">
-            <p style={{ margin: 0, fontWeight: 600 }}>{t.ai.provider}</p>
-          </div>
-        </section>
-
-        <section className="set-sec" id="key">
-          <div className="set-sec-head">
-            <h2>{t.ai.secKey}</h2>
-            <p>{t.ai.secKeyNote}</p>
-          </div>
-          <div className="set-sec-body">
-            <p style={{ margin: 0 }}>
-              {ai.hasOwnKey
-                ? t.ai.keyOwn(ai.apiKeyHint ?? "", ai.apiKeySetAt ? formatDate(ai.apiKeySetAt, language) : "—", ai.apiKeySetBy ?? "—")
-                : ai.operatorKeyAvailable ? t.ai.keyOperator : t.ai.keyNone}
-            </p>
-            <label className="field">
-              <span className="field-label">{t.ai.keyLabel}</span>
-              <input className="field-input" name="apiKey" type="password" autoComplete="off"
-                     spellCheck={false} placeholder="sk-ant-…" />
-              <span className="quiet field-hint">{t.ai.keyHint}</span>
-            </label>
-            {ai.hasOwnKey && (
-              <div>
-                <SubmitButton className="button button--quiet" form="remove-ai-key">{t.ai.deleteKey}</SubmitButton>
-                <span className="quiet field-hint" style={{ display: "block", marginTop: 6 }}>{t.ai.deleteKeyNote}</span>
+      {sourcesView === "register" && register && (
+        <section className="card more">
+          <div className="more-head"><h2>{t.sources.heading}</h2></div>
+          <div className="more-row"><div className="more-main"><span>{t.sources.intro}</span></div></div>
+          {register.map(src => {
+            const state = !src.allowed ? t.sources.stateBlocked : !src.connected ? t.sources.stateDisconnected : src.enabled ? t.sources.stateOn : t.sources.stateOff
+            const uses = [src.uses.retrieval && t.sources.useRetrieval, src.uses.import && t.sources.useImport, src.uses.tools && t.sources.useTools].filter(Boolean).join(", ")
+            return (
+              <div key={src.id} className="more-row">
+                <div className="more-main">
+                  <b>
+                    {src.name}{" "}
+                    <span className={src.enabled && src.connected && src.allowed ? "tag tag--published" : "tag"}>{state}</span>
+                  </b>
+                  <span>
+                    {[
+                      t.sources.kind[src.kind] + (src.adapter ? ` · ${src.adapter}` : ""),
+                      uses || null,
+                      src.accessLevel === "public" ? t.sources.publicOnly : null,
+                      src.kind !== "file" && src.defaultOn ? t.sources.defaultOn : null,
+                      src.detail,
+                    ].filter(Boolean).join(" · ")}
+                  </span>
+                </div>
+                <Link className="button button--quiet" href={src.href}>{t.sources.open}</Link>
               </div>
-            )}
-          </div>
+            )
+          })}
         </section>
-
-        <section className="set-sec" id="models">
-          <div className="set-sec-head">
-            <h2>{t.ai.secModels}</h2>
-            <p>{t.ai.secModelsNote}</p>
-          </div>
-          <div className="set-sec-body">
-            <div className="field">
-              <span className="field-label">{t.ai.answer}</span>
-              <Select language={language}
-                name="modelAnswer"
-                fieldLabel={t.ai.answer}
-                initial={ai.models.answer}
-                options={AI_MODELS.answer.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
-              />
-              <span className="quiet field-hint">{t.ai.answerNote}</span>
-            </div>
-            {/* Jediná voľba — text, nie zoznam (Haiku 4.5, `AI_MODELS.utility`). */}
-            <div className="field">
-              <span className="field-label">{t.ai.utility}</span>
-              <p style={{ margin: 0 }}>{AI_MODELS.utility.map(m => modelLabel(m.id, m.label)).join(", ")}</p>
-              <span className="quiet field-hint">{t.ai.utilityNote}</span>
-            </div>
-            <div className="field">
-              <span className="field-label">{t.ai.rewrite}</span>
-              <Select language={language}
-                name="modelRewrite"
-                fieldLabel={t.ai.rewrite}
-                initial={ai.models.rewrite}
-                options={AI_MODELS.rewrite.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
-              />
-              <span className="quiet field-hint">{t.ai.rewriteNote}</span>
-            </div>
-            <div className="field">
-              <span className="field-label">{t.ai.compliance}</span>
-              <Select language={language}
-                name="modelCompliance"
-                fieldLabel={t.ai.compliance}
-                initial={ai.models.compliance}
-                options={AI_MODELS.compliance.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
-              />
-              <span className="quiet field-hint">{t.ai.complianceNote}</span>
-            </div>
-          </div>
-        </section>
-
-        <div className="set-savebar">
-          <SubmitButton className="button">{t.ai.save}</SubmitButton>
-        </div>
-      </form>
-      {/* Odstránenie kľúča — vlastný formulár, tlačidlo je hore pri kľúči. */}
-      <form id="remove-ai-key" action={deleteAiKeyAction} hidden>
-        <FormPendingSignal form="remove-ai-key" />
-        <input type="hidden" name="tab" value="ai" />
-      </form>
-      </>
       )}
 
       {/*
@@ -1418,7 +1352,7 @@ export default async function OrganisationSectionPage({
         Zdroj „Legislatíva" sa na Opýtať sa ponúkne, keď je aspoň jeden
         predpis a rezidencia dovoľuje čítať katalóg (D257).
       */}
-      {aiView === "law" && law && (
+      {sourcesView === "law" && law && (
       <>
         <form action={saveLawSettingsAction} className="card set-form">
           <section className="set-sec" id="law">
@@ -1520,6 +1454,125 @@ export default async function OrganisationSectionPage({
           )}
         </>
         )}
+      </>
+      )}
+
+      </div>
+      )}
+
+      {/*
+        Umelá inteligencia (D157, 5. 10. 2026): kľúč a modely. Kľúč sa nikdy
+        neukazuje — ani zašifrovaný; obrazovka vie len, či je nastavený,
+        jeho koncovku a kto ho kedy zadal.
+      */}
+      {now === "ai" && (
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "minmax(0, 1fr)" }}>
+        {/* Nastavenie a Spotreba (ADR-026) — dve časti tej istej sekcie. Spotreba
+            má od 6. 10. 2026 vlastnú adresu `/organisation/ai/usage` (R5). */}
+        <nav className="tabs" aria-label={t.tabs.ai}>
+          <TabsBar>
+            <TabLink href="/organisation/ai" active={aiView === "settings"}>{tu.tabSettings}</TabLink>
+            <TabLink href="/organisation/ai/usage" active={aiView === "usage"}>{tu.tabUsage}</TabLink>
+            <TabLink href="/organisation/ai/overview" active={aiView === "overview"}>{tu.tabOverview}</TabLink>
+          </TabsBar>
+        </nav>
+
+      {aiView === "settings" && ai && (
+      <>
+      <form action={saveAiSettingsAction} className="card set-form">
+        <input type="hidden" name="tab" value="ai" />
+        <p className="quiet" style={{ margin: 0, padding: "18px 20px 0", maxWidth: 680 }}>{t.ai.intro}</p>
+
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.ai.secProvider}</h2>
+            <p>{t.ai.providerNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <p style={{ margin: 0, fontWeight: 600 }}>{t.ai.provider}</p>
+          </div>
+        </section>
+
+        <section className="set-sec" id="key">
+          <div className="set-sec-head">
+            <h2>{t.ai.secKey}</h2>
+            <p>{t.ai.secKeyNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <p style={{ margin: 0 }}>
+              {ai.hasOwnKey
+                ? t.ai.keyOwn(ai.apiKeyHint ?? "", ai.apiKeySetAt ? formatDate(ai.apiKeySetAt, language) : "—", ai.apiKeySetBy ?? "—")
+                : ai.operatorKeyAvailable ? t.ai.keyOperator : t.ai.keyNone}
+            </p>
+            <label className="field">
+              <span className="field-label">{t.ai.keyLabel}</span>
+              <input className="field-input" name="apiKey" type="password" autoComplete="off"
+                     spellCheck={false} placeholder="sk-ant-…" />
+              <span className="quiet field-hint">{t.ai.keyHint}</span>
+            </label>
+            {ai.hasOwnKey && (
+              <div>
+                <SubmitButton className="button button--quiet" form="remove-ai-key">{t.ai.deleteKey}</SubmitButton>
+                <span className="quiet field-hint" style={{ display: "block", marginTop: 6 }}>{t.ai.deleteKeyNote}</span>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="set-sec" id="models">
+          <div className="set-sec-head">
+            <h2>{t.ai.secModels}</h2>
+            <p>{t.ai.secModelsNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <div className="field">
+              <span className="field-label">{t.ai.answer}</span>
+              <Select language={language}
+                name="modelAnswer"
+                fieldLabel={t.ai.answer}
+                initial={ai.models.answer}
+                options={AI_MODELS.answer.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
+              />
+              <span className="quiet field-hint">{t.ai.answerNote}</span>
+            </div>
+            {/* Jediná voľba — text, nie zoznam (Haiku 4.5, `AI_MODELS.utility`). */}
+            <div className="field">
+              <span className="field-label">{t.ai.utility}</span>
+              <p style={{ margin: 0 }}>{AI_MODELS.utility.map(m => modelLabel(m.id, m.label)).join(", ")}</p>
+              <span className="quiet field-hint">{t.ai.utilityNote}</span>
+            </div>
+            <div className="field">
+              <span className="field-label">{t.ai.rewrite}</span>
+              <Select language={language}
+                name="modelRewrite"
+                fieldLabel={t.ai.rewrite}
+                initial={ai.models.rewrite}
+                options={AI_MODELS.rewrite.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
+              />
+              <span className="quiet field-hint">{t.ai.rewriteNote}</span>
+            </div>
+            <div className="field">
+              <span className="field-label">{t.ai.compliance}</span>
+              <Select language={language}
+                name="modelCompliance"
+                fieldLabel={t.ai.compliance}
+                initial={ai.models.compliance}
+                options={AI_MODELS.compliance.map(m => ({ value: m.id, label: modelLabel(m.id, m.label) }))}
+              />
+              <span className="quiet field-hint">{t.ai.complianceNote}</span>
+            </div>
+          </div>
+        </section>
+
+        <div className="set-savebar">
+          <SubmitButton className="button">{t.ai.save}</SubmitButton>
+        </div>
+      </form>
+      {/* Odstránenie kľúča — vlastný formulár, tlačidlo je hore pri kľúči. */}
+      <form id="remove-ai-key" action={deleteAiKeyAction} hidden>
+        <FormPendingSignal form="remove-ai-key" />
+        <input type="hidden" name="tab" value="ai" />
+      </form>
       </>
       )}
 
