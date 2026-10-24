@@ -68,8 +68,8 @@ const TICKETS = `{
   messages: [ { from, at, text } ],
   requester: { email, name, personId },
   draft,                        // návrh odpovede od asistenta, len z verejného obsahu
-  sentAnswer: { at, by, text }, // odoslané e-mailom zo schránky kanála
-  faqEntryId                    // ak odpoveď pribudla do FAQ
+  sentAnswer: { at, by, text }  // odoslané e-mailom zo schránky kanála
+  // otázky zavretých ticketov číta analýza helpdesku → návrhy do manuálov (ADR-034)
 }`;
 const VECTOR_QUERY = `// Znenia platné k dňu otázky sa spočítajú vopred z kolekcie documents
 // tým istým pravidlom, podľa ktorého sa predpis potvrdzuje a prideľuje.

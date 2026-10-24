@@ -15,6 +15,9 @@
     <marker id="arrowPink" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L7,3 L0,6 Z" fill="#AD1457"/>
     </marker>
+    <marker id="arrowVio" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#6B46C1"/>
+    </marker>
   </defs>
 
   <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektúra a dátový tok</text>
@@ -25,9 +28,13 @@
   <path d="M760,130 L760,228" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
 
   <!-- KONEKTORY (ADR-029) — živý zdroj pri otázke, nejde cez CMS -->
-  <rect x="919" y="88" width="557" height="54" rx="14" fill="#FCE4EC" stroke="#AD1457" stroke-width="1.5"/>
-  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="288" lengthAdjust="spacingAndGlyphs">KONEKTORY (MCP) — živý zdroj, mimo knižnice</text>
-  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="388" lengthAdjust="spacingAndGlyphs">zapína sa pilulkou alebo predvolene · popri knižnici · citácia „živý zdroj, neoverené“</text>
+  <rect x="919" y="88" width="275" height="54" rx="14" fill="#FCE4EC" stroke="#AD1457" stroke-width="1.5"/>
+  <rect x="1212" y="88" width="264" height="54" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="1232" y="110" font-size="12.5" font-weight="700" fill="#54309E" textLength="183" lengthAdjust="spacingAndGlyphs">CONTINEO AKO MCP SERVER</text>
+  <text x="1232" y="129" font-size="10.5" fill="#5f6368" textLength="205" lengthAdjust="spacingAndGlyphs">AI asistent číta knižnicu · OAuth · len čítanie</text>
+  <path d="M1344,142 L1344,228" stroke="#6B46C1" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowVio)"/>
+  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="195" lengthAdjust="spacingAndGlyphs">KONEKTORY (MCP) — živý zdroj</text>
+  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="236" lengthAdjust="spacingAndGlyphs">pilulkou alebo predvolene · „živý zdroj, neoverené“</text>
   <path d="M1051,142 L1051,228" stroke="#AD1457" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowPink)"/>
 
   <!-- CMS ako vrstva nad kanálmi a workerom -->
@@ -39,11 +46,11 @@
   <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
   <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6" textLength="61" lengthAdjust="spacingAndGlyphs">ZDROJE</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="191" lengthAdjust="spacingAndGlyphs">dnes: súbory, FAQ, schránka, konektor</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="213" lengthAdjust="spacingAndGlyphs">dnes: súbory, Slov-Lex, schránka, konektor</text>
   <g font-size="12.5" fill="#202124">
     <text x="60" y="316" textLength="216" lengthAdjust="spacingAndGlyphs">• Nahraté súbory — PDF + Word/Excel</text>
     <text x="60" y="342" fill="#9aa0a6" textLength="150" lengthAdjust="spacingAndGlyphs">• RSS / web (pripravujeme)</text>
-    <text x="60" y="368" textLength="147" lengthAdjust="spacingAndGlyphs">• FAQ · overené odpovede</text>
+    <text x="60" y="368" textLength="215" lengthAdjust="spacingAndGlyphs">• Slov-Lex (zákon) · overené odpovede</text>
     <text x="60" y="394" textLength="182" lengthAdjust="spacingAndGlyphs">• Schránka helpdesku (Graph) ⇅</text>
     <text x="60" y="420" textLength="113" lengthAdjust="spacingAndGlyphs">• Import z konektora</text>
     <text x="74" y="440" font-size="11" fill="#5f6368" textLength="198" lengthAdjust="spacingAndGlyphs">článok ako koncept s PDF → schválenie</text>
@@ -57,11 +64,11 @@
   <text x="353" y="285" font-size="11" fill="#5f6368" textLength="230" lengthAdjust="spacingAndGlyphs">spracovanie mimo DB · bez jazykového modelu</text>
   <g font-size="12.5" fill="#202124">
     <text x="353" y="316" textLength="90" lengthAdjust="spacingAndGlyphs">• Prevod súboru</text>
-    <text x="367" y="334" font-size="10.5" fill="#5f6368" textLength="184" lengthAdjust="spacingAndGlyphs">PDF sa schvaľuje · text z Wordu/Excelu</text>
+    <text x="367" y="334" font-size="10.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">PDF sa schvaľuje · z .md ho vyrobí Contineo</text>
     <text x="367" y="349" font-size="10.5" fill="#5f6368" textLength="144" lengthAdjust="spacingAndGlyphs">sken → ručný prepis modelom</text>
-    <text x="353" y="377" textLength="147" lengthAdjust="spacingAndGlyphs">• Členenie po článkoch / §</text>
-    <text x="367" y="395" font-size="10.5" fill="#5f6368" textLength="171" lengthAdjust="spacingAndGlyphs">analyzátor zo signálov navrhne profil</text>
-    <text x="367" y="410" font-size="10.5" fill="#5f6368" textLength="167" lengthAdjust="spacingAndGlyphs">FAQ po záznamoch · človek potvrdí</text>
+    <text x="353" y="377" textLength="195" lengthAdjust="spacingAndGlyphs">• Členenie zo štruktúry Markdownu</text>
+    <text x="367" y="395" font-size="10.5" fill="#5f6368" textLength="210" lengthAdjust="spacingAndGlyphs">nadpisy podľa úrovne · číslovanie · Článok, §</text>
+    <text x="367" y="410" font-size="10.5" fill="#5f6368" textLength="197" lengthAdjust="spacingAndGlyphs">bez profilov · ručné hranice majú prednosť</text>
     <text x="353" y="438" textLength="98" lengthAdjust="spacingAndGlyphs">• Metadáta úseku</text>
     <text x="367" y="456" font-size="10.5" fill="#5f6368" textLength="187" lengthAdjust="spacingAndGlyphs">companyCode · accessLevel · language</text>
     <text x="367" y="471" font-size="10.5" fill="#5f6368" textLength="177" lengthAdjust="spacingAndGlyphs">versionId · articleRef · druh z číselníka</text>
@@ -98,9 +105,9 @@
   <text x="646" y="500" font-size="10" fill="#3c4043" textLength="131" lengthAdjust="spacingAndGlyphs">Ľudia: persons · departments</text>
   <text x="646" y="513" font-size="10" fill="#3c4043" textLength="198" lengthAdjust="spacingAndGlyphs">Pridelenia: onboarding_tracks · assignments</text>
   <text x="646" y="526" font-size="10" fill="#3c4043" textLength="141" lengthAdjust="spacingAndGlyphs">Potvrdenia: acknowledgements</text>
-  <text x="646" y="539" font-size="10" fill="#3c4043" textLength="171" lengthAdjust="spacingAndGlyphs">Helpdesk: helpdesk_channels · tickets</text>
+  <text x="646" y="539" font-size="10" fill="#3c4043" textLength="191" lengthAdjust="spacingAndGlyphs">Kanály: channels · tickets · courier_threads</text>
   <text x="646" y="552" font-size="10" fill="#3c4043" textLength="181" lengthAdjust="spacingAndGlyphs">Vzdelávanie: courses · tests · certificates</text>
-  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="167" lengthAdjust="spacingAndGlyphs">Dohľad: audit · evaluations · ai_usage</text>
+  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="193" lengthAdjust="spacingAndGlyphs">Dohľad: audit · ai_usage · compliance_runs</text>
   <line x1="646" y1="574" x2="870" y2="574" stroke="#A8D5B5" stroke-width="1"/>
   <text x="646" y="586" font-size="10" fill="#0B6E2E" textLength="161" lengthAdjust="spacingAndGlyphs">Dôkazné záznamy sa nemenia (D24)</text>
   <text x="646" y="598" font-size="9.5" fill="#5f6368" textLength="199" lengthAdjust="spacingAndGlyphs">oprava = nový záznam · odvolanie = revokedAt</text>
@@ -132,7 +139,7 @@
   <text x="1240" y="354" font-size="12" fill="#202124" textLength="166" lengthAdjust="spacingAndGlyphs">• Asistent — otázka a odpoveď</text>
   <text x="1254" y="369" font-size="10.5" fill="#5f6368" textLength="148" lengthAdjust="spacingAndGlyphs">vždy · podpísaná identita (ISSF)</text>
   <text x="1240" y="390" font-size="12" fill="#202124" textLength="101" lengthAdjust="spacingAndGlyphs">• Tickety (voliteľne)</text>
-  <text x="1254" y="405" font-size="10.5" fill="#5f6368" textLength="201" lengthAdjust="spacingAndGlyphs">eskalácia z chatu · fronta riešiteľa · do FAQ</text>
+  <text x="1254" y="405" font-size="10.5" fill="#5f6368" textLength="186" lengthAdjust="spacingAndGlyphs">eskalácia z chatu · fronta · do manuálov</text>
   <text x="1240" y="426" font-size="12" fill="#202124" textLength="187" lengthAdjust="spacingAndGlyphs">• Schránka helpdesku ⇅ (voliteľne)</text>
   <text x="1254" y="441" font-size="10.5" fill="#5f6368" textLength="202" lengthAdjust="spacingAndGlyphs">e-mail = ticket · odpoveď e-mailom (Graph)</text>
   <line x1="1232" y1="458" x2="1456" y2="458" stroke="#D7CCF0" stroke-width="1"/>
@@ -166,7 +173,7 @@
   <rect x="776" y="820" width="700" height="88" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
   <text x="796" y="848" font-size="15" font-weight="700" fill="#B31412" textLength="190" lengthAdjust="spacingAndGlyphs">② ESKALÁCIA — na ticket</text>
   <text x="796" y="872" font-size="12.5" fill="#3c4043" textLength="564" lengthAdjust="spacingAndGlyphs">Po dvoch negatívnych hodnoteniach asistent ponúkne ticket; e-mail do schránky kanála je ticket tiež.</text>
-  <text x="796" y="892" font-size="12.5" fill="#3c4043" textLength="490" lengthAdjust="spacingAndGlyphs">Riešiteľ dostane návrh odpovede, upraví ho, odošle e-mailom a môže ho pridať do FAQ.</text>
+  <text x="796" y="892" font-size="12.5" fill="#3c4043" textLength="597" lengthAdjust="spacingAndGlyphs">Riešiteľ dostane návrh odpovede, upraví ho a odošle e-mailom; z otázok vznikne návrh doplnenia manuálu.</text>
 
   <text x="40" y="944" font-size="11.5" fill="#9aa0a6">Cloud: MongoDB Atlas EU · Voyage voyage-4 + rerank-2 · Claude API (Citations)  │  On-prem: MongoDB Community 8.2 · Infinity / TEI · vLLM (Qwen3 / EuroLLM)</text>
   <text x="40" y="964" font-size="11.5" fill="#9aa0a6">Jadro je v oboch režimoch identické — $rankFusion beží aj self-hosted. Líšia sa len tri adaptéry: embedding, rerank, generovanie (ADR-001).</text>
