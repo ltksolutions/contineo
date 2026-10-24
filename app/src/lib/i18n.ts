@@ -743,6 +743,8 @@ interface Dictionary {
     themeLabel: string
     /** Prepínač ranného súhrnu Kuriéra v plachte účtu (ADR-033, D207). */
     courierDigest: (on: boolean) => string
+    /** Odkaz na pripojené aplikácie v plachte účtu (ADR-038). */
+    connectedApps: string
     theme: Record<"system" | "light" | "dark", string>
     /** Popis pre čítačku obrazovky — hovorí aj to, čo sa stane po kliknutí. */
     themeToggle: (now: string, next: string) => string
@@ -1815,6 +1817,47 @@ interface Dictionary {
       emptyText: string
       capped: (shown: number, all: number) => string
       note: string
+      /** Prehľad po mesiacoch (ORG-ai-prehlad, 24. 10. 2026). */
+      tabOverview: string
+      overviewTitle: (period: string) => string
+      overviewLead: string
+      fromHint: string
+      toHint: string
+      quick: string
+      quickMonth: string
+      quickYear: (year: number) => string
+      quick12: string
+      byLabel: string
+      byPeople: string
+      byPurposes: string
+      byModels: string
+      avgMonth: string
+      tokensAll: string
+      share: string
+      colTotal: string
+      background: string
+      others: (n: number) => string
+      chartMonths: string
+      chartRank: Record<"people" | "purposes" | "models", (period: string) => string>
+      chartAlt: (list: string) => string
+      matrixTitle: (period: string) => string
+      monthHeads: string[]
+      year: (year: number) => string
+      delta: (pct: string) => string
+      unpriced: (n: number) => string
+      unpricedLink: string
+      tokIn: string
+      tokOut: string
+      tokCache: string
+      tokMillions: string
+      overviewEmpty: (period: string) => string
+      overviewEmptyText: string
+      emptyAction: string
+      overviewNote: string
+      onlyModel: (name: string) => string
+      onlyUnpriced: string
+      clearFilter: string
+      backgroundGroup: string
       purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining" | "faq-review" | "compliance-review", { label: string; why: string }>
     }
     branding: {
@@ -2539,6 +2582,57 @@ interface Dictionary {
     aiFailed: string
   }
   /** Widget pre cudzí systém (ADR-028, D166) — texty idú do skriptu widgetu podľa jazyka z tokenu. */
+  /**
+   * Contineo ako MCP server (ADR-038): obrazovka súhlasu, pripojené
+   * aplikácie v plachte účtu a nastavenie organizácie. Opisy nástrojov
+   * sem nepatria — tie číta model a sú anglické (D254).
+   */
+  mcp: {
+    /** Rozsahy tokenu, ako ich vidí človek na obrazovke súhlasu. */
+    scopes: Record<"library.read" | "ask", { title: string; text: string }>
+    consent: {
+      heading: (client: string) => string
+      intro: (client: string, org: string) => string
+      asPerson: (name: string, email: string) => string
+      scopesHeading: string
+      note: string
+      allow: string
+      deny: string
+      expired: string
+      expiredText: string
+      /** Doslovné znenie súhlasu — ukladá sa do záznamu v jazyku, v ktorom ho človek videl (D28). */
+      statement: (date: string, name: string, email: string, client: string, org: string, scopes: string) => string
+    }
+    apps: {
+      heading: string
+      intro: string
+      none: string
+      granted: (date: string) => string
+      lastUsed: (date: string) => string
+      neverUsed: string
+      revoked: (date: string) => string
+      revoke: string
+      revokedMessage: string
+      notFound: string
+      scopesLabel: string
+    }
+    org: {
+      heading: string
+      intro: string
+      enable: string
+      enableHint: string
+      publicOnly: string
+      publicOnlyHint: string
+      blocked: (residency: string) => string
+      note: string
+      address: string
+      addressHint: string
+      clientsHeading: string
+      clientsIntro: string
+      noClients: string
+      saved: string
+    }
+  }
   widget: {
     open: string
     title: string
@@ -5450,6 +5544,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     signOut: "Odhlásiť",
     themeLabel: "Téma:",
     courierDigest: (on) => `Ranný súhrn Kuriéra e-mailom: ${on ? "zapnutý" : "vypnutý"}`,
+    connectedApps: "Pripojené aplikácie",
     theme: { system: "podľa systému", light: "svetlá", dark: "tmavá" },
     themeToggle: (now, next) => `Téma ${now}. Prepnúť na: ${next}`,
     themeState: (now) => `Téma ${now}`,
@@ -6765,6 +6860,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       ai: "Umelá inteligencia",
       connectors: "Konektory",
+      assistants: "AI asistenti",
       acknowledgements: "Potvrdzovanie",
       audit: "Audit",
       gdpr: "GDPR",
@@ -6976,6 +7072,50 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhov FAQ proti dokumentom knižnice (ADR-032; zrušené 14. 10. 2026, ADR-034)" },
         "compliance-review": { label: "Kontrola súladu dokumentov", why: "kontrola dokumentov (manuály, rozpisy) proti normám knižnice (ADR-032, D196)" },
       },
+      tabOverview: "Prehľad",
+      overviewTitle: period => `Prehľad: ${period}`,
+      overviewLead: "Kto, na čo a akým modelom míňa. Každé číslo vedie do Spotreby na jednotlivé volania.",
+      fromHint: "Prázdne = aktuálny mesiac",
+      toHint: "Prázdne = koniec mesiaca",
+      quick: "Rýchly výber",
+      quickMonth: "tento mesiac",
+      quickYear: year => `rok ${year}`,
+      quick12: "posledných 12 mesiacov",
+      byLabel: "Pohľad",
+      byPeople: "Osoby",
+      byPurposes: "Účely",
+      byModels: "Modely",
+      avgMonth: "Priemer na mesiac",
+      tokensAll: "Tokeny vstup / výstup / cache",
+      share: "Podiel",
+      colTotal: "Spolu",
+      background: "na pozadí",
+      others: n => `Ostatné (${n})`,
+      chartMonths: "Suma po mesiacoch",
+      chartRank: {
+        people: period => `Kto míňa najviac: ${period}`,
+        purposes: period => `Na čo sa míňa najviac: ${period}`,
+        models: period => `Ktoré modely stoja najviac: ${period}`,
+      },
+      chartAlt: list => `Suma po mesiacoch: ${list}.`,
+      matrixTitle: period => `Spotreba po mesiacoch, ${period}`,
+      monthHeads: ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"],
+      year: year => `rok ${year}`,
+      delta: pct => `${pct} oproti rovnakému obdobiu minulého roka`,
+      unpriced: n => `Suma je neúplná: volania s modelom mimo cenníka (${n}) sú započítané s $0.`,
+      unpricedLink: "Zobraziť v Spotrebe",
+      tokIn: "vstup",
+      tokOut: "výstup",
+      tokCache: "cache",
+      tokMillions: "mil.",
+      overviewEmpty: period => `V období ${period} sa AI nevolala`,
+      overviewEmptyText: "Prehľad sa naplní prvým volaním modelu. Volania sa zapisujú od 5. 10. 2026; skúste iné obdobie.",
+      emptyAction: "Nastavenie asistenta",
+      overviewNote: "Suma je odhad podľa cenníka v deň volania, v dolároch; presnú sumu povie faktúra. Mesiace sú v UTC, rovnako ako filter Spotreby. Záznamy sa držia 25 mesiacov.",
+      onlyModel: name => `Len model ${name}`,
+      onlyUnpriced: "Len volania s modelom mimo cenníka",
+      clearFilter: "Zrušiť",
+      backgroundGroup: "Na pozadí",
     },
     branding: {
       name: "Názov portálu",
@@ -7687,6 +7827,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     bulkDone: (op, ok, failed) => `${op === "close" ? "Zavreté" : op === "take" ? "Prevzaté" : "Znovu otvorené"}: ${ok}${failed ? ` · nepodarilo sa: ${failed}` : ""}.`,
     msgReopened: "Ticket je znovu otvorený.",
     aiFailed: "Asistent návrh nepripravil — skús to o chvíľu alebo napíš odpoveď sám.",
+  },
+  mcp: {
+    scopes: {
+      "library.read": { title: "Čítať knižnicu", text: "Hľadať v dokumentoch, čítať platné znenia a zoznam dokumentov organizácie — to, čo vidíte na portáli." },
+      ask: { title: "Pýtať sa asistenta", text: "Položiť otázku a dostať odpoveď Continea s citáciami. Platí ju organizácia a otázka sa zapíše do vašej histórie." },
+    },
+    consent: {
+      heading: client => `${client} žiada prístup do Continea`,
+      intro: (client, org) => `Aplikácia ${client} chce vo vašom mene pracovať s Contineom organizácie ${org}. Dostane len to, čo smiete vy, a len v rozsahu, ktorý tu povolíte.`,
+      asPerson: (name, email) => `Prihlásený: ${name} (${email})`,
+      scopesHeading: "Čo aplikácia smie",
+      note: "Prístup kedykoľvek odvoláte v účte → Pripojené aplikácie. Obsah, ktorý aplikácia prečíta, spracúva model, ktorý ste si vybrali vy — nie Contineo.",
+      allow: "Povoliť",
+      deny: "Zamietnuť",
+      expired: "Žiadosť vypršala",
+      expiredText: "Aplikácia čakala na povolenie príliš dlho alebo žiadosť už bola vybavená. Skúste pripojenie z aplikácie znova.",
+      statement: (date, name, email, client, org, scopes) =>
+        `Dňa ${date} som ja, ${name} (${email}), povolil(a) aplikácii „${client}" prístup do Continea organizácie ${org} v mojom mene v rozsahu: ${scopes}.`,
+    },
+    apps: {
+      heading: "Pripojené aplikácie",
+      intro: "Aplikácie a AI asistenti, ktorým ste povolili pracovať s Contineom vo vašom mene. Odvolanie okamžite zneplatní ich prístup; záznam o súhlase zostáva.",
+      none: "Žiadna aplikácia nemá prístup.",
+      granted: date => `Povolené ${date}`,
+      lastUsed: date => `naposledy použité ${date}`,
+      neverUsed: "zatiaľ nepoužité",
+      revoked: date => `Odvolané ${date}`,
+      revoke: "Odvolať prístup",
+      revokedMessage: "Prístup aplikácie bol odvolaný.",
+      notFound: "Taký súhlas tu nie je alebo už bol odvolaný.",
+      scopesLabel: "Rozsah",
+    },
+    org: {
+      heading: "AI asistenti",
+      intro: "Contineo ako MCP server: ľudia organizácie si môžu pripojiť vlastného AI asistenta (Claude Code, Cowork, Claude.ai…) a ten za nich hľadá v knižnici a pýta sa Continea. Dostane len to, čo smie prihlásená osoba.",
+      enable: "Zapnúť prístup pre AI asistentov",
+      enableHint: "Predvolene vypnuté. Obsah knižnice odchádza do modelu, ktorý si vybral človek — nie do modelu organizácie. Zapnite vedome.",
+      publicOnly: "Púšťať cez asistentov len verejný obsah",
+      publicOnlyHint: "Interné dokumenty sa asistentom neukážu, aj keď ich prihlásená osoba na portáli vidí.",
+      blocked: residency => `V režime rezidencie „${residency}" sa prístup pre AI asistentov zapnúť nedá: obsah by opustil perimeter organizácie.`,
+      note: `Režim „eu-full": klienta si vyberá človek a organizácia ručí za to, kde jeho model beží.`,
+      address: "Adresa servera",
+      addressHint: "Túto adresu človek zadá vo svojom asistentovi; prihlási sa ako na portáli a povolí rozsah.",
+      clientsHeading: "Pripojené aplikácie v organizácii",
+      clientsIntro: "Kto má pripojeného asistenta a odkedy. Správca osôb smie prístup odvolať komukoľvek; záznam o súhlase zostáva.",
+      noClients: "Nikto zatiaľ nemá pripojenú aplikáciu.",
+      saved: "Nastavenie asistentov bolo uložené.",
+    },
   },
   widget: {
     open: "Opýtať sa",
@@ -10459,6 +10647,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     signOut: "Odhlásit",
     themeLabel: "Motiv:",
     courierDigest: (on) => `Ranní souhrn Kurýra e-mailem: ${on ? "zapnutý" : "vypnutý"}`,
+    connectedApps: "Připojené aplikace",
     theme: { system: "podle systému", light: "světlý", dark: "tmavý" },
     themeToggle: (now, next) => `Motiv ${now}. Přepnout na: ${next}`,
     themeState: (now) => `Motiv ${now}`,
@@ -11774,6 +11963,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Číselníky",
       ai: "Umělá inteligence",
       connectors: "Konektory",
+      assistants: "AI asistenti",
       acknowledgements: "Potvrzování",
       audit: "Audit",
       gdpr: "GDPR",
@@ -11985,6 +12175,50 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "faq-review": { label: "Kontrola FAQ", why: "kontrola návrhů FAQ proti dokumentům knihovny (ADR-032; zrušeno 14. 10. 2026, ADR-034)" },
         "compliance-review": { label: "Kontrola souladu dokumentů", why: "kontrola dokumentů (manuály, rozpisy) proti normám knihovny (ADR-032, D196)" },
       },
+      tabOverview: "Přehled",
+      overviewTitle: period => `Přehled: ${period}`,
+      overviewLead: "Kdo, na co a jakým modelem utrácí. Každé číslo vede do Spotřeby na jednotlivá volání.",
+      fromHint: "Prázdné = aktuální měsíc",
+      toHint: "Prázdné = konec měsíce",
+      quick: "Rychlý výběr",
+      quickMonth: "tento měsíc",
+      quickYear: year => `rok ${year}`,
+      quick12: "posledních 12 měsíců",
+      byLabel: "Pohled",
+      byPeople: "Osoby",
+      byPurposes: "Účely",
+      byModels: "Modely",
+      avgMonth: "Průměr za měsíc",
+      tokensAll: "Tokeny vstup / výstup / cache",
+      share: "Podíl",
+      colTotal: "Celkem",
+      background: "na pozadí",
+      others: n => `Ostatní (${n})`,
+      chartMonths: "Částka po měsících",
+      chartRank: {
+        people: period => `Kdo utrácí nejvíc: ${period}`,
+        purposes: period => `Na co se utrácí nejvíc: ${period}`,
+        models: period => `Které modely stojí nejvíc: ${period}`,
+      },
+      chartAlt: list => `Částka po měsících: ${list}.`,
+      matrixTitle: period => `Spotřeba po měsících, ${period}`,
+      monthHeads: ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"],
+      year: year => `rok ${year}`,
+      delta: pct => `${pct} oproti stejnému období loňského roku`,
+      unpriced: n => `Částka je neúplná: volání s modelem mimo ceník (${n}) jsou započtena s $0.`,
+      unpricedLink: "Zobrazit ve Spotřebě",
+      tokIn: "vstup",
+      tokOut: "výstup",
+      tokCache: "cache",
+      tokMillions: "mil.",
+      overviewEmpty: period => `V období ${period} se AI nevolala`,
+      overviewEmptyText: "Přehled se naplní prvním voláním modelu. Volání se zapisují od 5. 10. 2026; zkuste jiné období.",
+      emptyAction: "Nastavení asistenta",
+      overviewNote: "Částka je odhad podle ceníku v den volání, v dolarech; přesnou částku řekne faktura. Měsíce jsou v UTC, stejně jako filtr Spotřeby. Záznamy se drží 25 měsíců.",
+      onlyModel: name => `Jen model ${name}`,
+      onlyUnpriced: "Jen volání s modelem mimo ceník",
+      clearFilter: "Zrušit",
+      backgroundGroup: "Na pozadí",
     },
     branding: {
       name: "Název portálu",
@@ -12694,6 +12928,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     bulkDone: (op, ok, failed) => `${op === "close" ? "Zavřeno" : op === "take" ? "Převzato" : "Znovu otevřeno"}: ${ok}${failed ? ` · nepodařilo se: ${failed}` : ""}.`,
     msgReopened: "Ticket je znovu otevřen.",
     aiFailed: "Asistent návrh nepřipravil — zkus to za chvíli nebo napiš odpověď sám.",
+  },
+  mcp: {
+    scopes: {
+      "library.read": { title: "Číst knihovnu", text: "Hledat v dokumentech, číst platná znění a seznam dokumentů organizace — to, co vidíte na portálu." },
+      ask: { title: "Ptát se asistenta", text: "Položit otázku a dostat odpověď Continea s citacemi. Platí ji organizace a otázka se zapíše do vaší historie." },
+    },
+    consent: {
+      heading: client => `${client} žádá o přístup do Continea`,
+      intro: (client, org) => `Aplikace ${client} chce vaším jménem pracovat s Contineem organizace ${org}. Dostane jen to, co smíte vy, a jen v rozsahu, který tu povolíte.`,
+      asPerson: (name, email) => `Přihlášen: ${name} (${email})`,
+      scopesHeading: "Co aplikace smí",
+      note: "Přístup kdykoli odvoláte v účtu → Připojené aplikace. Obsah, který aplikace přečte, zpracovává model, který jste si vybrali vy — ne Contineo.",
+      allow: "Povolit",
+      deny: "Zamítnout",
+      expired: "Žádost vypršela",
+      expiredText: "Aplikace čekala na povolení příliš dlouho nebo žádost už byla vyřízena. Zkuste připojení z aplikace znovu.",
+      statement: (date, name, email, client, org, scopes) =>
+        `Dne ${date} jsem já, ${name} (${email}), povolil(a) aplikaci „${client}" přístup do Continea organizace ${org} svým jménem v rozsahu: ${scopes}.`,
+    },
+    apps: {
+      heading: "Připojené aplikace",
+      intro: "Aplikace a AI asistenti, kterým jste povolili pracovat s Contineem vaším jménem. Odvolání okamžitě zneplatní jejich přístup; záznam o souhlasu zůstává.",
+      none: "Žádná aplikace nemá přístup.",
+      granted: date => `Povoleno ${date}`,
+      lastUsed: date => `naposledy použito ${date}`,
+      neverUsed: "zatím nepoužito",
+      revoked: date => `Odvoláno ${date}`,
+      revoke: "Odvolat přístup",
+      revokedMessage: "Přístup aplikace byl odvolán.",
+      notFound: "Takový souhlas tu není nebo už byl odvolán.",
+      scopesLabel: "Rozsah",
+    },
+    org: {
+      heading: "AI asistenti",
+      intro: "Contineo jako MCP server: lidé organizace si mohou připojit vlastního AI asistenta (Claude Code, Cowork, Claude.ai…) a ten za ně hledá v knihovně a ptá se Continea. Dostane jen to, co smí přihlášená osoba.",
+      enable: "Zapnout přístup pro AI asistenty",
+      enableHint: "Ve výchozím stavu vypnuto. Obsah knihovny odchází do modelu, který si vybral člověk — ne do modelu organizace. Zapněte vědomě.",
+      publicOnly: "Pouštět přes asistenty jen veřejný obsah",
+      publicOnlyHint: "Interní dokumenty se asistentům neukážou, i když je přihlášená osoba na portálu vidí.",
+      blocked: residency => `V režimu rezidence „${residency}" se přístup pro AI asistenty zapnout nedá: obsah by opustil perimetr organizace.`,
+      note: `Režim „eu-full": klienta si vybírá člověk a organizace ručí za to, kde jeho model běží.`,
+      address: "Adresa serveru",
+      addressHint: "Tuto adresu člověk zadá ve svém asistentovi; přihlásí se jako na portálu a povolí rozsah.",
+      clientsHeading: "Připojené aplikace v organizaci",
+      clientsIntro: "Kdo má připojeného asistenta a odkdy. Správce osob smí přístup odvolat komukoli; záznam o souhlasu zůstává.",
+      noClients: "Nikdo zatím nemá připojenou aplikaci.",
+      saved: "Nastavení asistentů bylo uloženo.",
+    },
   },
   widget: {
     open: "Zeptat se",
@@ -15459,6 +15741,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     signOut: "Sign out",
     themeLabel: "Theme:",
     courierDigest: (on) => `Morning Courier digest by e-mail: ${on ? "on" : "off"}`,
+    connectedApps: "Connected apps",
     theme: { system: "system", light: "light", dark: "dark" },
     themeToggle: (now, next) => `Theme ${now}. Switch to: ${next}`,
     themeState: (now) => `Theme ${now}`,
@@ -16772,6 +17055,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codelists: "Code lists",
       ai: "Artificial intelligence",
       connectors: "Connectors",
+      assistants: "AI assistants",
       acknowledgements: "Acknowledgement",
       audit: "Audit",
       gdpr: "GDPR",
@@ -16983,6 +17267,50 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "faq-review": { label: "FAQ review", why: "checking FAQ proposals against library documents (ADR-032; removed 14 Oct 2026, ADR-034)" },
         "compliance-review": { label: "Document compliance check", why: "checking documents (manuals, schedules) against library norms (ADR-032, D196)" },
       },
+      tabOverview: "Overview",
+      overviewTitle: period => `Overview: ${period}`,
+      overviewLead: "Who spends, on what and with which model. Every number leads to Usage with the individual calls.",
+      fromHint: "Empty = current month",
+      toHint: "Empty = end of month",
+      quick: "Quick pick",
+      quickMonth: "this month",
+      quickYear: year => `year ${year}`,
+      quick12: "last 12 months",
+      byLabel: "View",
+      byPeople: "People",
+      byPurposes: "Purposes",
+      byModels: "Models",
+      avgMonth: "Monthly average",
+      tokensAll: "Tokens input / output / cache",
+      share: "Share",
+      colTotal: "Total",
+      background: "background",
+      others: n => `Other (${n})`,
+      chartMonths: "Amount by month",
+      chartRank: {
+        people: period => `Who spends most: ${period}`,
+        purposes: period => `What costs most: ${period}`,
+        models: period => `Which models cost most: ${period}`,
+      },
+      chartAlt: list => `Amount by month: ${list}.`,
+      matrixTitle: period => `Usage by month, ${period}`,
+      monthHeads: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      year: year => `year ${year}`,
+      delta: pct => `${pct} compared with the same period last year`,
+      unpriced: n => `The amount is incomplete: calls with a model outside the price list (${n}) are counted as $0.`,
+      unpricedLink: "Show in Usage",
+      tokIn: "input",
+      tokOut: "output",
+      tokCache: "cache",
+      tokMillions: "M",
+      overviewEmpty: period => `AI was not used in ${period}`,
+      overviewEmptyText: "The overview fills with the first model call. Calls are recorded since 5 Oct 2026; try another period.",
+      emptyAction: "Assistant settings",
+      overviewNote: "The amount is an estimate based on the price list on the day of the call, in dollars; the invoice has the exact amount. Months are in UTC, like the Usage filter. Records are kept for 25 months.",
+      onlyModel: name => `Only model ${name}`,
+      onlyUnpriced: "Only calls with a model outside the price list",
+      clearFilter: "Clear",
+      backgroundGroup: "Background",
     },
     branding: {
       name: "Portal name",
@@ -17692,6 +18020,54 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     bulkDone: (op, ok, failed) => `${op === "close" ? "Closed" : op === "take" ? "Taken" : "Reopened"}: ${ok}${failed ? ` · failed: ${failed}` : ""}.`,
     msgReopened: "The ticket is reopened.",
     aiFailed: "The assistant did not produce a draft — try again in a moment or write the answer yourself.",
+  },
+  mcp: {
+    scopes: {
+      "library.read": { title: "Read the library", text: "Search the documents, read the versions in force and list the organisation's documents — what you see on the portal." },
+      ask: { title: "Ask the assistant", text: "Ask a question and get Contineo's cited answer. The organisation pays for it and the question is recorded in your history." },
+    },
+    consent: {
+      heading: client => `${client} is requesting access to Contineo`,
+      intro: (client, org) => `${client} wants to work with ${org}'s Contineo on your behalf. It gets only what you are allowed to see, and only within the scope you grant here.`,
+      asPerson: (name, email) => `Signed in: ${name} (${email})`,
+      scopesHeading: "What the application may do",
+      note: "You can revoke access at any time under Account → Connected apps. Whatever the application reads is processed by the model you chose — not by Contineo.",
+      allow: "Allow",
+      deny: "Deny",
+      expired: "The request has expired",
+      expiredText: "The application waited too long for permission, or the request was already handled. Start the connection again from the application.",
+      statement: (date, name, email, client, org, scopes) =>
+        `On ${date} I, ${name} (${email}), allowed the application "${client}" to access ${org}'s Contineo on my behalf with the scope: ${scopes}.`,
+    },
+    apps: {
+      heading: "Connected apps",
+      intro: "Applications and AI assistants you have allowed to work with Contineo on your behalf. Revoking invalidates their access immediately; the consent record stays.",
+      none: "No application has access.",
+      granted: date => `Granted ${date}`,
+      lastUsed: date => `last used ${date}`,
+      neverUsed: "not used yet",
+      revoked: date => `Revoked ${date}`,
+      revoke: "Revoke access",
+      revokedMessage: "The application's access has been revoked.",
+      notFound: "No such consent exists, or it was already revoked.",
+      scopesLabel: "Scope",
+    },
+    org: {
+      heading: "AI assistants",
+      intro: "Contineo as an MCP server: people in the organisation can connect their own AI assistant (Claude Code, Cowork, Claude.ai…) which searches the library and asks Contineo on their behalf. It gets only what the signed-in person may see.",
+      enable: "Turn on access for AI assistants",
+      enableHint: "Off by default. Library content leaves for a model the person chose — not the organisation's model. Turn it on deliberately.",
+      publicOnly: "Let only public content through assistants",
+      publicOnlyHint: "Internal documents are not shown to assistants, even when the signed-in person sees them on the portal.",
+      blocked: residency => `In the "${residency}" residency mode, access for AI assistants cannot be enabled: content would leave the organisation's perimeter.`,
+      note: "Mode \"eu-full\": the person chooses the client and the organisation vouches for where its model runs.",
+      address: "Server address",
+      addressHint: "The person enters this address in their assistant, signs in as on the portal and grants the scope.",
+      clientsHeading: "Connected apps in the organisation",
+      clientsIntro: "Who has an assistant connected and since when. The people administrator may revoke anyone's access; the consent record stays.",
+      noClients: "Nobody has connected an application yet.",
+      saved: "Assistant settings were saved.",
+    },
   },
   widget: {
     open: "Ask",

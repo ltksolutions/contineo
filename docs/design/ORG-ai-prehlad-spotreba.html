@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Spotreba AI — 1440, oprava stĺpca Osoba</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/tokens.css">
+<link rel="stylesheet" href="ds/contineo/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; }
+a { color: inherit; }
+.ai-root { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); }
+.ai-root > header { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ai-root .header-search-input { width: 100%; }
+.ai-root .org-nav-item.is-active { background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+.ai-page { display: grid; gap: 14px; }
+.ai-page .tabs { margin: 2px 0 0; }
+.ai-page .field { display: grid; gap: 4px; margin: 0; }
+
+/* Oprava O6 (Q6): od 1024 px sa „Kontrola súladu dokumentov (na pozadí)“ lámalo po
+   písmenách — `overflow-wrap: anywhere` v stĺpci `minmax(0, 1fr)`. Stĺpec Osoba
+   dostane spodnú hranicu šírky a láme sa len na medzerách; `anywhere` ostáva
+   pod 1024 px (karta) a v stĺpci „Na čo a prečo“, kde sú dlhé názvy súborov. */
+@media (min-width: 1024px) {
+  .usage-table .usage-row, .usage-table .usage-row.usage-head {
+    grid-template-columns: 130px minmax(150px, 1.1fr) minmax(0, 2fr) 120px 130px 80px;
+  }
+  .usage-table .usage-person { overflow-wrap: normal; }
+}
+</style>
+</helmet>
+<div class="ai-root" style="--accent: {{accent}}; --accent-strong: {{accent}}; --accent-soft: color-mix(in srgb, {{accent}} 11%, transparent); --on-accent: #ffffff;">
+
+<header>
+  <div class="wrap--shell header-row">
+    <a class="header-brand" href="/">
+      <span class="header-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 5.2A5 5 0 1 0 12.5 10.8"/></svg></span>
+      <span class="header-name"><span class="header-name-short">SFZ</span><span class="header-name-full">Slovenský futbalový zväz</span></span>
+    </a>
+    <span class="header-spacer" aria-hidden="true"></span>
+    <div class="header-search-wrap">
+      <form class="header-search" action="/ask" method="get">
+        <label class="sr-only" for="ask-q2">Otázka na predpisy</label>
+        <input id="ask-q2" class="header-search-input" type="search" name="q" placeholder="Opýtajte sa na predpisy…">
+      </form>
+    </div>
+    <span class="header-spacer" aria-hidden="true"></span>
+    <a class="head-icon" href="/notifications" aria-label="Upozornenia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14V9a5 5 0 0 1 10 0v5l1.5 2h-13z"/><path d="M8.5 17.5a1.5 1.5 0 0 0 3 0"/></svg></a>
+    <a class="account-button" href="/me" aria-label="Ján Letko, účet"><span class="avatar" aria-hidden="true">JL</span></a>
+  </div>
+</header>
+
+<div class="app-path">
+  <div class="app-path-row">
+    <ol class="app-path-list">
+      <li><a href="/">Úvod</a></li>
+      <li><a href="/organisation">Organizácia</a></li>
+      <li><a href="/organisation/ai">Umelá inteligencia</a></li>
+      <li><span aria-current="page">Spotreba</span></li>
+    </ol>
+  </div>
+</div>
+
+<main id="content" class="app-main">
+<div class="org-grid org-grid--wide">
+  <nav class="org-nav" aria-label="Časti nastavenia">
+    <div class="org-nav-group"><h2 class="org-nav-title">Organizácia</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/general">Všeobecné</a>
+      <a class="org-nav-item" href="/organisation/departments">Oddelenia</a>
+      <a class="org-nav-item" href="/organisation/domains">Domény</a>
+    </div></div>
+    <div class="org-nav-group"><h2 class="org-nav-title">Prístup</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/signin">Prihlasovanie</a>
+    </div></div>
+    <div class="org-nav-group"><h2 class="org-nav-title">Dokumenty</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/codelists">Číselníky</a>
+      <a class="org-nav-item is-active" aria-current="page" href="/organisation/ai">Umelá inteligencia</a>
+      <a class="org-nav-item" href="/organisation/connectors">Konektory</a>
+      <a class="org-nav-item" href="/organisation/acknowledgements">Potvrdzovanie</a>
+    </div></div>
+    <div class="org-nav-group"><h2 class="org-nav-title">Dohľad</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/audit">Audit</a>
+      <a class="org-nav-item" href="/organisation/gdpr">GDPR</a>
+    </div></div>
+  </nav>
+
+  <div class="org-body">
+  <div class="ai-page">
+    <div class="page-head"><h1 class="page-title">Umelá inteligencia</h1></div>
+
+    <nav class="tabs" aria-label="Umelá inteligencia">
+      <div class="tabs-bar">
+        <a class="tab" href="/organisation/ai">Nastavenie</a>
+        <a class="tab is-active" aria-current="page" href="/organisation/ai/usage">Spotreba</a>
+        <a class="tab" href="/organisation/ai/overview">Prehľad</a>
+      </div>
+    </nav>
+
+    <form class="card usage-filter" method="get" action="/organisation/ai/usage">
+      <label class="field"><span class="field-label">Od</span><input class="field-input" type="date" name="from" value="2026-10-01"></label>
+      <label class="field"><span class="field-label">Do</span><input class="field-input" type="date" name="to" value="2026-10-31"></label>
+      <label class="field"><span class="field-label">Osoba</span>
+        <select class="field-input" name="person"><option value="">všetky</option><option>Ján Letko</option><option>Mária Kováčová</option><option>Kontrola súladu dokumentov (na pozadí)</option></select>
+      </label>
+      <label class="field"><span class="field-label">Účel</span>
+        <select class="field-input" name="purpose"><option value="">všetky</option><option>Odpoveď asistenta</option><option>Kontrola súladu dokumentov</option></select>
+      </label>
+      <button class="button button--quiet" type="submit">Použiť</button>
+    </form>
+
+    <div class="usage-summary card">
+      <div><span class="quiet">Volaní</span><strong>594</strong></div>
+      <div><span class="quiet">Vstup</span><strong>4 812 330</strong></div>
+      <div><span class="quiet">Výstup</span><strong>611 204</strong></div>
+      <div><span class="quiet">Cache</span><strong>18 402 118</strong></div>
+      <div><span class="quiet">Suma</span><strong>$61.24</strong></div>
+      <span class="page-head-spacer"></span>
+      <div class="usage-export">
+        <a class="button button--quiet" href="/api/ai-usage?format=csv&amp;from=2026-10-01&amp;to=2026-10-31">Export CSV</a>
+        <a class="button button--quiet" href="/api/ai-usage?format=xlsx&amp;from=2026-10-01&amp;to=2026-10-31">Export Excel</a>
+      </div>
+    </div>
+
+    <div class="usage-table" role="table">
+      <div class="usage-row usage-head" role="row" aria-hidden="true">
+        <span>Dátum</span><span>Osoba</span><span>Na čo a prečo</span><span>Model</span><span class="usage-num">Tokeny</span><span class="usage-num">Suma</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">24. 10. 2026 14:02</span>
+        <span class="usage-person">Kontrola súladu dokumentov (na pozadí)</span>
+        <span class="usage-what"><strong>Kontrola súladu dokumentov</strong> · Rozpis stretnutí III. ligy Západ<span class="quiet"> — kontrola dokumentov (manuály, rozpisy) proti normám knižnice (ADR-032, D196)</span><span class="quiet usage-key">kľúč organizácie</span></span>
+        <span class="quiet usage-model">Claude Sonnet</span>
+        <span class="usage-num usage-tokens">38 120 / 2 904<span class="quiet"> + 112 400</span></span>
+        <span class="usage-num usage-sum">$0.212</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">24. 10. 2026 13:48</span>
+        <span class="usage-person">Ján Letko</span>
+        <span class="usage-what"><strong>Odpoveď asistenta</strong><span class="quiet"> — odpoveď na otázku s citáciami z predpisov</span><span class="quiet usage-key">kľúč organizácie</span></span>
+        <span class="quiet usage-model">Claude Sonnet</span>
+        <span class="usage-num usage-tokens">9 804 / 1 122<span class="quiet"> + 64 000</span></span>
+        <span class="usage-num usage-sum">$0.067</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">24. 10. 2026 13:47</span>
+        <span class="usage-person">Ján Letko</span>
+        <span class="usage-what"><strong>Výber spôsobu hľadania</strong><span class="quiet"> — rozhodnutie medzi hľadaním podľa slov a podľa významu</span><span class="quiet usage-key">kľúč organizácie</span></span>
+        <span class="quiet usage-model">Claude Haiku</span>
+        <span class="usage-num usage-tokens">412 / 18</span>
+        <span class="usage-num usage-sum">$0.0006</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">24. 10. 2026 11:15</span>
+        <span class="usage-person">Mária Kováčová</span>
+        <span class="usage-what"><strong>Prepis skenu PDF</strong> · Smernica o odmeňovaní rozhodcov 2026.pdf<span class="quiet"> — sken bez textovej vrstvy sa prepisuje do textu predpisu</span><span class="quiet usage-key">kľúč organizácie</span></span>
+        <span class="quiet usage-model">Claude Sonnet</span>
+        <span class="usage-num usage-tokens">61 230 / 18 904</span>
+        <span class="usage-num usage-sum">$0.467</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">24. 10. 2026 09:30</span>
+        <span class="usage-person">Ťažba otázok (na pozadí)</span>
+        <span class="usage-what"><strong>Ťažba otázok</strong> · helpdesk@futbalsfz.sk, 23. 10.<span class="quiet"> — otázky z histórie schránky helpdesku pre návrhy do manuálov (ADR-030, ADR-034)</span><span class="quiet usage-key">kľúč prevádzkovateľa</span></span>
+        <span class="quiet usage-model">Claude Haiku</span>
+        <span class="usage-num usage-tokens">124 008 / 6 410</span>
+        <span class="usage-num usage-sum">$0.156</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">23. 10. 2026 17:02</span>
+        <span class="usage-person">Peter Horváth</span>
+        <span class="usage-what"><strong>Odpoveď asistenta</strong><span class="quiet"> — odpoveď na otázku s citáciami z predpisov</span> <span class="tag tag--expired">zlyhalo</span><span class="quiet usage-key">kľúč organizácie</span></span>
+        <span class="quiet usage-model">Claude Sonnet</span>
+        <span class="usage-num usage-tokens">8 210 / 0</span>
+        <span class="usage-num usage-sum">$0.025</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">23. 10. 2026 16:40</span>
+        <span class="usage-person">Lucia Nagyová</span>
+        <span class="usage-what"><strong>Úprava členenia textu</strong> · Disciplinárny poriadok SFZ<span class="quiet"> — obnovenie nadpisov a článkov v prevedenom texte</span><span class="quiet usage-key">kľúč organizácie</span></span>
+        <span class="quiet usage-model">Claude Opus</span>
+        <span class="usage-num usage-tokens">22 017 / 20 980</span>
+        <span class="usage-num usage-sum">$1.904</span>
+      </div>
+      <div class="usage-row card" role="row">
+        <span class="quiet usage-when">23. 10. 2026 16:12</span>
+        <span class="usage-person">Kontrola súladu dokumentov (na pozadí)</span>
+        <span class="usage-what"><strong>Kontrola súladu dokumentov</strong> · Manuál delegáta zväzu 2026/27<span class="quiet"> — kontrola dokumentov (manuály, rozpisy) proti normám knižnice (ADR-032, D196)</span><span class="quiet usage-key">kľúč organizácie</span></span>
+        <span class="quiet usage-model">Claude Sonnet</span>
+        <span class="usage-num usage-tokens">41 880 / 3 311<span class="quiet"> + 118 000</span></span>
+        <span class="usage-num usage-sum">$0.238</span>
+      </div>
+    </div>
+    <p class="quiet" style="margin: 0; font-size: var(--fs-small);">Zobrazených je 500 najnovších z 594. Celé obdobie je v exporte.</p>
+    <p class="quiet" style="margin: 0; font-size: var(--fs-small);">Suma je odhad podľa cenníka Anthropic v deň volania, v dolároch; presnú sumu povie faktúra. Znenie otázok sa neukladá. Záznamy sa držia 25 mesiacov.</p>
+  </div>
+  </div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2443c4","options":["#2443c4","#0f766e","#b91c1c","#232a35"],"section":"Organizácia"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#2443c4' };
+  }
+}
+</script>
+</body>
+</html>

@@ -126,6 +126,9 @@ export interface TenantChange {
   /** Kontakt pre ochranu osobných údajov (D153). Prázdne pole sa zapíše prázdne. */
   privacyContactName?: string
   privacyContactEmail?: string
+  /** Prístup pre AI asistentov — MCP server (ADR-038, D251, D252). */
+  assistantsEnabled?: boolean
+  assistantsPublicOnly?: boolean
 }
 
 /**
@@ -181,6 +184,12 @@ function languages(raw: string[] | undefined, where: string): UiLanguage[] | und
 /** Prevedie zmenu na `$set`. Nevyplnené polia sa **nemenia**, nemažú. */
 function toSet(change: TenantChange): Record<string, unknown> {
   const set: Record<string, unknown> = { updatedAt: new Date() }
+  // MCP server (ADR-038): obe hodnoty naraz, aby `updatedAt` hovoril o oboch.
+  if (change.assistantsEnabled !== undefined || change.assistantsPublicOnly !== undefined) {
+    if (change.assistantsEnabled !== undefined) set["assistants.enabled"] = change.assistantsEnabled
+    if (change.assistantsPublicOnly !== undefined) set["assistants.publicOnly"] = change.assistantsPublicOnly
+    set["assistants.updatedAt"] = new Date()
+  }
   if (change.hostnames) set.hostnames = change.hostnames
   if (change.displayName !== undefined) set["branding.displayName"] = change.displayName.trim()
   if (change.shortName !== undefined) set["branding.shortName"] = change.shortName.trim()

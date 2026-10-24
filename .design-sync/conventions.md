@@ -88,6 +88,27 @@ sú len doplnok. Texty sú po slovensky.
   `.seg` > dva `label.seg-opt` s natívnym `input type="radio"`; zvolený dostane `.is-ok`
   alebo `.is-bad`. Inde vo formulári ostáva `.choice-row`.
 
+## Grafy a matice (od 24. 10., ORG-ai-prehlad)
+Kreslí ich server z CSS — bez knižnice, bez JavaScriptu. Graf má textovú alternatívu v
+`p.sr-only` a samotný je `aria-hidden`; čísla sú vždy aj v matici pod ním.
+- Séria: `.series-1` … `.series-5` sú odtiene farby organizácie (líšia sa svetlosťou),
+  `.series-6` je sivé „Ostatné". V legende `ul.chart-legend` > `li` > `span.chart-swatch.series-N`.
+- Stĺpce po obdobiach: `section.card.chart-card` > `h2` + `.chart-plot` (premenná
+  `--chart-cols`) > `.chart-gridline` (popis osi v `span`) + `.chart-cols` > `a.chart-col`
+  > `span.chart-seg.series-N` (výška v %) + `small.chart-col-total`. Budúce obdobie je
+  `div.chart-col.is-future` (bodkovaná čiara, nie nula). Pod tým `.chart-labels`.
+- Rebríček (jedno obdobie): `.chart-rank` > `a.chart-rank-row` > `.chart-rank-name`
+  (swatch + `b`), `.chart-rank-track` > `.chart-rank-fill.series-N`, `.chart-rank-val`.
+- Matica položka × obdobie: od 1024 px `section.card.matrix-wrap` > `.matrix`
+  (`--matrix-cols` = šablóna stĺpcov) > `.matrix-row` (`.matrix-head`, `.matrix-foot`,
+  podriadok `.matrix-sub`) > `.matrix-name`, `.matrix-cell` (odkaz v bunke),
+  `.matrix-total`, `.matrix-meta`. Pod 1024 px tie isté riadky ako `.matrix-cards` >
+  `.card.matrix-card` (`.matrix-card-name`, `-sum`, `-meta`, `-last`, `-wide`) a malý graf
+  `span.spark` (12 × `span`, budúci `.is-future`); na konci `.card.matrix-cards-foot`.
+- Rýchly výber obdobia pod filtrom: `p.quiet.quick-ranges` s odkazmi, zvolený `a.is-on`.
+- Široká časť organizácie (matica s mesiacmi): `.org-grid.org-grid--wide` — telo bez
+  hranice 720 px.
+
 ## Príklad
 ```jsx
 <div>

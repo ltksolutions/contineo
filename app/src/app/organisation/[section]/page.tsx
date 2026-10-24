@@ -46,7 +46,14 @@ import ConnectorList from "../_connectors/ConnectorList"
 import ConnectorDetail from "../_connectors/ConnectorDetail"
 import { listConnectors, connectorById, connectorView, channelsUsingConnector } from "@/lib/connectors"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
-import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
+import { assistantsState } from "@/lib/mcpServer/access"
+import { getTenantProfile } from "@/lib/tenantProfile"
+import { grantsForCompany } from "@/lib/oauthServer"
+import { RESIDENCY_LABEL } from "@/lib/residency"
+import { saveAssistantsAction, revokeGrantAdminAction } from "../actions"
+import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageFilterQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
+import { overviewGroup, previousYearUsd, unpricedCalls, usageOverview } from "@/lib/aiOverview"
+import AiOverview from "../AiOverview"
 import { ratesForDate, formatUsd } from "@/lib/pricing"
 
 import { saveBrandingAction, deleteLogoAction, saveSignInPageAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "../actions"
@@ -207,7 +214,7 @@ export default async function OrganisationSectionPage({
     notFound()
   }
 
-  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string; remove?: string; request?: string; new?: string; endpoint?: string; name?: string; connector?: string; instructions?: string; try?: string; scope?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; search?: string; list?: string; view?: string; from?: string; to?: string; person?: string; purpose?: string; model?: string; unpriced?: string; by?: string; remove?: string; request?: string; new?: string; endpoint?: string; name?: string; connector?: string; instructions?: string; try?: string; scope?: string }>(await searchParams)
   const { msg: message, error, search, list: listParam } = query
   const { section } = await params
   // Neznáma časť je 404 — adresa je zmluva, nie návrh. DPO bez roly
@@ -242,6 +249,9 @@ export default async function OrganisationSectionPage({
     : []
   const retention = retentionSettings(tenant.privacy?.retention)
   const tt = d.dpo.retention
+  // AI asistenti (ADR-038): stav podľa rezidencie a súhlasy celej organizácie — len pre svoju časť.
+  const assistants = now === "assistants" ? assistantsState(tenant, (await getTenantProfile(tenant.companyCode)).dataResidency) : null
+  const grants = now === "assistants" ? await grantsForCompany(tenant.companyCode) : []
 
   // Strom sa načítava len pre svoju záložku. Na ostatných by to bol dotaz
   // navyše za nič.
@@ -275,7 +285,7 @@ export default async function OrganisationSectionPage({
   const tr = d.responsibility
 
   // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
-  const aiView: "settings" | "usage" = query.view === "usage" ? "usage" : "settings"
+  const aiView: "settings" | "usage" | "overview" = query.view === "usage" ? "usage" : query.view === "overview" ? "overview" : "settings"
   const ai = now === "ai" && aiView === "settings" ? aiSettingsView(tenant.ai) : null
   const tu = t.aiUsage
   // Spotreba (D158): súčty za celé obdobie, na obrazovke najnovších 500.
@@ -287,10 +297,21 @@ export default async function OrganisationSectionPage({
           usageTotals(tenant.companyCode, filter),
           usagePeople(tenant.companyCode),
         ])
-        const q = new URLSearchParams({ from: filter.fromText, to: filter.toText })
-        if (filter.personId) q.set("person", filter.personId)
-        if (filter.purpose) q.set("purpose", filter.purpose)
-        return { filter, rows, totals, people, query: q.toString() }
+        return { filter, rows, totals, people, query: usageFilterQuery(filter).toString() }
+      })()
+    : null
+  // Prehľad (ORG-ai-prehlad, 24. 10. 2026): to isté obdobie Od–Do ako Spotreba,
+  // rozložené podľa osoby, účelu alebo modelu a mesiaca.
+  const overview = now === "ai" && aiView === "overview"
+    ? await (async () => {
+        const filter = usageFilterFromQuery({ from: query.from, to: query.to })
+        const by = overviewGroup(query.by)
+        const [data, previous, unpriced] = await Promise.all([
+          usageOverview(tenant.companyCode, filter, by),
+          previousYearUsd(tenant.companyCode, filter),
+          unpricedCalls(tenant.companyCode, filter),
+        ])
+        return { filter, by, data, previous, unpriced }
       })()
     : null
   const locale = language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK"
@@ -322,8 +343,8 @@ export default async function OrganisationSectionPage({
 
   return (
     <AppShell language={ctx.person.language}
-              title={now === "ai" && aiView === "usage" ? tu.tabUsage : connector ? connector.name : t.tabs[now]}
-              trail={now === "ai" && aiView === "usage"
+              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : connector ? connector.name : t.tabs[now]}
+              trail={now === "ai" && aiView !== "settings"
                 ? { "/organisation": t.heading, "/organisation/ai": t.tabs.ai }
                 : connector
                 ? { "/organisation": t.heading, "/organisation/connectors": t.tabs.connectors }
@@ -344,7 +365,8 @@ export default async function OrganisationSectionPage({
         </p>
       </div>
 
-      <div className={single ? "org-grid org-grid--single" : "org-grid"}>
+      {/* Spotreba a Prehľad majú široké tabuľky — telo bez hranice 720 px (ORG-ai-prehlad). */}
+      <div className={single ? "org-grid org-grid--single" : now === "ai" && aiView !== "settings" ? "org-grid org-grid--wide" : "org-grid"}>
       {!single && <OrgNav current={now} label={t.tabsLabel} groups={t.groups} sections={t.tabs} />}
 
       <div className="org-body">
@@ -877,6 +899,94 @@ export default async function OrganisationSectionPage({
       </>
       )}
 
+      {/*
+        AI asistenti (ADR-038, D251, D252): Contineo ako MCP server. Prepínač
+        organizácie, „len verejný obsah", adresa servera a súhlasy všetkých
+        ľudí s možnosťou odvolať. V režime, ktorý zapnutie nedovolí, sa
+        formulár neukazuje — len veta prečo.
+      */}
+      {now === "assistants" && assistants && (
+      <>
+        <form action={saveAssistantsAction} className="card set-form">
+          <input type="hidden" name="tab" value="assistants" />
+          <section className="set-sec" id="assistants">
+            <div className="set-sec-head">
+              <h2>
+                {d.mcp.org.heading}{" "}
+                <span className={assistants.active ? "tag tag--published" : "tag"}>{assistants.active ? t.signIn.stateOn : t.signIn.stateOff}</span>
+              </h2>
+              <p>{d.mcp.org.intro}</p>
+            </div>
+            <div className="set-sec-body">
+              {!assistants.allowed ? (
+                <div className="lnote lnote--bad" role="status">
+                  <span className="lnote-mark" aria-hidden="true">!</span>
+                  <span className="lnote-text">{d.mcp.org.blocked(RESIDENCY_LABEL[assistants.residency])}</span>
+                </div>
+              ) : (
+                <div className="form-list">
+                  <label className="form-row select-row">
+                    <input type="checkbox" name="enabled" defaultChecked={assistants.enabled} />
+                    <span className="form-row-main">
+                      {d.mcp.org.enable}
+                      <span className="quiet field-hint" style={{ display: "block" }}>{d.mcp.org.enableHint}</span>
+                    </span>
+                  </label>
+                  <label className="form-row select-row">
+                    <input type="checkbox" name="publicOnly" defaultChecked={assistants.publicOnly} />
+                    <span className="form-row-main">
+                      {d.mcp.org.publicOnly}
+                      <span className="quiet field-hint" style={{ display: "block" }}>{d.mcp.org.publicOnlyHint}</span>
+                    </span>
+                  </label>
+                </div>
+              )}
+              {assistants.allowed && assistants.note && <p className="quiet field-hint" style={{ margin: 0 }}>{d.mcp.org.note}</p>}
+              <div className="set-callback">
+                <span className="quiet field-hint">{d.mcp.org.address}</span>
+                <code>{`https://${tenant.hostnames[0] ?? "<…>"}/mcp`}</code>
+                <span className="quiet field-hint">{d.mcp.org.addressHint}</span>
+              </div>
+            </div>
+          </section>
+          {assistants.allowed && (
+            <div className="set-savebar">
+              <SubmitButton className="button">{t.branding.save}</SubmitButton>
+              <span className="quiet">{d.common.saveBarNote}</span>
+            </div>
+          )}
+        </form>
+        <section className="card more">
+          <div className="more-head"><h2>{d.mcp.org.clientsHeading}</h2></div>
+          <div className="more-row"><div className="more-main"><span>{d.mcp.org.clientsIntro}</span></div></div>
+          {grants.length === 0 ? (
+            <div className="more-row"><div className="more-main"><span>{d.mcp.org.noClients}</span></div></div>
+          ) : grants.map(g => (
+            <div key={g.grantId} className="more-row" style={g.revokedAt ? { opacity: 0.65 } : undefined}>
+              <div className="more-main">
+                <b>{g.clientName} — {g.personName}</b>
+                <span>
+                  {g.revokedAt
+                    ? d.mcp.apps.revoked(formatDate(new Date(g.revokedAt), language))
+                    : `${d.mcp.apps.granted(formatDate(new Date(g.grantedAt), language))} · ${g.lastUsedAt ? d.mcp.apps.lastUsed(formatDate(new Date(g.lastUsedAt), language)) : d.mcp.apps.neverUsed}`}
+                  {" · "}{d.mcp.apps.scopesLabel}: {g.scopes.map(sc => d.mcp.scopes[sc]?.title ?? sc).join(", ")}
+                </span>
+              </div>
+              {!g.revokedAt && (
+                <form action={revokeGrantAdminAction}>
+                  <input type="hidden" name="tab" value="assistants" />
+                  <input type="hidden" name="grantId" value={g.grantId} />
+                  <input type="hidden" name="clientName" value={g.clientName} />
+                  <input type="hidden" name="personName" value={g.personName} />
+                  <SubmitButton className="button button--quiet">{d.mcp.apps.revoke}</SubmitButton>
+                </form>
+              )}
+            </div>
+          ))}
+        </section>
+      </>
+      )}
+
       {now === "codelists" && (
       // `minmax(0, 1fr)`: bez neho sa stĺpec mriežky roztiahne na šírku pásu
       // záložiek a na telefóne roztiahne celú stránku (565 px pri 375 px,
@@ -1189,6 +1299,7 @@ export default async function OrganisationSectionPage({
           <TabsBar>
             <TabLink href="/organisation/ai" active={aiView === "settings"}>{tu.tabSettings}</TabLink>
             <TabLink href="/organisation/ai/usage" active={aiView === "usage"}>{tu.tabUsage}</TabLink>
+            <TabLink href="/organisation/ai/overview" active={aiView === "overview"}>{tu.tabOverview}</TabLink>
           </TabsBar>
         </nav>
 
@@ -1312,7 +1423,13 @@ export default async function OrganisationSectionPage({
             {/* Obyčajný `<select>` — filter musí fungovať bez JavaScriptu. */}
             <select className="field-input" name="person" defaultValue={usage.filter.personId ?? ""}>
               <option value="">{tu.all}</option>
-              {usage.people.map(p => <option key={p.personId} value={p.personId}>{p.personName}</option>)}
+              {usage.people.filter(p => !p.background).map(p => <option key={p.personId} value={p.personId}>{p.personName}</option>)}
+              {/* Práca na pozadí (bez osoby) — vedie na ňu bunka Prehľadu (ORG-ai-prehlad). */}
+              {usage.people.some(p => p.background) && (
+                <optgroup label={tu.backgroundGroup}>
+                  {usage.people.filter(p => p.background).map(p => <option key={p.personId} value={p.personId}>{p.personName}</option>)}
+                </optgroup>
+              )}
             </select>
           </label>
           <label className="field">
@@ -1324,6 +1441,19 @@ export default async function OrganisationSectionPage({
           </label>
           {/* Filter nie je hlavná akcia — tiché (DESIGN_ODCHYLKY). */}
           <div><button className="button button--quiet" type="submit">{tu.apply}</button></div>
+          {/* Model a „mimo cenníka" prichádzajú z Prehľadu; výber pre ne nie je,
+              preto sa ukážu vetou s odkazom na zrušenie (ORG-ai-prehlad). */}
+          {(usage.filter.model || usage.filter.unpriced) && (() => {
+            const rest = usageFilterQuery({ ...usage.filter, model: undefined, unpriced: undefined })
+            return (
+              <p className="quiet usage-filter-extra">
+                {usage.filter.model && <input type="hidden" name="model" value={usage.filter.model} />}
+                {usage.filter.unpriced && <input type="hidden" name="unpriced" value="1" />}
+                {usage.filter.model ? tu.onlyModel(modelName(usage.filter.model)) : tu.onlyUnpriced}
+                {" · "}<a href={`/organisation/ai/usage?${rest}`}>{tu.clearFilter}</a>
+              </p>
+            )
+          })()}
         </form>
 
         <div className="usage-summary card">
@@ -1379,6 +1509,27 @@ export default async function OrganisationSectionPage({
         )}
         <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)", maxWidth: 680 }}>{tu.note}</p>
       </>
+      )}
+
+      {aiView === "overview" && overview && (
+        <AiOverview
+          tu={tu}
+          locale={locale}
+          overview={overview.data}
+          by={overview.by}
+          fromInput={query.from ?? ""}
+          toInput={query.to ?? ""}
+          fromText={overview.filter.fromText}
+          toText={overview.filter.toText}
+          previousUsd={overview.previous}
+          unpriced={overview.unpriced}
+          now={new Date()}
+          itemName={it => overview.by === "purposes"
+            ? tu.purposes[it.key as keyof typeof tu.purposes]?.label ?? it.key
+            : overview.by === "models" ? modelName(it.key)
+            // Štítok „na pozadí" to už hovorí — zátvorka z kópie mena by sa opakovala.
+            : it.background ? it.name.replace(/\s*\(na pozadí\)$/, "") : it.name}
+        />
       )}
       </div>
       )}
