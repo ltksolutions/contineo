@@ -145,9 +145,12 @@ asistenta.
 | ako sa synchronizuje, čo sa kde mení | `docs/DESIGN.md` |
 | známe odchýlky obrazoviek | `docs/DESIGN_ODCHYLKY.md` |
 
-Zrkadlo v Claude Design je „Contineo — design system"
-(https://claude.ai/artifact/AGZnHYA4nCDzqsXZvw7Lzh). Vzniká z repozitára
-cez `/design-sync` (spúšťa ho len Ján) a **ručne sa nikdy neupravuje**.
+Zrkadlo v Claude je artefakt „Contineo — design system"
+(https://claude.ai/artifact/AGZnHYA4nCDzqsXZvw7Lzh, synchronizovaný z kódu).
+Vzniká z repozitára cez `/design-sync` (spúšťa ho len Ján) a
+`.design-sync/export-artifact.mjs` (`docs/DESIGN.md`) a **ručne sa nikdy
+neupravuje**. Samostatný Claude Design končí 14. 12. 2026 — návrhy
+obrazoviek potom vznikajú v Claude ako artefakty typu *Design*.
 
 - **Najprv systém, potom obrazovka.** Prvok, ktorý v systéme nie je, sa
   nekreslí vlastnými triedami, farbami ani rozmermi. Najprv sa pridá do

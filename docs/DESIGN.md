@@ -4,7 +4,27 @@
 > kód a kedy a ako sa synchronizuje design system s Claude Design.
 > Zavedené 3. – 4. 10. 2026 (PR #246).
 
-## Dva projekty v Claude Design
+## Prechod do Claude (do 14. 12. 2026)
+
+Samostatný Claude Design (claude.ai/design) **končí 14. 12. 2026**; Claude
+Design žije v Claude ako artefakty. Ján 24. 10. 2026 rozhodol:
+
+1. **Design system je artefakt** „Contineo — design system"
+   https://claude.ai/artifact/AGZnHYA4nCDzqsXZvw7Lzh — typ *Design System*,
+   **synchronizovaný z kódu** (`"editing": "code"`: stránka je len na
+   čítanie, každá synchronizácia ju prepíše celú). Plní ho
+   `.design-sync/export-artifact.mjs` z toho istého overeného buildu ako
+   `/design-sync` (postup nižšie). Keď oficiálny `/design-sync` začne
+   zapisovať do artefaktov, skript zanikne.
+2. **Návrhy obrazoviek vznikajú v Claude ako artefakty typu *Design*** s
+   pripojeným design systémom vyššie. „Stiahni design — NÁZOV" ich prečíta
+   z artefaktu (Ján dá odkaz), nie zo starého projektu. Prvý návrh po
+   rozhodnutí je skúška postupu; čo sa ukáže inak, dopíše sa sem.
+
+Do 14. 12. beží aj starý postup s dvoma projektmi nižšie; `/design-sync`
+plní oba — projekt aj artefakt.
+
+## Dva projekty v Claude Design (do 14. 12. 2026)
 
 | Projekt | Načo je | Kto doň píše |
 |---|---|---|
@@ -63,6 +83,27 @@ Postup: v Claude Code napíš `/design-sync`. Pokračuje z `.design-sync/config.
 overí len zmenené komponenty, nahrá ich do „Contineo — design system"
 a na konci ponúkne PR so zmenami v `.design-sync/`. Nie po každom návrhu —
 skôr raz za niekoľko PR, ktoré menia štýly.
+
+**Po `/design-sync` do artefaktu** (Ján 24. 10. 2026) — z koreňa worktree,
+nad tým istým `ds-bundle/`:
+
+```
+node .ds-sync/package-validate.mjs ./ds-bundle   # .render-check.json pre výšky náhľadov
+node .design-sync/export-artifact.mjs --bundle ds-bundle \
+  --out .design-sync/.cache/artifact --sha $(git rev-parse --short HEAD) \
+  --published .design-sync/.cache/artifact-published.txt
+```
+
+Skript zapíše `project/…` (tokens.json zo `:root` a tmavej témy, tokens.css,
+README z `conventions.md`, balík s hlavičkou formátu 4, React 19 v
+`components/lib/`, typy, náhľady, obálku, index s `"editing": "code"`)
+a `publish.json` so súbormi a cestami na zmazanie. `artifact-published.txt`
+je zoznam ciest, ktoré artefakt dnes má (Artifact `list`, `scope: files`).
+Publikuje sa nástrojom Artifact jedným volaním: `url` artefaktu, `root`
+= `.design-sync/.cache/artifact`, `file_path` = `project/design-system.json`,
+`files` = ostatné cesty a mazania (`null`). Súbory `.d.ts` idú s
+`contentType: "text/plain"` — iný typ server neprijme. Pred publikovaním
+sa náhľady overia v simulovanom rámci (NOTES.md).
 
 Spúšťa ho **len používateľ** (asistent ho sám spustiť nesmie). Prístup ku
 Claude Design dáva jednorazové `/design-login` v interaktívnom `claude`

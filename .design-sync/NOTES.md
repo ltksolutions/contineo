@@ -54,3 +54,25 @@ k návrhovému projektu „Contineo.app responzivny design".
   od Nextu alebo DB, balík pre Claude Design sa nezostaví.
 - `conventions.md` od 8. 10. nesie aj `.set-savebar`, `.more`, `.lnote`,
   `.page-tools` a `.seg` — pri ich premenovaní v `globals.css` ju upraviť.
+
+## Export do artefaktu (od 24. 10. 2026)
+- `export-artifact.mjs` prekladá `ds-bundle/` do formátu typu *Design System*
+  (`format.md` typu: `read` na artefakte, `artifact-type/reference/`). Index
+  má `"editing": "code"` — stránka sa sama neukladá, každý export ju prepíše.
+- Prvý export zmazal 70 ciest zo staršej migrácie (`_ds_bundle.*`,
+  `_preview/`, `_vendor/`, `components/general/**`, `migration-map.json`,
+  starý `manifest.json`) — do `--published` patrí aktuálny zoznam súborov.
+- `.d.ts` server neprijme bez `contentType: "text/plain"`.
+- Náhľad komponentu je `preview.html` (riadok 1 `@dsCard`, jeden `<script
+  src="./preview.js">`) + `preview.js` = skompilovaný `_preview/<Comp>.js`
+  s pripojeným mountom. Rámec artefaktu načíta tokens.css, bundle.css,
+  `components/lib/react.js` (React 19 z aplikácie — `useFormStatus`
+  v SubmitButton) a bundle.js.
+- Obálka má triedy s prefixom `cover-` — `bundle.css` (globals.css) má `.tag`
+  a prebil by ich.
+- Overenie pred publikovaním: náhľad vložený do stránky s tokens.css,
+  bundle.css, react.js a bundle.js (Playwright), svetlá aj tmavá téma.
+  Pozor pri skladaní: vkladať cez funkciu `replace(x, () => …)` — v kóde
+  Reactu je `$&` a reťazcová náhrada ho rozbije.
+- Vstavaný prehliadač nie je prihlásený do claude.ai — stránku artefaktu
+  pozrie Ján.

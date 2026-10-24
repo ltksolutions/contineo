@@ -11,6 +11,25 @@
 ---
 
 
+## 2026-10-24 — design system ako artefakt v Claude
+
+**Čo sa zmenilo:** samostatný Claude Design končí 14. 12. a `/design-sync`
+zapisuje len do jeho projektov. Ján rozhodol: vlastný export hneď
+(`.design-sync/export-artifact.mjs`) z toho istého overeného `ds-bundle/`
+do artefaktu typu *Design System* s `"editing": "code"`, a návrhy v Claude
+ako artefakty *Design*. Prvý export: verzia 7 artefaktu `AGZn…`, 58 súborov
+(29 farebných tokenov v svetlej a tmavej téme, 7 rozmerov, 2 polomery,
+3 tiene, 9 veľkostí písma, 12 komponentov s náhľadom, obálka), 70 starých
+ciest z migrácie zmazaných.
+
+**Čo nefungovalo:** `.d.ts` bez `contentType` server odmietol celé
+volanie; v simulovanom rámci padali všetky náhľady, kým sa skripty
+nevkladali cez funkciu (`$&` v Reacte); podtitul obálky dostal rámik
+`.tag` z globals.css. Stránku artefaktu v prehliadači overuje Ján —
+vstavaný prehliadač nie je prihlásený.
+
+---
+
 ## 2026-10-24 — Poupratuj po dni zdrojov hľadania
 
 **Čo sa stalo 23. 10. okrem PR:** Ján chcel design system Contineo „súčasťou
