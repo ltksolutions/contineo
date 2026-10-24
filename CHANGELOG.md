@@ -4,6 +4,25 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Umelá inteligencia: Prehľad spotreby po mesiacoch (2026-10-24, ORG-ai-prehlad)
+
+- Nová časť **Prehľad** (`/organisation/ai/overview`) za Spotrebou: suma,
+  priemer na mesiac, volania a tokeny za obdobie Od–Do s porovnaním
+  s rovnakým obdobím minulého roka; rýchly výber „tento mesiac · rok ·
+  posledných 12 mesiacov · minulý rok“.
+- Pohľady Osoby, Účely, Modely. Pri viacerých mesiacoch stĺpcový graf
+  (5 najväčších a Ostatné) a matica položka × mesiac; pri jednom mesiaci
+  rebríček. V pohľade Modely aj tokeny po mesiacoch. Na telefóne karty
+  s malým grafom.
+- Každé číslo vedie do Spotreby s vyplneným filtrom. Spotreba preto vie
+  filtrovať aj prácu na pozadí, model a volania s modelom mimo cenníka.
+- Upozornenie, keď je suma neúplná (model mimo cenníka); export matice do
+  Excelu (`/api/ai-overview`).
+- Spotreba: stĺpec OSOBA sa od 1024 px už neláme po písmenách a časť má
+  širšie telo.
+- Design system: nové všeobecné prvky `.chart-*`, `.series-N`, `.matrix-*`,
+  `.spark`, `.quick-ranges`, `.org-grid--wide` (`conventions.md`).
+
 ### Dokumentácia: design system Contineo je záväzný (2026-10-23)
 
 - `CLAUDE.md`: každá požiadavka na dizajn a UX pri vývoji frontendu musí

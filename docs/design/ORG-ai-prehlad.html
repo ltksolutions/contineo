@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Prehľad spotreby AI — október 2026, Osoby</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/tokens.css">
+<link rel="stylesheet" href="ds/contineo/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; }
+a { color: inherit; }
+.ai-root { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); }
+.ai-root > header { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ai-root .header-search-input { width: 100%; }
+.ai-root .org-nav-item.is-active { background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+
+/* O3 — širšie telo časti: matica s 12 mesiacmi sa do 720 px nezmestí. */
+@media (min-width: 1024px) { .org-grid--wide { grid-template-columns: 220px minmax(0, 1fr); } }
+
+.ai-page { display: grid; gap: 14px; }
+.ai-page .tabs { margin: 2px 0 0; }
+.ai-page .page-head--section { margin: 0; }
+.ai-page .page-lead { margin: 0; }
+
+/* O5 — filter obdobia: dve dátumové polia, tiché Použiť, rýchly výber pod nimi. */
+.ai-filter { padding: 14px 18px; display: grid; gap: 10px 12px; align-items: end; }
+.ai-filter .field { display: grid; gap: 4px; margin: 0; }
+.ai-filter .field-hint { font-size: var(--fs-micro); color: var(--muted); }
+.ai-quick { grid-column: 1 / -1; margin: 0; font-size: var(--fs-small); }
+.ai-quick a { text-decoration: underline; text-underline-offset: 2px; }
+.ai-quick a.is-on { font-weight: 650; text-decoration: none; color: var(--ink); }
+@media (min-width: 640px) { .ai-filter { grid-template-columns: 170px 170px auto; } }
+@media (max-width: 639px) { .ai-filter .button { min-height: 44px; } }
+
+.ai-delta { font-size: var(--fs-micro); }
+
+/* O1 — graf: stĺpce po mesiacoch (SVG/CSS zo servera), rebríček pri jednom mesiaci. */
+.ai-plot { position: relative; height: 200px; margin-top: 24px; }
+.ai-y { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); font-size: 10.5px; color: var(--muted); line-height: 1; }
+.ai-y span { position: absolute; right: 0; bottom: 3px; font-variant-numeric: tabular-nums; }
+.ai-chart { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; border-bottom: 1px solid var(--line-strong); }
+.ai-col { position: relative; display: flex; flex-direction: column-reverse; height: 100%; min-width: 0; padding: 0 12%; border-radius: 4px; }
+.ai-col:hover { background: var(--accent-soft); }
+.ai-col.is-future { pointer-events: none; }
+.ai-col.is-future::after { content: ""; position: absolute; left: 30%; right: 30%; bottom: -1px; border-bottom: 2px dotted var(--line-strong); }
+.ai-seg { width: 100%; min-height: 1px; }
+.ai-col .ai-seg:last-child { border-radius: 3px 3px 0 0; }
+.ai-col-total { position: absolute; left: -20%; right: -20%; bottom: 100%; margin-bottom: 3px; text-align: center; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ai-months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; margin-top: 6px; font-size: 11.5px; color: var(--muted); text-align: center; }
+.ai-months .is-future { opacity: 0.55; }
+@media (max-width: 639px) { .ai-col-total { display: none; } .ai-plot { height: 160px; margin-top: 10px; } .ai-chart, .ai-months { gap: 3px; } }
+.ai-s1 { background: var(--accent); }
+.ai-s2 { background: color-mix(in srgb, var(--accent) 76%, var(--surface)); }
+.ai-s3 { background: color-mix(in srgb, var(--accent) 56%, var(--surface)); }
+.ai-s4 { background: color-mix(in srgb, var(--accent) 40%, var(--surface)); }
+.ai-s5 { background: color-mix(in srgb, var(--accent) 26%, var(--surface)); }
+.ai-s6 { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.ai-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none; font-size: var(--fs-small); }
+.ai-legend li { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.ai-swatch { flex: none; width: 11px; height: 11px; border-radius: 3px; }
+.ai-bars { display: grid; gap: 8px; margin-top: 12px; }
+.ai-bar { display: grid; grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) 70px; gap: 10px; align-items: center; font-size: var(--fs-small); min-height: 28px; border-radius: 6px; }
+.ai-bar:hover { background: var(--accent-soft); }
+.ai-bar-name { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.ai-bar-name b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-bar-track { height: 16px; border-radius: 4px; background: transparent; }
+.ai-bar-fill { height: 100%; border-radius: 4px; }
+.ai-bar-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+@media (max-width: 639px) { .ai-bar { grid-template-columns: minmax(0, 1fr) 64px; } .ai-bar-track { grid-column: 1 / -1; } }
+
+/* O2 — matica položka × mesiac: tabuľka od 1024 px, karty pod ňou. */
+.ai-matrix-card { display: none; padding: 6px 8px 8px; }
+.ai-matrix { display: grid; font-size: 12.5px; }
+.ai-mrow { display: grid; gap: 0 4px; align-items: center; border-top: 1px solid var(--line); }
+.ai-mrow.ai-mhead { border-top: 0; }
+.ai-mhead > span { padding: 8px 6px; font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-mhead > .ai-mname { text-align: left; }
+.ai-mname { text-align: left; padding: 7px 8px; font-weight: 500; min-width: 0; overflow-wrap: normal; }
+.ai-mname a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.ai-mcell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 0; }
+.ai-mcell > a { display: block; padding: 7px 6px; border-radius: 6px; }
+.ai-mcell > a:hover { background: var(--accent-soft); }
+.ai-matrix .ai-total { font-weight: 600; border-left: 1px solid var(--line-strong); }
+.ai-share, .ai-tokens { color: var(--muted); font-size: 11.5px; padding: 7px 8px; text-align: right; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ai-mfoot { font-weight: 600; border-top: 2px solid var(--line-strong); }
+.ai-mfoot .ai-mcell { padding: 7px 6px; }
+.ai-matrix .is-future { color: var(--muted); }
+.ai-matrix .tag { margin-left: 6px; vertical-align: 1px; }
+.ai-row-sub { border-top: 0; color: var(--muted); font-size: 11.5px; }
+.ai-row-sub .ai-mname { padding: 1px 8px 1px 22px; font-weight: 400; }
+.ai-row-sub .ai-mcell { padding: 1px 6px; }
+.ai-row-sub .ai-total { font-weight: 500; }
+.ai-cards { display: grid; gap: 8px; }
+.ai-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 14px; align-items: baseline; }
+.ai-card-name { font-weight: 600; min-width: 0; }
+.ai-card-name .tag { margin-left: 6px; vertical-align: 1px; }
+.ai-card-sum { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ai-card-share { font-size: var(--fs-small); color: var(--muted); }
+.ai-card-last { font-size: var(--fs-small); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.ai-card-last a { text-decoration: underline; text-underline-offset: 2px; }
+.ai-spark { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; height: 36px; align-items: end; margin: 8px 0 2px; border-bottom: 1px solid var(--line); }
+.ai-spark span { display: block; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; }
+.ai-spark span.is-future { background: transparent; border-bottom: 2px dotted var(--line-strong); min-height: 0; }
+.ai-card-tokens { grid-column: 1 / -1; font-size: var(--fs-small); color: var(--muted); }
+.ai-cards-foot { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; font-weight: 600; }
+@media (min-width: 1024px) { .ai-matrix-card { display: block; } .ai-cards { display: none; } }
+.ai-note { margin: 4px 0 0; font-size: var(--fs-small); }
+.ai-root .app-nav-tabbar svg { width: 22px; height: 22px; }
+@media (max-width: 639px) { .ai-root .app-main { padding-bottom: 88px; } }
+</style>
+</helmet>
+<div class="ai-root" style="--accent: {{accent}}; --accent-strong: {{accent}}; --accent-soft: color-mix(in srgb, {{accent}} 11%, transparent); --on-accent: #ffffff;">
+
+<header>
+  <div class="wrap--shell header-row">
+    <a class="header-brand" href="/">
+      <span class="header-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12.5 5.2A5 5 0 1 0 12.5 10.8"/></svg></span>
+      <span class="header-name"><span class="header-name-short">SFZ</span><span class="header-name-full">Slovenský futbalový zväz</span></span>
+    </a>
+    <span class="header-spacer" aria-hidden="true"></span>
+    <div class="header-search-wrap">
+      <form class="header-search" action="/ask" method="get">
+        <label class="sr-only" for="ask-q">Otázka na predpisy</label>
+        <input id="ask-q" class="header-search-input" type="search" name="q" placeholder="Opýtajte sa na predpisy…">
+      </form>
+    </div>
+    <span class="header-spacer" aria-hidden="true"></span>
+    <a class="head-icon" href="/notifications" aria-label="Upozornenia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14V9a5 5 0 0 1 10 0v5l1.5 2h-13z"/><path d="M8.5 17.5a1.5 1.5 0 0 0 3 0"/></svg></a>
+    <a class="account-button" href="/me" aria-label="Ján Letko, účet"><span class="avatar" aria-hidden="true">JL</span></a>
+  </div>
+</header>
+
+<div class="app-path">
+  <div class="app-path-row">
+    <ol class="app-path-list">
+      <li><a href="/">Úvod</a></li>
+      <li><a href="/organisation">Organizácia</a></li>
+      <li><a href="/organisation/ai">Umelá inteligencia</a></li>
+      <li><span aria-current="page">Prehľad</span></li>
+    </ol>
+  </div>
+</div>
+
+<main id="content" class="app-main">
+<div class="org-grid org-grid--wide">
+  <nav class="org-nav" aria-label="Časti nastavenia">
+    <div class="org-nav-group"><h2 class="org-nav-title">Organizácia</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/general">Všeobecné</a>
+      <a class="org-nav-item" href="/organisation/departments">Oddelenia</a>
+      <a class="org-nav-item" href="/organisation/domains">Domény</a>
+    </div></div>
+    <div class="org-nav-group"><h2 class="org-nav-title">Prístup</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/signin">Prihlasovanie</a>
+    </div></div>
+    <div class="org-nav-group"><h2 class="org-nav-title">Dokumenty</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/codelists">Číselníky</a>
+      <a class="org-nav-item is-active" aria-current="page" href="/organisation/ai">Umelá inteligencia</a>
+      <a class="org-nav-item" href="/organisation/connectors">Konektory</a>
+      <a class="org-nav-item" href="/organisation/acknowledgements">Potvrdzovanie</a>
+    </div></div>
+    <div class="org-nav-group"><h2 class="org-nav-title">Dohľad</h2><div class="org-nav-list">
+      <a class="org-nav-item" href="/organisation/audit">Audit</a>
+      <a class="org-nav-item" href="/organisation/gdpr">GDPR</a>
+    </div></div>
+  </nav>
+
+  <div class="org-body">
+  <div class="ai-page">
+    <div class="page-head"><h1 class="page-title">Umelá inteligencia</h1></div>
+
+    <nav class="tabs" aria-label="Umelá inteligencia">
+      <div class="tabs-bar">
+        <a class="tab" href="/organisation/ai">Nastavenie</a>
+        <a class="tab" href="/organisation/ai/usage">Spotreba</a>
+        <a class="tab is-active" aria-current="page" href="/organisation/ai/overview">Prehľad</a>
+      </div>
+    </nav>
+
+    <div class="page-head page-head--section">
+      <div class="page-head-main">
+        <h2>Prehľad: {{periodTitle}}</h2>
+        <p class="page-lead quiet">Kto, na čo a akým modelom míňa. Každé číslo vedie do Spotreby na jednotlivé volania.</p>
+      </div>
+      <div class="page-tools">
+        <a class="button button--quiet button--sm" href="{{exportHref}}">Export Excel</a>
+      </div>
+    </div>
+
+    <form class="card ai-filter" method="get" action="/organisation/ai/overview">
+      <label class="field">
+        <span class="field-label">Od</span>
+        <input class="field-input" type="date" name="from" value="{{fromVal}}">
+        <span class="field-hint">Prázdne = aktuálny mesiac</span>
+      </label>
+      <label class="field">
+        <span class="field-label">Do</span>
+        <input class="field-input" type="date" name="to" value="{{toVal}}">
+        <span class="field-hint">Prázdne = koniec mesiaca</span>
+      </label>
+      <input type="hidden" name="view" value="{{view}}">
+      <button class="button button--quiet" type="submit">Použiť</button>
+      <p class="quiet ai-quick">Rýchly výber:
+        <a class="{{qMonth}}" href="/organisation/ai/overview?view={{view}}">tento mesiac</a> ·
+        <a class="{{qYear}}" href="/organisation/ai/overview?from=2026-01-01&amp;to=2026-12-31&amp;view={{view}}">rok 2026</a> ·
+        <a href="/organisation/ai/overview?from=2025-11-01&amp;to=2026-10-31&amp;view={{view}}">posledných 12 mesiacov</a> ·
+        <a href="/organisation/ai/overview?from=2025-01-01&amp;to=2025-12-31&amp;view={{view}}">rok 2025</a>
+      </p>
+    </form>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
+      <div class="empty">
+        <div class="empty-title">{{emptyTitle}}</div>
+        <div class="empty-text">Prehľad sa naplní prvým volaním modelu. Volania sa zapisujú od 5. 10. 2026; skúste iné obdobie alebo skontrolujte, či je asistent zapnutý.</div>
+        <div class="empty-action"><a class="button button--quiet" href="/organisation/ai">Nastavenie asistenta</a></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{hasData}}" hint-placeholder-val="{{ true }}">
+      <div class="usage-summary card">
+        <div><span class="quiet">Suma</span><strong>{{sumPeriod}}</strong><span class="quiet ai-delta">{{delta}}</span></div>
+        <sc-if value="{{multi}}" hint-placeholder-val="{{ false }}">
+          <div><span class="quiet">Priemer na mesiac</span><strong>{{avgMonth}}</strong></div>
+        </sc-if>
+        <div><span class="quiet">Volaní</span><strong>{{calls}}</strong></div>
+        <div><span class="quiet">Tokeny vstup / výstup / cache</span><strong>{{tokensAll}}</strong></div>
+      </div>
+
+      <div class="lnote lnote--warn">
+        <span class="lnote-mark" aria-hidden="true">!</span>
+        <span class="lnote-text">Suma je neúplná: <a href="{{unknownHref}}">{{unknownCalls}}</a> použilo model mimo cenníka (gpt-4.1-nano) a je započítaných s $0.</span>
+      </div>
+
+      <nav class="view-switch view-switch--full" aria-label="Pohľad">
+        <a class="view-switch-item {{vPeople}}" href="{{hrefPeople}}">Osoby</a>
+        <a class="view-switch-item {{vPurposes}}" href="{{hrefPurposes}}">Účely</a>
+        <a class="view-switch-item {{vModels}}" href="{{hrefModels}}">Modely</a>
+      </nav>
+
+      <section class="card" aria-labelledby="ai-chart-h">
+        <div class="page-head page-head--section"><h2 id="ai-chart-h">{{chartTitle}}</h2></div>
+        <p class="sr-only">{{chartAlt}}</p>
+
+        <sc-if value="{{multi}}" hint-placeholder-val="{{ false }}">
+          <div class="ai-plot" aria-hidden="true">
+            <div class="ai-y" style="top: 0;"><span>{{yMax}}</span></div>
+            <div class="ai-y" style="top: 50%;"><span>{{yMid}}</span></div>
+            <div class="ai-chart">
+              <sc-for list="{{columns}}" as="col" hint-placeholder-count="12">
+                <a class="ai-col {{col.cls}}" href="{{col.href}}" title="{{col.title}}" tabindex="-1">
+                  <sc-for list="{{col.segs}}" as="seg" hint-placeholder-count="6">
+                    <span class="ai-seg {{seg.cls}}" style="height: {{seg.h}}%;" title="{{seg.title}}"></span>
+                  </sc-for>
+                  <span class="ai-col-total">{{col.total}}</span>
+                </a>
+              </sc-for>
+            </div>
+          </div>
+          <div class="ai-months" aria-hidden="true">
+            <sc-for list="{{columns}}" as="col" hint-placeholder-count="12"><span class="{{col.cls}}">{{col.label}}</span></sc-for>
+          </div>
+          <ul class="ai-legend">
+            <sc-for list="{{legend}}" as="it" hint-placeholder-count="6">
+              <li><span class="ai-swatch {{it.cls}}" aria-hidden="true"></span><span>{{it.name}}</span></li>
+            </sc-for>
+          </ul>
+        </sc-if>
+
+        <sc-if value="{{single}}" hint-placeholder-val="{{ true }}">
+          <div class="ai-bars" aria-hidden="true">
+            <sc-for list="{{bars}}" as="b" hint-placeholder-count="6">
+              <a class="ai-bar" href="{{b.href}}" tabindex="-1">
+                <span class="ai-bar-name"><span class="ai-swatch {{b.cls}}"></span><b>{{b.name}}</b></span>
+                <span class="ai-bar-track"><span class="ai-bar-fill {{b.cls}}" style="width: {{b.w}}%;"></span></span>
+                <span class="ai-bar-val">{{b.val}}</span>
+              </a>
+            </sc-for>
+          </div>
+        </sc-if>
+      </section>
+
+      <section class="card ai-matrix-card" aria-labelledby="ai-matrix-h">
+        <h2 id="ai-matrix-h" class="sr-only">{{matrixTitle}}</h2>
+        <div class="ai-matrix" role="table" aria-labelledby="ai-matrix-h">
+          <div class="ai-mrow ai-mhead" role="row" style="grid-template-columns: {{gridCols}};">
+            <span class="ai-mname" role="columnheader">{{viewLabel}}</span>
+            <sc-for list="{{monthHeads}}" as="m" hint-placeholder-count="12"><span class="{{m.cls}}" role="columnheader">{{m.label}}</span></sc-for>
+            <span class="ai-total" role="columnheader">Spolu</span>
+            <sc-if value="{{single}}" hint-placeholder-val="{{ true }}"><span role="columnheader">Podiel</span><span role="columnheader">Volaní</span></sc-if>
+            <span role="columnheader">Tokeny vstup / výstup / cache</span>
+          </div>
+          <sc-for list="{{rows}}" as="row" hint-placeholder-count="12">
+            <div class="ai-mrow" role="row" style="grid-template-columns: {{gridCols}};">
+              <span class="ai-mname" role="rowheader"><a href="{{row.href}}">{{row.name}}</a><sc-if value="{{row.bg}}" hint-placeholder-val="{{ false }}"><span class="tag tag--archived">na pozadí</span></sc-if></span>
+              <sc-for list="{{row.cells}}" as="c" hint-placeholder-count="12"><span class="ai-mcell {{c.cls}}" role="cell"><a href="{{c.href}}">{{c.label}}</a></span></sc-for>
+              <span class="ai-mcell ai-total" role="cell"><a href="{{row.href}}">{{row.total}}</a></span>
+              <sc-if value="{{single}}" hint-placeholder-val="{{ true }}"><span class="ai-share" role="cell">{{row.share}}</span><span class="ai-share" role="cell">{{row.calls}}</span></sc-if>
+              <span class="ai-tokens" role="cell">{{row.tokens}}</span>
+            </div>
+            <sc-for list="{{row.subs}}" as="s" hint-placeholder-count="0">
+              <div class="ai-mrow ai-row-sub" role="row" style="grid-template-columns: {{gridCols}};">
+                <span class="ai-mname" role="rowheader">{{s.name}}</span>
+                <sc-for list="{{s.cells}}" as="c" hint-placeholder-count="12"><span class="ai-mcell {{c.cls}}" role="cell">{{c.label}}</span></sc-for>
+                <span class="ai-mcell ai-total" role="cell">{{s.total}}</span>
+                <span class="ai-tokens" role="cell"></span>
+              </div>
+            </sc-for>
+          </sc-for>
+          <div class="ai-mrow ai-mfoot" role="row" style="grid-template-columns: {{gridCols}};">
+            <span class="ai-mname" role="rowheader">Spolu</span>
+            <sc-for list="{{totalCells}}" as="c" hint-placeholder-count="12"><span class="ai-mcell {{c.cls}}" role="cell">{{c.label}}</span></sc-for>
+            <span class="ai-mcell ai-total" role="cell">{{sumPeriod}}</span>
+            <sc-if value="{{single}}" hint-placeholder-val="{{ true }}"><span class="ai-share" role="cell">100 %</span><span class="ai-share" role="cell">{{calls}}</span></sc-if>
+            <span class="ai-tokens" role="cell">{{tokensAll}}</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="ai-cards" role="list">
+        <sc-for list="{{rows}}" as="row" hint-placeholder-count="12">
+          <div class="card ai-card" role="listitem">
+            <span class="ai-card-name"><a href="{{row.href}}">{{row.name}}</a><sc-if value="{{row.bg}}" hint-placeholder-val="{{ false }}"><span class="tag tag--archived">na pozadí</span></sc-if></span>
+            <span class="ai-card-sum">{{row.total}}</span>
+            <span class="ai-card-share">{{row.share}} · {{row.calls}} volaní</span>
+            <sc-if value="{{multi}}" hint-placeholder-val="{{ false }}">
+              <span class="ai-card-last">{{row.lastLabel}} <a href="{{row.lastHref}}">{{row.lastVal}}</a></span>
+              <span class="ai-spark" aria-hidden="true">
+                <sc-for list="{{row.bars}}" as="bar" hint-placeholder-count="12"><span class="{{bar.cls}}" style="height: {{bar.h}}%;"></span></sc-for>
+              </span>
+            </sc-if>
+            <span class="ai-card-tokens">Tokeny {{row.tokens}}</span>
+          </div>
+        </sc-for>
+        <div class="card ai-cards-foot"><span>Spolu</span><span>{{sumPeriod}}</span></div>
+      </div>
+
+      <p class="quiet ai-note">Suma je odhad podľa cenníka v deň volania, v dolároch; presnú sumu povie faktúra. Mesiace sú v UTC, rovnako ako filter Spotreby. Záznamy sa držia 25 mesiacov.</p>
+    </sc-if>
+  </div>
+  </div>
+</div>
+</main>
+
+<nav class="app-nav-tabbar" aria-label="Sekcie">
+  <a class="app-nav-tab" href="/"><span class="app-nav-tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 10 4l7 5.5V16a1 1 0 0 1-1 1h-4v-5H8v5H4a1 1 0 0 1-1-1z"/></svg></span>Úvod</a>
+  <a class="app-nav-tab" href="/library"><span class="app-nav-tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h4.5a2 2 0 0 1 2 2v10a1.5 1.5 0 0 0-1.5-1.5H4z"/><path d="M16 4h-4.5a2 2 0 0 0-2 2v10a1.5 1.5 0 0 1 1.5-1.5H16z"/></svg></span>Knižnica</a>
+  <a class="app-nav-tab" href="/learning"><span class="app-nav-tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8 10 4.5 17.5 8 10 11.5z"/><path d="M5.5 9.5v4c0 1 2 2.5 4.5 2.5s4.5-1.5 4.5-2.5v-4"/></svg></span>Vzdelávanie</a>
+  <a class="app-nav-tab is-active" href="/more" aria-current="page"><span class="app-nav-tab-icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg></span>Viac</a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["people","purposes","models"],"default":"people","section":"Prehľad"},"range":{"editor":"enum","options":["month","year","empty"],"default":"month","section":"Prehľad"},"accent":{"editor":"color","default":"#2443c4","options":["#2443c4","#0f766e","#b91c1c","#232a35"],"section":"Organizácia"},"$preview":{"width":1440,"height":1460}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const view = p.view ?? 'people';
+    const range = p.range ?? 'month';
+    const accent = p.accent ?? '#2443c4';
+
+    // Ilustračné dáta: rok 2026, volania zapísané za január až október (index 0–9).
+    const DATA_UNTIL = 10;
+    const MONTHS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const MONTH_NAMES = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december'];
+    const DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const series = (seed, base, trend) => {
+      const out = [];
+      for (let m = 0; m < 12; m++) {
+        if (m >= DATA_UNTIL) { out.push(0); continue; }
+        const r = Math.sin(seed * 7.3 + m * 1.7) * 0.5 + Math.cos(seed * 2.1 + m * 0.6) * 0.5;
+        out.push(Math.max(0.05, base * (1 + trend * m / 11) * (1 + 0.35 * r)));
+      }
+      return out;
+    };
+    // [názov, základ $/mesiac, trend, na pozadí, kľúč filtra, tokeny v tis. na 1 $ (vstup, výstup, cache)]
+    const PEOPLE = [
+      ['Ján Letko', 11.2, 0.3, false, 'person=p01'], ['Mária Kováčová', 8.4, 0.1, false, 'person=p02'],
+      ['Kontrola súladu dokumentov', 7.9, 0.6, true, 'person=bg:compliance-review'], ['Peter Horváth', 6.1, -0.1, false, 'person=p04'],
+      ['Lucia Nagyová', 5.3, 0.2, false, 'person=p05'], ['Ťažba otázok', 4.6, 0.4, true, 'person=bg:faq-mining'],
+      ['Tomáš Baláž', 3.8, 0, false, 'person=p07'], ['Eva Szabová', 3.1, 0.1, false, 'person=p08'],
+      ['Martin Tóth', 2.4, -0.2, false, 'person=p09'], ['Zuzana Lukáčová', 1.9, 0.3, false, 'person=p10'],
+      ['Michal Varga', 1.4, 0, false, 'person=p11'], ['Katarína Molnárová', 0.9, 0.5, false, 'person=p12'],
+    ];
+    const PURPOSES = [
+      ['Odpoveď asistenta', 22, 0.25, false, 'purpose=answer'], ['Kontrola súladu dokumentov', 9.5, 0.6, false, 'purpose=compliance-review'],
+      ['Prepis skenu PDF', 8, -0.3, false, 'purpose=pdf-rewrite'], ['Ťažba otázok', 5.5, 0.4, false, 'purpose=faq-mining'],
+      ['Analýza členenia', 4, 0, false, 'purpose=chunking-analysis'], ['Úprava členenia textu', 3.5, -0.1, false, 'purpose=markdown-clean'],
+      ['Úprava otázky', 2.2, 0.2, false, 'purpose=query-rewrite'], ['Výber spôsobu hľadania', 1.2, 0.2, false, 'purpose=query-classify'],
+      ['Kontrola FAQ', 0.8, -0.9, false, 'purpose=faq-review'],
+    ];
+    const MODELS = [
+      ['Claude Sonnet', 36, 0.2, false, 'model=claude-sonnet', [70, 9, 280]], ['Claude Opus', 10, 0.1, false, 'model=claude-opus', [15, 2, 60]],
+      ['Claude Haiku', 9, 0.3, false, 'model=claude-haiku', [400, 50, 1500]], ['GPT-4o mini', 2, -0.4, false, 'model=gpt-4o-mini', [600, 80, 0]],
+    ];
+    const mk = (list, seedBase) => list.map((it, i) => ({
+      name: it[0], bg: it[3], key: it[4],
+      tok: it[5] || [80 * (1 + 0.2 * Math.sin(i)), 10 * (1 + 0.2 * Math.cos(i)), 300 * (1 + 0.3 * Math.sin(i * 2))],
+      vals: series(seedBase + i, it[1], it[2]),
+    }));
+    const people = mk(PEOPLE, 1), purposes = mk(PURPOSES, 31), models = mk(MODELS, 61);
+    const totals12 = Array.from({ length: 12 }, (_, m) => people.reduce((s, it) => s + it.vals[m], 0));
+    const scaleTo = (items) => { for (let m = 0; m < 12; m++) { const s = items.reduce((a, it) => a + it.vals[m], 0); const k = s ? totals12[m] / s : 0; items.forEach(it => { it.vals[m] *= k; }); } };
+    scaleTo(purposes); scaleTo(models);
+
+    const isEmpty = range === 'empty';
+    const months = range === 'year' ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] : [9];
+    const dataMonths = months.filter(m => m < DATA_UNTIL);
+    const single = months.length === 1;
+    const multi = !single;
+
+    const usd = v => '$' + v.toFixed(2);
+    const tok = k => k >= 1000 ? (k / 1000).toFixed(1).replace('.', ',') + ' mil.' : Math.round(k) + ' tis.';
+    const int = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    const dateFrom = m => '2026-' + String(m + 1).padStart(2, '0') + '-01';
+    const dateTo = m => '2026-' + String(m + 1).padStart(2, '0') + '-' + DAYS[m];
+    const usageHref = (m, key) => '/organisation/ai/usage?from=' + dateFrom(m) + '&to=' + dateTo(m) + (key ? '&' + key : '');
+    const rangeHref = key => '/organisation/ai/usage?from=' + dateFrom(months[0]) + '&to=' + dateTo(months[months.length - 1]) + (key ? '&' + key : '');
+
+    const items = (view === 'models' ? models : view === 'purposes' ? purposes : people)
+      .map(it => ({ ...it, sum: dataMonths.reduce((a, m) => a + it.vals[m], 0) }))
+      .sort((a, b) => b.sum - a.sum);
+    const periodTotal = dataMonths.reduce((a, m) => a + totals12[m], 0);
+    const callsTotal = periodTotal * 9.7;
+    const tokensOf = it => [it.sum * it.tok[0], it.sum * it.tok[1], it.sum * it.tok[2]];
+    const tokensStr = t => tok(t[0]) + ' / ' + tok(t[1]) + (t[2] > 0 ? ' / ' + tok(t[2]) : ' / 0');
+    const tAll = items.reduce((a, it) => { const t = tokensOf(it); return [a[0] + t[0], a[1] + t[1], a[2] + t[2]]; }, [0, 0, 0]);
+
+    const viewLabel = view === 'models' ? 'Model' : view === 'purposes' ? 'Účel' : 'Osoba';
+    const periodTitle = isEmpty ? 'október 2026' : single ? MONTH_NAMES[months[0]] + ' 2026' : 'rok 2026';
+    const monthHeads = multi ? months.map(m => ({ label: MONTHS[m], cls: m >= DATA_UNTIL ? 'is-future' : '' })) : [];
+
+    // Graf: 5 najväčších položiek pohľadu a Ostatné.
+    const top = items.slice(0, 5), rest = items.slice(5);
+    const seriesList = top.map((it, i) => ({ name: it.name, cls: 'ai-s' + (i + 1), vals: it.vals, key: it.key }));
+    if (rest.length) seriesList.push({ name: 'Ostatné (' + rest.length + ')', cls: 'ai-s6', vals: Array.from({ length: 12 }, (_, m) => rest.reduce((a, it) => a + it.vals[m], 0)), key: '' });
+    const chartMax = Math.max(10, Math.ceil(Math.max(...months.map(m => totals12[m])) / 10) * 10);
+    const columns = months.map(m => {
+      const future = m >= DATA_UNTIL;
+      return {
+        label: MONTHS[m], cls: future ? 'is-future' : '', href: future ? '' : usageHref(m, ''),
+        title: future ? MONTH_NAMES[m] + ' 2026: zatiaľ nič' : MONTH_NAMES[m] + ' 2026: ' + usd(totals12[m]),
+        total: future ? '' : usd(totals12[m]),
+        segs: future ? [] : seriesList.map(s => ({ cls: s.cls, h: (s.vals[m] / chartMax * 100).toFixed(2), title: s.name + ': ' + usd(s.vals[m]) })),
+      };
+    });
+    const legend = seriesList.map(s => ({ name: s.name, cls: s.cls }));
+    const barMax = top.length ? top[0].sum : 1;
+    const bars = seriesList.map(s => {
+      const v = dataMonths.reduce((a, m) => a + s.vals[m], 0);
+      return { name: s.name, cls: s.cls, w: (v / barMax * 100).toFixed(1), val: usd(v), href: rangeHref(s.key) };
+    });
+    const chartTitle = multi ? 'Suma po mesiacoch' : 'Kto míňa najviac: ' + MONTH_NAMES[months[0]] + ' 2026';
+    const chartAlt = multi
+      ? 'Suma po mesiacoch 2026: ' + dataMonths.map(m => MONTH_NAMES[m] + ' ' + usd(totals12[m])).join(', ') + '. Mesiace ' + MONTH_NAMES.slice(DATA_UNTIL).join(' a ') + ' ešte nemajú volania.'
+      : 'Poradie za ' + MONTH_NAMES[months[0]] + ' 2026: ' + bars.map(b => b.name + ' ' + b.val).join(', ') + '.';
+
+    // Matica.
+    const lastM = dataMonths[dataMonths.length - 1];
+    const rows = items.map(it => {
+      const max = Math.max(...it.vals, 0.01);
+      const t = tokensOf(it);
+      return {
+        name: it.name, bg: it.bg, cls: '', href: rangeHref(it.key),
+        cells: multi ? months.map(m => ({ label: m >= DATA_UNTIL ? '' : usd(it.vals[m]), cls: m >= DATA_UNTIL ? 'is-future' : '', href: m >= DATA_UNTIL ? '' : usageHref(m, it.key) })) : [],
+        total: usd(it.sum), share: Math.round(it.sum / periodTotal * 100) + ' %', calls: int(it.sum * 9.7 * (it.tok[0] / 80)),
+        tokens: tokensStr(t),
+        lastLabel: MONTH_NAMES[lastM] + ':', lastVal: usd(it.vals[lastM]), lastHref: usageHref(lastM, it.key),
+        bars: it.vals.map((v, m) => ({ h: m >= DATA_UNTIL ? '0' : Math.max(5, v / max * 100).toFixed(1), cls: m >= DATA_UNTIL ? 'is-future' : '' })),
+        // Pohľad Modely: pod sumou tri riadky s tokenmi po mesiacoch (Q3 A).
+        subs: (view === 'models' && multi) ? ['vstup', 'výstup', 'cache'].map((label, i) => ({
+          name: label,
+          cells: months.map(m => ({ label: m >= DATA_UNTIL ? '' : (it.tok[i] > 0 ? tok(it.vals[m] * it.tok[i]) : '0'), cls: m >= DATA_UNTIL ? 'is-future' : '' })),
+          total: it.tok[i] > 0 ? tok(t[i]) : '0',
+        })) : [],
+      };
+    });
+    const totalCells = multi ? months.map(m => ({ label: m >= DATA_UNTIL ? '' : usd(totals12[m]), cls: m >= DATA_UNTIL ? 'is-future' : '' })) : [];
+    const gridCols = multi
+      ? 'minmax(150px, 1.5fr) repeat(' + months.length + ', minmax(0, 1fr)) 84px 170px'
+      : 'minmax(150px, 1fr) 96px 72px 84px 220px';
+
+    const q = (f, t) => f ? '&from=' + f + '&to=' + t : '';
+    const fromVal = range === 'year' ? '2026-01-01' : '';
+    const toVal = range === 'year' ? '2026-12-31' : '';
+    const viewHref = v => '/organisation/ai/overview?view=' + v + q(fromVal, toVal);
+
+    return {
+      accent, view, viewLabel, periodTitle, isEmpty, hasData: !isEmpty, single, multi,
+      emptyTitle: 'V období ' + periodTitle + ' sa AI nevolala',
+      fromVal, toVal, qMonth: range === 'year' ? '' : 'is-on', qYear: range === 'year' ? 'is-on' : '',
+      exportHref: '/api/ai-overview?format=xlsx&view=' + view + q(fromVal, toVal),
+      sumPeriod: usd(periodTotal), avgMonth: usd(dataMonths.length ? periodTotal / dataMonths.length : 0), calls: int(callsTotal),
+      delta: multi ? '+12 % oproti I–X 2025' : '+8 % oproti októbru 2025',
+      tokensAll: tokensStr(tAll),
+      unknownCalls: (multi ? 37 : 6) + ' volaní', unknownHref: rangeHref('model=unknown'),
+      vPeople: view === 'people' ? 'is-on' : '', vPurposes: view === 'purposes' ? 'is-on' : '', vModels: view === 'models' ? 'is-on' : '',
+      hrefPeople: viewHref('people'), hrefPurposes: viewHref('purposes'), hrefModels: viewHref('models'),
+      chartTitle, chartAlt, yMax: usd(chartMax), yMid: usd(chartMax / 2), columns, legend, bars,
+      matrixTitle: viewLabel + ' × ' + (multi ? 'mesiac' : 'suma') + ', ' + periodTitle,
+      monthHeads, rows, totalCells, gridCols,
+    };
+  }
+}
+</script>
+</body>
+</html>

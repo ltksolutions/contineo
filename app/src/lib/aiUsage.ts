@@ -124,8 +124,21 @@ export interface UsageFilter {
   /** Deň **za** posledným dňom obdobia (exkluzívne). */
   to: Date
   personId?: string
+  /**
+   * Práca na pozadí nemá `personId` — rozlišuje ju len kópia mena
+   * („Kontrola súladu (na pozadí)"). V adrese `person=bg:<meno>`
+   * (ORG-ai-prehlad, 24. 10. 2026), aby na ňu viedla bunka Prehľadu.
+   */
+  backgroundName?: string
   purpose?: AiUsagePurpose
+  /** Presný identifikátor modelu (`?model=`), z pohľadu Modely v Prehľade. */
+  model?: string
+  /** Len volania s modelom mimo cenníka (`?unpriced=1`) — upozornenie Prehľadu. */
+  unpriced?: boolean
 }
+
+/** Predpona osoby v adrese pre prácu na pozadí — `personId` je vtedy prázdne. */
+export const BACKGROUND_PERSON = "bg:"
 
 /**
  * Obdobie z adresy: `from` a `to` ako `YYYY-MM-DD`, `to` vrátane. Chýbajúce
@@ -149,18 +162,21 @@ export function usagePeriod(
   return { from, to: new Date(last.getTime() + 24 * 3600 * 1000), fromText: iso(from), toText: iso(last) }
 }
 
-function query(companyCode: string, f: UsageFilter) {
+export function usageQuery(companyCode: string, f: UsageFilter) {
   return {
     companyCode,
     at: { $gte: f.from, $lt: f.to },
     ...(f.personId ? { personId: f.personId } : {}),
+    ...(f.backgroundName ? { personId: null, personName: f.backgroundName } : {}),
     ...(f.purpose ? { purpose: f.purpose } : {}),
+    ...(f.model ? { model: f.model } : {}),
+    ...(f.unpriced ? { unknownModel: true } : {}),
   }
 }
 
 /** Riadky obdobia, najnovšie hore. `limit` len pre obrazovku; export berie všetko. */
 export async function usageRows(companyCode: string, f: UsageFilter, limit?: number): Promise<AiUsageRecord[]> {
-  const cursor = (await collection()).find(query(companyCode, f)).sort({ at: -1 })
+  const cursor = (await collection()).find(usageQuery(companyCode, f)).sort({ at: -1 })
   return (limit ? cursor.limit(limit) : cursor).toArray()
 }
 
@@ -173,7 +189,7 @@ export interface UsageTotals {
 /** Súčty za celé obdobie — aj keď obrazovka ukazuje len prvých N riadkov. */
 export async function usageTotals(companyCode: string, f: UsageFilter): Promise<UsageTotals> {
   const [row] = await (await collection()).aggregate<UsageTotals & { _id: null; input: number; output: number; cacheWrite: number; cacheRead: number }>([
-    { $match: query(companyCode, f) },
+    { $match: usageQuery(companyCode, f) },
     {
       $group: {
         _id: null,
@@ -194,16 +210,21 @@ export async function usageTotals(companyCode: string, f: UsageFilter): Promise<
   }
 }
 
-/** Ľudia, ktorí v organizácii AI niekedy volali — do filtra osoby. */
-export async function usagePeople(companyCode: string): Promise<{ personId: string; personName: string }[]> {
-  const rows = await (await collection()).aggregate<{ _id: string; personName: string }>([
-    { $match: { companyCode, personId: { $ne: null } } },
+/**
+ * Ľudia, ktorí v organizácii AI niekedy volali — do filtra osoby. Práca na
+ * pozadí ide na koniec s hodnotou `bg:<meno>` (ORG-ai-prehlad): bunka
+ * Prehľadu na ňu vedie a výber ju musí vedieť ukázať.
+ */
+export async function usagePeople(companyCode: string): Promise<{ personId: string; personName: string; background: boolean }[]> {
+  const rows = await (await collection()).aggregate<{ _id: string | null; name: string; personName: string }>([
+    { $match: { companyCode } },
     { $sort: { at: -1 } },
-    { $group: { _id: "$personId", personName: { $first: "$personName" } } },
+    { $group: { _id: { $ifNull: ["$personId", { $concat: [BACKGROUND_PERSON, "$personName"] }] }, personName: { $first: "$personName" } } },
   ]).toArray()
   return rows
-    .map(r => ({ personId: r._id, personName: r.personName }))
-    .sort((a, b) => a.personName.localeCompare(b.personName, "sk"))
+    .filter((r): r is typeof r & { _id: string } => typeof r._id === "string")
+    .map(r => ({ personId: r._id, personName: r.personName, background: r._id.startsWith(BACKGROUND_PERSON) }))
+    .sort((a, b) => Number(a.background) - Number(b.background) || a.personName.localeCompare(b.personName, "sk"))
 }
 
 /**
@@ -211,13 +232,27 @@ export async function usagePeople(companyCode: string): Promise<{ personId: stri
  * s tým, čo človek videl. Neznámy účel sa ignoruje.
  */
 export function usageFilterFromQuery(
-  q: { from?: string; to?: string; person?: string; purpose?: string },
+  q: { from?: string; to?: string; person?: string; purpose?: string; model?: string; unpriced?: string },
   now: Date = new Date(),
 ): UsageFilter & { fromText: string; toText: string } {
   const period = usagePeriod(q.from, q.to, now)
+  const bg = q.person?.startsWith(BACKGROUND_PERSON) ? q.person.slice(BACKGROUND_PERSON.length) : ""
   return {
     ...period,
-    ...(q.person ? { personId: q.person } : {}),
+    ...(bg ? { backgroundName: bg } : q.person ? { personId: q.person } : {}),
     ...(isAiUsagePurpose(q.purpose) ? { purpose: q.purpose } : {}),
+    ...(q.model ? { model: q.model.slice(0, 120) } : {}),
+    ...(q.unpriced === "1" ? { unpriced: true } : {}),
   }
+}
+
+/** Filter späť do adresy — obrazovka, export a odkazy Prehľadu ho skladajú rovnako. */
+export function usageFilterQuery(f: UsageFilter & { fromText: string; toText: string }): URLSearchParams {
+  const q = new URLSearchParams({ from: f.fromText, to: f.toText })
+  if (f.personId) q.set("person", f.personId)
+  if (f.backgroundName) q.set("person", BACKGROUND_PERSON + f.backgroundName)
+  if (f.purpose) q.set("purpose", f.purpose)
+  if (f.model) q.set("model", f.model)
+  if (f.unpriced) q.set("unpriced", "1")
+  return q
 }

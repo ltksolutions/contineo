@@ -24,6 +24,22 @@ Design žije v Claude ako artefakty. Ján 24. 10. 2026 rozhodol:
 Do 14. 12. beží aj starý postup s dvoma projektmi nižšie; `/design-sync`
 plní oba — projekt aj artefakt.
 
+**Ako sa návrh číta z artefaktu** (prvá skúška, ORG-ai-prehlad 24. 10. 2026):
+
+- Artefakt *Design* je plátno: `project/canvas.json` (plochy, poznámky,
+  pripojený design system) a jeden `project/<plocha>.dc.html` na plochu.
+  Plochy pre iné šírky sú často len `<dc-import name="Main">` s inými
+  vlastnosťami — obsah je v jednej hlavnej ploche.
+- Číta sa `Artifact read` s `paths` (canvas.json a plochy); do
+  `docs/design/` sa ukladá hlavná plocha ako `NÁZOV.html` a `NÁZOV.md`
+  píše asistent (zdroj, plochy, rozhodnuté, odchýlky).
+- **Sekcia „Rozhodnuté" v artefakte nevzniká** — `.md` k návrhu tam nie je
+  a odpovede z chatu s dizajnovým agentom sa neexportujú. Rozpory so
+  zadaním preto rozhodne Ján pri „stiahni design" (s odporúčaním).
+- Design system sa do plátna kopíruje (`project/ds/contineo/`: `tokens.css`,
+  `components/bundle.css`) — návrh teda kreslí so skutočnými triedami;
+  čo pridá vlastné (`<helmet><style>`), je odchýlka na rozhodnutie.
+
 ## Dva projekty v Claude Design (do 14. 12. 2026)
 
 | Projekt | Načo je | Kto doň píše |
