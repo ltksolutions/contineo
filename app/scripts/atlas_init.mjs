@@ -20,7 +20,7 @@
  */
 
 import { MongoClient } from "mongodb"
-import { COLLECTION as COL, VECTOR_INDEX, TEXT_INDEX, wantedIndexes, definitionDiff, LAW_COLLECTION, wantedLawIndexes } from "./lib/searchIndexes.mjs"
+import { COLLECTION as COL, wantedIndexes, definitionDiff, LAW_COLLECTION, wantedLawIndexes } from "./lib/searchIndexes.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
