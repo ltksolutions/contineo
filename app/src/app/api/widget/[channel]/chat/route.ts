@@ -51,7 +51,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
    * nie v skripte widgetu.
    */
   const language = normalizeLanguage(body.language ?? gate.language)
-  const allowed = await widgetSources(gate.tenant.companyCode, gate.channel, dictionary(language).widget.scopeLibrary)
+  const allowed = await widgetSources(gate.tenant.companyCode, gate.channel, dictionary(language).widget.scopeLibrary, dictionary(language).ask.scopeLaw)
   const picked = pickWidgetSources(body.sources, allowed)
   const searchedScope = searchedScopeOf(picked)
   const branding = brandingView(gate.tenant)

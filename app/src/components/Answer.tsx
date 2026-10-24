@@ -333,6 +333,10 @@ export function AnswerAside({
                     {z.live && (
                       <span className="quiet answer-source-meta">{t.liveNote(z.live.connectorName, z.live.group ?? null)}</span>
                     )}
+                    {/* Katalóg legislatívy (ADR-039, D259): text zákona zo Slov-Lexu, nie predpis organizácie. */}
+                    {z.law && (
+                      <span className="quiet answer-source-meta">{t.lawNote(z.law.number)}</span>
+                    )}
                   </span>
                   {z.live && (
                     <span className="tag tag--warn" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
@@ -342,6 +346,11 @@ export function AnswerAside({
                   {z.sourceType === "qa" && (
                     <span className="tag tag--published" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
                       {t.verified}
+                    </span>
+                  )}
+                  {z.law && (
+                    <span className="tag" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>
+                      {t.law}
                     </span>
                   )}
                   {/* Interný obsah vo verejnej odpovedi je tvrdá brána D9,

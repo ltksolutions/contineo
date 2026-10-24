@@ -10,6 +10,7 @@
 
 import type { HelpdeskChannel } from "./channels"
 import { liveConnectorsFor } from "./liveSources"
+import { lawSourceState, LAW_SOURCE_ID } from "./lawCatalog"
 
 export interface WidgetSource {
   /** `"library"` alebo id konektora. */
@@ -17,13 +18,24 @@ export interface WidgetSource {
   name: string
 }
 
-/** Povolené zdroje kanála v poradí: Knižnica, potom konektory podľa nastavenia. */
-export async function widgetSources(companyCode: string, channel: Pick<HelpdeskChannel, "connectorScopes">, libraryName: string): Promise<WidgetSource[]> {
+/**
+ * Povolené zdroje kanála v poradí: Knižnica, konektory podľa nastavenia,
+ * Legislatíva. Zákon je verejný (ADR-039, D259), preto vo widgete je, keď
+ * ho organizácia odoberá — správca kanála ho zatiaľ nevypína (fáza 2).
+ */
+export async function widgetSources(companyCode: string, channel: Pick<HelpdeskChannel, "connectorScopes">, libraryName: string, lawName: string): Promise<WidgetSource[]> {
   const refs = channel.connectorScopes ?? []
   // Prázdne `connectorScopes` = kanál živé zdroje nepoužíva. `liveConnectorsFor`
   // by bez nich vrátil všetky verejné, preto sa vôbec nevolá.
-  const live = refs.length ? await liveConnectorsFor(companyCode, "public", refs) : []
-  return [{ id: "library", name: libraryName }, ...live.map(c => ({ id: c.id, name: c.name }))]
+  const [live, law] = await Promise.all([
+    refs.length ? liveConnectorsFor(companyCode, "public", refs) : Promise.resolve([]),
+    lawSourceState(companyCode),
+  ])
+  return [
+    { id: "library", name: libraryName },
+    ...live.map(c => ({ id: c.id, name: c.name })),
+    ...(law.active ? [{ id: LAW_SOURCE_ID, name: lawName }] : []),
+  ]
 }
 
 /**

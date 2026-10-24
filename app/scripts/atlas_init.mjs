@@ -20,7 +20,7 @@
  */
 
 import { MongoClient } from "mongodb"
-import { COLLECTION as COL, VECTOR_INDEX, TEXT_INDEX, wantedIndexes, definitionDiff } from "./lib/searchIndexes.mjs"
+import { COLLECTION as COL, wantedIndexes, definitionDiff, LAW_COLLECTION, wantedLawIndexes } from "./lib/searchIndexes.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
@@ -52,7 +52,8 @@ try {
 
   // ── 1. kolekcie ──
   const existing = (await db.listCollections().toArray()).map(c => c.name)
-  for (const name of ["documents", COL, "tenant_profiles"]) {
+  // `law_chunks` — katalóg legislatívy (ADR-039); indexy sa zakladajú nižšie rovnako ako nad knižnicou.
+  for (const name of ["documents", COL, "tenant_profiles", LAW_COLLECTION]) {
     if (existing.includes(name)) {
       console.log(`${INFO} kolekcia ${name} už existuje`)
     } else {
@@ -74,7 +75,15 @@ try {
   }
 
   let changed = false
-  for (const { name, type, definition } of wantedIndexes()) {
+  // Knižnica aj katalóg legislatívy (ADR-039) prechádzajú tou istou slučkou:
+  // každý index vie, nad ktorou kolekciou stojí.
+  const lawCol = db.collection(LAW_COLLECTION)
+  const lawExisting = await lawCol.listSearchIndexes().toArray()
+  const wanted = [
+    ...wantedIndexes().map(w => ({ ...w, col, existing: existingIndexes })),
+    ...wantedLawIndexes().map(w => ({ ...w, col: lawCol, existing: lawExisting })),
+  ]
+  for (const { name, type, definition, col, existing: existingIndexes } of wanted) {
     const uz = existingIndexes.find(i => i.name === name)
     if (!uz && update && !confirmed) {
       console.log(`${INFO} index ${name} neexistuje — vytvorí sa s --naozaj`)
@@ -119,18 +128,22 @@ try {
   if (wait || changed) {
     console.log(`\n${INFO} čakám, kým sa indexy dostavajú…`)
     const deadline = Date.now() + 20 * 60 * 1000
-    const want = wantedIndexes()
     let finished = false
     while (Date.now() < deadline) {
-      const states = await col.listSearchIndexes().toArray()
-      const wanted = states.filter(i => [VECTOR_INDEX, TEXT_INDEX].includes(i.name))
-      const done = i => i.status === "READY" &&
-        !(i.statusDetail ?? []).some(d => d.stagedIndex) &&
-        !definitionDiff(i.latestDefinition, want.find(w => w.name === i.name).definition).differs
-      const label = wanted.map(i => `${i.name}=${i.status}${done(i) ? "" : " (stavia sa)"}`).join("  ")
+      // Obe kolekcie — knižnica aj katalóg legislatívy (ADR-039); stav sa číta
+      // z tej, nad ktorou index stojí.
+      const states = []
+      for (const w of wanted) {
+        const live = (await w.col.listSearchIndexes().toArray()).find(i => i.name === w.name)
+        states.push({ ...w, live })
+      }
+      const done = s => s.live && s.live.status === "READY" &&
+        !(s.live.statusDetail ?? []).some(d => d.stagedIndex) &&
+        !definitionDiff(s.live.latestDefinition, s.definition).differs
+      const label = states.map(s => `${s.name}=${s.live?.status ?? "—"}${done(s) ? "" : " (stavia sa)"}`).join("  ")
       process.stdout.write(`\r    ${label}          `)
-      if (wanted.length === 2 && wanted.every(done)) {
-        console.log(`\n${OK} oba indexy sú READY s definíciou z repozitára`)
+      if (states.every(done)) {
+        console.log(`\n${OK} všetky indexy sú READY s definíciou z repozitára`)
         finished = true
         break
       }
