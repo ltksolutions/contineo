@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   const back = (message: string, error = false) => {
     const q = new URLSearchParams({ msg: message })
     if (error) q.set("error", "1")
-    const path = connectorId ? `/organisation/connectors/${encodeURIComponent(connectorId)}` : "/organisation/connectors"
+    const path = connectorId ? `/organisation/sources/connectors/${encodeURIComponent(connectorId)}` : "/organisation/sources/connectors"
     return NextResponse.redirect(new URL(`${path}?${q}`, req.url))
   }
   const language = ctx.person.language

@@ -290,7 +290,8 @@ export default async function OrganisationSectionPage({
   // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
   const aiView: "settings" | "usage" | "overview" = query.view === "usage" ? "usage" : query.view === "overview" ? "overview" : "settings"
   // Zdroje (ADR-040): register, alebo Legislatíva ako podstránka (`/organisation/sources/law`).
-  const sourcesView: "register" | "law" = query.view === "law" ? "law" : "register"
+  const sourcesView: "register" | "law" | "connectors" = query.view === "law" ? "law" : query.view === "connectors" ? "connectors" : "register"
+  const onConnectors = now === "sources" && sourcesView === "connectors"
   const ai = now === "ai" && aiView === "settings" ? aiSettingsView(tenant.ai) : null
   const tu = t.aiUsage
   // Spotreba (D158): súčty za celé obdobie, na obrazovke najnovších 500.
@@ -344,11 +345,12 @@ export default async function OrganisationSectionPage({
 
   // Detail konektora (`/organisation/connectors/<id>`, návrh ORG-konektory):
   // cesta pod hlavičkou ho pomenuje, preto sa načíta pred vykreslením.
-  const connector = now === "connectors" && query.connector
+  const connector = onConnectors && query.connector
     ? await connectorById(tenant.companyCode, query.connector)
     : null
-  if (now === "connectors" && query.connector && !connector) notFound()
-  const connectorHref = connector ? `/organisation/connectors/${encodeURIComponent(connector.id)}` : null
+  if (onConnectors && query.connector && !connector) notFound()
+  const connectorsHref = "/organisation/sources/connectors"
+  const connectorHref = connector ? `${connectorsHref}/${encodeURIComponent(connector.id)}` : null
 
   const records = now === "audit"
     ? await auditRecords(tenant.companyCode, { search: search, limit: 200 })
@@ -356,21 +358,21 @@ export default async function OrganisationSectionPage({
 
   return (
     <AppShell language={ctx.person.language}
-              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : now === "sources" && sourcesView === "law" ? t.sources.tabLaw : connector ? connector.name : t.tabs[now]}
+              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : now === "sources" && sourcesView === "law" ? t.sources.tabLaw : connector ? connector.name : onConnectors ? t.tabs.connectors : t.tabs[now]}
               trail={now === "ai" && aiView !== "settings"
                 ? { "/organisation": t.heading, "/organisation/ai": t.tabs.ai }
-                : now === "sources" && sourcesView === "law"
-                ? { "/organisation": t.heading, "/organisation/sources": t.tabs.sources }
                 : connector
-                ? { "/organisation": t.heading, "/organisation/connectors": t.tabs.connectors }
+                ? { "/organisation": t.heading, "/organisation/sources": t.tabs.sources, [connectorsHref]: t.tabs.connectors }
+                : now === "sources" && sourcesView !== "register"
+                ? { "/organisation": t.heading, "/organisation/sources": t.tabs.sources }
                 : { "/organisation": t.heading }}>
     <div className="org-set" style={tenantStyle(branding)}>
       {/* Chyba pri pridávaní konektora sa ukáže v úlohe, nie tu (ORG-konektory). */}
       <Notice
         language={language}
-        message={now === "connectors" && query.new === "1" && error === "1" ? undefined : message}
+        message={onConnectors && query.new === "1" && error === "1" ? undefined : message}
         error={error === "1"}
-        back={connectorHref ?? orgSectionHref(now)}
+        back={connectorHref ?? (onConnectors ? connectorsHref : orgSectionHref(now))}
       />
 
       <div className="org-head">
@@ -1283,23 +1285,7 @@ export default async function OrganisationSectionPage({
       </div>
       )}
 
-      {/*
-        Konektory (ADR-029, D178; návrh ORG-konektory, 9. 10. 2026): prehľad
-        riadkov s pridaním z adresy (`?new=1`) a detail na vlastnej ceste.
-      */}
-      {now === "connectors" && !connector && (
-        <ConnectorList connectors={(await listConnectors(tenant.companyCode)).map(connectorView)} language={language} query={query} />
-      )}
-      {now === "connectors" && connector && (
-        <ConnectorDetail
-          c={connectorView(connector)}
-          channels={await channelsUsingConnector(tenant.companyCode, connector.id)}
-          query={query}
-          language={language}
-          redirectUrl={await connectorCallbackUrl()}
-          ctx={{ actor: { personId: ctx.person.id, personName: ctx.person.fullName } }}
-        />
-      )}
+
 
       {/*
         Zdroje (ADR-040, D263–D266): register zdrojov obsahu — knižnica,
@@ -1312,9 +1298,29 @@ export default async function OrganisationSectionPage({
         <nav className="tabs" aria-label={t.tabs.sources}>
           <TabsBar>
             <TabLink href="/organisation/sources" active={sourcesView === "register"}>{t.sources.tabRegister}</TabLink>
+            <TabLink href="/organisation/sources/connectors" active={sourcesView === "connectors"}>{t.tabs.connectors}</TabLink>
             <TabLink href="/organisation/sources/law" active={sourcesView === "law"}>{t.sources.tabLaw}</TabLink>
           </TabsBar>
         </nav>
+
+      {/*
+        Konektory (ADR-029, D178; návrh ORG-konektory, 9. 10. 2026): prehľad
+        riadkov s pridaním z adresy (`?new=1`) a detail na vlastnej ceste —
+        od ADR-040 (krok 2) ako podstránka Zdrojov.
+      */}
+      {onConnectors && !connector && (
+        <ConnectorList connectors={(await listConnectors(tenant.companyCode)).map(connectorView)} language={language} query={query} />
+      )}
+      {onConnectors && connector && (
+        <ConnectorDetail
+          c={connectorView(connector)}
+          channels={await channelsUsingConnector(tenant.companyCode, connector.id)}
+          query={query}
+          language={language}
+          redirectUrl={await connectorCallbackUrl()}
+          ctx={{ actor: { personId: ctx.person.id, personName: ctx.person.fullName } }}
+        />
+      )}
 
       {sourcesView === "register" && register && (
         <section className="card more">

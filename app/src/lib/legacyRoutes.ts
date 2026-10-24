@@ -30,8 +30,10 @@ import {
  * `/kniznica` a skončilo ako `/library/trasy`.
  */
 const PREFIXES: [string, string][] = [
-  // Legislatíva prešla z Umelej inteligencie do Zdrojov (ADR-040, 26. 10. 2026).
+  // Legislatíva prešla z Umelej inteligencie do Zdrojov (ADR-040, 26. 10. 2026);
+  // konektory sú podstránka Zdrojov (ADR-040 krok 2) — aj detail `/…/connectors/<id>`.
   ["/organisation/ai/law", "/organisation/sources/law"],
+  ["/organisation/connectors", "/organisation/sources/connectors"],
   // Trasy prešli z knižnice do Pridelených dokumentov (2. 10. 2026).
   // „Vzhľad a jazyky" → „Všeobecné" (3. 10. 2026).
   ["/organisation/branding", "/organisation/general"],

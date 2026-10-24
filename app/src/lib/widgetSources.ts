@@ -1,41 +1,38 @@
 /**
  * widgetSources.ts — zdroje, z ktorých si človek vo widgete kanála vyberá
- * (KANAL-widget-zdroje, Ján 23. 10. 2026; ADR-028, ADR-029).
+ * (KANAL-widget-zdroje, Ján 23. 10. 2026; ADR-028, ADR-029; ADR-040 D266).
  *
  * Správca kanála zdroje **povoľuje** (`connectorScopes`), človek si z nich
- * vyberá. Knižnica je vždy; živé zdroje len verejné (D174) a len tie, ktoré
- * má kanál v `connectorScopes` — jeden riadok za konektor, nie za rozsah (Q4).
+ * vyberá. Zoznam vzniká z registra zdrojov (`sourcesRegister.ts`) — ten
+ * istý, aký vidí Organizácia → Zdroje a výber na Opýtať sa. Knižnica je
+ * vždy; konektory len verejné (D174) a len tie, ktoré má kanál
+ * v `connectorScopes` — jeden riadok za konektor, nie za rozsah (Q4);
+ * legislatíva je verejná a je, keď ju organizácia odoberá (ADR-039 D259).
  * Predvolene sú zapnuté všetky povolené (Q3) — ako widget hľadal doteraz.
  */
 
 import type { HelpdeskChannel } from "./channels"
-import { liveConnectorsFor } from "./liveSources"
-import { lawSourceState, LAW_SOURCE_ID } from "./lawCatalog"
+import { parseScopeRef } from "./connectors"
+import { sourcesRegister } from "./sourcesRegister"
+import type { UiLanguage } from "./i18n"
 
 export interface WidgetSource {
-  /** `"library"` alebo id konektora. */
+  /** `"library"`, id konektora alebo `law`. */
   id: string
   name: string
 }
 
-/**
- * Povolené zdroje kanála v poradí: Knižnica, konektory podľa nastavenia,
- * Legislatíva. Zákon je verejný (ADR-039, D259), preto vo widgete je, keď
- * ho organizácia odoberá — správca kanála ho zatiaľ nevypína (fáza 2).
- */
-export async function widgetSources(companyCode: string, channel: Pick<HelpdeskChannel, "connectorScopes">, libraryName: string, lawName: string): Promise<WidgetSource[]> {
+/** Povolené zdroje kanála v poradí: Knižnica, konektory podľa nastavenia, Legislatíva. */
+export async function widgetSources(companyCode: string, channel: Pick<HelpdeskChannel, "connectorScopes">, language: UiLanguage, libraryName: string): Promise<WidgetSource[]> {
   const refs = channel.connectorScopes ?? []
-  // Prázdne `connectorScopes` = kanál živé zdroje nepoužíva. `liveConnectorsFor`
-  // by bez nich vrátil všetky verejné, preto sa vôbec nevolá.
-  const [live, law] = await Promise.all([
-    refs.length ? liveConnectorsFor(companyCode, "public", refs) : Promise.resolve([]),
-    lawSourceState(companyCode),
-  ])
-  return [
-    { id: "library", name: libraryName },
-    ...live.map(c => ({ id: c.id, name: c.name })),
-    ...(law.active ? [{ id: LAW_SOURCE_ID, name: lawName }] : []),
-  ]
+  // Prázdne `connectorScopes` = kanál živé zdroje konektorov nepoužíva.
+  const allowedConnectors = new Set(refs.map(parseScopeRef).filter(Boolean).map(r => r!.connectorId))
+  const register = await sourcesRegister(companyCode, language)
+  const live = register.filter(s =>
+    s.kind !== "file" && s.enabled && s.connected && s.allowed && s.uses.retrieval && s.accessLevel === "public"
+    && (s.kind !== "mcp" || allowedConnectors.has(s.id)),
+  )
+  return [{ id: "library", name: libraryName }, ...live.map(s => ({ id: s.id, name: s.name }))]
 }
 
 /**

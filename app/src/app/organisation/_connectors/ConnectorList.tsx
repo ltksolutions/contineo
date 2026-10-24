@@ -15,7 +15,7 @@ import type { ConnectorView } from "@/lib/connectors"
 import { addAndConnectAction } from "../actions"
 import ServerIcon from "./ServerIcon"
 
-export const CONNECTORS_HREF = "/organisation/connectors"
+export const CONNECTORS_HREF = "/organisation/sources/connectors"
 
 export function statusTagClass(s: ConnectorView["status"]): string {
   return s === "connected" ? "tag tag--published" : s === "error" ? "tag tag--warn" : "tag"

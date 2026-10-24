@@ -13,6 +13,9 @@ describe("stare cesty", () => {
   it("Legislatíva z Umelej inteligencie do Zdrojov (ADR-040)", () => {
     expect(legacyRoute("/organisation/ai/law")).toBe("/organisation/sources/law")
     expect(legacyRoute("/organisation/ai/usage")).toBeNull()
+    // Konektory ako podstránka Zdrojov (krok 2) — aj detail.
+    expect(legacyRoute("/organisation/connectors")).toBe("/organisation/sources/connectors")
+    expect(legacyRoute("/organisation/connectors/abc")).toBe("/organisation/sources/connectors/abc")
   })
   it("prelozi korene", () => {
     expect(legacyRoute("/dokumenty")).toBe("/documents")
@@ -103,6 +106,8 @@ describe("časť nastavenia organizácie z ?tab= na cestu (2. 10. 2026)", () => 
     expect(go("/organisation", "tab=signin")).toBe("/organisation/signin")
     expect(go("/organisation", "zalozka=prihlasenie")).toBe("/organisation/signin")
     expect(go("/organisation", "tab=utvary")).toBe("/organisation/departments")
+    // Konektory už nie sú časť — starý `?tab=connectors` vedie na podstránku Zdrojov (ADR-040 krok 2).
+    expect(go("/organisation", "tab=connectors")).toBe("/organisation/sources/connectors")
   })
   it("ostatné parametre ostanú, neznáma časť vedie na rozcestník", () => {
     expect(go("/organisation", "tab=audit&search=jan&msg=ok")).toBe("/organisation/audit?search=jan&msg=ok")
