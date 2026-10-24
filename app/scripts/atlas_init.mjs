@@ -128,18 +128,22 @@ try {
   if (wait || changed) {
     console.log(`\n${INFO} čakám, kým sa indexy dostavajú…`)
     const deadline = Date.now() + 20 * 60 * 1000
-    const want = wantedIndexes()
     let finished = false
     while (Date.now() < deadline) {
-      const states = await col.listSearchIndexes().toArray()
-      const wanted = states.filter(i => [VECTOR_INDEX, TEXT_INDEX].includes(i.name))
-      const done = i => i.status === "READY" &&
-        !(i.statusDetail ?? []).some(d => d.stagedIndex) &&
-        !definitionDiff(i.latestDefinition, want.find(w => w.name === i.name).definition).differs
-      const label = wanted.map(i => `${i.name}=${i.status}${done(i) ? "" : " (stavia sa)"}`).join("  ")
+      // Obe kolekcie — knižnica aj katalóg legislatívy (ADR-039); stav sa číta
+      // z tej, nad ktorou index stojí.
+      const states = []
+      for (const w of wanted) {
+        const live = (await w.col.listSearchIndexes().toArray()).find(i => i.name === w.name)
+        states.push({ ...w, live })
+      }
+      const done = s => s.live && s.live.status === "READY" &&
+        !(s.live.statusDetail ?? []).some(d => d.stagedIndex) &&
+        !definitionDiff(s.live.latestDefinition, s.definition).differs
+      const label = states.map(s => `${s.name}=${s.live?.status ?? "—"}${done(s) ? "" : " (stavia sa)"}`).join("  ")
       process.stdout.write(`\r    ${label}          `)
-      if (wanted.length === 2 && wanted.every(done)) {
-        console.log(`\n${OK} oba indexy sú READY s definíciou z repozitára`)
+      if (states.every(done)) {
+        console.log(`\n${OK} všetky indexy sú READY s definíciou z repozitára`)
         finished = true
         break
       }
