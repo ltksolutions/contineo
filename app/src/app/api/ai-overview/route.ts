@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   const modelName = (id: string) => Object.values(AI_MODELS).flat().find(m => m.id === id)?.label ?? id
   const aoa = overviewAoa(overview, it => by === "purposes"
     ? tu.purposes[it.key as keyof typeof tu.purposes]?.label ?? it.key
-    : by === "models" ? modelName(it.key) : it.name)
+    : by === "models" ? modelName(it.key) : it.key === "none" ? tu.noPerson : it.name)
 
   const XLSX = await import("xlsx")
   const book = XLSX.utils.book_new()

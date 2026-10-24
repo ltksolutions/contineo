@@ -130,6 +130,8 @@ export interface UsageFilter {
    * (ORG-ai-prehlad, 24. 10. 2026), aby na ňu viedla bunka Prehľadu.
    */
   backgroundName?: string
+  /** Všetka práca bez osoby (`?person=none`) — riadok „Automaticky" v Prehľade. */
+  noPerson?: boolean
   purpose?: AiUsagePurpose
   /** Presný identifikátor modelu (`?model=`), z pohľadu Modely v Prehľade. */
   model?: string
@@ -137,8 +139,11 @@ export interface UsageFilter {
   unpriced?: boolean
 }
 
-/** Predpona osoby v adrese pre prácu na pozadí — `personId` je vtedy prázdne. */
+/** Predpona osoby v adrese pre prácu na pozadí podľa mena — `personId` je vtedy prázdne. */
 export const BACKGROUND_PERSON = "bg:"
+
+/** Osoba v adrese pre všetku prácu bez osoby (cron, ťažba FAQ). */
+export const NO_PERSON = "none"
 
 /**
  * Obdobie z adresy: `from` a `to` ako `YYYY-MM-DD`, `to` vrátane. Chýbajúce
@@ -168,6 +173,7 @@ export function usageQuery(companyCode: string, f: UsageFilter) {
     at: { $gte: f.from, $lt: f.to },
     ...(f.personId ? { personId: f.personId } : {}),
     ...(f.backgroundName ? { personId: null, personName: f.backgroundName } : {}),
+    ...(f.noPerson ? { personId: null } : {}),
     ...(f.purpose ? { purpose: f.purpose } : {}),
     ...(f.model ? { model: f.model } : {}),
     ...(f.unpriced ? { unknownModel: true } : {}),
@@ -211,19 +217,25 @@ export async function usageTotals(companyCode: string, f: UsageFilter): Promise<
 }
 
 /**
- * Ľudia, ktorí v organizácii AI niekedy volali — do filtra osoby. Práca na
- * pozadí ide na koniec s hodnotou `bg:<meno>` (ORG-ai-prehlad): bunka
- * Prehľadu na ňu vedie a výber ju musí vedieť ukázať.
+ * Ľudia, ktorí v organizácii AI niekedy volali — do filtra osoby. Meno je
+ * z registra osôb: kópia v riadku spotreby môže byť meno procesu („Kontrola
+ * súladu (na pozadí)" pod `personId` toho, kto ju spustil). Práca bez osoby
+ * je na konci ako `none` (ORG-ai-prehlad, 24. 10. 2026).
  */
 export async function usagePeople(companyCode: string): Promise<{ personId: string; personName: string; background: boolean }[]> {
-  const rows = await (await collection()).aggregate<{ _id: string | null; name: string; personName: string }>([
+  const rows = await (await collection()).aggregate<{ _id: string; personName: string }>([
     { $match: { companyCode } },
     { $sort: { at: -1 } },
-    { $group: { _id: { $ifNull: ["$personId", { $concat: [BACKGROUND_PERSON, "$personName"] }] }, personName: { $first: "$personName" } } },
+    { $group: { _id: { $ifNull: ["$personId", NO_PERSON] }, personName: { $first: "$personName" } } },
   ]).toArray()
+  const ids = rows.map(r => r._id).filter(id => id !== NO_PERSON)
+  const persons = ids.length
+    ? await (await getCollection<{ id: string; companyCode: string; fullName: string }>("persons"))
+        .find({ companyCode, id: { $in: ids } }, { projection: { id: 1, fullName: 1 } }).toArray()
+    : []
+  const names = new Map(persons.map(p => [p.id, p.fullName]))
   return rows
-    .filter((r): r is typeof r & { _id: string } => typeof r._id === "string")
-    .map(r => ({ personId: r._id, personName: r.personName, background: r._id.startsWith(BACKGROUND_PERSON) }))
+    .map(r => ({ personId: r._id, personName: names.get(r._id) ?? r.personName, background: r._id === NO_PERSON }))
     .sort((a, b) => Number(a.background) - Number(b.background) || a.personName.localeCompare(b.personName, "sk"))
 }
 
@@ -239,7 +251,7 @@ export function usageFilterFromQuery(
   const bg = q.person?.startsWith(BACKGROUND_PERSON) ? q.person.slice(BACKGROUND_PERSON.length) : ""
   return {
     ...period,
-    ...(bg ? { backgroundName: bg } : q.person ? { personId: q.person } : {}),
+    ...(bg ? { backgroundName: bg } : q.person === NO_PERSON ? { noPerson: true } : q.person ? { personId: q.person } : {}),
     ...(isAiUsagePurpose(q.purpose) ? { purpose: q.purpose } : {}),
     ...(q.model ? { model: q.model.slice(0, 120) } : {}),
     ...(q.unpriced === "1" ? { unpriced: true } : {}),
@@ -251,6 +263,7 @@ export function usageFilterQuery(f: UsageFilter & { fromText: string; toText: st
   const q = new URLSearchParams({ from: f.fromText, to: f.toText })
   if (f.personId) q.set("person", f.personId)
   if (f.backgroundName) q.set("person", BACKGROUND_PERSON + f.backgroundName)
+  if (f.noPerson) q.set("person", NO_PERSON)
   if (f.purpose) q.set("purpose", f.purpose)
   if (f.model) q.set("model", f.model)
   if (f.unpriced) q.set("unpriced", "1")
