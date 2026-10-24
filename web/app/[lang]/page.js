@@ -9,6 +9,7 @@ import BotDemo from "@/components/BotDemo";
 import Modes from "@/components/Modes";
 import Versions from "@/components/Versions";
 import Governance from "@/components/Governance";
+import ComplianceCheck from "@/components/ComplianceCheck";
 import Audience from "@/components/Audience";
 import Roadmap from "@/components/Roadmap";
 import CTA from "@/components/CTA";
@@ -31,6 +32,7 @@ export default async function Home({ params }) {
         <Modes dict={dict} kb={sampleKB[lang]} />
         <Versions dict={dict} />
         <Governance dict={dict} lang={lang} />
+        <ComplianceCheck dict={dict} />
         <Features dict={dict} />
         <HowItWorks dict={dict} />
         <Audience dict={dict} lang={lang} />
