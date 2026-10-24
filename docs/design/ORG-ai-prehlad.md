@@ -87,9 +87,9 @@ Vzor SwiftUI: `Form` (Od/Do) + `Picker(.segmented)` (pohľad) + `Table` od
 
 ## Rozhodnuté
 
-Odporúčaná možnosť je vždy prvá. Q2 rozhodol Ján 24. 10. 2026 v chate
-(„dátumový rozsah daj voliteľný, predvolený je aktuálny mesiac"), ostatné
-čakajú na jedno slovo.
+Rozhodnuté 24. 10. 2026 (Ján, v chate): **Q2 podľa B** („dátumový rozsah
+daj voliteľný, predvolený je aktuálny mesiac"), **Q1 a Q3–Q8 podľa
+odporúčaní (A)**. Odporúčaná možnosť je vždy prvá.
 
 - **Q1 — Názov časti.** A „Prehľad" (cs „Přehled", en „Overview",
   `/organisation/ai/overview`) · B „Report" · C „Výkaz".
