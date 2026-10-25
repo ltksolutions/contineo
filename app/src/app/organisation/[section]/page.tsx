@@ -372,7 +372,9 @@ export default async function OrganisationSectionPage({
         language={language}
         message={onConnectors && query.new === "1" && error === "1" ? undefined : message}
         error={error === "1"}
-        back={connectorHref ?? (onConnectors ? connectorsHref : orgSectionHref(now))}
+        // Oznam vracia na podstránku, kde akcia prebehla — inak by „Zavrieť"
+        // po pridaní predpisu skočilo z Legislatívy na Register (Ján 26. 10.).
+        back={connectorHref ?? (onConnectors ? connectorsHref : now === "sources" && sourcesView === "law" ? "/organisation/sources/law" : orgSectionHref(now))}
       />
 
       <div className="org-head">
