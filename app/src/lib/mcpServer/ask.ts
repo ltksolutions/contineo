@@ -34,7 +34,12 @@ export interface AskOutcome {
 /** Najdlhšie, čo sa na odpoveď čaká — kratšie než `maxDuration` route. */
 export const ASK_TIMEOUT_MS = 50_000
 
-export async function askOnce(input: ChatStreamInput, timeoutMs = ASK_TIMEOUT_MS): Promise<AskOutcome> {
+export async function askOnce(
+  input: ChatStreamInput,
+  timeoutMs = ASK_TIMEOUT_MS,
+  /** V čom sa hľadalo — kópia názvov do záznamu, ako na `/ask` (ADR-040). */
+  searchedScope?: { library: boolean; live: string[] },
+): Promise<AskOutcome> {
   const startedAt = Date.now()
   const out: AskOutcome = { answer: "", sources: [], model: "", provider: "", noVersions: false }
   const citations: unknown[] = []
@@ -83,7 +88,7 @@ export async function askOnce(input: ChatStreamInput, timeoutMs = ASK_TIMEOUT_MS
           model: out.model, provider: out.provider, verifiedCitations: Boolean(done.verifiedCitations),
           ttftMs: firstTokenAt ? firstTokenAt - startedAt : null, totalMs: Date.now() - startedAt,
           timings: done.timings as never, tokens: done.tokens as never, cost: done.cost as never, time: done.time as never,
-          searchedScope: { library: !input.only || input.only.includes("library"), live: [] },
+          searchedScope: searchedScope ?? { library: !input.only || input.only.includes("library"), live: [] },
         }, input.usageActor.personId, input.companyCode, input.accessLevel)
       } catch (e) {
         console.error("[mcp] zápis odpovede zlyhal:", e)

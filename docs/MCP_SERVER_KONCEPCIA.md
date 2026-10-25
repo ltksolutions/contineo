@@ -385,3 +385,38 @@ len s človekom pri prehliadači — zapnutie a vydanie tokenu sú zápisy do
 databázy, ktoré asistent v tejto session nerobil. Overené bez zápisu:
 vypnutý server odpovedá na metadáta aj `/mcp` kódom 404; `tsc`, `eslint`,
 `vitest` (2 933 testov) a `next build` prešli.
+
+---
+
+## 10. Zdroje a Legislatíva cez MCP (2026-10-25)
+
+Katalóg legislatívy (ADR-039) a register zdrojov (ADR-040) prišli do `main`
+po fáze 1. MCP server ich odteraz pozná — stále len čítaním, teda v rámci
+fázy 1 (D250). Ján 25. 10.: „Áno, doplň MCP o zdroje a Legislatívu podľa
+návrhu."
+
+| Nástroj / zdroj | Čo robí | Opiera sa o |
+|---|---|---|
+| `list_sources` | zdroje, ktoré osoba smie vybrať: knižnica, Legislatíva, konektory — id, druh, predvolene, opis pre model | register (`sourcesRegister` + `liveSourcesFor`, D266) |
+| `search_library` + `sources` | hľadanie aj v Legislatíve (`lawSearch`) a v konektoroch (`liveSearch`), bez modelu; výsledok nesie `source` a adresu podľa pôvodu (portál, Slov-Lex, server konektora) | to isté ako Opýtať sa |
+| `ask` + `sources` | odpoveď z vybraných zdrojov; `includeLiveSources` ostáva ako zastaraný alias „všetky" | `chatStream` s `only` |
+| `list_law_acts` | odoberané predpisy organizácie, znenie účinné dnes, počet znení, dokument v knižnici (D260) | `lawSourceState`, `listActs`, `lawDocumentsFor` |
+| `get_law_act` | text znenia účinného k dňu alebo konkrétnej časovej verzie, zoznam znení, odkazy na Slov-Lex | `versionsOf`, `catalogVersion` |
+| `contineo://law/{rok}/{číslo}[/versions/{timepoint}]` | predpis ako zdroj na pripnutie | ten istý text ako `get_law_act` |
+
+**Pravidlá:**
+
+- Výber zdrojov je ten istý zoznam ako na Opýtať sa (D266): knižnica vždy,
+  ďalej len zapnuté, pripojené, rezidenciou dovolené zdroje, ktoré vedia
+  hľadať a nepresahujú úroveň osoby. „Len verejný obsah" (D252) schová
+  interný konektor; Legislatíva je verejná.
+- **Neznámy zdroj je chyba s vymenovaním dostupných**, nie ticho menej —
+  model má vedieť, že zdroj organizácia nemá.
+- Cez MCP sú len **odoberané** predpisy organizácie, nie celý katalóg
+  platformy; neodoberaný predpis sa hlási ako neexistujúci. Rezidencia
+  `on-prem` a `air-gap` katalóg nedovolí (D257) ani tu.
+- Predpis, ktorý má organizácia zverejnený v knižnici, odpovedá pri
+  hľadaní z knižnice (schválené znenie, D260) — `lawSearch` ho z katalógu
+  druhýkrát nevracia.
+- Konektor v `search_library` volá cudzí server (stopa `connector_calls`,
+  D177), nie jazykový model; zdroj, ktorý nestihol, sa vymenuje vo výsledku.

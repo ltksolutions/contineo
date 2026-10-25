@@ -27,10 +27,14 @@ import { getProviders } from "../providers/factory"
 import { CONTENT_ROLE } from "../library"
 import { brandingView } from "../tenants"
 import { questionsLastHour } from "../widgetApi"
-import { askLiveSources } from "../askSources"
+import { liveSearch } from "../liveSources"
+import { lawSearch } from "../lawSearch"
+import { LAW_SOURCE_ID } from "../lawCatalog"
 import { AppError } from "../appError"
 import type { OAuthScope } from "../oauthServer"
 import { askOnce } from "./ask"
+import { sourcesFor, pickSources, unknownSourcesMessage, LIBRARY_SOURCE_ID, type McpSource } from "./sources"
+import { lawActsFor, lawActText, lawActMarkdown } from "./law"
 import { logMcpCall } from "./calls"
 import type { McpActor } from "./auth"
 
@@ -46,10 +50,13 @@ export interface ToolSpec {
 
 export const TOOL_CATALOG: readonly ToolSpec[] = [
   { name: "whoami", scope: null },
+  { name: "list_sources", scope: "library.read" },
   { name: "search_library", scope: "library.read" },
   { name: "list_documents", scope: "library.read" },
   { name: "get_document", scope: "library.read" },
   { name: "document_hierarchy", scope: "library.read" },
+  { name: "list_law_acts", scope: "library.read" },
+  { name: "get_law_act", scope: "library.read" },
   { name: "ask", scope: "ask" },
 ]
 
@@ -142,13 +149,22 @@ export interface SearchHit {
   text: string
   versionLabel: string | null
   effectiveFrom: string | null
-  /** `"qa"` = overená odpoveď kurátora, nie článok predpisu (D11). */
+  /** `"qa"` = overená odpoveď kurátora, nie článok predpisu (D11); `"law"` = Legislatíva; `"mcp"` = konektor. */
   sourceType: string | null
+  /** Zdroj vo výbere: `library`, `law` alebo id konektora (ADR-040 D266). */
+  source: string
   url: string
 }
 
+/**
+ * Úsek → výsledok. Adresa podľa pôvodu: dokument knižnice na portáli,
+ * Legislatíva na Slov-Lexe (paragraf), konektor na jeho serveri.
+ */
 export function toHit(c: ChunkResult, origin: string): SearchHit {
+  const source = c.law ? LAW_SOURCE_ID : c.live ? c.live.connectorId : LIBRARY_SOURCE_ID
+  const external = c.law?.url ?? (c.live ? c.document?.sourceUrl : undefined)
   return {
+    source,
     documentId: c.documentId,
     title: c.document?.title ?? c.documentId,
     articleRef: c.articleRef ?? null,
@@ -157,7 +173,42 @@ export function toHit(c: ChunkResult, origin: string): SearchHit {
     versionLabel: c.version?.label ?? null,
     effectiveFrom: day(c.version?.effectiveFrom),
     sourceType: c.sourceType ?? null,
-    url: documentUrl(origin, c.documentId),
+    url: external || documentUrl(origin, c.documentId),
+  }
+}
+
+/**
+ * Hľadanie vo vybraných zdrojoch bez jazykového modelu: knižnica, Legislatíva
+ * (`lawSearch`, to isté ako na Opýtať sa) a konektory (`liveSearch` — volá
+ * cudzí server, nie model). Poradie ako pri odpovedi: knižnica, konektory,
+ * Legislatíva (D174, D259). Zdroj, ktorý zlyhal, sa ohlási, odpoveď ide ďalej.
+ */
+async function searchSources(actor: McpActor, picked: McpSource[], query: string, limit: number, asOf: Date): Promise<{ hits: SearchHit[]; failed: string[] }> {
+  const companyCode = actor.tenant.companyCode
+  const ids = new Set(picked.map(s => s.id))
+  const connectors = picked.filter(s => s.kind === "mcp").map(s => s.id)
+  const profile = await getTenantProfile(companyCode)
+  const providers = getProviders(profile)
+  const [library, live, law] = await Promise.all([
+    ids.has(LIBRARY_SOURCE_ID) ? searchLibrary(actor, query, limit, asOf) : Promise.resolve([]),
+    connectors.length
+      ? liveSearch({
+          companyCode, query, accessLevel: actor.accessLevel, redirectUrl: "", only: connectors,
+          ctx: { actor: { personId: actor.person.id, personName: actor.person.fullName }, channelKey: null },
+        })
+      : Promise.resolve({ chunks: [], failed: [], asked: [] }),
+    ids.has(LAW_SOURCE_ID)
+      ? lawSearch({
+          companyCode, query, asOf, byDefault: false,
+          useStageRerank: providers.rerank.isPipelineStage, rerankModel: profile.providers.rerank.model,
+          vectorPath: profile.providers.embedding.vectorPath,
+        })
+      : Promise.resolve({ chunks: [], asked: false, failed: false }),
+  ])
+  const names = new Map(picked.map(s => [s.id, s.name]))
+  return {
+    hits: [...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))],
+    failed: [...live.failed.map(f => f.name), ...(law.failed ? [names.get(LAW_SOURCE_ID) ?? LAW_SOURCE_ID] : [])],
   }
 }
 
@@ -266,21 +317,40 @@ export function registerTools(server: McpServer, actor: McpActor): void {
     }))
   }
 
+  if (allowed.has("list_sources")) {
+    server.registerTool("list_sources", {
+      title: "List sources",
+      description: `The content sources ${orgName} has and this person may search: the library (always), Legislation from Slov-Lex when the organisation follows any acts, and connected knowledge sources (MCP connectors). Pass their ids as \`sources\` to search_library or ask.`,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    }, guarded(actor, spec("list_sources"), async () => {
+      const sources = await sourcesFor(actor)
+      const lines = sources.map(s => `- ${s.id}: ${s.name}${s.defaultOn ? " (default)" : ""} — ${s.description}`)
+      return text(lines.join("\n"), { sources })
+    }))
+  }
+
   if (allowed.has("search_library")) {
     server.registerTool("search_library", {
-      title: "Search the library",
-      description: `Hybrid (semantic + full-text) search over the sections of ${orgName}'s documents that are in force on the given day. Returns the best-matching passages with document, article and version — no language model is involved; write the answer yourself and cite the passages. Use \`ask\` instead when you want Contineo's own answer with citations.`,
+      title: "Search the library and sources",
+      description: `Hybrid (semantic + full-text) search over the sections of ${orgName}'s documents in force on the given day — and, when asked via \`sources\`, over Legislation (Slov-Lex acts the organisation follows) and connected knowledge sources. Returns the best-matching passages with document, article, version and source — no language model is involved; write the answer yourself and cite the passages. Use \`ask\` instead when you want Contineo's own answer with citations.`,
       inputSchema: {
         query: z.string().min(2).max(500).describe("What to look for, in the language of the documents (Slovak for most organisations)."),
-        limit: z.number().int().min(1).max(SEARCH_MAX).optional().describe(`How many passages to return (default 8, at most ${SEARCH_MAX}).`),
+        limit: z.number().int().min(1).max(SEARCH_MAX).optional().describe(`How many library passages to return (default 8, at most ${SEARCH_MAX}). Legislation and connectors add their own few best passages.`),
         asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Search the versions in force on this day (YYYY-MM-DD). Default: today."),
+        sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources, e.g. ["library", "law"]. Default: ["library"].'),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },
-    }, guarded(actor, spec("search_library"), async ({ query, limit, asOf }) => {
-      const hits = await searchLibrary(actor, query.trim(), limit ?? 8, parseAsOf(asOf))
+    }, guarded(actor, spec("search_library"), async ({ query, limit, asOf, sources }) => {
+      const available = await sourcesFor(actor)
+      const { picked, unknown } = pickSources(sources, available, [LIBRARY_SOURCE_ID])
+      if (unknown.length) return failure(unknownSourcesMessage(unknown, available))
+      const { hits, failed } = await searchSources(actor, picked, query.trim(), limit ?? 8, parseAsOf(asOf))
       const lines = hits.map((h, i) =>
-        `${i + 1}. ${h.title}${h.articleRef ? ` — ${h.articleRef}` : ""}${h.heading ? ` (${h.heading})` : ""}${h.versionLabel ? ` [${h.versionLabel}]` : ""}\n${h.url}\n${h.text}`)
-      return text(hits.length ? lines.join("\n\n") : "No passages matched.", { hits, asOf: day(parseAsOf(asOf)) })
+        `${i + 1}. ${h.title}${h.articleRef ? ` — ${h.articleRef}` : ""}${h.heading ? ` (${h.heading})` : ""}${h.versionLabel ? ` [${h.versionLabel}]` : ""}${h.source !== LIBRARY_SOURCE_ID ? ` {${h.source}}` : ""}\n${h.url}\n${h.text}`)
+      const note = failed.length ? `\n\n(Not searched — source did not respond: ${failed.join(", ")})` : ""
+      return text((hits.length ? lines.join("\n\n") : "No passages matched.") + note, {
+        hits, asOf: day(parseAsOf(asOf)), searched: picked.map(s => s.id), failed,
+      })
     }))
   }
 
@@ -358,36 +428,74 @@ export function registerTools(server: McpServer, actor: McpActor): void {
       description: `Contineo's own answer with citations, produced by ${orgName}'s configured model over the documents in force — the same answer the person would get on the portal. Costs the organisation an AI call; prefer search_library when you only need passages. The question is recorded in the person's history.`,
       inputSchema: {
         question: z.string().min(3).max(1000).describe("The question, in the person's language."),
-        includeLiveSources: z.boolean().optional().describe("Also search the organisation's connected live sources (MCP connectors), when it has any. Default: library only."),
+        sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources to answer from, e.g. ["library", "law"]. Default: ["library"].'),
+        includeLiveSources: z.boolean().optional().describe("Deprecated — use sources. true = the library and every available source."),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },
-    }, guarded(actor, spec("ask"), async ({ question, includeLiveSources }) => {
+    }, guarded(actor, spec("ask"), async ({ question, sources, includeLiveSources }) => {
       const companyCode = actor.tenant.companyCode
       if (await questionsLastHour(companyCode, actor.person.id) >= ASK_PER_HOUR) {
         return failure(`Hourly limit of ${ASK_PER_HOUR} questions reached; try again later.`)
       }
-      const live = includeLiveSources
-        ? await askLiveSources({ state: "ready", tenant: actor.tenant, person: actor.person })
-        : []
+      const available = await sourcesFor(actor)
+      const fallback = includeLiveSources ? available.map(s => s.id) : [LIBRARY_SOURCE_ID]
+      const { picked, unknown } = pickSources(sources, available, fallback)
+      if (unknown.length) return failure(unknownSourcesMessage(unknown, available))
       const outcome = await askOnce({
         companyCode, query: question.trim(), language: actor.person.language, accessLevel: actor.accessLevel,
         usageActor: { companyCode, personId: actor.person.id, personName: actor.person.fullName, email: actor.person.email },
-        only: ["library", ...live.map(s => s.id)],
+        only: picked.map(s => s.id),
         callbackUrl: "",
+      }, undefined, {
+        library: picked.some(s => s.id === LIBRARY_SOURCE_ID),
+        live: picked.filter(s => s.id !== LIBRARY_SOURCE_ID).map(s => s.name),
       })
       if (outcome.error) return failure(outcome.error === "timeout" ? "The answer took too long." : outcome.error)
       if (!outcome.answer.trim()) {
         return text(outcome.noVersions ? "No document version is in force on that day." : "Nothing in the documents answers this question.", { answer: null, sources: [], noVersions: outcome.noVersions })
       }
-      const sources = outcome.sources.map(s => ({
+      const cited = outcome.sources.map(s => ({
         index: s.index, title: s.title, documentId: s.documentId ?? null, articleRef: s.articleRef ?? null, heading: s.heading ?? null,
-        sourceType: s.sourceType ?? null, url: s.documentId ? documentUrl(actor.origin, s.documentId) : s.url ?? null,
+        // Dokument knižnice na portáli; Legislatíva a konektor majú vlastnú adresu.
+        sourceType: s.sourceType ?? null,
+        url: s.documentId && !/^(law|live):/.test(s.documentId) ? documentUrl(actor.origin, s.documentId) : s.url ?? null,
       }))
-      const list = sources.map(s => `[${s.index}] ${s.title}${s.articleRef ? ` — ${s.articleRef}` : ""}${s.url ? ` · ${s.url}` : ""}`).join("\n")
+      const list = cited.map(s => `[${s.index}] ${s.title}${s.articleRef ? ` — ${s.articleRef}` : ""}${s.url ? ` · ${s.url}` : ""}`).join("\n")
       return text(`${outcome.answer.trim()}\n\nSources:\n${list}`, {
-        answer: outcome.answer.trim(), sources, asOf: outcome.asOf ?? null, model: outcome.model,
-        liveFailed: outcome.liveFailed ?? [], recordedId: outcome.recordedId ?? null,
+        answer: outcome.answer.trim(), sources: cited, asOf: outcome.asOf ?? null, model: outcome.model,
+        liveFailed: outcome.liveFailed ?? [], recordedId: outcome.recordedId ?? null, searched: picked.map(s => s.id),
       })
+    }))
+  }
+
+  if (allowed.has("list_law_acts")) {
+    server.registerTool("list_law_acts", {
+      title: "List followed legislation",
+      description: `Acts from Slov-Lex (laws, decrees) that ${orgName} follows: number, title, the version in force today, how many versions exist and whether the organisation also keeps the act in its library. Use get_law_act for the text.`,
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    }, guarded(actor, spec("list_law_acts"), async () => {
+      const { allowed: ok, acts } = await lawActsFor(actor.tenant.companyCode)
+      if (!ok) return text("Legislation is not available in this organisation's data residency mode.", { acts: [] })
+      const lines = acts.map(a => `- ${a.title} (${a.actId})${a.current ? ` — in force from ${a.current.effectiveFrom}${a.current.amendment ? `, amended by ${a.current.amendment}` : ""}` : " — no version in force yet"}${a.libraryDocumentId ? ` · in the library as ${a.libraryDocumentId}` : ""}`)
+      return text(acts.length ? lines.join("\n") : "The organisation follows no legislation.", { acts })
+    }))
+  }
+
+  if (allowed.has("get_law_act")) {
+    server.registerTool("get_law_act", {
+      title: "Get a law",
+      description: "The full Markdown text of a followed act from Slov-Lex in the version in force on the given day (or a specific timepoint), with the list of its versions and links to Slov-Lex. Cite sections (§) by their numbering in the text. When the act is also in the library, the library document is the organisation's approved copy.",
+      inputSchema: {
+        actId: z.string().min(1).max(60).describe("Act id from list_law_acts, e.g. SK/ZZ/2015/440."),
+        asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Day for which the version in force is chosen (YYYY-MM-DD). Default: today."),
+        timepoint: z.string().regex(/^\d{8}$/).optional().describe("A specific version (YYYYMMDD timepoint from the versions list)."),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    }, guarded(actor, spec("get_law_act"), async ({ actId, asOf, timepoint }) => {
+      const act = await lawActText(actor.tenant.companyCode, actId, parseAsOf(asOf), timepoint)
+      if (!act) return failure(`Act ${actId} is not followed by the organisation, or has no version for that day.`)
+      const { markdown, ...meta } = act
+      return text(lawActMarkdown(act), { ...meta, markdown })
     }))
   }
 }
