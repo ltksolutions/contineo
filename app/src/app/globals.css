@@ -1004,6 +1004,27 @@ textarea.field-input { min-height: 96px; padding: 10px 12px; line-height: 1.55; 
 .field-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /*
+  Posuvník v rozsahu (SwiftUI `Slider`), 25. 10. 2026 — prvý použitý pri
+  stropoch úsekov MCP (Prístup → AI asistenti). Natívny `input type=range`,
+  farba organizácie cez `accent-color` (nikdy systémová modrá); terč 44 px
+  na výšku. Nad posuvníkom popis a hodnota (`output`), pod ním krajné
+  hodnoty. Komponent `RangeField`. Len pre malý rozsah celých čísel
+  s rozumnou predvoľbou — presné číslo (suma, dátum) je `.field-input`.
+*/
+.field-range-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.field-range-value {
+  min-width: 2ch;
+  text-align: right;
+  font-size: var(--fs-section);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.field-range-input { width: 100%; min-height: 44px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.field-range-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.field-range-scale { display: flex; justify-content: space-between; font-size: var(--fs-micro); margin-top: -6px; }
+
+/*
  * Natívny `<select>` s triedou `.field-input` — filter v Reťazi dôkazov
  * a `<noscript>` zálohy komponentu Select. Operačný systém mu inak kreslí
  * vlastný ovládač (na macOS šípky hore-dole), ktorý s ostatnými poľami

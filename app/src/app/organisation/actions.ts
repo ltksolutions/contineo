@@ -38,7 +38,7 @@ import { saveConnector, removeConnector, disconnectConnector, connectorById, typ
 import { pathPattern } from "@/lib/connectorReduction"
 import { startAuthorization } from "@/lib/mcp/client"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
-import { assistantsState } from "@/lib/mcpServer/access"
+import { assistantsState, searchCaps } from "@/lib/mcpServer/access"
 import { getTenantProfile } from "@/lib/tenantProfile"
 import { tenantByCompanyCode } from "@/lib/tenants"
 import { RESIDENCY_LABEL } from "@/lib/residency"
@@ -804,12 +804,17 @@ export async function saveAssistantsAction(fd: FormData) {
     const state = assistantsState({ assistants: { enabled } }, profile.dataResidency)
     if (enabled && !state.allowed) throw new AppError("mcp.blocked", t.blocked(RESIDENCY_LABEL[profile.dataResidency]))
     const before = (await tenantByCompanyCode(self.companyCode))?.assistants
-    await saveTenant(self.companyCode, { assistantsEnabled: enabled, assistantsPublicOnly: publicOnly }, self.email)
+    // Posuvníky (Ján 25. 10.): orezané do rozsahu na serveri — hodnota z formulára sa dá podvrhnúť.
+    const caps = searchCaps({ documents: fieldText(fd, "capDocuments"), law: fieldText(fd, "capLaw") })
+    const capsBefore = searchCaps(before?.searchCaps)
+    await saveTenant(self.companyCode, { assistantsEnabled: enabled, assistantsPublicOnly: publicOnly, assistantsSearchCaps: caps }, self.email)
     await writeAudit({
       companyCode: self.companyCode, subject: "assistants", action: "changed", actor: self.email,
       changes: {
         enabled: { from: Boolean(before?.enabled), to: enabled },
         publicOnly: { from: Boolean(before?.publicOnly), to: publicOnly },
+        ...(capsBefore.documents !== caps.documents ? { capDocuments: { from: capsBefore.documents, to: caps.documents } } : {}),
+        ...(capsBefore.law !== caps.law ? { capLaw: { from: capsBefore.law, to: caps.law } } : {}),
       },
     })
   } catch (e) {

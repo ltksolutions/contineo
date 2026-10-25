@@ -35,6 +35,7 @@ import type { OAuthScope } from "../oauthServer"
 import { askOnce } from "./ask"
 import { sourcesFor, pickSources, unknownSourcesMessage, LIBRARY_SOURCE_ID, type McpSource } from "./sources"
 import { lawActsFor, lawActText, lawActMarkdown } from "./law"
+import type { SearchCaps } from "./access"
 import { logMcpCall } from "./calls"
 import type { McpActor } from "./auth"
 
@@ -72,25 +73,13 @@ export function toolsFor(scopes: readonly string[], roles: readonly string[] = [
 export const ASK_PER_HOUR = 60
 /** Najviac úsekov z `search_library`. */
 /**
- * Pevné stropy úsekov pre `search_library` — **pre každý zdroj zvlášť**,
- * bez parametra (Ján 25. 10. 2026: „nevidím dôvod na zadávanie limitu").
- * Strop musí mať server vždy: text, ktorý už odišiel, je v kontexte modelu
- * klienta a ten si ho spätne neustráži.
- *
- * Z čoho čísla sú:
- *   · úsek knižnice má cieľ 300–900 tokenov (ADR-035), takže 8 úsekov je
- *     zhruba 2 500–7 000 tokenov — dosť na odpoveď s citáciami, málo na to,
- *     aby jedno hľadanie zaplnilo kontext; na portáli ide modelu 5 z 20
- *     kandidátov (`chatStream`), tu píše model klienta a má o niečo viac;
- *   · Slov-Lex vracia najviac 4 (`lawSearch`, ten istý strop ako na portáli)
- *     — paragraf zákona býva dlhý;
- *   · konektor rovnako ako knižnica, 8.
- * Po mesiaci prevádzky sa dá overiť z `mcp_calls.size` (veľkosť odpovede).
+ * Strop úsekov pre zdroj podľa nastavenia organizácie (Prístup → AI
+ * asistenti, posuvníky; rozsahy a odôvodnenie v `access.ts`,
+ * `SEARCH_CAP_RANGE`). Knižnica a každý konektor majú strop „dokumenty",
+ * Slov-Lex vlastný.
  */
-export const SEARCH_CAP: Readonly<Record<"library" | "law" | "connector", number>> = { library: 8, law: 4, connector: 8 }
-
-function capFor(source: string): number {
-  return source === LIBRARY_SOURCE_ID ? SEARCH_CAP.library : source === SLOV_LEX_SOURCE_ID ? SEARCH_CAP.law : SEARCH_CAP.connector
+export function capsFor(caps: SearchCaps): (source: string) => number {
+  return source => source === SLOV_LEX_SOURCE_ID ? caps.law : caps.documents
 }
 
 // ── Pomocné ─────────────────────────────────────────────────────────────────
@@ -204,10 +193,9 @@ export function toHit(c: ChunkResult, origin: string): SearchHit {
  * Legislatíva (D174, D259). Zdroj, ktorý zlyhal, sa ohlási, odpoveď ide ďalej.
  */
 /**
- * Strop pre **každý zdroj zvlášť** (`SEARCH_CAP`), poradie sa zachová.
- * Čistá funkcia — testuje sa; `cap` sa dá podstrčiť v teste.
+ * Strop pre **každý zdroj zvlášť**, poradie sa zachová. Čistá funkcia — testuje sa.
  */
-export function capPerSource(hits: SearchHit[], cap: (source: string) => number = capFor): SearchHit[] {
+export function capPerSource(hits: SearchHit[], cap: (source: string) => number): SearchHit[] {
   const seen = new Map<string, number>()
   return hits.filter(h => {
     const n = seen.get(h.source) ?? 0
@@ -223,7 +211,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
   const profile = await getTenantProfile(companyCode)
   const providers = getProviders(profile)
   const [library, live, law] = await Promise.all([
-    ids.has(LIBRARY_SOURCE_ID) ? searchLibrary(actor, query, SEARCH_CAP.library, asOf) : Promise.resolve([]),
+    ids.has(LIBRARY_SOURCE_ID) ? searchLibrary(actor, query, actor.state.caps.documents, asOf) : Promise.resolve([]),
     connectors.length
       ? liveSearch({
           companyCode, query, accessLevel: actor.accessLevel, redirectUrl: "", only: connectors,
@@ -232,7 +220,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
       : Promise.resolve({ chunks: [], failed: [], asked: [] }),
     ids.has(SLOV_LEX_SOURCE_ID)
       ? lawSearch({
-          companyCode, query, asOf, byDefault: false,
+          companyCode, query, asOf, byDefault: false, limit: actor.state.caps.law,
           useStageRerank: providers.rerank.isPipelineStage, rerankModel: profile.providers.rerank.model,
           vectorPath: profile.providers.embedding.vectorPath,
         })
@@ -240,7 +228,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
   ])
   const names = new Map(picked.map(s => [s.id, s.name]))
   return {
-    hits: capPerSource([...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))]),
+    hits: capPerSource([...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))], capsFor(actor.state.caps)),
     failed: [...live.failed.map(f => f.name), ...(law.failed ? [names.get(SLOV_LEX_SOURCE_ID) ?? SLOV_LEX_SOURCE_ID] : [])],
   }
 }
