@@ -4,6 +4,31 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Zdroje → Web / RSS → Slov-Lex a návod pre zdroje (2026-10-25, ADR-040 Dodatok 1, #439)
+
+- Podmenu Zdrojov je **Register · Konektory · Web / RSS**. Slov-Lex je
+  zdroj druhu Web / RSS na `/organisation/sources/web/slov-lex`
+  („Slov-Lex — legislatíva SR"); zoznam `/organisation/sources/web`
+  pripraví miesto pre českú legislatívu a RSS.
+- Id zdroja vo výbere je `slov-lex`, názov **Legislatíva SR**. Staré
+  `/organisation/sources/law`, `/organisation/ai/law` a `?src=law` sa
+  prekladajú; MCP nástroje prijímajú aj starý id `law`.
+- Návod `/guide`: kapitola pre každého (zdroje pri otázke, štítky Zákon,
+  Živý zdroj, Overená odpoveď, znenie k dňu otázky) a kapitola pre správcu
+  (register a druhy zdrojov, katalóg legislatívy verzus knižnica, odber do
+  knižnice, nové znenie z nočnej kontroly). Oprava vety o profiloch
+  členenia (ADR-035).
+
+### Contineo ako MCP server: zdroje a Legislatíva, prihlásenie z Claude Code (2026-10-25, #438, #440)
+
+- `list_sources` vymenuje zdroje, ktoré osoba smie vybrať, z registra
+  zdrojov; `search_library` a `ask` berú `sources`. Legislatíva sa hľadá
+  v katalógu, konektory živo; výsledok nesie, odkiaľ je.
+- `list_law_acts` a `get_law_act`: odoberané predpisy organizácie a ich
+  znenia; zdroje `contineo://law/{rok}/{číslo}`.
+- OAuth: návrat na loopback s ľubovoľným portom (RFC 8252 § 7.3) —
+  prihlásenie Claude Code k MCP serveru už nekončí chybou návratovej adresy.
+
 ### Register zdrojov: Organizácia → Zdroje (2026-10-25, ADR-040, #433, #434, #437)
 
 - Nová sekcia **Organizácia → Zdroje**: register zdrojov obsahu s rovnakými

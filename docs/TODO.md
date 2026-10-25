@@ -264,6 +264,8 @@
 - [x] ~~Krok 1 — sekcia Organizácia → Zdroje, Legislatíva z Umelej inteligencie do Zdrojov, výber zdrojov z registra~~ ✅ 2026-10-25, #433
 - [x] ~~Krok 2 — konektory ako podstránka Zdrojov, preklad `/organisation/connectors[/…]` a `?tab=connectors`, widget číta register~~ ✅ 2026-10-25, #434
 - [x] ~~Krok 3 (časť) — schránka helpdesku ako riadok registra, Technológia podľa registra (sk/cs/en)~~ ✅ 2026-10-25, #437
+- [x] ~~Dodatok 1 (D268) — Zdroje → Web / RSS → Slov-Lex, id zdroja `slov-lex`, preklad `law`; návod s kapitolou pre každého a pre správcu zdrojov~~ ✅ 2026-10-25, #439
+- [ ] **Český adaptér** (`zakonyprolidi.cz`) — druhý zdroj druhu Web / RSS s vlastným id vedľa `slov-lex`; katalóg `law_*` ho unesie (jurisdikcia v identifikátore predpisu). Až s českým tenantom (ADR-039 fáza 3).
 - [ ] **Generický web a RSS bez adaptéra** a kolekcia `sources` (ADR-040 § 5) — s prvým skutočným zdrojom (úradný vestník s RSS, web zväzu).
 - [ ] **Rozsahy kanála helpdesku z registra** — dnes kanál vyberá rozsahy konektorov (`connectorScopes`); legislatívu vo widgete nevypína správca kanála, ale odber organizácie. Ak to bude treba, rozsah „legislatíva" ako ďalší riadok výberu kanála.
 

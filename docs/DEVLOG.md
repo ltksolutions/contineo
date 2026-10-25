@@ -72,6 +72,34 @@ v tomto upratovaní.
 Baseline po dni: app 0 errors, 39 warnings, 2970 testov v 258 súboroch;
 web 13 testov. Katalóg: 4 predpisy, 16 znení, 1 638 úsekov.
 
+**Popoludní: druh je zoznam, zdroj je detail (#439, ADR-040 Dodatok 1, D268).**
+Ján si všimol, že `/organisation/sources/law` robí z legislatívy druh
+zdroja, hoci D265 hovorí opak — a že príde aj česká. Nové tvary podľa
+konektorov: Zdroje → Web / RSS (zoznam) → Slov-Lex (detail), id zdroja
+`slov-lex`, staré adresy a `?src=law` sa prekladajú. Pri tom sa Ján
+opýtal, čo je vlastne „katalóg" — vysvetlenie (sklad verejného textu pre
+všetky organizácie, nie knižnica) išlo rovno do návodu: `/guide` má
+kapitolu pre každého (zdroje pri otázke, štítky) a pre správcu zdrojov.
+Odporúčal som jeden návod pre všetkých, nie dve dokumentácie — tak to
+Ján rozhodol pri vzniku `/guide`. V návode bola zastaraná veta
+o profiloch členenia (zanikli s ADR-035), opravená mimochodom.
+
+**Dve sessions na tom istom zdroji.** Kým #439 čakal na CI, druhá session
+zlúčila #438 (MCP server: `list_sources`, Legislatíva v `search_library`
+a `ask`) — postavený na id `law` a konštante, ktorú #439 premenoval.
+Zachytila to až kontrola „pohol sa main?" pred zlúčením; bez nej by main
+nešiel cez `tsc`. MCP som previedol na `slov-lex` s prekladom `law`, aby
+AI klient s uloženým `list_sources` neodpadol. Druhej session som
+pripravil správu, Ján ju poslal. **Nabudúce:** keď premenúvam niečo, čo
+je dnes nové, pozrieť `git log origin/main` aj vetvy iných sessions
+skôr, nie až pred zlúčením.
+
+**Rozpracovaný koncept zákona** (bod v TODO z ADR-037) Ján uzavrel ako
+neproblém: koncept zákona vzniká len strojovo, cron ho po založení
+neprepíše a bežiace kolo sa pri zmene samo zruší.
+
+Baseline na konci dňa: 2980 testov v 258 súboroch (vrátane MCP z #438).
+
 ---
 
 ## 2026-10-24 — Poupratuj: MCP server, oprava textu, Prehľad
