@@ -418,8 +418,12 @@ návrhu."
 - Predpis, ktorý má organizácia zverejnený v knižnici, odpovedá pri
   hľadaní z knižnice (schválené znenie, D260) — `lawSearch` ho z katalógu
   druhýkrát nevracia.
-- **`limit` v `search_library` je strop pre každý zdroj zvlášť** (knižnica,
-  Slov-Lex, každý konektor), Ján 25. 10. Legislatíva vráti najviac 4 úseky;
-  paragraf zákona býva dlhý, preto pri viacerých zdrojoch malý limit.
+- **`search_library` nemá parameter `limit`** (Ján 25. 10.: „nevidím dôvod
+  na zadávanie limitu"). Server má pevný strop pre každý zdroj zvlášť
+  (`SEARCH_CAP`): knižnica 8, Slov-Lex 4, každý konektor 8. Úsek knižnice má
+  cieľ 300–900 tokenov (ADR-035), 8 úsekov je teda zhruba 2 500–7 000
+  tokenov; Slov-Lex má ten istý strop ako na portáli (`lawSearch`). Strop
+  musí byť na serveri — text, ktorý odišiel, si model klienta spätne
+  neustráži. Čísla sa dajú po mesiaci overiť z `mcp_calls.size`.
 - Konektor v `search_library` volá cudzí server (stopa `connector_calls`,
   D177), nie jazykový model; zdroj, ktorý nestihol, sa vymenuje vo výsledku.
