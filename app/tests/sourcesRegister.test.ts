@@ -13,11 +13,12 @@ const base: RegisteredSource = {
   accessLevel: "internal", uses: { retrieval: true, import: true, tools: false }, href: "/organisation/sources/connectors/c1", detail: "api.sportnet.online",
 }
 const library: RegisteredSource = { ...base, id: "library", kind: "file", name: "Knižnica", accessLevel: "internal", uses: { retrieval: true, import: true, tools: false } }
+const mailbox: RegisteredSource = { ...base, id: "mailbox:podpora", kind: "mailbox", adapter: "graph", name: "Podpora", accessLevel: "public", uses: { retrieval: false, import: true, tools: false }, href: "/channels/podpora", detail: "podpora@futbalsfz.sk" }
 const law: RegisteredSource = { ...base, id: "law", kind: "web", adapter: "slov-lex", name: "Legislatíva", accessLevel: "public", defaultOn: true, uses: { retrieval: true, import: false, tools: false } }
 
 describe("živé zdroje z registra", () => {
-  it("knižnica nie je živý zdroj; konektor a legislatíva áno, s predvoľbou", () => {
-    expect(liveSourcesFor([library, base, law], "internal")).toEqual([
+  it("knižnica ani schránka nie sú živý zdroj; konektor a legislatíva áno, s predvoľbou", () => {
+    expect(liveSourcesFor([library, mailbox, base, law], "internal")).toEqual([
       { id: "c1", name: "Sportnet", defaultOn: false },
       { id: "law", name: "Legislatíva", defaultOn: true },
     ])
