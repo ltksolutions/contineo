@@ -278,7 +278,7 @@
 - [ ] **Rerank živých úsekov v cloude:** `$rerank` beží v pipeline a živé úseky v nej nie sú — idú za knižnicou v poradí servera. Keď to bude prekážať, aplikačný rerank nad zlúčeným zoznamom.
 - [ ] **Identita `person`** (každý si pripojí vlastný účet) — nutné pre C pri nástrojoch typu „moje členstvá"; schéma to nesie, kód nie.
 - [ ] **Po nasadení:** v Organizácia → Zdroje → Konektory „Pripojiť znova" (lokálny token je pod iným kľúčom), na kanáli ISSF vybrať rozsah ISSF, overiť generovanie odpovede so živým zdrojom (lokálne nešlo — kľúč AI organizácie je pod produkčným kľúčom).
-- [x] ~~**Contineo ako MCP server**~~ → **ADR-038** (2026-10-24, D249–D256): koncepcia `docs/MCP_SERVER_KONCEPCIA.md`; fáza 1 (OAuth vydáva Contineo, `whoami`, `search_library`, `get_document`, `list_documents`, `document_hierarchy`, `ask`, dokumenty ako zdroje). Otvorené: fáza 2 (koncepty, kontrola s potvrdením), fáza 3 (helpdesk, HR, vzdelávanie, osobné tokeny), verejný MCP bez prihlásenia, Contineo plugin pre Claude Code.
+- [x] ~~**Contineo ako MCP server**~~ → **ADR-038** (2026-10-24, D249–D256): koncepcia `docs/MCP_SERVER_KONCEPCIA.md`; fáza 1 (OAuth vydáva Contineo, `whoami`, `search_library`, `get_document`, `list_documents`, `document_hierarchy`, `ask`, dokumenty ako zdroje); 25. 10. doplnené zdroje a Legislatíva (`list_sources`, `sources` v `search_library` a `ask`, `list_law_acts`, `get_law_act`, `contineo://law/…`). Otvorené: fáza 2 (koncepty, kontrola s potvrdením), fáza 3 (helpdesk, HR, vzdelávanie, osobné tokeny), verejný MCP bez prihlásenia, Contineo plugin pre Claude Code.
 
 ### F. Reconciliation (Fáza 4b)
 - [ ] Kolekcia `codelist_change_requests` + preview (plný zoznam dotknutých dokumentov)
