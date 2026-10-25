@@ -30,7 +30,10 @@ SPDX-License-Identifier: EUPL-1.2
 > Krok 2 (26. 10. 2026) — konektory ako podstránka Zdrojov
 > (`/organisation/sources/connectors[/<id>]`), sekcia Konektory zanikla,
 > preklad `/organisation/connectors[/…]` aj `?tab=connectors`; widget kanála
-> číta register. Krok 3 v § 2, D267.
+> číta register. Krok 3 (26. 10. 2026, časť) — schránka helpdesku ako riadok
+> registra (ukazuje sa, nastavuje sa pri kanáli), stránka Technológia prepísaná
+> podľa registra; **generický web a RSS bez adaptéra a kolekcia `sources`**
+> zostávajú otvorené — prídu s prvým takým zdrojom (§ 5).
 
 ---
 
@@ -109,7 +112,7 @@ s generickým webom alebo RSS, ktoré nemajú kam inam (krok 3).
 |---|---|---|
 | **1** | sekcia Zdroje s registrom; Legislatíva ako podstránka Zdrojov; výber zdrojov z registra | `/organisation/ai/law` → `/organisation/sources/law` |
 | **2** | konektory ako podstránka Zdrojov, sekcia Konektory zaniká; kanál helpdesku vyberá zdroje z registra; widget kanála číta register | `/organisation/connectors[/…]` → `/organisation/sources/connectors[/…]` |
-| **3** | schránka helpdesku ako zdroj v registri; generický web a RSS ako zdroj druhu web bez adaptéra, kolekcia `sources`; stránka Technológia prepísaná podľa registra | — |
+| **3** | schránka helpdesku ako zdroj v registri (✅); stránka Technológia prepísaná podľa registra (✅); generický web a RSS ako zdroj druhu web bez adaptéra, kolekcia `sources` (otvorené — s prvým takým zdrojom) | — |
 
 Každý krok je vlastný PR; bez nového ADR, pokiaľ sa nezmení rozhodnutie.
 Staré adresy prekladá `lib/legacyRoutes.ts` (`CLAUDE.md`: verejné cesty sa

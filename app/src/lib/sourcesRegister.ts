@@ -15,6 +15,7 @@
  */
 
 import { listConnectors, connectorAllowed, type Connector } from "./connectors"
+import { listChannels, mailboxStalled, type HelpdeskChannel } from "./channels"
 import { canSearch } from "./mcp/operations"
 import { lawSourceState, LAW_SOURCE_ID } from "./lawCatalog"
 import { SLOV_LEX_ADAPTER } from "./slovLex"
@@ -68,11 +69,28 @@ function fromConnector(c: Connector, allowed: boolean): RegisteredSource {
   }
 }
 
+/**
+ * Schránka helpdesku ako zdroj (ADR-040 krok 3, D264): register ju ukazuje,
+ * nepreberá — nastavuje sa pri kanáli (ADR-028). Obsah z nej neide do
+ * hľadania priamo: otázky číta analýza a navrhuje doplnenie manuálov
+ * (ADR-030, ADR-034), preto „import", nie „živý zdroj".
+ */
+function fromMailbox(ch: HelpdeskChannel): RegisteredSource | null {
+  if (!ch.mailbox) return null
+  return {
+    id: `mailbox:${ch.key}`, kind: "mailbox", adapter: ch.mailbox.kind, name: ch.name,
+    enabled: true, connected: !mailboxStalled(ch.mailbox), allowed: true, defaultOn: false, accessLevel: "public",
+    uses: { retrieval: false, import: true, tools: false },
+    href: `/channels/${encodeURIComponent(ch.key)}`, detail: ch.mailbox.address,
+  }
+}
+
 /** Celý register organizácie — pre sekciu Zdroje aj pre výber zdrojov. */
 export async function sourcesRegister(companyCode: string, language: UiLanguage): Promise<RegisteredSource[]> {
   const t = dictionary(language)
-  const [connectors, law] = await Promise.all([listConnectors(companyCode), lawSourceState(companyCode)])
+  const [connectors, law, channels] = await Promise.all([listConnectors(companyCode), lawSourceState(companyCode), listChannels(companyCode)])
   const allowed = await Promise.all(connectors.map(c => connectorAllowed(companyCode, c.endpoint)))
+  const mailboxes = channels.map(fromMailbox).filter((s): s is RegisteredSource => s !== null)
   return [
     {
       id: "library", kind: "file", adapter: null, name: t.ask.scopeLibrary,
@@ -80,6 +98,7 @@ export async function sourcesRegister(companyCode: string, language: UiLanguage)
       uses: { retrieval: true, import: true, tools: false },
       href: "/library", detail: null,
     },
+    ...mailboxes,
     ...connectors.map((c, i) => fromConnector(c, allowed[i])),
     {
       id: LAW_SOURCE_ID, kind: "web", adapter: SLOV_LEX_ADAPTER, name: t.ask.scopeLaw,
