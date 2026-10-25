@@ -4,6 +4,27 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Stropy úsekov MCP posuvníkom a nový prvok `.field-range` (2026-10-25, #441)
+
+- `search_library` MCP servera nemá parameter `limit`. Strop úsekov je na
+  serveri pre každý zdroj zvlášť (knižnica, Slov-Lex, každý konektor)
+  a organizácia ho nastaví v **Organizácia → Prístup → AI asistenti**,
+  sekcia „Rozsah výsledkov hľadania": knižnica a konektory 3–15 (predvolene
+  8), Legislatíva 1–8 (predvolene 4). Zmena stropov ide do auditu. Portál
+  a nástroj `ask` sa nemenia.
+- Design system: **posuvník `.field-range`** (SwiftUI `Slider`) —
+  natívny `input type="range"` vo farbe organizácie, terč 44 px, hodnota
+  vedľa popisu, krajné hodnoty pod ním; komponent `RangeField`, konvencia
+  v `.design-sync/conventions.md`.
+
+### Smernica o pracovných cestách: text opravený bez novej verzie (2026-10-25, dáta SFZ)
+
+- Rozbité vnorené zoznamy a poznámky pod čiarou z prevodu z Wordu
+  (čl. 8, 10, 11, 12, 13, 14) a písmená v odsekoch podľa schváleného PDF
+  (čl. 1, 2, 3, 6, 7, 9, 13, 16). Cez Opraviť text (ADR-007): znenie, PDF
+  aj potvrdenia ostali, úseky sa preindexovali a odkazy na „ods. … písm. …"
+  sedia s textom.
+
 ### Zdroje → Web / RSS → Slov-Lex a návod pre zdroje (2026-10-25, ADR-040 Dodatok 1, #439)
 
 - Podmenu Zdrojov je **Register · Konektory · Web / RSS**. Slov-Lex je
