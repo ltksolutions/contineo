@@ -54,8 +54,15 @@ export function searchableSources(register: RegisteredSource[], accessLevel: "pu
  * menej — model má vedieť, že zdroj nemá (a z `list_sources`, ktoré má).
  * Chýbajúci výber = `fallback`.
  */
+/**
+ * Staré id zdrojov → dnešné (ADR-040 Dodatok 1, D268): `law` bol do 25. 10.
+ * id druhu, dnes je to zdroj `slov-lex`. Klient, ktorý si zapamätal výsledok
+ * `list_sources`, posiela starý tvar — prekladá sa, neodmieta.
+ */
+const LEGACY_SOURCE_IDS: Record<string, string> = { law: "slov-lex" }
+
 export function pickSources(requested: readonly string[] | undefined, allowed: McpSource[], fallback: string[]): { picked: McpSource[]; unknown: string[] } {
-  const ids = requested?.length ? [...new Set(requested)] : fallback
+  const ids = requested?.length ? [...new Set(requested.map(id => LEGACY_SOURCE_IDS[id] ?? id))] : fallback
   const byId = new Map(allowed.map(s => [s.id, s]))
   return {
     picked: ids.map(id => byId.get(id)).filter((s): s is McpSource => Boolean(s)),

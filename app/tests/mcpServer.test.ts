@@ -109,35 +109,37 @@ describe("zdroje z registra (ADR-040 D266)", () => {
     { ...base, id: "mbx", kind: "mailbox", name: "Helpdesk", enabled: true, accessLevel: "internal", uses: { retrieval: false, import: true, tools: false } },
     { ...base, id: "c1", kind: "mcp", name: "Sportnet", enabled: true, accessLevel: "internal", uses: { retrieval: true, import: true, tools: false } },
     { ...base, id: "c2", kind: "mcp", name: "Odpojený", enabled: true, connected: false, accessLevel: "public", uses: { retrieval: true, import: true, tools: false } },
-    { ...base, id: "law", kind: "web", adapter: "slov-lex", name: "Legislatíva", enabled: true, accessLevel: "public", uses: { retrieval: true, import: false, tools: false } },
+    { ...base, id: "slov-lex", kind: "web", adapter: "slov-lex", name: "Legislatíva", enabled: true, accessLevel: "public", uses: { retrieval: true, import: false, tools: false } },
   ]
 
   it("knižnica, Legislatíva a pripojený konektor; schránka a odpojený nie", () => {
-    expect(searchableSources(register, "internal").map(s => s.id)).toEqual(["library", "c1", "law"])
+    expect(searchableSources(register, "internal").map(s => s.id)).toEqual(["library", "c1", "slov-lex"])
   })
   it("len verejný obsah schová interný konektor, knižnica ostáva", () => {
-    expect(searchableSources(register, "public").map(s => s.id)).toEqual(["library", "law"])
+    expect(searchableSources(register, "public").map(s => s.id)).toEqual(["library", "slov-lex"])
   })
   it("Legislatíva bez odberu sa neponúkne", () => {
-    const off = register.map(s => s.id === "law" ? { ...s, enabled: false } : s)
+    const off = register.map(s => s.id === "slov-lex" ? { ...s, enabled: false } : s)
     expect(searchableSources(off, "internal").map(s => s.id)).toEqual(["library", "c1"])
   })
   it("výber: bez žiadosti predvolene knižnica, neznámy zdroj je chyba", () => {
     const allowed = searchableSources(register, "internal")
     expect(pickSources(undefined, allowed, ["library"]).picked.map(s => s.id)).toEqual(["library"])
-    expect(pickSources(["law", "law"], allowed, ["library"]).picked.map(s => s.id)).toEqual(["law"])
+    expect(pickSources(["slov-lex", "slov-lex"], allowed, ["library"]).picked.map(s => s.id)).toEqual(["slov-lex"])
+    // Starý id `law` (do 25. 10.) sa prekladá na zdroj Slov-Lex, neodmieta (ADR-040 D268).
+    expect(pickSources(["law"], allowed, ["library"])).toEqual({ picked: allowed.filter(s => s.id === "slov-lex"), unknown: [] })
     expect(pickSources(["library", "c2"], allowed, ["library"]).unknown).toEqual(["c2"])
   })
 })
 
 describe("výsledok hľadania podľa pôvodu", () => {
-  it("Legislatíva vedie na Slov-Lex a nesie zdroj law", () => {
+  it("Legislatíva vedie na Slov-Lex a nesie zdroj slov-lex", () => {
     const hit = toHit({
       _id: "x", text: "§ 3", documentId: "law:SK/ZZ/2015/440", articleRef: "§ 3", sourceType: "law",
       document: { title: "Zákon o športe", slug: "", sourceUrl: "https://www.slov-lex.sk/x", category: "law" },
       law: { actId: "SK/ZZ/2015/440", number: "440/2015", timepoint: "20260101", url: "https://www.slov-lex.sk/ezbierky/pravne-predpisy/SK/ZZ/2015/440/20260101#paragraf-3" },
     }, "https://intranet.futbalsfz.sk")
-    expect(hit.source).toBe("law")
+    expect(hit.source).toBe("slov-lex")
     expect(hit.url).toContain("slov-lex.sk")
   })
   it("konektor vedie na svoj server a nesie id konektora", () => {
