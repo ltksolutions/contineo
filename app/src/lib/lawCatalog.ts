@@ -128,8 +128,8 @@ export interface LawChunk {
 export interface LawSubscription {
   companyCode: string
   actId: string
-  /** `ask` = zdroj na Opýtať sa; `library` príde vo fáze 2 (D260). */
-  level: "ask"
+  /** `ask` = zdroj na Opýtať sa; `library` = aj dokument knižnice (D260) — ten odber na Opýtať sa zahŕňa. */
+  level: "ask" | "library"
   addedAt: Date
   addedBy: string
 }
@@ -325,6 +325,11 @@ export async function listActs(now: Date = new Date(), onlyActIds?: string[]): P
   })
 }
 
+/** Jedno znenie aj s textom — pre odber do knižnice (D260). */
+export async function catalogVersion(actId: string, timepoint: string): Promise<LawActVersion | null> {
+  return (await getCollection<LawActVersion>(LAW_VERSIONS_COLLECTION)).findOne({ versionKey: versionKeyOf(actId, timepoint) }, { projection: { _id: 0 } })
+}
+
 export async function versionsOf(actId: string): Promise<Omit<LawActVersion, "markdown">[]> {
   return (await getCollection<LawActVersion>(LAW_VERSIONS_COLLECTION))
     .find({ actId }, { projection: { _id: 0, markdown: 0 } }).sort({ timepoint: 1 }).toArray()
@@ -440,14 +445,17 @@ export async function subscribedActs(companyCode: string, now: Date = new Date()
  * Organizácia si objedná predpis: keď v katalógu nie je, pridá sa (D257 —
  * katalóg rastie podľa potreby). Opakovaný odber je bez účinku.
  */
-export async function subscribe(companyCode: string, address: string, actor: string, now: Date = new Date()): Promise<LawAct> {
+export async function subscribe(companyCode: string, address: string, actor: string, now: Date = new Date(), level: LawSubscription["level"] = "ask"): Promise<LawAct> {
   const code = requireCompanyCode(companyCode, "lawCatalog.subscribe")
   const act = await addAct(address, { companyCode: code, email: actor }, now)
-  await (await getCollection<LawSubscription>(LAW_SUBSCRIPTIONS_COLLECTION)).updateOne(
+  const col = await getCollection<LawSubscription>(LAW_SUBSCRIPTIONS_COLLECTION)
+  await col.updateOne(
     { companyCode: code, actId: act.actId },
-    { $setOnInsert: { companyCode: code, actId: act.actId, level: "ask", addedAt: now, addedBy: actor } },
+    { $setOnInsert: { companyCode: code, actId: act.actId, level, addedAt: now, addedBy: actor } },
     { upsert: true },
   )
+  // Odber do knižnice je viac než odber na Opýtať sa — úroveň sa len zvyšuje, nikdy neznižuje.
+  if (level === "library") await col.updateOne({ companyCode: code, actId: act.actId }, { $set: { level } })
   return act
 }
 

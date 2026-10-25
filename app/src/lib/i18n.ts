@@ -1857,6 +1857,9 @@ interface Dictionary {
       subscribed: (title: string) => string
       unsubscribed: string
       saved: string
+      /** Napojenie na knižnicu (ADR-039 D260). */
+      inLibrary: string
+      toLibrary: string
     }
     aiUsage: {
       tabSettings: string
@@ -2498,6 +2501,8 @@ interface Dictionary {
       complianceDone: (documents: number, findings: number) => string
       /** Prijaté znenie čaká na zápis do konceptu (D199) — správcom obsahu. */
       complianceToApply: (title: string) => string
+      /** Z katalógu legislatívy prišlo nové znenie ako koncept (ADR-039 D260, D261). */
+      lawVersionDraft: (title: string, date: string) => string
       /** Nové znenie dokumentu v hierarchii — treba skontrolovať súlad (D200, D241). */
       complianceRequested: (title: string, label: string, documents: number) => string
       /** Kolo zrušené, lebo sa koncept po predložení zmenil — schvaľovateľom. */
@@ -4227,6 +4232,9 @@ interface Dictionary {
       unchanged: string
       version: (date: string) => string
       corrected: string
+      /** Výber z katalógu legislatívy (ADR-039 D260). */
+      fromCatalog: string
+      fromCatalogHint: string
     }
     upload: {
       /** Číslované sekcie formulára — nie kroky sprievodcu, viď komentár v `new/page.tsx`. */
@@ -7167,6 +7175,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subscribed: title => `Pridané: ${title}.`,
       unsubscribed: "Odber zrušený. Predpis ostáva v katalógu pre ostatné organizácie.",
       saved: "Nastavenie legislatívy uložené.",
+      inLibrary: "v knižnici",
+      toLibrary: "odobrať do knižnice",
     },
     aiUsage: {
       tabSettings: "Nastavenie",
@@ -7817,6 +7827,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       complianceRequested: (title, label, d) => `Nové znenie „${label}" dokumentu „${title}" — treba skontrolovať súlad${d ? ` (${d} ${d === 1 ? "prepojený dokument" : d < 5 ? "prepojené dokumenty" : "prepojených dokumentov"})` : ""}.`,
       approvalCancelled: title => `Kolo schvaľovania dokumentu „${title}" bolo zrušené — koncept sa po predložení zmenil. Schváliť sa dá až nové predloženie.`,
       complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
+      lawVersionDraft: (title, date) => `Zo Slov-Lexu prišlo nové znenie „${title}"${date ? ` účinné od ${date}` : ""} — koncept čaká na schválenie.`,
       complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
     },
   },
@@ -9440,6 +9451,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       unchanged: "Na Slov-Lexe nie je novšie znenie ani zmena textu.",
       version: date => `Slov-Lex má novšie znenie účinné od ${date} — koncept nového znenia je pripravený.`,
       corrected: "Text toho istého znenia sa na Slov-Lexe zmenil — koncept s opraveným textom je pripravený.",
+      fromCatalog: "Z katalógu legislatívy",
+      fromCatalogHint: "Predpisy, ktoré organizácia odoberá na Opýtať sa a v knižnici ešte nie sú. Text je v katalógu, zo Slov-Lexu sa stiahne už len záväzné PDF.",
     },
     upload: {
       sectionFile: "Súbor",
@@ -12336,6 +12349,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subscribed: title => `Přidáno: ${title}.`,
       unsubscribed: "Odběr zrušen. Předpis zůstává v katalogu pro ostatní organizace.",
       saved: "Nastavení legislativy uloženo.",
+      inLibrary: "v knihovně",
+      toLibrary: "odebírat do knihovny",
     },
     aiUsage: {
       tabSettings: "Nastavení",
@@ -12984,6 +12999,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       complianceRequested: (title, label, d) => `Nové znění „${label}" dokumentu „${title}" — je třeba zkontrolovat soulad${d ? ` (${d} ${d === 1 ? "propojený dokument" : d < 5 ? "propojené dokumenty" : "propojených dokumentů"})` : ""}.`,
       approvalCancelled: title => `Kolo schvalování dokumentu „${title}" bylo zrušeno — koncept se po předložení změnil. Schválit lze až nové předložení.`,
       complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
+      lawVersionDraft: (title, date) => `Ze Slov-Lexu přišlo nové znění „${title}"${date ? ` účinné od ${date}` : ""} — koncept čeká na schválení.`,
       complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
     },
   },
@@ -14606,6 +14622,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       unchanged: "Na Slov-Lexu není novější znění ani změna textu.",
       version: date => `Slov-Lex má novější znění účinné od ${date} — koncept nového znění je připraven.`,
       corrected: "Text téhož znění se na Slov-Lexu změnil — koncept s opraveným textem je připraven.",
+      fromCatalog: "Z katalogu legislativy",
+      fromCatalogHint: "Předpisy, které organizace odebírá na Zeptat se a v knihovně ještě nejsou. Text je v katalogu, ze Slov-Lexu se stáhne už jen závazné PDF.",
     },
     upload: {
       sectionFile: "Soubor",
@@ -17494,6 +17512,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subscribed: title => `Added: ${title}.`,
       unsubscribed: "Unsubscribed. The act stays in the catalogue for other organisations.",
       saved: "Legislation settings saved.",
+      inLibrary: "in the library",
+      toLibrary: "subscribe into the library",
     },
     aiUsage: {
       tabSettings: "Settings",
@@ -18142,6 +18162,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       complianceRequested: (title, label, d) => `New version “${label}” of “${title}” — a compliance check is needed${d ? ` (${d} linked ${d === 1 ? "document" : "documents"})` : ""}.`,
       approvalCancelled: title => `The approval round for “${title}” was cancelled — the draft changed after it was submitted. Only a new submission can be approved.`,
       complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
+      lawVersionDraft: (title, date) => `A new wording of “${title}”${date ? ` in force from ${date}` : ""} arrived from Slov-Lex — the draft is waiting for approval.`,
       complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,
     },
   },
@@ -19758,6 +19779,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       unchanged: "Slov-Lex has no newer version and no text change.",
       version: date => `Slov-Lex has a newer version in force since ${date} — a draft of a new version is ready.`,
       corrected: "The text of the same version changed on Slov-Lex — a draft with the corrected text is ready.",
+      fromCatalog: "From the legislation catalogue",
+      fromCatalogHint: "Acts the organisation subscribes to in Ask that are not in the library yet. The text is in the catalogue; only the binding PDF is fetched from Slov-Lex.",
     },
     upload: {
       sectionFile: "File",

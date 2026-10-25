@@ -79,6 +79,8 @@ export type NotificationKind =
   | "complianceRequested"
   /** Kolo schvaľovania sa zrušilo, lebo sa koncept po predložení zmenil — schvaľovateľom, ktorí ešte nerozhodli. */
   | "approvalCancelled"
+  /** Z katalógu legislatívy prišlo nové znenie predpisu ako koncept (ADR-039 D260, D261) — správcom obsahu. */
+  | "lawVersionDraft"
 
 export interface NotificationParams {
   documentId?: string
@@ -125,6 +127,7 @@ export function notificationHref(
     // na čitateľskú kartu, kde formulár mýlil pri potvrdzovaní.
     case "responsibleAssigned":
     case "draftResponsibleAssigned":
+    case "lawVersionDraft":
       return documentId ? `/library/${encodeURIComponent(documentId)}` : null
     case "remindersSent":
       return "/hr/reminders"
