@@ -22,9 +22,21 @@
  */
 
 export const GUIDE_SK = `
-Tento návod hovorí, ako sa dokument dostane do systému a čo sa s ním po ceste stane. Je písaný pre správcu obsahu, schvaľovateľa a personalistu — teda pre toho, kto do systému vkladá, nie pre toho, kto len potvrdzuje.
+Návod má dve časti. **Prvá je pre každého**, kto sa pýta a číta odpovede: odkiaľ odpoveď je a ako čítať jej zdroje. **Ostatné kapitoly sú pre správcu obsahu, schvaľovateľa, personalistu a správcu organizácie** — teda pre toho, kto do systému vkladá a nastavuje, odkiaľ systém berie obsah.
 
-## 1. Odporúčaný postup od nahratia dokumentu
+## 1. Odkiaľ je odpoveď: zdroje pri otázke
+
+**Pri otázke si vyberáte, v čom sa hľadá.** Tlačidlo „Zdroje“ pri poli otázky ukáže, z čoho sa môže odpovedať: Knižnica (dokumenty vašej organizácie) a ďalšie zdroje, ktoré organizácia zapla — napríklad pripojený server alebo legislatíva. Zmena výberu nič nespúšťa; prejaví sa, až keď sa opýtate znova.
+
+**Hlavička odpovede hovorí, v čom sa hľadalo.** Aj keď z niektorého zdroja nič neprišlo, je vymenovaný — viete tak, že sa v ňom hľadalo a nič sa nenašlo, nie že sa naň zabudlo.
+
+**Každý zdroj pod odpoveďou má štítok, odkiaľ je.** Dokument knižnice nemá štítok — je to schválené znenie vašej organizácie. **Zákon** je text zákona zo Slov-Lexu, nie predpis organizácie; odkaz vedie priamo na paragraf na Slov-Lexe. **Živý zdroj** prišiel priamo z pripojeného servera a neprešiel kurátorom. **Overená odpoveď** je text, ktorý niekto overil nad predpisom, nie samotný predpis.
+
+**Odpoveď je podľa znenia platného v deň, na ktorý sa pýtate.** Bez dátumu je to dnešok. Otázka „čo platilo v januári 2024“ alebo „čo sa zmení od júla“ dostane znenie, ktoré platilo alebo bude platiť vtedy — pri dokumentoch knižnice aj pri zákonoch.
+
+**Keď si zákon a predpis organizácie protirečia, odpoveď to povie.** Zákon je nadradený; asistent má rozpor pomenovať a uviesť oboje, nie potichu vybrať jedno.
+
+## 2. Odporúčaný postup od nahratia dokumentu
 
 **Dokument vzniká zo súboru.** Predpis, smernica, zákon, manuál, zmluva: nahrá sa PDF a upraviteľný zdroj a text sa rozdelí na úseky pre vyhľadávanie. Asistent potom odpovedá z platných znení týchto dokumentov. Nahrávanie ponúka [Nahrať dokument](/library/new); tam je aj import článkov z pripojeného servera.
 
@@ -41,7 +53,7 @@ Tento návod hovorí, ako sa dokument dostane do systému a čo sa s ním po ces
 
 **Poradie sa nedá obísť.** Neschválené znenie sa zverejniť nedá a nezverejnené znenie sa nedá prideliť. Je to zámer: kto si predpis nájde sám, číta ho bez ohľadu na to, či ho niekto schválil — a systém, ktorý z neho odpovedá, zaň ručí rovnako.
 
-## 2. Možnosti schvaľovania
+## 3. Možnosti schvaľovania
 
 **Schvaľuje sa znenie, nie dokument.** Schvaľuje sa presne ten text, ktorý ľudia dostanú na potvrdenie a ktorý sa doslova ocitne vo formulke, pod ktorú sa podpíšu.
 
@@ -59,7 +71,7 @@ Tento návod hovorí, ako sa dokument dostane do systému a čo sa s ním po ces
 
 Čo čaká na vás, vidíte na obrazovke [Na schválenie](/approvals).
 
-## 3. Čo je trasa
+## 4. Čo je trasa
 
 **Trasa je poradie krokov: „prejdi týchto N dokumentov v tomto poradí“.** Je to nástroj personalistu — spôsob, ako povedať, že nový človek nemá dostať desať dokumentov naraz, ale postupne a v zmysluplnom slede.
 
@@ -76,13 +88,13 @@ Nový zamestnanec uvidí zoznam a v ňom, kde skončil: „Krok 2 zo 4“. Syst�
 
 **Trasa nie je to isté, čo pridelenie.** Pridelenie hovorí „tento dokument je vaša povinnosť“. Trasa hovorí „a preberte ich v tomto poradí“. Dokument môže byť pridelený aj bez trasy.
 
-## 4. Členenie, index a inteligentné vyhľadávanie
+## 5. Členenie, index a inteligentné vyhľadávanie
 
 Toto je časť, ktorú nikto nevypĺňa ručne, ale oplatí sa jej rozumieť — rozhoduje o tom, či systém na otázku odpovie presne, alebo od veci.
 
 **Kedy index vzniká.** Do vyhľadávania ide **zverejnené znenie**: pri zverejnení sa jeho text nareže na úseky a tie sa uložia do indexu. Jeden dokument sa dá preindexovať v jeho detaile (Správa → Preindexovať). Celú knižnicu preindexuje prevádzkovateľ, keď sa zmení spôsob členenia.
 
-**Ako prakticky vzniká členenie: pravidlá, nie jazykový model.** Text reže program podľa vzorov členenia predpisu — ČASŤ, hlava, diel, článok, paragraf, príloha. **Žiadne LLM v tom nie je.** Rovnaký text dá vždy rovnaké úseky, výsledok sa dá skontrolovať a pri rezaní sa nezmení ani slovo. Úsek tak zodpovedá tomu, na čo sa človek odvoláva, keď hovorí „podľa článku 78“. Spôsob narezania sa nastavuje **profilom pre každý dokument zvlášť** — norma s článkami a zápisnica zo zasadnutia sa nemajú rezať rovnako; dokument bez vlastného profilu používa základný.
+**Ako prakticky vzniká členenie: pravidlá, nie jazykový model.** Text reže program podľa vzorov členenia predpisu — ČASŤ, hlava, diel, článok, paragraf, príloha. **Žiadne LLM v tom nie je.** Rovnaký text dá vždy rovnaké úseky, výsledok sa dá skontrolovať a pri rezaní sa nezmení ani slovo. Úsek tak zodpovedá tomu, na čo sa človek odvoláva, keď hovorí „podľa článku 78“. Rez sa berie **zo štruktúry textu** — nadpisov a číslovania; kde to nesedí, správca obsahu v detaile dokumentu upraví hranice úsekov ručne alebo prijme návrh rezov, ktorý ukáže len pridané a zrušené hranice.
 
 **Každý úsek si nesie, odkiaľ je.** Na jeho začiatku je cestička — dokument, časť, článok. Bez nej by úsek vytrhnutý z prostriedku predpisu nevedel povedať, čoho je súčasťou, a odpoveď by sa oň oprela naslepo.
 
@@ -93,4 +105,18 @@ Toto je časť, ktorú nikto nevypĺňa ručne, ale oplatí sa jej rozumieť —
 **Odpoveď sa skladá len z nájdených úsekov a cituje ich doslova.** Pri každej odpovedi vidíte citácie — presné vety, o ktoré sa opiera — a zoznam úsekov, ktoré systém prehľadal. Keď citácia chýba, tvrdenie nemá oporu a treba to tak brať.
 
 **Potvrdenie sa viaže na text, členenie nie.** Preindexovanie dokumentu teda nikoho nenúti potvrdzovať znova — mení sa len to, ako systém v texte hľadá, nie čo je v ňom napísané. Úseky starého znenia sa pri novom nemažú, len sa označia ako neaktívne; vyhľadáva sa v platných.
+
+## 6. Zdroje obsahu a legislatíva
+
+Táto kapitola je pre správcu organizácie a správcu obsahu. Nastavuje sa v [Organizácia → Zdroje](/organisation/sources).
+
+**Zdroje sú jeden register.** Odkiaľ organizácia berie obsah, je vymenované na jednom mieste. Každý zdroj má **druh**, ktorý určuje, čo vie: **Súbory** sú dokumenty nahraté do knižnice. **Schránka helpdesku** je e-mailová schránka kanála; otázky z nej číta analýza a navrhuje doplnenie manuálov — nastavuje sa pri kanáli. **MCP konektor** je pripojený server; z neho sa dajú články importovať do knižnice ako koncepty, môže byť živým zdrojom pri otázke a ponúka nástroje. **Web / RSS** sú zdroje z verejného webu, ktoré Contineo číta cez adaptér. Pri každom zdroji register povie, či je zapnutý, či ho vaša rezidencia dovoľuje a či sa pri otázke používa predvolene.
+
+**Slov-Lex je zdroj druhu Web / RSS: slovenská legislatíva.** Nastavuje sa v [Zdroje → Web / RSS → Slov-Lex](/organisation/sources/web/slov-lex). Pridáte predpis adresou zo Slov-Lexu alebo číslom (napríklad 440/2015) a asistent z neho odpovedá — vo výbere zdrojov ako „Legislatíva SR“. Prepínač „Používať predvolene“ určí, či je zapnutý aj bez výberu. Česká legislatíva alebo RSS vestníkov pribudnú ako ďalšie zdroje toho istého druhu.
+
+**Čo je katalóg legislatívy.** Text zákona je pre všetky organizácie rovnaký, preto ho Contineo drží **raz pre všetky** — v spoločnom katalógu. Pre každý predpis má všetky znenia z histórie na Slov-Lexe, aj tie s účinnosťou v budúcnosti, a text každého znenia rozrezaný po paragrafoch. Predpis sa do katalógu dostane, keď ho niektorá organizácia pridá, a odvtedy ho každú noc kontrola porovná so Slov-Lexom a doplní nové znenia. Pri otázke sa hľadá len v predpisoch, ktoré odoberá vaša organizácia.
+
+**Katalóg nie je knižnica.** V katalógu sa nič neschvaľuje ani nepotvrdzuje, nemá záväzné PDF a nestojí v hierarchii dokumentov — je to kópia verejného textu na hľadanie. Keď chcete zákon **nadradiť Stanovám** alebo ho dať **ľuďom potvrdiť**, odoberte ho do knižnice: pri predpise kliknite „odobrať do knižnice“, alebo v [Nahrať dokument](/library/new) zvoľte Predpis zo Slov-Lexu a vyberte ho z katalógu. Vznikne koncept dokumentu s textom z katalógu a záväzným PDF zo Slov-Lexu, ktorý prejde schválením ako každý iný. Keď je zákon v knižnici zverejnený, asistent odpovedá zo schváleného znenia v knižnici, nie z katalógu — zákon tak nepríde dvakrát.
+
+**Nové znenie zákona príde samo.** Keď Slov-Lex vyhlási novelu — aj s účinnosťou v budúcnosti — nočná kontrola založí v knižnici koncept nového znenia s dátumom účinnosti zo Slov-Lexu a správcovia obsahu dostanú upozornenie. Schvaľovateľ nerozhoduje o obsahu, len potvrdzuje, že je to znenie, ktoré Slov-Lex vyhlásil. Na detaile dokumentu je tlačidlo „Skontrolovať zdroj“, ak nechcete čakať do rána.
 `.trim()

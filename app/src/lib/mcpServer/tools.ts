@@ -29,7 +29,7 @@ import { brandingView } from "../tenants"
 import { questionsLastHour } from "../widgetApi"
 import { liveSearch } from "../liveSources"
 import { lawSearch } from "../lawSearch"
-import { LAW_SOURCE_ID } from "../lawCatalog"
+import { SLOV_LEX_SOURCE_ID } from "../lawCatalog"
 import { AppError } from "../appError"
 import type { OAuthScope } from "../oauthServer"
 import { askOnce } from "./ask"
@@ -149,7 +149,7 @@ export interface SearchHit {
   text: string
   versionLabel: string | null
   effectiveFrom: string | null
-  /** `"qa"` = overená odpoveď kurátora, nie článok predpisu (D11); `"law"` = Legislatíva; `"mcp"` = konektor. */
+  /** `"qa"` = overená odpoveď kurátora, nie článok predpisu (D11); `"law"` = text zákona z katalógu legislatívy (zdroj `slov-lex`, ADR-040 D268); `"mcp"` = konektor. */
   sourceType: string | null
   /** Zdroj vo výbere: `library`, `law` alebo id konektora (ADR-040 D266). */
   source: string
@@ -161,7 +161,7 @@ export interface SearchHit {
  * Legislatíva na Slov-Lexe (paragraf), konektor na jeho serveri.
  */
 export function toHit(c: ChunkResult, origin: string): SearchHit {
-  const source = c.law ? LAW_SOURCE_ID : c.live ? c.live.connectorId : LIBRARY_SOURCE_ID
+  const source = c.law ? SLOV_LEX_SOURCE_ID : c.live ? c.live.connectorId : LIBRARY_SOURCE_ID
   const external = c.law?.url ?? (c.live ? c.document?.sourceUrl : undefined)
   return {
     source,
@@ -197,7 +197,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
           ctx: { actor: { personId: actor.person.id, personName: actor.person.fullName }, channelKey: null },
         })
       : Promise.resolve({ chunks: [], failed: [], asked: [] }),
-    ids.has(LAW_SOURCE_ID)
+    ids.has(SLOV_LEX_SOURCE_ID)
       ? lawSearch({
           companyCode, query, asOf, byDefault: false,
           useStageRerank: providers.rerank.isPipelineStage, rerankModel: profile.providers.rerank.model,
@@ -208,7 +208,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
   const names = new Map(picked.map(s => [s.id, s.name]))
   return {
     hits: [...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))],
-    failed: [...live.failed.map(f => f.name), ...(law.failed ? [names.get(LAW_SOURCE_ID) ?? LAW_SOURCE_ID] : [])],
+    failed: [...live.failed.map(f => f.name), ...(law.failed ? [names.get(SLOV_LEX_SOURCE_ID) ?? SLOV_LEX_SOURCE_ID] : [])],
   }
 }
 
@@ -337,7 +337,7 @@ export function registerTools(server: McpServer, actor: McpActor): void {
         query: z.string().min(2).max(500).describe("What to look for, in the language of the documents (Slovak for most organisations)."),
         limit: z.number().int().min(1).max(SEARCH_MAX).optional().describe(`How many library passages to return (default 8, at most ${SEARCH_MAX}). Legislation and connectors add their own few best passages.`),
         asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Search the versions in force on this day (YYYY-MM-DD). Default: today."),
-        sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources, e.g. ["library", "law"]. Default: ["library"].'),
+        sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources, e.g. ["library", "slov-lex"]. Default: ["library"].'),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },
     }, guarded(actor, spec("search_library"), async ({ query, limit, asOf, sources }) => {
@@ -428,7 +428,7 @@ export function registerTools(server: McpServer, actor: McpActor): void {
       description: `Contineo's own answer with citations, produced by ${orgName}'s configured model over the documents in force — the same answer the person would get on the portal. Costs the organisation an AI call; prefer search_library when you only need passages. The question is recorded in the person's history.`,
       inputSchema: {
         question: z.string().min(3).max(1000).describe("The question, in the person's language."),
-        sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources to answer from, e.g. ["library", "law"]. Default: ["library"].'),
+        sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources to answer from, e.g. ["library", "slov-lex"]. Default: ["library"].'),
         includeLiveSources: z.boolean().optional().describe("Deprecated — use sources. true = the library and every available source."),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },

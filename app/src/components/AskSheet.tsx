@@ -332,7 +332,7 @@ export default function AskSheet({
                     <input type="checkbox" name="src" value={id} checked={selected.includes(id)} onChange={() => toggle(id)} />
                     <span className="form-row-main">
                       <span>{sourceName(id)}</span>
-                      <span className="form-row-sub">{id === "library" ? ta.scopeLibrarySub : id === "law" ? ta.scopeLawSub : ta.scopeLiveSub}</span>
+                      <span className="form-row-sub">{id === "library" ? ta.scopeLibrarySub : id === "slov-lex" ? ta.scopeLawSub : ta.scopeLiveSub}</span>
                     </span>
                   </label>
                 ))}

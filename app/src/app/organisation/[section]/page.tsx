@@ -290,8 +290,10 @@ export default async function OrganisationSectionPage({
 
   // Nastavenie AI (D157) — len pre svoju časť; kľúč sa sem nedostane.
   const aiView: "settings" | "usage" | "overview" = query.view === "usage" ? "usage" : query.view === "overview" ? "overview" : "settings"
-  // Zdroje (ADR-040): register, alebo Legislatíva ako podstránka (`/organisation/sources/law`).
-  const sourcesView: "register" | "law" | "connectors" = query.view === "law" ? "law" : query.view === "connectors" ? "connectors" : "register"
+  // Zdroje (ADR-040): register, konektory, zdroje Web / RSS a detail Slov-Lexu (Dodatok 1, D268).
+  const sourcesView: "register" | "connectors" | "web" | "slov-lex" =
+    query.view === "connectors" ? "connectors" : query.view === "web" ? "web" : query.view === "slov-lex" ? "slov-lex" : "register"
+  const onWeb = now === "sources" && (sourcesView === "web" || sourcesView === "slov-lex")
   const onConnectors = now === "sources" && sourcesView === "connectors"
   const ai = now === "ai" && aiView === "settings" ? aiSettingsView(tenant.ai) : null
   const tu = t.aiUsage
@@ -321,9 +323,9 @@ export default async function OrganisationSectionPage({
         return { filter, by, data, previous, unpriced }
       })()
     : null
-  const register = now === "sources" && sourcesView === "register" ? await sourcesRegister(tenant.companyCode, language) : null
-  // Legislatíva (ADR-039, D259): odoberané predpisy a stav zdroja — len pre svoju podstránku.
-  const law = now === "sources" && sourcesView === "law"
+  const register = now === "sources" && (sourcesView === "register" || sourcesView === "web") ? await sourcesRegister(tenant.companyCode, language) : null
+  // Slov-Lex (ADR-039, D259): odoberané predpisy a stav zdroja — len pre svoju podstránku.
+  const law = now === "sources" && sourcesView === "slov-lex"
     ? await (async () => {
         const [acts, state] = await Promise.all([subscribedActs(tenant.companyCode), lawSourceState(tenant.companyCode)])
         // Napojenie na knižnicu (ADR-039 D260) — odvodené z pôvodu dokumentu, nič sa neukladá.
@@ -361,11 +363,13 @@ export default async function OrganisationSectionPage({
 
   return (
     <AppShell language={ctx.person.language}
-              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : now === "sources" && sourcesView === "law" ? t.sources.tabLaw : connector ? connector.name : onConnectors ? t.tabs.connectors : t.tabs[now]}
+              title={now === "ai" && aiView === "usage" ? tu.tabUsage : now === "ai" && aiView === "overview" ? tu.tabOverview : now === "sources" && sourcesView === "slov-lex" ? t.sources.slovLex : sourcesView === "web" && now === "sources" ? t.sources.tabWeb : connector ? connector.name : onConnectors ? t.tabs.connectors : t.tabs[now]}
               trail={now === "ai" && aiView !== "settings"
                 ? { "/organisation": t.heading, "/organisation/ai": t.tabs.ai }
                 : connector
                 ? { "/organisation": t.heading, "/organisation/sources": t.tabs.sources, [connectorsHref]: t.tabs.connectors }
+                : now === "sources" && sourcesView === "slov-lex"
+                ? { "/organisation": t.heading, "/organisation/sources": t.tabs.sources, "/organisation/sources/web": t.sources.tabWeb }
                 : now === "sources" && sourcesView !== "register"
                 ? { "/organisation": t.heading, "/organisation/sources": t.tabs.sources }
                 : { "/organisation": t.heading }}>
@@ -377,7 +381,7 @@ export default async function OrganisationSectionPage({
         error={error === "1"}
         // Oznam vracia na podstránku, kde akcia prebehla — inak by „Zavrieť"
         // po pridaní predpisu skočilo z Legislatívy na Register (Ján 25. 10.).
-        back={connectorHref ?? (onConnectors ? connectorsHref : now === "sources" && sourcesView === "law" ? "/organisation/sources/law" : orgSectionHref(now))}
+        back={connectorHref ?? (onConnectors ? connectorsHref : now === "sources" && sourcesView === "slov-lex" ? "/organisation/sources/web/slov-lex" : orgSectionHref(now))}
       />
 
       <div className="org-head">
@@ -1304,7 +1308,7 @@ export default async function OrganisationSectionPage({
           <TabsBar>
             <TabLink href="/organisation/sources" active={sourcesView === "register"}>{t.sources.tabRegister}</TabLink>
             <TabLink href="/organisation/sources/connectors" active={sourcesView === "connectors"}>{t.tabs.connectors}</TabLink>
-            <TabLink href="/organisation/sources/law" active={sourcesView === "law"}>{t.sources.tabLaw}</TabLink>
+            <TabLink href="/organisation/sources/web" active={onWeb}>{t.sources.tabWeb}</TabLink>
           </TabsBar>
         </nav>
 
@@ -1327,11 +1331,12 @@ export default async function OrganisationSectionPage({
         />
       )}
 
-      {sourcesView === "register" && register && (
+      {/* Register a zoznam Web / RSS (D268) — ten istý riadok zdroja, zoznam je len výrez registra podľa druhu. */}
+      {(sourcesView === "register" || sourcesView === "web") && register && (
         <section className="card more">
-          <div className="more-head"><h2>{t.sources.heading}</h2></div>
-          <div className="more-row"><div className="more-main"><span>{t.sources.intro}</span></div></div>
-          {register.map(src => {
+          <div className="more-head"><h2>{sourcesView === "web" ? t.sources.tabWeb : t.sources.heading}</h2></div>
+          <div className="more-row"><div className="more-main"><span>{sourcesView === "web" ? t.sources.webIntro : t.sources.intro}</span></div></div>
+          {register.filter(src => sourcesView !== "web" || src.kind === "web").map(src => {
             const state = !src.allowed ? t.sources.stateBlocked : !src.connected ? t.sources.stateDisconnected : src.enabled ? t.sources.stateOn : t.sources.stateOff
             const uses = [src.uses.retrieval && t.sources.useRetrieval, src.uses.import && t.sources.useImport, src.uses.tools && t.sources.useTools].filter(Boolean).join(", ")
             return (
@@ -1359,11 +1364,12 @@ export default async function OrganisationSectionPage({
       )}
 
       {/*
-        Legislatíva (ADR-039, D259): odber predpisov z katalógu zo Slov-Lexu.
-        Zdroj „Legislatíva" sa na Opýtať sa ponúkne, keď je aspoň jeden
-        predpis a rezidencia dovoľuje čítať katalóg (D257).
+        Slov-Lex — zdroj druhu Web / RSS (ADR-040 D265, Dodatok 1 D268):
+        odber predpisov z katalógu legislatívy (ADR-039, D259). Zdroj
+        „Legislatíva SR" sa na Opýtať sa ponúkne, keď je aspoň jeden predpis
+        a rezidencia dovoľuje čítať katalóg (D257).
       */}
-      {sourcesView === "law" && law && (
+      {sourcesView === "slov-lex" && law && (
       <>
         <form action={saveLawSettingsAction} className="card set-form">
           <section className="set-sec" id="law">

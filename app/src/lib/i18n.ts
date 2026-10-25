@@ -1818,7 +1818,9 @@ interface Dictionary {
       heading: string
       intro: string
       tabRegister: string
-      tabLaw: string
+      tabWeb: string
+      webIntro: string
+      slovLex: string
       kind: Record<"file" | "mailbox" | "mcp" | "web", string>
       useRetrieval: string
       useImport: string
@@ -5699,8 +5701,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeTitle: "Zdroje hľadania",
     scopeLibrarySub: "Dokumenty organizácie v Contineo",
     scopeLiveSub: "Živý zdroj — hľadá sa priamo v ňom, obsah neprešiel kurátorom",
-    scopeLaw: "Legislatíva",
-    scopeLawSub: "Zákony zo Slov-Lexu, ktoré organizácia odoberá — znenie účinné v deň otázky",
+    scopeLaw: "Legislatíva SR",
+    scopeLawSub: "Zákony SR zo Slov-Lexu, ktoré organizácia odoberá — znenie účinné v deň otázky",
     scopeFoot: "Zmena sa prejaví, až keď sa opýtate znova.",
     scopeEmpty: "Vyberte aspoň jeden zdroj.",
     reask: "Opýtať sa znova",
@@ -7139,7 +7141,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Zdroje obsahu",
       intro: "Odkiaľ organizácia berie obsah: knižnica, pripojené konektory a legislatíva. Každý zdroj má druh, ktorý určuje, čo vie — import do knižnice, živé hľadanie pri otázke, nástroje agenta.",
       tabRegister: "Register",
-      tabLaw: "Legislatíva",
+      tabWeb: "Web / RSS",
+      webIntro: "Zdroje, ktoré Contineo číta z verejného webu cez adaptér. Dnes Slov-Lex — legislatíva SR; ďalšie (česká legislatíva, RSS vestníkov) pribudnú ako ďalšie riadky.",
+      slovLex: "Slov-Lex — legislatíva SR",
       kind: { file: "Súbory", mailbox: "Schránka helpdesku", mcp: "MCP konektor", web: "Web / RSS" },
       useRetrieval: "živý zdroj pri otázke",
       useImport: "import do knižnice",
@@ -7154,7 +7158,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       actCount: n => `${n} ${n === 1 ? "predpis" : n < 5 ? "predpisy" : "predpisov"}`,
     },
     law: {
-      heading: "Legislatíva",
+      heading: "Slov-Lex — legislatíva SR",
       intro: "Zákony zo Slov-Lexu, z ktorých asistent odpovedá popri dokumentoch organizácie. Text sa drží v spoločnom katalógu Continea a dopĺňa sa z portálu každý deň; v odpovedi je označený ako zákon s odkazom na paragraf.",
       blocked: residency => `V režime ${residency} sa katalóg legislatívy nečíta — text otázky by opustil perimeter organizácie.`,
       defaultOn: "Používať predvolene",
@@ -10873,8 +10877,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeTitle: "Zdroje hledání",
     scopeLibrarySub: "Dokumenty organizace v Contineo",
     scopeLiveSub: "Živý zdroj — hledá se přímo v něm, obsah neprošel kurátorem",
-    scopeLaw: "Legislativa",
-    scopeLawSub: "Zákony ze Slov-Lexu, které organizace odebírá — znění účinné v den otázky",
+    scopeLaw: "Legislativa SR",
+    scopeLawSub: "Zákony SR ze Slov-Lexu, které organizace odebírá — znění účinné v den otázky",
     scopeFoot: "Změna se projeví, až když se zeptáte znovu.",
     scopeEmpty: "Vyberte alespoň jeden zdroj.",
     reask: "Zeptat se znovu",
@@ -12313,7 +12317,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Zdroje obsahu",
       intro: "Odkud organizace bere obsah: knihovna, připojené konektory a legislativa. Každý zdroj má druh, který určuje, co umí — import do knihovny, živé hledání u otázky, nástroje agenta.",
       tabRegister: "Registr",
-      tabLaw: "Legislativa",
+      tabWeb: "Web / RSS",
+      webIntro: "Zdroje, které Contineo čte z veřejného webu přes adaptér. Dnes Slov-Lex — legislativa SR; další (česká legislativa, RSS věstníků) přibudou jako další řádky.",
+      slovLex: "Slov-Lex — legislativa SR",
       kind: { file: "Soubory", mailbox: "Schránka helpdesku", mcp: "MCP konektor", web: "Web / RSS" },
       useRetrieval: "živý zdroj u otázky",
       useImport: "import do knihovny",
@@ -12328,7 +12334,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       actCount: n => `${n} ${n === 1 ? "předpis" : n < 5 ? "předpisy" : "předpisů"}`,
     },
     law: {
-      heading: "Legislativa",
+      heading: "Slov-Lex — legislativa SR",
       intro: "Zákony ze Slov-Lexu, ze kterých asistent odpovídá vedle dokumentů organizace. Text se drží ve společném katalogu Continea a doplňuje se z portálu každý den; v odpovědi je označen jako zákon s odkazem na paragraf.",
       blocked: residency => `V režimu ${residency} se katalog legislativy nečte — text otázky by opustil perimetr organizace.`,
       defaultOn: "Používat jako výchozí",
@@ -16038,8 +16044,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     scopeTitle: "Search sources",
     scopeLibrarySub: "Your organisation’s documents in Contineo",
     scopeLiveSub: "Live source — searched directly, content not curated",
-    scopeLaw: "Legislation",
-    scopeLawSub: "Acts from Slov-Lex the organisation subscribes to — the wording in force on the day of the question",
+    scopeLaw: "Slovak legislation",
+    scopeLawSub: "Slovak acts from Slov-Lex the organisation subscribes to — the wording in force on the day of the question",
     scopeFoot: "The change applies when you ask again.",
     scopeEmpty: "Choose at least one source.",
     reask: "Ask again",
@@ -17476,7 +17482,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Content sources",
       intro: "Where the organisation takes its content from: the library, connected connectors and legislation. Each source has a kind that says what it can do — import into the library, live search on a question, agent tools.",
       tabRegister: "Register",
-      tabLaw: "Legislation",
+      tabWeb: "Web / RSS",
+      webIntro: "Sources Contineo reads from the public web through an adapter. Today Slov-Lex — Slovak legislation; more (Czech legislation, gazette RSS) will appear as further rows.",
+      slovLex: "Slov-Lex — Slovak legislation",
       kind: { file: "Files", mailbox: "Helpdesk mailbox", mcp: "MCP connector", web: "Web / RSS" },
       useRetrieval: "live source on a question",
       useImport: "import into the library",
@@ -17491,7 +17499,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       actCount: n => `${n} ${n === 1 ? "act" : "acts"}`,
     },
     law: {
-      heading: "Legislation",
+      heading: "Slov-Lex — Slovak legislation",
       intro: "Acts from Slov-Lex the assistant answers from alongside the organisation's documents. The text lives in Contineo's shared catalogue and is refreshed from the portal daily; in an answer it is labelled as an act with a link to the section.",
       blocked: residency => `In the ${residency} mode the legislation catalogue is not read — the question would leave the organisation's perimeter.`,
       defaultOn: "Use by default",

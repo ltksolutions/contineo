@@ -11,7 +11,9 @@ import { legacyOrgSection } from "../src/lib/orgSections"
 
 describe("stare cesty", () => {
   it("Legislatíva z Umelej inteligencie do Zdrojov (ADR-040)", () => {
-    expect(legacyRoute("/organisation/ai/law")).toBe("/organisation/sources/law")
+    expect(legacyRoute("/organisation/ai/law")).toBe("/organisation/sources/web/slov-lex")
+    // Druh je zoznam, zdroj je detail (ADR-040 Dodatok 1).
+    expect(legacyRoute("/organisation/sources/law")).toBe("/organisation/sources/web/slov-lex")
     expect(legacyRoute("/organisation/ai/usage")).toBeNull()
     // Konektory ako podstránka Zdrojov (krok 2) — aj detail.
     expect(legacyRoute("/organisation/connectors")).toBe("/organisation/sources/connectors")
