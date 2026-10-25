@@ -379,8 +379,8 @@ počty v `retention[].helpdesk`).
 3. **Kuriér naostro:** živý rozhovor dvoch ľudí, ranný súhrn v logu
    `courier-digest`, prvý oznam oddeleniu.
 4. **Prehľad AI:** zjednotiť meno procesov na pozadí pri zápise spotreby
-   (`docs/TODO.md`, „Spotreba AI: jedno meno"); **`/design-sync`**, aby nový
-   posuvník `.field-range` bol aj v artefakte design systému.
+   (`docs/TODO.md`, „Spotreba AI: jedno meno"). Posuvník `.field-range`
+   je v knižnici aj v artefakte design systému (`/design-sync` 25. 10., verzia 10).
 5. **Zdroje hľadania naostro:** jedna otázka so zaškrtnutým Sportnetom
    z plachty — hlavička „… a zo zdroja Sportnet dokumentácia", oznam po
    zmene výberu bez nového volania.

@@ -65,8 +65,12 @@ Posuvník v design systéme nebol — otázka s odporúčaním, Ján schválil
 z buildu, lebo prihlásenie na `localhost` nie je po ruke: počítač aj
 375 px v tmavej téme.
 
-**Ostáva.** `/design-sync` (Ján), aby `.field-range` bol aj v artefakte
-design systému. Stropy po mesiaci overiť z `mcp_calls.size`. V smernici
+**`/design-sync` v ten istý večer** (Ján ho spustil): `RangeField` je 13.
+komponent knižnice v Claude Design aj v artefakte (verzia 10, `bf83603`).
+Publikovanie do artefaktu dvakrát odmietnuté, kým nebol prečítaný celý
+artefakt a `file_path` nebol absolútny — zapísané v `.design-sync/NOTES.md`.
+
+**Ostáva.** Stropy po mesiaci overiť z `mcp_calls.size`. V smernici
 bodka pred zátvorkou v pozn. 5; Pracovný poriadok SFZ bez nadradeného
 dokumentu; Skúšobný poriadok `sfz:test_znenia` viditeľný ako platný.
 
