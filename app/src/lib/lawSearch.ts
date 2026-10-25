@@ -22,6 +22,7 @@ import {
   type LawActVersion, type LawChunk,
 } from "./lawCatalog"
 import { actNumber } from "./slovLex"
+import { lawDocumentsFor } from "./lawLibraryLink"
 
 export const LAW_VECTOR_INDEX = process.env.LAW_VECTOR_INDEX ?? "law_vector_index"
 export const LAW_TEXT_INDEX = process.env.LAW_TEXT_INDEX ?? "law_text_index"
@@ -105,7 +106,12 @@ export async function lawSearch(input: LawSearchInput): Promise<LawSearchResult>
     if (!state.active) return { chunks: [], asked: false, failed: false }
     if (input.byDefault && !state.defaultOn) return { chunks: [], asked: false, failed: false }
 
-    const versions = await versionsAsOf(state.actIds, input.asOf)
+    // Zákon, ktorý má organizácia zverejnený v knižnici, odpovedá z knižnice
+    // (schválené znenie, D260) — z katalógu by prišiel druhýkrát.
+    const inLibrary = await lawDocumentsFor(input.companyCode, state.actIds, input.asOf)
+    const actIds = state.actIds.filter(id => !inLibrary.get(id)?.published)
+    if (!actIds.length) return { chunks: [], asked: true, failed: false }
+    const versions = await versionsAsOf(actIds, input.asOf)
     if (!versions.length) return { chunks: [], asked: true, failed: false }
     const keys = versions.map(v => v.versionKey)
     const byKey = new Map(versions.map(v => [v.versionKey, v]))

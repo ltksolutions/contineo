@@ -7,8 +7,9 @@
  * stiahne znenie účinné dnes, aby sa chytila oprava textu na portáli.
  * Katalóg nie je dôkazný záznam (D257), preto sa prepisuje bez pýtania.
  *
- * Koncepty nových znení pre organizácie s odberom do knižnice sú fáza 2
- * (D260) — tu zatiaľ nie sú.
+ * Po kontrole katalógu prejde dokumenty knižníc so sledovaným zdrojom
+ * (fáza 2, D260): novšie znenie je koncept nového znenia v tej knižnici
+ * a správcovia obsahu dostanú upozornenie.
  *
  * Beh je chránený `CRON_SECRET` ako ostatné crony: bez neho by to bol
  * verejný odkaz, ktorý na povel sťahuje megabajty z cudzieho portálu.
@@ -17,6 +18,7 @@
 import { NextResponse } from "next/server"
 import { getCollection } from "@/lib/mongodb"
 import { LAW_ACTS_COLLECTION, syncAct, type LawAct, type SyncOutcome } from "@/lib/lawCatalog"
+import { draftNewVersionsFromCatalog } from "@/lib/webImport"
 
 export const dynamic = "force-dynamic"
 /** Každé znenie je 1,4 MB HTML a rez; strop stiahnutí na predpis drží beh pod minútou. */
@@ -41,6 +43,7 @@ export async function GET(request: Request) {
     report.push(await syncAct(act.actId, now, DOWNLOADS_PER_ACT))
   }
   const failed = report.filter(r => r.error).length
-  console.log(`[legislativa] cron: ${report.length} predpisov, ${report.reduce((n, r) => n + r.added.length, 0)} nových znení, ${failed} chýb`)
-  return NextResponse.json({ ok: true, acts: report.length, failed, report })
+  const drafts = await draftNewVersionsFromCatalog(now)
+  console.log(`[legislativa] cron: ${report.length} predpisov, ${report.reduce((n, r) => n + r.added.length, 0)} nových znení, ${failed} chýb; koncepty v knižniciach: ${drafts.filter(d => d.result !== "error").length}, chyby: ${drafts.filter(d => d.result === "error").length}`)
+  return NextResponse.json({ ok: true, acts: report.length, failed, report, drafts })
 }

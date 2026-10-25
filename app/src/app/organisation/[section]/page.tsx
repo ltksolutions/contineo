@@ -54,6 +54,7 @@ import { saveAssistantsAction, revokeGrantAdminAction } from "../actions"
 import { subscribeLawAction, unsubscribeLawAction, saveLawSettingsAction } from "../actions"
 import { subscribedActs, lawSourceState, SUGGESTED_ACTS } from "@/lib/lawCatalog"
 import { sourcesRegister } from "@/lib/sourcesRegister"
+import { lawDocumentsFor } from "@/lib/lawLibraryLink"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageFilterQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
 import { overviewGroup, previousYearUsd, unpricedCalls, usageOverview } from "@/lib/aiOverview"
 import AiOverview from "../AiOverview"
@@ -325,7 +326,9 @@ export default async function OrganisationSectionPage({
   const law = now === "sources" && sourcesView === "law"
     ? await (async () => {
         const [acts, state] = await Promise.all([subscribedActs(tenant.companyCode), lawSourceState(tenant.companyCode)])
-        return { acts, state }
+        // Napojenie na knižnicu (ADR-039 D260) — odvodené z pôvodu dokumentu, nič sa neukladá.
+        const library = await lawDocumentsFor(tenant.companyCode, acts.map(a => a.actId))
+        return { acts, state, library }
       })()
     : null
   const locale = language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK"
@@ -1414,6 +1417,10 @@ export default async function OrganisationSectionPage({
                   ].filter(Boolean).join(" · ")}
                   {" · "}
                   <a href={`https://www.slov-lex.sk/pravne-predpisy/${a.actId}/`} target="_blank" rel="noopener noreferrer">Slov-Lex</a>
+                  {" · "}
+                  {law.library.get(a.actId)
+                    ? <Link href={`/library/${encodeURIComponent(law.library.get(a.actId)!.documentId)}`}>{t.law.inLibrary}</Link>
+                    : <Link href={`/library/new/web?${new URLSearchParams({ address: a.actId }).toString()}`}>{t.law.toLibrary}</Link>}
                 </span>
               </div>
               {/* Karty s vlastnou akciou majú tlačidlá tiché (DESIGN_ODCHYLKY R1). */}

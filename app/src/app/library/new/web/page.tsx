@@ -28,6 +28,8 @@ import { treeOptions } from "@/lib/treeOptions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, errorText, formatDate } from "@/lib/i18n"
 import { previewSlovLex, type WebPreview } from "@/lib/webImport"
+import { subscribedActs } from "@/lib/lawCatalog"
+import { lawDocumentsFor } from "@/lib/lawLibraryLink"
 import { AppError } from "@/lib/appError"
 import { importWebDocumentAction } from "../../actions"
 
@@ -58,18 +60,22 @@ export default async function WebImportPage({ searchParams }: { searchParams: Pr
   let loadError: string | null = null
   if (address) {
     try {
-      preview = await previewSlovLex(companyCode, address)
+      preview = await previewSlovLex(companyCode, address, ctx.person.email)
     } catch (e) {
       if (!(e instanceof AppError)) console.error("[web-import] načítanie zlyhalo:", e)
       loadError = errorText(e, language)
     }
   }
 
-  const [departmentRows, folders, tags] = await Promise.all([
+  const [departmentRows, folders, tags, subscribed] = await Promise.all([
     flattenTree(await allDepartments(companyCode)),
     allFolders(companyCode),
     tagOptions(companyCode, extras),
+    subscribedActs(companyCode),
   ])
+  // Výber z katalógu (ADR-039 D260): odoberané predpisy, ktoré v knižnici ešte nie sú.
+  const inLibrary = await lawDocumentsFor(companyCode, subscribed.map(a => a.actId))
+  const fromCatalog = subscribed.filter(a => !inLibrary.has(a.actId))
   const folderOptions = treeOptions(flattenFolders(folders).map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level })))
   const categories = codelistOptions("category", extras)
   // Zákon je predvolený druh — na to táto cesta vznikla; keď ho organizácia nemá, prvý v zozname.
@@ -97,6 +103,20 @@ export default async function WebImportPage({ searchParams }: { searchParams: Pr
       </form>
 
       {loadError && <p className="quiet" role="alert">{t.errorBefore}{loadError}</p>}
+
+      {/* Z katalógu legislatívy (ADR-039 D260): jeden klik namiesto adresy. */}
+      {!preview && fromCatalog.length > 0 && (
+        <section className="card more" style={{ marginBottom: 20 }}>
+          <div className="more-head"><h2>{t.fromCatalog}</h2></div>
+          <div className="more-row"><div className="more-main"><span>{t.fromCatalogHint}</span></div></div>
+          {fromCatalog.map(a => (
+            <div key={a.actId} className="more-row">
+              <div className="more-main"><b>{a.title}</b><span>{a.actId}</span></div>
+              <Link className="button button--quiet" href={`/library/new/web?${new URLSearchParams({ address: a.actId }).toString()}`}>{t.load}</Link>
+            </div>
+          ))}
+        </section>
+      )}
 
       {preview && (
         <form action={importWebDocumentAction} className="upload-form">

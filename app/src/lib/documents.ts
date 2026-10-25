@@ -241,6 +241,8 @@ export interface WebDocumentSource {
   fetchedAt: Date
   contentHash: string
   adapterVersion: string
+  /** Text znenia prišiel z katalógu legislatívy, nie priamo z portálu (ADR-039 D260). Staršie dokumenty ho nemajú. */
+  catalog?: boolean
 }
 
 export type DocumentSource = McpDocumentSource | WebDocumentSource
