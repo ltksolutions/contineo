@@ -2707,6 +2707,13 @@ interface Dictionary {
       clientsIntro: string
       noClients: string
       saved: string
+      /** Stropy úsekov pre search_library — posuvníky (Ján 25. 10. 2026). */
+      capsHeading: string
+      capsIntro: string
+      capDocuments: string
+      capDocumentsHint: string
+      capLaw: string
+      capLawHint: string
     }
   }
   widget: {
@@ -8024,6 +8031,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       clientsIntro: "Kto má pripojeného asistenta a odkedy. Správca osôb smie prístup odvolať komukoľvek; záznam o súhlase zostáva.",
       noClients: "Nikto zatiaľ nemá pripojenú aplikáciu.",
       saved: "Nastavenie asistentov bolo uložené.",
+      capsHeading: "Rozsah výsledkov hľadania",
+      capsIntro: "Koľko úsekov textu pošle Contineo asistentovi pri hľadaní z jedného zdroja. Viac úsekov dá asistentovi viac podkladov, ale zaberie mu viac miesta v konverzácii a jeho tokeny platí ten, kto asistenta používa. Odpovede na portáli a nástroj „Opýtať sa“ sa tým nemenia.",
+      capDocuments: "Knižnica a konektory — úsekov z každého zdroja",
+      capDocumentsHint: "Predvolene 8. Úsek knižnice má zvyčajne pol strany až stranu textu; pod 3 chýba asistentovi kontext, nad 15 zaplní jedno hľadanie veľkú časť konverzácie.",
+      capLaw: "Legislatíva — úsekov zo Slov-Lexu",
+      capLawHint: "Predvolene 4. Paragraf zákona býva dlhší než úsek knižnice, preto je rozsah menší.",
     },
   },
   widget: {
@@ -13198,6 +13211,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       clientsIntro: "Kdo má připojeného asistenta a odkdy. Správce osob smí přístup odvolat komukoli; záznam o souhlasu zůstává.",
       noClients: "Nikdo zatím nemá připojenou aplikaci.",
       saved: "Nastavení asistentů bylo uloženo.",
+      capsHeading: "Rozsah výsledků hledání",
+      capsIntro: "Kolik úseků textu pošle Contineo asistentovi při hledání z jednoho zdroje. Více úseků dá asistentovi více podkladů, ale zabere mu víc místa v konverzaci a jeho tokeny platí ten, kdo asistenta používá. Odpovědi na portálu a nástroj „Zeptat se“ se tím nemění.",
+      capDocuments: "Knihovna a konektory — úseků z každého zdroje",
+      capDocumentsHint: "Výchozí 8. Úsek knihovny má obvykle půl strany až stranu textu; pod 3 chybí asistentovi kontext, nad 15 zaplní jedno hledání velkou část konverzace.",
+      capLaw: "Legislativa — úseků ze Slov-Lexu",
+      capLawHint: "Výchozí 4. Paragraf zákona bývá delší než úsek knihovny, proto je rozsah menší.",
     },
   },
   widget: {
@@ -18363,6 +18382,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       clientsIntro: "Who has an assistant connected and since when. The people administrator may revoke anyone's access; the consent record stays.",
       noClients: "Nobody has connected an application yet.",
       saved: "Assistant settings were saved.",
+      capsHeading: "Search result size",
+      capsIntro: "How many passages of text Contineo sends the assistant per source when it searches. More passages give the assistant more to work from, but take more room in its conversation, and its tokens are paid by whoever uses the assistant. Answers on the portal and the Ask tool are not affected.",
+      capDocuments: "Library and connectors — passages per source",
+      capDocumentsHint: "Default 8. A library passage is usually half a page to a page; below 3 the assistant lacks context, above 15 a single search fills much of the conversation.",
+      capLaw: "Legislation — passages from Slov-Lex",
+      capLawHint: "Default 4. A section of a law tends to be longer than a library passage, so the range is smaller.",
     },
   },
   widget: {

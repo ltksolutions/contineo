@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { TOOL_CATALOG, toolsFor, visibleRows, toHit } from "../src/lib/mcpServer/tools"
-import { assistantsState, mcpAccessLevel } from "../src/lib/mcpServer/access"
+import { TOOL_CATALOG, toolsFor, visibleRows, toHit, capPerSource, capsFor, type SearchHit } from "../src/lib/mcpServer/tools"
+import { assistantsState, mcpAccessLevel, searchCaps, clampCap, SEARCH_CAP_RANGE } from "../src/lib/mcpServer/access"
 import { bearerToken, originOf } from "../src/lib/mcpServer/origin"
 import type { LibraryRow } from "../src/lib/libraryRead"
 import { searchableSources, pickSources } from "../src/lib/mcpServer/sources"
@@ -176,5 +176,43 @@ describe("znenie predpisu (ADR-039)", () => {
   it("konkrétna časová verzia má prednosť pred dňom", () => {
     expect(pickLawVersion(versions, new Date("2026-10-25T12:00:00Z"), "20270101")?.timepoint).toBe("20270101")
     expect(pickLawVersion(versions, new Date(), "19990101")).toBe(null)
+  })
+})
+
+describe("search_library: strop pre každý zdroj podľa nastavenia organizácie", () => {
+  const h = (source: string, n: number): SearchHit => ({
+    source, documentId: `${source}-${n}`, title: "", articleRef: null, heading: null, text: "",
+    versionLabel: null, effectiveFrom: null, sourceType: null, url: "",
+  })
+  const many = (source: string, n: number) => Array.from({ length: n }, (_, i) => h(source, i + 1))
+
+  it("predvolene knižnica 8, Slov-Lex 4, každý konektor 8 — v pôvodnom poradí", () => {
+    const out = capPerSource([...many("library", 12), ...many("c1", 10), ...many("c2", 9), ...many("slov-lex", 6)], capsFor(searchCaps(undefined)))
+    const count = (s: string) => out.filter(x => x.source === s).length
+    expect([count("library"), count("c1"), count("c2"), count("slov-lex")]).toEqual([8, 8, 8, 4])
+    expect(out.slice(0, 2).map(x => x.documentId)).toEqual(["library-1", "library-2"])
+  })
+  it("nastavenie organizácie platí: dokumenty 3, Legislatíva 1", () => {
+    const out = capPerSource([...many("library", 5), ...many("slov-lex", 3)], capsFor({ documents: 3, law: 1 }))
+    expect(out.map(x => x.documentId)).toEqual(["library-1", "library-2", "library-3", "slov-lex-1"])
+  })
+  it("menej výsledkov než strop nič nevyhodí", () => {
+    expect(capPerSource([h("library", 1), h("slov-lex", 1)], capsFor(searchCaps(undefined)))).toHaveLength(2)
+  })
+})
+
+describe("stropy z posuvníka sa orežú do rozsahu", () => {
+  it("chýbajúca alebo nečíselná hodnota = predvoľba", () => {
+    expect(searchCaps(undefined)).toEqual({ documents: SEARCH_CAP_RANGE.documents.default, law: SEARCH_CAP_RANGE.law.default })
+    expect(clampCap("abc", SEARCH_CAP_RANGE.documents)).toBe(8)
+    expect(clampCap("", SEARCH_CAP_RANGE.law)).toBe(4)
+  })
+  it("mimo rozsahu sa oreže, desatinné sa zaokrúhli", () => {
+    expect(clampCap("99", SEARCH_CAP_RANGE.documents)).toBe(15)
+    expect(clampCap(0, SEARCH_CAP_RANGE.law)).toBe(1)
+    expect(clampCap("6.6", SEARCH_CAP_RANGE.documents)).toBe(7)
+  })
+  it("stav asistentov nesie stropy organizácie", () => {
+    expect(assistantsState({ assistants: { enabled: true, searchCaps: { documents: 5, law: 2 } } }, "eu-data").caps).toEqual({ documents: 5, law: 2 })
   })
 })

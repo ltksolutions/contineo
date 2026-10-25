@@ -35,6 +35,7 @@ import type { OAuthScope } from "../oauthServer"
 import { askOnce } from "./ask"
 import { sourcesFor, pickSources, unknownSourcesMessage, LIBRARY_SOURCE_ID, type McpSource } from "./sources"
 import { lawActsFor, lawActText, lawActMarkdown } from "./law"
+import type { SearchCaps } from "./access"
 import { logMcpCall } from "./calls"
 import type { McpActor } from "./auth"
 
@@ -71,7 +72,15 @@ export function toolsFor(scopes: readonly string[], roles: readonly string[] = [
 /** Strop otázok `ask` na osobu a hodinu — agent v slučke minie viac než človek (D14). */
 export const ASK_PER_HOUR = 60
 /** Najviac úsekov z `search_library`. */
-const SEARCH_MAX = 20
+/**
+ * Strop úsekov pre zdroj podľa nastavenia organizácie (Prístup → AI
+ * asistenti, posuvníky; rozsahy a odôvodnenie v `access.ts`,
+ * `SEARCH_CAP_RANGE`). Knižnica a každý konektor majú strop „dokumenty",
+ * Slov-Lex vlastný.
+ */
+export function capsFor(caps: SearchCaps): (source: string) => number {
+  return source => source === SLOV_LEX_SOURCE_ID ? caps.law : caps.documents
+}
 
 // ── Pomocné ─────────────────────────────────────────────────────────────────
 
@@ -183,14 +192,26 @@ export function toHit(c: ChunkResult, origin: string): SearchHit {
  * cudzí server, nie model). Poradie ako pri odpovedi: knižnica, konektory,
  * Legislatíva (D174, D259). Zdroj, ktorý zlyhal, sa ohlási, odpoveď ide ďalej.
  */
-async function searchSources(actor: McpActor, picked: McpSource[], query: string, limit: number, asOf: Date): Promise<{ hits: SearchHit[]; failed: string[] }> {
+/**
+ * Strop pre **každý zdroj zvlášť**, poradie sa zachová. Čistá funkcia — testuje sa.
+ */
+export function capPerSource(hits: SearchHit[], cap: (source: string) => number): SearchHit[] {
+  const seen = new Map<string, number>()
+  return hits.filter(h => {
+    const n = seen.get(h.source) ?? 0
+    seen.set(h.source, n + 1)
+    return n < cap(h.source)
+  })
+}
+
+async function searchSources(actor: McpActor, picked: McpSource[], query: string, asOf: Date): Promise<{ hits: SearchHit[]; failed: string[] }> {
   const companyCode = actor.tenant.companyCode
   const ids = new Set(picked.map(s => s.id))
   const connectors = picked.filter(s => s.kind === "mcp").map(s => s.id)
   const profile = await getTenantProfile(companyCode)
   const providers = getProviders(profile)
   const [library, live, law] = await Promise.all([
-    ids.has(LIBRARY_SOURCE_ID) ? searchLibrary(actor, query, limit, asOf) : Promise.resolve([]),
+    ids.has(LIBRARY_SOURCE_ID) ? searchLibrary(actor, query, actor.state.caps.documents, asOf) : Promise.resolve([]),
     connectors.length
       ? liveSearch({
           companyCode, query, accessLevel: actor.accessLevel, redirectUrl: "", only: connectors,
@@ -199,7 +220,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
       : Promise.resolve({ chunks: [], failed: [], asked: [] }),
     ids.has(SLOV_LEX_SOURCE_ID)
       ? lawSearch({
-          companyCode, query, asOf, byDefault: false,
+          companyCode, query, asOf, byDefault: false, limit: actor.state.caps.law,
           useStageRerank: providers.rerank.isPipelineStage, rerankModel: profile.providers.rerank.model,
           vectorPath: profile.providers.embedding.vectorPath,
         })
@@ -207,7 +228,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
   ])
   const names = new Map(picked.map(s => [s.id, s.name]))
   return {
-    hits: [...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))],
+    hits: capPerSource([...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))], capsFor(actor.state.caps)),
     failed: [...live.failed.map(f => f.name), ...(law.failed ? [names.get(SLOV_LEX_SOURCE_ID) ?? SLOV_LEX_SOURCE_ID] : [])],
   }
 }
@@ -335,16 +356,15 @@ export function registerTools(server: McpServer, actor: McpActor): void {
       description: `Hybrid (semantic + full-text) search over the sections of ${orgName}'s documents in force on the given day — and, when asked via \`sources\`, over Legislation (Slov-Lex acts the organisation follows) and connected knowledge sources. Returns the best-matching passages with document, article, version and source — no language model is involved; write the answer yourself and cite the passages. Use \`ask\` instead when you want Contineo's own answer with citations.`,
       inputSchema: {
         query: z.string().min(2).max(500).describe("What to look for, in the language of the documents (Slovak for most organisations)."),
-        limit: z.number().int().min(1).max(SEARCH_MAX).optional().describe(`How many library passages to return (default 8, at most ${SEARCH_MAX}). Legislation and connectors add their own few best passages.`),
         asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Search the versions in force on this day (YYYY-MM-DD). Default: today."),
         sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources, e.g. ["library", "slov-lex"]. Default: ["library"].'),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },
-    }, guarded(actor, spec("search_library"), async ({ query, limit, asOf, sources }) => {
+    }, guarded(actor, spec("search_library"), async ({ query, asOf, sources }) => {
       const available = await sourcesFor(actor)
       const { picked, unknown } = pickSources(sources, available, [LIBRARY_SOURCE_ID])
       if (unknown.length) return failure(unknownSourcesMessage(unknown, available))
-      const { hits, failed } = await searchSources(actor, picked, query.trim(), limit ?? 8, parseAsOf(asOf))
+      const { hits, failed } = await searchSources(actor, picked, query.trim(), parseAsOf(asOf))
       const lines = hits.map((h, i) =>
         `${i + 1}. ${h.title}${h.articleRef ? ` — ${h.articleRef}` : ""}${h.heading ? ` (${h.heading})` : ""}${h.versionLabel ? ` [${h.versionLabel}]` : ""}${h.source !== LIBRARY_SOURCE_ID ? ` {${h.source}}` : ""}\n${h.url}\n${h.text}`)
       const note = failed.length ? `\n\n(Not searched — source did not respond: ${failed.join(", ")})` : ""
