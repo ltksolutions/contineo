@@ -13,7 +13,7 @@ SPDX-License-Identifier: EUPL-1.2
 > contineo.app/sk/technologia"; k návrhu: „Áno, napíš ADR-040 Register
 > zdrojov podľa odporúčania (Legislatíva ako zdroj druhu web/RSS
 > s adaptérom) a začni presunom Legislatívy do sekcie Zdroje."
-> **Čísla rozhodnutí:** D263–D267.
+> **Čísla rozhodnutí:** D263–D267; Dodatok 1: D268 (mení adresu z D265).
 > **Nadväzuje na:** ADR-029 (konektory: pripojenie s viacerými použitiami —
 > živý zdroj, import, nástroje; výber zdrojov na Opýtať sa), ADR-037
 > (sledovaný zdroj s adaptérom, pôvod `source.type: "web"`), ADR-039
@@ -150,3 +150,38 @@ neprejmenúvajú).
   (ADR-028); register ju má ukázať, nie preberať.
 - Spoločný tvar „čo zdroj vie" pre web bez adaptéra (RSS, sitemap) — až
   s prvým takým zdrojom.
+
+## Dodatok 1 — Druh je zoznam, zdroj je detail: Web / RSS a Slov-Lex (D268, 2026-10-25)
+
+> **Rozhodol:** Ján Letko (2026-10-25) — „mám …/organisation/sources/law, ale
+> podľa mňa law je len typ, druh zdroja Web / RSS … Slov-Lex je len slovenská
+> legislatíva, príde aj česká a iné zdroje typu Web / RSS"; k návrhu:
+> „súhlasím, môžeš to spraviť a aj ten dodatok ADR-040".
+
+**Kontext.** Krok 1 dal Legislatíve adresu `/organisation/sources/law`
+a záložku „Legislatíva" vedľa Konektorov. To robí z legislatívy druh
+zdroja, hoci podľa D265 je druh **Web / RSS** a Slov-Lex je jeden zdroj
+toho druhu. Český zdroj (`zakonyprolidi.cz`, ADR-039 fáza 3) alebo RSS
+vestníka by nemali kam patriť, iba ako druhá „Legislatíva".
+
+**D268 — Druh je zoznam, zdroj je detail, ako pri konektoroch.**
+
+- Podmenu Zdrojov: **Register · Konektory · Web / RSS**. Záložka
+  „Legislatíva" zaniká.
+- `/organisation/sources/web` je zoznam zdrojov druhu Web / RSS
+  z registra; `/organisation/sources/web/<id>` je detail zdroja. Dnes je
+  jediný `slov-lex` — „Slov-Lex — legislatíva SR" s odoberanými
+  predpismi, predvoľbou a ponukou (ADR-039 D259).
+- **Id zdroja vo výbere zdrojov je id zdroja, nie druhu:** `slov-lex`
+  namiesto `law`. Vo výbere na Opýtať sa sa volá „Legislatíva SR"; český
+  zdroj bude samostatný riadok „Legislatíva ČR" a človek si zapne jeden,
+  druhý alebo oba.
+- **Staré tvary sa prekladajú** (`CLAUDE.md`): `/organisation/sources/law`
+  a `/organisation/ai/law` → `/organisation/sources/web/slov-lex`
+  (`legacyRoutes.ts`); `?src=law` → `?src=slov-lex` (`askScope.ts`).
+- **Nemení sa:** katalóg legislatívy (`law_*`) je sklad pre všetky
+  adaptéry legislatívy, nie pre Slov-Lex — jurisdikciu nesie identifikátor
+  predpisu (`SK/ZZ/2015/440`), názvy kolekcií sú dáta. `sourceType: "law"`
+  na úseku a štítok „Zákon" v citácii hovoria, čo čitateľ číta, nie
+  odkiaľ to je. Správa katalógu ostáva `/admin/law`.
+

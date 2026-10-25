@@ -14,17 +14,17 @@ const base: RegisteredSource = {
 }
 const library: RegisteredSource = { ...base, id: "library", kind: "file", name: "Knižnica", accessLevel: "internal", uses: { retrieval: true, import: true, tools: false } }
 const mailbox: RegisteredSource = { ...base, id: "mailbox:podpora", kind: "mailbox", adapter: "graph", name: "Podpora", accessLevel: "public", uses: { retrieval: false, import: true, tools: false }, href: "/channels/podpora", detail: "podpora@futbalsfz.sk" }
-const law: RegisteredSource = { ...base, id: "law", kind: "web", adapter: "slov-lex", name: "Legislatíva", accessLevel: "public", defaultOn: true, uses: { retrieval: true, import: false, tools: false } }
+const law: RegisteredSource = { ...base, id: "slov-lex", kind: "web", adapter: "slov-lex", name: "Legislatíva", accessLevel: "public", defaultOn: true, uses: { retrieval: true, import: false, tools: false } }
 
 describe("živé zdroje z registra", () => {
   it("knižnica ani schránka nie sú živý zdroj; konektor a legislatíva áno, s predvoľbou", () => {
     expect(liveSourcesFor([library, mailbox, base, law], "internal")).toEqual([
       { id: "c1", name: "Sportnet", defaultOn: false },
-      { id: "law", name: "Legislatíva", defaultOn: true },
+      { id: "slov-lex", name: "Legislatíva", defaultOn: true },
     ])
   })
   it("verejný pýtajúci sa nevidí interný konektor, zákon áno", () => {
-    expect(liveSourcesFor([library, base, law], "public").map(s => s.id)).toEqual(["law"])
+    expect(liveSourcesFor([library, base, law], "public").map(s => s.id)).toEqual(["slov-lex"])
   })
   it("vypnutý, nepripojený, blokovaný alebo bez hľadania sa neponúka", () => {
     expect(liveSourcesFor([{ ...base, enabled: false }], "internal")).toEqual([])

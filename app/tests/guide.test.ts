@@ -36,11 +36,12 @@ describe("Návod", () => {
     expect(GUIDE_SK.length).toBeGreaterThan(1000)
   })
 
-  it("má všetky štyri sekcie, ktoré sľubuje", () => {
+  // Šesť kapitol: jedna pre každého (zdroje odpovede), päť pre správcov (25. 10. 2026).
+  it("má všetkých šesť kapitol, ktoré sľubuje", () => {
     const headings = toBlocks(GUIDE_SK)
       .filter(b => b.druh === "nadpis")
       .map(b => b.segments.map(u => u.text).join(""))
-    expect(headings.length).toBe(4)
+    expect(headings.length).toBe(6)
   })
 
   it("odkazuje aspoň na jednu obrazovku", () => {

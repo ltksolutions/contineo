@@ -17,7 +17,7 @@
 import { listConnectors, connectorAllowed, type Connector } from "./connectors"
 import { listChannels, mailboxStalled, type HelpdeskChannel } from "./channels"
 import { canSearch } from "./mcp/operations"
-import { lawSourceState, LAW_SOURCE_ID } from "./lawCatalog"
+import { lawSourceState, SLOV_LEX_SOURCE_ID } from "./lawCatalog"
 import { SLOV_LEX_ADAPTER } from "./slovLex"
 import { dictionary, type UiLanguage } from "./i18n"
 import type { AskLiveSource } from "./askScope"
@@ -51,7 +51,8 @@ export interface RegisteredSource {
 
 const CONNECTORS_HREF = "/organisation/sources/connectors"
 export const SOURCES_HREF = "/organisation/sources"
-export const LAW_HREF = `${SOURCES_HREF}/law`
+export const WEB_HREF = `${SOURCES_HREF}/web`
+export const LAW_HREF = `${WEB_HREF}/slov-lex`
 
 function fromConnector(c: Connector, allowed: boolean): RegisteredSource {
   let host: string | null = null
@@ -101,7 +102,7 @@ export async function sourcesRegister(companyCode: string, language: UiLanguage)
     ...mailboxes,
     ...connectors.map((c, i) => fromConnector(c, allowed[i])),
     {
-      id: LAW_SOURCE_ID, kind: "web", adapter: SLOV_LEX_ADAPTER, name: t.ask.scopeLaw,
+      id: SLOV_LEX_SOURCE_ID, kind: "web", adapter: SLOV_LEX_ADAPTER, name: t.ask.scopeLaw,
       enabled: law.actIds.length > 0, connected: true, allowed: law.allowed, defaultOn: law.defaultOn, accessLevel: "public",
       // Odber do knižnice je fáza 2 ADR-039 (D260).
       uses: { retrieval: true, import: false, tools: false },

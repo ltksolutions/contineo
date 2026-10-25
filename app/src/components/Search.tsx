@@ -348,7 +348,7 @@ export default function Search({
                         <input type="checkbox" name="src" value={id} checked={pending.includes(id)} onChange={() => togglePending(id)} />
                         <span className="form-row-main">
                           <span>{sourceName(id)}</span>
-                          <span className="form-row-sub">{id === "library" ? t.scopeLibrarySub : id === "law" ? t.scopeLawSub : t.scopeLiveSub}</span>
+                          <span className="form-row-sub">{id === "library" ? t.scopeLibrarySub : id === "slov-lex" ? t.scopeLawSub : t.scopeLiveSub}</span>
                         </span>
                       </label>
                     ))}

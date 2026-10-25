@@ -40,8 +40,13 @@ export const LAW_CHUNKS_COLLECTION = "law_chunks"
 export const LAW_SUBSCRIPTIONS_COLLECTION = "law_subscriptions"
 export const LAW_SETTINGS_COLLECTION = "law_settings"
 
-/** Id zdroja vo výbere zdrojov (`?src=law`) — popri `library` a id konektorov (D259). */
-export const LAW_SOURCE_ID = "law"
+/**
+ * Id zdroja Slov-Lex vo výbere zdrojov (`?src=slov-lex`) a v adrese
+ * `/organisation/sources/web/slov-lex` — id **zdroja**, nie druhu (ADR-040
+ * Dodatok 1, D268). Český zdroj dostane vlastné id. Do 25. 10. to bolo
+ * `law`; starý `?src=law` prekladá `askScope.ts`.
+ */
+export const SLOV_LEX_SOURCE_ID = "slov-lex"
 /** `sourceType` úseku z katalógu — čitateľ má vedieť, že číta zákon, nie predpis organizácie. */
 export const LAW_SOURCE_TYPE = "law"
 /** Režimy rezidencie, v ktorých sa katalóg z cloudu nečíta (D257; ako ADR-038 D251). */

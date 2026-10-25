@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
-import { anchorFor, citationUrl, versionKeyOf, effectiveVersions, lawAllowed, LAW_SOURCE_ID, SUGGESTED_ACTS } from "../src/lib/lawCatalog"
+import { anchorFor, citationUrl, versionKeyOf, effectiveVersions, lawAllowed, SLOV_LEX_SOURCE_ID, SUGGESTED_ACTS } from "../src/lib/lawCatalog"
 import { lawChunkToResult, lawVectorFilter, lawSearchFilterClauses } from "../src/lib/lawSearch"
 import { parseVersion, parseActRef } from "../src/lib/slovLex"
 import { cutForIndex } from "../src/lib/chunkCut"
@@ -111,9 +111,11 @@ describe("ukážka zákona: § ako úsek s kotvou", () => {
 
 describe("zdroj „Legislatíva“ vo výbere zdrojov", () => {
   it("id `law` prejde rozsahom z adresy ako každý živý zdroj a predvoľba ho berie podľa nastavenia", () => {
-    expect(scopeFromQuery("library,law", [LAW_SOURCE_ID])).toEqual(["library", "law"])
-    expect(defaultScope([{ id: LAW_SOURCE_ID, defaultOn: true }])).toEqual(["library", "law"])
-    expect(defaultScope([{ id: LAW_SOURCE_ID, defaultOn: false }])).toEqual(["library"])
+    expect(scopeFromQuery("library,slov-lex", [SLOV_LEX_SOURCE_ID])).toEqual(["library", "slov-lex"])
+    // Starý `?src=law` (do 25. 10.) sa prekladá na zdroj Slov-Lex (ADR-040 Dodatok 1).
+    expect(scopeFromQuery("library,law", [SLOV_LEX_SOURCE_ID])).toEqual(["library", "slov-lex"])
+    expect(defaultScope([{ id: SLOV_LEX_SOURCE_ID, defaultOn: true }])).toEqual(["library", "slov-lex"])
+    expect(defaultScope([{ id: SLOV_LEX_SOURCE_ID, defaultOn: false }])).toEqual(["library"])
   })
   it("ponuka pre športovú organizáciu sú platné čísla predpisov", () => {
     for (const s of SUGGESTED_ACTS) expect(parseActRef(s.address), s.address).not.toBeNull()

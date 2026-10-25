@@ -30,7 +30,7 @@ import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "./embeddingGu
 import { dictionary } from "./i18n"
 import { liveSearch } from "./liveSources"
 import { lawSearch } from "./lawSearch"
-import { LAW_SOURCE_ID } from "./lawCatalog"
+import { SLOV_LEX_SOURCE_ID } from "./lawCatalog"
 import type { CallContext } from "./mcp/client"
 
 export interface ChatStreamInput {
@@ -180,7 +180,7 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
         }
         // Katalóg legislatívy (ADR-039, D259): výslovný výber pilulkou, alebo
         // bez piluliek len keď má organizácia „používať predvolene".
-        const askLaw = only ? only.includes(LAW_SOURCE_ID) : true
+        const askLaw = only ? only.includes(SLOV_LEX_SOURCE_ID) : true
         const [libraryChunks, live, law] = await Promise.all([
           askLibrary
             ? searchWithSubQueries(
@@ -196,7 +196,7 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
             ? liveSearch({
                 companyCode, query: searchQuery, accessLevel, scopeRefs: liveScopes,
                 redirectUrl: input.callbackUrl ?? "", ctx: callCtx,
-                only: only ? only.filter(x => x !== "library" && x !== LAW_SOURCE_ID) : undefined,
+                only: only ? only.filter(x => x !== "library" && x !== SLOV_LEX_SOURCE_ID) : undefined,
               })
             : Promise.resolve({ chunks: [], failed: [], asked: [] }),
           askLaw

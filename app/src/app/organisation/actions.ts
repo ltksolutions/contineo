@@ -844,7 +844,7 @@ function backToLaw(message: string, error = false): never {
   revalidatePath("/organisation", "layout")
   const q = new URLSearchParams({ msg: message })
   if (error) q.set("error", "1")
-  redirect(`/organisation/sources/law?${q.toString()}`)
+  redirect(`/organisation/sources/web/slov-lex?${q.toString()}`)
 }
 
 export async function saveLawSettingsAction(fd: FormData) {

@@ -136,6 +136,31 @@ Do vyhľadávania vstupujú vždy:
 - `chunkType != "preambula"` — preambuly inak zaberali prvé miesta, lebo sú
   podobné každej otázke.
 
+### Legislatíva z katalógu — druhé hľadanie popri knižnici (ADR-039, ADR-040)
+
+Keď má organizácia odoberané predpisy zo Slov-Lexu a človek má zapnutý
+zdroj „Legislatíva SR" (id `slov-lex`), beží **súbežne s knižnicou** druhé
+hybridné hľadanie nad kolekciou `law_chunks` (`lawSearch.ts`). Je to
+**katalóg legislatívy** — text predpisov raz pre všetky organizácie, bez
+`companyCode` (menovitá výnimka z D90). Organizáciu tu zastupuje odber
+(`law_subscriptions`, s `companyCode`): hľadá sa len v odoberaných
+predpisoch a len v znení účinnom v deň otázky (`law_act_versions`, kľúč
+`versionKey` = `SK/ZZ/2015/440@20260101`). Predpis, ktorý má organizácia
+zverejnený v knižnici, sa v katalógu nehľadá — odpovedá schválené znenie
+z knižnice. Úseky katalógu sa pridajú za úseky knižnice a idú do spoločného
+reranku; nesú `sourceType: "law"` a odkaz na paragraf na Slov-Lexe.
+Vlastné indexy `law_vector_index` a `law_text_index` (rovnaký model
+embeddingu, strážca priestoru platí aj tu). Zlyhanie katalógu odpoveď
+z knižnice nezhodí — len poznámka pod odpoveďou.
+
+**Ako sa katalóg plní.** Odber predpisu stiahne znenie účinné dnes. Cron
+`/api/cron/law-catalog` (denne 4:15, `vercel.json`) potom pre každý predpis
+prečíta históriu na Slov-Lexe, stiahne chýbajúce znenia (najviac štyri na
+predpis a beh, najdlhšie nekontrolované prvé), znovu stiahne znenie
+účinné dnes kvôli oprave textu a nakoniec pre dokumenty knižníc s pôvodom
+`web` / `slov-lex` založí koncept nového znenia a pošle `lawVersionDraft`
+správcom obsahu. Správa katalógu pre správcu platformy: `/admin/law`.
+
 ## 6. Preradenie — voyage rerank-2
 
 Stupeň `$rerank` **vnútri tej istej agregácie**. Zoberie 20 kandidátov
