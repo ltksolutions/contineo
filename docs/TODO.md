@@ -249,16 +249,23 @@
 ### E. Source-adaptéry + provenance (Fáza 4/6)
 - [ ] Rozhranie `SourceAdapter` + refaktor existujúceho file (PDF/MD) adaptéra
 - [x] ~~Provenance polia v `documents`~~ ✅ — `documents.source` má dva tvary: `mcp` (ADR-029) a `web` (ADR-037, s časovou verziou `timepoint`).
-- [ ] Adaptér: web link (jednorazové URL → MD) — **pre Slov-Lex hotový** (ADR-037, D242); generický web a RSS ostávajú otvorené (Slov-Lex RSS nemá, hash celého HTML je krehký).
+- [ ] Adaptér: web link (jednorazové URL → MD) — **pre Slov-Lex hotový** (ADR-037, D242; od 25. 10. cez katalóg legislatívy, ADR-039); **generický web a RSS bez adaptéra** ostávajú otvorené — ADR-040 § 5: prídu s prvým skutočným zdrojom spolu s kolekciou `sources`.
 - [ ] ~~Adaptéry: MCP / API~~ → **MCP konektor nie je adaptér zdroja, ale pripojenie s použitiami (ADR-029, 2026-10-07).** Fáza 1 (živý zdroj) je v `main`; import do knižnice je použitie B (nižšie). API/DB zostáva otvorené.
 
 ### E3. Sledovaný zdroj legislatívy — Slov-Lex (ADR-037)
-- [ ] **Krok C — cron a upozornenie** (D247): denne prejsť dokumenty s `source.type: "web"`, urobiť to isté ako „Skontrolovať zdroj" a správcovi obsahu poslať upozornenie o koncepte novely. **Spúšťač:** prvá skutočná novela zákona o športe prejde krokom B (21. 10. Slov-Lex nemá vyhlásené neskoršie znenie).
-- [ ] **Rozpracovaný koncept a nové stiahnutie:** dnes Skontrolovať zdroj prepíše koncept, ktorý človek medzitým upravil (rovnako ako re-sync konektora). Pred krokom C rozhodnúť: zastaviť sa a ohlásiť, alebo založiť koncept vedľa.
-- [ ] **Vykonávacie predpisy** (vyhlášky k zákonu o športe) ako samostatné dokumenty pod zákonom — portál ich vypisuje vo „Vzťahoch predpisu".
+- [x] ~~**Krok C — cron a upozornenie** (D247)~~ ✅ 2026-10-25 — prekonané ADR-039 D261: jeden cron katalógu `/api/cron/law-catalog` (4:15) dopĺňa znenia a pre dokumenty knižníc zakladá koncepty nových znení s upozornením `lawVersionDraft` (#436). **Zostáva:** prvú skutočnú novelu prejsť ručne a porovnať s tým, čo cron urobil (ADR-039 § 5).
+- [ ] **Rozpracovaný koncept a nové stiahnutie:** Skontrolovať zdroj — a od 25. 10. aj nočný cron — prepíše koncept, ktorý človek medzitým upravil (rovnako ako re-sync konektora). **Rozhodnúť:** zastaviť sa a ohlásiť, alebo založiť koncept vedľa. Odporúčanie: cron sa pri rozpracovanom koncepte zastaví a pošle upozornenie, tlačidlo ostane ako dnes.
+- [ ] **Vykonávacie predpisy** (vyhlášky k zákonu o športe) ako samostatné dokumenty pod zákonom — portál ich vypisuje vo „Vzťahoch predpisu". Fáza 3 ADR-039 (D262), spolu s predvoleným súborom predpisov podľa druhu organizácie.
 - [ ] **Odkazy na citované predpisy** v texte (DOCX zo Slov-Lexu ich má, HTML tiež) — len ak budú v odpovediach chýbať; v texte na vyhľadávanie sú adresy šum.
 - [ ] **Český adaptér** (Sbírka zákonů) — až s českým tenantom.
 - [ ] **Návrh rezov pri veľkom dokumente:** kolo 3 nad zákonom má 5 nálezov (§ 3 a § 83 nad strop, tri zlomky). Ak budú odpovede z týchto miest slabé, nové kolo s poznámkou kurátora.
+
+### E4. Register zdrojov (ADR-040)
+- [x] ~~Krok 1 — sekcia Organizácia → Zdroje, Legislatíva z Umelej inteligencie do Zdrojov, výber zdrojov z registra~~ ✅ 2026-10-25, #433
+- [x] ~~Krok 2 — konektory ako podstránka Zdrojov, preklad `/organisation/connectors[/…]` a `?tab=connectors`, widget číta register~~ ✅ 2026-10-25, #434
+- [x] ~~Krok 3 (časť) — schránka helpdesku ako riadok registra, Technológia podľa registra (sk/cs/en)~~ ✅ 2026-10-25, #437
+- [ ] **Generický web a RSS bez adaptéra** a kolekcia `sources` (ADR-040 § 5) — s prvým skutočným zdrojom (úradný vestník s RSS, web zväzu).
+- [ ] **Rozsahy kanála helpdesku z registra** — dnes kanál vyberá rozsahy konektorov (`connectorScopes`); legislatívu vo widgete nevypína správca kanála, ale odber organizácie. Ak to bude treba, rozsah „legislatíva" ako ďalší riadok výberu kanála.
 
 ### E2. MCP konektory — ďalšie fázy (ADR-029)
 - [x] ~~**Použitie B — import do knižnice**~~ ✅ 2026-10-08 (PR #311): Knižnica → Nahrať → Import zo servera; výber z výsledkov hľadania, `uploadDocument()` s Markdownom a PDF vysádzaným u nás (`markdownPdf.ts`), `documents.source.*`, blok Zdroj na detaile s kontrolou zmien cez `contentHash` (nové znenie ako koncept). PDF ostáva povinné aj pre MCP (rozhodnutie Jána 8. 10.: automatické, nie výnimka z ADR-011).
@@ -270,7 +277,7 @@
 - [ ] **Servisný účet Sportnetu:** vyžiadať aplikáciu s `client_credentials` (ako `issfconnector`); dnes pilot pod osobným účtom Jána — mení sa len `auth` na konektore.
 - [ ] **Rerank živých úsekov v cloude:** `$rerank` beží v pipeline a živé úseky v nej nie sú — idú za knižnicou v poradí servera. Keď to bude prekážať, aplikačný rerank nad zlúčeným zoznamom.
 - [ ] **Identita `person`** (každý si pripojí vlastný účet) — nutné pre C pri nástrojoch typu „moje členstvá"; schéma to nesie, kód nie.
-- [ ] **Po nasadení:** v Organizácia → Konektory „Pripojiť znova" (lokálny token je pod iným kľúčom), na kanáli ISSF vybrať rozsah ISSF, overiť generovanie odpovede so živým zdrojom (lokálne nešlo — kľúč AI organizácie je pod produkčným kľúčom).
+- [ ] **Po nasadení:** v Organizácia → Zdroje → Konektory „Pripojiť znova" (lokálny token je pod iným kľúčom), na kanáli ISSF vybrať rozsah ISSF, overiť generovanie odpovede so živým zdrojom (lokálne nešlo — kľúč AI organizácie je pod produkčným kľúčom).
 - [x] ~~**Contineo ako MCP server**~~ → **ADR-038** (2026-10-24, D249–D256): koncepcia `docs/MCP_SERVER_KONCEPCIA.md`; fáza 1 (OAuth vydáva Contineo, `whoami`, `search_library`, `get_document`, `list_documents`, `document_hierarchy`, `ask`, dokumenty ako zdroje). Otvorené: fáza 2 (koncepty, kontrola s potvrdením), fáza 3 (helpdesk, HR, vzdelávanie, osobné tokeny), verejný MCP bez prihlásenia, Contineo plugin pre Claude Code.
 
 ### F. Reconciliation (Fáza 4b)

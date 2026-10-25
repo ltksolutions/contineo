@@ -4,6 +4,39 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Register zdrojov: Organizácia → Zdroje (2026-10-25, ADR-040, #433, #434, #437)
+
+- Nová sekcia **Organizácia → Zdroje**: register zdrojov obsahu s rovnakými
+  stĺpcami — druh, čo zdroj vie (živý zdroj, import, nástroje agenta),
+  úroveň prístupu, predvolene na Opýtať sa, stav. Riadky: knižnica,
+  schránky helpdesku, MCP konektory, legislatíva.
+- Podmenu **Register · Konektory · Legislatíva**. Sekcia Konektory zanikla;
+  `/organisation/connectors[/…]`, `?tab=connectors` a `/organisation/ai/law`
+  sa prekladajú na nové adresy.
+- Výber zdrojov na Opýtať sa, v plachte, vo widgete kanála a v nástroji
+  `ask` MCP servera číta register — ten istý zoznam ako sekcia Zdroje.
+- Stránka Technológia (sk, cs, en) opisuje zdroje podľa registra.
+
+### Katalóg legislatívy zo Slov-Lexu (2026-10-25, ADR-039, #432, #435, #436)
+
+- **Zdroj „Legislatíva"** na Opýtať sa: zákony zo Slov-Lexu, ktoré
+  organizácia odoberá, v znení účinnom v deň otázky; citácia so štítkom
+  „Zákon" a odkazom na paragraf na Slov-Lexe. Model pri rozpore zákona
+  a predpisu organizácie to povie.
+- Predpisy sú v **spoločnom katalógu** pre všetky organizácie (všetky znenia
+  z histórie, § ako úsek, rovnaký embedding ako knižnica). Odber v Zdroje →
+  Legislatíva adresou, číslom alebo z ponuky pre športovú organizáciu.
+- **Odber do knižnice z katalógu**: Nahrať → Predpis zo Slov-Lexu ponúka
+  odoberané predpisy; text je z katalógu, zo Slov-Lexu sa sťahuje len
+  záväzné PDF. Zverejnený dokument knižnice má pri odpovedi prednosť.
+- **Denný cron** `/api/cron/law-catalog` (4:15) dopĺňa znenia vrátane
+  vyhlásených vopred a pre dokumenty knižníc zakladá koncepty nových znení
+  s upozornením správcom obsahu.
+- Správa katalógu pre správcu platformy: `/admin/law`.
+- `atlas_init.mjs` zakladá indexy `law_vector_index` a `law_text_index`
+  a `--pockaj` čaká na všetky indexy.
+- Oprava: oznam po akcii v Legislatíve vracia na Legislatívu (#435).
+
 ### Web contineo.app: Kontrola súladu, koniec FAQ, Kuriér a Slov-Lex na predajných stránkach (2026-10-24)
 
 Úvod má novú sekciu **Kontrola súladu** (proti nadradeným normám, nález

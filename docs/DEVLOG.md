@@ -11,6 +11,69 @@
 ---
 
 
+## 2026-10-25 — Slov-Lex ako štandardný zdroj: katalóg legislatívy a register zdrojov
+
+**Z čoho to vzišlo.** Ján: „implementujem slov-lex.sk ako štandardný zdroj".
+Slov-Lex už bol v knižnici (ADR-037), ale ako kópia per organizácia —
+každá by si zákon sťahovala, rezala a indexovala zvlášť a asistent by
+mlčal, kým ho neimportuje. Dva tvary (katalóg platformy verzus len zdroj
+na Opýtať sa) som dal na výber s odporúčaním; ten druhý by aj tak
+potreboval index, lebo Slov-Lex nemá vyhľadávanie, takže by vznikol
+katalóg, len schovaný. Ján vybral katalóg → **ADR-039** (D257–D262).
+
+**Fáza 1 (#432).** Zdieľané kolekcie `law_acts`, `law_act_versions`,
+`law_chunks` bez `companyCode` — prvá menovitá výnimka z D90, zapísaná
+v hlavičke `lawCatalog.ts`. Odbery organizácie sú záznam s `companyCode`.
+Zdroj „Legislatíva" vo výbere zdrojov, citácia s kotvou paragrafu na
+portáli, cron o 4:15. Na ukážke zákona sa ukázalo, že rez zo štruktúry
+dáva `§ n` ako `articleRef` priamo — netreba vlastný rezač.
+
+**Čo nevyšlo hneď.**
+- `npx tsc` v novom worktree hlásil „This is not the tsc command" —
+  worktree nemal `node_modules` (ADR-020 hovorí `npm ci`, zabudol som).
+- Build upozornil, že `lawCatalog.ts` cez `contentHash` z `connectorImport.ts`
+  ťahá sadzbu PDF a celý projekt do trasovania cronu. Odtlačok je jeden
+  riadok, skopírovaný s komentárom prečo.
+- Ján spustil `atlas_init.mjs` z koreňa worktree — `.env.local` tam nie je,
+  je len v hlavnom checkoute. Druhý beh prešiel, ale `--pockaj` čakal len
+  na indexy knižnice a hlásil hotovo, kým `law_vector_index` ešte stál
+  BUILDING. Opravené (#432); správa commitu `8e124a6` má omylom „26. 10.".
+- Ján hľadal Legislatívu na `intranet.futbalsfz.sk` pred zlúčením PR —
+  produkcia je `main`, vetva tam nie je. Nabudúce to povedať pri PR.
+
+**Register zdrojov (ADR-040, #433, #434, #437).** Ján v strede práce:
+„definíciu sources … to nie je o AI, to je sólo register aj s vlastnosťami"
+a hneď nato „je to zdroj typu RSS/WEB zo schémy Technológia". Druhá veta
+zmenila návrh: Legislatíva nie je vlastný druh, je to web s adaptérom
+`slov-lex`. Register je tvar nad existujúcimi dátami, nie nová kolekcia —
+presun dát bez nového správania by bol len riziko. Kroky: sekcia Zdroje
+a presun Legislatívy z Umelej inteligencie (#433), konektory ako
+podstránka so starými adresami cez preklad (#434), schránka helpdesku
+v registri a Technológia podľa registra (#437). Generický web a RSS bez
+adaptéra zámerne nerobené — bez prvého skutočného zdroja by to bol odhad,
+rovnaký dôvod ako D247.
+
+**Overenie naostro.** Ján pridal štyri zákony a položil otázku
+o profesionálnom športovcovi. Záznam: hľadalo sa v Knižnici aj
+Legislatíve, § 3 prišiel z katalógu, ostatné paragrafy z knižnice — zákon
+o športe je tam **zverejnený od 23. 10.**, čo NEXT.md ešte tvrdil opačne.
+Návrat oznamu po pridaní predpisu skákal na Register (#435).
+
+**Fáza 2 (#436).** Import a „Skontrolovať zdroj" berú text z katalógu, zo
+Slov-Lexu už len záväzné PDF. Napojenie knižnice na katalóg je odvodené
+z pôvodu dokumentu (D27), bez migrácie. Zverejnený dokument knižnice má
+pri odpovedi prednosť, aby zákon neprišiel dvakrát. Cron zakladá koncepty
+nových znení a pošle `lawVersionDraft` správcom obsahu.
+
+**Dátum.** V ADR-039, ADR-040 a dvoch komentároch som písal 26. 10. —
+session prešla cez polnoc a ja som počítal dni, nie hodiny. Opravené
+v tomto upratovaní.
+
+Baseline po dni: app 0 errors, 39 warnings, 2970 testov v 258 súboroch;
+web 13 testov. Katalóg: 4 predpisy, 16 znení, 1 638 úsekov.
+
+---
+
 ## 2026-10-24 — Poupratuj: MCP server, oprava textu, Prehľad
 
 **Druhá session** zaviedla ADR-038 (Contineo ako MCP server, D249–D256)

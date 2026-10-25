@@ -30,7 +30,7 @@ SPDX-License-Identifier: EUPL-1.2
 > (`/organisation/ai/law`), zdroj „Legislatíva" vo výbere zdrojov na `/ask`,
 > v plachte otázky, vo widgete kanála a v nástroji `ask` MCP servera;
 > indexy `law_vector_index` a `law_text_index` v `scripts/lib/searchIndexes.mjs`
-> (zakladá `atlas_init.mjs`). Fáza 2 (26. 10. 2026) — `lib/webImport.ts`
+> (zakladá `atlas_init.mjs`). Fáza 2 (25. 10. 2026) — `lib/webImport.ts`
 > berie text z katalógu a zo Slov-Lexu sťahuje už len záväzné PDF; výber
 > z katalógu na `/library/new/web`; napojenie dokumentu knižnice odvodené
 > z pôvodu (`lib/lawLibraryLink.ts`, bez migrácie); zverejnený dokument

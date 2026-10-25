@@ -5,8 +5,8 @@ SPDX-License-Identifier: EUPL-1.2
 
 # ADR-040 — Register zdrojov: zdroje obsahu ako vlastná sekcia organizácie, druh zo spoločnej schémy, adaptér ako vlastnosť
 
-> **Stav:** prijaté · **Dátum:** 2026-10-26
-> **Rozhodol:** Ján Letko (2026-10-26) — „definíciu sources, čiže ďalších
+> **Stav:** prijaté · **Dátum:** 2026-10-25
+> **Rozhodol:** Ján Letko (2026-10-25) — „definíciu sources, čiže ďalších
 > zdrojov okrem lokálnej knižnice alebo do lokálnej knižnice, navrhujem
 > definovať zvlášť — to nie je o AI, to je sólo register aj s vlastnosťami";
 > k zaradeniu Legislatívy: „myslím si, že je to zdroj typu RSS/WEB zo schémy
@@ -23,14 +23,14 @@ SPDX-License-Identifier: EUPL-1.2
 > 2026), stránka `contineo.app/sk/technologia`, odsek „Zdroje obsahu (súbory
 > aj integrácie)", `CLAUDE.md` (verejné cesty sa prekladajú, nepremenúvajú;
 > časť, ktorú má cesta pomenovať, má vlastnú adresu).
-> **Implementácia:** krok 1 (26. 10. 2026, #433) — `lib/sourcesRegister.ts`
+> **Implementácia:** krok 1 (25. 10. 2026, #433) — `lib/sourcesRegister.ts`
 > (spoločný tvar zdrojov, jediný vstup pre výber zdrojov), sekcia
 > Organizácia → **Zdroje** (`/organisation/sources`) s registrom
 > a Legislatívou (`/organisation/sources/law`), preklad `/organisation/ai/law`.
-> Krok 2 (26. 10. 2026) — konektory ako podstránka Zdrojov
+> Krok 2 (25. 10. 2026) — konektory ako podstránka Zdrojov
 > (`/organisation/sources/connectors[/<id>]`), sekcia Konektory zanikla,
 > preklad `/organisation/connectors[/…]` aj `?tab=connectors`; widget kanála
-> číta register. Krok 3 (26. 10. 2026, časť) — schránka helpdesku ako riadok
+> číta register. Krok 3 (25. 10. 2026, časť) — schránka helpdesku ako riadok
 > registra (ukazuje sa, nastavuje sa pri kanáli), stránka Technológia prepísaná
 > podľa registra; **generický web a RSS bez adaptéra a kolekcia `sources`**
 > zostávajú otvorené — prídu s prvým takým zdrojom (§ 5).
