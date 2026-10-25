@@ -27,6 +27,13 @@ k návrhovému projektu „Contineo.app responzivny design".
   `.tab`, `.view-switch`…) v conventions.md.
 
 ## Prostredie
+- **V novom worktree** chýba `.ds-sync/` aj `ds-bundle/` (sú v `.gitignore`):
+  skopírovať skripty skillu a nainštalovať `esbuild ts-morph @types/react
+  playwright@1.63.0` do `.ds-sync/` (verzia playwrightu zodpovedá
+  `chromium_headless_shell-1243` v `~/Library/Caches/ms-playwright`).
+  Známky (`.design-sync/.cache/review/`) sú tiež len lokálne — úplný
+  `package-capture` v novom worktree hlási nezmenené komponenty ako
+  „need grading"; overené nahratím (kotva), netreba ich hodnotiť znova.
 - Spúšťa sa z koreňa repozitára:
   `node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules app/node_modules --entry app/design-sync.entry.ts --out ./ds-bundle [--remote .design-sync/.cache/remote-sync.json]`
 - Playwright + chromium-headless-shell v `.ds-sync/` (nainštalované 3. 10. 2026).
@@ -55,7 +62,21 @@ k návrhovému projektu „Contineo.app responzivny design".
 - `conventions.md` od 8. 10. nesie aj `.set-savebar`, `.more`, `.lnote`,
   `.page-tools` a `.seg` — pri ich premenovaní v `globals.css` ju upraviť.
 
+## RangeField (25. 10. 2026)
+- Posuvník `.field-range` pribudol do `globals.css` a `conventions.md` (Ján
+  25. 10., stropy úsekov MCP v AI asistentoch). Komponent je klientsky
+  (`useState` pre zobrazenú hodnotu), bez Nextu — do knižnice patrí.
+  Náhľad: `SearchCaps` (dva posuvníky s nápovedou) a `Bounds` (krajné
+  hodnoty). V artefakte bez farby organizácie je jazdec v predvolenom
+  `--accent` — svetlá téma tmavý, tmavá téma svetlý.
+- `conventions.md` spomína „SwiftUI `Slider`" — kontrola mien to hlási ako
+  komponent, ktorý v buildi nie je; je to odkaz na SwiftUI, nie chyba.
+
 ## Export do artefaktu (od 24. 10. 2026)
+- **Publikovanie do artefaktu chce najprv `read` artefaktu (bez `path`)**
+  v tej istej konverzácii — `list` ani `read` jedného súboru nestačí — a
+  `file_path` ako **absolútnu** cestu; inak publikovanie odmietne s „You
+  haven't viewed the latest version". 25. 10. verzia 10.
 - `export-artifact.mjs` prekladá `ds-bundle/` do formátu typu *Design System*
   (`format.md` typu: `read` na artefakte, `artifact-type/reference/`). Index
   má `"editing": "code"` — stránka sa sama neukladá, každý export ju prepíše.

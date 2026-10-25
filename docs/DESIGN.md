@@ -136,9 +136,10 @@ v Termináli; pri prvom behu na novom počítači treba urobiť znova.
 
 **`app/design-sync.entry.ts`** vyberá, ktoré komponenty idú do knižnice.
 Smú tam byť **len komponenty bez `next/link`, `next/navigation`, relácie
-a databázy** — iné by sa v Claude Design nevykreslili. Dnes ich je 12:
+a databázy** — iné by sa v Claude Design nevykreslili. Dnes ich je 13:
 `Icon`, `ContineoMark`, `SearchStrip`, `Select`, `MultiSelect`, `Skeleton`,
-`SkeletonCard`, `SkeletonList`, `Fact`, `TabsBar`, `CopyLink`, `SubmitButton`. Vzhľad zvyšku
+`SkeletonCard`, `SkeletonList`, `Fact`, `TabsBar`, `CopyLink`, `SubmitButton`,
+`RangeField` (posuvník `.field-range`, od 25. 10. 2026). Vzhľad zvyšku
 aplikácie nesú triedy z `globals.css` opísané v `conventions.md`.
 
 Do gitu nejde (`.gitignore`): `.ds-sync/`, `ds-bundle/`,
