@@ -48,7 +48,7 @@ export interface RegisteredSource {
   detail: string | null
 }
 
-const CONNECTORS_HREF = "/organisation/connectors"
+const CONNECTORS_HREF = "/organisation/sources/connectors"
 export const SOURCES_HREF = "/organisation/sources"
 export const LAW_HREF = `${SOURCES_HREF}/law`
 

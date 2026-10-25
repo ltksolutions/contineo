@@ -32,7 +32,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ channel
   const org = branding.shortName?.trim() || branding.displayName
   // Povolené zdroje kanála (KANAL-widget-zdroje): Knižnica a verejné konektory
   // z `connectorScopes`, jeden za konektor. Podnadpis riadku je hotový text.
-  const sources = (await widgetSources(tenant.companyCode, channel, tw.scopeLibrary, dictionary(language).ask.scopeLaw))
+  const sources = (await widgetSources(tenant.companyCode, channel, language, tw.scopeLibrary))
     .map(s => ({ ...s, sub: s.id === "library" ? tw.scopeLibrarySub.replace("{org}", org) : tw.scopeLiveSub }))
   const js = widgetScript({
     apiBase: `https://${host}`,

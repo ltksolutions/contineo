@@ -579,7 +579,7 @@ export async function deleteAiKeyAction(fd: FormData) {
 
 // ── Konektory (ADR-029, D178; návrh ORG-konektory, 9. 10. 2026) ───────────────
 
-const CONNECTORS_HREF = "/organisation/connectors"
+const CONNECTORS_HREF = "/organisation/sources/connectors"
 
 function connectorHref(id: string, q: Record<string, string> = {}, hash = ""): string {
   const qs = new URLSearchParams(q).toString()

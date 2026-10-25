@@ -10,7 +10,7 @@ import { ORG_SECTIONS } from "../src/lib/orgSections"
 
 const base: RegisteredSource = {
   id: "c1", kind: "mcp", adapter: null, name: "Sportnet", enabled: true, connected: true, allowed: true, defaultOn: false,
-  accessLevel: "internal", uses: { retrieval: true, import: true, tools: false }, href: "/organisation/connectors/c1", detail: "api.sportnet.online",
+  accessLevel: "internal", uses: { retrieval: true, import: true, tools: false }, href: "/organisation/sources/connectors/c1", detail: "api.sportnet.online",
 }
 const library: RegisteredSource = { ...base, id: "library", kind: "file", name: "Knižnica", accessLevel: "internal", uses: { retrieval: true, import: true, tools: false } }
 const law: RegisteredSource = { ...base, id: "law", kind: "web", adapter: "slov-lex", name: "Legislatíva", accessLevel: "public", defaultOn: true, uses: { retrieval: true, import: false, tools: false } }
@@ -34,9 +34,8 @@ describe("živé zdroje z registra", () => {
 })
 
 describe("sekcia Zdroje", () => {
-  it("je medzi časťami organizácie, medzi Umelou inteligenciou a Konektormi (D263)", () => {
-    const i = ORG_SECTIONS.indexOf("sources")
-    expect(i).toBeGreaterThan(ORG_SECTIONS.indexOf("ai"))
-    expect(i).toBeLessThan(ORG_SECTIONS.indexOf("connectors"))
+  it("je medzi časťami organizácie za Umelou inteligenciou; Konektory už nie sú časť, ale jej podstránka (D263, D267 krok 2)", () => {
+    expect(ORG_SECTIONS.indexOf("sources")).toBeGreaterThan(ORG_SECTIONS.indexOf("ai"))
+    expect(ORG_SECTIONS).not.toContain("connectors")
   })
 })

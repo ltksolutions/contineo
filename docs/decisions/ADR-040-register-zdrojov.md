@@ -23,11 +23,14 @@ SPDX-License-Identifier: EUPL-1.2
 > 2026), stránka `contineo.app/sk/technologia`, odsek „Zdroje obsahu (súbory
 > aj integrácie)", `CLAUDE.md` (verejné cesty sa prekladajú, nepremenúvajú;
 > časť, ktorú má cesta pomenovať, má vlastnú adresu).
-> **Implementácia:** krok 1 — `lib/sourcesRegister.ts` (spoločný tvar
-> zdrojov, jediný vstup pre výber zdrojov), sekcia Organizácia → **Zdroje**
-> (`/organisation/sources`) s registrom a Legislatívou
-> (`/organisation/sources/law`), preklad `/organisation/ai/law`. Kroky 2 a 3
-> v § 2, D267.
+> **Implementácia:** krok 1 (26. 10. 2026, #433) — `lib/sourcesRegister.ts`
+> (spoločný tvar zdrojov, jediný vstup pre výber zdrojov), sekcia
+> Organizácia → **Zdroje** (`/organisation/sources`) s registrom
+> a Legislatívou (`/organisation/sources/law`), preklad `/organisation/ai/law`.
+> Krok 2 (26. 10. 2026) — konektory ako podstránka Zdrojov
+> (`/organisation/sources/connectors[/<id>]`), sekcia Konektory zanikla,
+> preklad `/organisation/connectors[/…]` aj `?tab=connectors`; widget kanála
+> číta register. Krok 3 v § 2, D267.
 
 ---
 

@@ -90,7 +90,7 @@ export default async function ConnectorImportPage({ searchParams }: { searchPara
       <Notice message={q.msg ?? (q.error ? `${t.errorBefore}${q.error}` : undefined)} error={Boolean(q.error)} back={self} language={language} />
 
       {connectors.length === 0 ? (
-        <p className="quiet">{t.noConnector} <Link href="/organisation/connectors">{t.noConnectorLink}</Link></p>
+        <p className="quiet">{t.noConnector} <Link href="/organisation/sources/connectors">{t.noConnectorLink}</Link></p>
       ) : (
         <>
           {/* Hľadanie — GET, stav v adrese. */}

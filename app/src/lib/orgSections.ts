@@ -14,8 +14,8 @@ import { tabValue } from "./urlParams"
 
 export const ORG_SECTION_GROUPS = [
   // Konektory (ADR-029): pripojenia organizácie k cudzím MCP serverom.
-  // Zdroje (ADR-040): register zdrojov obsahu; konektory doň prejdú v kroku 2.
-  { key: "org", sections: ["general", "departments", "codelists", "ai", "sources", "connectors"] },
+  // Zdroje (ADR-040): register zdrojov obsahu, konektory a legislatíva sú jeho podstránky.
+  { key: "org", sections: ["general", "departments", "codelists", "ai", "sources"] },
   // Asistenti (ADR-038): Contineo ako MCP server — zapnutie a pripojené aplikácie.
   { key: "access", sections: ["domains", "signin", "assistants"] },
   // Členenie (`chunking`) tu do 5. 10. 2026 bolo; od D160 sa nenastavuje
@@ -52,7 +52,8 @@ export function legacyOrgSection(pathname: string, search: URLSearchParams): str
   rest.delete("tab")
   rest.delete("zalozka")
   const section = tabValue(given)
-  const path = isOrgSection(section) ? orgSectionHref(section) : "/organisation"
+  // Konektory sú od ADR-040 (krok 2) podstránka Zdrojov — starý `?tab=connectors` vedie rovno tam.
+  const path = section === "connectors" ? "/organisation/sources/connectors" : isOrgSection(section) ? orgSectionHref(section) : "/organisation"
   const q = rest.toString()
   return q ? `${path}?${q}` : path
 }
