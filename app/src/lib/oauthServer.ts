@@ -107,8 +107,31 @@ export function isAllowedRedirectUri(uri: string): boolean {
   try { u = new URL(uri) } catch { return false }
   if (u.hash) return false
   if (u.protocol === "https:") return true
-  if (u.protocol === "http:") return ["localhost", "127.0.0.1", "[::1]"].includes(u.hostname.toLowerCase())
+  if (u.protocol === "http:") return LOOPBACK_HOSTS.includes(u.hostname.toLowerCase())
   return false
+}
+
+const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
+
+/**
+ * Je žiadaná návratová adresa medzi registrovanými? Doslovne — okrem
+ * návratu na vlastný počítač (loopback, `http://localhost…`), kde sa **port
+ * neporovnáva** (RFC 8252 § 7.3): natívny klient počúva na porte, ktorý
+ * dostane od systému až pri prihlásení. Claude Code registruje
+ * `http://localhost/callback` a prihlasuje sa s `http://localhost:53624/callback`
+ * (Ján 25. 10. 2026). Schéma, hostiteľ, cesta a parametre musia sedieť.
+ */
+export function redirectUriMatches(registered: readonly string[], requested: string): boolean {
+  if (registered.includes(requested)) return true
+  let want: URL
+  try { want = new URL(requested) } catch { return false }
+  if (want.protocol !== "http:" || !LOOPBACK_HOSTS.includes(want.hostname.toLowerCase())) return false
+  return registered.some(r => {
+    let u: URL
+    try { u = new URL(r) } catch { return false }
+    return u.protocol === "http:" && u.hostname.toLowerCase() === want.hostname.toLowerCase()
+      && u.pathname === want.pathname && u.search === want.search
+  })
 }
 
 /**

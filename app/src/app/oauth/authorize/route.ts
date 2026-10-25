@@ -18,7 +18,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { tenantForMcp } from "@/lib/mcpServer/auth"
 import { originOf } from "@/lib/mcpServer/origin"
 import { onboardingContext } from "@/lib/session"
-import { clientById, createAuthRequest, parseScopes, redirectWith, resourceMatches, OAuthError } from "@/lib/oauthServer"
+import { clientById, createAuthRequest, parseScopes, redirectUriMatches, redirectWith, resourceMatches, OAuthError } from "@/lib/oauthServer"
 
 export const dynamic = "force-dynamic"
 
@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
   const client = await clientById(companyCode, q.get("client_id") ?? "")
   if (!client) return new Response("invalid_client: neznámy klient", { status: 400 })
   const redirectUri = q.get("redirect_uri") ?? (client.redirectUris.length === 1 ? client.redirectUris[0] : "")
-  if (!redirectUri || !client.redirectUris.includes(redirectUri)) {
+  // Loopback bez ohľadu na port (RFC 8252 § 7.3) — viď `redirectUriMatches()`.
+  if (!redirectUri || !redirectUriMatches(client.redirectUris, redirectUri)) {
     return new Response("invalid_request: návratová adresa nie je registrovaná", { status: 400 })
   }
   const state = q.get("state") ?? undefined

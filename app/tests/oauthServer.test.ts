@@ -9,7 +9,7 @@
 import { createHash } from "node:crypto"
 import { describe, it, expect } from "vitest"
 import {
-  OAUTH_SCOPES, OAuthError, hashSecret, isAllowedRedirectUri, isClientIdMetadataUrl, newSecret, parseScopes,
+  OAUTH_SCOPES, OAuthError, hashSecret, isAllowedRedirectUri, isClientIdMetadataUrl, newSecret, parseScopes, redirectUriMatches,
   redirectWith, resourceFor, resourceMatches, validateClientMetadata, verifyPkce,
 } from "../src/lib/oauthServer"
 
@@ -88,5 +88,27 @@ describe("metadáta klienta", () => {
     expect(isClientIdMetadataUrl("https://claude.ai")).toBe(false)
     expect(isClientIdMetadataUrl("http://claude.ai/x")).toBe(false)
     expect(isClientIdMetadataUrl("cnt_c_abc")).toBe(false)
+  })
+})
+
+describe("návratová adresa pri prihlásení (RFC 8252 § 7.3)", () => {
+  // Presne to, čo registruje Claude Code (claude.ai/oauth/claude-code-client-metadata).
+  const claudeCode = ["http://localhost/callback", "http://127.0.0.1/callback"]
+
+  it("loopback s ľubovoľným portom prejde", () => {
+    expect(redirectUriMatches(claudeCode, "http://localhost:53624/callback")).toBe(true)
+    expect(redirectUriMatches(claudeCode, "http://127.0.0.1:61000/callback")).toBe(true)
+  })
+  it("iná cesta, iný hostiteľ alebo https na loopback neprejde", () => {
+    expect(redirectUriMatches(claudeCode, "http://localhost:53624/evil")).toBe(false)
+    expect(redirectUriMatches(claudeCode, "http://[::1]:53624/callback")).toBe(false)
+    expect(redirectUriMatches(claudeCode, "https://localhost:53624/callback")).toBe(false)
+    expect(redirectUriMatches(["http://localhost/callback"], "http://localhost:1/callback?x=1")).toBe(false)
+  })
+  it("verejná adresa sa porovnáva doslovne, vrátane portu", () => {
+    const web = ["https://claude.ai/api/mcp/auth_callback"]
+    expect(redirectUriMatches(web, "https://claude.ai/api/mcp/auth_callback")).toBe(true)
+    expect(redirectUriMatches(web, "https://claude.ai:8443/api/mcp/auth_callback")).toBe(false)
+    expect(redirectUriMatches(web, "http://claude.ai/api/mcp/auth_callback")).toBe(false)
   })
 })
