@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { TOOL_CATALOG, toolsFor, visibleRows, toHit } from "../src/lib/mcpServer/tools"
+import { TOOL_CATALOG, toolsFor, visibleRows, toHit, capPerSource, type SearchHit } from "../src/lib/mcpServer/tools"
 import { assistantsState, mcpAccessLevel } from "../src/lib/mcpServer/access"
 import { bearerToken, originOf } from "../src/lib/mcpServer/origin"
 import type { LibraryRow } from "../src/lib/libraryRead"
@@ -176,5 +176,23 @@ describe("znenie predpisu (ADR-039)", () => {
   it("konkrétna časová verzia má prednosť pred dňom", () => {
     expect(pickLawVersion(versions, new Date("2026-10-25T12:00:00Z"), "20270101")?.timepoint).toBe("20270101")
     expect(pickLawVersion(versions, new Date(), "19990101")).toBe(null)
+  })
+})
+
+describe("limit v search_library je strop pre každý zdroj", () => {
+  const h = (source: string, n: number): SearchHit => ({
+    source, documentId: `${source}-${n}`, title: "", articleRef: null, heading: null, text: "",
+    versionLabel: null, effectiveFrom: null, sourceType: null, url: "",
+  })
+  const hits = [h("library", 1), h("library", 2), h("library", 3), h("c1", 1), h("c1", 2), h("slov-lex", 1), h("slov-lex", 2), h("slov-lex", 3)]
+
+  it("pri limite 2 najviac dva z každého zdroja, v pôvodnom poradí", () => {
+    expect(capPerSource(hits, 2).map(x => x.documentId)).toEqual(["library-1", "library-2", "c1-1", "c1-2", "slov-lex-1", "slov-lex-2"])
+  })
+  it("každý konektor má vlastný strop", () => {
+    expect(capPerSource([h("c1", 1), h("c2", 1), h("c1", 2), h("c2", 2)], 1).map(x => x.documentId)).toEqual(["c1-1", "c2-1"])
+  })
+  it("vyšší limit nič nevyhodí", () => {
+    expect(capPerSource(hits, 8)).toHaveLength(hits.length)
   })
 })

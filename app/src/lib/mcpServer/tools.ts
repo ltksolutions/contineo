@@ -183,6 +183,21 @@ export function toHit(c: ChunkResult, origin: string): SearchHit {
  * cudzí server, nie model). Poradie ako pri odpovedi: knižnica, konektory,
  * Legislatíva (D174, D259). Zdroj, ktorý zlyhal, sa ohlási, odpoveď ide ďalej.
  */
+/**
+ * Strop `limit` pre **každý zdroj zvlášť** (knižnica, Slov-Lex, každý
+ * konektor), poradie sa zachová. Model si tak vie ustrážiť dĺžku výsledku:
+ * paragraf zákona má aj tisíce znakov a bez stropu Legislatíva pridávala svoje
+ * úseky navyše (Ján 25. 10. 2026). Čistá funkcia — testuje sa.
+ */
+export function capPerSource(hits: SearchHit[], limit: number): SearchHit[] {
+  const seen = new Map<string, number>()
+  return hits.filter(h => {
+    const n = seen.get(h.source) ?? 0
+    seen.set(h.source, n + 1)
+    return n < limit
+  })
+}
+
 async function searchSources(actor: McpActor, picked: McpSource[], query: string, limit: number, asOf: Date): Promise<{ hits: SearchHit[]; failed: string[] }> {
   const companyCode = actor.tenant.companyCode
   const ids = new Set(picked.map(s => s.id))
@@ -207,7 +222,7 @@ async function searchSources(actor: McpActor, picked: McpSource[], query: string
   ])
   const names = new Map(picked.map(s => [s.id, s.name]))
   return {
-    hits: [...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))],
+    hits: capPerSource([...library, ...live.chunks.map(c => toHit(c, actor.origin)), ...law.chunks.map(c => toHit(c, actor.origin))], limit),
     failed: [...live.failed.map(f => f.name), ...(law.failed ? [names.get(SLOV_LEX_SOURCE_ID) ?? SLOV_LEX_SOURCE_ID] : [])],
   }
 }
@@ -335,7 +350,7 @@ export function registerTools(server: McpServer, actor: McpActor): void {
       description: `Hybrid (semantic + full-text) search over the sections of ${orgName}'s documents in force on the given day — and, when asked via \`sources\`, over Legislation (Slov-Lex acts the organisation follows) and connected knowledge sources. Returns the best-matching passages with document, article, version and source — no language model is involved; write the answer yourself and cite the passages. Use \`ask\` instead when you want Contineo's own answer with citations.`,
       inputSchema: {
         query: z.string().min(2).max(500).describe("What to look for, in the language of the documents (Slovak for most organisations)."),
-        limit: z.number().int().min(1).max(SEARCH_MAX).optional().describe(`How many library passages to return (default 8, at most ${SEARCH_MAX}). Legislation and connectors add their own few best passages.`),
+        limit: z.number().int().min(1).max(SEARCH_MAX).optional().describe(`At most this many passages from each selected source (default 8, at most ${SEARCH_MAX}); Legislation returns at most 4. Use a small limit with several sources — sections of a law can be long.`),
         asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Search the versions in force on this day (YYYY-MM-DD). Default: today."),
         sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources, e.g. ["library", "slov-lex"]. Default: ["library"].'),
       },

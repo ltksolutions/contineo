@@ -418,5 +418,8 @@ návrhu."
 - Predpis, ktorý má organizácia zverejnený v knižnici, odpovedá pri
   hľadaní z knižnice (schválené znenie, D260) — `lawSearch` ho z katalógu
   druhýkrát nevracia.
+- **`limit` v `search_library` je strop pre každý zdroj zvlášť** (knižnica,
+  Slov-Lex, každý konektor), Ján 25. 10. Legislatíva vráti najviac 4 úseky;
+  paragraf zákona býva dlhý, preto pri viacerých zdrojoch malý limit.
 - Konektor v `search_library` volá cudzí server (stopa `connector_calls`,
   D177), nie jazykový model; zdroj, ktorý nestihol, sa vymenuje vo výsledku.
