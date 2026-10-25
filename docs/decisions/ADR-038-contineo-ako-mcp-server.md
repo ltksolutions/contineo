@@ -24,7 +24,7 @@ SPDX-License-Identifier: EUPL-1.2
 > znenia je ľudský akt), ADR-036 D234 (platený beh len po rekapitulácii),
 > D24 (dôkazné záznamy sa nemenia), D28 (potvrdenie doslovne v jazyku,
 > v ktorom ho človek videl).
-> **Implementácia:** fáza 1 — `app/src/app/mcp/route.ts`,
+> **Implementácia:** dodatok 2026-10-25 — zdroje a Legislatíva (§ 3a); fáza 1 — `app/src/app/mcp/route.ts`,
 > `app/src/app/.well-known/*`, `app/src/app/oauth/*`, `lib/mcpServer/`,
 > `lib/oauthServer.ts`, nastavenie organizácie „Prístup pre AI asistentov",
 > plachta účtu „Pripojené aplikácie".
@@ -136,6 +136,15 @@ klientov.
 - `/mcp`, `/.well-known/*` a `/oauth/*` sú **verejné cesty** — po
   zverejnení sa nepremenúvajú (`CLAUDE.md`, prekladová tabuľka).
 - Kód klienta (`lib/mcp/`) a servera (`lib/mcpServer/`) sa nemiešajú.
+
+## 3a. Dodatok (2026-10-25) — zdroje a Legislatíva
+
+Po ADR-039 a ADR-040 MCP server číta register zdrojov a katalóg
+legislatívy: `list_sources`, výber `sources` v `search_library` a `ask`,
+`list_law_acts`, `get_law_act` a zdroje `contineo://law/…`. Stále len
+čítanie (D250 fáza 1), bez nového rozhodnutia: výber zdrojov je register
+(ADR-040 D266), Legislatíva len odoberané predpisy a rezidencia ako D257.
+Podrobne `docs/MCP_SERVER_KONCEPCIA.md` § 10.
 
 ## 4. Otvorené
 
