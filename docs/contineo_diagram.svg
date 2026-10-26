@@ -56,10 +56,10 @@
     <text x="60" y="427" textLength="95" lengthAdjust="spacingAndGlyphs">• MCP konektory</text>
     <text x="74" y="445" font-size="10.5" fill="#5f6368" textLength="178" lengthAdjust="spacingAndGlyphs">živý zdroj · import článku ako koncept</text>
     <text x="74" y="460" font-size="10.5" fill="#9aa0a6" font-style="italic" textLength="141" lengthAdjust="spacingAndGlyphs">nástroje agenta (pripravujeme)</text>
-    <text x="60" y="490" textLength="189" lengthAdjust="spacingAndGlyphs">• Web / RSS — zdroj s adaptérom</text>
-    <text x="74" y="508" font-size="10.5" fill="#5f6368" textLength="201" lengthAdjust="spacingAndGlyphs">Slov-Lex: Legislatíva SR, katalóg platformy</text>
-    <text x="74" y="523" font-size="10.5" fill="#5f6368" textLength="204" lengthAdjust="spacingAndGlyphs">denná kontrola · novela ako koncept znenia</text>
-    <text x="74" y="538" font-size="10.5" fill="#9aa0a6" font-style="italic" textLength="185" lengthAdjust="spacingAndGlyphs">web a RSS bez adaptéra (pripravujeme)</text>
+    <text x="60" y="490" textLength="150" lengthAdjust="spacingAndGlyphs">• Web — sledovaná adresa</text>
+    <text x="74" y="508" font-size="10.5" fill="#5f6368" textLength="181" lengthAdjust="spacingAndGlyphs">crawler číta · index · odber do knižnice</text>
+    <text x="74" y="523" font-size="10.5" fill="#5f6368" textLength="192" lengthAdjust="spacingAndGlyphs">Slov-Lex dnes · ďalší web = ďalší crawler</text>
+    <text x="60" y="541" fill="#9aa0a6" textLength="203" lengthAdjust="spacingAndGlyphs">• RSS — feed (crawler pripravujeme)</text>
   </g>
   <text x="60" y="568" font-size="11" fill="#1A73E8" textLength="158" lengthAdjust="spacingAndGlyphs">⇅ schránka je aj výstupný kanál</text>
   <text x="60" y="586" font-size="11" fill="#1A73E8" textLength="230" lengthAdjust="spacingAndGlyphs">každý zdroj: druh · čo vie · prístup · predvolene</text>

@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: web, RSS a crawler — názvoslovie (2026-10-26, ADR-040 Dodatok 2)
+
+Web je sledovaná adresa, RSS sledovaný feed, crawler len čítačka, ktorá
+ich obsah číta a parsuje (Ján 26. 10.). Obrázok architektúry a stránka
+Technológia už nepíšu „web bez adaptéra pripravujeme" — sledovaný web
+funguje (Slov-Lex s crawlerom statického portálu), ďalší web znamená
+ďalší crawler, crawler pre RSS sa pripravuje. Rovnako „Pripravujeme" na
+úvode a stack. Názvoslovie je zapísané v ADR-040 ako Dodatok 2. sk, cs,
+en; PNG a kópia v docs.
+
 ### Web contineo.app: blok Zdroje v obrázku podľa registra zdrojov (2026-10-26)
 
 Blok **Zdroje** v obrázku architektúry je prekreslený podľa registra

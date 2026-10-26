@@ -185,3 +185,26 @@ vestníka by nemali kam patriť, iba ako druhá „Legislatíva".
   na úseku a štítok „Zákon" v citácii hovoria, čo čitateľ číta, nie
   odkiaľ to je. Správa katalógu ostáva `/admin/law`.
 
+## Dodatok 2 — Názvoslovie: web, RSS a crawler (2026-10-26)
+
+> **Rozhodol:** Ján Letko (2026-10-26) — „WEB je adresa, ktorú strážime
+> a aktualizujeme z neho index alebo aj preberáme do knižnice; RSS je RSS
+> feed, ktorý strážime a aktualizujeme z neho index alebo aj preberáme do
+> knižnice; crawler považujem len za pomôcku, ktorá číta a parsuje/preberá
+> obsah z WEB a RSS typu zdroja."
+
+- **Web** = sledovaná adresa. **RSS** = sledovaný feed. Oba sú zdroje
+  druhu Web / RSS (D264, D265) s dvoma použitiami: aktualizácia indexu
+  pre odpovede a odber do knižnice (vždy ako koncept, ADR-037 D243).
+- **Crawler** = to, čo D265 volá „adaptér": čítačka, ktorá obsah sledovanej
+  adresy alebo feedu číta a parsuje. Nie je to druh zdroja ani jeho
+  vlastnosť viditeľná pre správcu; každý web potrebuje crawler podľa
+  svojej stavby. V kóde ostáva pole `adapter` (`slov-lex`) — názov poľa
+  je dáta, nepremenúva sa (`CLAUDE.md`).
+- **Stav k 26. 10. 2026:** sledovaný web funguje — Slov-Lex s crawlerom
+  statického portálu (`slovLex.ts`, katalóg ADR-039). Crawler pre ďalšie
+  weby vzniká s prvým takým zdrojom (§ 5); crawler pre RSS ešte nie je.
+- Verejný web (`contineo.app/sk/technologia`) a obrázok architektúry
+  používajú toto názvoslovie; „web bez adaptéra pripravujeme" sa už nepíše,
+  lebo to znelo, že web ako zdroj chýba.
+
