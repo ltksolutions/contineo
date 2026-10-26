@@ -20,6 +20,7 @@
 import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
 import { writeAudit, diff } from "./audit"
+import { notify } from "./notifications"
 import { CONTENT_ROLE } from "./library"
 import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, newDepartmentHistory, newGroupHistory, newTrackHistory } from "./persons"
 import { normalizeLanguage } from "./i18n"
@@ -468,6 +469,19 @@ export async function savePerson(
     targetId: id, targetLabel: existing.fullName,
     changes: diff(before, interesting),
   })
+
+  // Dotknutá osoba sa o zmene rolí dozvie zo zvončeka (Ján 26. 10. 2026).
+  // Až po audite: správa o zmene nesmie predbehnúť jej záznam. Zápis
+  // upozornenia nikdy nevyhodí výnimku, takže uloženie osoby neohrozí.
+  if (Array.isArray(set.roles)) {
+    const before = new Set(existing.roles ?? [])
+    const after = new Set(set.roles as string[])
+    const added = [...after].filter(r => !before.has(r))
+    const removed = [...before].filter(r => !after.has(r))
+    if (added.length || removed.length) {
+      await notify({ companyCode, personId: id, kind: "rolesChanged", params: { added, removed } })
+    }
+  }
 }
 
 /**

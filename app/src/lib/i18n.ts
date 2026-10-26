@@ -2509,6 +2509,8 @@ interface Dictionary {
       complianceRequested: (title: string, label: string, documents: number) => string
       /** Kolo zrušené, lebo sa koncept po predložení zmenil — schvaľovateľom. */
       approvalCancelled: (title: string) => string
+      /** Správca osôb zmenil roly — dotknutej osobe. Názvy rolí už preložené. */
+      rolesChanged: (added: string[], removed: string[]) => string
     }
   }
   /** Knižnica dokumentov (D53). */
@@ -7839,6 +7841,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalCancelled: title => `Kolo schvaľovania dokumentu „${title}" bolo zrušené — koncept sa po predložení zmenil. Schváliť sa dá až nové predloženie.`,
       complianceToApply: (title) => `Z kontroly súladu je prijaté nové znenie dokumentu „${title}" — čaká na zápis do konceptu.`,
       lawVersionDraft: (title, date) => `Zo Slov-Lexu prišlo nové znenie „${title}"${date ? ` účinné od ${date}` : ""} — koncept čaká na schválenie.`,
+      rolesChanged: (added, removed) => [
+        added.length ? `Pridané ${added.length === 1 ? "oprávnenie" : "oprávnenia"}: ${added.join(", ")}.` : "",
+        removed.length ? `Odobrané ${removed.length === 1 ? "oprávnenie" : "oprávnenia"}: ${removed.join(", ")}.` : "",
+      ].filter(Boolean).join(" "),
       complianceDone: (documents, findings) => `Kontrola súladu dobehla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentov"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezov"} na rozhodnutie.`,
     },
   },
@@ -13019,6 +13025,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalCancelled: title => `Kolo schvalování dokumentu „${title}" bylo zrušeno — koncept se po předložení změnil. Schválit lze až nové předložení.`,
       complianceToApply: (title) => `Z kontroly souladu je přijato nové znění dokumentu „${title}" — čeká na zápis do konceptu.`,
       lawVersionDraft: (title, date) => `Ze Slov-Lexu přišlo nové znění „${title}"${date ? ` účinné od ${date}` : ""} — koncept čeká na schválení.`,
+      rolesChanged: (added, removed) => [
+        added.length ? `Přidané oprávnění: ${added.join(", ")}.` : "",
+        removed.length ? `Odebrané oprávnění: ${removed.join(", ")}.` : "",
+      ].filter(Boolean).join(" "),
       complianceDone: (documents, findings) => `Kontrola souladu doběhla: ${documents} ${documents === 1 ? "dokument" : documents < 5 ? "dokumenty" : "dokumentů"}, ${findings} ${findings === 1 ? "nález" : findings < 5 ? "nálezy" : "nálezů"} k rozhodnutí.`,
     },
   },
@@ -18190,6 +18200,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalCancelled: title => `The approval round for “${title}” was cancelled — the draft changed after it was submitted. Only a new submission can be approved.`,
       complianceToApply: (title) => `A compliance check accepted new wording for “${title}” — it is waiting to be written into the draft.`,
       lawVersionDraft: (title, date) => `A new wording of “${title}”${date ? ` in force from ${date}` : ""} arrived from Slov-Lex — the draft is waiting for approval.`,
+      rolesChanged: (added, removed) => [
+        added.length ? `${added.length === 1 ? "Permission" : "Permissions"} added: ${added.join(", ")}.` : "",
+        removed.length ? `${removed.length === 1 ? "Permission" : "Permissions"} removed: ${removed.join(", ")}.` : "",
+      ].filter(Boolean).join(" "),
       complianceDone: (documents, findings) => `Compliance check finished: ${documents} ${documents === 1 ? "document" : "documents"}, ${findings} ${findings === 1 ? "finding" : "findings"} to decide.`,
     },
   },
