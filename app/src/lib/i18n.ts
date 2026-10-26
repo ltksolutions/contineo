@@ -2944,6 +2944,9 @@ interface Dictionary {
     embedClaimLevels: Record<"required" | "recommended" | "optional", string>
     embedClaims: Record<string, string>
     embedSigning: string[]
+    embedViewLabel: string
+    embedViewPage: string
+    embedViewServer: string
     embedJavaHeading: string
     embedJavaIntro: string[]
     embedJavaServer: string[]
@@ -8333,6 +8336,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Podpis HMAC-SHA256 tajným kľúčom kanála (Nastavenie kanála → Tajný kľúč; ukáže sa len raz). Kľúč patrí len na váš server, nikdy nie do stránky.",
       "Hotová knižnica (napr. jsonwebtoken v Node, firebase/php-jwt v PHP) urobí hlavičku aj podpis sama — stačí jej dať obsah a kľúč.",
     ],
+    embedViewLabel: "Časť kódu",
+    embedViewPage: "Kód do stránky",
+    embedViewServer: "Token na serveri",
     embedJavaHeading: "Vzor v Jave",
     embedJavaIntro: [
       "Pre server v Jave (napr. ISSF na Apache Wicket): čistá Java 8 a novšia, bez knižníc. iss a aud sú už vyplnené za tento kanál.",
@@ -13574,6 +13580,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Podpis HMAC-SHA256 tajným klíčem kanálu (Nastavení kanálu → Tajný klíč; ukáže se jen jednou). Klíč patří jen na váš server, nikdy ne do stránky.",
       "Hotová knihovna (např. jsonwebtoken v Node, firebase/php-jwt v PHP) udělá hlavičku i podpis sama — stačí jí dát obsah a klíč.",
     ],
+    embedViewLabel: "Část kódu",
+    embedViewPage: "Kód do stránky",
+    embedViewServer: "Token na serveru",
     embedJavaHeading: "Vzor v Javě",
     embedJavaIntro: [
       "Pro server v Javě (např. ISSF na Apache Wicket): čistá Java 8 a novější, bez knihoven. iss a aud jsou už vyplněné za tento kanál.",
@@ -18806,6 +18815,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Signature HMAC-SHA256 with the channel secret (Channel settings → Secret; shown only once). The secret belongs on your server only, never in the page.",
       "A ready library (e.g. jsonwebtoken for Node, firebase/php-jwt for PHP) builds the header and signature itself — give it the content and the secret.",
     ],
+    embedViewLabel: "Code part",
+    embedViewPage: "Page code",
+    embedViewServer: "Server token",
     embedJavaHeading: "Java example",
     embedJavaIntro: [
       "For a Java server (e.g. ISSF on Apache Wicket): plain Java 8 or later, no libraries. iss and aud are already filled in for this channel.",

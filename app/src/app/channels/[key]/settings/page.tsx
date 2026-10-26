@@ -44,7 +44,10 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
     notFound()
   }
   const { key } = await params
-  const { msg, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const { msg, error, embed } = normalizeQuery<{ msg?: string; error?: string; embed?: string }>(await searchParams)
+  // Kód na vloženie má dve časti pre dvoch ľudí — kód do stránky a token na
+  // serveri (Ján 27. 10. 2026). Prepínač pohľadu, stav v adrese.
+  const embedView = embed === "server" ? "server" : "page"
   const raw = await channelByKey(ctx.tenant.companyCode, decodeURIComponent(key))
   if (!raw) notFound()
   const c = channelView(raw)
@@ -353,28 +356,43 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
           <h2 className="detail-block-title">{t.embedHeading}</h2>
           <p className="detail-block-note" style={{ margin: 0 }}>{t.embedIntro}</p>
           {c.widget.origins.length === 0 && <p className="tag tag--warn" style={{ margin: 0, justifySelf: "start" }}>{t.embedNoOrigins}</p>}
-          {!fallbackContact && <p className="quiet" style={{ margin: 0 }}>{t.embedNoContact}</p>}
-          <pre className="embed-code"><code>{embedCode}</code></pre>
-          <div><CopyLink value={embedCode} label={t.embedCopy} done={t.embedCopied} /></div>
-          <h3 className="embed-sub">{t.embedParamsHeading}</h3>
-          <dl className="embed-params">
-            {t.embedParams.map(p => (
-              <div key={p.name}><dt><code>{p.name}</code></dt><dd>{p.text}</dd></div>
+          <nav className="view-switch" aria-label={t.embedViewLabel} style={{ justifySelf: "start" }}>
+            {(["page", "server"] as const).map(v => (
+              <Link key={v} href={`/channels/${encodeURIComponent(c.key)}/settings${v === "page" ? "" : `?embed=${v}`}#embed`} scroll={false}
+                className={`view-switch-item${v === embedView ? " is-on" : ""}`} aria-current={v === embedView ? "page" : undefined}>
+                {v === "page" ? t.embedViewPage : t.embedViewServer}
+              </Link>
             ))}
-          </dl>
-          <h3 className="embed-sub">{t.embedTokenHeading}</h3>
-          <p className="quiet" style={{ margin: 0 }}>{t.embedTokenIntro}</p>
-          <pre className="embed-code"><code>{tokenPayloadLines(tokenDoc).join("\n")}</code></pre>
-          <ul className="quiet" style={{ margin: 0, paddingLeft: 18 }}>
-            {t.embedSigning.map(l => <li key={l}>{l}</li>)}
-          </ul>
-          <h3 className="embed-sub">{t.embedJavaHeading}</h3>
-          {t.embedJavaIntro.map(l => <p key={l} className="quiet" style={{ margin: 0 }}>{l}</p>)}
-          <pre className="embed-code"><code>{javaCode}</code></pre>
-          <div><CopyLink value={javaCode} label={t.embedCopy} done={t.embedCopied} /></div>
-          <ul className="quiet" style={{ margin: 0, paddingLeft: 18 }}>
-            {t.embedJavaServer.map(l => <li key={l}>{l}</li>)}
-          </ul>
+          </nav>
+          {embedView === "page" ? (
+            <>
+              {!fallbackContact && <p className="quiet" style={{ margin: 0 }}>{t.embedNoContact}</p>}
+              <pre className="embed-code"><code>{embedCode}</code></pre>
+              <div><CopyLink value={embedCode} label={t.embedCopy} done={t.embedCopied} /></div>
+              <h3 className="embed-sub">{t.embedParamsHeading}</h3>
+              <dl className="embed-params">
+                {t.embedParams.map(p => (
+                  <div key={p.name}><dt><code>{p.name}</code></dt><dd>{p.text}</dd></div>
+                ))}
+              </dl>
+            </>
+          ) : (
+            <>
+              <h3 className="embed-sub">{t.embedTokenHeading}</h3>
+              <p className="quiet" style={{ margin: 0 }}>{t.embedTokenIntro}</p>
+              <pre className="embed-code"><code>{tokenPayloadLines(tokenDoc).join("\n")}</code></pre>
+              <ul className="quiet" style={{ margin: 0, paddingLeft: 18 }}>
+                {t.embedSigning.map(l => <li key={l}>{l}</li>)}
+              </ul>
+              <h3 className="embed-sub">{t.embedJavaHeading}</h3>
+              {t.embedJavaIntro.map(l => <p key={l} className="quiet" style={{ margin: 0 }}>{l}</p>)}
+              <pre className="embed-code"><code>{javaCode}</code></pre>
+              <div><CopyLink value={javaCode} label={t.embedCopy} done={t.embedCopied} /></div>
+              <ul className="quiet" style={{ margin: 0, paddingLeft: 18 }}>
+                {t.embedJavaServer.map(l => <li key={l}>{l}</li>)}
+              </ul>
+            </>
+          )}
         </section>
       )}
     </div>
