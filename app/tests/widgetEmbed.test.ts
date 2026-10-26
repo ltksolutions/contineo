@@ -4,7 +4,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { widgetEmbedCode, FALLBACK_ELEMENT_ID, tokenPayloadLines, TOKEN_CLAIMS } from "../src/lib/widgetEmbed"
+import { widgetEmbedCode, FALLBACK_ELEMENT_ID, tokenPayloadLines, TOKEN_CLAIMS, javaTokenExample } from "../src/lib/widgetEmbed"
+import { verifyWidgetToken } from "../src/lib/widgetToken"
 import { widgetFallbackContact } from "../src/lib/channels"
 import { widgetScript } from "../src/lib/widgetScript"
 
@@ -75,5 +76,26 @@ describe("kontakt pri výpadku", () => {
     const js = widgetScript({ apiBase: "https://x", channel: "k", accent: "#000", texts: { contact: "Napíš:" }, language: "sk", contact: "org@x.sk" })
     expect(js).toContain('"contact":"org@x.sk"')
     expect(js).toContain("function contact()")
+  })
+})
+
+describe("vzor v Jave (ISSF, 26. 10. 2026)", () => {
+  const ch = { key: "d9589242-8b85-4850-a10a-a30ebbbe8f18", secret: "skusobny-tajny-kluc-123", origins: ["https://issf.futbalsfz.sk"] }
+  it("nesie iss a aud kanála a podpisuje HmacSHA256", () => {
+    const java = javaTokenExample({ iss: ch.origins[0], aud: ch.key })
+    expect(java).toContain('static final String ISSUER = "https://issf.futbalsfz.sk";')
+    expect(java).toContain(`static final String CHANNEL_KEY = "${ch.key}";`)
+    expect(java).toContain('Mac.getInstance("HmacSHA256")')
+    expect(java).toContain("(iat + 900)")
+  })
+  // Token vydal práve tento kód (javac 16, kľúč `skusobny-tajny-kluc-123`) —
+  // meno s diakritikou, úvodzovkami a spätnou lomkou. Pri zmene vzoru ho
+  // treba vydať znova, inak test overuje starý kód.
+  const fromJava = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2lzc2YuZnV0YmFsc2Z6LnNrIiwiYXVkIjoiZDk1ODkyNDItOGI4NS00ODUwLWExMGEtYTMwZWJiYmU4ZjE4Iiwic3ViIjoiMTUyODk3MyIsImVtYWlsIjoiamFuLm5vdmFrQGV4YW1wbGUuc2siLCJnaXZlbl9uYW1lIjoiSsOhbiIsImZhbWlseV9uYW1lIjoiTm92w6FrIFwiSmFub1wiIFxcIHgiLCJyb2xlcyI6WyJrbHVib3bDvSBtYW5hxb7DqXIiXSwiY2x1YiI6Ik1GSyBCeXTEjWEiLCJsYW5nIjoic2siLCJpYXQiOjE3OTMwNTQ0MzMsImV4cCI6MTc5MzA1NTMzM30.SsK_Zl8MydPwL59ewO3XWHkT8imdpLhe6lbAps_FSGU"
+  it("token z Javy Contineo prijme v čase vydania, s iným kľúčom nie", () => {
+    const at = new Date(1793054433 * 1000)
+    const id = verifyWidgetToken(fromJava, ch, at)
+    expect(id).toMatchObject({ externalId: "1528973", familyName: 'Novák "Jano" \\ x', roles: ["klubový manažér"], club: "MFK Bytča", language: "sk" })
+    expect(() => verifyWidgetToken(fromJava, { ...ch, secret: "iny" }, at)).toThrow()
   })
 })

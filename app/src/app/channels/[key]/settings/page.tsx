@@ -27,7 +27,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary, formatDate } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { channelContentPreview } from "@/lib/channelContent"
-import { widgetEmbedCode, tokenPayloadLines, type TokenDoc } from "@/lib/widgetEmbed"
+import { widgetEmbedCode, tokenPayloadLines, javaTokenExample, type TokenDoc } from "@/lib/widgetEmbed"
 import { requestHostname } from "@/lib/session"
 import CopyLink from "@/components/CopyLink"
 import { codelistOptions } from "@/lib/codelists"
@@ -87,6 +87,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
     heading: t.embedTokenHeading, iss: c.widget.origins[0] ?? t.embedIssPlaceholder, aud: c.key,
     levels: t.embedClaimLevels, claims: t.embedClaims, signing: t.embedSigning,
   }
+  const javaCode = javaTokenExample({ iss: tokenDoc.iss, aud: tokenDoc.aud })
   const embedCode = isWidget
     ? widgetEmbedCode({
         host: await requestHostname(), channelKey: c.key, fallbackText: t.embedFallbackText, contact: fallbackContact,
@@ -366,6 +367,13 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
           <pre className="embed-code"><code>{tokenPayloadLines(tokenDoc).join("\n")}</code></pre>
           <ul className="quiet" style={{ margin: 0, paddingLeft: 18 }}>
             {t.embedSigning.map(l => <li key={l}>{l}</li>)}
+          </ul>
+          <h3 className="embed-sub">{t.embedJavaHeading}</h3>
+          {t.embedJavaIntro.map(l => <p key={l} className="quiet" style={{ margin: 0 }}>{l}</p>)}
+          <pre className="embed-code"><code>{javaCode}</code></pre>
+          <div><CopyLink value={javaCode} label={t.embedCopy} done={t.embedCopied} /></div>
+          <ul className="quiet" style={{ margin: 0, paddingLeft: 18 }}>
+            {t.embedJavaServer.map(l => <li key={l}>{l}</li>)}
           </ul>
         </section>
       )}

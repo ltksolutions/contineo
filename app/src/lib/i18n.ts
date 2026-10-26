@@ -2917,6 +2917,9 @@ interface Dictionary {
     embedClaimLevels: Record<"required" | "recommended" | "optional", string>
     embedClaims: Record<string, string>
     embedSigning: string[]
+    embedJavaHeading: string
+    embedJavaIntro: string[]
+    embedJavaServer: string[]
     rateLimit: string
     rateLimitHint: string
     widgetSecret: string
@@ -8283,6 +8286,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Podpis HMAC-SHA256 tajným kľúčom kanála (Nastavenie kanála → Tajný kľúč; ukáže sa len raz). Kľúč patrí len na váš server, nikdy nie do stránky.",
       "Hotová knižnica (napr. jsonwebtoken v Node, firebase/php-jwt v PHP) urobí hlavičku aj podpis sama — stačí jej dať obsah a kľúč.",
     ],
+    embedJavaHeading: "Vzor v Jave",
+    embedJavaIntro: [
+      "Pre server v Jave (napr. ISSF na Apache Wicket): čistá Java 8 a novšia, bez knižníc. iss a aud sú už vyplnené za tento kanál.",
+      "Volanie: ContineoToken.issue(tajnýKľúč, registračnéČíslo, email, meno, priezvisko, roly, klub, \"sk\"). Klub môže byť null, roly prázdny zoznam.",
+    ],
+    embedJavaServer: [
+      "Tajný kľúč čítajte z konfigurácie servera, nie zo zdrojového kódu a nikdy nie zo stránky.",
+      "Token pre data-token vložte do spoločnej šablóny stránok po prihlásení — vo Wickete napríklad AttributeModifier na značke <script> v základnej stránke.",
+      "Adresu /api/contineo-token pripojte na rovnakej doméne (vo Wickete mountResource) — prihlásenému vráti nový token ako čistý text, neprihlásenému 401.",
+    ],
     rateLimit: "Strop požiadaviek na osobu a hodinu",
     rateLimitHint: "Ochrana pred zneužitím (D14).",
     widgetSecret: "Tajný kľúč",
@@ -13494,6 +13507,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Podpis HMAC-SHA256 tajným klíčem kanálu (Nastavení kanálu → Tajný klíč; ukáže se jen jednou). Klíč patří jen na váš server, nikdy ne do stránky.",
       "Hotová knihovna (např. jsonwebtoken v Node, firebase/php-jwt v PHP) udělá hlavičku i podpis sama — stačí jí dát obsah a klíč.",
     ],
+    embedJavaHeading: "Vzor v Javě",
+    embedJavaIntro: [
+      "Pro server v Javě (např. ISSF na Apache Wicket): čistá Java 8 a novější, bez knihoven. iss a aud jsou už vyplněné za tento kanál.",
+      "Volání: ContineoToken.issue(tajnýKlíč, registračníČíslo, email, jméno, příjmení, role, klub, \"cs\"). Klub může být null, role prázdný seznam.",
+    ],
+    embedJavaServer: [
+      "Tajný klíč čtěte z konfigurace serveru, ne ze zdrojového kódu a nikdy ne ze stránky.",
+      "Token pro data-token vložte do společné šablony stránek po přihlášení — ve Wicketu například AttributeModifier na značce <script> v základní stránce.",
+      "Adresu /api/contineo-token připojte na stejné doméně (ve Wicketu mountResource) — přihlášenému vrátí nový token jako čistý text, nepřihlášenému 401.",
+    ],
     rateLimit: "Strop požadavků na osobu a hodinu",
     rateLimitHint: "Ochrana před zneužitím (D14).",
     widgetSecret: "Tajný klíč",
@@ -18695,6 +18718,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Token header: {\"alg\":\"HS256\",\"typ\":\"JWT\"}.",
       "Signature HMAC-SHA256 with the channel secret (Channel settings → Secret; shown only once). The secret belongs on your server only, never in the page.",
       "A ready library (e.g. jsonwebtoken for Node, firebase/php-jwt for PHP) builds the header and signature itself — give it the content and the secret.",
+    ],
+    embedJavaHeading: "Java example",
+    embedJavaIntro: [
+      "For a Java server (e.g. ISSF on Apache Wicket): plain Java 8 or later, no libraries. iss and aud are already filled in for this channel.",
+      "Call: ContineoToken.issue(secret, registrationNumber, email, givenName, familyName, roles, club, \"en\"). Club may be null, roles an empty list.",
+    ],
+    embedJavaServer: [
+      "Read the secret from the server configuration, not from source code and never from the page.",
+      "Put the token for data-token into the shared page template after sign-in — in Wicket e.g. an AttributeModifier on the <script> tag in the base page.",
+      "Mount /api/contineo-token on the same domain (in Wicket mountResource) — it returns a fresh token as plain text to a signed-in user, 401 otherwise.",
     ],
     rateLimit: "Request limit per person and hour",
     rateLimitHint: "Protection against abuse (D14).",
