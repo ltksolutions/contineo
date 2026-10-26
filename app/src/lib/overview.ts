@@ -57,7 +57,7 @@ export const LAW_CATEGORY = "zakon"
  * pri úlohách); bez parametra okno `NEW_DAYS` dní.
  */
 export function mergeReaderDocuments(
-  docs: { documentId: string; title: string; category: string | null; versionLabel: string; effectiveFrom: Date; effectiveTo: Date | null; publishedAt: Date | null }[],
+  docs: { documentId: string; title: string; category: string | null; versionLabel: string; effectiveFrom: Date; effectiveTo: Date | null; publishedAt: Date | null; lawActId?: string | null }[],
   acts: { actId: string; title: string; current: { effectiveFrom: Date } | null }[],
   asOf = new Date(),
   newSinceDate?: Date | null,
@@ -77,7 +77,12 @@ export function mergeReaderDocuments(
     href: `/documents/${encodeURIComponent(d.documentId)}`,
     askHref: `/ask?${new URLSearchParams({ src: "library", doc: d.documentId }).toString()}`,
   }))
+  // Zákon, ktorý je aj dokumentom knižnice, sa vypíše raz — ako dokument
+  // knižnice: ten má prednosť aj pri odpovedi (ADR-039 D260) a nesie údaje
+  // organizácie (zodpovedná osoba, nadradené).
+  const inLibrary = new Set(docs.map(d => d.lawActId).filter((id): id is string => Boolean(id)))
   for (const a of acts) {
+    if (inLibrary.has(a.actId)) continue
     // Predpis bez znenia účinného dnes (len vyhlásené na neskôr) sa čitateľovi neponúka — nemal by čo čítať.
     if (!a.current) continue
     rows.push({
