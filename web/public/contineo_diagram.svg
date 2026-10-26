@@ -24,7 +24,7 @@
   <text x="40" y="74" font-size="14" fill="#5f6368">Zdroje · spracovanie · review → MongoDB (jadro) → AI adaptéry → kanály. Adaptéry sa vyberajú konfiguráciou tenanta, nie kódom.</text>
 
   <rect x="300" y="96" width="600" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
-  <text x="600" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, roly) · auto-zakladanie používateľov</text>
+  <text x="600" y="118" font-size="13" fill="#3c4043" text-anchor="middle" textLength="571" lengthAdjust="spacingAndGlyphs">Identita: e-mailový odkaz · Entra ID · Google · účet vzniká pri prvom prihlásení · CRM pripravujeme</text>
   <path d="M760,130 L760,228" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
 
   <!-- KONEKTORY (ADR-029) — živý zdroj pri otázke, nejde cez CMS -->
@@ -41,22 +41,28 @@
   <rect x="26" y="170" width="586" height="524" rx="18"
         fill="#F7F9FE" stroke="#1A73E8" stroke-width="1.6" stroke-dasharray="8 5"/>
   <text x="46" y="196" font-size="15" font-weight="700" fill="#174EA6" textLength="186" lengthAdjust="spacingAndGlyphs">CMS — SPRÁVA OBSAHU</text>
-  <text x="46" y="215" font-size="11" fill="#5f6368" textLength="310" lengthAdjust="spacingAndGlyphs">jediné miesto pravdy pre obsah — knižnica, verzie, tagy, review</text>
+  <text x="46" y="215" font-size="11" fill="#5f6368" textLength="374" lengthAdjust="spacingAndGlyphs">jediné miesto pravdy pre obsah — knižnica, znenia, hierarchia, schvaľovanie</text>
 
-  <!-- ZDROJE -->
+  <!-- ZDROJE — register zdrojov (ADR-040 D264): štyri druhy, každý s tým, čo vie -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
-  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6" textLength="61" lengthAdjust="spacingAndGlyphs">ZDROJE</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="227" lengthAdjust="spacingAndGlyphs">register: súbory · schránka · konektor · zákony</text>
+  <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6">ZDROJE</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="181" lengthAdjust="spacingAndGlyphs">register zdrojov organizácie · 4 druhy</text>
   <g font-size="12.5" fill="#202124">
-    <text x="60" y="316" textLength="216" lengthAdjust="spacingAndGlyphs">• Nahraté súbory — PDF + Word/Excel</text>
-    <text x="60" y="342" fill="#9aa0a6" textLength="150" lengthAdjust="spacingAndGlyphs">• RSS / web (pripravujeme)</text>
-    <text x="60" y="368" textLength="204" lengthAdjust="spacingAndGlyphs">• Legislatíva — katalóg zo Slov-Lexu</text>
-    <text x="60" y="394" textLength="182" lengthAdjust="spacingAndGlyphs">• Schránka helpdesku (Graph) ⇅</text>
-    <text x="60" y="420" textLength="113" lengthAdjust="spacingAndGlyphs">• Import z konektora</text>
-    <text x="74" y="440" font-size="11" fill="#5f6368" textLength="198" lengthAdjust="spacingAndGlyphs">článok ako koncept s PDF → schválenie</text>
-    <text x="74" y="457" font-size="11" fill="#5f6368" textLength="123" lengthAdjust="spacingAndGlyphs">kontrola zmien na serveri</text>
+    <text x="60" y="316" textLength="192" lengthAdjust="spacingAndGlyphs">• Súbory — PDF, Word, Excel, .md</text>
+    <text x="74" y="334" font-size="10.5" fill="#5f6368" textLength="173" lengthAdjust="spacingAndGlyphs">knižnica · predvolený zdroj pri otázke</text>
+    <text x="60" y="364" textLength="138" lengthAdjust="spacingAndGlyphs">• Schránka helpdesku ⇅</text>
+    <text x="74" y="382" font-size="10.5" fill="#5f6368" textLength="152" lengthAdjust="spacingAndGlyphs">Microsoft Graph · e-mail = ticket</text>
+    <text x="74" y="397" font-size="10.5" fill="#5f6368" textLength="176" lengthAdjust="spacingAndGlyphs">otázky → návrhy doplnenia manuálov</text>
+    <text x="60" y="427" textLength="95" lengthAdjust="spacingAndGlyphs">• MCP konektory</text>
+    <text x="74" y="445" font-size="10.5" fill="#5f6368" textLength="178" lengthAdjust="spacingAndGlyphs">živý zdroj · import článku ako koncept</text>
+    <text x="74" y="460" font-size="10.5" fill="#9aa0a6" font-style="italic" textLength="141" lengthAdjust="spacingAndGlyphs">nástroje agenta (pripravujeme)</text>
+    <text x="60" y="490" textLength="189" lengthAdjust="spacingAndGlyphs">• Web / RSS — zdroj s adaptérom</text>
+    <text x="74" y="508" font-size="10.5" fill="#5f6368" textLength="201" lengthAdjust="spacingAndGlyphs">Slov-Lex: Legislatíva SR, katalóg platformy</text>
+    <text x="74" y="523" font-size="10.5" fill="#5f6368" textLength="204" lengthAdjust="spacingAndGlyphs">denná kontrola · novela ako koncept znenia</text>
+    <text x="74" y="538" font-size="10.5" fill="#9aa0a6" font-style="italic" textLength="185" lengthAdjust="spacingAndGlyphs">web a RSS bez adaptéra (pripravujeme)</text>
   </g>
-  <text x="60" y="496" font-size="11" fill="#1A73E8" textLength="158" lengthAdjust="spacingAndGlyphs">⇅ schránka je aj výstupný kanál</text>
+  <text x="60" y="568" font-size="11" fill="#1A73E8" textLength="158" lengthAdjust="spacingAndGlyphs">⇅ schránka je aj výstupný kanál</text>
+  <text x="60" y="586" font-size="11" fill="#1A73E8" textLength="230" lengthAdjust="spacingAndGlyphs">každý zdroj: druh · čo vie · prístup · predvolene</text>
 
   <!-- WORKER -->
   <rect x="333" y="236" width="264" height="372" rx="14" fill="#FEF3E0" stroke="#E8920C" stroke-width="1.5"/>
@@ -83,7 +89,7 @@
   <!-- KURÁTORSKÁ BRÁNA (v rámci CMS) -->
   <rect x="40" y="622" width="557" height="58" rx="10" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
   <text x="58" y="645" font-size="13.5" font-weight="700" fill="#174EA6" textLength="248" lengthAdjust="spacingAndGlyphs">KURÁTOR — brána pred publikovaním</text>
-  <text x="58" y="666" font-size="11.5" fill="#3c4043" textLength="416" lengthAdjust="spacingAndGlyphs">tagy z číselníka → review → publish · kanál smie len predvyplniť, publikuje človek</text>
+  <text x="58" y="666" font-size="11.5" fill="#3c4043" textLength="524" lengthAdjust="spacingAndGlyphs">druh a značky z číselníka → schválenie → zverejnenie · zdroj len predvyplní koncept, zverejňuje človek</text>
 
   <!-- MongoDB JADRO -->
   <rect x="626" y="236" width="264" height="372" rx="14" fill="#E6F4EA" stroke="#137333" stroke-width="2"/>

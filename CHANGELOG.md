@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: blok Zdroje v obrázku podľa registra zdrojov (2026-10-26)
+
+Blok **Zdroje** v obrázku architektúry je prekreslený podľa registra
+(ADR-040 D264): štyri druhy — Súbory, Schránka helpdesku, **MCP konektory**
+(živý zdroj · import článku ako koncept · nástroje agenta pripravujeme)
+a **Web / RSS so zdrojom s adaptérom** (Slov-Lex: Legislatíva SR, katalóg,
+denná kontrola; web a RSS bez adaptéra pripravujeme). Namiesto „Import
+z konektora" je konektor so svojimi použitiami; sivé „RSS / web" už nehovorí,
+že web ako taký chýba. Pilulka identity hovorí o e-maile, Entra ID a Google
+a že CRM sa pripravuje; podtitul CMS a brána kurátora používajú dnešné
+pojmy (znenia, hierarchia, schvaľovanie). sk, cs, en; PNG a kópia v docs.
+
 ### Web contineo.app: katalóg legislatívy a register zdrojov (2026-10-25, ADR-039, ADR-040)
 
 Web hovorí o Legislatíve ako o zdroji pri otázke: katalóg zo Slov-Lexu
