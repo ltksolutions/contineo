@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { NEW_DAYS, EXPIRING_DAYS } from "../src/lib/overview"
+import { NEW_DAYS, EXPIRING_DAYS, pickRecent } from "../src/lib/overview"
 
 const DEN = 24 * 60 * 60 * 1000
 
@@ -62,5 +62,28 @@ describe("expiruje do 30 dní", () => {
     // varovanie do budúcnosti, je to iný stav. Zamiešať ho medzi „expiruje
     // do 30 dní" by znamenalo, že dlaždica ukazuje aj to, čo je dávno preč.
     expect(expiruje(teraz - 1 * DEN, teraz)).toBe(false)
+  })
+})
+
+describe("pickRecent — posledné dokumenty knižnice na Prehľade", () => {
+  const asOf = new Date("2026-10-26")
+  const doc = (documentId: string, versions: { label: string; publishedAt?: string }[]) => ({ documentId, title: `Dokument ${documentId}`, versions: versions as never })
+
+  it("každý dokument raz, podľa najnovšie zverejneného znenia, najnovšie hore", () => {
+    const out = pickRecent([
+      doc("a", [{ label: "v1", publishedAt: "2026-01-01" }, { label: "v2", publishedAt: "2026-09-01" }]),
+      doc("b", [{ label: "v1", publishedAt: "2026-10-01" }]),
+    ], 10, asOf)
+    expect(out.map(x => `${x.documentId}:${x.versionLabel}`)).toEqual(["b:v1", "a:v2"])
+  })
+  it("bez časovej hranice — aj rok staré dokumenty sú v paneli", () => {
+    expect(pickRecent([doc("a", [{ label: "v1", publishedAt: "2024-01-01" }])], 5, asOf)).toHaveLength(1)
+  })
+  it("znenie zverejnené v budúcnosti a dokument bez zverejnenia sa vynechajú", () => {
+    expect(pickRecent([doc("a", [{ label: "v1", publishedAt: "2027-01-01" }]), doc("b", [{ label: "v1" }])], 5, asOf)).toHaveLength(0)
+  })
+  it("strop počtu", () => {
+    const docs = ["a", "b", "c"].map((id, i) => doc(id, [{ label: "v1", publishedAt: `2026-0${i + 1}-01` }]))
+    expect(pickRecent(docs, 2, asOf).map(x => x.documentId)).toEqual(["c", "b"])
   })
 })
