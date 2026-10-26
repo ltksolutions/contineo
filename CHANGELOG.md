@@ -63,6 +63,15 @@ z Prehľadu a zo stránky dokumentu, parameter `documentIds` v MCP.
 Nový druh upozornenia `rolesChanged`: keď správca osobe roly pridá alebo
 odoberie, osoba dostane vetu, ktoré roly pribudli a ktoré ubudli (sk, cs,
 en), bez odkazu — nové práva uvidí v navigácii.
+### Web contineo.app: web, RSS a crawler — názvoslovie (2026-10-26, ADR-040 Dodatok 2)
+
+Web je sledovaná adresa, RSS sledovaný feed, crawler len čítačka, ktorá
+ich obsah číta a parsuje (Ján 26. 10.). Obrázok architektúry a stránka
+Technológia už nepíšu „web bez adaptéra pripravujeme" — sledovaný web
+funguje (Slov-Lex s crawlerom statického portálu), ďalší web znamená
+ďalší crawler, crawler pre RSS sa pripravuje. Rovnako „Pripravujeme" na
+úvode a stack. Názvoslovie je zapísané v ADR-040 ako Dodatok 2. sk, cs,
+en; PNG a kópia v docs.
 
 ### Web contineo.app: blok Zdroje v obrázku podľa registra zdrojov (2026-10-26)
 

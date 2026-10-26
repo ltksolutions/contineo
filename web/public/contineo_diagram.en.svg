@@ -56,10 +56,10 @@
     <text x="60" y="427" textLength="102" lengthAdjust="spacingAndGlyphs">• MCP connectors</text>
     <text x="74" y="445" font-size="10.5" fill="#5f6368" textLength="168" lengthAdjust="spacingAndGlyphs">live source · article import as a draft</text>
     <text x="74" y="460" font-size="10.5" fill="#9aa0a6" font-style="italic" textLength="125" lengthAdjust="spacingAndGlyphs">agent tools (in preparation)</text>
-    <text x="60" y="490" textLength="216" lengthAdjust="spacingAndGlyphs">• Web / RSS — source with an adapter</text>
-    <text x="74" y="508" font-size="10.5" fill="#5f6368" textLength="178" lengthAdjust="spacingAndGlyphs">Slov-Lex: Slovak legislation catalogue</text>
-    <text x="74" y="523" font-size="10.5" fill="#5f6368" textLength="202" lengthAdjust="spacingAndGlyphs">daily check · amendment as a draft version</text>
-    <text x="74" y="538" font-size="10.5" fill="#9aa0a6" font-style="italic" textLength="213" lengthAdjust="spacingAndGlyphs">web and RSS without adapter (in preparation)</text>
+    <text x="60" y="490" textLength="159" lengthAdjust="spacingAndGlyphs">• Web — a watched address</text>
+    <text x="74" y="508" font-size="10.5" fill="#5f6368" textLength="173" lengthAdjust="spacingAndGlyphs">crawler reads · index · into the library</text>
+    <text x="74" y="523" font-size="10.5" fill="#5f6368" textLength="195" lengthAdjust="spacingAndGlyphs">Slov-Lex today · each site its own crawler</text>
+    <text x="60" y="541" fill="#9aa0a6" textLength="192" lengthAdjust="spacingAndGlyphs">• RSS feed (crawler in preparation)</text>
   </g>
   <text x="60" y="568" font-size="11" fill="#1A73E8" textLength="193" lengthAdjust="spacingAndGlyphs">⇅ the mailbox is an output channel too</text>
   <text x="60" y="586" font-size="11" fill="#1A73E8" textLength="220" lengthAdjust="spacingAndGlyphs">each source: kind · abilities · access · default</text>
