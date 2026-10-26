@@ -4,6 +4,66 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prehľad a detail dokumentu pre bežného používateľa (2026-10-26, ADR-041, #449–#452)
+
+Bežný používateľ vidí **dokumenty, nie zdroje** (D270): platné dokumenty
+knižnice a odoberané predpisy z katalógu legislatívy v jednom zozname,
+členenom len podľa druhu (predpis je druh Zákon). Pripojené systémy
+ostávajú vo výbere zdrojov na Opýtať sa.
+
+- **Prehľad (`/`)** má bloky **Moje úlohy** (povinnosti s termínovým chipom
+  a kolá schválenia, počet v hlavičke), **Dokumenty** (najnovšie znenie
+  prvé, meta druh · označenie · znenie od, chip `nové` alebo `expiruje`,
+  akcia Opýtať sa) a rozcestník Organizácia / Správa. Dlaždice KPI, panel
+  „Čo máte k dispozícii" a blok „Pre vás" zanikli (D271) — ich čísla sú
+  v hlavičkách a chipoch.
+- **Čitateľský detail dokumentu** (`/documents/<id>`, D272): riadok druh ·
+  znenie · účinné od; karta údajov — zodpovedná osoba, právny základ,
+  prijal (orgán), autor, nadradené, jazyk, pôvod, „Potvrdili ste …";
+  karta znení s prepínaním `?version=` (zverejnené staršie aj budúce
+  znenia, koncept nikdy; potvrdzuje sa len platné). Priečinok, prístup,
+  značky ani cudzie potvrdenia sa čitateľovi nekreslia.
+- **Zákon pre čitateľa** (`/documents/law/<actId>`, D273): predpis
+  z katalógu pre každého prihláseného človeka organizácie, ktorá ho
+  odoberá, v tvare čitateľského detailu (znenia, celý text, pôvod
+  s odkazom na Slov-Lex, odkaz na dokument v knižnici). Správcovská adresa
+  v Zdrojoch ostáva; Prehľad vedie na čitateľskú.
+- **Roly vidia len svoje** (D274): správca obsahu má na čitateľskom detaile
+  jediný tichý odkaz „Upraviť v knižnici", správca osôb pri zákone
+  „Spravovať zdroj"; nikto iný správcovskú akciu nevidí.
+- **Knižnica na čítanie** (`/library` bez roly): prepínač pohľadu podľa
+  druhu (`?kind=`) s počtami, predpisy z katalógu v zozname, druh v mete.
+- `lib/documents.ts`: `readableVersions()`, `versionToRead()`,
+  `versionState()`; `lib/overview.ts`: `mergeReaderDocuments()`
+  (`libraryNews`, `expiringVersions`, `recentLibrary` zmazané);
+  `components/LawActText.tsx` spoločný pre obe obrazovky predpisu.
+- Návrh `docs/design/ZAKLAD-prehlad-a-detail-pre-pouzivatela.md`,
+  rozhodnutie `docs/decisions/ADR-041-dokument-pre-pouzivatela.md`.
+
+### Opýtať sa nad jedným dokumentom (2026-10-26, ADR-029 § 7 D269, #448)
+
+Rozsah zdroja „knižnica" sa dá zúžiť na jeden dokument (`/ask?src=library&doc=`):
+hlavička „Odpoveď z dokumentu …", výber v plachte aj na `/ask`, odkazy
+z Prehľadu a zo stránky dokumentu, parameter `documentIds` v MCP.
+
+### Slov-Lex v Zdrojoch: kontrola pri predpise, detail predpisu, „Pridať do knižnice" (2026-10-26, #445–#447)
+
+- Pri každom predpise v Zdroje → Web / RSS → Slov-Lex je **dátum poslednej
+  kontroly** cronom a **chyba**, ak posledná kontrola zlyhala (#445).
+- **Detail predpisu** (`/organisation/sources/web/slov-lex/<actId>`) so
+  zneniami v katalógu (stav, novela, stiahnuté, úseky, Slov-Lex, PDF)
+  a celým textom zvoleného znenia (`?version=`) s kotvami paragrafov;
+  názov predpisu v zozname naň vedie. Odkaz „pridať do knižnice" je tlačidlo
+  **Pridať do knižnice** vedľa „Zrušiť odber" (#446).
+- Prehľad dostal panel „Čo máte k dispozícii" (#447) — ten istý deň
+  prekonaný ADR-041 (vyššie).
+
+### Zvonček: upozornenie na zmenu rolí (2026-10-26, #443)
+
+Nový druh upozornenia `rolesChanged`: keď správca osobe roly pridá alebo
+odoberie, osoba dostane vetu, ktoré roly pribudli a ktoré ubudli (sk, cs,
+en), bez odkazu — nové práva uvidí v navigácii.
+
 ### Web contineo.app: blok Zdroje v obrázku podľa registra zdrojov (2026-10-26)
 
 Blok **Zdroje** v obrázku architektúry je prekreslený podľa registra
