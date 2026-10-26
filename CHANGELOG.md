@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: katalóg legislatívy a register zdrojov (2026-10-25, ADR-039, ADR-040)
+
+Web hovorí o Legislatíve ako o zdroji pri otázke: katalóg zo Slov-Lexu
+spoločný pre všetky organizácie, výber predpisov v Zdroje → Web / RSS,
+štítok Zákon s odkazom na paragraf, denná kontrola noviel, odber do
+knižnice z katalógu; register zdrojov ako jeden zoznam pre otázku, widget
+aj MCP server; nástroje MCP servera list_sources, list_law_acts,
+get_law_act a prihlásenie z Claude Code. Tabuľka dátových tokov na
+Bezpečnosti má riadok Katalóg legislatívy. „Automatické sledovanie noviel"
+už nie je v Pripravujeme. V obrázku: Legislatíva v Zdrojoch a v bloku
+„Konektory a legislatíva pri otázke", kolekcie law_acts · law_chunks.
+sk, cs, en; PNG a kópia v docs.
+
 ### Stropy úsekov MCP posuvníkom a nový prvok `.field-range` (2026-10-25, #441)
 
 - `search_library` MCP servera nemá parameter `limit`. Strop úsekov je na

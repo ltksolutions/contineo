@@ -31,10 +31,10 @@
   <rect x="919" y="88" width="275" height="54" rx="14" fill="#FCE4EC" stroke="#AD1457" stroke-width="1.5"/>
   <rect x="1212" y="88" width="264" height="54" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
   <text x="1232" y="110" font-size="12.5" font-weight="700" fill="#54309E" textLength="194" lengthAdjust="spacingAndGlyphs">CONTINEO AS AN MCP SERVER</text>
-  <text x="1232" y="129" font-size="10.5" fill="#5f6368" textLength="224" lengthAdjust="spacingAndGlyphs">AI assistant reads the library · OAuth · read-only</text>
+  <text x="1232" y="129" font-size="10.5" fill="#5f6368" textLength="207" lengthAdjust="spacingAndGlyphs">reads library, legislation, connectors · OAuth</text>
   <path d="M1344,142 L1344,228" stroke="#6B46C1" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowVio)"/>
-  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="213" lengthAdjust="spacingAndGlyphs">CONNECTORS (MCP) — live source</text>
-  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="209" lengthAdjust="spacingAndGlyphs">by pill or by default · “live source, unverified”</text>
+  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="225" lengthAdjust="spacingAndGlyphs">CONNECTORS + LEGISLATION at ask</text>
+  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="232" lengthAdjust="spacingAndGlyphs">the person picks sources · labels Live source, Act</text>
   <path d="M1051,142 L1051,228" stroke="#AD1457" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowPink)"/>
 
   <!-- CMS ako vrstva nad kanálmi a workerom -->
@@ -46,11 +46,11 @@
   <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
   <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6" textLength="74" lengthAdjust="spacingAndGlyphs">SOURCES</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="204" lengthAdjust="spacingAndGlyphs">today: files, Slov-Lex, mailbox, connector</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="199" lengthAdjust="spacingAndGlyphs">register: files · mailbox · connector · acts</text>
   <g font-size="12.5" fill="#202124">
     <text x="60" y="316" textLength="210" lengthAdjust="spacingAndGlyphs">• Uploaded files — PDF + Word/Excel</text>
     <text x="60" y="342" fill="#9aa0a6" textLength="154" lengthAdjust="spacingAndGlyphs">• RSS / web (in preparation)</text>
-    <text x="60" y="368" textLength="209" lengthAdjust="spacingAndGlyphs">• Act from Slov-Lex · verified answers</text>
+    <text x="60" y="368" textLength="224" lengthAdjust="spacingAndGlyphs">• Legislation — catalogue from Slov-Lex</text>
     <text x="60" y="394" textLength="169" lengthAdjust="spacingAndGlyphs">• Helpdesk mailbox (Graph) ⇅</text>
     <text x="60" y="420" textLength="144" lengthAdjust="spacingAndGlyphs">• Import from a connector</text>
     <text x="74" y="440" font-size="11" fill="#5f6368" textLength="186" lengthAdjust="spacingAndGlyphs">article as a draft with PDF → approval</text>
@@ -107,7 +107,7 @@
   <text x="646" y="526" font-size="10" fill="#3c4043" textLength="176" lengthAdjust="spacingAndGlyphs">Acknowledgement: acknowledgements</text>
   <text x="646" y="539" font-size="10" fill="#3c4043" textLength="203" lengthAdjust="spacingAndGlyphs">Channels: channels · tickets · courier_threads</text>
   <text x="646" y="552" font-size="10" fill="#3c4043" textLength="163" lengthAdjust="spacingAndGlyphs">Training: courses · tests · certificates</text>
-  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="203" lengthAdjust="spacingAndGlyphs">Oversight: audit · ai_usage · compliance_runs</text>
+  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="154" lengthAdjust="spacingAndGlyphs">Legislation: law_acts · law_chunks</text>
   <line x1="646" y1="574" x2="870" y2="574" stroke="#A8D5B5" stroke-width="1"/>
   <text x="646" y="586" font-size="10" fill="#0B6E2E" textLength="189" lengthAdjust="spacingAndGlyphs">Evidence records are never changed (D24)</text>
   <text x="646" y="598" font-size="9.5" fill="#5f6368" textLength="208" lengthAdjust="spacingAndGlyphs">correction = new record · revocation = revokedAt</text>
