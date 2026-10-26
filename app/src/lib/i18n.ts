@@ -1289,51 +1289,30 @@ interface Dictionary {
   }
   /** Prehľad (`docs/design/README.md`, časť 2). */
   overview: {
+    /** Prehľad čitateľa (ADR-041 D271): Moje úlohy a Dokumenty namiesto dlaždíc a „Pre vás". */
+    tasksHeading: string
+    documentsHeading: string
+    documentsAll: string
+    emptyDocumentsTitle: string
+    emptyDocumentsText: string
+    newChip: string
+    kindLaw: string
+    effectiveFromMeta: (date: string) => string
+    ask: string
     hello: (name: string) => string
-    tiles: Record<string, string>
-    soonNote: (n: number) => string
-    mine: string
-    newNote: (days: number) => string
-    expiringNote: (days: number) => string
-    attention: string
-    news: string
     /** Prázdny panel — dva riadky: čo tu nie je a čo z toho vyplýva (PREHLAD, úloha 1). */
     empty: {
       attentionTitle: string
       attentionText: string
-      newsTitle: (days: number) => string
-      newsText: string
     }
     /** Pätička panela — cesta k celému zoznamu (SHELL-rozcestnik, 4a). */
     showAll: (n: number) => string
     allTasks: string
-    wholeLibrary: string
-    /** Nadpis nad panelmi, pod dlaždicami sekcií. */
-    forYou: string
     by: (date: string) => string
-    until: (date: string) => string
     expiringChip: string
     open: string
     decide: string
     submittedBy: (who: string) => string
-    /** Panel „Čo máte k dispozícii" nad rozcestníkom (Ján 26. 10. 2026): obsah, z ktorého asistent odpovedá. */
-    available: {
-      heading: string
-      library: string
-      sources: string
-      emptyLibraryTitle: string
-      emptyLibraryText: string
-      emptySourcesTitle: string
-      emptySourcesText: string
-      kindLaw: string
-      kindConnector: string
-      actEffective: (date: string) => string
-      actsCount: (n: number) => string
-      ask: string
-      askLibrary: string
-      askAll: string
-      register: string
-    }
   }
 
   /** Reťaz dôkazov o potvrdení (ADR-005). Os je pohľad, nie záznam. */
@@ -3027,6 +3006,9 @@ interface Dictionary {
       searchSubmit: string
       emptyFilter: string
       validFrom: (date: string) => string
+      /** Prepínač pohľadu podľa druhu (`?kind=`, ADR-041 D270–D271). */
+      kindAll: string
+      kindLaw: string
     }
     /**
      * Postup znenia v štyroch krokoch (rám KNIZNICA-postup-znenia, ADR-014).
@@ -6174,48 +6156,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     chosenOf: (chosen, total) => `Vybrané ${chosen} z ${total}`,
   },
   overview: {
+    tasksHeading: "Moje úlohy",
+    documentsHeading: "Dokumenty",
+    documentsAll: "Všetky dokumenty →",
+    emptyDocumentsTitle: "Zatiaľ žiadne dokumenty",
+    emptyDocumentsText: "Zverejnené normy, smernice a odoberané predpisy sa ukážu tu.",
+    newChip: "nové",
+    kindLaw: "Zákon",
+    effectiveFromMeta: date => `znenie od ${date}`,
+    ask: "Opýtať sa",
     hello: name => `Dobrý deň, ${name}`,
-    tiles: {
-      toAcknowledge: "Na potvrdenie",
-      toApprove: "Čaká na schválenie",
-      new: "Nové",
-      expiring: "Expiruje",
-    },
-    soonNote: n => (n === 1 ? "1 súrne" : n <= 4 ? `${n} súrne` : `${n} súrnych`),
-    mine: "na mňa",
-    newNote: days => `dokumentov za ${days} dní`,
-    expiringNote: days => `predpisov do ${days} dní`,
-    attention: "Vyžaduje vašu pozornosť",
-    news: "Novinky v knižnici",
     empty: {
       attentionTitle: "Nič od vás nikto nečaká",
       attentionText: "Keď vám niekto pridelí normu alebo vás určí schvaľovateľom, objaví sa to tu aj s termínom.",
-      newsTitle: days => `Za posledných ${days} dní nič nové`,
-      newsText: "Nové znenia a tie, ktorým sa blíži koniec platnosti, sa ukážu tu.",
     },
     showAll: n => `Zobraziť všetkých ${n} →`,
-    wholeLibrary: "Celá knižnica →",
-    available: {
-      heading: "Čo máte k dispozícii",
-      library: "Knižnica",
-      sources: "Ďalšie zdroje",
-      emptyLibraryTitle: "V knižnici zatiaľ nič nie je",
-      emptyLibraryText: "Zverejnené normy a dokumenty organizácie sa ukážu tu.",
-      emptySourcesTitle: "Žiadne ďalšie zdroje",
-      emptySourcesText: "Legislatíva zo Slov-Lexu a pripojené systémy, z ktorých asistent odpovedá, sa ukážu tu.",
-      kindLaw: "Legislatíva SR",
-      kindConnector: "pripojený systém",
-      actEffective: date => `znenie účinné od ${date}`,
-      actsCount: n => `${n} ${n === 1 ? "predpis" : n < 5 ? "predpisy" : "predpisov"}`,
-      ask: "Opýtať sa",
-      askLibrary: "Opýtať sa knižnice →",
-      askAll: "Opýtať sa všetkých zdrojov →",
-      register: "Register zdrojov →",
-    },
     allTasks: "Všetky úlohy →",
-    forYou: "Pre vás",
     by: date => `do ${date}`,
-    until: date => `platí do ${date}`,
     expiringChip: "expiruje",
     open: "Otvoriť",
     decide: "Rozhodnúť",
@@ -8415,6 +8372,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       searchSubmit: "Hľadať",
       emptyFilter: "Žiadny dokument tomu nezodpovedá.",
       validFrom: date => `platí od ${date}`,
+      kindAll: "Všetky",
+      kindLaw: "Zákon",
     },
     flow: {
       heading: d => `Nové znenie od ${d}`,
@@ -11411,48 +11370,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     chosenOf: (chosen, total) => `Vybráno ${chosen} z ${total}`,
   },
   overview: {
+    tasksHeading: "Moje úkoly",
+    documentsHeading: "Dokumenty",
+    documentsAll: "Všechny dokumenty →",
+    emptyDocumentsTitle: "Zatím žádné dokumenty",
+    emptyDocumentsText: "Zveřejněné normy, směrnice a odebírané předpisy se ukážou tady.",
+    newChip: "nové",
+    kindLaw: "Zákon",
+    effectiveFromMeta: date => `znění od ${date}`,
+    ask: "Zeptat se",
     hello: name => `Dobrý den, ${name}`,
-    tiles: {
-      toAcknowledge: "K potvrzení",
-      toApprove: "Čeká na schválení",
-      new: "Nové",
-      expiring: "Expiruje",
-    },
-    soonNote: n => (n === 1 ? "1 spěchá" : `${n} spěchá`),
-    mine: "na mě",
-    newNote: days => `dokumentů za ${days} dní`,
-    expiringNote: days => `předpisů do ${days} dní`,
-    attention: "Vyžaduje vaši pozornost",
-    news: "Novinky v knihovně",
     empty: {
       attentionTitle: "Nikdo od vás nic nečeká",
       attentionText: "Když vám někdo přidělí normu nebo vás určí schvalovatelem, objeví se to tady i s termínem.",
-      newsTitle: days => `Za posledních ${days} dní nic nového`,
-      newsText: "Nová znění a ta, kterým se blíží konec platnosti, se ukážou tady.",
     },
     showAll: n => `Zobrazit všech ${n} →`,
-    wholeLibrary: "Celá knihovna →",
-    available: {
-      heading: "Co máte k dispozici",
-      library: "Knihovna",
-      sources: "Další zdroje",
-      emptyLibraryTitle: "V knihovně zatím nic není",
-      emptyLibraryText: "Zveřejněné normy a dokumenty organizace se ukážou zde.",
-      emptySourcesTitle: "Žádné další zdroje",
-      emptySourcesText: "Legislativa ze Slov-Lexu a připojené systémy, z nichž asistent odpovídá, se ukážou zde.",
-      kindLaw: "Legislativa SR",
-      kindConnector: "připojený systém",
-      actEffective: date => `znění účinné od ${date}`,
-      actsCount: n => `${n} ${n === 1 ? "předpis" : n < 5 ? "předpisy" : "předpisů"}`,
-      ask: "Zeptat se",
-      askLibrary: "Zeptat se knihovny →",
-      askAll: "Zeptat se všech zdrojů →",
-      register: "Registr zdrojů →",
-    },
     allTasks: "Všechny úkoly →",
-    forYou: "Pro vás",
     by: date => `do ${date}`,
-    until: date => `platí do ${date}`,
     expiringChip: "expiruje",
     open: "Otevřít",
     decide: "Rozhodnout",
@@ -13650,6 +13584,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       searchSubmit: "Hledat",
       emptyFilter: "Žádný dokument tomu neodpovídá.",
       validFrom: date => `platí od ${date}`,
+      kindAll: "Vše",
+      kindLaw: "Zákon",
     },
     flow: {
       heading: d => `Nové znění od ${d}`,
@@ -16637,48 +16573,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     chosenOf: (chosen, total) => `${chosen} of ${total} selected`,
   },
   overview: {
+    tasksHeading: "My tasks",
+    documentsHeading: "Documents",
+    documentsAll: "All documents →",
+    emptyDocumentsTitle: "No documents yet",
+    emptyDocumentsText: "Published rules, directives and subscribed acts will appear here.",
+    newChip: "new",
+    kindLaw: "Act",
+    effectiveFromMeta: date => `version from ${date}`,
+    ask: "Ask",
     hello: name => `Hello, ${name}`,
-    tiles: {
-      toAcknowledge: "To acknowledge",
-      toApprove: "Waiting for approval",
-      new: "New",
-      expiring: "Expiring",
-    },
-    soonNote: n => (n === 1 ? "1 urgent" : `${n} urgent`),
-    mine: "for you",
-    newNote: days => `documents in ${days} days`,
-    expiringNote: days => `rules within ${days} days`,
-    attention: "Needs your attention",
-    news: "New in the library",
     empty: {
       attentionTitle: "Nobody is waiting on you",
       attentionText: "When someone assigns you a document or names you an approver, it will appear here with its deadline.",
-      newsTitle: days => `Nothing new in the last ${days} days`,
-      newsText: "New versions and those approaching the end of their validity will show up here.",
     },
     showAll: n => `Show all ${n} →`,
-    wholeLibrary: "Whole library →",
-    available: {
-      heading: "What you have available",
-      library: "Library",
-      sources: "Other sources",
-      emptyLibraryTitle: "Nothing in the library yet",
-      emptyLibraryText: "Published regulations and documents of the organisation will appear here.",
-      emptySourcesTitle: "No other sources",
-      emptySourcesText: "Legislation from Slov-Lex and connected systems the assistant answers from will appear here.",
-      kindLaw: "Slovak legislation",
-      kindConnector: "connected system",
-      actEffective: date => `version effective from ${date}`,
-      actsCount: n => `${n} ${n === 1 ? "act" : "acts"}`,
-      ask: "Ask",
-      askLibrary: "Ask the library →",
-      askAll: "Ask all sources →",
-      register: "Sources register →",
-    },
     allTasks: "All tasks →",
-    forYou: "For you",
     by: date => `by ${date}`,
-    until: date => `valid until ${date}`,
     expiringChip: "expiring",
     open: "Open",
     decide: "Decide",
@@ -18876,6 +18787,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       searchSubmit: "Search",
       emptyFilter: "No document matches.",
       validFrom: date => `in force from ${date}`,
+      kindAll: "All",
+      kindLaw: "Act",
     },
     flow: {
       heading: d => `New version from ${d}`,
