@@ -1292,7 +1292,26 @@ interface Dictionary {
     newChip: string
     kindLaw: string
     effectiveFromMeta: (date: string) => string
-    ask: string
+    /** Prehľad podľa návrhu PREHLAD-ulohy-a-dokumenty (26. 10. 2026). */
+    overdueCount: (n: number) => string
+    taskAcknowledge: string
+    taskDecide: string
+    trackStep: (order: number, total: number) => string
+    groupOver: string
+    groupSoon: string
+    groupRest: string
+    groupDecide: string
+    findLabel: string
+    findPlaceholder: string
+    findSubmit: string
+    kindAll: string
+    kindsLabel: string
+    noResults: (q: string) => string
+    noResultsInKind: (kind: string, q: string) => string
+    otherKinds: (n: number) => string
+    searchAllKinds: string
+    titlesOnly: string
+    askContent: (q: string) => string
     hello: (name: string) => string
     /** Prázdny panel — dva riadky: čo tu nie je a čo z toho vyplýva (PREHLAD, úloha 1). */
     empty: {
@@ -1304,8 +1323,6 @@ interface Dictionary {
     allTasks: string
     by: (date: string) => string
     expiringChip: string
-    open: string
-    decide: string
     submittedBy: (who: string) => string
   }
 
@@ -6157,7 +6174,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     newChip: "nové",
     kindLaw: "Zákon",
     effectiveFromMeta: date => `znenie účinné od ${date}`,
-    ask: "Opýtať sa",
+    overdueCount: n => `z toho ${n} po termíne`,
+    taskAcknowledge: "Prečítať a potvrdiť",
+    taskDecide: "Schváliť alebo zamietnuť",
+    trackStep: (order, total) => `krok ${order} z ${total}`,
+    groupOver: "Po termíne",
+    groupSoon: "Blíži sa termín",
+    groupRest: "Ďalšie",
+    groupDecide: "Na rozhodnutie",
+    findLabel: "Hľadať v dokumentoch",
+    findPlaceholder: "Hľadať v dokumentoch",
+    findSubmit: "Hľadať",
+    kindAll: "Všetky",
+    kindsLabel: "Druh dokumentu",
+    noResults: q => `Pre „${q}" sa nič nenašlo`,
+    noResultsInKind: (kind, q) => q ? `V druhu ${kind} nič pre „${q}"` : `V druhu ${kind} nič nie je`,
+    otherKinds: n => n === 1 ? "V iných druhoch je 1 dokument." : n < 5 ? `V iných druhoch sú ${n} dokumenty.` : `V iných druhoch je ${n} dokumentov.`,
+    searchAllKinds: "Hľadať vo všetkých druhoch",
+    titlesOnly: "Hľadá sa v názvoch.",
+    askContent: q => `Opýtať sa na „${q}" v obsahu →`,
     hello: name => `Dobrý deň, ${name}`,
     empty: {
       attentionTitle: "Nič od vás nikto nečaká",
@@ -6167,8 +6202,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     allTasks: "Všetky úlohy →",
     by: date => `do ${date}`,
     expiringChip: "expiruje",
-    open: "Otvoriť",
-    decide: "Rozhodnúť",
     submittedBy: who => `predložil ${who}`,
   },
   evidence: {
@@ -11370,7 +11403,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     newChip: "nové",
     kindLaw: "Zákon",
     effectiveFromMeta: date => `znění účinné od ${date}`,
-    ask: "Zeptat se",
+    overdueCount: n => `z toho ${n} po termínu`,
+    taskAcknowledge: "Přečíst a potvrdit",
+    taskDecide: "Schválit nebo zamítnout",
+    trackStep: (order, total) => `krok ${order} z ${total}`,
+    groupOver: "Po termínu",
+    groupSoon: "Blíží se termín",
+    groupRest: "Další",
+    groupDecide: "K rozhodnutí",
+    findLabel: "Hledat v dokumentech",
+    findPlaceholder: "Hledat v dokumentech",
+    findSubmit: "Hledat",
+    kindAll: "Vše",
+    kindsLabel: "Druh dokumentu",
+    noResults: q => `Pro „${q}" se nic nenašlo`,
+    noResultsInKind: (kind, q) => q ? `V druhu ${kind} nic pro „${q}"` : `V druhu ${kind} nic není`,
+    otherKinds: n => n === 1 ? "V jiných druzích je 1 dokument." : n < 5 ? `V jiných druzích jsou ${n} dokumenty.` : `V jiných druzích je ${n} dokumentů.`,
+    searchAllKinds: "Hledat ve všech druzích",
+    titlesOnly: "Hledá se v názvech.",
+    askContent: q => `Zeptat se na „${q}" v obsahu →`,
     hello: name => `Dobrý den, ${name}`,
     empty: {
       attentionTitle: "Nikdo od vás nic nečeká",
@@ -11380,8 +11431,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     allTasks: "Všechny úkoly →",
     by: date => `do ${date}`,
     expiringChip: "expiruje",
-    open: "Otevřít",
-    decide: "Rozhodnout",
     submittedBy: who => `předložil ${who}`,
   },
   evidence: {
@@ -16572,7 +16621,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     newChip: "new",
     kindLaw: "Act",
     effectiveFromMeta: date => `effective from ${date}`,
-    ask: "Ask",
+    overdueCount: n => `${n} overdue`,
+    taskAcknowledge: "Read and acknowledge",
+    taskDecide: "Approve or reject",
+    trackStep: (order, total) => `step ${order} of ${total}`,
+    groupOver: "Overdue",
+    groupSoon: "Due soon",
+    groupRest: "Other",
+    groupDecide: "To decide",
+    findLabel: "Search documents",
+    findPlaceholder: "Search documents",
+    findSubmit: "Search",
+    kindAll: "All",
+    kindsLabel: "Document type",
+    noResults: q => `Nothing found for “${q}”`,
+    noResultsInKind: (kind, q) => q ? `Nothing for “${q}” in ${kind}` : `Nothing in ${kind}`,
+    otherKinds: n => n === 1 ? "1 document in other types." : `${n} documents in other types.`,
+    searchAllKinds: "Search all types",
+    titlesOnly: "Titles are searched.",
+    askContent: q => `Ask about “${q}” in the content →`,
     hello: name => `Hello, ${name}`,
     empty: {
       attentionTitle: "Nobody is waiting on you",
@@ -16582,8 +16649,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     allTasks: "All tasks →",
     by: date => `by ${date}`,
     expiringChip: "expiring",
-    open: "Open",
-    decide: "Decide",
     submittedBy: who => `submitted by ${who}`,
   },
   evidence: {
