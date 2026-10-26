@@ -33,6 +33,15 @@ describe("plachta otázky so zdrojmi", () => {
     expect(html).not.toContain('name="src"')
     expect(html).toContain("Odpoveď sa skladá len z dokumentov SFZ.")
   })
+  it("dokument zúženia (D269): riadok doc aj bez živého zdroja, veta menuje dokument", () => {
+    const html = renderToString(createElement(AskSheet, {
+      mode: "inline", organisation: "SFZ", language: "sk", live: [], initialDocuments: [{ id: "sfz:stanovy", title: "Stanovy SFZ" }],
+    }))
+    expect(html).toContain('class="ask-scope ask-sheet-scope"')
+    expect(html).toContain("Zdroje: Stanovy SFZ ▾")
+    expect(html).toContain('type="checkbox" name="doc" checked="" value="sfz:stanovy"')
+    expect(html).toContain("Odpoveď sa skladá len z dokumentu Stanovy SFZ.")
+  })
   it("predvolený výber: Knižnica a „používať predvolene“", () => {
     expect(defaultScope([{ id: "c1", defaultOn: true }, { id: "c2", defaultOn: false }])).toEqual(["library", "c1"])
   })

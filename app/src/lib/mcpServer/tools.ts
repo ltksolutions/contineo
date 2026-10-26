@@ -33,6 +33,7 @@ import { SLOV_LEX_SOURCE_ID } from "../lawCatalog"
 import { AppError } from "../appError"
 import type { OAuthScope } from "../oauthServer"
 import { askOnce } from "./ask"
+import { MAX_SCOPE_DOCUMENTS } from "../askScope"
 import { sourcesFor, pickSources, unknownSourcesMessage, LIBRARY_SOURCE_ID, type McpSource } from "./sources"
 import { lawActsFor, lawActText, lawActMarkdown } from "./law"
 import type { SearchCaps } from "./access"
@@ -450,9 +451,10 @@ export function registerTools(server: McpServer, actor: McpActor): void {
         question: z.string().min(3).max(1000).describe("The question, in the person's language."),
         sources: z.array(z.string().max(100)).max(10).optional().describe('Source ids from list_sources to answer from, e.g. ["library", "slov-lex"]. Default: ["library"].'),
         includeLiveSources: z.boolean().optional().describe("Deprecated — use sources. true = the library and every available source."),
+        documentIds: z.array(z.string().min(1).max(200)).max(MAX_SCOPE_DOCUMENTS).optional().describe("Restrict the library to these documents (ids from list_documents or search_library); other sources are unaffected. Default: the whole library."),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },
-    }, guarded(actor, spec("ask"), async ({ question, sources, includeLiveSources }) => {
+    }, guarded(actor, spec("ask"), async ({ question, sources, includeLiveSources, documentIds }) => {
       const companyCode = actor.tenant.companyCode
       if (await questionsLastHour(companyCode, actor.person.id) >= ASK_PER_HOUR) {
         return failure(`Hourly limit of ${ASK_PER_HOUR} questions reached; try again later.`)
@@ -461,14 +463,27 @@ export function registerTools(server: McpServer, actor: McpActor): void {
       const fallback = includeLiveSources ? available.map(s => s.id) : [LIBRARY_SOURCE_ID]
       const { picked, unknown } = pickSources(sources, available, fallback)
       if (unknown.length) return failure(unknownSourcesMessage(unknown, available))
+      // Zúženie knižnice na dokumenty (ADR-029 D269): len tie, ktoré osoba
+      // vidí — neviditeľný je chyba volania, nie tichý prázdny výsledok.
+      const askedDocs = [...new Set((documentIds ?? []).map(d => d.trim()).filter(Boolean))]
+      let scopeDocs: { id: string; title: string }[] = []
+      if (askedDocs.length) {
+        const visible = visibleRows(await libraryList(companyCode), { accessLevel: actor.accessLevel, roles: [] }, false)
+        scopeDocs = askedDocs.map(id => visible.find(r => r.documentId === id)).filter(r => r !== undefined).map(r => ({ id: r.documentId, title: r.title }))
+        const missing = askedDocs.filter(id => !scopeDocs.some(d => d.id === id))
+        if (missing.length) return failure(`Unknown or unavailable document(s): ${missing.join(", ")}. Use list_documents.`)
+      }
+      const library = picked.some(s => s.id === LIBRARY_SOURCE_ID)
       const outcome = await askOnce({
         companyCode, query: question.trim(), language: actor.person.language, accessLevel: actor.accessLevel,
         usageActor: { companyCode, personId: actor.person.id, personName: actor.person.fullName, email: actor.person.email },
         only: picked.map(s => s.id),
+        documentIds: library && scopeDocs.length ? scopeDocs.map(d => d.id) : undefined,
         callbackUrl: "",
       }, undefined, {
-        library: picked.some(s => s.id === LIBRARY_SOURCE_ID),
+        library,
         live: picked.filter(s => s.id !== LIBRARY_SOURCE_ID).map(s => s.name),
+        ...(library && scopeDocs.length ? { documents: scopeDocs.map(d => d.title) } : {}),
       })
       if (outcome.error) return failure(outcome.error === "timeout" ? "The answer took too long." : outcome.error)
       if (!outcome.answer.trim()) {
@@ -484,6 +499,7 @@ export function registerTools(server: McpServer, actor: McpActor): void {
       return text(`${outcome.answer.trim()}\n\nSources:\n${list}`, {
         answer: outcome.answer.trim(), sources: cited, asOf: outcome.asOf ?? null, model: outcome.model,
         liveFailed: outcome.liveFailed ?? [], recordedId: outcome.recordedId ?? null, searched: picked.map(s => s.id),
+        searchedDocuments: scopeDocs.map(d => d.id),
       })
     }))
   }

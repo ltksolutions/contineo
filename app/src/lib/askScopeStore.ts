@@ -8,7 +8,19 @@
  * výber (Q3 A). Nič sa neukladá — žije len v otvorenej karte.
  */
 
-let current: string[] | null = null
+import type { AskScopeDocument } from "./askScope"
 
-export function setAskScope(ids: string[] | null) { current = ids ? [...ids] : null }
-export function askScope(): string[] | null { return current ? [...current] : null }
+/** Výber zdrojov a dokumenty zúženia knižnice (`?doc=`, D269). */
+export interface AskScopeState {
+  ids: string[]
+  documents: AskScopeDocument[]
+}
+
+let current: AskScopeState | null = null
+
+export function setAskScope(scope: AskScopeState | null) {
+  current = scope ? { ids: [...scope.ids], documents: scope.documents.map(d => ({ ...d })) } : null
+}
+export function askScope(): AskScopeState | null {
+  return current ? { ids: [...current.ids], documents: current.documents.map(d => ({ ...d })) } : null
+}

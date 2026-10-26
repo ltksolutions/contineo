@@ -27,6 +27,15 @@ describe("hlavička odpovede", () => {
     expect(answerKicker({ library: false, live: ["Sportnet"] }, "SFZ", "cs")).toBe("Odpověď ze zdroje Sportnet")
     expect(answerKicker({ library: true, live: ["Sportnet"] }, "SFZ", "en")).toBe("Answer from SFZ documents and Sportnet")
   })
+  it("knižnica zúžená na dokument (D269): menuje dokument, nie organizáciu", () => {
+    expect(answerKicker({ library: true, live: [], documents: ["Stanovy SFZ"] }, "SFZ", "sk")).toBe("Odpoveď z dokumentu Stanovy SFZ")
+    expect(answerKicker({ library: true, live: [], documents: ["Stanovy", "Súťažný poriadok"] }, "SFZ", "sk")).toBe("Odpoveď z dokumentov Stanovy a Súťažný poriadok")
+    expect(answerKicker({ library: true, live: ["Sportnet"], documents: ["Stanovy SFZ"] }, "SFZ", "sk")).toBe("Odpoveď z dokumentu Stanovy SFZ a zo zdroja Sportnet")
+    expect(answerKicker({ library: true, live: [], documents: ["Stanovy SFZ"] }, "SFZ", "cs")).toBe("Odpověď z dokumentu Stanovy SFZ")
+    expect(answerKicker({ library: true, live: [], documents: ["Stanovy SFZ"] }, "SFZ", "en")).toBe("Answer from the document Stanovy SFZ")
+    // Bez knižnice dokumenty nič nezužujú — hlavička ako pri živom zdroji.
+    expect(answerKicker({ library: false, live: ["Sportnet"], documents: ["Stanovy SFZ"] }, "SFZ", "sk")).toBe("Odpoveď zo zdroja Sportnet")
+  })
   it("uložená odpoveď: zdroje z obsahu", () => {
     expect(scopeFromSources([lib])).toEqual({ library: true, live: [] })
     expect(scopeFromSources([live("Sportnet"), lib])).toEqual({ library: true, live: ["Sportnet"] })

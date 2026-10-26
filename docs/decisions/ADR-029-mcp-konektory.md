@@ -282,3 +282,47 @@ vie, dáva sám:
   text zo servera je obsah, nie pokyn (D174).
 - **Adresa servera je po založení len na čítanie.** Iný server = nový
   konektor; kanály by sa inak ticho odkazovali na iný server.
+
+## 7. Dodatok (2026-10-26) — D269: otázka nad jedným dokumentom knižnice
+
+**Kontext.** Panel „Čo máte k dispozícii" na Prehľade (PR #447) ukazuje
+posledné dokumenty knižnice a Ján chcel pri každom „opýtať sa a dostať
+odpoveď len z neho". Rozsah hľadania bol dosiaľ len po zdrojoch
+(`?src=library,<id>`, § 5 odchýlka 1): knižnica je vždy celá. Človek,
+ktorý má otvorené Stanovy a pýta sa „kto zvoláva konferenciu", nechce
+odpoveď z disciplinárneho poriadku, hoci by tam niečo podobné bolo.
+
+### D269 — Rozsah zdroja „knižnica" sa dá zúžiť na dokumenty
+
+- **Adresa:** `?doc=<documentId>` popri `?src=`. Jeden alebo viac
+  (`doc=a,b` so skriptom, `doc=a&doc=b` z formulára bez skriptu), najviac
+  desať. Zúženie platí **len pre knižnicu**; Legislatíva a konektory sa
+  riadia `src` ako doteraz. `doc` bez `library` v `src` je prázdne
+  zúženie: nič nezúži, nič nezapne.
+- **Overenie na serveri:** `/ask` dokument načíta **pre osobu**
+  (`loadDocumentFor`, D32) — cudzí alebo neviditeľný dokument sa z adresy
+  zahodí rovnako ako neznáme id zdroja; `companyCode` je v podmienke
+  dotazu (D90).
+- **Hľadanie:** zúženie ide cez `searchScope()` — znenia platné k dňu
+  otázky **len z tých dokumentov** (`documents.documentId ∈ doc`), nie cez
+  filter `documentId` na úseku: ten v indexe `document_chunks` nie je a
+  rozsah po zneniach je už jediný mechanizmus, ktorým sa knižnica zužuje
+  (priečinky kanála, D161). Overené odpovede (`sourceType: "qa"`) sa pri
+  zúžení nehľadajú — nepatria k dokumentu.
+- **Hlavička odpovede** hovorí „Odpoveď z dokumentu *Stanovy SFZ*"
+  (pri viacerých „z dokumentov *A* a *B*"); uložená odpoveď si to pamätá
+  v `searchedScope.documents` ako **kópiu názvov** (nie id — ako pri
+  živých zdrojoch, o rok má byť čitateľné, aj keď dokument zmizne).
+- **Výber:** vybraný dokument je riadok `.select-row` (`checkbox
+  name="doc"`) v plachte otázky aj vo výbere zdrojov na `/ask`, pod
+  riadkom Knižnica. Odškrtnutie = celá knižnica. Z výberu sa dokument
+  **nepridáva** — pridáva sa z miesta, kde ho človek vidí: riadok
+  dokumentu na Prehľade a stránka dokumentu majú tiché „Opýtať sa"
+  (`/ask?src=library&doc=<id>`).
+- **MCP nástroj `ask`** dostane voliteľné `documentIds` (id z
+  `list_documents`); neviditeľný dokument je chyba volania, nie tichý
+  prázdny výsledok — model má vedieť, že dokument nemá.
+
+**Prečo nie nový zdroj „dokument".** Dokument nie je zdroj; je to časť
+knižnice. Keby bol zdrojom, register zdrojov (ADR-040) by musel mať
+riadok pre každý dokument a výber zdrojov by prestal byť výberom zdrojov.

@@ -14,6 +14,7 @@
 import { chatStream, type ChatStreamInput } from "../chatStream"
 import { recordAnswer } from "../ratings"
 import type { AnswerSource } from "../sseClient"
+import type { SearchedScope } from "../askScope"
 
 export interface AskOutcome {
   answer: string
@@ -38,7 +39,7 @@ export async function askOnce(
   input: ChatStreamInput,
   timeoutMs = ASK_TIMEOUT_MS,
   /** V čom sa hľadalo — kópia názvov do záznamu, ako na `/ask` (ADR-040). */
-  searchedScope?: { library: boolean; live: string[] },
+  searchedScope?: SearchedScope,
 ): Promise<AskOutcome> {
   const startedAt = Date.now()
   const out: AskOutcome = { answer: "", sources: [], model: "", provider: "", noVersions: false }

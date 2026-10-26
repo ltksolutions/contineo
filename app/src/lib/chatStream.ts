@@ -55,6 +55,12 @@ export interface ChatStreamInput {
    * alebo chýbajúce = všetko, na čo má človek právo.
    */
   only?: string[]
+  /**
+   * Zúženie knižnice na dokumenty (`?doc=`, ADR-029 D269): hľadá sa len
+   * v ich zneniach platných k dňu otázky. Živé zdroje a Legislatíva sa
+   * riadia `only`. Prázdne = celá knižnica.
+   */
+  documentIds?: string[]
   /** Adresa návratu pre OAuth konektora (`connectorCallbackUrl()`); prázdna mimo požiadavky. */
   callbackUrl?: string
   /** Kanál, z ktorého otázka prišla — do stopy volania konektora (D177). */
@@ -148,7 +154,11 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
         // Znenia platné dnes — raz na otázku, zdieľa ich aj rozklad na
         // podotázky. Otázku k inému dňu rozpozná až krok 6 plánu „znenia
         // v indexe"; dovtedy je to vždy dnešok.
-        const scope = await searchScope(companyCode, searchInstant(time, now), now, narrow)
+        const documentIds = input.documentIds?.filter(Boolean) ?? []
+        const scope = await searchScope(
+          companyCode, searchInstant(time, now), now,
+          documentIds.length ? { ...narrow, documentIds } : narrow,
+        )
         measure("znenia")
         const collection = await getCollection("document_chunks")
         // Anotacia je nutna: bez nej TypeScript rozsiri accessLevel na `string`

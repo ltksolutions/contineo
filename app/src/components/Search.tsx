@@ -14,7 +14,7 @@
  * otázku" otvorí jej plachtu.
  */
 
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type SyntheticEvent } from "react"
+import { Fragment, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type SyntheticEvent } from "react"
 import Link from "next/link"
 import { askQuestion } from "@/lib/sseClient"
 import type { AskResult } from "@/lib/sseClient"
@@ -28,10 +28,19 @@ import { HEADER_ASK_ID } from "./HeaderAsk"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { answerFrom } from "@/lib/answerKicker"
 import { setAskScope } from "@/lib/askScopeStore"
+import type { AskScopeDocument } from "@/lib/askScope"
 
-/** Id zdrojov → knižnica a názvy živých zdrojov (hlavička, oznam, uložený záznam). */
-function scopeOf(ids: string[], liveSources: { id: string; name: string }[] | undefined) {
-  return { library: ids.includes("library"), live: (liveSources ?? []).filter(l => ids.includes(l.id)).map(l => l.name) }
+/**
+ * Id zdrojov → knižnica, názvy živých zdrojov a názvy dokumentov zúženia
+ * (hlavička, oznam, uložený záznam). Dokumenty len s knižnicou (D269).
+ */
+function scopeOf(ids: string[], liveSources: { id: string; name: string }[] | undefined, documents: AskScopeDocument[] = []) {
+  const library = ids.includes("library")
+  return {
+    library,
+    live: (liveSources ?? []).filter(l => ids.includes(l.id)).map(l => l.name),
+    ...(library && documents.length ? { documents: documents.map(d => d.title) } : {}),
+  }
 }
 
 const EMPTY: AnswerState = {
@@ -45,6 +54,7 @@ export default function Search({
   language,
   liveSources,
   initialScope,
+  documents,
 }: {
   /**
    * Otázka z adresy — položená v hlavičke. Číta sa len pri pripojení
@@ -68,6 +78,11 @@ export default function Search({
   liveSources?: { id: string; name: string; defaultOn?: boolean }[]
   /** Rozsah z adresy (`?src=`); prázdny = knižnica a zdroje s „používať predvolene". */
   initialScope?: string[]
+  /**
+   * Knižnica zúžená na dokumenty (`?doc=`, ADR-029 D269) — overené pre
+   * osobu na serveri. Riadok vo výbere; odškrtnutie = celá knižnica.
+   */
+  documents?: AskScopeDocument[]
 }) {
   const t = dictionary(language).ask
   const [state, setState] = useState<AnswerState>(EMPTY)
@@ -83,6 +98,11 @@ export default function Search({
   const initial = initialScope?.length ? initialScope : ["library", ...(liveSources ?? []).filter(l => l.defaultOn).map(l => l.id)]
   const [pending, setPending] = useState<string[]>(initial)
   const [askedScope, setAskedScope] = useState<string[]>(initial)
+  // Dokumenty zúženia (D269): rovnaké dva stavy ako zdroje — výber a to, s čím sa pýtalo.
+  const docsAll = documents ?? []
+  const [pendingDocs, setPendingDocs] = useState<string[]>(docsAll.map(d => d.id))
+  const [askedDocs, setAskedDocs] = useState<string[]>(docsAll.map(d => d.id))
+  const docsOf = (ids: string[]) => docsAll.filter(d => ids.includes(d.id))
   const [open, setOpen] = useState(false)
   const scopeRef = useRef<HTMLDetailsElement>(null)
   /** Kedy sa beh spustil — „Opýtali ste sa o 10:42". Len v prehliadači. */
@@ -97,7 +117,7 @@ export default function Search({
    * spočítať aj z neposúdených odpovedí. Keby sa záznam zakladal až pri
    * kliknutí na hodnotenie, prišli by sme o dáta z každej preskočenej otázky.
    */
-  async function record(q: string, v: AskResult, scope: string[]) {
+  async function record(q: string, v: AskResult, scope: string[], docIds: string[]) {
     try {
       const r = await fetch("/api/rating", {
         method: "POST",
@@ -116,7 +136,7 @@ export default function Search({
           ttftMs: v.ttftMs, totalMs: v.totalMs, timings: v.timings,
           tokens: v.tokens, cost: v.cost, time: v.time,
           // V čom sa hľadalo — uložená odpoveď ho menuje rovnako ako táto (Q3, A 23. 10.).
-          searchedScope: scopeOf(scope, liveSources),
+          searchedScope: scopeOf(scope, liveSources, docsOf(docIds)),
         }),
       })
       if (!r.ok) return
@@ -137,10 +157,11 @@ export default function Search({
     }
   }
 
-  async function send(text: string, scope: string[] = askedScope) {
+  async function send(text: string, scope: string[] = askedScope, docIds: string[] = askedDocs) {
     const q = text.trim()
     if (!q) return
     setAskedScope(scope)
+    setAskedDocs(docIds)
 
     abort.current?.abort()
     const ctrl = new AbortController()
@@ -154,10 +175,10 @@ export default function Search({
       const v = await askQuestion(
         q,
         p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase, time: p.time, comparison: p.comparison })),
-        { signal: ctrl.signal, language, only: scope }
+        { signal: ctrl.signal, language, only: scope, documentIds: scope.includes("library") && docIds.length ? docIds : undefined }
       )
       setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined, time: v.time, comparison: v.comparison })
-      if (!v.error && v.text) void record(q, v, scope)
+      if (!v.error && v.text) void record(q, v, scope, docIds)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.
       if ((e as Error)?.name === "AbortError") return
@@ -197,9 +218,14 @@ export default function Search({
   const sameScope = (a: string[], b: string[]) => a.length === b.length && a.every(x => b.includes(x))
   // Zdroje sa menujú, neskrývajú za „všetky" ani „2 z 3" — má byť jasné,
   // v čom sa hľadá (Ján 23. 10. 2026).
-  const scopeValue = pending.length === 0 ? t.scopeNone : pending.map(sourceName).join(", ")
+  // Zúžená knižnica sa menuje dokumentom, nie slovom „Knižnica" (D269).
+  const pendingDocsOn = pending.includes("library") ? docsOf(pendingDocs) : []
+  const scopeValue = pending.length === 0
+    ? t.scopeNone
+    : pending.map(id => (id === "library" && pendingDocsOn.length ? pendingDocsOn.map(d => d.title).join(", ") : sourceName(id))).join(", ")
   const togglePending = (id: string) =>
     setPending(p => scopeIds.filter(x => (x === id ? !p.includes(x) : p.includes(x))))
+  const toggleDoc = (id: string) => setPendingDocs(p => (p.includes(id) ? p.filter(x => x !== id) : [...p, id]))
   const reask = () => {
     if (pending.length === 0) return
     setOpen(false)
@@ -209,17 +235,21 @@ export default function Search({
       u.search = ""
       u.searchParams.set("q", preset)
       u.searchParams.set("src", pending.join(","))
+      if (pendingDocsOn.length) u.searchParams.set("doc", pendingDocsOn.map(d => d.id).join(","))
       window.history.replaceState(null, "", u.toString())
     } catch { /* bez adresy sa dá žiť — rozsah je v stave */ }
-    void send(preset, pending)
+    void send(preset, pending, pendingDocs)
   }
-  const scopeChanged = !open && !state.running && pending.length > 0 && !sameScope(pending, askedScope)
+  const askedDocsOn = askedScope.includes("library") ? docsOf(askedDocs) : []
+  const scopeChanged = !open && !state.running && pending.length > 0
+    && (!sameScope(pending, askedScope) || !sameScope(pendingDocsOn.map(d => d.id), askedDocsOn.map(d => d.id)))
 
   // „Upraviť otázku" otvorí plachtu v hlavičke s týmto výberom (ASK-zdroje-v-plachte, bod 8).
   useEffect(() => {
-    setAskScope(liveSources?.length ? pending : null)
+    const docs = pending.includes("library") ? (documents ?? []).filter(d => pendingDocs.includes(d.id)) : []
+    setAskScope(liveSources?.length || documents?.length ? { ids: pending, documents: docs } : null)
     return () => setAskScope(null)
-  }, [pending, liveSources])
+  }, [pending, pendingDocs, liveSources, documents])
 
   // Esc zavrie plachtu a vráti fokus na tlačidlo; od 640 px ju zavrie aj
   // klik mimo nej (popover nemá závoj).
@@ -317,7 +347,7 @@ export default function Search({
           (`.ask-scope-pop`). Bez JavaScriptu je to `<details>` + GET
           formulár, ktorý odošle `q` a `src`. Počas písania sa výber nemení.
         */}
-        {liveSources && liveSources.length > 0 && (state.running ? (
+        {((liveSources && liveSources.length > 0) || docsAll.length > 0) && (state.running ? (
           <div className="ask-scope">
             <button type="button" className="button button--quiet button--sm" disabled>{`${t.scopeButton(scopeValue)} ▾`}</button>
           </div>
@@ -344,13 +374,25 @@ export default function Search({
                 <div className="card form-group-body form-group-body--rows">
                   <div className="form-list">
                     {scopeIds.map(id => (
-                      <label key={id} className="form-row select-row">
-                        <input type="checkbox" name="src" value={id} checked={pending.includes(id)} onChange={() => togglePending(id)} />
-                        <span className="form-row-main">
-                          <span>{sourceName(id)}</span>
-                          <span className="form-row-sub">{id === "library" ? t.scopeLibrarySub : id === "slov-lex" ? t.scopeLawSub : t.scopeLiveSub}</span>
-                        </span>
-                      </label>
+                      <Fragment key={id}>
+                        <label className="form-row select-row">
+                          <input type="checkbox" name="src" value={id} checked={pending.includes(id)} onChange={() => togglePending(id)} />
+                          <span className="form-row-main">
+                            <span>{sourceName(id)}</span>
+                            <span className="form-row-sub">{id === "library" ? t.scopeLibrarySub : id === "slov-lex" ? t.scopeLawSub : t.scopeLiveSub}</span>
+                          </span>
+                        </label>
+                        {/* Dokumenty zúženia pod Knižnicou (D269); bez nej sa riadok neodošle. */}
+                        {id === "library" && pending.includes("library") && docsAll.map(d => (
+                          <label key={d.id} className="form-row select-row">
+                            <input type="checkbox" name="doc" value={d.id} checked={pendingDocs.includes(d.id)} onChange={() => toggleDoc(d.id)} />
+                            <span className="form-row-main">
+                              <span>{d.title}</span>
+                              <span className="form-row-sub">{t.scopeDocumentSub}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </Fragment>
                     ))}
                   </div>
                 </div>
@@ -388,12 +430,12 @@ export default function Search({
       {scopeChanged && (
         <div className="lnote lnote--info lnote--action ask-scope-note" role="status">
           <span className="lnote-mark" aria-hidden="true">!</span>
-          <span className="lnote-text">{t.scopeChanged(answerFrom(scopeOf(askedScope, liveSources), organisation, language), askedScope.length === 1)}</span>
+          <span className="lnote-text">{t.scopeChanged(answerFrom(scopeOf(askedScope, liveSources, askedDocsOn), organisation, language), askedScope.length === 1)}</span>
           <button type="button" className="button button--sm" onClick={reask}>{t.reask}</button>
         </div>
       )}
 
-      <AnswerBody state={state} organisation={organisation} language={language} scope={scopeOf(askedScope, liveSources)} />
+      <AnswerBody state={state} organisation={organisation} language={language} scope={scopeOf(askedScope, liveSources, askedDocsOn)} />
       </div>
 
       {/* Vpravo od karty (≥ 1180 px), inak pod ňou — poradie určuje CSS mriežka. */}
