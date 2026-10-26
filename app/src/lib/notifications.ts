@@ -81,6 +81,12 @@ export type NotificationKind =
   | "approvalCancelled"
   /** Z katalógu legislatívy prišlo nové znenie predpisu ako koncept (ADR-039 D260, D261) — správcom obsahu. */
   | "lawVersionDraft"
+  /**
+   * Správca osôb pridal alebo odobral roly (Ján 26. 10. 2026) — dotknutej
+   * osobe. Práva platia od ďalšieho kliknutia; bez správy by si človek len
+   * všimol, že mu pribudla alebo zmizla časť navigácie.
+   */
+  | "rolesChanged"
 
 export interface NotificationParams {
   documentId?: string
@@ -93,6 +99,10 @@ export interface NotificationParams {
   runId?: string
   /** Počet kontrolovaných dokumentov (`complianceDone`). */
   total?: number
+  /** Pridané roly (`rolesChanged`) — kľúče, nie popisy; popis sa skladá pri čítaní. */
+  added?: string[]
+  /** Odobrané roly (`rolesChanged`). */
+  removed?: string[]
 }
 
 export interface Notification {
@@ -139,6 +149,9 @@ export function notificationHref(
       return "/library/compliance#requests"
     case "complianceDone":
       return params.runId ? `/library/compliance/${encodeURIComponent(params.runId)}` : "/library/compliance"
+    case "rolesChanged":
+      // Nové práva nemajú jedno miesto — človek ich uvidí v navigácii.
+      return null
     case "complianceToApply":
       // Rovno na dokument a rozhodnuté nálezy — tam čaká „Zapísať do konceptu" (KNIZ-kontrola-suladu-detail).
       return params.runId

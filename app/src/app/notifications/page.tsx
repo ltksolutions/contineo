@@ -36,6 +36,15 @@ export const dynamic = "force-dynamic"
  * prázdny riadok — ukáže sa aspoň to, čoho sa týkal. Prázdny riadok v zozname
  * vyzerá ako chyba vykreslenia, nie ako stará udalosť.
  */
+/**
+ * Krátky názov roly: v slovníku je „dpo — zodpovedná osoba: …", do vety
+ * patrí len časť pred pomlčkou. Neznámy kľúč ostane kľúčom.
+ */
+function roleNames(language: UiLanguage, keys: string[] | undefined): string[] {
+  const names = dictionary(language).people.roles as Record<string, string>
+  return (keys ?? []).map(k => (names[k] ?? k).split(" — ")[0].trim())
+}
+
 function sentence(language: UiLanguage, kind: string, params: NotificationParams): string {
   const t = dictionary(language).notifications.kinds
   const title = params.documentTitle ?? params.documentId ?? ""
@@ -52,6 +61,7 @@ function sentence(language: UiLanguage, kind: string, params: NotificationParams
     case "complianceRequested": return t.complianceRequested(title, params.versionLabel ?? "", params.count ?? 0)
     case "approvalCancelled": return t.approvalCancelled(title)
     case "lawVersionDraft": return t.lawVersionDraft(title, params.versionLabel ?? "")
+    case "rolesChanged": return t.rolesChanged(roleNames(language, params.added), roleNames(language, params.removed))
     default: return title || kind
   }
 }
