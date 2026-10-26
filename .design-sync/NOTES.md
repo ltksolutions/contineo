@@ -102,3 +102,20 @@ k návrhovému projektu „Contineo.app responzivny design".
   vo vstavanom prehliadači: pás „synced from code", obálka, farby v oboch
   témach s kontrastom, živé náhľady všetkých 12 komponentov (spodné sa
   načítajú až pri posunutí).
+
+## PREHLAD-ulohy-a-dokumenty (26. 10. 2026)
+- Do `globals.css` a `conventions.md` pribudli `.view-switch--scroll`,
+  `a.panel-row.panel-row--link` + `.panel-chevron`, `.panel-group` (+ `--bad`)
+  a `.task-icon` (+ `--bad`, `--soon`, `--decide`). Komponenty knižnice sa
+  nezmenili (13, náhľady tie isté).
+- `LiveFilter` (hľadanie počas písania) **nie je** v balíku — je v aplikácii
+  mimo `design-sync.entry.ts` (používa `next/navigation`). V `conventions.md`
+  preto stojí `SearchStrip` vo `<form method="get">`.
+- **Artefakt aktualizovaný** (verzia 13), **projekt Claude Design nie**:
+  `DesignSync` v neinteraktívnej session odmietol prístup — treba
+  `/design-login` v interaktívnom `claude` v Termináli a potom nahrať
+  (projekt má kotvu `_ds_sync.json` z 25. 10.; driver s `--remote` ukáže
+  zmenu len v `_ds_bundle.css`, `styles.css`-uzávere a `README.md`).
+- Pri tomto behu sa `.ds-sync/` inštaloval nanovo vo worktree (esbuild,
+  ts-morph, @types/react, playwright@1.63.0); `package-validate` prešiel
+  s render-checkom.

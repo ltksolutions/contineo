@@ -119,7 +119,7 @@ Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.
 - Zoznam, z ktorého sa vyberá (nie koná): `.card.panel` > `a.panel-row.panel-row--link` — **celý riadok je odkaz** na detail, vpravo `svg.panel-chevron` (šípka ›). V riadku `.panel-main` > `.panel-name` + `.panel-meta`, voliteľne `.due-chip` alebo `.tag` pred šípkou. Bez `.panel-action`: akcie sú na detaile.
 - Skupiny v jednom paneli: `div.panel-group` (nadpis skupiny, `--fs-micro`, podklad `--surface-2`); `.panel-group--bad` pre „Po termíne".
 - Úloha má vľavo `span.task-icon` (kruh 36 px s ikonou druhu úlohy): `--bad` po termíne, `--soon` blíži sa termín, `--decide` rozhodnutie. Farba nesie naliehavosť, nie druh. Pod 640 px ide termín úlohy pod text.
-- Hľadanie s rozsahmi: `LiveFilter` so `SearchStrip` a pod ním (od 1024 px vedľa) `nav.view-switch.view-switch--scroll` — rozsahy s počtom `.view-switch-count` **po hľadaní**; pri 5+ voľbách sa pás roluje vodorovne, neláme. Rozsah bez výsledku sa neukazuje, okrem zvoleného.
+- Hľadanie s rozsahmi: `SearchStrip` vo `<form method="get">` (aplikácia ho odosiela počas písania) a pod ním (od 1024 px vedľa) `nav.view-switch.view-switch--scroll` — rozsahy s počtom `.view-switch-count` **po hľadaní**; pri 5+ voľbách sa pás roluje vodorovne, neláme. Rozsah bez výsledku sa neukazuje, okrem zvoleného.
 
 ## Príklad
 ```jsx
