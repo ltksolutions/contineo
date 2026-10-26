@@ -36,6 +36,10 @@ export interface PendingItem {
   href: string
   /** Druhý riadok pod názvom. Krátky, inak sa na telefóne zalomí na tri. */
   detail?: string
+  /** Druh dokumentu (číselník `category`), keď ho zdroj pozná. */
+  category?: string | null
+  /** Poradie kroku v trase — „krok 2 z 5" na Prehľade. Len pri úlohe z trasy. */
+  step?: { order: number; total: number }
   /**
    * Čas na **zoradenie**. Nie je to to isté ako `assignedAt`: zoradiť treba
    * aj to, čo pridelenie nemá.
@@ -191,6 +195,8 @@ export async function acknowledgementDuties(person: Person): Promise<Acknowledge
           // čo jeho `detail` znamená. Helpdesk tam raz bude mať číslo tiketu.
           // Označenie znenia sa neukazuje (ADR-016 D113) — znenie určuje dátum účinnosti.
           detail: step.effectiveFrom ? tv(step.effectiveFrom) : undefined,
+          category: step.category ?? null,
+          step: { order: step.order, total: track.steps.length },
           sortAt: assignedAt ?? step.effectiveFrom,
           assignedAt,
           isNew: isNewFor(person, assignedAt),
@@ -236,6 +242,7 @@ export async function acknowledgementDuties(person: Person): Promise<Acknowledge
           title: doc.title,
           href: `/documents/${encodeURIComponent(a.subject.documentId)}`,
           detail: effective.version.effectiveFrom ? tv(effective.version.effectiveFrom) : undefined,
+          category: doc.category ?? null,
           sortAt: assignedAt,
           assignedAt,
           isNew: isNewFor(person, assignedAt),

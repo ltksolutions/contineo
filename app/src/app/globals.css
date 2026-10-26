@@ -5658,6 +5658,75 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .panel-action:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ── Prehľad: riadok ako odkaz, skupiny a ikona úlohy, rozsahy s rolovaním ──
+   PREHLAD-ulohy-a-dokumenty (26. 10. 2026), odchýlky 1–4 schválené Jánom.
+   Zoznam je na výber, nie na akcie (Q2): celý riadok vedie na detail, vpravo
+   šípka ako v SwiftUI `List` s `NavigationLink`; akcie sú až na detaile. */
+.panel-group {
+  padding: 9px 16px 5px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--fs-micro);
+  font-weight: 650;
+}
+.panel-group--bad { background: var(--bad-bg); color: var(--bad-fg); }
+
+.panel-row--link {
+  flex-wrap: nowrap;
+  gap: 12px 14px;
+  min-height: 56px;
+  padding: 10px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+.panel-row--link:hover { background: var(--surface-2); color: inherit; }
+.panel-row--link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.panel-row--link .panel-name { font-size: 15px; font-weight: 600; }
+.panel-row--link:hover .panel-name { color: inherit; }
+.panel-row--link .panel-meta { display: block; font-size: var(--fs-small); color: var(--muted); margin-top: 2px; }
+.panel-row--link .due-chip { margin-left: 0; }
+.panel-chevron { flex: none; color: var(--muted); }
+
+/* Ikona druhu úlohy v kruhu 36 px; farba hovorí naliehavosť, nie druh. */
+.task-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.task-icon--bad { background: var(--bad-bg); color: var(--bad-fg); }
+.task-icon--soon { background: var(--warn-bg); color: var(--warn-fg); }
+.task-icon--decide { background: var(--accent-soft); color: var(--accent); }
+
+/* Na telefóne ide termín úlohy pod text (zarovnaný s ním), šípka ostáva hore —
+   inak by na 390 px zostalo názvu 150 px. */
+@media (max-width: 639px) {
+  .panel-row--link { flex-wrap: wrap; align-items: flex-start; }
+  .panel-row--link .panel-chevron { order: 2; align-self: center; }
+  .panel-row--link > .task-icon ~ .due-chip { order: 3; margin-left: 50px; }
+}
+
+/* Rozsahy hľadania (`.searchScopes`, Q1): ten istý `.view-switch`, len pri
+   piatich a viac voľbách sa pás neláme, ale roluje vodorovne. */
+.view-switch--scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  justify-self: start;
+}
+.view-switch--scroll::-webkit-scrollbar { display: none; }
+@media (max-width: 1023px) {
+  .view-switch--scroll .view-switch-item { min-height: 40px; padding: 0 12px; }
+}
+
 /* Pod 640 px idú chip a akcia POD text, nie vedľa — inak na 390 px zostane
    názvu 90 px. Akcia je dotykový cieľ 44 px. */
 @media (max-width: 639px) {

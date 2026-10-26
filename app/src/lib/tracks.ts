@@ -60,6 +60,8 @@ export interface StepStatus {
   versionId: string | null
   versionLabel: string | null
   effectiveFrom: Date | null
+  /** Druh dokumentu (číselník `category`) — Prehľad ho píše k úlohe (ADR-041 D270). */
+  category?: string | null
   done: boolean
   /** Vyplnené, keď sa krok nedá prejsť — potom je `done` vždy `false`. */
   blocked: StepBlocker | null
@@ -180,7 +182,7 @@ export async function trackProgress(person: {
       steps.push({
         order: step.order, documentId: step.documentId, title: doc.title,
         versionId: v.version.versionId, versionLabel: v.version.label,
-        effectiveFrom: v.version.effectiveFrom,
+        effectiveFrom: v.version.effectiveFrom, category: doc.category ?? null,
         done: false, blocked: null,
       })
     }
