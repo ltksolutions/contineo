@@ -111,11 +111,15 @@ k návrhovému projektu „Contineo.app responzivny design".
 - `LiveFilter` (hľadanie počas písania) **nie je** v balíku — je v aplikácii
   mimo `design-sync.entry.ts` (používa `next/navigation`). V `conventions.md`
   preto stojí `SearchStrip` vo `<form method="get">`.
-- **Artefakt aktualizovaný** (verzia 13), **projekt Claude Design nie**:
-  `DesignSync` v neinteraktívnej session odmietol prístup — treba
-  `/design-login` v interaktívnom `claude` v Termináli a potom nahrať
-  (projekt má kotvu `_ds_sync.json` z 25. 10.; driver s `--remote` ukáže
-  zmenu len v `_ds_bundle.css`, `styles.css`-uzávere a `README.md`).
+- **Artefakt aktualizovaný** (verzia 13) a 27. 10. aj **projekt Claude
+  Design**: driver s `--remote` — 13 nezmenených, nič na overenie, nič na
+  mazanie, nahraté 71 súborov + sentinel + nová kotva `_ds_sync.json`
+  (projekt má 75 súborov vrátane `_ds_manifest.json` a
+  `_adherence.oxlintrc.json` od aplikácie).
+- **Prihlásenie:** `DesignSync` v desktopovej session funguje až po
+  jednorazovom `/design-login` v interaktívnom `claude` v Termináli na tom
+  istom Macu (26. 10. ho Ján urobil); prihlásenie je viazané na počítač,
+  nie na projekt.
 - Pri tomto behu sa `.ds-sync/` inštaloval nanovo vo worktree (esbuild,
   ts-morph, @types/react, playwright@1.63.0); `package-validate` prešiel
   s render-checkom.
