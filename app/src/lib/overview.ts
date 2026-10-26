@@ -120,3 +120,37 @@ export async function expiringVersions(
   }
   return out.sort((a, b) => a.effectiveTo.getTime() - b.effectiveTo.getTime())
 }
+
+/** Dokument knižnice v paneli „Čo máte k dispozícii" — posledné zverejnené znenie. */
+export interface RecentDocument {
+  documentId: string
+  title: string
+  versionLabel: string
+  publishedAt: Date
+}
+
+/**
+ * Posledných `limit` zverejnených dokumentov, každý raz, podľa najnovšie
+ * zverejneného znenia. Na rozdiel od noviniek bez časovej hranice: panel
+ * hovorí, **čo v knižnici je**, nie čo sa v nej za týždeň zmenilo —
+ * organizácia s desiatimi starými normami nemá vidieť prázdny panel.
+ */
+export function pickRecent(docs: RawDoc[], limit: number, asOf = new Date()): RecentDocument[] {
+  const out: RecentDocument[] = []
+  for (const d of docs) {
+    let latest: { label: string; at: Date } | null = null
+    for (const v of d.versions ?? []) {
+      const at = v.publishedAt ? new Date(v.publishedAt) : null
+      if (!at || at.getTime() > asOf.getTime()) continue
+      if (!latest || at.getTime() > latest.at.getTime()) latest = { label: v.label, at }
+    }
+    if (!latest) continue
+    out.push({ documentId: String(d.documentId), title: String(d.title ?? d.documentId), versionLabel: latest.label, publishedAt: latest.at })
+  }
+  return out.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()).slice(0, limit)
+}
+
+export async function recentLibrary(companyCode: string, limit: number, asOf = new Date()): Promise<{ recent: RecentDocument[]; total: number }> {
+  const docs = await publishedDocs(companyCode)
+  return { recent: pickRecent(docs, limit, asOf), total: docs.length }
+}

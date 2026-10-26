@@ -29,7 +29,9 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor, documentTitles } from "@/lib/approvalsDb"
-import { libraryNews, expiringVersions, NEW_DAYS, EXPIRING_DAYS } from "@/lib/overview"
+import { libraryNews, expiringVersions, recentLibrary, NEW_DAYS, EXPIRING_DAYS } from "@/lib/overview"
+import { sourcesRegister } from "@/lib/sourcesRegister"
+import { subscribedActs, SLOV_LEX_SOURCE_ID } from "@/lib/lawCatalog"
 import { dueState } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
@@ -39,6 +41,9 @@ export const dynamic = "force-dynamic"
  * každá dlaždica vlastný tvar a `tile.tone` neexistuje na tých, ktoré ho
  * nemajú — TypeScript to hlási a mal by pravdu, lebo šablóna s ním počíta.
  */
+/** Riadky v paneloch „Čo máte k dispozícii" — toľko, koľko má panel Pre vás. */
+const AVAILABLE_ROWS = 6
+
 interface Tile {
   key: string
   href: string
@@ -80,14 +85,30 @@ export default async function OverviewPage({
     je dlaždica v Správe s počtom požiadaviek (`navData.ts`) — pás ostáva
     povinnostiam a novinkám.
   */
-  const [pending, approvals, news, expiring, nav] = await Promise.all([
+  const [pending, approvals, news, expiring, nav, available, register] = await Promise.all([
     pendingForPerson(person),
     roundsWaitingFor(person.companyCode, person.email),
     libraryNews(person.companyCode),
     expiringVersions(person.companyCode),
     // Tie isté roly a počty ako shell — `cache()`, takže bez dotazov navyše.
     shellNavData(),
+    recentLibrary(person.companyCode, AVAILABLE_ROWS),
+    // Ten istý register ako Organizácia → Zdroje a výber zdrojov na Opýtať sa (ADR-040).
+    sourcesRegister(person.companyCode, language),
   ])
+  /*
+    „Čo máte k dispozícii" (Ján 26. 10. 2026): odkiaľ asistent odpovedá —
+    knižnica, legislatíva zo Slov-Lexu a pripojené systémy. Zdroj sa ukáže,
+    len keď z neho dnes naozaj ide odpovedať: zapnutý, pripojený, dovolený
+    rezidenciou a s hľadaním — presne tak, ako ho filtruje výber na Opýtať sa.
+    Prihlásená osoba organizácie je `internal` (`accessLevelFor()`), interné
+    zdroje sú pre ňu v poriadku.
+  */
+  const liveSources = register.filter(s => s.kind !== "file" && s.enabled && s.connected && s.allowed && s.uses.retrieval)
+  const lawSource = liveSources.find(s => s.id === SLOV_LEX_SOURCE_ID) ?? null
+  const acts = lawSource ? await subscribedActs(person.companyCode) : []
+  const connectors = liveSources.filter(s => s.id !== SLOV_LEX_SOURCE_ID)
+  const sourcesTotal = acts.length + connectors.length
   /*
     Dlaždice sekcií (SHELL-rozcestnik): od 640 px nie je stále menu, sekcie
     sú tu. Kto akú dlaždicu vidí, rozhodol `navItems()` — rovnako ako lišta
@@ -177,6 +198,88 @@ export default async function OverviewPage({
             </Link>
           ))}
         </div>
+
+        {/*
+          Čo máte k dispozícii (Ján 26. 10. 2026): nad rozcestníkom, aby každý
+          videl, z akého obsahu asistent odpovedá, skôr než sa pýta. Dva
+          panely v tej istej mriežke ako Pre vás — knižnica a ostatné zdroje;
+          tri panely by v dvojstĺpcovej mriežke nechali prázdne miesto.
+          Otázka nad jedným dokumentom zatiaľ nie je (rozsah je len zdroj),
+          preto má riadok dokumentu len odkaz na znenie.
+        */}
+        <section className="section-group" aria-labelledby="available">
+          <h2 className="section-group-title" id="available">{t.available.heading}</h2>
+          <div className="overview-panels">
+            <section className="card panel">
+              <div className="panel-head">
+                <span>{t.available.library}</span>
+                {available.total > 0 && <span className="panel-head-count">{available.total}</span>}
+              </div>
+              {available.recent.length === 0 && (
+                <div className="panel-empty">
+                  <span className="panel-empty-title">{t.available.emptyLibraryTitle}</span>
+                  <span className="panel-empty-text">{t.available.emptyLibraryText}</span>
+                </div>
+              )}
+              {available.recent.map(r => (
+                <div key={`avail-${r.documentId}`} className="panel-row">
+                  <div className="panel-main">
+                    <Link className="panel-name" href={`/documents/${encodeURIComponent(r.documentId)}`}>{r.title}</Link>
+                    <div className="quiet panel-meta">{r.versionLabel} · {formatDate(r.publishedAt, language)}</div>
+                  </div>
+                  <Link className="panel-action" href={`/documents/${encodeURIComponent(r.documentId)}`}>{t.open}</Link>
+                </div>
+              ))}
+              {/* Správca obsahu ide do Knižnice, ostatní sa jej opýtajú — na 404 by skončili. */}
+              <div className="panel-foot">
+                {nav.flags.isContentManager
+                  ? <Link href="/library">{t.wholeLibrary}</Link>
+                  : <Link href={`/ask?${new URLSearchParams({ src: "library" }).toString()}`}>{t.available.askLibrary}</Link>}
+              </div>
+            </section>
+
+            <section className="card panel">
+              <div className="panel-head">
+                <span>{t.available.sources}</span>
+                {sourcesTotal > 0 && <span className="panel-head-count">{sourcesTotal}</span>}
+              </div>
+              {sourcesTotal === 0 && (
+                <div className="panel-empty">
+                  <span className="panel-empty-title">{t.available.emptySourcesTitle}</span>
+                  <span className="panel-empty-text">{t.available.emptySourcesText}</span>
+                </div>
+              )}
+              {acts.map(a => (
+                <div key={`act-${a.actId}`} className="panel-row">
+                  <div className="panel-main">
+                    {/* Detail predpisu je v nastaveniach organizácie (správca osôb); ostatným znenie ukáže portál. */}
+                    {nav.flags.isPeopleAdmin
+                      ? <Link className="panel-name" href={`/organisation/sources/web/${SLOV_LEX_SOURCE_ID}/${a.actId}`}>{a.title}</Link>
+                      : <a className="panel-name" href={`https://www.slov-lex.sk/pravne-predpisy/${a.actId}/`} target="_blank" rel="noopener noreferrer">{a.title}</a>}
+                    <div className="quiet panel-meta">
+                      {t.available.kindLaw}{a.current ? ` · ${t.available.actEffective(formatDate(a.current.effectiveFrom, language))}` : ""}
+                    </div>
+                  </div>
+                  <Link className="panel-action" href={`/ask?${new URLSearchParams({ src: SLOV_LEX_SOURCE_ID }).toString()}`}>{t.available.ask}</Link>
+                </div>
+              ))}
+              {connectors.map(c => (
+                <div key={`src-${c.id}`} className="panel-row">
+                  <div className="panel-main">
+                    <span className="panel-name">{c.name}</span>
+                    <div className="quiet panel-meta">{t.available.kindConnector}{c.detail ? ` · ${c.detail}` : ""}</div>
+                  </div>
+                  <Link className="panel-action" href={`/ask?${new URLSearchParams({ src: c.id }).toString()}`}>{t.available.ask}</Link>
+                </div>
+              ))}
+              <div className="panel-foot">
+                {nav.flags.isPeopleAdmin
+                  ? <Link href="/organisation/sources">{t.available.register}</Link>
+                  : <Link href="/ask">{t.available.askAll}</Link>}
+              </div>
+            </section>
+          </div>
+        </section>
 
         {/* Rozcestník: pod KPI sekcie, pod nimi „Pre vás". Nadpisy skupín
             nesú kotvu pre krok skupiny v ceste (`/#management`). */}

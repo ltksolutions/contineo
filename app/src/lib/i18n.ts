@@ -1293,6 +1293,24 @@ interface Dictionary {
     open: string
     decide: string
     submittedBy: (who: string) => string
+    /** Panel „Čo máte k dispozícii" nad rozcestníkom (Ján 26. 10. 2026): obsah, z ktorého asistent odpovedá. */
+    available: {
+      heading: string
+      library: string
+      sources: string
+      emptyLibraryTitle: string
+      emptyLibraryText: string
+      emptySourcesTitle: string
+      emptySourcesText: string
+      kindLaw: string
+      kindConnector: string
+      actEffective: (date: string) => string
+      actsCount: (n: number) => string
+      ask: string
+      askLibrary: string
+      askAll: string
+      register: string
+    }
   }
 
   /** Reťaz dôkazov o potvrdení (ADR-005). Os je pohľad, nie záznam. */
@@ -6138,6 +6156,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     showAll: n => `Zobraziť všetkých ${n} →`,
     wholeLibrary: "Celá knižnica →",
+    available: {
+      heading: "Čo máte k dispozícii",
+      library: "Knižnica",
+      sources: "Ďalšie zdroje",
+      emptyLibraryTitle: "V knižnici zatiaľ nič nie je",
+      emptyLibraryText: "Zverejnené normy a dokumenty organizácie sa ukážu tu.",
+      emptySourcesTitle: "Žiadne ďalšie zdroje",
+      emptySourcesText: "Legislatíva zo Slov-Lexu a pripojené systémy, z ktorých asistent odpovedá, sa ukážu tu.",
+      kindLaw: "Legislatíva SR",
+      kindConnector: "pripojený systém",
+      actEffective: date => `znenie účinné od ${date}`,
+      actsCount: n => `${n} ${n === 1 ? "predpis" : n < 5 ? "predpisy" : "predpisov"}`,
+      ask: "Opýtať sa",
+      askLibrary: "Opýtať sa knižnice →",
+      askAll: "Opýtať sa všetkých zdrojov →",
+      register: "Register zdrojov →",
+    },
     allTasks: "Všetky úlohy →",
     forYou: "Pre vás",
     by: date => `do ${date}`,
@@ -11343,6 +11378,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     showAll: n => `Zobrazit všech ${n} →`,
     wholeLibrary: "Celá knihovna →",
+    available: {
+      heading: "Co máte k dispozici",
+      library: "Knihovna",
+      sources: "Další zdroje",
+      emptyLibraryTitle: "V knihovně zatím nic není",
+      emptyLibraryText: "Zveřejněné normy a dokumenty organizace se ukážou zde.",
+      emptySourcesTitle: "Žádné další zdroje",
+      emptySourcesText: "Legislativa ze Slov-Lexu a připojené systémy, z nichž asistent odpovídá, se ukážou zde.",
+      kindLaw: "Legislativa SR",
+      kindConnector: "připojený systém",
+      actEffective: date => `znění účinné od ${date}`,
+      actsCount: n => `${n} ${n === 1 ? "předpis" : n < 5 ? "předpisy" : "předpisů"}`,
+      ask: "Zeptat se",
+      askLibrary: "Zeptat se knihovny →",
+      askAll: "Zeptat se všech zdrojů →",
+      register: "Registr zdrojů →",
+    },
     allTasks: "Všechny úkoly →",
     forYou: "Pro vás",
     by: date => `do ${date}`,
@@ -16537,6 +16589,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     showAll: n => `Show all ${n} →`,
     wholeLibrary: "Whole library →",
+    available: {
+      heading: "What you have available",
+      library: "Library",
+      sources: "Other sources",
+      emptyLibraryTitle: "Nothing in the library yet",
+      emptyLibraryText: "Published regulations and documents of the organisation will appear here.",
+      emptySourcesTitle: "No other sources",
+      emptySourcesText: "Legislation from Slov-Lex and connected systems the assistant answers from will appear here.",
+      kindLaw: "Slovak legislation",
+      kindConnector: "connected system",
+      actEffective: date => `version effective from ${date}`,
+      actsCount: n => `${n} ${n === 1 ? "act" : "acts"}`,
+      ask: "Ask",
+      askLibrary: "Ask the library →",
+      askAll: "Ask all sources →",
+      register: "Sources register →",
+    },
     allTasks: "All tasks →",
     forYou: "For you",
     by: date => `by ${date}`,
