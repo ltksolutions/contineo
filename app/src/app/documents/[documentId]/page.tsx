@@ -31,6 +31,7 @@ import { buildStatement, validAcknowledgements } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { acknowledgementDuties } from "@/lib/pending"
 import { dueState } from "@/lib/due"
+import { dueText } from "@/lib/dueText"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import { isContentManager } from "@/lib/library"
@@ -126,7 +127,6 @@ export default async function DocumentPage({
     ? [...duties.fromTracks, ...duties.outsideTracks].find(i => i.id === doc.documentId)
     : undefined
   const due = duty?.due ?? null
-  const tOverview = d.overview
 
   /*
     Zodpovedná osoba za znenie (D91) — **dnešný** kontakt, nie odtlačok:
@@ -222,7 +222,7 @@ export default async function DocumentPage({
                 termín potvrdenie nezakazuje a obrazovka sa nemá tváriť, že áno. */}
             {due && (
               <span className={`due-chip due-chip--${dueState(due, now)}`}>
-                {tOverview.by(date(due))}
+                {dueText(due, now, person.language)}
               </span>
             )}
           </p>
@@ -257,16 +257,14 @@ export default async function DocumentPage({
             return (
               <div key={v.versionId} className="more-row" aria-current={isShown ? "true" : undefined}>
                 <div className="more-main">
+                  {/* Znenie určuje dátum účinnosti, označenie sa neukazuje (ADR-016 D113). */}
                   <b>
-                    {v.label}
-                    {" "}<span className={state === "now" ? "tag tag--published" : "tag"}>{stateLabel[state]}</span>
-                  </b>
-                  <span>
                     {v.effectiveTo
                       ? d.org.law.detail.effectiveRange(date(v.effectiveFrom!), date(v.effectiveTo))
                       : d.org.law.current(date(v.effectiveFrom!))}
-                    {v.changeNote && ` · ${v.changeNote}`}
-                  </span>
+                    {" "}<span className={state === "now" ? "tag tag--published" : "tag"}>{stateLabel[state]}</span>
+                  </b>
+                  {v.changeNote && <span>{v.changeNote}</span>}
                 </div>
                 {isShown
                   ? <span className="quiet" style={{ fontSize: 13 }}>{t.versionShown}</span>
@@ -280,7 +278,7 @@ export default async function DocumentPage({
       {shown && !isCurrent && (
         <p className="card" style={{ padding: 16, margin: "0 0 16px" }}>
           {current.ok
-            ? <>{t.versionNotCurrent(current.version.label)} <Link href={base}>{t.versionCurrentLink}</Link></>
+            ? <>{t.versionNotCurrent(date(current.version.effectiveFrom!))} <Link href={base}>{t.versionCurrentLink}</Link></>
             : (t.blockedReason[current.reason] ?? current.reason)}
         </p>
       )}

@@ -101,7 +101,7 @@ export default async function LibraryReader({
                 <Link href={r.href} className="library-reader-row">
                   <span className="library-reader-title">{r.title}</span>
                   <span className="quiet library-reader-meta">
-                    {[r.category ? kindLabel(r.category) : null, r.versionLabel, t.reader.validFrom(formatDate(r.effectiveFrom, language))]
+                    {[r.category ? kindLabel(r.category) : null, t.reader.validFrom(formatDate(r.effectiveFrom, language))]
                       .filter(Boolean).join(" · ")}
                   </span>
                 </Link>

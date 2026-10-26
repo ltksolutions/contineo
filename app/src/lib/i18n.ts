@@ -163,7 +163,7 @@ interface Dictionary {
     versionShow: string
     versionShown: string
     /** Nad textom staršieho alebo budúceho znenia; potvrdzuje sa len platné. */
-    versionNotCurrent: (label: string) => string
+    versionNotCurrent: (from: string) => string
     versionCurrentLink: string
     listHeading: string
     listIntro: string
@@ -219,12 +219,6 @@ interface Dictionary {
     count: (n: number) => string
     showAll: (n: number) => string
     blockedNote: (n: number) => string
-    /**
-     * Druhý riadok položky. Samotné „1.0" pod názvom normy nepovie nič —
-     * vyzerá to ako číslo bez významu. Dátum platnosti sa sem nedáva:
-     * v úzkom stĺpci by riadok zalomil a `/documents` ho aj tak ukazuje.
-     */
-    version: (label: string) => string
     /**
      * „Čaká od …". Ukáže sa **len** pri úlohe, ktorá má pridelenie (D37) —
      * inak by dátum znamenal niečo iné, než čo je pri ňom napísané.
@@ -5141,7 +5135,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     versionsHeading: n => `Znenia (${n})`,
     versionShow: "Zobraziť",
     versionShown: "zobrazené",
-    versionNotCurrent: label => `Toto znenie už neplatí alebo ešte neplatí; platné je znenie ${label}.`,
+    versionNotCurrent: from => `Toto znenie dnes neplatí; platné je znenie účinné od ${from}.`,
     versionCurrentLink: "Zobraziť platné znenie",
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
@@ -5164,7 +5158,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnosť už skončila",
       "document-unavailable": "dokument nie je dostupný",
     },
-    version: (label, from) => `znenie ${label} · účinné od ${from}`,
+    version: (_label, from) => `znenie účinné od ${from}`,
     readingElapsed: t => `Čas čítania: ${t}`,
     readingNote: "Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.",
     readingSeconds: n => `${n} s`,
@@ -5184,7 +5178,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevybavené žiadosti",
-      version: label => `${label}`,
       waitingSince: d => `čaká od ${d}`,
       dueBy: d => `do ${d}`,
       dueToday: "termín dnes",
@@ -6163,7 +6156,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyDocumentsText: "Zverejnené normy, smernice a odoberané predpisy sa ukážu tu.",
     newChip: "nové",
     kindLaw: "Zákon",
-    effectiveFromMeta: date => `znenie od ${date}`,
+    effectiveFromMeta: date => `znenie účinné od ${date}`,
     ask: "Opýtať sa",
     hello: name => `Dobrý deň, ${name}`,
     empty: {
@@ -10355,7 +10348,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     versionsHeading: n => `Znění (${n})`,
     versionShow: "Zobrazit",
     versionShown: "zobrazeno",
-    versionNotCurrent: label => `Toto znění už neplatí nebo ještě neplatí; platné je znění ${label}.`,
+    versionNotCurrent: from => `Toto znění dnes neplatí; platné je znění účinné od ${from}.`,
     versionCurrentLink: "Zobrazit platné znění",
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
@@ -10378,7 +10371,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnost už skončila",
       "document-unavailable": "dokument není dostupný",
     },
-    version: (label, from) => `znění ${label} · účinné od ${from}`,
+    version: (_label, from) => `znění účinné od ${from}`,
     readingElapsed: t => `Čas čtení: ${t}`,
     readingNote: "Zaznamenává se, je informativní a není součástí potvrzení.",
     readingSeconds: n => `${n} s`,
@@ -10398,7 +10391,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevyřízené žádosti",
-      version: label => `${label}`,
       waitingSince: d => `čeká od ${d}`,
       dueBy: d => `do ${d}`,
       dueToday: "termín dnes",
@@ -11377,7 +11369,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyDocumentsText: "Zveřejněné normy, směrnice a odebírané předpisy se ukážou tady.",
     newChip: "nové",
     kindLaw: "Zákon",
-    effectiveFromMeta: date => `znění od ${date}`,
+    effectiveFromMeta: date => `znění účinné od ${date}`,
     ask: "Zeptat se",
     hello: name => `Dobrý den, ${name}`,
     empty: {
@@ -15566,7 +15558,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     versionsHeading: n => `Versions (${n})`,
     versionShow: "Show",
     versionShown: "shown",
-    versionNotCurrent: label => `This version is no longer, or not yet, in effect; the current version is ${label}.`,
+    versionNotCurrent: from => `This version is not in effect today; the current version is effective from ${from}.`,
     versionCurrentLink: "Show the current version",
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
@@ -15589,7 +15581,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "it is no longer effective",
       "document-unavailable": "the document is not available",
     },
-    version: (label, from) => `version ${label} · effective from ${from}`,
+    version: (_label, from) => `version effective from ${from}`,
     readingElapsed: t => `Reading time: ${t}`,
     readingNote: "It is recorded, informative, and not part of the acknowledgement.",
     readingSeconds: n => `${n} s`,
@@ -15609,7 +15601,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Pending items",
-      version: label => `${label}`,
       waitingSince: d => `waiting since ${d}`,
       dueBy: d => `by ${d}`,
       dueToday: "due today",
@@ -16580,7 +16571,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyDocumentsText: "Published rules, directives and subscribed acts will appear here.",
     newChip: "new",
     kindLaw: "Act",
-    effectiveFromMeta: date => `version from ${date}`,
+    effectiveFromMeta: date => `effective from ${date}`,
     ask: "Ask",
     hello: name => `Hello, ${name}`,
     empty: {
