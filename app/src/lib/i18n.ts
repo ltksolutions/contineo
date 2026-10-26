@@ -163,7 +163,7 @@ interface Dictionary {
     versionShow: string
     versionShown: string
     /** Nad textom staršieho alebo budúceho znenia; potvrdzuje sa len platné. */
-    versionNotCurrent: (label: string) => string
+    versionNotCurrent: (from: string) => string
     versionCurrentLink: string
     listHeading: string
     listIntro: string
@@ -219,12 +219,6 @@ interface Dictionary {
     count: (n: number) => string
     showAll: (n: number) => string
     blockedNote: (n: number) => string
-    /**
-     * Druhý riadok položky. Samotné „1.0" pod názvom normy nepovie nič —
-     * vyzerá to ako číslo bez významu. Dátum platnosti sa sem nedáva:
-     * v úzkom stĺpci by riadok zalomil a `/documents` ho aj tak ukazuje.
-     */
-    version: (label: string) => string
     /**
      * „Čaká od …". Ukáže sa **len** pri úlohe, ktorá má pridelenie (D37) —
      * inak by dátum znamenal niečo iné, než čo je pri ňom napísané.
@@ -1298,7 +1292,26 @@ interface Dictionary {
     newChip: string
     kindLaw: string
     effectiveFromMeta: (date: string) => string
-    ask: string
+    /** Prehľad podľa návrhu PREHLAD-ulohy-a-dokumenty (26. 10. 2026). */
+    overdueCount: (n: number) => string
+    taskAcknowledge: string
+    taskDecide: string
+    trackStep: (order: number, total: number) => string
+    groupOver: string
+    groupSoon: string
+    groupRest: string
+    groupDecide: string
+    findLabel: string
+    findPlaceholder: string
+    findSubmit: string
+    kindAll: string
+    kindsLabel: string
+    noResults: (q: string) => string
+    noResultsInKind: (kind: string, q: string) => string
+    otherKinds: (n: number) => string
+    searchAllKinds: string
+    titlesOnly: string
+    askContent: (q: string) => string
     hello: (name: string) => string
     /** Prázdny panel — dva riadky: čo tu nie je a čo z toho vyplýva (PREHLAD, úloha 1). */
     empty: {
@@ -1310,8 +1323,6 @@ interface Dictionary {
     allTasks: string
     by: (date: string) => string
     expiringChip: string
-    open: string
-    decide: string
     submittedBy: (who: string) => string
   }
 
@@ -5141,7 +5152,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     versionsHeading: n => `Znenia (${n})`,
     versionShow: "Zobraziť",
     versionShown: "zobrazené",
-    versionNotCurrent: label => `Toto znenie už neplatí alebo ešte neplatí; platné je znenie ${label}.`,
+    versionNotCurrent: from => `Toto znenie dnes neplatí; platné je znenie účinné od ${from}.`,
     versionCurrentLink: "Zobraziť platné znenie",
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
@@ -5164,7 +5175,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnosť už skončila",
       "document-unavailable": "dokument nie je dostupný",
     },
-    version: (label, from) => `znenie ${label} · účinné od ${from}`,
+    version: (_label, from) => `znenie účinné od ${from}`,
     readingElapsed: t => `Čas čítania: ${t}`,
     readingNote: "Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.",
     readingSeconds: n => `${n} s`,
@@ -5184,7 +5195,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevybavené žiadosti",
-      version: label => `${label}`,
       waitingSince: d => `čaká od ${d}`,
       dueBy: d => `do ${d}`,
       dueToday: "termín dnes",
@@ -6163,8 +6173,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyDocumentsText: "Zverejnené normy, smernice a odoberané predpisy sa ukážu tu.",
     newChip: "nové",
     kindLaw: "Zákon",
-    effectiveFromMeta: date => `znenie od ${date}`,
-    ask: "Opýtať sa",
+    effectiveFromMeta: date => `znenie účinné od ${date}`,
+    overdueCount: n => `z toho ${n} po termíne`,
+    taskAcknowledge: "Prečítať a potvrdiť",
+    taskDecide: "Schváliť alebo zamietnuť",
+    trackStep: (order, total) => `krok ${order} z ${total}`,
+    groupOver: "Po termíne",
+    groupSoon: "Blíži sa termín",
+    groupRest: "Ďalšie",
+    groupDecide: "Na rozhodnutie",
+    findLabel: "Hľadať v dokumentoch",
+    findPlaceholder: "Hľadať v dokumentoch",
+    findSubmit: "Hľadať",
+    kindAll: "Všetky",
+    kindsLabel: "Druh dokumentu",
+    noResults: q => `Pre „${q}" sa nič nenašlo`,
+    noResultsInKind: (kind, q) => q ? `V druhu ${kind} nič pre „${q}"` : `V druhu ${kind} nič nie je`,
+    otherKinds: n => n === 1 ? "V iných druhoch je 1 dokument." : n < 5 ? `V iných druhoch sú ${n} dokumenty.` : `V iných druhoch je ${n} dokumentov.`,
+    searchAllKinds: "Hľadať vo všetkých druhoch",
+    titlesOnly: "Hľadá sa v názvoch.",
+    askContent: q => `Opýtať sa na „${q}" v obsahu →`,
     hello: name => `Dobrý deň, ${name}`,
     empty: {
       attentionTitle: "Nič od vás nikto nečaká",
@@ -6174,8 +6202,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     allTasks: "Všetky úlohy →",
     by: date => `do ${date}`,
     expiringChip: "expiruje",
-    open: "Otvoriť",
-    decide: "Rozhodnúť",
     submittedBy: who => `predložil ${who}`,
   },
   evidence: {
@@ -10355,7 +10381,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     versionsHeading: n => `Znění (${n})`,
     versionShow: "Zobrazit",
     versionShown: "zobrazeno",
-    versionNotCurrent: label => `Toto znění už neplatí nebo ještě neplatí; platné je znění ${label}.`,
+    versionNotCurrent: from => `Toto znění dnes neplatí; platné je znění účinné od ${from}.`,
     versionCurrentLink: "Zobrazit platné znění",
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
@@ -10378,7 +10404,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnost už skončila",
       "document-unavailable": "dokument není dostupný",
     },
-    version: (label, from) => `znění ${label} · účinné od ${from}`,
+    version: (_label, from) => `znění účinné od ${from}`,
     readingElapsed: t => `Čas čtení: ${t}`,
     readingNote: "Zaznamenává se, je informativní a není součástí potvrzení.",
     readingSeconds: n => `${n} s`,
@@ -10398,7 +10424,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevyřízené žádosti",
-      version: label => `${label}`,
       waitingSince: d => `čeká od ${d}`,
       dueBy: d => `do ${d}`,
       dueToday: "termín dnes",
@@ -11377,8 +11402,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyDocumentsText: "Zveřejněné normy, směrnice a odebírané předpisy se ukážou tady.",
     newChip: "nové",
     kindLaw: "Zákon",
-    effectiveFromMeta: date => `znění od ${date}`,
-    ask: "Zeptat se",
+    effectiveFromMeta: date => `znění účinné od ${date}`,
+    overdueCount: n => `z toho ${n} po termínu`,
+    taskAcknowledge: "Přečíst a potvrdit",
+    taskDecide: "Schválit nebo zamítnout",
+    trackStep: (order, total) => `krok ${order} z ${total}`,
+    groupOver: "Po termínu",
+    groupSoon: "Blíží se termín",
+    groupRest: "Další",
+    groupDecide: "K rozhodnutí",
+    findLabel: "Hledat v dokumentech",
+    findPlaceholder: "Hledat v dokumentech",
+    findSubmit: "Hledat",
+    kindAll: "Vše",
+    kindsLabel: "Druh dokumentu",
+    noResults: q => `Pro „${q}" se nic nenašlo`,
+    noResultsInKind: (kind, q) => q ? `V druhu ${kind} nic pro „${q}"` : `V druhu ${kind} nic není`,
+    otherKinds: n => n === 1 ? "V jiných druzích je 1 dokument." : n < 5 ? `V jiných druzích jsou ${n} dokumenty.` : `V jiných druzích je ${n} dokumentů.`,
+    searchAllKinds: "Hledat ve všech druzích",
+    titlesOnly: "Hledá se v názvech.",
+    askContent: q => `Zeptat se na „${q}" v obsahu →`,
     hello: name => `Dobrý den, ${name}`,
     empty: {
       attentionTitle: "Nikdo od vás nic nečeká",
@@ -11388,8 +11431,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     allTasks: "Všechny úkoly →",
     by: date => `do ${date}`,
     expiringChip: "expiruje",
-    open: "Otevřít",
-    decide: "Rozhodnout",
     submittedBy: who => `předložil ${who}`,
   },
   evidence: {
@@ -15566,7 +15607,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     versionsHeading: n => `Versions (${n})`,
     versionShow: "Show",
     versionShown: "shown",
-    versionNotCurrent: label => `This version is no longer, or not yet, in effect; the current version is ${label}.`,
+    versionNotCurrent: from => `This version is not in effect today; the current version is effective from ${from}.`,
     versionCurrentLink: "Show the current version",
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
@@ -15589,7 +15630,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "it is no longer effective",
       "document-unavailable": "the document is not available",
     },
-    version: (label, from) => `version ${label} · effective from ${from}`,
+    version: (_label, from) => `version effective from ${from}`,
     readingElapsed: t => `Reading time: ${t}`,
     readingNote: "It is recorded, informative, and not part of the acknowledgement.",
     readingSeconds: n => `${n} s`,
@@ -15609,7 +15650,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Pending items",
-      version: label => `${label}`,
       waitingSince: d => `waiting since ${d}`,
       dueBy: d => `by ${d}`,
       dueToday: "due today",
@@ -16580,8 +16620,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyDocumentsText: "Published rules, directives and subscribed acts will appear here.",
     newChip: "new",
     kindLaw: "Act",
-    effectiveFromMeta: date => `version from ${date}`,
-    ask: "Ask",
+    effectiveFromMeta: date => `effective from ${date}`,
+    overdueCount: n => `${n} overdue`,
+    taskAcknowledge: "Read and acknowledge",
+    taskDecide: "Approve or reject",
+    trackStep: (order, total) => `step ${order} of ${total}`,
+    groupOver: "Overdue",
+    groupSoon: "Due soon",
+    groupRest: "Other",
+    groupDecide: "To decide",
+    findLabel: "Search documents",
+    findPlaceholder: "Search documents",
+    findSubmit: "Search",
+    kindAll: "All",
+    kindsLabel: "Document type",
+    noResults: q => `Nothing found for “${q}”`,
+    noResultsInKind: (kind, q) => q ? `Nothing for “${q}” in ${kind}` : `Nothing in ${kind}`,
+    otherKinds: n => n === 1 ? "1 document in other types." : `${n} documents in other types.`,
+    searchAllKinds: "Search all types",
+    titlesOnly: "Titles are searched.",
+    askContent: q => `Ask about “${q}” in the content →`,
     hello: name => `Hello, ${name}`,
     empty: {
       attentionTitle: "Nobody is waiting on you",
@@ -16591,8 +16649,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     allTasks: "All tasks →",
     by: date => `by ${date}`,
     expiringChip: "expiring",
-    open: "Open",
-    decide: "Decide",
     submittedBy: who => `submitted by ${who}`,
   },
   evidence: {

@@ -233,6 +233,12 @@ Jedno pravidlo pre každú obrazovku (ZAKLAD-podmenu-a-akcie, 2. 10. 2026):
 - Odchýlka od návrhu (iné rozmery, chýbajúca trieda, text navyše) sa
   pomenuje v PR, nielen urobí.
 - Jeden návrh = jedna vetva a jeden PR, ak Ján nepovie inak.
+- **Artefakt typu *Design* zakladá asistent sám, keď ho treba** — Ján
+  ho nemusí zakladať ani o to žiadať (rozhodnutie Jána 26. 10. 2026).
+  **Vždy s pripojeným artefaktom „Contineo — design system"**
+  (https://claude.ai/artifact/AGZnHYA4nCDzqsXZvw7Lzh), nikdy s iným ani
+  bez neho. Zadanie (`docs/design/NAZOV-zadanie.md`) vzniká pred ním;
+  odkaz na artefakt sa zapíše do zadania. Postup: `docs/DESIGN.md`.
 
 ## Kto smie commitovať priamo do `main`
 
@@ -248,6 +254,13 @@ zdieľanej vetvy.
 problémov (zlúčený, nasadenie na Verceli `success`). Lokálne aj na `origin`.
 Nezlúčená vetva alebo vetva, pri ktorej niečo zlyhalo, sa bez súhlasu Jána
 nemaže. (Súhlas Jána 2026-09-23.)
+
+**Vlastný PR asistent zlučuje sám, keď treba**, bez pýtania — keď je CI
+zelené, PR je `MERGEABLE` a nie je v ňom nič, čo čaká na Jánovo
+rozhodnutie. Po zlúčení overí `MERGED`, počká na nasadenie na Verceli
+`success` a vetvu zmaže (pravidlo vyššie). Červené CI, konflikt alebo
+otvorená otázka v PR znamenajú stop a správu Jánovi. (Súhlas Jána
+2026-10-26.)
 
 ## Dve sessions v jednom repozitári = dve vetvy
 

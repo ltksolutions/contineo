@@ -1,5 +1,11 @@
 # PREHLAD.md — Prehľad (`/`)
 
+> **Prekonané 26. 10. 2026 (ADR-041, D271):** KPI pás, panely „Čo vás čaká"
+> a „Novinky" aj „Čo máte k dispozícii" zanikli. Prehľad má Moje úlohy,
+> Dokumenty a rozcestník — `ZAKLAD-prehlad-a-detail-pre-pouzivatela.md`,
+> časť A. Úlohy 1–3 nižšie (prázdny stav, stropy riadkov, pätička) platia
+> ďalej pre panely `.card.panel`.
+
 **Úvodná obrazovka po prihlásení.** Odpovedá na jednu otázku: *čo odo mňa
 niekto čaká.*
 

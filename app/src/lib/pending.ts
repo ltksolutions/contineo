@@ -20,7 +20,7 @@ import { trackProgress } from "./tracks"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
 import { assignmentsForPerson, dateForPerson, dueForPerson } from "./assignments"
-import { dictionary } from "./i18n"
+import { dictionary, formatDate } from "./i18n"
 import type { Person } from "./persons"
 
 export type PendingSourceKey = "acknowledgement" | "curation" | "helpdesk"
@@ -36,6 +36,10 @@ export interface PendingItem {
   href: string
   /** Druhý riadok pod názvom. Krátky, inak sa na telefóne zalomí na tri. */
   detail?: string
+  /** Druh dokumentu (číselník `category`), keď ho zdroj pozná. */
+  category?: string | null
+  /** Poradie kroku v trase — „krok 2 z 5" na Prehľade. Len pri úlohe z trasy. */
+  step?: { order: number; total: number }
   /**
    * Čas na **zoradenie**. Nie je to to isté ako `assignedAt`: zoradiť treba
    * aj to, čo pridelenie nemá.
@@ -130,7 +134,7 @@ function earlier(a: Date | null, b: Date | null): Date | null {
 }
 
 export async function acknowledgementDuties(person: Person): Promise<AcknowledgementDuties> {
-    const t = dictionary(person.language).pending
+    const tv = (from: Date) => dictionary(person.language).onboarding.version("", formatDate(from, person.language))
 
     const [tracks, assignments] = await Promise.all([
       trackProgress(person),
@@ -189,7 +193,10 @@ export async function acknowledgementDuties(person: Person): Promise<Acknowledge
           href: `/documents/${encodeURIComponent(step.documentId)}`,
           // Text druhého riadka skladá **zdroj**, nie widget: len zdroj vie,
           // čo jeho `detail` znamená. Helpdesk tam raz bude mať číslo tiketu.
-          detail: step.versionLabel ? t.version(step.versionLabel) : undefined,
+          // Označenie znenia sa neukazuje (ADR-016 D113) — znenie určuje dátum účinnosti.
+          detail: step.effectiveFrom ? tv(step.effectiveFrom) : undefined,
+          category: step.category ?? null,
+          step: { order: step.order, total: track.steps.length },
           sortAt: assignedAt ?? step.effectiveFrom,
           assignedAt,
           isNew: isNewFor(person, assignedAt),
@@ -234,7 +241,8 @@ export async function acknowledgementDuties(person: Person): Promise<Acknowledge
           id: a.subject.documentId,
           title: doc.title,
           href: `/documents/${encodeURIComponent(a.subject.documentId)}`,
-          detail: t.version(a.subject.versionLabel),
+          detail: effective.version.effectiveFrom ? tv(effective.version.effectiveFrom) : undefined,
+          category: doc.category ?? null,
           sortAt: assignedAt,
           assignedAt,
           isNew: isNewFor(person, assignedAt),

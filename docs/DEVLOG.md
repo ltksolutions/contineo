@@ -10,6 +10,69 @@
 
 ---
 
+## 2026-10-26 — Prehľad a detail pre bežného používateľa (ADR-041); nočný beh cronu overený
+
+**Nočný beh cronu katalógu — len čítanie.** Dva behy (25. 10. na nasadení
+fázy 1: 12 nových znení; 26. 10.: 11 nových znení, 0 chýb, 0 konceptov),
+katalóg 27 znení a 2 776 úsekov, odtlačok `sfz:zakon_440_2015` sedí,
+žiadne `lawVersionDraft`. Čítalo sa cez Vercel Runtime Logs (okno 15 minút
+okolo 04:15 UTC — širšie okno vypršalo) a skriptom nad produkčnou DB mimo
+repozitára, bez zápisu. `NEXT.md` tvrdil, že prvý beh neprebehol — opravené
+tu. Ku kontrole súladu: existujúca kontrola Stanov proti zákonu (23. 10.,
+1,37 USD) má 13 nerozhodnutých nálezov — najprv rozhodnúť, až potom nové
+kolo.
+
+**Otázky Jána k legislatíve** viedli k trom malým PR: dátum poslednej
+kontroly a chyba pri predpise (#445), detail predpisu so zneniami a celým
+textom a „Pridať do knižnice" ako tlačidlo (#446), panel „Čo máte
+k dispozícii" na Prehľade (#447). Posledný žil pol dňa: Ján pri pohľade
+na snímku povedal, čo bežný používateľ naozaj potrebuje — a to nebol
+ďalší panel, ale iná úvodná stránka.
+
+**ADR-041 — bežný používateľ vidí dokumenty, nie zdroje.** Z jedného
+odseku Jána vzišli štyri rozhodnutia (D270–D274): jeden zoznam podľa
+druhu (predpis z katalógu je druh Zákon), Prehľad z blokov Moje úlohy ·
+Dokumenty · Organizácia, čitateľský detail s kartou údajov a prepínačom
+zverejnených znení, čitateľská adresa zákona, roly vidia na detaile len
+svoje. Najprv jedna strana návrhu a ADR (#449), potom tri PR v poradí
+**B → C → A** — detail skôr než Prehľad, lebo Prehľad naň odkazuje. Kľúčové
+zistenia pri písaní návrhu: Knižnica na čítanie už existovala
+(`LibraryReader`, od 30. 9.), rolové oddelenie detailu tiež (`/documents`
+verzus `/library`); čitateľ ale nemal ani dátovo staršie znenia
+(`loadDocumentFor` dával len platné) a detail predpisu videl jediná rola.
+Tri otázky s odporúčaním Ján prijal bez zmeny (budúce znenie čitateľovi
+áno, 6 riadkov, zodpovedná osoba pri zákone neskôr).
+
+**Čo sa v implementácii nerobilo potichu.** „Opýtať sa" na detaile ostalo
+tiché, hoci návrh písal plné — jediné plné tlačidlo stránky je
+„Potvrdzujem" na konci; návrh opravený v tom istom PR. Kurzy a testy
+v Moje úlohy nie sú: Vzdelávanie nemá pri kurze termín, nebolo by podľa
+čoho zoradiť — zapísané ako vlastné rozhodnutie v TODO. Pripojené systémy
+z Prehľadu zmizli úplne: pre čitateľa to nie sú dokumenty.
+
+**Čo nevyšlo hneď.**
+- Po zlúčení #450 ostal worktree na starej vetve a krok C sa začal písať
+  na nej; `git checkout -b … origin/main` najprv odmietol, lebo lokálny
+  `origin/main` bol zastaraný (fetch pred zlúčením, nie po). Po `fetch`
+  prešiel a zmeny C sa preniesli čisto. **Nabudúce:** po zlúčení najprv
+  `git fetch origin main && git checkout --detach origin/main`, potom nová
+  vetva.
+- Plný beh `vitest` raz ukázal desať padnutých testov knižnice, ktoré
+  s mojou zmenou nesúviseli; druhý beh bol zelený. Pravdepodobne súbeh
+  s buildom v tom istom príkaze. **Nabudúce:** testy a build oddelene.
+- Hromadná úprava `i18n.ts` skriptom padla na tom, že sk a cs majú
+  rovnaký text (`platí od ${date}`) — hľadanie podľa textu nestačí,
+  treba podľa okolia. A `tiles` ostal v type, keď sa z hodnôt vymazal —
+  `tsc` to chytil.
+- Názov testu so „slovenskými úvodzovkami" v reťazci s rovnakými
+  úvodzovkami — syntax; esbuild to oznámil len ako „',' expected".
+
+**Poupratuj:** `libraryNews`, `expiringVersions`, `recentLibrary` a
+`pickRecent` z `overview.ts` zmazané aj s testami (okná „nové" a „expiruje"
+sú teraz v `mergeReaderDocuments` a ich hranice v `readerDocuments.test.ts`);
+`PREHLAD.md` označený ako prekonaný; TODO a NEXT podľa gitu.
+
+---
 
 ## 2026-10-25 večer — MCP naostro, smernica o cestovných náhradách, stropy úsekov posuvníkom
 

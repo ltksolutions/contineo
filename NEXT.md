@@ -6,11 +6,26 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-25 neskoro večer** (MCP overený naostro z Claude Desktop aj Claude Code; stropy úsekov `search_library` posuvníkmi v AI asistentoch a nový prvok `.field-range`, #441; smernica o pracovných cestách — zoznamy, poznámky a písmená podľa PDF opravené bez novej verzie; predtým katalóg legislatívy ADR-039 fázy 1–2, #432, #436; register zdrojov ADR-040 kroky 1–3, Organizácia → Zdroje, #433, #434, #437; Zdroje → Web / RSS → Slov-Lex a návod pre zdroje, ADR-040 Dodatok 1, #439; MCP server so zdrojmi a Legislatívou #438 a prihlásenie z Claude Code #440, druhá session; návrat oznamu Legislatívy #435; predtým 2026-10-24 večer: Prehľad spotreby AI #425, #426 — prvý návrh z artefaktu *Design*; Contineo ako MCP server fáza 1, ADR-038, #422, #424; oprava textu znenia a PDF konceptu #427–#429; design system ako artefakt v Claude, `/design-sync` 24. 10.; predtým výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-26 večer** (Prehľad a detail dokumentu pre bežného používateľa — ADR-041, kroky B → C → A, #449–#452; otázka nad jedným dokumentom `?doc=` D269, #448, druhá session; detail predpisu s celým textom a tlačidlo „Pridať do knižnice" #446, dátum kontroly pri predpise #445; prvé nočné behy cronu katalógu overené, bez konceptov; predtým 2026-10-25 neskoro večer: MCP overený naostro z Claude Desktop aj Claude Code; stropy úsekov `search_library` posuvníkmi v AI asistentoch a nový prvok `.field-range`, #441; smernica o pracovných cestách — zoznamy, poznámky a písmená podľa PDF opravené bez novej verzie; predtým katalóg legislatívy ADR-039 fázy 1–2, #432, #436; register zdrojov ADR-040 kroky 1–3, Organizácia → Zdroje, #433, #434, #437; Zdroje → Web / RSS → Slov-Lex a návod pre zdroje, ADR-040 Dodatok 1, #439; MCP server so zdrojmi a Legislatívou #438 a prihlásenie z Claude Code #440, druhá session; návrat oznamu Legislatívy #435; predtým 2026-10-24 večer: Prehľad spotreby AI #425, #426 — prvý návrh z artefaktu *Design*; Contineo ako MCP server fáza 1, ADR-038, #422, #424; oprava textu znenia a PDF konceptu #427–#429; design system ako artefakt v Claude, `/design-sync` 24. 10.; predtým výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Prehľad a detail pre bežného používateľa (26. 10., ADR-041, #449–#452).**
+Bežný človek vidí **dokumenty, nie zdroje**: jeden zoznam podľa druhu
+(predpis z katalógu je druh Zákon), pripojené systémy ostávajú len vo výbere
+zdrojov na Opýtať sa. Prehľad (`/`) má **Moje úlohy** (povinnosti s termínom,
+kolá schválenia) a **Dokumenty** (knižnica + odoberané predpisy, chipy
+`nové` a `expiruje`, akcia Opýtať sa) a pod nimi rozcestník; KPI dlaždice
+a „Pre vás" zanikli. Čitateľský detail `/documents/<id>` má riadok druh ·
+znenie · účinné od, kartu údajov (zodpovedná osoba, právny základ, prijal,
+autor, nadradené, jazyk, pôvod, moje potvrdenie — bez priečinka, prístupu,
+značiek a cudzích potvrdení) a prepínanie zverejnených znení `?version=`;
+zákon má čitateľskú adresu `/documents/law/<actId>` (správcovská ostáva);
+správca obsahu má na detaile jediný tichý odkaz. Knižnica na čítanie
+(`/library` bez roly) má prepínač podľa druhu `?kind=`. **Otázka nad jedným
+dokumentom** `?doc=` (D269, #448, druhá session). **Naživo neoverené.**
 
 **Zdroje a katalóg legislatívy (25. 10., ADR-039, ADR-040, #432–#437).**
 Organizácia → **Zdroje** je register zdrojov obsahu (knižnica, schránky
@@ -26,7 +41,11 @@ cron o 4:15 dopĺňa históriu po štyroch zneniach na predpis). Odber do
 knižnice ide z katalógu, zo Slov-Lexu sa sťahuje len záväzné PDF; zverejnený
 dokument knižnice má pri odpovedi prednosť pred katalógom. Cron zakladá
 koncepty nových znení a posiela `lawVersionDraft` správcom obsahu —
-**prvý nočný beh ešte neprebehol.** Správa katalógu: `/admin/law`.
+**prvé nočné behy 25. a 26. 10. prebehli** (12 + 11 nových znení, 0 chýb,
+0 konceptov; katalóg 27 znení, 2 776 úsekov; log `[legislativa] cron:` vo
+Vercel Runtime Logs). Správa katalógu: `/admin/law`; pri každom predpise
+v Zdroje → Web / RSS → Slov-Lex je dátum poslednej kontroly a chyba (#445),
+detail predpisu so zneniami a celým textom (#446).
 Návod `/guide` má kapitolu pre každého (zdroje pri otázke) a pre správcu
 zdrojov (katalóg verzus knižnica). MCP server zdroje aj Legislatívu číta
 (`list_sources`, `list_law_acts`, `get_law_act`, #438, druhá session).
@@ -370,10 +389,12 @@ počty v `retention[].helpdesk`).
 
 1. **Rozhodnúť 41 nálezov kola 2** a nové znenia siedmich manuálov
    (ISSF-00, 01, 02, 03, 04, 05, 07) poslať na schválenie v jednom kole.
-2. **Kontrola súladu Stanov proti Zákonu o športe** (zákon je zverejnený
-   od 23. 10., nadradený Stanovám) a **po prvom nočnom behu cronu
-   katalógu** pozrieť upozornenia — koncept „opraveného" znenia zákona by
-   znamenal, že odtlačok z katalógu nesedí s ADR-037 (zahodiť). **Nahrať
+2. **Prejsť naživo** Prehľad, `/library` s prepínačom druhu, jeden dokument
+   a jeden zákon (ADR-041, #450–#452 nasadené bez pohľadu v prehliadači).
+   **Kontrola súladu Stanov proti Zákonu o športe:** existujúca kontrola
+   „Stanovy SFZ proti zákonu o športe" z 23. 10. má 13 nerozhodnutých
+   nálezov — najprv rozhodnúť, nové kolo (≈ 1,37 USD, 2 min) až potom.
+   Nočný beh cronu katalógu je overený (žiadny koncept). **Nahrať
    licenčnú normu trénerov** — päť otázok o trénerských licenciách dnes
    nepokryje žiadny dokument.
 3. **Kuriér naostro:** živý rozhovor dvoch ľudí, ranný súhrn v logu

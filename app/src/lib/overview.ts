@@ -1,159 +1,25 @@
 /**
- * overview.ts — čísla a zoznamy pre Prehľad (`docs/design/README.md`, časť 2).
+ * overview.ts — zoznam dokumentov pre čitateľa (Prehľad a Knižnica na čítanie,
+ * ADR-041 D270).
  *
  * **Nič sa tu nepočíta druhýkrát.** Povinnosti idú z `pendingForPerson()`,
- * kolá schvaľovania z `roundsWaitingFor()` — z tých istých funkcií, ktoré
- * kreslia widget a obrazovku schvaľovateľa. Dlaždica, ktorá si svoje číslo
- * počíta po svojom, sa raz rozíde s obrazovkou, na ktorú odkazuje, a človek
- * bude mať pravdu, keď povie „to nesedí".
+ * kolá schvaľovania z `roundsWaitingFor()`, dokumenty z `readableDocuments()`
+ * a predpisy zo `subscribedActs()` — z tých istých funkcií, ktoré kreslia
+ * obrazovky, na ktoré Prehľad odkazuje. Panel, ktorý si svoje položky počíta
+ * po svojom, sa raz rozíde s obrazovkou, na ktorú odkazuje.
  *
- * Dve dlaždice návrhu potrebujú vlastný dotaz, lebo sa nedali odvodiť
- * z ničoho existujúceho: „nové za 7 dní" a „expiruje do 30 dní". Obe sú
- * o dokumentoch, nie o osobe, a obe sa počítajú **z rovnakého zdroja ako
- * knižnica** — z `versions[]`, nie z `updatedAt` na dokumente. `updatedAt` sa
- * mení aj pri oprave preklepu v označení a „nové" by potom znamenalo
- * „niekto sa toho dotkol".
+ * Okná „nové" a „expiruje" sú z `publishedAt` a `effectiveTo` na **znení**,
+ * nie z `updatedAt` na dokumente: `updatedAt` sa mení aj pri oprave preklepu
+ * v označení a „nové" by potom znamenalo „niekto sa toho dotkol". Dlaždice
+ * KPI a panel Novinky, ktoré tieto okná kreslili, zanikli 26. 10. 2026
+ * (D271); okná ostali ako chipy pri riadku.
  */
 
-import { getCollection } from "./mongodb"
-import { DOCUMENTS_COLLECTION, type Version } from "./documents"
+import { dueState } from "./due"
+import { matchesQuery } from "./askHistoryMatch"
 
 export const NEW_DAYS = 7
 export const EXPIRING_DAYS = 30
-
-export interface LibraryNews {
-  documentId: string
-  title: string
-  versionLabel: string
-  publishedAt: Date
-  category?: string
-}
-
-export interface ExpiringVersion {
-  documentId: string
-  title: string
-  versionLabel: string
-  effectiveTo: Date
-}
-
-interface RawDoc {
-  documentId: unknown
-  title?: unknown
-  category?: unknown
-  status?: unknown
-  versions?: Version[]
-}
-
-async function publishedDocs(companyCode: string): Promise<RawDoc[]> {
-  const col = await getCollection(DOCUMENTS_COLLECTION)
-  return col
-    .find(
-      { companyCode, status: "published" },
-      {
-        projection: {
-          documentId: 1, title: 1, category: 1, status: 1,
-          "versions.versionId": 1, "versions.label": 1, "versions.isActive": 1,
-          "versions.publishedAt": 1, "versions.effectiveTo": 1,
-        },
-      },
-    )
-    .toArray() as unknown as RawDoc[]
-}
-
-/**
- * Znenia zverejnené za posledných `NEW_DAYS` dní, najnovšie hore.
- *
- * Počíta sa `publishedAt` na **znení**, nie `updatedAt` na dokumente: nové
- * znenie je nová vec na prečítanie, oprava preklepu v označení nie.
- */
-export async function libraryNews(
-  companyCode: string,
-  asOf = new Date(),
-  days = NEW_DAYS,
-): Promise<LibraryNews[]> {
-  const hranica = asOf.getTime() - days * 24 * 60 * 60 * 1000
-  const out: LibraryNews[] = []
-
-  for (const d of await publishedDocs(companyCode)) {
-    for (const v of d.versions ?? []) {
-      const at = v.publishedAt ? new Date(v.publishedAt) : null
-      if (!at || at.getTime() < hranica || at.getTime() > asOf.getTime()) continue
-      out.push({
-        documentId: String(d.documentId),
-        title: String(d.title ?? d.documentId),
-        versionLabel: v.label,
-        publishedAt: at,
-        ...(d.category ? { category: String(d.category) } : {}),
-      })
-    }
-  }
-  return out.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())
-}
-
-/**
- * Znenia, ktorým sa do `EXPIRING_DAYS` dní končí platnosť.
- *
- * **Len tie, ktoré platia teraz.** Znenie s `effectiveTo` v minulosti už
- * neexpiruje — už vypršalo, a to je iná veta. Archivované (`isActive: false`)
- * sa nerátajú vôbec: skončili tým, že ich nahradilo novšie, nie časom.
- */
-export async function expiringVersions(
-  companyCode: string,
-  asOf = new Date(),
-  days = EXPIRING_DAYS,
-): Promise<ExpiringVersion[]> {
-  const hranica = asOf.getTime() + days * 24 * 60 * 60 * 1000
-  const out: ExpiringVersion[] = []
-
-  for (const d of await publishedDocs(companyCode)) {
-    for (const v of d.versions ?? []) {
-      if (!v.isActive || !v.effectiveTo) continue
-      const to = new Date(v.effectiveTo)
-      if (to.getTime() < asOf.getTime() || to.getTime() > hranica) continue
-      out.push({
-        documentId: String(d.documentId),
-        title: String(d.title ?? d.documentId),
-        versionLabel: v.label,
-        effectiveTo: to,
-      })
-    }
-  }
-  return out.sort((a, b) => a.effectiveTo.getTime() - b.effectiveTo.getTime())
-}
-
-/** Dokument knižnice v paneli „Čo máte k dispozícii" — posledné zverejnené znenie. */
-export interface RecentDocument {
-  documentId: string
-  title: string
-  versionLabel: string
-  publishedAt: Date
-}
-
-/**
- * Posledných `limit` zverejnených dokumentov, každý raz, podľa najnovšie
- * zverejneného znenia. Na rozdiel od noviniek bez časovej hranice: panel
- * hovorí, **čo v knižnici je**, nie čo sa v nej za týždeň zmenilo —
- * organizácia s desiatimi starými normami nemá vidieť prázdny panel.
- */
-export function pickRecent(docs: RawDoc[], limit: number, asOf = new Date()): RecentDocument[] {
-  const out: RecentDocument[] = []
-  for (const d of docs) {
-    let latest: { label: string; at: Date } | null = null
-    for (const v of d.versions ?? []) {
-      const at = v.publishedAt ? new Date(v.publishedAt) : null
-      if (!at || at.getTime() > asOf.getTime()) continue
-      if (!latest || at.getTime() > latest.at.getTime()) latest = { label: v.label, at }
-    }
-    if (!latest) continue
-    out.push({ documentId: String(d.documentId), title: String(d.title ?? d.documentId), versionLabel: latest.label, publishedAt: latest.at })
-  }
-  return out.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()).slice(0, limit)
-}
-
-export async function recentLibrary(companyCode: string, limit: number, asOf = new Date()): Promise<{ recent: RecentDocument[]; total: number }> {
-  const docs = await publishedDocs(companyCode)
-  return { recent: pickRecent(docs, limit, asOf), total: docs.length }
-}
 
 /**
  * Jeden riadok zoznamu dokumentov pre čitateľa (ADR-041, D270): dokument
@@ -166,9 +32,11 @@ export interface ReaderDocumentRow {
   title: string
   /** Kľúč číselníka `category`; `null` pri dokumente bez druhu. */
   category: string | null
-  versionLabel: string | null
   effectiveFrom: Date
-  /** Platné znenie zverejnené za posledných `NEW_DAYS` dní. */
+  /**
+   * Nové pre čitateľa: zverejnené po `newSince` (jeho predchádzajúce
+   * prihlásenie, PREHLAD-ulohy-a-dokumenty Q3), inak za posledných `NEW_DAYS` dní.
+   */
   isNew: boolean
   /** Platnosť znenia končí do `EXPIRING_DAYS` dní. */
   expiring: boolean
@@ -183,20 +51,26 @@ export const LAW_CATEGORY = "zakon"
  * Zlúči platné dokumenty knižnice a odoberané predpisy do jedného zoznamu,
  * najnovšie znenie prvé. Čistá funkcia — Prehľad a Knižnica na čítanie
  * z nej kreslia to isté, len inak zoradené a orezané.
+ *
+ * `newSince`: od kedy je dokument „nový". `null` = nikdy (človek tu ešte
+ * nebol — zvýrazniť mu pri prvom vstupe všetko je šum, rovnako ako `isNewFor()`
+ * pri úlohách); bez parametra okno `NEW_DAYS` dní.
  */
 export function mergeReaderDocuments(
   docs: { documentId: string; title: string; category: string | null; versionLabel: string; effectiveFrom: Date; effectiveTo: Date | null; publishedAt: Date | null }[],
   acts: { actId: string; title: string; current: { effectiveFrom: Date } | null }[],
   asOf = new Date(),
+  newSinceDate?: Date | null,
 ): ReaderDocumentRow[] {
-  const newSince = asOf.getTime() - NEW_DAYS * 24 * 60 * 60 * 1000
+  const newSince = newSinceDate === undefined
+    ? asOf.getTime() - NEW_DAYS * 24 * 60 * 60 * 1000
+    : newSinceDate === null ? Infinity : newSinceDate.getTime() + 1
   const expiringUntil = asOf.getTime() + EXPIRING_DAYS * 24 * 60 * 60 * 1000
   const rows: ReaderDocumentRow[] = docs.map(d => ({
     key: `doc:${d.documentId}`,
     kind: "document",
     title: d.title,
     category: d.category,
-    versionLabel: d.versionLabel,
     effectiveFrom: d.effectiveFrom,
     isNew: Boolean(d.publishedAt && d.publishedAt.getTime() >= newSince && d.publishedAt.getTime() <= asOf.getTime()),
     expiring: Boolean(d.effectiveTo && d.effectiveTo.getTime() > asOf.getTime() && d.effectiveTo.getTime() <= expiringUntil),
@@ -211,7 +85,6 @@ export function mergeReaderDocuments(
       kind: "law",
       title: a.title,
       category: LAW_CATEGORY,
-      versionLabel: null,
       effectiveFrom: a.current.effectiveFrom,
       isNew: false,
       expiring: false,
@@ -220,4 +93,51 @@ export function mergeReaderDocuments(
     })
   }
   return rows.sort((a, b) => b.effectiveFrom.getTime() - a.effectiveFrom.getTime() || a.title.localeCompare(b.title, "sk"))
+}
+
+/** Skupina úlohy na Prehľade podľa termínu (PREHLAD-ulohy-a-dokumenty). */
+export type TaskGroup = "over" | "soon" | "rest"
+
+/**
+ * Úlohy v skupinách podľa naliehavosti: po termíne, blíži sa termín,
+ * ostatné. V skupine skorší termín prvý, bez termínu na konci; inak ostáva
+ * poradie zdroja. Prázdne skupiny sa nevracajú.
+ */
+export function groupTasks<T extends { due: Date | null }>(items: T[], now: Date): { group: TaskGroup; items: T[] }[] {
+  const groupOf = (due: Date | null): TaskGroup => {
+    const state = dueState(due, now)
+    return state === "over" ? "over" : state === "soon" ? "soon" : "rest"
+  }
+  const order: TaskGroup[] = ["over", "soon", "rest"]
+  return order
+    .map(group => ({
+      group,
+      items: items
+        .map((item, i) => ({ item, i }))
+        .filter(x => groupOf(x.item.due) === group)
+        .sort((a, b) => (a.item.due?.getTime() ?? Infinity) - (b.item.due?.getTime() ?? Infinity) || a.i - b.i)
+        .map(x => x.item),
+    }))
+    .filter(g => g.items.length > 0)
+}
+
+/**
+ * Hľadanie s rozsahmi (SwiftUI `.searchable` + `.searchScopes`): text hľadá
+ * v názve, druh zúži výsledok. Počty pri druhoch sú **po hľadaní** — hovoria,
+ * koľko z nájdeného je v ktorom druhu. Druh bez výsledku sa neukazuje, okrem
+ * zvoleného: ten ostáva s nulou, aby človek videl, prečo nič nevidí.
+ */
+export function findReaderDocuments(rows: ReaderDocumentRow[], find: string, kind: string) {
+  const q = find.trim()
+  const matched = q ? rows.filter(r => matchesQuery(r.title, q)) : rows
+  const known = new Set(rows.map(r => r.category).filter((k): k is string => Boolean(k)))
+  const activeKind = kind && known.has(kind) ? kind : ""
+  const counts = new Map<string, number>()
+  for (const r of matched) if (r.category) counts.set(r.category, (counts.get(r.category) ?? 0) + 1)
+  if (activeKind && !counts.has(activeKind)) counts.set(activeKind, 0)
+  const kinds = [...counts]
+    .map(([key, count]) => ({ key, count }))
+    .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
+  const shown = activeKind ? matched.filter(r => r.category === activeKind) : matched
+  return { query: q, kinds, activeKind, matchedTotal: matched.length, shown }
 }
