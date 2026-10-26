@@ -255,9 +255,8 @@ export default async function OverviewPage({
                 <div key={`act-${a.actId}`} className="panel-row">
                   <div className="panel-main">
                     {/* Detail predpisu je v nastaveniach organizácie (správca osôb); ostatným znenie ukáže portál. */}
-                    {nav.flags.isPeopleAdmin
-                      ? <Link className="panel-name" href={`/organisation/sources/web/${SLOV_LEX_SOURCE_ID}/${a.actId}`}>{a.title}</Link>
-                      : <a className="panel-name" href={`https://www.slov-lex.sk/pravne-predpisy/${a.actId}/`} target="_blank" rel="noopener noreferrer">{a.title}</a>}
+                    {/* Čitateľská adresa predpisu pre každého (ADR-041 D273); správa zdroja je odtiaľ tichým odkazom. */}
+                    <Link className="panel-name" href={`/documents/law/${a.actId}`}>{a.title}</Link>
                     <div className="quiet panel-meta">
                       {t.available.kindLaw}{a.current ? ` · ${t.available.actEffective(formatDate(a.current.effectiveFrom, language))}` : ""}
                     </div>
