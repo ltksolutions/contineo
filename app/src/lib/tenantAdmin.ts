@@ -129,6 +129,8 @@ export interface TenantChange {
   /** Prístup pre AI asistentov — MCP server (ADR-038, D251, D252). */
   assistantsEnabled?: boolean
   assistantsPublicOnly?: boolean
+  /** Stropy úsekov pre `search_library` — už orezané do rozsahu (`searchCaps()`). */
+  assistantsSearchCaps?: { documents: number; law: number }
 }
 
 /**
@@ -185,9 +187,10 @@ function languages(raw: string[] | undefined, where: string): UiLanguage[] | und
 function toSet(change: TenantChange): Record<string, unknown> {
   const set: Record<string, unknown> = { updatedAt: new Date() }
   // MCP server (ADR-038): obe hodnoty naraz, aby `updatedAt` hovoril o oboch.
-  if (change.assistantsEnabled !== undefined || change.assistantsPublicOnly !== undefined) {
+  if (change.assistantsEnabled !== undefined || change.assistantsPublicOnly !== undefined || change.assistantsSearchCaps !== undefined) {
     if (change.assistantsEnabled !== undefined) set["assistants.enabled"] = change.assistantsEnabled
     if (change.assistantsPublicOnly !== undefined) set["assistants.publicOnly"] = change.assistantsPublicOnly
+    if (change.assistantsSearchCaps !== undefined) set["assistants.searchCaps"] = change.assistantsSearchCaps
     set["assistants.updatedAt"] = new Date()
   }
   if (change.hostnames) set.hostnames = change.hostnames

@@ -418,5 +418,15 @@ návrhu."
 - Predpis, ktorý má organizácia zverejnený v knižnici, odpovedá pri
   hľadaní z knižnice (schválené znenie, D260) — `lawSearch` ho z katalógu
   druhýkrát nevracia.
+- **`search_library` nemá parameter `limit`** (Ján 25. 10.: „nevidím dôvod
+  na zadávanie limitu"). Strop je na serveri pre každý zdroj zvlášť — text,
+  ktorý odišiel, si model klienta spätne neustráži — a **organizácia si ho
+  nastaví posuvníkmi v Prístup → AI asistenti** (`.field-range`, nový prvok
+  design systému): knižnica a každý konektor 3–15 (predvolene 8), Legislatíva
+  1–8 (predvolene 4). Úsek knižnice má cieľ 300–900 tokenov (ADR-035), 8
+  úsekov je teda zhruba 2 500–7 000 tokenov; pod 3 chýba kontext, nad 15 jedno
+  hľadanie zaplní veľkú časť konverzácie. Rozsahy a odôvodnenie sú pri
+  `SEARCH_CAP_RANGE` (`lib/mcpServer/access.ts`); overiť sa dajú po mesiaci
+  z `mcp_calls.size`. Portál ani `ask` sa nemenia.
 - Konektor v `search_library` volá cudzí server (stopa `connector_calls`,
   D177), nie jazykový model; zdroj, ktorý nestihol, sa vymenuje vo výsledku.

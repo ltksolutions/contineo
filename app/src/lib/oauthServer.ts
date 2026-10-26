@@ -98,6 +98,9 @@ export function verifyPkce(verifier: string | null | undefined, challenge: strin
   return computed.length === expected.length && timingSafeEqual(computed, expected)
 }
 
+/** Návrat na vlastný počítač — tu sa smie `http://` a port sa neporovnáva (RFC 8252). */
+const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
+
 /**
  * Návratová adresa klienta: `https://` kamkoľvek, `http://` len na loopback
  * (Claude Code a inšpektor počúvajú na `localhost`). Bez fragmentu.
@@ -110,8 +113,6 @@ export function isAllowedRedirectUri(uri: string): boolean {
   if (u.protocol === "http:") return LOOPBACK_HOSTS.includes(u.hostname.toLowerCase())
   return false
 }
-
-const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
 
 /**
  * Je žiadaná návratová adresa medzi registrovanými? Doslovne — okrem

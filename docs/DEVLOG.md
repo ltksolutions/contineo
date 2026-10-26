@@ -11,6 +11,73 @@
 ---
 
 
+## 2026-10-25 večer — MCP naostro, smernica o cestovných náhradách, stropy úsekov posuvníkom
+
+**MCP overený naostro.** Ján pripojil konektor v Claude Desktop, potom
+v Claude Code. Z Claude Code prihlásenie najprv padlo na „návratová adresa
+nie je registrovaná": Claude Code registruje `http://localhost/callback`
+bez portu a prihlasuje sa s náhodným — RFC 8252 § 7.3 hovorí, že port sa
+pri loopback neporovnáva (#440, už v CHANGELOG). Po oprave prešli `whoami`,
+`list_sources`, `list_law_acts` aj `search_library` so `slov-lex`. Lokálny
+konektor „contineo" v `~/.claude.json` ukazoval na `localhost:3000`; Ján ho
+prepol na produkciu.
+
+**Smernica o pracovných cestách — dve opravy textu (ADR-007).** Pri skúške
+MCP sa v čl. 11 ukázali rozbité vnorené zoznamy (`-   -   1.`) a zlomené
+poznámky pod čiarou — pozostatok prevodu z Wordu, rovnaký v čl. 8, 10, 12,
+13 a 14. Oprava v mene Jána cez Opraviť text: zoznamy a poznámky (+23/−25),
+potom písmená v odsekoch podľa schváleného PDF (+60/−60, čl. 1, 2, 3, 6, 7,
+9, 13, 16 — v PDF strany 3 až 12). Text sa menil v editore presnými
+náhradami nad textom v stránke, nie prepisovaním 23 000 znakov; rozdiel
+zo servera sa pred potvrdením zhodoval s návrhom. Znenie, PDF aj potvrdenia
+ostali, preindexovalo sa 19 úsekov a odkazy „ods. 2 písm. b) až f)" či
+„podľa odseku 6" teraz sedia.
+
+**Čo nevyšlo hneď.**
+- Prvý výpočet písmen mal zlé hranice článkov a písmená sa rozliali do
+  čl. 4 až 14. Kontrola „slová textu sa nezmenili" to **nezachytila** —
+  menili sa len označenia. Zachytil to až pohľad na zoznam zmien; odvtedy
+  kontrola tvaru každého článku proti PDF (`1 2 a) … f) 3 …`). Nič sa
+  neuložilo. **Nabudúce:** pri štrukturálnej oprave kontrolovať očakávaný
+  tvar, nie len nezmenené slová.
+- PDF otvorené priamo cez `/api/library/file/…` vyvolalo Jánovi dialóg
+  uloženia; čítačka `/documents/…` kreslí strany ako obrázok bez textovej
+  vrstvy, takže štruktúra sa čítala zo snímok strán.
+- Build po prepnutí vetiev padol na zastaraných typoch v `.next/dev`
+  (stránka, ktorá na `main` už nie je) — `rm -rf .next/dev` a znova.
+- #440 odišiel do `main` s chybou ESLint (`no-use-before-define`:
+  `LOOPBACK_HOSTS` pod funkciou, ktorá ho používa). Za behu neškodná, ale
+  pravidlo je chyba zámerne. Prehliadol som ju, lebo som z `npx eslint .`
+  čítal len posledný riadok („… potentially fixable"), nie súhrn `✖ N
+  problems (X errors…)`. CI ESLint nespúšťa. Opravené pri tomto Poupratuj.
+  **Nabudúce:** čítať riadok `✖`, nie chvost výpisu.
+
+**Limit v `search_library` → stropy posuvníkom (#441).** `limit` obmedzoval
+len knižnicu; Legislatíva pridávala svoje úseky navyše (pri `limit: 2`
+štyri paragrafy, ~10 000 znakov). Ján: parameter je zbytočný, model si ho
+stráži sám. Odpoveď: parameter áno, strop nie — text, ktorý odišiel, si
+model spätne neustráži. Výsledok: bez parametra, strop pre každý zdroj
+zvlášť a **organizácia ho nastaví posuvníkmi** v Prístup → AI asistenti
+(knižnica a konektory 3–15, predvolene 8; Legislatíva 1–8, predvolene 4).
+Posuvník v design systéme nebol — otázka s odporúčaním, Ján schválil
+**`.field-range`** (natívny `input type=range`, farba organizácie, 44 px,
+`RangeField`). Náhľad sa robil statickým HTML so skompilovaným CSS
+z buildu, lebo prihlásenie na `localhost` nie je po ruke: počítač aj
+375 px v tmavej téme.
+
+**`/design-sync` v ten istý večer** (Ján ho spustil): `RangeField` je 13.
+komponent knižnice v Claude Design aj v artefakte (verzia 10, `bf83603`).
+Publikovanie do artefaktu dvakrát odmietnuté, kým nebol prečítaný celý
+artefakt a `file_path` nebol absolútny — zapísané v `.design-sync/NOTES.md`.
+
+**Ostáva.** Stropy po mesiaci overiť z `mcp_calls.size`. V smernici
+bodka pred zátvorkou v pozn. 5; Pracovný poriadok SFZ bez nadradeného
+dokumentu; Skúšobný poriadok `sfz:test_znenia` viditeľný ako platný.
+
+Baseline na konci dňa: 2992 testov v 259 súboroch.
+
+---
+
 ## 2026-10-25 — Slov-Lex ako štandardný zdroj: katalóg legislatívy a register zdrojov
 
 **Z čoho to vzišlo.** Ján: „implementujem slov-lex.sk ako štandardný zdroj".

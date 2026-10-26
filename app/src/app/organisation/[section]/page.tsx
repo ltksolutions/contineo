@@ -46,7 +46,8 @@ import ConnectorList from "../_connectors/ConnectorList"
 import ConnectorDetail from "../_connectors/ConnectorDetail"
 import { listConnectors, connectorById, connectorView, channelsUsingConnector } from "@/lib/connectors"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
-import { assistantsState } from "@/lib/mcpServer/access"
+import { assistantsState, SEARCH_CAP_RANGE } from "@/lib/mcpServer/access"
+import RangeField from "@/components/RangeField"
 import { getTenantProfile } from "@/lib/tenantProfile"
 import { grantsForCompany } from "@/lib/oauthServer"
 import { RESIDENCY_LABEL } from "@/lib/residency"
@@ -975,6 +976,25 @@ export default async function OrganisationSectionPage({
               </div>
             </div>
           </section>
+          {/* Stropy úsekov pre search_library (Ján 25. 10. 2026) — posuvníky `.field-range`. */}
+          {assistants.allowed && (
+            <section className="set-sec" id="assistants-caps">
+              <div className="set-sec-head">
+                <h2>{d.mcp.org.capsHeading}</h2>
+                <p>{d.mcp.org.capsIntro}</p>
+              </div>
+              <div className="set-sec-body">
+                <RangeField
+                  name="capDocuments" label={d.mcp.org.capDocuments} hint={d.mcp.org.capDocumentsHint}
+                  min={SEARCH_CAP_RANGE.documents.min} max={SEARCH_CAP_RANGE.documents.max} defaultValue={assistants.caps.documents}
+                />
+                <RangeField
+                  name="capLaw" label={d.mcp.org.capLaw} hint={d.mcp.org.capLawHint}
+                  min={SEARCH_CAP_RANGE.law.min} max={SEARCH_CAP_RANGE.law.max} defaultValue={assistants.caps.law}
+                />
+              </div>
+            </section>
+          )}
           {assistants.allowed && (
             <div className="set-savebar">
               <SubmitButton className="button">{t.branding.save}</SubmitButton>

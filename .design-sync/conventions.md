@@ -48,6 +48,11 @@ sú len doplnok. Texty sú po slovensky.
   | niekoľko zo zoznamu | `.form-row.select-row` (kruh vľavo) | `type="checkbox"` |
   | jedna z 2–5 | `.form-row.choice-row` (fajka vpravo) | `type="radio"`; pole voľby v `div.choice-field` hneď za riadkom |
   | zapnuté / vypnuté | `.form-row` | `type="checkbox" role="switch" class="toggle"` |
+- Číslo v malom rozsahu s rozumnou predvoľbou (SwiftUI `Slider`, od 25. 10.): komponent
+  `RangeField` → `div.field.field-range` > `.field-range-head` (`label.field-label` +
+  `output.field-range-value`), natívny `input.field-range-input type="range"` (farba
+  organizácie cez `accent-color`, terč 44 px), `.field-range-scale` (min a max), `.field-hint`.
+  Presné číslo (suma, dátum, počet osôb) je `.field-input`, nie posuvník.
 - Pilulky (`.tag`) sú len na čítanie, vo formulári nie. `.view-switch` do formulára nepatrí.
 
 ```jsx

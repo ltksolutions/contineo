@@ -31,10 +31,10 @@
   <rect x="919" y="88" width="275" height="54" rx="14" fill="#FCE4EC" stroke="#AD1457" stroke-width="1.5"/>
   <rect x="1212" y="88" width="264" height="54" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
   <text x="1232" y="110" font-size="12.5" font-weight="700" fill="#54309E" textLength="183" lengthAdjust="spacingAndGlyphs">CONTINEO AKO MCP SERVER</text>
-  <text x="1232" y="129" font-size="10.5" fill="#5f6368" textLength="205" lengthAdjust="spacingAndGlyphs">AI asistent číta knižnicu · OAuth · len čítanie</text>
+  <text x="1232" y="129" font-size="10.5" fill="#5f6368" textLength="207" lengthAdjust="spacingAndGlyphs">číta knižnicu, legislatívu a konektory · OAuth</text>
   <path d="M1344,142 L1344,228" stroke="#6B46C1" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowVio)"/>
-  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="195" lengthAdjust="spacingAndGlyphs">KONEKTORY (MCP) — živý zdroj</text>
-  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="236" lengthAdjust="spacingAndGlyphs">pilulkou alebo predvolene · „živý zdroj, neoverené“</text>
+  <text x="939" y="110" font-size="12.5" font-weight="700" fill="#AD1457" textLength="236" lengthAdjust="spacingAndGlyphs">KONEKTORY A LEGISLATÍVA pri otázke</text>
+  <text x="939" y="129" font-size="10.5" fill="#5f6368" textLength="226" lengthAdjust="spacingAndGlyphs">zdroje si človek vyberie · štítky Živý zdroj, Zákon</text>
   <path d="M1051,142 L1051,228" stroke="#AD1457" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowPink)"/>
 
   <!-- CMS ako vrstva nad kanálmi a workerom -->
@@ -46,11 +46,11 @@
   <!-- ZDROJE -->
   <rect x="40" y="236" width="264" height="372" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
   <text x="60" y="266" font-size="15" font-weight="700" fill="#174EA6" textLength="61" lengthAdjust="spacingAndGlyphs">ZDROJE</text>
-  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="213" lengthAdjust="spacingAndGlyphs">dnes: súbory, Slov-Lex, schránka, konektor</text>
+  <text x="60" y="285" font-size="11" fill="#5f6368" textLength="227" lengthAdjust="spacingAndGlyphs">register: súbory · schránka · konektor · zákony</text>
   <g font-size="12.5" fill="#202124">
     <text x="60" y="316" textLength="216" lengthAdjust="spacingAndGlyphs">• Nahraté súbory — PDF + Word/Excel</text>
     <text x="60" y="342" fill="#9aa0a6" textLength="150" lengthAdjust="spacingAndGlyphs">• RSS / web (pripravujeme)</text>
-    <text x="60" y="368" textLength="215" lengthAdjust="spacingAndGlyphs">• Slov-Lex (zákon) · overené odpovede</text>
+    <text x="60" y="368" textLength="204" lengthAdjust="spacingAndGlyphs">• Legislatíva — katalóg zo Slov-Lexu</text>
     <text x="60" y="394" textLength="182" lengthAdjust="spacingAndGlyphs">• Schránka helpdesku (Graph) ⇅</text>
     <text x="60" y="420" textLength="113" lengthAdjust="spacingAndGlyphs">• Import z konektora</text>
     <text x="74" y="440" font-size="11" fill="#5f6368" textLength="198" lengthAdjust="spacingAndGlyphs">článok ako koncept s PDF → schválenie</text>
@@ -107,7 +107,7 @@
   <text x="646" y="526" font-size="10" fill="#3c4043" textLength="141" lengthAdjust="spacingAndGlyphs">Potvrdenia: acknowledgements</text>
   <text x="646" y="539" font-size="10" fill="#3c4043" textLength="191" lengthAdjust="spacingAndGlyphs">Kanály: channels · tickets · courier_threads</text>
   <text x="646" y="552" font-size="10" fill="#3c4043" textLength="181" lengthAdjust="spacingAndGlyphs">Vzdelávanie: courses · tests · certificates</text>
-  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="193" lengthAdjust="spacingAndGlyphs">Dohľad: audit · ai_usage · compliance_runs</text>
+  <text x="646" y="565" font-size="10" fill="#3c4043" textLength="153" lengthAdjust="spacingAndGlyphs">Legislatíva: law_acts · law_chunks</text>
   <line x1="646" y1="574" x2="870" y2="574" stroke="#A8D5B5" stroke-width="1"/>
   <text x="646" y="586" font-size="10" fill="#0B6E2E" textLength="161" lengthAdjust="spacingAndGlyphs">Dôkazné záznamy sa nemenia (D24)</text>
   <text x="646" y="598" font-size="9.5" fill="#5f6368" textLength="199" lengthAdjust="spacingAndGlyphs">oprava = nový záznam · odvolanie = revokedAt</text>

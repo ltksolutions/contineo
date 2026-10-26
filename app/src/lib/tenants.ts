@@ -254,6 +254,8 @@ export interface Tenant {
   assistants?: {
     enabled: boolean
     publicOnly?: boolean
+    /** Stropy úsekov pre `search_library` (posuvníky); chýba = predvoľby (`SEARCH_CAP_RANGE`). */
+    searchCaps?: { documents?: number; law?: number }
     updatedAt?: Date
     updatedBy?: string
   }

@@ -44,6 +44,11 @@ export interface LawSearchInput {
   useStageRerank: boolean
   rerankModel?: string
   vectorPath?: string
+  /**
+   * Koľko úsekov vrátiť; chýba = 4 ako na portáli. Nastavuje ho len MCP server
+   * podľa organizácie (posuvník v AI asistentoch, ADR-038).
+   */
+  limit?: number
 }
 
 export interface LawSearchResult {
@@ -114,6 +119,7 @@ export async function lawSearch(input: LawSearchInput): Promise<LawSearchResult>
     const versions = await versionsAsOf(actIds, input.asOf)
     if (!versions.length) return { chunks: [], asked: true, failed: false }
     const keys = versions.map(v => v.versionKey)
+    const resultCount = input.limit ?? RERANK_LIMIT
     const byKey = new Map(versions.map(v => [v.versionKey, v]))
 
     const pipeline: Document[] = [
@@ -144,8 +150,8 @@ export async function lawSearch(input: LawSearchInput): Promise<LawSearchResult>
           combination: { weights: { vector: 0.6, fulltext: 0.4 } },
         },
       },
-      ...rerankStages({ useStageRerank: input.useStageRerank, rerankModel: input.rerankModel, query: input.query }, LIMIT, RERANK_LIMIT),
-      ...(input.useStageRerank ? [] : [{ $limit: LIMIT }]),
+      ...rerankStages({ useStageRerank: input.useStageRerank, rerankModel: input.rerankModel, query: input.query }, Math.max(LIMIT, resultCount * 3), resultCount),
+      ...(input.useStageRerank ? [] : [{ $limit: Math.max(LIMIT, resultCount * 3) }]),
       {
         $project: {
           text: 1, versionKey: 1, actId: 1, timepoint: 1, chunkIndex: 1, heading: 1, articleRef: 1, chunkType: 1,
