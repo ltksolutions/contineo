@@ -18,8 +18,15 @@ Design žije v Claude ako artefakty. Ján 24. 10. 2026 rozhodol:
    zapisovať do artefaktov, skript zanikne.
 2. **Návrhy obrazoviek vznikajú v Claude ako artefakty typu *Design*** s
    pripojeným design systémom vyššie. „Stiahni design — NÁZOV" ich prečíta
-   z artefaktu (Ján dá odkaz), nie zo starého projektu. Prvý návrh po
+   z artefaktu, nie zo starého projektu. Prvý návrh po
    rozhodnutí je skúška postupu; čo sa ukáže inak, dopíše sa sem.
+3. **Artefakt *Design* zakladá asistent sám, keď ho treba** (Ján 26. 10.
+   2026) — **vždy a len s pripojeným artefaktom „Contineo — design
+   system"** z bodu 1. Poradie: zadanie `docs/design/NAZOV-zadanie.md`
+   (s otázkami a odporúčaniami) → artefakt *Design* s týmto design
+   systémom, plochy 390 / 834 / 1440 → odkaz na artefakt do zadania →
+   Ján rozhodne otázky → „stiahni design NAZOV". Prvé dva návrhy
+   (ORG-ai-prehlad) zakladal Ján ručne.
 
 Do 14. 12. beží aj starý postup s dvoma projektmi nižšie; `/design-sync`
 plní oba — projekt aj artefakt.
