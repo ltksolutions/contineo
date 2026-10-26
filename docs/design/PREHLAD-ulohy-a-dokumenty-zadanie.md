@@ -11,6 +11,11 @@
 > Časť **Prompt pre Design** sa vloží do artefaktu, zvyšok je kontext pre
 > Jána a pre implementáciu.
 >
+> **Artefakt *Design*:** https://claude.ai/artifact/81LbjeKbakaztb7LPW3YRb
+> (založený 26. 10. 2026, pripojený „Contineo — design system"). Rámy
+> 1440 / 834 / 390 a Stavy; nakreslené podľa odporúčaní Q1–Q5 = A,
+> odchýlky sú v poznámke na plátne. Rozhoduje Ján pri „stiahni design".
+>
 > **Meradlo je design system Contineo** (`.design-sync/conventions.md`,
 > `app/src/app/globals.css`, `app/src/components/`). Rozhodnutie
 > v repozitári má prednosť: ADR-041 (D270–D274) platí, návrh mení tvar,
