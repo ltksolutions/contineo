@@ -481,9 +481,14 @@ export async function loadDocumentFor(
 export interface ReadableDocument {
   documentId: string
   title: string
+  /** Druh (číselník `category`) — jediné členenie, ktoré čitateľ dostane (ADR-041 D270). */
+  category: string | null
   /** Platné znenie dnes — označenie a začiatok účinnosti. */
   versionLabel: string
   effectiveFrom: Date
+  effectiveTo: Date | null
+  /** Kedy bolo platné znenie zverejnené — chip „nové" na Prehľade. */
+  publishedAt: Date | null
 }
 
 /**
@@ -498,14 +503,18 @@ export async function readableDocuments(companyCode: string, now: Date = new Dat
   const code = requireCompanyCode(companyCode, "readableDocuments")
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
   const docs = await col
-    .find({ companyCode: code }, { projection: { documentId: 1, title: 1, companyCode: 1, accessLevel: 1, versions: 1 } })
+    .find({ companyCode: code }, { projection: { documentId: 1, title: 1, companyCode: 1, accessLevel: 1, category: 1, versions: 1 } })
     .toArray()
   const out: ReadableDocument[] = []
   for (const d of docs) {
     if (!canSeeDocument({ companyCode: code }, d)) continue
     const v = effectiveVersion(d, now)
     if (!v.ok || !v.version.effectiveFrom) continue
-    out.push({ documentId: d.documentId, title: d.title, versionLabel: v.version.label, effectiveFrom: v.version.effectiveFrom })
+    out.push({
+      documentId: d.documentId, title: d.title, category: d.category ?? null,
+      versionLabel: v.version.label, effectiveFrom: v.version.effectiveFrom, effectiveTo: v.version.effectiveTo ?? null,
+      publishedAt: v.version.publishedAt ?? null,
+    })
   }
   return out.sort((a, b) => a.title.localeCompare(b.title, "sk"))
 }

@@ -18,6 +18,7 @@ import { allDepartments, flattenTree as flattenDepartments } from "@/lib/departm
 import { documentsProgress } from "@/lib/libraryProgress"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
+import { lawSourceState, subscribedActs } from "@/lib/lawCatalog"
 import Select from "@/components/Select"
 import AckBar from "@/components/AckBar"
 import LiveFilter from "@/components/LiveFilter"
@@ -71,12 +72,19 @@ export default async function LibraryPage({
     if (ctx.state === "forbidden") {
       const who = await onboardingContext()
       if (who.state === "ready") {
-        const raw = (await searchParams).search
+        const rq = await searchParams
+        const text = (v: unknown) => (typeof v === "string" ? v : "")
+        // Predpisy z katalógu len keď ich rezidencia dovoľuje čítať (D257); inak je to len knižnica.
+        const law = await lawSourceState(who.tenant.companyCode)
+        const acts = law.allowed ? await subscribedActs(who.tenant.companyCode) : []
         return (
           <LibraryReader
             companyCode={who.tenant.companyCode}
             language={who.person.language}
-            search={typeof raw === "string" ? raw : ""}
+            search={text(rq.search)}
+            kind={text(rq.kind)}
+            extras={tenantExtras(who.tenant)}
+            acts={acts}
           />
         )
       }
