@@ -19,6 +19,11 @@ export interface KickerScope {
   library: boolean
   /** Názvy živých zdrojov, v ktorých sa hľadalo. */
   live: string[]
+  /**
+   * Knižnica zúžená na dokumenty (`?doc=`, ADR-029 D269) — názvy. Hlavička
+   * potom hovorí „z dokumentu Stanovy SFZ", nie „z dokumentov SFZ".
+   */
+  documents?: string[]
 }
 
 /** Zdroje z obsahu odpovede — pre uloženú odpoveď bez výberu piluliek. */
@@ -38,17 +43,6 @@ function joinNames(names: string[], language: UiLanguage): string {
   return `${names.slice(0, -1).join(", ")}${and}${names[names.length - 1]}`
 }
 
-export function answerKicker(scope: KickerScope, organisation: string | undefined, language: UiLanguage | undefined): string {
-  const lang: UiLanguage = language ?? "sk"
-  const tAsk = dictionary(lang).ask
-  const tAnswer = dictionary(lang).answer
-  const live = scope.live.filter(Boolean)
-  if (live.length === 0) return organisation ? tAsk.answerKicker(organisation) : tAnswer.fromDocuments
-  const names = joinNames(live, lang)
-  if (!scope.library) return tAsk.answerKickerLive(names, live.length)
-  return tAsk.answerKickerBoth(organisation ?? "", names, live.length)
-}
-
 /**
  * „z dokumentov SFZ a zo zdroja …" — odkiaľ zobrazená odpoveď je, do oznamu
  * „Zdroje sa zmenili" (ASK-zdroje-hladania). Tie isté pravidlá ako
@@ -58,8 +52,28 @@ export function answerFrom(scope: KickerScope, organisation: string | undefined,
   const lang: UiLanguage = language ?? "sk"
   const tAsk = dictionary(lang).ask
   const live = scope.live.filter(Boolean)
+  const documents = scope.library ? (scope.documents ?? []).filter(Boolean) : []
+  if (documents.length) {
+    const docNames = joinNames(documents, lang)
+    return live.length
+      ? tAsk.fromDocumentAndLive(docNames, documents.length, joinNames(live, lang), live.length)
+      : tAsk.fromDocument(docNames, documents.length)
+  }
   if (live.length === 0) return tAsk.fromLibrary(organisation ?? "")
   const names = joinNames(live, lang)
   if (!scope.library) return tAsk.fromLive(names, live.length)
   return tAsk.fromBoth(organisation ?? "", names, live.length)
+}
+
+export function answerKicker(scope: KickerScope, organisation: string | undefined, language: UiLanguage | undefined): string {
+  const lang: UiLanguage = language ?? "sk"
+  const tAsk = dictionary(lang).ask
+  const tAnswer = dictionary(lang).answer
+  const live = scope.live.filter(Boolean)
+  // Zúženie na dokumenty (D269): hlavička menuje dokument, nie organizáciu.
+  if (scope.library && scope.documents?.length) return tAsk.answerOf(answerFrom(scope, organisation, language))
+  if (live.length === 0) return organisation ? tAsk.answerKicker(organisation) : tAnswer.fromDocuments
+  const names = joinNames(live, lang)
+  if (!scope.library) return tAsk.answerKickerLive(names, live.length)
+  return tAsk.answerKickerBoth(organisation ?? "", names, live.length)
 }

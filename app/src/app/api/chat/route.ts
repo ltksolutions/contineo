@@ -49,6 +49,7 @@ import { onboardingContext }  from "@/lib/session"
 import { sameOrigin } from "@/lib/sameOrigin"
 import { accessLevelFor } from "@/lib/accessLevel"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
+import { MAX_SCOPE_DOCUMENTS } from "@/lib/askScope"
 
 // ── Typy ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,8 @@ interface ChatRequest {
   usePreprocessing?:  boolean   // default: true pre vector/hybrid
   /** Rozsah z piluliek (ADR-029): `"library"` a/alebo id konektorov. */
   only?:              string[]
+  /** Zúženie knižnice na dokumenty (`?doc=`, D269). */
+  documentIds?:       string[]
 }
 
 // ── Handler ──────────────────────────────────────────────────────────────────
@@ -116,9 +119,14 @@ export async function POST(req: NextRequest) {
    * (organizácia, osoba) a o platnosti otázky.
    */
   const only = Array.isArray(body.only) ? body.only.filter((x): x is string => typeof x === "string").slice(0, 20) : undefined
+  // Id dokumentov z klienta sa nekontrolujú zvlášť: `searchScope()` ich dáva
+  // do podmienky spolu s `companyCode` (D90), cudzí dokument nič nenájde.
+  const documentIds = Array.isArray(body.documentIds)
+    ? body.documentIds.filter((x): x is string => typeof x === "string" && x.trim() !== "").slice(0, MAX_SCOPE_DOCUMENTS)
+    : undefined
   const stream = chatStream({
     companyCode, query, language, accessLevel: userRole, usageActor, useLLMClassifier, usePreprocessing,
-    only, callbackUrl: await connectorCallbackUrl(),
+    only, documentIds, callbackUrl: await connectorCallbackUrl(),
   })
   return sseResponse(stream)
 }

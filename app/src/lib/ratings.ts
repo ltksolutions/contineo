@@ -16,6 +16,7 @@
  */
 
 import type { QueryTime } from "./queryTime"
+import type { SearchedScope } from "./askScope"
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
@@ -102,8 +103,9 @@ export interface RatingRecord {
    * Ján 23. 10. 2026 — hlavička menuje, v čom sa hľadalo, aj keď z niektorého
    * zdroja nič neprišlo). Kópia názvu, nie id: o rok má byť čitateľné, aj keď
    * konektor zmizne. Starší záznam pole nemá — zdroje sa odvodia z obsahu.
+   * `documents`: názvy dokumentov, keď bola knižnica zúžená (`?doc=`, D269).
    */
-  searchedScope?: { library: boolean; live: string[] }
+  searchedScope?: SearchedScope
 
   // To, čo vie povedať len človek (D9, kapitola 3).
   correct: Verdict
@@ -237,8 +239,9 @@ export interface NewRating {
    * Ján 23. 10. 2026 — hlavička menuje, v čom sa hľadalo, aj keď z niektorého
    * zdroja nič neprišlo). Kópia názvu, nie id: o rok má byť čitateľné, aj keď
    * konektor zmizne. Starší záznam pole nemá — zdroje sa odvodia z obsahu.
+   * `documents`: názvy dokumentov, keď bola knižnica zúžená (`?doc=`, D269).
    */
-  searchedScope?: { library: boolean; live: string[] }
+  searchedScope?: SearchedScope
 }
 
 /** Polia, ktoré smie hodnotiteľ meniť. Nič iné sa cez API prepísať nedá. */

@@ -131,7 +131,14 @@ export default async function DocumentPage({
       />
 
 
-      <h1 className="page-title">{doc.title}</h1>
+      {/* Tiché „Opýtať sa" vpravo: otázka len nad týmto dokumentom (ADR-029 D269). */}
+      <div className="page-head">
+        <h1 className="page-title">{doc.title}</h1>
+        <span className="page-head-spacer" />
+        <Link className="button button--quiet" href={`/ask?${new URLSearchParams({ src: "library", doc: doc.documentId }).toString()}`}>
+          {t.askDocument}
+        </Link>
+      </div>
 
       {/*
         Hlavička znenia (ZNENIE-kontakt-a-privacy, bod 1): riadok verzie

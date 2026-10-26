@@ -227,6 +227,8 @@ export default async function OverviewPage({
                     <Link className="panel-name" href={`/documents/${encodeURIComponent(r.documentId)}`}>{r.title}</Link>
                     <div className="quiet panel-meta">{r.versionLabel} · {formatDate(r.publishedAt, language)}</div>
                   </div>
+                  {/* Otázka len nad týmto dokumentom (ADR-029 D269). */}
+                  <Link className="panel-action" href={`/ask?${new URLSearchParams({ src: "library", doc: r.documentId }).toString()}`}>{t.available.ask}</Link>
                   <Link className="panel-action" href={`/documents/${encodeURIComponent(r.documentId)}`}>{t.open}</Link>
                 </div>
               ))}

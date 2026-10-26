@@ -248,7 +248,7 @@ export async function askQuestion(
    * odpovede**, nie chybová hláška — skladá ju ten, kto odpoveď tvorí.
    * Cesta `/api/chat` prihláseného človeka nepozná, tak si jazyk povieme.
    */
-  init?: { signal?: AbortSignal; url?: string; language?: string; only?: string[] }
+  init?: { signal?: AbortSignal; url?: string; language?: string; only?: string[]; documentIds?: string[] }
 ): Promise<AskResult> {
   const start = Date.now()
   let ttftMs: number | null = null
@@ -270,7 +270,8 @@ export async function askQuestion(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     // `only`: rozsah hľadania z piluliek (ADR-029) — prázdne = knižnica aj živé zdroje.
-    body: JSON.stringify({ query: question, language: init?.language, only: init?.only }),
+    // `documentIds`: zúženie knižnice na dokumenty (`?doc=`, D269).
+    body: JSON.stringify({ query: question, language: init?.language, only: init?.only, documentIds: init?.documentIds }),
     signal: init?.signal,
   })
 

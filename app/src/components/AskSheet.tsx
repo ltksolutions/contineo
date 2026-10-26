@@ -26,14 +26,14 @@
  * odpoveďou. Zmena nič nespúšťa. Veta pod lištou menuje vybrané zdroje.
  */
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Icon from "./Icon"
 import { ContineoMark } from "./ContineoMark"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { answerFrom } from "@/lib/answerKicker"
-import { defaultScope, type AskLiveSource } from "@/lib/askScope"
+import { defaultScope, type AskLiveSource, type AskScopeDocument } from "@/lib/askScope"
 
 /** Rovnaký strop ako API (`/api/chat`) a ako doterajšie pole na `/ask`. */
 export const QUESTION_MAX = 1000
@@ -71,6 +71,7 @@ export default function AskSheet({
   onClose,
   live: liveProp,
   initialSources,
+  initialDocuments,
 }: {
   mode: "overlay" | "inline"
   initial?: string
@@ -80,6 +81,11 @@ export default function AskSheet({
   live?: AskLiveSource[]
   /** Výber z obrazovky odpovede („Upraviť otázku"); inak predvolený (Q3 A). */
   initialSources?: string[]
+  /**
+   * Knižnica zúžená na dokumenty (`?doc=`, ADR-029 D269) — z adresy `/ask`
+   * alebo z obrazovky odpovede. Riadok pod Knižnicou; odškrtnutie = celá.
+   */
+  initialDocuments?: AskScopeDocument[]
   language?: UiLanguage
   /**
    * Len `overlay`: zavretie Esc, „×" alebo odoslaním — s tým, čo je v poli.
@@ -111,7 +117,17 @@ export default function AskSheet({
   const [scopeOpen, setScopeOpen] = useState(false)
   const [lastWarn, setLastWarn] = useState(false)
   const scopeRef = useRef<HTMLDetailsElement>(null)
-  const sourceName = (id: string) => (id === "library" ? ta.scopeLibrary : live.find(l => l.id === id)?.name ?? id)
+  const documents = initialDocuments ?? []
+  const [docsOn, setDocsOn] = useState<string[] | null>(null)
+  const docsPicked = selected.includes("library") ? documents.filter(d => (docsOn ?? documents.map(x => x.id)).includes(d.id)) : []
+  const toggleDoc = (id: string) => setDocsOn(p => {
+    const cur = p ?? documents.map(x => x.id)
+    return cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]
+  })
+  // Zúžená knižnica sa menuje dokumentom (D269).
+  const sourceName = (id: string) =>
+    id === "library" ? (docsPicked.length ? docsPicked.map(d => d.title).join(", ") : ta.scopeLibrary) : live.find(l => l.id === id)?.name ?? id
+  const hasScope = live.length > 0 || documents.length > 0
   // Posledný zapnutý zdroj sa neodškrtne (bod 4) — riadok nie je `disabled`, inak by sa neodoslal.
   const toggle = (id: string) => {
     const next = scopeIds.filter(x => (x === id ? !selected.includes(x) : selected.includes(x)))
@@ -123,7 +139,11 @@ export default function AskSheet({
     scopeRef.current?.querySelector("summary")?.focus()
   }
   const from = answerFrom(
-    { library: selected.includes("library"), live: live.filter(l => selected.includes(l.id)).map(l => l.name) },
+    {
+      library: selected.includes("library"),
+      live: live.filter(l => selected.includes(l.id)).map(l => l.name),
+      ...(docsPicked.length ? { documents: docsPicked.map(d => d.title) } : {}),
+    },
     org, language,
   )
 
@@ -203,8 +223,10 @@ export default function AskSheet({
     if (!q) return
     onClose?.(q, true)
     // Výber ide s otázkou (`?src=`, PR #418); bez živého zdroja nie je čo poslať.
-    const src = live.length ? `&src=${encodeURIComponent(selected.join(","))}` : ""
-    router.push(`/ask?q=${encodeURIComponent(q)}${src}`)
+    const src = live.length || docsPicked.length ? `&src=${encodeURIComponent(selected.join(","))}` : ""
+    // Dokumenty zúženia (D269) idú s otázkou rovnako.
+    const doc = docsPicked.length ? `&doc=${encodeURIComponent(docsPicked.map(d => d.id).join(","))}` : ""
+    router.push(`/ask?q=${encodeURIComponent(q)}${src}${doc}`)
   }
 
   const pick = (example: string) => {
@@ -306,7 +328,7 @@ export default function AskSheet({
         <div className="ask-sheet-bar">
           {/* Výber zdrojov (Q1 A): `<details>` drží len tlačidlo, riadky sú pod
               lištou a ukáže ich `:has([open])` — funguje aj bez JS (S1). */}
-          {live.length > 0 && (
+          {hasScope && (
             <details ref={scopeRef} className="ask-scope ask-sheet-scope" open={scopeOpen} onToggle={e => setScopeOpen(e.currentTarget.open)}>
               <summary className="button button--quiet button--sm" aria-controls="ask-sheet-scope-pane">
                 {`${ta.scopeButton(selected.map(sourceName).join(", "))} ▾`}
@@ -322,19 +344,31 @@ export default function AskSheet({
           <span className="ask-sheet-bar-button">{button}</span>
         </div>
 
-        {live.length > 0 && (
+        {hasScope && (
           <fieldset className="ask-sheet-scope-pane form-group" id="ask-sheet-scope-pane">
             <legend className="form-group-head">{ta.scopeLabel}</legend>
             <div className="card form-group-body form-group-body--rows">
               <div className="form-list">
                 {scopeIds.map(id => (
-                  <label key={id} className="form-row select-row">
-                    <input type="checkbox" name="src" value={id} checked={selected.includes(id)} onChange={() => toggle(id)} />
-                    <span className="form-row-main">
-                      <span>{sourceName(id)}</span>
-                      <span className="form-row-sub">{id === "library" ? ta.scopeLibrarySub : id === "slov-lex" ? ta.scopeLawSub : ta.scopeLiveSub}</span>
-                    </span>
-                  </label>
+                  <Fragment key={id}>
+                    <label className="form-row select-row">
+                      <input type="checkbox" name="src" value={id} checked={selected.includes(id)} onChange={() => toggle(id)} />
+                      <span className="form-row-main">
+                        <span>{id === "library" ? ta.scopeLibrary : sourceName(id)}</span>
+                        <span className="form-row-sub">{id === "library" ? ta.scopeLibrarySub : id === "slov-lex" ? ta.scopeLawSub : ta.scopeLiveSub}</span>
+                      </span>
+                    </label>
+                    {/* Dokumenty zúženia pod Knižnicou (D269) — ten istý GET formulár, `name="doc"`. */}
+                    {id === "library" && selected.includes("library") && documents.map(d => (
+                      <label key={d.id} className="form-row select-row">
+                        <input type="checkbox" name="doc" value={d.id} checked={docsPicked.some(x => x.id === d.id)} onChange={() => toggleDoc(d.id)} />
+                        <span className="form-row-main">
+                          <span>{d.title}</span>
+                          <span className="form-row-sub">{ta.scopeDocumentSub}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </Fragment>
                 ))}
               </div>
             </div>

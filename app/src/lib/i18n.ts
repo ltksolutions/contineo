@@ -152,6 +152,8 @@ interface Dictionary {
   onboarding: {
     /** ADR-011: PDF znenia. */
     openPdf: string
+    /** Tiché tlačidlo na stránke dokumentu: otázka len nad ním (`/ask?src=library&doc=`, D269). */
+    askDocument: string
     listHeading: string
     listIntro: string
     /** Prázdny stav (`.empty`, DOCUMENTS úloha 4) — bez akcie: človek tu nemá čo urobiť. */
@@ -839,6 +841,16 @@ interface Dictionary {
     fromLibrary: (organisation: string) => string
     fromLive: (names: string, count: number) => string
     fromBoth: (organisation: string, names: string, count: number) => string
+    /**
+     * Knižnica zúžená na dokumenty (`?doc=`, ADR-029 D269): „z dokumentu
+     * Stanovy SFZ", s živým zdrojom „z dokumentu … a zo zdroja …".
+     * Hlavička je `answerOf(from)` — „Odpoveď z dokumentu …".
+     */
+    fromDocument: (names: string, count: number) => string
+    fromDocumentAndLive: (documents: string, documentCount: number, names: string, count: number) => string
+    answerOf: (from: string) => string
+    /** Riadok vybraného dokumentu vo výbere zdrojov; odškrtnutie = celá knižnica. */
+    scopeDocumentSub: string
     /** Bez JavaScriptu odpovedanie nefunguje — SSE sa formulárom nenahradí. */
     noScript: string
     noScriptLink: string
@@ -5127,6 +5139,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   onboarding: {
     openPdf: "Otvoriť PDF",
+    askDocument: "Opýtať sa",
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
     emptyTitle: "Nemáte nič na potvrdenie",
@@ -5759,6 +5772,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     fromLibrary: org => (org ? `z dokumentov ${org}` : "z dokumentov"),
     fromLive: (names, count) => `${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
     fromBoth: (org, names, count) => `z dokumentov ${org} a ${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
+    fromDocument: (names, count) => `${count > 1 ? "z dokumentov" : "z dokumentu"} ${names}`,
+    fromDocumentAndLive: (documents, documentCount, names, count) =>
+      `${documentCount > 1 ? "z dokumentov" : "z dokumentu"} ${documents} a ${count > 1 ? "zo zdrojov" : "zo zdroja"} ${names}`,
+    answerOf: from => `Odpoveď ${from}`,
+    scopeDocumentSub: "Len tento dokument — po odškrtnutí sa hľadá v celej knižnici",
     noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
     noScriptLink: "prejsť na dokumenty",
     history: {
@@ -10349,6 +10367,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   onboarding: {
     openPdf: "Otevřít PDF",
+    askDocument: "Zeptat se",
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
     emptyTitle: "Nemáte nic k potvrzení",
@@ -10981,6 +11000,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     fromLibrary: org => (org ? `z dokumentů ${org}` : "z dokumentů"),
     fromLive: (names, count) => `${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
     fromBoth: (org, names, count) => `z dokumentů ${org} a ${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
+    fromDocument: (names, count) => `${count > 1 ? "z dokumentů" : "z dokumentu"} ${names}`,
+    fromDocumentAndLive: (documents, documentCount, names, count) =>
+      `${documentCount > 1 ? "z dokumentů" : "z dokumentu"} ${documents} a ${count > 1 ? "ze zdrojů" : "ze zdroje"} ${names}`,
+    answerOf: from => `Odpověď ${from}`,
+    scopeDocumentSub: "Jen tento dokument — po odškrtnutí se hledá v celé knihovně",
     noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
     noScriptLink: "přejít na dokumenty",
     history: {
@@ -15568,6 +15592,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   onboarding: {
     openPdf: "Open PDF",
+    askDocument: "Ask",
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
     emptyTitle: "Nothing to acknowledge",
@@ -16194,6 +16219,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     fromLibrary: org => (org ? `from ${org} documents` : "from documents"),
     fromLive: names => `from ${names}`,
     fromBoth: (org, names) => `from ${org} documents and ${names}`,
+    fromDocument: (names, count) => `from the ${count > 1 ? "documents" : "document"} ${names}`,
+    fromDocumentAndLive: (documents, documentCount, names) =>
+      `from the ${documentCount > 1 ? "documents" : "document"} ${documents} and ${names}`,
+    answerOf: from => `Answer ${from}`,
+    scopeDocumentSub: "This document only — untick to search the whole library",
     noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
     noScriptLink: "go to documents",
     history: {

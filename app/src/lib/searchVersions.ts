@@ -107,15 +107,28 @@ export async function searchScope(
    * Prázdny zoznam znamená celú knižnicu, nie nič: kanál bez priečinkov
    * vidí všetko organizácie.
    */
-  narrow?: { folderIds?: string[] },
+  narrow?: {
+    folderIds?: string[]
+    /**
+     * Zúženie na dokumenty (`?doc=`, ADR-029 D269): znenia len z nich.
+     * Prázdny zoznam = celá knižnica. Overené odpovede sa pri zúžení
+     * nehľadajú — k dokumentu nepatria.
+     */
+    documentIds?: string[]
+  },
 ): Promise<SearchScope> {
   const code = requireCompanyCode(companyCode, "searchScope")
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
   const folderIds = (narrow?.folderIds ?? []).filter(Boolean)
+  const documentIds = (narrow?.documentIds ?? []).filter(Boolean)
   const docs = await col
     .find(
-      // `folderPath` nesie aj predkov (D56), takže jeden `$in` pokryje podstrom.
-      folderIds.length ? { companyCode: code, folderPath: { $in: folderIds } } : { companyCode: code },
+      {
+        companyCode: code,
+        // `folderPath` nesie aj predkov (D56), takže jeden `$in` pokryje podstrom.
+        ...(folderIds.length ? { folderPath: { $in: folderIds } } : {}),
+        ...(documentIds.length ? { documentId: { $in: documentIds } } : {}),
+      },
       { projection: VERSION_PROJECTION },
     )
     .toArray()
@@ -123,7 +136,7 @@ export async function searchScope(
   return {
     asOf,
     versionIds: Object.keys(versions),
-    verifiedAnswers: isSameDay(asOf, now),
+    verifiedAnswers: isSameDay(asOf, now) && documentIds.length === 0,
     versions,
   }
 }

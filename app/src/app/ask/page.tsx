@@ -25,8 +25,9 @@ import { brandingView } from "@/lib/tenants"
 import { dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
 import { evaluationContext } from "@/lib/evaluation"
-import { scopeFromQuery } from "@/lib/askScope"
+import { scopeFromQuery, documentIdsFromQuery, type AskScopeDocument } from "@/lib/askScope"
 import { askLiveSources } from "@/lib/askSources"
+import { loadDocumentFor } from "@/lib/documents"
 
 // Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
@@ -69,6 +70,16 @@ export default async function AskPage({
   const liveSources = await askLiveSources(ctx)
   // Rozsah z adresy — oba tvary `src` (so skriptom aj bez neho), `askScope.ts`.
   const initialScope = scopeFromQuery(q?.src, liveSources.map(l => l.id))
+  /*
+   * Zúženie knižnice na dokumenty (`?doc=`, ADR-029 D269). Dokument sa
+   * načíta **pre osobu** (D32): cudzí alebo neviditeľný sa z adresy zahodí
+   * ako neznáme id zdroja. Názov je kópia do hlavičky a záznamu.
+   */
+  const documents: AskScopeDocument[] = person
+    ? (await Promise.all(documentIdsFromQuery(q?.doc).map(id => loadDocumentFor(person, id))))
+        .filter(d => d !== null)
+        .map(d => ({ id: d.documentId, title: d.title }))
+    : []
 
   return (
     <AppShell language={person?.language}>
@@ -78,20 +89,28 @@ export default async function AskPage({
           // je nová adresa a má byť aj nový beh, nie pokračovanie starého.
           // Aj iný výber zdrojov k tej istej otázke (plachta, ASK-zdroje-v-plachte).
           <Search
-            key={`${asked}\u0000${initialScope.join(",")}`}
+            key={`${asked}\u0000${initialScope.join(",")}\u0000${documents.map(d => d.id).join(",")}`}
             preset={asked}
             organisation={short}
             language={person?.language}
             canEvaluate={canEvaluate}
             liveSources={liveSources}
             initialScope={initialScope}
+            documents={documents}
           />
         ) : (
           <>
             <h1 className="page-title">{t.heading}</h1>
             <p className="quiet page-lead ask-empty-lead">{t.emptyLead}</p>
             {/* Zdroje zo servera — vložená plachta ich má aj bez JS (ASK-zdroje-v-plachte). */}
-            <AskSheet mode="inline" organisation={short} live={liveSources} language={person?.language} />
+            <AskSheet
+              mode="inline"
+              organisation={short}
+              live={liveSources}
+              language={person?.language}
+              initialSources={initialScope.length ? initialScope : undefined}
+              initialDocuments={documents}
+            />
           </>
         )}
       </div>
