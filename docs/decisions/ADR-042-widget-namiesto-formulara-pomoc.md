@@ -166,7 +166,10 @@ o tom, za koho sa píše.
    identifikátorom vlákna, `threadRef` v tickete, odpoveď riešiteľa vo
    vlákne. **Podmienka spustenia.**
 2. **Zoznam registračných čísel pri osobe (D280)** — migrácia
-   `externalRef.widget.<kanál>`, párovanie bez prepisovania.
+   `externalRef.widget.<kanál>`, párovanie bez prepisovania. Osoba sa
+   hľadá podľa e-mailu (nie najprv podľa účtu); kód číta oba tvary
+   (`widgetRefs()`), takže poradie nasadenie → `npm run migrate:widget-refs`
+   je bezpečné.
 3. **`phone_number`, `context`, adresa stránky (D276)** — overenie tokenu,
    tabuľka „Údaje z ISSF" pri tickete, vzor v Jave a `docs/WIDGET_ISSF.md`.
 4. **Ponuka správy vo widgete (D275)** — odkaz, frázy, predvyplnená správa,
