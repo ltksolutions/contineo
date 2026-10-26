@@ -8044,10 +8044,10 @@ a.mc-lrow-link:hover { background: var(--surface-2); }
 }
 
 /* ── Knižnica na čítanie (`LibraryReader`, SHELL-menu-v-hlavicke) ────────── */
-.library-reader { max-width: 820px; display: grid; gap: 14px; }
+/* `minmax(0, 1fr)`: bez neho by pás druhov (`.view-switch--scroll`) roztiahol
+   stĺpec mriežky na svoju plnú šírku a stránka na telefóne by sa posúvala do strany. */
+.library-reader { max-width: 820px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .library-reader .page-title, .library-reader .page-lead { margin: 0; }
-.library-reader-search { display: flex; gap: 8px; }
-.library-reader-search .field-input { flex: 1 1 auto; min-width: 0; }
 .library-reader-list { margin: 0; padding: 0; list-style: none; overflow: hidden; }
 .library-reader-list li + li { border-top: 1px solid var(--line); }
 .library-reader-row { display: grid; gap: 2px; padding: 12px 16px; color: var(--ink); text-decoration: none; }

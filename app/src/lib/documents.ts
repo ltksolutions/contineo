@@ -489,6 +489,12 @@ export interface ReadableDocument {
   effectiveTo: Date | null
   /** Kedy bolo platné znenie zverejnené — chip „nové" na Prehľade. */
   publishedAt: Date | null
+  /**
+   * Predpis zo Slov-Lexu, ktorý je dokumentom knižnice (ADR-037): jeho
+   * `actId`. Zoznam pre čitateľa podľa neho nevypíše ten istý zákon druhýkrát
+   * z katalógu — dokument knižnice má prednosť (ADR-039 D260).
+   */
+  lawActId: string | null
 }
 
 /**
@@ -503,7 +509,7 @@ export async function readableDocuments(companyCode: string, now: Date = new Dat
   const code = requireCompanyCode(companyCode, "readableDocuments")
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
   const docs = await col
-    .find({ companyCode: code }, { projection: { documentId: 1, title: 1, companyCode: 1, accessLevel: 1, category: 1, versions: 1 } })
+    .find({ companyCode: code }, { projection: { documentId: 1, title: 1, companyCode: 1, accessLevel: 1, category: 1, source: 1, versions: 1 } })
     .toArray()
   const out: ReadableDocument[] = []
   for (const d of docs) {
@@ -514,6 +520,7 @@ export async function readableDocuments(companyCode: string, now: Date = new Dat
       documentId: d.documentId, title: d.title, category: d.category ?? null,
       versionLabel: v.version.label, effectiveFrom: v.version.effectiveFrom, effectiveTo: v.version.effectiveTo ?? null,
       publishedAt: v.version.publishedAt ?? null,
+      lawActId: d.source?.type === "web" ? d.source.externalId : null,
     })
   }
   return out.sort((a, b) => a.title.localeCompare(b.title, "sk"))

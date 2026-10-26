@@ -10,7 +10,7 @@ const now = new Date("2026-10-26T12:00:00Z")
 const days = (n: number) => new Date(now.getTime() + n * 24 * 60 * 60 * 1000)
 const doc = (documentId: string, extra: Partial<Parameters<typeof mergeReaderDocuments>[0][number]> = {}) => ({
   documentId, title: documentId, category: "smernica" as string | null, versionLabel: "1",
-  effectiveFrom: days(-100), effectiveTo: null as Date | null, publishedAt: days(-100) as Date | null, ...extra,
+  effectiveFrom: days(-100), effectiveTo: null as Date | null, publishedAt: days(-100) as Date | null, lawActId: null as string | null, ...extra,
 })
 
 describe("mergeReaderDocuments", () => {
@@ -133,5 +133,19 @@ describe("findReaderDocuments — hľadanie s rozsahmi", () => {
 
   it("hľadá bez diakritiky", () => {
     expect(findReaderDocuments(rows, "financna", "").shown).toHaveLength(1)
+  })
+})
+
+describe("zákon v knižnici aj v katalógu", () => {
+  it("sa vypíše raz, ako dokument knižnice", () => {
+    const rows = mergeReaderDocuments(
+      [doc("sfz:zakon_440_2015", { category: "zakon", lawActId: "SK/ZZ/2015/440" })],
+      [
+        { actId: "SK/ZZ/2015/440", title: "Zákon č. 440/2015 Z. z. o športe", current: { effectiveFrom: days(-30) } },
+        { actId: "SK/ZZ/2018/18", title: "Zákon č. 18/2018 Z. z.", current: { effectiveFrom: days(-30) } },
+      ],
+      now,
+    )
+    expect(rows.map(r => r.key).sort()).toEqual(["doc:sfz:zakon_440_2015", "law:SK/ZZ/2018/18"])
   })
 })

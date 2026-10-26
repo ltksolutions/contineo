@@ -8,17 +8,22 @@
  * čitateľ nerozlišuje, odkiaľ obsah prišiel. Jediné členenie je **druh**
  * (`?kind=`, prepínač pohľadu); predpis je druh Zákon. Dokument sa číta
  * v čitateľskom detaile `/documents/{id}`, predpis v `/documents/law/{actId}`.
- * Žiadne koncepty, kurácia, priečinky ani akcie správy. Hľadanie v názve je
- * `GET` formulár, bez skriptu funguje.
+ * Žiadne koncepty, kurácia, priečinky ani akcie správy.
+ *
+ * Hľadanie a druhy sú tie isté ako v paneli Dokumenty na Prehľade
+ * (PREHLAD-ulohy-a-dokumenty): pole s lupou filtruje počas písania
+ * (`LiveFilter`, bez skriptu `GET` formulár), počty pri druhoch sú po
+ * hľadaní a pás druhov sa na telefóne roluje (`.view-switch--scroll`).
  *
  * Prázdny zoznam je „Zatiaľ tu pre vás nie sú žiadne dokumenty", nie 403.
  */
 
 import Link from "next/link"
 import AppShell from "./AppShell"
+import LiveFilter from "./LiveFilter"
+import SearchStrip from "./SearchStrip"
 import { readableDocuments } from "@/lib/documents"
-import { mergeReaderDocuments, LAW_CATEGORY } from "@/lib/overview"
-import { matchesQuery } from "@/lib/askHistoryMatch"
+import { mergeReaderDocuments, findReaderDocuments, LAW_CATEGORY } from "@/lib/overview"
 import { codelistOptions, type CodelistExtras } from "@/lib/codelists"
 import type { LawActOverview } from "@/lib/lawCatalog"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
@@ -45,20 +50,15 @@ export default async function LibraryReader({
   const now = new Date()
   const all = mergeReaderDocuments(await readableDocuments(companyCode, now), acts, now)
     .sort((a, b) => a.title.localeCompare(b.title, "sk"))
-  const q = search.trim()
+  const found = findReaderDocuments(all, search, kind)
 
-  /*
-    Druhy len tie, ktoré v zozname sú — prepínač s prázdnou voľbou by človeka
-    poslal na prázdnu obrazovku. Názov z číselníka (aj vlastného druhu
-    organizácie); predpis bez položky v číselníku má názov z prekladu.
-  */
+  // Názov druhu z číselníka (aj vlastného druhu organizácie); predpis bez položky v číselníku má názov z prekladu.
   const labels = new Map(codelistOptions("category", extras).map(o => [o.value, o.label]))
   const kindLabel = (key: string) => labels.get(key) ?? (key === LAW_CATEGORY ? t.reader.kindLaw : key)
-  const kinds = [...new Set(all.map(r => r.category).filter((k): k is string => Boolean(k)))]
-    .sort((a, b) => kindLabel(a).localeCompare(kindLabel(b), "sk"))
-  const byKind = kind && kinds.includes(kind) ? all.filter(r => r.category === kind) : all
-  const docs = q ? byKind.filter(r => matchesQuery(r.title, q)) : byKind
-  const href = (k: string) => `/library${k || q ? `?${new URLSearchParams({ ...(k ? { kind: k } : {}), ...(q ? { search: q } : {}) }).toString()}` : ""}`
+  const href = (k: string) => {
+    const p = new URLSearchParams({ ...(k ? { kind: k } : {}), ...(found.query ? { search: found.query } : {}) }).toString()
+    return p ? `/library?${p}` : "/library"
+  }
 
   return (
     <AppShell language={language}>
@@ -67,36 +67,37 @@ export default async function LibraryReader({
         <p className="quiet page-lead">{t.reader.lead}</p>
 
         {all.length > 0 && (
-          <form className="library-reader-search" method="get" action="/library" role="search">
-            {kind && <input type="hidden" name="kind" value={kind} />}
-            <input className="field-input" type="search" name="search" defaultValue={q}
-                   placeholder={t.reader.search} aria-label={t.reader.search} />
-            <button className="button button--quiet" type="submit">{t.reader.searchSubmit}</button>
-          </form>
-        )}
-
-        {/* Prepínač pohľadu podľa druhu — sivý, bez farby organizácie (ZAKLAD-podmenu-a-akcie). Pri jedinom druhu sa nekreslí. */}
-        {kinds.length > 1 && (
-          <nav className="view-switch view-switch--fit" aria-label={t.reader.kindAll}>
-            <Link className={`view-switch-item${!kind || !kinds.includes(kind) ? " is-on" : ""}`}
-                  aria-current={!kind || !kinds.includes(kind) ? "true" : undefined} href={href("")}>
-              {t.reader.kindAll} <span className="view-switch-count">{all.length}</span>
-            </Link>
-            {kinds.map(k => (
-              <Link key={k} className={`view-switch-item${k === kind ? " is-on" : ""}`} aria-current={k === kind ? "true" : undefined} href={href(k)}>
-                {kindLabel(k)} <span className="view-switch-count">{all.filter(r => r.category === k).length}</span>
-              </Link>
-            ))}
-          </nav>
+          <div className="library-toolbar">
+            <LiveFilter className="library-search" action="/library" label={t.reader.search}>
+              <SearchStrip name="search" defaultValue={found.query} placeholder={t.reader.search}
+                           label={t.reader.search} submitLabel={t.reader.searchSubmit} />
+              {found.activeKind && <input type="hidden" name="kind" value={found.activeKind} />}
+            </LiveFilter>
+            {/* Prepínač pohľadu podľa druhu — sivý, bez farby organizácie (ZAKLAD-podmenu-a-akcie). Pri jedinom druhu sa nekreslí. */}
+            {(found.kinds.length > 1 || found.activeKind) && (
+              <nav className="view-switch view-switch--scroll" aria-label={t.reader.kindAll}>
+                <Link className={`view-switch-item${found.activeKind ? "" : " is-on"}`}
+                      aria-current={found.activeKind ? undefined : "true"} href={href("")} scroll={false}>
+                  {t.reader.kindAll}<span className="view-switch-count">{found.matchedTotal}</span>
+                </Link>
+                {found.kinds.map(k => (
+                  <Link key={k.key} className={`view-switch-item${k.key === found.activeKind ? " is-on" : ""}`}
+                        aria-current={k.key === found.activeKind ? "true" : undefined} href={href(k.key)} scroll={false}>
+                    {kindLabel(k.key)}<span className="view-switch-count">{k.count}</span>
+                  </Link>
+                ))}
+              </nav>
+            )}
+          </div>
         )}
 
         {all.length === 0 ? (
           <div className="empty"><div className="empty-title">{t.emptyForYou}</div></div>
-        ) : docs.length === 0 ? (
+        ) : found.shown.length === 0 ? (
           <div className="empty"><div className="empty-title">{t.reader.emptyFilter}</div></div>
         ) : (
           <ul className="card library-reader-list">
-            {docs.map(r => (
+            {found.shown.map(r => (
               <li key={r.key}>
                 <Link href={r.href} className="library-reader-row">
                   <span className="library-reader-title">{r.title}</span>
