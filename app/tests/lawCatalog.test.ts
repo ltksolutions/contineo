@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
-import { anchorFor, citationUrl, versionKeyOf, effectiveVersions, lawAllowed, SLOV_LEX_SOURCE_ID, SUGGESTED_ACTS } from "../src/lib/lawCatalog"
+import { anchorFor, citationUrl, versionKeyOf, effectiveVersions, versionToShow, lawAllowed, SLOV_LEX_SOURCE_ID, SUGGESTED_ACTS } from "../src/lib/lawCatalog"
 import { lawChunkToResult, lawVectorFilter, lawSearchFilterClauses } from "../src/lib/lawSearch"
 import { parseVersion, parseActRef } from "../src/lib/slovLex"
 import { cutForIndex } from "../src/lib/chunkCut"
@@ -119,5 +119,27 @@ describe("zdroj „Legislatíva“ vo výbere zdrojov", () => {
   })
   it("ponuka pre športovú organizáciu sú platné čísla predpisov", () => {
     for (const s of SUGGESTED_ACTS) expect(parseActRef(s.address), s.address).not.toBeNull()
+  })
+})
+
+describe("versionToShow — znenie pre detail predpisu", () => {
+  const v = (timepoint: string, from: string, to: string | null) => ({ actId: "SK/ZZ/2015/440", timepoint, effectiveFrom: new Date(from), effectiveTo: to ? new Date(to) : null })
+  const versions = [v("20250701", "2025-07-01", "2026-01-01"), v("20260101", "2026-01-01", null), v("20270101", "2027-01-01", null)]
+  const now = new Date("2026-10-26")
+
+  it("bez parametra ukáže znenie účinné dnes", () => {
+    expect(versionToShow(versions, undefined, now)?.timepoint).toBe("20260101")
+  })
+  it("vyžiadané znenie z adresy má prednosť", () => {
+    expect(versionToShow(versions, "20250701", now)?.timepoint).toBe("20250701")
+  })
+  it("neznáme znenie v adrese padá na predvolené, nie na 404", () => {
+    expect(versionToShow(versions, "19990101", now)?.timepoint).toBe("20260101")
+  })
+  it("predpis so znením len na neskôr ukáže najnovšie", () => {
+    expect(versionToShow([versions[2]], undefined, now)?.timepoint).toBe("20270101")
+  })
+  it("bez znení je null", () => {
+    expect(versionToShow([], undefined, now)).toBeNull()
   })
 })

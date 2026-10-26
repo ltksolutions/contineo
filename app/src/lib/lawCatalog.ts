@@ -189,6 +189,21 @@ export function effectiveVersions<T extends { actId: string; timepoint: string; 
   return [...byAct.values()]
 }
 
+/**
+ * Znenie, ktorého text ukáže detail predpisu: vyžiadaná časová verzia
+ * z adresy (`?version=20260101`), inak znenie účinné dnes, inak najnovšie
+ * (predpis, ktorý má zatiaľ len znenie vyhlásené na neskôr). Neznáma
+ * hodnota v adrese padá na predvolené — starý odkaz nemá vrátiť 404.
+ */
+export function versionToShow<T extends { actId: string; timepoint: string; effectiveFrom: Date; effectiveTo: Date | null }>(
+  versions: T[], requested: string | undefined, now: Date,
+): T | null {
+  if (!versions.length) return null
+  const wanted = requested ? versions.find(v => v.timepoint === requested) : undefined
+  if (wanted) return wanted
+  return effectiveVersions(versions, now)[0] ?? [...versions].sort((a, b) => a.timepoint.localeCompare(b.timepoint)).at(-1) ?? null
+}
+
 /** Smie organizácia s touto rezidenciou čítať katalóg z cloudu? (D257) */
 export function lawAllowed(residency: DataResidency | undefined): boolean {
   return !LAW_BLOCKED.includes(residency ?? "global")

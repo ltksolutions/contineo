@@ -53,7 +53,7 @@ import { grantsForCompany } from "@/lib/oauthServer"
 import { RESIDENCY_LABEL } from "@/lib/residency"
 import { saveAssistantsAction, revokeGrantAdminAction } from "../actions"
 import { subscribeLawAction, unsubscribeLawAction, saveLawSettingsAction } from "../actions"
-import { subscribedActs, lawSourceState, SUGGESTED_ACTS } from "@/lib/lawCatalog"
+import { subscribedActs, lawSourceState, SUGGESTED_ACTS, SLOV_LEX_SOURCE_ID } from "@/lib/lawCatalog"
 import { sourcesRegister } from "@/lib/sourcesRegister"
 import { lawDocumentsFor } from "@/lib/lawLibraryLink"
 import { AI_USAGE_PURPOSES, usageFilterFromQuery, usageFilterQuery, usageRows, usageTotals, usagePeople } from "@/lib/aiUsage"
@@ -1434,7 +1434,8 @@ export default async function OrganisationSectionPage({
           ) : law.acts.map(a => (
             <div key={a.actId} className="more-row">
               <div className="more-main">
-                <b>{a.title}</b>
+                {/* Názov vedie na detail predpisu: znenia v katalógu a celý text (Ján 26. 10. 2026). */}
+                <b><Link href={`/organisation/sources/web/${SLOV_LEX_SOURCE_ID}/${a.actId}`}>{a.title}</Link></b>
                 <span>
                   {[
                     a.current ? t.law.current(formatDate(a.current.effectiveFrom, language)) : t.law.pending,
@@ -1445,18 +1446,21 @@ export default async function OrganisationSectionPage({
                   ].filter(Boolean).join(" · ")}
                   {" · "}
                   <a href={`https://www.slov-lex.sk/pravne-predpisy/${a.actId}/`} target="_blank" rel="noopener noreferrer">Slov-Lex</a>
-                  {" · "}
-                  {law.library.get(a.actId)
-                    ? <Link href={`/library/${encodeURIComponent(law.library.get(a.actId)!.documentId)}`}>{t.law.inLibrary}</Link>
-                    : <Link href={`/library/new/web?${new URLSearchParams({ address: a.actId }).toString()}`}>{t.law.toLibrary}</Link>}
+                  {law.library.get(a.actId) && <>{" · "}<Link href={`/library/${encodeURIComponent(law.library.get(a.actId)!.documentId)}`}>{t.law.inLibrary}</Link></>}
                 </span>
                 {a.lastError && <span><span className="tone-bad">{t.law.checkError(a.lastError)}</span></span>}
               </div>
-              {/* Karty s vlastnou akciou majú tlačidlá tiché (DESIGN_ODCHYLKY R1). */}
-              <form action={unsubscribeLawAction}>
-                <input type="hidden" name="actId" value={a.actId} />
-                <SubmitButton className="button button--quiet">{t.law.remove}</SubmitButton>
-              </form>
+              {/* Karty s vlastnou akciou majú tlačidlá tiché (DESIGN_ODCHYLKY R1). Odber do knižnice je
+                  akcia, nie poznámka — tlačidlo, nie odkaz v texte (Ján 26. 10. 2026). */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {!law.library.get(a.actId) && (
+                  <Link className="button button--quiet" href={`/library/new/web?${new URLSearchParams({ address: a.actId }).toString()}`}>{t.law.toLibrary}</Link>
+                )}
+                <form action={unsubscribeLawAction}>
+                  <input type="hidden" name="actId" value={a.actId} />
+                  <SubmitButton className="button button--quiet">{t.law.remove}</SubmitButton>
+                </form>
+              </div>
             </div>
           ))}
         </section>

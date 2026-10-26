@@ -1866,6 +1866,23 @@ interface Dictionary {
       checked: (when: string) => string
       neverChecked: string
       checkError: (message: string) => string
+      /** Detail predpisu: znenia v katalógu a celý text (ADR-039). */
+      detail: {
+        versionsHeading: string
+        subscribedSince: (date: string) => string
+        notSubscribed: string
+        effectiveRange: (from: string, to: string) => string
+        stateNow: string
+        statePast: string
+        stateLater: string
+        original: string
+        fetched: (date: string) => string
+        chunks: (n: number) => string
+        fullText: string
+        shownBelow: string
+        textHeading: (date: string) => string
+        textNote: string
+      }
     }
     aiUsage: {
       tabSettings: string
@@ -7193,10 +7210,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       unsubscribed: "Odber zrušený. Predpis ostáva v katalógu pre ostatné organizácie.",
       saved: "Nastavenie legislatívy uložené.",
       inLibrary: "v knižnici",
-      toLibrary: "odobrať do knižnice",
+      toLibrary: "Pridať do knižnice",
       checked: when => `kontrola ${when}`,
       neverChecked: "zatiaľ bez kontroly",
       checkError: message => `Posledná kontrola zlyhala: ${message}`,
+      detail: {
+        versionsHeading: "Znenia v katalógu",
+        subscribedSince: date => `odoberané od ${date}`,
+        notSubscribed: "organizácia neodoberá",
+        effectiveRange: (from, to) => `znenie účinné od ${from} do ${to}`,
+        stateNow: "účinné dnes",
+        statePast: "už neúčinné",
+        stateLater: "účinné neskôr",
+        original: "pôvodné znenie",
+        fetched: date => `stiahnuté ${date}`,
+        chunks: n => `${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úsekov"}`,
+        fullText: "Celý text",
+        shownBelow: "zobrazené nižšie",
+        textHeading: date => `Celý text — znenie účinné od ${date}`,
+        textNote: "Text zo Slov-Lexu prepísaný na čítanie a hľadanie. Záväzné je PDF na portáli.",
+      },
     },
     aiUsage: {
       tabSettings: "Nastavenie",
@@ -12382,10 +12415,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       unsubscribed: "Odběr zrušen. Předpis zůstává v katalogu pro ostatní organizace.",
       saved: "Nastavení legislativy uloženo.",
       inLibrary: "v knihovně",
-      toLibrary: "odebírat do knihovny",
+      toLibrary: "Přidat do knihovny",
       checked: when => `kontrola ${when}`,
       neverChecked: "zatím bez kontroly",
       checkError: message => `Poslední kontrola selhala: ${message}`,
+      detail: {
+        versionsHeading: "Znění v katalogu",
+        subscribedSince: date => `odebíráno od ${date}`,
+        notSubscribed: "organizace neodebírá",
+        effectiveRange: (from, to) => `znění účinné od ${from} do ${to}`,
+        stateNow: "účinné dnes",
+        statePast: "již neúčinné",
+        stateLater: "účinné později",
+        original: "původní znění",
+        fetched: date => `staženo ${date}`,
+        chunks: n => `${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úseků"}`,
+        fullText: "Celý text",
+        shownBelow: "zobrazeno níže",
+        textHeading: date => `Celý text — znění účinné od ${date}`,
+        textNote: "Text ze Slov-Lexu přepsaný pro čtení a hledání. Závazné je PDF na portálu.",
+      },
     },
     aiUsage: {
       tabSettings: "Nastavení",
@@ -17560,10 +17609,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       unsubscribed: "Unsubscribed. The act stays in the catalogue for other organisations.",
       saved: "Legislation settings saved.",
       inLibrary: "in the library",
-      toLibrary: "subscribe into the library",
+      toLibrary: "Add to the library",
       checked: when => `checked ${when}`,
       neverChecked: "not checked yet",
       checkError: message => `The last check failed: ${message}`,
+      detail: {
+        versionsHeading: "Versions in the catalogue",
+        subscribedSince: date => `subscribed since ${date}`,
+        notSubscribed: "not subscribed by the organisation",
+        effectiveRange: (from, to) => `version effective from ${from} to ${to}`,
+        stateNow: "in force today",
+        statePast: "no longer in force",
+        stateLater: "in force later",
+        original: "original text",
+        fetched: date => `fetched ${date}`,
+        chunks: n => `${n} ${n === 1 ? "chunk" : "chunks"}`,
+        fullText: "Full text",
+        shownBelow: "shown below",
+        textHeading: date => `Full text — version effective from ${date}`,
+        textNote: "Text from Slov-Lex transcribed for reading and search. The PDF on the portal is the binding one.",
+      },
     },
     aiUsage: {
       tabSettings: "Settings",
