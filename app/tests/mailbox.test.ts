@@ -147,3 +147,45 @@ describe("ticket — citovana historia", () => {
     expect("quoted" in msg).toBe(false)
   })
 })
+
+describe("GraphMailbox.send a replyTo (ADR-042, D277)", () => {
+  afterEach(() => vi.unstubAllGlobals())
+  type Call = { url: string; method: string; prefer: string | null; body: unknown }
+  function stub(sendStatus = 202): Call[] {
+    const calls: Call[] = []
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.includes("/token")) return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      const h = new Headers(init?.headers)
+      calls.push({ url, method: init?.method ?? "GET", prefer: h.get("prefer"), body: init?.body ? JSON.parse(String(init.body)) : null })
+      if (url.endsWith("/send")) return new Response(null, { status: sendStatus })
+      if (init?.method === "DELETE") return new Response(null, { status: 204 })
+      return new Response(JSON.stringify({ id: "imm-1", internetMessageId: "<c1@x>", conversationId: "conv-w" }), { status: 201 })
+    }))
+    return calls
+  }
+  const box = () => new GraphMailbox({ address: "helpdesk@futbalsfz.sk", tenantId: "t", clientId: "c", clientSecret: "s" })
+
+  it("send: koncept s nemenným identifikátorom, potom odoslanie; vráti vlákno", async () => {
+    const calls = stub()
+    await expect(box().send("rodic@example.sk", "Prijali sme", "Text")).resolves.toEqual({ messageId: "<c1@x>", threadRef: "conv-w", providerId: "imm-1" })
+    expect(calls.map(c => `${c.method} ${c.url.replace(/^.*\/users\/[^/]+/, "")}`)).toEqual(["POST /messages", "POST /messages/imm-1/send"])
+    expect(calls.every(c => c.prefer === 'IdType="ImmutableId"')).toBe(true)
+    expect(calls[0].body).toMatchObject({ subject: "Prijali sme", toRecipients: [{ emailAddress: { address: "rodic@example.sk" } }] })
+  })
+
+  it("replyTo: createReply na vlastnú správu s výslovným adresátom", async () => {
+    const calls = stub()
+    await box().replyTo("imm-1", "rodic@example.sk", "Odpoveď.")
+    expect(calls[0].url).toContain("/messages/imm-1/createReply")
+    expect(calls[0].body).toEqual({ message: { toRecipients: [{ emailAddress: { address: "rodic@example.sk" } }], body: { contentType: "Text", content: "Odpoveď." } } })
+    expect(calls[1].url).toContain("/messages/imm-1/send")
+  })
+
+  it("neodoslaný koncept sa zmaže a chyba ide ďalej", async () => {
+    const calls = stub(500)
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    await expect(box().send("rodic@example.sk", "S", "T")).rejects.toBeTruthy()
+    expect(calls.at(-1)).toMatchObject({ method: "DELETE" })
+    expect(calls.at(-1)!.url).toContain("/messages/imm-1")
+  })
+})

@@ -17,7 +17,7 @@ import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { helpdeskContext } from "@/lib/helpdeskAgents"
 import { mailboxFor } from "@/lib/channels"
 import {
-  ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, lastIncoming, importTicketThread, TicketError,
+  ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, answerRoute, importTicketThread, TicketError,
 } from "@/lib/tickets"
 import { draftTicketAnswer } from "@/lib/ticketDraft"
 
@@ -117,12 +117,12 @@ export async function sendAnswerAction(fd: FormData) {
     if (!ticket || !channel) throw new TicketError("ticket.notFound", "Taký ticket tu nie je.")
     const mailbox = mailboxFor(channel)
     await sendTicketAnswer(ctx.person.companyCode, ctx.keys, id, fieldText(fd, "text"), { email: ctx.person.email, personId: ctx.person.id }, async (t, text) => {
-      // E-mailový ticket: odpoveď vo vlákne na poslednú správu pýtajúceho sa.
-      // Ticket z chatu vlákno nemá — ide nová správa na adresu z tokenu.
-      const incoming = lastIncoming(t)
-      if (t.source === "email" && incoming) return mailbox.reply(incoming.providerId, text)
-      if (!t.asker.email) throw new TicketError("ticket.noRecipient", "Ticket nemá komu odpovedať — chýba adresa.")
-      return mailbox.send(t.asker.email, t.subject ? `Re: ${t.subject}` : "Odpoveď helpdesku", text)
+      // Vo vlákne, kde sa dá (ADR-042, D277): na e-mail pýtajúceho sa, inak
+      // na potvrdenie ticketu z widgetu; nová správa len bez oboch.
+      const route = answerRoute(t)
+      if (route.kind === "reply") return mailbox.reply(route.providerId, text)
+      if (route.kind === "replyTo") return mailbox.replyTo(route.providerId, route.to, text)
+      return mailbox.send(route.to, t.subject ? `Re: ${t.subject}` : "Odpoveď helpdesku", text)
     })
   } catch (e) {
     if (isRedirect(e)) throw e
