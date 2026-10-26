@@ -1921,6 +1921,9 @@ interface Dictionary {
         chunks: (n: number) => string
         fullText: string
         shownBelow: string
+        /** Čitateľský detail predpisu `/documents/law/…` (ADR-041, D273). */
+        manageSource: string
+        libraryRow: string
         textHeading: (date: string) => string
         textNote: string
       }
@@ -7298,6 +7301,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         chunks: n => `${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úsekov"}`,
         fullText: "Celý text",
         shownBelow: "zobrazené nižšie",
+        manageSource: "Spravovať zdroj",
+        libraryRow: "V knižnici",
         textHeading: date => `Celý text — znenie účinné od ${date}`,
         textNote: "Text zo Slov-Lexu prepísaný na čítanie a hľadanie. Záväzné je PDF na portáli.",
       },
@@ -12533,6 +12538,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         chunks: n => `${n} ${n === 1 ? "úsek" : n < 5 ? "úseky" : "úseků"}`,
         fullText: "Celý text",
         shownBelow: "zobrazeno níže",
+        manageSource: "Spravovat zdroj",
+        libraryRow: "V knihovně",
         textHeading: date => `Celý text — znění účinné od ${date}`,
         textNote: "Text ze Slov-Lexu přepsaný pro čtení a hledání. Závazné je PDF na portálu.",
       },
@@ -17757,6 +17764,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         chunks: n => `${n} ${n === 1 ? "chunk" : "chunks"}`,
         fullText: "Full text",
         shownBelow: "shown below",
+        manageSource: "Manage the source",
+        libraryRow: "In the library",
         textHeading: date => `Full text — version effective from ${date}`,
         textNote: "Text from Slov-Lex transcribed for reading and search. The PDF on the portal is the binding one.",
       },

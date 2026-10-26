@@ -8,9 +8,9 @@
  * a dá sa poslať odkazom. Znenie v adrese je `?version=20260101`; bez neho
  * sa ukáže znenie účinné dnes.
  *
- * Text sa kreslí ako pohľad Dnes v Členení: bloky Markdownu cez
- * `FormattedText`, nikdy ako HTML. Paragrafy dostanú kotvu v tvare, aký má
- * portál (`#paragraf-58`), takže odkaz z odpovede asistenta sedí aj tu.
+ * Text kreslí `LawActText` — ten istý ako na čitateľskom detaile
+ * `/documents/law/<actId>` (ADR-041 D273), kam sa odtiaľto nevedie: správca
+ * je tu kvôli zdroju (kontrola, chyba, odber), čitateľ tam kvôli predpisu.
  *
  * Stránka sa len číta; odber a odber do knižnice sú na zozname predpisov.
  * Prístup ako celé nastavenia organizácie (správca osôb, D154).
@@ -20,29 +20,17 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { orgPageContext } from "@/lib/orgSettings"
 import {
-  SLOV_LEX_SOURCE_ID, actById, versionsOf, catalogVersion, versionToShow, anchorFor, subscriptionsFor,
+  SLOV_LEX_SOURCE_ID, actById, versionsOf, catalogVersion, versionToShow, subscriptionsFor,
 } from "@/lib/lawCatalog"
 import { lawDocumentsFor } from "@/lib/lawLibraryLink"
-import { splitBlocks, headingText, type TextBlock } from "@/lib/chunkBlocks"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
-import FormattedText from "@/components/FormattedText"
+import LawActText from "@/components/LawActText"
 
 export const dynamic = "force-dynamic"
-
-/** Jeden blok znenia — nadpis s kotvou paragrafu, tabuľka v rámiku, ostatné ako formátovaný text. */
-function BlockView({ block }: { block: TextBlock }) {
-  if (block.kind === "heading") {
-    const text = headingText(block)
-    const id = anchorFor(text) ?? undefined
-    return block.level <= 2 ? <h2 id={id}>{text}</h2> : <h3 id={id}>{text}</h3>
-  }
-  if (block.kind === "table") return <pre className="cut-pre">{block.text}</pre>
-  return <FormattedText text={block.text} />
-}
 
 export default async function LawActDetailPage({
   params,
@@ -81,7 +69,6 @@ export default async function LawActDetailPage({
   const shown = versionToShow(versions, query.version, now)
   // Text sa číta až tu — zoznam znení ho nepotrebuje a jedno znenie má státisíce znakov.
   const full = shown ? await catalogVersion(actId, shown.timepoint) : null
-  const blocks = full ? splitBlocks(full.markdown) : []
   const date = (x: Date) => formatDate(x, language)
   const base = `/organisation/sources/web/${SLOV_LEX_SOURCE_ID}/${actId}`
   const slovLexHref = `https://www.slov-lex.sk/pravne-predpisy/${actId}/`
@@ -148,17 +135,7 @@ export default async function LawActDetailPage({
           })}
         </section>
 
-        {full && (
-          <>
-            <h2 id="text" style={{ margin: "24px 0 10px" }}>{td.textHeading(date(full.effectiveFrom))}</h2>
-            <p className="quiet" style={{ margin: "0 0 12px", fontSize: 13 }}>{td.textNote}</p>
-            <article className="cut-doc card" aria-label={td.textHeading(date(full.effectiveFrom))}>
-              <section className="cut-block">
-                {blocks.map(b => <BlockView key={b.index} block={b} />)}
-              </section>
-            </article>
-          </>
-        )}
+        {full && <LawActText markdown={full.markdown} heading={td.textHeading(date(full.effectiveFrom))} note={td.textNote} />}
       </div>
     </AppShell>
   )
