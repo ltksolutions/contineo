@@ -1420,6 +1420,8 @@ export default async function OrganisationSectionPage({
                     a.current ? t.law.current(formatDate(a.current.effectiveFrom, language)) : t.law.pending,
                     a.current?.amendment ? t.law.amendment(a.current.amendment) : null,
                     a.laterCount ? t.law.later(a.laterCount) : null,
+                    // Denný cron katalógu (D261) — bez dátumu sa nedá povedať, či je znenie čerstvé.
+                    a.lastCheckedAt ? t.law.checked(formatDate(a.lastCheckedAt, language)) : t.law.neverChecked,
                   ].filter(Boolean).join(" · ")}
                   {" · "}
                   <a href={`https://www.slov-lex.sk/pravne-predpisy/${a.actId}/`} target="_blank" rel="noopener noreferrer">Slov-Lex</a>
@@ -1428,6 +1430,7 @@ export default async function OrganisationSectionPage({
                     ? <Link href={`/library/${encodeURIComponent(law.library.get(a.actId)!.documentId)}`}>{t.law.inLibrary}</Link>
                     : <Link href={`/library/new/web?${new URLSearchParams({ address: a.actId }).toString()}`}>{t.law.toLibrary}</Link>}
                 </span>
+                {a.lastError && <span><span className="tone-bad">{t.law.checkError(a.lastError)}</span></span>}
               </div>
               {/* Karty s vlastnou akciou majú tlačidlá tiché (DESIGN_ODCHYLKY R1). */}
               <form action={unsubscribeLawAction}>

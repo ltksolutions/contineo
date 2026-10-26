@@ -1862,6 +1862,10 @@ interface Dictionary {
       /** Napojenie na knižnicu (ADR-039 D260). */
       inLibrary: string
       toLibrary: string
+      /** Posledná kontrola katalógu cronom (D261). */
+      checked: (when: string) => string
+      neverChecked: string
+      checkError: (message: string) => string
     }
     aiUsage: {
       tabSettings: string
@@ -7181,6 +7185,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavenie legislatívy uložené.",
       inLibrary: "v knižnici",
       toLibrary: "odobrať do knižnice",
+      checked: when => `kontrola ${when}`,
+      neverChecked: "zatiaľ bez kontroly",
+      checkError: message => `Posledná kontrola zlyhala: ${message}`,
     },
     aiUsage: {
       tabSettings: "Nastavenie",
@@ -12357,6 +12364,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Nastavení legislativy uloženo.",
       inLibrary: "v knihovně",
       toLibrary: "odebírat do knihovny",
+      checked: when => `kontrola ${when}`,
+      neverChecked: "zatím bez kontroly",
+      checkError: message => `Poslední kontrola selhala: ${message}`,
     },
     aiUsage: {
       tabSettings: "Nastavení",
@@ -17522,6 +17532,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       saved: "Legislation settings saved.",
       inLibrary: "in the library",
       toLibrary: "subscribe into the library",
+      checked: when => `checked ${when}`,
+      neverChecked: "not checked yet",
+      checkError: message => `The last check failed: ${message}`,
     },
     aiUsage: {
       tabSettings: "Settings",
