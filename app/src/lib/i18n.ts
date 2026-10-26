@@ -154,6 +154,17 @@ interface Dictionary {
     openPdf: string
     /** Tiché tlačidlo na stránke dokumentu: otázka len nad ním (`/ask?src=library&doc=`, D269). */
     askDocument: string
+    /** Správca obsahu: tichý odkaz na správcovský detail (ADR-041, D274). */
+    editInLibrary: string
+    /** Karta údajov o dokumente a znení (ADR-041, D272). */
+    factsHeading: string
+    /** Zoznam zverejnených znení s prepínaním `?version=` (D272). */
+    versionsHeading: (n: number) => string
+    versionShow: string
+    versionShown: string
+    /** Nad textom staršieho alebo budúceho znenia; potvrdzuje sa len platné. */
+    versionNotCurrent: (label: string) => string
+    versionCurrentLink: string
     listHeading: string
     listIntro: string
     /** Prázdny stav (`.empty`, DOCUMENTS úloha 4) — bez akcie: človek tu nemá čo urobiť. */
@@ -5140,6 +5151,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   onboarding: {
     openPdf: "Otvoriť PDF",
     askDocument: "Opýtať sa",
+    editInLibrary: "Upraviť v knižnici",
+    factsHeading: "Údaje",
+    versionsHeading: n => `Znenia (${n})`,
+    versionShow: "Zobraziť",
+    versionShown: "zobrazené",
+    versionNotCurrent: label => `Toto znenie už neplatí alebo ešte neplatí; platné je znenie ${label}.`,
+    versionCurrentLink: "Zobraziť platné znenie",
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
     emptyTitle: "Nemáte nič na potvrdenie",
@@ -5161,7 +5179,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnosť už skončila",
       "document-unavailable": "dokument nie je dostupný",
     },
-    version: (_label, from) => `znenie účinné od ${from}`,
+    version: (label, from) => `znenie ${label} · účinné od ${from}`,
     readingElapsed: t => `Čas čítania: ${t}`,
     readingNote: "Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.",
     readingSeconds: n => `${n} s`,
@@ -10368,6 +10386,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   onboarding: {
     openPdf: "Otevřít PDF",
     askDocument: "Zeptat se",
+    editInLibrary: "Upravit v knihovně",
+    factsHeading: "Údaje",
+    versionsHeading: n => `Znění (${n})`,
+    versionShow: "Zobrazit",
+    versionShown: "zobrazeno",
+    versionNotCurrent: label => `Toto znění už neplatí nebo ještě neplatí; platné je znění ${label}.`,
+    versionCurrentLink: "Zobrazit platné znění",
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
     emptyTitle: "Nemáte nic k potvrzení",
@@ -10389,7 +10414,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnost už skončila",
       "document-unavailable": "dokument není dostupný",
     },
-    version: (_label, from) => `znění účinné od ${from}`,
+    version: (label, from) => `znění ${label} · účinné od ${from}`,
     readingElapsed: t => `Čas čtení: ${t}`,
     readingNote: "Zaznamenává se, je informativní a není součástí potvrzení.",
     readingSeconds: n => `${n} s`,
@@ -15593,6 +15618,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   onboarding: {
     openPdf: "Open PDF",
     askDocument: "Ask",
+    editInLibrary: "Edit in the library",
+    factsHeading: "Details",
+    versionsHeading: n => `Versions (${n})`,
+    versionShow: "Show",
+    versionShown: "shown",
+    versionNotCurrent: label => `This version is no longer, or not yet, in effect; the current version is ${label}.`,
+    versionCurrentLink: "Show the current version",
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
     emptyTitle: "Nothing to acknowledge",
@@ -15614,7 +15646,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "it is no longer effective",
       "document-unavailable": "the document is not available",
     },
-    version: (_label, from) => `version effective from ${from}`,
+    version: (label, from) => `version ${label} · effective from ${from}`,
     readingElapsed: t => `Reading time: ${t}`,
     readingNote: "It is recorded, informative, and not part of the acknowledgement.",
     readingSeconds: n => `${n} s`,

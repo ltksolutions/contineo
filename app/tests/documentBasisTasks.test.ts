@@ -42,7 +42,7 @@ vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/documentOpens", () => ({ recordOpen: async () => {} }))
 vi.mock("@/lib/assignments", () => ({ assignedAtByVersion: async () => new Map() }))
 vi.mock("@/lib/pending", () => ({ acknowledgementDuties: async () => ({ fromTracks: [], outsideTracks: [] }) }))
-vi.mock("@/lib/acknowledgements", () => ({ buildStatement: () => "formulka", hasAcknowledged: async () => false }))
+vi.mock("@/lib/acknowledgements", () => ({ buildStatement: () => "formulka", validAcknowledgements: async () => [] }))
 vi.mock("@/lib/library", async importOriginal => ({
   ...(await importOriginal<typeof import("../src/lib/library")>()),
   isContentManager: () => state.contentManager,
