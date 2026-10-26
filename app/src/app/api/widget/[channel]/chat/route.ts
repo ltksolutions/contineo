@@ -9,7 +9,7 @@
  */
 
 import { NextResponse } from "next/server"
-import { widgetGate, corsHeaders, questionsLastHour, recordingTransform } from "@/lib/widgetApi"
+import { widgetGate, widgetPreflight, corsHeaders, questionsLastHour, recordingTransform } from "@/lib/widgetApi"
 import { chatStream } from "@/lib/chatStream"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { widgetSources, pickWidgetSources, searchedScopeOf } from "@/lib/widgetSources"
@@ -22,11 +22,7 @@ export const maxDuration = 60
 
 export async function OPTIONS(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel } = await params
-  const gate = await widgetGate(req, channel, "preflight")
-  // Preflight nemá token — stačí, že pôvod je povolený (gate vráti 401 až za pôvodom).
-  if (gate instanceof Response && gate.status !== 401) return gate
-  const origin = req.headers.get("origin") ?? ""
-  return new Response(null, { status: 204, headers: corsHeaders(origin.replace(/\/+$/, "")) })
+  return widgetPreflight(req, channel)
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ channel: string }> }) {

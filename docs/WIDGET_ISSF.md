@@ -4,8 +4,10 @@
 > kanála v Contineu. **ISSF nie je Sportnet**: Sportnet je platforma
 > sportnet.online s CRM a identifikátorom `sportnetID`; ISSF má vlastný
 > identifikátor osoby, **registračné číslo**. Rozhodnutie:
-> ADR-028, D166. Stav 6. 10. 2026: implementované (krok 5), naostro
-> neoverené — čaká na vydávanie tokenu na strane ISSF.
+> ADR-028, D166. Stav 26. 10. 2026: implementované (krok 5); skúška
+> priamo v stránke ISSF prešla (widget sa vykreslí, token z Javy Contineo
+> prijme — pozri „Skúška v ISSF"). Naostro neoverené — čaká na tajný kľúč
+> kanála a vydávanie tokenu na strane ISSF.
 
 ## Ako to funguje
 
@@ -88,6 +90,71 @@ function issueToken(user, secret) {
 }
 ```
 
+Príklad (Java 8+, bez knižníc — **ISSF beží na Apache Wicket**). Ten istý
+kód s vyplneným `iss` a `aud` je v nastavení kanála pod **Vzor v Jave**
+(`javaTokenExample()` v `app/src/lib/widgetEmbed.ts`); token, ktorý vydal,
+overuje `app/tests/widgetEmbed.test.ts`:
+
+```java
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+public final class ContineoToken {
+  static final String ISSUER = "https://issf.futbalsfz.sk";
+  static final String CHANNEL_KEY = "d9589242-8b85-4850-a10a-a30ebbbe8f18";
+
+  public static String issue(String secret, String sub, String email, String givenName,
+                             String familyName, List<String> roles, String club, String lang) throws Exception {
+    long iat = System.currentTimeMillis() / 1000;
+    StringBuilder r = new StringBuilder("[");
+    for (int i = 0; i < roles.size(); i++) r.append(i > 0 ? "," : "").append(q(roles.get(i)));
+    r.append("]");
+    String payload = "{\"iss\":" + q(ISSUER) + ",\"aud\":" + q(CHANNEL_KEY) + ",\"sub\":" + q(sub)
+        + ",\"email\":" + q(email) + ",\"given_name\":" + q(givenName) + ",\"family_name\":" + q(familyName)
+        + ",\"roles\":" + r + (club != null ? ",\"club\":" + q(club) : "") + ",\"lang\":" + q(lang)
+        + ",\"iat\":" + iat + ",\"exp\":" + (iat + 900) + "}";
+    String h = b64("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+    String p = b64(payload.getBytes(StandardCharsets.UTF_8));
+    Mac mac = Mac.getInstance("HmacSHA256");
+    mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+    return h + "." + p + "." + b64(mac.doFinal((h + "." + p).getBytes(StandardCharsets.UTF_8)));
+  }
+
+  private static String b64(byte[] b) {
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
+  }
+
+  private static String q(String v) {
+    StringBuilder o = new StringBuilder("\"");
+    for (char ch : v.toCharArray()) {
+      if (ch == '"' || ch == '\\') o.append('\\').append(ch);
+      else if (ch < 0x20) o.append(String.format("\\u%04x", (int) ch));
+      else o.append(ch);
+    }
+    return o.append('"').toString();
+  }
+}
+```
+
+Volanie: `ContineoToken.issue(secret, registracneCislo, email, meno,
+priezvisko, roly, klub, "sk")` — klub môže byť `null`, roly prázdny zoznam.
+`q()` escapuje úvodzovky a spätnú lomku; bez toho by meno ako
+`Novák "Jano"` rozbilo JSON a token by neprešiel.
+
+**Kde to vo Wickete sedí** (návrh pre vývojárov ISSF, ich kód nepoznáme):
+
+- tajný kľúč z konfigurácie servera (premenná prostredia, `.properties`
+  mimo repozitára), nikdy v zdrojovom kóde ani v stránke;
+- `data-token` v **spoločnej šablóne** stránok po prihlásení — napr.
+  `AttributeModifier.replace("data-token", …)` na `<script>` v základnej
+  stránke, z ktorej dedia ostatné; token sa vydá pri každom vykreslení;
+- `/api/contineo-token` ako `mountResource(...)` v `Application.init()` —
+  pre prihláseného v session vráti nový token ako `text/plain`,
+  neprihlásenému 401.
+
 ### 2. Obnova tokenu
 
 Token platí 15 minút, stránka ISSF dlhšie. ISSF vystaví **endpoint na
@@ -132,6 +199,25 @@ cd app && npm run widget:test -- --company SFZ --channel 6f1d2c3a-9b4e-4c7d-8a2f
 `http://localhost:4567` medzi povolené pôvody kanála. Stránka beží na tom pôvode, vloží skript widgetu
 z aplikácie a pri 401 si vyžiada nový token z `/token`. Po skúške pôvod
 z kanála odobrať.
+
+## Skúška v ISSF (26. 10. 2026)
+
+Kód na vloženie bol vložený do živej pracovnej plochy ISSF len
+v prehliadači (nič sa v ISSF ani Contineu neuložilo). Zistené:
+
+- ISSF je **Apache Wicket** (Java), jQuery 1.6.1; **bez
+  Content-Security-Policy**, skript z `intranet.futbalsfz.sk` sa smie
+  načítať. Shadow DOM funguje, najvyšší `z-index` stránky je 1005.
+- Tlačidlo a panel sa vykreslia vo farbe SFZ; bez platného tokenu widget
+  ukáže chybu a kontakt pri výpadku.
+- `/api/contineo-token` na ISSF zatiaľ vracia 404 — treba ho pridať.
+- **Preflight bez tajného kľúča vracal 503**, prehliadač to hlásil ako
+  chybu CORS („Failed to fetch"). Opravené: `OPTIONS` overuje len kanál
+  a pôvod (`widgetPreflight`), `widget.noSecret` príde v odpovedi na
+  samotné volanie.
+
+Zostáva: tajný kľúč kanála (vytvára Ján na obrazovke kanála), vydávanie
+tokenu a `/api/contineo-token` na strane ISSF, vloženie kódu.
 
 ## Čo API vracia
 

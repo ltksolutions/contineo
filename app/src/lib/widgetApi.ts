@@ -87,6 +87,23 @@ export async function widgetGate(req: Request, channelKey: string, token: string
   return { tenant, channel, identity, person, origin: origin!, language: identity.language ?? person.language ?? language }
 }
 
+/**
+ * Preflight `OPTIONS` pre všetky volania widgetu. Overí len kanál a pôvod —
+ * token preflight nenesie a chýbajúci tajný kľúč tu nevadí: keby preflight
+ * vrátil 503, prehliadač by ohlásil chybu CORS („Failed to fetch") a stránka
+ * cudzieho systému by sa nedozvedela, že chýba kľúč (`widget.noSecret` príde
+ * až v odpovedi na samotné volanie). Zistené pri skúške v ISSF 26. 10. 2026.
+ */
+export async function widgetPreflight(req: Request, channelKey: string): Promise<Response> {
+  const tenant = await currentTenant().catch(() => null)
+  if (!tenant) return new Response(null, { status: 404 })
+  const channel = await channelByKey(tenant.companyCode, channelKey)
+  if (!channel || channel.kind !== "widget") return new Response(null, { status: 404 })
+  const origin = requestOrigin(req.headers)
+  if (!originAllowed(channel, origin)) return new Response(null, { status: 403 })
+  return new Response(null, { status: 204, headers: corsHeaders(origin!) })
+}
+
 /** Koľko otázok osoba položila za poslednú hodinu — proti stropu kanála (D14). */
 export async function questionsLastHour(companyCode: string, personId: string): Promise<number> {
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)

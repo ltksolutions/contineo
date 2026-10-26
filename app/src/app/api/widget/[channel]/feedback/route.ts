@@ -7,7 +7,7 @@
  */
 
 import { NextResponse } from "next/server"
-import { widgetGate, corsHeaders } from "@/lib/widgetApi"
+import { widgetGate, widgetPreflight, corsHeaders } from "@/lib/widgetApi"
 import { getCollection } from "@/lib/mongodb"
 import { RATINGS_COLLECTION, saveReaderFeedback, type RatingRecord } from "@/lib/ratings"
 import { ObjectId } from "mongodb"
@@ -16,9 +16,7 @@ export const dynamic = "force-dynamic"
 
 export async function OPTIONS(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel } = await params
-  const gate = await widgetGate(req, channel, "preflight")
-  if (gate instanceof Response && gate.status !== 401) return gate
-  return new Response(null, { status: 204, headers: corsHeaders((req.headers.get("origin") ?? "").replace(/\/+$/, "")) })
+  return widgetPreflight(req, channel)
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ channel: string }> }) {

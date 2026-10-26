@@ -115,3 +115,57 @@ export function widgetEmbedCode(i: EmbedInput): string {
   )
   return lines.join("\n")
 }
+
+/**
+ * Vzor vydania tokenu v Jave (skúška v ISSF 26. 10. 2026: ISSF beží na
+ * Apache Wicket, vzor v Node mu nepomôže). Čistá Java 8+, bez knižníc —
+ * nevieme, ktoré JWT knižnice ISSF smie pridať. `iss` a `aud` sú skutočné
+ * hodnoty kanála. Bez komentárov v kóde: vysvetlenie je v texte nad ním
+ * (i18n), kód sa nemusí prekladať. Overené `verifyWidgetToken()` v teste
+ * `widgetEmbed.test.ts` (podpis, diakritika, úvodzovky v mene).
+ */
+export function javaTokenExample(c: { iss: string; aud: string }): string {
+  return [
+    `import java.nio.charset.StandardCharsets;`,
+    `import java.util.Base64;`,
+    `import java.util.List;`,
+    `import javax.crypto.Mac;`,
+    `import javax.crypto.spec.SecretKeySpec;`,
+    ``,
+    `public final class ContineoToken {`,
+    `  static final String ISSUER = ${JSON.stringify(c.iss)};`,
+    `  static final String CHANNEL_KEY = ${JSON.stringify(c.aud)};`,
+    ``,
+    `  public static String issue(String secret, String sub, String email, String givenName,`,
+    `                             String familyName, List<String> roles, String club, String lang) throws Exception {`,
+    `    long iat = System.currentTimeMillis() / 1000;`,
+    `    StringBuilder r = new StringBuilder("[");`,
+    `    for (int i = 0; i < roles.size(); i++) r.append(i > 0 ? "," : "").append(q(roles.get(i)));`,
+    `    r.append("]");`,
+    `    String payload = "{\\"iss\\":" + q(ISSUER) + ",\\"aud\\":" + q(CHANNEL_KEY) + ",\\"sub\\":" + q(sub)`,
+    `        + ",\\"email\\":" + q(email) + ",\\"given_name\\":" + q(givenName) + ",\\"family_name\\":" + q(familyName)`,
+    `        + ",\\"roles\\":" + r + (club != null ? ",\\"club\\":" + q(club) : "") + ",\\"lang\\":" + q(lang)`,
+    `        + ",\\"iat\\":" + iat + ",\\"exp\\":" + (iat + 900) + "}";`,
+    `    String h = b64("{\\"alg\\":\\"HS256\\",\\"typ\\":\\"JWT\\"}".getBytes(StandardCharsets.UTF_8));`,
+    `    String p = b64(payload.getBytes(StandardCharsets.UTF_8));`,
+    `    Mac mac = Mac.getInstance("HmacSHA256");`,
+    `    mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));`,
+    `    return h + "." + p + "." + b64(mac.doFinal((h + "." + p).getBytes(StandardCharsets.UTF_8)));`,
+    `  }`,
+    ``,
+    `  private static String b64(byte[] b) {`,
+    `    return Base64.getUrlEncoder().withoutPadding().encodeToString(b);`,
+    `  }`,
+    ``,
+    `  private static String q(String v) {`,
+    `    StringBuilder o = new StringBuilder("\\"");`,
+    `    for (char ch : v.toCharArray()) {`,
+    `      if (ch == '"' || ch == '\\\\') o.append('\\\\').append(ch);`,
+    `      else if (ch < 0x20) o.append(String.format("\\\\u%04x", (int) ch));`,
+    `      else o.append(ch);`,
+    `    }`,
+    `    return o.append('"').toString();`,
+    `  }`,
+    `}`,
+  ].join("\n")
+}
