@@ -265,6 +265,10 @@ export interface DocumentRecord {
    * je samostatný dokument, nie preklad. Viď `i18n.ts`.
    */
   language?: string
+  /** Druh dokumentu (číselník `category`, ADR-027, D179). Chýba pri dokumentoch spred D179. */
+  category?: string | null
+  /** Nadradené dokumenty (ADR-034, D219) — `documentId`; viac je v poriadku. */
+  parentIds?: string[] | null
   versions?: Version[]
   /** Text dokumentu pre zobrazenie človeku. Na verzii má prednosť. */
   markdown?: string
@@ -349,6 +353,37 @@ export function effectiveVersion(doc: DocumentRecord, asOf: Date = new Date()): 
     (a.effectiveFrom as Date).getTime() >= (b.effectiveFrom as Date).getTime() ? a : b
   )
   return { ok: true, version: latest }
+}
+
+/**
+ * Znenia, ktoré smie čitateľ vidieť (ADR-041, D272): tie isté kandidáty ako
+ * `effectiveVersion()` — vydané znenia s určenou platnosťou, aj staršie
+ * (nahradené, s koncom platnosti) a aj také, ktoré platia až v budúcnosti.
+ * Koncept ani obsah bez určenej platnosti sem nepatrí. Najnovšie prvé.
+ */
+export function readableVersions(doc: DocumentRecord): Version[] {
+  return (doc.versions ?? [])
+    .filter(v => (v.isActive || v.effectiveTo instanceof Date) && v.effectiveFrom instanceof Date)
+    .sort((a, b) => (b.effectiveFrom as Date).getTime() - (a.effectiveFrom as Date).getTime())
+}
+
+/**
+ * Ktoré znenie čitateľovi ukázať: vyžiadané (`?version=`), ak ho smie vidieť,
+ * inak platné. Neznámy identifikátor sa ticho prepne na platné — adresa so
+ * starým odkazom nemá skončiť na 404, keď dokument ďalej existuje.
+ */
+export function versionToRead(doc: DocumentRecord, requested: string | undefined, asOf: Date = new Date()): Version | null {
+  const wanted = requested ? readableVersions(doc).find(v => v.versionId === requested) : undefined
+  if (wanted) return wanted
+  const current = effectiveVersion(doc, asOf)
+  return current.ok ? current.version : null
+}
+
+/** Stav znenia k dátumu — pre štítok v zozname znení. */
+export function versionState(v: Pick<Version, "effectiveFrom" | "effectiveTo">, asOf: Date = new Date()): "later" | "past" | "now" {
+  if (v.effectiveFrom && v.effectiveFrom.getTime() > asOf.getTime()) return "later"
+  if (v.effectiveTo && v.effectiveTo.getTime() <= asOf.getTime()) return "past"
+  return "now"
 }
 
 /** Načíta dokument organizácie. `null`, keď taký v nej nie je (D90). */

@@ -79,8 +79,9 @@ PDF / text znenia … (bez zmeny)
   Zobrazené staré znenie má nad textom riadok „Toto znenie už neplatí;
   platné je {označenie}" s odkazom — potvrdzuje sa **len platné** znenie,
   karta potvrdenia sa pri inom nekreslí.
-- **Akcie v `.page-head`**: `Opýtať sa` (plné, z #448 `?doc=`) — jediné
-  plné tlačidlo. Správca obsahu vidí navyše tiché `Upraviť v knižnici` →
+- **Akcie v `.page-head`**: `Opýtať sa` (tiché, z #448 `?doc=`) — jediné
+  plné tlačidlo stránky je `Potvrdzujem` na jej konci (R2), preto tu plné
+  nie je. Správca obsahu vidí navyše tiché `Upraviť v knižnici` →
   `/library/<id>` (D274); nikto iný žiadnu správcovskú akciu nevidí.
   DPO, HR, hodnotiteľ na čitateľskom detaile nič navyše nemajú — ich práca
   je na vlastných obrazovkách.

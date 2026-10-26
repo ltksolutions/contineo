@@ -8,10 +8,17 @@
  * Znenie formulky sa skladá tu, na serveri, z toho istého zdroja ako pri zápise
  * (`buildStatement`). Človek teda vidí presne to, čo sa mu uloží — a nie podobný
  * text, ktorý by sa časom mohol rozísť s tým skutočným.
+ *
+ * Čitateľský detail (ADR-041, D272): nad textom je riadok druh · znenie ·
+ * platí od, karta údajov (kto zodpovedá, právny základ, kto prijal, autor,
+ * nadradené, jazyk, pôvod, moje potvrdenie) a pri viacerých vydaných zneniach
+ * karta znení s prepínaním `?version=`. Správcovské pojmy — priečinok,
+ * prístup, značky, cudzie potvrdenia — sa tu nekreslia; kto má rolu správcu
+ * obsahu, má jeden tichý odkaz do knižnice (D274).
  */
 
 import Link from "next/link"
-import VersionMetaLine from "@/components/VersionMetaLine"
+import type { ReactNode } from "react"
 import { initials } from "@/lib/initials"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
@@ -19,11 +26,15 @@ import { recordOpen } from "@/lib/documentOpens"
 import { assignedAtByVersion } from "@/lib/assignments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
-import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
+import { loadDocumentFor, effectiveVersion, readableVersions, versionToRead, versionState } from "@/lib/documents"
+import { buildStatement, validAcknowledgements } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { acknowledgementDuties } from "@/lib/pending"
 import { dueState } from "@/lib/due"
+import { codelistOptions } from "@/lib/codelists"
+import { tenantExtras } from "@/lib/codelistsTenant"
+import { isContentManager } from "@/lib/library"
+import { documentTitles } from "@/lib/approvalsDb"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
 import FormattedText from "@/components/FormattedText"
 import PdfView from "@/components/PdfView"
@@ -54,8 +65,9 @@ export default async function DocumentPage({
   const person = ctx.person
   const branding = brandingView(ctx.tenant)
 
-  const t = dictionary(person.language).onboarding
-  const tr = dictionary(person.language).responsibility
+  const d = dictionary(person.language)
+  const t = d.onboarding
+  const tr = d.responsibility
   const documentId = decodeURIComponent((await params).documentId)
   const doc = await loadDocumentFor(person, documentId)
   /*
@@ -68,7 +80,16 @@ export default async function DocumentPage({
   const text = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
   const message = text(q.msg)
   const failed = text(q.error) === "1"
-  const version = effectiveVersion(doc)
+  const now = new Date()
+  const current = effectiveVersion(doc, now)
+  /*
+    Zobrazené znenie je vyžiadané (`?version=`) alebo platné (D272). Čitateľ
+    vidí len vydané znenia; koncept sa vyžiadať nedá. Potvrdzuje sa, meria
+    a zapisuje otvorenie **len pri platnom** — staré znenie je na čítanie.
+  */
+  const shown = versionToRead(doc, text(q.version), now)
+  const isCurrent = Boolean(shown && current.ok && shown.versionId === current.version.versionId)
+  const readable = readableVersions(doc)
 
   /*
     Prvé otvorenie znenia (ADR-005, D64). **Len tomu, kto povinnosť má** —
@@ -81,14 +102,14 @@ export default async function DocumentPage({
     nikdy nevidel. `recordOpen()` nikdy nevyhadzuje: keď zápis zlyhá, stránka
     sa zobrazí aj tak. Meranie nesmie brániť plneniu povinnosti.
   */
-  if (version.ok) {
+  if (shown && isCurrent) {
     const mine = await assignedAtByVersion(person)
-    if (mine.has(version.version.versionId)) {
+    if (mine.has(shown.versionId)) {
       await recordOpen({
         companyCode: person.companyCode,
         personId: person.id,
         documentId: doc.documentId,
-        versionId: version.version.versionId,
+        versionId: shown.versionId,
       })
     }
   }
@@ -100,23 +121,61 @@ export default async function DocumentPage({
     má žiť na jednom mieste. Položka existuje len pre nepotvrdenú povinnosť,
     takže po potvrdení chip zmizne sám.
   */
-  const duties = version.ok ? await acknowledgementDuties(person) : null
+  const duties = isCurrent ? await acknowledgementDuties(person) : null
   const duty = duties
     ? [...duties.fromTracks, ...duties.outsideTracks].find(i => i.id === doc.documentId)
     : undefined
   const due = duty?.due ?? null
-  const now = new Date()
-  const tOverview = dictionary(person.language).overview
+  const tOverview = d.overview
 
   /*
     Zodpovedná osoba za znenie (D91) — **dnešný** kontakt, nie odtlačok:
     človek sa má dovolať. Odtlačok z okamihu potvrdenia si nesie záznam.
   */
-  const responsible = version.ok ? version.version.responsiblePerson : undefined
-  const contact = await responsibleContact(person.companyCode, responsible)
+  const responsible = shown?.responsiblePerson
+  const contact = isCurrent ? await responsibleContact(person.companyCode, responsible) : null
   const basisName = (v: { legalBasis?: string; legalBasisLabel?: string }) =>
     v.legalBasisLabel ?? (v.legalBasis ? tr.basisLabel[v.legalBasis] : "")
 
+  /*
+    Karta údajov (D272): názvy z číselníkov, nie kľúče; nadradené dokumenty
+    menom s odkazom na ich čitateľský detail; moje potvrdenie z reťaze dôkazov
+    pre zobrazené znenie. Prázdne pole sa vynechá — „—" by hovorilo, že údaj
+    chýba, a čitateľovi na tom nezáleží.
+  */
+  const extras = tenantExtras(ctx.tenant)
+  const codeLabel = (list: string, key: string | null | undefined) =>
+    key ? (codelistOptions(list, extras).find(o => o.value === key)?.label ?? key) : ""
+  const parentIds = (doc.parentIds ?? []).filter(Boolean)
+  const [parentTitles, mine] = await Promise.all([
+    parentIds.length ? documentTitles(person.companyCode, parentIds) : new Map<string, string>(),
+    shown ? validAcknowledgements({ companyCode: person.companyCode, personId: person.id, versionId: shown.versionId }) : [],
+  ])
+  const acknowledgedAt = mine[0]?.acknowledgedAt ?? null
+  const date = (x: Date) => formatDate(x, person.language)
+  const tv = d.library.docView
+  const facts: [string, ReactNode][] = shown
+    ? ([
+        [tr.responsiblePerson, shown.responsiblePerson?.fullName],
+        [tr.legalBasis, shown.legalBasis
+          ? `${basisName(shown)}${shown.legalBasisReference ? ` · ${shown.legalBasisReference}` : ""}`
+          : ""],
+        [d.versionMeta.approvedBy, shown.approvedBy
+          ? `${shown.approvedBy}${shown.approvedOn ? ` · ${date(shown.approvedOn)}` : ""}`
+          : ""],
+        [d.versionMeta.author, shown.author],
+        [tv.rows.parents, parentIds.length
+          ? <span key="parents">{parentIds.map((p, i) => (
+              <span key={p}>{i > 0 && ", "}<Link href={`/documents/${encodeURIComponent(p)}`}>{parentTitles.get(p) ?? p}</Link></span>
+            ))}</span>
+          : ""],
+        [tv.rows.language, codeLabel("language", doc.language)],
+        [tv.rows.origin, doc.source?.type === "mcp" ? tv.originConnector(doc.source.connectorName) : doc.source?.type === "web" ? tv.originWeb : tv.originManual],
+        [t.confirmHeading, acknowledgedAt ? t.confirmedAt(date(acknowledgedAt)) : ""],
+      ] as [string, ReactNode][]).filter(([, value]) => Boolean(value))
+    : []
+  const stateLabel = { now: d.org.law.detail.stateNow, past: d.org.law.detail.statePast, later: d.org.law.detail.stateLater }
+  const base = `/documents/${encodeURIComponent(doc.documentId)}`
 
   return (
     <AppShell language={person.language} title={doc.title}>
@@ -127,46 +186,106 @@ export default async function DocumentPage({
         language={person.language}
         message={message}
         error={failed}
-        back={`/documents/${encodeURIComponent(documentId)}`}
+        back={base}
       />
 
 
-      {/* Tiché „Opýtať sa" vpravo: otázka len nad týmto dokumentom (ADR-029 D269). */}
+      {/*
+        Tiché „Opýtať sa" vpravo: otázka len nad týmto dokumentom (ADR-029
+        D269). Jediné plné tlačidlo stránky je „Potvrdzujem" na jej konci.
+        Správca obsahu má navyše tichý odkaz do knižnice — jediná správcovská
+        vec na čitateľskom detaile (D274).
+      */}
       <div className="page-head">
         <h1 className="page-title">{doc.title}</h1>
         <span className="page-head-spacer" />
+        {isContentManager(person) && (
+          <Link className="button button--quiet" href={`/library/${encodeURIComponent(doc.documentId)}`}>{t.editInLibrary}</Link>
+        )}
         <Link className="button button--quiet" href={`/ask?${new URLSearchParams({ src: "library", doc: doc.documentId }).toString()}`}>
           {t.askDocument}
         </Link>
       </div>
 
       {/*
-        Hlavička znenia (ZNENIE-kontakt-a-privacy, bod 1): riadok verzie
-        s termínovým chipom a pod ním údaje o znení (ADR-013) v jednom obale,
-        nie zápornými okrajmi.
+        Hlavička (ZNENIE-kontakt-a-privacy, bod 1; ADR-041 D272): riadok
+        druh · znenie · platí od s termínovým chipom, pod ním karta údajov.
+        Druh je prvý — je to jediné delenie, ktoré čitateľ pozná (D270).
       */}
-      {version.ok ? (
+      {shown ? (
         <div className="zn-head">
           <p className="quiet zn-version">
-            <span>{t.version(version.version.label, formatDate(version.version.effectiveFrom!, person.language))}</span>
+            <span>
+              {[codeLabel("category", doc.category), t.version(shown.label, date(shown.effectiveFrom!))].filter(Boolean).join(" · ")}
+            </span>
             {/* Po lehote len chip v --bad-bg, nie červená karta: prekročený
                 termín potvrdenie nezakazuje a obrazovka sa nemá tváriť, že áno. */}
             {due && (
               <span className={`due-chip due-chip--${dueState(due, now)}`}>
-                {tOverview.by(formatDate(due, person.language))}
+                {tOverview.by(date(due))}
               </span>
             )}
           </p>
-          <VersionMetaLine author={version.version.author} approvedBy={version.version.approvedBy}
-                           approvedOn={version.version.approvedOn} language={person.language} />
+          {facts.length > 0 && (
+            <section className="card insp-rows" aria-label={t.factsHeading}>
+              {facts.map(([label, value]) => (
+                <div className="labeled-row" key={label}>
+                  <span>{label}</span>
+                  <span>{value}</span>
+                </div>
+              ))}
+            </section>
+          )}
         </div>
       ) : (
         <p className="card" style={{ padding: 16, margin: "16px 0" }}>
-          {t.blockedReason[version.reason] ?? version.reason}
+          {!current.ok && (t.blockedReason[current.reason] ?? current.reason)}
         </p>
       )}
 
-      {version.ok && (
+      {/*
+        Znenia (D272): len pri dvoch a viac vydaných; najnovšie prvé, so
+        štítkom stavu. Karty s vlastnou akciou majú tlačidlá tiché (R1);
+        zobrazené znenie tlačidlo nemá.
+      */}
+      {shown && readable.length > 1 && (
+        <section className="card more" style={{ marginBottom: 24 }}>
+          <div className="more-head"><h2>{t.versionsHeading(readable.length)}</h2></div>
+          {readable.map(v => {
+            const isShown = v.versionId === shown.versionId
+            const state = versionState(v, now)
+            return (
+              <div key={v.versionId} className="more-row" aria-current={isShown ? "true" : undefined}>
+                <div className="more-main">
+                  <b>
+                    {v.label}
+                    {" "}<span className={state === "now" ? "tag tag--published" : "tag"}>{stateLabel[state]}</span>
+                  </b>
+                  <span>
+                    {v.effectiveTo
+                      ? d.org.law.detail.effectiveRange(date(v.effectiveFrom!), date(v.effectiveTo))
+                      : d.org.law.current(date(v.effectiveFrom!))}
+                    {v.changeNote && ` · ${v.changeNote}`}
+                  </span>
+                </div>
+                {isShown
+                  ? <span className="quiet" style={{ fontSize: 13 }}>{t.versionShown}</span>
+                  : <Link className="button button--quiet" href={`${base}?${new URLSearchParams({ version: v.versionId }).toString()}`}>{t.versionShow}</Link>}
+              </div>
+            )
+          })}
+        </section>
+      )}
+
+      {shown && !isCurrent && (
+        <p className="card" style={{ padding: 16, margin: "0 0 16px" }}>
+          {current.ok
+            ? <>{t.versionNotCurrent(current.version.label)} <Link href={base}>{t.versionCurrentLink}</Link></>
+            : (t.blockedReason[current.reason] ?? current.reason)}
+        </p>
+      )}
+
+      {shown && (
         <>
           {/*
             Znenie prešlo prepisom cez model, takže je v markdowne. Vypísať ho
@@ -181,19 +300,23 @@ export default async function DocumentPage({
             PDF by vyzeral ako druhé znenie toho istého. Znenia spred ADR-011
             PDF nemajú a zostáva im text.
           */}
-          {version.version.pdf ? (
+          {shown.pdf ? (
             <PdfView
-              href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(version.version.versionId)}`}
-              name={version.version.pdf.name}
-              bytes={version.version.pdf.bytes}
-              labels={{ open: t.openPdf, ...dictionary(person.language).common.pdf }}
+              href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(shown.versionId)}`}
+              name={shown.pdf.name}
+              bytes={shown.pdf.bytes}
+              labels={{ open: t.openPdf, ...d.common.pdf }}
             />
           ) : (
             <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
-              <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} anchors />
+              <FormattedText text={shown.markdown ?? doc.markdown ?? ""} anchors />
             </article>
           )}
+        </>
+      )}
 
+      {shown && isCurrent && (
+        <>
           {/*
             Merač je pod textom, nie nad ním. Hore by z neho bola stopka nad
             hlavou; údaj nemá následok a nemá tak ani vyzerať.
@@ -235,12 +358,12 @@ export default async function DocumentPage({
               ) : (
                 <p className="contact-gone" role="status">{tr.contactGone}</p>
               )}
-              {version.version.legalBasis && (
+              {shown.legalBasis && (
                 <dl className="contact-basis">
                   <dt>{tr.legalBasis}</dt>
                   <dd>
-                    {basisName(version.version)}
-                    {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
+                    {basisName(shown)}
+                    {shown.legalBasisReference && ` · ${shown.legalBasisReference}`}
                   </dd>
                 </dl>
               )}
@@ -254,13 +377,13 @@ export default async function DocumentPage({
             <p style={{ fontSize: "var(--fs-lead)", lineHeight: 1.65, margin: "0 0 18px" }}>
               {buildStatement(
                 doc.title,
-                version.version.effectiveFrom!,
+                shown.effectiveFrom!,
                 person.language,
                 person.gender,
               )}
             </p>
 
-            {(await hasAcknowledged(person.companyCode, person.id, version.version.versionId)) ? (
+            {acknowledgedAt ? (
               // Variant zo ZAKLADU, nie inline prepis; a `span`, nie `p` —
               // odstavec s display: inline-flex by čítačka ohlásila ako
               // odstavec, hoci je to štítok (ZNENIE, úloha 2).
@@ -282,8 +405,8 @@ export default async function DocumentPage({
             <p className="ack-privacy">
               <span aria-hidden="true">ⓘ</span>
               <span>
-                {dictionary(person.language).privacy.linkBefore}
-                <Link href="/privacy">{dictionary(person.language).privacy.link}</Link>
+                {d.privacy.linkBefore}
+                <Link href="/privacy">{d.privacy.link}</Link>
               </span>
             </p>
           </section>
