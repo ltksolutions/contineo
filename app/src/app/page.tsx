@@ -36,6 +36,7 @@ import { lawSourceState, subscribedActs } from "@/lib/lawCatalog"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import { dueState } from "@/lib/due"
+import { dueText } from "@/lib/dueText"
 
 export const dynamic = "force-dynamic"
 
@@ -126,14 +127,16 @@ export default async function OverviewPage({
             otázka sa kladie v hlavičke — jedno pole, jedno miesto. */}
         <h1 className="page-title overview-hello">{t.hello(person.fullName)}</h1>
 
-        {/* Dva panely pod sebou na celú šírku: riadok s chipom, metou a akciou
-            potrebuje šírku, v dvoch stĺpcoch by sa lámal na tri riadky. */}
+        {/*
+          Dva panely pod sebou na celú šírku: riadok s chipom, metou a akciou
+          potrebuje šírku. Bez obalu `.overview-panels` — ten má od 1024 px
+          dva stĺpce a jeden panel by zabral polovicu. Nadpis je len v hlavičke
+          panelu, nie ešte raz nad ním.
+        */}
         <section className="section-group" aria-labelledby="tasks">
-          <h2 className="section-group-title" id="tasks">{t.tasksHeading}</h2>
-          <div className="overview-panels">
             <section className="card panel">
               <div className="panel-head">
-                <span>{t.tasksHeading}</span>
+                <span id="tasks">{t.tasksHeading}</span>
                 {tasksTotal > 0 && <span className="panel-head-count">{tasksTotal}</span>}
               </div>
               {/*
@@ -156,7 +159,7 @@ export default async function OverviewPage({
                   {/* Po lehote len chip v --bad-bg: prekročený termín potvrdenie nezakazuje. */}
                   {i.due && (
                     <span className={`due-chip due-chip--${dueState(i.due, now)}`}>
-                      {t.by(formatDate(i.due, language))}
+                      {dueText(i.due, now, language)}
                     </span>
                   )}
                   <Link className="panel-action" href={i.href}>{t.open}</Link>
@@ -176,15 +179,12 @@ export default async function OverviewPage({
                 <Link href="/documents">{tasksHidden ? t.showAll(tasksTotal) : t.allTasks}</Link>
               </div>
             </section>
-          </div>
         </section>
 
         <section className="section-group" aria-labelledby="documents">
-          <h2 className="section-group-title" id="documents">{t.documentsHeading}</h2>
-          <div className="overview-panels">
             <section className="card panel">
               <div className="panel-head">
-                <span>{t.documentsHeading}</span>
+                <span id="documents">{t.documentsHeading}</span>
                 {documents.length > 0 && <span className="panel-head-count">{documents.length}</span>}
               </div>
               {documents.length === 0 && (
@@ -198,7 +198,7 @@ export default async function OverviewPage({
                   <div className="panel-main">
                     <Link className="panel-name" href={r.href}>{r.title}</Link>
                     <div className="quiet panel-meta">
-                      {[r.category ? kindLabel(r.category) : null, r.versionLabel, t.effectiveFromMeta(formatDate(r.effectiveFrom, language))]
+                      {[r.category ? kindLabel(r.category) : null, t.effectiveFromMeta(formatDate(r.effectiveFrom, language))]
                         .filter(Boolean).join(" · ")}
                     </div>
                   </div>
@@ -215,7 +215,6 @@ export default async function OverviewPage({
                 <Link href="/library">{documents.length > documentsShown.length ? t.showAll(documents.length) : t.documentsAll}</Link>
               </div>
             </section>
-          </div>
         </section>
 
         {/* Rozcestník: Organizácia pre každého, Správa rolám. Nadpisy skupín

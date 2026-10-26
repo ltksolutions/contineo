@@ -16,6 +16,7 @@ import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { dueText } from "@/lib/dueText"
 import { dueState } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
@@ -66,7 +67,6 @@ export default async function DocumentsPage({
 
   const t = dictionary(person.language).onboarding
   // „do 12. 9. 2026" je ten istý kľúč ako na Prehľade — nie nový.
-  const tOverview = dictionary(person.language).overview
   const now = new Date()
 
   /*
@@ -153,7 +153,7 @@ export default async function DocumentsPage({
 
                     {due && (
                       <span className={`due-chip duty-due due-chip--${dueState(due, now)}`}>
-                        {tOverview.by(formatDate(due, person.language))}
+                        {dueText(due, now, person.language)}
                       </span>
                     )}
 
@@ -223,7 +223,7 @@ export default async function DocumentsPage({
                   <span className="duty-title">{item.title}</span>
                   {item.due && (
                     <span className={`due-chip duty-due due-chip--${dueState(item.due, now)}`}>
-                      {tOverview.by(formatDate(item.due, person.language))}
+                      {dueText(item.due, now, person.language)}
                     </span>
                   )}
                   <span className="tag">{t.todo}</span>

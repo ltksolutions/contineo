@@ -168,21 +168,22 @@ describe("zdroj nepotvrdenych noriem", () => {
     expect(r.items[0].href).toBe("/documents/smernica%201%2F2026")
   })
 
-  it("druhý riadok nesie uložené znenie bez predpony", async () => {
-    trackProgress.mockResolvedValue([track([step({ versionLabel: "1.0" })])])
+  it("druhý riadok je dátum účinnosti, nie označenie (ADR-016 D113)", async () => {
+    trackProgress.mockResolvedValue([track([step({ versionLabel: "Pracovný poriadok SFZ 20260907", effectiveFrom: new Date("2026-09-07T00:00:00Z") })])])
 
     const r = await acknowledgementSource.collect(person())
 
-    // Označenie sa od ADR-016 len prenáša, bez predpony „verzia".
-    expect(r.items[0].detail).toBe("1.0")
+    // Ručné označenie z čias pred ADR-016 opakovalo názov — pod názvom by stál dvakrát.
+    expect(r.items[0].detail).toBe("znenie účinné od 7. 9. 2026")
   })
 
-  it("v angličtine rovnako bez predpony", async () => {
-    trackProgress.mockResolvedValue([track([step({ versionLabel: "1.0" })])])
+  it("v angličtine rovnako dátum", async () => {
+    trackProgress.mockResolvedValue([track([step({ versionLabel: "1.0", effectiveFrom: new Date("2026-09-07T00:00:00Z") })])])
 
     const r = await acknowledgementSource.collect(person({ language: "en" }))
 
-    expect(r.items[0].detail).toBe("1.0")
+    expect(r.items[0].detail).toMatch(/^version effective from /)
+    expect(r.items[0].detail).not.toContain("1.0")
   })
 
   it("prázdna trasa dá prázdny zoznam, nie chybu", async () => {

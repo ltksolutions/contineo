@@ -29,7 +29,6 @@ export interface ReaderDocumentRow {
   title: string
   /** Kľúč číselníka `category`; `null` pri dokumente bez druhu. */
   category: string | null
-  versionLabel: string | null
   effectiveFrom: Date
   /** Platné znenie zverejnené za posledných `NEW_DAYS` dní. */
   isNew: boolean
@@ -59,7 +58,6 @@ export function mergeReaderDocuments(
     kind: "document",
     title: d.title,
     category: d.category,
-    versionLabel: d.versionLabel,
     effectiveFrom: d.effectiveFrom,
     isNew: Boolean(d.publishedAt && d.publishedAt.getTime() >= newSince && d.publishedAt.getTime() <= asOf.getTime()),
     expiring: Boolean(d.effectiveTo && d.effectiveTo.getTime() > asOf.getTime() && d.effectiveTo.getTime() <= expiringUntil),
@@ -74,7 +72,6 @@ export function mergeReaderDocuments(
       kind: "law",
       title: a.title,
       category: LAW_CATEGORY,
-      versionLabel: null,
       effectiveFrom: a.current.effectiveFrom,
       isNew: false,
       expiring: false,
