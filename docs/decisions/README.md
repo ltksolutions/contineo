@@ -52,6 +52,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-038](ADR-038-contineo-ako-mcp-server.md) | Contineo ako MCP server: Contineo vydáva OAuth token (súhlas je dôkazný záznam), nástroje podľa rolí a rozsahov, fáza 1 len čítanie, zapínateľné nastavenie organizácie obmedzené rezidenciou, zápis osôb nikdy (D249–D256) | ✅ prijaté · fáza 1 · dodatok: zdroje a Legislatíva |
 | [ADR-039](ADR-039-katalog-legislativy-slov-lex.md) | Katalóg legislatívy: predpisy zo Slov-Lexu ako zdieľaný obsah platformy (menovitá výnimka z D90), všetky znenia a § ako úsek, vstavaný zdroj „Legislatíva" na Opýtať sa s výberom predpisov organizácie, odber do knižnice z katalógu namiesto druhého stiahnutia, jeden cron platformy namiesto kroku C per organizácia (D257–D262) · prekonáva čakaciu podmienku D247 | ✅ prijaté · fázy 1–2 |
 | [ADR-040](ADR-040-register-zdrojov.md) | Register zdrojov: zdroje obsahu ako vlastná sekcia Organizácia → Zdroje (umelá inteligencia si nechá kľúč, modely, spotrebu), druh zdroja zo spoločnej schémy (súbor, schránka, MCP konektor, web/RSS) určuje, čo zdroj vie, adaptér je vlastnosť zdroja web (Legislatíva = web s adaptérom slov-lex, nie vlastný druh), register je spoločný tvar nad existujúcimi dátami a jediný vstup pre výber zdrojov, adresy sa prekladajú (D263–D267) · Dodatok 1: druh je zoznam, zdroj je detail — Zdroje → Web / RSS → Slov-Lex, id zdroja `slov-lex` namiesto `law` (D268) | ✅ prijaté · kroky 1–3 (generický web/RSS otvorený), dodatok 1 |
+| [ADR-041](ADR-041-dokument-pre-pouzivatela.md) | Dokument pre bežného používateľa: jeden zoznam dokumentov podľa druhu bez ohľadu na zdroj (predpis z katalógu je druh Zákon), Prehľad z blokov Moje úlohy · Dokumenty · Organizácia (KPI dlaždice a „Pre vás" zanikajú), čitateľský detail s kartou údajov a prepínačom zverejnených znení `?version=` (bez Priečinka, Prístupu, Značiek a cudzích potvrdení), čitateľská adresa zákona `/documents/law/<actId>`, roly vidia na detaile len svoje (D270–D274) | ✅ prijaté · návrh `docs/design/ZAKLAD-prehlad-a-detail-pre-pouzivatela.md`, kroky B → C → A |
 
 ## Čo sem nepatrí
 
@@ -64,6 +65,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-041**. Súbor `ADR-041-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-042**. Súbor `ADR-042-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
