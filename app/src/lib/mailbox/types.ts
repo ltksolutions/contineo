@@ -60,6 +60,14 @@ export interface MailboxPage {
 /** Sledované priečinky: prijatá pošta a odoslaná (odpovede z Outlooku). */
 export type MailFolder = "inbox" | "sentitems"
 
+/** Odoslaná správa: `Message-ID`, vlákno a trvalý identifikátor u poskytovateľa — čo poskytovateľ vráti. */
+export interface SentMail {
+  messageId: string | null
+  threadRef: string | null
+  /** Graph: nemenný identifikátor (`ImmutableId`), platí aj po presune do Odoslaných. */
+  providerId: string | null
+}
+
 export interface MailboxAdapter {
   readonly kind: MailboxKind
   /** Adresa schránky, z ktorej sa čítajú a odosielajú správy. */
@@ -91,8 +99,18 @@ export interface MailboxAdapter {
   listHeaders(from: Date, to: Date, stopAt?: number): Promise<MailHeader[]>
   /** Odpoveď vo vlákne z adresy schránky. Vracia `internetMessageId` odoslanej správy, ak ho poskytovateľ vráti. */
   reply(messageId: string, text: string): Promise<{ messageId: string | null }>
-  /** Nová správa z adresy schránky — pre ticket z chatu, ktorý vlákno v schránke nemá (D163). */
-  send(to: string, subject: string, text: string): Promise<{ messageId: string | null }>
+  /**
+   * Nová správa z adresy schránky — potvrdenie ticketu z widgetu, ktorý
+   * vlákno v schránke ešte nemá (D163, D277). Vracia vlákno, ktoré správa
+   * založila, a jej trvalý identifikátor — na ďalšiu odpoveď v tom vlákne.
+   */
+  send(to: string, subject: string, text: string): Promise<SentMail>
+  /**
+   * Odpoveď vo vlákne na **vlastnú** odoslanú správu (potvrdenie, D277)
+   * s výslovným adresátom — obyčajná `reply` by na vlastnú správu
+   * odpovedala schránke samej.
+   */
+  replyTo(providerId: string, to: string, text: string): Promise<SentMail>
   /** Overenie spojenia: prihlásenie a čítanie schránky. Vyhadzuje `MailboxError`. */
   verify(): Promise<{ address: string; displayName: string | null }>
 }

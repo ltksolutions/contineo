@@ -467,6 +467,16 @@ interface Dictionary {
     note: string
   }
 
+  /**
+   * Potvrdenie ticketu z widgetu (ADR-042, D277). Správa o prijatí, nie
+   * odpoveď — zakladá e-mailové vlákno, do ktorého príde odpoveď riešiteľa
+   * a kam sa pripojí odpoveď človeka. Čistý text z adresy schránky kanála.
+   */
+  ticketConfirmationEmail: {
+    subject: (subject: string) => string
+    body: (input: { organisation: string; message: string }) => string
+  }
+
   dpo: {
     heading: string
     /** Odkaz na záložku GDPR v nastaveniach (D154). */
@@ -5444,6 +5454,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       receiptIntro: date => `Vašu námietku proti spracúvaniu osobných údajov sme prijali ${date}. Takto znie:`,
       receiptNote: "Námietku posúdi zodpovedná osoba (DPO). Do jej rozhodnutia sa vaše doklady nemažú.",
       receiptContact: email => `Námietku posúdi zodpovedná osoba (DPO). Do jej rozhodnutia sa vaše doklady nemažú. Otázky posielajte na ${email}.`,
+    },
+    ticketConfirmationEmail: {
+      subject: subject => `Prijali sme vašu správu: ${subject}`,
+      body: ({ organisation, message }) => `Dobrý deň,\n\nprijali sme vašu správu pre helpdesk ${organisation}. Odpovieme vám e-mailom na túto adresu.\n\nNa tento e-mail môžete odpovedať — odpoveď sa pripojí k vašej správe.\n\nVaša správa:\n\n${message}\n\nHelpdesk ${organisation}`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právnych základov ${quarter} \u2014 ${org}`,
@@ -10684,6 +10698,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       receiptNote: "Námitku posoudí pověřenec (DPO). Do jeho rozhodnutí se vaše doklady nemažou.",
       receiptContact: email => `Námitku posoudí pověřenec (DPO). Do jeho rozhodnutí se vaše doklady nemažou. Dotazy posílejte na ${email}.`,
     },
+    ticketConfirmationEmail: {
+      subject: subject => `Přijali jsme vaši zprávu: ${subject}`,
+      body: ({ organisation, message }) => `Dobrý den,\n\npřijali jsme vaši zprávu pro helpdesk ${organisation}. Odpovíme vám e-mailem na tuto adresu.\n\nNa tento e-mail můžete odpovědět — odpověď se připojí k vaší zprávě.\n\nVaše zpráva:\n\n${message}\n\nHelpdesk ${organisation}`,
+    },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právních základů ${quarter} \u2014 ${org}`,
       subtitle: "Čtvrtletní kontrola",
@@ -15913,6 +15931,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       receiptIntro: date => `We received your objection to the processing of personal data on ${date}. It reads:`,
       receiptNote: "The data protection officer (DPO) will assess it. Your records are not deleted until a decision is made.",
       receiptContact: email => `The data protection officer (DPO) will assess it. Your records are not deleted until a decision is made. Send questions to ${email}.`,
+    },
+    ticketConfirmationEmail: {
+      subject: subject => `We have received your message: ${subject}`,
+      body: ({ organisation, message }) => `Hello,\n\nwe have received your message for the ${organisation} helpdesk. We will reply by e-mail to this address.\n\nYou can reply to this e-mail — your reply will be added to your message.\n\nYour message:\n\n${message}\n\n${organisation} helpdesk`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Legal basis report ${quarter} \u2014 ${org}`,

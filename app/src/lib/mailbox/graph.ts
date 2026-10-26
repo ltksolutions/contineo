@@ -22,7 +22,7 @@
  */
 
 import { AppError } from "../appError"
-import { htmlToText, type MailboxAdapter, type MailboxPage, type MailMessage, type MailFolder, type MailHeader } from "./types"
+import { htmlToText, type MailboxAdapter, type MailboxPage, type MailMessage, type MailFolder, type MailHeader, type SentMail } from "./types"
 
 export class MailboxError extends AppError {}
 
@@ -320,18 +320,53 @@ export class GraphMailbox implements MailboxAdapter {
     return { messageId: null }
   }
 
-  async send(to: string, subject: string, text: string): Promise<{ messageId: string | null }> {
+  /**
+   * Odoslanie cez koncept: `sendMail` vráti 202 bez tela, koncept nesie
+   * `conversationId` a `internetMessageId` hneď (D277). Hlavička
+   * `ImmutableId` drží identifikátor platný aj po presune do Odoslaných —
+   * podľa neho sa neskôr odpovedá v tom istom vlákne.
+   */
+  async send(to: string, subject: string, text: string): Promise<SentMail> {
+    const draft = await this.post(`${this.userPath()}/messages`, {
+      subject, body: { contentType: "Text", content: text }, toRecipients: [{ emailAddress: { address: to } }],
+    }, "odoslanie")
+    return this.sendDraft(draft)
+  }
+
+  async replyTo(providerId: string, to: string, text: string): Promise<SentMail> {
+    const draft = await this.post(`${this.userPath()}/messages/${encodeURIComponent(providerId)}/createReply`, {
+      message: { toRecipients: [{ emailAddress: { address: to } }], body: { contentType: "Text", content: text } },
+    }, "odpoveď")
+    return this.sendDraft(draft)
+  }
+
+  private async post(url: string, body: unknown, what: string): Promise<GraphMessage> {
     const token = await this.accessToken()
-    const r = await withTimeout(signal => fetch(`${this.userPath()}/sendMail`, {
+    const r = await withTimeout(signal => fetch(url, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: { subject, body: { contentType: "Text", content: text }, toRecipients: [{ emailAddress: { address: to } }] },
-        saveToSentItems: true,
-      }),
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: 'IdType="ImmutableId"' },
+      body: JSON.stringify(body),
       signal, cache: "no-store",
     }))
-    if (!r.ok) throw await graphError(r, "odoslanie")
-    return { messageId: null }
+    if (!r.ok) throw await graphError(r, what)
+    return await r.json() as GraphMessage
+  }
+
+  private async sendDraft(draft: GraphMessage): Promise<SentMail> {
+    const token = await this.accessToken()
+    const r = await withTimeout(signal => fetch(`${this.userPath()}/messages/${encodeURIComponent(draft.id)}/send`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, Prefer: 'IdType="ImmutableId"' },
+      signal, cache: "no-store",
+    }))
+    if (!r.ok) {
+      const err = await graphError(r, "odoslanie")
+      // Neodoslaný koncept by v schránke strašil; jeho zmazanie je upratanie, nie strata dát.
+      await withTimeout(signal => fetch(`${this.userPath()}/messages/${encodeURIComponent(draft.id)}`, {
+        method: "DELETE", headers: { Authorization: `Bearer ${token}`, Prefer: 'IdType="ImmutableId"' }, signal, cache: "no-store",
+      })).catch(() => null)
+      throw err
+    }
+    return { messageId: draft.internetMessageId ?? null, threadRef: draft.conversationId ?? null, providerId: draft.id }
   }
 }

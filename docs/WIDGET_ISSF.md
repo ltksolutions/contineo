@@ -20,8 +20,10 @@
    založí alebo spáruje (bez prístupu do intranetu), odpovie z predpisov
    a FAQ kanála — **len verejný obsah** — a odpoveď zapíše na hodnotenie.
 4. Palec dole dvakrát v rozhovore → widget ponúkne **napísať helpdesku**.
-   Ticket pristane vo fronte riešiteľov kanála (Kanály → Tickety), riešiteľ
-   odpovie e-mailom na adresu z tokenu.
+   Ticket pristane vo fronte riešiteľov kanála (Kanály → Tickety). Človeku
+   príde z adresy schránky kanála **potvrdenie** a tým vznikne e-mailové
+   vlákno (ADR-042, D277): riešiteľ odpovedá v ňom a keď človek odpovie
+   e-mailom, správa sa pripojí k tomu istému ticketu.
 
 ## Čo urobí správca kanála (Contineo)
 

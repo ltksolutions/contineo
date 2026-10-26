@@ -19,7 +19,7 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { writeAudit } from "./audit"
-import type { MailMessage } from "./mailbox/types"
+import type { MailMessage, SentMail } from "./mailbox/types"
 import { splitQuotedHistory } from "./mailbox/types"
 
 export const TICKETS_COLLECTION = "tickets"
@@ -72,6 +72,13 @@ export interface Ticket {
   assigneeId: string | null
   draft: { text: string; sources: unknown[]; model: string; at: Date } | null
   sentAnswer: { text: string; by: string; at: Date; messageId: string | null } | null
+  /**
+   * Potvrdenie ticketu z widgetu (ADR-042, D277): správa o prijatí, ktorá
+   * založila e-mailové vlákno (`threadRef`). `providerId` je nemenný
+   * identifikátor u poskytovateľa — na ňu sa odpovedá, kým človek nenapíše
+   * e-mailom sám. Staršie tickety a tickety bez schránky ho nemajú.
+   */
+  confirmation?: { providerId: string; messageId: string | null; at: Date } | null
   createdAt: Date
   updatedAt: Date
   closedAt: Date | null
@@ -389,7 +396,7 @@ export async function sendTicketAnswer(
   id: string,
   text: string,
   actor: { email: string; personId: string },
-  send: (t: TicketWithId, text: string) => Promise<{ messageId: string | null }>,
+  send: (t: TicketWithId, text: string) => Promise<{ messageId: string | null; threadRef?: string | null }>,
 ): Promise<void> {
   const t = await loadForWrite(companyCode, channelKeys, id)
   const body = text.replace(/\r\n?/g, "\n").trim()
@@ -401,7 +408,11 @@ export async function sendTicketAnswer(
   await col.updateOne(
     { _id: t._id },
     {
-      $set: { state: "sent" as TicketState, sentAnswer: { text: body, by: actor.email, at: now, messageId: r.messageId }, assigneeId: t.assigneeId ?? actor.personId, updatedAt: now },
+      $set: {
+        state: "sent" as TicketState, sentAnswer: { text: body, by: actor.email, at: now, messageId: r.messageId }, assigneeId: t.assigneeId ?? actor.personId, updatedAt: now,
+        // Ticket z widgetu bez potvrdenia dostane vlákno prvou odpoveďou (D277).
+        ...(!t.threadRef && r.threadRef ? { threadRef: r.threadRef } : {}),
+      },
       $push: {
         messages: {
           internetMessageId: r.messageId, providerId: `sent:${now.getTime()}`, direction: "out" as const,
@@ -469,4 +480,66 @@ export async function createChatTicket(companyCode: string, input: ChatTicketInp
   })
   await writeAudit({ companyCode, subject: "ticket", action: "zalozeny-z-chatu", actor: input.asker.email ?? "widget", targetId: String(r.insertedId), targetLabel: subject, note: input.channelKey })
   return String(r.insertedId)
+}
+
+/**
+ * Potvrdí ticket z widgetu e-mailom a jeho vlákno zapíše do ticketu
+ * (ADR-042, D277). Bez toho odpoveď riešiteľa odíde ako nová správa
+ * a odpoveď človeka založí druhý ticket bez údajov z ISSF.
+ *
+ * Správa ide do ticketu ako odchádzajúca s `sent:` identifikátorom
+ * a `Message-ID` — synchronizácia schránky ju potom spozná (`isKnown`,
+ * `adoptableIndex`) a nepovažuje ju za odpoveď riešiteľa. Stav ticketu
+ * sa nemení: potvrdenie nie je odpoveď (D12 sa ho netýka).
+ */
+export async function confirmChatTicket(
+  companyCode: string,
+  id: string,
+  mail: { to: string; subject: string; text: string },
+  send: (to: string, subject: string, text: string) => Promise<SentMail>,
+): Promise<void> {
+  const sent = await send(mail.to, mail.subject, mail.text)
+  const now = new Date()
+  const col = await getCollection<TicketWithId>(TICKETS_COLLECTION)
+  await col.updateOne(
+    { _id: new ObjectId(id), companyCode, source: "chat" },
+    {
+      $set: {
+        // Vlákno sa nastaví len ticketu, ktorý ho ešte nemá — nikdy neprepíše iné.
+        ...(sent.threadRef ? { threadRef: sent.threadRef } : {}),
+        ...(sent.providerId ? { confirmation: { providerId: sent.providerId, messageId: sent.messageId, at: now } } : {}),
+        updatedAt: now,
+      },
+      $push: {
+        messages: {
+          internetMessageId: sent.messageId, providerId: `sent:${now.getTime()}`, direction: "out" as const,
+          from: null, subject: mail.subject, text: mail.text, at: now, attachments: [],
+        },
+      },
+    },
+  )
+  await writeAudit({ companyCode, subject: "ticket", action: "potvrdenie-odoslane", actor: "widget", targetId: id, targetLabel: mail.subject })
+}
+
+/**
+ * Ako odoslať odpoveď riešiteľa (ADR-042, D277):
+ *   • na poslednú prijatú **e-mailovú** správu odpoveďou vo vlákne
+ *     (e-mailový ticket, alebo človek odpovedal na potvrdenie);
+ *   • ticket z widgetu s potvrdením — odpoveďou na potvrdenie, adresát
+ *     výslovne z ticketu (odpoveď na vlastnú správu by išla schránke);
+ *   • inak novou správou (ticket z widgetu bez potvrdenia — výpadok
+ *     schránky pri založení, staršie tickety).
+ */
+export type AnswerRoute =
+  | { kind: "reply"; providerId: string }
+  | { kind: "replyTo"; providerId: string; to: string }
+  | { kind: "send"; to: string }
+
+export function answerRoute(t: Ticket): AnswerRoute {
+  const incoming = lastIncoming(t)
+  // Prvá správa ticketu z widgetu má `chat:` identifikátor — v schránke nie je.
+  if (incoming && !incoming.providerId.startsWith("chat:")) return { kind: "reply", providerId: incoming.providerId }
+  if (!t.asker.email) throw new TicketError("ticket.noRecipient", "Ticket nemá komu odpovedať — chýba adresa.")
+  if (t.confirmation?.providerId) return { kind: "replyTo", providerId: t.confirmation.providerId, to: t.asker.email }
+  return { kind: "send", to: t.asker.email }
 }

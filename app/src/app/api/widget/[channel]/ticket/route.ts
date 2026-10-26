@@ -7,14 +7,16 @@
  * kanála (`/channels/tickets`).
  */
 
-import { NextResponse } from "next/server"
+import { NextResponse, after } from "next/server"
 import { ObjectId } from "mongodb"
 import { widgetGate, widgetPreflight, corsHeaders } from "@/lib/widgetApi"
-import { createChatTicket } from "@/lib/tickets"
+import { createChatTicket, confirmChatTicket } from "@/lib/tickets"
+import { mailboxFor } from "@/lib/channels"
+import { brandingView } from "@/lib/tenants"
 import { getCollection } from "@/lib/mongodb"
 import { RATINGS_COLLECTION, type RatingRecord } from "@/lib/ratings"
 import { AppError } from "@/lib/appError"
-import { errorText } from "@/lib/i18n"
+import { errorText, dictionary } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
@@ -58,6 +60,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
       message,
       conversation,
     })
+    // Potvrdenie e-mailom založí vlákno ticketu (ADR-042, D277). Po odpovedi
+    // widgetu — človek nečaká na schránku; ticket platí, aj keď potvrdenie
+    // neodíde (vlákno potom vznikne prvou odpoveďou riešiteľa).
+    const email = gate.identity.email
+    if (gate.channel.mailbox && email) {
+      const channel = gate.channel
+      const te = dictionary(gate.language).ticketConfirmationEmail
+      const branding = brandingView(gate.tenant)
+      const organisation = branding.shortName?.trim() || branding.displayName
+      const subject = te.subject(message.split("\n")[0].slice(0, 120))
+      after(() => confirmChatTicket(gate.tenant.companyCode, id, { to: email, subject, text: te.body({ organisation, message }) },
+        (to, subj, text) => mailboxFor(channel).send(to, subj, text))
+        .catch(e => console.error("[widget] potvrdenie ticketu neodišlo:", e instanceof Error ? e.message : e)))
+    }
     return NextResponse.json({ ok: true, id }, { headers: cors })
   } catch (e) {
     const code = e instanceof AppError ? e.code : "failed"
