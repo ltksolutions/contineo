@@ -40,3 +40,22 @@ describe("verifyWidgetToken", () => {
     expect(() => verifyWidgetToken("abc", channel, now)).toThrow(/tvar/)
   })
 })
+
+describe("phone_number a context (ADR-042, D276)", () => {
+  it("context: text, čísla a áno/nie v poradí; vnorené, prázdne a nad strop sa vynechajú", async () => {
+    const { parseContext, MAX_CONTEXT } = await import("../src/lib/widgetToken")
+    expect(parseContext({ "ID klubu": "1234", "ID osoby": 654321, Aktívny: true, Zväzy: ["a"], Prázdne: "  ", Vnorené: { a: 1 } }))
+      .toEqual([{ label: "ID klubu", value: "1234" }, { label: "ID osoby", value: "654321" }, { label: "Aktívny", value: "true" }])
+    expect(parseContext(Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`k${i}`, "v"])))).toHaveLength(MAX_CONTEXT)
+    expect(parseContext("text")).toEqual([])
+    expect(parseContext(["a"])).toEqual([])
+  })
+  it("token nesie telefón a context; bez nich prázdne", async () => {
+    const { signWidgetToken, verifyWidgetToken } = await import("../src/lib/widgetToken")
+    const ch = { key: "k", secret: "s", origins: ["https://issf.futbalsfz.sk"] }
+    const base = { iss: "https://issf.futbalsfz.sk", aud: "k", sub: "1234567", email: "a@b.sk" }
+    expect(verifyWidgetToken(signWidgetToken({ ...base, phone_number: " +421 900 ", context: { Zväz: "ObFZ" } }, "s"), ch))
+      .toMatchObject({ phone: "+421 900", context: [{ label: "Zväz", value: "ObFZ" }] })
+    expect(verifyWidgetToken(signWidgetToken(base, "s"), ch)).toMatchObject({ phone: null, context: [] })
+  })
+})

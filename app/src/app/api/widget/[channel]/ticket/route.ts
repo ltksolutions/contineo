@@ -10,7 +10,7 @@
 import { NextResponse, after } from "next/server"
 import { ObjectId } from "mongodb"
 import { widgetGate, widgetPreflight, corsHeaders } from "@/lib/widgetApi"
-import { createChatTicket, confirmChatTicket } from "@/lib/tickets"
+import { createChatTicket, confirmChatTicket, widgetPage } from "@/lib/tickets"
 import { mailboxFor } from "@/lib/channels"
 import { brandingView } from "@/lib/tenants"
 import { getCollection } from "@/lib/mongodb"
@@ -27,7 +27,7 @@ export async function OPTIONS(req: Request, { params }: { params: Promise<{ chan
 
 export async function POST(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel: key } = await params
-  let body: { token?: string; message?: string; conversation?: { recordId?: string | null; question?: string; verdict?: unknown }[] }
+  let body: { token?: string; message?: string; page?: unknown; conversation?: { recordId?: string | null; question?: string; verdict?: unknown }[] }
   try { body = await req.json() } catch { return new Response("invalid-json", { status: 400 }) }
   const gate = await widgetGate(req, key, body.token ?? null)
   if (gate instanceof Response) return gate
@@ -56,6 +56,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
         personId: gate.person.id, email: gate.identity.email, name: gate.identity.name || gate.person.fullName,
         // Identifikátor vo vydávajúcom systéme (v ISSF registračné číslo) — riešiteľ si podľa neho človeka nájde.
         roles: gate.identity.roles, club: gate.identity.club, reference: gate.identity.externalId,
+        // Údaje pre riešiteľa (ADR-042, D276): z tokenu a adresa stránky z widgetu.
+        phone: gate.identity.phone, context: gate.identity.context, issuer: gate.identity.issuer,
+        page: widgetPage(body.page, gate.origin),
       },
       message,
       conversation,

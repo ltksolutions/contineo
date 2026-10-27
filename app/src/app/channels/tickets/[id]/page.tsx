@@ -52,6 +52,19 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const newestFirst = [...ticket.messages].reverse()
   const isOpen = ticket.state !== "closed"
   const canSend = isOpen && Boolean(channel?.mailbox) && (ticket.asker.email || ticket.messages.some(m => m.direction === "in"))
+  // Údaje z vydávajúceho systému (ADR-042, D276, D280): účet a kam ide
+  // odpoveď zvlášť — píše často rodič alebo manažér za hráča.
+  const a = ticket.asker
+  const issuerHost = a.issuer ? (() => { try { return new URL(a.issuer).hostname } catch { return a.issuer } })() : null
+  const issuerRows: [string, React.ReactNode][] = ticket.source === "chat" ? [
+    [t.issuerAccount, [a.name, a.reference ? `(${a.reference})` : ""].filter(Boolean).join(" ")],
+    [t.issuerReplyTo, a.email ?? ""],
+    [t.issuerPhone, a.phone ?? ""],
+    [t.issuerRoles, a.roles.join(", ")],
+    [t.issuerClub, a.club ?? ""],
+    ...(a.context ?? []).map(c => [c.label, c.value] as [string, string]),
+    [t.issuerPage, a.page ? <a href={a.page} target="_blank" rel="noopener noreferrer">{a.page}</a> : ""],
+  ].filter(([, v]) => Boolean(v)) as [string, React.ReactNode][] : []
   const sources = (ticket.draft?.sources ?? []) as { documentId?: string; title?: string; articleRef?: string | null; sourceType?: string; live?: { connectorName: string; group?: string } }[]
 
   return (
@@ -175,6 +188,15 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
               )}
             </form>
           </section>
+
+          {issuerRows.length > 0 && (
+            <section className="card detail-block">
+              <h2 className="detail-block-title">{issuerHost ? t.issuerHeading(issuerHost) : channel?.name ?? ticket.channelKey}</h2>
+              <dl className="facts">
+                {issuerRows.map(([k, v], i) => <div key={i}><dt>{k}</dt><dd>{v}</dd></div>)}
+              </dl>
+            </section>
+          )}
 
           {sources.length > 0 && (
             <section className="card detail-block">
