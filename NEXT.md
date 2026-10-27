@@ -6,11 +6,26 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-26 večer** (Prehľad a detail dokumentu pre bežného používateľa — ADR-041, kroky B → C → A, #449–#452; otázka nad jedným dokumentom `?doc=` D269, #448, druhá session; detail predpisu s celým textom a tlačidlo „Pridať do knižnice" #446, dátum kontroly pri predpise #445; prvé nočné behy cronu katalógu overené, bez konceptov; predtým 2026-10-25 neskoro večer: MCP overený naostro z Claude Desktop aj Claude Code; stropy úsekov `search_library` posuvníkmi v AI asistentoch a nový prvok `.field-range`, #441; smernica o pracovných cestách — zoznamy, poznámky a písmená podľa PDF opravené bez novej verzie; predtým katalóg legislatívy ADR-039 fázy 1–2, #432, #436; register zdrojov ADR-040 kroky 1–3, Organizácia → Zdroje, #433, #434, #437; Zdroje → Web / RSS → Slov-Lex a návod pre zdroje, ADR-040 Dodatok 1, #439; MCP server so zdrojmi a Legislatívou #438 a prihlásenie z Claude Code #440, druhá session; návrat oznamu Legislatívy #435; predtým 2026-10-24 večer: Prehľad spotreby AI #425, #426 — prvý návrh z artefaktu *Design*; Contineo ako MCP server fáza 1, ADR-038, #422, #424; oprava textu znenia a PDF konceptu #427–#429; design system ako artefakt v Claude, `/design-sync` 24. 10.; predtým výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-27** (widget kanála ISSF Helpdesk nahrádza formulár Pomoc, ADR-042 kroky 1–5 a Dodatok 1, #463–#471, druhá session; manuály ISSF-00, 02, 03 so zjednoteným zrušením registrácie hráča zverejnené, podnet legislatíve s bodom 5; krúžok v päte karty postupu #470; cesta priečinka po migrácii ADR-034 #472, `check` bez rozporov; Prehľad podľa návrhu PREHLAD-ulohy-a-dokumenty #458; predtým 2026-10-26 večer: Prehľad a detail dokumentu pre bežného používateľa — ADR-041, kroky B → C → A, #449–#452; otázka nad jedným dokumentom `?doc=` D269, #448, druhá session; detail predpisu s celým textom a tlačidlo „Pridať do knižnice" #446, dátum kontroly pri predpise #445; prvé nočné behy cronu katalógu overené, bez konceptov; predtým 2026-10-25 neskoro večer: MCP overený naostro z Claude Desktop aj Claude Code; stropy úsekov `search_library` posuvníkmi v AI asistentoch a nový prvok `.field-range`, #441; smernica o pracovných cestách — zoznamy, poznámky a písmená podľa PDF opravené bez novej verzie; predtým katalóg legislatívy ADR-039 fázy 1–2, #432, #436; register zdrojov ADR-040 kroky 1–3, Organizácia → Zdroje, #433, #434, #437; Zdroje → Web / RSS → Slov-Lex a návod pre zdroje, ADR-040 Dodatok 1, #439; MCP server so zdrojmi a Legislatívou #438 a prihlásenie z Claude Code #440, druhá session; návrat oznamu Legislatívy #435; predtým 2026-10-24 večer: Prehľad spotreby AI #425, #426 — prvý návrh z artefaktu *Design*; Contineo ako MCP server fáza 1, ADR-038, #422, #424; oprava textu znenia a PDF konceptu #427–#429; design system ako artefakt v Claude, `/design-sync` 24. 10.; predtým výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
 
 ---
 
 ## Kde sme teraz
+
+**Manuály ISSF sú zverejnené všetky (24.–27. 10.).** Kolo 2 kontroly
+rozhodnuté, sedem nových znení od 24. 10.; ISSF-00, 02 a 03 majú ďalšie
+znenie od 25. 10. so zjednotenou vetou o zrušení registrácie hráča
+(žiadosť v ISSF alebo písomne na Matrike SFZ, aj e-mailom — rozhodnutie
+Jána). Index a členenie overené nad produkciou. V hlavičke manuálov
+ostal „Stav k: 9. 10. 2026" — opraviť pri najbližšom znení.
+
+**Widget kanála ISSF Helpdesk (27. 10., ADR-042, #463–#471, druhá
+session)** nahrádza formulár Pomoc v ISSF: vlákno ticketu cez potvrdenie
+e-mailom, osoba ako e-mailový kontakt so zoznamom účtov, údaje z ISSF
+pri tickete, vzhľad a správanie ako nastavenie kanála (zmluva s ISSF je
+len `script src` a token), ponuka správy helpdesku
+a `ContineoHelpdesk.open()`. Ďalší krok je u prevádzkovateľa ISSF
+(`docs/WIDGET_ISSF.md`).
 
 **Prehľad a detail pre bežného používateľa (26. 10., ADR-041, #449–#452).**
 Bežný človek vidí **dokumenty, nie zdroje**: jeden zoznam podľa druhu
@@ -336,18 +351,19 @@ nastaví v Nastaveniach, záložka GDPR (D154). Otvorená karta po nasadení pon
 
 ## Čo čaká na rozhodnutie Jána
 
-**41 nálezov kola 2 kontroly manuálov** — rozhoduje Ján s oddeleniami
-v Kontrole súladu; pri zápisoch pre laikov (ISSF-05) overiť so ŠTK, kto
-zápis uzatvára. Lehotu „žiadosť o predĺženie licencie najskôr 30 dní pred
-skončením" (ISSF-00) overiť s Oddelením vzdelávania trénerov.
+**Dve overenia k manuálom** (kolo 2 je rozhodnuté a manuály zverejnené):
+pri zápisoch pre laikov (ISSF-05) overiť so ŠTK, kto zápis uzatvára;
+lehotu „žiadosť o predĺženie licencie najskôr 30 dní pred skončením"
+(ISSF-00) overiť s Oddelením vzdelávania trénerov.
 
 **Sportnet ako verejný zdroj pre widget ISSF** — Ján prepne sám neskôr
 (Organizácia › Zdroje › Konektory, potom „Živé zdroje" kanála ISSF); výber zdrojov
 sa vo widgete objaví do hodiny bez nasadenia.
 
-**Podnet legislatíve: RaPP a Stanovy verzus prax ISSF** — štyri body,
-dokument pripravený 20. 10.; poslať LPO a pri poplatku 0,50 € zistiť,
-na základe čoho ho ISSF účtuje.
+**Podnet legislatíve: RaPP a Stanovy verzus prax ISSF** — päť bodov
+(27. 10. pribudol bod 5, zrušenie registrácie hráča aj písomne,
+`~/Downloads/Podnet_RaPP_Stanovy_prax_ISSF_2026-10-27.docx`); poslať LPO
+a pri poplatku 0,50 € zistiť, na základe čoho ho ISSF účtuje.
 
 **🔴 Ako DPO: súhlas s účelom „história otázok“** (H1) — nasadené 30. 9.
 pred súhlasom, na pokyn Jána; záznam o spracúvaní a `/privacy` sú doplnené.
@@ -387,8 +403,8 @@ počty v `retention[].helpdesk`).
 
 ## Najbližšie kroky
 
-1. **Rozhodnúť 41 nálezov kola 2** a nové znenia siedmich manuálov
-   (ISSF-00, 01, 02, 03, 04, 05, 07) poslať na schválenie v jednom kole.
+1. **Poslať podnet legislatíve** (päť bodov) a overiť dve veci k manuálom
+   so ŠTK a s Oddelením vzdelávania trénerov.
 2. **Prejsť naživo** Prehľad, `/library` s prepínačom druhu, jeden dokument
    a jeden zákon (ADR-041, #450–#452 nasadené bez pohľadu v prehliadači).
    **Kontrola súladu Stanov proti Zákonu o športe:** existujúca kontrola
