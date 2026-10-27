@@ -36,6 +36,12 @@
  * obrazovka. Esc, „×" alebo klik na závoj zavrie; rozpísaný text ostane
  * v riadku.
  *
+ * **Posúvanie riadku** (Ján 27. 10. 2026): za úchyt na ľavom okraji riadku
+ * (myš, dotyk, šípky — Shift po 64 px); Home alebo dvojklik ho vráti na
+ * miesto z nastavenia. Miesto si pamätá prehliadač človeka (`localStorage`,
+ * podiel šírky a výšky okna), nastavenie kanála sa nemení; riadok ostáva
+ * vždy celý na obrazovke. Plachta sa neposúva.
+ *
  * **Jazyk** (D290): kanál s viac jazykmi má v hlavičke prepínač jazyka —
  * skratky SK / CZ / EN v tvare `Picker(.segmented)` (Ján 27. 10. 2026); mení
  * texty widgetu aj jazyk odpovede. Prvý je voľba z minulej návštevy
@@ -142,6 +148,12 @@ export const WIDGET_CSS: string[] = [
   ".xw-row-mark{display:grid;flex:none;color:var(--accent)}",
   ".xw-row-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
   ".xw-row-text.is-draft{color:var(--ink)}",
+  ".xw-row--grip{padding-left:48px}",
+  ".xw-grip{position:absolute;left:6px;top:50%;translate:0 -50%;display:grid;place-items:center;width:36px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:grab;touch-action:none}",
+  ".xw-grip:hover{background:var(--surface-2);color:var(--ink)}",
+  ".xw-grip:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}",
+  ".xw-dock.is-dragging .xw-grip{cursor:grabbing}",
+  ".xw-dock.is-dragging .xw-row{box-shadow:0 1px 2px rgba(20,28,42,.08),0 20px 48px rgba(20,28,42,.28)}",
   ".xw-row-go{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:18px;background:var(--accent);color:var(--on-accent)}",
   ".xw-scrim{position:fixed;inset:0;background:rgba(20,28,42,.32);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s}",
   ".xw-scrim.is-open{opacity:1;visibility:visible}",
@@ -221,6 +233,7 @@ export interface WidgetScriptConfig {
 const MARK = `<svg width="22" height="22" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"/><circle cx="17.5" cy="20" r="3.4" fill="currentColor"/><circle cx="30.5" cy="20" r="3.4" fill="currentColor"/><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"/></svg>`
 const ARROW = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>`
 const CLOCK = `<svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6.6"/><path d="M9 5.4V9l2.4 1.6"/></svg>`
+const GRIP = `<svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.6"/><circle cx="10" cy="4" r="1.6"/><circle cx="4" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="4" cy="16" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>`
 const CROSS = `<svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 5l8 8M13 5l-8 8"/></svg>`
 
 /** Poloha a veľkosť podľa nastavenia kanála — mimo design systému, mení sa s nastavením. */
@@ -233,7 +246,7 @@ export function placementCss(look: WidgetAppearanceForScript): string[] {
     : `${anchor};width:min(${WIDGET_SIZE_PX[look.size].width}px,calc(100vw - 32px));height:min(${WIDGET_SIZE_PX[look.size].height}px,calc(100vh - 32px))`
   return [
     row
-      ? `.xw-row{position:fixed;z-index:2147483000;${look.position === "top" ? "top" : "bottom"}:${EDGE}px;left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 32px))}`
+      ? `.xw-dock{position:fixed;z-index:2147483000;${look.position === "top" ? "top" : "bottom"}:${EDGE}px;left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 32px))}`
       : `.fab{position:fixed;${anchor};z-index:2147483000;min-height:44px;padding:0 18px;border:0;border-radius:22px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.18)}`,
     ".xw-scrim{z-index:2147483000}",
     // Závoj len pri plachte cez obrazovku; menšia plachta stojí pri tlačidle bez neho.
@@ -303,7 +316,7 @@ var script=document.currentScript||(function(){var s=document.querySelectorAll('
 var token=script&&script.getAttribute('data-token')||'';
 var tokenUrl=script&&script.getAttribute('data-token-url')||'';
 var negatives=0, conversation=[], busy=false, lastQuestion='', started=false;
-var MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)};
+var GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)};
 
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function svg(html,size){var s=el('span');s.innerHTML=html;var g=s.firstChild;if(size){g.setAttribute('width',size);g.setAttribute('height',size)}return g}
@@ -332,13 +345,17 @@ style.textContent=':host{all:initial;font:15px/1.5 -apple-system,BlinkMacSystemF
 root.appendChild(style);
 
 /* Zatvorený widget: riadok otázky (hore/dole v strede, D286) alebo tlačidlo. */
-var launcher,rowText=null;
+var launcher,rowText=null,dock,grip=null;
 if(ROW){
-  launcher=el('button','xw-row');launcher.type='button';
+  /* Úchyt je vedľa riadku v obale, nie v ňom — tlačidlo v tlačidle nie je platné HTML. */
+  dock=el('div','xw-dock');
+  launcher=el('button','xw-row xw-row--grip');launcher.type='button';
+  grip=el('button','xw-grip');grip.type='button';grip.appendChild(svg(GRIP));tx(grip,'move','aria-label');tx(grip,'move','title');
   var rm=el('span','xw-row-mark');rm.appendChild(svg(MARK));rowText=el('span','xw-row-text');
   var go=el('span','xw-row-go');go.appendChild(svg(ARROW));
   launcher.appendChild(rm);launcher.appendChild(rowText);launcher.appendChild(go);
-}else{launcher=el('button','fab');launcher.type='button'}
+  dock.appendChild(launcher);dock.appendChild(grip);
+}else{launcher=el('button','fab');launcher.type='button';dock=launcher}
 var scrim=el('div','xw-scrim');
 var sheet=el('section','xw-sheet');sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');
 /* Hlavička: značka, názov, jazyk, zdroje, zavrieť. */
@@ -416,7 +433,7 @@ var moreSend=tx(el('button','button'),'send');moreSend.type='submit';
 moreBar.appendChild(offerBtn);moreBar.appendChild(el('span','xw-hint'));moreBar.appendChild(moreSend);moreForm.appendChild(more.box);moreForm.appendChild(moreBar);
 cin.appendChild(moreForm);cin.appendChild(tx(el('div','xw-foot'),'poweredBy'));composer.appendChild(cin);
 sheet.appendChild(body);sheet.appendChild(composer);
-root.appendChild(launcher);root.appendChild(scrim);root.appendChild(sheet);
+root.appendChild(dock);root.appendChild(scrim);root.appendChild(sheet);
 document.body.appendChild(host);
 
 /* Texty nastavené v kanáli (riadok, tlačidlo, privítanie, vzory) — v aktuálnom jazyku. */
@@ -446,11 +463,33 @@ function setLanguage(code){
 
 /* Otvorenie: plachta vyrastie z miesta zatvoreného widgetu; ten sa medzitým skryje. */
 function isOpen(){return sheet.classList.contains('is-open')}
-function openPanel(){if(isOpen())return;sheet.classList.add('is-open');scrim.classList.add('is-open');launcher.hidden=true;
+function openPanel(){if(isOpen())return;sheet.classList.add('is-open');scrim.classList.add('is-open');dock.hidden=true;
   if(!started)loadHistory(first.input.value);
   setTimeout(function(){var t=started?more.input:first.input;t.focus();t.setSelectionRange(t.value.length,t.value.length)},40)}
-function closePanel(){sheet.classList.remove('is-open');scrim.classList.remove('is-open');launcher.hidden=false;syncOwn();launcher.focus()}
+function closePanel(){sheet.classList.remove('is-open');scrim.classList.remove('is-open');dock.hidden=false;syncOwn();launcher.focus()}
 launcher.addEventListener('click',openPanel);
+
+/* Posúvanie riadku za úchyt. Miesto = podiel okna, aby prežilo zmenu veľkosti. */
+var POS='contineo-widget-pos:'+CFG.channel;
+function clampTo(x,y){var r=dock.getBoundingClientRect();return [Math.max(8,Math.min(x,innerWidth-r.width-8)),Math.max(8,Math.min(y,innerHeight-r.height-8))]}
+function place(x,y){var c=clampTo(x,y);dock.style.left=c[0]+'px';dock.style.top=c[1]+'px';dock.style.bottom='auto';dock.style.transform='none';return c}
+function savePos(c){try{localStorage.setItem(POS,JSON.stringify({x:c[0]/innerWidth,y:c[1]/innerHeight}))}catch(e){}}
+function resetPos(){dock.style.left=dock.style.top=dock.style.bottom=dock.style.transform='';try{localStorage.removeItem(POS)}catch(e){}}
+function restorePos(){var p=null;try{p=JSON.parse(localStorage.getItem(POS)||'null')}catch(e){}if(p&&typeof p.x==='number'&&typeof p.y==='number')place(p.x*innerWidth,p.y*innerHeight)}
+if(grip){
+  var drag=null;
+  grip.addEventListener('pointerdown',function(e){if(e.button!==0)return;var r=dock.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top,moved:false};grip.setPointerCapture(e.pointerId);dock.classList.add('is-dragging');e.preventDefault()});
+  grip.addEventListener('pointermove',function(e){if(!drag)return;drag.moved=true;drag.c=place(e.clientX-drag.dx,e.clientY-drag.dy)});
+  function endDrag(){if(!drag)return;if(drag.moved&&drag.c)savePos(drag.c);drag=null;dock.classList.remove('is-dragging')}
+  grip.addEventListener('pointerup',endDrag);grip.addEventListener('pointercancel',endDrag);
+  grip.addEventListener('dblclick',resetPos);
+  grip.addEventListener('keydown',function(e){
+    if(e.key==='Home'){e.preventDefault();resetPos();return}
+    var step=e.shiftKey?64:16,d={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]}[e.key];if(!d)return;
+    e.preventDefault();var r=dock.getBoundingClientRect();savePos(place(r.left+d[0],r.top+d[1]))});
+  /* Po zmene veľkosti okna ostane riadok celý na obrazovke. */
+  addEventListener('resize',function(){if(dock.style.left)restorePos()});
+}
 /* Písanie do zatvoreného riadku ho rozbalí a znak pokračuje v poli. */
 launcher.addEventListener('keydown',function(e){if(!ROW||e.ctrlKey||e.metaKey||e.altKey||e.key.length!==1||e.key===' ')return;e.preventDefault();first.input.value+=e.key;openPanel();onFirstInput()});
 close.addEventListener('click',closePanel);
@@ -584,6 +623,6 @@ first.input.addEventListener('input',onFirstInput);
 escBtn.addEventListener('click',function(){var m=escTa.value.trim();if(!m)return;escBtn.disabled=true;
   api('ticket',{message:m,language:P.code,page:location.href.split('#')[0],conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.hidden=true;escTa.value='';sys(T.escalated);negatives=0;syncOffer()}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
 
-syncScope();syncOwn();
+syncScope();syncOwn();if(grip)restorePos();
 })();`
 }

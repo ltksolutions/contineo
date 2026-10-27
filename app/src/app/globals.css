@@ -4382,7 +4382,8 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * nesie tieto pravidlá doslova a test `widgetCss` stráži, že sú tu.
  * Mení sa to tu a v skripte naraz. Opis: `.design-sync/conventions.md`.
  *
- * Zatvorený: `.xw-row` riadok otázky (tvar `.header-search`, 52 px a tieň —
+ * Zatvorený: `.xw-dock` > `.xw-row` riadok otázky + `.xw-grip` úchyt na posúvanie,
+ * riadok otázky (tvar `.header-search`, 52 px a tieň —
  * stojí nad cudzou stránkou). Otvorený: `.xw-sheet` plachta (tvar
  * `.ask-sheet--overlay`) nad `.xw-scrim`; `.xw-head` (značka, názov,
  * `.xw-langs` prepínač jazyka SK / CZ / EN, zdroje, `.xw-close`), `.xw-body` > `.xw-col` (720 px)
@@ -4397,6 +4398,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-row-mark{display:grid;flex:none;color:var(--accent)}
 .xw-row-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .xw-row-text.is-draft{color:var(--ink)}
+.xw-row--grip{padding-left:48px}
+.xw-grip{position:absolute;left:6px;top:50%;translate:0 -50%;display:grid;place-items:center;width:36px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:grab;touch-action:none}
+.xw-grip:hover{background:var(--surface-2);color:var(--ink)}
+.xw-grip:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.xw-dock.is-dragging .xw-grip{cursor:grabbing}
+.xw-dock.is-dragging .xw-row{box-shadow:0 1px 2px rgba(20,28,42,.08),0 20px 48px rgba(20,28,42,.28)}
 .xw-row-go{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:18px;background:var(--accent);color:var(--on-accent)}
 .xw-scrim{position:fixed;inset:0;background:rgba(20,28,42,.32);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s}
 .xw-scrim.is-open{opacity:1;visibility:visible}

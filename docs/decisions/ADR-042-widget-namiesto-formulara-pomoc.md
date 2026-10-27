@@ -307,6 +307,12 @@ vás.").
 Prečo: riadok pozýva písať a hovorí, na čo sa pýtať; tlačidlo nie. Riadok
 potrebuje šírku, pri boku obrazovky by stál cez obsah.
 
+**Posúvanie** (Ján, 27. 10. 2026): riadok sa dá posunúť za úchyt na ľavom
+okraji — myšou, dotykom aj šípkami; Home alebo dvojklik ho vráti. Miesto si
+pamätá prehliadač človeka, nie nastavenie kanála. Prečo: v ISSF sú tlačidlá
+podľa obrazovky raz hore, raz dole; kto má riadok v ceste, odsunie si ho
+sám. Plachta sa neposúva.
+
 Prečo hore a nie dole (Ján, 27. 10. 2026, po skúške v ISSF): dole sú na
 viacerých obrazovkách ISSF funkčné tlačidlá (napr. Prehľad položiek
 faktúry: „Pripraviť export do excelu", „Vytvor súhrnú faktúru", „Export do

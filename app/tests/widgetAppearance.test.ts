@@ -79,7 +79,11 @@ describe("skript widgetu podľa nastavenia", () => {
   })
   it("bez nastavenia riadok otázky hore v strede a plachta 80 % × 80 % so závojom (D286, D287)", () => {
     const js = widgetScript(base)
-    expect(js).toContain(".xw-row{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 32px))}")
+    expect(js).toContain(".xw-dock{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 32px))}")
+    // Úchyt na posúvanie: myš, šípky, Home a dvojklik vráti; miesto si pamätá prehliadač.
+    expect(js).toContain("var POS='contineo-widget-pos:'+CFG.channel")
+    expect(js).toContain("grip.addEventListener('dblclick',resetPos)")
+    expect(js).toContain("if(e.key==='Home')")
     expect(js).toContain("left:10vw;top:10vh;width:80vw;height:80vh;transform:none;transform-origin:center top")
     expect(js).not.toContain(".xw-scrim{display:none}.xw-sheet")
     expect(js).toContain("var ROW=true")
