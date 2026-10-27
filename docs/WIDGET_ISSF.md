@@ -45,7 +45,9 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
 - **Vzhľad a správanie widgetu** (ADR-042, Dodatok 1 a 2): poloha na
   ôsmich miestach okolo obrazovky — **hore a dole v strede je zatvorený
   widget riadok otázky** (značka, nápoveda, šípka), inde tlačidlo;
-  predvolene **hore v strede**. Veľkosť plachty malá / stredná / veľká /
+  predvolene **hore v strede** (dole by na viacerých obrazovkách ISSF
+  prekryl funkčné tlačidlá; hlavička ISSF nie je pripnutá a pri posunutí
+  odíde, D286). Veľkosť plachty malá / stredná / veľká /
   **na obrazovku (80 % × 80 %, predvolená)**; na telefóne je plachta celá
   obrazovka. V jazykoch kanála: nápoveda v riadku, text tlačidla,
   privítanie a **vzory otázok** (najviac 6, v prázdnej plachte; klik otázku

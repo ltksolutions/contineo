@@ -307,6 +307,13 @@ vás.").
 Prečo: riadok pozýva písať a hovorí, na čo sa pýtať; tlačidlo nie. Riadok
 potrebuje šírku, pri boku obrazovky by stál cez obsah.
 
+Prečo hore a nie dole (Ján, 27. 10. 2026, po skúške v ISSF): dole sú na
+viacerých obrazovkách ISSF funkčné tlačidlá (napr. Prehľad položiek
+faktúry: „Pripraviť export do excelu", „Vytvor súhrnú faktúru", „Export do
+pdf") a riadok by ich prekryl. Hore riadok pri otvorení stránky prekryje
+pozdrav a výber zväzu v hlavičke, ale hlavička ISSF nie je pripnutá —
+po posunutí stránky odíde a pod riadkom ostane len obsah.
+
 ### D287 — Štvrtá veľkosť: plachta 80 % × 80 % obrazovky
 
 K trom predvoľbám z D283 pribudne „na obrazovku": plachta 80 % šírky
