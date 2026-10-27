@@ -180,6 +180,12 @@ o tom, za koho sa píše.
 5. **Ponuka správy vo widgete (D275)** — odkaz, frázy, predvyplnená správa,
    zobrazený e-mail — s hodnotami z nastavenia kanála (D283);
    `ContineoHelpdesk.open()` pre odkazy „Pomoc" v ISSF (D285).
+   *Technicky (27. 10. 2026):* frázy sa porovnávajú ako časť vety bez
+   diakritiky a veľkých písmen (`normalizePhrase`), skript dostane frázy
+   všetkých jazykov rozhrania naraz; pri fráze sa asistent nepýta.
+   Adresu odpovede číta skript z claimu `email` v tokene (údaj
+   prihláseného človeka, nie tajomstvo). Odkaz „Napísať helpdesku“ je tiché
+   tlačidlo pod poľom otázky; formulár správy má „Zrušiť“.
 6. **Na strane ISSF (D278, D285)** — tajný kľúč kanála (vytvára Ján),
    vydávanie tokenu, `/api/contineo-token`, vloženie kódu, odkazy „Pomoc"
    na `ContineoHelpdesk.open()`, zrušenie formulára a stránky `/Pomoc`.

@@ -264,7 +264,7 @@ export interface ChannelInput {
   widgetFallbackEmail?: string
   rateLimitPerHour?: number | string
   /** Vzhľad a správanie widgetu z formulára; chýbajúce = bez zmeny (D283). */
-  widgetAppearance?: { position?: string; size?: string; escalateAfter?: string | number; launcher?: Record<string, string>; greeting?: Record<string, string> }
+  widgetAppearance?: { position?: string; size?: string; escalateAfter?: string | number; launcher?: Record<string, string>; greeting?: Record<string, string>; offerLink?: boolean; phrases?: Record<string, string[]> }
   mailbox?: {
     kind: string
     address: string
@@ -392,7 +392,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
     companyCode: code, subject: "helpdesk-channel", action: existing ? "changed" : "created", actor,
     targetId: key, targetLabel: name,
     // Vzhľad widgetu v poznámke (D284): kto, kedy a čo zmenil — návrat je ďalšie uloženie.
-    note: `${kind} · ${kind === "widget" ? "public" : channel.accessLevel}${tickets ? " · tickety" : ""}${mailbox ? ` · schránka ${mailbox.kind} · ${mailbox.address}` : ""}${kind === "widget" ? ` · widget ${widget.appearance?.position} ${widget.appearance?.size} po ${widget.appearance?.escalateAfter}` : ""}`,
+    note: `${kind} · ${kind === "widget" ? "public" : channel.accessLevel}${tickets ? " · tickety" : ""}${mailbox ? ` · schránka ${mailbox.kind} · ${mailbox.address}` : ""}${kind === "widget" ? ` · widget ${widget.appearance?.position} ${widget.appearance?.size} po ${widget.appearance?.escalateAfter}${widget.appearance?.offerLink === false ? " bez odkazu" : ""}` : ""}`,
   })
   return channel
 }

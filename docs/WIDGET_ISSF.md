@@ -49,6 +49,14 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
   kanála, po koľkých neúspechoch ponúknuť helpdesk. Panel sa otvára na
   mieste tlačidla smerom do stredu obrazovky; na telefóne je celá obrazovka.
   Všetko sa mení tu, ISSF kód nemení.
+- **Ponuka správy helpdesku** (ADR-042, D275, D283): okrem prahu
+  neúspechov **stále viditeľný odkaz „Napísať helpdesku“** pod poľom otázky
+  po prvej odpovedi (predvolene zapnutý) a **frázy**, pri ktorých widget
+  ponúkne správu hneď a asistenta sa nepýta (jedna na riadok, v každom
+  jazyku kanála; stačí časť vety, veľké písmená a diakritika nerozhodujú;
+  prázdne = predvolené krátke jadrá ako „helpdesk“, „s človekom“,
+  „s operátorom“ — slovosled a ohýbanie im nevadia). Formulár správy je predvyplnený poslednou otázkou a ukazuje
+  „Odpoveď príde na …“ — e-mail z tokenu.
 - **Náhľad widgetu** (tlačidlo pod vzhľadom): uložené nastavenie na
   prázdnej stránke s tokenom prihláseného správcu. Je to skutočný widget —
   otázky sa zapíšu na hodnotenie a správa helpdesku založí ticket. Treba
@@ -211,6 +219,28 @@ volanie API, kontakt ukáže sám widget pod chybovou hláškou.
 
 Skript sa cachuje **5 minút** s `ETag` (ADR-042, D284); zmena vzhľadu,
 textov alebo farby v Contineu sa prejaví do 5 minút bez zásahu v ISSF.
+
+### 4. Odkazy „Pomoc“ otvárajú widget (len ISSF)
+
+Formulár Pomoc aj stránka `/Pomoc` zanikajú (ADR-042, D285). Odkazy
+„Pomoc“ v menu a pätičke ISSF ostanú, ale otvoria panel widgetu. Skript
+na to ponúka `ContineoHelpdesk.open()` — otvorí panel a vráti `true`.
+Odkaz má ako `href` e-mail helpdesku, takže keď skript nenabehol, otvorí
+sa e-mailový klient:
+
+```html
+<a href="mailto:helpdesk@futbalsfz.sk"
+   onclick="return !(window.ContineoHelpdesk && ContineoHelpdesk.open())">Pomoc</a>
+```
+
+Vo Wickete je to obyčajný `ExternalLink` (alebo statické `<a>` v šablóne)
+s atribútom `onclick` cez `AttributeModifier` — nie `Link`
+s `onClick` na serveri, ten by stránku znova načítal.
+
+Panel sa otvorí prázdny (s privítaním, ak je nastavené): človek najprv
+hľadá a správu helpdesku napíše odkazom „Napísať helpdesku“, frázou alebo
+po neúspechoch (D275). Je to integrácia ISSF, nie nastavenie kanála;
+iný cudzí systém dostane len plávajúce tlačidlo.
 
 ## Skúška bez ISSF
 
