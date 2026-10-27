@@ -7,9 +7,14 @@
  *
  * Bez JavaScriptu zostane text podľa predvoleného stavu a formulár funguje:
  * server sa riadi poľom `carryOver`, nie textom tlačidla.
+ *
+ * Krúžok a zablokovanie počas zverejnenia dáva `SubmitButton` (stav číta
+ * z `FormPendingSignal` vo formulári) — zverejnenie trvá niekoľko sekúnd
+ * a tlačidlo predtým vyzeralo, akoby sa nič nedialo (Ján, 27. 10. 2026).
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
+import SubmitButton from "@/components/SubmitButton"
 
 export default function PublishSubmit({
   withCarryOver,
@@ -22,16 +27,16 @@ export default function PublishSubmit({
   /** Formulár, ktorý tlačidlo odosiela, keď stojí mimo neho (päta karty postupu). */
   form?: string
 }) {
-  const ref = useRef<HTMLButtonElement>(null)
   const [on, setOn] = useState(withCarryOver)
 
   useEffect(() => {
-    const form = ref.current?.form
-    const box = form?.querySelector<HTMLInputElement>('input[name="carryOver"]')
-    if (!form || !box) return
+    const target = form ? document.getElementById(form) : null
+    if (!(target instanceof HTMLFormElement)) return
+    const box = target.querySelector<HTMLInputElement>('input[name="carryOver"]')
+    if (!box) return
     const sync = () => {
       setOn(box.checked)
-      form.querySelectorAll<HTMLElement>("[data-carry-over]").forEach(el => {
+      target.querySelectorAll<HTMLElement>("[data-carry-over]").forEach(el => {
         el.hidden = !box.checked
         el.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select").forEach(i => { i.disabled = !box.checked })
       })
@@ -39,11 +44,11 @@ export default function PublishSubmit({
     sync()
     box.addEventListener("change", sync)
     return () => box.removeEventListener("change", sync)
-  }, [])
+  }, [form])
 
   return (
-    <button ref={ref} className="button" type="submit" form={form}>
+    <SubmitButton className="button" form={form}>
       {on ? labels.publishAndAssign : labels.publish}
-    </button>
+    </SubmitButton>
   )
 }
