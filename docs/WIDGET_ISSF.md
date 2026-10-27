@@ -67,6 +67,8 @@ aj overí; preto nemajú vlastné názvy (rozhodnutie Jána 6. 10. 2026).
 | `roles` | pole rolí, napr. `["klubový manažér", "rozhodca"]` — vyberá FAQ pre publikum, riešiteľ ich vidí pri tickete |
 | `club` | klub (nepovinné) |
 | `lang` | `sk`, `cs` alebo `en` (nepovinné) |
+| `phone_number` | telefón (štandardný claim OIDC, nepovinné) — z `mobil` alebo `telefon`; riešiteľ ho vidí pri tickete |
+| `context` | ďalšie údaje pre riešiteľa ako objekt názov → text, najviac 10 (nepovinné) — napr. `{"ID klubu": "1234", "Zväzy": "ObFZ …", "ID používateľa": "123456", "ID osoby": "654321"}`; **čísla bez oddeľovača tisícov**. Riešiteľ ich vidí v karte „Údaje z issf.futbalsfz.sk" (ADR-042, D276). |
 | `iat`, `exp` | vydanie a platnosť; `exp − iat` **najviac 15 minút** |
 
 Token s dlhšou platnosťou Contineo odmietne (`widget.tokenClaims`).
@@ -101,6 +103,7 @@ overuje `app/tests/widgetEmbed.test.ts`:
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -109,14 +112,22 @@ public final class ContineoToken {
   static final String CHANNEL_KEY = "d9589242-8b85-4850-a10a-a30ebbbe8f18";
 
   public static String issue(String secret, String sub, String email, String givenName,
-                             String familyName, List<String> roles, String club, String lang) throws Exception {
+                             String familyName, List<String> roles, String club, String lang,
+                             String phone, Map<String, String> context) throws Exception {
     long iat = System.currentTimeMillis() / 1000;
     StringBuilder r = new StringBuilder("[");
     for (int i = 0; i < roles.size(); i++) r.append(i > 0 ? "," : "").append(q(roles.get(i)));
     r.append("]");
+    StringBuilder c = new StringBuilder("{");
+    for (Map.Entry<String, String> e : context.entrySet()) {
+      if (c.length() > 1) c.append(",");
+      c.append(q(e.getKey())).append(":").append(q(e.getValue()));
+    }
+    c.append("}");
     String payload = "{\"iss\":" + q(ISSUER) + ",\"aud\":" + q(CHANNEL_KEY) + ",\"sub\":" + q(sub)
         + ",\"email\":" + q(email) + ",\"given_name\":" + q(givenName) + ",\"family_name\":" + q(familyName)
         + ",\"roles\":" + r + (club != null ? ",\"club\":" + q(club) : "") + ",\"lang\":" + q(lang)
+        + (phone != null ? ",\"phone_number\":" + q(phone) : "") + ",\"context\":" + c
         + ",\"iat\":" + iat + ",\"exp\":" + (iat + 900) + "}";
     String h = b64("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
     String p = b64(payload.getBytes(StandardCharsets.UTF_8));
@@ -142,7 +153,9 @@ public final class ContineoToken {
 ```
 
 Volanie: `ContineoToken.issue(secret, registracneCislo, email, meno,
-priezvisko, roly, klub, "sk")` — klub môže byť `null`, roly prázdny zoznam.
+priezvisko, roly, klub, "sk", telefon, udaje)` — klub a telefón môžu byť
+`null`, roly prázdny zoznam, údaje prázdna mapa; `LinkedHashMap` drží
+poradie riadkov pri tickete.
 `q()` escapuje úvodzovky a spätnú lomku; bez toho by meno ako
 `Novák "Jano"` rozbilo JSON a token by neprešiel.
 
@@ -243,8 +256,10 @@ Všetky volania vyžadujú hlavičku `Origin` z povolených pôvodov; preflight
   s druhom **`external`**: **nemôže sa prihlásiť do intranetu**, aj keby
   mala adresu, ktorú by prihlásenie prijalo. Import osôb správcom druh
   prepíše a tým ju pustí dnu.
-- E-mail, meno, priezvisko, roly, klub a registračné číslo (`sub`) sú
-  kópia z tokenu v čase otázky; riešiteľ ich vidí pri tickete.
+- E-mail, meno, priezvisko, roly, klub, registračné číslo (`sub`),
+  telefón a `context` sú kópia z tokenu v čase správy; spolu s adresou
+  stránky ISSF, z ktorej človek písal (posiela ju widget), ich riešiteľ
+  vidí pri tickete v karte „Údaje z …" (ADR-042, D276).
 - Otázky a odpovede sú záznamy v `evaluations` ako pri intranete
   (hodnotenie, kurácia); účel „helpdesk" patrí do informovania dotknutých
   osôb (ADR-022) — doplní DPO.

@@ -278,6 +278,6 @@ syncScope();
 form.addEventListener('submit',function(ev){ev.preventDefault();var q=ta.value.trim();if(!q||busy)return;ta.value='';ask(q)});
 ta.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();form.dispatchEvent(new Event('submit',{cancelable:true}))}});
 escBtn.addEventListener('click',function(){var m=escTa.value.trim();if(!m)return;escBtn.disabled=true;
-  api('ticket',{message:m,conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.classList.remove('is-open');escTa.value='';sys(T.escalated);negatives=0}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
+  api('ticket',{message:m,page:location.href.split('#')[0],conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.classList.remove('is-open');escTa.value='';sys(T.escalated);negatives=0}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
 })();`
 }

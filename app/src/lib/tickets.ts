@@ -65,6 +65,16 @@ export interface Ticket {
     club: string | null
     /** Identifikátor osoby vo vydávajúcom systéme (v ISSF registračné číslo) — riešiteľ si podľa neho človeka nájde. */
     reference?: string | null
+    /**
+     * Údaje z vydávajúceho systému v čase správy (ADR-042, D276) — kópia
+     * z tokenu, ako meno a roly (D24). Len ticket z widgetu; staršie nemajú.
+     */
+    phone?: string | null
+    context?: { label: string; value: string }[]
+    /** Pôvod tokenu (`iss`), napr. `https://issf.futbalsfz.sk` — z neho nadpis „Údaje z …". */
+    issuer?: string | null
+    /** Stránka cudzieho systému, z ktorej človek písal (bez fragmentu). */
+    page?: string | null
   }
   subject: string
   messages: TicketMessage[]
@@ -542,4 +552,21 @@ export function answerRoute(t: Ticket): AnswerRoute {
   if (!t.asker.email) throw new TicketError("ticket.noRecipient", "Ticket nemá komu odpovedať — chýba adresa.")
   if (t.confirmation?.providerId) return { kind: "replyTo", providerId: t.confirmation.providerId, to: t.asker.email }
   return { kind: "send", to: t.asker.email }
+}
+
+/**
+ * Adresa stránky z widgetu (ADR-042, D276): len `http(s)` z pôvodu, ktorý
+ * prešiel bránou, bez fragmentu, najviac 500 znakov. Inak nič — adresu
+ * posiela prehliadač a riešiteľ na ňu klikne.
+ */
+export function widgetPage(raw: unknown, origin: string): string | null {
+  if (typeof raw !== "string" || raw.length > 500) return null
+  try {
+    const u = new URL(raw)
+    if ((u.protocol !== "https:" && u.protocol !== "http:") || u.origin !== origin) return null
+    u.hash = ""
+    return u.toString()
+  } catch {
+    return null
+  }
 }

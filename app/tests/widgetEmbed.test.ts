@@ -87,15 +87,18 @@ describe("vzor v Jave (ISSF, 26. 10. 2026)", () => {
     expect(java).toContain(`static final String CHANNEL_KEY = "${ch.key}";`)
     expect(java).toContain('Mac.getInstance("HmacSHA256")')
     expect(java).toContain("(iat + 900)")
+    expect(java).toContain("Map<String, String> context")
   })
   // Token vydal práve tento kód (javac 16, kľúč `skusobny-tajny-kluc-123`) —
-  // meno s diakritikou, úvodzovkami a spätnou lomkou. Pri zmene vzoru ho
+  // meno s diakritikou, úvodzovkami a spätnou lomkou, telefón a `context`
+  // s úvodzovkami (ADR-042, D276). Údaje sú vymyslené. Pri zmene vzoru ho
   // treba vydať znova, inak test overuje starý kód.
-  const fromJava = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2lzc2YuZnV0YmFsc2Z6LnNrIiwiYXVkIjoiZDk1ODkyNDItOGI4NS00ODUwLWExMGEtYTMwZWJiYmU4ZjE4Iiwic3ViIjoiMTUyODk3MyIsImVtYWlsIjoiamFuLm5vdmFrQGV4YW1wbGUuc2siLCJnaXZlbl9uYW1lIjoiSsOhbiIsImZhbWlseV9uYW1lIjoiTm92w6FrIFwiSmFub1wiIFxcIHgiLCJyb2xlcyI6WyJrbHVib3bDvSBtYW5hxb7DqXIiXSwiY2x1YiI6Ik1GSyBCeXTEjWEiLCJsYW5nIjoic2siLCJpYXQiOjE3OTMwNTQ0MzMsImV4cCI6MTc5MzA1NTMzM30.SsK_Zl8MydPwL59ewO3XWHkT8imdpLhe6lbAps_FSGU"
+  const fromJava = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2lzc2YuZnV0YmFsc2Z6LnNrIiwiYXVkIjoiZDk1ODkyNDItOGI4NS00ODUwLWExMGEtYTMwZWJiYmU4ZjE4Iiwic3ViIjoiMTIzNDU2NyIsImVtYWlsIjoiamFuLm5vdmFrQGV4YW1wbGUuc2siLCJnaXZlbl9uYW1lIjoiSsOhbiIsImZhbWlseV9uYW1lIjoiTm92w6FrIFwiSmFub1wiIFxcIHgiLCJyb2xlcyI6WyJrbHVib3bDvSBtYW5hxb7DqXIiXSwiY2x1YiI6Ik1GSyBCeXTEjWEiLCJsYW5nIjoic2siLCJwaG9uZV9udW1iZXIiOiIrNDIxOTAwMTIzNDU2IiwiY29udGV4dCI6eyJJRCBrbHVidSI6IjEyMzQiLCJadsOkenkiOiJPYkZaIFwiU2VuaWNhXCIifSwiaWF0IjoxNzkzMDU5NzcxLCJleHAiOjE3OTMwNjA2NzF9.MLP5EBbFiN8XFGL18KWENo4d4LxBe4t9Qp0zUtqSqg4"
   it("token z Javy Contineo prijme v čase vydania, s iným kľúčom nie", () => {
-    const at = new Date(1793054433 * 1000)
+    const at = new Date(1793059771 * 1000)
     const id = verifyWidgetToken(fromJava, ch, at)
-    expect(id).toMatchObject({ externalId: "1528973", familyName: 'Novák "Jano" \\ x', roles: ["klubový manažér"], club: "MFK Bytča", language: "sk" })
+    expect(id).toMatchObject({ externalId: "1234567", familyName: 'Novák "Jano" \\ x', roles: ["klubový manažér"], club: "MFK Bytča", language: "sk", phone: "+421900123456" })
+    expect(id.context).toEqual([{ label: "ID klubu", value: "1234" }, { label: "Zväzy", value: 'ObFZ "Senica"' }])
     expect(() => verifyWidgetToken(fromJava, { ...ch, secret: "iny" }, at)).toThrow()
   })
 })

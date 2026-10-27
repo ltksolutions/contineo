@@ -18,6 +18,8 @@
  *   email, given_name, family_name, roles[], club – údaje o osobe (kópia
  *          v čase vydania); `name` len ako záloha, keď mená zvlášť chýbajú;
  *   lang – jazyk rozhrania (sk/cs/en), nepovinný;
+ *   phone_number, context – nepovinné údaje pre riešiteľa: telefón a ďalšie
+ *          údaje vydávajúceho systému ako názov → text (ADR-042, D276);
  *   iat, exp – vydanie a platnosť; `exp - iat` najviac 15 minút.
  *
  * Bez knižnice: HS256 je jeden HMAC a dve base64url; `jose` by pribudlo
@@ -45,8 +47,40 @@ export interface WidgetIdentity {
   roles: string[]
   club: string | null
   language: "sk" | "cs" | "en" | null
+  /** Telefón (`phone_number`, OIDC) — riešiteľ niekedy volá (ADR-042, D276). */
+  phone: string | null
+  /**
+   * Ďalšie údaje vydávajúceho systému (`context`) — názov → text v poradí
+   * z tokenu, najviac `MAX_CONTEXT` položiek (ADR-042, D276). ISSF sem dá
+   * ID klubu, zväzy, ID používateľa a osoby; Contineo ich len ukáže.
+   */
+  context: { label: string; value: string }[]
   issuer: string
   expiresAt: Date
+}
+
+/** Strop položiek `context` a dĺžok — token je hlavička, nie úložisko. */
+export const MAX_CONTEXT = 10
+const MAX_CONTEXT_LABEL = 60
+const MAX_CONTEXT_VALUE = 300
+
+/**
+ * `context` z tokenu: objekt názov → text. Čísla a logické hodnoty sa
+ * prevedú na text, vnorené objekty a polia sa vynechajú (nie je ako ich
+ * ukázať v jednom riadku), prázdne tiež. Zlý tvar celého poľa token
+ * neodmietne — `context` je nepovinný doplnok, nie identita.
+ */
+export function parseContext(raw: unknown): { label: string; value: string }[] {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return []
+  const out: { label: string; value: string }[] = []
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (out.length >= MAX_CONTEXT) break
+    if (typeof v !== "string" && typeof v !== "number" && typeof v !== "boolean") continue
+    const label = k.replace(/\s+/g, " ").trim().slice(0, MAX_CONTEXT_LABEL)
+    const value = String(v).replace(/\s+/g, " ").trim().slice(0, MAX_CONTEXT_VALUE)
+    if (label && value) out.push({ label, value })
+  }
+  return out
 }
 
 function b64url(input: Buffer | string): string {
@@ -58,7 +92,7 @@ function fromB64url(s: string): Buffer {
 
 /** Vydanie tokenu — pre testy, dokumentáciu a skúšobnú stránku; ISSF má vlastnú implementáciu. */
 export function signWidgetToken(
-  claims: { iss: string; aud: string; sub: string; email: string; given_name?: string; family_name?: string; name?: string; roles?: string[]; club?: string | null; lang?: string },
+  claims: { iss: string; aud: string; sub: string; email: string; given_name?: string; family_name?: string; name?: string; roles?: string[]; club?: string | null; lang?: string; phone_number?: string; context?: Record<string, string | number | boolean> },
   secret: string,
   now: Date = new Date(),
   ttlSeconds: number = MAX_TOKEN_TTL_S,
@@ -131,6 +165,8 @@ export function verifyWidgetToken(
     roles: Array.isArray(payload.roles) ? payload.roles.map(r => String(r).trim()).filter(Boolean).slice(0, 20) : [],
     club: payload.club ? String(payload.club).trim() : null,
     language: lang === "sk" || lang === "cs" || lang === "en" ? lang : null,
+    phone: tidy(payload.phone_number).slice(0, 40) || null,
+    context: parseContext(payload.context),
     issuer: iss,
     expiresAt: new Date(exp * 1000),
   }
