@@ -305,8 +305,13 @@ export interface Person {
     entraObjectId?: string | null
     /** `sub` z Google. */
     googleSub?: string | null
-    /** Identifikátor v cudzom systéme podľa kľúča kanála helpdesku (ADR-028, D166): `{ issf: "<sub>" }`. */
-    widget?: Record<string, string>
+    /**
+     * Identifikátory v cudzom systéme podľa kľúča kanála helpdesku (ADR-028,
+     * D166): `{ "<kľúč>": ["<sub>", …] }` — všetky účty, z ktorých z tejto
+     * adresy písali (ADR-042, D280). Pred migráciou
+     * `migrate_widget_refs.mjs` reťazec; číta ho `widgetRefs()`.
+     */
+    widget?: Record<string, string[] | string>
   }
 
   createdBy?: string

@@ -234,11 +234,15 @@ Všetky volania vyžadujú hlavičku `Origin` z povolených pôvodov; preflight
 
 ## Osobné údaje
 
-- Osoba z tokenu sa hľadá podľa identifikátora (`sub`), potom podľa
-  **e-mailu** — zamestnanec s rovnakou adresou v ISSF aj intranete sa len
-  spáruje a intranet mu ostáva. Inak sa založí s druhom **`external`**:
-  **nemôže sa prihlásiť do intranetu**, aj keby mala adresu, ktorú by
-  prihlásenie prijalo. Import osôb správcom druh prepíše a tým ju pustí dnu.
+- **Osoba je e-mailový kontakt, účet ISSF je údaj** (ADR-042, D280). Jeden
+  e-mail v ISSF zdieľa viac účtov (rodič za deti, manažér za hráčov), preto
+  sa osoba hľadá **podľa e-mailu** a registračné čísla účtov, z ktorých
+  z adresy písali, sa **pridávajú do zoznamu** — nič sa neprepisuje a meno
+  ostáva z prvého tokenu. Zamestnanec s rovnakou adresou v ISSF aj
+  intranete sa len spáruje a intranet mu ostáva. Inak sa osoba založí
+  s druhom **`external`**: **nemôže sa prihlásiť do intranetu**, aj keby
+  mala adresu, ktorú by prihlásenie prijalo. Import osôb správcom druh
+  prepíše a tým ju pustí dnu.
 - E-mail, meno, priezvisko, roly, klub a registračné číslo (`sub`) sú
   kópia z tokenu v čase otázky; riešiteľ ich vidí pri tickete.
 - Otázky a odpovede sú záznamy v `evaluations` ako pri intranete
