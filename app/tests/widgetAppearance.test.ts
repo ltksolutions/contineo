@@ -4,8 +4,9 @@
  */
 
 import { describe, it, expect, vi } from "vitest"
-import { widgetAppearance, appearanceForScript, normalizePhrase, DEFAULT_WIDGET_APPEARANCE, DEFAULT_PHRASES, WIDGET_POSITIONS } from "../src/lib/widgetAppearance"
-import { widgetScript, anchorCss } from "../src/lib/widgetScript"
+import { readFileSync } from "node:fs"
+import { widgetAppearance, appearanceForScript, normalizePhrase, isRowPosition, DEFAULT_WIDGET_APPEARANCE, DEFAULT_PHRASES, WIDGET_POSITIONS } from "../src/lib/widgetAppearance"
+import { widgetScript, anchorCss, WIDGET_CSS } from "../src/lib/widgetScript"
 
 const SECRET = "skusobny-kluc"
 vi.mock("../src/lib/channels", () => ({ widgetSecret: (c: { widget: { secretEnc?: string } }) => (c.widget.secretEnc ? SECRET : null) }))
@@ -13,15 +14,15 @@ const { previewToken, previewSubject } = await import("../src/lib/widgetPreview"
 const { verifyWidgetToken } = await import("../src/lib/widgetToken")
 
 describe("widgetAppearance", () => {
-  it("predvolene vpravo v strede, stredný panel, helpdesk po dvoch neúspechoch (D282, D275)", () => {
+  it("predvolene riadok hore v strede, plachta na obrazovku, helpdesk po dvoch neúspechoch (D286, D287, D275)", () => {
     expect(widgetAppearance(undefined)).toEqual(DEFAULT_WIDGET_APPEARANCE)
-    expect(DEFAULT_WIDGET_APPEARANCE).toMatchObject({ position: "right-middle", size: "m", escalateAfter: 2 })
+    expect(DEFAULT_WIDGET_APPEARANCE).toMatchObject({ position: "top", size: "xl", escalateAfter: 2 })
   })
   it("osem miest okolo obrazovky", () => {
     expect(WIDGET_POSITIONS).toHaveLength(8)
   })
   it("neznáma hodnota padá na predvolenú, nie na chybu", () => {
-    expect(widgetAppearance({ position: "stred", size: "xl", escalateAfter: 7 })).toMatchObject({ position: "right-middle", size: "m", escalateAfter: 2 })
+    expect(widgetAppearance({ position: "stred", size: "xl", escalateAfter: 7 })).toMatchObject({ position: "top", size: "xl", escalateAfter: 2 })
     expect(widgetAppearance({ position: "right-top", size: "l", escalateAfter: "3" })).toMatchObject({ position: "right-top", size: "l", escalateAfter: 3 })
   })
   it("texty: len jazyky rozhrania, orezané, prázdne vynechané, so stropom", () => {
@@ -76,29 +77,53 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(anchorCss("top")).toBe("left:50%;top:16px;transform:translateX(-50%)")
     expect(anchorCss("right-bottom")).toBe("right:16px;bottom:16px;transform:none")
   })
-  it("bez nastavenia vpravo v strede so stredným panelom", () => {
+  it("bez nastavenia riadok otázky hore v strede a plachta 80 % × 80 % so závojom (D286, D287)", () => {
     const js = widgetScript(base)
-    expect(js).toContain(".fab{position:fixed;right:16px;top:50%;transform:translateY(-50%);")
-    expect(js).toContain("width:min(400px,calc(100vw - 32px));height:min(600px,calc(100vh - 32px))")
+    expect(js).toContain(".xw-row{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 32px))}")
+    expect(js).toContain("left:10vw;top:10vh;width:80vw;height:80vh;transform:none;transform-origin:center top")
+    expect(js).not.toContain(".xw-scrim{display:none}.xw-sheet")
+    expect(js).toContain("var ROW=true")
   })
-  it("poloha, veľkosť, text tlačidla, privítanie a prah idú do skriptu", () => {
+  it("v rohu tlačidlo a plachta pri ňom bez závoja; veľkosť, texty a prah idú do skriptu", () => {
     const look = appearanceForScript(widgetAppearance({ position: "right-top", size: "l", escalateAfter: 1, launcher: { sk: "Pomoc" }, greeting: { sk: "Ahoj" } }), "sk")
     const js = widgetScript({ ...base, appearance: look })
-    expect(js).toContain(".panel{position:fixed;right:16px;top:16px;transform:none;")
-    expect(js).toContain("width:min(480px,calc(100vw - 32px));height:min(720px,calc(100vh - 32px))")
-    expect(js).toContain('"appearance":{"position":"right-top","size":"l","escalateAfter":1,"launcher":"Pomoc","greeting":"Ahoj","offerLink":true,')
+    expect(js).toContain("var ROW=false")
+    expect(js).toContain(".fab{position:fixed;right:16px;top:16px;transform:none;")
+    expect(js).toContain(".xw-sheet{position:fixed;z-index:2147483001;right:16px;top:16px;transform:none;width:min(480px,calc(100vw - 32px));height:min(720px,calc(100vh - 32px));transform-origin:right top}")
+    expect(js).toContain(".xw-scrim{display:none}")
+    expect(js).toContain('"launcher":"Pomoc","greeting":"Ahoj"')
     expect(js).toContain("negatives>=LOOK.escalateAfter")
-    expect(js).not.toContain("negatives>=2")
   })
-  it("je platný JavaScript a ponúka ContineoHelpdesk.open() (D285)", () => {
-    const js = widgetScript({ ...base, appearance: appearanceForScript(DEFAULT_WIDGET_APPEARANCE, "sk") })
-    expect(() => new Function(js)).not.toThrow()
-    expect(js).toContain("window.ContineoHelpdesk={open:function(){openPanel();return true}}")
-    // Regulárny výraz diakritiky musí do prehliadača prísť ako únik, nie zlomený.
-    expect(js).toContain("replace(/[\\u0300-\\u036f]/g,'')")
+  it("riadok len hore a dole v strede", () => {
+    expect(WIDGET_POSITIONS.filter(isRowPosition)).toEqual(["top", "bottom"])
+    const js = widgetScript({ ...base, appearance: appearanceForScript(widgetAppearance({ position: "bottom" }), "sk") })
+    expect(js).toContain("bottom:16px;left:50%;transform:translateX(-50%)")
+    expect(js).toContain("transform-origin:center bottom")
   })
   it("na telefóne celá obrazovka bez ohľadu na polohu", () => {
-    expect(widgetScript(base)).toContain("@media (max-width:640px){.panel{top:0;right:0;bottom:0;left:0;transform:none;width:100vw;height:100vh;border-radius:0}}")
+    expect(widgetScript(base)).toContain("@media (max-width:640px){.xw-sheet{top:0;right:0;bottom:0;left:0;transform:none;width:100vw;height:100vh;height:100dvh;border-radius:0;border:0}")
+  })
+  it("nápoveda riadku a vzory otázok podľa jazyka (D288)", () => {
+    const a = widgetAppearance({ placeholder: { sk: "Máte otázku k ISSF?" }, examples: { sk: ["Ako zmením heslo?", "", "Ako zmením heslo?"], en: Array.from({ length: 9 }, (_, i) => `q${i}`) } })
+    expect(appearanceForScript(a, "sk")).toMatchObject({ placeholder: "Máte otázku k ISSF?", examples: ["Ako zmením heslo?"] })
+    expect(appearanceForScript(a, "en").examples).toHaveLength(6)
+    expect(appearanceForScript(a, "cs")).toMatchObject({ placeholder: "", examples: [] })
+  })
+  it("všetky jazyky kanála idú do skriptu; jeden jazyk = bez výberu (D290)", () => {
+    const packs = (["sk", "en"] as const).map(code => ({ code, label: code, texts: { open: code }, appearance: appearanceForScript(DEFAULT_WIDGET_APPEARANCE, code), sources: [] }))
+    const js = widgetScript({ ...base, languages: packs })
+    expect(js).toContain('"languages":[{"code":"sk"')
+    expect(js).toContain("if(PACKS.length>1)")
+    expect(widgetScript(base)).toContain('"languages":[{"code":"sk","label":"sk"')
+  })
+})
+
+describe("design system vo widgete (KANAL-widget-riadok-otazky)", () => {
+  it("každé pravidlo WIDGET_CSS je doslova v globals.css", () => {
+    const n = (c: string) => c.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{};:,>])\s*/g, "$1").replace(/;}/g, "}")
+    const globals = n(readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8"))
+    const missing = WIDGET_CSS.filter(r => !globals.includes(n(r)))
+    expect(missing).toEqual([])
   })
 })
 

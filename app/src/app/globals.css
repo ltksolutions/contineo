@@ -4375,6 +4375,67 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   cursor: pointer;
 }
 
+/*
+ * Externý widget kanála (KANAL-widget-riadok-otazky, Ján 27. 10. 2026;
+ * ADR-042, Dodatok 2). Widget beží v cudzom systéme v Shadow DOM, kam
+ * globals.css nedosiahne — skript (`lib/widgetScript.ts`, `WIDGET_CSS`)
+ * nesie tieto pravidlá doslova a test `widgetCss` stráži, že sú tu.
+ * Mení sa to tu a v skripte naraz. Opis: `.design-sync/conventions.md`.
+ *
+ * Zatvorený: `.xw-row` riadok otázky (tvar `.header-search`, 52 px a tieň —
+ * stojí nad cudzou stránkou). Otvorený: `.xw-sheet` plachta (tvar
+ * `.ask-sheet--overlay`) nad `.xw-scrim`; `.xw-head` (značka, názov,
+ * `.xw-lang` jazyk, zdroje, `.xw-close`), `.xw-body` > `.xw-col` (720 px)
+ * s `.xw-empty` (pole `.xw-field`, nedávne otázky a vzory ako v plachte
+ * otázky) alebo rozhovorom `.xw-log` (`.xw-q`, `.xw-a`, `.xw-sys`,
+ * `.xw-card` správa helpdesku), dole `.xw-composer`. Poloha a veľkosť sú
+ * nastavenie kanála a dopĺňa ich skript.
+ */
+.xw-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 8px 0 16px;background:var(--surface);border:1px solid var(--line-strong);border-radius:26px;box-shadow:0 1px 2px rgba(20,28,42,.08),0 12px 32px rgba(20,28,42,.18);font:inherit;font-size:15px;text-align:left;color:var(--muted);cursor:text;transition:box-shadow .2s ease}
+.xw-row:hover{box-shadow:0 1px 2px rgba(20,28,42,.08),0 16px 40px rgba(20,28,42,.24)}
+.xw-row:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),0 12px 32px rgba(20,28,42,.18)}
+.xw-row-mark{display:grid;flex:none;color:var(--accent)}
+.xw-row-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xw-row-text.is-draft{color:var(--ink)}
+.xw-row-go{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:18px;background:var(--accent);color:var(--on-accent)}
+.xw-scrim{position:fixed;inset:0;background:rgba(20,28,42,.32);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s}
+.xw-scrim.is-open{opacity:1;visibility:visible}
+.xw-sheet{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 48px rgba(20,28,42,.28);overflow:hidden;opacity:0;visibility:hidden;scale:.92;transition:scale .32s cubic-bezier(.2,.8,.2,1),opacity .2s ease,visibility .32s}
+.xw-sheet.is-open{opacity:1;visibility:visible;scale:1}
+.xw-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:8px 8px 8px 18px;border-bottom:1px solid var(--line)}
+.xw-head-title{flex:1;min-width:0;font-weight:650;font-size:17px;color:var(--ink)}
+.xw-close{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:22px;background:transparent;color:var(--ink);font:inherit;font-size:24px;line-height:1;cursor:pointer}
+.xw-close:hover{background:var(--surface-2)}
+.xw-lang{min-height:36px;padding:0 10px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:var(--fs-small);cursor:pointer}
+.xw-body{flex:1;min-height:0;overflow:auto;background:var(--bg)}
+.xw-col{max-width:720px;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:14px}
+.xw-empty{display:flex;flex-direction:column;gap:16px}
+.xw-empty h2{margin:0;font-size:22px;color:var(--ink)}
+.xw-lead{margin:0;color:var(--muted);white-space:pre-wrap}
+.xw-form{display:flex;flex-direction:column;gap:10px}
+.xw-field{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;padding:12px 14px;border:1px solid var(--control-line);border-radius:14px;background:var(--surface)}
+.xw-field:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.xw-field-mark{display:grid;padding-top:3px;color:var(--accent)}
+.xw-field textarea{width:100%;min-height:0;padding:0;border:0;outline:0;resize:none;background:transparent;color:var(--ink);font:inherit;font-size:17px;line-height:1.5}
+.xw-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.xw-hint{flex:1;font-size:12.5px;color:var(--muted)}
+.xw-log{display:flex;flex-direction:column;gap:14px}
+.xw-composer{border-top:1px solid var(--line);background:var(--surface)}
+.xw-composer-in{max-width:720px;margin:0 auto;padding:12px 20px 10px;display:flex;flex-direction:column;gap:8px}
+.xw-foot{font-size:11px;color:var(--muted);text-align:center}
+.xw-q{align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:14px;background:var(--accent);color:var(--on-accent);white-space:pre-wrap;overflow-wrap:anywhere}
+.xw-a{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.xw-a-head{display:block;margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted);white-space:normal}
+.xw-src{margin-top:10px;font-size:13px;color:var(--muted);white-space:normal}
+.xw-src ul{margin:4px 0 0;padding-left:18px}
+.xw-rate{display:flex;gap:8px;margin-top:12px;white-space:normal}
+.xw-sys{align-self:center;max-width:92%;color:var(--muted);font-size:13px;text-align:center}
+.xw-sys a{color:var(--accent)}
+.xw-card{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.xw-card h3{margin:0;font-size:17px;color:var(--ink)}
+.xw-card textarea{width:100%;min-height:96px;padding:10px;border:1px solid var(--control-line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;resize:vertical}
+.xw-muted{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+
 @media (min-width: 640px) and (max-width: 1023px) {
   .ask-sheet--overlay { min-width: 0; width: calc(100% + 60px); }
 }

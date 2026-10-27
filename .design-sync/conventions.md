@@ -121,6 +121,27 @@ Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.
 - Úloha má vľavo `span.task-icon` (kruh 36 px s ikonou druhu úlohy): `--bad` po termíne, `--soon` blíži sa termín, `--decide` rozhodnutie. Farba nesie naliehavosť, nie druh. Pod 640 px ide termín úlohy pod text.
 - Hľadanie s rozsahmi: `SearchStrip` vo `<form method="get">` (aplikácia ho odosiela počas písania) a pod ním (od 1024 px vedľa) `nav.view-switch.view-switch--scroll` — rozsahy s počtom `.view-switch-count` **po hľadaní**; pri 5+ voľbách sa pás roluje vodorovne, neláme. Rozsah bez výsledku sa neukazuje, okrem zvoleného.
 
+## Externý widget kanála (od 27. 10., KANAL-widget-riadok-otazky)
+Widget kanála typu *widget* vložený v cudzom systéme (ISSF). Beží v Shadow DOM, preto ho
+skript nesie celý (`lib/widgetScript.ts`, `WIDGET_CSS`); triedy `.xw-*` sú v `globals.css`
+a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičke a plachta otázky.
+- Zatvorený **hore alebo dole v strede**: `button.xw-row` — `span.xw-row-mark` (značka Continea, farba
+  organizácie), `span.xw-row-text` (nápoveda z nastavenia kanála, rozpísaný text `.is-draft`),
+  `span.xw-row-go` (šípka). 52 px, oblý, s tieňom. Na ostatných šiestich miestach tlačidlo.
+  Klik, Enter alebo písanie ho rozbalí; písaný znak pokračuje v poli.
+- Otvorený: `.xw-scrim` (závoj) + `section.xw-sheet[role=dialog]` — pri veľkosti „na obrazovku"
+  80 % × 80 % v strede, inak pri tlačidle; pod 640 px celá obrazovka. Vyrastá z miesta zatvoreného
+  widgetu (`scale`, 0,32 s; bez animácie pri `prefers-reduced-motion`). Esc, `.xw-close` alebo závoj zavrie.
+- Hlavička `.xw-head`: značka, `.xw-head-title`, `select.xw-lang` (len kanál s viac jazykmi), „Zdroje: … ▾"
+  (`.button--quiet.button--sm`, riadky pod hlavičkou), `.xw-close` (44 px).
+- Telo `.xw-body` > `.xw-col` (720 px v strede). Prázdne: `.xw-empty` > `h2`, `p.xw-lead`,
+  `form.xw-form` > `.xw-field` (`.xw-field-mark` + `textarea`) a `.xw-bar` (`.xw-hint` + jediné plné „Opýtať sa"),
+  potom nedávne otázky (`.ask-sheet-examples.ask-sheet-mine`) a vzory (`.ask-sheet-examples`) — ako v plachte otázky.
+- Rozhovor: `.xw-log` > `.xw-q` (otázka, farba organizácie), `.xw-a` (`.xw-a-head`, text, `.xw-src`, `.xw-rate`
+  s tichými `.button--sm`), `.xw-sys`; správa helpdesku `.xw-card` (`h3`, `.xw-muted`, `textarea`, plné „Odoslať helpdesku"
+  + tiché „Zrušiť"). Pole pod rozhovorom `.xw-composer` > `.xw-composer-in` s tichým „Napísať helpdesku".
+- Tlačidlá widgetu majú terč 44 px aj na počítači. Widget vyká.
+
 ## Príklad
 ```jsx
 <div>

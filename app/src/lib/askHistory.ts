@@ -175,3 +175,48 @@ export async function unhideAll(companyCode: string, personId: string, at: Date)
   )
   return r.modifiedCount
 }
+
+/**
+ * História vo widgete kanála (ADR-042, Dodatok 2, D288): tie isté záznamy
+ * `evaluations` ako v plachte otázky, ale **len verejné** —
+ * `askerAccessLevel: "public"`. Osoba z widgetu je e-mailový kontakt (D280)
+ * a môže byť zároveň používateľom intranetu; jej interné otázky do cudzieho
+ * systému nepatria.
+ */
+export function widgetAskerFilter(companyCode: string, personId: string): Filter<RatingRecord> {
+  return { ...askerFilter(companyCode, personId), askerAccessLevel: "public" }
+}
+
+/** Posledné rôzne otázky osoby vo widgete, pri písaní zúžené. */
+export async function widgetRecentQuestions(companyCode: string, personId: string, q = "", limit = 5): Promise<HistoryItem[]> {
+  const col = await collection()
+  const query = q.trim()
+  const cursor = col.find(widgetAskerFilter(companyCode, personId), { projection: PROJECTION }).sort({ createdAt: -1 }).limit(query ? SCAN_LIMIT : 50)
+  const items: HistoryItem[] = []
+  for await (const r of cursor) {
+    if (query && !matchesQuery(r.question, query)) continue
+    items.push(toItem(r))
+  }
+  return distinctQuestions(items).slice(0, limit)
+}
+
+/** Uložená odpoveď pre widget — len vlastná a verejná, inak `null`. */
+export async function widgetAnswer(companyCode: string, personId: string, id: string): Promise<Pick<RatingRecord, "question" | "answer" | "sources" | "createdAt"> | null> {
+  if (!ObjectId.isValid(id)) return null
+  const col = await collection()
+  const filter = askerFilter(companyCode, personId)
+  // `hiddenForAsker` nevadí: skrytie je o zozname, nie o prístupe (ako `answerForViewer`).
+  delete (filter as Record<string, unknown>).hiddenForAsker
+  return col.findOne({ ...filter, askerAccessLevel: "public", _id: new ObjectId(id) }, { projection: { question: 1, answer: 1, sources: 1, createdAt: 1 } })
+}
+
+/** × v histórii widgetu — len vlastný verejný záznam. */
+export async function widgetHideQuestion(companyCode: string, personId: string, id: string): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false
+  const col = await collection()
+  const r = await col.updateOne(
+    { ...widgetAskerFilter(companyCode, personId), _id: new ObjectId(id) },
+    { $set: { hiddenForAsker: true, hiddenAt: new Date() } },
+  )
+  return r.matchedCount === 1
+}

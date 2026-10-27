@@ -72,6 +72,8 @@ export async function saveChannelAction(fd: FormData) {
             greeting: Object.fromEntries(UI_LANGUAGES.map(l => [l, fieldText(fd, `widgetGreeting-${l}`)])),
             offerLink: fieldText(fd, "widgetOfferLink") === "on",
             phrases: Object.fromEntries(UI_LANGUAGES.map(l => [l, lines(fd, `widgetPhrases-${l}`)])),
+            placeholder: Object.fromEntries(UI_LANGUAGES.map(l => [l, fieldText(fd, `widgetPlaceholder-${l}`)])),
+            examples: Object.fromEntries(UI_LANGUAGES.map(l => [l, lines(fd, `widgetExamples-${l}`)])),
           }
         : undefined,
       mailbox: mailboxKind

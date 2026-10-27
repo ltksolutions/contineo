@@ -42,13 +42,17 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
 - **Obsah kanála** (priečinky knižnice) a **jazyky** — prvý jazyk je jazyk
   textov widgetu, keď token jazyk nenesie.
 - **Strop otázok na osobu a hodinu** (predvolene 60).
-- **Vzhľad a správanie widgetu** (ADR-042, Dodatok 1): poloha tlačidla na
-  ôsmich miestach okolo obrazovky (predvolene **vpravo v strede** — v ISSF je
-  hore menu, vľavo dole export zostáv a schvaľovanie žiadostí, vpravo dole
-  tabuľky s akciami), veľkosť
-  panela (malý / stredný / veľký), text tlačidla a privítanie v jazykoch
-  kanála, po koľkých neúspechoch ponúknuť helpdesk. Panel sa otvára na
-  mieste tlačidla smerom do stredu obrazovky; na telefóne je celá obrazovka.
+- **Vzhľad a správanie widgetu** (ADR-042, Dodatok 1 a 2): poloha na
+  ôsmich miestach okolo obrazovky — **hore a dole v strede je zatvorený
+  widget riadok otázky** (značka, nápoveda, šípka), inde tlačidlo;
+  predvolene **hore v strede**. Veľkosť plachty malá / stredná / veľká /
+  **na obrazovku (80 % × 80 %, predvolená)**; na telefóne je plachta celá
+  obrazovka. V jazykoch kanála: nápoveda v riadku, text tlačidla,
+  privítanie a **vzory otázok** (najviac 6, v prázdnej plachte; klik otázku
+  vloží). Prázdna plachta ukáže aj **nedávne otázky** človeka (len z
+  widgetu, nie interné z intranetu). Kanál s viac jazykmi má v plachte
+  **výber jazyka** (texty aj odpoveď; ISSF jazyk v tokene posielať nemusí).
+  Widget vyká.
   Všetko sa mení tu, ISSF kód nemení.
 - **Ponuka správy helpdesku** (ADR-042, D275, D283): okrem prahu
   neúspechov **stále viditeľný odkaz „Napísať helpdesku“** pod poľom otázky

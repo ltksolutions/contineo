@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Widget v ISSF — riadok otázky</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/tokens.css">
+<link rel="stylesheet" href="ds/contineo/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+/* Odchýlka W-R1: riadok otázky widgetu — tvar .header-search, väčší terč a tieň, lebo stojí nad cudzou stránkou. */
+.wrow{position:absolute;left:50%;top:16px;transform:translateX(-50%);width:min(640px,calc(100% - 32px));z-index:5}
+.wrow-field{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 8px 0 16px;box-sizing:border-box;background:var(--surface);border:1px solid var(--line-strong);border-radius:26px;box-shadow:0 1px 2px rgba(20,28,42,.08),0 12px 32px rgba(20,28,42,.18);cursor:text;font:inherit;text-align:left;color:var(--muted);font-size:15px;transition:box-shadow .2s ease,transform .2s ease}
+.wrow-field:hover{box-shadow:0 1px 2px rgba(20,28,42,.08),0 16px 40px rgba(20,28,42,.24);transform:translateY(-1px)}
+.wrow-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrow-kbd{flex:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:18px;background:var(--accent);color:var(--on-accent)}
+/* Odchýlka W-R2: plachta widgetu 80 % × 80 % so závojom — tvar .ask-sheet--overlay. */
+.wscrim{position:absolute;inset:0;background:rgba(20,28,42,.32);z-index:6;transition:opacity .28s ease}
+.wsheet{position:absolute;left:10%;top:10%;width:80%;height:80%;z-index:7;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 48px rgba(20,28,42,.28);overflow:hidden;transform-origin:50% 0;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+.wsheet.is-closed{transform:translateY(-12%) scale(.45,.08);opacity:0;pointer-events:none}
+.wscrim.is-closed{opacity:0;pointer-events:none}
+.whead{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 18px;border-bottom:1px solid var(--line)}
+.whead-title{font-weight:650;font-size:var(--fs-section);color:var(--ink)}
+.wclose{width:44px;height:44px;border:0;background:transparent;border-radius:22px;font-size:24px;line-height:1;color:var(--ink);cursor:pointer}
+.wclose:hover{background:var(--surface-2)}
+.wbody{flex:1;min-height:0;overflow:auto;background:var(--bg)}
+.wcol{max-width:720px;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:14px}
+.wq{align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:14px;background:var(--accent);color:var(--on-accent)}
+.wa{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);line-height:1.55}
+.wa-head{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.wa-src{margin-top:10px;font-size:13px;color:var(--muted)}
+.wa-src ul{margin:4px 0 0;padding-left:18px}
+.wa-rate{display:flex;gap:8px;margin-top:12px}
+.wcomposer{border-top:1px solid var(--line);background:var(--surface)}
+.wcomposer-in{max-width:720px;margin:0 auto;padding:12px 20px 14px;display:flex;flex-direction:column;gap:8px}
+.wfield{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;padding:12px 14px;border:1px solid var(--control-line);border-radius:14px;background:var(--surface)}
+.wfield:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.wfield textarea{width:100%;border:0;outline:0;resize:none;background:transparent;font:inherit;font-size:17px;line-height:1.5;color:var(--ink);padding:0}
+.wbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wbar-hint{flex:1;font-size:12.5px;color:var(--muted)}
+.wfoot{font-size:11px;color:var(--muted);text-align:center}
+.wempty{display:flex;flex-direction:column;gap:16px;padding-top:24px}
+.wempty h2{margin:0;font-size:22px;color:var(--ink)}
+.wgreet{margin:0;color:var(--muted);font-size:15px}
+@media (prefers-reduced-motion:reduce){.wsheet,.wscrim{transition:none}}
+/* Kulisa: zjednodušená stránka ISSF (vlastná aplikácia SFZ), len pozadie návrhu. */
+.issf{position:absolute;inset:0;background:#e9ebee;font-family:Arial,Helvetica,sans-serif}
+.issf-top{background:linear-gradient(#2b3240,#1c2230);height:320px}
+.issf-box{position:absolute;left:44px;right:44px;top:28px;background:#18213a;color:#c9d2e3;border-radius:2px}
+.issf-links{padding:16px 18px 0;font-size:13px}
+.issf-links b{color:#fff;display:block;margin-bottom:6px;font-size:14px}
+.issf-links span{text-decoration:underline;margin-right:14px}
+.issf-menu{display:flex;flex-wrap:wrap;gap:26px;padding:22px 18px;font-size:14px;font-weight:600}
+.issf-page{position:absolute;left:44px;right:44px;top:216px;bottom:0;background:#f3f4f6;border:1px solid #d5d8de}
+.issf-h1{background:#fff;padding:14px 18px;font-size:24px;font-weight:700;color:#111;border-bottom:1px solid #d5d8de}
+.issf-panel{margin:16px 20px 0;border:1px solid #cfd3da;background:#fff}
+.issf-panel-h{background:#1f2433;color:#fff;padding:8px 12px;font-size:14px;font-weight:600}
+.issf-panel-b{padding:12px;font-size:13px;color:#222;line-height:1.6}
+.issf-row{display:flex;gap:30px;padding:10px 12px;font-size:12.5px;font-weight:600;color:#555;border-bottom:1px solid #eee}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;position:relative;overflow:hidden;font-family:var(--font-sans, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);color:var(--ink);--accent:{{accent}};--accent-strong:{{accent}};--accent-soft:rgba(26,71,201,.14);--on-accent:#ffffff">
+  <div class="issf" aria-hidden="true">
+    <div class="issf-top"></div>
+    <div class="issf-box">
+      <div class="issf-links"><b>Vitajte, Ján Letko (jan.letko)</b><span>Domov</span><span>Môj profil</span><span>Môj účet</span><span>Moje členské poplatky</span><span>Moje žiadosti</span><span>Správy</span><span>Pomoc</span><span>Odhlásiť</span></div>
+      <div class="issf-menu"><span>Organizačná štruktúra</span><span>Používatelia</span><span>Komisie</span><span>Podanie na komisiu</span><span>Uznesenia</span><span>Žiadosti a správy</span><span>Parametre systému</span><span>Faktúry</span><span>Štadióny</span><span>Súťaže</span><span>Reporty</span></div>
+    </div>
+    <div class="issf-page">
+      <div class="issf-h1">Pracovná plocha - Supermatrikár</div>
+      <div class="issf-panel"><div class="issf-panel-h">Prepínanie pracovných profilov</div><div class="issf-panel-b">Zobraziť pre rolu: Supermatrikár</div></div>
+      <div class="issf-panel"><div class="issf-panel-h">Vitajte v ISSF</div><div class="issf-panel-b">Dobrý deň, vítame Vás v Informačnom systéme slovenského futbalu.<br><br>Sledujte prosím stránku projektu a prezrite si aj Videonávody.<br><br>V prípade akýchkoľvek problémov nás kontaktujte.</div></div>
+      <div class="issf-panel"><div class="issf-panel-h">Prehľad aktuálnych žiadostí, ktoré sa týkajú Vás a čakajú na schválenie</div><div class="issf-row"><span>Typ</span><span>Stav</span><span>Dátum zmeny stavu</span><span>Dátum zaevidovania</span><span>Zväz</span><span>Žiadajúci klub</span><span>Akcia</span></div><div class="issf-panel-b" style="text-align:center">Neboli nájdené žiadne záznamy</div></div>
+    </div>
+  </div>
+
+  <div class="wrow">
+    <button type="button" class="wrow-field" onClick="{{openSheet}}" aria-label="Opýtať sa pomocníka SFZ">
+      <span style="display:grid;color:var(--accent)" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"></circle><circle cx="17.5" cy="20" r="3.4" fill="currentColor"></circle><circle cx="30.5" cy="20" r="3.4" fill="currentColor"></circle><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"></path></svg></span>
+      <span class="wrow-text">Máte otázku k predpisom SFZ alebo k ISSF? Potrebujete návod? Pýtajte sa, sme tu pre vás.</span>
+      <span class="wrow-kbd" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg></span>
+    </button>
+  </div>
+
+  <div class="wscrim {{closedCls}}" onClick="{{closeSheet}}"></div>
+  <section class="wsheet {{closedCls}}" role="dialog" aria-label="Pomocník SFZ">
+    <div class="whead">
+      <span style="display:grid;color:var(--accent)" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"></circle><circle cx="17.5" cy="20" r="3.4" fill="currentColor"></circle><circle cx="30.5" cy="20" r="3.4" fill="currentColor"></circle><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"></path></svg></span>
+      <span class="whead-title">Pomocník SFZ</span>
+      <span style="flex:1"></span>
+      <button type="button" class="button button--quiet button--sm">Zdroje: Knižnica, Legislatíva SR ▾</button>
+      <button type="button" class="wclose" aria-label="Zavrieť" onClick="{{closeSheet}}">×</button>
+    </div>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ true }}">
+      <div class="wbody">
+        <div class="wcol wempty">
+          <h2>S čím vám môžeme pomôcť?</h2>
+          <p class="wgreet">Odpovedáme z predpisov SFZ a z návodov k ISSF. Keď odpoveď nenájdeme, pošlete správu helpdesku a odpovie vám človek.</p>
+          <div class="wfield">
+            <span style="display:grid;color:var(--accent);padding-top:3px" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"></circle><circle cx="17.5" cy="20" r="3.4" fill="currentColor"></circle><circle cx="30.5" cy="20" r="3.4" fill="currentColor"></circle><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"></path></svg></span>
+            <textarea rows="4" aria-label="Otázka" placeholder="Napríklad: Ako zaregistrujem hráča na hosťovanie?"></textarea>
+          </div>
+          <div class="wbar">
+            <span class="wbar-hint">Enter odošle · Shift + Enter nový riadok</span>
+            <button type="button" class="button" onClick="{{ask}}">Opýtať sa</button>
+          </div>
+          <div class="ask-sheet-examples ask-sheet-mine" style="padding:0">
+            <h3>Vaše nedávne otázky</h3>
+            <ul>
+              <li><a class="ask-sheet-mine-open" href="#"><svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6.6"></circle><path d="M9 5.4V9l2.4 1.6"></path></svg><span>Ako zmením heslo do ISSF?</span><time>včera</time></a></li>
+              <li><a class="ask-sheet-mine-open" href="#"><svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6.6"></circle><path d="M9 5.4V9l2.4 1.6"></path></svg><span>Kde nájdem potvrdenie o registrácii klubu?</span><time>12. 10.</time></a></li>
+            </ul>
+          </div>
+          <div class="ask-sheet-examples" style="padding:0">
+            <h3>Napríklad</h3>
+            <button type="button"><svg width="15" height="15" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="5"></circle></svg><span>[VZOR 1 — z nastavenia kanála, napr. Ako podám žiadosť o prestup hráča?]</span><i aria-hidden="true">vložiť</i></button>
+            <button type="button"><svg width="15" height="15" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="5"></circle></svg><span>[VZOR 2 — napr. Ako vytlačím registračný preukaz?]</span><i aria-hidden="true">vložiť</i></button>
+            <button type="button"><svg width="15" height="15" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="5"></circle></svg><span>[VZOR 3 — napr. Koľko žltých kariet znamená zastavenie činnosti?]</span><i aria-hidden="true">vložiť</i></button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isAnswer}}" hint-placeholder-val="{{ false }}">
+      <div class="wbody">
+        <div class="wcol">
+          <div class="wq">Ako zaregistrujem hráča na hosťovanie?</div>
+          <div class="wa">
+            <span class="wa-head">Odpoveď z dokumentov SFZ</span>
+            [ODPOVEĎ ASISTENTA — text z predpisov a návodov ISSF, po kúskoch, ako dnes]
+            <div class="wa-src">Zdroje<ul><li>[Registračný a prestupový poriadok (čl. …)]</li><li>[Manuál ISSF — Žiadosti]</li></ul></div>
+            <div class="wa-rate"><button type="button" class="button button--quiet button--sm">Pomohlo</button><button type="button" class="button button--quiet button--sm">Nepomohlo</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="wcomposer"><div class="wcomposer-in">
+        <div class="wfield">
+          <span style="display:grid;color:var(--accent);padding-top:3px" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"></circle><circle cx="17.5" cy="20" r="3.4" fill="currentColor"></circle><circle cx="30.5" cy="20" r="3.4" fill="currentColor"></circle><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"></path></svg></span>
+          <textarea rows="1" aria-label="Ďalšia otázka" placeholder="Opýtajte sa ďalej…"></textarea>
+        </div>
+        <div class="wbar">
+          <button type="button" class="button button--quiet button--sm" onClick="{{helpdesk}}">Napísať helpdesku</button>
+          <span class="wbar-hint"></span>
+          <button type="button" class="button">Opýtať sa</button>
+        </div>
+        <div class="wfoot">Contineo</div>
+      </div></div>
+    </sc-if>
+
+    <sc-if value="{{isHelpdesk}}" hint-placeholder-val="{{ false }}">
+      <div class="wbody">
+        <div class="wcol">
+          <div class="wq">Ako zaregistrujem hráča na hosťovanie?</div>
+          <div class="wa" style="display:flex;flex-direction:column;gap:10px">
+            <b style="font-size:var(--fs-section)">Správa helpdesku</b>
+            <span style="color:var(--muted)">Napíšte helpdesku, čo potrebujete vyriešiť. Odpovie človek e-mailom.</span>
+            <label class="field"><span class="field-label">Čo potrebujete vyriešiť</span><textarea class="field-input" rows="4">Ako zaregistrujem hráča na hosťovanie?</textarea></label>
+            <span class="quiet" style="font-size:13px">Odpoveď príde na peter.hrac@example.com</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="button">Odoslať helpdesku</button><button type="button" class="button button--quiet" onClick="{{ask}}">Zrušiť</button></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1a47c9","options":["#1a47c9","#232a35","#0b5394"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { view: 'closed' }; }
+  renderVals() {
+    const v = this.state.view;
+    return {
+      accent: this.props.accent ?? '#1a47c9',
+      closedCls: v === 'closed' ? 'is-closed' : '',
+      isEmpty: v === 'closed' || v === 'open',
+      isAnswer: v === 'answer',
+      isHelpdesk: v === 'helpdesk',
+      openSheet: () => this.setState({ view: 'open' }),
+      closeSheet: () => this.setState({ view: 'closed' }),
+      ask: () => this.setState({ view: 'answer' }),
+      helpdesk: () => this.setState({ view: 'helpdesk' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -9,13 +9,13 @@
  */
 
 import { NextResponse } from "next/server"
-import { widgetGate, widgetPreflight, corsHeaders, questionsLastHour, recordingTransform } from "@/lib/widgetApi"
+import { widgetGate, widgetPreflight, corsHeaders, questionsLastHour, recordingTransform, widgetLanguage } from "@/lib/widgetApi"
 import { chatStream } from "@/lib/chatStream"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { widgetSources, pickWidgetSources, searchedScopeOf } from "@/lib/widgetSources"
 import { answerKicker, answerFrom } from "@/lib/answerKicker"
 import { brandingView } from "@/lib/tenants"
-import { dictionary, normalizeLanguage } from "@/lib/i18n"
+import { dictionary } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -46,7 +46,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
    * Hlavička odpovede sa skladá tu — skloňovanie a jazyk sú v i18n servera,
    * nie v skripte widgetu.
    */
-  const language = normalizeLanguage(body.language ?? gate.language)
+  // Jazyk z výberu vo widgete (D290), len jazyk kanála.
+  const language = widgetLanguage(gate, body.language)
   const allowed = await widgetSources(gate.tenant.companyCode, gate.channel, language, dictionary(language).widget.scopeLibrary)
   const picked = pickWidgetSources(body.sources, allowed)
   const searchedScope = searchedScopeOf(picked)
@@ -60,7 +61,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
   const stream = chatStream({
     companyCode: gate.tenant.companyCode,
     query,
-    language: body.language ?? gate.language,
+    language,
     accessLevel: "public",
     usageActor: { companyCode: gate.tenant.companyCode, personId: gate.person.id, personName: gate.person.fullName, email: gate.person.email },
     // Rozsahy živých zdrojov kanála (ADR-029, D175); úroveň `public` pustí len verejné konektory.

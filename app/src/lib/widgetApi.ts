@@ -24,7 +24,7 @@ import { verifyWidgetToken, type WidgetIdentity } from "./widgetToken"
 import { ensureWidgetPerson } from "./widgetPersons"
 import { recordAnswer, RATINGS_COLLECTION, type RatingRecord } from "./ratings"
 import { AppError } from "./appError"
-import { errorText, type UiLanguage } from "./i18n"
+import { errorText, isUiLanguage, type UiLanguage } from "./i18n"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 
@@ -93,6 +93,17 @@ export async function widgetGate(req: Request, channelKey: string, token: string
   }
   const person = await ensureWidgetPerson(tenant.companyCode, channel.key, identity, language)
   return { tenant, channel, identity, person, origin: origin!, language: identity.language ?? person.language ?? language }
+}
+
+/**
+ * Jazyk odpovede z výberu vo widgete (D290) — len jazyk kanála; iný
+ * (podvrhnutý alebo kanál medzitým jazyk vypol) padá na jazyk z tokenu.
+ */
+export function widgetLanguage(gate: Pick<WidgetGate, "channel" | "language">, requested: unknown): UiLanguage {
+  const allowed = gate.channel.languages
+  return typeof requested === "string" && isUiLanguage(requested) && (!allowed.length || allowed.includes(requested))
+    ? requested
+    : gate.language
 }
 
 /**

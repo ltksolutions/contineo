@@ -12,7 +12,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
-import { WIDGET_POSITIONS, WIDGET_SIZES, ESCALATE_AFTER, LAUNCHER_MAX, GREETING_MAX, DEFAULT_PHRASES } from "@/lib/widgetAppearance"
+import { WIDGET_POSITIONS, WIDGET_SIZES, ESCALATE_AFTER, LAUNCHER_MAX, GREETING_MAX, PLACEHOLDER_MAX, DEFAULT_PHRASES } from "@/lib/widgetAppearance"
 import Select from "@/components/Select"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
@@ -290,10 +290,24 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
               </label>
             ))}
             {lookLanguages.map(l => (
+              <label key={`placeholder-${l}`} className="field">
+                <span className="field-label">{t.widgetPlaceholder(l)}</span>
+                <input className="field-input" name={`widgetPlaceholder-${l}`} maxLength={PLACEHOLDER_MAX} defaultValue={look.placeholder[l] ?? ""} placeholder={dictionary(l).widget.rowPlaceholder} />
+                <span className="quiet field-hint">{t.widgetPlaceholderHint(dictionary(l).widget.rowPlaceholder)}</span>
+              </label>
+            ))}
+            {lookLanguages.map(l => (
               <label key={`greeting-${l}`} className="field">
                 <span className="field-label">{t.widgetGreeting(l)}</span>
                 <textarea className="field-input" name={`widgetGreeting-${l}`} rows={2} maxLength={GREETING_MAX} defaultValue={look.greeting[l] ?? ""} />
                 <span className="quiet field-hint">{t.widgetGreetingHint}</span>
+              </label>
+            ))}
+            {lookLanguages.map(l => (
+              <label key={`examples-${l}`} className="field">
+                <span className="field-label">{t.widgetExamples(l)}</span>
+                <textarea className="field-input" name={`widgetExamples-${l}`} rows={3} defaultValue={(look.examples[l] ?? []).join("\n")} />
+                <span className="quiet field-hint">{t.widgetExamplesHint}</span>
               </label>
             ))}
             <label className="form-row form-row--bare">

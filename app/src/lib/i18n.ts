@@ -2803,6 +2803,22 @@ interface Dictionary {
     thanks: string
     tryAgain: string
     noAnswer: string
+    /** Nápoveda v riadku otázky (zatvorený widget hore alebo dole v strede, D286); prepíše ju nastavenie kanála. */
+    rowPlaceholder: string
+    close: string
+    /** Výber jazyka v hlavičke plachty (D290). */
+    language: string
+    /** Prázdna plachta: nadpis a veta pod ním, keď kanál nemá privítanie. */
+    emptyTitle: string
+    emptyLead: string
+    enterHint: string
+    /** Pole pod rozhovorom po prvej otázke. */
+    askMore: string
+    historyRecent: string
+    historyMatching: string
+    historyHide: string
+    examplesLabel: string
+    insert: string
     escalateIntro: string
     /** Úvod formulára, keď ho človek otvoril sám (odkaz, fráza) — nie po neúspechu. */
     escalateIntroDirect: string
@@ -2949,12 +2965,16 @@ interface Dictionary {
     widgetPositions: Record<"left-top" | "top" | "right-top" | "right-middle" | "right-bottom" | "bottom" | "left-bottom" | "left-middle", string>
     widgetPositionHint: string
     widgetSize: string
-    widgetSizes: Record<"s" | "m" | "l", string>
+    widgetSizes: Record<"s" | "m" | "l" | "xl", string>
     widgetEscalate: string
     widgetEscalateOption: (n: number) => string
     widgetEscalateHint: string
     widgetLauncher: (language: string) => string
     widgetLauncherHint: (fallback: string) => string
+    widgetPlaceholder: (language: string) => string
+    widgetPlaceholderHint: (fallback: string) => string
+    widgetExamples: (language: string) => string
+    widgetExamplesHint: string
     widgetGreeting: (language: string) => string
     widgetGreetingHint: string
     widgetOfferLink: string
@@ -8216,27 +8236,39 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   widget: {
     open: "Opýtať sa",
     title: "Pomocník",
-    placeholder: "Napíš otázku…",
-    send: "Odoslať",
+    placeholder: "Napíšte otázku…",
+    send: "Opýtať sa",
+    rowPlaceholder: "Máte otázku? Potrebujete návod alebo vysvetlenie? Pýtajte sa, sme tu pre vás.",
+    language: "Jazyk",
+    close: "Zavrieť",
+    emptyTitle: "S čím vám môžeme pomôcť?",
+    emptyLead: "Odpovedáme z predpisov a návodov. Keď odpoveď nenájdeme, pošlete správu helpdesku a odpovie vám človek.",
+    enterHint: "Enter odošle · Shift + Enter nový riadok",
+    askMore: "Opýtajte sa ďalej…",
+    historyRecent: "Vaše nedávne otázky",
+    historyMatching: "Z vašich otázok",
+    historyHide: "Skryť z histórie",
+    examplesLabel: "Napríklad",
+    insert: "vložiť",
     thinking: "Hľadám v predpisoch…",
     sources: "Zdroje",
     helpful: "Pomohlo",
     notHelpful: "Nepomohlo",
     thanks: "Ďakujeme.",
-    tryAgain: "Skús otázku položiť inak, alebo napíš helpdesku.",
+    tryAgain: "Skúste otázku položiť inak, alebo napíšte helpdesku.",
     noAnswer: "V predpisoch a častých otázkach som na to nenašiel odpoveď.",
-    escalateIntro: "Asistent ti nepomohol. Napíš helpdesku — odpovie človek e-mailom na tvoju adresu.",
-    escalateIntroDirect: "Napíš helpdesku, čo potrebuješ vyriešiť. Odpovie človek e-mailom.",
-    escalateMessage: "Čo potrebuješ vyriešiť",
+    escalateIntro: "Asistent vám nepomohol. Napíšte helpdesku — odpovie človek e-mailom na vašu adresu.",
+    escalateIntroDirect: "Napíšte helpdesku, čo potrebujete vyriešiť. Odpovie človek e-mailom.",
+    escalateMessage: "Čo potrebujete vyriešiť",
     escalateSubmit: "Odoslať helpdesku",
     escalateCancel: "Zrušiť",
     escalated: "Správa je odoslaná. Helpdesk odpovie e-mailom.",
     writeHelpdesk: "Napísať helpdesku",
     replyTo: "Odpoveď príde na {email}",
-    error: "Niečo sa pokazilo. Skús to o chvíľu.",
-    expired: "Prihlásenie vypršalo — obnov stránku.",
+    error: "Niečo sa pokazilo. Skúste to o chvíľu.",
+    expired: "Prihlásenie vypršalo — obnovte stránku.",
     poweredBy: "Contineo",
-    contact: "Ak to nepôjde ani neskôr, napíš správcovi:",
+    contact: "Ak to nepôjde ani neskôr, napíšte správcovi:",
     scopeButton: "Zdroje: {names}",
     scopeLabel: "Zdroje hľadania",
     scopeLibrary: "Knižnica",
@@ -8358,12 +8390,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     widgetPositionHint: "Panel sa otvorí na mieste tlačidla smerom do stredu obrazovky. Na telefóne zaberie celú obrazovku.",
     widgetSize: "Veľkosť panela",
-    widgetSizes: { s: "malý (360 × 520)", m: "stredný (400 × 600)", l: "veľký (480 × 720)" },
+    widgetSizes: { s: "malý (360 × 520)", m: "stredný (400 × 600)", l: "veľký (480 × 720)", xl: "na obrazovku (80 % × 80 %)" },
     widgetEscalate: "Ponúknuť helpdesk po",
     widgetEscalateOption: n => (n === 1 ? "1 neúspechu" : `${n} neúspechoch`),
     widgetEscalateHint: "Neúspech je palec dole alebo otázka, na ktorú asistent nenašiel odpoveď.",
     widgetLauncher: l => `Text tlačidla (${l})`,
-    widgetLauncherHint: f => `Prázdne = „${f}“.`,
+    widgetLauncherHint: f => `Platí pri polohe v rohu alebo v strede boku. Prázdne = „${f}“.`,
+    widgetPlaceholder: l => `Text v riadku otázky (${l})`,
+    widgetPlaceholderHint: f => `Platí pri polohe hore alebo dole v strede. Prázdne = „${f}“`,
+    widgetExamples: l => `Vzory otázok (${l})`,
+    widgetExamplesHint: "Jeden na riadok, najviac 6. Ukážu sa v prázdnom widgete; klik otázku vloží, neodošle. Prázdne = bez vzorov.",
     widgetGreeting: l => `Privítanie (${l})`,
     widgetGreetingHint: "Prvá správa v prázdnom paneli. Prázdne = bez privítania.",
     widgetOfferLink: "Stále viditeľný odkaz „Napísať helpdesku“",
@@ -13501,27 +13537,39 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   widget: {
     open: "Zeptat se",
     title: "Pomocník",
-    placeholder: "Napiš otázku…",
-    send: "Odeslat",
+    placeholder: "Napište otázku…",
+    send: "Zeptat se",
+    rowPlaceholder: "Máte otázku? Potřebujete návod nebo vysvětlení? Ptejte se, jsme tu pro vás.",
+    language: "Jazyk",
+    close: "Zavřít",
+    emptyTitle: "S čím vám můžeme pomoci?",
+    emptyLead: "Odpovídáme z předpisů a návodů. Když odpověď nenajdeme, pošlete zprávu helpdesku a odpoví vám člověk.",
+    enterHint: "Enter odešle · Shift + Enter nový řádek",
+    askMore: "Zeptejte se dál…",
+    historyRecent: "Vaše nedávné otázky",
+    historyMatching: "Z vašich otázek",
+    historyHide: "Skrýt z historie",
+    examplesLabel: "Například",
+    insert: "vložit",
     thinking: "Hledám v předpisech…",
     sources: "Zdroje",
     helpful: "Pomohlo",
     notHelpful: "Nepomohlo",
     thanks: "Děkujeme.",
-    tryAgain: "Zkus otázku položit jinak, nebo napiš helpdesku.",
+    tryAgain: "Zkuste otázku položit jinak, nebo napište helpdesku.",
     noAnswer: "V předpisech a častých otázkách jsem na to nenašel odpověď.",
-    escalateIntro: "Asistent ti nepomohl. Napiš helpdesku — odpoví člověk e-mailem na tvou adresu.",
-    escalateIntroDirect: "Napiš helpdesku, co potřebuješ vyřešit. Odpoví člověk e-mailem.",
-    escalateMessage: "Co potřebuješ vyřešit",
+    escalateIntro: "Asistent vám nepomohl. Napište helpdesku — odpoví člověk e-mailem na vaši adresu.",
+    escalateIntroDirect: "Napište helpdesku, co potřebujete vyřešit. Odpoví člověk e-mailem.",
+    escalateMessage: "Co potřebujete vyřešit",
     escalateSubmit: "Odeslat helpdesku",
     escalated: "Zpráva je odeslána. Helpdesk odpoví e-mailem.",
     escalateCancel: "Zrušit",
     writeHelpdesk: "Napsat helpdesku",
     replyTo: "Odpověď přijde na {email}",
-    error: "Něco se pokazilo. Zkus to za chvíli.",
-    expired: "Přihlášení vypršelo — obnov stránku.",
+    error: "Něco se pokazilo. Zkuste to za chvíli.",
+    expired: "Přihlášení vypršelo — obnovte stránku.",
     poweredBy: "Contineo",
-    contact: "Pokud to nepůjde ani později, napiš správci:",
+    contact: "Pokud to nepůjde ani později, napište správci:",
     scopeButton: "Zdroje: {names}",
     scopeLabel: "Zdroje hledání",
     scopeLibrary: "Knihovna",
@@ -13643,12 +13691,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     widgetPositionHint: "Panel se otevře na místě tlačítka směrem do středu obrazovky. Na telefonu zabere celou obrazovku.",
     widgetSize: "Velikost panelu",
-    widgetSizes: { s: "malý (360 × 520)", m: "střední (400 × 600)", l: "velký (480 × 720)" },
+    widgetSizes: { s: "malý (360 × 520)", m: "střední (400 × 600)", l: "velký (480 × 720)", xl: "na obrazovku (80 % × 80 %)" },
     widgetEscalate: "Nabídnout helpdesk po",
     widgetEscalateOption: n => (n === 1 ? "1 neúspěchu" : `${n} neúspěších`),
     widgetEscalateHint: "Neúspěch je palec dolů nebo otázka, na kterou asistent nenašel odpověď.",
     widgetLauncher: l => `Text tlačítka (${l})`,
-    widgetLauncherHint: f => `Prázdné = „${f}“.`,
+    widgetLauncherHint: f => `Platí při poloze v rohu nebo uprostřed boku. Prázdné = „${f}“.`,
+    widgetPlaceholder: l => `Text v řádku otázky (${l})`,
+    widgetPlaceholderHint: f => `Platí při poloze nahoře nebo dole uprostřed. Prázdné = „${f}“`,
+    widgetExamples: l => `Vzory otázek (${l})`,
+    widgetExamplesHint: "Jeden na řádek, nejvýše 6. Ukážou se v prázdném widgetu; klik otázku vloží, neodešle. Prázdné = bez vzorů.",
     widgetGreeting: l => `Přivítání (${l})`,
     widgetGreetingHint: "První zpráva v prázdném panelu. Prázdné = bez přivítání.",
     widgetOfferLink: "Stále viditelný odkaz „Napsat helpdesku“",
@@ -18778,7 +18830,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     open: "Ask",
     title: "Assistant",
     placeholder: "Type your question…",
-    send: "Send",
+    send: "Ask",
+    rowPlaceholder: "Have a question? Need a guide or an explanation? Ask us, we are here for you.",
+    language: "Language",
+    close: "Close",
+    emptyTitle: "How can we help you?",
+    emptyLead: "We answer from regulations and guides. If we find no answer, send a message to the helpdesk and a person will reply.",
+    enterHint: "Enter sends · Shift + Enter new line",
+    askMore: "Ask a follow-up…",
+    historyRecent: "Your recent questions",
+    historyMatching: "From your questions",
+    historyHide: "Hide from history",
+    examplesLabel: "For example",
+    insert: "insert",
     thinking: "Searching the regulations…",
     sources: "Sources",
     helpful: "Helpful",
@@ -18919,12 +18983,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     widgetPositionHint: "The panel opens where the button is, towards the centre of the screen. On a phone it takes the whole screen.",
     widgetSize: "Panel size",
-    widgetSizes: { s: "small (360 × 520)", m: "medium (400 × 600)", l: "large (480 × 720)" },
+    widgetSizes: { s: "small (360 × 520)", m: "medium (400 × 600)", l: "large (480 × 720)", xl: "screen (80 % × 80 %)" },
     widgetEscalate: "Offer the helpdesk after",
     widgetEscalateOption: n => (n === 1 ? "1 failure" : `${n} failures`),
     widgetEscalateHint: "A failure is a thumbs down or a question the assistant found no answer to.",
     widgetLauncher: l => `Button text (${l})`,
-    widgetLauncherHint: f => `Empty = "${f}".`,
+    widgetLauncherHint: f => `Used in a corner or the middle of a side. Empty = "${f}".`,
+    widgetPlaceholder: l => `Question row text (${l})`,
+    widgetPlaceholderHint: f => `Used at the top or bottom centre. Empty = "${f}"`,
+    widgetExamples: l => `Example questions (${l})`,
+    widgetExamplesHint: "One per line, at most 6. Shown in an empty widget; a click inserts the question without sending it. Empty = no examples.",
     widgetGreeting: l => `Greeting (${l})`,
     widgetGreetingHint: "First message in an empty panel. Empty = no greeting.",
     widgetOfferLink: "Always-visible “Write to the helpdesk” link",

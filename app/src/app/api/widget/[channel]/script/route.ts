@@ -12,13 +12,16 @@ import { createHash } from "node:crypto"
 import { widgetAppearance, appearanceForScript } from "@/lib/widgetAppearance"
 import { currentTenant, requestHostname } from "@/lib/session"
 import { channelByKey, widgetFallbackContact } from "@/lib/channels"
-import { dictionary } from "@/lib/i18n"
+import { dictionary, isUiLanguage, type UiLanguage } from "@/lib/i18n"
 import { brandingView } from "@/lib/tenants"
 import { widgetScript } from "@/lib/widgetScript"
 import { widgetSources } from "@/lib/widgetSources"
 import { accentVars } from "@/components/TenantHeader"
 
 export const dynamic = "force-dynamic"
+
+/** Názov jazyka v ňom samom — vo výbere jazyka widgetu (D290). */
+const LANGUAGE_LABELS: Record<UiLanguage, string> = { sk: "Slovenčina", cs: "Čeština", en: "English" }
 
 export async function GET(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel: key } = await params
@@ -28,25 +31,41 @@ export async function GET(req: Request, { params }: { params: Promise<{ channel:
   if (!channel || channel.kind !== "widget" || !channel.widget.origins.length) return new Response(null, { status: 404 })
   const language = channel.languages[0] ?? tenant.defaultLanguage
   const host = await requestHostname()
-  const tw = dictionary(language).widget
   const branding = brandingView(tenant)
   const accent = branding.accentColor ?? "#1f6feb"
   const org = branding.shortName?.trim() || branding.displayName
   // Povolené zdroje kanála (KANAL-widget-zdroje): Knižnica a verejné konektory
   // z `connectorScopes`, jeden za konektor. Podnadpis riadku je hotový text.
-  const sources = (await widgetSources(tenant.companyCode, channel, language, tw.scopeLibrary))
-    .map(s => ({ ...s, sub: s.id === "library" ? tw.scopeLibrarySub.replace("{org}", org) : tw.scopeLiveSub }))
+  const look = widgetAppearance(channel.widget.appearance)
+  // Všetky jazyky kanála naraz (D290): výber jazyka v plachte prepne texty
+  // bez nového stiahnutia skriptu. Kanál bez zoznamu jazykov = jazyk organizácie.
+  const codes = (channel.languages.length ? channel.languages : [language]).filter(isUiLanguage)
+  const packs = await Promise.all(codes.map(async code => {
+    const d = dictionary(code)
+    const sources = (await widgetSources(tenant.companyCode, channel, code, d.widget.scopeLibrary))
+      .map(s => ({ ...s, sub: s.id === "library" ? d.widget.scopeLibrarySub.replace("{org}", org) : d.widget.scopeLiveSub }))
+    return {
+      code,
+      label: LANGUAGE_LABELS[code],
+      texts: { ...d.widget, rateLimited: d.errors["widget.rateLimited"] ?? "" } as Record<string, string>,
+      appearance: appearanceForScript(look, code),
+      sources,
+    }
+  }))
+  const main = packs.find(p => p.code === language) ?? packs[0]
   const js = widgetScript({
     apiBase: `https://${host}`,
     channel: channel.key,
     accent,
     // Hover plného tlačidla ako v aplikácii (`--accent-strong` z `accentVars`).
     accentStrong: accentVars(accent)["--accent-strong"] ?? accent,
-    sources,
-    texts: { ...dictionary(language).widget, rateLimited: dictionary(language).errors["widget.rateLimited"] ?? "" } as Record<string, string>,
-    language,
+    accentSoft: accentVars(accent)["--accent-soft"],
+    sources: main.sources,
+    texts: main.texts,
+    language: main.code,
     contact: widgetFallbackContact(channel, tenant.branding?.supportEmail),
-    appearance: appearanceForScript(widgetAppearance(channel.widget.appearance), language),
+    appearance: main.appearance,
+    languages: packs,
   })
   // ETag z obsahu (D284): prehliadač sa po 5 minútach opýta, a keď sa
   // nastavenie kanála nezmenilo, dostane 304 bez tela.
