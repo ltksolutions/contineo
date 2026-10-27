@@ -15,12 +15,14 @@ SPDX-License-Identifier: EUPL-1.2
 > „všetky tieto pomocné informácie potrebuje človek pri tickete vidieť";
 > „ak nič nefunguje, ukážeme používateľovi e-mailovú adresu
 > helpdesk@futbalsfz.sk"; k návrhu: „Áno, beriem odporúčania D1–D6."
-> **Čísla rozhodnutí:** D275–D280 (v návrhu D1–D6).
+> **Čísla rozhodnutí:** D275–D280 (v návrhu D1–D6) · Dodatok 1: D281–D285
+> (nastavenie widgetu z Continea, poloha, zrušenie stránky Pomoc).
 > **Nadväzuje na:** ADR-028 (kanály, schránka cez adaptér, e-mail ako
 > ticket, identita z ISSF tokenom, D163, D166, D169), `docs/WIDGET_ISSF.md`
 > (skúška v ISSF 26. 10. 2026, vzor tokenu v Jave, #459), D24 (dôkazné
 > záznamy sa nemenia), D12 (odpoveď odosiela vždy človek).
-> **Implementácia:** päť krokov (§ 3); krok 1 je podmienka spustenia.
+> **Implementácia:** šesť krokov (§ 3, doplnené Dodatkom 1); krok 1 je
+> podmienka spustenia.
 
 ---
 
@@ -123,10 +125,9 @@ Prečo: bez vlákna sa rozhovor rozpadne na dva tickety a druhý stratí
 
 ### D278 — Formulár Pomoc sa vypne v deň spustenia widgetu (v návrhu D4)
 
-Odkazy „Pomoc" v ISSF otvoria panel widgetu. Stránka `/Pomoc` namiesto
-formulára ukáže krátky text, tlačidlo „Opýtať sa" a pod ním
-`mailto:helpdesk@futbalsfz.sk`. Formulár sa vypne **v deň spustenia**,
-nie po súbežnej prevádzke.
+Odkazy „Pomoc" v ISSF otvoria panel widgetu. Formulár sa vypne **v deň
+spustenia**, nie po súbežnej prevádzke. *(Upravené Dodatkom 1, D285:
+stránka `/Pomoc` celá zaniká — nekreslí sa ani text s tlačidlom.)*
 
 Keď widget nenabehne alebo zlyhá, ukáže sa `helpdesk@futbalsfz.sk`
 (náhradný blok `onerror` a kontakt pod chybou — už dnes); e-mail sa načíta
@@ -172,7 +173,96 @@ o tom, za koho sa píše.
    je bezpečné.
 3. **`phone_number`, `context`, adresa stránky (D276)** — overenie tokenu,
    tabuľka „Údaje z ISSF" pri tickete, vzor v Jave a `docs/WIDGET_ISSF.md`.
-4. **Ponuka správy vo widgete (D275)** — odkaz, frázy, predvyplnená správa,
-   zobrazený e-mail; otvorenie panela z odkazu „Pomoc" v ISSF.
-5. **Na strane ISSF (D278)** — tajný kľúč kanála (vytvára Ján), vydávanie
-   tokenu, `/api/contineo-token`, vloženie kódu, náhrada stránky `/Pomoc`.
+4. **Nastavenie widgetu z Continea (Dodatok 1, D281–D284)** — poloha
+   na ôsmich miestach, veľkosť panela, texty, správanie ponuky helpdesku
+   ako nastavenie kanála; cache skriptu 5 minút s ETag; náhľad. Pred
+   krokom 5, aby krok 5 nenapísal napevno to, čo je nastavením.
+5. **Ponuka správy vo widgete (D275)** — odkaz, frázy, predvyplnená správa,
+   zobrazený e-mail — s hodnotami z nastavenia kanála (D283);
+   `ContineoHelpdesk.open()` pre odkazy „Pomoc" v ISSF (D285).
+6. **Na strane ISSF (D278, D285)** — tajný kľúč kanála (vytvára Ján),
+   vydávanie tokenu, `/api/contineo-token`, vloženie kódu, odkazy „Pomoc"
+   na `ContineoHelpdesk.open()`, zrušenie formulára a stránky `/Pomoc`.
+
+---
+
+## Dodatok 1 — Nastavenie widgetu z Continea (2026-10-27)
+
+> **Rozhodol:** Ján Letko (2026-10-27) — „potrebujem také riešenie, že si
+> budeme vedieť do externého systému, napríklad ISSF, po zavedení meniť
+> obsah widgetu v ISSF, správanie aj veľkosť"; „ja chcem formulár Pomoc
+> úplne zrušiť a zaviesť len plávajúci widget, určenie polohy je super";
+> „vľavo v strede, lebo vľavo dole bývajú tlačidlá exportu zostáv
+> a schvaľovania žiadostí"; odkazy Pomoc „otvárať nimi widget, ale toto
+> je špeciálne len pre ISSF, nie je to štandard, štandard je len …
+> umiestnenie dookola obrazovky a nielen po rohoch, ale aj v strede strán".
+
+### Kontext
+
+Skript widgetu generuje Contineo pri každom stiahnutí
+(`/api/widget/<kľúč>/script`) — texty, farba, zdroje a kontakt pri výpadku
+sa preto menia v Contineu bez zásahu v ISSF už dnes. Napevno v skripte je
+poloha (vpravo dole), veľkosť panela (400 × 600 px) a správanie (ponuka
+helpdesku po dvoch neúspechoch). Skript sa cachuje hodinu.
+
+V ISSF je hore cez celú šírku menu, vľavo dole tlačidlá exportu zostáv
+a schvaľovania žiadostí, vpravo dole tabuľky so stĺpcom akcií.
+
+### D281 — Zmluva s cudzím systémom je zmrazená
+
+Cudzí systém dodá **raz**: `<script src>` s kľúčom kanála, `data-token`,
+`data-token-url` a náhradný blok s kontaktom. Všetko ostatné — vzhľad,
+poloha, veľkosť, texty a správanie — je **nastavenie kanála v Contineu**
+a prejaví sa bez zmeny u cudzieho systému.
+
+Prečo: každá ďalšia zmena by inak čakala na vývojárov cudzieho systému.
+
+### D282 — Poloha tlačidla: osem miest okolo obrazovky, predvolene vľavo v strede
+
+Tlačidlo widgetu sa dá umiestniť do **štyroch rohov a do stredu každej
+strany** (vľavo hore, hore v strede, vpravo hore, vpravo v strede, vpravo
+dole, dole v strede, vľavo dole, vľavo v strede). **Predvolené je vľavo
+v strede.** Panel sa otvára vedľa tlačidla smerom dovnútra obrazovky; pod
+640 px je panel celá obrazovka ako doteraz.
+
+Je to **štandard** — nastavenie každého kanála typu widget, nie úprava
+pre ISSF. Tvar tlačidla a panela sa nemení; poloha nie je nový prvok
+dizajnu.
+
+Prečo predvolene vľavo v strede: v ISSF je hore menu, vľavo dole
+tlačidlá exportu zostáv a schvaľovania žiadostí a vpravo dole tabuľky
+s akciami — stred ľavej strany nezakrýva nič, čo sa používa.
+
+### D283 — Veľkosť, texty a správanie ponuky helpdesku sú nastavenie kanála
+
+V nastavení kanála (časť „Vzhľad a správanie widgetu"):
+
+- **veľkosť panela** — tri predvoľby (malý, stredný, veľký), nie voľné
+  pixely: voľné rozmery by sa na niektorej šírke rozbili;
+- **text tlačidla a privítanie** v jazykoch kanála;
+- **ponuka správy helpdesku** (D275) — po koľkých neúspechoch (1–3,
+  predvolene 2), stále viditeľný odkaz „Napísať helpdesku" (predvolene
+  zapnutý), frázy, pri ktorých sa ponúkne hneď (predvolené sk/cs/en).
+
+D275 tým ostáva v platnosti ako **predvolené hodnoty** týchto nastavení.
+
+### D284 — Zmena sa prejaví do 5 minút; náhľad; audit
+
+Skript sa cachuje **5 minút** s `ETag` (prehliadač ho stiahne znova len
+pri zmene), nie hodinu. V nastavení kanála je **náhľad widgetu** —
+stránka so skriptom a dočasným tokenom prihláseného správcu, aby správca
+zmenu videl skôr než ľudia v cudzom systéme. Uloženie platí hneď
+a zapíše sa do **auditu** (kto, kedy, čo); návrat je ďalšie uloženie.
+Koncepty a zverejňovanie nastavenia sa nerobia, kým to niekto nebude
+potrebovať.
+
+### D285 — Formulár a stránka Pomoc v ISSF zanikajú; odkazy „Pomoc" otvárajú widget
+
+V ISSF ostane **len plávajúci widget**. Formulár Pomoc aj stránka `/Pomoc`
+zanikajú (upravuje D278 — text s tlačidlom na `/Pomoc` sa nekreslí).
+
+Odkazy „Pomoc" v ISSF ostanú a **otvoria panel widgetu**. Skript na to
+ponúkne všeobecné `ContineoHelpdesk.open()`; keď skript nenabehol, odkaz
+vedie na `mailto:helpdesk@futbalsfz.sk`. **Použitie je integrácia ISSF,
+nie štandard ani nastavenie kanála** — opisuje sa v `docs/WIDGET_ISSF.md`.
+Iný cudzí systém dostane len plávajúce tlačidlo podľa D282.
