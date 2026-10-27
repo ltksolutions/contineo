@@ -70,6 +70,8 @@ export async function saveChannelAction(fd: FormData) {
             position: fieldText(fd, "widgetPosition"), size: fieldText(fd, "widgetSize"), escalateAfter: fieldText(fd, "widgetEscalateAfter"),
             launcher: Object.fromEntries(UI_LANGUAGES.map(l => [l, fieldText(fd, `widgetLauncher-${l}`)])),
             greeting: Object.fromEntries(UI_LANGUAGES.map(l => [l, fieldText(fd, `widgetGreeting-${l}`)])),
+            offerLink: fieldText(fd, "widgetOfferLink") === "on",
+            phrases: Object.fromEntries(UI_LANGUAGES.map(l => [l, lines(fd, `widgetPhrases-${l}`)])),
           }
         : undefined,
       mailbox: mailboxKind

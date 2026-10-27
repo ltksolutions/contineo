@@ -2804,9 +2804,16 @@ interface Dictionary {
     tryAgain: string
     noAnswer: string
     escalateIntro: string
+    /** Úvod formulára, keď ho človek otvoril sám (odkaz, fráza) — nie po neúspechu. */
+    escalateIntroDirect: string
     escalateMessage: string
     escalateSubmit: string
+    escalateCancel: string
     escalated: string
+    /** Stále viditeľný odkaz pod poľom otázky (D275). */
+    writeHelpdesk: string
+    /** Kam príde odpoveď; `{email}` z tokenu. */
+    replyTo: string
     error: string
     expired: string
     poweredBy: string
@@ -2950,6 +2957,10 @@ interface Dictionary {
     widgetLauncherHint: (fallback: string) => string
     widgetGreeting: (language: string) => string
     widgetGreetingHint: string
+    widgetOfferLink: string
+    widgetOfferLinkHint: string
+    widgetPhrases: (language: string) => string
+    widgetPhrasesHint: string
     widgetPreview: string
     widgetPreviewHint: string
     /** Stránka náhľadu widgetu — stojí namiesto cudzej stránky. */
@@ -8215,9 +8226,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tryAgain: "Skús otázku položiť inak, alebo napíš helpdesku.",
     noAnswer: "V predpisoch a častých otázkach som na to nenašiel odpoveď.",
     escalateIntro: "Asistent ti nepomohol. Napíš helpdesku — odpovie človek e-mailom na tvoju adresu.",
+    escalateIntroDirect: "Napíš helpdesku, čo potrebuješ vyriešiť. Odpovie človek e-mailom.",
     escalateMessage: "Čo potrebuješ vyriešiť",
     escalateSubmit: "Odoslať helpdesku",
+    escalateCancel: "Zrušiť",
     escalated: "Správa je odoslaná. Helpdesk odpovie e-mailom.",
+    writeHelpdesk: "Napísať helpdesku",
+    replyTo: "Odpoveď príde na {email}",
     error: "Niečo sa pokazilo. Skús to o chvíľu.",
     expired: "Prihlásenie vypršalo — obnov stránku.",
     poweredBy: "Contineo",
@@ -8351,6 +8366,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetLauncherHint: f => `Prázdne = „${f}“.`,
     widgetGreeting: l => `Privítanie (${l})`,
     widgetGreetingHint: "Prvá správa v prázdnom paneli. Prázdne = bez privítania.",
+    widgetOfferLink: "Stále viditeľný odkaz „Napísať helpdesku“",
+    widgetOfferLinkHint: "Tiché tlačidlo pod poľom otázky po prvej odpovedi — človek nemusí čakať na neúspechy.",
+    widgetPhrases: l => `Frázy, pri ktorých sa správa ponúkne hneď (${l})`,
+    widgetPhrasesHint: "Jedna na riadok. Stačí časť vety; veľké písmená a diakritika nerozhodujú. Asistent sa pri nich nepýta. Prázdne = predvolené (sivé).",
     widgetPreview: "Náhľad widgetu",
     widgetPreviewHint: "Uložené nastavenie na prázdnej stránke, s vaším menom — skôr než ho uvidia ľudia v cudzom systéme.",
     previewTitle: c => `Náhľad widgetu — ${c}`,
@@ -13492,9 +13511,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tryAgain: "Zkus otázku položit jinak, nebo napiš helpdesku.",
     noAnswer: "V předpisech a častých otázkách jsem na to nenašel odpověď.",
     escalateIntro: "Asistent ti nepomohl. Napiš helpdesku — odpoví člověk e-mailem na tvou adresu.",
+    escalateIntroDirect: "Napiš helpdesku, co potřebuješ vyřešit. Odpoví člověk e-mailem.",
     escalateMessage: "Co potřebuješ vyřešit",
     escalateSubmit: "Odeslat helpdesku",
     escalated: "Zpráva je odeslána. Helpdesk odpoví e-mailem.",
+    escalateCancel: "Zrušit",
+    writeHelpdesk: "Napsat helpdesku",
+    replyTo: "Odpověď přijde na {email}",
     error: "Něco se pokazilo. Zkus to za chvíli.",
     expired: "Přihlášení vypršelo — obnov stránku.",
     poweredBy: "Contineo",
@@ -13628,6 +13651,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetLauncherHint: f => `Prázdné = „${f}“.`,
     widgetGreeting: l => `Přivítání (${l})`,
     widgetGreetingHint: "První zpráva v prázdném panelu. Prázdné = bez přivítání.",
+    widgetOfferLink: "Stále viditelný odkaz „Napsat helpdesku“",
+    widgetOfferLinkHint: "Tiché tlačítko pod polem otázky po první odpovědi — člověk nemusí čekat na neúspěchy.",
+    widgetPhrases: l => `Fráze, při kterých se zpráva nabídne hned (${l})`,
+    widgetPhrasesHint: "Jedna na řádek. Stačí část věty; velká písmena a diakritika nerozhodují. Asistent se při nich neptá. Prázdné = výchozí (šedé).",
     widgetPreview: "Náhled widgetu",
     widgetPreviewHint: "Uložené nastavení na prázdné stránce, s vaším jménem — dřív, než ho uvidí lidé v cizím systému.",
     previewTitle: c => `Náhled widgetu — ${c}`,
@@ -18760,9 +18787,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tryAgain: "Try asking differently, or write to the helpdesk.",
     noAnswer: "I could not find an answer in the documents.",
     escalateIntro: "The assistant did not help. Write to the helpdesk — a person will reply by e-mail to your address.",
+    escalateIntroDirect: "Tell the helpdesk what you need to resolve. A person will reply by e-mail.",
     escalateMessage: "What do you need to resolve",
     escalateSubmit: "Send to the helpdesk",
     escalated: "Your message has been sent. The helpdesk will reply by e-mail.",
+    escalateCancel: "Cancel",
+    writeHelpdesk: "Write to the helpdesk",
+    replyTo: "The reply will go to {email}",
     error: "Something went wrong. Try again in a moment.",
     expired: "Your session expired — reload the page.",
     poweredBy: "Contineo",
@@ -18896,6 +18927,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetLauncherHint: f => `Empty = "${f}".`,
     widgetGreeting: l => `Greeting (${l})`,
     widgetGreetingHint: "First message in an empty panel. Empty = no greeting.",
+    widgetOfferLink: "Always-visible “Write to the helpdesk” link",
+    widgetOfferLinkHint: "A quiet button under the question field after the first answer — people do not have to wait for failures.",
+    widgetPhrases: l => `Phrases that offer the message at once (${l})`,
+    widgetPhrasesHint: "One per line. Part of a sentence is enough; case and diacritics do not matter. The assistant is not asked. Empty = defaults (grey).",
     widgetPreview: "Widget preview",
     widgetPreviewHint: "The saved settings on a blank page, with your name — before people in the external system see them.",
     previewTitle: c => `Widget preview — ${c}`,

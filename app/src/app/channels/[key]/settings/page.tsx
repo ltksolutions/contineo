@@ -12,7 +12,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
-import { WIDGET_POSITIONS, WIDGET_SIZES, ESCALATE_AFTER, LAUNCHER_MAX, GREETING_MAX } from "@/lib/widgetAppearance"
+import { WIDGET_POSITIONS, WIDGET_SIZES, ESCALATE_AFTER, LAUNCHER_MAX, GREETING_MAX, DEFAULT_PHRASES } from "@/lib/widgetAppearance"
 import Select from "@/components/Select"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
@@ -294,6 +294,18 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
                 <span className="field-label">{t.widgetGreeting(l)}</span>
                 <textarea className="field-input" name={`widgetGreeting-${l}`} rows={2} maxLength={GREETING_MAX} defaultValue={look.greeting[l] ?? ""} />
                 <span className="quiet field-hint">{t.widgetGreetingHint}</span>
+              </label>
+            ))}
+            <label className="form-row form-row--bare">
+              <input type="checkbox" className="toggle" role="switch" name="widgetOfferLink" defaultChecked={look.offerLink} />
+              <span>{t.widgetOfferLink}</span>
+            </label>
+            <span className="quiet field-hint">{t.widgetOfferLinkHint}</span>
+            {lookLanguages.map(l => (
+              <label key={`phrases-${l}`} className="field">
+                <span className="field-label">{t.widgetPhrases(l)}</span>
+                <textarea className="field-input" name={`widgetPhrases-${l}`} rows={4} defaultValue={(look.phrases[l] ?? []).join("\n")} placeholder={DEFAULT_PHRASES[l].join("\n")} />
+                <span className="quiet field-hint">{t.widgetPhrasesHint}</span>
               </label>
             ))}
             <div className="field">

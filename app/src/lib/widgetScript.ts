@@ -29,6 +29,15 @@
  * privítanie a prah ponuky helpdesku. Panel sa otvára na mieste tlačidla
  * smerom dovnútra obrazovky a tlačidlo sa medzitým skryje (zatvára sa „×");
  * pod 640 px je panel celá obrazovka.
+ *
+ * **Ponuka správy helpdesku** (ADR-042, D275, D283, D285): po neúspechoch
+ * (prah z nastavenia), cez stále viditeľný tichý odkaz „Napísať helpdesku"
+ * pod poľom otázky (dá sa vypnúť) a hneď pri fráze zo zoznamu — vtedy sa
+ * asistent nepýta. Formulár je predvyplnený poslednou otázkou a ukazuje,
+ * kam príde odpoveď (`email` z tokenu; obsah tokenu nie je tajný, je to
+ * údaj prihláseného človeka). `ContineoHelpdesk.open()` otvorí panel
+ * z odkazu v cudzom systéme a vráti `true`; keď skript nenabehol, odkaz
+ * ostane obyčajným `mailto:` (`docs/WIDGET_ISSF.md`).
  */
 
 import { DEFAULT_WIDGET_APPEARANCE, WIDGET_SIZE_PX, appearanceForScript, type WidgetAppearanceForScript, type WidgetPosition } from "./widgetAppearance"
@@ -99,14 +108,19 @@ export function widgetScript(cfg: WidgetScriptConfig): string {
 "use strict";
 var CFG=${config};
 var T=CFG.texts;
-var LOOK=CFG.appearance||{escalateAfter:2,launcher:'',greeting:''};
+var LOOK=CFG.appearance||{escalateAfter:2,launcher:'',greeting:'',offerLink:true,phrases:[]};
 var script=document.currentScript||(function(){var s=document.querySelectorAll('script[data-token]');return s[s.length-1]})();
 var token=script&&script.getAttribute('data-token')||'';
 var tokenUrl=script&&script.getAttribute('data-token-url')||'';
-var negatives=0, conversation=[], busy=false;
+var negatives=0, conversation=[], busy=false, lastQuestion='';
 
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function esc(s){return String(s)}
+/* Ten istý tvar ako normalizePhrase() na serveri — frázy prichádzajú už v ňom. */
+function norm(s){return String(s).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/\\s+/g,' ').trim()}
+function wantsHelpdesk(q){var n=norm(q);return (LOOK.phrases||[]).some(function(p){return p&&n.indexOf(p)>=0})}
+/* Kam príde odpoveď: claim email z tokenu (D275). */
+function replyAddress(){try{var p=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');var b=atob(p);var u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return JSON.parse(new TextDecoder().decode(u)).email||''}catch(e){return ''}}
 
 var host=el('div');host.setAttribute('data-contineo-helpdesk','');
 var root=host.attachShadow({mode:'open'});
@@ -178,6 +192,10 @@ style.textContent=[
 /* Len textové polia — checkbox výberu zdrojov nesmie zdediť padding ani flex. */
 'textarea{flex:1;font:inherit;color:var(--ink);background:var(--surface);padding:10px;border:1px solid var(--control-line);border-radius:10px;resize:none;min-height:44px}',
 '.esc{padding:12px;border-top:1px solid var(--line);background:var(--surface);display:none;flex-direction:column;gap:8px}.esc.is-open{display:flex}',
+'.esc-to{font-size:13px;color:var(--muted);overflow-wrap:anywhere}',
+'.esc-actions{display:flex;flex-wrap:wrap;gap:8px}',
+/* Tichý odkaz pod poľom otázky (D275) — ovládač je tiché tlačidlo, nie text. */
+'.offer{padding:0 10px 8px;background:var(--surface)}',
 '.foot{font-size:11px;color:var(--muted);text-align:center;padding:4px;background:var(--surface)}',
 '.msg.sys a{color:var(--accent)}'
 ].join('');
@@ -230,9 +248,12 @@ function syncNote(){
   last.note.hidden=!last.ids||same(on,last.ids);
 }
 var form=el('form','ask');var ta=el('textarea');ta.placeholder=T.placeholder;ta.rows=1;ta.required=true;var send=el('button','button',T.send);send.type='submit';form.appendChild(ta);form.appendChild(send);
-var esc=el('div','esc');var escIntro=el('div',null,T.escalateIntro);var escTa=el('textarea');escTa.placeholder=T.escalateMessage;escTa.rows=3;var escBtn=el('button','button',T.escalateSubmit);escBtn.type='button';esc.appendChild(escIntro);esc.appendChild(escTa);esc.appendChild(escBtn);
+var esc=el('div','esc');var escIntro=el('div',null,T.escalateIntro);var escTa=el('textarea');escTa.placeholder=T.escalateMessage;escTa.rows=3;var escTo=el('div','esc-to');escTo.hidden=true;
+var escActions=el('div','esc-actions');var escBtn=el('button','button',T.escalateSubmit);escBtn.type='button';var escCancel=el('button','button button--quiet',T.escalateCancel);escCancel.type='button';
+escActions.appendChild(escBtn);escActions.appendChild(escCancel);esc.appendChild(escIntro);esc.appendChild(escTa);esc.appendChild(escTo);esc.appendChild(escActions);
+var offer=el('div','offer');offer.hidden=true;var offerBtn=el('button','button button--quiet button--sm',T.writeHelpdesk);offerBtn.type='button';offer.appendChild(offerBtn);
 var foot=el('div','foot',T.poweredBy);
-panel.appendChild(head);if(scope)panel.appendChild(scope);panel.appendChild(log);panel.appendChild(esc);panel.appendChild(form);panel.appendChild(foot);
+panel.appendChild(head);if(scope)panel.appendChild(scope);panel.appendChild(log);panel.appendChild(esc);panel.appendChild(form);panel.appendChild(offer);panel.appendChild(foot);
 root.appendChild(fab);root.appendChild(panel);
 document.body.appendChild(host);
 
@@ -244,6 +265,9 @@ function openPanel(){panel.classList.add('is-open');fab.hidden=true;
 function closePanel(){panel.classList.remove('is-open');fab.hidden=false;fab.focus()}
 fab.addEventListener('click',openPanel);
 close.addEventListener('click',closePanel);
+/* Odkazy „Pomoc" v cudzom systéme (D285): \`onclick="return !(window.ContineoHelpdesk&&ContineoHelpdesk.open())"\`
+   pri \`href="mailto:…"\` — bez skriptu ostane e-mail. */
+window.ContineoHelpdesk={open:function(){openPanel();return true}};
 
 function sys(text){var m=el('div','msg sys',text);log.appendChild(m);log.scrollTop=log.scrollHeight;return m}
 var contactShown=false;
@@ -261,20 +285,32 @@ function api(path,body,retry){
   });
 }
 
-function offerEscalation(){esc.classList.add('is-open');escTa.focus()}
+/* Formulár správy (D275): úvod podľa toho, prečo sa otvoril, predvyplnená
+   posledná otázka, adresa odpovede. Odkaz sa medzitým skryje. */
+function offerEscalation(direct){
+  escIntro.textContent=direct?T.escalateIntroDirect:T.escalateIntro;
+  if(!escTa.value.trim()&&lastQuestion)escTa.value=lastQuestion;
+  var to=replyAddress();escTo.textContent=to?T.replyTo.replace('{email}',to):'';escTo.hidden=!to;
+  esc.classList.add('is-open');offer.hidden=true;
+  escTa.focus();escTa.setSelectionRange(escTa.value.length,escTa.value.length);
+}
+function closeEscalation(){esc.classList.remove('is-open');syncOffer();ta.focus()}
+function syncOffer(){offer.hidden=!LOOK.offerLink||!conversation.length||esc.classList.contains('is-open')}
+offerBtn.addEventListener('click',function(){offerEscalation(true)});
+escCancel.addEventListener('click',closeEscalation);
 
 function rateButtons(recordId,answerEl){
   var rate=el('div','rate');var up=el('button',null,T.helpful);up.type='button';var down=el('button',null,T.notHelpful);down.type='button';
   function pick(v){up.classList.toggle('is-on',v===1);down.classList.toggle('is-on',v===0);up.disabled=down.disabled=true;
     conversation.forEach(function(c){if(c.recordId===recordId)c.verdict=v});
     api('feedback',{id:recordId,verdict:v}).catch(function(){});
-    if(v===0){negatives++;if(negatives>=LOOK.escalateAfter){sys(T.tryAgain);offerEscalation()}}else{sys(T.thanks)}}
+    if(v===0){negatives++;if(negatives>=LOOK.escalateAfter){sys(T.tryAgain);offerEscalation(false)}}else{sys(T.thanks)}}
   up.addEventListener('click',function(){pick(1)});down.addEventListener('click',function(){pick(0)});
   rate.appendChild(up);rate.appendChild(down);answerEl.appendChild(rate);
 }
 
 function ask(q){
-  busy=true;send.disabled=true;if(scopeBtn)scopeBtn.disabled=true;
+  busy=true;send.disabled=true;if(scopeBtn)scopeBtn.disabled=true;lastQuestion=q;
   if(last.note){last.note.remove();last.note=null}
   log.appendChild(el('div','msg q',q));
   var a=el('div','msg a');var aHead=el('span','a-head');aHead.hidden=true;var body=el('div');a.appendChild(aHead);a.appendChild(body);log.appendChild(a);
@@ -300,7 +336,7 @@ function ask(q){
     return pump();
   }).then(function(){
     thinking.remove();
-    if(!text.trim()||!sources.length){body.textContent=T.noAnswer;negatives++;conversation.push({recordId:null,question:q,verdict:0});if(negatives>=LOOK.escalateAfter)offerEscalation();return}
+    if(!text.trim()||!sources.length){body.textContent=T.noAnswer;negatives++;conversation.push({recordId:null,question:q,verdict:0});if(negatives>=LOOK.escalateAfter)offerEscalation(false);return}
     if(sources.length){var s=el('div','src',T.sources);var ul=el('ul');var seen={};sources.forEach(function(x){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;var li=el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':''));ul.appendChild(li)});s.appendChild(ul);a.appendChild(s)}
     conversation.push({recordId:recordId,question:q,verdict:null});
     if(recordId)rateButtons(recordId,a);
@@ -314,13 +350,16 @@ function ask(q){
       rb.addEventListener('click',function(){if(!busy)ask(last.question)});
       n.appendChild(mk);n.appendChild(nt);n.appendChild(rb);a.insertAdjacentElement('afterend',n);last.note=n;syncNote();
     }
-  }).catch(function(e){thinking.remove();body.textContent=e&&e.message==='expired'?T.expired:(e&&e.message==='rate'?(T.rateLimited||T.error):T.error);if(!e||e.message!=='rate')contact()}).then(function(){busy=false;send.disabled=false;if(scopeBtn)scopeBtn.disabled=false;log.scrollTop=log.scrollHeight});
+  }).catch(function(e){thinking.remove();body.textContent=e&&e.message==='expired'?T.expired:(e&&e.message==='rate'?(T.rateLimited||T.error):T.error);if(!e||e.message!=='rate')contact()}).then(function(){busy=false;send.disabled=false;if(scopeBtn)scopeBtn.disabled=false;syncOffer();log.scrollTop=log.scrollHeight});
 }
 syncScope();
 
-form.addEventListener('submit',function(ev){ev.preventDefault();var q=ta.value.trim();if(!q||busy)return;ta.value='';ask(q)});
+/* Fráza zo zoznamu (D275): správa sa ponúkne hneď, asistent sa nepýta. */
+form.addEventListener('submit',function(ev){ev.preventDefault();var q=ta.value.trim();if(!q||busy)return;ta.value='';
+  if(wantsHelpdesk(q)){log.appendChild(el('div','msg q',q));log.scrollTop=log.scrollHeight;offerEscalation(true);return}
+  ask(q)});
 ta.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();form.dispatchEvent(new Event('submit',{cancelable:true}))}});
 escBtn.addEventListener('click',function(){var m=escTa.value.trim();if(!m)return;escBtn.disabled=true;
-  api('ticket',{message:m,page:location.href.split('#')[0],conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.classList.remove('is-open');escTa.value='';sys(T.escalated);negatives=0}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
+  api('ticket',{message:m,page:location.href.split('#')[0],conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.classList.remove('is-open');escTa.value='';sys(T.escalated);negatives=0;syncOffer()}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
 })();`
 }

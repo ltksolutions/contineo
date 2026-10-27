@@ -9,7 +9,7 @@
  * Bez závislostí na databáze — číta ho aj skript widgetu a testy.
  */
 
-import { isUiLanguage, type UiLanguage } from "./i18n"
+import { isUiLanguage, UI_LANGUAGES, type UiLanguage } from "./i18n"
 
 /**
  * Osem miest okolo obrazovky, v smere hodinových ručičiek od ľavého
@@ -35,6 +35,32 @@ export const ESCALATE_AFTER = [1, 2, 3] as const
 /** Strop textov — tlačidlo je na jeden riadok, privítanie na pár viet. */
 export const LAUNCHER_MAX = 40
 export const GREETING_MAX = 500
+/** Frázy: najviac 20 na jazyk, každá na pár slov. */
+export const PHRASES_MAX = 20
+export const PHRASE_MAX = 80
+
+/**
+ * Predvolené frázy, pri ktorých widget hneď ponúkne správu helpdesku
+ * (D275) — zoznam, nie rozpoznávanie zámeru modelom. Porovnáva sa časť
+ * vety bez diakritiky a veľkých písmen (`normalizePhrase`), preto stačí
+ * jeden tvar bez ohľadu na to, či človek píše s mäkčeňmi. Frázy sú
+ * krátke jadrá („s človekom“, nie „spojiť sa s človekom“) — slovenčina
+ * má voľný slovosled a ohýba („chcem sa s človekom spojiť“, „helpdesku“).
+ */
+export const DEFAULT_PHRASES: Record<UiLanguage, string[]> = {
+  sk: ["helpdesk", "s človekom", "s operátorom", "kontaktovať podporu", "napísať podpore"],
+  cs: ["helpdesk", "s člověkem", "s operátorem", "kontaktovat podporu", "napsat podpoře"],
+  en: ["helpdesk", "help desk", "a human", "real person", "an operator", "contact support"],
+}
+
+/**
+ * Tvar, v ktorom sa frázy porovnávajú: malé písmená, bez diakritiky,
+ * jedna medzera. Skript widgetu robí s otázkou to isté (`norm` v
+ * `widgetScript.ts`) — menia sa spolu.
+ */
+export function normalizePhrase(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim()
+}
 
 export interface WidgetAppearance {
   position: WidgetPosition
@@ -45,6 +71,10 @@ export interface WidgetAppearance {
   launcher: Partial<Record<UiLanguage, string>>
   /** Privítanie v prázdnom paneli podľa jazyka; chýbajúce = bez privítania. */
   greeting: Partial<Record<UiLanguage, string>>
+  /** Stále viditeľný odkaz „Napísať helpdesku" po prvej odpovedi (D275, D283). */
+  offerLink: boolean
+  /** Frázy podľa jazyka, pri ktorých sa správa ponúkne hneď; chýbajúci jazyk = `DEFAULT_PHRASES`. */
+  phrases: Partial<Record<UiLanguage, string[]>>
 }
 
 /**
@@ -53,7 +83,7 @@ export interface WidgetAppearance {
  * tabuľky s akciami. Prah 2 je D275.
  */
 export const DEFAULT_WIDGET_APPEARANCE: WidgetAppearance = {
-  position: "left-middle", size: "m", escalateAfter: 2, launcher: {}, greeting: {},
+  position: "left-middle", size: "m", escalateAfter: 2, launcher: {}, greeting: {}, offerLink: true, phrases: {},
 }
 
 function texts(raw: unknown, max: number): Partial<Record<UiLanguage, string>> {
@@ -63,6 +93,17 @@ function texts(raw: unknown, max: number): Partial<Record<UiLanguage, string>> {
     if (!isUiLanguage(lang) || typeof v !== "string") continue
     const text = v.replace(/\r\n?/g, "\n").trim().slice(0, max)
     if (text) out[lang] = text
+  }
+  return out
+}
+
+function phraseLists(raw: unknown): Partial<Record<UiLanguage, string[]>> {
+  const out: Partial<Record<UiLanguage, string[]>> = {}
+  if (!raw || typeof raw !== "object") return out
+  for (const [lang, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (!isUiLanguage(lang) || !Array.isArray(v)) continue
+    const list = [...new Set(v.filter((x): x is string => typeof x === "string").map(x => x.replace(/\s+/g, " ").trim().slice(0, PHRASE_MAX)).filter(Boolean))]
+    if (list.length) out[lang] = list.slice(0, PHRASES_MAX)
   }
   return out
 }
@@ -82,6 +123,9 @@ export function widgetAppearance(raw: unknown): WidgetAppearance {
     escalateAfter: n === 1 || n === 2 || n === 3 ? n : d.escalateAfter,
     launcher: texts(r.launcher, LAUNCHER_MAX),
     greeting: texts(r.greeting, GREETING_MAX),
+    // Chýbajúce pole (staršie kanály) = zapnuté, ako D275.
+    offerLink: r.offerLink !== false,
+    phrases: phraseLists(r.phrases),
   }
 }
 
@@ -92,11 +136,17 @@ export interface WidgetAppearanceForScript {
   escalateAfter: number
   launcher: string
   greeting: string
+  offerLink: boolean
+  /** Frázy všetkých jazykov rozhrania, už v tvare `normalizePhrase`. */
+  phrases: string[]
 }
 
 export function appearanceForScript(a: WidgetAppearance, language: UiLanguage): WidgetAppearanceForScript {
   return {
     position: a.position, size: a.size, escalateAfter: a.escalateAfter,
     launcher: a.launcher[language] ?? "", greeting: a.greeting[language] ?? "",
+    offerLink: a.offerLink,
+    // Všetky jazyky naraz: človek s českým rozhraním môže napísať po slovensky.
+    phrases: [...new Set(UI_LANGUAGES.flatMap(l => (a.phrases[l] ?? DEFAULT_PHRASES[l]).map(normalizePhrase)).filter(Boolean))],
   }
 }
