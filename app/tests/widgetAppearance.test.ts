@@ -107,6 +107,14 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(js).toContain("if(!LOOK.tip||tip||tipSeen()||isOpen()||dock.hidden)return")
     expect(js).toContain("function openPanel(){hideTip();")
   })
+  it("pätka: na čom beží, ochrana údajov, zdrojový kód a verzia; odkazy v novej karte", () => {
+    const js = widgetScript({ ...base, version: "0.1.0 · abc1234", privacyUrl: "https://intranet.futbalsfz.sk/privacy" })
+    expect(js).toContain("ext('https://contineo.app')")
+    expect(js).toContain("ext('https://github.com/ltksolutions/contineo')")
+    expect(js).toContain('"privacyUrl":"https://intranet.futbalsfz.sk/privacy"')
+    expect(js).toContain('"version":"0.1.0 · abc1234"')
+    expect(js).toContain("a.target='_blank';a.rel='noreferrer'")
+  })
   it("riadok len hore a dole v strede", () => {
     expect(WIDGET_POSITIONS.filter(isRowPosition)).toEqual(["top", "bottom"])
     const js = widgetScript({ ...base, appearance: appearanceForScript(widgetAppearance({ position: "bottom" }), "sk") })

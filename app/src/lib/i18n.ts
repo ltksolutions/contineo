@@ -2810,6 +2810,8 @@ interface Dictionary {
     language: string
     /** Úchyt riadku otázky: čo robí a ako ho vrátiť. */
     move: string
+    /** Pätka widgetu: „verzia 0.1.0 · abc1234". */
+    version: string
     /** Úvodný tip pri prvej návšteve (D291); `{org}` = skratka organizácie. */
     tipTitle: string
     tipBody: string
@@ -8251,6 +8253,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Opýtať sa",
     rowPlaceholder: "Máte otázku? Potrebujete návod alebo vysvetlenie? Pýtajte sa, sme tu pre vás.",
     move: "Posunúť pomocníka. Šípky ho posúvajú, Home alebo dvojklik ho vráti na miesto.",
+    version: "verzia",
     tipTitle: "Nový pomocník {org}",
     tipBody: "Pýtajte sa vlastnými slovami — na predpisy, postupy aj návody. Keď odpoveď nenájdeme, pošlete správu helpdesku a odpovie vám človek.",
     tipMove: "Ak vám riadok niečo zakrýva, posuňte ho za úchyt. Dvojklik ho vráti.",
@@ -13561,6 +13564,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Zeptat se",
     rowPlaceholder: "Máte otázku? Potřebujete návod nebo vysvětlení? Ptejte se, jsme tu pro vás.",
     move: "Posunout pomocníka. Šipky ho posouvají, Home nebo dvojklik ho vrátí na místo.",
+    version: "verze",
     tipTitle: "Nový pomocník {org}",
     tipBody: "Ptejte se vlastními slovy — na předpisy, postupy i návody. Když odpověď nenajdeme, pošlete zprávu helpdesku a odpoví vám člověk.",
     tipMove: "Pokud vám řádek něco zakrývá, posuňte ho za úchyt. Dvojklik ho vrátí.",
@@ -18862,6 +18866,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Ask",
     rowPlaceholder: "Have a question? Need a guide or an explanation? Ask us, we are here for you.",
     move: "Move the assistant. Arrow keys move it, Home or a double click puts it back.",
+    version: "version",
     tipTitle: "New {org} assistant",
     tipBody: "Ask in your own words — about regulations, procedures and guides. If we find no answer, send a message to the helpdesk and a person will reply.",
     tipMove: "If the row covers something, drag it by the handle. A double click puts it back.",

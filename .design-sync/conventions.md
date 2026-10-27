@@ -147,6 +147,9 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
   dole nie je miesto: `.is-above`), šípka mieri na úchyt (`--tip-x`). `.xw-tip-head` (`.xw-tip-title` + `.xw-tip-close` 44 px),
   dve vety (`p`, druhá `.xw-tip-move` s úchytom), `.xw-tip-actions` — plné `.button--sm` „Vyskúšať" a tiché „Rozumiem".
   Úchyt medzitým bliká (`.xw-dock.is-tip`, bez animácie pri `prefers-reduced-motion`). Bez závoja, fokus neberie; raz v prehliadači.
+- Pätka plachty `.xw-foot` (vždy, aj v prázdnom stave), ako pätička aplikácie: `a.xw-foot-brand` „Systém beží na aplikácii
+  [značka] **Contineo**" → contineo.app, Ochrana osobných údajov organizácie (`/privacy` na jej doméne), Zdrojový kód
+  (GitHub), „verzia 0.1.0 · revízia". Odkazy v novej karte (`target=_blank`, `rel=noreferrer`), 12 px, terč 24 px.
 - Tlačidlá widgetu majú terč 44 px aj na počítači. Widget vyká.
 
 ## Príklad

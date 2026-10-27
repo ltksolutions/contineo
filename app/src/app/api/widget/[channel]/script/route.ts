@@ -17,6 +17,7 @@ import { brandingView } from "@/lib/tenants"
 import { widgetScript } from "@/lib/widgetScript"
 import { widgetSources } from "@/lib/widgetSources"
 import { accentVars } from "@/components/TenantHeader"
+import { REVISION, VERSION } from "@/lib/appVersion"
 
 export const dynamic = "force-dynamic"
 
@@ -49,7 +50,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ channel:
       code,
       label: LANGUAGE_LABELS[code],
       short: LANGUAGE_SHORT[code],
-      texts: { ...d.widget, tipTitle: d.widget.tipTitle.replace("{org}", org), rateLimited: d.errors["widget.rateLimited"] ?? "" } as Record<string, string>,
+      texts: {
+        ...d.widget, tipTitle: d.widget.tipTitle.replace("{org}", org), rateLimited: d.errors["widget.rateLimited"] ?? "",
+        // Pätka widgetu — tie isté texty ako pätička aplikácie.
+        runsOn: d.footer.runsOn, sourceCode: d.footer.sourceCode, privacyLink: d.privacy.link,
+      } as Record<string, string>,
       appearance: appearanceForScript(look, code),
       sources,
     }
@@ -68,6 +73,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ channel:
     contact: widgetFallbackContact(channel, tenant.branding?.supportEmail),
     appearance: main.appearance,
     languages: packs,
+    version: REVISION ? `${VERSION} · ${REVISION}` : VERSION,
+    privacyUrl: `https://${host}/privacy`,
   })
   // ETag z obsahu (D284): prehliadač sa po 5 minútach opýta, a keď sa
   // nastavenie kanála nezmenilo, dostane 304 bez tela.
