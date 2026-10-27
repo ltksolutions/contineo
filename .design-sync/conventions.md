@@ -125,7 +125,8 @@ Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.
 Widget kanála typu *widget* vložený v cudzom systéme (ISSF). Beží v Shadow DOM, preto ho
 skript nesie celý (`lib/widgetScript.ts`, `WIDGET_CSS`); triedy `.xw-*` sú v `globals.css`
 a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičke a plachta otázky.
-- Zatvorený **hore alebo dole v strede**: `button.xw-row` — `span.xw-row-mark` (značka Continea, farba
+- Zatvorený **hore alebo dole v strede**: `div.xw-dock` > `button.xw-row.xw-row--grip` + `button.xw-grip` (úchyt ⋮⋮ na ľavom
+  okraji riadku, 36 × 44 px: ťahanie, šípky, Home a dvojklik vráti; miesto si pamätá prehliadač, nastavenie kanála nie). Riadok `button.xw-row` — `span.xw-row-mark` (značka Continea, farba
   organizácie), `span.xw-row-text` (nápoveda z nastavenia kanála, rozpísaný text `.is-draft`),
   `span.xw-row-go` (šípka). 52 px, oblý, s tieňom. Na ostatných šiestich miestach tlačidlo.
   Klik, Enter alebo písanie ho rozbalí; písaný znak pokračuje v poli.

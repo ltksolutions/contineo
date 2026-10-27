@@ -2808,6 +2808,8 @@ interface Dictionary {
     close: string
     /** Výber jazyka v hlavičke plachty (D290). */
     language: string
+    /** Úchyt riadku otázky: čo robí a ako ho vrátiť. */
+    move: string
     /** Prázdna plachta: nadpis a veta pod ním, keď kanál nemá privítanie. */
     emptyTitle: string
     emptyLead: string
@@ -8239,6 +8241,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     placeholder: "Napíšte otázku…",
     send: "Opýtať sa",
     rowPlaceholder: "Máte otázku? Potrebujete návod alebo vysvetlenie? Pýtajte sa, sme tu pre vás.",
+    move: "Posunúť pomocníka. Šípky ho posúvajú, Home alebo dvojklik ho vráti na miesto.",
     language: "Jazyk",
     close: "Zavrieť",
     emptyTitle: "S čím vám môžeme pomôcť?",
@@ -13540,6 +13543,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     placeholder: "Napište otázku…",
     send: "Zeptat se",
     rowPlaceholder: "Máte otázku? Potřebujete návod nebo vysvětlení? Ptejte se, jsme tu pro vás.",
+    move: "Posunout pomocníka. Šipky ho posouvají, Home nebo dvojklik ho vrátí na místo.",
     language: "Jazyk",
     close: "Zavřít",
     emptyTitle: "S čím vám můžeme pomoci?",
@@ -18832,6 +18836,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     placeholder: "Type your question…",
     send: "Ask",
     rowPlaceholder: "Have a question? Need a guide or an explanation? Ask us, we are here for you.",
+    move: "Move the assistant. Arrow keys move it, Home or a double click puts it back.",
     language: "Language",
     close: "Close",
     emptyTitle: "How can we help you?",
