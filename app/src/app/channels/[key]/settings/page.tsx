@@ -12,6 +12,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
+import { WIDGET_POSITIONS, WIDGET_SIZES, ESCALATE_AFTER, LAUNCHER_MAX, GREETING_MAX } from "@/lib/widgetAppearance"
 import Select from "@/components/Select"
 import MultiSelect from "@/components/MultiSelect"
 import SubmitButton from "@/components/SubmitButton"
@@ -56,6 +57,9 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
   const branding = brandingView(ctx.tenant)
   const base = channelHref(c.key, "settings")
   const isWidget = c.kind === "widget"
+  const look = c.widget.appearance
+  // Texty widgetu pre každý jazyk kanála; kanál bez jazykov má jazyk organizácie.
+  const lookLanguages = c.languages.length ? c.languages : [ctx.tenant.defaultLanguage]
   // Podmenu Tickety len riešiteľovi tohto kanála — správca ich nevidí (D170).
   const canTickets = isWidget && c.tickets && isHelpdeskAgent(ctx.person) && raw.assigneeIds.includes(ctx.person.id)
 
@@ -253,6 +257,49 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
                      defaultValue={c.widget.fallbackEmail ?? ""} placeholder={ctx.tenant.branding?.supportEmail ?? ""} />
               <span className="quiet field-hint">{t.widgetFallbackHint(ctx.tenant.branding?.supportEmail ?? null)}</span>
             </label>
+          </div>
+        </section>
+
+        {/* Vzhľad a správanie widgetu (ADR-042, Dodatok 1, D282–D284): mení sa
+            tu, cudzí systém skript nemení. Texty pre každý jazyk kanála. */}
+        <section className="set-sec" id="look">
+          <div className="set-sec-head"><h2>{t.widgetLook}</h2><p>{t.widgetLookIntro}</p></div>
+          <div className="set-sec-body">
+            <div className="field">
+              <span className="field-label">{t.widgetPosition}</span>
+              <Select language={language} name="widgetPosition" fieldLabel={t.widgetPosition} initial={look.position}
+                options={WIDGET_POSITIONS.map(p => ({ value: p, label: t.widgetPositions[p] }))} />
+              <span className="quiet field-hint">{t.widgetPositionHint}</span>
+            </div>
+            <div className="field">
+              <span className="field-label">{t.widgetSize}</span>
+              <Select language={language} name="widgetSize" fieldLabel={t.widgetSize} initial={look.size}
+                options={WIDGET_SIZES.map(z => ({ value: z, label: t.widgetSizes[z] }))} />
+            </div>
+            <div className="field">
+              <span className="field-label">{t.widgetEscalate}</span>
+              <Select language={language} name="widgetEscalateAfter" fieldLabel={t.widgetEscalate} initial={String(look.escalateAfter)}
+                options={ESCALATE_AFTER.map(n => ({ value: String(n), label: t.widgetEscalateOption(n) }))} />
+              <span className="quiet field-hint">{t.widgetEscalateHint}</span>
+            </div>
+            {lookLanguages.map(l => (
+              <label key={`launcher-${l}`} className="field">
+                <span className="field-label">{t.widgetLauncher(l)}</span>
+                <input className="field-input" name={`widgetLauncher-${l}`} maxLength={LAUNCHER_MAX} defaultValue={look.launcher[l] ?? ""} placeholder={dictionary(l).widget.open} />
+                <span className="quiet field-hint">{t.widgetLauncherHint(dictionary(l).widget.open)}</span>
+              </label>
+            ))}
+            {lookLanguages.map(l => (
+              <label key={`greeting-${l}`} className="field">
+                <span className="field-label">{t.widgetGreeting(l)}</span>
+                <textarea className="field-input" name={`widgetGreeting-${l}`} rows={2} maxLength={GREETING_MAX} defaultValue={look.greeting[l] ?? ""} />
+                <span className="quiet field-hint">{t.widgetGreetingHint}</span>
+              </label>
+            ))}
+            <div className="field">
+              <div><a className="button button--quiet" href={`${channelHref(c.key)}/preview`} target="_blank" rel="noopener">{t.widgetPreview}</a></div>
+              <span className="quiet field-hint">{t.widgetPreviewHint}</span>
+            </div>
           </div>
         </section>
         </>

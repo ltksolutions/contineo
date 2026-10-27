@@ -19,6 +19,7 @@ import { NextResponse } from "next/server"
 import { getCollection } from "./mongodb"
 import { currentTenant } from "./session"
 import { channelByKey, widgetSecret, type HelpdeskChannel } from "./channels"
+import { sameOrigin } from "./sameOrigin"
 import { verifyWidgetToken, type WidgetIdentity } from "./widgetToken"
 import { ensureWidgetPerson } from "./widgetPersons"
 import { recordAnswer, RATINGS_COLLECTION, type RatingRecord } from "./ratings"
@@ -35,6 +36,13 @@ export function requestOrigin(headers: Headers): string | null {
   return o ? o.replace(/\/+$/, "") : null
 }
 
+/*
+ * Vlastný pôvod aplikácie prejde tiež — z neho volá **náhľad widgetu**
+ * v nastavení kanála (ADR-042, D284). Nič tým neotvára: token musí byť
+ * podpísaný tajným kľúčom kanála a jeho `iss` medzi povolenými pôvodmi
+ * (`verifyWidgetToken`), takže cudzia stránka ani skript v intranete bez
+ * kľúča nič nezmôže.
+ */
 export function originAllowed(channel: Pick<HelpdeskChannel, "widget">, origin: string | null): boolean {
   if (!origin) return false
   return channel.widget.origins.some(o => o.replace(/\/+$/, "") === origin)
@@ -70,7 +78,7 @@ export async function widgetGate(req: Request, channelKey: string, token: string
   // Portál widget nemá (D169) — pre API je to, ako keby kanál neexistoval.
   if (!channel || channel.kind !== "widget") return new Response(null, { status: 404 })
   const origin = requestOrigin(req.headers)
-  if (!originAllowed(channel, origin)) return new Response(null, { status: 403 })
+  if (!originAllowed(channel, origin) && !sameOrigin(req.headers)) return new Response(null, { status: 403 })
   const cors = corsHeaders(origin!)
   const language = channel.languages[0] ?? tenant.defaultLanguage
   const secret = widgetSecret(channel)
@@ -100,7 +108,7 @@ export async function widgetPreflight(req: Request, channelKey: string): Promise
   const channel = await channelByKey(tenant.companyCode, channelKey)
   if (!channel || channel.kind !== "widget") return new Response(null, { status: 404 })
   const origin = requestOrigin(req.headers)
-  if (!originAllowed(channel, origin)) return new Response(null, { status: 403 })
+  if (!originAllowed(channel, origin) && !sameOrigin(req.headers)) return new Response(null, { status: 403 })
   return new Response(null, { status: 204, headers: corsHeaders(origin!) })
 }
 
