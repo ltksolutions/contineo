@@ -77,6 +77,13 @@ zmene štýlov widgetu vždy pozrieť plachtu na desktope aj na 375 px, nielen
 `toContain`. Skript sa do ISSF nedal vložiť z `127.0.0.1` (zmiešaný obsah),
 ukážky preto bežali s nasadeným skriptom z intranetu a podvrhnutým `fetch`.
 
+**Pätka widgetu (#480).** Ján chcel, aby bolo jasné, že ide o Contineo
+a na čom beží. Pätka preberá pätičku aplikácie — „Systém beží na
+aplikácii Contineo", ochrana osobných údajov organizácie, zdrojový kód,
+verzia s revíziou — a stojí pod plachtou vždy, nielen po prvej otázke.
+Skript sa pri tom prvýkrát zlomil na spätných apostrofoch v komentári
+vnútri šablóny (`tsc` to chytil hneď); komentáre v tele skriptu bez nich.
+
 **Prehľad podľa návrhu z artefaktu *Design*** (#458): úlohy v skupinách
 podľa naliehavosti, dokumenty ako hľadanie s rozsahmi. Prvý návrh, pri
 ktorom asistent zakladal artefakt sám (CLAUDE.md, 26. 10.).
