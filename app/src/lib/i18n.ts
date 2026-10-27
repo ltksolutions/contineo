@@ -2935,6 +2935,29 @@ interface Dictionary {
     /** Kontakt pri výpadku widgetu a kód na vloženie (Ján 8. 10. 2026). */
     widgetFallback: string
     widgetFallbackHint: (orgContact: string | null) => string
+    /** Vzhľad a správanie widgetu (ADR-042, Dodatok 1, D282–D284). */
+    widgetLook: string
+    widgetLookIntro: string
+    widgetPosition: string
+    widgetPositions: Record<"left-top" | "top" | "right-top" | "right-middle" | "right-bottom" | "bottom" | "left-bottom" | "left-middle", string>
+    widgetPositionHint: string
+    widgetSize: string
+    widgetSizes: Record<"s" | "m" | "l", string>
+    widgetEscalate: string
+    widgetEscalateOption: (n: number) => string
+    widgetEscalateHint: string
+    widgetLauncher: (language: string) => string
+    widgetLauncherHint: (fallback: string) => string
+    widgetGreeting: (language: string) => string
+    widgetGreetingHint: string
+    widgetPreview: string
+    widgetPreviewHint: string
+    /** Stránka náhľadu widgetu — stojí namiesto cudzej stránky. */
+    previewTitle: (channel: string) => string
+    previewIntro: (origin: string) => string
+    previewReal: string
+    previewNoSecret: string
+    previewNoOrigins: string
     embedHeading: string
     /** Prvý riadok komentára v kóde na vloženie. */
     embedCommentTitle: (channel: string) => string
@@ -8311,6 +8334,30 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetOriginsHint: "Adresy, z ktorých smie widget volať, každá na nový riadok: https://issf.futbalsfz.sk",
     widgetFallback: "Kontakt pri výpadku",
     widgetFallbackHint: org => org ? `Komu sa ozvať, keď widget na cudzej stránke nenabehne alebo neodpovedá. Prázdne = Kontaktná adresa organizácie (${org}).` : "Komu sa ozvať, keď widget na cudzej stránke nenabehne alebo neodpovedá. Prázdne = Kontaktná adresa organizácie — tá zatiaľ nie je nastavená (Organizácia → Všeobecné).",
+    widgetLook: "Vzhľad a správanie widgetu",
+    widgetLookIntro: "Nastavuje sa tu, nie v cudzom systéme — zmena sa tam prejaví do 5 minút.",
+    widgetPosition: "Poloha tlačidla",
+    widgetPositions: {
+      "left-top": "vľavo hore", top: "hore v strede", "right-top": "vpravo hore", "right-middle": "vpravo v strede",
+      "right-bottom": "vpravo dole", bottom: "dole v strede", "left-bottom": "vľavo dole", "left-middle": "vľavo v strede",
+    },
+    widgetPositionHint: "Panel sa otvorí na mieste tlačidla smerom do stredu obrazovky. Na telefóne zaberie celú obrazovku.",
+    widgetSize: "Veľkosť panela",
+    widgetSizes: { s: "malý (360 × 520)", m: "stredný (400 × 600)", l: "veľký (480 × 720)" },
+    widgetEscalate: "Ponúknuť helpdesk po",
+    widgetEscalateOption: n => (n === 1 ? "1 neúspechu" : `${n} neúspechoch`),
+    widgetEscalateHint: "Neúspech je palec dole alebo otázka, na ktorú asistent nenašiel odpoveď.",
+    widgetLauncher: l => `Text tlačidla (${l})`,
+    widgetLauncherHint: f => `Prázdne = „${f}".`,
+    widgetGreeting: l => `Privítanie (${l})`,
+    widgetGreetingHint: "Prvá správa v prázdnom paneli. Prázdne = bez privítania.",
+    widgetPreview: "Náhľad widgetu",
+    widgetPreviewHint: "Uložené nastavenie na prázdnej stránke, s vaším menom — skôr než ho uvidia ľudia v cudzom systéme.",
+    previewTitle: c => `Náhľad widgetu — ${c}`,
+    previewIntro: o => `Takto widget uvidia ľudia na ${o}. Ukazuje uložené nastavenie kanála.`,
+    previewReal: "Otázky aj správy helpdesku sú skutočné: odpovede sa zapíšu na hodnotenie a správa založí ticket s vaším menom.",
+    previewNoSecret: "Kanál nemá tajný kľúč — bez neho sa token nedá podpísať. Vytvorte ho v nastavení kanála.",
+    previewNoOrigins: "Kanál nemá povolený pôvod — widget sa nikde nevykreslí. Doplňte ho v nastavení kanála.",
     embedHeading: "Kód na vloženie",
     embedCommentTitle: ch => `Contineo — pomocník kanála „${ch}“. Parametre:`,
     embedIntro: "Vložte do stránky, na ktorej má byť pomocník — najlepšie pred koniec <body>. Token vydáva váš server pre prihláseného človeka (návod: docs/WIDGET_ISSF.md).",
@@ -13564,6 +13611,30 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetOriginsHint: "Adresy, ze kterých smí widget volat, každá na nový řádek: https://issf.futbalsfz.sk",
     widgetFallback: "Kontakt při výpadku",
     widgetFallbackHint: org => org ? `Komu se ozvat, když widget na cizí stránce nenaběhne nebo neodpovídá. Prázdné = Kontaktní adresa organizace (${org}).` : "Komu se ozvat, když widget na cizí stránce nenaběhne nebo neodpovídá. Prázdné = Kontaktní adresa organizace — ta zatím není nastavena (Organizace → Obecné).",
+    widgetLook: "Vzhled a chování widgetu",
+    widgetLookIntro: "Nastavuje se zde, ne v cizím systému — změna se tam projeví do 5 minut.",
+    widgetPosition: "Poloha tlačítka",
+    widgetPositions: {
+      "left-top": "vlevo nahoře", top: "nahoře uprostřed", "right-top": "vpravo nahoře", "right-middle": "vpravo uprostřed",
+      "right-bottom": "vpravo dole", bottom: "dole uprostřed", "left-bottom": "vlevo dole", "left-middle": "vlevo uprostřed",
+    },
+    widgetPositionHint: "Panel se otevře na místě tlačítka směrem do středu obrazovky. Na telefonu zabere celou obrazovku.",
+    widgetSize: "Velikost panelu",
+    widgetSizes: { s: "malý (360 × 520)", m: "střední (400 × 600)", l: "velký (480 × 720)" },
+    widgetEscalate: "Nabídnout helpdesk po",
+    widgetEscalateOption: n => (n === 1 ? "1 neúspěchu" : `${n} neúspěších`),
+    widgetEscalateHint: "Neúspěch je palec dolů nebo otázka, na kterou asistent nenašel odpověď.",
+    widgetLauncher: l => `Text tlačítka (${l})`,
+    widgetLauncherHint: f => `Prázdné = „${f}".`,
+    widgetGreeting: l => `Přivítání (${l})`,
+    widgetGreetingHint: "První zpráva v prázdném panelu. Prázdné = bez přivítání.",
+    widgetPreview: "Náhled widgetu",
+    widgetPreviewHint: "Uložené nastavení na prázdné stránce, s vaším jménem — dřív, než ho uvidí lidé v cizím systému.",
+    previewTitle: c => `Náhled widgetu — ${c}`,
+    previewIntro: o => `Takto widget uvidí lidé na ${o}. Ukazuje uložené nastavení kanálu.`,
+    previewReal: "Otázky i zprávy helpdesku jsou skutečné: odpovědi se zapíší k hodnocení a zpráva založí ticket s vaším jménem.",
+    previewNoSecret: "Kanál nemá tajný klíč — bez něj se token nedá podepsat. Vytvořte ho v nastavení kanálu.",
+    previewNoOrigins: "Kanál nemá povolený původ — widget se nikde nevykreslí. Doplňte ho v nastavení kanálu.",
     embedHeading: "Kód pro vložení",
     embedCommentTitle: ch => `Contineo — pomocník kanálu „${ch}“. Parametry:`,
     embedIntro: "Vložte do stránky, kde má být pomocník — nejlépe před konec <body>. Token vydává váš server pro přihlášeného člověka (návod: docs/WIDGET_ISSF.md).",
@@ -18808,6 +18879,30 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetOriginsHint: "Addresses the widget may call from, one per line: https://issf.futbalsfz.sk",
     widgetFallback: "Contact during an outage",
     widgetFallbackHint: org => org ? `Who to contact when the widget does not load or answer on the external page. Empty = the organisation's contact address (${org}).` : "Who to contact when the widget does not load or answer on the external page. Empty = the organisation's contact address — not set yet (Organisation → General).",
+    widgetLook: "Widget look and behaviour",
+    widgetLookIntro: "Set here, not in the external system — changes show up there within 5 minutes.",
+    widgetPosition: "Button position",
+    widgetPositions: {
+      "left-top": "top left", top: "top centre", "right-top": "top right", "right-middle": "middle right",
+      "right-bottom": "bottom right", bottom: "bottom centre", "left-bottom": "bottom left", "left-middle": "middle left",
+    },
+    widgetPositionHint: "The panel opens where the button is, towards the centre of the screen. On a phone it takes the whole screen.",
+    widgetSize: "Panel size",
+    widgetSizes: { s: "small (360 × 520)", m: "medium (400 × 600)", l: "large (480 × 720)" },
+    widgetEscalate: "Offer the helpdesk after",
+    widgetEscalateOption: n => (n === 1 ? "1 failure" : `${n} failures`),
+    widgetEscalateHint: "A failure is a thumbs down or a question the assistant found no answer to.",
+    widgetLauncher: l => `Button text (${l})`,
+    widgetLauncherHint: f => `Empty = "${f}".`,
+    widgetGreeting: l => `Greeting (${l})`,
+    widgetGreetingHint: "First message in an empty panel. Empty = no greeting.",
+    widgetPreview: "Widget preview",
+    widgetPreviewHint: "The saved settings on a blank page, with your name — before people in the external system see them.",
+    previewTitle: c => `Widget preview — ${c}`,
+    previewIntro: o => `This is how people on ${o} will see the widget. It shows the saved channel settings.`,
+    previewReal: "Questions and helpdesk messages are real: answers are recorded for rating and a message creates a ticket with your name.",
+    previewNoSecret: "The channel has no secret key — the token cannot be signed without it. Create it in the channel settings.",
+    previewNoOrigins: "The channel has no allowed origin — the widget will not show anywhere. Add one in the channel settings.",
     embedHeading: "Embed code",
     embedCommentTitle: ch => `Contineo — assistant of channel “${ch}”. Parameters:`,
     embedIntro: "Put it on the page where the assistant should appear — ideally just before </body>. Your server issues the token for the signed-in person (guide: docs/WIDGET_ISSF.md).",

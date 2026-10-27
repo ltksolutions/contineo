@@ -42,6 +42,17 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
 - **Obsah kanála** (priečinky knižnice) a **jazyky** — prvý jazyk je jazyk
   textov widgetu, keď token jazyk nenesie.
 - **Strop otázok na osobu a hodinu** (predvolene 60).
+- **Vzhľad a správanie widgetu** (ADR-042, Dodatok 1): poloha tlačidla na
+  ôsmich miestach okolo obrazovky (predvolene **vľavo v strede** — v ISSF je
+  hore menu, vľavo dole export zostáv a schvaľovanie žiadostí), veľkosť
+  panela (malý / stredný / veľký), text tlačidla a privítanie v jazykoch
+  kanála, po koľkých neúspechoch ponúknuť helpdesk. Panel sa otvára na
+  mieste tlačidla smerom do stredu obrazovky; na telefóne je celá obrazovka.
+  Všetko sa mení tu, ISSF kód nemení.
+- **Náhľad widgetu** (tlačidlo pod vzhľadom): uložené nastavenie na
+  prázdnej stránke s tokenom prihláseného správcu. Je to skutočný widget —
+  otázky sa zapíšu na hodnotenie a správa helpdesku založí ticket. Treba
+  tajný kľúč a aspoň jeden povolený pôvod.
 
 ## Čo urobí ISSF
 
@@ -198,8 +209,8 @@ organizácie (Organizácia → Všeobecné). Keď skript vôbec nenabehne (výpa
 vypnutý kanál), `onerror` ukáže náhradný blok. Keď nabehne, ale zlyhá
 volanie API, kontakt ukáže sám widget pod chybovou hláškou.
 
-Skript sa cachuje hodinu; zmena textov alebo farby v Contineu sa prejaví
-do hodiny bez zásahu v ISSF.
+Skript sa cachuje **5 minút** s `ETag` (ADR-042, D284); zmena vzhľadu,
+textov alebo farby v Contineu sa prejaví do 5 minút bez zásahu v ISSF.
 
 ## Skúška bez ISSF
 

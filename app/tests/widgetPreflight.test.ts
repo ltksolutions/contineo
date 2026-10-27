@@ -32,6 +32,13 @@ describe("widgetPreflight", () => {
       expect(r.headers.get("access-control-allow-origin")).toBeNull()
     }
   })
+  it("vlastný pôvod aplikácie (náhľad widgetu, D284) prejde, aj keď nie je medzi povolenými", async () => {
+    channelByKey.mockResolvedValueOnce({ kind: "widget", widget: { origins: ["https://issf.futbalsfz.sk"] } })
+    const own = new Request("https://intranet.futbalsfz.sk/api/widget/k/chat", { method: "OPTIONS", headers: { origin: "https://intranet.futbalsfz.sk", "x-forwarded-host": "intranet.futbalsfz.sk" } })
+    const r = await widgetPreflight(own, "k")
+    expect(r.status).toBe(204)
+    expect(r.headers.get("access-control-allow-origin")).toBe("https://intranet.futbalsfz.sk")
+  })
   it("neznámy kanál alebo portál: 404", async () => {
     channelByKey.mockResolvedValueOnce(null)
     expect((await widgetPreflight(req("https://issf.futbalsfz.sk"), "k")).status).toBe(404)

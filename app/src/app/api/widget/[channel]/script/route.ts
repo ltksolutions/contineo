@@ -8,6 +8,8 @@
  */
 
 import { NextResponse } from "next/server"
+import { createHash } from "node:crypto"
+import { widgetAppearance, appearanceForScript } from "@/lib/widgetAppearance"
 import { currentTenant, requestHostname } from "@/lib/session"
 import { channelByKey, widgetFallbackContact } from "@/lib/channels"
 import { dictionary } from "@/lib/i18n"
@@ -18,7 +20,7 @@ import { accentVars } from "@/components/TenantHeader"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(_req: Request, { params }: { params: Promise<{ channel: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel: key } = await params
   const tenant = await currentTenant().catch(() => null)
   if (!tenant) return new Response(null, { status: 404 })
@@ -44,13 +46,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ channel
     texts: { ...dictionary(language).widget, rateLimited: dictionary(language).errors["widget.rateLimited"] ?? "" } as Record<string, string>,
     language,
     contact: widgetFallbackContact(channel, tenant.branding?.supportEmail),
+    appearance: appearanceForScript(widgetAppearance(channel.widget.appearance), language),
   })
-  return new NextResponse(js, {
-    headers: {
-      "Content-Type": "application/javascript; charset=utf-8",
-      // Hodina: zmena textu alebo farby sa prejaví do hodiny, bez nasadenia.
-      "Cache-Control": "public, max-age=3600",
-      "X-Content-Type-Options": "nosniff",
-    },
-  })
+  // ETag z obsahu (D284): prehliadač sa po 5 minútach opýta, a keď sa
+  // nastavenie kanála nezmenilo, dostane 304 bez tela.
+  const etag = `"${createHash("sha256").update(js).digest("base64url").slice(0, 27)}"`
+  const headers = {
+    "Content-Type": "application/javascript; charset=utf-8",
+    // 5 minút (D284): zmena vzhľadu, textov alebo farby sa v cudzom systéme
+    // prejaví do 5 minút, bez zásahu u neho.
+    "Cache-Control": "public, max-age=300",
+    ETag: etag,
+    "X-Content-Type-Options": "nosniff",
+  }
+  if (req.headers.get("if-none-match") === etag) return new Response(null, { status: 304, headers })
+  return new NextResponse(js, { headers })
 }

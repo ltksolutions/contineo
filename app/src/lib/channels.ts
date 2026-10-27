@@ -34,6 +34,7 @@ import { isBounce } from "./mailbox/bounce"
 import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { requireCompanyCode } from "./tenantScope"
 import { isUiLanguage, type UiLanguage } from "./i18n"
+import { widgetAppearance, type WidgetAppearance } from "./widgetAppearance"
 import { GraphMailbox } from "./mailbox/graph"
 import type { MailboxAdapter, MailboxKind, MailFolder } from "./mailbox/types"
 import { ingestMessages, TICKETS_COLLECTION } from "./tickets"
@@ -136,6 +137,11 @@ export interface ChannelWidget {
    * Prázdne = Kontaktná adresa organizácie (`branding.supportEmail`).
    */
   fallbackEmail?: string
+  /**
+   * Vzhľad a správanie widgetu (ADR-042, Dodatok 1, D282–D283). Staršie
+   * kanály ho nemajú — `widgetAppearance()` doplní predvolené hodnoty.
+   */
+  appearance?: Partial<WidgetAppearance>
 }
 
 export interface HelpdeskChannel {
@@ -180,7 +186,7 @@ export interface HelpdeskChannel {
 /** Čo vidí obrazovka — bez tajomstiev. */
 export type ChannelView = Omit<HelpdeskChannel, "mailbox" | "widget"> & {
   mailbox: (Omit<ChannelMailbox, "graph"> & { graph?: { tenantId: string; clientId: string; clientSecretHint?: string; secretSetAt?: Date; secretSetBy?: string; hasSecret: boolean } }) | null
-  widget: Omit<ChannelWidget, "secretEnc"> & { hasSecret: boolean }
+  widget: Omit<ChannelWidget, "secretEnc" | "appearance"> & { hasSecret: boolean; appearance: WidgetAppearance }
 }
 
 /**
@@ -216,7 +222,7 @@ export function channelView(c: HelpdeskChannel): ChannelView {
             : undefined,
         }
       : null,
-    widget: { origins: widget.origins, rateLimitPerHour: widget.rateLimitPerHour, fallbackEmail: widget.fallbackEmail, secretHint: widget.secretHint, secretSetAt: widget.secretSetAt, revealOnce: widget.revealOnce, hasSecret: Boolean(widget.secretEnc) },
+    widget: { origins: widget.origins, rateLimitPerHour: widget.rateLimitPerHour, fallbackEmail: widget.fallbackEmail, secretHint: widget.secretHint, secretSetAt: widget.secretSetAt, revealOnce: widget.revealOnce, hasSecret: Boolean(widget.secretEnc), appearance: widgetAppearance(widget.appearance) },
   }
 }
 
@@ -257,6 +263,8 @@ export interface ChannelInput {
   /** Kontakt pri výpadku widgetu; prázdne = kontaktná adresa organizácie. */
   widgetFallbackEmail?: string
   rateLimitPerHour?: number | string
+  /** Vzhľad a správanie widgetu z formulára; chýbajúce = bez zmeny (D283). */
+  widgetAppearance?: { position?: string; size?: string; escalateAfter?: string | number; launcher?: Record<string, string>; greeting?: Record<string, string> }
   mailbox?: {
     kind: string
     address: string
@@ -360,6 +368,7 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
       return v || undefined
     })(),
     rateLimitPerHour: Number.isFinite(rate) && rate > 0 ? Math.min(Math.round(rate), 10_000) : DEFAULT_RATE_LIMIT,
+    appearance: widgetAppearance(input.widgetAppearance ?? existing?.widget.appearance),
   }
 
   const channel: HelpdeskChannel = {
@@ -382,7 +391,8 @@ export async function saveChannel(companyCode: string, input: ChannelInput, acto
   await writeAudit({
     companyCode: code, subject: "helpdesk-channel", action: existing ? "changed" : "created", actor,
     targetId: key, targetLabel: name,
-    note: `${kind} · ${kind === "widget" ? "public" : channel.accessLevel}${tickets ? " · tickety" : ""}${mailbox ? ` · schránka ${mailbox.kind} · ${mailbox.address}` : ""}`,
+    // Vzhľad widgetu v poznámke (D284): kto, kedy a čo zmenil — návrat je ďalšie uloženie.
+    note: `${kind} · ${kind === "widget" ? "public" : channel.accessLevel}${tickets ? " · tickety" : ""}${mailbox ? ` · schránka ${mailbox.kind} · ${mailbox.address}` : ""}${kind === "widget" ? ` · widget ${widget.appearance?.position} ${widget.appearance?.size} po ${widget.appearance?.escalateAfter}` : ""}`,
   })
   return channel
 }

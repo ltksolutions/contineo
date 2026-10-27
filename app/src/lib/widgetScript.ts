@@ -4,8 +4,8 @@
  * Jeden súbor bez závislostí, ktorý si ISSF vloží značkou `<script>`.
  * Vykreslí plávajúce tlačidlo a panel v Shadow DOM (štýly ISSF naň nesiahnu
  * a naopak), otázku pošle na `/api/widget/<kanál>/chat` s tokenom, odpoveď
- * číta po kúskoch (SSE), ukáže zdroje a palce; po **dvoch** negatívnych
- * hodnoteniach v rozhovore ponúkne ticket (D166). Token berie z atribútu
+ * číta po kúskoch (SSE), ukáže zdroje a palce; po negatívnych hodnoteniach
+ * v rozhovore ponúkne ticket (D166) — po koľkých, je nastavenie kanála. Token berie z atribútu
  * `data-token`, pri vypršaní si vyžiada nový z `data-token-url` (adresa na
  * strane ISSF, rovnaký pôvod ako stránka).
  *
@@ -23,7 +23,38 @@
  * dokumentácia ▾" (vždy vymenované), rozbalí sa v paneli. Zmena nič
  * nespúšťa — výber ide s ďalšou otázkou. Hlavičku odpovede skladá server
  * (udalosť `scope`), skript ju len vypíše.
+ *
+ * **Vzhľad a správanie z nastavenia kanála** (ADR-042, Dodatok 1, D281–D283):
+ * poloha na ôsmich miestach okolo obrazovky, veľkosť panela, text tlačidla,
+ * privítanie a prah ponuky helpdesku. Panel sa otvára na mieste tlačidla
+ * smerom dovnútra obrazovky a tlačidlo sa medzitým skryje (zatvára sa „×");
+ * pod 640 px je panel celá obrazovka.
  */
+
+import { DEFAULT_WIDGET_APPEARANCE, WIDGET_SIZE_PX, appearanceForScript, type WidgetAppearanceForScript, type WidgetPosition } from "./widgetAppearance"
+
+/** Odstup od okraja obrazovky — ako doteraz pri pravom dolnom rohu. */
+const EDGE = 16
+
+/**
+ * Ukotvenie tlačidla aj panela k miestu na obrazovke (D282). Stredy strán
+ * sa centrujú posunom, rohy len odstupom od dvoch okrajov.
+ */
+export function anchorCss(position: WidgetPosition): string {
+  const [x, y] = position === "top" ? ["center", "top"]
+    : position === "bottom" ? ["center", "bottom"]
+    : position.split("-") as [string, string]
+  const parts: string[] = []
+  const shift: string[] = []
+  if (x === "left") parts.push(`left:${EDGE}px`)
+  else if (x === "right") parts.push(`right:${EDGE}px`)
+  else { parts.push("left:50%"); shift.push("translateX(-50%)") }
+  if (y === "top") parts.push(`top:${EDGE}px`)
+  else if (y === "bottom") parts.push(`bottom:${EDGE}px`)
+  else { parts.push("top:50%"); shift.push("translateY(-50%)") }
+  parts.push(`transform:${shift.length ? shift.join(" ") : "none"}`)
+  return parts.join(";")
+}
 
 /** Svetlé tokeny z `:root` v `globals.css` — widget tmavú tému nemá. */
 export const WIDGET_TOKENS: Record<string, string> = {
@@ -54,15 +85,21 @@ export interface WidgetScriptConfig {
   accentStrong?: string
   /** Povolené zdroje kanála; pri jedinom sa výber nekreslí. */
   sources?: { id: string; name: string; sub: string }[]
+  /** Vzhľad a správanie z nastavenia kanála; chýbajúce = predvolené (D282, D283). */
+  appearance?: WidgetAppearanceForScript
 }
 
 export function widgetScript(cfg: WidgetScriptConfig): string {
   const config = JSON.stringify(cfg)
   const tokens = Object.entries(WIDGET_TOKENS).map(([k, v]) => `${k}:${v}`).join(";")
+  const look = cfg.appearance ?? appearanceForScript(DEFAULT_WIDGET_APPEARANCE, "sk")
+  const anchor = anchorCss(look.position)
+  const size = WIDGET_SIZE_PX[look.size]
   return `(function(){
 "use strict";
 var CFG=${config};
 var T=CFG.texts;
+var LOOK=CFG.appearance||{escalateAfter:2,launcher:'',greeting:''};
 var script=document.currentScript||(function(){var s=document.querySelectorAll('script[data-token]');return s[s.length-1]})();
 var token=script&&script.getAttribute('data-token')||'';
 var tokenUrl=script&&script.getAttribute('data-token-url')||'';
@@ -79,10 +116,10 @@ style.textContent=[
 '*{box-sizing:border-box}',
 /* \`hidden\` musí vyhrať nad display z tried (.lnote, .a-head) — oznam a hlavička sa skrývajú atribútom. */
 '[hidden]{display:none!important}',
-'.fab{position:fixed;right:16px;bottom:16px;z-index:2147483000;min-height:44px;padding:0 18px;border:0;border-radius:22px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.18)}',
-'.panel{position:fixed;right:16px;bottom:72px;z-index:2147483000;width:min(400px,calc(100vw - 32px));height:min(600px,calc(100vh - 100px));display:none;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);overflow:hidden}',
+'.fab{position:fixed;${anchor};z-index:2147483000;min-height:44px;padding:0 18px;border:0;border-radius:22px;background:var(--accent);color:var(--on-accent);font:inherit;font-weight:600;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.18)}',
+'.panel{position:fixed;${anchor};z-index:2147483000;width:min(${size.width}px,calc(100vw - 32px));height:min(${size.height}px,calc(100vh - 32px));display:none;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);overflow:hidden}',
 '.panel.is-open{display:flex}',
-'@media (max-width:640px){.panel{right:0;bottom:0;width:100vw;height:100vh;border-radius:0}}',
+'@media (max-width:640px){.panel{top:0;right:0;bottom:0;left:0;transform:none;width:100vw;height:100vh;border-radius:0}}',
 '.head{display:flex;align-items:center;gap:10px;padding:0 0 0 14px;min-height:52px;background:var(--accent);color:var(--on-accent);font-weight:600}',
 '.head button{margin-left:auto;background:transparent;border:0;color:var(--on-accent);font-size:22px;line-height:1;cursor:pointer;min-width:44px;min-height:44px}',
 /* Prenesené z globals.css: tlačidlá (W1 — .btn nahradené .button). */
@@ -146,7 +183,7 @@ style.textContent=[
 ].join('');
 root.appendChild(style);
 
-var fab=el('button','fab',T.open);fab.type='button';
+var fab=el('button','fab',LOOK.launcher||T.open);fab.type='button';
 var panel=el('div','panel');
 var head=el('div','head',T.title);var close=el('button',null,'×');close.type='button';close.setAttribute('aria-label','close');head.appendChild(close);
 var log=el('div','log');
@@ -199,8 +236,14 @@ panel.appendChild(head);if(scope)panel.appendChild(scope);panel.appendChild(log)
 root.appendChild(fab);root.appendChild(panel);
 document.body.appendChild(host);
 
-fab.addEventListener('click',function(){panel.classList.toggle('is-open');if(panel.classList.contains('is-open'))ta.focus()});
-close.addEventListener('click',function(){panel.classList.remove('is-open')});
+/* Panel sa otvára na mieste tlačidla (D282); tlačidlo sa medzitým skryje. */
+var greeted=false;
+function openPanel(){panel.classList.add('is-open');fab.hidden=true;
+  if(!greeted&&LOOK.greeting&&!log.firstChild){greeted=true;log.appendChild(el('div','msg a',LOOK.greeting))}
+  ta.focus()}
+function closePanel(){panel.classList.remove('is-open');fab.hidden=false;fab.focus()}
+fab.addEventListener('click',openPanel);
+close.addEventListener('click',closePanel);
 
 function sys(text){var m=el('div','msg sys',text);log.appendChild(m);log.scrollTop=log.scrollHeight;return m}
 var contactShown=false;
@@ -225,7 +268,7 @@ function rateButtons(recordId,answerEl){
   function pick(v){up.classList.toggle('is-on',v===1);down.classList.toggle('is-on',v===0);up.disabled=down.disabled=true;
     conversation.forEach(function(c){if(c.recordId===recordId)c.verdict=v});
     api('feedback',{id:recordId,verdict:v}).catch(function(){});
-    if(v===0){negatives++;if(negatives>=2){sys(T.tryAgain);offerEscalation()}}else{sys(T.thanks)}}
+    if(v===0){negatives++;if(negatives>=LOOK.escalateAfter){sys(T.tryAgain);offerEscalation()}}else{sys(T.thanks)}}
   up.addEventListener('click',function(){pick(1)});down.addEventListener('click',function(){pick(0)});
   rate.appendChild(up);rate.appendChild(down);answerEl.appendChild(rate);
 }
@@ -257,7 +300,7 @@ function ask(q){
     return pump();
   }).then(function(){
     thinking.remove();
-    if(!text.trim()||!sources.length){body.textContent=T.noAnswer;negatives++;conversation.push({recordId:null,question:q,verdict:0});if(negatives>=2)offerEscalation();return}
+    if(!text.trim()||!sources.length){body.textContent=T.noAnswer;negatives++;conversation.push({recordId:null,question:q,verdict:0});if(negatives>=LOOK.escalateAfter)offerEscalation();return}
     if(sources.length){var s=el('div','src',T.sources);var ul=el('ul');var seen={};sources.forEach(function(x){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;var li=el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':''));ul.appendChild(li)});s.appendChild(ul);a.appendChild(s)}
     conversation.push({recordId:recordId,question:q,verdict:null});
     if(recordId)rateButtons(recordId,a);

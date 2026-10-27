@@ -12,7 +12,7 @@ import { revalidatePath } from "next/cache"
 import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
 import { AppError } from "@/lib/appError"
-import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { dictionary, errorText, UI_LANGUAGES, type UiLanguage } from "@/lib/i18n"
 import { saveChannel, removeChannel, verifyMailbox, syncChannel, rotateWidgetSecret } from "@/lib/channels"
 import { startAnalysis, continueAnalysis } from "@/lib/historyAnalysis"
 import { startHarvest, continueHarvest, addExclusions } from "@/lib/faqHarvest"
@@ -64,6 +64,14 @@ export async function saveChannelAction(fd: FormData) {
       widgetOrigins: lines(fd, "widgetOrigins"),
       widgetFallbackEmail: fd.has("widgetFallbackEmail") ? fieldText(fd, "widgetFallbackEmail") : undefined,
       rateLimitPerHour: fieldText(fd, "rateLimitPerHour"),
+      // Vzhľad widgetu (D283); formulár portálu tieto polia nemá — bez zmeny.
+      widgetAppearance: fd.has("widgetPosition")
+        ? {
+            position: fieldText(fd, "widgetPosition"), size: fieldText(fd, "widgetSize"), escalateAfter: fieldText(fd, "widgetEscalateAfter"),
+            launcher: Object.fromEntries(UI_LANGUAGES.map(l => [l, fieldText(fd, `widgetLauncher-${l}`)])),
+            greeting: Object.fromEntries(UI_LANGUAGES.map(l => [l, fieldText(fd, `widgetGreeting-${l}`)])),
+          }
+        : undefined,
       mailbox: mailboxKind
         ? { kind: mailboxKind, address: fieldText(fd, "address"), tenantId: fieldText(fd, "tenantId"), clientId: fieldText(fd, "clientId"), clientSecret: fieldText(fd, "clientSecret"), syncIntervalMinutes: fieldText(fd, "syncInterval"), skipBounces: fieldText(fd, "skipBounces") === "on" }
         : null,
