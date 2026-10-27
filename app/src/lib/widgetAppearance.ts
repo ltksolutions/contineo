@@ -6,6 +6,9 @@
  * veľkosť panela, text tlačidla, privítanie a prah ponuky helpdesku sa
  * nastavujú v Contineu a skript ich dostane zo servera.
  *
+ * **Tvar** (Dodatok 2, D286): hore v strede a dole v strede je zatvorený
+ * widget **riadok otázky**, na ostatných šiestich miestach tlačidlo.
+ *
  * Bez závislostí na databáze — číta ho aj skript widgetu a testy.
  */
 
@@ -20,14 +23,22 @@ export const WIDGET_POSITIONS = [
 ] as const
 export type WidgetPosition = (typeof WIDGET_POSITIONS)[number]
 
-/** Tri predvoľby, nie voľné pixely (D283) — voľné rozmery by sa na niektorej šírke rozbili. */
-export const WIDGET_SIZES = ["s", "m", "l"] as const
+/**
+ * Predvoľby, nie voľné pixely (D283) — voľné rozmery by sa na niektorej
+ * šírke rozbili. `xl` je 80 % × 80 % obrazovky v strede so závojom (D287).
+ */
+export const WIDGET_SIZES = ["s", "m", "l", "xl"] as const
 export type WidgetSize = (typeof WIDGET_SIZES)[number]
-/** Šírka × výška panela od 640 px; pod 640 px je panel celá obrazovka. */
-export const WIDGET_SIZE_PX: Record<WidgetSize, { width: number; height: number }> = {
+/** Šírka × výška panela od 640 px; pod 640 px je panel celá obrazovka. `xl` je v percentách. */
+export const WIDGET_SIZE_PX: Record<Exclude<WidgetSize, "xl">, { width: number; height: number }> = {
   s: { width: 360, height: 520 },
   m: { width: 400, height: 600 },
   l: { width: 480, height: 720 },
+}
+
+/** Riadok otázky namiesto tlačidla — len hore a dole v strede (D286): riadok potrebuje šírku. */
+export function isRowPosition(position: WidgetPosition): boolean {
+  return position === "top" || position === "bottom"
 }
 
 export const ESCALATE_AFTER = [1, 2, 3] as const
@@ -35,6 +46,11 @@ export const ESCALATE_AFTER = [1, 2, 3] as const
 /** Strop textov — tlačidlo je na jeden riadok, privítanie na pár viet. */
 export const LAUNCHER_MAX = 40
 export const GREETING_MAX = 500
+/** Nápoveda v riadku otázky — viac než text tlačidla, stále jeden riadok. */
+export const PLACEHOLDER_MAX = 120
+/** Vzory otázok v prázdnej plachte (D288). */
+export const EXAMPLES_MAX = 6
+export const EXAMPLE_MAX = 140
 /** Frázy: najviac 20 na jazyk, každá na pár slov. */
 export const PHRASES_MAX = 20
 export const PHRASE_MAX = 80
@@ -75,15 +91,19 @@ export interface WidgetAppearance {
   offerLink: boolean
   /** Frázy podľa jazyka, pri ktorých sa správa ponúkne hneď; chýbajúci jazyk = `DEFAULT_PHRASES`. */
   phrases: Partial<Record<UiLanguage, string[]>>
+  /** Nápoveda v riadku otázky podľa jazyka; chýbajúca = predvolená (`widget.rowPlaceholder`). */
+  placeholder: Partial<Record<UiLanguage, string>>
+  /** Vzory otázok v prázdnej plachte podľa jazyka; chýbajúce = časť sa nekreslí (D288). */
+  examples: Partial<Record<UiLanguage, string[]>>
 }
 
 /**
- * Predvolené hodnoty. Vpravo v strede (D282, Ján 27. 10. 2026): v ISSF
- * je hore menu, vľavo dole tlačidlá exportu zostáv a schvaľovania žiadostí
- * a vpravo dole tabuľky s akciami — stred strany nič nezakrýva. Prah 2 je D275.
+ * Predvolené hodnoty: riadok otázky hore v strede, plachta 80 % × 80 %
+ * (Dodatok 2, D286, D287 — Ján 27. 10. 2026, po vpravo v strede z D282).
+ * Prah 2 je D275.
  */
 export const DEFAULT_WIDGET_APPEARANCE: WidgetAppearance = {
-  position: "right-middle", size: "m", escalateAfter: 2, launcher: {}, greeting: {}, offerLink: true, phrases: {},
+  position: "top", size: "xl", escalateAfter: 2, launcher: {}, greeting: {}, offerLink: true, phrases: {}, placeholder: {}, examples: {},
 }
 
 function texts(raw: unknown, max: number): Partial<Record<UiLanguage, string>> {
@@ -97,13 +117,13 @@ function texts(raw: unknown, max: number): Partial<Record<UiLanguage, string>> {
   return out
 }
 
-function phraseLists(raw: unknown): Partial<Record<UiLanguage, string[]>> {
+function lists(raw: unknown, maxItems: number, maxLength: number): Partial<Record<UiLanguage, string[]>> {
   const out: Partial<Record<UiLanguage, string[]>> = {}
   if (!raw || typeof raw !== "object") return out
   for (const [lang, v] of Object.entries(raw as Record<string, unknown>)) {
     if (!isUiLanguage(lang) || !Array.isArray(v)) continue
-    const list = [...new Set(v.filter((x): x is string => typeof x === "string").map(x => x.replace(/\s+/g, " ").trim().slice(0, PHRASE_MAX)).filter(Boolean))]
-    if (list.length) out[lang] = list.slice(0, PHRASES_MAX)
+    const list = [...new Set(v.filter((x): x is string => typeof x === "string").map(x => x.replace(/\s+/g, " ").trim().slice(0, maxLength)).filter(Boolean))]
+    if (list.length) out[lang] = list.slice(0, maxItems)
   }
   return out
 }
@@ -125,7 +145,9 @@ export function widgetAppearance(raw: unknown): WidgetAppearance {
     greeting: texts(r.greeting, GREETING_MAX),
     // Chýbajúce pole (staršie kanály) = zapnuté, ako D275.
     offerLink: r.offerLink !== false,
-    phrases: phraseLists(r.phrases),
+    phrases: lists(r.phrases, PHRASES_MAX, PHRASE_MAX),
+    placeholder: texts(r.placeholder, PLACEHOLDER_MAX),
+    examples: lists(r.examples, EXAMPLES_MAX, EXAMPLE_MAX),
   }
 }
 
@@ -139,6 +161,8 @@ export interface WidgetAppearanceForScript {
   offerLink: boolean
   /** Frázy všetkých jazykov rozhrania, už v tvare `normalizePhrase`. */
   phrases: string[]
+  placeholder: string
+  examples: string[]
 }
 
 export function appearanceForScript(a: WidgetAppearance, language: UiLanguage): WidgetAppearanceForScript {
@@ -148,5 +172,7 @@ export function appearanceForScript(a: WidgetAppearance, language: UiLanguage): 
     offerLink: a.offerLink,
     // Všetky jazyky naraz: človek s českým rozhraním môže napísať po slovensky.
     phrases: [...new Set(UI_LANGUAGES.flatMap(l => (a.phrases[l] ?? DEFAULT_PHRASES[l]).map(normalizePhrase)).filter(Boolean))],
+    placeholder: a.placeholder[language] ?? "",
+    examples: a.examples[language] ?? [],
   }
 }

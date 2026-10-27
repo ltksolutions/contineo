@@ -278,3 +278,77 @@ ponúkne všeobecné `ContineoHelpdesk.open()`; keď skript nenabehol, odkaz
 vedie na `mailto:helpdesk@futbalsfz.sk`. **Použitie je integrácia ISSF,
 nie štandard ani nastavenie kanála** — opisuje sa v `docs/WIDGET_ISSF.md`.
 Iný cudzí systém dostane len plávajúce tlačidlo podľa D282.
+
+---
+
+## Dodatok 2 — Riadok otázky, plachta na obrazovku, história a jazyk (2026-10-27)
+
+> **Rozhodol:** Ján Letko (2026-10-27) po ukážke widgetu v ISSF — „chcel
+> by som design tlačidla ‚Opýtať sa' inak, modernejšie, interaktívnejšie,
+> navrhujem rovno riadok ako v hlavičke Contineo … rozbaliť … na 80 %
+> obrazovky"; k návrhu KANAL-widget-riadok-otazky „R1: ok, default hore;
+> R2: ok; R3: ok; R4: dajme vzory otázok, poprípade aj históriu otázok;
+> R5: ok"; „schvaľujem návrh ako finálny"; „je možné, že sa prihlási do
+> ISSF zahraničný hráč, prepínač jazykov by bol fajn". Návrh:
+> `docs/design/KANAL-widget-riadok-otazky.*`, zadanie s otázkami
+> `docs/design/KANAL-widget-riadok-otazky-zadanie.md`.
+
+### D286 — Hore a dole v strede je zatvorený widget riadok otázky
+
+Na polohe hore v strede a dole v strede je zatvorený widget **riadok
+otázky** v tvare poľa z hlavičky Continea (značka, nápoveda, šípka), na
+ostatných šiestich miestach z D282 ostáva tlačidlo. Klik, Enter alebo
+písanie riadok rozbalí; rozpísaný text v ňom ostane po zavretí.
+**Predvolené je hore v strede** (mení predvolenú polohu z D282). Nápoveda
+v riadku je nastavenie kanála v jazykoch kanála; predvolená je všeobecná
+(„Máte otázku? Potrebujete návod alebo vysvetlenie? Pýtajte sa, sme tu pre
+vás.").
+
+Prečo: riadok pozýva písať a hovorí, na čo sa pýtať; tlačidlo nie. Riadok
+potrebuje šírku, pri boku obrazovky by stál cez obsah.
+
+### D287 — Štvrtá veľkosť: plachta 80 % × 80 % obrazovky
+
+K trom predvoľbám z D283 pribudne „na obrazovku": plachta 80 % šírky
+a výšky v strede so závojom, vyrastá z miesta zatvoreného widgetu.
+**Predvolená.** Pod 640 px je plachta celá obrazovka ako doteraz.
+Rozhovor má v širokej plachte stĺpec 720 px, aby sa dal čítať.
+
+### D288 — Prázdna plachta: nedávne otázky a vzory ako v Contineu
+
+Prázdna plachta má, ako plachta otázky v intranete, veľké pole, **nedávne
+otázky osoby** a **vzory otázok**:
+
+- história je tých istých záznamov `evaluations` (H1 histórie otázok), osoby
+  z widgetu (D280 — podľa e-mailu, nie podľa účtu ISSF) a **len verejných**
+  (`askerAccessLevel: "public"`); interné otázky tej istej osoby
+  z intranetu do cudzieho systému nejdú. Posledných 5, pri písaní zúžené;
+  riadok otvorí uloženú odpoveď v plachte, „×" ju skryje z histórie (H2).
+  Odkaz „Všetky" sa nekreslí — stránka histórie je v intranete;
+- vzory sú **nastavenie kanála** v jazykoch kanála (najviac 6); prázdne =
+  časť sa nekreslí. Vzor otázku vloží, neodošle.
+
+### D289 — Widget vyká
+
+Texty widgetu v slovenčine a češtine vykajú („Napíšte helpdesku"), ako
+ISSF a SFZ píšu ľuďom. Rozhranie intranetu sa tým nemení.
+
+### D290 — Výber jazyka vo widgete
+
+Kanál s viac jazykmi má v hlavičke plachty **výber jazyka** (názov jazyka
+v ňom samom: Slovenčina, Čeština, English). Mení texty widgetu, jazyk
+odpovede aj jazyk potvrdenia ticketu; server prijme len jazyk kanála.
+Prvý jazyk je voľba z minulej návštevy (prehliadač), potom `lang` z tokenu,
+potom prvý jazyk kanála. Skript nesie texty všetkých jazykov kanála naraz,
+zmena nesťahuje nič nové.
+
+Prečo: do ISSF sa prihlási aj zahraničný hráč alebo rozhodca a ISSF jazyk
+v tokene nemusí posielať. Jazyk odpovede je vec človeka, nie systému,
+v ktorom widget stojí.
+
+### Design system
+
+Externý widget kanála (`.xw-*`) je súčasť design systému: `globals.css`,
+`.design-sync/conventions.md`; skript nesie pravidlá doslova
+(`WIDGET_CSS`) a test `widgetCss` stráži, že sa nerozídu. Zrkadlo
+v Claude aktualizuje `/design-sync` (spúšťa Ján).

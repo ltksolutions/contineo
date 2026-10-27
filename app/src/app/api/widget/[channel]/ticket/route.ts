@@ -9,7 +9,7 @@
 
 import { NextResponse, after } from "next/server"
 import { ObjectId } from "mongodb"
-import { widgetGate, widgetPreflight, corsHeaders } from "@/lib/widgetApi"
+import { widgetGate, widgetPreflight, corsHeaders, widgetLanguage } from "@/lib/widgetApi"
 import { createChatTicket, confirmChatTicket, widgetPage } from "@/lib/tickets"
 import { mailboxFor } from "@/lib/channels"
 import { brandingView } from "@/lib/tenants"
@@ -27,7 +27,7 @@ export async function OPTIONS(req: Request, { params }: { params: Promise<{ chan
 
 export async function POST(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel: key } = await params
-  let body: { token?: string; message?: string; page?: unknown; conversation?: { recordId?: string | null; question?: string; verdict?: unknown }[] }
+  let body: { token?: string; message?: string; language?: unknown; page?: unknown; conversation?: { recordId?: string | null; question?: string; verdict?: unknown }[] }
   try { body = await req.json() } catch { return new Response("invalid-json", { status: 400 }) }
   const gate = await widgetGate(req, key, body.token ?? null)
   if (gate instanceof Response) return gate
@@ -69,7 +69,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
     const email = gate.identity.email
     if (gate.channel.mailbox && email) {
       const channel = gate.channel
-      const te = dictionary(gate.language).ticketConfirmationEmail
+      // Potvrdenie v jazyku, ktorý mal človek vo widgete zvolený (D290).
+      const te = dictionary(widgetLanguage(gate, body.language)).ticketConfirmationEmail
       const branding = brandingView(gate.tenant)
       const organisation = branding.shortName?.trim() || branding.displayName
       const subject = te.subject(message.split("\n")[0].slice(0, 120))
