@@ -342,8 +342,10 @@ ISSF a SFZ píšu ľuďom. Rozhranie intranetu sa tým nemení.
 
 ### D290 — Výber jazyka vo widgete
 
-Kanál s viac jazykmi má v hlavičke plachty **výber jazyka** (názov jazyka
-v ňom samom: Slovenčina, Čeština, English). Mení texty widgetu, jazyk
+Kanál s viac jazykmi má v hlavičke plachty **prepínač jazyka** so
+skratkami **SK / CZ / EN** v tvare segmentového prepínača (Ján, 27. 10.
+2026: „prepínač jazykov daj ikony SK, EN, CZ"); plný názov jazyka v ňom
+samom (Slovenčina, Čeština, English) je pre čítačku a v bublinke. Mení texty widgetu, jazyk
 odpovede aj jazyk potvrdenia ticketu; server prijme len jazyk kanála.
 Prvý jazyk je voľba z minulej návštevy (prehliadač), potom `lang` z tokenu,
 potom prvý jazyk kanála. Skript nesie texty všetkých jazykov kanála naraz,

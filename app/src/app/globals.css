@@ -4385,7 +4385,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * Zatvorený: `.xw-row` riadok otázky (tvar `.header-search`, 52 px a tieň —
  * stojí nad cudzou stránkou). Otvorený: `.xw-sheet` plachta (tvar
  * `.ask-sheet--overlay`) nad `.xw-scrim`; `.xw-head` (značka, názov,
- * `.xw-lang` jazyk, zdroje, `.xw-close`), `.xw-body` > `.xw-col` (720 px)
+ * `.xw-langs` prepínač jazyka SK / CZ / EN, zdroje, `.xw-close`), `.xw-body` > `.xw-col` (720 px)
  * s `.xw-empty` (pole `.xw-field`, nedávne otázky a vzory ako v plachte
  * otázky) alebo rozhovorom `.xw-log` (`.xw-q`, `.xw-a`, `.xw-sys`,
  * `.xw-card` správa helpdesku), dole `.xw-composer`. Poloha a veľkosť sú
@@ -4406,7 +4406,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-head-title{flex:1;min-width:0;font-weight:650;font-size:17px;color:var(--ink)}
 .xw-close{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:22px;background:transparent;color:var(--ink);font:inherit;font-size:24px;line-height:1;cursor:pointer}
 .xw-close:hover{background:var(--surface-2)}
-.xw-lang{min-height:36px;padding:0 10px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:var(--fs-small);cursor:pointer}
+.xw-langs{display:inline-flex;gap:2px;padding:2px;border-radius:10px;background:var(--seg-track)}
+.xw-lang{min-width:44px;min-height:40px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--ink);font:inherit;font-size:var(--fs-small);font-weight:600;letter-spacing:0.04em;cursor:pointer}
+.xw-lang:hover{background:var(--surface)}
+.xw-lang:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.xw-lang.is-on{background:var(--seg-thumb);box-shadow:var(--seg-shadow)}
 .xw-body{flex:1;min-height:0;overflow:auto;background:var(--bg)}
 .xw-col{max-width:720px;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:14px}
 .xw-empty{display:flex;flex-direction:column;gap:16px}
