@@ -41,6 +41,7 @@
     "migrate:documentkey": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_document_key.mjs",
     "migrate:personname": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_person_name.mjs",
     "migrate:address": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/migrate_controller_address.mjs",
+    "folders:recompute": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/folder_paths_recompute.mjs",
     "migrate:kinds": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/migrate_document_kinds.mjs",
     "migrate:remove-faq": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/migrate_remove_faq.mjs",
     "migrate:indexes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_index_names.mjs",
