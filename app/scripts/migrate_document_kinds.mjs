@@ -21,7 +21,7 @@
 import { getClient, getCollection } from "../src/lib/mongodb.ts"
 import { DOCUMENTS_COLLECTION } from "../src/lib/documents.ts"
 import { TENANTS_COLLECTION } from "../src/lib/tenants.ts"
-import { FOLDERS_COLLECTION } from "../src/lib/folders.ts"
+import { FOLDERS_COLLECTION, allFolders, pathIdsTo } from "../src/lib/folders.ts"
 import { writeAudit } from "../src/lib/audit.ts"
 
 const ZAPISAT = process.argv.includes("--zapisat")
@@ -90,8 +90,11 @@ if (!ZAPISAT) {
       })
     }
   }
+  // Cesta patrí k priečinku — bez nej ho filter „vrátane podpriečinkov"
+  // nenájde (`npm run check` 27. 10. 2026: 8 poriadkov s prázdnou cestou).
+  const folderPath = folder ? pathIdsTo(await allFolders(folder.companyCode), folder.id) : []
   for (const d of toFolder) {
-    await docs.updateOne({ companyCode: d.companyCode, documentId: d.documentId }, { $set: { folderId: folder.id } })
+    await docs.updateOne({ companyCode: d.companyCode, documentId: d.documentId }, { $set: { folderId: folder.id, folderPath } })
     await writeAudit({
       companyCode: d.companyCode, subject: "document", action: "changed", actor: ACTOR,
       targetId: d.documentId, targetLabel: d.title,
