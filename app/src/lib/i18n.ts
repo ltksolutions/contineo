@@ -2810,6 +2810,13 @@ interface Dictionary {
     language: string
     /** Úchyt riadku otázky: čo robí a ako ho vrátiť. */
     move: string
+    /** Úvodný tip pri prvej návšteve (D291); `{org}` = skratka organizácie. */
+    tipTitle: string
+    tipBody: string
+    tipMove: string
+    tipTry: string
+    tipOk: string
+    tipClose: string
     /** Prázdna plachta: nadpis a veta pod ním, keď kanál nemá privítanie. */
     emptyTitle: string
     emptyLead: string
@@ -2979,6 +2986,8 @@ interface Dictionary {
     widgetExamplesHint: string
     widgetGreeting: (language: string) => string
     widgetGreetingHint: string
+    widgetTip: string
+    widgetTipHint: string
     widgetOfferLink: string
     widgetOfferLinkHint: string
     widgetPhrases: (language: string) => string
@@ -8242,6 +8251,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Opýtať sa",
     rowPlaceholder: "Máte otázku? Potrebujete návod alebo vysvetlenie? Pýtajte sa, sme tu pre vás.",
     move: "Posunúť pomocníka. Šípky ho posúvajú, Home alebo dvojklik ho vráti na miesto.",
+    tipTitle: "Nový pomocník {org}",
+    tipBody: "Pýtajte sa vlastnými slovami — na predpisy, postupy aj návody. Keď odpoveď nenájdeme, pošlete správu helpdesku a odpovie vám človek.",
+    tipMove: "Ak vám riadok niečo zakrýva, posuňte ho za úchyt. Dvojklik ho vráti.",
+    tipTry: "Vyskúšať",
+    tipOk: "Rozumiem",
+    tipClose: "Zavrieť tip",
     language: "Jazyk",
     close: "Zavrieť",
     emptyTitle: "S čím vám môžeme pomôcť?",
@@ -8405,6 +8420,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetExamplesHint: "Jeden na riadok, najviac 6. Ukážu sa v prázdnom widgete; klik otázku vloží, neodošle. Prázdne = bez vzorov.",
     widgetGreeting: l => `Privítanie (${l})`,
     widgetGreetingHint: "Prvá správa v prázdnom paneli. Prázdne = bez privítania.",
+    widgetTip: "Úvodný tip pri prvej návšteve",
+    widgetTipHint: "Bublina pod riadkom otázky: čo je pomocník a ako ho posunúť. Ukáže sa raz v prehliadači, kým ju človek nezavrie alebo widget neotvorí.",
     widgetOfferLink: "Stále viditeľný odkaz „Napísať helpdesku“",
     widgetOfferLinkHint: "Tiché tlačidlo pod poľom otázky po prvej odpovedi — človek nemusí čakať na neúspechy.",
     widgetPhrases: l => `Frázy, pri ktorých sa správa ponúkne hneď (${l})`,
@@ -13544,6 +13561,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Zeptat se",
     rowPlaceholder: "Máte otázku? Potřebujete návod nebo vysvětlení? Ptejte se, jsme tu pro vás.",
     move: "Posunout pomocníka. Šipky ho posouvají, Home nebo dvojklik ho vrátí na místo.",
+    tipTitle: "Nový pomocník {org}",
+    tipBody: "Ptejte se vlastními slovy — na předpisy, postupy i návody. Když odpověď nenajdeme, pošlete zprávu helpdesku a odpoví vám člověk.",
+    tipMove: "Pokud vám řádek něco zakrývá, posuňte ho za úchyt. Dvojklik ho vrátí.",
+    tipTry: "Vyzkoušet",
+    tipOk: "Rozumím",
+    tipClose: "Zavřít tip",
     language: "Jazyk",
     close: "Zavřít",
     emptyTitle: "S čím vám můžeme pomoci?",
@@ -13707,6 +13730,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetExamplesHint: "Jeden na řádek, nejvýše 6. Ukážou se v prázdném widgetu; klik otázku vloží, neodešle. Prázdné = bez vzorů.",
     widgetGreeting: l => `Přivítání (${l})`,
     widgetGreetingHint: "První zpráva v prázdném panelu. Prázdné = bez přivítání.",
+    widgetTip: "Úvodní tip při první návštěvě",
+    widgetTipHint: "Bublina pod řádkem otázky: co je pomocník a jak ho posunout. Ukáže se jednou v prohlížeči, dokud ji člověk nezavře nebo widget neotevře.",
     widgetOfferLink: "Stále viditelný odkaz „Napsat helpdesku“",
     widgetOfferLinkHint: "Tiché tlačítko pod polem otázky po první odpovědi — člověk nemusí čekat na neúspěchy.",
     widgetPhrases: l => `Fráze, při kterých se zpráva nabídne hned (${l})`,
@@ -18837,6 +18862,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Ask",
     rowPlaceholder: "Have a question? Need a guide or an explanation? Ask us, we are here for you.",
     move: "Move the assistant. Arrow keys move it, Home or a double click puts it back.",
+    tipTitle: "New {org} assistant",
+    tipBody: "Ask in your own words — about regulations, procedures and guides. If we find no answer, send a message to the helpdesk and a person will reply.",
+    tipMove: "If the row covers something, drag it by the handle. A double click puts it back.",
+    tipTry: "Try it",
+    tipOk: "Got it",
+    tipClose: "Close tip",
     language: "Language",
     close: "Close",
     emptyTitle: "How can we help you?",
@@ -19000,6 +19031,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     widgetExamplesHint: "One per line, at most 6. Shown in an empty widget; a click inserts the question without sending it. Empty = no examples.",
     widgetGreeting: l => `Greeting (${l})`,
     widgetGreetingHint: "First message in an empty panel. Empty = no greeting.",
+    widgetTip: "Intro tip on the first visit",
+    widgetTipHint: "A bubble under the question row: what the assistant is and how to move it. Shown once per browser until closed or the widget is opened.",
     widgetOfferLink: "Always-visible “Write to the helpdesk” link",
     widgetOfferLinkHint: "A quiet button under the question field after the first answer — people do not have to wait for failures.",
     widgetPhrases: l => `Phrases that offer the message at once (${l})`,

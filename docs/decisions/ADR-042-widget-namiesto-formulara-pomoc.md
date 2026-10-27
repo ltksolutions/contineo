@@ -361,6 +361,22 @@ Prečo: do ISSF sa prihlási aj zahraničný hráč alebo rozhodca a ISSF jazyk
 v tokene nemusí posielať. Jazyk odpovede je vec človeka, nie systému,
 v ktorom widget stojí.
 
+### D291 — Úvodný tip pri prvej návšteve
+
+Pri prvej návšteve sa pod zatvoreným widgetom ukáže **jeden tip** v tvare
+SwiftUI `TipKit` (popover tip): čo pomocník je, že pri nenájdenej odpovedi
+odpovie človek z helpdesku, a že riadok sa dá posunúť za úchyt (ten
+medzitým bliká). „Vyskúšať" widget otvorí, „Rozumiem", „×" alebo Esc tip
+zavrie. Ukáže sa raz v prehliadači a zmizne aj vtedy, keď človek widget
+otvorí sám. Bez závoja a bez krádeže fokusu. V nastavení kanála sa dá
+vypnúť (predvolene zapnutý); texty sú pevné v sk, cs a en. Návrh: plochy
+„úvodný tip" v artefakte KANAL-widget-riadok-otazky.
+
+Prečo jeden tip a nie sprievodca s krokmi (Ján, 27. 10. 2026, odporúčania
+A, A, A): ľudia sprievodcov odklikávajú bez čítania a do ISSF prišli robiť
+niečo iné; prázdna plachta už sama ukazuje, ako sa pýtať. Animácia, ktorá
+by sama hýbala riadkom, by mätla a pri vypnutých animáciách aj tak odpadne.
+
 ### Design system
 
 Externý widget kanála (`.xw-*`) je súčasť design systému: `globals.css`,

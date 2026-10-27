@@ -4446,6 +4446,19 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-card h3{margin:0;font-size:17px;color:var(--ink)}
 .xw-card textarea{width:100%;min-height:96px;padding:10px;border:1px solid var(--control-line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;resize:vertical}
 .xw-muted{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.xw-tip{position:fixed;z-index:2147483002;width:min(360px,calc(100vw - 32px));padding:14px 14px 12px 16px;display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(20,28,42,.22)}
+.xw-tip::before{content:"";position:absolute;top:-7px;left:var(--tip-x,22px);width:12px;height:12px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.xw-tip.is-above::before{top:auto;bottom:-7px;transform:rotate(225deg)}
+.xw-tip-head{display:flex;align-items:flex-start;gap:8px}
+.xw-tip-title{flex:1;font-weight:650;font-size:15px;color:var(--ink)}
+.xw-tip-close{display:grid;place-items:center;flex:none;width:44px;height:44px;margin:-12px -10px -8px 0;border:0;border-radius:22px;background:transparent;color:var(--muted);font:inherit;font-size:20px;line-height:1;cursor:pointer}
+.xw-tip-close:hover{background:var(--surface-2);color:var(--ink)}
+.xw-tip p{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}
+.xw-tip .xw-tip-move{display:flex;gap:8px;align-items:flex-start;color:var(--muted)}
+.xw-tip-move svg{flex:none;margin-top:1px}
+.xw-tip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.xw-dock.is-tip .xw-grip{animation:xw-pulse 1.6s ease-in-out infinite}
+@keyframes xw-pulse{0%,100%{background:transparent}50%{background:var(--accent-soft)}}
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .ask-sheet--overlay { min-width: 0; width: calc(100% + 60px); }
