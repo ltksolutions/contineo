@@ -73,6 +73,7 @@ import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { archiveState, type ArchiveEntry } from "@/lib/documentArchiveState"
 import { draftBasisTaskFor } from "@/lib/versionResponsibilityDb"
 import SubmitButton from "@/components/SubmitButton"
+import FormPendingSignal from "@/components/FormPendingSignal"
 import Icon from "@/components/Icon"
 
 export const dynamic = "force-dynamic"
@@ -1419,6 +1420,7 @@ export default async function DocumentDetailPage({
               aby „Pred zverejnením" mohlo stáť medzi nimi bez vnorených formulárov. */}
           {flow.step === 1 && (
             <form action={prepareDraftAction} id="flow-step" className="flow-form">
+              <FormPendingSignal form="flow-step" />
               <input type="hidden" name="documentId" value={d.documentId} />
               <input type="hidden" name="versionLabel" value={t.approvalDraftLabel} />
               {!metaIsLocked && <input type="hidden" name="metaEditable" value="1" />}
@@ -1568,6 +1570,7 @@ export default async function DocumentDetailPage({
           {/* Krok 3 — zverejnenie. Tlačidlo v päte karty (`form="flow-step"`). */}
           {flow.step === 3 && (
             <form action={publishVersionAction} id="flow-step" className="flow-form">
+              <FormPendingSignal form="flow-step" />
               <input type="hidden" name="documentId" value={d.documentId} />
               <p className="flow-lead">{tflow.lead3}</p>
 
@@ -1618,6 +1621,7 @@ export default async function DocumentDetailPage({
           {/* Krok 4 — prenos pridelení samostatne. */}
           {flow.step === 4 && (
             <form action={carryOverAssignmentsAction} id="flow-step" className="flow-form">
+              <FormPendingSignal form="flow-step" />
               <input type="hidden" name="documentId" value={d.documentId} />
               <p className="flow-lead">{tflow.lead4} {tc.intro(carryOverVersion?.label ?? d.effectiveLabel)}</p>
               <CarryOverFields
