@@ -53,7 +53,7 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
   privítanie a **vzory otázok** (najviac 6, v prázdnej plachte; klik otázku
   vloží). Prázdna plachta ukáže aj **nedávne otázky** človeka (len z
   widgetu, nie interné z intranetu). Kanál s viac jazykmi má v plachte
-  **výber jazyka** (texty aj odpoveď; ISSF jazyk v tokene posielať nemusí).
+  **prepínač jazyka SK / CZ / EN** (texty aj odpoveď; ISSF jazyk v tokene posielať nemusí).
   Widget vyká.
   Všetko sa mení tu, ISSF kód nemení.
 - **Ponuka správy helpdesku** (ADR-042, D275, D283): okrem prahu

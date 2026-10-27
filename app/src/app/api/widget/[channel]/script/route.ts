@@ -20,8 +20,9 @@ import { accentVars } from "@/components/TenantHeader"
 
 export const dynamic = "force-dynamic"
 
-/** Názov jazyka v ňom samom — vo výbere jazyka widgetu (D290). */
+/** Názov jazyka v ňom samom a skratka na prepínači widgetu (D290) — CZ, nie kód „CS". */
 const LANGUAGE_LABELS: Record<UiLanguage, string> = { sk: "Slovenčina", cs: "Čeština", en: "English" }
+const LANGUAGE_SHORT: Record<UiLanguage, string> = { sk: "SK", cs: "CZ", en: "EN" }
 
 export async function GET(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel: key } = await params
@@ -47,6 +48,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ channel:
     return {
       code,
       label: LANGUAGE_LABELS[code],
+      short: LANGUAGE_SHORT[code],
       texts: { ...d.widget, rateLimited: d.errors["widget.rateLimited"] ?? "" } as Record<string, string>,
       appearance: appearanceForScript(look, code),
       sources,

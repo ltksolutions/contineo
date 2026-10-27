@@ -132,7 +132,9 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
 - Otvorený: `.xw-scrim` (závoj) + `section.xw-sheet[role=dialog]` — pri veľkosti „na obrazovku"
   80 % × 80 % v strede, inak pri tlačidle; pod 640 px celá obrazovka. Vyrastá z miesta zatvoreného
   widgetu (`scale`, 0,32 s; bez animácie pri `prefers-reduced-motion`). Esc, `.xw-close` alebo závoj zavrie.
-- Hlavička `.xw-head`: značka, `.xw-head-title`, `select.xw-lang` (len kanál s viac jazykmi), „Zdroje: … ▾"
+- Hlavička `.xw-head`: značka, `.xw-head-title`, prepínač jazyka `.xw-langs` > `button.xw-lang` so skratkami SK / CZ / EN
+  (tvar `Picker(.segmented)`, sivý ako `.view-switch`; zvolený `.is-on` + `aria-pressed`, plný názov v `aria-label`; len kanál
+  s viac jazykmi), „Zdroje: … ▾"
   (`.button--quiet.button--sm`, riadky pod hlavičkou), `.xw-close` (44 px).
 - Telo `.xw-body` > `.xw-col` (720 px v strede). Prázdne: `.xw-empty` > `h2`, `p.xw-lead`,
   `form.xw-form` > `.xw-field` (`.xw-field-mark` + `textarea`) a `.xw-bar` (`.xw-hint` + jediné plné „Opýtať sa"),

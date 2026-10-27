@@ -36,7 +36,8 @@
  * obrazovka. Esc, „×" alebo klik na závoj zavrie; rozpísaný text ostane
  * v riadku.
  *
- * **Jazyk** (D290): kanál s viac jazykmi má v hlavičke výber jazyka; mení
+ * **Jazyk** (D290): kanál s viac jazykmi má v hlavičke prepínač jazyka —
+ * skratky SK / CZ / EN v tvare `Picker(.segmented)` (Ján 27. 10. 2026); mení
  * texty widgetu aj jazyk odpovede. Prvý je voľba z minulej návštevy
  * (`localStorage`), potom `lang` z tokenu, potom prvý jazyk kanála.
  *
@@ -100,6 +101,9 @@ export const WIDGET_TOKENS: Record<string, string> = {
   "--ok-fg": "#047857",
   "--fs-small": "13px",
   "--control-h": "40px",
+  "--seg-track": "rgba(118, 118, 128, 0.12)",
+  "--seg-thumb": "#ffffff",
+  "--seg-shadow": "0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04)",
 }
 
 /**
@@ -147,7 +151,11 @@ export const WIDGET_CSS: string[] = [
   ".xw-head-title{flex:1;min-width:0;font-weight:650;font-size:17px;color:var(--ink)}",
   ".xw-close{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:22px;background:transparent;color:var(--ink);font:inherit;font-size:24px;line-height:1;cursor:pointer}",
   ".xw-close:hover{background:var(--surface-2)}",
-  ".xw-lang{min-height:36px;padding:0 10px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:var(--fs-small);cursor:pointer}",
+  ".xw-langs{display:inline-flex;gap:2px;padding:2px;border-radius:10px;background:var(--seg-track)}",
+  ".xw-lang{min-width:44px;min-height:40px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--ink);font:inherit;font-size:var(--fs-small);font-weight:600;letter-spacing:0.04em;cursor:pointer}",
+  ".xw-lang:hover{background:var(--surface)}",
+  ".xw-lang:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}",
+  ".xw-lang.is-on{background:var(--seg-thumb);box-shadow:var(--seg-shadow)}",
   ".xw-body{flex:1;min-height:0;overflow:auto;background:var(--bg)}",
   ".xw-col{max-width:720px;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:14px}",
   ".xw-empty{display:flex;flex-direction:column;gap:16px}",
@@ -181,8 +189,10 @@ export const WIDGET_CSS: string[] = [
 /** Jazyk, ktorý skript pozná: texty, nastavené texty kanála a zdroje v ňom (D290). */
 export interface WidgetLanguagePack {
   code: string
-  /** Názov jazyka v ňom samom („Čeština") — vo výbere jazyka. */
+  /** Názov jazyka v ňom samom („Čeština") — pre čítačku a bublinu nad skratkou. */
   label: string
+  /** Skratka na prepínači („CZ"); chýba = kód veľkými písmenami. */
+  short?: string
   texts: Record<string, string>
   appearance?: WidgetAppearanceForScript
   sources?: { id: string; name: string; sub: string }[]
@@ -334,12 +344,15 @@ var sheet=el('section','xw-sheet');sheet.setAttribute('role','dialog');sheet.set
 /* Hlavička: značka, názov, jazyk, zdroje, zavrieť. */
 var head=el('div','xw-head');var hm=el('span','xw-row-mark');hm.appendChild(svg(MARK));
 head.appendChild(hm);head.appendChild(tx(el('span','xw-head-title'),'title'));
-var langSel=null;
+/* Prepínač jazyka: skratky SK / CZ / EN, plný názov pre čítačku (D290). */
+var langBtns=[];
 if(PACKS.length>1){
-  langSel=el('select','xw-lang');tx(langSel,'language','aria-label');
-  PACKS.forEach(function(p){var o=el('option',null,p.label);o.value=p.code;o.lang=p.code;langSel.appendChild(o)});
-  langSel.value=P.code;head.appendChild(langSel);
+  var langs=el('div','xw-langs');langs.setAttribute('role','group');tx(langs,'language','aria-label');
+  PACKS.forEach(function(p){var b=el('button','xw-lang',p.short||p.code.toUpperCase());b.type='button';b.lang=p.code;b.title=p.label;b.setAttribute('aria-label',p.label);
+    b.addEventListener('click',function(){setLanguage(p.code)});langBtns.push([b,p.code]);langs.appendChild(b)});
+  head.appendChild(langs);syncLangs();
 }
+function syncLangs(){langBtns.forEach(function(x){var on=x[1]===P.code;x[0].classList.toggle('is-on',on);x[0].setAttribute('aria-pressed',String(on))})}
 var scopeBtn=null,scopeVal=null,pane=null,boxes=[],hint=null,rowNames=[],rowSubs=[];
 function SRC(){return P.sources||[]}
 var on=SRC().map(function(x){return x.id});
@@ -428,9 +441,8 @@ function setLanguage(code){
   try{localStorage.setItem(STORE,code)}catch(e){}
   LABELS.forEach(function(l){label(l[0],l[1],l[2])});
   SRC().forEach(function(x,i){if(rowNames[i]){rowNames[i].textContent=x.name;rowSubs[i].textContent=x.sub}});
-  syncScope();syncOwn();if(!started)loadHistory(first.input.value);
+  syncScope();syncOwn();syncLangs();if(!started)loadHistory(first.input.value);
 }
-if(langSel)langSel.addEventListener('change',function(){setLanguage(langSel.value)});
 
 /* Otvorenie: plachta vyrastie z miesta zatvoreného widgetu; ten sa medzitým skryje. */
 function isOpen(){return sheet.classList.contains('is-open')}
