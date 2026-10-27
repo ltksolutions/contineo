@@ -223,21 +223,27 @@ a prejaví sa bez zmeny u cudzieho systému.
 
 Prečo: každá ďalšia zmena by inak čakala na vývojárov cudzieho systému.
 
-### D282 — Poloha tlačidla: osem miest okolo obrazovky, predvolene vľavo v strede
+### D282 — Poloha tlačidla: osem miest okolo obrazovky, predvolene vpravo v strede
 
 Tlačidlo widgetu sa dá umiestniť do **štyroch rohov a do stredu každej
 strany** (vľavo hore, hore v strede, vpravo hore, vpravo v strede, vpravo
-dole, dole v strede, vľavo dole, vľavo v strede). **Predvolené je vľavo
-v strede.** Panel sa otvára vedľa tlačidla smerom dovnútra obrazovky; pod
+dole, dole v strede, vľavo dole, vľavo v strede). **Predvolené je vpravo
+v strede** *(zmena 27. 10. 2026, pôvodne vľavo v strede — viď nižšie)*. Panel sa otvára vedľa tlačidla smerom dovnútra obrazovky; pod
 640 px je panel celá obrazovka ako doteraz.
 
 Je to **štandard** — nastavenie každého kanála typu widget, nie úprava
 pre ISSF. Tvar tlačidla a panela sa nemení; poloha nie je nový prvok
 dizajnu.
 
-Prečo predvolene vľavo v strede: v ISSF je hore menu, vľavo dole
+Prečo predvolene v strede strany: v ISSF je hore menu, vľavo dole
 tlačidlá exportu zostáv a schvaľovania žiadostí a vpravo dole tabuľky
-s akciami — stred ľavej strany nezakrýva nič, čo sa používa.
+s akciami — stred strany nezakrýva nič, čo sa používa.
+
+*Zmena predvolenej strany (Ján Letko, 27. 10. 2026):* po ukážke widgetu
+v ISSF „ak bude button vpravo v strede obrazovky, tam dajme aj default".
+Vpravo v strede je tlačidlo tam, kde ho ľudia z webov poznajú, a otvorený
+panel neprekryje ľavé menu sekcie. Kanál, ktorý má polohu uloženú,
+ostáva, ako je; zmena platí pre kanály bez uloženej polohy a pre nové.
 
 ### D283 — Veľkosť, texty a správanie ponuky helpdesku sú nastavenie kanála
 

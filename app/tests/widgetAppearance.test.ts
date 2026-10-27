@@ -13,15 +13,15 @@ const { previewToken, previewSubject } = await import("../src/lib/widgetPreview"
 const { verifyWidgetToken } = await import("../src/lib/widgetToken")
 
 describe("widgetAppearance", () => {
-  it("predvolene vľavo v strede, stredný panel, helpdesk po dvoch neúspechoch (D282, D275)", () => {
+  it("predvolene vpravo v strede, stredný panel, helpdesk po dvoch neúspechoch (D282, D275)", () => {
     expect(widgetAppearance(undefined)).toEqual(DEFAULT_WIDGET_APPEARANCE)
-    expect(DEFAULT_WIDGET_APPEARANCE).toMatchObject({ position: "left-middle", size: "m", escalateAfter: 2 })
+    expect(DEFAULT_WIDGET_APPEARANCE).toMatchObject({ position: "right-middle", size: "m", escalateAfter: 2 })
   })
   it("osem miest okolo obrazovky", () => {
     expect(WIDGET_POSITIONS).toHaveLength(8)
   })
   it("neznáma hodnota padá na predvolenú, nie na chybu", () => {
-    expect(widgetAppearance({ position: "stred", size: "xl", escalateAfter: 7 })).toMatchObject({ position: "left-middle", size: "m", escalateAfter: 2 })
+    expect(widgetAppearance({ position: "stred", size: "xl", escalateAfter: 7 })).toMatchObject({ position: "right-middle", size: "m", escalateAfter: 2 })
     expect(widgetAppearance({ position: "right-top", size: "l", escalateAfter: "3" })).toMatchObject({ position: "right-top", size: "l", escalateAfter: 3 })
   })
   it("texty: len jazyky rozhrania, orezané, prázdne vynechané, so stropom", () => {
@@ -76,9 +76,9 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(anchorCss("top")).toBe("left:50%;top:16px;transform:translateX(-50%)")
     expect(anchorCss("right-bottom")).toBe("right:16px;bottom:16px;transform:none")
   })
-  it("bez nastavenia vľavo v strede so stredným panelom", () => {
+  it("bez nastavenia vpravo v strede so stredným panelom", () => {
     const js = widgetScript(base)
-    expect(js).toContain(".fab{position:fixed;left:16px;top:50%;transform:translateY(-50%);")
+    expect(js).toContain(".fab{position:fixed;right:16px;top:50%;transform:translateY(-50%);")
     expect(js).toContain("width:min(400px,calc(100vw - 32px));height:min(600px,calc(100vh - 32px))")
   })
   it("poloha, veľkosť, text tlačidla, privítanie a prah idú do skriptu", () => {
