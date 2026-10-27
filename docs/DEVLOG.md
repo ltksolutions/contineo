@@ -10,6 +10,49 @@
 
 ---
 
+## 2026-10-27 — Widget namiesto formulára Pomoc (ADR-042); manuály zjednotené a zverejnené
+
+**Zrušenie registrácie hráča jednou vetou.** Kolo 2 kontroly manuálov
+navrhlo pri troch manuáloch „len elektronicky v ISSF" podľa RaPP čl. 15
+ods. 4. Ján to prijatie zvrátil vetou z praxe matriky — žiadosť v ISSF
+alebo písomne na Matrike SFZ, aj e-mailom — s tým, že nejde o rozpor,
+lebo aj registrácia sa vo vyhradených prípadoch robí inak než cez ISSF.
+ISSF-00, 02 a 03 dostali nové znenie od 25. 10. (po jednom riadku),
+Agáta schválila 26. 10., Ján zverejnil 27. 10. Index aj členenie overené
+nad produkciou (`chunking:compare`: 24 dokumentov, nič na preindexovanie).
+Do podnetu pre legislatívu pribudol bod 5 — spresnenie čl. 15 ods. 4 ako
+možnosť A, lebo predpis písomnú žiadosť pri hráčovi výslovne neuvádza.
+
+**Pri zverejnení sa netočil krúžok** (#470). Tlačidlá päty karty postupu
+stoja mimo formulára (`form="flow-step"`) a formuláre nemali
+`FormPendingSignal`, takže bez krúžku boli všetky štyri — predložiť,
+uložiť, zverejniť aj prideliť. Ján to videl až pri zverejnení, lebo to
+trvá päť sekúnd; ostatné dobehnú rýchlejšie, než si človek všimne.
+Lokálne sa klik neskúšal (lokálny dev píše do produkčnej DB), overil ho
+Ján pri zverejnení troch manuálov.
+
+**`npm run check` mal 8 rozporov**, ktoré s manuálmi nesúviseli: poriadky
+v „Poriadky SFZ" bez `folderPath`. Stopa viedla k migrácii ADR-034 z 13. 10.,
+ktorá zapísala `folderId` bez cesty — obrazovka pri presune cestu ukladá,
+skript nie. Oprava v skripte a nový `npm run folders:recompute` (#472).
+Zápis do produkčnej DB asistentovi zablokovali povolenia Claude Code —
+príkaz spustil Ján, `check` potom bez rozporov. Ponaučenie: jednorazový
+skript, ktorý zapisuje polia, ktoré inak drží knižnica (`folderPath`),
+má volať funkciu knižnice, nie `updateOne`.
+
+**ADR-042 v jeden deň (druhá session, #463–#471).** Widget kanála ISSF
+Helpdesk nahrádza formulár Pomoc v ISSF: vlákno ticketu cez potvrdenie
+e-mailom, osoba ako e-mailový kontakt so zoznamom účtov (rodič za deti),
+údaje z ISSF pri tickete, vzhľad a správanie ako nastavenie kanála
+(Dodatok 1, D281–D285 — zmluva s ISSF je zmrazená na `script src`
+a token) a ponuka správy helpdesku. Deň predtým skúška priamo v ISSF
+ukázala, že beží na Apache Wicket a preflight bez tajného kľúča vracal 503
+— odtiaľ vzor tokenu v Jave (#459).
+
+**Prehľad podľa návrhu z artefaktu *Design*** (#458): úlohy v skupinách
+podľa naliehavosti, dokumenty ako hľadanie s rozsahmi. Prvý návrh, pri
+ktorom asistent zakladal artefakt sám (CLAUDE.md, 26. 10.).
+
 ## 2026-10-26 — Prehľad a detail pre bežného používateľa (ADR-041); nočný beh cronu overený
 
 **Nočný beh cronu katalógu — len čítanie.** Dva behy (25. 10. na nasadení

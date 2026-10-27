@@ -4,6 +4,70 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Widget kanála ISSF Helpdesk nahrádza formulár Pomoc v ISSF (2026-10-27, ADR-042, #463–#471)
+
+Rozhodol Ján 27. 10. 2026 (D275–D285). Cudzí systém vloží skript raz;
+všetko ostatné sa nastavuje v Contineu pri kanáli.
+
+- **Vlákno ticketu** (krok 1, D277): po založení ticketu z widgetu odíde
+  potvrdenie e-mailom a ticket si zapíše vlákno; odpoveď riešiteľa aj
+  odpoveď človeka ostávajú v tom istom tickete.
+- **Osoba z widgetu je e-mailový kontakt** (krok 2, D280): jeden e-mail
+  môže mať viac účtov ISSF (rodič za deti, manažér za hráčov); účty sa
+  pridávajú do zoznamu, nič sa neprepisuje. Migrácia
+  `npm run migrate:widget-refs`.
+- **Údaje z ISSF pri tickete** (krok 3, D276): token nesie nepovinné
+  `phone_number` a `context`, widget pošle adresu stránky; riešiteľ ich
+  vidí v karte „Údaje z <systém>".
+- **Vzhľad a správanie ako nastavenie kanála** (krok 4, D281–D284): osem
+  polôh tlačidla (predvolene vľavo v strede), veľkosť panela, texty podľa
+  jazyka, prah ponuky helpdesku; zmena do 5 minút (cache s ETag), náhľad
+  `/channels/<kľúč>/preview`, audit.
+- **Ponuka správy helpdesku** (krok 5, D275, D285): odkaz „Napísať
+  helpdesku" a frázy v jazykoch kanála; `window.ContineoHelpdesk.open()`
+  pre odkazy „Pomoc" v ISSF.
+- Nastavenie kanála: kód na vloženie v dvoch častiach prepínačom pohľadu
+  (`?embed=server`, #464); vzor tokenu v Jave pre Apache Wicket a preflight
+  bez tajného kľúča (#459). Postup: `docs/WIDGET_ISSF.md`.
+
+### Postup dokumentu: krúžok v tlačidlách päty karty (2026-10-27, #470)
+
+„Uložiť a predložiť", „Len uložiť", „Zverejniť od …" a „Prideliť vybraným"
+stoja mimo formulára `flow-step` a krúžok ani zablokovanie neukazovali —
+zverejnenie trvá okolo 5 sekúnd a vyzeralo, že sa nič nedeje.
+`FormPendingSignal` vo všetkých troch formulároch kroku, `PublishSubmit`
+kreslí `SubmitButton`.
+
+### Cesta priečinka po migrácii druhov (2026-10-27, #472)
+
+`npm run check` hlásil 8 poriadkov v „Poriadky SFZ" s prázdnym
+`folderPath`, filter „vrátane podpriečinkov" ich nenašiel. Príčina:
+migrácia ADR-034 (13. 10.) nastavila priečinok bez cesty. Migrácia cestu
+odteraz ukladá; nový `npm run folders:recompute` (náhľad, `--zapisat`)
+cestu dopočíta. V SFZ dopočítané 27. 10., `check` bez rozporov.
+
+### Knižnica na čítanie a Prehľad podľa návrhu (2026-10-26–27, #455, #458, #462)
+
+- **Prehľad podľa návrhu PREHLAD-ulohy-a-dokumenty** (#458): Moje úlohy
+  v skupinách Po termíne · Blíži sa termín · Ďalšie · Na rozhodnutie,
+  celý riadok je odkaz; Dokumenty ako hľadanie v názve (`?find=`)
+  s rozsahmi podľa druhu (`?kind=`). Nové prvky systému
+  `.view-switch--scroll`, `.panel-row--link`, `.panel-chevron`,
+  `.panel-group`, `.task-icon`.
+- Prehľad a detail na celú šírku, bez označenia znenia (D113), chip
+  „po termíne o N dní" (#455).
+- Knižnica na čítanie: predpis zo Slov-Lexu, ktorý je aj dokumentom
+  knižnice, sa vypíše raz; hľadanie ako na Prehľade; pás druhov sa na
+  telefóne roluje (#462).
+
+### Manuály ISSF: zjednotené zrušenie registrácie hráča (2026-10-25, obsah)
+
+ISSF-00, ISSF-02 a ISSF-03 v znení účinnom od 25. 10. 2026 opisujú
+zrušenie registrácie hráča jednou vetou podľa praxe matriky (žiadosť
+v ISSF alebo písomne na Matrike SFZ, aj e-mailom). Zmena obsahu
+v knižnici, nie kódu; spresnenie RaPP čl. 15 ods. 4 je bodom 5 podnetu
+pre legislatívu.
+
 ### Prehľad a detail dokumentu pre bežného používateľa (2026-10-26, ADR-041, #449–#452)
 
 Bežný používateľ vidí **dokumenty, nie zdroje** (D270): platné dokumenty
