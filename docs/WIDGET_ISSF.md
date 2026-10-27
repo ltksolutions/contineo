@@ -43,8 +43,9 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
   textov widgetu, keď token jazyk nenesie.
 - **Strop otázok na osobu a hodinu** (predvolene 60).
 - **Vzhľad a správanie widgetu** (ADR-042, Dodatok 1): poloha tlačidla na
-  ôsmich miestach okolo obrazovky (predvolene **vľavo v strede** — v ISSF je
-  hore menu, vľavo dole export zostáv a schvaľovanie žiadostí), veľkosť
+  ôsmich miestach okolo obrazovky (predvolene **vpravo v strede** — v ISSF je
+  hore menu, vľavo dole export zostáv a schvaľovanie žiadostí, vpravo dole
+  tabuľky s akciami), veľkosť
   panela (malý / stredný / veľký), text tlačidla a privítanie v jazykoch
   kanála, po koľkých neúspechoch ponúknuť helpdesk. Panel sa otvára na
   mieste tlačidla smerom do stredu obrazovky; na telefóne je celá obrazovka.

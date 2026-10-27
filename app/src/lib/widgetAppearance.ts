@@ -78,12 +78,12 @@ export interface WidgetAppearance {
 }
 
 /**
- * Predvolené hodnoty. Vľavo v strede (D282): v ISSF je hore menu, vľavo
- * dole tlačidlá exportu zostáv a schvaľovania žiadostí a vpravo dole
- * tabuľky s akciami. Prah 2 je D275.
+ * Predvolené hodnoty. Vpravo v strede (D282, Ján 27. 10. 2026): v ISSF
+ * je hore menu, vľavo dole tlačidlá exportu zostáv a schvaľovania žiadostí
+ * a vpravo dole tabuľky s akciami — stred strany nič nezakrýva. Prah 2 je D275.
  */
 export const DEFAULT_WIDGET_APPEARANCE: WidgetAppearance = {
-  position: "left-middle", size: "m", escalateAfter: 2, launcher: {}, greeting: {}, offerLink: true, phrases: {},
+  position: "right-middle", size: "m", escalateAfter: 2, launcher: {}, greeting: {}, offerLink: true, phrases: {},
 }
 
 function texts(raw: unknown, max: number): Partial<Record<UiLanguage, string>> {
