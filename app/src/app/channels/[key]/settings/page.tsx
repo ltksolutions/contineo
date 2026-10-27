@@ -311,6 +311,11 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
               </label>
             ))}
             <label className="form-row form-row--bare">
+              <input type="checkbox" className="toggle" role="switch" name="widgetTip" defaultChecked={look.tip} />
+              <span>{t.widgetTip}</span>
+            </label>
+            <span className="quiet field-hint">{t.widgetTipHint}</span>
+            <label className="form-row form-row--bare">
               <input type="checkbox" className="toggle" role="switch" name="widgetOfferLink" defaultChecked={look.offerLink} />
               <span>{t.widgetOfferLink}</span>
             </label>

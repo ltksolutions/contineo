@@ -42,6 +42,12 @@
  * podiel šírky a výšky okna), nastavenie kanála sa nemení; riadok ostáva
  * vždy celý na obrazovke. Plachta sa neposúva.
  *
+ * **Úvodný tip** (D291, `TipKit` — popover tip): pri prvej návšteve bublina
+ * pod zatvoreným widgetom — čo pomocník je a ako ho posunúť (úchyt zatiaľ
+ * bliká), „Vyskúšať" ho otvorí, „Rozumiem", „×" alebo Esc zavrie. Raz
+ * v prehliadači: zmizne aj otvorením widgetu. Bez závoja a bez krádeže
+ * fokusu — čítačka ho ohlási (`role="status"`). Vypína sa v nastavení kanála.
+ *
  * **Jazyk** (D290): kanál s viac jazykmi má v hlavičke prepínač jazyka —
  * skratky SK / CZ / EN v tvare `Picker(.segmented)` (Ján 27. 10. 2026); mení
  * texty widgetu aj jazyk odpovede. Prvý je voľba z minulej návštevy
@@ -196,6 +202,19 @@ export const WIDGET_CSS: string[] = [
   ".xw-card h3{margin:0;font-size:17px;color:var(--ink)}",
   ".xw-card textarea{width:100%;min-height:96px;padding:10px;border:1px solid var(--control-line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;resize:vertical}",
   ".xw-muted{color:var(--muted);font-size:13px;overflow-wrap:anywhere}",
+  ".xw-tip{position:fixed;z-index:2147483002;width:min(360px,calc(100vw - 32px));padding:14px 14px 12px 16px;display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(20,28,42,.22)}",
+  ".xw-tip::before{content:\"\";position:absolute;top:-7px;left:var(--tip-x,22px);width:12px;height:12px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}",
+  ".xw-tip.is-above::before{top:auto;bottom:-7px;transform:rotate(225deg)}",
+  ".xw-tip-head{display:flex;align-items:flex-start;gap:8px}",
+  ".xw-tip-title{flex:1;font-weight:650;font-size:15px;color:var(--ink)}",
+  ".xw-tip-close{display:grid;place-items:center;flex:none;width:44px;height:44px;margin:-12px -10px -8px 0;border:0;border-radius:22px;background:transparent;color:var(--muted);font:inherit;font-size:20px;line-height:1;cursor:pointer}",
+  ".xw-tip-close:hover{background:var(--surface-2);color:var(--ink)}",
+  ".xw-tip p{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}",
+  ".xw-tip .xw-tip-move{display:flex;gap:8px;align-items:flex-start;color:var(--muted)}",
+  ".xw-tip-move svg{flex:none;margin-top:1px}",
+  ".xw-tip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}",
+  ".xw-dock.is-tip .xw-grip{animation:xw-pulse 1.6s ease-in-out infinite}",
+  "@keyframes xw-pulse{0%,100%{background:transparent}50%{background:var(--accent-soft)}}",
 ]
 
 /** Jazyk, ktorý skript pozná: texty, nastavené texty kanála a zdroje v ňom (D290). */
@@ -293,7 +312,7 @@ const SHADOW_CSS = [
 const MEDIA_CSS = [
   /* Telefón: plachta je celá obrazovka, závoj netreba. */
   "@media (max-width:640px){.xw-sheet{top:0;right:0;bottom:0;left:0;transform:none;width:100vw;height:100vh;height:100dvh;border-radius:0;border:0}.xw-scrim{display:none}.xw-col{padding:20px 16px}.xw-composer-in{padding:12px 16px 10px}}",
-  "@media (prefers-reduced-motion:reduce){.xw-sheet,.xw-scrim{transition:none}}",
+  "@media (prefers-reduced-motion:reduce){.xw-sheet,.xw-scrim{transition:none}.xw-dock.is-tip .xw-grip{animation:none;background:var(--accent-soft)}}",
 ]
 
 export function widgetScript(cfg: WidgetScriptConfig): string {
@@ -463,7 +482,7 @@ function setLanguage(code){
 
 /* Otvorenie: plachta vyrastie z miesta zatvoreného widgetu; ten sa medzitým skryje. */
 function isOpen(){return sheet.classList.contains('is-open')}
-function openPanel(){if(isOpen())return;sheet.classList.add('is-open');scrim.classList.add('is-open');dock.hidden=true;
+function openPanel(){hideTip();if(isOpen())return;sheet.classList.add('is-open');scrim.classList.add('is-open');dock.hidden=true;
   if(!started)loadHistory(first.input.value);
   setTimeout(function(){var t=started?more.input:first.input;t.focus();t.setSelectionRange(t.value.length,t.value.length)},40)}
 function closePanel(){sheet.classList.remove('is-open');scrim.classList.remove('is-open');dock.hidden=false;syncOwn();launcher.focus()}
@@ -472,9 +491,9 @@ launcher.addEventListener('click',openPanel);
 /* Posúvanie riadku za úchyt. Miesto = podiel okna, aby prežilo zmenu veľkosti. */
 var POS='contineo-widget-pos:'+CFG.channel;
 function clampTo(x,y){var r=dock.getBoundingClientRect();return [Math.max(8,Math.min(x,innerWidth-r.width-8)),Math.max(8,Math.min(y,innerHeight-r.height-8))]}
-function place(x,y){var c=clampTo(x,y);dock.style.left=c[0]+'px';dock.style.top=c[1]+'px';dock.style.bottom='auto';dock.style.transform='none';return c}
+function place(x,y){var c=clampTo(x,y);dock.style.left=c[0]+'px';dock.style.top=c[1]+'px';dock.style.bottom='auto';dock.style.transform='none';positionTip();return c}
 function savePos(c){try{localStorage.setItem(POS,JSON.stringify({x:c[0]/innerWidth,y:c[1]/innerHeight}))}catch(e){}}
-function resetPos(){dock.style.left=dock.style.top=dock.style.bottom=dock.style.transform='';try{localStorage.removeItem(POS)}catch(e){}}
+function resetPos(){dock.style.left=dock.style.top=dock.style.bottom=dock.style.transform='';try{localStorage.removeItem(POS)}catch(e){}positionTip()}
 function restorePos(){var p=null;try{p=JSON.parse(localStorage.getItem(POS)||'null')}catch(e){}if(p&&typeof p.x==='number'&&typeof p.y==='number')place(p.x*innerWidth,p.y*innerHeight)}
 if(grip){
   var drag=null;
@@ -623,6 +642,34 @@ first.input.addEventListener('input',onFirstInput);
 escBtn.addEventListener('click',function(){var m=escTa.value.trim();if(!m)return;escBtn.disabled=true;
   api('ticket',{message:m,language:P.code,page:location.href.split('#')[0],conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.hidden=true;escTa.value='';sys(T.escalated);negatives=0;syncOffer()}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
 
+/* Úvodný tip (D291): raz v prehliadači. Bez úložiska sa neukáže — inak by
+   sa ukazoval pri každom načítaní stránky. */
+var TIPKEY='contineo-widget-tip:'+CFG.channel,tip=null;
+function tipSeen(){try{return localStorage.getItem(TIPKEY)==='1'}catch(e){return true}}
+function hideTip(){if(!tip)return;tip.remove();tip=null;dock.classList.remove('is-tip');try{localStorage.setItem(TIPKEY,'1')}catch(e){}}
+function positionTip(){
+  if(!tip)return;var r=dock.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+  var below=r.bottom+12+h<=innerHeight-8,left=Math.max(8,Math.min(r.left,innerWidth-w-8));
+  tip.style.left=left+'px';tip.style.top=(below?r.bottom+12:r.top-12-h)+'px';tip.classList.toggle('is-above',!below);
+  /* Šípka bubliny mieri na úchyt (pri tlačidle na jeho začiatok). */
+  var g=grip?grip.getBoundingClientRect():r;tip.style.setProperty('--tip-x',Math.max(12,Math.min((grip?g.left+g.width/2:r.left+22)-left-6,w-24))+'px');
+}
+function showTip(){
+  if(!LOOK.tip||tip||tipSeen()||isOpen()||dock.hidden)return;
+  tip=el('div','xw-tip');tip.setAttribute('role','status');
+  var th=el('div','xw-tip-head');th.appendChild(tx(el('span','xw-tip-title'),'tipTitle'));
+  var tc=el('button','xw-tip-close','\u00d7');tc.type='button';tx(tc,'tipClose','aria-label');tc.addEventListener('click',hideTip);th.appendChild(tc);
+  tip.appendChild(th);tip.appendChild(tx(el('p'),'tipBody'));
+  if(grip){var mv=el('p','xw-tip-move');mv.appendChild(svg(GRIP));mv.appendChild(tx(el('span'),'tipMove'));tip.appendChild(mv)}
+  var ta=el('div','xw-tip-actions');var tt=tx(el('button','button button--sm'),'tipTry');tt.type='button';var to=tx(el('button','button button--quiet button--sm'),'tipOk');to.type='button';
+  tt.addEventListener('click',function(){hideTip();openPanel()});to.addEventListener('click',hideTip);
+  ta.appendChild(tt);ta.appendChild(to);tip.appendChild(ta);
+  tip.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();hideTip()}});
+  root.appendChild(tip);dock.classList.add('is-tip');positionTip();
+}
+addEventListener('resize',positionTip);
+
 syncScope();syncOwn();if(grip)restorePos();
+setTimeout(showTip,1000);
 })();`
 }

@@ -143,6 +143,10 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
 - Rozhovor: `.xw-log` > `.xw-q` (otázka, farba organizácie), `.xw-a` (`.xw-a-head`, text, `.xw-src`, `.xw-rate`
   s tichými `.button--sm`), `.xw-sys`; správa helpdesku `.xw-card` (`h3`, `.xw-muted`, `textarea`, plné „Odoslať helpdesku"
   + tiché „Zrušiť"). Pole pod rozhovorom `.xw-composer` > `.xw-composer-in` s tichým „Napísať helpdesku".
+- Úvodný tip (`TipKit`, popover tip) pri prvej návšteve: `div.xw-tip[role=status]` pod zatvoreným widgetom (nad ním, keď
+  dole nie je miesto: `.is-above`), šípka mieri na úchyt (`--tip-x`). `.xw-tip-head` (`.xw-tip-title` + `.xw-tip-close` 44 px),
+  dve vety (`p`, druhá `.xw-tip-move` s úchytom), `.xw-tip-actions` — plné `.button--sm` „Vyskúšať" a tiché „Rozumiem".
+  Úchyt medzitým bliká (`.xw-dock.is-tip`, bez animácie pri `prefers-reduced-motion`). Bez závoja, fokus neberie; raz v prehliadači.
 - Tlačidlá widgetu majú terč 44 px aj na počítači. Widget vyká.
 
 ## Príklad

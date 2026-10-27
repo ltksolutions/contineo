@@ -264,7 +264,7 @@ export interface ChannelInput {
   widgetFallbackEmail?: string
   rateLimitPerHour?: number | string
   /** Vzhľad a správanie widgetu z formulára; chýbajúce = bez zmeny (D283). */
-  widgetAppearance?: { position?: string; size?: string; escalateAfter?: string | number; launcher?: Record<string, string>; greeting?: Record<string, string>; offerLink?: boolean; phrases?: Record<string, string[]>; placeholder?: Record<string, string>; examples?: Record<string, string[]> }
+  widgetAppearance?: { position?: string; size?: string; escalateAfter?: string | number; launcher?: Record<string, string>; greeting?: Record<string, string>; offerLink?: boolean; phrases?: Record<string, string[]>; placeholder?: Record<string, string>; examples?: Record<string, string[]>; tip?: boolean }
   mailbox?: {
     kind: string
     address: string

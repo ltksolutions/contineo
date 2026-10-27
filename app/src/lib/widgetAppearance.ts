@@ -95,6 +95,8 @@ export interface WidgetAppearance {
   placeholder: Partial<Record<UiLanguage, string>>
   /** Vzory otázok v prázdnej plachte podľa jazyka; chýbajúce = časť sa nekreslí (D288). */
   examples: Partial<Record<UiLanguage, string[]>>
+  /** Úvodný tip pri prvej návšteve (D291); predvolene zapnutý. */
+  tip: boolean
 }
 
 /**
@@ -103,7 +105,7 @@ export interface WidgetAppearance {
  * Prah 2 je D275.
  */
 export const DEFAULT_WIDGET_APPEARANCE: WidgetAppearance = {
-  position: "top", size: "xl", escalateAfter: 2, launcher: {}, greeting: {}, offerLink: true, phrases: {}, placeholder: {}, examples: {},
+  position: "top", size: "xl", escalateAfter: 2, launcher: {}, greeting: {}, offerLink: true, phrases: {}, placeholder: {}, examples: {}, tip: true,
 }
 
 function texts(raw: unknown, max: number): Partial<Record<UiLanguage, string>> {
@@ -148,6 +150,8 @@ export function widgetAppearance(raw: unknown): WidgetAppearance {
     phrases: lists(r.phrases, PHRASES_MAX, PHRASE_MAX),
     placeholder: texts(r.placeholder, PLACEHOLDER_MAX),
     examples: lists(r.examples, EXAMPLES_MAX, EXAMPLE_MAX),
+    // Chýbajúce pole (staršie kanály) = zapnutý, ako D291.
+    tip: r.tip !== false,
   }
 }
 
@@ -163,6 +167,7 @@ export interface WidgetAppearanceForScript {
   phrases: string[]
   placeholder: string
   examples: string[]
+  tip: boolean
 }
 
 export function appearanceForScript(a: WidgetAppearance, language: UiLanguage): WidgetAppearanceForScript {
@@ -174,5 +179,6 @@ export function appearanceForScript(a: WidgetAppearance, language: UiLanguage): 
     phrases: [...new Set(UI_LANGUAGES.flatMap(l => (a.phrases[l] ?? DEFAULT_PHRASES[l]).map(normalizePhrase)).filter(Boolean))],
     placeholder: a.placeholder[language] ?? "",
     examples: a.examples[language] ?? [],
+    tip: a.tip,
   }
 }

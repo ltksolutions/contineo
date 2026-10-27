@@ -49,7 +49,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ channel:
       code,
       label: LANGUAGE_LABELS[code],
       short: LANGUAGE_SHORT[code],
-      texts: { ...d.widget, rateLimited: d.errors["widget.rateLimited"] ?? "" } as Record<string, string>,
+      texts: { ...d.widget, tipTitle: d.widget.tipTitle.replace("{org}", org), rateLimited: d.errors["widget.rateLimited"] ?? "" } as Record<string, string>,
       appearance: appearanceForScript(look, code),
       sources,
     }

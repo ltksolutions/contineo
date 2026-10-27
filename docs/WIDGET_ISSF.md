@@ -48,7 +48,10 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
   predvolene **hore v strede** (dole by na viacerých obrazovkách ISSF
   prekryl funkčné tlačidlá; hlavička ISSF nie je pripnutá a pri posunutí
   odíde, D286). Človek si riadok môže **posunúť** za úchyt ⋮⋮ (myš, dotyk,
-  šípky; Home alebo dvojklik vráti) — miesto si pamätá jeho prehliadač. Veľkosť plachty malá / stredná / veľká /
+  šípky; Home alebo dvojklik vráti) — miesto si pamätá jeho prehliadač.
+- **Úvodný tip** pri prvej návšteve (D291): bublina pod riadkom — čo je
+  pomocník a ako ho posunúť; raz v prehliadači. Vypína sa prepínačom
+  „Úvodný tip pri prvej návšteve". Veľkosť plachty malá / stredná / veľká /
   **na obrazovku (80 % × 80 %, predvolená)**; na telefóne je plachta celá
   obrazovka. V jazykoch kanála: nápoveda v riadku, text tlačidla,
   privítanie a **vzory otázok** (najviac 6, v prázdnej plachte; klik otázku

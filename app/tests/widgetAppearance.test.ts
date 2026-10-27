@@ -98,6 +98,15 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(js).toContain('"launcher":"Pomoc","greeting":"Ahoj"')
     expect(js).toContain("negatives>=LOOK.escalateAfter")
   })
+  it("úvodný tip: predvolene zapnutý, vypína sa v nastavení, raz v prehliadači (D291)", () => {
+    expect(DEFAULT_WIDGET_APPEARANCE.tip).toBe(true)
+    expect(widgetAppearance({ position: "top" }).tip).toBe(true)
+    expect(appearanceForScript(widgetAppearance({ tip: false }), "sk").tip).toBe(false)
+    const js = widgetScript(base)
+    expect(js).toContain("var TIPKEY='contineo-widget-tip:'+CFG.channel")
+    expect(js).toContain("if(!LOOK.tip||tip||tipSeen()||isOpen()||dock.hidden)return")
+    expect(js).toContain("function openPanel(){hideTip();")
+  })
   it("riadok len hore a dole v strede", () => {
     expect(WIDGET_POSITIONS.filter(isRowPosition)).toEqual(["top", "bottom"])
     const js = widgetScript({ ...base, appearance: appearanceForScript(widgetAppearance({ position: "bottom" }), "sk") })
