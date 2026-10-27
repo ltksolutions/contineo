@@ -49,6 +49,34 @@ a token) a ponuka správy helpdesku. Deň predtým skúška priamo v ISSF
 ukázala, že beží na Apache Wicket a preflight bez tajného kľúča vracal 503
 — odtiaľ vzor tokenu v Jave (#459).
 
+**Widget po ukážke v ISSF: z tlačidla riadok otázky (#474–#478,
+ADR-042 Dodatok 2, D286–D291).** Ján si widget pozrel vložený do živej
+stránky ISSF (len v prehliadači, s podvrhnutým API, lebo kanál ešte nemá
+tajný kľúč) a za večer z neho bol iný prvok: predvolene vpravo v strede
+(#474), potom návrh v artefakte *Design* s piatimi otázkami s odporúčaním
+— riadok otázky ako v hlavičke Continea, plachta 80 % × 80 %, nedávne
+otázky a vzory, vykanie — a po schválení finálu aj prepínač jazyka pre
+zahraničných hráčov (#475), skratky SK / CZ / EN (#476), posúvanie za
+úchyt (#477) a úvodný tip v tvare `TipKit` (#478). Externý widget je
+v design systéme (`.xw-*`); skript nesie pravidlá doslova a test
+`widgetCss` stráži, že sa s `globals.css` nerozídu. Na koniec zadanie pre
+vývojára ISSF (`docs/ZADANIE_ISSF_WIDGET.md`, `.docx` v Downloads).
+
+**Rozhodnutie, ktoré zmenil pohľad do ISSF.** Riadok hore v strede
+v ISSF prekrýva pozdrav a výber zväzu; navrhol som dole. Ján vrátil hore:
+dole sú na viacerých obrazovkách funkčné tlačidlá (faktúry: export,
+súhrnná faktúra), hlavička nie je pripnutá a pri posunutí odíde. Z toho
+vzišlo posúvanie — kto má riadok v ceste, odsunie si ho sám.
+
+**Čo chytil až prehliadač, nie testy.** Dve chyby poradia CSS: základné
+`.button` vo widgete (terč 44 px) išlo za `.button--quiet` a „Zdroje" bolo
+plné tlačidlo; pravidlo pre telefón išlo pred polohu z nastavenia a plachta
+na 375 px nebola na celú obrazovku. Obe našla skúška vygenerovaného skriptu
+na skúšobnej stránke, `tsc` ani testy reťazcov nie. **Nabudúce:** pri
+zmene štýlov widgetu vždy pozrieť plachtu na desktope aj na 375 px, nielen
+`toContain`. Skript sa do ISSF nedal vložiť z `127.0.0.1` (zmiešaný obsah),
+ukážky preto bežali s nasadeným skriptom z intranetu a podvrhnutým `fetch`.
+
 **Prehľad podľa návrhu z artefaktu *Design*** (#458): úlohy v skupinách
 podľa naliehavosti, dokumenty ako hľadanie s rozsahmi. Prvý návrh, pri
 ktorom asistent zakladal artefakt sám (CLAUDE.md, 26. 10.).

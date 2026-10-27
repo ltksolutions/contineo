@@ -20,7 +20,8 @@ všetko ostatné sa nastavuje v Contineu pri kanáli.
   `phone_number` a `context`, widget pošle adresu stránky; riešiteľ ich
   vidí v karte „Údaje z <systém>".
 - **Vzhľad a správanie ako nastavenie kanála** (krok 4, D281–D284): osem
-  polôh tlačidla (predvolene vľavo v strede), veľkosť panela, texty podľa
+  polôh tlačidla (pôvodne predvolene vľavo v strede, neskôr vpravo v strede
+  #474 a hore v strede #475), veľkosť panela, texty podľa
   jazyka, prah ponuky helpdesku; zmena do 5 minút (cache s ETag), náhľad
   `/channels/<kľúč>/preview`, audit.
 - **Ponuka správy helpdesku** (krok 5, D275, D285): odkaz „Napísať
@@ -29,6 +30,30 @@ všetko ostatné sa nastavuje v Contineu pri kanáli.
 - Nastavenie kanála: kód na vloženie v dvoch častiach prepínačom pohľadu
   (`?embed=server`, #464); vzor tokenu v Jave pre Apache Wicket a preflight
   bez tajného kľúča (#459). Postup: `docs/WIDGET_ISSF.md`.
+
+### Widget ako riadok otázky (2026-10-27, ADR-042 Dodatok 2, D286–D291, #474–#478)
+
+Po ukážke vo živom ISSF, návrh KANAL-widget-riadok-otazky (artefakt
+*Design*) schválený Jánom ako finálny.
+
+- **Riadok otázky** hore a dole v strede namiesto tlačidla (značka,
+  nápoveda z nastavenia, šípka); predvolene hore v strede. Písanie ho
+  rozbalí, rozpísaný text ostane.
+- **Plachta 80 % × 80 %** so závojom a animáciou ako štvrtá, predvolená
+  veľkosť; na telefóne celá obrazovka.
+- **Nedávne otázky a vzory** v prázdnej plachte ako v Contineu; história
+  len verejných otázok osoby (`POST /api/widget/<kanál>/history`), vzory
+  ako nastavenie kanála.
+- **Widget vyká**; **prepínač jazyka SK / CZ / EN** mení texty, jazyk
+  odpovede aj potvrdenia ticketu (#476).
+- **Posúvanie riadku** za úchyt myšou, dotykom aj šípkami; Home alebo
+  dvojklik vráti; miesto si pamätá prehliadač (#477).
+- **Úvodný tip** pri prvej návšteve (`TipKit`), vypínateľný v nastavení
+  kanála (#478).
+- Externý widget v design systéme: `.xw-*` v `globals.css`
+  a `conventions.md`, skript ich nesie doslova (`WIDGET_CSS`, test
+  `widgetCss`).
+- Zadanie pre vývojára ISSF: `docs/ZADANIE_ISSF_WIDGET.md`.
 
 ### Postup dokumentu: krúžok v tlačidlách päty karty (2026-10-27, #470)
 
