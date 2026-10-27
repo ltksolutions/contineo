@@ -49,6 +49,9 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
   prekryl funkčné tlačidlá; hlavička ISSF nie je pripnutá a pri posunutí
   odíde, D286). Človek si riadok môže **posunúť** za úchyt ⋮⋮ (myš, dotyk,
   šípky; Home alebo dvojklik vráti) — miesto si pamätá jeho prehliadač.
+- **Pätka widgetu**: na čom pomocník beží (odkaz na contineo.app),
+  ochrana osobných údajov organizácie, zdrojový kód a verzia s revíziou —
+  pri hlásení chyby povedzte verziu z pätky. Odkazy sa otvárajú v novej karte.
 - **Úvodný tip** pri prvej návšteve (D291): bublina pod riadkom — čo je
   pomocník a ako ho posunúť; raz v prehliadači. Vypína sa prepínačom
   „Úvodný tip pri prvej návšteve". Veľkosť plachty malá / stredná / veľká /

@@ -189,7 +189,11 @@ export const WIDGET_CSS: string[] = [
   ".xw-log{display:flex;flex-direction:column;gap:14px}",
   ".xw-composer{border-top:1px solid var(--line);background:var(--surface)}",
   ".xw-composer-in{max-width:720px;margin:0 auto;padding:12px 20px 10px;display:flex;flex-direction:column;gap:8px}",
-  ".xw-foot{font-size:11px;color:var(--muted);text-align:center}",
+  ".xw-foot{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 14px;padding:4px 16px 8px;background:var(--surface);font-size:12px;color:var(--muted)}",
+  ".xw-foot a{display:inline-flex;align-items:center;gap:5px;min-height:24px;color:var(--muted);text-decoration:none}",
+  ".xw-foot a:hover{color:var(--ink);text-decoration:underline}",
+  ".xw-foot a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}",
+  ".xw-foot-brand b{color:var(--ink);font-weight:600}",
   ".xw-q{align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:14px;background:var(--accent);color:var(--on-accent);white-space:pre-wrap;overflow-wrap:anywhere}",
   ".xw-a{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}",
   ".xw-a-head{display:block;margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted);white-space:normal}",
@@ -247,12 +251,18 @@ export interface WidgetScriptConfig {
   appearance?: WidgetAppearanceForScript
   /** Všetky jazyky kanála (D290); chýba alebo jeden = bez výberu jazyka. */
   languages?: WidgetLanguagePack[]
+  /** Verzia a revízia nasadenia pre pätku, napr. `0.1.0 · 937ed63`. */
+  version?: string
+  /** Ochrana osobných údajov organizácie (`/privacy` na jej doméne). */
+  privacyUrl?: string
 }
 
 const MARK = `<svg width="22" height="22" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="20" r="15" stroke="currentColor" stroke-width="6"/><circle cx="17.5" cy="20" r="3.4" fill="currentColor"/><circle cx="30.5" cy="20" r="3.4" fill="currentColor"/><path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor"/></svg>`
 const ARROW = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>`
 const CLOCK = `<svg width="15" height="15" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6.6"/><path d="M9 5.4V9l2.4 1.6"/></svg>`
 const GRIP = `<svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.6"/><circle cx="10" cy="4" r="1.6"/><circle cx="4" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="4" cy="16" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>`
+/** Značka GitHubu — tá istá ako v pätičke aplikácie (`GitHubMark`). */
+const GITHUB = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>`
 const CROSS = `<svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 5l8 8M13 5l-8 8"/></svg>`
 
 /** Poloha a veľkosť podľa nastavenia kanála — mimo design systému, mení sa s nastavením. */
@@ -335,7 +345,7 @@ var script=document.currentScript||(function(){var s=document.querySelectorAll('
 var token=script&&script.getAttribute('data-token')||'';
 var tokenUrl=script&&script.getAttribute('data-token-url')||'';
 var negatives=0, conversation=[], busy=false, lastQuestion='', started=false;
-var GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)};
+var GITHUB=${JSON.stringify(GITHUB)}, GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)};
 
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function svg(html,size){var s=el('span');s.innerHTML=html;var g=s.firstChild;if(size){g.setAttribute('width',size);g.setAttribute('height',size)}return g}
@@ -450,8 +460,19 @@ var more=field(1,'askMore');var moreForm=el('form','xw-form');
 var moreBar=el('div','xw-bar');var offerBtn=tx(el('button','button button--quiet button--sm'),'writeHelpdesk');offerBtn.type='button';offerBtn.hidden=true;
 var moreSend=tx(el('button','button'),'send');moreSend.type='submit';
 moreBar.appendChild(offerBtn);moreBar.appendChild(el('span','xw-hint'));moreBar.appendChild(moreSend);moreForm.appendChild(more.box);moreForm.appendChild(moreBar);
-cin.appendChild(moreForm);cin.appendChild(tx(el('div','xw-foot'),'poweredBy'));composer.appendChild(cin);
-sheet.appendChild(body);sheet.appendChild(composer);
+cin.appendChild(moreForm);composer.appendChild(cin);
+/* Pätka (Ján 27. 10. 2026): na čom pomocník beží, ochrana osobných údajov
+   organizácie, zdrojový kód a verzia — ako pätička intranetu (Footer.tsx).
+   Človek v cudzom systéme inak nevie, čí je to nástroj a komu hlásiť chybu.
+   Stojí pod plachtou vždy, aj v prázdnom stave. */
+var foot=el('div','xw-foot');
+function ext(href){var a=el('a');a.href=href;a.target='_blank';a.rel='noreferrer';return a}
+var brand=ext('https://contineo.app');brand.className='xw-foot-brand';brand.appendChild(tx(el('span'),'runsOn'));brand.appendChild(svg(MARK,16));brand.appendChild(el('b',null,'Contineo'));
+foot.appendChild(brand);
+if(CFG.privacyUrl)foot.appendChild(tx(ext(CFG.privacyUrl),'privacyLink'));
+var src=ext('https://github.com/ltksolutions/contineo');src.appendChild(svg(GITHUB,13));src.appendChild(tx(el('span'),'sourceCode'));foot.appendChild(src);
+if(CFG.version){var ver=el('span');var vl=tx(el('span'),'version');ver.appendChild(vl);ver.appendChild(document.createTextNode(' '+CFG.version));foot.appendChild(ver)}
+sheet.appendChild(body);sheet.appendChild(composer);sheet.appendChild(foot);
 root.appendChild(dock);root.appendChild(scrim);root.appendChild(sheet);
 document.body.appendChild(host);
 
