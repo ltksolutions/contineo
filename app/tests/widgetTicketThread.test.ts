@@ -112,3 +112,15 @@ describe("cesta odpovede riešiteľa", () => {
     expect(only().state).toBe("sent")
   })
 })
+
+describe("adresa stránky z widgetu (ADR-042, D276)", () => {
+  it("len z pôvodu brány, bez fragmentu; iné nič", async () => {
+    const { widgetPage } = await import("../src/lib/tickets")
+    const o = "https://issf.futbalsfz.sk"
+    expect(widgetPage("https://issf.futbalsfz.sk/Pomoc?17#x", o)).toBe("https://issf.futbalsfz.sk/Pomoc?17")
+    expect(widgetPage("https://zly.sk/Pomoc", o)).toBeNull()
+    expect(widgetPage("javascript:alert(1)", o)).toBeNull()
+    expect(widgetPage(42, o)).toBeNull()
+    expect(widgetPage(`https://issf.futbalsfz.sk/${"a".repeat(600)}`, o)).toBeNull()
+  })
+})

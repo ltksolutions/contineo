@@ -30,7 +30,7 @@ const { ensureWidgetPerson, widgetRefs } = await import("../src/lib/widgetPerson
 
 const id = (over: Partial<WidgetIdentity>): WidgetIdentity => ({
   externalId: "1111111", email: "rodic@example.sk", givenName: "Peter", familyName: "Hráč", name: "Peter Hráč",
-  roles: ["HRAC"], club: null, language: "sk", issuer: "https://issf.futbalsfz.sk", expiresAt: new Date(), ...over,
+  roles: ["HRAC"], club: null, language: "sk", phone: null, context: [], issuer: "https://issf.futbalsfz.sk", expiresAt: new Date(), ...over,
 })
 const refs = (d: Doc) => (d.externalRef as { widget: Record<string, unknown> }).widget.k
 

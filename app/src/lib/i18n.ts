@@ -2695,6 +2695,14 @@ interface Dictionary {
     draftMeta: (model: string, when: string) => string
     noDraft: string
     draftSources: string
+    /** Karta údajov z vydávajúceho systému pri tickete z widgetu (ADR-042, D276, D280). */
+    issuerHeading: (system: string) => string
+    issuerAccount: string
+    issuerReplyTo: string
+    issuerPhone: string
+    issuerRoles: string
+    issuerClub: string
+    issuerPage: string
     answer: string
     answerHint: string
     saveDraft: string
@@ -8082,6 +8090,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     draftMeta: (model: string, when: string) => `návrh ${model}, ${when}`,
     noDraft: "Zatiaľ bez návrhu.",
     draftSources: "Zdroje návrhu",
+    issuerHeading: system => `Údaje z ${system}`,
+    issuerAccount: "Účet",
+    issuerReplyTo: "Odpoveď na",
+    issuerPhone: "Telefón",
+    issuerRoles: "Roly",
+    issuerClub: "Klub",
+    issuerPage: "Písal(a) zo stránky",
     answer: "Text odpovede",
     answerHint: "Odíde ako čistý text z adresy schránky kanála. Bez pozdravu a podpisu, ak ich nechceš — pridáva sa nič.",
     saveDraft: "Uložiť návrh",
@@ -8327,6 +8342,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       name: "celé meno, len ak meno a priezvisko nemáte zvlášť",
       roles: "zoznam rolí osoby, napríklad hráč alebo tréner",
       club: "klub osoby",
+      phone_number: "telefón osoby — riešiteľ ho vidí pri tickete",
+      context: "ďalšie údaje pre riešiteľa ako názov → text (ID klubu, zväzy, ID osoby…), najviac 10; čísla bez oddeľovača tisícov",
       lang: "jazyk pomocníka: sk, cs alebo en",
       iat: "čas vydania — počet sekúnd od 1. 1. 1970 (Unix čas), teda „teraz“",
       exp: "koniec platnosti — najviac iat + 900 (15 minút)",
@@ -8342,7 +8359,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     embedJavaHeading: "Vzor v Jave",
     embedJavaIntro: [
       "Pre server v Jave (napr. ISSF na Apache Wicket): čistá Java 8 a novšia, bez knižníc. iss a aud sú už vyplnené za tento kanál.",
-      "Volanie: ContineoToken.issue(tajnýKľúč, registračnéČíslo, email, meno, priezvisko, roly, klub, \"sk\"). Klub môže byť null, roly prázdny zoznam.",
+      "Volanie: ContineoToken.issue(tajnýKľúč, registračnéČíslo, email, meno, priezvisko, roly, klub, \"sk\", telefón, údaje). Klub a telefón môžu byť null, roly prázdny zoznam, údaje prázdna mapa (LinkedHashMap drží poradie riadkov pri tickete).",
     ],
     embedJavaServer: [
       "Tajný kľúč čítajte z konfigurácie servera, nie zo zdrojového kódu a nikdy nie zo stránky.",
@@ -13326,6 +13343,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     draftMeta: (model: string, when: string) => `návrh ${model}, ${when}`,
     noDraft: "Zatím bez návrhu.",
     draftSources: "Zdroje návrhu",
+    issuerHeading: system => `Údaje z ${system}`,
+    issuerAccount: "Účet",
+    issuerReplyTo: "Odpověď na",
+    issuerPhone: "Telefon",
+    issuerRoles: "Role",
+    issuerClub: "Klub",
+    issuerPage: "Psal(a) ze stránky",
     answer: "Text odpovědi",
     answerHint: "Odejde jako čistý text z adresy schránky kanálu. Nic se nepřidává.",
     saveDraft: "Uložit návrh",
@@ -13571,6 +13595,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       name: "celé jméno, jen pokud jméno a příjmení nemáte zvlášť",
       roles: "seznam rolí osoby, například hráč nebo trenér",
       club: "klub osoby",
+      phone_number: "telefon osoby — řešitel ho vidí u ticketu",
+      context: "další údaje pro řešitele jako název → text (ID klubu, svazy, ID osoby…), nejvýše 10; čísla bez oddělovače tisíců",
       lang: "jazyk pomocníka: sk, cs nebo en",
       iat: "čas vydání — počet sekund od 1. 1. 1970 (Unix čas), tedy „teď“",
       exp: "konec platnosti — nejvýše iat + 900 (15 minut)",
@@ -13586,7 +13612,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     embedJavaHeading: "Vzor v Javě",
     embedJavaIntro: [
       "Pro server v Javě (např. ISSF na Apache Wicket): čistá Java 8 a novější, bez knihoven. iss a aud jsou už vyplněné za tento kanál.",
-      "Volání: ContineoToken.issue(tajnýKlíč, registračníČíslo, email, jméno, příjmení, role, klub, \"cs\"). Klub může být null, role prázdný seznam.",
+      "Volání: ContineoToken.issue(tajnýKlíč, registračníČíslo, email, jméno, příjmení, role, klub, \"cs\", telefon, údaje). Klub a telefon mohou být null, role prázdný seznam, údaje prázdná mapa (LinkedHashMap drží pořadí řádků u ticketu).",
     ],
     embedJavaServer: [
       "Tajný klíč čtěte z konfigurace serveru, ne ze zdrojového kódu a nikdy ne ze stránky.",
@@ -18561,6 +18587,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     draftMeta: (model: string, when: string) => `draft by ${model}, ${when}`,
     noDraft: "No draft yet.",
     draftSources: "Draft sources",
+    issuerHeading: system => `Data from ${system}`,
+    issuerAccount: "Account",
+    issuerReplyTo: "Reply to",
+    issuerPhone: "Phone",
+    issuerRoles: "Roles",
+    issuerClub: "Club",
+    issuerPage: "Wrote from page",
     answer: "Answer text",
     answerHint: "Goes out as plain text from the channel mailbox address. Nothing is added.",
     saveDraft: "Save draft",
@@ -18806,6 +18839,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       name: "full name, only if you don't have first and last name separately",
       roles: "list of the person's roles, for example player or coach",
       club: "the person's club",
+      phone_number: "the person's phone — the agent sees it with the ticket",
+      context: "more data for the agent as name → text (club ID, associations, person ID…), at most 10; numbers without thousands separators",
       lang: "assistant language: sk, cs or en",
       iat: "issued at — seconds since 1 Jan 1970 (Unix time), i.e. “now”",
       exp: "expiry — at most iat + 900 (15 minutes)",
@@ -18821,7 +18856,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     embedJavaHeading: "Java example",
     embedJavaIntro: [
       "For a Java server (e.g. ISSF on Apache Wicket): plain Java 8 or later, no libraries. iss and aud are already filled in for this channel.",
-      "Call: ContineoToken.issue(secret, registrationNumber, email, givenName, familyName, roles, club, \"en\"). Club may be null, roles an empty list.",
+      "Call: ContineoToken.issue(secret, registrationNumber, email, givenName, familyName, roles, club, \"en\", phone, context). Club and phone may be null, roles an empty list, context an empty map (a LinkedHashMap keeps the row order on the ticket).",
     ],
     embedJavaServer: [
       "Read the secret from the server configuration, not from source code and never from the page.",
