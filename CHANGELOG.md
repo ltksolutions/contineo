@@ -54,6 +54,9 @@ Po ukážke vo živom ISSF, návrh KANAL-widget-riadok-otazky (artefakt
   a `conventions.md`, skript ich nesie doslova (`WIDGET_CSS`, test
   `widgetCss`).
 - Zadanie pre vývojára ISSF: `docs/ZADANIE_ISSF_WIDGET.md`.
+- **Pätka widgetu** (#480): „Systém beží na aplikácii Contineo" s odkazom
+  na contineo.app, ochrana osobných údajov organizácie, zdrojový kód
+  a verzia s revíziou; vždy pod plachtou, odkazy v novej karte.
 
 ### Postup dokumentu: krúžok v tlačidlách päty karty (2026-10-27, #470)
 
