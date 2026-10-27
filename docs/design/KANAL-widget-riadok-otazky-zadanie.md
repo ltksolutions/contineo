@@ -17,8 +17,8 @@
 > chýba, návrh pomenuje ako odchýlku — nekreslí to vlastnými triedami potichu.
 >
 > **Artefakt návrhu:** https://claude.ai/artifact/TRb1BuTwYqCRpGDwk7BJwD
-> (plochy 1440 hrateľná a 1440 variant R1 B, 834, 390 zatvorený
-> a rozbalený, formulár správy helpdesku; s design systémom Contineo).
+> (plochy 1440 hrateľná, 834, 390 zatvorený a rozbalený s históriou
+> a vzormi, formulár správy helpdesku; s design systémom Contineo).
 
 ## Prečo
 
@@ -94,6 +94,33 @@ kliknutí rozšíri na mieste do plachty s viacriadkovým poľom.
   vyká** — prepísať texty `widget` v sk a cs *(odporúčam: ISSF aj SFZ
   píšu ľuďom „Vy", helpdesk je úradný kontakt)*. B) Tykanie ostane, len
   nápoveda riadku vyká.
+
+## Rozhodnuté (Ján, 27. 10. 2026)
+
+- **R1 A, predvolene hore v strede** — „R1: ok, default hore". Riadok
+  stojí hore v strede alebo dole v strede; pri ostatných šiestich
+  polohách ostane tlačidlo. Predvolená poloha kanála sa mení z „vpravo
+  v strede" (PR #474) na **„hore v strede"**; plachta sa otvára z riadku
+  smerom dole.
+- **R2 A** — štvrtá veľkosť 80 % × 80 %, pre riadok predvolená.
+- **R3 A** — na telefóne riadok ostane, rozbalí sa na celú obrazovku.
+- **R4 B, rozšírené** — „dajme vzory otázok, poprípade aj históriu
+  otázok, ako je to priamo v Contineo/intranete". V prázdnom paneli ako
+  v plachte otázky (`.ask-sheet-mine`, `.ask-sheet-examples`):
+  - **Vaše nedávne otázky** — posledných 5 otázok tejto osoby v kanáli
+    (záznamy `evaluations` s `personId` osoby z widgetu, D280 — teda
+    podľa e-mailu, nie podľa účtu ISSF); pri písaní sa filtrujú ako
+    v Contineu. Riadok otvorí uloženú odpoveď **v paneli**; „×" ju skryje
+    z histórie. Odkaz „Všetky" sa nekreslí — stránka histórie je
+    v intranete, nie v ISSF. *(Odporúčanie, na potvrdenie pri finále.)*
+  - **Napríklad** — vzory otázok ako **nastavenie kanála** v jazykoch
+    kanála (ako text tlačidla); vzor otázku vloží, neodošle. Prázdne =
+    časť sa nekreslí. *(Odporúčanie: vzory pre ISSF sú iné než predpisové
+    vzory intranetu, preto nastavenie, nie pevné texty.)*
+- **R5 A** — widget vyká; texty `widget` v sk a cs sa prepíšu.
+- **Design system:** „externý widget typu kanál" sa do design systému
+  doplní (`globals.css`, `conventions.md`, zrkadlo cez `/design-sync`),
+  keď Ján návrh schváli ako finálny.
 
 ## Odchýlky od design systému v návrhu
 
