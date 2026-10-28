@@ -377,6 +377,26 @@ A, A, A): ľudia sprievodcov odklikávajú bez čítania a do ISSF prišli robi�
 niečo iné; prázdna plachta už sama ukazuje, ako sa pýtať. Animácia, ktorá
 by sama hýbala riadkom, by mätla a pri vypnutých animáciách aj tak odpadne.
 
+### D292 — Riadok sa dá zbaliť na posúvateľné tlačidlo
+
+Zatvorený riadok otázky má na pravom okraji „⤡" (`arrow.down.right.and.arrow.up.left`),
+ktoré ho **zbalí na tlačidlo „Opýtajte sa…"** (značka + text, 44 px).
+Tlačidlo sa ťahá celé — pohyb pod 5 px je klik — a posúvajú ho aj šípky;
+Home alebo dvojklik ho vráti na miesto z nastavenia kanála. **Klik ho
+rozbalí späť na riadok** a ďalší klik do riadku otvorí plachtu ako doteraz.
+Tvar (riadok / tlačidlo) aj miesto si pamätá prehliadač človeka;
+predvolený je riadok, nastavenie kanála sa nemení.
+
+Miesto sa ukladá ako podiel okna **a okraj, ku ktorému je widget bližšie**
+(ľavý alebo pravý). Tlačidlo v pravom dolnom rohu sa tak rozbalí na riadok
+zarovnaný doprava a po zbalení je opäť tam, kde bolo — orezanie riadku na
+šírku obrazovky miesto neprepíše. Staršie uložené miesto (bez okraja) sa
+číta ako ľavý okraj.
+
+Prečo (Ján, 28. 10. 2026): riadok je široký a na niektorých obrazovkách
+ISSF zavadzia aj po posunutí; malé tlačidlo sa dá odložiť do rohu a riadok
+je od neho jeden klik.
+
 ### Design system
 
 Externý widget kanála (`.xw-*`) je súčasť design systému: `globals.css`,

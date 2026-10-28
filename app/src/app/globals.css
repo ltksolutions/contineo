@@ -4382,7 +4382,8 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * nesie tieto pravidlá doslova a test `widgetCss` stráži, že sú tu.
  * Mení sa to tu a v skripte naraz. Opis: `.design-sync/conventions.md`.
  *
- * Zatvorený: `.xw-dock` > `.xw-row` riadok otázky + `.xw-grip` úchyt na posúvanie,
+ * Zatvorený: `.xw-dock` > `.xw-row` riadok otázky + `.xw-grip` úchyt na posúvanie
+ * + `.xw-fold` zbalenie na `.xw-pill` tlačidlo (`.xw-dock.is-compact`),
  * riadok otázky (tvar `.header-search`, 52 px a tieň —
  * stojí nad cudzou stránkou). Otvorený: `.xw-sheet` plachta (tvar
  * `.ask-sheet--overlay`) nad `.xw-scrim`; `.xw-head` (značka, názov,
@@ -4404,6 +4405,16 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-grip:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .xw-dock.is-dragging .xw-grip{cursor:grabbing}
 .xw-dock.is-dragging .xw-row{box-shadow:0 1px 2px rgba(20,28,42,.08),0 20px 48px rgba(20,28,42,.28)}
+.xw-row--fold{padding-right:52px}
+.xw-fold{position:absolute;right:6px;top:50%;translate:0 -50%;display:grid;place-items:center;width:40px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
+.xw-fold:hover{background:var(--surface-2);color:var(--ink)}
+.xw-fold:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* Zbalený tvar (Ján 28. 10. 2026): tlačidlo „Opýtajte sa…", ťahá sa celé, klik rozbalí riadok. */
+.xw-dock.is-compact{width:max-content}
+.xw-pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px 0 12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:22px;box-shadow:0 1px 2px rgba(20,28,42,.08),0 12px 32px rgba(20,28,42,.18);font:inherit;font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:grab;touch-action:none;transition:box-shadow .2s ease}
+.xw-pill:hover{box-shadow:0 1px 2px rgba(20,28,42,.08),0 16px 40px rgba(20,28,42,.24)}
+.xw-pill:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),0 12px 32px rgba(20,28,42,.18)}
+.xw-dock.is-dragging .xw-pill{cursor:grabbing;box-shadow:0 1px 2px rgba(20,28,42,.08),0 20px 48px rgba(20,28,42,.28)}
 .xw-row-go{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:18px;background:var(--accent);color:var(--on-accent)}
 .xw-scrim{position:fixed;inset:0;background:rgba(20,28,42,.32);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s}
 .xw-scrim.is-open{opacity:1;visibility:visible}

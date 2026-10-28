@@ -49,6 +49,8 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
   prekryl funkčné tlačidlá; hlavička ISSF nie je pripnutá a pri posunutí
   odíde, D286). Človek si riadok môže **posunúť** za úchyt ⋮⋮ (myš, dotyk,
   šípky; Home alebo dvojklik vráti) — miesto si pamätá jeho prehliadač.
+  Riadok sa dá **zbaliť na tlačidlo „Opýtajte sa…“** („⤡“ vpravo, D292);
+  tlačidlo sa ťahá celé a klik ho rozbalí späť na riadok.
 - **Pätka widgetu**: na čom pomocník beží (odkaz na contineo.app),
   ochrana osobných údajov organizácie, zdrojový kód a verzia s revíziou —
   pri hlásení chyby povedzte verziu z pätky. Odkazy sa otvárajú v novej karte.

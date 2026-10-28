@@ -42,6 +42,12 @@
  * podiel šírky a výšky okna), nastavenie kanála sa nemení; riadok ostáva
  * vždy celý na obrazovke. Plachta sa neposúva.
  *
+ * **Zbalenie na tlačidlo** (Ján 28. 10. 2026): „⤡" na pravom okraji riadku ho
+ * zbalí na tlačidlo „Opýtajte sa…", ktoré sa ťahá celé (pohyb pod 5 px je
+ * klik); klik ho rozbalí späť na riadok. Miesto sa drží okraja, ku ktorému
+ * je bližšie — riadok sa rozbalí od toho istého okraja a zbalením sa nič
+ * neposunie. Tvar aj miesto si pamätá prehliadač, predvolený je riadok.
+ *
  * **Úvodný tip** (D291, `TipKit` — popover tip): pri prvej návšteve bublina
  * pod zatvoreným widgetom — čo pomocník je a ako ho posunúť (úchyt zatiaľ
  * bliká), „Vyskúšať" ho otvorí, „Rozumiem", „×" alebo Esc zavrie. Raz
@@ -160,6 +166,15 @@ export const WIDGET_CSS: string[] = [
   ".xw-grip:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}",
   ".xw-dock.is-dragging .xw-grip{cursor:grabbing}",
   ".xw-dock.is-dragging .xw-row{box-shadow:0 1px 2px rgba(20,28,42,.08),0 20px 48px rgba(20,28,42,.28)}",
+  ".xw-row--fold{padding-right:52px}",
+  ".xw-fold{position:absolute;right:6px;top:50%;translate:0 -50%;display:grid;place-items:center;width:40px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}",
+  ".xw-fold:hover{background:var(--surface-2);color:var(--ink)}",
+  ".xw-fold:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}",
+  ".xw-dock.is-compact{width:max-content}",
+  ".xw-pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px 0 12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:22px;box-shadow:0 1px 2px rgba(20,28,42,.08),0 12px 32px rgba(20,28,42,.18);font:inherit;font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:grab;touch-action:none;transition:box-shadow .2s ease}",
+  ".xw-pill:hover{box-shadow:0 1px 2px rgba(20,28,42,.08),0 16px 40px rgba(20,28,42,.24)}",
+  ".xw-pill:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),0 12px 32px rgba(20,28,42,.18)}",
+  ".xw-dock.is-dragging .xw-pill{cursor:grabbing;box-shadow:0 1px 2px rgba(20,28,42,.08),0 20px 48px rgba(20,28,42,.28)}",
   ".xw-row-go{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:18px;background:var(--accent);color:var(--on-accent)}",
   ".xw-scrim{position:fixed;inset:0;background:rgba(20,28,42,.32);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s}",
   ".xw-scrim.is-open{opacity:1;visibility:visible}",
@@ -263,6 +278,8 @@ const CLOCK = `<svg width="15" height="15" viewBox="0 0 18 18" fill="none" strok
 const GRIP = `<svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.6"/><circle cx="10" cy="4" r="1.6"/><circle cx="4" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="4" cy="16" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>`
 /** Značka GitHubu — tá istá ako v pätičke aplikácie (`GitHubMark`). */
 const GITHUB = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>`
+/** Zbaliť — `arrow.down.right.and.arrow.up.left` zo SF Symbols. */
+const FOLD = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 10l7-7M14 10V5M14 10h5M10 14l-7 7M10 14v5M10 14H5"/></svg>`
 const CROSS = `<svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 5l8 8M13 5l-8 8"/></svg>`
 
 /** Poloha a veľkosť podľa nastavenia kanála — mimo design systému, mení sa s nastavením. */
@@ -345,7 +362,7 @@ var script=document.currentScript||(function(){var s=document.querySelectorAll('
 var token=script&&script.getAttribute('data-token')||'';
 var tokenUrl=script&&script.getAttribute('data-token-url')||'';
 var negatives=0, conversation=[], busy=false, lastQuestion='', started=false;
-var GITHUB=${JSON.stringify(GITHUB)}, GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)};
+var GITHUB=${JSON.stringify(GITHUB)}, GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)}, FOLD=${JSON.stringify(FOLD)};
 
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function svg(html,size){var s=el('span');s.innerHTML=html;var g=s.firstChild;if(size){g.setAttribute('width',size);g.setAttribute('height',size)}return g}
@@ -374,16 +391,20 @@ style.textContent=':host{all:initial;font:15px/1.5 -apple-system,BlinkMacSystemF
 root.appendChild(style);
 
 /* Zatvorený widget: riadok otázky (hore/dole v strede, D286) alebo tlačidlo. */
-var launcher,rowText=null,dock,grip=null;
+var launcher,rowText=null,dock,grip=null,fold=null,pill=null;
 if(ROW){
-  /* Úchyt je vedľa riadku v obale, nie v ňom — tlačidlo v tlačidle nie je platné HTML. */
+  /* Úchyt a zbalenie sú vedľa riadku v obale, nie v ňom — tlačidlo v tlačidle nie je platné HTML. */
   dock=el('div','xw-dock');
-  launcher=el('button','xw-row xw-row--grip');launcher.type='button';
+  launcher=el('button','xw-row xw-row--grip xw-row--fold');launcher.type='button';
   grip=el('button','xw-grip');grip.type='button';grip.appendChild(svg(GRIP));tx(grip,'move','aria-label');tx(grip,'move','title');
+  fold=el('button','xw-fold');fold.type='button';fold.appendChild(svg(FOLD));tx(fold,'fold','aria-label');tx(fold,'fold','title');
   var rm=el('span','xw-row-mark');rm.appendChild(svg(MARK));rowText=el('span','xw-row-text');
   var go=el('span','xw-row-go');go.appendChild(svg(ARROW));
   launcher.appendChild(rm);launcher.appendChild(rowText);launcher.appendChild(go);
-  dock.appendChild(launcher);dock.appendChild(grip);
+  /* Zbalený tvar: tlačidlo „Opýtajte sa…" — ťahá sa celé, klik rozbalí riadok. */
+  pill=el('button','xw-pill');pill.type='button';pill.hidden=true;tx(pill,'unfold','title');
+  var pm=el('span','xw-row-mark');pm.appendChild(svg(MARK,20));pill.appendChild(pm);pill.appendChild(tx(el('span'),'pill'));
+  dock.appendChild(launcher);dock.appendChild(grip);dock.appendChild(fold);dock.appendChild(pill);
 }else{launcher=el('button','fab');launcher.type='button';dock=launcher}
 var scrim=el('div','xw-scrim');
 var sheet=el('section','xw-sheet');sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');
@@ -506,32 +527,46 @@ function isOpen(){return sheet.classList.contains('is-open')}
 function openPanel(){hideTip();if(isOpen())return;sheet.classList.add('is-open');scrim.classList.add('is-open');dock.hidden=true;
   if(!started)loadHistory(first.input.value);
   setTimeout(function(){var t=started?more.input:first.input;t.focus();t.setSelectionRange(t.value.length,t.value.length)},40)}
-function closePanel(){sheet.classList.remove('is-open');scrim.classList.remove('is-open');dock.hidden=false;syncOwn();launcher.focus()}
+function closePanel(){sheet.classList.remove('is-open');scrim.classList.remove('is-open');dock.hidden=false;syncOwn();(compact?pill:launcher).focus()}
 launcher.addEventListener('click',openPanel);
 
-/* Posúvanie riadku za úchyt. Miesto = podiel okna, aby prežilo zmenu veľkosti. */
-var POS='contineo-widget-pos:'+CFG.channel;
+/* Posúvanie za úchyt riadku alebo za celé zbalené tlačidlo. Miesto = podiel
+   okna a strana, ku ktorej sa drží (ľavý alebo pravý okraj) — riadok aj
+   tlačidlo potom stoja pri tom istom okraji a prepínanie ich nerozháže. */
+var POS='contineo-widget-pos:'+CFG.channel,MODE='contineo-widget-mode:'+CFG.channel,anchor=null,compact=false,dragEnd=0;
 function clampTo(x,y){var r=dock.getBoundingClientRect();return [Math.max(8,Math.min(x,innerWidth-r.width-8)),Math.max(8,Math.min(y,innerHeight-r.height-8))]}
 function place(x,y){var c=clampTo(x,y);dock.style.left=c[0]+'px';dock.style.top=c[1]+'px';dock.style.bottom='auto';dock.style.transform='none';positionTip();return c}
-function savePos(c){try{localStorage.setItem(POS,JSON.stringify({x:c[0]/innerWidth,y:c[1]/innerHeight}))}catch(e){}}
-function resetPos(){dock.style.left=dock.style.top=dock.style.bottom=dock.style.transform='';try{localStorage.removeItem(POS)}catch(e){}positionTip()}
-function restorePos(){var p=null;try{p=JSON.parse(localStorage.getItem(POS)||'null')}catch(e){}if(p&&typeof p.x==='number'&&typeof p.y==='number')place(p.x*innerWidth,p.y*innerHeight)}
-if(grip){
-  var drag=null;
-  grip.addEventListener('pointerdown',function(e){if(e.button!==0)return;var r=dock.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top,moved:false};grip.setPointerCapture(e.pointerId);dock.classList.add('is-dragging');e.preventDefault()});
-  grip.addEventListener('pointermove',function(e){if(!drag)return;drag.moved=true;drag.c=place(e.clientX-drag.dx,e.clientY-drag.dy)});
-  function endDrag(){if(!drag)return;if(drag.moved&&drag.c)savePos(drag.c);drag=null;dock.classList.remove('is-dragging')}
-  grip.addEventListener('pointerup',endDrag);grip.addEventListener('pointercancel',endDrag);
-  grip.addEventListener('dblclick',resetPos);
-  grip.addEventListener('keydown',function(e){
+function applyAnchor(){if(!anchor)return;var w=dock.getBoundingClientRect().width;place(anchor.s==='r'?anchor.x*innerWidth-w:anchor.x*innerWidth,anchor.y*innerHeight)}
+function savePos(c){var w=dock.getBoundingClientRect().width,right=c[0]+w/2>innerWidth/2;
+  anchor={x:(right?c[0]+w:c[0])/innerWidth,y:c[1]/innerHeight,s:right?'r':'l'};try{localStorage.setItem(POS,JSON.stringify(anchor))}catch(e){}}
+function resetPos(){anchor=null;dock.style.left=dock.style.top=dock.style.bottom=dock.style.transform='';try{localStorage.removeItem(POS)}catch(e){}positionTip()}
+function restorePos(){var p=null;try{p=JSON.parse(localStorage.getItem(POS)||'null')}catch(e){}if(p&&typeof p.x==='number'&&typeof p.y==='number'){anchor={x:p.x,y:p.y,s:p.s==='r'?'r':'l'};applyAnchor()}}
+/* Dva tvary zatvoreného widgetu: riadok a tlačidlo. Voľbu si pamätá prehliadač. */
+function setCompact(on,focus){if(!pill)return;compact=on;dock.classList.toggle('is-compact',on);
+  launcher.hidden=grip.hidden=fold.hidden=on;pill.hidden=!on;
+  try{if(on)localStorage.setItem(MODE,'button');else localStorage.removeItem(MODE)}catch(e){}
+  applyAnchor();positionTip();if(focus)(on?pill:launcher).focus()}
+/* Ťahanie: kým sa ukazovateľ nepohne o 5 px, je to klik. */
+function draggable(h){var drag=null;
+  h.addEventListener('pointerdown',function(e){if(e.button!==0)return;var r=dock.getBoundingClientRect();drag={sx:e.clientX,sy:e.clientY,dx:e.clientX-r.left,dy:e.clientY-r.top,moved:false};h.setPointerCapture(e.pointerId);e.preventDefault()});
+  h.addEventListener('pointermove',function(e){if(!drag)return;if(!drag.moved){if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)<5)return;drag.moved=true;dock.classList.add('is-dragging')}drag.c=place(e.clientX-drag.dx,e.clientY-drag.dy)});
+  function end(){if(!drag)return;if(drag.moved&&drag.c){savePos(drag.c);dragEnd=Date.now()}drag=null;dock.classList.remove('is-dragging')}
+  h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
+  h.addEventListener('dblclick',resetPos);
+  h.addEventListener('keydown',function(e){
     if(e.key==='Home'){e.preventDefault();resetPos();return}
     var step=e.shiftKey?64:16,d={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]}[e.key];if(!d)return;
-    e.preventDefault();var r=dock.getBoundingClientRect();savePos(place(r.left+d[0],r.top+d[1]))});
-  /* Po zmene veľkosti okna ostane riadok celý na obrazovke. */
-  addEventListener('resize',function(){if(dock.style.left)restorePos()});
+    e.preventDefault();var r=dock.getBoundingClientRect();savePos(place(r.left+d[0],r.top+d[1]))})}
+if(grip){
+  draggable(grip);draggable(pill);
+  fold.addEventListener('click',function(){hideTip();setCompact(true,true)});
+  pill.addEventListener('click',function(){if(Date.now()-dragEnd<400)return;setCompact(false,true)});
+  /* Po zmene veľkosti okna ostane widget celý na obrazovke. */
+  addEventListener('resize',applyAnchor);
 }
 /* Písanie do zatvoreného riadku ho rozbalí a znak pokračuje v poli. */
-launcher.addEventListener('keydown',function(e){if(!ROW||e.ctrlKey||e.metaKey||e.altKey||e.key.length!==1||e.key===' ')return;e.preventDefault();first.input.value+=e.key;openPanel();onFirstInput()});
+function typeToOpen(e){if(!ROW||e.ctrlKey||e.metaKey||e.altKey||e.key.length!==1||e.key===' ')return;e.preventDefault();first.input.value+=e.key;openPanel();onFirstInput()}
+launcher.addEventListener('keydown',typeToOpen);if(pill)pill.addEventListener('keydown',typeToOpen);
 close.addEventListener('click',closePanel);
 scrim.addEventListener('click',closePanel);
 sheet.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen()){e.preventDefault();closePanel()}});
@@ -673,7 +708,7 @@ function positionTip(){
   var below=r.bottom+12+h<=innerHeight-8,left=Math.max(8,Math.min(r.left,innerWidth-w-8));
   tip.style.left=left+'px';tip.style.top=(below?r.bottom+12:r.top-12-h)+'px';tip.classList.toggle('is-above',!below);
   /* Šípka bubliny mieri na úchyt (pri tlačidle na jeho začiatok). */
-  var g=grip?grip.getBoundingClientRect():r;tip.style.setProperty('--tip-x',Math.max(12,Math.min((grip?g.left+g.width/2:r.left+22)-left-6,w-24))+'px');
+  var gr=grip&&!compact,g=gr?grip.getBoundingClientRect():r;tip.style.setProperty('--tip-x',Math.max(12,Math.min((gr?g.left+g.width/2:r.left+22)-left-6,w-24))+'px');
 }
 function showTip(){
   if(!LOOK.tip||tip||tipSeen()||isOpen()||dock.hidden)return;
@@ -690,7 +725,8 @@ function showTip(){
 }
 addEventListener('resize',positionTip);
 
-syncScope();syncOwn();if(grip)restorePos();
+syncScope();syncOwn();
+if(grip){var m=null;try{m=localStorage.getItem(MODE)}catch(e){}if(m==='button')setCompact(true,false);restorePos()}
 setTimeout(showTip,1000);
 })();`
 }

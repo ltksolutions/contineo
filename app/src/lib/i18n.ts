@@ -2810,6 +2810,10 @@ interface Dictionary {
     language: string
     /** Úchyt riadku otázky: čo robí a ako ho vrátiť. */
     move: string
+    /** Zbalenie riadku na tlačidlo a späť; `pill` je text zbaleného tlačidla. */
+    fold: string
+    unfold: string
+    pill: string
     /** Pätka widgetu: „verzia 0.1.0 · abc1234". */
     version: string
     /** Úvodný tip pri prvej návšteve (D291); `{org}` = skratka organizácie. */
@@ -8253,10 +8257,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Opýtať sa",
     rowPlaceholder: "Máte otázku? Potrebujete návod alebo vysvetlenie? Pýtajte sa, sme tu pre vás.",
     move: "Posunúť pomocníka. Šípky ho posúvajú, Home alebo dvojklik ho vráti na miesto.",
+    fold: "Zbaliť na tlačidlo",
+    unfold: "Rozbaliť riadok otázky. Tlačidlo sa dá posunúť ťahaním alebo šípkami, dvojklik ho vráti na miesto.",
+    pill: "Opýtajte sa…",
     version: "verzia",
     tipTitle: "Nový pomocník {org}",
     tipBody: "Pýtajte sa vlastnými slovami — na predpisy, postupy aj návody. Keď odpoveď nenájdeme, pošlete správu helpdesku a odpovie vám človek.",
-    tipMove: "Ak vám riadok niečo zakrýva, posuňte ho za úchyt. Dvojklik ho vráti.",
+    tipMove: "Ak vám riadok niečo zakrýva, posuňte ho za úchyt alebo ho vpravo zbaľte na tlačidlo. Dvojklik ho vráti.",
     tipTry: "Vyskúšať",
     tipOk: "Rozumiem",
     tipClose: "Zavrieť tip",
@@ -13564,10 +13571,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Zeptat se",
     rowPlaceholder: "Máte otázku? Potřebujete návod nebo vysvětlení? Ptejte se, jsme tu pro vás.",
     move: "Posunout pomocníka. Šipky ho posouvají, Home nebo dvojklik ho vrátí na místo.",
+    fold: "Sbalit na tlačítko",
+    unfold: "Rozbalit řádek dotazu. Tlačítko se dá posunout tažením nebo šipkami, dvojklik ho vrátí na místo.",
+    pill: "Zeptejte se…",
     version: "verze",
     tipTitle: "Nový pomocník {org}",
     tipBody: "Ptejte se vlastními slovy — na předpisy, postupy i návody. Když odpověď nenajdeme, pošlete zprávu helpdesku a odpoví vám člověk.",
-    tipMove: "Pokud vám řádek něco zakrývá, posuňte ho za úchyt. Dvojklik ho vrátí.",
+    tipMove: "Pokud vám řádek něco zakrývá, posuňte ho za úchyt nebo ho vpravo sbalte na tlačítko. Dvojklik ho vrátí.",
     tipTry: "Vyzkoušet",
     tipOk: "Rozumím",
     tipClose: "Zavřít tip",
@@ -18866,10 +18876,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     send: "Ask",
     rowPlaceholder: "Have a question? Need a guide or an explanation? Ask us, we are here for you.",
     move: "Move the assistant. Arrow keys move it, Home or a double click puts it back.",
+    fold: "Collapse to a button",
+    unfold: "Expand the question row. Drag the button or use the arrow keys to move it; a double click puts it back.",
+    pill: "Ask…",
     version: "version",
     tipTitle: "New {org} assistant",
     tipBody: "Ask in your own words — about regulations, procedures and guides. If we find no answer, send a message to the helpdesk and a person will reply.",
-    tipMove: "If the row covers something, drag it by the handle. A double click puts it back.",
+    tipMove: "If the row covers something, drag it by the handle or collapse it to a button on the right. A double click puts it back.",
     tipTry: "Try it",
     tipOk: "Got it",
     tipClose: "Close tip",
