@@ -110,6 +110,10 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(js).toContain("help.addEventListener('click',function(){if(tip)hideTip();else showTip(true)})")
     expect(js).toContain("if(tip||isOpen()||dock.hidden||!asked&&(!LOOK.tip||tipSeen()))return")
     expect(dictionary("cs").widget.tipShow).toBe("Jak pomocník funguje")
+    // Riadky tipu s ikonou úchytu aj zbalenia; pod riadkom má tip jeho šírku.
+    expect(js).toContain("[[GRIP,'tipMove'],[FOLD,'tipFold']]")
+    expect(js).toContain("tip.style.width=grip&&!compact?r.width+'px':''")
+    for (const l of ["sk", "cs", "en"] as const) expect(dictionary(l).widget.tipFold).toBeTruthy()
   })
   it("v rohu tlačidlo a plachta pri ňom bez závoja; veľkosť, texty a prah idú do skriptu", () => {
     const look = appearanceForScript(widgetAppearance({ position: "right-top", size: "l", escalateAfter: 1, launcher: { sk: "Pomoc" }, greeting: { sk: "Ahoj" } }), "sk")

@@ -716,7 +716,9 @@ var TIPKEY='contineo-widget-tip:'+CFG.channel,tip=null;
 function tipSeen(){try{return localStorage.getItem(TIPKEY)==='1'}catch(e){return true}}
 function hideTip(){if(!tip)return;tip.remove();tip=null;dock.classList.remove('is-tip');if(help)help.setAttribute('aria-expanded','false');try{localStorage.setItem(TIPKEY,'1')}catch(e){}}
 function positionTip(){
-  if(!tip)return;var r=dock.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+  if(!tip)return;var r=dock.getBoundingClientRect();
+  /* Pod riadkom má tip jeho šírku; pod tlačidlom a v rohu ostáva úzky. */
+  tip.style.width=grip&&!compact?r.width+'px':'';var w=tip.offsetWidth,h=tip.offsetHeight;
   var below=r.bottom+12+h<=innerHeight-8,left=Math.max(8,Math.min(r.left,innerWidth-w-8));
   tip.style.left=left+'px';tip.style.top=(below?r.bottom+12:r.top-12-h)+'px';tip.classList.toggle('is-above',!below);
   /* Šípka bubliny mieri na úchyt (pri tlačidle na jeho začiatok). */
@@ -729,7 +731,8 @@ function showTip(asked){
   var th=el('div','xw-tip-head');th.appendChild(tx(el('span','xw-tip-title'),'tipTitle'));
   var tc=el('button','xw-tip-close','\u00d7');tc.type='button';tx(tc,'tipClose','aria-label');tc.addEventListener('click',hideTip);th.appendChild(tc);
   tip.appendChild(th);tip.appendChild(tx(el('p'),'tipBody'));
-  if(grip){var mv=el('p','xw-tip-move');mv.appendChild(svg(GRIP));mv.appendChild(tx(el('span'),'tipMove'));tip.appendChild(mv)}
+  /* Pre každú voľbu riadok s ikonou ovládača, ako ho človek uvidí v riadku. */
+  if(grip){[[GRIP,'tipMove'],[FOLD,'tipFold']].forEach(function(x){var mv=el('p','xw-tip-move');mv.appendChild(svg(x[0],x[0]===FOLD?16:null));mv.appendChild(tx(el('span'),x[1]));tip.appendChild(mv)})}
   var ta=el('div','xw-tip-actions');var tt=tx(el('button','button button--sm'),'tipTry');tt.type='button';var to=tx(el('button','button button--quiet button--sm'),'tipOk');to.type='button';
   tt.addEventListener('click',function(){hideTip();openPanel()});to.addEventListener('click',hideTip);
   ta.appendChild(tt);ta.appendChild(to);tip.appendChild(ta);

@@ -2820,6 +2820,8 @@ interface Dictionary {
     tipTitle: string
     tipBody: string
     tipMove: string
+    /** Riadok tipu s ikonou „⤡“: zbalenie na tlačidlo. */
+    tipFold: string
     tipTry: string
     tipOk: string
     tipClose: string
@@ -8265,7 +8267,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     version: "verzia",
     tipTitle: "Nový pomocník {org}",
     tipBody: "Pýtajte sa vlastnými slovami — na predpisy, postupy aj návody. Keď odpoveď nenájdeme, pošlete správu helpdesku a odpovie vám človek.",
-    tipMove: "Ak vám riadok niečo zakrýva, posuňte ho za úchyt alebo ho vpravo zbaľte na tlačidlo. Dvojklik ho vráti.",
+    tipMove: "Ak vám riadok niečo zakrýva, posuňte ho za úchyt. Dvojklik ho vráti.",
+    tipFold: "Riadok sa dá vpravo zbaliť na malé tlačidlo „Opýtajte sa…“. Klik naň ho znova rozbalí.",
     tipTry: "Vyskúšať",
     tipOk: "Rozumiem",
     tipClose: "Zavrieť tip",
@@ -13580,7 +13583,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     version: "verze",
     tipTitle: "Nový pomocník {org}",
     tipBody: "Ptejte se vlastními slovy — na předpisy, postupy i návody. Když odpověď nenajdeme, pošlete zprávu helpdesku a odpoví vám člověk.",
-    tipMove: "Pokud vám řádek něco zakrývá, posuňte ho za úchyt nebo ho vpravo sbalte na tlačítko. Dvojklik ho vrátí.",
+    tipMove: "Pokud vám řádek něco zakrývá, posuňte ho za úchyt. Dvojklik ho vrátí.",
+    tipFold: "Řádek se dá vpravo sbalit na malé tlačítko „Zeptejte se…“. Klik na něj ho znovu rozbalí.",
     tipTry: "Vyzkoušet",
     tipOk: "Rozumím",
     tipClose: "Zavřít tip",
@@ -18886,7 +18890,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     version: "version",
     tipTitle: "New {org} assistant",
     tipBody: "Ask in your own words — about regulations, procedures and guides. If we find no answer, send a message to the helpdesk and a person will reply.",
-    tipMove: "If the row covers something, drag it by the handle or collapse it to a button on the right. A double click puts it back.",
+    tipMove: "If the row covers something, drag it by the handle. A double click puts it back.",
+    tipFold: "On the right, the row collapses to a small “Ask…” button. Click it to expand the row again.",
     tipTry: "Try it",
     tipOk: "Got it",
     tipClose: "Close tip",
