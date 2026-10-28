@@ -55,7 +55,8 @@ Kanály (menu, správca organizácie) → kanál typu **widget**:
   ochrana osobných údajov organizácie, zdrojový kód a verzia s revíziou —
   pri hlásení chyby povedzte verziu z pätky. Odkazy sa otvárajú v novej karte.
 - **Úvodný tip** pri prvej návšteve (D291): bublina pod riadkom — čo je
-  pomocník a ako ho posunúť; raz v prehliadači. Vypína sa prepínačom
+  pomocník a ako ho posunúť; raz v prehliadači (pamätá si to `localStorage`,
+  nie cookie). Znova ho ukáže žiarovka v riadku (D293). Vypína sa prepínačom
   „Úvodný tip pri prvej návšteve". Veľkosť plachty malá / stredná / veľká /
   **na obrazovku (80 % × 80 %, predvolená)**; na telefóne je plachta celá
   obrazovka. V jazykoch kanála: nápoveda v riadku, text tlačidla,

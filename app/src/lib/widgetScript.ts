@@ -48,6 +48,9 @@
  * je bližšie — riadok sa rozbalí od toho istého okraja a zbalením sa nič
  * neposunie. Tvar aj miesto si pamätá prehliadač, predvolený je riadok.
  *
+ * **Tip na požiadanie** (Ján 28. 10. 2026): žiarovka vedľa „⤡" ukáže úvodný
+ * tip znova, aj keď ho kanál pri prvej návšteve vypol; druhý klik ho zavrie.
+ *
  * **Úvodný tip** (D291, `TipKit` — popover tip): pri prvej návšteve bublina
  * pod zatvoreným widgetom — čo pomocník je a ako ho posunúť (úchyt zatiaľ
  * bliká), „Vyskúšať" ho otvorí, „Rozumiem", „×" alebo Esc zavrie. Raz
@@ -170,6 +173,10 @@ export const WIDGET_CSS: string[] = [
   ".xw-fold{position:absolute;right:6px;top:50%;translate:0 -50%;display:grid;place-items:center;width:40px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}",
   ".xw-fold:hover{background:var(--surface-2);color:var(--ink)}",
   ".xw-fold:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}",
+  ".xw-row--help{padding-right:92px}",
+  ".xw-help{position:absolute;right:46px;top:50%;translate:0 -50%;display:grid;place-items:center;width:40px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}",
+  ".xw-help:hover,.xw-help[aria-expanded=true]{background:var(--surface-2);color:var(--ink)}",
+  ".xw-help:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}",
   ".xw-dock.is-compact{width:max-content}",
   ".xw-pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px 0 12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:22px;box-shadow:0 1px 2px rgba(20,28,42,.08),0 12px 32px rgba(20,28,42,.18);font:inherit;font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:grab;touch-action:none;transition:box-shadow .2s ease}",
   ".xw-pill:hover{box-shadow:0 1px 2px rgba(20,28,42,.08),0 16px 40px rgba(20,28,42,.24)}",
@@ -278,6 +285,8 @@ const CLOCK = `<svg width="15" height="15" viewBox="0 0 18 18" fill="none" strok
 const GRIP = `<svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.6"/><circle cx="10" cy="4" r="1.6"/><circle cx="4" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="4" cy="16" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>`
 /** Značka GitHubu — tá istá ako v pätičke aplikácie (`GitHubMark`). */
 const GITHUB = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>`
+/** Tip znova — `lightbulb` zo SF Symbols (TipKit). */
+const BULB = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg>`
 /** Zbaliť — `arrow.down.right.and.arrow.up.left` zo SF Symbols. */
 const FOLD = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 10l7-7M14 10V5M14 10h5M10 14l-7 7M10 14v5M10 14H5"/></svg>`
 const CROSS = `<svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 5l8 8M13 5l-8 8"/></svg>`
@@ -362,7 +371,7 @@ var script=document.currentScript||(function(){var s=document.querySelectorAll('
 var token=script&&script.getAttribute('data-token')||'';
 var tokenUrl=script&&script.getAttribute('data-token-url')||'';
 var negatives=0, conversation=[], busy=false, lastQuestion='', started=false;
-var GITHUB=${JSON.stringify(GITHUB)}, GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)}, FOLD=${JSON.stringify(FOLD)};
+var GITHUB=${JSON.stringify(GITHUB)}, GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)}, FOLD=${JSON.stringify(FOLD)}, BULB=${JSON.stringify(BULB)};
 
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function svg(html,size){var s=el('span');s.innerHTML=html;var g=s.firstChild;if(size){g.setAttribute('width',size);g.setAttribute('height',size)}return g}
@@ -391,12 +400,14 @@ style.textContent=':host{all:initial;font:15px/1.5 -apple-system,BlinkMacSystemF
 root.appendChild(style);
 
 /* Zatvorený widget: riadok otázky (hore/dole v strede, D286) alebo tlačidlo. */
-var launcher,rowText=null,dock,grip=null,fold=null,pill=null;
+var launcher,rowText=null,dock,grip=null,fold=null,pill=null,help=null;
 if(ROW){
   /* Úchyt a zbalenie sú vedľa riadku v obale, nie v ňom — tlačidlo v tlačidle nie je platné HTML. */
   dock=el('div','xw-dock');
-  launcher=el('button','xw-row xw-row--grip xw-row--fold');launcher.type='button';
+  launcher=el('button','xw-row xw-row--grip xw-row--fold xw-row--help');launcher.type='button';
   grip=el('button','xw-grip');grip.type='button';grip.appendChild(svg(GRIP));tx(grip,'move','aria-label');tx(grip,'move','title');
+  /* Tip na požiadanie (Ján 28. 10. 2026): ten istý ako pri prvej návšteve. */
+  help=el('button','xw-help');help.type='button';help.appendChild(svg(BULB));tx(help,'tipShow','aria-label');tx(help,'tipShow','title');help.setAttribute('aria-expanded','false');
   fold=el('button','xw-fold');fold.type='button';fold.appendChild(svg(FOLD));tx(fold,'fold','aria-label');tx(fold,'fold','title');
   var rm=el('span','xw-row-mark');rm.appendChild(svg(MARK));rowText=el('span','xw-row-text');
   var go=el('span','xw-row-go');go.appendChild(svg(ARROW));
@@ -404,7 +415,7 @@ if(ROW){
   /* Zbalený tvar: tlačidlo „Opýtajte sa…" — ťahá sa celé, klik rozbalí riadok. */
   pill=el('button','xw-pill');pill.type='button';pill.hidden=true;tx(pill,'unfold','title');
   var pm=el('span','xw-row-mark');pm.appendChild(svg(MARK,20));pill.appendChild(pm);pill.appendChild(tx(el('span'),'pill'));
-  dock.appendChild(launcher);dock.appendChild(grip);dock.appendChild(fold);dock.appendChild(pill);
+  dock.appendChild(launcher);dock.appendChild(grip);dock.appendChild(help);dock.appendChild(fold);dock.appendChild(pill);
 }else{launcher=el('button','fab');launcher.type='button';dock=launcher}
 var scrim=el('div','xw-scrim');
 var sheet=el('section','xw-sheet');sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');
@@ -543,7 +554,7 @@ function resetPos(){anchor=null;dock.style.left=dock.style.top=dock.style.bottom
 function restorePos(){var p=null;try{p=JSON.parse(localStorage.getItem(POS)||'null')}catch(e){}if(p&&typeof p.x==='number'&&typeof p.y==='number'){anchor={x:p.x,y:p.y,s:p.s==='r'?'r':'l'};applyAnchor()}}
 /* Dva tvary zatvoreného widgetu: riadok a tlačidlo. Voľbu si pamätá prehliadač. */
 function setCompact(on,focus){if(!pill)return;compact=on;dock.classList.toggle('is-compact',on);
-  launcher.hidden=grip.hidden=fold.hidden=on;pill.hidden=!on;
+  launcher.hidden=grip.hidden=help.hidden=fold.hidden=on;pill.hidden=!on;
   try{if(on)localStorage.setItem(MODE,'button');else localStorage.removeItem(MODE)}catch(e){}
   applyAnchor();positionTip();if(focus)(on?pill:launcher).focus()}
 /* Ťahanie: kým sa ukazovateľ nepohne o 5 px, je to klik. */
@@ -560,6 +571,7 @@ function draggable(h){var drag=null;
 if(grip){
   draggable(grip);draggable(pill);
   fold.addEventListener('click',function(){hideTip();setCompact(true,true)});
+  help.addEventListener('click',function(){if(tip)hideTip();else showTip(true)});
   pill.addEventListener('click',function(){if(Date.now()-dragEnd<400)return;setCompact(false,true)});
   /* Po zmene veľkosti okna ostane widget celý na obrazovke. */
   addEventListener('resize',applyAnchor);
@@ -702,7 +714,7 @@ escBtn.addEventListener('click',function(){var m=escTa.value.trim();if(!m)return
    sa ukazoval pri každom načítaní stránky. */
 var TIPKEY='contineo-widget-tip:'+CFG.channel,tip=null;
 function tipSeen(){try{return localStorage.getItem(TIPKEY)==='1'}catch(e){return true}}
-function hideTip(){if(!tip)return;tip.remove();tip=null;dock.classList.remove('is-tip');try{localStorage.setItem(TIPKEY,'1')}catch(e){}}
+function hideTip(){if(!tip)return;tip.remove();tip=null;dock.classList.remove('is-tip');if(help)help.setAttribute('aria-expanded','false');try{localStorage.setItem(TIPKEY,'1')}catch(e){}}
 function positionTip(){
   if(!tip)return;var r=dock.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
   var below=r.bottom+12+h<=innerHeight-8,left=Math.max(8,Math.min(r.left,innerWidth-w-8));
@@ -710,8 +722,9 @@ function positionTip(){
   /* Šípka bubliny mieri na úchyt (pri tlačidle na jeho začiatok). */
   var gr=grip&&!compact,g=gr?grip.getBoundingClientRect():r;tip.style.setProperty('--tip-x',Math.max(12,Math.min((gr?g.left+g.width/2:r.left+22)-left-6,w-24))+'px');
 }
-function showTip(){
-  if(!LOOK.tip||tip||tipSeen()||isOpen()||dock.hidden)return;
+/* Sám od seba raz v prehliadači (ak ho kanál nevypol); ikonou kedykoľvek. */
+function showTip(asked){
+  if(tip||isOpen()||dock.hidden||!asked&&(!LOOK.tip||tipSeen()))return;
   tip=el('div','xw-tip');tip.setAttribute('role','status');
   var th=el('div','xw-tip-head');th.appendChild(tx(el('span','xw-tip-title'),'tipTitle'));
   var tc=el('button','xw-tip-close','\u00d7');tc.type='button';tx(tc,'tipClose','aria-label');tc.addEventListener('click',hideTip);th.appendChild(tc);
@@ -721,12 +734,12 @@ function showTip(){
   tt.addEventListener('click',function(){hideTip();openPanel()});to.addEventListener('click',hideTip);
   ta.appendChild(tt);ta.appendChild(to);tip.appendChild(ta);
   tip.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();hideTip()}});
-  root.appendChild(tip);dock.classList.add('is-tip');positionTip();
+  root.appendChild(tip);dock.classList.add('is-tip');if(help)help.setAttribute('aria-expanded','true');positionTip();
 }
 addEventListener('resize',positionTip);
 
 syncScope();syncOwn();
 if(grip){var m=null;try{m=localStorage.getItem(MODE)}catch(e){}if(m==='button')setCompact(true,false);restorePos()}
-setTimeout(showTip,1000);
+setTimeout(function(){showTip(false)},1000);
 })();`
 }

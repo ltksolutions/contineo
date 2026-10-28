@@ -4410,6 +4410,10 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-fold:hover{background:var(--surface-2);color:var(--ink)}
 .xw-fold:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 /* Zbalený tvar (Ján 28. 10. 2026): tlačidlo „Opýtajte sa…", ťahá sa celé, klik rozbalí riadok. */
+.xw-row--help{padding-right:92px}
+.xw-help{position:absolute;right:46px;top:50%;translate:0 -50%;display:grid;place-items:center;width:40px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
+.xw-help:hover,.xw-help[aria-expanded=true]{background:var(--surface-2);color:var(--ink)}
+.xw-help:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .xw-dock.is-compact{width:max-content}
 .xw-pill{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px 0 12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:22px;box-shadow:0 1px 2px rgba(20,28,42,.08),0 12px 32px rgba(20,28,42,.18);font:inherit;font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;cursor:grab;touch-action:none;transition:box-shadow .2s ease}
 .xw-pill:hover{box-shadow:0 1px 2px rgba(20,28,42,.08),0 16px 40px rgba(20,28,42,.24)}

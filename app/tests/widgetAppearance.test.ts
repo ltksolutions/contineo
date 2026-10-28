@@ -104,6 +104,13 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(dictionary("cs").widget.pill).toBe("Zeptejte se…")
     expect(dictionary("en").widget.pill).toBe("Ask…")
   })
+  it("žiarovka v riadku ukáže tip znova, aj keď kanál automatický tip vypol (Ján 28. 10. 2026)", () => {
+    const js = widgetScript(base)
+    expect(js).toContain("help=el('button','xw-help')")
+    expect(js).toContain("help.addEventListener('click',function(){if(tip)hideTip();else showTip(true)})")
+    expect(js).toContain("if(tip||isOpen()||dock.hidden||!asked&&(!LOOK.tip||tipSeen()))return")
+    expect(dictionary("cs").widget.tipShow).toBe("Jak pomocník funguje")
+  })
   it("v rohu tlačidlo a plachta pri ňom bez závoja; veľkosť, texty a prah idú do skriptu", () => {
     const look = appearanceForScript(widgetAppearance({ position: "right-top", size: "l", escalateAfter: 1, launcher: { sk: "Pomoc" }, greeting: { sk: "Ahoj" } }), "sk")
     const js = widgetScript({ ...base, appearance: look })
@@ -120,7 +127,7 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(appearanceForScript(widgetAppearance({ tip: false }), "sk").tip).toBe(false)
     const js = widgetScript(base)
     expect(js).toContain("var TIPKEY='contineo-widget-tip:'+CFG.channel")
-    expect(js).toContain("if(!LOOK.tip||tip||tipSeen()||isOpen()||dock.hidden)return")
+    expect(js).toContain("if(tip||isOpen()||dock.hidden||!asked&&(!LOOK.tip||tipSeen()))return")
     expect(js).toContain("function openPanel(){hideTip();")
   })
   it("pätka: na čom beží, ochrana údajov, zdrojový kód a verzia; odkazy v novej karte", () => {
