@@ -7,7 +7,7 @@ kanála (verzia `0.1.0 · ec7223d`).
 **Je to ukážka, nie záznam skutočnej otázky.** Odpoveď a história otázok
 boli podvrhnuté v prehliadači (nič neodišlo na server ani helpdesku),
 meno v hlavičke ISSF a e-mail sú vymyslené (Peter Ukážka,
-`peter.ukazka@example.com`). Komentár je syntetický hlas macOS (Laura).
+`peter.ukazka@example.com`). Komentár je syntetický hlas vytvorený v ElevenLabs.
 
 | súbor | čo ukazuje |
 |---|---|
