@@ -7,6 +7,7 @@ import { describe, it, expect, vi } from "vitest"
 import { readFileSync } from "node:fs"
 import { widgetAppearance, appearanceForScript, normalizePhrase, isRowPosition, DEFAULT_WIDGET_APPEARANCE, DEFAULT_PHRASES, WIDGET_POSITIONS } from "../src/lib/widgetAppearance"
 import { widgetScript, anchorCss, WIDGET_CSS } from "../src/lib/widgetScript"
+import { dictionary } from "../src/lib/i18n"
 
 const SECRET = "skusobny-kluc"
 vi.mock("../src/lib/channels", () => ({ widgetSecret: (c: { widget: { secretEnc?: string } }) => (c.widget.secretEnc ? SECRET : null) }))
@@ -82,11 +83,26 @@ describe("skript widgetu podľa nastavenia", () => {
     expect(js).toContain(".xw-dock{position:fixed;z-index:2147483000;top:16px;left:50%;transform:translateX(-50%);width:min(640px,calc(100vw - 32px))}")
     // Úchyt na posúvanie: myš, šípky, Home a dvojklik vráti; miesto si pamätá prehliadač.
     expect(js).toContain("var POS='contineo-widget-pos:'+CFG.channel")
-    expect(js).toContain("grip.addEventListener('dblclick',resetPos)")
+    expect(js).toContain("h.addEventListener('dblclick',resetPos)")
     expect(js).toContain("if(e.key==='Home')")
+    expect(js).toContain("draggable(grip);draggable(pill)")
     expect(js).toContain("left:10vw;top:10vh;width:80vw;height:80vh;transform:none;transform-origin:center top")
     expect(js).not.toContain(".xw-scrim{display:none}.xw-sheet")
     expect(js).toContain("var ROW=true")
+  })
+  it("riadok sa dá zbaliť na posúvateľné tlačidlo „Opýtajte sa…“ a klikom rozbaliť späť (Ján 28. 10. 2026)", () => {
+    const js = widgetScript(base)
+    expect(js).toContain("fold=el('button','xw-fold')")
+    expect(js).toContain("pill=el('button','xw-pill')")
+    // Tvar si pamätá prehliadač; klik po ťahaní tlačidlo nerozbalí.
+    expect(js).toContain("MODE='contineo-widget-mode:'+CFG.channel")
+    expect(js).toContain("if(m==='button')setCompact(true,false)")
+    expect(js).toContain("if(Date.now()-dragEnd<400)return;setCompact(false,true)")
+    // Miesto sa drží bližšieho okraja, aby rozbalenie a zbalenie nič neposunuli.
+    expect(js).toContain("s:right?'r':'l'")
+    expect(dictionary("sk").widget.pill).toBe("Opýtajte sa…")
+    expect(dictionary("cs").widget.pill).toBe("Zeptejte se…")
+    expect(dictionary("en").widget.pill).toBe("Ask…")
   })
   it("v rohu tlačidlo a plachta pri ňom bez závoja; veľkosť, texty a prah idú do skriptu", () => {
     const look = appearanceForScript(widgetAppearance({ position: "right-top", size: "l", escalateAfter: 1, launcher: { sk: "Pomoc" }, greeting: { sk: "Ahoj" } }), "sk")

@@ -130,6 +130,10 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
   organizácie), `span.xw-row-text` (nápoveda z nastavenia kanála, rozpísaný text `.is-draft`),
   `span.xw-row-go` (šípka). 52 px, oblý, s tieňom. Na ostatných šiestich miestach tlačidlo.
   Klik, Enter alebo písanie ho rozbalí; písaný znak pokračuje v poli.
+- **Zbalený na tlačidlo** (Ján 28. 10. 2026): `button.xw-fold` (40 × 44 px, ikona `arrow.down.right.and.arrow.up.left`) na pravom
+  okraji riadku (`.xw-row--fold`) ho zbalí na `button.xw-pill` — značka + „Opýtajte sa…", 44 px, oblé, s tieňom
+  (`.xw-dock.is-compact`). Tlačidlo sa ťahá celé (pohyb pod 5 px je klik), šípky ho posúvajú, Home a dvojklik vrátia;
+  klik ho rozbalí späť na riadok pri tom istom okraji obrazovky. Tvar aj miesto si pamätá prehliadač.
 - Otvorený: `.xw-scrim` (závoj) + `section.xw-sheet[role=dialog]` — pri veľkosti „na obrazovku"
   80 % × 80 % v strede, inak pri tlačidle; pod 640 px celá obrazovka. Vyrastá z miesta zatvoreného
   widgetu (`scale`, 0,32 s; bez animácie pri `prefers-reduced-motion`). Esc, `.xw-close` alebo závoj zavrie.
