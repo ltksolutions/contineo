@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: nový podtitul „Jedna overená odpoveď namiesto zoznamu odkazov." (2026-10-28)
+
+Nadpis „Opýtajte sa. Nehľadajte." ostáva; podtitul pod ním je po novom
+**„Jedna overená odpoveď namiesto zoznamu odkazov."** (česky „Jedna
+ověřená odpověď místo seznamu odkazů.", anglicky „One verified answer
+instead of a list of links."). Zmenený je úvod webu, popis pre sociálne
+siete v metadátach, obrázky pre sociálne siete (dynamické aj tri statické
+PNG, ktoré mali starý podtitul zapečený) a hlas značky
+v `docs/brand-messaging.md`.
+
 ### Widget kanála ISSF Helpdesk nahrádza formulár Pomoc v ISSF (2026-10-27, ADR-042, #463–#471)
 
 Rozhodol Ján 27. 10. 2026 (D275–D285). Cudzí systém vloží skript raz;
