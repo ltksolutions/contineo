@@ -135,7 +135,8 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
   (`.xw-dock.is-compact`). Tlačidlo sa ťahá celé (pohyb pod 5 px je klik), šípky ho posúvajú, Home a dvojklik vrátia;
   klik ho rozbalí späť na riadok pri tom istom okraji obrazovky. Tvar aj miesto si pamätá prehliadač.
 - **Tip na požiadanie** (Ján 28. 10. 2026): `button.xw-help` (žiarovka `lightbulb`, 40 × 44 px) vľavo od `.xw-fold`
-  (`.xw-row--help`) ukáže úvodný tip znova; kým je tip otvorený, má `aria-expanded=true` a sivý podklad. Len v tvare riadku.
+  (`.xw-row--help`) ukáže úvodný tip znova. Tip pod riadkom má šírku riadku a pre každý ovládač riadok `p.xw-tip-move`
+  s jeho ikonou (úchyt ⋮⋮, zbalenie ⤡); kým je tip otvorený, má `aria-expanded=true` a sivý podklad. Len v tvare riadku.
 - Otvorený: `.xw-scrim` (závoj) + `section.xw-sheet[role=dialog]` — pri veľkosti „na obrazovku"
   80 % × 80 % v strede, inak pri tlačidle; pod 640 px celá obrazovka. Vyrastá z miesta zatvoreného
   widgetu (`scale`, 0,32 s; bez animácie pri `prefers-reduced-motion`). Esc, `.xw-close` alebo závoj zavrie.
