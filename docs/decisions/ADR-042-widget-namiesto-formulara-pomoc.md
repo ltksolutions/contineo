@@ -397,6 +397,19 @@ Prečo (Ján, 28. 10. 2026): riadok je široký a na niektorých obrazovkách
 ISSF zavadzia aj po posunutí; malé tlačidlo sa dá odložiť do rohu a riadok
 je od neho jeden klik.
 
+### D293 — Tip sa dá vyvolať znova žiarovkou v riadku
+
+V tvare riadku je vľavo od „⤡" **žiarovka** (`lightbulb` — TipKit), ktorá
+ukáže úvodný tip (D291) znova; druhý klik, „Rozumiem", „×" alebo Esc ho
+zavrie. Funguje aj vtedy, keď kanál automatický tip pri prvej návšteve
+vypol — prepínač v nastavení sa týka len toho, či sa tip ukáže sám.
+V zbalenom tlačidle žiarovka nie je; tlačidlo má byť malé.
+
+Prečo (Ján, 28. 10. 2026): tip zmizne po prvom zavretí a kto ho odklikol
+bez čítania, nemal ako sa k nemu vrátiť. Či sa tip už ukázal, si pamätá
+prehliadač v `localStorage` (`contineo-widget-tip:<kanál>`), nie cookie —
+na server nič neodchádza.
+
 ### Design system
 
 Externý widget kanála (`.xw-*`) je súčasť design systému: `globals.css`,

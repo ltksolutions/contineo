@@ -2823,6 +2823,8 @@ interface Dictionary {
     tipTry: string
     tipOk: string
     tipClose: string
+    /** Žiarovka v riadku, ktorá tip ukáže znova. */
+    tipShow: string
     /** Prázdna plachta: nadpis a veta pod ním, keď kanál nemá privítanie. */
     emptyTitle: string
     emptyLead: string
@@ -8267,6 +8269,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tipTry: "Vyskúšať",
     tipOk: "Rozumiem",
     tipClose: "Zavrieť tip",
+    tipShow: "Ako pomocník funguje",
     language: "Jazyk",
     close: "Zavrieť",
     emptyTitle: "S čím vám môžeme pomôcť?",
@@ -13581,6 +13584,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tipTry: "Vyzkoušet",
     tipOk: "Rozumím",
     tipClose: "Zavřít tip",
+    tipShow: "Jak pomocník funguje",
     language: "Jazyk",
     close: "Zavřít",
     emptyTitle: "S čím vám můžeme pomoci?",
@@ -18886,6 +18890,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tipTry: "Try it",
     tipOk: "Got it",
     tipClose: "Close tip",
+    tipShow: "How the assistant works",
     language: "Language",
     close: "Close",
     emptyTitle: "How can we help you?",
