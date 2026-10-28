@@ -1,0 +1,62 @@
+# Video pomocníka v ISSF — ako vzniklo
+
+Zdroj videí v `web/public/media/pomocnik-issf/` (popis súborov je v tamojšom
+`README.md`). Všetko beží na Macu: Swift s AVFoundation a WebKit, `afconvert`,
+`screencapture`, žiadny ffmpeg. Zvuky a hlas sú z ElevenLabs.
+
+**Kľúč ElevenLabs sa do repozitára nedáva.** Skripty ho čítajú z premennej
+`ELEVENLABS_API_KEY` alebo z Kľúčenky:
+
+```
+security add-generic-password -a "$USER" -s ELEVENLABS_API_KEY -w
+```
+
+Voice ID hlasu „LTK“ je `ZBmvz7pM2hkKUTvijLfe` — bez kľúča účtu sa použiť nedá.
+
+## 1. Ukážka v ISSF
+
+Nahrávka obrazovky panela prehliadača s widgetom kanála na `issf.futbalsfz.sk`.
+Odpoveď, história a meno používateľa boli v prehliadači podvrhnuté (nič
+neodišlo na server); tento krok je ručný a jeho skript v repozitári nie je,
+lebo je viazaný na produkčné ISSF.
+
+```
+screencapture -v -V 72 -x -R 553,260,1156,764 rec.mov        # výrez panela v bodoch
+./voice-issf.sh ZBmvz7pM2hkKUTvijLfe voice                   # šesť viet komentára
+swift narrate.swift rec.mov <začiatok+0,6> "s1:…,s6:…,end:…" voice ukazka-hd.mp4 1.0
+swift still.swift ukazka-hd.mp4 <čas> snimka.png && swift crop.swift snimka.png snimka.png 14
+```
+
+Značky scén (`s1`–`s6`, `end`, milisekundy epochy) zapisoval režisér v stránke
+(`window.__m`), začiatok nahrávky je čas spustenia `screencapture` posunutý
+o oneskorenie nahrávania (~0,6 s, overené podľa snímky, keď zmizne tip).
+
+## 2. Animácie značky a intro
+
+`index.html` kreslí tri animácie ako čistú funkciu času (`render(t)`):
+
+| režim | čo | dĺžka |
+|---|---|---|
+| `?mode=logo` | lupa v tme, rozsvietenie, premena na Contineo, vypísaná odpoveď | 9 s, 1080 × 1080 |
+| `?mode=intro` | „Hľadáte a dostávate možnosti.“ → „Opýtajte sa. Nehľadajte.“ → odpoveď | 16,8 s, 1156 × 764 |
+| `?mode=outro` | záverečné logo s pohľadom a žmurknutím | 4,8 s, 1156 × 764 |
+
+Náhľad v prehliadači (bez `&render` sa prehráva v slučke):
+
+```
+python3 -m http.server 8765 --directory web/scripts/pomocnik-issf
+open "http://127.0.0.1:8765/index.html?mode=logo"
+```
+
+Výroba videí (v 2× rozlíšení, 60 snímok/s):
+
+```
+./sounds.sh ZBmvz7pM2hkKUTvijLfe snd           # efekty a štyri vety intra
+./build.sh snd ukazka-hd.mp4 out                # logo, obe intrá, záver, celé video
+```
+
+Časy zvukov v `build.sh` sedia na časovú os v `index.html` (`M`, `OFF`, `F`, `I`);
+pri zmene časovania treba posunúť obe. Titulky `titulky-*.vtt` majú časy celého
+videa (intro 16,8 s + ukážka + záver).
+
+Kontrola časovania bez prehrávania: `swift contact-sheet.swift video.mp4 "1,2,3" pas.png`.

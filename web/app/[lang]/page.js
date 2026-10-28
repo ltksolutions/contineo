@@ -6,6 +6,7 @@ import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
 import Manifesto from "@/components/Manifesto";
 import BotDemo from "@/components/BotDemo";
+import VideoDemo from "@/components/VideoDemo";
 import Modes from "@/components/Modes";
 import Versions from "@/components/Versions";
 import Governance from "@/components/Governance";
@@ -28,6 +29,7 @@ export default async function Home({ params }) {
       <main id="main">
         <Hero dict={dict} />
         <Manifesto dict={dict} />
+        <VideoDemo dict={dict} lang={lang} />
         <BotDemo dict={dict} kb={sampleKB[lang]} />
         <Modes dict={dict} kb={sampleKB[lang]} />
         <Versions dict={dict} />

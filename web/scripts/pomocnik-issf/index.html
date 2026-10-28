@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contineo intro</title>
+<style>
+  :root { --bg: #11151c; --ink: #ffffff; --muted: #9aa4b2; --dot: #5c6675; --card: #1b212b; --line: rgba(255,255,255,.12); }
+  html, body { margin: 0; background: #000; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  #stage { position: relative; overflow: hidden; background: var(--bg); }
+  #stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .txt { position: absolute; left: 0; right: 0; text-align: center; color: var(--ink); font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+  .sub { color: var(--muted); font-weight: 500; letter-spacing: -0.01em; }
+  #ui { position: fixed; right: 12px; top: 12px; color: #9aa4b2; font: 12px system-ui; display: flex; gap: 8px; }
+  #ui a { color: #eef1f5; }
+  body.render #ui { display: none; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="ui"><a href="?mode=intro">intro</a><a href="?mode=logo">logo</a><a href="?mode=outro">záver</a><span id="clock"></span></div>
+<script>
+// Animácia značky Contineo: lupa, ktorá hľadá, sa premení na bublinu reči, ktorá odpovedá.
+// Režimy ?mode=logo | intro | outro. render(t) je čistá funkcia času, aby sa dala vykresliť po snímkach
+// (render.swift); bez ?render sa animácia prehráva v slučke.
+const q = new URLSearchParams(location.search)
+const MODE = q.get("mode") || "intro"
+const LOGO = MODE === "logo", OUTRO = MODE === "outro"
+const W = LOGO ? 1080 : 1156, H = LOGO ? 1080 : 764
+const DURATION = LOGO ? 9.0 : OUTRO ? 4.8 : 16.8
+const stage = document.getElementById("stage")
+stage.style.width = W + "px"; stage.style.height = H + "px"
+const NS = "http://www.w3.org/2000/svg"
+const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); stage.appendChild(svg)
+const el = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e }
+const div = (cls, text, css) => { const d = document.createElement("div"); d.className = cls; d.textContent = text; Object.assign(d.style, css); stage.appendChild(d); return d }
+
+// ---------- čas ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x))
+const seg = (t, a, b) => clamp((t - a) / (b - a))
+const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
+const easeOut = x => 1 - Math.pow(1 - x, 3)
+const back = x => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2) }
+const lerp = (a, b, x) => a + (b - a) * x
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+
+// ---------- časová os ----------
+// časy značky (sú rovnaké v oboch režimoch, intro ich len posúva)
+// shatter = začiatok premeny lupy na bublinu (názov z prvej verzie, v ktorej sa lupa rozbíjala)
+const M = { draw: 0.05, drawEnd: 0.6, shake: 1.25, shatter: 1.55, gather: 2.45, eyes: 2.95, blink: 3.75, word: 4.05 }
+// logo: 2,2 s hľadania s baterkou v tme, potom sa rozsvieti; intro: lupa sa rozbije v čase 4,15 s
+const OFF = LOGO ? 2.2 : 2.6
+const F = { on: 0.25, flick: 2.45, lit: 2.62 }
+const I = { rows: 0.9, rowsEnd: 3.7, ask: 7.2, type: 7.4, answer: 8.9, settle: 11.2, word: 11.8, claim: 13.1 }
+
+// ---------- značka v jednotkách viewBoxu 48 ----------
+const CX = 24, CY = 20, R = 15
+const markG = el("g", {})
+const ringFull = el("circle", { cx: CX, cy: CY, r: R, fill: "none", stroke: "var(--ink)", "stroke-width": 6 }, markG)
+const RING_LEN = 2 * Math.PI * R
+const pieces = []
+// rúčka klasickej lupy pod 45° (tri kúsky; dva z nich v intre a logu nahradia nájdené bodky)
+const HA = Math.PI / 4, hu = [Math.cos(HA), Math.sin(HA)]
+const handle = [[17, 21.5], [21.5, 25.5], [25.5, 30]]
+handle.forEach(([r0, r1], i) => {
+  const mid = (r0 + r1) / 2, len = r1 - r0
+  const home = { x: CX + hu[0] * mid, y: CY + hu[1] * mid }
+  const node = el("rect", { fill: "var(--ink)" }, markG)
+  pieces.push({ kind: ["tail", "eye", "eye"][i], len, home, node, eye: i - 1 })
+})
+const tailNode = el("path", { d: "M17 32.5 L24 43 L29 31.5 Z", fill: "var(--ink)" }, markG)
+const HANDLE_Q = [[17, 3.2], [17, -3.2], [30.4, -3.2], [30.4, 3.2]]
+const TAIL_Q = [[12.5, 7], [11.5, -5], [23, 0], [23, 0]]
+const spring = (x, k = 5, w = 11) => x <= 0 ? 0 : 1 - Math.exp(-k * x) * Math.cos(w * x)
+function tailPath(angleDeg, morph) {
+  const a = angleDeg * Math.PI / 180, u = [Math.cos(a), Math.sin(a)], v = [-Math.sin(a), Math.cos(a)]
+  return "M" + HANDLE_Q.map((p, i) => {
+    const al = lerp(p[0], TAIL_Q[i][0], morph), pe = lerp(p[1], TAIL_Q[i][1], morph)
+    return `${CX + u[0] * al + v[0] * pe} ${CY + u[1] * al + v[1] * pe}`
+  }).join(" L") + " Z"
+}
+const EYES = [{ x: 17.5, y: 20 }, { x: 30.5, y: 20 }]
+
+// Rozbitie lupy z predchádzajúcej verzie odobralo z generátora 48 čísel. Odoberáme ich naďalej,
+// aby bodky v poli ostali tam, kde sú v zverejnenom videu.
+for (let i = 0; i < 48; i++) rnd()
+
+// skok bodky do oka: niekoľko odskokov, dopad so stlačením
+function hopTo(t, t0, from, to, hops) {
+  const dur = .75, x = seg(t, t0, t0 + dur)
+  if (x >= 1) { const k = seg(t, t0 + dur, t0 + dur + .5), sq = Math.exp(-7 * k) * Math.cos(16 * k); return { x: to.x, y: to.y, sx: 1 + .32 * sq, sy: 1 - .32 * sq, done: true } }
+  const h = x * hops, i = Math.floor(h), f = h - i
+  const amp = 16 * Math.pow(.6, i)
+  const y = lerp(from.y, to.y, x) - amp * 4 * f * (1 - f)
+  const near = f < .12 || f > .88
+  return { x: lerp(from.x, to.x, x), y, sx: near ? 1.18 : .92, sy: near ? .82 : 1.08, done: false }
+}
+
+function drawMark(t, c, s, extra = {}) {
+  // t je čas značky (M), c stred na obrazovke, s mierka
+  const peekX = seg(t, M.drawEnd, M.shake), pk = Math.sin(Math.PI * peekX)
+  const look = extra.look || { x: Math.sin(peekX * Math.PI * 3) * 7 * pk, y: 0, tilt: Math.sin(peekX * Math.PI * 3) * 8 * pk }
+  const blink = extra.blink ?? Math.sin(seg(t, M.blink, M.blink + .26) * Math.PI)
+  const hop = extra.hop ?? Math.sin(seg(t, M.blink - .05, M.blink + .45) * Math.PI) * 1.8
+  const pulse = extra.pulse || 0
+  const pre = t < M.shatter
+  const gx = pre ? look.x : 0, gr = pre ? look.tilt : 0
+  const sw = clamp((t - M.shatter) / 1.2), sq = sw > 0 ? Math.exp(-6 * sw) * Math.sin(14 * sw) : 0
+  markG.setAttribute("transform", `translate(${c.x} ${c.y}) scale(${s * (1 + pulse) * (1 + .06 * sq)} ${s * (1 + pulse) * (1 - .06 * sq)}) translate(${gx - CX} ${-hop - CY}) rotate(${gr} ${CX} ${CY})`)
+
+  // kruh sa na začiatku nakreslí
+  const td = extra.drawT ?? t
+  const draw = ease(seg(td, M.draw, M.drawEnd))
+  ringFull.setAttribute("stroke-dasharray", `${RING_LEN * draw} ${RING_LEN}`)
+  ringFull.setAttribute("transform", `rotate(-90 ${CX} ${CY})`)
+  ringFull.setAttribute("opacity", 1)
+  const grow = ease(seg(td, M.drawEnd - .25, M.drawEnd + .1))
+
+  pieces.forEach(p => {
+    const n = p.node
+    if (!pre && p.kind === "tail") { n.setAttribute("opacity", 0); return }
+    if (!pre && p.kind === "eye") {
+      // oči: bodky nájdené lupou doskáču do kruhu
+      const t0 = M.eyes + p.eye * .17
+      if (t < t0 || !extra.eyeFrom) { n.setAttribute("opacity", 0); return }
+      const hp = hopTo(t, t0, extra.eyeFrom[p.eye], EYES[p.eye], 3), d = 6.8
+      const ex = hp.x + (hp.done ? extra.eyeDX || 0 : 0), ey = hp.y
+      const w = d * hp.sx * (hp.done ? 1 : lerp(.75, 1, seg(t, t0, t0 + .6))), h = d * hp.sy * (hp.done ? 1 - .88 * blink : 1) * (hp.done ? 1 : lerp(.75, 1, seg(t, t0, t0 + .6)))
+      n.setAttribute("x", ex - w / 2); n.setAttribute("y", ey - h / 2); n.setAttribute("width", w); n.setAttribute("height", h); n.setAttribute("rx", Math.min(w, h) / 2)
+      n.setAttribute("transform", ""); n.setAttribute("opacity", 1)
+      return
+    }
+    if (!pre) { n.setAttribute("opacity", 0); return }
+    // rúčka lupy pred premenou
+    const hw = 6.4, len = (p.len + (pre ? .9 : 0)) * (pre ? grow : 1)
+    let x = p.home.x, y = p.home.y, rot = 45, w = len, h = hw, rx = 1.2, op = pre && grow <= 0 ? 0 : 1
+    n.setAttribute("x", x - w / 2); n.setAttribute("y", y - h / 2); n.setAttribute("width", w); n.setAttribute("height", h); n.setAttribute("rx", rx)
+    n.setAttribute("transform", `rotate(${rot} ${x} ${y})`); n.setAttribute("opacity", op)
+  })
+  // rúčka sa švihne nadol ako kyvadlo a stane sa chvostíkom bubliny
+  tailNode.setAttribute("opacity", pre ? 0 : 1)
+  tailNode.setAttribute("d", tailPath(45 + 45 * spring(sw), ease(seg(t, M.shatter + .05, M.shatter + .45))))
+  return { eyes: EYES.map(e => ({ x: c.x + (e.x - CX) * s, y: c.y + (e.y - CY) * s })) }
+}
+
+// ---------- intro: zoznam výsledkov a pole bodiek ----------
+const C = LOGO ? { x: W / 2, y: H / 2 - 40 } : { x: W / 2, y: 300 }
+const S = LOGO ? 9 : 5.6
+const listG = el("g", {}); svg.insertBefore(listG, markG)
+const defs = el("defs", {}); svg.insertBefore(defs, svg.firstChild)
+const rg = el("radialGradient", { id: "beam" }, defs)
+el("stop", { offset: "0", "stop-color": "#fff" }, rg); el("stop", { offset: ".55", "stop-color": "#fff", "stop-opacity": ".85" }, rg); el("stop", { offset: "1", "stop-color": "#fff", "stop-opacity": "0" }, rg)
+const glow = el("radialGradient", { id: "glow" }, defs)
+el("stop", { offset: "0", "stop-color": "#fff6df", "stop-opacity": ".55" }, glow); el("stop", { offset: "1", "stop-color": "#fff6df", "stop-opacity": "0" }, glow)
+const mask = el("mask", { id: "spot", maskUnits: "userSpaceOnUse", x: 0, y: 0, width: W, height: H }, defs)
+el("rect", { x: 0, y: 0, width: W, height: H, fill: "#000" }, mask)
+const spot = el("circle", { fill: "url(#beam)" }, mask)
+const litG = el("g", { mask: "url(#spot)" }); svg.insertBefore(litG, listG)
+const halo = el("circle", { fill: "url(#glow)" }); svg.insertBefore(halo, listG)
+const finds = []
+if (LOGO) for (let i = 0; i < 34; i++) {
+  let x, y
+  do { x = 90 + rnd() * (W - 180); y = 110 + rnd() * (H - 300) } while (Math.hypot(x - W / 2, y - (H / 2 - 40)) < 210)
+  finds.push({ x, y, r: 6 + rnd() * 7, node: el("circle", { fill: "#9aa4b2" }, litG), ph: rnd() * 6.28 })
+}
+const rows = []
+const counter = el("text", { fill: "var(--muted)", "font-size": 17, "font-weight": 600, "font-family": "system-ui, -apple-system, sans-serif", opacity: 0 }, listG)
+if (MODE === "intro") {
+  for (let i = 0; i < 20; i++) {
+    const g = el("g", {}, listG)
+    const t = el("rect", { rx: 5, height: 11, width: 150 + rnd() * 130, fill: "#c9d1dc" }, g)
+    const l1 = el("rect", { rx: 4, y: 20, height: 8, width: 260 + rnd() * 90, fill: "var(--dot)" }, g)
+    const l2 = el("rect", { rx: 4, y: 34, height: 8, width: 140 + rnd() * 140, fill: "var(--dot)" }, g)
+    const dots = [0, 1, 2].map(() => el("circle", { r: 0, fill: "#c9d1dc" }, listG))
+    rows.push({ g, parts: [t, l1, l2], dots })
+  }
+}
+// otázka a odpoveď
+const qaG = el("g", { opacity: 0 })
+const qBox = el("rect", { rx: 20, fill: "#eef1f5" }, qaG)
+const qText = el("text", { fill: "#11151c", "font-size": 22, "font-weight": 600, "font-family": "system-ui, -apple-system, sans-serif" }, qaG)
+const aBox = el("rect", { rx: 22, fill: "var(--card)", stroke: "var(--line)" }, qaG)
+const aBars = [0, 1, 2].map(() => el("rect", { rx: 6, height: 12, fill: "#eef1f5" }, qaG))
+const chips = ["§ Registračný poriadok, čl. 18", "Manuál ISSF"].map(tx => {
+  const g = el("g", {}, qaG)
+  const r = el("rect", { rx: 13, height: 26, fill: "none", stroke: "var(--muted)", "stroke-width": 1.4 }, g)
+  const t = el("text", { x: 14, y: 18, fill: "var(--muted)", "font-size": 14, "font-weight": 600, "font-family": "system-ui, -apple-system, sans-serif" }, g); t.textContent = tx
+  return { g, r, t }
+})
+const rnd2 = i => (Math.sin(i * 91.7) * 43758.5453) % 1 * .5 + .25
+// poradie viditeľného riadku pri rozbití (prvý viditeľný = 0)
+let firstVis = 0
+const vi = i => i - firstVis
+const QUESTION = "Ako podám žiadosť o prestup hráča?"
+
+// texty
+const tA = div("txt", "Hľadáte a dostávate možnosti.", { top: "600px", fontSize: "44px" })
+const tB = div("txt", "Opýtajte sa. Nehľadajte.", { top: "600px", fontSize: "50px" })
+const tC = div("txt", "Pýtate sa a dostávate odpoveď.", { top: "600px", fontSize: "44px" })
+const tD = div("txt sub", "Jedna overená odpoveď namiesto zoznamu odkazov.", { top: "440px", fontSize: "28px" })
+const oA = div("txt", "Opýtajte sa. Nehľadajte.", { top: "448px", fontSize: "34px" })
+const oB = div("txt sub", "contineo.app", { top: "500px", fontSize: "22px" })
+if (!OUTRO) [oA, oB].forEach(n => n.style.display = "none")
+const word = div("txt", "Contineo", { fontSize: (LOGO ? 130 : 64) + "px", textAlign: "left", right: "auto" })
+if (LOGO || OUTRO) [tA, tB, tC, tD].forEach(n => n.style.display = "none")
+const show = (node, t, a, b, c2, d) => { const k = ease(seg(t, a, b)) * (1 - ease(seg(t, c2, d))); node.style.opacity = k; node.style.transform = `translateY(${(1 - k) * 14}px)` }
+
+function render(t) {
+  const tm = t - OFF   // čas značky
+  if (LOGO) {
+    // baterka v tme: lupa krúži, svieti len jej šošovka, odhaľuje bodky
+    const lit = t < F.flick ? 0 : t < F.flick + .06 ? 1 : t < F.flick + .14 ? 0 : 1
+    const path = 1 - ease(seg(t, F.flick - .5, F.flick + .1))
+    const ph = t * 1.35
+    const mc = { x: C.x + Math.sin(ph) * 300 * path, y: C.y + Math.sin(ph * 1.7 + .6) * 170 * path }
+    const end = ease(seg(tm, M.word, M.word + .7))
+    const c = t < F.lit + .4 ? mc : { x: C.x - end * 300, y: C.y }
+    const on = ease(seg(t, F.on, F.on + .35))
+    stage.style.background = lit ? "#11151c" : "#05070a"
+    const lens = { x: c.x, y: c.y }
+    spot.setAttribute("cx", lens.x); spot.setAttribute("cy", lens.y)
+    spot.setAttribute("r", lit ? 3000 : 300 * on)
+    halo.setAttribute("cx", lens.x); halo.setAttribute("cy", lens.y); halo.setAttribute("r", 260 * on); halo.setAttribute("opacity", lit ? 0 : 1)
+    // bodky: v tme ich vidno len v kuželi, po rozsvietení odskáču do bubliny
+    const eyeFrom = []
+    finds.forEach((d, i) => {
+      let x = d.x + Math.sin(t * .9 + d.ph) * 6, y = d.y + Math.cos(t * .7 + d.ph) * 5
+      if (i < 2) {
+        // dve bodky sa stanú očami: do skoku ich preberá značka
+        eyeFrom.push({ x: (x - C.x) / S + CX, y: (y - C.y) / S + CY })
+        d.node.setAttribute("cx", x); d.node.setAttribute("cy", y)
+        d.node.setAttribute("r", t > OFF + M.eyes + i * .17 ? 0 : d.r); d.node.setAttribute("fill", lit ? "#c9d1dc" : "#c9d1dc")
+        return
+      }
+      const st = OFF + M.gather + .15 + i * .035, k = seg(t, st, st + .55)
+      if (k > 0) { const kk = ease(k); x = lerp(x, C.x, kk); y = lerp(y, C.y + 30, kk) - Math.sin(k * Math.PI) * (110 + (i % 4) * 25) }
+      d.node.setAttribute("cx", x); d.node.setAttribute("cy", y); d.node.setAttribute("r", k >= 1 ? 0 : d.r * (1 - k * .4))
+      d.node.setAttribute("fill", lit ? "#5c6675" : "#c9d1dc")
+    })
+    let pulse = 0
+    finds.forEach((d, i) => { const k = t - (OFF + M.gather + .15 + i * .035 + .55); if (k > 0 && k < .25) pulse += Math.sin(k / .25 * Math.PI) * .025 })
+    markG.setAttribute("opacity", lit ? 1 : .2 + .5 * on)
+    const look = { x: 0, y: 0, tilt: Math.sin(ph) * 14 * path }
+    drawMark(tm, c, S, { look, pulse: Math.min(pulse, .06), drawT: t + M.drawEnd, eyeFrom })
+    wordAt(t, c, S, OFF + M.word, 130, true)
+    return
+  }
+  if (OUTRO) {
+    // záverečné logo: pozrie sa vľavo, vpravo, na diváka, žmurkne dvakrát a prikývne
+    const s = S * .8 * back(seg(t, .05, .6))
+    const c = { x: C.x - 150, y: C.y + 10 }
+    const eyeDX = -2.3 * ease(seg(t, 1.0, 1.25)) + 4.6 * ease(seg(t, 1.65, 1.9)) - 2.3 * ease(seg(t, 2.35, 2.6))
+    const bl = (a) => Math.sin(seg(t, a, a + .22) * Math.PI)
+    const blink = Math.max(bl(2.95), bl(3.3))
+    const hop = Math.sin(seg(t, 3.7, 4.15) * Math.PI) * 2.2
+    drawMark(100, c, s, { blink, hop, eyeDX, eyeFrom: EYES })
+    wordAt(t + .35, c, s, 0, 64)
+    show(oA, t, 1.1, 1.6, 99, 100); show(oB, t, 1.5, 2.0, 99, 100)
+    stage.style.filter = t < .2 ? `brightness(${seg(t, 0, .2)})` : t > DURATION - .45 ? `brightness(${1 - seg(t, DURATION - .45, DURATION)})` : ""
+    return
+  }
+  // --- intro: lupa blúdi vľavo, potom sa vráti do stredu a rozbije
+  const wanderK = seg(t, .6, 3.9), wk = Math.sin(Math.PI * wanderK)
+  const home = { x: C.x - 230 * (1 - ease(seg(t, 3.3, 3.95))), y: C.y }
+  const mc = tm < M.shatter ? { x: home.x + Math.sin(t * 2.1) * 120 * wk, y: home.y + Math.sin(t * 3.3 + 1) * 60 * wk } : null
+  const slide = ease(seg(t, I.ask - .4, I.ask + .3)) * (1 - ease(seg(t, I.settle, I.settle + .7)))
+  const endK = ease(seg(t, I.word, I.word + .8))
+  const c = mc || { x: C.x - slide * 300 - endK * 150, y: C.y + endK * 10 }
+  const s = S * lerp(1, .8, endK)
+  const look = mc ? { x: 0, y: 0, tilt: Math.sin(t * 2.1) * 10 * wk } : null
+  // bodky z rozsypaného zoznamu skáču do bubliny, tá pri každej pulzne
+  let pulse = 0
+  const swallowAt = i => OFF + M.gather + .2 + i * .03
+  for (let i = 0; i < 18; i++) { const k = t - (swallowAt(i) + .5); if (k > 0 && k < .25) pulse += Math.sin(k / .25 * Math.PI) * .03 }
+
+  // --- zoznam výsledkov vpravo: pribúdajú, posúvajú sa, nikdy nekončia
+  const px = 640, py = 110, rowH = 64
+  const breakT0 = OFF + M.shatter
+  const shown = (Math.min(t, breakT0) - I.rows) * 6.5
+  const scroll = Math.max(0, shown - 6) * rowH
+  const breakT = OFF + M.shatter
+  counter.setAttribute("x", px); counter.setAttribute("y", py - 30)
+  counter.textContent = `Približne ${Math.max(0, Math.floor(Math.pow(Math.max(0, t - I.rows), 2.2) * 180)).toLocaleString("sk-SK")} výsledkov`
+  counter.setAttribute("opacity", ease(seg(t, I.rows, I.rows + .4)) * (1 - seg(t, breakT - .3, breakT)))
+  firstVis = Math.max(0, Math.ceil((Math.max(0, shown - 6) * rowH - 40) / rowH))
+  const eyeFrom = [{ x: 60, y: 10 }, { x: 60, y: 20 }]
+  rows.forEach((r, i) => {
+    const appear = easeOut(clamp(shown - i))
+    let x = px + (1 - appear) * 30, y = py + i * rowH - scroll
+    const vis = y > py - 40 && y < py + 6.5 * rowH
+    if (t < breakT) {
+      r.g.setAttribute("transform", `translate(${x} ${y})`)
+      r.g.setAttribute("opacity", vis ? appear * clamp(1 - (y - (py + 5.5 * rowH)) / rowH) : 0)
+      r.parts.forEach(p => p.setAttribute("opacity", 1))
+      return
+    }
+    // riadok sa rozsype na tri bodky; tie odskáču do bubliny
+    const burst = seg(t, breakT, breakT + .3)
+    r.g.setAttribute("transform", `translate(${x} ${y})`)
+    r.g.setAttribute("opacity", vis ? 1 - burst : 0)
+    r.parts.forEach((p, j) => {
+      const d = r.dots[j], idx = vi(i) * 3 + j
+      if (!vis || idx < 0) { d.setAttribute("r", 0); return }
+      const ox = x + (j === 0 ? 0 : 8) + rnd2(i * 3 + j) * 60, oy = y + [5, 24, 38][j]
+      const eye = idx === 0 ? 0 : idx === 3 ? 1 : -1
+      if (eye >= 0) {
+        // táto bodka sa stane okom
+        const pop = back(seg(t, breakT, breakT + .35)), fall = 12 * seg(t, breakT, OFF + M.eyes)
+        eyeFrom[eye] = { x: (ox - c.x) / s + CX, y: (oy + fall - c.y) / s + CY }
+        d.setAttribute("cx", ox); d.setAttribute("cy", oy + fall); d.setAttribute("fill", "#c9d1dc")
+        d.setAttribute("r", t > OFF + M.eyes + eye * .17 ? 0 : 5.5 * pop)
+        return
+      }
+      const st = swallowAt(idx), k = seg(t, st, st + .5)
+      const pop = back(seg(t, breakT + .05 * j, breakT + .35 + .05 * j))
+      const fall = Math.min(1, burst) * (12 + j * 6) * seg(t, breakT, st)
+      const bx = lerp(ox, c.x, ease(k)), by = lerp(oy + fall, c.y + 30, ease(k)) - Math.sin(k * Math.PI) * (90 + (idx % 4) * 22)
+      d.setAttribute("cx", bx); d.setAttribute("cy", by)
+      d.setAttribute("r", k >= 1 ? 0 : 5.5 * pop * (1 - k * .5))
+      d.setAttribute("fill", j === 0 ? "#c9d1dc" : "#7d8796")
+    })
+  })
+  drawMark(tm, c, s, { look, pulse: Math.min(pulse, .07), drawT: t, eyeFrom })
+
+  // --- otázka a jedna odpoveď
+  const qa = ease(seg(t, I.ask, I.ask + .4)) * (1 - ease(seg(t, I.settle, I.settle + .45)))
+  qaG.setAttribute("opacity", qa)
+  const qx = c.x + 170, qy = C.y - 150
+  const typed = QUESTION.slice(0, Math.floor(seg(t, I.type, I.type + 1.2) * QUESTION.length))
+  qText.textContent = typed || " "
+  qText.setAttribute("x", qx + 24); qText.setAttribute("y", qy + 38)
+  qBox.setAttribute("x", qx); qBox.setAttribute("y", qy); qBox.setAttribute("height", 58)
+  qBox.setAttribute("width", Math.max(70, qText.getComputedTextLength() + 48))
+  const aa = back(seg(t, I.answer, I.answer + .45))
+  const ay = qy + 82, aw = 520, ah = 200
+  aBox.setAttribute("x", qx); aBox.setAttribute("y", ay); aBox.setAttribute("width", aw); aBox.setAttribute("height", ah)
+  aBox.setAttribute("transform", `translate(${qx} ${ay}) scale(${Math.max(.001, aa)}) translate(${-qx} ${-ay})`)
+  ;[440, 400, 280].forEach((bw, i) => {
+    const g = easeOut(seg(t, I.answer + .35 + i * .28, I.answer + .75 + i * .28))
+    const b = aBars[i]; b.setAttribute("x", qx + 30); b.setAttribute("y", ay + 34 + i * 30); b.setAttribute("width", Math.max(.1, bw * g)); b.setAttribute("opacity", g > 0 ? .95 - i * .12 : 0)
+  })
+  let chipX = qx + 30
+  chips.forEach((ch, i) => {
+    const g = back(seg(t, I.answer + 1.35 + i * .22, I.answer + 1.75 + i * .22))
+    const tw = ch.t.getComputedTextLength() + 28
+    ch.r.setAttribute("width", tw)
+    ch.g.setAttribute("transform", `translate(${chipX} ${ay + 142}) scale(${Math.max(0, g)})`)
+    chipX += tw + 12
+  })
+
+  // --- texty
+  show(tA, t, .8, 1.3, OFF + M.shatter - .2, OFF + M.shatter + .1)
+  show(tB, t, OFF + M.gather, OFF + M.gather + .5, I.ask - .1, I.ask + .2)
+  show(tC, t, I.ask + .2, I.ask + .7, I.settle, I.settle + .4)
+  show(tD, t, I.claim, I.claim + .5, 99, 100)
+  wordAt(t, c, s, I.word, 64, true)
+  stage.style.filter = t > DURATION - .5 ? `brightness(${1 - seg(t, DURATION - .5, DURATION)})` : ""
+}
+
+const typingDots = [0, 1, 2].map(() => el("circle", { r: 0, fill: "var(--muted)" }))
+const ansBars = [0, 1].map(() => el("rect", { rx: 5, height: 10, fill: "var(--dot)" }))
+const WORD = "Contineo"
+function wordAt(t, c, s, at, fsz, typed = false) {
+  if (typed) {
+    // odpoveď: najprv „píše…“, potom sa slovo vypíše po písmenách, pod ním riadky odpovede
+    const x0 = c.x + 22 * s, yMid = c.y
+    const dotsOn = seg(t, at + .05, at + .2) * (1 - seg(t, at + .6, at + .68))
+    typingDots.forEach((d, i) => {
+      const b = Math.sin(Math.max(0, (t - at) * 9 - i * .9)) * .5 + .5
+      d.setAttribute("cx", x0 + fsz * (.12 + i * .22)); d.setAttribute("cy", yMid - b * fsz * .06)
+      d.setAttribute("r", fsz * .065 * dotsOn); d.setAttribute("opacity", .5 + .5 * b)
+    })
+    const n = Math.floor(seg(t, at + .68, at + .68 + WORD.length * .085) * WORD.length)
+    const typing = n > 0 && n < WORD.length
+    const caret = t > at + .6 && t < at + .68 + WORD.length * .085 + .5 && Math.floor(t * 4) % 2 === 0 ? '<span style="color:#9aa4b2;font-weight:300">|</span>' : ""
+    word.innerHTML = WORD.slice(0, n) + (typing || caret ? caret : "")
+    word.style.left = x0 + "px"; word.style.top = (c.y - fsz * .62) + "px"
+    word.style.opacity = 1; word.style.clipPath = ""; word.style.transform = ""
+    if (LOGO) {
+      const full = fsz * 4.35
+      ;[1, .62].forEach((f, i) => {
+        const g = easeOut(seg(t, at + 1.55 + i * .22, at + 2.05 + i * .22))
+        ansBars[i].setAttribute("x", x0 + 4); ansBars[i].setAttribute("y", c.y + fsz * .62 + 6 + i * 24)
+        ansBars[i].setAttribute("height", 12); ansBars[i].setAttribute("width", Math.max(.1, full * f * g)); ansBars[i].setAttribute("opacity", g > 0 ? 1 : 0)
+      })
+    }
+    return
+  }
+  const wk = ease(seg(t, at + .25, at + .85))
+  word.style.left = (c.x + 22 * s) + "px"
+  word.style.top = (c.y - fsz * .62) + "px"
+  word.style.opacity = wk
+  word.style.clipPath = `inset(0 ${100 - wk * 100}% 0 0)`
+  word.style.transform = `translateX(${(1 - wk) * -24}px)`
+}
+
+window.render = render; window.DURATION = DURATION; window.SIZE = [W, H]
+if (q.get("render") === null) {
+  const t0 = performance.now(), clock = document.getElementById("clock")
+  const loop = now => { const t = ((now - t0) / 1000) % (DURATION + 1.2); render(Math.min(t, DURATION)); clock.textContent = t.toFixed(2) + " s"; requestAnimationFrame(loop) }
+  requestAnimationFrame(loop)
+} else { document.body.classList.add("render"); render(Number(q.get("t") || 0)) }
+</script>
+</body>
+</html>
