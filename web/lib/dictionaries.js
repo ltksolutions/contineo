@@ -36,6 +36,14 @@ export const dictionaries = {
       eyebrow: "Prečo Contineo",
       text: "Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať záložiek, prehľadávať zložky. Contineo to obracia: jednoducho sa opýtate a dostanete odpoveď. A nie hocijakú — odpoveď z obsahu vašej firmy, s citáciou zdroja. Nie z internetu. Z vášho sveta.",
     },
+    video: {
+      eyebrow: "Ukážka",
+      title: "Pomocník v ISSF za minútu",
+      subtitle:
+        "Contineo vložené do systému, ktorý ľudia už používajú: otázka vlastnými slovami, odpoveď z predpisov a manuálov so zdrojmi, a keď nestačí, správa pre helpdesk.",
+      label: "Video: pomocník Contineo v Informačnom systéme slovenského futbalu",
+      note: "Ukážka s vymysleným používateľom.",
+    },
     logos: "Postavené na MongoDB $rankFusion · Voyage AI · Claude · Next.js · EU hosting · GDPR",
     features: {
       eyebrow: "Funkcie",
@@ -937,6 +945,14 @@ export const dictionaries = {
       eyebrow: "Proč Contineo",
       text: "Roky jsme se učili hledat — vypisovat klíčová slova, otevírat deset záložek, prohledávat složky. Contineo to obrací: prostě se zeptáte a dostanete odpověď. A ne ledajakou — odpověď z obsahu vaší firmy, s citací zdroje. Ne z internetu. Z vašeho světa.",
     },
+    video: {
+      eyebrow: "Ukázka",
+      title: "Pomocník v ISSF za minutu",
+      subtitle:
+        "Contineo vložené do systému, který lidé už používají: otázka vlastními slovy, odpověď z předpisů a manuálů se zdroji, a když nestačí, zpráva pro helpdesk.",
+      label: "Video: pomocník Contineo v Informačním systému slovenského fotbalu",
+      note: "Video je ve slovenštině, s českými titulky. Ukázka s vymyšleným uživatelem.",
+    },
     logos: "Postaveno na MongoDB $rankFusion · Voyage AI · Claude · Next.js · EU hosting · GDPR",
     features: {
       eyebrow: "Funkce",
@@ -1837,6 +1853,14 @@ export const dictionaries = {
     manifesto: {
       eyebrow: "Why Contineo",
       text: "For years we learned to search — typing keywords, opening ten tabs, digging through folders. Contineo flips it: you simply ask and get the answer. And not just any answer — one from your company's content, with a source citation. Not from the internet. From your world.",
+    },
+    video: {
+      eyebrow: "Demo",
+      title: "The ISSF helper in a minute",
+      subtitle:
+        "Contineo built into a system people already use: a question in their own words, an answer from rules and manuals with sources, and when that isn't enough, a message to the helpdesk.",
+      label: "Video: the Contineo helper in the Slovak football information system",
+      note: "The video is in Slovak, with English subtitles. Demo with a made-up user.",
     },
     logos: "Built on MongoDB $rankFusion · Voyage AI · Claude · Next.js · EU hosting · GDPR",
     features: {
