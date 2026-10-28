@@ -112,7 +112,9 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
       </div>
       <ChannelPartTabs channelKey={c.key} current={base} canTickets={canTickets} canSettings language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.kindHints[c.kind]}</p>
-      <Notice message={msg} error={error === "1"} back={base} language={language} />
+      {/* Nový tajný kľúč je v oznamom okne: „Rozumiem“ stránku načíta znova
+          a kľúč sa ukazuje len raz (`takeRevealedWidgetSecret`). */}
+      <Notice message={revealed ? t.widgetSecretShown : msg} detail={revealed ?? undefined} error={!revealed && error === "1"} back={base} language={language} />
 
       <form action={saveChannelAction} className="card set-form" id="channel">
         <input type="hidden" name="isNew" value="0" />
