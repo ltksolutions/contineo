@@ -11,7 +11,10 @@ Jadro posolstva: **odpoveď príde z vlastného obsahu firmy, nie z internetu.**
 Opýtajte sa. Nehľadajte.
 
 **Claim (krátka, opakovateľná veta)**
-Odpovede z vášho sveta, nie z internetu.
+Jedna overená odpoveď namiesto zoznamu odkazov.
+
+> Zmena Jána 28. 10. 2026; dovtedy „Odpovede z vášho sveta, nie z internetu.“
+> Česky: Jedna ověřená odpověď místo seznamu odkazů.
 
 **Hero podtitul**
 Contineo nájde odpoveď vo vašom vlastnom obsahu — weby, projekty, normy aj interné predpisy. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije.
@@ -32,7 +35,7 @@ Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať 
 Ask. Don't search.
 
 **Claim**
-Answers from your world, not the internet.
+One verified answer instead of a list of links.
 
 **Hero subtitle**
 Contineo finds the answer in your own content — websites, projects, regulations and internal guidelines. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives.

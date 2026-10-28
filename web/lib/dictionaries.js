@@ -25,7 +25,7 @@ export const dictionaries = {
     hero: {
       badge: "Vyhľadávanie, riadenie a potvrdzovanie predpisov",
       title: "Opýtajte sa. Nehľadajte.",
-      claim: "Odpovede z vášho sveta, nie z internetu.",
+      claim: "Jedna overená odpoveď namiesto zoznamu odkazov.",
       subtitle:
         "Contineo nájde odpoveď vo vašom vlastnom obsahu — v normách, smerniciach a interných predpisoch, ktoré do neho nahráte. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije. A predpis, ktorý musia ľudia poznať, rozpošle, pripomenie a doloží, kto sa s ním kedy oboznámil.",
       ctaPrimary: "Vyskúšať vyhľadávanie",
@@ -926,7 +926,7 @@ export const dictionaries = {
     hero: {
       badge: "Vyhledávání, řízení a potvrzování předpisů",
       title: "Zeptejte se. Nehledejte.",
-      claim: "Odpovědi z vašeho světa, ne z internetu.",
+      claim: "Jedna ověřená odpověď místo seznamu odkazů.",
       subtitle:
         "Contineo najde odpověď ve vašem vlastním obsahu — v normách, směrnicích a interních předpisech, které do něj nahrajete. Žádné listování ve složkách, žádné dohady z internetu. Jen ověřená odpověď odtud, kde skutečně žije. A předpis, který musí lidé znát, rozešle, připomene a doloží, kdo se s ním kdy seznámil.",
       ctaPrimary: "Vyzkoušet vyhledávání",
@@ -1827,7 +1827,7 @@ export const dictionaries = {
     hero: {
       badge: "Search, governance and acknowledgement of regulations",
       title: "Ask. Don't search.",
-      claim: "Answers from your world, not the internet.",
+      claim: "One verified answer instead of a list of links.",
       subtitle:
         "Contineo finds the answer in your own content — in the regulations, policies and internal guidelines you upload into it. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives. And a regulation people must know, it sends out, follows up on and proves who read it and when.",
       ctaPrimary: "Try the search",

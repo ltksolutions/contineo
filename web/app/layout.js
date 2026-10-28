@@ -32,14 +32,14 @@ export const metadata = {
     url: "https://contineo.app",
     title: "Contineo — vyhľadávanie a potvrdzovanie predpisov",
     description:
-      "Opýtajte sa. Nehľadajte. Odpovede z vášho sveta, nie z internetu.",
+      "Opýtajte sa. Nehľadajte. Jedna overená odpoveď namiesto zoznamu odkazov.",
     locale: "sk_SK",
   },
   twitter: {
     card: "summary_large_image",
     title: "Contineo — vyhľadávanie a potvrdzovanie predpisov",
     description:
-      "Opýtajte sa. Nehľadajte. Odpovede z vášho sveta, nie z internetu.",
+      "Opýtajte sa. Nehľadajte. Jedna overená odpoveď namiesto zoznamu odkazov.",
   },
   robots: {
     index: true,
