@@ -24,11 +24,18 @@ export default function Notice({
   message: message,
   error: error,
   back: back,
+  detail,
   language,
 }: {
   message?: string
   /** Rozlíšenie je na volajúcom. Hádať to z textu by sa raz pomýlilo. */
   error?: boolean
+  /**
+   * Hodnota na skopírovanie, ktorá sa ukáže len raz (tajný kľúč kanála).
+   * Patrí do oznamu, nie len na stránku pod ním: potvrdenie stránku načíta
+   * znova a hodnota, ktorú človek pod ztmaveným pozadím nevidel, by zmizla.
+   */
+  detail?: string
   /** Kam vedie potvrdenie — tá istá stránka bez parametra so správou. */
   back: string
   /** Jazyk prostredia — aj potvrdenie je text pre človeka. */
@@ -61,6 +68,7 @@ export default function Notice({
         </span>
 
         <p id="notice-message" className="notice-text">{message}</p>
+        {detail && <code style={{ userSelect: "all", wordBreak: "break-all" }}>{detail}</code>}
 
         {/* `autoFocus`: na klávesnici je potvrdenie prvé, kam sa dá stlačiť
             Enter, a nie je nutné hľadať ho tabulátorom cez celú stránku. */}
