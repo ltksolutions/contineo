@@ -3,14 +3,14 @@
  *
  * Posledna prijata sprava nad odpovedou, pod odpovedou historia od najstarsej;
  * odpovede helpdesku odsadene, sprava zobrazena hore je v historii zbalena
- * (Jan 29. 10. 2026, predtym od najnovsej podla 7. 10.).
+ * (Jan 29. 10. 2026, predtym od najnovsej podla 7. 10.). Pri sprave datum aj cas.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 
 const stubs = vi.hoisted(() => (names: string[]) => Object.fromEntries(names.map(n => [n, async () => {}])))
-const state = vi.hoisted(() => ({ messages: [] as unknown[] }))
+const state = vi.hoisted(() => ({ messages: [] as unknown[], ticketState: "new", sentAnswer: null as unknown }))
 
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") }, redirect: () => { throw new Error("redirect") } }))
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
@@ -31,8 +31,8 @@ vi.mock("@/lib/tickets", async importOriginal => ({
   ticketById: async () => ({
     _id: "t1", companyCode: "SFZ", channelKey: "k", source: "email", threadRef: "conv1",
     asker: { personId: null, email: "jan@example.sk", name: "Ján Smandra", roles: [], club: null },
-    subject: "Zmena priezviska", messages: state.messages, state: "new", assigneeId: null,
-    draft: null, sentAnswer: null, createdAt: new Date(), updatedAt: new Date(), closedAt: null,
+    subject: "Zmena priezviska", messages: state.messages, state: state.ticketState, assigneeId: null,
+    draft: null, sentAnswer: state.sentAnswer, createdAt: new Date(), updatedAt: new Date(), closedAt: null,
   }),
 }))
 vi.mock("../src/app/channels/tickets/actions", () => stubs([
@@ -49,7 +49,7 @@ async function render() {
   return renderToStaticMarkup(await Page({ params: Promise.resolve({ id: "t1" }), searchParams: Promise.resolve({}) }))
 }
 
-beforeEach(() => { state.messages = [] })
+beforeEach(() => { state.messages = []; state.ticketState = "new"; state.sentAnswer = null })
 
 describe("vlakno ticketu", () => {
   it("posledna prijata hore, potom odpoved, potom historia od najstarsej", async () => {
@@ -79,6 +79,9 @@ describe("vlakno ticketu", () => {
     expect(hist).toContain("Odpoveď helpdesku")
     expect(hist).toContain("došlá správa")
     expect(hist).toContain("· Nech sa páči: jozko@example.sk</span>")
+    // dátum aj čas v pásme Bratislavy: 10:00 UTC v októbri (letný čas) = 12:00
+    expect(hist).toContain("Odpoveď helpdesku</b> · 6. 10. 2026 12:00")
+    expect(hist).toContain("4 správy · posledná: Helpdesk, 8. 10. 2026 12:00")
   })
 
   it("jedna sprava: len hore, bez historie", async () => {
@@ -87,5 +90,23 @@ describe("vlakno ticketu", () => {
     expect(html).toContain('id="last-message"')
     expect(html).not.toContain("thread-summary")
     expect(html.match(/<article class="thread-msg/g)).toHaveLength(1)
+  })
+
+  it("po odoslani uz nie je formular odpovede, ale odoslany text a Znovu otvorit", async () => {
+    state.messages = [msg("a", "in", "Otázka?", 3), msg("b", "out", "Odpoveď.", 4)]
+    state.ticketState = "sent"
+    state.sentAnswer = { text: "Odpoveď.", by: "agent@sfz.sk", at: new Date("2026-10-04T10:00:00Z"), messageId: null }
+    const html = await render()
+    expect(html).not.toContain("Odoslať odpoveď")
+    expect(html).not.toContain("<textarea")
+    expect(html).toContain("Znovu otvoriť")
+    expect(html).toContain("Zavrieť")
+  })
+
+  it("otvoreny ticket ma formular a nema Znovu otvorit", async () => {
+    state.messages = [msg("a", "in", "Otázka?", 3)]
+    const html = await render()
+    expect(html).toContain("Odoslať odpoveď")
+    expect(html).not.toContain("Znovu otvoriť")
   })
 })

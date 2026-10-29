@@ -16,10 +16,11 @@ import Notice from "@/components/Notice"
 import FormattedText from "@/components/FormattedText"
 import SubmitButton from "@/components/SubmitButton"
 import { helpdeskContext } from "@/lib/helpdeskAgents"
-import { ticketById } from "@/lib/tickets"
+import { ticketById, OPEN_STATES } from "@/lib/tickets"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { calendarDate, SEARCH_TIME_ZONE } from "@/lib/versionContext"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { findPerson } from "@/lib/persons"
 import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, importThreadAction } from "../actions"
@@ -45,6 +46,14 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const assignee = ticket.assigneeId ? await findPerson(ctx.tenant.companyCode, ticket.assigneeId).catch(() => null) : null
   const draftText = ticket.draft?.text ?? ""
   type Message = (typeof ticket.messages)[number]
+  // Dátum aj čas v pásme organizácie (Ján 29. 10. 2026) — pri správe
+  // a odpovedi v ten istý deň rozhoduje čas, ktorá bola skôr a ako dlho
+  // pýtajúci čakal. `formatDate` počíta deň v UTC, preto `calendarDate`.
+  const when = (at: Date) => {
+    const d = new Date(at)
+    const time = d.toLocaleTimeString(language === "en" ? "en-GB" : language, { timeZone: SEARCH_TIME_ZONE, hour: "2-digit", minute: "2-digit" })
+    return `${formatDate(calendarDate(d), language)} ${time}`
+  }
   const who = (m: Message) =>
     m.direction === "out" ? t.fromHelpdesk : t.fromAsker(m.from?.name ?? m.from?.address ?? ticket.asker.name ?? "")
   // Začiatok celého textu, nie prvý riadok — ten býva len „Dobrý deň,".
@@ -58,7 +67,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const meta = (m: Message) => (
     <>
       {m.direction === "out" ? <b>{t.msgOut}</b> : <><b>{who(m)}</b> · {t.msgIn}</>}
-      {" · "}{formatDate(m.at, language)}{m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}
+      {" · "}{when(m.at)}{m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}
     </>
   )
   const body = (m: Message) => (
@@ -73,7 +82,10 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
     </>
   )
   const cls = (m: Message) => `thread-msg${m.direction === "out" ? " thread-msg--out" : ""}`
-  const isOpen = ticket.state !== "closed"
+  // Formulár odpovede len kým ticket čaká na helpdesk (Ján 29. 10. 2026):
+  // po odoslaní ostáva odoslaný text, nie ďalšie „Odoslať odpoveď". Nová
+  // správa pýtajúceho alebo „Znovu otvoriť" formulár vráti.
+  const isOpen = OPEN_STATES.includes(ticket.state)
   const canSend = isOpen && Boolean(channel?.mailbox) && (ticket.asker.email || ticket.messages.some(m => m.direction === "in"))
   // Údaje z vydávajúceho systému (ADR-042, D276, D280): účet a kam ide
   // odpoveď zvlášť — píše často rodič alebo manažér za hráča.
@@ -124,7 +136,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
             <p className="detail-block-note" style={{ margin: 0 }}>{t.draftIntro}</p>
             {ticket.sentAnswer && (
               <p className="quiet" style={{ margin: 0 }}>
-                {t.sent(ticket.sentAnswer.by, formatDate(ticket.sentAnswer.at, language))}
+                {t.sent(ticket.sentAnswer.by, when(ticket.sentAnswer.at))}
                 {ticket.draft && <> · {ticket.draft.text === ticket.sentAnswer.text ? t.sentUnchanged : t.sentEdited}</>}
               </p>
             )}
@@ -132,7 +144,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
               <form action={draftWithAiAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                 <input type="hidden" name="id" value={id} />
                 <SubmitButton className="button button--quiet">{t.draftFromAi}</SubmitButton>
-                {ticket.draft ? <span className="quiet">{t.draftMeta(ticket.draft.model, formatDate(ticket.draft.at, language))}</span> : <span className="quiet">{t.noDraft}</span>}
+                {ticket.draft ? <span className="quiet">{t.draftMeta(ticket.draft.model, when(ticket.draft.at))}</span> : <span className="quiet">{t.noDraft}</span>}
               </form>
             )}
             {isOpen ? (
@@ -162,7 +174,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
             <section className="card detail-block" id="history">
               <h2 className="detail-block-title">{t.thread}</h2>
               {messages.length > 1 && (
-                <p className="quiet thread-summary">{t.threadSummary(messages.length, who(messages[messages.length - 1]), formatDate(messages[messages.length - 1].at, language))}</p>
+                <p className="quiet thread-summary">{t.threadSummary(messages.length, who(messages[messages.length - 1]), when(messages[messages.length - 1].at))}</p>
               )}
               {messages.map((m, i) => m === lastIn ? (
                 // Je celá nad odpoveďou — tu len riadok, aby história ostala úplná.
@@ -197,14 +209,20 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
                 <SubmitButton className="button button--quiet">{t.take}</SubmitButton>
               )}
             </form>
-            <form action={closeTicketAction}>
-              <input type="hidden" name="id" value={id} />
-              {isOpen ? (
+            {ticket.state !== "closed" && (
+              <form action={closeTicketAction}>
+                <input type="hidden" name="id" value={id} />
                 <SubmitButton className="button button--quiet">{t.close}</SubmitButton>
-              ) : (
-                <><input type="hidden" name="reopen" value="1" /><SubmitButton className="button button--quiet">{t.reopen}</SubmitButton></>
-              )}
-            </form>
+              </form>
+            )}
+            {/* Odpovedaný aj zavretý sa dá otvoriť znova — napríklad na doplnenie odpovede. */}
+            {!isOpen && (
+              <form action={closeTicketAction}>
+                <input type="hidden" name="id" value={id} />
+                <input type="hidden" name="reopen" value="1" />
+                <SubmitButton className="button button--quiet">{t.reopen}</SubmitButton>
+              </form>
+            )}
           </section>
 
           {issuerRows.length > 0 && (
