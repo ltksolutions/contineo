@@ -78,6 +78,11 @@ function forbiddenAsNull(e: unknown): null {
   throw e
 }
 
+/** Telo správy: HTML, keď ho volajúci zostavil (odpoveď na ticket), inak čistý text. */
+function mailBody(text: string, html?: string): { contentType: "Text" | "HTML"; content: string } {
+  return html ? { contentType: "HTML", content: html } : { contentType: "Text", content: text }
+}
+
 const NO_THREAD: SentMail = { messageId: null, threadRef: null, providerId: null }
 
 /** Chyba Graphu do našej výnimky — kód pre i18n, podrobnosť do logu. */
@@ -321,12 +326,12 @@ export class GraphMailbox implements MailboxAdapter {
     return out
   }
 
-  async reply(messageId: string, text: string): Promise<{ messageId: string | null }> {
+  async reply(messageId: string, text: string, html?: string): Promise<{ messageId: string | null }> {
     const token = await this.accessToken()
     const r = await withTimeout(signal => fetch(`${this.userPath()}/messages/${encodeURIComponent(messageId)}/reply`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ message: { body: { contentType: "Text", content: text } } }),
+      body: JSON.stringify({ message: { body: mailBody(text, html) } }),
       signal, cache: "no-store",
     }))
     if (!r.ok) throw await graphError(r, "odpoveď")
@@ -341,16 +346,16 @@ export class GraphMailbox implements MailboxAdapter {
    * `ImmutableId` drží identifikátor platný aj po presune do Odoslaných —
    * podľa neho sa neskôr odpovedá v tom istom vlákne.
    */
-  async send(to: string, subject: string, text: string): Promise<SentMail> {
-    const message = { subject, body: { contentType: "Text", content: text }, toRecipients: [{ emailAddress: { address: to } }] }
+  async send(to: string, subject: string, text: string, html?: string): Promise<SentMail> {
+    const message = { subject, body: mailBody(text, html), toRecipients: [{ emailAddress: { address: to } }] }
     const draft = await this.post(`${this.userPath()}/messages`, message, "odoslanie").catch(forbiddenAsNull)
     if (draft) return this.sendDraft(draft)
     await this.action(`${this.userPath()}/sendMail`, { message, saveToSentItems: true }, "odoslanie")
     return NO_THREAD
   }
 
-  async replyTo(providerId: string, to: string, text: string): Promise<SentMail> {
-    const message = { toRecipients: [{ emailAddress: { address: to } }], body: { contentType: "Text", content: text } }
+  async replyTo(providerId: string, to: string, text: string, html?: string): Promise<SentMail> {
+    const message = { toRecipients: [{ emailAddress: { address: to } }], body: mailBody(text, html) }
     const url = `${this.userPath()}/messages/${encodeURIComponent(providerId)}`
     const draft = await this.post(`${url}/createReply`, { message }, "odpoveď").catch(forbiddenAsNull)
     if (draft) return this.sendDraft(draft)

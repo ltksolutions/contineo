@@ -217,6 +217,15 @@ describe("GraphMailbox.send a replyTo (ADR-042, D277)", () => {
     await expect(box().send("rodic@example.sk", "S", "T")).rejects.toMatchObject({ code: "mailbox.notFound" })
   })
 
+  it("odpoveď s HTML ide ako HTML, bez neho ako čistý text", async () => {
+    const calls = stub()
+    await box().replyTo("imm-1", "rodic@example.sk", "**Áno**", "<p><strong>Áno</strong></p>")
+    expect(calls[0].body).toMatchObject({ message: { body: { contentType: "HTML", content: "<p><strong>Áno</strong></p>" } } })
+    const plain = stub()
+    await box().send("rodic@example.sk", "S", "Text")
+    expect(plain[0].body).toMatchObject({ body: { contentType: "Text", content: "Text" } })
+  })
+
   it("neodoslaný koncept sa zmaže a chyba ide ďalej", async () => {
     const calls = stub(500)
     vi.spyOn(console, "error").mockImplementation(() => {})

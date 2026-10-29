@@ -139,8 +139,11 @@ export function splitInline(line: string): Segment[] {
  *
  * Prázdny riadok oddeľuje odseky. Riadky vo vnútri odseku sa spájajú
  * medzerou — model zalamuje podľa svojho, nie podľa šírky okna.
+ *
+ * `lineBreaks`: riadky odseku ostanú oddelené `\n` — e-mail (pozdrav,
+ * podpis) píše človek, nie model, a jeho zalomenia sú zámerné.
  */
-export function toBlocks(text: string): Block[] {
+export function toBlocks(text: string, opts: { lineBreaks?: boolean } = {}): Block[] {
   const blocks: Block[] = []
   // Delenie na všetky tvary konca riadku, nielen `\n`. Uložené znenie
   // predpisu má `\r\n` (prišlo z Wordu a PDF) a osamotené `\r` na konci
@@ -155,7 +158,7 @@ export function toBlocks(text: string): Block[] {
 
   const closeParagraph = () => {
     if (!paragraph.length) return
-    blocks.push({ druh: "odsek", segments: splitInline(paragraph.join(" ")) })
+    blocks.push({ druh: "odsek", segments: splitInline(paragraph.join(opts.lineBreaks ? "\n" : " ")) })
     paragraph = []
   }
   const closeList = () => {
