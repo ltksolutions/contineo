@@ -35,3 +35,37 @@ export function isBounce(m: Pick<MailMessage, "from" | "subject" | "outgoing">):
   const from = m.from?.address ?? ""
   return BOUNCE_SENDER.test(from) || BOUNCE_SUBJECT.test(m.subject.trim())
 }
+
+/**
+ * Automatická odpoveď o neprítomnosti (Ján 29. 10. 2026) — z „Automatische
+ * Antwort: ISSF …" vznikol ticket a odpoveď na vybavený ticket by ho znova
+ * otvorila. Predpona predmetu je ustálená v jazyku schránky odosielateľa;
+ * vyžaduje sa dvojbodka, aby „Out of office request" od človeka prešiel.
+ */
+const AUTO_REPLY_SUBJECT = new RegExp(
+  "^(" + [
+    "automatic reply",
+    "auto[- ]?reply",
+    "out of (the )?office",
+    "automatická odpoveď",
+    "automatická odpověď",
+    "automatische antwort",
+    "abwesenheitsnotiz",
+    "réponse automatique",
+    "risposta automatica",
+    "respuesta automática",
+    "odpowiedź automatyczna",
+    "automatisch antwoord",
+    "automatikus válasz",
+  ].join("|") + ")\\s*:",
+  "i",
+)
+
+export function isAutoReply(m: Pick<MailMessage, "subject" | "outgoing">): boolean {
+  return !m.outgoing && AUTO_REPLY_SUBJECT.test(m.subject.trim())
+}
+
+/** Správa od stroja, nie otázka človeka: návrat alebo automatická odpoveď. */
+export function isMachineMail(m: Pick<MailMessage, "from" | "subject" | "outgoing">): boolean {
+  return isBounce(m) || isAutoReply(m)
+}

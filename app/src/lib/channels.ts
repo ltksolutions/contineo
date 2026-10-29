@@ -30,7 +30,7 @@ import { randomBytes, randomUUID } from "node:crypto"
 import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
-import { isBounce } from "./mailbox/bounce"
+import { isMachineMail } from "./mailbox/bounce"
 import { encrypt, decrypt, encryptionAvailable } from "./secrets"
 import { requireCompanyCode } from "./tenantScope"
 import { isUiLanguage, type UiLanguage } from "./i18n"
@@ -479,7 +479,7 @@ export interface SyncReport {
   skipped: number
   /** Správy spred `syncSince` — história, nie tickety. */
   beforeStart: number
-  /** Správy o nedoručení, z ktorých ticket nevznikol (`skipBounces`). */
+  /** Správy o nedoručení a automatické odpovede, z ktorých ticket nevznikol (`skipBounces`). */
   bounces?: number
   done: boolean
   error: string | null
@@ -512,8 +512,9 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
         report.pages += 1
         const recent = page.messages.filter(m => m.receivedAt >= since)
         report.beforeStart += page.messages.length - recent.length
-        // Návraty od poštového servera ticketmi nie sú (nastavenie kanála).
-        const fresh = channel.mailbox!.skipBounces === false ? recent : recent.filter(m => !isBounce(m))
+        // Návraty od poštového servera a automatické odpovede ticketmi nie sú
+        // (nastavenie kanála) — a vybavený ticket znova neotvoria.
+        const fresh = channel.mailbox!.skipBounces === false ? recent : recent.filter(m => !isMachineMail(m))
         report.bounces = (report.bounces ?? 0) + recent.length - fresh.length
         if (fresh.length) {
           const r = await ingestMessages(code, key, fresh, { thread })

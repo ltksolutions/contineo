@@ -325,12 +325,13 @@ function toListItem(t: TicketWithId): TicketListItem {
 export async function listTickets(
   companyCode: string,
   channelKeys: string[],
-  view: "open" | "sent" | "closed" | "all" = "open",
+  view: "open" | "done" | "all" = "open",
   limit = 200,
 ): Promise<TicketListItem[]> {
   if (!channelKeys.length) return []
   const col = await getCollection<TicketWithId>(TICKETS_COLLECTION)
-  const state = view === "open" ? { $in: OPEN_STATES } : view === "sent" ? "sent" : view === "closed" ? "closed" : undefined
+  // Vybavené = odpovedané aj zavreté; nová správa pýtajúceho ich vráti do Otvorených.
+  const state = view === "open" ? { $in: OPEN_STATES } : view === "done" ? { $nin: OPEN_STATES } : undefined
   const rows = await col
     .find({ companyCode, channelKey: { $in: channelKeys }, ...(state ? { state } : {}) })
     .sort({ updatedAt: -1 })
