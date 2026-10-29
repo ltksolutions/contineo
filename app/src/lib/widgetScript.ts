@@ -72,6 +72,7 @@
  * ostane obyčajným `mailto:` (`docs/WIDGET_ISSF.md`).
  */
 
+import { WIDGET_MARKDOWN_JS } from "./widgetMarkdown"
 import { DEFAULT_WIDGET_APPEARANCE, WIDGET_SIZE_PX, appearanceForScript, isRowPosition, type WidgetAppearanceForScript, type WidgetPosition } from "./widgetAppearance"
 
 /** Odstup od okraja obrazovky — ako doteraz pri pravom dolnom rohu. */
@@ -219,6 +220,13 @@ export const WIDGET_CSS: string[] = [
   ".xw-q{align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:14px;background:var(--accent);color:var(--on-accent);white-space:pre-wrap;overflow-wrap:anywhere}",
   ".xw-a{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}",
   ".xw-a-head{display:block;margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted);white-space:normal}",
+  ".xw-md{white-space:normal}.xw-md>*{margin:0 0 12px}.xw-md>:last-child{margin-bottom:0}",
+  ".xw-md ul,.xw-md ol{padding-left:22px}",
+  ".xw-wait{display:flex;align-items:center;gap:2px;font-weight:600;color:var(--ink)}.xw-wait .button-spinner{color:var(--accent)}.xw-a>.lnote{margin-top:12px}",
+  ".xw-rate .button[aria-pressed=\"true\"]{opacity:1;background:var(--surface-2);border-color:var(--control-line)}",
+  ".button-spinner{display:inline-block;width:12px;height:12px;margin-right:8px;vertical-align:-1px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:button-spin 0.7s linear infinite}",
+  "@keyframes button-spin{to{transform:rotate(360deg)}}",
+  ".xw-md-h{font-size:15.5px;font-weight:700}.xw-md>.xw-md-h{margin:18px 0 8px}.xw-md>.xw-md-h:first-child{margin-top:0}.xw-md-h--lg{font-size:16.5px}",
   ".xw-src{margin-top:10px;font-size:13px;color:var(--muted);white-space:normal}",
   ".xw-src ul{margin:4px 0 0;padding-left:18px}",
   ".xw-rate{display:flex;gap:8px;margin-top:12px;white-space:normal}",
@@ -348,7 +356,7 @@ const SHADOW_CSS = [
 const MEDIA_CSS = [
   /* Telefón: plachta je celá obrazovka, závoj netreba. */
   "@media (max-width:640px){.xw-sheet{top:0;right:0;bottom:0;left:0;transform:none;width:100vw;height:100vh;height:100dvh;border-radius:0;border:0}.xw-scrim{display:none}.xw-col{padding:20px 16px}.xw-composer-in{padding:12px 16px 10px}}",
-  "@media (prefers-reduced-motion:reduce){.xw-sheet,.xw-scrim{transition:none}.xw-dock.is-tip .xw-grip{animation:none;background:var(--accent-soft)}}",
+  "@media (prefers-reduced-motion:reduce){.xw-sheet,.xw-scrim{transition:none}.button-spinner{animation:none}.xw-dock.is-tip .xw-grip{animation:none;background:var(--accent-soft)}}",
 ]
 
 export function widgetScript(cfg: WidgetScriptConfig): string {
@@ -374,6 +382,13 @@ var negatives=0, conversation=[], busy=false, lastQuestion='', started=false;
 var GITHUB=${JSON.stringify(GITHUB)}, GRIP=${JSON.stringify(GRIP)}, MARK=${JSON.stringify(MARK)}, ARROW=${JSON.stringify(ARROW)}, CLOCK=${JSON.stringify(CLOCK)}, CROSS=${JSON.stringify(CROSS)}, FOLD=${JSON.stringify(FOLD)}, BULB=${JSON.stringify(BULB)};
 
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+/* Odpoveď je ľahký Markdown — rozklad ako v intranete (widgetMarkdown.ts), uzly len cez textContent. */
+var mdBlocks=${WIDGET_MARKDOWN_JS};
+function segs(n,list){list.forEach(function(x){n.appendChild(x.bold?el('strong',null,x.text):document.createTextNode(x.text))});return n}
+function renderMd(box,text){box.textContent='';mdBlocks(text).forEach(function(b){
+  if(b.kind==='h')box.appendChild(segs(el('div','xw-md-h'+(b.level<=2?' xw-md-h--lg':'')),b.segments));
+  else if(b.kind==='p')box.appendChild(segs(el('p'),b.segments));
+  else{var l=el(b.numbered?'ol':'ul');b.items.forEach(function(it,j){var li=segs(el('li'),it);if(b.values[j]!=null)li.value=b.values[j];l.appendChild(li)});box.appendChild(l)}})}
 function svg(html,size){var s=el('span');s.innerHTML=html;var g=s.firstChild;if(size){g.setAttribute('width',size);g.setAttribute('height',size)}return g}
 /* Ten istý tvar ako normalizePhrase() na serveri — frázy prichádzajú už v ňom. */
 function norm(s){return String(s).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/\\s+/g,' ').trim()}
@@ -588,6 +603,10 @@ window.ContineoHelpdesk={open:function(){openPanel();return true}};
 
 function scrollEnd(){body.scrollTop=body.scrollHeight}
 function sys(text){var m=el('div','xw-sys',text);log.appendChild(m);scrollEnd();return m}
+/* Potvrdenie, ktoré si človek musí všimnúť (poďakovanie, odoslaná správa) — zelený .lnote, nie sivý riadok (Ján 29. 10. 2026). */
+function done(text,parent){var m=el('div','lnote');m.setAttribute('role','status');m.appendChild(el('span','lnote-mark','\u2713'));m.appendChild(el('span','lnote-text',text));(parent||log).appendChild(m);scrollEnd();return m}
+/* Hľadanie beží — točiaci sa kruh priamo v karte odpovede, kam sa človek pozerá. */
+function waiting(box){var w=el('div','xw-wait');w.setAttribute('role','status');w.appendChild(el('span','button-spinner'));w.appendChild(document.createTextNode(T.thinking));box.appendChild(w);scrollEnd();return w}
 var contactShown=false;
 function contact(){if(contactShown||!CFG.contact)return;contactShown=true;var m=el('div','xw-sys');m.appendChild(document.createTextNode(T.contact+' '));var a=el('a',null,CFG.contact);a.href='mailto:'+CFG.contact;m.appendChild(a);log.appendChild(m);scrollEnd()}
 
@@ -620,7 +639,7 @@ function renderHistory(items,filtered){
 /* Uložená odpoveď sa otvorí v plachte ako časť rozhovoru, s palcami. */
 function openSaved(id){
   api('history',{action:'open',id:id}).then(function(r){if(!r.ok)throw new Error('http');return r.json()}).then(function(j){
-    start();log.appendChild(el('div','xw-q',j.question));var a=answerBox();a.body.textContent=j.answer;lastQuestion=j.question;
+    start();log.appendChild(el('div','xw-q',j.question));var a=answerBox();renderMd(a.body,j.answer);lastQuestion=j.question;
     showSources(a.box,j.sources||[]);conversation.push({recordId:id,question:j.question,verdict:null});rateButtons(id,a.box);syncOffer();scrollEnd();
   }).catch(function(e){start();sys(e&&e.message==='expired'?T.expired:T.error)});
 }
@@ -642,7 +661,7 @@ function syncOffer(){offerBtn.hidden=!LOOK.offerLink||!conversation.length||!esc
 offerBtn.addEventListener('click',function(){offerEscalation(true)});
 escCancel.addEventListener('click',closeEscalation);
 
-function answerBox(){var a=el('div','xw-a');var h=el('span','xw-a-head');h.hidden=true;var b=el('div');a.appendChild(h);a.appendChild(b);log.appendChild(a);return {box:a,head:h,body:b}}
+function answerBox(){var a=el('div','xw-a');var h=el('span','xw-a-head');h.hidden=true;var b=el('div','xw-md');a.appendChild(h);a.appendChild(b);log.appendChild(a);return {box:a,head:h,body:b}}
 function showSources(box,sources){if(!sources.length)return;var s=el('div','xw-src',T.sources);var ul=el('ul');var seen={};
   sources.forEach(function(x){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;ul.appendChild(el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':'')))});s.appendChild(ul);box.appendChild(s)}
 function rateButtons(recordId,answerEl){
@@ -650,7 +669,7 @@ function rateButtons(recordId,answerEl){
   function pick(v){up.disabled=down.disabled=true;(v===1?up:down).setAttribute('aria-pressed','true');
     conversation.forEach(function(c){if(c.recordId===recordId)c.verdict=v});
     api('feedback',{id:recordId,verdict:v}).catch(function(){});
-    if(v===0){negatives++;if(negatives>=LOOK.escalateAfter){sys(T.tryAgain);offerEscalation(false)}}else{sys(T.thanks)}}
+    if(v===0){negatives++;if(negatives>=LOOK.escalateAfter){sys(T.tryAgain);offerEscalation(false)}}else{done(T.thanks,answerEl)}}
   up.addEventListener('click',function(){pick(1)});down.addEventListener('click',function(){pick(0)});
   rate.appendChild(up);rate.appendChild(down);answerEl.appendChild(rate);
 }
@@ -660,7 +679,7 @@ function ask(q){
   if(last.note){last.note.remove();last.note=null}
   log.appendChild(el('div','xw-q',q));
   var A=answerBox();var ran=null;
-  var thinking=sys(T.thinking);
+  var thinking=waiting(A.body);
   var text='',sources=[],recordId=null;
   api('chat',{query:q,language:P.code,sources:on.slice()}).then(function(r){
     if(!r.ok||!r.body){throw new Error(r.status===429?'rate':'http')}
@@ -671,7 +690,7 @@ function ask(q){
       var parts=buf.split('\\n\\n');buf=parts.pop()||'';
       parts.forEach(function(p){var line=p.split('\\n').filter(function(l){return l.indexOf('data: ')===0})[0];if(!line)return;var ev;try{ev=JSON.parse(line.slice(6))}catch(e){return}
         if(ev.type==='scope'){ran=ev;A.head.textContent=ev.kicker||'';A.head.hidden=!ev.kicker}
-        else if(ev.type==='token'){text+=ev.token;A.body.textContent=text;thinking.remove();scrollEnd()}
+        else if(ev.type==='token'){text+=ev.token;renderMd(A.body,text);thinking.remove();scrollEnd()}
         else if(ev.type==='done'){sources=ev.sources||[]}
         else if(ev.type==='recorded'){recordId=ev.id}
         else if(ev.type==='error'){text=text||T.error;A.body.textContent=text}
@@ -708,7 +727,7 @@ moreForm.addEventListener('submit',function(ev){ev.preventDefault();submitQuesti
 first.input.addEventListener('input',onFirstInput);
 [first.input,more.input].forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();t.form.dispatchEvent(new Event('submit',{cancelable:true}))}})});
 escBtn.addEventListener('click',function(){var m=escTa.value.trim();if(!m)return;escBtn.disabled=true;
-  api('ticket',{message:m,language:P.code,page:location.href.split('#')[0],conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.hidden=true;escTa.value='';sys(T.escalated);negatives=0;syncOffer()}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
+  api('ticket',{message:m,language:P.code,page:location.href.split('#')[0],conversation:conversation.map(function(c){return {recordId:c.recordId,question:c.question,verdict:c.verdict}})}).then(function(r){if(!r.ok)throw new Error('http');esc.hidden=true;escTa.value='';done(T.escalated);negatives=0;syncOffer()}).catch(function(e){sys(e&&e.message==='expired'?T.expired:T.error);contact()}).then(function(){escBtn.disabled=false})});
 
 /* Úvodný tip (D291): raz v prehliadači. Bez úložiska sa neukáže — inak by
    sa ukazoval pri každom načítaní stránky. */
