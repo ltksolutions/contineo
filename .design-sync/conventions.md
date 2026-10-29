@@ -172,10 +172,12 @@ v `web/scripts/pomocnik-issf/`. Platí pre každé video, príspevok na sociáln
   lupa v tme, rozsvietenie, premena na Contineo, bodky doskočia, vypísaná odpoveď, jingle.
 - **Záverečné logo** `contineo-zaverecne-logo.mp4` (4,8 s): logo, oči žmurknú, „Opýtajte sa.
   Nehľadajte." a contineo.app, jingle. Ním končí každé video Continea.
-- **Intro** `contineo-intro-s-hlasom.mp4` / `-bez-hlasu.mp4` (16,8 s): „Hľadáte a dostávate
-  možnosti." → „Opýtajte sa. Nehľadajte." → „Jedna overená odpoveď namiesto zoznamu odkazov."
+- **Intro** `contineo-intro-s-hlasom.mp4` / `-bez-hlasu.mp4` (16,8 s): „Stále hľadáte
+  a dostávate možnosti?" → „Opýtajte sa. Nehľadajte." → „Pýtajte sa, a dostávajte odpovede."
+  → „Jedna overená odpoveď namiesto zoznamu odkazov."
 - **Hlas komentára** je „LTK" v ElevenLabs: pokojný vecný prednes, vety sa vyrábajú so susednými
-  vetami ako kontextom, **koniec každej vety ide hlasom dole** (aj jednoslovnej).
+  vetami ako kontextom, **koniec každej vety ide hlasom dole** (aj jednoslovnej);
+  otázka na konci stúpa (v texte pre hlas sa píše „??", s jedným otáznikom končí plocho).
 - Slogan sa v obraze ani v texte neparafrázuje: **„Opýtajte sa. Nehľadajte."**; podtitul
   „Jedna overená odpoveď namiesto zoznamu odkazov.". SFZ sa číta celým názvom zväzu.
 - Video na webe má titulky sk/cs/en (`titulky-*.vtt`) a náhľad (`poster-video.jpg`); vety
