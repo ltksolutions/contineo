@@ -20,6 +20,7 @@ import {
   ticketById, assignTicket, saveTicketDraft, sendTicketAnswer, closeTicket, reopenTicket, answerRoute, importTicketThread, TicketError,
 } from "@/lib/tickets"
 import { draftTicketAnswer } from "@/lib/ticketDraft"
+import { markdownEmailHtml } from "@/lib/markdownEmail"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -119,10 +120,12 @@ export async function sendAnswerAction(fd: FormData) {
     await sendTicketAnswer(ctx.person.companyCode, ctx.keys, id, fieldText(fd, "text"), { email: ctx.person.email, personId: ctx.person.id }, async (t, text) => {
       // Vo vlákne, kde sa dá (ADR-042, D277): na e-mail pýtajúceho sa, inak
       // na potvrdenie ticketu z widgetu; nová správa len bez oboch.
+      // Text ostáva v tickete Markdownom; do e-mailu ide sformátovaný (Ján 29. 10. 2026).
       const route = answerRoute(t)
-      if (route.kind === "reply") return mailbox.reply(route.providerId, text)
-      if (route.kind === "replyTo") return mailbox.replyTo(route.providerId, route.to, text)
-      return mailbox.send(route.to, t.subject ? `Re: ${t.subject}` : "Odpoveď helpdesku", text)
+      const html = markdownEmailHtml(text)
+      if (route.kind === "reply") return mailbox.reply(route.providerId, text, html)
+      if (route.kind === "replyTo") return mailbox.replyTo(route.providerId, route.to, text, html)
+      return mailbox.send(route.to, t.subject ? `Re: ${t.subject}` : "Odpoveď helpdesku", text, html)
     })
   } catch (e) {
     if (isRedirect(e)) throw e

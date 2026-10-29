@@ -98,19 +98,19 @@ export interface MailboxAdapter {
    */
   listHeaders(from: Date, to: Date, stopAt?: number): Promise<MailHeader[]>
   /** Odpoveď vo vlákne z adresy schránky. Vracia `internetMessageId` odoslanej správy, ak ho poskytovateľ vráti. */
-  reply(messageId: string, text: string): Promise<{ messageId: string | null }>
+  reply(messageId: string, text: string, html?: string): Promise<{ messageId: string | null }>
   /**
    * Nová správa z adresy schránky — potvrdenie ticketu z widgetu, ktorý
    * vlákno v schránke ešte nemá (D163, D277). Vracia vlákno, ktoré správa
    * založila, a jej trvalý identifikátor — na ďalšiu odpoveď v tom vlákne.
    */
-  send(to: string, subject: string, text: string): Promise<SentMail>
+  send(to: string, subject: string, text: string, html?: string): Promise<SentMail>
   /**
    * Odpoveď vo vlákne na **vlastnú** odoslanú správu (potvrdenie, D277)
    * s výslovným adresátom — obyčajná `reply` by na vlastnú správu
    * odpovedala schránke samej.
    */
-  replyTo(providerId: string, to: string, text: string): Promise<SentMail>
+  replyTo(providerId: string, to: string, text: string, html?: string): Promise<SentMail>
   /** Overenie spojenia: prihlásenie a čítanie schránky. Vyhadzuje `MailboxError`. */
   verify(): Promise<{ address: string; displayName: string | null }>
 }
