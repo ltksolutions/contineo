@@ -159,6 +159,28 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
   (GitHub), „verzia 0.1.0 · revízia". Odkazy v novej karte (`target=_blank`, `rel=noreferrer`), 12 px, terč 24 px.
 - Tlačidlá widgetu majú terč 44 px aj na počítači. Widget vyká.
 
+## Značka v pohybe a zvuku (od 29. 10., web, sociálne siete, články)
+Video a zvuk Continea sa nekreslia ani neskladajú nanovo — berú sa hotové z
+`web/public/media/pomocnik-issf/` (verejne `contineo.app/media/pomocnik-issf/…`), zdroj a výroba
+v `web/scripts/pomocnik-issf/`. Platí pre každé video, príspevok na sociálne siete aj článok.
+- **Zvukové logo (jingle)** `contineo-jingle.m4a` (`.wav` na strih): šesť tónov G C E **G** E C,
+  paličkový nástroj so zvončekom, na konci tichý akord C dur; 4,3 s, z toho 1,4 s melódia. Otázka
+  vystúpi hore, odpoveď sa vráti dole. **Melódia, tempo ani nástroj sa nemenia**; vyrába ho
+  `jingle.py`. Znie vždy s logom: na konci každého videa (posledný tón doznie s koncom) a pri
+  premene lupy na Contineo. Nie pod hovoreným slovom, nie viackrát v jednom videe.
+- **Animácia loga** `contineo-logo-animacia.mp4` (9 s, 2160 × 2160, štvorec pre sociálne siete):
+  lupa v tme, rozsvietenie, premena na Contineo, bodky doskočia, vypísaná odpoveď, jingle.
+- **Záverečné logo** `contineo-zaverecne-logo.mp4` (4,8 s): logo, oči žmurknú, „Opýtajte sa.
+  Nehľadajte." a contineo.app, jingle. Ním končí každé video Continea.
+- **Intro** `contineo-intro-s-hlasom.mp4` / `-bez-hlasu.mp4` (16,8 s): „Hľadáte a dostávate
+  možnosti." → „Opýtajte sa. Nehľadajte." → „Jedna overená odpoveď namiesto zoznamu odkazov."
+- **Hlas komentára** je „LTK" v ElevenLabs: pokojný vecný prednes, vety sa vyrábajú so susednými
+  vetami ako kontextom, **koniec každej vety ide hlasom dole** (aj jednoslovnej).
+- Slogan sa v obraze ani v texte neparafrázuje: **„Opýtajte sa. Nehľadajte."**; podtitul
+  „Jedna overená odpoveď namiesto zoznamu odkazov.". SFZ sa číta celým názvom zväzu.
+- Video na webe má titulky sk/cs/en (`titulky-*.vtt`) a náhľad (`poster-video.jpg`); vety
+  vypálené v obraze sa do titulkov v tom istom jazyku neopakujú.
+
 ## Príklad
 ```jsx
 <div>

@@ -15,7 +15,8 @@ meno v hlavičke ISSF a e-mail sú vymyslené (Peter Ukážka,
 | `contineo-intro-s-hlasom.mp4` | intro „Opýtajte sa. Nehľadajte.“ s hlasom, 16,8 s, 2312 px |
 | `contineo-intro-bez-hlasu.mp4` | to isté intro len so zvukovými efektmi |
 | `contineo-logo-animacia.mp4` | animácia značky: lupa v tme, rozsvietenie, premena na Contineo, 9 s, 2160 × 2160 |
-| `contineo-zaverecne-logo.mp4` | záverečné logo so sloganom a contineo.app, 4,8 s |
+| `contineo-zaverecne-logo.mp4` | záverečné logo so sloganom, contineo.app a zvukovým logom, 4,8 s |
+| `contineo-jingle.m4a`, `contineo-jingle.wav` | zvukové logo Continea (jingle): G C E G E C a akord C dur, 4,3 s |
 | `poster-video.jpg` | náhľad videa na webe (koniec intra) |
 | `titulky-sk.vtt`, `titulky-cs.vtt`, `titulky-en.vtt` | titulky celého videa; v intre sú slovenské vety priamo v obraze, preklady sú hore |
 | `poster.jpg` | náhľad ukážky (odpoveď so zdrojmi) |
@@ -32,7 +33,9 @@ Snímky majú 2312 × 1514 px (Retina, 2×).
 
 Video je na úvodnej stránke webu v sekcii za Manifestom (`web/components/VideoDemo.js`).
 Zdroj animácií a postup výroby: `web/scripts/pomocnik-issf/README.md`.
+Pravidlá použitia (sociálne siete, články, ďalšie videá): `.design-sync/conventions.md`,
+sekcia „Značka v pohybe a zvuku“.
 
 Animácie sú vykreslené po snímkach z HTML a SVG, farby a značka podľa
 `ContineoMark` (lupa sa premení na bublinu reči, ako to opisuje komentár
-v `app/src/components/ContineoMark.tsx`). Zvukové efekty sú z ElevenLabs.
+v `app/src/components/ContineoMark.tsx`). Zvukové efekty sú z ElevenLabs, zvukové logo je zložené v `jingle.py`.
