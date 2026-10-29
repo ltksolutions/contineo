@@ -31,9 +31,10 @@ sfx torch "small flashlight button click on" 0.5
 sfx switch "light switch click, room lights turning on with a soft electric hum" 1.0
 sfx tiptoe "quiet curious pizzicato tiptoe music, sneaky searching in the dark, short" 2.2
 
-# Hlas číta len texty, ktoré sú na obrazovke.
-B1="Hľadáte a dostávate možnosti."; B2="Opýtajte sa. Nehľadajte."
-B3="Pýtate sa a dostávate odpoveď."; B4="Jedna overená odpoveď namiesto zoznamu odkazov."
+# Hlas číta len texty, ktoré sú na obrazovke. Dva otázniky sú pokyn pre hlas: s jedným
+# končila otázka plocho, na obrazovke a v titulkoch je jeden.
+B1="Stále hľadáte a dostávate možnosti??"; B2="Opýtajte sa. Nehľadajte."
+B3="Pýtajte sa, a dostávajte odpovede."; B4="Jedna overená odpoveď namiesto zoznamu odkazov."
 say b1 "$B1" "" "$B2"
 say b2 "$B2" "$B1" "$B3"
 say b3 "$B3" "$B2" "$B4"

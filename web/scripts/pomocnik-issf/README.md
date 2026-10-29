@@ -17,7 +17,8 @@ Voice ID hlasu „LTK“ je `ZBmvz7pM2hkKUTvijLfe` — bez kľúča účtu sa po
 plochá alebo stúpa, ako keby pokračovala, preto obe skripty posielajú aj
 susedné vety (`previous_text`, `next_text`). Hlas nevyjde zakaždým rovnako;
 vetu, ktorej koniec neklesne, treba vyrobiť znova a vybrať lepší záber
-(29. 10. 2026 tak boli opakované vety s5, s6 a b1).
+(29. 10. 2026 tak boli opakované vety s5, s6 a b1). Otázka v intre potrebuje
+v texte pre hlas dva otázniky, inak jej koniec nestúpne.
 
 ## 1. Ukážka v ISSF
 
@@ -44,7 +45,7 @@ o oneskorenie nahrávania (~0,6 s, overené podľa snímky, keď zmizne tip).
 | režim | čo | dĺžka |
 |---|---|---|
 | `?mode=logo` | lupa v tme, rozsvietenie, premena na Contineo, vypísaná odpoveď | 9 s, 1080 × 1080 |
-| `?mode=intro` | „Hľadáte a dostávate možnosti.“ → „Opýtajte sa. Nehľadajte.“ → odpoveď | 16,8 s, 1156 × 764 |
+| `?mode=intro` | „Stále hľadáte a dostávate možnosti?“ → „Opýtajte sa. Nehľadajte.“ → odpoveď | 16,8 s, 1156 × 764 |
 | `?mode=outro` | záverečné logo s pohľadom a žmurknutím | 4,8 s, 1156 × 764 |
 
 Náhľad v prehliadači (bez `&render` sa prehráva v slučke):
