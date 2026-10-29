@@ -34,7 +34,7 @@ export const dictionaries = {
     },
     manifesto: {
       eyebrow: "Prečo Contineo",
-      text: "Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať záložiek, prehľadávať zložky. Contineo to obracia: jednoducho sa opýtate a dostanete odpoveď. A nie hocijakú — odpoveď z obsahu vašej firmy, s citáciou zdroja. Nie z internetu. Z vášho sveta.",
+      text: "Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať záložiek, prehľadávať zložky. Contineo to obracia: jednoducho sa opýtate a dostanete odpoveď. A nie hocijakú — odpoveď z obsahu vašej firmy, s citáciou zdroja. Jedna overená odpoveď, nie zoznam odkazov.",
     },
     video: {
       eyebrow: "Ukážka",
@@ -943,7 +943,7 @@ export const dictionaries = {
     },
     manifesto: {
       eyebrow: "Proč Contineo",
-      text: "Roky jsme se učili hledat — vypisovat klíčová slova, otevírat deset záložek, prohledávat složky. Contineo to obrací: prostě se zeptáte a dostanete odpověď. A ne ledajakou — odpověď z obsahu vaší firmy, s citací zdroje. Ne z internetu. Z vašeho světa.",
+      text: "Roky jsme se učili hledat — vypisovat klíčová slova, otevírat deset záložek, prohledávat složky. Contineo to obrací: prostě se zeptáte a dostanete odpověď. A ne ledajakou — odpověď z obsahu vaší firmy, s citací zdroje. Jedna ověřená odpověď, ne seznam odkazů.",
     },
     video: {
       eyebrow: "Ukázka",
@@ -1852,7 +1852,7 @@ export const dictionaries = {
     },
     manifesto: {
       eyebrow: "Why Contineo",
-      text: "For years we learned to search — typing keywords, opening ten tabs, digging through folders. Contineo flips it: you simply ask and get the answer. And not just any answer — one from your company's content, with a source citation. Not from the internet. From your world.",
+      text: "For years we learned to search — typing keywords, opening ten tabs, digging through folders. Contineo flips it: you simply ask and get the answer. And not just any answer — one from your company's content, with a source citation. One verified answer, not a list of links.",
     },
     video: {
       eyebrow: "Demo",

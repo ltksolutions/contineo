@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: manifest končí novým posolstvom (2026-10-29)
+
+Krátky manifest na úvode („Roky sme sa učili hľadať…") končil vetou
+„Nie z internetu. Z vášho sveta." — starým posolstvom, ktoré 28. 10.
+nahradil podtitul. Po novom končí **„Jedna overená odpoveď, nie zoznam
+odkazov."** (česky „Jedna ověřená odpověď, ne seznam odkazů.", anglicky
+„One verified answer, not a list of links."), v slovníku webu aj
+v `docs/brand-messaging.md`.
+
 ### Web contineo.app: nový podtitul „Jedna overená odpoveď namiesto zoznamu odkazov." (2026-10-28)
 
 Nadpis „Opýtajte sa. Nehľadajte." ostáva; podtitul pod ním je po novom

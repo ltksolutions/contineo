@@ -20,7 +20,7 @@ Jedna overená odpoveď namiesto zoznamu odkazov.
 Contineo nájde odpoveď vo vašom vlastnom obsahu — weby, projekty, normy aj interné predpisy. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije.
 
 **Krátky manifest (o produkte / o nás)**
-Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať záložiek, prehľadávať zložky. Contineo to obracia: jednoducho sa opýtate a dostanete odpoveď. A nie hocijakú — odpoveď z obsahu vašej firmy, s citáciou zdroja. Nie z internetu. Z vášho sveta.
+Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať záložiek, prehľadávať zložky. Contineo to obracia: jednoducho sa opýtate a dostanete odpoveď. A nie hocijakú — odpoveď z obsahu vašej firmy, s citáciou zdroja. Jedna overená odpoveď, nie zoznam odkazov.
 
 **Linky na ďalšie kanály**
 - Reklama / sociálne: „Prestaňte hľadať vo svojich dokumentoch. Opýtajte sa ich."
@@ -41,7 +41,7 @@ One verified answer instead of a list of links.
 Contineo finds the answer in your own content — websites, projects, regulations and internal guidelines. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives.
 
 **Short manifesto**
-For years we learned to search — typing keywords, opening ten tabs, digging through folders. Contineo flips it: you simply ask and get the answer. And not just any answer — one from your company's content, with a source citation. Not from the internet. From your world.
+For years we learned to search — typing keywords, opening ten tabs, digging through folders. Contineo flips it: you simply ask and get the answer. And not just any answer — one from your company's content, with a source citation. One verified answer, not a list of links.
 
 **Channel lines**
 - Ad / social: "Stop searching your documents. Ask them."
