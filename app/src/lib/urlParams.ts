@@ -40,6 +40,16 @@ export const LEGACY_TAB_VALUES: Record<string, string> = {
   clenenie: "chunking",
 }
 
+/**
+ * Staré pohľady zoznamu ticketov → nové (Ján 29. 10. 2026). Odpovedané
+ * a Zavreté sa správali rovnako — nová správa pýtajúceho vráti ticket
+ * medzi otvorené z oboch —, preto sú spolu vo Vybavených.
+ */
+export const LEGACY_TICKET_VIEWS: Record<string, string> = {
+  sent: "done",
+  closed: "done",
+}
+
 export type RawQuery = Record<string, string | string[] | undefined>
 
 /**

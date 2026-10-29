@@ -110,3 +110,24 @@ describe("ingestMessages — historia vlakna", () => {
     expect(only().messages.map(m => m.providerId)).toEqual(["old1", "old2", "in3"])
   })
 })
+
+describe("ingestMessages — nova sprava na vybavenom tickete", () => {
+  // Vo Vybavených sú odpovedané aj zavreté (Ján 29. 10. 2026); nová správa
+  // pýtajúceho vráti oba do Otvorených.
+  it.each(["sent", "closed"])("ticket v stave %s sa znova otvori", async state => {
+    await ingestMessages("SFZ", "k", [mail({ id: "in1", internetMessageId: "<in1>" })])
+    store[0].state = state
+    store[0].closedAt = state === "closed" ? at(11) : null
+    await ingestMessages("SFZ", "k", [mail({ id: "in2", internetMessageId: "<in2>", text: "Ešte jedna otázka.", receivedAt: at(12) })])
+    expect(only().state).toBe("reopened")
+    expect(store[0].closedAt).toBeNull()
+    expect(only().messages).toHaveLength(2)
+  })
+
+  it("odpoved helpdesku vybaveny ticket neotvori", async () => {
+    await ingestMessages("SFZ", "k", [mail({ id: "in1", internetMessageId: "<in1>" })])
+    store[0].state = "closed"
+    await ingestMessages("SFZ", "k", [mail({ id: "out1", internetMessageId: "<out1>", outgoing: true, from: helpdesk, text: "Doplnenie.", receivedAt: at(12) })])
+    expect(only().state).toBe("closed")
+  })
+})

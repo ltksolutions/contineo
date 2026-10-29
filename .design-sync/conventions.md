@@ -121,6 +121,12 @@ Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.
 - Úloha má vľavo `span.task-icon` (kruh 36 px s ikonou druhu úlohy): `--bad` po termíne, `--soon` blíži sa termín, `--decide` rozhodnutie. Farba nesie naliehavosť, nie druh. Pod 640 px ide termín úlohy pod text.
 - Hľadanie s rozsahmi: `SearchStrip` vo `<form method="get">` (aplikácia ho odosiela počas písania) a pod ním (od 1024 px vedľa) `nav.view-switch.view-switch--scroll` — rozsahy s počtom `.view-switch-count` **po hľadaní**; pri 5+ voľbách sa pás roluje vodorovne, neláme. Rozsah bez výsledku sa neukazuje, okrem zvoleného.
 
+## Vlákno ticketu (od 29. 10.)
+- Poradie v `.detail-main`: karta „Posledná prijatá správa" (`#last-message`), pod ňou odpoveď (`#answer`), pod ňou história vlákna (`#history`) **od najstaršej správy** — číta sa ako rozhovor.
+- Správa je `.thread-msg` (pruh vľavo `--line-strong`); odpoveď helpdesku `.thread-msg--out` je **odsadená** (24 px, pod 640 px 12 px) a má pruh `--accent`, takže dvojica došlá správa → odpoveď je vidieť na prvý pohľad. Hlavička `.thread-msg-head`: pri došlej meno a „došlá správa", pri odpovedi „Odpoveď helpdesku".
+- Správa zobrazená nad odpoveďou je v histórii zbalená do riadku (`details.thread-msg` + `.thread-msg-preview`), aby sa neopakovala celá.
+- Zoznam ticketov má prepínač pohľadu `.view-switch` Otvorené · Vybavené · Všetky; Vybavené sú odpovedané aj zavreté (nová správa pýtajúceho vráti oba do Otvorených).
+
 ## Externý widget kanála (od 27. 10., KANAL-widget-riadok-otazky)
 Widget kanála typu *widget* vložený v cudzom systéme (ISSF). Beží v Shadow DOM, preto ho
 skript nesie celý (`lib/widgetScript.ts`, `WIDGET_CSS`); triedy `.xw-*` sú v `globals.css`

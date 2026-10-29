@@ -2,7 +2,8 @@
  * /channels/tickets/[id] — ticket (ADR-028 krok 4; pod Kanálmi od D170,
  * predtým `/helpdesk/[id]`). Len riešiteľ kanála ticketu — správca nie (D170).
  *
- * Vľavo vlákno správ, pod ním návrh odpovede a odoslanie; vpravo (od 1024 px)
+ * Vľavo posledná prijatá správa, pod ňou odpoveď a pod tou história vlákna
+ * od najstaršej správy (Ján 29. 10. 2026); vpravo (od 1024 px)
  * kto rieši, zdroje návrhu a „Pridať do FAQ". Všetko sú formuláre — bez
  * JavaScriptu to funguje rovnako. Jediné plné tlačidlo na obrazovke je
  * **Odoslať odpoveď** (CLAUDE.md: najviac jedno plné).
@@ -43,13 +44,35 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const base = `/channels/tickets/${encodeURIComponent(id)}`
   const assignee = ticket.assigneeId ? await findPerson(ctx.tenant.companyCode, ticket.assigneeId).catch(() => null) : null
   const draftText = ticket.draft?.text ?? ""
-  const who = (m: (typeof ticket.messages)[number]) =>
+  type Message = (typeof ticket.messages)[number]
+  const who = (m: Message) =>
     m.direction === "out" ? t.fromHelpdesk : t.fromAsker(m.from?.name ?? m.from?.address ?? ticket.asker.name ?? "")
   // Začiatok celého textu, nie prvý riadok — ten býva len „Dobrý deň,".
   const preview = (text: string) => text.replace(/\s+/g, " ").trim().slice(0, 200)
-  // Vlákno pod odpoveďou, najnovšia správa hore a rozbalená, staršie zbalené
-  // (Ján 7. 10. 2026). Kópia poľa — `messages` ostáva od najstaršej.
-  const newestFirst = [...ticket.messages].reverse()
+  // Správa, na ktorú sa odpovedá, je nad odpoveďou; história pod ňou ide od
+  // najstaršej, aby sa čítala ako rozhovor otázka → odpoveď (Ján 29. 10. 2026,
+  // predtým od najnovšej podľa 7. 10.). `messages` je uložené od najstaršej.
+  const messages = ticket.messages
+  const lastIn = [...messages].reverse().find(m => m.direction === "in") ?? null
+  const showHistory = messages.length > 1 || (messages.length === 1 && !lastIn) || (ticket.source === "email" && Boolean(ticket.threadRef))
+  const meta = (m: Message) => (
+    <>
+      {m.direction === "out" ? <b>{t.msgOut}</b> : <><b>{who(m)}</b> · {t.msgIn}</>}
+      {" · "}{formatDate(m.at, language)}{m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}
+    </>
+  )
+  const body = (m: Message) => (
+    <>
+      <div className="thread-msg-body">{m.text}</div>
+      {m.quoted && (
+        <details className="thread-quoted">
+          <summary className="quiet">{t.quotedHistory}</summary>
+          <div className="quiet thread-quoted-body">{m.quoted}</div>
+        </details>
+      )}
+    </>
+  )
+  const cls = (m: Message) => `thread-msg${m.direction === "out" ? " thread-msg--out" : ""}`
   const isOpen = ticket.state !== "closed"
   const canSend = isOpen && Boolean(channel?.mailbox) && (ticket.asker.email || ticket.messages.some(m => m.direction === "in"))
   // Údaje z vydávajúceho systému (ADR-042, D276, D280): účet a kam ide
@@ -86,6 +109,16 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
 
       <div className="detail-grid">
         <div className="detail-main">
+          {lastIn && (
+            <section className="card detail-block" id="last-message">
+              <h2 className="detail-block-title">{t.lastIncoming}</h2>
+              <article className={cls(lastIn)}>
+                <p className="quiet thread-msg-head">{meta(lastIn)}</p>
+                {body(lastIn)}
+              </article>
+            </section>
+          )}
+
           <section className="card detail-block" id="answer">
             <h2 className="detail-block-title">{t.draftHeading}</h2>
             <p className="detail-block-note" style={{ margin: 0 }}>{t.draftIntro}</p>
@@ -125,48 +158,33 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
             )}
           </section>
 
-          <section className="card detail-block">
-            <h2 className="detail-block-title">{t.thread}</h2>
-            {newestFirst.length > 1 && (
-              <p className="quiet thread-summary">{t.threadSummary(newestFirst.length, who(newestFirst[0]), formatDate(newestFirst[0].at, language))}</p>
-            )}
-            {newestFirst.map((m, i) => {
-              const cls = `thread-msg${m.direction === "out" ? " thread-msg--out" : ""}`
-              const meta = <><b>{who(m)}</b> · {formatDate(m.at, language)}{m.attachments.length > 0 && <> · {t.attachments(m.attachments.length)}</>}</>
-              const body = (
-                <>
-                  <div className="thread-msg-body">{m.text}</div>
-                  {m.quoted && (
-                    <details className="thread-quoted">
-                      <summary className="quiet">{t.quotedHistory}</summary>
-                      <div className="quiet thread-quoted-body">{m.quoted}</div>
-                    </details>
-                  )}
-                </>
-              )
-              if (i === 0) {
-                return (
-                  <article key={`${m.providerId}-${i}`} className={cls}>
-                    <p className="quiet thread-msg-head">{meta}</p>
-                    {body}
-                  </article>
-                )
-              }
-              return (
-                <details key={`${m.providerId}-${i}`} className={cls}>
-                  <summary className="quiet"><span className="thread-msg-meta">{meta}</span><span className="thread-msg-preview">· {preview(m.text)}</span></summary>
-                  {body}
+          {showHistory && (
+            <section className="card detail-block" id="history">
+              <h2 className="detail-block-title">{t.thread}</h2>
+              {messages.length > 1 && (
+                <p className="quiet thread-summary">{t.threadSummary(messages.length, who(messages[messages.length - 1]), formatDate(messages[messages.length - 1].at, language))}</p>
+              )}
+              {messages.map((m, i) => m === lastIn ? (
+                // Je celá nad odpoveďou — tu len riadok, aby história ostala úplná.
+                <details key={`${m.providerId}-${i}`} className={cls(m)}>
+                  <summary className="quiet"><span className="thread-msg-meta">{meta(m)}</span><span className="thread-msg-preview">· {preview(m.text)}</span></summary>
+                  {body(m)}
                 </details>
-              )
-            })}
-            {ticket.source === "email" && ticket.threadRef && (
-              <form action={importThreadAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-                <input type="hidden" name="id" value={id} />
-                <SubmitButton className="button button--quiet">{t.threadImport}</SubmitButton>
-                <span className="quiet field-hint">{t.threadImportHint}</span>
-              </form>
-            )}
-          </section>
+              ) : (
+                <article key={`${m.providerId}-${i}`} className={cls(m)}>
+                  <p className="quiet thread-msg-head">{meta(m)}</p>
+                  {body(m)}
+                </article>
+              ))}
+              {ticket.source === "email" && ticket.threadRef && (
+                <form action={importThreadAction} style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                  <input type="hidden" name="id" value={id} />
+                  <SubmitButton className="button button--quiet">{t.threadImport}</SubmitButton>
+                  <span className="quiet field-hint">{t.threadImportHint}</span>
+                </form>
+              )}
+            </section>
+          )}
         </div>
 
         <aside className="detail-side" style={{ display: "grid", gap: 16, alignContent: "start" }}>

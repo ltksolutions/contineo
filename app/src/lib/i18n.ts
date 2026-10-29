@@ -2663,8 +2663,8 @@ interface Dictionary {
     intro: string
     noChannels: string
     viewOpen: string
-    viewSent: string
-    viewClosed: string
+    /** Odpovedané aj zavreté — pýtajúci ich odpoveďou vráti medzi otvorené. */
+    viewDone: string
     viewAll: string
     empty: string
     colSubject: string
@@ -2687,6 +2687,9 @@ interface Dictionary {
     threadImportHint: string
     msgThreadImported: (n: number) => string
     fromHelpdesk: string
+    lastIncoming: string
+    msgIn: string
+    msgOut: string
     fromAsker: (name: string) => string
     attachments: (n: number) => string
     draftHeading: string
@@ -8133,8 +8136,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     intro: "Tickety kanálov, ktorých si správcom ticketov. Návrh odpovede pripraví asistent z dokumentov kanála; odošleš ho ty, nikdy nie systém sám.",
     noChannels: "Nie si správcom ticketov žiadneho kanála. Správca organizácie ťa pridá medzi správcov ticketov v Kanáloch.",
     viewOpen: "Otvorené",
-    viewSent: "Odpovedané",
-    viewClosed: "Zavreté",
+    viewDone: "Vybavené",
     viewAll: "Všetky",
     empty: "Žiadne tickety.",
     colSubject: "Predmet",
@@ -8150,13 +8152,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assignedTo: (name: string) => `rieši ${name}`,
     take: "Prevziať",
     release: "Uvoľniť",
-    thread: "Vlákno",
+    thread: "História vlákna",
     quotedHistory: "Predchádzajúca korešpondencia v e-maile",
     threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} ${n < 5 ? "správy" : "správ"} · posledná: ${lastFrom}, ${lastAt}`,
     threadImport: "Dotiahnuť históriu vlákna",
     threadImportHint: "Načíta zo schránky skoršie správy tohto vlákna — prijaté aj odoslané, aj spred spustenia synchronizácie.",
     msgThreadImported: (n: number) => n ? `Doplnené správy z vlákna: ${n}.` : "Vlákno je úplné — v schránke nie sú ďalšie správy.",
     fromHelpdesk: "Helpdesk",
+    lastIncoming: "Posledná prijatá správa",
+    msgIn: "došlá správa",
+    msgOut: "Odpoveď helpdesku",
     fromAsker: (name: string) => name || "Pýtajúci sa",
     attachments: (n: number) => (n === 1 ? "1 príloha (v schránke)" : `${n} príloh (v schránke)`),
     draftHeading: "Odpoveď",
@@ -8388,8 +8393,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     kindImap: "IMAP (zatiaľ nedostupné)",
     address: "Adresa schránky",
     addressHint: "napr. helpdesk@futbalsfz.sk — číta sa z nej aj odpovedá",
-    skipBounces: "Nezakladať tickety zo správ o nedoručení",
-    skipBouncesHint: "Návrat od poštového servera (mailer-daemon, „Undelivered Mail Returned to Sender“, „Nedoručiteľné: …“) nie je otázka človeka. Rozpoznáva sa podľa odosielateľa a predmetu.",
+    skipBounces: "Nezakladať tickety zo správ o nedoručení a automatických odpovedí",
+    skipBouncesHint: "Návrat od poštového servera (mailer-daemon, „Undelivered Mail Returned to Sender“, „Nedoručiteľné: …“) ani automatická odpoveď o neprítomnosti („Automatická odpoveď: …“, „Automatic reply: …“) nie je otázka človeka. Rozpoznáva sa podľa odosielateľa a predmetu.",
     tenantId: "Tenant (Directory ID)",
     clientId: "Client ID aplikácie",
     clientSecret: "Tajomstvo aplikácie (client secret)",
@@ -13449,8 +13454,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     intro: "Tikety kanálů, kterých jsi správcem tiketů. Návrh odpovědi připraví asistent z dokumentů kanálu; odešleš ho ty, nikdy ne systém sám.",
     noChannels: "Nejsi správcem tiketů žádného kanálu. Správce organizace tě přidá mezi správce tiketů v Kanálech.",
     viewOpen: "Otevřené",
-    viewSent: "Zodpovězené",
-    viewClosed: "Zavřené",
+    viewDone: "Vyřízené",
     viewAll: "Všechny",
     empty: "Žádné tickety.",
     colSubject: "Předmět",
@@ -13466,13 +13470,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assignedTo: (name: string) => `řeší ${name}`,
     take: "Převzít",
     release: "Uvolnit",
-    thread: "Vlákno",
+    thread: "Historie vlákna",
     quotedHistory: "Předchozí korespondence v e-mailu",
     threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} ${n < 5 ? "zprávy" : "zpráv"} · poslední: ${lastFrom}, ${lastAt}`,
     threadImport: "Dotáhnout historii vlákna",
     threadImportHint: "Načte ze schránky dřívější zprávy tohoto vlákna — přijaté i odeslané, i z doby před spuštěním synchronizace.",
     msgThreadImported: (n: number) => n ? `Doplněné zprávy z vlákna: ${n}.` : "Vlákno je úplné — ve schránce nejsou další zprávy.",
     fromHelpdesk: "Helpdesk",
+    lastIncoming: "Poslední přijatá zpráva",
+    msgIn: "došlá zpráva",
+    msgOut: "Odpověď helpdesku",
     fromAsker: (name: string) => name || "Tazatel",
     attachments: (n: number) => (n === 1 ? "1 příloha (ve schránce)" : `${n} příloh (ve schránce)`),
     draftHeading: "Odpověď",
@@ -13704,8 +13711,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     kindImap: "IMAP (zatím nedostupné)",
     address: "Adresa schránky",
     addressHint: "např. helpdesk@futbalsfz.sk — čte se z ní i odpovídá",
-    skipBounces: "Nezakládat tickety ze zpráv o nedoručení",
-    skipBouncesHint: "Návrat od poštovního serveru (mailer-daemon, „Undelivered Mail Returned to Sender“, „Nedoručitelné: …“) není dotaz člověka. Rozpoznává se podle odesílatele a předmětu.",
+    skipBounces: "Nezakládat tickety ze zpráv o nedoručení a automatických odpovědí",
+    skipBouncesHint: "Návrat od poštovního serveru (mailer-daemon, „Undelivered Mail Returned to Sender“, „Nedoručitelné: …“) ani automatická odpověď o nepřítomnosti („Automatická odpověď: …“, „Automatic reply: …“) není dotaz člověka. Rozpoznává se podle odesílatele a předmětu.",
     tenantId: "Tenant (Directory ID)",
     clientId: "Client ID aplikace",
     clientSecret: "Tajemství aplikace (client secret)",
@@ -18756,8 +18763,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     intro: "Tickets of the channels you are a ticket manager of. The assistant drafts an answer from the channel's documents; you send it, never the system on its own.",
     noChannels: "You are not a ticket manager of any channel. The organisation administrator adds you as a ticket manager in Channels.",
     viewOpen: "Open",
-    viewSent: "Answered",
-    viewClosed: "Closed",
+    viewDone: "Done",
     viewAll: "All",
     empty: "No tickets.",
     colSubject: "Subject",
@@ -18773,13 +18779,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assignedTo: (name: string) => `handled by ${name}`,
     take: "Take",
     release: "Release",
-    thread: "Thread",
+    thread: "Thread history",
     quotedHistory: "Earlier correspondence quoted in the e-mail",
     threadSummary: (n: number, lastFrom: string, lastAt: string) => `${n} messages · latest: ${lastFrom}, ${lastAt}`,
     threadImport: "Load thread history",
     threadImportHint: "Loads earlier messages of this thread from the mailbox — received and sent, including those from before synchronisation started.",
     msgThreadImported: (n: number) => n ? `Messages added from the thread: ${n}.` : "The thread is complete — there are no more messages in the mailbox.",
     fromHelpdesk: "Helpdesk",
+    lastIncoming: "Latest message received",
+    msgIn: "incoming message",
+    msgOut: "Helpdesk reply",
     fromAsker: (name: string) => name || "Asker",
     attachments: (n: number) => (n === 1 ? "1 attachment (in the mailbox)" : `${n} attachments (in the mailbox)`),
     draftHeading: "Answer",
@@ -19011,8 +19020,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     kindImap: "IMAP (not available yet)",
     address: "Mailbox address",
     addressHint: "e.g. helpdesk@futbalsfz.sk — read from and replied from",
-    skipBounces: "Do not create tickets from delivery failure notices",
-    skipBouncesHint: "A bounce from a mail server (mailer-daemon, “Undelivered Mail Returned to Sender”) is not a person's question. It is recognised by sender and subject.",
+    skipBounces: "Do not create tickets from delivery failure notices and automatic replies",
+    skipBouncesHint: "A bounce from a mail server (mailer-daemon, “Undelivered Mail Returned to Sender”) and an out-of-office reply (“Automatic reply: …”) are not a person's question. They are recognised by sender and subject.",
     tenantId: "Tenant (Directory ID)",
     clientId: "Application client ID",
     clientSecret: "Application secret (client secret)",

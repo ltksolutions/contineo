@@ -14,12 +14,15 @@ import type { TicketListItem } from "@/lib/tickets"
 import SubmitButton from "./SubmitButton"
 import TicketBulkBar, { TICKET_BULK_FORM } from "./TicketBulkBar"
 import { bulkTicketsAction } from "@/app/channels/tickets/actions"
+import { LEGACY_TICKET_VIEWS } from "@/lib/urlParams"
 
-export const TICKET_VIEWS = ["open", "sent", "closed", "all"] as const
+export const TICKET_VIEWS = ["open", "done", "all"] as const
 export type TicketView = (typeof TICKET_VIEWS)[number]
 
+/** Neznámy pohľad je Otvorené; staré `sent` a `closed` vedú do Vybavených. */
 export function ticketView(raw: string | undefined): TicketView {
-  return (TICKET_VIEWS as readonly string[]).includes(raw ?? "") ? (raw as TicketView) : "open"
+  const value = raw ? LEGACY_TICKET_VIEWS[raw] ?? raw : ""
+  return (TICKET_VIEWS as readonly string[]).includes(value) ? (value as TicketView) : "open"
 }
 
 export default function TicketList({ tickets, view, base, channelName, showChannel, personId, language }: {
@@ -34,7 +37,7 @@ export default function TicketList({ tickets, view, base, channelName, showChann
   language: UiLanguage
 }) {
   const t = dictionary(language).helpdesk
-  const viewLabel: Record<TicketView, string> = { open: t.viewOpen, sent: t.viewSent, closed: t.viewClosed, all: t.viewAll }
+  const viewLabel: Record<TicketView, string> = { open: t.viewOpen, done: t.viewDone, all: t.viewAll }
   const href = (id: string) => `/channels/tickets/${id}`
   const stateTag = (state: TicketListItem["state"]) => (
     <span className={`tag ${state === "sent" || state === "closed" ? "tag--published" : "tag--draft"}`}>{t.state[state]}</span>
@@ -57,8 +60,8 @@ export default function TicketList({ tickets, view, base, channelName, showChann
         <form id={TICKET_BULK_FORM} action={bulkTicketsAction} style={{ marginTop: 16 }}>
           <input type="hidden" name="back" value={view === "open" ? base : `${base}?view=${view}`} />
           <TicketBulkBar labels={{ selectAll: t.bulkSelectAll, selected: t.bulkSelected(-1).replace("-1", "{n}"), none: t.bulkNone }}>
-            {view !== "closed" && <SubmitButton className="button button--quiet" name="op" value="take">{t.bulkTake}</SubmitButton>}
-            {view === "closed"
+            {view !== "done" && <SubmitButton className="button button--quiet" name="op" value="take">{t.bulkTake}</SubmitButton>}
+            {view === "done"
               ? <SubmitButton className="button button--quiet" name="op" value="reopen">{t.bulkReopen}</SubmitButton>
               : <SubmitButton className="button button--quiet" name="op" value="close">{t.bulkClose}</SubmitButton>}
           </TicketBulkBar>

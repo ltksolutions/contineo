@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { isBounce } from "../src/lib/mailbox/bounce"
+import { isBounce, isAutoReply, isMachineMail } from "../src/lib/mailbox/bounce"
 
 const msg = (address: string, subject: string, outgoing = false) => ({ from: { address, name: null }, subject, outgoing })
 
@@ -24,5 +24,29 @@ describe("návrat od poštového servera", () => {
     expect(isBounce(msg("hrac@gmail.com", "Nemôžem sa prihlásiť do ISSF"))).toBe(false)
     expect(isBounce(msg("hrac@gmail.com", "Re: nedoručiteľné heslo?"))).toBe(false)
     expect(isBounce(msg("mailer-daemon@x.sk", "Undelivered", true))).toBe(false)
+  })
+})
+
+describe("automatická odpoveď o neprítomnosti (Ján 29. 10. 2026)", () => {
+  it("rozpozná predponu v jazyku schránky", () => {
+    for (const s of [
+      "Automatische Antwort: ISSF Žiadosť o zmenu termínu",
+      "Automatic reply: Re: Prestup hráča",
+      "Automatická odpoveď: Re: Registračný preukaz",
+      "Automatická odpověď: Dotaz",
+      "Out of Office: Re: ISSF",
+      "Abwesenheitsnotiz: Anfrage",
+      "AutoReply: x",
+    ]) expect(isAutoReply(msg("klub@example.sk", s)), s).toBe(true)
+  })
+  it("otázku človeka nechá tak", () => {
+    expect(isAutoReply(msg("klub@example.sk", "Re: automatická odpoveď z ISSF nefunguje"))).toBe(false)
+    expect(isAutoReply(msg("klub@example.sk", "Out of office request na zápas"))).toBe(false)
+    expect(isAutoReply(msg("helpdesk@futbalsfz.sk", "Automatic reply: x", true))).toBe(false)
+  })
+  it("strojová pošta = návrat alebo automatická odpoveď", () => {
+    expect(isMachineMail(msg("postmaster@x.sk", "Hocičo"))).toBe(true)
+    expect(isMachineMail(msg("klub@example.sk", "Automatische Antwort: x"))).toBe(true)
+    expect(isMachineMail(msg("klub@example.sk", "Prestup hráča"))).toBe(false)
   })
 })

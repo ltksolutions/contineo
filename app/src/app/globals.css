@@ -8574,12 +8574,15 @@ a.chart-rank-row:hover { background: var(--accent-soft); }
 .chunks-compare thead th { font-size: var(--fs-small); color: var(--muted); font-weight: 600; }
 .chunks-compare tbody th { font-weight: 400; color: var(--muted); }
 
-/* ── Vlákno ticketu helpdesku (Ján 7. 10. 2026) ──────────────────────────────
-   Odpoveď je nad vláknom; vlákno ide od najnovšej správy, tá je rozbalená,
-   staršie sú zbalené do riadku — `<details>`, takže to funguje bez skriptu. */
+/* ── Vlákno ticketu helpdesku (Ján 7. 10. 2026, poradie 29. 10. 2026) ───────
+   Posledná prijatá správa je nad odpoveďou, história pod ňou od najstaršej.
+   Odpoveď helpdesku je odsadená a má pruh vo farbe organizácie, aby dvojica
+   došlá správa → odpoveď bola vidieť na prvý pohľad. Správa zobrazená nad
+   odpoveďou je v histórii zbalená do riadku — `<details>`, bez skriptu. */
 .thread-summary { margin: 0; font-size: var(--fs-small); }
-.thread-msg { border-left: 3px solid var(--border); padding-left: 12px; min-width: 0; }
-.thread-msg--out { border-left-color: var(--accent); }
+.thread-msg { border-left: 3px solid var(--line-strong); padding-left: 12px; min-width: 0; }
+.thread-msg--out { border-left-color: var(--accent); margin-left: 24px; }
+@media (max-width: 639px) { .thread-msg--out { margin-left: 12px; } }
 .thread-msg-head { margin: 0 0 4px; font-size: var(--fs-small); }
 .thread-msg-body { white-space: pre-wrap; line-height: 1.6; overflow-wrap: anywhere; }
 details.thread-msg > summary {

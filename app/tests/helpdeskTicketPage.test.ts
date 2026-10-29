@@ -1,8 +1,9 @@
 /**
  * helpdeskTicketPage.test.ts — vlakno ticketu na obrazovke riesitela (ADR-028).
  *
- * Blok Odpoved nad vlaknom, vlakno od najnovsej spravy, ta je rozbalena,
- * starsie zbalene v <details>, suhrn nad vlaknom (Jan 7. 10. 2026).
+ * Posledna prijata sprava nad odpovedou, pod odpovedou historia od najstarsej;
+ * odpovede helpdesku odsadene, sprava zobrazena hore je v historii zbalena
+ * (Jan 29. 10. 2026, predtym od najnovsej podla 7. 10.).
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
@@ -51,7 +52,7 @@ async function render() {
 beforeEach(() => { state.messages = [] })
 
 describe("vlakno ticketu", () => {
-  it("odpoved je nad vlaknom; vlakno od najnovsej, ta rozbalena, starsie zbalene; suhrn hore", async () => {
+  it("posledna prijata hore, potom odpoved, potom historia od najstarsej", async () => {
     state.messages = [
       msg("a", "in", "Žiadam o zmenu priezviska.\nĎalší riadok", 3),
       msg("b", "out", "Kontaktujte matriku.", 6),
@@ -59,23 +60,32 @@ describe("vlakno ticketu", () => {
       msg("d", "out", "Ďakujeme, upravené.", 8),
     ]
     const html = await render()
-    expect(html.indexOf('id="answer"')).toBeLessThan(html.indexOf("thread-summary"))
-    expect(html).toContain("4 správy · posledná: Helpdesk")
-    expect(html.match(/<article class="thread-msg/g)).toHaveLength(1)
-    expect(html.match(/<details class="thread-msg/g)).toHaveLength(3)
-    // najnovšia je rozbalená a prvá
-    expect(html).toMatch(/<article class="thread-msg[^"]*">[\s\S]*?Ďakujeme, upravené\./)
-    expect(html.indexOf("Ďakujeme, upravené.")).toBeLessThan(html.indexOf("Nech sa páči"))
-    expect(html.indexOf("Nech sa páči")).toBeLessThan(html.indexOf("Žiadam o zmenu"))
-    // náhľad zbalenej správy je začiatok celého textu, nie len prvý riadok (pozdrav)
-    expect(html).toContain("· Žiadam o zmenu priezviska. Ďalší riadok</span>")
+    const last = html.indexOf('id="last-message"'), answer = html.indexOf('id="answer"'), history = html.indexOf('id="history"')
+    expect(last).toBeGreaterThan(-1)
+    expect(last).toBeLessThan(answer)
+    expect(answer).toBeLessThan(history)
+    // hore je posledná *prijatá*, nie posledná vôbec (tá je odpoveď)
+    expect(html.slice(last, answer)).toContain("Nech sa páči")
+    expect(html.slice(last, answer)).not.toContain("Ďakujeme, upravené.")
+    const hist = html.slice(history)
+    expect(hist).toContain("4 správy · posledná: Helpdesk")
+    expect(hist.indexOf("Žiadam o zmenu")).toBeLessThan(hist.indexOf("Kontaktujte matriku."))
+    expect(hist.indexOf("Kontaktujte matriku.")).toBeLessThan(hist.indexOf("Nech sa páči"))
+    expect(hist.indexOf("Nech sa páči")).toBeLessThan(hist.indexOf("Ďakujeme, upravené."))
+    // zobrazená hore je v histórii zbalená, ostatné celé; odpovede označené
+    expect(hist.match(/<details class="thread-msg/g)).toHaveLength(1)
+    expect(hist.match(/<article class="thread-msg/g)).toHaveLength(3)
+    expect(hist.match(/thread-msg thread-msg--out/g)).toHaveLength(2)
+    expect(hist).toContain("Odpoveď helpdesku")
+    expect(hist).toContain("došlá správa")
+    expect(hist).toContain("· Nech sa páči: jozko@example.sk</span>")
   })
 
-  it("jedna sprava: rozbalena, bez suhrnu", async () => {
+  it("jedna sprava: len hore, bez historie", async () => {
     state.messages = [msg("a", "in", "Otázka?", 3)]
     const html = await render()
+    expect(html).toContain('id="last-message"')
     expect(html).not.toContain("thread-summary")
-    expect(html).not.toContain('<details class="thread-msg')
     expect(html.match(/<article class="thread-msg/g)).toHaveLength(1)
   })
 })
