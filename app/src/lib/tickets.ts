@@ -124,17 +124,28 @@ export interface IngestOptions {
   thread?: (threadRef: string) => Promise<MailMessage[]>
 }
 
-const norm = (s: string) => s.replace(/\s+/g, " ").trim()
+/**
+ * Text na porovnanie odpovede s jej kópiou z Odoslaných: len písmená.
+ * V tickete je Markdown, odchádza HTML e-mail (#497) a kópia sa vracia ako
+ * text z HTML — bez `**` a `#`, odkaz len textom, iné medzery a zoznam
+ * prečíslovaný od 1 (Ján 29. 10. 2026: odpoveď bola vo vlákne dvakrát).
+ */
+const matchKey = (s: string) => s
+  .replace(/\[([^\]\n]+)\]\([^)\s]*\)/g, "$1")
+  .normalize("NFC").toLowerCase()
+  .replace(/[^\p{L}]+/gu, "")
 
 /**
  * Odpoveď odoslaná z Continea je v tickete zapísaná hneď (`providerId`
  * `sent:…`, Graph identifikátor nevráti). Jej kópia z Odoslaných príde
  * synchronizáciou neskôr — nesmie sa pridať druhýkrát, len si vezme
- * identitu. Zhoda je podľa textu bez citovanej histórie.
+ * identitu. Zhoda je podľa textu bez citovanej histórie (`matchKey`).
  */
 function adoptableIndex(messages: TicketMessage[], tm: TicketMessage): number {
   if (tm.direction !== "out") return -1
-  return messages.findIndex(x => x.direction === "out" && x.providerId.startsWith("sent:") && norm(x.text) === norm(tm.text))
+  const key = matchKey(tm.text)
+  if (!key) return -1
+  return messages.findIndex(x => x.direction === "out" && x.providerId.startsWith("sent:") && matchKey(x.text) === key)
 }
 
 function isKnown(messages: TicketMessage[], m: MailMessage): boolean {

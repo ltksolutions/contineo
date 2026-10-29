@@ -33,11 +33,15 @@ export function markdownEmailHtml(text: string): string {
     }
     if (b.druh === "odsek") return `<p style="margin:0 0 12px">${inline(b.segments)}</p>`
     const tag = b.numbered ? "ol" : "ul"
+    // `start` na zozname aj `value` na položke: prevod HTML na text v Outlooku
+    // a Graphe `value` nečíta a zoznam „3. … 4." by poslal ako „1. … 1."
+    // (Ján 29. 10. 2026).
+    const start = b.numbered && b.values[0] != null && b.values[0] !== 1 ? ` start="${b.values[0]}"` : ""
     const items = b.items.map((p, j) => {
       const value = b.numbered && b.values[j] != null ? ` value="${b.values[j]}"` : ""
       return `<li${value} style="margin:0 0 4px">${inline(p)}</li>`
     }).join("")
-    return `<${tag} style="margin:0 0 12px;padding-left:22px">${items}</${tag}>`
+    return `<${tag}${start} style="margin:0 0 12px;padding-left:22px">${items}</${tag}>`
   }).join("\n")
   return `<div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.55;color:#161b22">\n${body}\n</div>`
 }

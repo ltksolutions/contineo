@@ -31,4 +31,11 @@ describe("markdownEmailHtml — odpoveď na ticket ako HTML e-mail", () => {
     expect(h).toContain("<strong>&lt;b&gt;</strong>")
     expect(h).toContain("&amp;")
   })
+
+  it("zoznam, ktorý nezačína jednotkou, má start — prevod na text value nečíta", () => {
+    const out = markdownEmailHtml("1. Prvý\n\nMedzi tým.\n\n3. Tretí\n4. Štvrtý")
+    expect(out).toContain('<ol style=')
+    expect(out).toContain('<ol start="3" style=')
+    expect(out).toContain('<li value="4"')
+  })
 })

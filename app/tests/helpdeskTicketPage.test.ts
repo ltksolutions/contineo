@@ -10,13 +10,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 
 const stubs = vi.hoisted(() => (names: string[]) => Object.fromEntries(names.map(n => [n, async () => {}])))
-const state = vi.hoisted(() => ({ messages: [] as unknown[], ticketState: "new", sentAnswer: null as unknown }))
+const state = vi.hoisted(() => ({ messages: [] as unknown[], ticketState: "new", sentAnswer: null as unknown, assigneeId: null as string | null }))
 
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("404") }, redirect: () => { throw new Error("redirect") } }))
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/components/TenantHeader", () => ({ tenantStyle: () => ({}) }))
-vi.mock("@/lib/persons", () => ({ findPerson: async () => null }))
+vi.mock("@/lib/people", () => ({ loadPersonById: async (_c: string, id: string) => (id === "p1" ? { fullName: "Riešiteľ Príklad" } : null) }))
 vi.mock("@/lib/mongodb", () => ({ getCollection: async () => ({ find: () => ({ sort: () => ({ toArray: async () => [] }) }) }) }))
 vi.mock("@/lib/helpdeskAgents", () => ({
   helpdeskContext: async () => ({
@@ -31,7 +31,7 @@ vi.mock("@/lib/tickets", async importOriginal => ({
   ticketById: async () => ({
     _id: "t1", companyCode: "SFZ", channelKey: "k", source: "email", threadRef: "conv1",
     asker: { personId: null, email: "jan@example.sk", name: "Ján Smandra", roles: [], club: null },
-    subject: "Zmena priezviska", messages: state.messages, state: state.ticketState, assigneeId: null,
+    subject: "Zmena priezviska", messages: state.messages, state: state.ticketState, assigneeId: state.assigneeId,
     draft: null, sentAnswer: state.sentAnswer, createdAt: new Date(), updatedAt: new Date(), closedAt: null,
   }),
 }))
@@ -49,7 +49,7 @@ async function render() {
   return renderToStaticMarkup(await Page({ params: Promise.resolve({ id: "t1" }), searchParams: Promise.resolve({}) }))
 }
 
-beforeEach(() => { state.messages = []; state.ticketState = "new"; state.sentAnswer = null })
+beforeEach(() => { state.messages = []; state.ticketState = "new"; state.sentAnswer = null; state.assigneeId = null })
 
 describe("vlakno ticketu", () => {
   it("posledna prijata hore, potom odpoved, potom historia od najstarsej", async () => {
@@ -108,5 +108,13 @@ describe("vlakno ticketu", () => {
     const html = await render()
     expect(html).toContain("Odoslať odpoveď")
     expect(html).not.toContain("Znovu otvoriť")
+  })
+
+  it("riesitel je menom, nie identifikatorom", async () => {
+    state.messages = [msg("a", "in", "Otázka?", 3)]
+    state.assigneeId = "p1"
+    const html = await render()
+    expect(html).toContain("rieši Riešiteľ Príklad")
+    expect(html).not.toContain("rieši p1")
   })
 })
