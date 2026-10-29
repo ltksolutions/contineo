@@ -65,6 +65,21 @@ async function withTimeout<T>(run: (signal: AbortSignal) => Promise<T>): Promise
   }
 }
 
+/**
+ * Koncept (`POST /messages`, `createReply`) potrebuje **Mail.ReadWrite**;
+ * schránka zúžená len na Mail.Read a Mail.Send (`docs/NASADENIE_app.md` § 5)
+ * ho odmietne s 403 — 29. 10. 2026 tak neodišla odpoveď na ticket z widgetu.
+ * Vtedy sa odošle priamo (`sendMail`, `reply`) ako pred ADR-042: správa
+ * odíde, len bez identifikátora vlákna; odpoveď človeka spáruje
+ * synchronizácia podľa textu (`adoptableIndex`).
+ */
+function forbiddenAsNull(e: unknown): null {
+  if (e instanceof MailboxError && e.code === "mailbox.forbidden") return null
+  throw e
+}
+
+const NO_THREAD: SentMail = { messageId: null, threadRef: null, providerId: null }
+
 /** Chyba Graphu do našej výnimky — kód pre i18n, podrobnosť do logu. */
 async function graphError(r: Response, what: string): Promise<MailboxError> {
   let detail = ""
@@ -327,17 +342,33 @@ export class GraphMailbox implements MailboxAdapter {
    * podľa neho sa neskôr odpovedá v tom istom vlákne.
    */
   async send(to: string, subject: string, text: string): Promise<SentMail> {
-    const draft = await this.post(`${this.userPath()}/messages`, {
-      subject, body: { contentType: "Text", content: text }, toRecipients: [{ emailAddress: { address: to } }],
-    }, "odoslanie")
-    return this.sendDraft(draft)
+    const message = { subject, body: { contentType: "Text", content: text }, toRecipients: [{ emailAddress: { address: to } }] }
+    const draft = await this.post(`${this.userPath()}/messages`, message, "odoslanie").catch(forbiddenAsNull)
+    if (draft) return this.sendDraft(draft)
+    await this.action(`${this.userPath()}/sendMail`, { message, saveToSentItems: true }, "odoslanie")
+    return NO_THREAD
   }
 
   async replyTo(providerId: string, to: string, text: string): Promise<SentMail> {
-    const draft = await this.post(`${this.userPath()}/messages/${encodeURIComponent(providerId)}/createReply`, {
-      message: { toRecipients: [{ emailAddress: { address: to } }], body: { contentType: "Text", content: text } },
-    }, "odpoveď")
-    return this.sendDraft(draft)
+    const message = { toRecipients: [{ emailAddress: { address: to } }], body: { contentType: "Text", content: text } }
+    const url = `${this.userPath()}/messages/${encodeURIComponent(providerId)}`
+    const draft = await this.post(`${url}/createReply`, { message }, "odpoveď").catch(forbiddenAsNull)
+    if (draft) return this.sendDraft(draft)
+    // `reply` s výslovným adresátom stačí s Mail.Send; bez adresáta by odpovedal schránke samej.
+    await this.action(`${url}/reply`, { message }, "odpoveď")
+    return NO_THREAD
+  }
+
+  /** Akcia Graphu, ktorá vráti 202 bez tela (`sendMail`, `reply`). */
+  private async action(url: string, body: unknown, what: string): Promise<void> {
+    const token = await this.accessToken()
+    const r = await withTimeout(signal => fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal, cache: "no-store",
+    }))
+    if (!r.ok) throw await graphError(r, what)
   }
 
   private async post(url: string, body: unknown, what: string): Promise<GraphMessage> {

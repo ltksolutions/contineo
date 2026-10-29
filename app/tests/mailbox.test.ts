@@ -181,6 +181,42 @@ describe("GraphMailbox.send a replyTo (ADR-042, D277)", () => {
     expect(calls[1].url).toContain("/messages/imm-1/send")
   })
 
+  /** Schránka zúžená na Mail.Read + Mail.Send: koncept 403, priame akcie 202. */
+  function stubNoDrafts(): Call[] {
+    const calls: Call[] = []
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.includes("/token")) return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      calls.push({ url, method: init?.method ?? "GET", prefer: new Headers(init?.headers).get("prefer"), body: init?.body ? JSON.parse(String(init.body)) : null })
+      if (url.endsWith("/sendMail") || url.endsWith("/reply")) return new Response(null, { status: 202 })
+      return new Response(JSON.stringify({ error: { code: "ErrorAccessDenied", message: "Access is denied." } }), { status: 403 })
+    }))
+    return calls
+  }
+
+  it("bez Mail.ReadWrite: send odíde cez sendMail, bez vlákna (29. 10. 2026)", async () => {
+    const calls = stubNoDrafts()
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    await expect(box().send("rodic@example.sk", "Re: otázka", "Text")).resolves.toEqual({ messageId: null, threadRef: null, providerId: null })
+    expect(calls.map(c => c.url.replace(/^.*\/users\/[^/]+/, ""))).toEqual(["/messages", "/sendMail"])
+    expect(calls[1].body).toMatchObject({ saveToSentItems: true, message: { subject: "Re: otázka", toRecipients: [{ emailAddress: { address: "rodic@example.sk" } }] } })
+  })
+
+  it("bez Mail.ReadWrite: replyTo odíde cez reply s výslovným adresátom", async () => {
+    const calls = stubNoDrafts()
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    await expect(box().replyTo("imm-1", "rodic@example.sk", "Odpoveď.")).resolves.toEqual({ messageId: null, threadRef: null, providerId: null })
+    expect(calls[1].url).toContain("/messages/imm-1/reply")
+    expect(calls[1].body).toEqual({ message: { toRecipients: [{ emailAddress: { address: "rodic@example.sk" } }], body: { contentType: "Text", content: "Odpoveď." } } })
+  })
+
+  it("iná chyba konceptu než 403 sa nezahladí", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => url.includes("/token")
+      ? new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }))
+      : new Response("{}", { status: 404 })))
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    await expect(box().send("rodic@example.sk", "S", "T")).rejects.toMatchObject({ code: "mailbox.notFound" })
+  })
+
   it("neodoslaný koncept sa zmaže a chyba ide ďalej", async () => {
     const calls = stub(500)
     vi.spyOn(console, "error").mockImplementation(() => {})
