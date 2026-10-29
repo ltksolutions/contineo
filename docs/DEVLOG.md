@@ -10,6 +10,48 @@
 
 ---
 
+## 2026-10-28–29 — Widget sa dá zbaliť; video pomocníka so zvukovým logom
+
+**Widget dostal zbalenie a žiarovku (D292, D293).** Po ukážke v ISSF sa
+riadok otázky zbalí na posúvateľné tlačidlo „Opýtajte sa…" a úvodný tip
+sa dá vyvolať znova žiarovkou. Tip potom dostal pre každý ovládač vlastný
+riadok s ikonou, lebo jedna veta o posune a zbalení sa nedala čítať.
+Popri tom sa ukázalo, prečo kanál stále nemá tajný kľúč: kľúč sa ukazoval
+na stránke pod oznamom „Kanál je uložený." a tlačidlo „Rozumiem" stránku
+znova načítalo, takže zmizol skôr, než ho správca videl. Kľúč je teraz
+priamo v okne oznamu.
+
+**Video pomocníka (#486–#494).** Ukážka widgetu v ISSF je nahrávka panela
+prehliadača; odpoveď, história a meno sú podvrhnuté v prehliadači (Peter
+Ukážka), nič neodišlo na server. Skript podvrhu sa necommituje, je viazaný
+na produkčné ISSF. Komentár číta hlas „LTK" z ElevenLabs; kľúč je len
+v Kľúčenke. Intro, animácia loga a záverečné logo sú kreslené ako čistá
+funkcia času v `index.html` a vykreslené po snímkach — bez ffmpegu, len
+Swift a AVFoundation.
+
+**Čo stálo čas: intonácia.** Samostatne čítaná veta končí plocho, ako
+keby pokračovala; Ján to počul aj pri jednoslovnej vete. Pomohlo poslať
+susedné vety ako kontext (`previous_text`, `next_text`), poslednej vete
+„Ďakujem.". Hlas nevyjde zakaždým rovnako, preto sa každá veta vyrába
+viackrát a záber sa vyberá podľa zmeranej výšky hlasu na konci vety
+(autokorelácia v numpy, posledných 0,5 s v poltónoch) — asistent zvuk
+nepočuje, meranie je jediná kontrola pred Jánom. Opačný problém mala
+otázka v novom intre: s jedným otáznikom končila plocho, stúpla až s „??"
+v texte pre hlas (na obrazovke ostáva jeden).
+
+**Zvukové logo.** Jingly z generátora zvukov ElevenLabs Ján odmietol —
+chcel melódiu na 5–6 úderov, nie efekt. Štyri melódie sú preto zložené
+v numpy (marimba, zvon, akord), Ján vybral m1: G C E G E C. Dozvuk bol
+dlhší ako záverečné logo a predĺžil by video, `mix.swift` ho teraz
+odstrihne a stíši. Pravidlá značky v pohybe a zvuku sú v `conventions.md`,
+aby sa na ne nezabudlo pri sociálnych sieťach a článkoch.
+
+**Nabudúce:** čakanie na Vercel cez `grep pending` v zozname stavov
+nefunguje — GitHub vracia staré `pending` aj nové `success` naraz. Treba
+sa pýtať, či je `success`, nie či chýba `pending`.
+
+---
+
 ## 2026-10-27 — Widget namiesto formulára Pomoc (ADR-042); manuály zjednotené a zverejnené
 
 **Zrušenie registrácie hráča jednou vetou.** Kolo 2 kontroly manuálov

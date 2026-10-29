@@ -4,6 +4,33 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web contineo.app: video pomocníka v ISSF, zvukové logo a značka v pohybe (2026-10-28–29, #486, #487, #489–#491, #493, #494)
+
+Na úvodnej stránke za Manifestom je 66-sekundové video: intro „Opýtajte
+sa. Nehľadajte.", priebeh pomocníka v ISSF s komentárom a záverečné logo,
+titulky sk/cs/en. Ukážka je podvrhnutá v prehliadači (Peter Ukážka), nič
+neodišlo na server.
+
+- Komentár je hlas „LTK" z ElevenLabs; koniec vety klesá, otázka v intre
+  stúpa (#491, #494).
+- **Zvukové logo Continea** — melódia G C E G E C (`jingle.py`,
+  `contineo-jingle.m4a` a `.wav`) hrá v animácii loga a v záverečnom logu
+  (#493).
+- Intro číta po novom „Stále hľadáte a dostávate možnosti?" a „Pýtajte
+  sa, a dostávajte odpovede." (#494).
+- Design system: sekcia „Značka v pohybe a zvuku" v `conventions.md` —
+  jingle, animácia loga, záverečné logo, intro, hlas, titulky.
+- Zdroj a postup výroby: `web/scripts/pomocnik-issf/README.md`.
+
+### Widget: zbalenie na tlačidlo, tip žiarovkou; kľúč kanála v ozname (2026-10-28, D292, D293)
+
+- „⤡" na okraji riadku otázky ho zbalí na posúvateľné tlačidlo „Opýtajte
+  sa…"; tvar aj miesto si pamätá prehliadač, dvojklik a Home vrátia (D292).
+- Žiarovka v riadku ukáže úvodný tip znova, aj pri vypnutom automatickom
+  tipe (D293). Tip má riadok pre úchyt aj pre zbalenie.
+- Nový tajný kľúč kanála je priamo v okne oznamu „Kanál je uložený."
+  — predtým bol pod ním a po „Rozumiem" zmizol nevidený.
+
 ### Web contineo.app: manifest končí novým posolstvom (2026-10-29)
 
 Krátky manifest na úvode („Roky sme sa učili hľadať…") končil vetou
