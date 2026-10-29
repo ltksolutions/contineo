@@ -58,11 +58,16 @@ Výroba videí (v 2× rozlíšení, 60 snímok/s):
 
 ```
 ./sounds.sh ZBmvz7pM2hkKUTvijLfe snd           # efekty a štyri vety intra
+python3 jingle.py snd/jingle.wav                # zvukové logo (melódia m1, bez ElevenLabs)
 ./build.sh snd ukazka-hd.mp4 out                # logo, obe intrá, záver, celé video
 ```
 
 Časy zvukov v `build.sh` sedia na časovú os v `index.html` (`M`, `OFF`, `F`, `I`);
 pri zmene časovania treba posunúť obe. Titulky `titulky-*.vtt` majú časy celého
 videa (intro 16,8 s + ukážka + záver).
+
+Zvukové logo hrá v animácii loga od 6,1 s (posledný tón pri vypísaní odpovede) a v záverečnom
+logu od 0,48 s, aby posledný tón dozvučal s koncom. Zvuk, ktorý presahuje video, `mix.swift`
+odstrihne a posledných 0,4 s stíši. Pravidlá použitia značky: `.design-sync/conventions.md`.
 
 Kontrola časovania bez prehrávania: `swift contact-sheet.swift video.mp4 "1,2,3" pas.png`.

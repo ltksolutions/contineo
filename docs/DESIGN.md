@@ -67,7 +67,9 @@ a farbami aplikácie, nie s vlastným odhadom.
 „Design system Contineo je záväzný"). Jeho zdroj je tento repozitár:
 `.design-sync/conventions.md` (pravidlá), `app/src/app/globals.css`
 (tokeny a triedy) a `app/src/components/` (komponenty). Claude Design
-dostáva ich kópiu.
+dostáva ich kópiu. Značka v pohybe a zvuku (animácia loga, záverečné logo,
+intro, zvukové logo, hlas) je v tom istom `conventions.md` a jej súbory
+v `web/public/media/pomocnik-issf/` — pre videá, sociálne siete aj články.
 
 ## Ako navrhnúť novú obrazovku
 

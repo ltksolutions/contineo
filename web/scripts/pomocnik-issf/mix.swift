@@ -14,8 +14,16 @@ for cue in a[3].split(separator: ",") {
   let p = cue.split(separator: "@"); let au = AVURLAsset(url: URL(fileURLWithPath: String(p[0])))
   let at = try! await au.loadTracks(withMediaType: .audio)[0]; let d = try! await au.load(.duration)
   let ca = comp.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)!
-  try! ca.insertTimeRange(CMTimeRange(start: .zero, duration: d), of: at, at: CMTime(seconds: Double(p[1])!, preferredTimescale: ts))
-  let mp = AVMutableAudioMixInputParameters(track: ca); mp.setVolume(Float(p[2])!, at: .zero); params.append(mp)
+  // Zvuk, ktorý presahuje koniec videa (dozvuk jinglu), sa odstrihne — inak by video za obrazom pokračovalo.
+  let start = CMTime(seconds: Double(p[1])!, preferredTimescale: ts)
+  let len = CMTimeMinimum(d, CMTimeSubtract(d1, start))
+  try! ca.insertTimeRange(CMTimeRange(start: .zero, duration: len), of: at, at: start)
+  let mp = AVMutableAudioMixInputParameters(track: ca); mp.setVolume(Float(p[2])!, at: .zero)
+  if CMTimeCompare(len, d) < 0 { // odstrihnutý zvuk do konca stíšiť, nech nekončí cvaknutím
+    let fade = CMTime(seconds: min(0.4, len.seconds), preferredTimescale: ts)
+    mp.setVolumeRamp(fromStartVolume: Float(p[2])!, toEndVolume: 0, timeRange: CMTimeRange(start: CMTimeSubtract(d1, fade), duration: fade))
+  }
+  params.append(mp)
 }
 // pokračovania: ďalšie videá aj s ich zvukom, jedno za druhým
 var at0 = d1
