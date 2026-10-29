@@ -12,9 +12,10 @@ sfx() { # názov, opis, dĺžka v s
   curl -sf -X POST "$API/sound-generation?output_format=mp3_44100_128" -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" -d "$body" -o "$OUT/$1.mp3"
   afconvert -f WAVE -d LEI16@48000 "$OUT/$1.mp3" "$OUT/$1.wav"; echo "$1 ok"
 }
-# Pokojný „business“ prednes: stabilnejší hlas, pomalšie tempo.
-say() { # názov, text
-  body=$(python3 -c 'import json,sys;print(json.dumps({"text":sys.argv[1],"model_id":"eleven_multilingual_v2","language_code":"sk","voice_settings":{"stability":0.75,"similarity_boost":0.8,"style":0,"use_speaker_boost":True,"speed":0.86}}))' "$2")
+# Pokojný „business“ prednes: stabilnejší hlas, pomalšie tempo. Text pred
+# a za vetou (previous_text/next_text) drží klesajúcu intonáciu na jej konci.
+say() { # názov, text, predchádzajúca veta, nasledujúca veta
+  body=$(python3 -c 'import json,sys;print(json.dumps({"text":sys.argv[1],"previous_text":sys.argv[2],"next_text":sys.argv[3],"model_id":"eleven_multilingual_v2","language_code":"sk","voice_settings":{"stability":0.75,"similarity_boost":0.8,"style":0,"use_speaker_boost":True,"speed":0.86}}))' "$2" "$3" "$4")
   curl -sf -X POST "$API/text-to-speech/$VOICE?output_format=mp3_44100_128" -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" -d "$body" -o "$OUT/$1.mp3"
   afconvert -f WAVE -d LEI16@48000 "$OUT/$1.mp3" "$OUT/$1.wav"; echo "$1 ok"
 }
@@ -31,7 +32,9 @@ sfx switch "light switch click, room lights turning on with a soft electric hum"
 sfx tiptoe "quiet curious pizzicato tiptoe music, sneaky searching in the dark, short" 2.2
 
 # Hlas číta len texty, ktoré sú na obrazovke.
-say b1 "Hľadáte a dostávate možnosti."
-say b2 "Opýtajte sa. Nehľadajte."
-say b3 "Pýtate sa a dostávate odpoveď."
-say b4 "Jedna overená odpoveď namiesto zoznamu odkazov."
+B1="Hľadáte a dostávate možnosti."; B2="Opýtajte sa. Nehľadajte."
+B3="Pýtate sa a dostávate odpoveď."; B4="Jedna overená odpoveď namiesto zoznamu odkazov."
+say b1 "$B1" "" "$B2"
+say b2 "$B2" "$B1" "$B3"
+say b3 "$B3" "$B2" "$B4"
+say b4 "$B4" "$B3" "Ďakujem."

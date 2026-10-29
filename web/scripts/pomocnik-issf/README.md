@@ -13,6 +13,12 @@ security add-generic-password -a "$USER" -s ELEVENLABS_API_KEY -w
 
 Voice ID hlasu „LTK“ je `ZBmvz7pM2hkKUTvijLfe` — bez kľúča účtu sa použiť nedá.
 
+**Koniec vety má ísť hlasom dole.** Samostatne čítaná veta ostáva na konci
+plochá alebo stúpa, ako keby pokračovala, preto obe skripty posielajú aj
+susedné vety (`previous_text`, `next_text`). Hlas nevyjde zakaždým rovnako;
+vetu, ktorej koniec neklesne, treba vyrobiť znova a vybrať lepší záber
+(29. 10. 2026 tak boli opakované vety s5, s6 a b1).
+
 ## 1. Ukážka v ISSF
 
 Nahrávka obrazovky panela prehliadača s widgetom kanála na `issf.futbalsfz.sk`.
