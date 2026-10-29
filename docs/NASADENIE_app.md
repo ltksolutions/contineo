@@ -643,6 +643,9 @@ New-ManagementScope -Name "Contineo helpdesk mailbox" `
 # 3. Čítanie a odosielanie, oboje zúžené na ten rozsah.
 New-ManagementRoleAssignment -App <Object ID> -Role "Application Mail.Read" -CustomResourceScope "Contineo helpdesk mailbox"
 New-ManagementRoleAssignment -App <Object ID> -Role "Application Mail.Send" -CustomResourceScope "Contineo helpdesk mailbox"
+# 3b. Vlákno ticketu z widgetu (ADR-042, D277): odpoveď cez koncept nesie
+#     identifikátor vlákna. Bez tohto oprávnenia správa odíde tiež, len bez neho.
+New-ManagementRoleAssignment -App <Object ID> -Role "Application Mail.ReadWrite" -CustomResourceScope "Contineo helpdesk mailbox"
 
 # 4. Overenie — InScope má byť True pre helpdesk@ a False pre inú schránku.
 Test-ServicePrincipalAuthorization -Identity <Object ID> -Resource helpdesk@futbalsfz.sk | Format-Table
