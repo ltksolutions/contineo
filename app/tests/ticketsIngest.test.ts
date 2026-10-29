@@ -72,6 +72,26 @@ describe("ingestMessages — odoslana posta", () => {
     expect(only().messages[1]).toMatchObject({ providerId: "out1", internetMessageId: "<out1>" })
   })
 
+  it("kopia HTML e-mailu sa sparuje s Markdownom v tickete (Jan 29. 10. 2026)", async () => {
+    await ingestMessages("SFZ", "k", [mail({ id: "in1", internetMessageId: "<in1>" })])
+    const markdown = "Dobrý deň,\n\n**Postup**\n\n1. Pošlite [rodný list](/documents/abc).\n\n3. Počkajte na potvrdenie.\n\nS pozdravom"
+    only().messages.push({ internetMessageId: null, providerId: "sent:1", direction: "out", text: markdown, from: null, subject: "", at: at(10), attachments: [] } as never)
+    only().state = "sent"
+    // Tak ju vráti Graph: bez značiek, odkaz len textom, zoznam od 1, iné medzery.
+    const copy = "Dobrý deň,\n\nPostup\n\n  1.  Pošlite rodný list.\n\n  1.  Počkajte na potvrdenie.\n\nS pozdravom"
+    const r = await ingestMessages("SFZ", "k", [mail({ id: "out1", internetMessageId: "<out1>", outgoing: true, from: helpdesk, text: copy, receivedAt: at(10) })])
+    expect(r.skipped).toBe(1)
+    expect(only().messages).toHaveLength(2)
+    expect(only().messages[1]).toMatchObject({ providerId: "out1", text: markdown })
+  })
+
+  it("ina odpoved sa nesparuje", async () => {
+    await ingestMessages("SFZ", "k", [mail({ id: "in1", internetMessageId: "<in1>" })])
+    only().messages.push({ internetMessageId: null, providerId: "sent:1", direction: "out", text: "Pošlite rodný list.", from: null, subject: "", at: at(10), attachments: [] } as never)
+    await ingestMessages("SFZ", "k", [mail({ id: "out2", internetMessageId: "<out2>", outgoing: true, from: helpdesk, text: "Pošlite výpis z matriky.", receivedAt: at(11) })])
+    expect(only().messages).toHaveLength(3)
+  })
+
   it("odoslana bez ticketu ticket nezaklada", async () => {
     const r = await ingestMessages("SFZ", "k", [mail({ id: "out1", outgoing: true, from: helpdesk })])
     expect(r).toEqual({ created: 0, appended: 0, skipped: 1 })

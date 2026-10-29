@@ -22,7 +22,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { calendarDate, SEARCH_TIME_ZONE } from "@/lib/versionContext"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { findPerson } from "@/lib/persons"
+import { loadPersonById } from "@/lib/people"
 import { takeTicketAction, draftWithAiAction, saveDraftAction, sendAnswerAction, closeTicketAction, importThreadAction } from "../actions"
 
 export const dynamic = "force-dynamic"
@@ -43,7 +43,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
   const t = dictionary(language).helpdesk
   const branding = brandingView(ctx.tenant)
   const base = `/channels/tickets/${encodeURIComponent(id)}`
-  const assignee = ticket.assigneeId ? await findPerson(ctx.tenant.companyCode, ticket.assigneeId).catch(() => null) : null
+  const assignee = ticket.assigneeId ? await loadPersonById(ctx.tenant.companyCode, ticket.assigneeId).catch(() => null) : null
   const draftText = ticket.draft?.text ?? ""
   type Message = (typeof ticket.messages)[number]
   // Dátum aj čas v pásme organizácie (Ján 29. 10. 2026) — pri správe
