@@ -147,8 +147,8 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
 - Telo `.xw-body` > `.xw-col` (720 px v strede). Prázdne: `.xw-empty` > `h2`, `p.xw-lead`,
   `form.xw-form` > `.xw-field` (`.xw-field-mark` + `textarea`) a `.xw-bar` (`.xw-hint` + jediné plné „Opýtať sa"),
   potom nedávne otázky (`.ask-sheet-examples.ask-sheet-mine`) a vzory (`.ask-sheet-examples`) — ako v plachte otázky.
-- Rozhovor: `.xw-log` > `.xw-q` (otázka, farba organizácie), `.xw-a` (`.xw-a-head`, text, `.xw-src`, `.xw-rate`
-  s tichými `.button--sm`), `.xw-sys`; správa helpdesku `.xw-card` (`h3`, `.xw-muted`, `textarea`, plné „Odoslať helpdesku"
+- Rozhovor: `.xw-log` > `.xw-q` (otázka, farba organizácie), `.xw-a` (`.xw-a-head`, text `.xw-md` — Markdown odpovede ako `FormattedText`: odseky, `.xw-md-h` nadpisy, zoznamy, tučné —, `.xw-src`, `.xw-rate`
+  s tichými `.button--sm`), `.xw-sys`; hľadanie `.xw-wait` (`.button-spinner` + „Hľadám…“) v karte odpovede; poďakovanie za hodnotenie a odoslaná správa helpdesku sú zelený `.lnote` so ✓ (`role="status"`), nie sivý `.xw-sys`; správa helpdesku `.xw-card` (`h3`, `.xw-muted`, `textarea`, plné „Odoslať helpdesku"
   + tiché „Zrušiť"). Pole pod rozhovorom `.xw-composer` > `.xw-composer-in` s tichým „Napísať helpdesku".
 - Úvodný tip (`TipKit`, popover tip) pri prvej návšteve: `div.xw-tip[role=status]` pod zatvoreným widgetom (nad ním, keď
   dole nie je miesto: `.is-above`), šípka mieri na úchyt (`--tip-x`). `.xw-tip-head` (`.xw-tip-title` + `.xw-tip-close` 44 px),

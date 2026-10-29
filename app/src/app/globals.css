@@ -4456,6 +4456,13 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-q{align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:14px;background:var(--accent);color:var(--on-accent);white-space:pre-wrap;overflow-wrap:anywhere}
 .xw-a{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
 .xw-a-head{display:block;margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--muted);white-space:normal}
+/* Text odpovede vo widgete — ľahký Markdown ako FormattedText v intranete (widgetMarkdown.ts). */
+.xw-md{white-space:normal}.xw-md>*{margin:0 0 12px}.xw-md>:last-child{margin-bottom:0}
+.xw-md ul,.xw-md ol{padding-left:22px}
+/* Stav vo widgete: hľadanie v karte odpovede, potvrdenie zeleným .lnote (Ján 29. 10. 2026). */
+.xw-wait{display:flex;align-items:center;gap:2px;font-weight:600;color:var(--ink)}.xw-wait .button-spinner{color:var(--accent)}.xw-a>.lnote{margin-top:12px}
+.xw-rate .button[aria-pressed="true"]{opacity:1;background:var(--surface-2);border-color:var(--control-line)}
+.xw-md-h{font-size:15.5px;font-weight:700}.xw-md>.xw-md-h{margin:18px 0 8px}.xw-md>.xw-md-h:first-child{margin-top:0}.xw-md-h--lg{font-size:16.5px}
 .xw-src{margin-top:10px;font-size:13px;color:var(--muted);white-space:normal}
 .xw-src ul{margin:4px 0 0;padding-left:18px}
 .xw-rate{display:flex;gap:8px;margin-top:12px;white-space:normal}
