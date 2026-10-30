@@ -107,12 +107,74 @@ export interface QueueItem {
    * `null` = nikto nebol prihlásený; `gone` = osoba už v adresári nie je
    * (záznam drží len odkaz, pri výmaze osoby zmizne s ňou — `ratings.ts`).
    */
-  asker: { name: string; email: string; role: string | null } | "gone" | null
+  asker: PersonInfo | "gone" | null
   /** Odkiaľ otázka prišla (Ján 30. 10. 2026). `null` = záznam spred zavedenia poľa. */
   origin: RatingOrigin | null
+  /** Ako sa o podnete rozhodlo — len v pohľadoch Posúdené a Vyradené. */
+  decision?: Decision
+}
+
+export interface PersonInfo { name: string; email: string; role: string | null }
+
+export interface Decision {
+  kind: "assessed" | "dismissed"
+  at: Date
+  /** Hodnotiteľ; `gone` = už nie je v adresári. */
+  by: PersonInfo | "gone" | null
+  correct: 0 | 1 | null
+  hallucination: 0 | 1 | null
+  verifiedAnswer: string
+  correctSources: string
+}
+
+/**
+ * Pohľady fronty (Ján 30. 10. 2026: „keď rozhodnem o podnetoch, nemám
+ * prístup k potvrdeným, vyradeným"). Kľúče sú v adrese `?view=`.
+ */
+export const EVALUATION_VIEWS = ["pending", "assessed", "dismissed"] as const
+export type EvaluationView = (typeof EVALUATION_VIEWS)[number]
+
+export function evaluationView(raw: string | undefined): EvaluationView {
+  return (EVALUATION_VIEWS as readonly string[]).includes(raw ?? "") ? (raw as EvaluationView) : "pending"
 }
 
 const MAX_QUEUE = 200
+
+/** Osoby z adresára **vlastnej organizácie** podľa `id` — jedným dotazom. */
+async function peopleById(companyCode: string, ids: (string | null | undefined)[]): Promise<Map<string, PersonInfo>> {
+  const wanted = [...new Set(ids.filter((id): id is string => Boolean(id)))]
+  if (!wanted.length) return new Map()
+  const rows = await (await getCollection<Person>(PERSONS_COLLECTION))
+    // `companyCode` je v podmienke, nie v kontrole nad ňou (D32).
+    .find({ companyCode, id: { $in: wanted } }, { projection: { id: 1, fullName: 1, email: 1, jobTitle: 1, department: 1 } })
+    .toArray()
+  return new Map(rows.map(p => [p.id, { name: p.fullName, email: p.email, role: p.jobTitle || p.department || null }]))
+}
+
+const lookup = (people: Map<string, PersonInfo>, id: string | null | undefined) =>
+  !id ? null : people.get(id) ?? "gone"
+
+/**
+ * Kto sa pýtal. Staršie záznamy nemajú `askedBy`; **pred posudkom** je
+ * v `reviewer` ten, kto sa pýtal — po posudku je tam hodnotiteľ, preto sa
+ * pri vybavenom zázname naň nesiaha.
+ */
+const askerId = (z: RatingRecord) =>
+  z.askedBy ?? (z.evaluatedAt ? undefined : z.reviewer) ?? z.readerNoteBy ?? null
+
+function toItem(z: RatingRecord, people: Map<string, PersonInfo>): QueueItem {
+  return {
+    id: String(z._id),
+    question: z.question ?? "",
+    answer: z.answer ?? "",
+    askedAt: z.createdAt ?? new Date(0),
+    readerVerdict: z.readerVerdict ?? null,
+    readerNote: z.readerNote ?? "",
+    sources: (z.sources ?? []).map(s => ({ title: s.title, articleRef: s.articleRef })),
+    origin: z.origin ?? null,
+    asker: lookup(people, askerId(z)),
+  }
+}
 
 /**
  * Čo čaká na hodnotiteľa v jeho organizácii.
@@ -130,30 +192,67 @@ export async function evaluationQueue(companyCode: string): Promise<QueueItem[]>
     .toArray()
 
   const pending = rows.filter(needsEvaluation)
-  // Staršie záznamy nemajú `askedBy`; pred posudkom je v `reviewer` ten, kto sa pýtal.
-  const askerId = (z: RatingRecord) => z.askedBy ?? z.reviewer ?? z.readerNoteBy ?? null
-  const ids = [...new Set(pending.map(askerId).filter((id): id is string => Boolean(id)))]
-  const people = new Map(ids.length
-    ? (await (await getCollection<Person>(PERSONS_COLLECTION))
-        // `companyCode` je v podmienke, nie v kontrole nad ňou (D32).
-        .find({ companyCode, id: { $in: ids } }, { projection: { id: 1, fullName: 1, email: 1, jobTitle: 1, department: 1 } })
-        .toArray()).map(p => [p.id, p] as const)
-    : [])
-  return pending.map(z => {
-    const id = askerId(z)
-    const p = id ? people.get(id) : undefined
-    return {
-    id: String(z._id),
-    question: z.question ?? "",
-    answer: z.answer ?? "",
-    askedAt: z.createdAt ?? new Date(0),
-    readerVerdict: z.readerVerdict ?? null,
-    readerNote: z.readerNote ?? "",
-    sources: (z.sources ?? []).map(s => ({ title: s.title, articleRef: s.articleRef })),
-    origin: z.origin ?? null,
-    asker: !id ? null : p ? { name: p.fullName, email: p.email, role: p.jobTitle || p.department || null } : "gone",
-    }
-  })
+  const people = await peopleById(companyCode, pending.map(askerId))
+  return pending.map(z => toItem(z, people))
+}
+
+/** Podmienka pohľadu Posúdené / Vyradené. */
+const decidedFilter = (companyCode: string, kind: Decision["kind"]) => ({
+  companyCode,
+  evaluatedAt: { $exists: true },
+  dismissedAt: { $exists: kind === "dismissed" },
+})
+
+/**
+ * Posúdené alebo vyradené podnety, najnovšie rozhodnutie prvé. Posúdené sú
+ * všetky záznamy s posudkom — aj tie, ktoré hodnotiteľ posúdil priamo pod
+ * odpoveďou, nielen z fronty.
+ */
+export async function evaluationDecided(companyCode: string, kind: Decision["kind"]): Promise<QueueItem[]> {
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const rows = await col
+    .find(decidedFilter(companyCode, kind) as never)
+    .sort({ evaluatedAt: -1 })
+    .limit(MAX_QUEUE)
+    .toArray()
+  const people = await peopleById(companyCode, rows.flatMap(z => [askerId(z), z.evaluatedBy]))
+  return rows.map(z => ({
+    ...toItem(z, people),
+    decision: {
+      kind,
+      at: z.dismissedAt ?? z.evaluatedAt ?? new Date(0),
+      by: lookup(people, z.dismissedBy ?? z.evaluatedBy),
+      correct: z.correct ?? null,
+      hallucination: z.hallucination ?? null,
+      verifiedAnswer: z.verifiedAnswer ?? "",
+      correctSources: z.correctSources ?? "",
+    },
+  }))
+}
+
+/** Počty pre prepínač pohľadov a súhrn posudkov. */
+export interface EvaluationCounts {
+  pending: number
+  assessed: number
+  dismissed: number
+  correct: number
+  wrong: number
+  hallucination: number
+}
+
+export async function evaluationCounts(companyCode: string): Promise<EvaluationCounts> {
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const assessed = decidedFilter(companyCode, "assessed")
+  const count = (q: Record<string, unknown>) => col.countDocuments(q as never)
+  const [pending, assessedN, dismissed, correct, wrong, hallucination] = await Promise.all([
+    queueCount(companyCode),
+    count(assessed),
+    count(decidedFilter(companyCode, "dismissed")),
+    count({ ...assessed, correct: 1 }),
+    count({ ...assessed, correct: 0 }),
+    count({ ...assessed, hallucination: 1 }),
+  ])
+  return { pending, assessed: assessedN, dismissed, correct, wrong, hallucination }
 }
 
 /**

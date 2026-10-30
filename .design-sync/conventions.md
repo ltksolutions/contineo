@@ -126,6 +126,7 @@ Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.
 - Správa je `.thread-msg` (pruh vľavo `--line-strong`); odpoveď helpdesku `.thread-msg--out` je **odsadená** (24 px, pod 640 px 12 px) a má pruh `--accent`, takže dvojica došlá správa → odpoveď je vidieť na prvý pohľad. Hlavička `.thread-msg-head`: pri došlej meno a „došlá správa", pri odpovedi „Odpoveď helpdesku".
 - Správa zobrazená nad odpoveďou je v histórii zbalená do riadku (`details.thread-msg` + `.thread-msg-preview`), aby sa neopakovala celá.
 - Zoznam ticketov má prepínač pohľadu `.view-switch` Otvorené · Vybavené · Všetky; Vybavené sú odpovedané aj zavreté (nová správa pýtajúceho vráti oba do Otvorených).
+- Fronta Na posúdenie má prepínač `.view-switch.view-switch--fit` Čaká · Posúdené · Vyradené s počtom `.view-switch-count` (od 30. 10.). Rozhodnutý podnet je na čítanie: posudok štítkami `.tag` v `.eval-head`, overené znenie citátom `.quote`; vyradený má tiché „Vrátiť do fronty“.
 
 ## Externý widget kanála (od 27. 10., KANAL-widget-riadok-otazky)
 Widget kanála typu *widget* vložený v cudzom systéme (ISSF). Beží v Shadow DOM, preto ho

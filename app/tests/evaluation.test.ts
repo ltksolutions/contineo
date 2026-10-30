@@ -21,7 +21,7 @@ vi.mock("../src/lib/session", () => ({ currentTenant, currentPerson }))
 vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 
 import {
-  isEvaluator, needsEvaluation, evaluationContext, evaluationQueue, EVALUATOR_ROLE,
+  isEvaluator, needsEvaluation, evaluationContext, evaluationQueue, evaluationDecided, evaluationView, EVALUATOR_ROLE,
 } from "../src/lib/evaluation"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
@@ -151,5 +151,31 @@ describe("evaluationQueue — kto sa pýtal (Jan 30. 10. 2026)", () => {
     expect(q.map(i => i.origin)).toEqual([{ kind: "widget", label: "ISSF Helpdesk" }, null, null, null])
     // Osoby len z vlastnej organizácie (D32).
     expect(personsQuery).toMatchObject({ companyCode: "SFZ" })
+  })
+})
+
+describe("pohľady fronty (Jan 30. 10. 2026)", () => {
+  it("neznámy pohľad je Čaká", () => {
+    expect(evaluationView("assessed")).toBe("assessed")
+    expect(evaluationView("dismissed")).toBe("dismissed")
+    expect(evaluationView("zle")).toBe("pending")
+    expect(evaluationView(undefined)).toBe("pending")
+  })
+
+  it("posúdený záznam: pýtajúci sa nie je z `reviewer` (tam je hodnotiteľ), posudok s menom hodnotiteľa", async () => {
+    const at = new Date("2026-10-30T10:00:00Z")
+    const rows = [
+      { _id: "d1", companyCode: "SFZ", question: "Q", readerVerdict: 0, reviewer: "ev", evaluatedAt: at, evaluatedBy: "ev", correct: 0, hallucination: 1, verifiedAnswer: "Takto." },
+    ]
+    const persons = [{ id: "ev", companyCode: "SFZ", email: "hodnotitel@example.com", fullName: "Hana Hodnotiteľka" }]
+    let ratingsQuery: Record<string, unknown> | null = null
+    getCollection.mockReset()
+    getCollection.mockImplementation(async (name: string) => name === "persons"
+      ? { find: () => ({ toArray: async () => persons }) }
+      : { find: (q: Record<string, unknown>) => { ratingsQuery = q; return { sort: () => ({ limit: () => ({ toArray: async () => rows }) }) } } })
+    const [item] = await evaluationDecided("SFZ", "assessed")
+    expect(ratingsQuery).toMatchObject({ companyCode: "SFZ", evaluatedAt: { $exists: true }, dismissedAt: { $exists: false } })
+    expect(item.asker).toBeNull()
+    expect(item.decision).toMatchObject({ kind: "assessed", at, correct: 0, hallucination: 1, verifiedAnswer: "Takto.", by: { name: "Hana Hodnotiteľka" } })
   })
 })

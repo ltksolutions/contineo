@@ -16,7 +16,7 @@ import { revalidatePath } from "next/cache"
 import { evaluationContext } from "@/lib/evaluation"
 import { saveCurationDraft, CurationError } from "@/lib/curation"
 import { isRedirect } from "@/lib/redirects"
-import { dismissRating } from "@/lib/ratings"
+import { dismissRating, restoreRating } from "@/lib/ratings"
 import { dictionary } from "@/lib/i18n"
 
 function fieldText(fd: FormData, name: string): string {
@@ -72,4 +72,15 @@ export async function dismissEvaluationAction(fd: FormData) {
   const ok = await dismissRating(fieldText(fd, "id"), ctx.person.id, ctx.tenant.companyCode)
   revalidatePath("/evaluation")
   redirect(ok ? `/evaluation?msg=${encodeURIComponent(t.dismissed)}` : `/evaluation?msg=${encodeURIComponent(t.dismissFailed)}&error=1`)
+}
+
+/** Vráti vyradený podnet do fronty — vyradenie omylom. */
+export async function restoreEvaluationAction(fd: FormData) {
+  const ctx = await evaluationContext()
+  if (ctx.state !== "ready") redirect("/")
+  const t = dictionary(ctx.person.language).evaluation
+  const ok = await restoreRating(fieldText(fd, "id"), ctx.tenant.companyCode)
+  revalidatePath("/evaluation")
+  // Neúspech = podnet už nie je vyradený; pohľad Vyradené ukáže skutočný stav.
+  redirect(ok ? `/evaluation?msg=${encodeURIComponent(t.restored)}` : "/evaluation?view=dismissed")
 }

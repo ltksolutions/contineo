@@ -20,9 +20,9 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { evaluationContext, evaluationQueue } from "@/lib/evaluation"
+import { evaluationContext, evaluationQueue, evaluationDecided, evaluationCounts, evaluationView, EVALUATION_VIEWS } from "@/lib/evaluation"
 import { preparableAnswers } from "@/lib/curation"
-import { prepareCurationAction, dismissEvaluationAction } from "./actions"
+import { prepareCurationAction, dismissEvaluationAction, restoreEvaluationAction } from "./actions"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { brandingView } from "@/lib/tenants"
@@ -49,11 +49,18 @@ export default async function EvaluationPage({
   const t = dictionary(language).evaluation
   const tc = dictionary(language).curation
   const branding = brandingView(ctx.tenant)
-  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
-  const [queue, toPrepare] = await Promise.all([
-    evaluationQueue(ctx.person.companyCode),
-    preparableAnswers(ctx.person.companyCode),
+  const query = normalizeQuery<{ msg?: string; error?: string; view?: string }>(await searchParams)
+  const { msg: message, error } = query
+  // Pohľady Čaká / Posúdené / Vyradené (Ján 30. 10. 2026): to isté, iné
+  // zoskupenie — sivý `.view-switch`, stav v adrese.
+  const view = evaluationView(query.view)
+  const code = ctx.person.companyCode
+  const [queue, toPrepare, counts] = await Promise.all([
+    view === "pending" ? evaluationQueue(code) : evaluationDecided(code, view),
+    view === "pending" ? preparableAnswers(code) : Promise.resolve([]),
+    evaluationCounts(code),
   ])
+  const emptyText = view === "assessed" ? t.emptyAssessed : view === "dismissed" ? t.emptyDismissed : null
 
   return (
     <AppShell language={language}>
@@ -63,17 +70,32 @@ export default async function EvaluationPage({
       {/* Hlavička stránky (DESIGN_ODCHYLKY P1); počet čakajúcich ako štítok vedľa. */}
       <div className="page-head">
         <h1 className="page-title">{t.heading}</h1>
-        {queue.length > 0 && <span className="tag">{t.waiting(queue.length)}</span>}
+        {counts.pending > 0 && <span className="tag">{t.waiting(counts.pending)}</span>}
       </div>
       <p className="quiet page-lead eval-lead">{t.intro}</p>
 
       <Notice language={language} message={message} error={error === "1"} back="/evaluation" />
 
+      <nav className="view-switch view-switch--fit" aria-label={t.viewsLabel}>
+        {EVALUATION_VIEWS.map(v => (
+          <Link key={v} href={v === "pending" ? "/evaluation" : `/evaluation?view=${v}`}
+                className={`view-switch-item${v === view ? " is-on" : ""}`} aria-current={v === view ? "page" : undefined}>
+            {t.views[v]}<span className="view-switch-count">{counts[v]}</span>
+          </Link>
+        ))}
+      </nav>
+
+      {view === "assessed" && counts.assessed > 0 && (
+        <p className="quiet">{t.summary(counts.correct, counts.wrong, counts.hallucination)}</p>
+      )}
+
       {queue.length === 0 && (
-        <div className="empty">
-          <div className="empty-title">{t.empty}</div>
-          <div className="empty-text">{t.emptyNote}</div>
-        </div>
+        emptyText
+          ? <div className="empty"><div className="empty-title">{emptyText}</div></div>
+          : <div className="empty">
+              <div className="empty-title">{t.empty}</div>
+              <div className="empty-text">{t.emptyNote}</div>
+            </div>
       )}
 
       {queue.map(item => (
@@ -127,6 +149,35 @@ export default async function EvaluationPage({
             </details>
           </div>
 
+          {item.decision ? (
+            // Rozhodnutý podnet je na čítanie; vyradený sa dá vrátiť do fronty.
+            <section className="rating">
+              <div className="eval-head">
+                {item.decision.kind === "dismissed" && <span className="tag">{t.verdictDismissed}</span>}
+                {item.decision.correct === 1 && <span className="tag tag--published">{t.verdictCorrect}</span>}
+                {item.decision.correct === 0 && <span className="tag tag--expired">{t.verdictWrong}</span>}
+                {item.decision.hallucination === 1 && <span className="tag tag--expired">{t.verdictHallucination}</span>}
+                <span className="eval-date">
+                  {t.decidedBy(
+                    item.decision.by === null ? "—" : item.decision.by === "gone" ? t.askerGone : item.decision.by.name,
+                    formatDate(item.decision.at, language),
+                  )}
+                </span>
+              </div>
+              {item.decision.verifiedAnswer && (
+                <blockquote className="quote">
+                  <span className="quote-who">{t.verifiedLabel}</span>
+                  <span className="quote-text">{item.decision.verifiedAnswer}</span>
+                </blockquote>
+              )}
+              {item.decision.kind === "dismissed" && (
+                <form action={restoreEvaluationAction}>
+                  <input type="hidden" name="id" value={item.id} />
+                  <SubmitButton className="button button--quiet">{t.restore}</SubmitButton>
+                </form>
+              )}
+            </section>
+          ) : <>
           <Rating recordId={item.id} canEvaluate as="section" language={language} />
 
           {/* Podnet mimo témy sa vyradí bez posudku (Ján 30. 10. 2026).
@@ -138,6 +189,7 @@ export default async function EvaluationPage({
             </form>
             <p className="quiet field-hint">{t.dismissHint}</p>
           </section>
+          </>}
         </article>
       ))}
 
@@ -150,6 +202,7 @@ export default async function EvaluationPage({
         Zverejňuje **správca obsahu**, nie hodnotiteľ. Preto je tlačidlo
         „Pripraviť pár", nie „Zverejniť".
       */}
+      {view === "pending" && (
       <section className="form-group form-group--lg eval-prepare">
         <h2 className="form-group-head form-group-head--step">{tc.prepareHeading}</h2>
         <p className="form-group-lead quiet">{tc.prepareIntro}</p>
@@ -217,6 +270,7 @@ export default async function EvaluationPage({
           <Link href="/library/curation">{tc.open}</Link>
         </p>
       </section>
+      )}
     </div>
     </AppShell>
   )
