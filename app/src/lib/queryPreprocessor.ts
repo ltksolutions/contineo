@@ -11,6 +11,7 @@ import type { GenerationProvider, CompleteOptions } from "./providers/types"
 import { parseModelTime } from "./queryTime"
 import type { QueryTime } from "./queryTime"
 import { calendarDate } from "./versionContext"
+import { contextualQuery, priorQuestions, type PriorTurn } from "./conversationContext"
 
 export interface PreprocessedQuery {
   rewritten: string        // vyčistený/prepísaný dotaz
@@ -43,6 +44,17 @@ Pravidlá:
 - time.kind: "asOf", len ak sa dotaz výslovne pýta na stav k inému dňu alebo roku (minulému či budúcemu); "compare", ak sa pýta, čo sa zmenilo alebo aký je rozdiel medzi zneniami; inak "today"
 - time.date: pri "asOf" dátum v tvare RRRR-MM-DD, pri roku bez dňa 31. 12. toho roka; inak null. Dnes je {today}.
 - rewritten: časový údaj z dotazu vynechaj, rieši ho time`
+
+/*
+ * Doplnok pri rozhovore vo widgete: „to nie je správne" alebo „a pre
+ * mládež?" samo osebe nenájde nič — hľadať sa má podľa toho, na čo
+ * nadväzuje.
+ */
+const HISTORY_RULE = `
+
+Predchádzajúce otázky v tom istom rozhovore:
+{history}
+- rewritten: ak dotaz na ne nadväzuje (odkazuje na ne, opravuje alebo dopĺňa predchádzajúcu odpoveď), napíš ho ako samostatnú otázku, ktorá dáva zmysel bez nich; inak ich ignoruj`
 
 // ── Parsovanie odpovede modelu ───────────────────────────────────────────────
 
@@ -93,8 +105,8 @@ const SHORT_QUERY_WORDS = 4  // krátke dotazy nepredspracovávame
 export const PREPROCESS_TIMEOUT_MS = 2500
 
 /** Bezpečný výsledok, keď sa preprocessing nepodarí — pôvodný dotaz bez zmeny. */
-const passthrough = (query: string): PreprocessedQuery =>
-  ({ rewritten: query, subQueries: [], keywords: [], time: null })
+const passthrough = (query: string, history: PriorTurn[] = []): PreprocessedQuery =>
+  ({ rewritten: contextualQuery(query, history), subQueries: [], keywords: [], time: null })
 
 /**
  * Prepis dotazu pred vyhľadávaním. Beží na utility adaptéri (ADR-001),
@@ -109,17 +121,18 @@ export async function preprocessQuery(
   now: Date = new Date(),
   /** Spotreba do výkazu (D158) — volajúci vie, kto sa pýta. */
   onUsage?: CompleteOptions["onUsage"],
+  /** Predchádzajúce kolá rozhovoru — krátka nadväzujúca otázka sa prepisuje tiež. */
+  history: PriorTurn[] = [],
 ): Promise<PreprocessedQuery> {
-  if (query.trim().split(/\s+/).length <= SHORT_QUERY_WORDS) return passthrough(query)
-  if (!provider) return passthrough(query)
+  if (!history.length && query.trim().split(/\s+/).length <= SHORT_QUERY_WORDS) return passthrough(query)
+  if (!provider) return passthrough(query, history)
 
   try {
-    const raw = await provider.complete(
-      PREPROCESS_PROMPT.replace("{query}", query).replace("{today}", calendarDate(now).toISOString().slice(0, 10)),
-      { maxTokens: 256, timeoutMs: PREPROCESS_TIMEOUT_MS, onUsage }
-    )
-    return parsePreprocessed(raw, query, now)
+    const prompt = PREPROCESS_PROMPT.replace("{query}", query).replace("{today}", calendarDate(now).toISOString().slice(0, 10))
+      + (history.length ? HISTORY_RULE.replace("{history}", priorQuestions(history)) : "")
+    const raw = await provider.complete(prompt, { maxTokens: 256, timeoutMs: PREPROCESS_TIMEOUT_MS, onUsage })
+    return parsePreprocessed(raw, contextualQuery(query, history), now)
   } catch {
-    return passthrough(query)
+    return passthrough(query, history)
   }
 }

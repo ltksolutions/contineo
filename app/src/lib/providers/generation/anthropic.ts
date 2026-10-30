@@ -15,6 +15,7 @@
  */
 
 import { versionContext } from "../../versionContext"
+import { questionText } from "../../conversationContext"
 import type { ChunkResult } from "../../mongoSearch"
 import { ProviderConfigError } from "../types"
 import type {
@@ -89,7 +90,7 @@ export class AnthropicGenerationProvider implements GenerationProvider {
         role: "user",
         content: [
           ...docs,
-          { type: "text", text: `Otázka: ${req.query}` },
+          { type: "text", text: questionText(req.query, req.history) },
         ],
       }],
     }
@@ -278,7 +279,7 @@ export function messagesBody(
       role: "user",
       content: [
         ...req.chunks.map((c) => documentBlock(c, citations)),
-        { type: "text", text: `Otázka: ${req.query}` },
+        { type: "text", text: questionText(req.query, req.history) },
       ],
     }],
   }

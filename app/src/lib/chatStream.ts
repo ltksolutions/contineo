@@ -32,6 +32,7 @@ import { liveSearch } from "./liveSources"
 import { lawSearch } from "./lawSearch"
 import { SLOV_LEX_SOURCE_ID } from "./lawCatalog"
 import type { CallContext } from "./mcp/client"
+import { contextualQuery, type PriorTurn } from "./conversationContext"
 
 export interface ChatStreamInput {
   companyCode: string
@@ -65,10 +66,16 @@ export interface ChatStreamInput {
   callbackUrl?: string
   /** Kanál, z ktorého otázka prišla — do stopy volania konektora (D177). */
   channelKey?: string | null
+  /**
+   * Predchádzajúce kolá rozhovoru (widget, `conversationContext.ts`) — pre
+   * prepis otázky na hľadanie aj pre model. Bez nich je to samostatná otázka.
+   */
+  history?: PriorTurn[]
 }
 
 export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
   const { companyCode, query, language, accessLevel, usageActor, narrow } = input
+  const history = input.history ?? []
   const userRole = accessLevel
   const useLLMClassifier = input.useLLMClassifier ?? false
   const usePreprocessing = input.usePreprocessing ?? (process.env.PREPROCESSING_DEFAULT !== "false")
@@ -136,8 +143,12 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
         const shouldPreprocess = usePreprocessing && searchMode !== "fulltext"
         const now = new Date()
         const processed = shouldPreprocess
-          ? await preprocessQuery(query, providers.utility, now, utilityUsage("query-rewrite"))
-          : { rewritten: contentQuery, subQueries: [], keywords: [], time: null }
+          ? await preprocessQuery(query, providers.utility, now, utilityUsage("query-rewrite"), history)
+          : {
+            // Fulltext hľadá kód alebo číslo článku — predchádzajúca otázka by ho rozriedila.
+            rewritten: searchMode === "fulltext" ? contentQuery : contextualQuery(contentQuery, history),
+            subQueries: [], keywords: [], time: null,
+          }
         // Ku ktorému dňu sa otázka pýta (krok 6). Pravidlá bežia vždy — aj pri
         // krátkej a fulltextovej otázke, kde prepis modelom nebeží; model
         // doplní len to, čo pravidlá nenašli.
@@ -335,7 +346,7 @@ export function chatStream(input: ChatStreamInput): ReadableStream<Uint8Array> {
         // hľadania, bez ďalšieho dotazu (krok 5).
         const inner = generateAnswer({
           query, chunks: answerChunks, userRole, profile, timings, language, asOf: scope.asOf, time, comparison,
-          usage: usageActor,
+          usage: usageActor, history,
         })
         const reader = inner.getReader()
         for (;;) {

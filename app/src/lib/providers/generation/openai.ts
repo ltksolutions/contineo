@@ -13,6 +13,7 @@
  */
 
 import { versionContext } from "../../versionContext"
+import { questionText } from "../../conversationContext"
 import type { ChunkResult } from "../../mongoSearch"
 import { ProviderConfigError } from "../types"
 import type {
@@ -55,7 +56,7 @@ export class OpenAICompatGenerationProvider implements GenerationProvider {
   async *stream(req: GenerationRequest): AsyncGenerator<GenerationEvent> {
     const userPrompt =
       `Kontext:\n${buildContext(req.chunks)}\n\n` +
-      `Otázka: ${req.query}\n\n` +
+      `${questionText(req.query, req.history)}\n\n` +
       `Odpoveď (uveď čísla zdrojov [1], [2]... pri citáciách):`
 
     const headers: Record<string, string> = { "Content-Type": "application/json" }
