@@ -13,17 +13,11 @@ import type { dictionary } from "@/lib/i18n"
 import type { Overview, OverviewGroup, OverviewItem } from "@/lib/aiOverview"
 import { topWithRest } from "@/lib/aiOverview"
 import { formatUsd, type TokenCounts } from "@/lib/pricing"
+import { niceMax } from "@/lib/chartScale"
 
 type Strings = ReturnType<typeof dictionary>["org"]["aiUsage"]
 
 const FILTER_KEY: Record<OverviewGroup, string> = { people: "person", purposes: "purpose", models: "model" }
-
-/** Horná hranica osi: okrúhle číslo tesne nad maximom, nech graf nie je prázdny. */
-function niceMax(v: number): number {
-  if (v <= 0) return 1
-  const p = 10 ** Math.floor(Math.log10(v))
-  return [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].map(m => m * p).find(x => x >= v) ?? 10 * p
-}
 
 export default function AiOverview({
   tu, locale, overview, by, fromInput, toInput, fromText, toText, previousUsd, unpriced, now,

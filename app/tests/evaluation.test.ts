@@ -22,6 +22,7 @@ vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 
 import {
   isEvaluator, needsEvaluation, evaluationContext, evaluationQueue, evaluationDecided, evaluationView, EVALUATOR_ROLE,
+  evaluationStats,
 } from "../src/lib/evaluation"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
@@ -177,5 +178,50 @@ describe("pohľady fronty (Jan 30. 10. 2026)", () => {
     expect(ratingsQuery).toMatchObject({ companyCode: "SFZ", evaluatedAt: { $exists: true }, dismissedAt: { $exists: false } })
     expect(item.asker).toBeNull()
     expect(item.decision).toMatchObject({ kind: "assessed", at, correct: 0, hallucination: 1, verifiedAnswer: "Takto.", by: { name: "Hana Hodnotiteľka" } })
+  })
+})
+
+describe("evaluationStats", () => {
+  // 30. 10. 2026 — posledný mesiac obdobia je október 2026.
+  const now = new Date("2026-10-30T12:00:00Z")
+  const at = (iso: string) => new Date(iso)
+
+  it("pocita mesiace v case SFZ, nie v UTC", () => {
+    // 31. 8. 2026 o 23:30 UTC je v Bratislave uz 1. 9.
+    const s = evaluationStats([{ createdAt: at("2026-08-31T23:30:00Z"), readerVerdict: 1 }], now)
+    expect(s.months).toHaveLength(12)
+    expect(s.months.at(-1)!.key).toBe("2026-10")
+    expect(s.months[0].key).toBe("2025-11")
+    expect(s.byMonth[s.months.findIndex(m => m.key === "2026-09")].answers).toBe(1)
+    expect(s.byMonth[s.months.findIndex(m => m.key === "2026-08")].answers).toBe(0)
+  })
+
+  it("posudky tymi istymi pravidlami ako fronta a pohlady", () => {
+    const s = evaluationStats([
+      { createdAt: at("2026-10-01T10:00:00Z"), readerVerdict: 1 },
+      // Caka: nesedi, bez posudku.
+      { createdAt: at("2026-10-02T10:00:00Z"), readerVerdict: 0 },
+      // Posudene: nespravna a zaroven s vymyslenym.
+      { createdAt: at("2026-10-03T10:00:00Z"), readerNote: "Zly paragraf", evaluatedAt: now, correct: 0, hallucination: 1 },
+      // Posudene: spravna.
+      { createdAt: at("2026-10-04T10:00:00Z"), readerVerdict: 0, evaluatedAt: now, correct: 1, hallucination: 0 },
+      // Vyradene: posudok sa nepocita, aj keby tam bol.
+      { createdAt: at("2026-10-05T10:00:00Z"), readerVerdict: 0, evaluatedAt: now, dismissedAt: now, correct: 0 },
+      // Mimo obdobia.
+      { createdAt: at("2025-10-15T10:00:00Z"), readerVerdict: 0 },
+    ], now)
+    expect(s.total).toEqual({ answers: 5, doesNotFit: 4, correct: 1, wrong: 1, hallucination: 1, dismissed: 1, pending: 1 })
+  })
+
+  it("zdroje: najvacsi prvy, neuvedeny na konci", () => {
+    const s = evaluationStats([
+      { createdAt: at("2026-10-01T10:00:00Z") },
+      { createdAt: at("2026-10-01T10:00:00Z"), origin: { kind: "intranet" } },
+      { createdAt: at("2026-10-02T10:00:00Z"), origin: { kind: "widget", label: "Helpdesk" } },
+      { createdAt: at("2026-09-02T10:00:00Z"), origin: { kind: "widget", label: "Helpdesk" } },
+    ], now)
+    expect(s.sources.map(x => x.key)).toEqual(["widget:Helpdesk", "intranet", ""])
+    expect(s.sources[0].answersByMonth.slice(-2)).toEqual([1, 1])
+    expect(s.sources[2].origin).toBeNull()
   })
 })
