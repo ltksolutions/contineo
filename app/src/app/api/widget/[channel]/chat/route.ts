@@ -63,7 +63,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
     query,
     language,
     accessLevel: "public",
-    usageActor: { companyCode: gate.tenant.companyCode, personId: gate.person.id, personName: gate.person.fullName, email: gate.person.email },
+    usageActor: { companyCode: gate.tenant.companyCode, personId: gate.person.id, personName: gate.person.fullName, email: gate.person.email, channelKey: gate.channel.key },
     // Rozsahy živých zdrojov kanála (ADR-029, D175); úroveň `public` pustí len verejné konektory.
     narrow: { folderIds: gate.channel.folderIds, connectorScopes: gate.channel.connectorScopes ?? [] },
     only: picked.map(s => s.id),

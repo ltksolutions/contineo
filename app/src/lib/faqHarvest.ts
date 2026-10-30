@@ -614,7 +614,7 @@ function runFilter(ctx: RunCtx) {
 
 function usageFor(ctx: RunCtx, model: string, subject: string) {
   return (tokens: Partial<TokenCounts>, failed?: boolean) => void recordAiUsage(usageRecord({
-    actor: ctx.actor, purpose: "faq-mining", subject: `${ctx.channel.name} → ${subject}`.slice(0, 200),
+    actor: { ...ctx.actor, channelKey: ctx.channel.key }, purpose: "faq-mining", subject: `${ctx.channel.name} → ${subject}`.slice(0, 200),
     provider: "anthropic", model, keySource: ctx.keySource, tokens, failed,
   }))
 }

@@ -111,7 +111,7 @@ export async function draftTicketAnswer(ticket: Ticket, channel: HelpdeskChannel
     throw new TicketDraftError("ticket.aiFailed", "Asistent návrh nepripravil — skúste to o chvíľu.")
   } finally {
     void recordAiUsage(usageRecord({
-      actor, purpose: "answer", subject: `ticket: ${ticket.subject}`.slice(0, 200),
+      actor: { ...actor, channelKey: channel.key }, purpose: "answer", subject: `ticket: ${ticket.subject}`.slice(0, 200),
       provider: profile.providers.generation.kind, model, keySource: profile.providers.generation.keySource ?? null, tokens, failed,
     }))
   }
