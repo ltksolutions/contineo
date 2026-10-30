@@ -32,6 +32,7 @@ import Rating from "@/components/Rating"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
 import EvaluationTabs from "@/components/EvaluationTabs"
+import { SEARCH_TIME_ZONE } from "@/lib/versionContext"
 
 export const dynamic = "force-dynamic"
 
@@ -61,6 +62,8 @@ export default async function EvaluationPage({
     view === "pending" ? preparableAnswers(code) : Promise.resolve([]),
     evaluationCounts(code),
   ])
+  const time = new Intl.DateTimeFormat(language === "en" ? "en-GB" : language === "cs" ? "cs-CZ" : "sk-SK",
+    { hour: "2-digit", minute: "2-digit", timeZone: SEARCH_TIME_ZONE })
   const emptyText = view === "assessed" ? t.emptyAssessed : view === "dismissed" ? t.emptyDismissed : null
 
   return (
@@ -116,6 +119,22 @@ export default async function EvaluationPage({
                 {" · "}{t.askedAt} {formatDate(item.askedAt, language)}
               </span>
             </div>
+
+            {/* Widget posiela každú otázku zvlášť; doplňujúca otázka sa bez
+                predchádzajúcich nedá posúdiť (Ján 30. 10. 2026). Citát ako
+                slová čitateľa — sú to doslovne slová človeka. */}
+            {item.earlier.map((e, i) => (
+              <blockquote key={i} className="quote">
+                <span className="quote-who">{t.earlier(time.format(e.askedAt))}</span>
+                <span className="quote-text">{e.question}</span>
+                {e.answer && (
+                  <details className="eval-ans">
+                    <summary>{t.showAnswer}</summary>
+                    <div className="eval-ans-body">{e.answer}</div>
+                  </details>
+                )}
+              </blockquote>
+            ))}
 
             <p className="eval-q">{item.question}</p>
 
