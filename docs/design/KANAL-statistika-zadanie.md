@@ -11,6 +11,10 @@
 > (plochy 1440 správca, 834 riešiteľ bez ceny, 390 správca; odchýlky
 > `.stat-tiles` a `.period-nav` sú v `<helmet>` hlavnej plochy).
 >
+> **Stav: rozhodnuté 30. 10. 2026** — Q1–Q5 podľa odporúčania (A).
+> Návrh: `KANAL-statistika.html` (hlavná plocha artefaktu), popis
+> implementácie: `KANAL-statistika.md`.
+>
 > **Meradlo je design system Contineo** (`.design-sync/conventions.md`,
 > `app/src/app/globals.css`, `app/src/components/`).
 
@@ -40,7 +44,7 @@ položkou sa nekreslí.
 | čo | odkiaľ | za akú dobu |
 |---|---|---|
 | otázky vo widgete a odpovede s prameňmi | `evaluations` (`origin.kind = widget`), osoba z widgetu | od spustenia widgetu |
-| otázky bez odpovede („nenašlo sa") | `ai_usage` (prepis/triedenie otázky bez záznamu odpovede) | od spustenia widgetu |
+| otázky bez odpovede („nenašlo sa") | `unanswered_questions` (nové, len počet a čas) — pri „nenašlo sa" sa model nevolá, takže v `ai_usage` nie sú | od nasadenia štatistiky (30. 10. 2026) |
 | hodnotenie používateľa Sedí / Nesedí, poznámka | `evaluations.readerVerdict`, `readerNote` | od spustenia widgetu |
 | posudok hodnotiteľa: správne / nesprávne / halucinácia / vyradené | `evaluations.correct`, `hallucination`, `dismissedAt` | od spustenia widgetu |
 | tickety: prijaté, odoslaná odpoveď, uzavreté, čas do odpovede | `tickets` (`channelKey`, `messages[]`, `sentAnswer.at`) | celá história |

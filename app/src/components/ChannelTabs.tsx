@@ -5,15 +5,16 @@
  * aspoň jedného kanála; správca bez kanálov by mal jedinú položku, a tá sa
  * nekreslí (CLAUDE.md: podmenu s jedinou položkou sa nekreslí).
  *
- * `ChannelPartTabs` — časti jedného kanála: Tickety (riešiteľ kanála)
- * a Nastavenie (správca organizácie). Správca obsah ticketov nevidí,
- * takže mu podmenu Tickety neukáže — vrátilo by mu 404.
+ * `ChannelPartTabs` — časti jedného kanála: Tickety (riešiteľ kanála),
+ * Štatistika (widget; riešiteľ aj správca, KANAL-statistika) a Nastavenie
+ * (správca organizácie). Správca obsah ticketov nevidí, takže mu podmenu
+ * Tickety neukáže — vrátilo by mu 404.
  */
 
 import SectionTabs from "./SectionTabs"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
-export function channelHref(key: string, part?: "tickets" | "settings"): string {
+export function channelHref(key: string, part?: "tickets" | "stats" | "settings"): string {
   return `/channels/${encodeURIComponent(key)}${part ? `/${part}` : ""}`
 }
 
@@ -29,16 +30,19 @@ export function ChannelSectionTabs({ current, isAgent, language }: { current: st
   )
 }
 
-export function ChannelPartTabs({ channelKey, current, canTickets, canSettings, language }: {
+export function ChannelPartTabs({ channelKey, current, canTickets, canStats, canSettings, language }: {
   channelKey: string
   current: string
   canTickets: boolean
+  /** Štatistika má zmysel len pri widgete — portál nemá vlastné otázky ani tickety. */
+  canStats: boolean
   canSettings: boolean
   language?: UiLanguage
 }) {
   const t = dictionary(language).channels
   const tabs = [
     ...(canTickets ? [{ href: channelHref(channelKey, "tickets"), label: t.tabTickets }] : []),
+    ...(canStats ? [{ href: channelHref(channelKey, "stats"), label: t.tabStats }] : []),
     ...(canSettings ? [{ href: channelHref(channelKey, "settings"), label: t.tabSettings }] : []),
   ]
   if (tabs.length < 2) return null

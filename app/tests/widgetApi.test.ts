@@ -12,6 +12,8 @@ vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn() }))
 vi.mock("../src/lib/session", () => ({ currentTenant: vi.fn(), requestHostname: vi.fn() }))
 const recordAnswer = vi.fn(async () => "rec1")
 vi.mock("../src/lib/ratings", () => ({ recordAnswer: (...a: unknown[]) => recordAnswer(...a as []), RATINGS_COLLECTION: "evaluations", saveReaderFeedback: vi.fn() }))
+const recordUnanswered = vi.fn(async () => {})
+vi.mock("../src/lib/unansweredQuestions", () => ({ recordUnanswered: (...a: unknown[]) => recordUnanswered(...a as []) }))
 
 import { originAllowed, corsHeaders, recordingTransform, requestOrigin } from "../src/lib/widgetApi"
 
@@ -37,7 +39,7 @@ async function run(events: unknown[], extra: Partial<Parameters<typeof recording
   const src = new ReadableStream<Uint8Array>({
     start(c) { for (const e of events) c.enqueue(enc.encode(`data: ${JSON.stringify(e)}\n\n`)); c.close() },
   })
-  const out = src.pipeThrough(recordingTransform({ question: "Q?", personId: "p1", companyCode: "SFZ", startedAt: Date.now(), channelName: "ISSF Helpdesk", ...extra }))
+  const out = src.pipeThrough(recordingTransform({ question: "Q?", personId: "p1", companyCode: "SFZ", startedAt: Date.now(), channelName: "ISSF Helpdesk", channelKey: "issf", ...extra }))
   const reader = out.getReader(); const dec = new TextDecoder(); let s = ""
   for (;;) { const r = await reader.read(); if (r.done) break; s += dec.decode(r.value) }
   return s
@@ -66,10 +68,16 @@ describe("recordingTransform", () => {
     expect(rec.question).toBe("Q?")
     expect([personId, companyCode, level]).toEqual(["p1", "SFZ", "public"])
   })
-  it("bez zdrojov sa nic nezapise", async () => {
-    recordAnswer.mockClear()
+  it("bez zdrojov sa odpoved nezapise, len pocet nezodpovedanych v kanali (KANAL-statistika)", async () => {
+    recordAnswer.mockClear(); recordUnanswered.mockClear()
     const s = await run([{ type: "done", sources: [], model: "none" }])
     expect(s).not.toContain("recorded")
     expect(recordAnswer).not.toHaveBeenCalled()
+    expect(recordUnanswered).toHaveBeenCalledWith("SFZ", "issf")
+  })
+  it("zodpovedana otazka sa medzi nezodpovedane nepocita", async () => {
+    recordUnanswered.mockClear()
+    await run([{ type: "token", token: "A" }, { type: "done", sources: [{ title: "RP" }] }])
+    expect(recordUnanswered).not.toHaveBeenCalled()
   })
 })

@@ -2942,6 +2942,67 @@ interface Dictionary {
     tabMyTickets: string
     tabTickets: string
     tabSettings: string
+    tabStats: string
+    /** Štatistika kanála (KANAL-statistika, 30. 10. 2026). */
+    stats: {
+      lead: string
+      leadAgent: string
+      exportXlsx: string
+      periodLabel: string
+      periods: Record<"day" | "week" | "month" | "year", string>
+      prev: Record<"day" | "week" | "month" | "year", string>
+      next: Record<"day" | "week" | "month" | "year", string>
+      weekTitle: (range: string) => string
+      compare: (range: string) => string
+      summary: string
+      tileQuestions: string
+      tileQuestionsSub: string
+      tileAnswered: string
+      tileAnsweredSub: (answered: string, all: string) => string
+      tileSatisfaction: string
+      tileSatisfactionSub: (fits: string, all: string) => string
+      tileAccuracy: string
+      tileAccuracySub: (correct: string, all: string) => string
+      tileTickets: string
+      tileTicketsSub: (answered: string, median: string) => string
+      tileCost: string
+      tileCostSub: (perAnswer: string) => string
+      deltaVs: (change: string, previous: string) => string
+      deltaPoints: (change: string) => string
+      deltaSame: string
+      deltaNone: string
+      faster: (d: string) => string
+      slower: (d: string) => string
+      chartTitle: Record<"day" | "week" | "month" | "year", string>
+      chartAlt: (list: string) => string
+      chartItem: (label: string, answered: string, unanswered: string) => string
+      seriesAnswered: string
+      seriesUnanswered: string
+      readerTitle: string
+      reader: Record<"fits" | "doesNotFit" | "none", string>
+      verdictTitle: string
+      verdicts: Record<"correct" | "wrong" | "hallucination" | "dismissed" | "pending", string>
+      ticketsTitle: string
+      ticketTiles: Record<"received" | "answered" | "closed" | "reopened" | "median" | "p90", string>
+      aiTitle: string
+      aiTotal: string
+      aiPerAnswer: string
+      aiCalls: string
+      aiTokens: string
+      colPurpose: string
+      colTotal: string
+      colTokens: string
+      groups: Record<"answer" | "ticket-draft" | "query-rewrite" | "query-classify" | "faq-mining" | "other", string>
+      cardLast: (label: string, value: string) => string
+      share: (pct: string) => string
+      noteSince: string
+      empty: string
+      emptyText: string
+      units: { min: string; h: string; d: string }
+      million: (n: string) => string
+      sheets: { summary: string; quality: string; tickets: string; ai: string }
+      colMetric: string
+    }
     agentsNote: string
     back: string
 
@@ -8433,6 +8494,66 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabMyTickets: "Moje tickety",
     tabTickets: "Tickety",
     tabSettings: "Nastavenie",
+    tabStats: "Štatistika",
+    stats: {
+      lead: "Ako Contineo v kanáli odpovedá, ako sú ľudia spokojní a čo to stojí.",
+      leadAgent: "Ako Contineo v kanáli odpovedá a ako sú ľudia spokojní.",
+      exportXlsx: "Export Excel",
+      periodLabel: "Obdobie",
+      periods: { day: "Deň", week: "Týždeň", month: "Mesiac", year: "Rok" },
+      prev: { day: "Predchádzajúci deň", week: "Predchádzajúci týždeň", month: "Predchádzajúci mesiac", year: "Predchádzajúci rok" },
+      next: { day: "Nasledujúci deň", week: "Nasledujúci týždeň", month: "Nasledujúci mesiac", year: "Nasledujúci rok" },
+      weekTitle: range => `Týždeň ${range}`,
+      compare: range => `porovnanie s ${range}`,
+      summary: "Súhrn",
+      tileQuestions: "Otázky",
+      tileQuestionsSub: "vo widgete",
+      tileAnswered: "Zodpovedané",
+      tileAnsweredSub: (a, all) => `${a} z ${all} s prameňmi`,
+      tileSatisfaction: "Spokojnosť",
+      tileSatisfactionSub: (f, all) => `${f} z ${all} hodnotení „Sedí"`,
+      tileAccuracy: "Presnosť",
+      tileAccuracySub: (c, all) => `${c} z ${all} posudkov správne`,
+      tileTickets: "Tickety",
+      tileTicketsSub: (a, median) => `${a} zodpovedaných · medián ${median}`,
+      tileCost: "Cena",
+      tileCostSub: x => `${x} na zodpovedanú otázku`,
+      deltaVs: (change, prev) => `${change} oproti ${prev}`,
+      deltaPoints: change => `${change} b.`,
+      deltaSame: "— ako minule",
+      deltaNone: "— bez porovnania",
+      faster: d => `${d} rýchlejšie`,
+      slower: d => `${d} pomalšie`,
+      chartTitle: { day: "Otázky po hodinách", week: "Otázky po dňoch", month: "Otázky po dňoch", year: "Otázky po mesiacoch" },
+      chartAlt: list => `Otázky: ${list}.`,
+      chartItem: (label, a, u) => `${label} ${a} zodpovedaných a ${u} bez odpovede`,
+      seriesAnswered: "Zodpovedané z prameňov",
+      seriesUnanswered: "Bez odpovede („nenašlo sa“)",
+      readerTitle: "Hodnotenie používateľov",
+      reader: { fits: "Sedí", doesNotFit: "Nesedí", none: "Bez hodnotenia" },
+      verdictTitle: "Posudky hodnotiteľa",
+      verdicts: { correct: "Správne", wrong: "Nesprávne", hallucination: "Halucinácia", dismissed: "Vyradené", pending: "Čaká na posúdenie" },
+      ticketsTitle: "Tickety",
+      ticketTiles: { received: "Prijaté", answered: "Odpovedané", closed: "Uzavreté", reopened: "Znovu otvorené", median: "Medián odpovede", p90: "90 % do" },
+      aiTitle: "AI a cena",
+      aiTotal: "Suma",
+      aiPerAnswer: "Na zodpovedanú otázku",
+      aiCalls: "Volaní",
+      aiTokens: "Tokeny",
+      colPurpose: "Účel",
+      colTotal: "Spolu",
+      colTokens: "Tokeny",
+      groups: { answer: "Odpoveď vo widgete", "ticket-draft": "Návrh odpovede na ticket", "query-rewrite": "Úprava otázky", "query-classify": "Výber spôsobu hľadania", "faq-mining": "Ťažba FAQ", other: "Ostatné" },
+      cardLast: (label, value) => `${label}: ${value}`,
+      share: pct => `${pct} zo sumy`,
+      noteSince: "Otázky bez odpovede sa počítajú od 30. 10. 2026. Cena pred týmto dňom je dopočítaná cez osoby z widgetu a návrhy odpovedí na tickety v nej nie sú.",
+      empty: "V tomto období neprišla žiadna otázka ani ticket.",
+      emptyText: "Šípkou sa vrátite do predchádzajúceho obdobia.",
+      units: { min: "min", h: "h", d: "d" },
+      million: n => `${n} mil.`,
+      sheets: { summary: "Súhrn", quality: "Kvalita", tickets: "Tickety", ai: "AI a cena" },
+      colMetric: "Ukazovateľ",
+    },
     agentsNote: "Správcovia ticketov majú zmysel, keď sú zapnuté tickety.",
     back: "Kanály",
     intro: "Kanál je jedno miesto, kde sa ľudia pýtajú: má vlastný obsah (priečinky knižnice), schránku, správcov ticketov a widget. Kanálov môže byť viac — každý pre iný projekt a publikum.",
@@ -13795,6 +13916,66 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabMyTickets: "Moje tickety",
     tabTickets: "Tickety",
     tabSettings: "Nastavení",
+    tabStats: "Statistika",
+    stats: {
+      lead: "Jak Contineo v kanálu odpovídá, jak jsou lidé spokojeni a co to stojí.",
+      leadAgent: "Jak Contineo v kanálu odpovídá a jak jsou lidé spokojeni.",
+      exportXlsx: "Export Excel",
+      periodLabel: "Období",
+      periods: { day: "Den", week: "Týden", month: "Měsíc", year: "Rok" },
+      prev: { day: "Předchozí den", week: "Předchozí týden", month: "Předchozí měsíc", year: "Předchozí rok" },
+      next: { day: "Následující den", week: "Následující týden", month: "Následující měsíc", year: "Následující rok" },
+      weekTitle: range => `Týden ${range}`,
+      compare: range => `srovnání s ${range}`,
+      summary: "Souhrn",
+      tileQuestions: "Dotazy",
+      tileQuestionsSub: "ve widgetu",
+      tileAnswered: "Zodpovězené",
+      tileAnsweredSub: (a, all) => `${a} z ${all} s prameny`,
+      tileSatisfaction: "Spokojenost",
+      tileSatisfactionSub: (f, all) => `${f} z ${all} hodnocení „Sedí"`,
+      tileAccuracy: "Přesnost",
+      tileAccuracySub: (c, all) => `${c} z ${all} posudků správně`,
+      tileTickets: "Tikety",
+      tileTicketsSub: (a, median) => `${a} zodpovězených · medián ${median}`,
+      tileCost: "Cena",
+      tileCostSub: x => `${x} na zodpovězený dotaz`,
+      deltaVs: (change, prev) => `${change} oproti ${prev}`,
+      deltaPoints: change => `${change} b.`,
+      deltaSame: "— jako minule",
+      deltaNone: "— bez srovnání",
+      faster: d => `${d} rychleji`,
+      slower: d => `${d} pomaleji`,
+      chartTitle: { day: "Dotazy po hodinách", week: "Dotazy po dnech", month: "Dotazy po dnech", year: "Dotazy po měsících" },
+      chartAlt: list => `Dotazy: ${list}.`,
+      chartItem: (label, a, u) => `${label} ${a} zodpovězených a ${u} bez odpovědi`,
+      seriesAnswered: "Zodpovězené z pramenů",
+      seriesUnanswered: "Bez odpovědi („nic se nenašlo“)",
+      readerTitle: "Hodnocení uživatelů",
+      reader: { fits: "Sedí", doesNotFit: "Nesedí", none: "Bez hodnocení" },
+      verdictTitle: "Posudky hodnotitele",
+      verdicts: { correct: "Správně", wrong: "Nesprávně", hallucination: "Halucinace", dismissed: "Vyřazené", pending: "Čeká na posouzení" },
+      ticketsTitle: "Tikety",
+      ticketTiles: { received: "Přijaté", answered: "Zodpovězené", closed: "Uzavřené", reopened: "Znovu otevřené", median: "Medián odpovědi", p90: "90 % do" },
+      aiTitle: "AI a cena",
+      aiTotal: "Částka",
+      aiPerAnswer: "Na zodpovězený dotaz",
+      aiCalls: "Volání",
+      aiTokens: "Tokeny",
+      colPurpose: "Účel",
+      colTotal: "Celkem",
+      colTokens: "Tokeny",
+      groups: { answer: "Odpověď ve widgetu", "ticket-draft": "Návrh odpovědi na tiket", "query-rewrite": "Úprava dotazu", "query-classify": "Výběr způsobu hledání", "faq-mining": "Těžba FAQ", other: "Ostatní" },
+      cardLast: (label, value) => `${label}: ${value}`,
+      share: pct => `${pct} z částky`,
+      noteSince: "Dotazy bez odpovědi se počítají od 30. 10. 2026. Cena před tímto dnem je dopočítaná přes osoby z widgetu a návrhy odpovědí na tikety v ní nejsou.",
+      empty: "V tomto období nepřišel žádný dotaz ani tiket.",
+      emptyText: "Šipkou se vrátíte do předchozího období.",
+      units: { min: "min", h: "h", d: "d" },
+      million: n => `${n} mil.`,
+      sheets: { summary: "Souhrn", quality: "Kvalita", tickets: "Tikety", ai: "AI a cena" },
+      colMetric: "Ukazatel",
+    },
     agentsNote: "Správci tiketů mají smysl, když jsou zapnuté tikety.",
     back: "Kanály",
     intro: "Kanál je jedno místo, kde se lidé ptají: má vlastní obsah (složky knihovny), schránku, správce tiketů a widget. Kanálů může být víc — každý pro jiný projekt a publikum.",
@@ -19148,6 +19329,66 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tabMyTickets: "My tickets",
     tabTickets: "Tickets",
     tabSettings: "Settings",
+    tabStats: "Statistics",
+    stats: {
+      lead: "How Contineo answers in this channel, how satisfied people are and what it costs.",
+      leadAgent: "How Contineo answers in this channel and how satisfied people are.",
+      exportXlsx: "Export Excel",
+      periodLabel: "Period",
+      periods: { day: "Day", week: "Week", month: "Month", year: "Year" },
+      prev: { day: "Previous day", week: "Previous week", month: "Previous month", year: "Previous year" },
+      next: { day: "Next day", week: "Next week", month: "Next month", year: "Next year" },
+      weekTitle: range => `Week ${range}`,
+      compare: range => `compared with ${range}`,
+      summary: "Summary",
+      tileQuestions: "Questions",
+      tileQuestionsSub: "in the widget",
+      tileAnswered: "Answered",
+      tileAnsweredSub: (a, all) => `${a} of ${all} with sources`,
+      tileSatisfaction: "Satisfaction",
+      tileSatisfactionSub: (f, all) => `${f} of ${all} ratings “Fits”`,
+      tileAccuracy: "Accuracy",
+      tileAccuracySub: (c, all) => `${c} of ${all} reviews correct`,
+      tileTickets: "Tickets",
+      tileTicketsSub: (a, median) => `${a} answered · median ${median}`,
+      tileCost: "Cost",
+      tileCostSub: x => `${x} per answered question`,
+      deltaVs: (change, prev) => `${change} vs ${prev}`,
+      deltaPoints: change => `${change} pp`,
+      deltaSame: "— same as before",
+      deltaNone: "— no comparison",
+      faster: d => `${d} faster`,
+      slower: d => `${d} slower`,
+      chartTitle: { day: "Questions by hour", week: "Questions by day", month: "Questions by day", year: "Questions by month" },
+      chartAlt: list => `Questions: ${list}.`,
+      chartItem: (label, a, u) => `${label} ${a} answered and ${u} unanswered`,
+      seriesAnswered: "Answered from sources",
+      seriesUnanswered: "No answer (“nothing found”)",
+      readerTitle: "User ratings",
+      reader: { fits: "Fits", doesNotFit: "Does not fit", none: "Not rated" },
+      verdictTitle: "Reviewer verdicts",
+      verdicts: { correct: "Correct", wrong: "Incorrect", hallucination: "Hallucination", dismissed: "Dismissed", pending: "Awaiting review" },
+      ticketsTitle: "Tickets",
+      ticketTiles: { received: "Received", answered: "Answered", closed: "Closed", reopened: "Reopened", median: "Median reply", p90: "90 % within" },
+      aiTitle: "AI and cost",
+      aiTotal: "Total",
+      aiPerAnswer: "Per answered question",
+      aiCalls: "Calls",
+      aiTokens: "Tokens",
+      colPurpose: "Purpose",
+      colTotal: "Total",
+      colTokens: "Tokens",
+      groups: { answer: "Widget answer", "ticket-draft": "Ticket reply draft", "query-rewrite": "Question rewriting", "query-classify": "Search mode choice", "faq-mining": "FAQ mining", other: "Other" },
+      cardLast: (label, value) => `${label}: ${value}`,
+      share: pct => `${pct} of total`,
+      noteSince: "Unanswered questions are counted from 30 Oct 2026. Cost before that day is attributed through widget persons and does not include ticket reply drafts.",
+      empty: "No question or ticket came in during this period.",
+      emptyText: "Use the arrow to go back to the previous period.",
+      units: { min: "min", h: "h", d: "d" },
+      million: n => `${n} M`,
+      sheets: { summary: "Summary", quality: "Quality", tickets: "Tickets", ai: "AI and cost" },
+      colMetric: "Metric",
+    },
     agentsNote: "Ticket managers matter when tickets are on.",
     back: "Channels",
     intro: "A channel is one place where people ask: it has its own content (library folders), mailbox, ticket managers and widget. There can be several channels — one per project and audience.",

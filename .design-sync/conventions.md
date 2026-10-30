@@ -113,6 +113,14 @@ Kreslí ich server z CSS — bez knižnice, bez JavaScriptu. Graf má textovú a
 - Rýchly výber obdobia pod filtrom: `p.quiet.quick-ranges` s odkazmi, zvolený `a.is-on`.
 - Široká časť organizácie (matica s mesiacmi): `.org-grid.org-grid--wide` — telo bez
   hranice 720 px.
+- Súhrnné dlaždice (od 30. 10., KANAL-statistika): `.stat-tiles` > `a.card.stat-tile`
+  (odkaz na zoznam, z ktorého číslo je) > `span.stat-tile-label`, `-value`, `-sub`,
+  `-delta`. Zmena oproti predchádzajúcemu obdobiu so šípkou ▲/▼ a stavom `.is-better`,
+  `.is-worse`, `.is-same` — farba hovorí, či je to dobre, nie smer. Mriežka 2 / 3 / 6
+  stĺpcov (pod 640, od 640, od 1024 px).
+- Kalendárne obdobie (od 30. 10., KANAL-statistika): `.view-switch` Deň | Týždeň |
+  Mesiac | Rok a pod ním `p.period-nav` — tiché `button--sm` ‹ a ›, `b` s názvom obdobia,
+  `span.quiet.period-nav-compare` s porovnaním. Budúce obdobie je `span.is-disabled`.
 
 ## Zoznamy na výber a hľadanie s rozsahmi (od 26. 10., PREHLAD-ulohy-a-dokumenty)
 Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.

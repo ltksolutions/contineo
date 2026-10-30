@@ -45,7 +45,7 @@ export default async function ChannelTicketsPage({ params, searchParams }: { par
         <span className="page-head-spacer" />
         <span className="tag">{tc.kinds[channel.kind]}</span>
       </div>
-      <ChannelPartTabs channelKey={key} current={base} canTickets canSettings={ctx.isAdmin} language={language} />
+      <ChannelPartTabs channelKey={key} current={base} canTickets canStats={channel.kind === "widget"} canSettings={ctx.isAdmin} language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
       <Notice message={msg} error={error === "1"} back={base} language={language} />
       <TicketList tickets={tickets} view={view} base={base} channelName={new Map([[key, channel.name]])}
