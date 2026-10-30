@@ -21,7 +21,7 @@
 import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
 import { RATINGS_COLLECTION } from "./ratings"
-import type { RatingRecord } from "./ratings"
+import type { RatingRecord, RatingOrigin } from "./ratings"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 import { loadPersonsByIds } from "./people"
@@ -105,6 +105,8 @@ export interface QueueItem {
    * (záznam drží len odkaz, pri výmaze osoby zmizne s ňou — `ratings.ts`).
    */
   asker: { name: string; email: string; role: string | null } | "gone" | null
+  /** Odkiaľ otázka prišla (Ján 30. 10. 2026). `null` = záznam spred zavedenia poľa. */
+  origin: RatingOrigin | null
 }
 
 const MAX_QUEUE = 200
@@ -139,6 +141,7 @@ export async function evaluationQueue(companyCode: string): Promise<QueueItem[]>
     readerVerdict: z.readerVerdict ?? null,
     readerNote: z.readerNote ?? "",
     sources: (z.sources ?? []).map(s => ({ title: s.title, articleRef: s.articleRef })),
+    origin: z.origin ?? null,
     asker: !id ? null : p ? { name: p.fullName, email: p.email, role: p.jobTitle || p.department || null } : "gone",
     }
   })

@@ -63,6 +63,14 @@ export interface CurationState {
   expiredBecause?: string
 }
 
+/** Kde otázka vznikla. Kľúče `kind` sú dáta v `evaluations` — nepremenúvať. */
+export const RATING_ORIGINS = ["intranet", "widget", "mcp"] as const
+export interface RatingOrigin {
+  kind: (typeof RATING_ORIGINS)[number]
+  /** Názov kanála (widget) alebo MCP klienta, kópia v čase otázky. */
+  label?: string
+}
+
 export interface RatingRecord {
   _id?: ObjectId
 
@@ -106,6 +114,13 @@ export interface RatingRecord {
    * `documents`: názvy dokumentov, keď bola knižnica zúžená (`?doc=`, D269).
    */
   searchedScope?: SearchedScope
+  /**
+   * Odkiaľ otázka prišla (Ján 30. 10. 2026: „pridal by som aj zdroj/kanál,
+   * kde vznikol podnet"): intranet, widget kanála alebo MCP klient. `label`
+   * je **kópia názvu** kanála či klienta v čase otázky — o rok má byť
+   * čitateľný, aj keď kanál premenujú. Záznamy spred 30. 10. pole nemajú.
+   */
+  origin?: RatingOrigin
 
   // To, čo vie povedať len človek (D9, kapitola 3).
   correct: Verdict
@@ -242,6 +257,8 @@ export interface NewRating {
    * `documents`: názvy dokumentov, keď bola knižnica zúžená (`?doc=`, D269).
    */
   searchedScope?: SearchedScope
+  /** Odkiaľ otázka prišla — viď `RatingRecord.origin`. Povinné, aby ho žiadne volanie nevynechalo. */
+  origin: RatingOrigin
 }
 
 /** Polia, ktoré smie hodnotiteľ meniť. Nič iné sa cez API prepísať nedá. */

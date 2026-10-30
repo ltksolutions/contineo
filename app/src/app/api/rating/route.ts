@@ -106,6 +106,8 @@ export async function POST(req: NextRequest) {
         cost: body.cost,
         time: sanitizeQueryTime(body.time),
         searchedScope: sanitizeSearchedScope(body.searchedScope),
+        // Táto cesta je len pre prihláseného v intranete; widget a MCP zapisujú samy.
+        origin: { kind: "intranet" },
       },
       who.person.id,
       who.companyCode,

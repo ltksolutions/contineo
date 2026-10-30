@@ -82,6 +82,8 @@ export default async function EvaluationPage({
             <div className="eval-head">
               {item.readerVerdict === 0 && <span className="tag tag--expired">{t.saidDoesNotFit}</span>}
               {item.readerNote && <span className="tag">{t.reported}</span>}
+              {/* Zdroj podnetu: intranet, widget kanála, MCP klient (Ján 30. 10. 2026). */}
+              {item.origin && <span className="tag">{[t.origin[item.origin.kind], item.origin.label].filter(Boolean).join(" · ")}</span>}
               {/* Kto sa pýtal — aby sa dalo človeku odpísať (Ján 30. 10. 2026). */}
               <span className="eval-date">
                 {item.asker === null ? t.askerAnonymous
