@@ -1469,6 +1469,22 @@ interface Dictionary {
     dismissHint: string
     dismissed: string
     dismissFailed: string
+    /** Pohľady fronty `?view=` (Ján 30. 10. 2026). */
+    views: { pending: string; assessed: string; dismissed: string }
+    viewsLabel: string
+    emptyAssessed: string
+    emptyDismissed: string
+    /** Posudok na karte v pohľadoch Posúdené a Vyradené. */
+    verdictCorrect: string
+    verdictWrong: string
+    verdictHallucination: string
+    verdictDismissed: string
+    decidedBy: (who: string, date: string) => string
+    verifiedLabel: string
+    /** Súhrn posudkov v pohľade Posúdené. */
+    summary: (correct: number, wrong: number, hallucination: number) => string
+    restore: string
+    restored: string
     reader: string
     /** Pýtajúci sa bez prihlásenia (verejný widget). */
     askerAnonymous: string
@@ -6447,6 +6463,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     dismissHint: "Otázka nesúvisí s témou alebo niekto skúšal hlúposti. Odpoveď sa neposudzuje a do znalostí nejde.",
     dismissed: "Podnet je vyradený z fronty.",
     dismissFailed: "Podnet sa nepodarilo vyradiť — možno ho medzitým niekto posúdil.",
+    views: { pending: "Čaká", assessed: "Posúdené", dismissed: "Vyradené" },
+    viewsLabel: "Pohľad",
+    emptyAssessed: "Zatiaľ nie je nič posúdené.",
+    emptyDismissed: "Nič nie je vyradené.",
+    verdictCorrect: "správna",
+    verdictWrong: "nesprávna",
+    verdictHallucination: "vymyslel si",
+    verdictDismissed: "vyradené",
+    decidedBy: (who, date) => `${who} · ${date}`,
+    verifiedLabel: "Ako mala odpoveď znieť",
+    summary: (c, w, h) => `Správne ${c} · nesprávne ${w} · s vymysleným ${h}`,
+    restore: "Vrátiť do fronty",
+    restored: "Podnet je späť vo fronte.",
     reader: "Čitateľ napísal",
     askerAnonymous: "bez prihlásenia",
     askerGone: "osoba už nie je v adresári",
@@ -11775,6 +11804,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     dismissHint: "Dotaz nesouvisí s tématem nebo někdo zkoušel hlouposti. Odpověď se neposuzuje a do znalostí nejde.",
     dismissed: "Podnět je vyřazen z fronty.",
     dismissFailed: "Podnět se nepodařilo vyřadit — možná ho mezitím někdo posoudil.",
+    views: { pending: "Čeká", assessed: "Posouzené", dismissed: "Vyřazené" },
+    viewsLabel: "Pohled",
+    emptyAssessed: "Zatím není nic posouzeno.",
+    emptyDismissed: "Nic není vyřazeno.",
+    verdictCorrect: "správná",
+    verdictWrong: "nesprávná",
+    verdictHallucination: "vymyslel si",
+    verdictDismissed: "vyřazeno",
+    decidedBy: (who, date) => `${who} · ${date}`,
+    verifiedLabel: "Jak měla odpověď znít",
+    summary: (c, w, h) => `Správné ${c} · nesprávné ${w} · s vymyšleným ${h}`,
+    restore: "Vrátit do fronty",
+    restored: "Podnět je zpět ve frontě.",
     reader: "Čtenář napsal",
     askerAnonymous: "bez přihlášení",
     askerGone: "osoba už není v adresáři",
@@ -17092,6 +17134,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     dismissHint: "The question is off-topic or someone was fooling around. The answer is not assessed and does not go into knowledge.",
     dismissed: "The item was removed from the queue.",
     dismissFailed: "The item could not be removed — someone may have assessed it meanwhile.",
+    views: { pending: "Waiting", assessed: "Assessed", dismissed: "Removed" },
+    viewsLabel: "View",
+    emptyAssessed: "Nothing has been assessed yet.",
+    emptyDismissed: "Nothing has been removed.",
+    verdictCorrect: "correct",
+    verdictWrong: "wrong",
+    verdictHallucination: "made something up",
+    verdictDismissed: "removed",
+    decidedBy: (who, date) => `${who} · ${date}`,
+    verifiedLabel: "What the answer should have said",
+    summary: (c, w, h) => `Correct ${c} · wrong ${w} · made up ${h}`,
+    restore: "Return to queue",
+    restored: "The item is back in the queue.",
     reader: "The reader wrote",
     askerAnonymous: "not signed in",
     askerGone: "no longer in the directory",

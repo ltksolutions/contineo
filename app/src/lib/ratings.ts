@@ -381,6 +381,21 @@ export async function dismissRating(id: string, evaluator: string, companyCode: 
   return r.matchedCount === 1
 }
 
+/**
+ * Vráti vyradený podnet do fronty — vyradenie omylom. Len vyradený; posúdený
+ * záznam sa tadiaľto neotvára.
+ */
+export async function restoreRating(id: string, companyCode: string): Promise<boolean> {
+  const code = requireCompanyCode(companyCode, "restoreRating")
+  if (!ObjectId.isValid(id)) return false
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const r = await col.updateOne(
+    { _id: new ObjectId(id), companyCode: code, dismissedAt: { $exists: true } } as never,
+    { $unset: { dismissedAt: "", dismissedBy: "", evaluatedAt: "", evaluatedBy: "" }, $set: { updatedAt: new Date() } },
+  )
+  return r.matchedCount === 1
+}
+
 /** Najdlhšie hlásenie, ktoré sa uloží. Popis chyby, nie príloha. */
 export const MAX_READER_NOTE = 2000
 

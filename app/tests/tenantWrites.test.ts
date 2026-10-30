@@ -21,7 +21,7 @@ const fakeCollection = {
 }
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async () => fakeCollection) }))
 
-import { recordAnswer, saveReaderFeedback, saveVerdict, dismissRating } from "../src/lib/ratings"
+import { recordAnswer, saveReaderFeedback, saveVerdict, dismissRating, restoreRating } from "../src/lib/ratings"
 import { publishCuration, saveCurationDraft } from "../src/lib/curation"
 import { MissingTenantError, requireCompanyCode } from "../src/lib/tenantScope"
 import { personAcknowledgements, validAcknowledgements } from "../src/lib/acknowledgements"
@@ -54,6 +54,11 @@ describe("ratings — organizácia v podmienke", () => {
     expect(set).toMatchObject({ dismissedBy: "p1", evaluatedBy: "p1" })
     expect(set).not.toHaveProperty("reviewer")
     await expect(dismissRating(ID, "p1", "")).rejects.toThrow(MissingTenantError)
+  })
+
+  it("restoreRating vráti len vyradený záznam vlastnej organizácie", async () => {
+    await restoreRating(ID, "SFZ")
+    expect(calls[0].filter).toMatchObject({ companyCode: "SFZ", dismissedAt: { $exists: true } })
   })
 
   it("saveReaderFeedback hľadá záznam podľa _id A organizácie", async () => {
