@@ -4,6 +4,41 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Helpdesk: tickety ako čitateľné vlákno a preposlané e-maily (2026-10-29–30, #495–#501)
+
+- Odpoveď riešiteľa odchádza ako **formátovaný HTML e-mail** z Markdownu
+  (#497); bez Mail.ReadWrite prejde odoslanie cez `sendMail` a `reply`
+  (#496). Aplikácia v Entra má od 29. 10. Mail.ReadWrite zúžené na
+  schránku helpdesku (`docs/NASADENIE_app.md` § 5).
+- Zoznam ticketov: **Otvorené / Vybavené / Všetky** (staré
+  `?view=sent|closed` vedú na Vybavené). Detail: posledná prijatá správa
+  nad odpoveďou, pod ňou história chronologicky, odpovede odsadené
+  farbou organizácie; **dátum aj čas** pri každej správe; po odoslaní
+  sa formulár odpovede nezobrazí, kým nepríde nová správa (#498, #499).
+- **Automatické odpovede** (mimo kancelárie a pod.) sa ticketmi nestanú,
+  rovnako ako návraty od poštového servera (#498).
+- Kópia odpovede z Odoslaných sa vo vlákne nezdvojí, číslovaný zoznam
+  v e-maile začína správnym číslom, „rieši" ukazuje meno (#500).
+- **E-mail preposlaný kolegom** („Fwd:" z domény schránky): pýtajúcim sa
+  je pôvodný odosielateľ z hlavičky, kolega je „preposlal(a) …" a odpoveď
+  ide pôvodnému odosielateľovi (#501). Staré tickety sa nemenia.
+
+### Fronta Na posúdenie: kto sa pýtal, odkiaľ a vyradenie (2026-10-30, #502–#505)
+
+- Pri podnete je **meno, e-mail a pozícia** toho, kto sa pýtal (#502),
+  a štítok **zdroja** — Intranet, Widget · názov kanála, MCP · klient;
+  nové pole `origin` v `evaluations`, staršie záznamy ho nemajú (#503).
+- Tlačidlo **Vyradiť z fronty** pre podnety mimo témy: záznam sa nemaže,
+  dostane `dismissedAt` a do kurácie nejde (#505).
+- Oprava: posudok sa po #502 neukladal (kruhový import
+  `evaluation.ts` ↔ `people.ts`); nový test `importCycles.test.ts` (#504).
+
+### Prihlásenie: kolega založený cez widget ISSF (2026-10-30, #506)
+
+Externá osoba (D168) s adresou z povolenej domény sa pri prihlásení
+overeným kontom Microsoft / Google povýši na zamestnanca (`promotedBy`,
+`promotedAt`). Údaj z ISSF sám na to nestačí; vyradenú osobu nepustí.
+
 ### Web contineo.app: video pomocníka v ISSF, zvukové logo a značka v pohybe (2026-10-28–29, #486, #487, #489–#491, #493, #494)
 
 Na úvodnej stránke za Manifestom je 66-sekundové video: intro „Opýtajte
