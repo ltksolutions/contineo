@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-30** (tickety ako vlákno — Otvorené/Vybavené/Všetky, čas pri správach, HTML e-mail, filter automatických odpovedí, preposlané e-maily kolegov #495–#501; fronta Na posúdenie s osobou, zdrojom a vyradením #502–#505, oprava kruhového importu #504; kolegovia založení cez widget sa prihlásia #506; predtým 2026-10-29: video pomocníka v ISSF na contineo.app s hlasom, titulkami, zvukovým logom G C E G E C a novým introm, sekcia „Značka v pohybe a zvuku" v `conventions.md`, #486–#494; widget sa dá zbaliť na tlačidlo D292, tip žiarovkou D293, tajný kľúč kanála priamo v okne oznamu; predtým 2026-10-27 večer: widget ako riadok otázky s plachtou 80 %, históriou, vzormi, prepínačom SK / CZ / EN, posúvaním, úvodným tipom a pätkou s verziou, ADR-042 Dodatok 2, #474–#480, druhá session; zadanie pre vývojára ISSF `docs/ZADANIE_ISSF_WIDGET.md`; predtým: widget kanála ISSF Helpdesk nahrádza formulár Pomoc, ADR-042 kroky 1–5 a Dodatok 1, #463–#471, druhá session; manuály ISSF-00, 02, 03 so zjednoteným zrušením registrácie hráča zverejnené, podnet legislatíve s bodom 5; krúžok v päte karty postupu #470; cesta priečinka po migrácii ADR-034 #472, `check` bez rozporov; Prehľad podľa návrhu PREHLAD-ulohy-a-dokumenty #458; predtým 2026-10-26 večer: Prehľad a detail dokumentu pre bežného používateľa — ADR-041, kroky B → C → A, #449–#452; otázka nad jedným dokumentom `?doc=` D269, #448, druhá session; detail predpisu s celým textom a tlačidlo „Pridať do knižnice" #446, dátum kontroly pri predpise #445; prvé nočné behy cronu katalógu overené, bez konceptov; predtým 2026-10-25 neskoro večer: MCP overený naostro z Claude Desktop aj Claude Code; stropy úsekov `search_library` posuvníkmi v AI asistentoch a nový prvok `.field-range`, #441; smernica o pracovných cestách — zoznamy, poznámky a písmená podľa PDF opravené bez novej verzie; predtým katalóg legislatívy ADR-039 fázy 1–2, #432, #436; register zdrojov ADR-040 kroky 1–3, Organizácia → Zdroje, #433, #434, #437; Zdroje → Web / RSS → Slov-Lex a návod pre zdroje, ADR-040 Dodatok 1, #439; MCP server so zdrojmi a Legislatívou #438 a prihlásenie z Claude Code #440, druhá session; návrat oznamu Legislatívy #435; predtým 2026-10-24 večer: Prehľad spotreby AI #425, #426 — prvý návrh z artefaktu *Design*; Contineo ako MCP server fáza 1, ADR-038, #422, #424; oprava textu znenia a PDF konceptu #427–#429; design system ako artefakt v Claude, `/design-sync` 24. 10.; predtým výber zdrojov na Opýtať sa bez automatického opýtania #418, už v plachte otázky #421, widget kanála so zdrojmi a hlavičkou odpovede #420; design system Contineo záväzný v `CLAUDE.md`, `/design-sync` 23. 10.; predtým 2026-10-23: kontrola manuálov nanovo: ADR-036 potvrdenie pred spustením, zastavenie, zrušenie #401, kontrola konceptu D240 #403, kolo 2 nad konceptmi 41 nálezov, nález v celom odseku #419; delenie dlhých odsekov a zoznamov #398; podnet legislatíve pripravený; predtým ADR-037: Zákon o športe zo Slov-Lexu ako sledovaný zdroj, koncept v knižnici nad Stanovami, #405; Členenie veľkého dokumentu — číslovanie zoznamov, nadpisy, návrh rezov len ako zmeny, jedno meranie úseku, #406–#414; ponuka „⋯“ v Knižnici zrušená #407, #409; požiadavky na kontrolu len z hierarchie D241, #404; predtým ADR-035: členenie zo štruktúry Markdownu, profily zanikli, rezač blokov s návrhom AI, #389–#394; strážca zápisu v editore textu a Myersov rozdiel #396–#397; Súťažný poriadok bez „Stránka | N"; Kuriér editor s lištou a odkazmi von #390–#395; predtým ADR-034: úloha a záväznosť druhu, Stanovy/Poriadok/Zákon, hierarchia dokumentov, návrhy z helpdesku do manuálov, FAQ zrušené — #385–#388; ISSF-01 nové znenie 13. 10.; predtým: Kuriér ADR-033 fáza 1 celá v `main`, #376–#379; manuály ISSF zverejnené; zrušené kolo ≠ zamietnuté #373; kontrola súladu ADR-032 v prevádzke, #343–#363, #367, #375; FAQ z histórie helpdesku ADR-030 dobehlo, 54 návrhov vo fronte; PDF z textu konceptu ADR-031 a #365; FAQ ku kanálu D201; jedno bežiace kolo #372; rozhranie #368–#371; staršie: súpis DESIGN_ODCHYLKY vybavený 8. 10., MCP konektory ADR-029, helpdesk ADR-028)
+Posledná aktualizácia: **2026-10-30 popoludní** (štatistika kanála pre board #510, #513, #514; widget pozná predchádzajúce kolá rozhovoru #512, #515; fronta Na posúdenie s pohľadmi, štatistikou a predchádzajúcimi otázkami #508, #509, #511). Staršie dni sú v `docs/DEVLOG.md`.
 
 ---
 
@@ -44,6 +44,18 @@ Fronta Na posúdenie ukazuje, kto sa pýtal a odkiaľ (`origin`, staršie
 záznamy bez neho), podnet mimo témy sa dá vyradiť. Osoby z widgetu do
 intranetu nesmú (D168); kolega so služobnou adresou sa pri prihlásení
 povýši (#506) — **naživo neoverené**, prvé prihlásenie ukáže.
+
+**Štatistika kanála a prehľady fronty (30. 10. popoludní, #508–#515).**
+Kanál ISSF Helpdesk má časť **Štatistika** (`/channels/<key>/stats`):
+deň / týždeň / mesiac / rok, dlaždice so zmenou oproti minulému obdobiu,
+hodnotenia, posudky, tickety, AI a cena (len správca) a Excel pre board
+s 12 predchádzajúcimi obdobiami. Otázky „nenašlo sa" sa zapisujú až od
+30. 10. (`unanswered_questions`), takže „Zodpovedané %" je dovtedy príliš
+priaznivé. Prvý týždeň: 114 otázok, **spokojnosť 44 %**, 30 ticketov,
+4,24 USD. Fronta Na posúdenie má pohľady Čaká / Posúdené / Vyradené,
+štatistiku `/evaluation/stats` a na karte predchádzajúce otázky tej istej
+osoby. Widget posiela posledné tri kolá rozhovoru, takže doplňujúca otázka
+už nehľadá naslepo.
 
 **Video pomocníka na contineo.app (28.–29. 10., #486–#494).** Intro,
 ukážka v ISSF s komentárom hlasom „LTK" a záverečné logo, titulky
@@ -376,7 +388,8 @@ nastaví v Nastaveniach, záložka GDPR (D154). Otvorená karta po nasadení pon
 
 **Widget v ISSF:** voliteľne vzory otázok kanála. Poslať `/design-sync`
 (pribudli triedy `.xw-*` vrátane `.xw-pill` a `.xw-help`, sekcia
-„Značka v pohybe a zvuku" a „Vlákno ticketu" s `.thread-msg`).
+„Značka v pohybe a zvuku", „Vlákno ticketu" s `.thread-msg` a 30. 10.
+`.stat-tiles` a `.period-nav`).
 
 **Dve overenia k manuálom** (kolo 2 je rozhodnuté a manuály zverejnené):
 pri zápisoch pre laikov (ISSF-05) — **podnet ŠTK poslaný 27. 10., čaká sa
@@ -431,8 +444,10 @@ počty v `retention[].helpdesk`).
 
 ## Najbližšie kroky
 
-1. **Fronta Na posúdenie:** posúdiť alebo vyradiť prvé podnety; pri
-   novom podnete skontrolovať štítok zdroja (`origin`). Staré tickety
+1. **Fronta Na posúdenie:** posúdiť štyri čakajúce podnety (spokojnosť
+   kanála je 44 % — 9 × Nesedí za prvý týždeň, stojí za pozretie, na čo
+   ľudia reagovali). Od 31. 10. pozrieť v štatistike kanála skutočný podiel
+   „nenašlo sa". Staré tickety
    „Fwd:" od kolegov (7) — odpovedať pôvodnému pisateľovi ručne.
    **Poslať podnet legislatíve** (päť bodov); odpoveď ŠTK k ISSF-05
    a overenie s Oddelením vzdelávania trénerov.

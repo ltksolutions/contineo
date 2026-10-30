@@ -4,6 +4,37 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Štatistika kanála pre board (2026-10-30, #510, #513, #514)
+
+- Kanál typu widget má časť **Štatistika** (Tickety · Štatistika ·
+  Nastavenie): deň, týždeň, mesiac alebo rok so šípkami a dlaždice
+  Otázky, Zodpovedané, Spokojnosť, Presnosť, Tickety a Cena so zmenou
+  oproti predchádzajúcemu obdobiu. Pod nimi graf otázok, hodnotenia
+  používateľov, posudky hodnotiteľa, tickety (medián a 90. percentil
+  odpovede) a AI a cena podľa účelu.
+- Riešiteľ kanála vidí všetko okrem ceny, správca organizácie všetko.
+  Čísla vedú do zoznamov, z ktorých vznikli.
+- **Export do Excelu**: hárok na blok, zvolené obdobie a 12 predchádzajúcich.
+- Volania AI z kanála nesú `channelKey` (#510). Otázky, ku ktorým sa nič
+  nenašlo, sa zapisujú do novej kolekcie `unanswered_questions` (kanál
+  a čas, 25 mesiacov), počítajú sa od 30. 10. 2026.
+- Design system: `.stat-tiles`, `.period-nav`.
+
+### Widget: rozhovor s predchádzajúcimi kolami (2026-10-30, #512, #515)
+
+Widget posiela posledné tri kolá toho istého okna. Doplňujúca otázka sa
+pred hľadaním prepíše na samostatnú a model dostane kolá ako súvislosť,
+nie ako zdroj. Odkazy `[1]` zo starých odpovedí sa odstraňujú.
+
+### Fronta Na posúdenie: pohľady, štatistika a súvislosť otázky (2026-10-30, #508, #509, #511)
+
+- Pohľady **Čaká / Posúdené / Vyradené** s počtami a súhrnom posudkov;
+  vyradený podnet sa dá vrátiť do fronty (#508).
+- **Štatistika** `/evaluation/stats`: 12 mesiacov a rozdelenie podľa
+  zdroja (#509).
+- Karta podnetu ukáže až tri predchádzajúce otázky tej istej osoby
+  z toho istého zdroja do hodiny pred otázkou (#511).
+
 ### Helpdesk: tickety ako čitateľné vlákno a preposlané e-maily (2026-10-29–30, #495–#501)
 
 - Odpoveď riešiteľa odchádza ako **formátovaný HTML e-mail** z Markdownu
