@@ -517,7 +517,7 @@ export async function syncChannel(companyCode: string, key: string, maxPages = S
         const fresh = channel.mailbox!.skipBounces === false ? recent : recent.filter(m => !isMachineMail(m))
         report.bounces = (report.bounces ?? 0) + recent.length - fresh.length
         if (fresh.length) {
-          const r = await ingestMessages(code, key, fresh, { thread })
+          const r = await ingestMessages(code, key, fresh, { thread, mailbox: adapter.address })
           report.created += r.created; report.appended += r.appended; report.skipped += r.skipped
         }
         cursor = page.cursor
