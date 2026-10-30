@@ -39,7 +39,7 @@ const fake = {
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async () => fake) }))
 vi.mock("../src/lib/audit", () => ({ writeAudit: vi.fn(async () => {}) }))
 
-const { ingestMessages, importTicketThread } = await import("../src/lib/tickets")
+const { ingestMessages, importTicketThread, answerRoute } = await import("../src/lib/tickets")
 
 const at = (h: number) => new Date(`2026-10-07T${String(h).padStart(2, "0")}:00:00Z`)
 const mail = (over: Partial<MailMessage>): MailMessage => ({
@@ -149,5 +149,33 @@ describe("ingestMessages — nova sprava na vybavenom tickete", () => {
     store[0].state = "closed"
     await ingestMessages("SFZ", "k", [mail({ id: "out1", internetMessageId: "<out1>", outgoing: true, from: helpdesk, text: "Doplnenie.", receivedAt: at(12) })])
     expect(only().state).toBe("closed")
+  })
+})
+
+describe("ingestMessages — preposlane kolegom (Jan 30. 10. 2026)", () => {
+  const fwd = (over: Partial<MailMessage> = {}) => mail({
+    id: "f1", internetMessageId: "<f1>", from: { address: "kolega@futbalsfz.sk", name: "Kolega SFZ" }, subject: "Fwd: Nefunkčné prihlásenie",
+    text: "Prosím o vybavenie.\n\nOd: Jana Vzorová <jana.vzorova@example.com>\n\nDobrý deň, neviem sa prihlásiť.", ...over,
+  })
+  type F = T & { asker: { email: string | null; name: string | null }; forwardedBy?: { address: string } }
+
+  it("pytajucim sa je povodny odosielatel, kolega je v forwardedBy; odpoved ide povodnemu", async () => {
+    await ingestMessages("SFZ", "k", [fwd()], { mailbox: "helpdesk@futbalsfz.sk" })
+    const t = only() as unknown as F
+    expect(t.asker).toMatchObject({ email: "jana.vzorova@example.com", name: "Jana Vzorová" })
+    expect(t.forwardedBy).toEqual({ address: "kolega@futbalsfz.sk", name: "Kolega SFZ" })
+    expect(answerRoute(t as never)).toEqual({ kind: "replyTo", providerId: "f1", to: "jana.vzorova@example.com" })
+  })
+
+  it("ked povodny odosielatel odpovie sam, ide obycajna odpoved vo vlakne", async () => {
+    await ingestMessages("SFZ", "k", [fwd()], { mailbox: "helpdesk@futbalsfz.sk" })
+    await ingestMessages("SFZ", "k", [mail({ id: "in2", internetMessageId: "<in2>", from: { address: "jana.vzorova@example.com", name: "Jana Vzorová" }, text: "Ďakujem.", receivedAt: at(11) })])
+    expect(answerRoute(only() as never)).toEqual({ kind: "reply", providerId: "in2" })
+  })
+
+  it("bez adresy schranky (stare volanie) ostava odosielatel", async () => {
+    await ingestMessages("SFZ", "k", [fwd()])
+    expect((only() as unknown as F).asker.email).toBe("kolega@futbalsfz.sk")
+    expect((only() as unknown as F).forwardedBy).toBeUndefined()
   })
 })

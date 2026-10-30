@@ -114,6 +114,7 @@ export default async function TicketPage({ params, searchParams }: { params: Pro
         {t.fromAsker(ticket.asker.name ?? "")}{ticket.asker.email ? ` · ${ticket.asker.email}` : ""}
         {ticket.asker.club ? ` · ${ticket.asker.club}` : ""}{ticket.asker.reference ? ` · ${ticket.asker.reference}` : ""}
         {ticket.asker.roles.length ? ` · ${ticket.asker.roles.join(", ")}` : ""}
+        {ticket.forwardedBy ? ` · ${t.forwardedBy(ticket.forwardedBy.name ?? ticket.forwardedBy.address)}` : ""}
         {" · "}{channel?.name ?? ticket.channelKey} · {t.source[ticket.source]}
         {" · "}{ticket.assigneeId ? t.assignedTo(assignee?.fullName ?? ticket.assigneeId) : t.unassigned}
       </p>

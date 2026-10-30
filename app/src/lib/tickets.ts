@@ -21,6 +21,7 @@ import { AppError } from "./appError"
 import { writeAudit } from "./audit"
 import type { MailMessage, SentMail } from "./mailbox/types"
 import { splitQuotedHistory } from "./mailbox/types"
+import { forwardedSender } from "./mailbox/forward"
 
 export const TICKETS_COLLECTION = "tickets"
 
@@ -89,6 +90,12 @@ export interface Ticket {
    * e-mailom sám. Staršie tickety a tickety bez schránky ho nemajú.
    */
   confirmation?: { providerId: string; messageId: string | null; at: Date } | null
+  /**
+   * Kolega, ktorý e-mail preposlal na helpdesk (`mailbox/forward.ts`);
+   * pýtajúci sa je pôvodný odosielateľ. Na jeho správu sa odpovedá
+   * pôvodnému odosielateľovi. Ostatné tickety ho nemajú.
+   */
+  forwardedBy?: { address: string; name: string | null } | null
   createdAt: Date
   updatedAt: Date
   closedAt: Date | null
@@ -122,6 +129,8 @@ export interface IngestOptions {
    * stať hocikomu"). Zlyhanie históriu vynechá, ticket aj tak vznikne.
    */
   thread?: (threadRef: string) => Promise<MailMessage[]>
+  /** Adresa schránky kanála — jej doména určuje, kto je kolega, ktorý preposiela. */
+  mailbox?: string
 }
 
 /**
@@ -236,9 +245,12 @@ export async function ingestMessages(
     }
     if (m.outgoing) { result.skipped += 1; continue }
 
+    const original = options.mailbox ? forwardedSender(m, options.mailbox) : null
+    const asker = original ?? m.from
     const ticket: Ticket = {
       companyCode, channelKey, source: "email", threadRef: m.threadRef,
-      asker: { personId: null, email: m.from?.address ?? null, name: m.from?.name ?? null, roles: [], club: null, reference: null },
+      asker: { personId: null, email: asker?.address ?? null, name: asker?.name ?? null, roles: [], club: null, reference: null },
+      ...(original ? { forwardedBy: m.from } : {}),
       subject: m.subject,
       messages: [tm],
       state: "new", assigneeId: null, draft: null, sentAnswer: null,
@@ -546,7 +558,8 @@ export async function confirmChatTicket(
 /**
  * Ako odoslať odpoveď riešiteľa (ADR-042, D277):
  *   • na poslednú prijatú **e-mailovú** správu odpoveďou vo vlákne
- *     (e-mailový ticket, alebo človek odpovedal na potvrdenie);
+ *     (e-mailový ticket, alebo človek odpovedal na potvrdenie); ak ju
+ *     preposlal kolega, s výslovným adresátom — pôvodným odosielateľom;
  *   • ticket z widgetu s potvrdením — odpoveďou na potvrdenie, adresát
  *     výslovne z ticketu (odpoveď na vlastnú správu by išla schránke);
  *   • inak novou správou (ticket z widgetu bez potvrdenia — výpadok
@@ -560,7 +573,11 @@ export type AnswerRoute =
 export function answerRoute(t: Ticket): AnswerRoute {
   const incoming = lastIncoming(t)
   // Prvá správa ticketu z widgetu má `chat:` identifikátor — v schránke nie je.
-  if (incoming && !incoming.providerId.startsWith("chat:")) return { kind: "reply", providerId: incoming.providerId }
+  if (incoming && !incoming.providerId.startsWith("chat:")) {
+    // Odpoveď na preposlanie by išla kolegovi — adresát výslovne pýtajúci sa.
+    const forwarded = t.forwardedBy && t.asker.email && incoming.from?.address.toLowerCase() === t.forwardedBy.address.toLowerCase()
+    return forwarded ? { kind: "replyTo", providerId: incoming.providerId, to: t.asker.email! } : { kind: "reply", providerId: incoming.providerId }
+  }
   if (!t.asker.email) throw new TicketError("ticket.noRecipient", "Ticket nemá komu odpovedať — chýba adresa.")
   if (t.confirmation?.providerId) return { kind: "replyTo", providerId: t.confirmation.providerId, to: t.asker.email }
   return { kind: "send", to: t.asker.email }

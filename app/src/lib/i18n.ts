@@ -2691,6 +2691,7 @@ interface Dictionary {
     msgIn: string
     msgOut: string
     fromAsker: (name: string) => string
+    forwardedBy: (name: string) => string
     attachments: (n: number) => string
     draftHeading: string
     draftIntro: string
@@ -8163,6 +8164,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgIn: "došlá správa",
     msgOut: "Odpoveď helpdesku",
     fromAsker: (name: string) => name || "Pýtajúci sa",
+    forwardedBy: (name: string) => `preposlal(a) ${name}`,
     attachments: (n: number) => (n === 1 ? "1 príloha (v schránke)" : `${n} príloh (v schránke)`),
     draftHeading: "Odpoveď",
     draftIntro: "Asistent navrhne odpoveď z dokumentov kanála. Uprav ju a odošli — rozdiel medzi návrhom a odoslaným textom je to, z čoho sa systém učí.",
@@ -13481,6 +13483,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgIn: "došlá zpráva",
     msgOut: "Odpověď helpdesku",
     fromAsker: (name: string) => name || "Tazatel",
+    forwardedBy: (name: string) => `přeposlal(a) ${name}`,
     attachments: (n: number) => (n === 1 ? "1 příloha (ve schránce)" : `${n} příloh (ve schránce)`),
     draftHeading: "Odpověď",
     draftIntro: "Asistent navrhne odpověď z dokumentů kanálu. Uprav ji a odešli — rozdíl mezi návrhem a odeslaným textem je to, z čeho se systém učí.",
@@ -18790,6 +18793,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     msgIn: "incoming message",
     msgOut: "Helpdesk reply",
     fromAsker: (name: string) => name || "Asker",
+    forwardedBy: (name: string) => `forwarded by ${name}`,
     attachments: (n: number) => (n === 1 ? "1 attachment (in the mailbox)" : `${n} attachments (in the mailbox)`),
     draftHeading: "Answer",
     draftIntro: "The assistant drafts an answer from the channel's documents. Edit it and send — the difference between the draft and the sent text is what the system learns from.",
