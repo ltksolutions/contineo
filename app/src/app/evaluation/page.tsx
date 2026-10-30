@@ -22,7 +22,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { evaluationContext, evaluationQueue } from "@/lib/evaluation"
 import { preparableAnswers } from "@/lib/curation"
-import { prepareCurationAction } from "./actions"
+import { prepareCurationAction, dismissEvaluationAction } from "./actions"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { brandingView } from "@/lib/tenants"
@@ -128,6 +128,16 @@ export default async function EvaluationPage({
           </div>
 
           <Rating recordId={item.id} canEvaluate as="section" language={language} />
+
+          {/* Podnet mimo témy sa vyradí bez posudku (Ján 30. 10. 2026).
+              Tiché tlačidlo — zoznam kariet s vlastnou akciou (R1). */}
+          <section className="rating">
+            <form action={dismissEvaluationAction}>
+              <input type="hidden" name="id" value={item.id} />
+              <SubmitButton className="button button--quiet">{t.dismiss}</SubmitButton>
+            </form>
+            <p className="quiet field-hint">{t.dismissHint}</p>
+          </section>
         </article>
       ))}
 
