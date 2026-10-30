@@ -21,7 +21,7 @@ vi.mock("../src/lib/session", () => ({ currentTenant, currentPerson }))
 vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 
 import {
-  isEvaluator, needsEvaluation, evaluationContext, EVALUATOR_ROLE,
+  isEvaluator, needsEvaluation, evaluationContext, evaluationQueue, EVALUATOR_ROLE,
 } from "../src/lib/evaluation"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
@@ -118,5 +118,37 @@ describe("evaluationContext", () => {
   it("vypadok databazy obrazovku neotvori", async () => {
     currentTenant.mockRejectedValue(new Error("cluster nedostupny"))
     expect((await evaluationContext()).state).toBe("unknown-host")
+  })
+})
+
+describe("evaluationQueue — kto sa pýtal (Jan 30. 10. 2026)", () => {
+  const rows = [
+    { _id: "r1", companyCode: "SFZ", question: "Q1", readerVerdict: 0, askedBy: "p1" },
+    { _id: "r2", companyCode: "SFZ", question: "Q2", readerVerdict: 0, reviewer: "p2" },
+    { _id: "r3", companyCode: "SFZ", question: "Q3", readerVerdict: 0 },
+    { _id: "r4", companyCode: "SFZ", question: "Q4", readerNote: "zle", askedBy: "zmazana" },
+  ]
+  const persons = [
+    { id: "p1", companyCode: "SFZ", email: "jana.vzorova@example.com", fullName: "Jana Vzorová", jobTitle: "rozhodkyňa", personType: "external", status: "active", language: "sk", tracks: [] },
+    { id: "p2", companyCode: "SFZ", email: "peter@example.com", fullName: "Peter Príklad", department: "Matrika", personType: "employee", status: "active", language: "sk", tracks: [] },
+  ]
+  let personsQuery: Record<string, unknown> | null = null
+  beforeEach(() => {
+    getCollection.mockReset()
+    getCollection.mockImplementation(async (name: string) => name === "persons"
+      ? { find: (q: Record<string, unknown>) => { personsQuery = q; return { toArray: async () => persons } } }
+      : { find: () => ({ sort: () => ({ limit: () => ({ toArray: async () => rows }) }) }) })
+  })
+
+  it("meno, e-mail a pozícia z adresára; bez prihlásenia null; zmazaná osoba gone", async () => {
+    const q = await evaluationQueue("SFZ")
+    expect(q.map(i => i.asker)).toEqual([
+      { name: "Jana Vzorová", email: "jana.vzorova@example.com", role: "rozhodkyňa" },
+      { name: "Peter Príklad", email: "peter@example.com", role: "Matrika" },
+      null,
+      "gone",
+    ])
+    // Osoby len z vlastnej organizácie (D32).
+    expect(personsQuery).toMatchObject({ companyCode: "SFZ" })
   })
 })

@@ -1465,6 +1465,10 @@ interface Dictionary {
     saidDoesNotFit: string
     reported: string
     reader: string
+    /** Pýtajúci sa bez prihlásenia (verejný widget). */
+    askerAnonymous: string
+    /** Osoba už nie je v adresári. */
+    askerGone: string
     answerLabel: string
     showAnswer: string
     hideAnswer: string
@@ -6433,6 +6437,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     saidDoesNotFit: "nesedí",
     reported: "nahlásené",
     reader: "Čitateľ napísal",
+    askerAnonymous: "bez prihlásenia",
+    askerGone: "osoba už nie je v adresári",
     answerLabel: "Odpoveď systému",
     showAnswer: "Zobraziť odpoveď",
     hideAnswer: "Skryť odpoveď",
@@ -11754,6 +11760,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     saidDoesNotFit: "nesedí",
     reported: "nahlášeno",
     reader: "Čtenář napsal",
+    askerAnonymous: "bez přihlášení",
+    askerGone: "osoba už není v adresáři",
     answerLabel: "Odpověď systému",
     showAnswer: "Zobrazit odpověď",
     hideAnswer: "Skrýt odpověď",
@@ -17064,6 +17072,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     saidDoesNotFit: "wrong",
     reported: "reported",
     reader: "The reader wrote",
+    askerAnonymous: "not signed in",
+    askerGone: "no longer in the directory",
     answerLabel: "The system's answer",
     showAnswer: "Show the answer",
     hideAnswer: "Hide the answer",

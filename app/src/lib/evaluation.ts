@@ -24,6 +24,7 @@ import { RATINGS_COLLECTION } from "./ratings"
 import type { RatingRecord } from "./ratings"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
+import { loadPersonsByIds } from "./people"
 
 export const EVALUATOR_ROLE = "evaluator"
 
@@ -98,6 +99,12 @@ export interface QueueItem {
   readerVerdict: 0 | 1 | null
   readerNote: string
   sources: { title: string; articleRef?: string }[]
+  /**
+   * Kto sa pýtal (Ján 30. 10. 2026: „potrebujem pri nich aj info o osobe").
+   * `null` = nikto nebol prihlásený; `gone` = osoba už v adresári nie je
+   * (záznam drží len odkaz, pri výmaze osoby zmizne s ňou — `ratings.ts`).
+   */
+  asker: { name: string; email: string; role: string | null } | "gone" | null
 }
 
 const MAX_QUEUE = 200
@@ -117,7 +124,14 @@ export async function evaluationQueue(companyCode: string): Promise<QueueItem[]>
     .limit(MAX_QUEUE)
     .toArray()
 
-  return rows.filter(needsEvaluation).map(z => ({
+  const pending = rows.filter(needsEvaluation)
+  // Staršie záznamy nemajú `askedBy`; pred posudkom je v `reviewer` ten, kto sa pýtal.
+  const askerId = (z: RatingRecord) => z.askedBy ?? z.reviewer ?? z.readerNoteBy ?? null
+  const people = await loadPersonsByIds(companyCode, pending.map(askerId).filter((id): id is string => Boolean(id)))
+  return pending.map(z => {
+    const id = askerId(z)
+    const p = id ? people.get(id) : undefined
+    return {
     id: String(z._id),
     question: z.question ?? "",
     answer: z.answer ?? "",
@@ -125,7 +139,9 @@ export async function evaluationQueue(companyCode: string): Promise<QueueItem[]>
     readerVerdict: z.readerVerdict ?? null,
     readerNote: z.readerNote ?? "",
     sources: (z.sources ?? []).map(s => ({ title: s.title, articleRef: s.articleRef })),
-  }))
+    asker: !id ? null : p ? { name: p.fullName, email: p.email, role: p.jobTitle || p.department || null } : "gone",
+    }
+  })
 }
 
 /**
