@@ -82,7 +82,13 @@ export default async function EvaluationPage({
             <div className="eval-head">
               {item.readerVerdict === 0 && <span className="tag tag--expired">{t.saidDoesNotFit}</span>}
               {item.readerNote && <span className="tag">{t.reported}</span>}
-              <span className="eval-date">{t.askedAt} {formatDate(item.askedAt, language)}</span>
+              {/* Kto sa pýtal — aby sa dalo človeku odpísať (Ján 30. 10. 2026). */}
+              <span className="eval-date">
+                {item.asker === null ? t.askerAnonymous
+                  : item.asker === "gone" ? t.askerGone
+                  : <>{item.asker.name} · <a href={`mailto:${item.asker.email}`}>{item.asker.email}</a>{item.asker.role ? ` · ${item.asker.role}` : ""}</>}
+                {" · "}{t.askedAt} {formatDate(item.askedAt, language)}
+              </span>
             </div>
 
             <p className="eval-q">{item.question}</p>
