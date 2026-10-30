@@ -10,6 +10,62 @@
 
 ---
 
+## 2026-10-29–30 — Tickety ako vlákno, preposlané e-maily, fronta Na posúdenie
+
+**Schránka a tickety (#495–#501).** Aplikácia v Entra dostala Mail.ReadWrite
+(PowerShell, RBAC zúžené na schránku helpdesku; `Test-ServicePrincipalAuthorization`
+True len pre helpdesk@). Odpoveď odchádza ako HTML e-mail z Markdownu.
+Ján pri prvých ticketoch nerozumel dvom záložkám Otvorené/Odpovedané —
+po novom Otvorené / Vybavené / Všetky, posledná prijatá správa nad
+odpoveďou, história chronologicky s odsadenými odpoveďami a automatické
+odpovede („Automatická odpoveď:", „Out of office:") sa ticketom nestanú.
+Pri správach je čas (bez neho sa vlákno z jedného dňa nedalo čítať) a po
+odoslaní formulár odpovede zmizne.
+
+**Overenie naživo našlo tri chyby, ktoré testy nevideli (#500).** Odpoveď
+bola vo vlákne dvakrát: kópia z Odoslaných sa nespárovala, lebo v tickete
+je Markdown a Graph vráti text z HTML (bez `**`, odkaz len textom, zoznam
+prečíslovaný). Párovanie je teraz len podľa písmen. Ten istý HTML e-mail
+prečísloval „3., 4." na „1., 1." — `ol start`. A „rieši" ukazovalo
+identifikátor, lebo sa osoba hľadala funkciou, ktorá čaká e-mail.
+
+**Kolegyňa „nevidela" ticket** — bol medzi Vybavenými, lebo naň niekto
+ráno odpovedal z Outlooku. Kód bol v poriadku; stačilo pozrieť stav.
+
+**issf@ je Microsoft 365 skupina** s jediným členom helpdesk@ — kópia
+prichádza s pôvodným odosielateľom, ticket aj odpoveď patria človeku.
+Pri hľadaní sa však ukázalo 7 ticketov „Fwd:" od kolegov, kde by odpoveď
+odišla kolegovi. Pôvodný odosielateľ sa teraz berie z hlavičky
+preposlanej správy (#501), len ak preposiela adresa z domény schránky
+a pôvodný je mimo nej — ľudia zvonku, ktorí prepošlú systémový e-mail
+ISSF, ostávajú pýtajúcimi sa.
+
+**Fronta Na posúdenie (#502–#505).** Prišli prvé podnety. Pri každom je
+meno, e-mail a pozícia toho, kto sa pýtal, a zdroj (intranet, widget
+s názvom kanála, MCP klient — nové pole `origin`, staršie záznamy ho
+nemajú a neodhaduje sa). Podnet mimo témy sa dá vyradiť bez posudku.
+
+**Čo stálo čas: kruhový import.** #502 pridal do `evaluation.ts` import
+`people.ts`, ktorý importuje `EVALUATOR_ROLE` z `evaluation.ts`. Prešli
+tsc, eslint, vitest aj build; v produkcii PATCH `/api/rating` padal na
+„Cannot access before initialization" a hodnotiteľ videl „Táto voľba sa
+neuložila". Vitest načíta moduly v inom poradí, `import/no-cycle` bez
+TypeScriptového resolvera kruh nevidí. Nový `importCycles.test.ts`
+hľadá kruhy v `src/lib` sám (jeden starší, acknowledgements ↔ tracks,
+je v zozname známych). Chyba sa našla v logu Vercelu, nie klikaním —
+klik by zapisoval do produkcie.
+
+**Osoby z widgetu do intranetu nesmú (D168)** — overené pri
+otázke Jána: 341 externých, bez rolí, widget odpovedá na úrovni
+verejné. Traja z nich však majú adresu SFZ; pri prihlásení služobným
+kontom ich brána odmietla. Prihlásenie overeným kontom z povolenej domény
+ich teraz povýši na zamestnanca (#506).
+
+**Nabudúce:** pri zmene importov v `lib/` spustiť `importCycles.test.ts`
+skôr než build — a pri chybe na produkcii najprv Vercel Runtime Logs.
+
+---
+
 ## 2026-10-28–29 — Widget sa dá zbaliť; video pomocníka so zvukovým logom
 
 **Widget dostal zbalenie a žiarovku (D292, D293).** Po ukážke v ISSF sa
