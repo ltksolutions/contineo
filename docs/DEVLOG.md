@@ -10,6 +10,47 @@
 
 ---
 
+## 2026-10-30 popoludní — Prehľady fronty, rozhovor vo widgete, štatistika kanála
+
+**Fronta Na posúdenie dostala prehľady (#508, #509).** Ján po prvých
+rozhodnutiach nevidel, čo už posúdil. Prepínač Čaká / Posúdené / Vyradené
+s počtami, vyradený podnet sa dá vrátiť a nová stránka `/evaluation/stats`
+ukazuje mesiace a zdroje. Počíta sa tými istými pravidlami ako fronta,
+aby sa čísla nerozišli.
+
+**„Nesprávna odpoveď na predchádzajúcu otázku" (#511, #512, #515).** Na
+karte podnetu nebolo vidieť, na čo človek reagoval. Príčina bola hlbšie:
+widget posielal len poslednú otázku, takže model odpovedal naslepo a hľadalo
+sa podľa slov „nesprávna odpoveď". Karta teraz dopočíta až tri predchádzajúce
+otázky tej istej osoby (spätne, aj pre staré podnety). Widget posiela
+posledné tri kolá a hľadanie si z nich prepíše samostatnú otázku. Kolá
+nie sú zdrojom, fakty sú len z dokumentov nájdených teraz. Pri kontrole
+sa ukázalo, že v starej odpovedi ostávajú značky `[1]`, ktoré by ukazovali
+na úseky novej otázky. Odstraňujú sa na serveri pre všetky adaptéry.
+
+**Štatistika kanála (#510, #513, #514).** Návrh vznikol ako artefakt
+*Design* a Ján potvrdil všetky odporúčania (A). Prvý krok bol `channelKey`
+v `ai_usage` (#510), staršie riadky sa priraďujú cez osobu z widgetu.
+**Nečakané:** otázka, ku ktorej sa nič nenašlo, nebola zapísaná nikde —
+model sa nevolá, takže nie je ani v spotrebe AI. Pribudla kolekcia
+`unanswered_questions` len s kanálom a časom (bez znenia a osoby, TTL 25
+mesiacov). „Zodpovedané %" je preto pravdivé až od 30. 10. a stránka to
+hovorí. Do design systému pribudli `.stat-tiles` a `.period-nav`.
+
+**Čo stálo čas:** overenie proti produkčnej DB nebolo dovolené, a správne —
+`loadChannelStats` zakladá index, teda zapisuje. Overovalo sa na nasadenej
+stránke. Tam sa našlo „0 mil." pri tokenoch (#514), čo test s malými
+číslami nevidel.
+
+**Prvé čísla (týždeň 26. 10.):** 114 otázok, spokojnosť 44 % (9 × Nesedí),
+presnosť 100 % zo 4 posudkov, 30 ticketov, 4,24 USD.
+
+**Nabudúce:** formát čísel skúšať aj s reálnymi rádmi (tisíce tokenov,
+nie jednotky). Pri novej metrike najprv overiť, či sa udalosť vôbec
+niekde zapisuje.
+
+---
+
 ## 2026-10-29–30 — Tickety ako vlákno, preposlané e-maily, fronta Na posúdenie
 
 **Schránka a tickety (#495–#501).** Aplikácia v Entra dostala Mail.ReadWrite
