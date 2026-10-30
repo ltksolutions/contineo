@@ -174,6 +174,14 @@ export interface RatingRecord {
   evaluatedAt?: Date
   /** `persons.id` hodnotiteľa. */
   evaluatedBy?: string
+  /**
+   * Hodnotiteľ podnet **vyradil** — otázka nesúvisí s témou, niekto skúšal
+   * hlúposti (Ján 30. 10. 2026). Záznam sa nemaže (meranie spotreby a
+   * história ostávajú), len odíde z fronty bez posudku a do kurácie nejde.
+   * Nastaví aj `evaluatedAt` — to je príznak „vybavené" pre frontu.
+   */
+  dismissedAt?: Date
+  dismissedBy?: string
 
   /**
    * Kto je za záznamom — **`persons.id`, nie e-mail** (O17, 2026-09-16).
@@ -352,6 +360,24 @@ export async function saveVerdict(
   // neexistujúci. Do 2026-09-17 tu bolo len `_id` — hodnotiteľ ktorejkoľvek
   // organizácie zapísal posudok do cudzieho záznamu, keď poznal jeho ObjectId.
   const r = await col.updateOne({ _id: new ObjectId(id), companyCode: code }, { $set: changes })
+  return r.matchedCount === 1
+}
+
+/**
+ * Vyradí podnet z fronty bez posudku (`dismissedAt`). Nepodpisuje sa ako
+ * `reviewer` — neposúdil, len vyradil. Bránu roly drží volajúci.
+ * `false`, keď záznam v organizácii nie je alebo už je vybavený.
+ */
+export async function dismissRating(id: string, evaluator: string, companyCode: string): Promise<boolean> {
+  const code = requireCompanyCode(companyCode, "dismissRating")
+  if (!ObjectId.isValid(id)) return false
+  const now = new Date()
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const r = await col.updateOne(
+    // Len nevybavený — posúdený záznam sa vyradením neprepíše.
+    { _id: new ObjectId(id), companyCode: code, evaluatedAt: { $exists: false } } as never,
+    { $set: { dismissedAt: now, dismissedBy: evaluator, evaluatedAt: now, evaluatedBy: evaluator, updatedAt: now } },
+  )
   return r.matchedCount === 1
 }
 

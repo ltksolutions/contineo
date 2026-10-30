@@ -149,6 +149,9 @@ export async function saveCurationDraft(
   if (!record) {
     throw new CurationError("curation.unknownRecord", "Taký záznam o odpovedi neexistuje.")
   }
+  if (record.dismissedAt) {
+    throw new CurationError("curation.dismissed", "Podnet bol vyradený — z neho sa overená odpoveď nerobí.")
+  }
   if (!record.evaluatedAt) {
     throw new CurationError(
       "curation.notEvaluated",
@@ -459,6 +462,7 @@ export async function preparableAnswers(companyCode: string): Promise<Preparable
       companyCode,
       evaluatedAt: { $exists: true },
       verifiedAnswer: { $nin: ["", null] },
+      dismissedAt: { $exists: false },
       $or: [{ curation: { $exists: false } }, { "curation.state": "draft" }],
     } as never)
     .sort({ evaluatedAt: -1 })

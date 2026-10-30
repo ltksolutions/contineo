@@ -1464,6 +1464,11 @@ interface Dictionary {
     /** Čo povedal čitateľ — odznak nad kartou. */
     saidDoesNotFit: string
     reported: string
+    /** Vyradenie podnetu, ktorý nesúvisí s témou (Ján 30. 10. 2026). */
+    dismiss: string
+    dismissHint: string
+    dismissed: string
+    dismissFailed: string
     reader: string
     /** Pýtajúci sa bez prihlásenia (verejný widget). */
     askerAnonymous: string
@@ -6438,6 +6443,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyNote: "Sem sa dostane odpoveď až vtedy, keď na ňu niekto klikne „Nesedí“ alebo napíše, čo je na nej zle. Správne odpovede vás nezdržujú.",
     saidDoesNotFit: "nesedí",
     reported: "nahlásené",
+    dismiss: "Vyradiť z fronty",
+    dismissHint: "Otázka nesúvisí s témou alebo niekto skúšal hlúposti. Odpoveď sa neposudzuje a do znalostí nejde.",
+    dismissed: "Podnet je vyradený z fronty.",
+    dismissFailed: "Podnet sa nepodarilo vyradiť — možno ho medzitým niekto posúdil.",
     reader: "Čitateľ napísal",
     askerAnonymous: "bez prihlásenia",
     askerGone: "osoba už nie je v adresári",
@@ -11762,6 +11771,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyNote: "Sem se odpověď dostane až tehdy, když na ni někdo klikne „Nesedí“ nebo napíše, co je na ní špatně. Správné odpovědi vás nezdržují.",
     saidDoesNotFit: "nesedí",
     reported: "nahlášeno",
+    dismiss: "Vyřadit z fronty",
+    dismissHint: "Dotaz nesouvisí s tématem nebo někdo zkoušel hlouposti. Odpověď se neposuzuje a do znalostí nejde.",
+    dismissed: "Podnět je vyřazen z fronty.",
+    dismissFailed: "Podnět se nepodařilo vyřadit — možná ho mezitím někdo posoudil.",
     reader: "Čtenář napsal",
     askerAnonymous: "bez přihlášení",
     askerGone: "osoba už není v adresáři",
@@ -17075,6 +17088,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     emptyNote: "An answer lands here only when somebody clicks „It is not“ or writes what was wrong with it. Correct answers do not take your time.",
     saidDoesNotFit: "wrong",
     reported: "reported",
+    dismiss: "Remove from queue",
+    dismissHint: "The question is off-topic or someone was fooling around. The answer is not assessed and does not go into knowledge.",
+    dismissed: "The item was removed from the queue.",
+    dismissFailed: "The item could not be removed — someone may have assessed it meanwhile.",
     reader: "The reader wrote",
     askerAnonymous: "not signed in",
     askerGone: "no longer in the directory",

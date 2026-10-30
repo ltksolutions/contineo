@@ -16,6 +16,8 @@ import { revalidatePath } from "next/cache"
 import { evaluationContext } from "@/lib/evaluation"
 import { saveCurationDraft, CurationError } from "@/lib/curation"
 import { isRedirect } from "@/lib/redirects"
+import { dismissRating } from "@/lib/ratings"
+import { dictionary } from "@/lib/i18n"
 
 function fieldText(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -57,4 +59,17 @@ export async function prepareCurationAction(fd: FormData) {
   redirect(`/evaluation?msg=${encodeURIComponent(
     "Pár je pripravený. Zverejní ho správca obsahu — do znalostí sa zatiaľ nedostal.",
   )}`)
+}
+
+/**
+ * Vyradí podnet, ktorý nesúvisí s témou (Ján 30. 10. 2026: „niekto skúšal
+ * hlúposti"). Záznam ostáva, len odíde z fronty bez posudku.
+ */
+export async function dismissEvaluationAction(fd: FormData) {
+  const ctx = await evaluationContext()
+  if (ctx.state !== "ready") redirect("/")
+  const t = dictionary(ctx.person.language).evaluation
+  const ok = await dismissRating(fieldText(fd, "id"), ctx.person.id, ctx.tenant.companyCode)
+  revalidatePath("/evaluation")
+  redirect(ok ? `/evaluation?msg=${encodeURIComponent(t.dismissed)}` : `/evaluation?msg=${encodeURIComponent(t.dismissFailed)}&error=1`)
 }

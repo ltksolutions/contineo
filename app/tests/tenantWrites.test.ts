@@ -21,7 +21,7 @@ const fakeCollection = {
 }
 vi.mock("../src/lib/mongodb", () => ({ getCollection: vi.fn(async () => fakeCollection) }))
 
-import { recordAnswer, saveReaderFeedback, saveVerdict } from "../src/lib/ratings"
+import { recordAnswer, saveReaderFeedback, saveVerdict, dismissRating } from "../src/lib/ratings"
 import { publishCuration, saveCurationDraft } from "../src/lib/curation"
 import { MissingTenantError, requireCompanyCode } from "../src/lib/tenantScope"
 import { personAcknowledgements, validAcknowledgements } from "../src/lib/acknowledgements"
@@ -45,6 +45,15 @@ describe("ratings — organizácia v podmienke", () => {
   it("saveVerdict hľadá záznam podľa _id A organizácie", async () => {
     await saveVerdict(ID, { correct: 1 }, "p1", "SFZ")
     expect(calls[0].filter).toMatchObject({ companyCode: "SFZ" })
+  })
+
+  it("dismissRating hľadá nevybavený záznam podľa _id A organizácie, reviewer nemení", async () => {
+    await dismissRating(ID, "p1", "SFZ")
+    expect(calls[0].filter).toMatchObject({ companyCode: "SFZ", evaluatedAt: { $exists: false } })
+    const set = (fakeCollection.updateOne.mock.calls.at(-1) as unknown as [unknown, { $set: Record<string, unknown> }])[1].$set
+    expect(set).toMatchObject({ dismissedBy: "p1", evaluatedBy: "p1" })
+    expect(set).not.toHaveProperty("reviewer")
+    await expect(dismissRating(ID, "p1", "")).rejects.toThrow(MissingTenantError)
   })
 
   it("saveReaderFeedback hľadá záznam podľa _id A organizácie", async () => {
