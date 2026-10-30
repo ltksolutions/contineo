@@ -110,7 +110,7 @@ export default async function ChannelPage({ params, searchParams }: { params: Pr
         <span className="page-head-spacer" />
         <span className="tag">{t.kinds[c.kind]}</span>
       </div>
-      <ChannelPartTabs channelKey={c.key} current={base} canTickets={canTickets} canSettings language={language} />
+      <ChannelPartTabs channelKey={c.key} current={base} canTickets={canTickets} canStats={c.kind === "widget"} canSettings language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.kindHints[c.kind]}</p>
       {/* Nový tajný kľúč je v oznamom okne: „Rozumiem“ stránku načíta znova
           a kľúč sa ukazuje len raz (`takeRevealedWidgetSecret`). */}

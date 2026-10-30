@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Štatistika kanála</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/tokens.css">
+<link rel="stylesheet" href="ds/contineo/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:inherit}
+/* ODCHÝLKA 1 (Q1): súhrnné dlaždice — z tokenov, bez novej farby. */
+.stat-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
+@media (min-width:640px){.stat-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1024px){.stat-tiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.stat-tile{display:grid;gap:2px;align-content:start;padding:14px 16px;margin:0;color:inherit;text-decoration:none}
+a.stat-tile:hover{background:var(--surface-2)}
+.stat-tile-label{font-size:var(--fs-small);color:var(--muted)}
+.stat-tile-value{font-size:26px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat-tile-sub{font-size:var(--fs-micro);color:var(--muted)}
+.stat-tile-delta{font-size:var(--fs-micro);font-weight:600;font-variant-numeric:tabular-nums}
+.stat-tile-delta.is-better{color:var(--ok-fg)}
+.stat-tile-delta.is-worse{color:var(--bad-fg)}
+.stat-tile-delta.is-same{color:var(--muted)}
+/* ODCHÝLKA 2: šípky obdobia pod prepínačom pohľadu. */
+.period-nav{display:flex;align-items:center;gap:8px;margin:8px 0 0}
+.period-nav b{font-size:var(--fs-body);font-variant-numeric:tabular-nums}
+.period-nav .is-disabled{opacity:.4;pointer-events:none}
+</style>
+</helmet>
+<div style="--accent: {{accent}}; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; box-sizing: border-box; padding: 24px var(--pad-main, 16px) 48px">
+<div style="max-width: var(--shell-maxw, 1240px); margin: 0 auto; display: flex; flex-direction: column; gap: var(--gap, 14px)">
+
+<p class="quiet" style="margin: 0; font-size: var(--fs-small)"><a href="#">Kanály</a> › ISSF Helpdesk</p>
+
+<div class="page-head">
+  <div class="page-head-main">
+    <h1 class="page-title">ISSF Helpdesk</h1>
+    <p class="page-lead quiet">Ako Contineo v kanáli odpovedá, ako sú ľudia spokojní a čo to stojí.</p>
+  </div>
+  <div class="page-tools">
+    <a class="button button--quiet button--sm" href="#">Export Excel</a>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="Časti kanála"><div class="tabs-bar">
+  <a class="tab" href="#">Tickety</a>
+  <a class="tab is-active" href="#" aria-current="page">Štatistika</a>
+  <sc-if value="{{isAdmin}}" hint-placeholder-val="{{true}}"><a class="tab" href="#">Nastavenie</a></sc-if>
+</div></nav>
+
+<div>
+  <nav class="view-switch" aria-label="Obdobie">
+    <a class="view-switch-item" href="#">Deň</a>
+    <a class="view-switch-item is-on" href="#" aria-current="page">Týždeň</a>
+    <a class="view-switch-item" href="#">Mesiac</a>
+    <a class="view-switch-item" href="#">Rok</a>
+  </nav>
+  <p class="period-nav">
+    <a class="button button--quiet button--sm" href="#" aria-label="Predchádzajúci týždeň">‹</a>
+    <b>Týždeň 27. 10. – 2. 11. 2026</b>
+    <span class="button button--quiet button--sm is-disabled" aria-hidden="true">›</span>
+    <span class="quiet" style="font-size: var(--fs-small)">porovnanie s 20. – 26. 10.</span>
+  </p>
+</div>
+
+<section aria-labelledby="sum-h" style="display: flex; flex-direction: column; gap: 8px">
+  <h2 id="sum-h" class="sr-only">Súhrn</h2>
+  <div class="stat-tiles">
+    <sc-for list="{{tiles}}" as="t" hint-placeholder-count="6">
+      <a class="card stat-tile" href="#">
+        <span class="stat-tile-label">{{t.label}}</span>
+        <span class="stat-tile-value">{{t.value}}</span>
+        <span class="stat-tile-sub">{{t.sub}}</span>
+        <span class="stat-tile-delta {{t.deltaCls}}">{{t.delta}}</span>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<section class="card chart-card" aria-labelledby="chart-h">
+  <h2 id="chart-h">Otázky po dňoch</h2>
+  <p class="sr-only">Pondelok 7 zodpovedaných a 1 bez odpovede, utorok 9 a 2, streda 8 a 1, štvrtok 6 a 2.</p>
+  <div class="chart-plot" aria-hidden="true" style="--chart-cols: 7">
+    <div class="chart-gridline" style="top: 0"><span>12</span></div>
+    <div class="chart-gridline" style="top: 50%"><span>6</span></div>
+    <div class="chart-cols">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+        <sc-if value="{{d.future}}" hint-placeholder-val="{{false}}"><div class="chart-col is-future"></div></sc-if>
+        <sc-if value="{{d.past}}" hint-placeholder-val="{{true}}">
+          <a class="chart-col" tabindex="-1" href="#" title="{{d.title}}">
+            <span class="chart-seg series-1" style="height: {{d.a}}%"></span>
+            <span class="chart-seg series-6" style="height: {{d.u}}%"></span>
+            <small class="chart-col-total">{{d.total}}</small>
+          </a>
+        </sc-if>
+      </sc-for>
+    </div>
+  </div>
+  <div class="chart-labels" aria-hidden="true" style="--chart-cols: 7">
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="7"><span class="{{d.labelCls}}">{{d.label}}</span></sc-for>
+  </div>
+  <ul class="chart-legend">
+    <li><span class="chart-swatch series-1" aria-hidden="true"></span><span>Zodpovedané z prameňov</span></li>
+    <li><span class="chart-swatch series-6" aria-hidden="true"></span><span>Bez odpovede („nenašlo sa")</span></li>
+  </ul>
+</section>
+
+<section class="card chart-card" aria-labelledby="reader-h">
+  <h2 id="reader-h">Hodnotenie používateľov</h2>
+  <p class="sr-only">Sedí 12, nesedí 3, bez hodnotenia 15.</p>
+  <div class="chart-rank">
+    <sc-for list="{{reader}}" as="r" hint-placeholder-count="3">
+      <a class="chart-rank-row" href="#">
+        <span class="chart-rank-name"><span class="chart-swatch {{r.cls}}"></span><b>{{r.name}}</b></span>
+        <span class="chart-rank-track"><span class="chart-rank-fill {{r.cls}}" style="width: {{r.w}}%"></span></span>
+        <span class="chart-rank-val">{{r.val}}</span>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<section class="card chart-card" aria-labelledby="eval-h">
+  <h2 id="eval-h">Posudky hodnotiteľa</h2>
+  <p class="sr-only">Správne 8, nesprávne 1, halucinácia 1, vyradené 2, čaká 3.</p>
+  <div class="chart-rank">
+    <sc-for list="{{evals}}" as="r" hint-placeholder-count="5">
+      <a class="chart-rank-row" href="#">
+        <span class="chart-rank-name"><span class="chart-swatch {{r.cls}}"></span><b>{{r.name}}</b></span>
+        <span class="chart-rank-track"><span class="chart-rank-fill {{r.cls}}" style="width: {{r.w}}%"></span></span>
+        <span class="chart-rank-val">{{r.val}}</span>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<section aria-labelledby="tick-h" style="display: flex; flex-direction: column; gap: 8px">
+  <div class="page-head page-head--section"><h2 id="tick-h">Tickety (e-mail)</h2></div>
+  <div class="stat-tiles">
+    <sc-for list="{{tickets}}" as="t" hint-placeholder-count="6">
+      <a class="card stat-tile" href="#">
+        <span class="stat-tile-label">{{t.label}}</span>
+        <span class="stat-tile-value">{{t.value}}</span>
+        <span class="stat-tile-delta {{t.deltaCls}}">{{t.delta}}</span>
+      </a>
+    </sc-for>
+  </div>
+</section>
+
+<sc-if value="{{isAdmin}}" hint-placeholder-val="{{true}}">
+<section aria-labelledby="ai-h" style="display: flex; flex-direction: column; gap: 8px">
+  <div class="page-head page-head--section"><h2 id="ai-h">AI a cena</h2></div>
+  <div class="lnote lnote--warn">
+    <span class="lnote-mark" aria-hidden="true">!</span>
+    <span class="lnote-text">Cena do 29. 10. je dopočítaná cez osoby z widgetu. Návrhy odpovedí na tickety pred 30. 10. v nej nie sú.</span>
+  </div>
+  <div class="usage-summary card">
+    <div><span class="quiet">Suma</span><strong>6,40 $</strong></div>
+    <div><span class="quiet">Na zodpovedanú otázku</span><strong>0,21 $</strong></div>
+    <div><span class="quiet">Volaní</span><strong>214</strong></div>
+    <div><span class="quiet">Tokeny</span><strong>1,9 mil.</strong></div>
+  </div>
+  <section class="card matrix-wrap" aria-labelledby="mx-h">
+    <h3 id="mx-h" class="sr-only">Cena podľa účelu po dňoch</h3>
+    <div class="matrix" role="table" aria-labelledby="mx-h" style="--matrix-cols: minmax(180px, 1.6fr) repeat(7, minmax(0, 1fr)) 84px 150px">
+      <div class="matrix-row matrix-head" role="row">
+        <span class="matrix-name" role="columnheader">Účel</span>
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="7"><span class="matrix-cell {{d.labelCls}}" role="columnheader">{{d.label}}</span></sc-for>
+        <span class="matrix-total" role="columnheader">Spolu</span>
+        <span class="matrix-meta" role="columnheader">Tokeny</span>
+      </div>
+      <sc-for list="{{purposes}}" as="p" hint-placeholder-count="5">
+        <div class="matrix-row" role="row">
+          <span class="matrix-name" role="rowheader"><a href="#">{{p.name}}</a></span>
+          <sc-for list="{{p.cells}}" as="c" hint-placeholder-count="7"><span class="matrix-cell {{c.cls}}" role="cell">{{c.v}}</span></sc-for>
+          <span class="matrix-cell matrix-total" role="cell"><a href="#">{{p.total}}</a></span>
+          <span class="matrix-meta" role="cell">{{p.tokens}}</span>
+        </div>
+      </sc-for>
+      <div class="matrix-row matrix-foot" role="row">
+        <span class="matrix-name" role="rowheader">Spolu</span>
+        <sc-for list="{{footCells}}" as="c" hint-placeholder-count="7"><span class="matrix-cell {{c.cls}}" role="cell">{{c.v}}</span></sc-for>
+        <span class="matrix-cell matrix-total" role="cell">6,40 $</span>
+        <span class="matrix-meta" role="cell">1,9 mil.</span>
+      </div>
+    </div>
+  </section>
+  <div class="matrix-cards" role="list">
+    <sc-for list="{{purposes}}" as="p" hint-placeholder-count="5">
+      <div class="card matrix-card" role="listitem">
+        <span class="matrix-card-name"><a href="#">{{p.name}}</a></span>
+        <span class="matrix-card-sum">{{p.total}}</span>
+        <span class="matrix-card-meta">{{p.share}} · {{p.tokens}}</span>
+        <span class="matrix-card-last">Dnes: {{p.today}}</span>
+        <span class="spark" aria-hidden="true" style="--chart-cols: 7">
+          <sc-for list="{{p.spark}}" as="s" hint-placeholder-count="7"><span class="{{s.cls}}" style="height: {{s.h}}%"></span></sc-for>
+        </span>
+      </div>
+    </sc-for>
+    <div class="card matrix-cards-foot"><span>Spolu</span><span>6,40 $</span></div>
+  </div>
+</section>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"role":{"editor":"enum","options":["admin","agent"],"default":"admin","tsType":"\"admin\" | \"agent\""},"accent":{"editor":"color","default":"#232a35","options":["#232a35","#1d4ed8","#0f766e"]},"$preview":{"width":1440,"height":2100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const isAdmin = (this.props.role ?? 'admin') !== 'agent';
+    const max = 12;
+    const raw = [
+      { label: 'Po 27.', a: 7, u: 1 }, { label: 'Ut 28.', a: 9, u: 2 }, { label: 'St 29.', a: 8, u: 1 }, { label: 'Št 30.', a: 6, u: 2 },
+      { label: 'Pi 31.', future: true }, { label: 'So 1.', future: true }, { label: 'Ne 2.', future: true },
+    ];
+    const days = raw.map(d => d.future
+      ? { label: d.label, future: true, past: false, labelCls: 'is-future' }
+      : { label: d.label, future: false, past: true, labelCls: '', a: (d.a / max) * 100, u: (d.u / max) * 100, total: String(d.a + d.u), title: d.label + ': ' + d.a + ' zodpovedaných, ' + d.u + ' bez odpovede' });
+    const tiles = [
+      { label: 'Otázky', value: '36', sub: 'vo widgete', delta: '▲ 20 % oproti 30', deltaCls: 'is-same' },
+      { label: 'Zodpovedané', value: '83 %', sub: '30 z 36 s prameňmi', delta: '▲ 3 b.', deltaCls: 'is-better' },
+      { label: 'Spokojnosť', value: '80 %', sub: '12 z 15 hodnotení „Sedí"', delta: '▼ 5 b.', deltaCls: 'is-worse' },
+      { label: 'Presnosť', value: '80 %', sub: '8 z 10 posudkov správne', delta: '▲ 10 b.', deltaCls: 'is-better' },
+      { label: 'Tickety', value: '25', sub: '21 zodpovedaných · medián 3 h 20 min', delta: '▼ 40 min rýchlejšie', deltaCls: 'is-better' },
+    ];
+    if (isAdmin) tiles.push({ label: 'Cena', value: '6,40 $', sub: '0,21 $ na zodpovedanú otázku', delta: '▲ 0,90 $', deltaCls: 'is-worse' });
+    const rank = (rows, total) => rows.map(r => ({ ...r, w: (r.n / total) * 100, val: String(r.n) }));
+    const reader = rank([
+      { name: 'Sedí', n: 12, cls: 'series-1' }, { name: 'Nesedí', n: 3, cls: 'series-3' }, { name: 'Bez hodnotenia', n: 15, cls: 'series-6' },
+    ], 15);
+    const evals = rank([
+      { name: 'Správne', n: 8, cls: 'series-1' }, { name: 'Nesprávne', n: 1, cls: 'series-3' }, { name: 'Halucinácia', n: 1, cls: 'series-4' },
+      { name: 'Vyradené', n: 2, cls: 'series-6' }, { name: 'Čaká na posúdenie', n: 3, cls: 'series-5' },
+    ], 8);
+    const tickets = [
+      { label: 'Prijaté', value: '25', delta: '▲ 3', deltaCls: 'is-same' },
+      { label: 'Odpovedané', value: '21', delta: '▲ 5', deltaCls: 'is-better' },
+      { label: 'Uzavreté', value: '18', delta: '▲ 2', deltaCls: 'is-better' },
+      { label: 'Znovu otvorené', value: '2', delta: '— ako minule', deltaCls: 'is-same' },
+      { label: 'Medián odpovede', value: '3 h 20 min', delta: '▼ 40 min', deltaCls: 'is-better' },
+      { label: '90 % do', value: '1 d 4 h', delta: '▲ 2 h', deltaCls: 'is-worse' },
+    ];
+    const usd = v => v ? v.toFixed(2).replace('.', ',') : '';
+    const rows = [
+      { name: 'Odpoveď', v: [0.95, 1.20, 1.05, 0.90], tokens: '1,2 mil.' },
+      { name: 'Návrh odpovede na ticket', v: [0.40, 0.52, 0.38, 0.32], tokens: '0,5 mil.' },
+      { name: 'Prepis otázky', v: [0.09, 0.11, 0.10, 0.08], tokens: '0,1 mil.' },
+      { name: 'Ťažba FAQ', v: [0, 0.18, 0, 0], tokens: '0,06 mil.' },
+      { name: 'Triedenie otázky', v: [0.03, 0.04, 0.03, 0.02], tokens: '0,04 mil.' },
+    ];
+    const all = 6.40;
+    const purposes = rows.map(r => {
+      const sum = r.v.reduce((a, b) => a + b, 0);
+      const mx = Math.max(0.0001, ...r.v);
+      return {
+        name: r.name, tokens: r.tokens, total: usd(sum) + ' $', share: Math.round((sum / all) * 100) + ' %', today: usd(r.v[3]) + ' $',
+        cells: days.map((d, i) => d.future ? { v: '', cls: 'is-future' } : { v: usd(r.v[i]), cls: '' }),
+        spark: days.map((d, i) => d.future ? { cls: 'is-future', h: 0 } : { cls: '', h: Math.max(5, (r.v[i] / mx) * 100) }),
+      };
+    });
+    const footCells = days.map((d, i) => d.future ? { v: '', cls: 'is-future' } : { v: usd(rows.reduce((a, r) => a + r.v[i], 0)), cls: '' });
+    return { isAdmin, accent: this.props.accent ?? '#232a35', days, tiles, reader, evals, tickets, purposes, footCells };
+  }
+}
+</script>
+</body>
+</html>

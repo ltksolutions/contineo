@@ -86,7 +86,7 @@ export default async function ChannelHistoryPage({ params, searchParams }: { par
         <span className="page-head-spacer" />
         <span className="tag">{c.name}</span>
       </div>
-      <ChannelPartTabs channelKey={c.key} current={channelHref(c.key, "settings")} canTickets={canTickets} canSettings language={language} />
+      <ChannelPartTabs channelKey={c.key} current={channelHref(c.key, "settings")} canTickets={canTickets} canStats={c.kind === "widget"} canSettings language={language} />
       <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.historyIntro}</p>
       <Notice message={msg} error={error === "1"} back={base} language={language} />
 

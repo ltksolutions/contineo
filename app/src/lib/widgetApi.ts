@@ -23,6 +23,7 @@ import { sameOrigin } from "./sameOrigin"
 import { verifyWidgetToken, type WidgetIdentity } from "./widgetToken"
 import { ensureWidgetPerson } from "./widgetPersons"
 import { recordAnswer, RATINGS_COLLECTION, type RatingRecord } from "./ratings"
+import { recordUnanswered } from "./unansweredQuestions"
 import { AppError } from "./appError"
 import { errorText, isUiLanguage, type UiLanguage } from "./i18n"
 import type { Person } from "./persons"
@@ -143,6 +144,8 @@ export function recordingTransform(input: {
   searchedScope?: { library: boolean; live: string[] }
   /** Názov kanála — kópia do záznamu ako zdroj podnetu. */
   channelName: string
+  /** Kľúč kanála — nezodpovedaná otázka sa počíta v štatistike kanála (KANAL-statistika). */
+  channelKey: string
   /** Prvá udalosť streamu: zdroje behu a hotová hlavička odpovede pre widget. */
   scopeEvent?: Record<string, unknown>
 }): TransformStream<Uint8Array, Uint8Array> {
@@ -159,7 +162,11 @@ export function recordingTransform(input: {
     else if (ev.type === "citation") citations.push(ev.citation)
     else if (ev.type === "done") {
       const sources = Array.isArray(ev.sources) ? ev.sources : []
-      if (!text.trim() || !sources.length) return
+      if (!text.trim() || !sources.length) {
+        // „Nenašlo sa" — nie je čo hodnotiť, ale do podielu zodpovedaných patrí.
+        void recordUnanswered(input.companyCode, input.channelKey)
+        return
+      }
       try {
         const id = await recordAnswer({
           question: input.question, answer: text, sources: sources as never, citations: citations as never,

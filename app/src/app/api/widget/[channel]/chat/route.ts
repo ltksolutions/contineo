@@ -72,7 +72,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
     // Predchádzajúce kolá z toho istého okna widgetu; starý skript ich neposiela.
     history: parseHistory(body.history),
     callbackUrl: await connectorCallbackUrl(),
-  }).pipeThrough(recordingTransform({ question: query, personId: gate.person.id, companyCode: gate.tenant.companyCode, startedAt: Date.now(), searchedScope, channelName: gate.channel.name, scopeEvent }))
+  }).pipeThrough(recordingTransform({ question: query, personId: gate.person.id, companyCode: gate.tenant.companyCode, startedAt: Date.now(), searchedScope, channelName: gate.channel.name, channelKey: gate.channel.key, scopeEvent }))
 
   return new Response(stream, {
     headers: { ...cors, "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
