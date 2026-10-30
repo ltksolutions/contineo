@@ -141,6 +141,8 @@ export function recordingTransform(input: {
   startedAt: number
   /** V čom sa hľadalo — uloží sa so záznamom ako na `/ask` (KANAL-widget-zdroje). */
   searchedScope?: { library: boolean; live: string[] }
+  /** Názov kanála — kópia do záznamu ako zdroj podnetu. */
+  channelName: string
   /** Prvá udalosť streamu: zdroje behu a hotová hlavička odpovede pre widget. */
   scopeEvent?: Record<string, unknown>
 }): TransformStream<Uint8Array, Uint8Array> {
@@ -164,7 +166,7 @@ export function recordingTransform(input: {
           model: String(ev.model ?? ""), provider: String(ev.provider ?? ""), verifiedCitations: Boolean(ev.verifiedCitations),
           ttftMs: firstTokenAt ? firstTokenAt - input.startedAt : null, totalMs: Date.now() - input.startedAt,
           timings: ev.timings as never, tokens: ev.tokens as never, cost: ev.cost as never, time: ev.time as never,
-          searchedScope: input.searchedScope,
+          searchedScope: input.searchedScope, origin: { kind: "widget", label: input.channelName },
         }, input.personId, input.companyCode, "public")
         controller.enqueue(enc.encode(`data: ${JSON.stringify({ type: "recorded", id })}\n\n`))
       } catch (e) {

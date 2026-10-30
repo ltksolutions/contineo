@@ -1469,6 +1469,8 @@ interface Dictionary {
     askerAnonymous: string
     /** Osoba už nie je v adresári. */
     askerGone: string
+    /** Odkiaľ otázka prišla — štítok na karte. Kľúče z `RATING_ORIGINS`. */
+    origin: { intranet: string; widget: string; mcp: string }
     answerLabel: string
     showAnswer: string
     hideAnswer: string
@@ -6439,6 +6441,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reader: "Čitateľ napísal",
     askerAnonymous: "bez prihlásenia",
     askerGone: "osoba už nie je v adresári",
+    origin: { intranet: "Intranet", widget: "Widget", mcp: "MCP" },
     answerLabel: "Odpoveď systému",
     showAnswer: "Zobraziť odpoveď",
     hideAnswer: "Skryť odpoveď",
@@ -11762,6 +11765,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reader: "Čtenář napsal",
     askerAnonymous: "bez přihlášení",
     askerGone: "osoba už není v adresáři",
+    origin: { intranet: "Intranet", widget: "Widget", mcp: "MCP" },
     answerLabel: "Odpověď systému",
     showAnswer: "Zobrazit odpověď",
     hideAnswer: "Skrýt odpověď",
@@ -17074,6 +17078,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     reader: "The reader wrote",
     askerAnonymous: "not signed in",
     askerGone: "no longer in the directory",
+    origin: { intranet: "Intranet", widget: "Widget", mcp: "MCP" },
     answerLabel: "The system's answer",
     showAnswer: "Show the answer",
     hideAnswer: "Hide the answer",

@@ -484,7 +484,7 @@ export function registerTools(server: McpServer, actor: McpActor): void {
         library,
         live: picked.filter(s => s.id !== LIBRARY_SOURCE_ID).map(s => s.name),
         ...(library && scopeDocs.length ? { documents: scopeDocs.map(d => d.title) } : {}),
-      })
+      }, actor.clientName)
       if (outcome.error) return failure(outcome.error === "timeout" ? "The answer took too long." : outcome.error)
       if (!outcome.answer.trim()) {
         return text(outcome.noVersions ? "No document version is in force on that day." : "Nothing in the documents answers this question.", { answer: null, sources: [], noVersions: outcome.noVersions })

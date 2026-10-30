@@ -123,7 +123,7 @@ describe("evaluationContext", () => {
 
 describe("evaluationQueue — kto sa pýtal (Jan 30. 10. 2026)", () => {
   const rows = [
-    { _id: "r1", companyCode: "SFZ", question: "Q1", readerVerdict: 0, askedBy: "p1" },
+    { _id: "r1", companyCode: "SFZ", question: "Q1", readerVerdict: 0, askedBy: "p1", origin: { kind: "widget", label: "ISSF Helpdesk" } },
     { _id: "r2", companyCode: "SFZ", question: "Q2", readerVerdict: 0, reviewer: "p2" },
     { _id: "r3", companyCode: "SFZ", question: "Q3", readerVerdict: 0 },
     { _id: "r4", companyCode: "SFZ", question: "Q4", readerNote: "zle", askedBy: "zmazana" },
@@ -148,6 +148,7 @@ describe("evaluationQueue — kto sa pýtal (Jan 30. 10. 2026)", () => {
       null,
       "gone",
     ])
+    expect(q.map(i => i.origin)).toEqual([{ kind: "widget", label: "ISSF Helpdesk" }, null, null, null])
     // Osoby len z vlastnej organizácie (D32).
     expect(personsQuery).toMatchObject({ companyCode: "SFZ" })
   })

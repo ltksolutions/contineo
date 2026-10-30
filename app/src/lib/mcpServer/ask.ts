@@ -40,6 +40,8 @@ export async function askOnce(
   timeoutMs = ASK_TIMEOUT_MS,
   /** V čom sa hľadalo — kópia názvov do záznamu, ako na `/ask` (ADR-040). */
   searchedScope?: SearchedScope,
+  /** Názov MCP klienta (napr. Claude) — kópia do záznamu ako zdroj podnetu. */
+  clientName?: string,
 ): Promise<AskOutcome> {
   const startedAt = Date.now()
   const out: AskOutcome = { answer: "", sources: [], model: "", provider: "", noVersions: false }
@@ -90,6 +92,7 @@ export async function askOnce(
           ttftMs: firstTokenAt ? firstTokenAt - startedAt : null, totalMs: Date.now() - startedAt,
           timings: done.timings as never, tokens: done.tokens as never, cost: done.cost as never, time: done.time as never,
           searchedScope: searchedScope ?? { library: !input.only || input.only.includes("library"), live: [] },
+          origin: { kind: "mcp", ...(clientName ? { label: clientName } : {}) },
         }, input.usageActor.personId, input.companyCode, input.accessLevel)
       } catch (e) {
         console.error("[mcp] zápis odpovede zlyhal:", e)

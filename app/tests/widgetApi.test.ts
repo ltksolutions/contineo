@@ -37,7 +37,7 @@ async function run(events: unknown[], extra: Partial<Parameters<typeof recording
   const src = new ReadableStream<Uint8Array>({
     start(c) { for (const e of events) c.enqueue(enc.encode(`data: ${JSON.stringify(e)}\n\n`)); c.close() },
   })
-  const out = src.pipeThrough(recordingTransform({ question: "Q?", personId: "p1", companyCode: "SFZ", startedAt: Date.now(), ...extra }))
+  const out = src.pipeThrough(recordingTransform({ question: "Q?", personId: "p1", companyCode: "SFZ", startedAt: Date.now(), channelName: "ISSF Helpdesk", ...extra }))
   const reader = out.getReader(); const dec = new TextDecoder(); let s = ""
   for (;;) { const r = await reader.read(); if (r.done) break; s += dec.decode(r.value) }
   return s
@@ -50,8 +50,10 @@ describe("recordingTransform", () => {
     const s = await run([{ type: "token", token: "A" }, { type: "done", sources: [{ title: "RP" }] }],
       { searchedScope: { library: true, live: [] }, scopeEvent })
     expect(s.indexOf('"type":"scope"')).toBe(s.indexOf("data: ") + 6 + 1)
-    const [rec] = recordAnswer.mock.calls[0] as unknown as [{ searchedScope: unknown }]
+    const [rec] = recordAnswer.mock.calls[0] as unknown as [{ searchedScope: unknown; origin: unknown }]
     expect(rec.searchedScope).toEqual({ library: true, live: [] })
+    // Zdroj podnetu pre frontu Na posúdenie (Ján 30. 10. 2026).
+    expect(rec.origin).toEqual({ kind: "widget", label: "ISSF Helpdesk" })
   })
   it("prepusti udalosti, po done so zdrojmi zapise odpoved a prida recorded", async () => {
     recordAnswer.mockClear()
