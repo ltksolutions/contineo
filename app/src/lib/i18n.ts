@@ -3001,7 +3001,6 @@ interface Dictionary {
       empty: string
       emptyText: string
       units: { min: string; h: string; d: string }
-      million: (n: string) => string
       sheets: { summary: string; quality: string; tickets: string; ai: string }
       colMetric: string
     }
@@ -8553,7 +8552,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       empty: "V tomto období neprišla žiadna otázka ani ticket.",
       emptyText: "Šípkou sa vrátite do predchádzajúceho obdobia.",
       units: { min: "min", h: "h", d: "d" },
-      million: n => `${n} mil.`,
       sheets: { summary: "Súhrn", quality: "Kvalita", tickets: "Tickety", ai: "AI a cena" },
       colMetric: "Ukazovateľ",
     },
@@ -13976,7 +13974,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       empty: "V tomto období nepřišel žádný dotaz ani tiket.",
       emptyText: "Šipkou se vrátíte do předchozího období.",
       units: { min: "min", h: "h", d: "d" },
-      million: n => `${n} mil.`,
       sheets: { summary: "Souhrn", quality: "Kvalita", tickets: "Tikety", ai: "AI a cena" },
       colMetric: "Ukazatel",
     },
@@ -19390,7 +19387,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       empty: "No question or ticket came in during this period.",
       emptyText: "Use the arrow to go back to the previous period.",
       units: { min: "min", h: "h", d: "d" },
-      million: n => `${n} M`,
       sheets: { summary: "Summary", quality: "Quality", tickets: "Tickets", ai: "AI and cost" },
       colMetric: "Metric",
     },
