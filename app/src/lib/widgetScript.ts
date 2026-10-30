@@ -640,7 +640,7 @@ function renderHistory(items,filtered){
 function openSaved(id){
   api('history',{action:'open',id:id}).then(function(r){if(!r.ok)throw new Error('http');return r.json()}).then(function(j){
     start();log.appendChild(el('div','xw-q',j.question));var a=answerBox();renderMd(a.body,j.answer);lastQuestion=j.question;
-    showSources(a.box,j.sources||[]);conversation.push({recordId:id,question:j.question,verdict:null});rateButtons(id,a.box);syncOffer();scrollEnd();
+    showSources(a.box,j.sources||[]);conversation.push({recordId:id,question:j.question,verdict:null,answer:j.answer||''});rateButtons(id,a.box);syncOffer();scrollEnd();
   }).catch(function(e){start();sys(e&&e.message==='expired'?T.expired:T.error)});
 }
 
@@ -681,7 +681,9 @@ function ask(q){
   var A=answerBox();var ran=null;
   var thinking=waiting(A.body);
   var text='',sources=[],recordId=null;
-  api('chat',{query:q,language:P.code,sources:on.slice()}).then(function(r){
+  /* Posledné kolá toho istého okna — model vie, na čo otázka nadväzuje. */
+  var history=conversation.slice(-3).map(function(c){return {question:c.question,answer:c.answer||''}});
+  api('chat',{query:q,language:P.code,sources:on.slice(),history:history}).then(function(r){
     if(!r.ok||!r.body){throw new Error(r.status===429?'rate':'http')}
     var reader=r.body.getReader(),dec=new TextDecoder(),buf='';
     function pump(){return reader.read().then(function(res){
@@ -700,9 +702,9 @@ function ask(q){
     return pump();
   }).then(function(){
     thinking.remove();
-    if(!text.trim()||!sources.length){A.body.textContent=T.noAnswer;negatives++;conversation.push({recordId:null,question:q,verdict:0});if(negatives>=LOOK.escalateAfter)offerEscalation(false);return}
+    if(!text.trim()||!sources.length){A.body.textContent=T.noAnswer;negatives++;conversation.push({recordId:null,question:q,verdict:0,answer:''});if(negatives>=LOOK.escalateAfter)offerEscalation(false);return}
     showSources(A.box,sources);
-    conversation.push({recordId:recordId,question:q,verdict:null});
+    conversation.push({recordId:recordId,question:q,verdict:null,answer:text});
     if(recordId)rateButtons(recordId,A.box);
     if(ran&&scopeBtn){
       last={question:q,ids:ran.ids||[],from:ran.from||'',answer:A.box,note:null};

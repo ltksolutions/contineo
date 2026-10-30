@@ -1497,6 +1497,8 @@ interface Dictionary {
     hideAnswer: string
     sources: (n: number) => string
     askedAt: string
+    /** Predchádzajúca otázka tej istej osoby nad otázkou podnetu (Ján 30. 10. 2026). */
+    earlier: (time: string) => string
     waiting: (n: number) => string
     /** Podmenu sekcie: fronta a štatistika (Ján 30. 10. 2026). */
     tabsLabel: string
@@ -6572,6 +6574,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sources: n => (n === 1 ? "1 zdroj" : n <= 4 ? `${n} zdroje` : `${n} zdrojov`),
     askedAt: "opýtané",
     waiting: n => (n === 1 ? "1 na posúdenie" : n <= 4 ? `${n} na posúdenie` : `${n} na posúdenie`),
+    earlier: time => `Predchádzajúca otázka · ${time}`,
     tabsLabel: "Na posúdenie",
     tabs: { queue: "Podnety", stats: "Štatistika" },
     stats: {
@@ -11996,6 +11999,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sources: n => (n === 1 ? "1 zdroj" : n <= 4 ? `${n} zdroje` : `${n} zdrojů`),
     askedAt: "dotázáno",
     waiting: n => `${n} k posouzení`,
+    earlier: time => `Předchozí otázka · ${time}`,
     tabsLabel: "K posouzení",
     tabs: { queue: "Podněty", stats: "Statistika" },
     stats: {
@@ -17409,6 +17413,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sources: n => (n === 1 ? "1 source" : `${n} sources`),
     askedAt: "asked",
     waiting: n => `${n} to evaluate`,
+    earlier: time => `Earlier question · ${time}`,
     tabsLabel: "To evaluate",
     tabs: { queue: "Reports", stats: "Statistics" },
     stats: {
