@@ -113,7 +113,16 @@ export interface QueueItem {
   origin: RatingOrigin | null
   /** Ako sa o podnete rozhodlo — len v pohľadoch Posúdené a Vyradené. */
   decision?: Decision
+  /**
+   * Čo sa ten istý človek v tom istom zdroji pýtal tesne predtým, najstaršie
+   * prvé (Ján 30. 10. 2026: „nevidím, akú otázku dal človek"). Doplňujúca
+   * otázka typu „Nesprávna odpoveď na predchádzajúcu otázku…" sa bez nich
+   * posúdiť nedá.
+   */
+  earlier: EarlierQuestion[]
 }
+
+export interface EarlierQuestion { question: string; answer: string; askedAt: Date }
 
 export interface PersonInfo { name: string; email: string; role: string | null }
 
@@ -163,7 +172,55 @@ const lookup = (people: Map<string, PersonInfo>, id: string | null | undefined) 
 const askerId = (z: RatingRecord) =>
   z.askedBy ?? (z.evaluatedAt ? undefined : z.reviewer) ?? z.readerNoteBy ?? null
 
-function toItem(z: RatingRecord, people: Map<string, PersonInfo>): QueueItem {
+// ── predchádzajúce otázky ───────────────────────────────────────────────────
+
+/** Ako ďaleko dozadu ešte ide o ten istý rozhovor. */
+export const EARLIER_WINDOW_MS = 60 * 60_000
+const MAX_EARLIER = 3
+
+type EarlierRow = Pick<RatingRecord, "question" | "answer" | "createdAt" | "askedBy" | "origin"> & { _id?: unknown }
+
+const sameOrigin = (a: RatingOrigin | null | undefined, b: RatingOrigin | null | undefined) =>
+  (a?.kind ?? "") === (b?.kind ?? "") && (a?.label ?? "") === (b?.label ?? "")
+
+/**
+ * Predchádzajúce otázky k jednému záznamu — čistá funkcia kvôli testu.
+ *
+ * Widget posiela na server len poslednú otázku, nie rozhovor, takže
+ * súvislosť sa dá zložiť len spätne: tá istá osoba (`askedBy`), ten istý
+ * zdroj a najviac `EARLIER_WINDOW_MS` pred otázkou. Záznamy bez `askedBy`
+ * (nikto prihlásený, staršie záznamy) súvislosť nemajú — nedá sa povedať,
+ * či ide o toho istého človeka.
+ */
+export function pickEarlier(target: EarlierRow, rows: EarlierRow[]): EarlierQuestion[] {
+  const at = target.createdAt?.getTime()
+  if (!target.askedBy || !at) return []
+  return rows
+    .filter(r => r.askedBy === target.askedBy && sameOrigin(r.origin, target.origin) && r.createdAt
+      && r.createdAt.getTime() < at && r.createdAt.getTime() >= at - EARLIER_WINDOW_MS)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, MAX_EARLIER)
+    .reverse()
+    .map(r => ({ question: r.question ?? "", answer: r.answer ?? "", askedAt: r.createdAt }))
+}
+
+/** Predchádzajúce otázky ku všetkým záznamom naraz — jedným dotazom. */
+async function earlierById(companyCode: string, targets: RatingRecord[]): Promise<Map<string, EarlierQuestion[]>> {
+  const withAsker = targets.filter(z => z.askedBy && z.createdAt)
+  if (!withAsker.length) return new Map()
+  const times = withAsker.map(z => z.createdAt.getTime())
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const rows = await col
+    .find({
+      companyCode,
+      askedBy: { $in: [...new Set(withAsker.map(z => z.askedBy!))] },
+      createdAt: { $gte: new Date(Math.min(...times) - EARLIER_WINDOW_MS), $lt: new Date(Math.max(...times)) },
+    } as never, { projection: { question: 1, answer: 1, createdAt: 1, askedBy: 1, origin: 1 } })
+    .toArray()
+  return new Map(withAsker.map(z => [String(z._id), pickEarlier(z, rows)]))
+}
+
+function toItem(z: RatingRecord, people: Map<string, PersonInfo>, earlier: Map<string, EarlierQuestion[]>): QueueItem {
   return {
     id: String(z._id),
     question: z.question ?? "",
@@ -174,6 +231,7 @@ function toItem(z: RatingRecord, people: Map<string, PersonInfo>): QueueItem {
     sources: (z.sources ?? []).map(s => ({ title: s.title, articleRef: s.articleRef })),
     origin: z.origin ?? null,
     asker: lookup(people, askerId(z)),
+    earlier: earlier.get(String(z._id)) ?? [],
   }
 }
 
@@ -185,16 +243,9 @@ function toItem(z: RatingRecord, people: Map<string, PersonInfo>): QueueItem {
  * neho sa nedá povedať, ktorej organizácii patria.
  */
 export async function evaluationQueue(companyCode: string): Promise<QueueItem[]> {
-  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
-  const rows = await col
-    .find({ companyCode, evaluatedAt: { $exists: false } } as never)
-    .sort({ createdAt: -1 })
-    .limit(MAX_QUEUE)
-    .toArray()
-
-  const pending = rows.filter(needsEvaluation)
-  const people = await peopleById(companyCode, pending.map(askerId))
-  return pending.map(z => toItem(z, people))
+  const pending = await pendingRows(companyCode)
+  const [people, earlier] = await Promise.all([peopleById(companyCode, pending.map(askerId)), earlierById(companyCode, pending)])
+  return pending.map(z => toItem(z, people, earlier))
 }
 
 /** Podmienka pohľadu Posúdené / Vyradené. */
@@ -216,9 +267,12 @@ export async function evaluationDecided(companyCode: string, kind: Decision["kin
     .sort({ evaluatedAt: -1 })
     .limit(MAX_QUEUE)
     .toArray()
-  const people = await peopleById(companyCode, rows.flatMap(z => [askerId(z), z.evaluatedBy]))
+  const [people, earlier] = await Promise.all([
+    peopleById(companyCode, rows.flatMap(z => [askerId(z), z.evaluatedBy])),
+    earlierById(companyCode, rows),
+  ])
   return rows.map(z => ({
-    ...toItem(z, people),
+    ...toItem(z, people, earlier),
     decision: {
       kind,
       at: z.dismissedAt ?? z.evaluatedAt ?? new Date(0),
@@ -264,7 +318,18 @@ export async function evaluationCounts(companyCode: string): Promise<EvaluationC
  * objemoch je to jeden dotaz; keby fronta narástla, počíta sa agregáciou.
  */
 export async function queueCount(companyCode: string): Promise<number> {
-  return (await evaluationQueue(companyCode)).length
+  return (await pendingRows(companyCode)).length
+}
+
+/** Záznamy fronty bez dopočítania osôb a súvislostí — spoločné pre zoznam aj počet. */
+async function pendingRows(companyCode: string): Promise<RatingRecord[]> {
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const rows = await col
+    .find({ companyCode, evaluatedAt: { $exists: false } } as never)
+    .sort({ createdAt: -1 })
+    .limit(MAX_QUEUE)
+    .toArray()
+  return rows.filter(needsEvaluation)
 }
 
 // ── štatistika ──────────────────────────────────────────────────────────────

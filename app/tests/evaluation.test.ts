@@ -22,7 +22,7 @@ vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 
 import {
   isEvaluator, needsEvaluation, evaluationContext, evaluationQueue, evaluationDecided, evaluationView, EVALUATOR_ROLE,
-  evaluationStats,
+  evaluationStats, pickEarlier, EARLIER_WINDOW_MS,
 } from "../src/lib/evaluation"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
@@ -223,5 +223,31 @@ describe("evaluationStats", () => {
     expect(s.sources.map(x => x.key)).toEqual(["widget:Helpdesk", "intranet", ""])
     expect(s.sources[0].answersByMonth.slice(-2)).toEqual([1, 1])
     expect(s.sources[2].origin).toBeNull()
+  })
+})
+
+describe("pickEarlier", () => {
+  const widget = { kind: "widget" as const, label: "Helpdesk" }
+  const t0 = new Date("2026-10-30T10:00:00Z")
+  const before = (min: number) => new Date(t0.getTime() - min * 60_000)
+  const target = { question: "A plati to aj pre oblastne sutaze?", answer: "", createdAt: t0, askedBy: "p1", origin: widget }
+
+  it("ta ista osoba, ten isty zdroj, v okne, najstarsia prva", () => {
+    const rows = [
+      { question: "Druha", answer: "Odpoved 2", createdAt: before(5), askedBy: "p1", origin: widget },
+      { question: "Prva", answer: "Odpoved 1", createdAt: before(20), askedBy: "p1", origin: widget },
+      { question: "Ina osoba", answer: "", createdAt: before(3), askedBy: "p2", origin: widget },
+      { question: "Iny zdroj", answer: "", createdAt: before(3), askedBy: "p1", origin: { kind: "intranet" as const } },
+      { question: "Davno", answer: "", createdAt: new Date(t0.getTime() - EARLIER_WINDOW_MS - 1), askedBy: "p1", origin: widget },
+      { question: "Neskor", answer: "", createdAt: new Date(t0.getTime() + 1000), askedBy: "p1", origin: widget },
+      target,
+    ]
+    expect(pickEarlier(target, rows).map(e => e.question)).toEqual(["Prva", "Druha"])
+  })
+
+  it("najviac tri, bez osoby ziadne", () => {
+    const rows = [1, 2, 3, 4, 5].map(m => ({ question: `Q${m}`, answer: "", createdAt: before(m), askedBy: "p1", origin: widget }))
+    expect(pickEarlier(target, rows).map(e => e.question)).toEqual(["Q3", "Q2", "Q1"])
+    expect(pickEarlier({ ...target, askedBy: undefined }, rows)).toEqual([])
   })
 })
