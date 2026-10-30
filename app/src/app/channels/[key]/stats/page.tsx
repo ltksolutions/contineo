@@ -110,7 +110,8 @@ export default async function ChannelStatsPage({ params, searchParams }: { param
   const hrefFor = (r: StatRange) => `${base}?${new URLSearchParams({ period: r.period, at: r.at })}`
   const exportHref = `/api/channels/${encodeURIComponent(key)}/stats?${new URLSearchParams({ period: range.period, at: range.at })}`
   const num = (n: number) => new Intl.NumberFormat(locale).format(n)
-  const millions = (n: number) => ts.million(new Intl.NumberFormat(locale, { maximumFractionDigits: n >= 10_000_000 ? 0 : 1 }).format(n / 1_000_000))
+  // „1,6 mil.", „79 tis." — pri pár tisícoch tokenov by „0 mil." nepovedalo nič.
+  const millions = (n: number) => new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(n)
   const lastDay = `${range.last.year}-${String(range.last.month + 1).padStart(2, "0")}-${String(range.last.day).padStart(2, "0")}`
   const usageHref = `/organisation/ai/usage?${new URLSearchParams({ from: range.at, to: lastDay })}`
   const ticketsHref = isAgent ? channelHref(key, "tickets") : undefined
