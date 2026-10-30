@@ -31,6 +31,7 @@ import { dictionary, formatDate } from "@/lib/i18n"
 import Rating from "@/components/Rating"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
+import EvaluationTabs from "@/components/EvaluationTabs"
 
 export const dynamic = "force-dynamic"
 
@@ -72,6 +73,7 @@ export default async function EvaluationPage({
         <h1 className="page-title">{t.heading}</h1>
         {counts.pending > 0 && <span className="tag">{t.waiting(counts.pending)}</span>}
       </div>
+      <EvaluationTabs current="/evaluation" language={language} />
       <p className="quiet page-lead eval-lead">{t.intro}</p>
 
       <Notice language={language} message={message} error={error === "1"} back="/evaluation" />

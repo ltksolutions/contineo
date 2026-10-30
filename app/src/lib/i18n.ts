@@ -1498,6 +1498,31 @@ interface Dictionary {
     sources: (n: number) => string
     askedAt: string
     waiting: (n: number) => string
+    /** Podmenu sekcie: fronta a štatistika (Ján 30. 10. 2026). */
+    tabsLabel: string
+    tabs: { queue: string; stats: string }
+    /** Štatistika `/evaluation/stats`. */
+    stats: {
+      lead: string
+      byLabel: string
+      byMonths: string
+      bySources: string
+      chartTitle: string
+      chartAlt: (text: string) => string
+      seriesFits: string
+      seriesDoesNotFit: string
+      metrics: {
+        answers: string; doesNotFit: string; share: string; correct: string
+        wrong: string; hallucination: string; dismissed: string; pending: string
+      }
+      colMetric: string
+      colSource: string
+      total: string
+      noSource: string
+      summary: (answers: number, doesNotFit: number, share: string) => string
+      empty: string
+      note: string
+    }
   }
   rating: {
     /**
@@ -6486,6 +6511,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sources: n => (n === 1 ? "1 zdroj" : n <= 4 ? `${n} zdroje` : `${n} zdrojov`),
     askedAt: "opýtané",
     waiting: n => (n === 1 ? "1 na posúdenie" : n <= 4 ? `${n} na posúdenie` : `${n} na posúdenie`),
+    tabsLabel: "Na posúdenie",
+    tabs: { queue: "Podnety", stats: "Štatistika" },
+    stats: {
+      lead: "Koľko odpovedí systém dal za posledných 12 mesiacov, pri koľkých niekto povedal, že nesedia, a ako o nich hodnotitelia rozhodli.",
+      byLabel: "Zoskupiť",
+      byMonths: "Po mesiacoch",
+      bySources: "Podľa zdroja",
+      chartTitle: "Odpovede po mesiacoch",
+      chartAlt: text => `Odpovede po mesiacoch: ${text}`,
+      seriesFits: "Bez výhrad",
+      seriesDoesNotFit: "Nesedí",
+      metrics: {
+        answers: "Odpovede", doesNotFit: "Nesedí", share: "Podiel nesedí", correct: "Správne",
+        wrong: "Nesprávne", hallucination: "S vymysleným", dismissed: "Vyradené", pending: "Čaká",
+      },
+      colMetric: "Ukazovateľ",
+      colSource: "Zdroj",
+      total: "Spolu",
+      noSource: "Neuvedený",
+      summary: (answers, doesNotFit, share) => `${answers} odpovedí · nesedí ${doesNotFit} (${share})`,
+      empty: "Za posledných 12 mesiacov systém nedal žiadnu odpoveď.",
+      note: "Nesedí = čitateľ to povedal alebo napísal, čo je zle. Správne, nesprávne a s vymysleným sú posudky hodnotiteľa; odpoveď môže byť nesprávna a zároveň s vymysleným. Zdroj sa zapisuje od 30. 10. 2026 — staršie odpovede sú „Neuvedený“.",
+    },
   },
   rating: {
     readerQuestion: "Sedí táto odpoveď?",
@@ -11827,6 +11875,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sources: n => (n === 1 ? "1 zdroj" : n <= 4 ? `${n} zdroje` : `${n} zdrojů`),
     askedAt: "dotázáno",
     waiting: n => `${n} k posouzení`,
+    tabsLabel: "K posouzení",
+    tabs: { queue: "Podněty", stats: "Statistika" },
+    stats: {
+      lead: "Kolik odpovědí systém dal za posledních 12 měsíců, u kolika někdo řekl, že nesedí, a jak o nich hodnotitelé rozhodli.",
+      byLabel: "Seskupit",
+      byMonths: "Po měsících",
+      bySources: "Podle zdroje",
+      chartTitle: "Odpovědi po měsících",
+      chartAlt: text => `Odpovědi po měsících: ${text}`,
+      seriesFits: "Bez výhrad",
+      seriesDoesNotFit: "Nesedí",
+      metrics: {
+        answers: "Odpovědi", doesNotFit: "Nesedí", share: "Podíl nesedí", correct: "Správné",
+        wrong: "Nesprávné", hallucination: "S vymyšleným", dismissed: "Vyřazené", pending: "Čeká",
+      },
+      colMetric: "Ukazatel",
+      colSource: "Zdroj",
+      total: "Celkem",
+      noSource: "Neuvedený",
+      summary: (answers, doesNotFit, share) => `${answers} odpovědí · nesedí ${doesNotFit} (${share})`,
+      empty: "Za posledních 12 měsíců systém nedal žádnou odpověď.",
+      note: "Nesedí = čtenář to řekl nebo napsal, co je špatně. Správné, nesprávné a s vymyšleným jsou posudky hodnotitele; odpověď může být nesprávná a zároveň s vymyšleným. Zdroj se zapisuje od 30. 10. 2026 — starší odpovědi jsou „Neuvedený“.",
+    },
   },
   rating: {
     readerQuestion: "Sedí tato odpověď?",
@@ -17157,6 +17228,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sources: n => (n === 1 ? "1 source" : `${n} sources`),
     askedAt: "asked",
     waiting: n => `${n} to evaluate`,
+    tabsLabel: "To evaluate",
+    tabs: { queue: "Reports", stats: "Statistics" },
+    stats: {
+      lead: "How many answers the system gave over the last 12 months, how many someone said were wrong, and how evaluators decided.",
+      byLabel: "Group",
+      byMonths: "By month",
+      bySources: "By source",
+      chartTitle: "Answers by month",
+      chartAlt: text => `Answers by month: ${text}`,
+      seriesFits: "No objection",
+      seriesDoesNotFit: "Wrong",
+      metrics: {
+        answers: "Answers", doesNotFit: "Wrong", share: "Share wrong", correct: "Correct",
+        wrong: "Incorrect", hallucination: "Invented", dismissed: "Dismissed", pending: "Waiting",
+      },
+      colMetric: "Metric",
+      colSource: "Source",
+      total: "Total",
+      noSource: "Not recorded",
+      summary: (answers, doesNotFit, share) => `${answers} answers · wrong ${doesNotFit} (${share})`,
+      empty: "The system gave no answers in the last 12 months.",
+      note: "Wrong = the reader said so or wrote what is wrong. Correct, incorrect and invented are the evaluator's verdicts; an answer can be both incorrect and invented. The source is recorded since 30 Oct 2026 — older answers show as “Not recorded”.",
+    },
   },
   rating: {
     readerQuestion: "Is this answer right?",

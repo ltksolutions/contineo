@@ -28,6 +28,7 @@ import type { Tenant } from "./tenants"
 // bundli zhodil `/api/rating` — konštanta bola pri prvom použití ešte
 // neinicializovaná (30. 10. 2026, posudok sa neukladal).
 import { PERSONS_COLLECTION } from "./persons"
+import { SEARCH_TIME_ZONE } from "./versionContext"
 
 export const EVALUATOR_ROLE = "evaluator"
 
@@ -264,4 +265,127 @@ export async function evaluationCounts(companyCode: string): Promise<EvaluationC
  */
 export async function queueCount(companyCode: string): Promise<number> {
   return (await evaluationQueue(companyCode)).length
+}
+
+// ── štatistika ──────────────────────────────────────────────────────────────
+
+/**
+ * Štatistika posudkov po mesiacoch a podľa zdroja (Ján 30. 10. 2026:
+ * „chýbajú mi prehľady, prípadne nejaká štatistika").
+ *
+ * Každý záznam je jedna odpoveď (`recordAnswer` ho zakladá hneď po
+ * vygenerovaní), takže „odpovede" sú všetky odpovede, nie len hodnotené.
+ * Ostatné počty sú tými istými pravidlami ako fronta a pohľady — `needsEvaluation`
+ * pre Čaká a `decidedFilter` pre Posúdené / Vyradené —, aby čísla na
+ * štatistike sedeli s tým, čo človek uvidí po kliknutí na pohľad.
+ */
+export interface StatsCounts {
+  answers: number
+  /** Čitateľ povedal „nesedí" alebo napísal, čo je zle. */
+  doesNotFit: number
+  correct: number
+  wrong: number
+  hallucination: number
+  dismissed: number
+  pending: number
+}
+
+export interface StatsMonth { key: string; year: number; month: number }
+
+export interface StatsSource {
+  key: string
+  /** `null` = záznam spred zavedenia zdroja (30. 10. 2026). */
+  origin: RatingOrigin | null
+  counts: StatsCounts
+  /** Odpovede po mesiacoch — pre malý graf v karte. */
+  answersByMonth: number[]
+}
+
+export interface EvaluationStats {
+  months: StatsMonth[]
+  byMonth: StatsCounts[]
+  sources: StatsSource[]
+  total: StatsCounts
+}
+
+export const STATS_MONTHS = 12
+
+// Staršie záznamy nemajú všetky polia — preto `Partial`.
+type StatsRow = Partial<Pick<RatingRecord,
+  "createdAt" | "readerVerdict" | "readerNote" | "correct" | "hallucination" | "evaluatedAt" | "dismissedAt" | "origin">>
+
+const zeroCounts = (): StatsCounts =>
+  ({ answers: 0, doesNotFit: 0, correct: 0, wrong: 0, hallucination: 0, dismissed: 0, pending: 0 })
+
+const monthParts = new Intl.DateTimeFormat("en-GB", { timeZone: SEARCH_TIME_ZONE, year: "numeric", month: "numeric" })
+
+/** Mesiac v čase SFZ — odpoveď o 23:30 posledného dňa patrí do toho mesiaca, nie do ďalšieho. */
+function monthOf(d: Date): StatsMonth {
+  const parts = monthParts.formatToParts(d)
+  const year = Number(parts.find(p => p.type === "year")?.value)
+  const month = Number(parts.find(p => p.type === "month")?.value) - 1
+  return { key: `${year}-${String(month + 1).padStart(2, "0")}`, year, month }
+}
+
+function addRow(c: StatsCounts, z: StatsRow) {
+  c.answers++
+  if (z.readerVerdict === 0 || z.readerNote?.trim()) c.doesNotFit++
+  if (z.dismissedAt) c.dismissed++
+  else if (z.evaluatedAt) {
+    if (z.correct === 1) c.correct++
+    if (z.correct === 0) c.wrong++
+    if (z.hallucination === 1) c.hallucination++
+  }
+  if (needsEvaluation(z)) c.pending++
+}
+
+const sourceKey = (o: RatingOrigin | null | undefined) => (o ? [o.kind, o.label].filter(Boolean).join(":") : "")
+
+/** Čistá funkcia — posledných `STATS_MONTHS` mesiacov vrátane aktuálneho. */
+export function evaluationStats(rows: StatsRow[], now: Date): EvaluationStats {
+  const last = monthOf(now)
+  const months: StatsMonth[] = Array.from({ length: STATS_MONTHS }, (_, i) => {
+    const d = new Date(Date.UTC(last.year, last.month - (STATS_MONTHS - 1 - i), 1))
+    const year = d.getUTCFullYear(), month = d.getUTCMonth()
+    return { key: `${year}-${String(month + 1).padStart(2, "0")}`, year, month }
+  })
+  const index = new Map(months.map((m, i) => [m.key, i]))
+  const byMonth = months.map(zeroCounts)
+  const total = zeroCounts()
+  const sources = new Map<string, StatsSource>()
+
+  for (const z of rows) {
+    if (!z.createdAt) continue
+    const i = index.get(monthOf(z.createdAt).key)
+    if (i === undefined) continue
+    addRow(byMonth[i], z)
+    addRow(total, z)
+    const key = sourceKey(z.origin)
+    let s = sources.get(key)
+    if (!s) {
+      s = { key, origin: z.origin ?? null, counts: zeroCounts(), answersByMonth: months.map(() => 0) }
+      sources.set(key, s)
+    }
+    addRow(s.counts, z)
+    s.answersByMonth[i]++
+  }
+
+  // Najväčší zdroj prvý; „neuvedený" (staršie záznamy) vždy na konci.
+  const sorted = [...sources.values()].sort((a, b) =>
+    Number(!a.origin) - Number(!b.origin) || b.counts.answers - a.counts.answers || a.key.localeCompare(b.key))
+  return { months, byMonth, sources: sorted, total }
+}
+
+export async function loadEvaluationStats(companyCode: string, now = new Date()): Promise<EvaluationStats> {
+  const last = monthOf(now)
+  // Deň rezervy pred prvým mesiacom: hranica je o polnoci v Bratislave, nie v UTC.
+  // Čo do obdobia nepatrí, vyradí `evaluationStats`.
+  const since = new Date(Date.UTC(last.year, last.month - (STATS_MONTHS - 1), 1) - 86_400_000)
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const rows = await col
+    .find({ companyCode, createdAt: { $gte: since } } as never, {
+      projection: { _id: 0, createdAt: 1, readerVerdict: 1, readerNote: 1, correct: 1, hallucination: 1, evaluatedAt: 1, dismissedAt: 1, origin: 1 },
+    })
+    .toArray()
+  return evaluationStats(rows as StatsRow[], now)
 }
