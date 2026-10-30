@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { parseHistory, contextualQuery, questionText, MAX_PRIOR_TURNS } from "../src/lib/conversationContext"
+import { parseHistory, contextualQuery, questionText, withoutSourceMarkers, MAX_PRIOR_TURNS } from "../src/lib/conversationContext"
 import { preprocessQuery } from "../src/lib/queryPreprocessor"
 import type { GenerationProvider } from "../src/lib/providers/types"
 
@@ -19,6 +19,12 @@ describe("parseHistory", () => {
     expect(turns[0]).toEqual({ question: "Kedy je uzávierka prestupov?", answer: "" })
     expect(turns[1].question).toHaveLength(1000)
     expect(turns[1].answer).toHaveLength(2000)
+  })
+
+  it("z odpovede odstráni odkazy na zdroje, iné hranaté zátvorky nechá", () => {
+    expect(withoutSourceMarkers("Poplatok je 10 € [1]. Lehota je 15 dní [2, 3] a [1–2].")).toBe("Poplatok je 10 €. Lehota je 15 dní a.")
+    expect(withoutSourceMarkers("Pole [Názov] je povinné.")).toBe("Pole [Názov] je povinné.")
+    expect(parseHistory([{ question: "q", answer: "Áno [4]." }])[0].answer).toBe("Áno.")
   })
 
   it("nechá len posledné kolá a nepole je prázdny rozhovor", () => {

@@ -23,6 +23,17 @@ export const MAX_PRIOR_TURNS = 3
 const MAX_QUESTION = 1000
 const MAX_ANSWER = 2000
 
+/*
+ * Odkazy na zdroje v texte starej odpovede (`[1]`, `[2, 3]`, `[1–3]`, adaptér
+ * OpenAI). Zdroje z predchádzajúcich kôl sa modelu neposielajú, takže by
+ * ukazovali na čísla úsekov tejto otázky — a model by ich mohol prevziať.
+ */
+const SOURCE_MARKER = /\s?\[\d+(?:\s*[,–-]\s*\d+)*\]/g
+
+export function withoutSourceMarkers(text: string): string {
+  return text.replace(SOURCE_MARKER, "")
+}
+
 /** Overí a oreže kolá z požiadavky. Čokoľvek iné než text sa zahodí. */
 export function parseHistory(raw: unknown): PriorTurn[] {
   if (!Array.isArray(raw)) return []
@@ -33,7 +44,7 @@ export function parseHistory(raw: unknown): PriorTurn[] {
     if (typeof question !== "string" || !question.trim()) continue
     turns.push({
       question: question.trim().slice(0, MAX_QUESTION),
-      answer: typeof answer === "string" ? answer.trim().slice(0, MAX_ANSWER) : "",
+      answer: typeof answer === "string" ? withoutSourceMarkers(answer).trim().slice(0, MAX_ANSWER) : "",
     })
   }
   return turns.slice(-MAX_PRIOR_TURNS)
