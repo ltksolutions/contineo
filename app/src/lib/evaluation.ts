@@ -24,7 +24,10 @@ import { RATINGS_COLLECTION } from "./ratings"
 import type { RatingRecord, RatingOrigin } from "./ratings"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
-import { loadPersonsByIds } from "./people"
+// Nie `people.ts`: ten importuje `EVALUATOR_ROLE` odtiaľto a kruh v produkčnom
+// bundli zhodil `/api/rating` — konštanta bola pri prvom použití ešte
+// neinicializovaná (30. 10. 2026, posudok sa neukladal).
+import { PERSONS_COLLECTION } from "./persons"
 
 export const EVALUATOR_ROLE = "evaluator"
 
@@ -129,7 +132,13 @@ export async function evaluationQueue(companyCode: string): Promise<QueueItem[]>
   const pending = rows.filter(needsEvaluation)
   // Staršie záznamy nemajú `askedBy`; pred posudkom je v `reviewer` ten, kto sa pýtal.
   const askerId = (z: RatingRecord) => z.askedBy ?? z.reviewer ?? z.readerNoteBy ?? null
-  const people = await loadPersonsByIds(companyCode, pending.map(askerId).filter((id): id is string => Boolean(id)))
+  const ids = [...new Set(pending.map(askerId).filter((id): id is string => Boolean(id)))]
+  const people = new Map(ids.length
+    ? (await (await getCollection<Person>(PERSONS_COLLECTION))
+        // `companyCode` je v podmienke, nie v kontrole nad ňou (D32).
+        .find({ companyCode, id: { $in: ids } }, { projection: { id: 1, fullName: 1, email: 1, jobTitle: 1, department: 1 } })
+        .toArray()).map(p => [p.id, p] as const)
+    : [])
   return pending.map(z => {
     const id = askerId(z)
     const p = id ? people.get(id) : undefined

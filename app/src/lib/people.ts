@@ -214,14 +214,6 @@ export async function loadPersonById(companyCode: string, id: string): Promise<P
   return p ? toRow(p) : null
 }
 
-/** Viac osôb **z vlastnej organizácie** naraz, podľa `id`. Chýbajúce v mape nie sú. */
-export async function loadPersonsByIds(companyCode: string, ids: string[]): Promise<Map<string, PersonRow>> {
-  if (!ids.length) return new Map()
-  const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const people = await col.find({ companyCode, id: { $in: [...new Set(ids)] } }).toArray()
-  return new Map(people.map(p => [p.id, toRow(p)]))
-}
-
 // ── zápis ────────────────────────────────────────────────────────────────────
 
 export interface PersonChange {
