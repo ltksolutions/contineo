@@ -316,6 +316,12 @@ export interface Person {
 
   createdBy?: string
   createdAt: Date
+  /**
+   * Kedy a čím sa z `external` stal zamestnanec — prihlásenie overeným
+   * kontom z povolenej domény (`createFromDomain`, 30. 10. 2026).
+   */
+  promotedBy?: string
+  promotedAt?: Date
 }
 
 /** Údaje pre založenie alebo aktualizáciu osoby — napr. z CSV importu. */
@@ -968,6 +974,13 @@ export function isDomainAllowed(email: string, domains: string[] | undefined): b
  *
  * Vracia `null`, keď sa nič nezaložilo — vrátane prípadu, keď medzitým
  * záznam vznikol súbežnou požiadavkou (dve karty naraz).
+ *
+ * **Externá osoba s tou adresou sa povýši na zamestnanca** (Ján 30. 10. 2026).
+ * Kolega, ktorý sa prvý raz ozval cez widget ISSF, vznikol ako `external`
+ * (D168) a `$setOnInsert` by ho nechal tak — intranet by ho odmietol aj so
+ * služobným kontom. Povýšiť smie len táto cesta: adresu overil poskytovateľ
+ * a doména je povolená. Údaj z widgetu sám na to nestačí. Vyradenú osobu
+ * (`inactive`) to nepustí.
  */
 export async function createFromDomain(
   companyCode: string,
@@ -1006,7 +1019,14 @@ export async function createFromDomain(
       { $setOnInsert: person as never },
       { upsert: true },
     )
-    if (!r.upsertedCount) return null
+    if (!r.upsertedCount) {
+      const promoted = await col.updateOne(
+        { companyCode, email: address, personType: "external", status: { $ne: "inactive" } },
+        { $set: { personType: "employee", promotedBy: source, promotedAt: now } },
+      )
+      if (promoted.modifiedCount) console.log(`[persons] ${address} v ${companyCode}: externá → zamestnanec (${source})`)
+      return null
+    }
     console.log(`[persons] ${address} založený automaticky do ${companyCode} (${source})`)
     return person
   } catch (e) {

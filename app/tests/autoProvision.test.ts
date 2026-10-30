@@ -7,8 +7,20 @@
  * pustiť dnu niekoho cudzieho.
  */
 
-import { describe, it, expect } from "vitest"
-import { isDomainAllowed, addressDomain } from "../src/lib/persons"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+
+const updates: { filter: Record<string, unknown>; update: Record<string, unknown>; upsert: boolean }[] = []
+let upserted = 0
+vi.mock("../src/lib/mongodb", () => ({
+  getCollection: vi.fn(async () => ({
+    updateOne: async (filter: Record<string, unknown>, update: Record<string, unknown>, opts?: { upsert?: boolean }) => {
+      updates.push({ filter, update, upsert: Boolean(opts?.upsert) })
+      return opts?.upsert ? { upsertedCount: upserted } : { modifiedCount: 1 }
+    },
+  })),
+}))
+
+import { isDomainAllowed, addressDomain, createFromDomain } from "../src/lib/persons"
 import { normalizeDomains } from "../src/lib/tenantAdmin"
 
 describe("domena adresy", () => {
@@ -84,5 +96,25 @@ describe("normalizacia domen z formulara", () => {
   it("prázdny vstup dá prázdny zoznam", () => {
     expect(normalizeDomains("")).toEqual([])
     expect(normalizeDomains([])).toEqual([])
+  })
+})
+
+describe("createFromDomain — externá osoba z widgetu (30. 10. 2026)", () => {
+  beforeEach(() => { updates.length = 0 })
+
+  it("nová adresa sa založí a nič sa nepovyšuje", async () => {
+    upserted = 1
+    expect(await createFromDomain("SFZ", "Nova.Kolegyna@futbalsfz.sk", "Nová Kolegyňa", "auto:entra")).not.toBeNull()
+    expect(updates).toHaveLength(1)
+  })
+
+  it("existujúca externá osoba sa povýši na zamestnanca, vyradená nie", async () => {
+    upserted = 0
+    expect(await createFromDomain("SFZ", "kolega@futbalsfz.sk", "Kolega", "auto:entra")).toBeNull()
+    expect(updates[1]).toMatchObject({
+      filter: { companyCode: "SFZ", email: "kolega@futbalsfz.sk", personType: "external", status: { $ne: "inactive" } },
+      update: { $set: { personType: "employee", promotedBy: "auto:entra" } },
+      upsert: false,
+    })
   })
 })
