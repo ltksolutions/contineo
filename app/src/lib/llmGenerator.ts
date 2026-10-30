@@ -22,6 +22,7 @@ import { dictionary } from "./i18n"
 import { asOfInstruction, calendarDate, compareInstruction } from "./versionContext"
 import type { ComparisonBrief } from "./versionContext"
 import type { QueryTime } from "./queryTime"
+import type { PriorTurn } from "./conversationContext"
 import type { TokenCounts } from "./pricing"
 import type { GeneratedCitation, TenantProfile } from "./providers/types"
 
@@ -56,6 +57,8 @@ export interface GenerateOptions {
   time?: QueryTime
   /** Porovnanie dvoch znení (krok 7) — pokyn namiesto „ku dňu". */
   comparison?: ComparisonBrief
+  /** Predchádzajúce kolá rozhovoru (widget, `conversationContext.ts`). */
+  history?: PriorTurn[]
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
@@ -204,6 +207,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           query,
           chunks,
           maxTokens: profile.providers.generation.maxTokens,
+          history: opts.history,
         })) {
           if (ev.type === "text") {
             if (firstToken && opts.timings) {

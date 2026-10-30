@@ -12,6 +12,7 @@
  */
 
 import type { ChunkResult } from "../mongoSearch"
+import type { PriorTurn } from "../conversationContext"
 
 // ── Profil tenanta ───────────────────────────────────────────────────────────
 
@@ -189,6 +190,8 @@ export interface GenerationRequest {
   query: string
   chunks: ChunkResult[]
   maxTokens?: number
+  /** Predchádzajúce kolá rozhovoru (widget) — `questionText()`. */
+  history?: PriorTurn[]
 }
 
 export interface CompleteOptions {

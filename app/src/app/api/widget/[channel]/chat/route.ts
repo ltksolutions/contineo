@@ -11,6 +11,7 @@
 import { NextResponse } from "next/server"
 import { widgetGate, widgetPreflight, corsHeaders, questionsLastHour, recordingTransform, widgetLanguage } from "@/lib/widgetApi"
 import { chatStream } from "@/lib/chatStream"
+import { parseHistory } from "@/lib/conversationContext"
 import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { widgetSources, pickWidgetSources, searchedScopeOf } from "@/lib/widgetSources"
 import { answerKicker, answerFrom } from "@/lib/answerKicker"
@@ -27,7 +28,7 @@ export async function OPTIONS(req: Request, { params }: { params: Promise<{ chan
 
 export async function POST(req: Request, { params }: { params: Promise<{ channel: string }> }) {
   const { channel: key } = await params
-  let body: { token?: string; query?: string; language?: string; sources?: unknown }
+  let body: { token?: string; query?: string; language?: string; sources?: unknown; history?: unknown }
   try { body = await req.json() } catch { return new Response("invalid-json", { status: 400 }) }
   const gate = await widgetGate(req, key, body.token ?? null)
   if (gate instanceof Response) return gate
@@ -68,6 +69,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
     narrow: { folderIds: gate.channel.folderIds, connectorScopes: gate.channel.connectorScopes ?? [] },
     only: picked.map(s => s.id),
     channelKey: gate.channel.key,
+    // Predchádzajúce kolá z toho istého okna widgetu; starý skript ich neposiela.
+    history: parseHistory(body.history),
     callbackUrl: await connectorCallbackUrl(),
   }).pipeThrough(recordingTransform({ question: query, personId: gate.person.id, companyCode: gate.tenant.companyCode, startedAt: Date.now(), searchedScope, channelName: gate.channel.name, scopeEvent }))
 
