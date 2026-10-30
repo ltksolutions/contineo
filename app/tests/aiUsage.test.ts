@@ -44,6 +44,13 @@ describe("aiUsage — spotreba AI (D158, D159)", () => {
     expect(Object.keys(r)).not.toContain("query")
   })
 
+  it("kanál z volajúceho ide do riadku; volanie mimo kanála ho nemá", () => {
+    const w = usageRecord({ actor: { ...actor, channelKey: "issf" }, purpose: "answer", provider: "anthropic", model: "claude-sonnet-5", keySource: "operator", at: NOW })
+    expect(w.channelKey).toBe("issf")
+    const p = usageRecord({ actor, purpose: "answer", provider: "anthropic", model: "claude-sonnet-5", keySource: "operator", at: NOW })
+    expect("channelKey" in p).toBe(false)
+  })
+
   it("retencia 25 mesiacov", () => {
     expect(AI_USAGE_RETENTION_DAYS).toBeGreaterThanOrEqual(760)
     expect(AI_USAGE_RETENTION_DAYS).toBeLessThanOrEqual(762)

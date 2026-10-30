@@ -44,6 +44,13 @@ export interface UsageActor {
   personId: string | null
   personName: string
   email: string
+  /**
+   * Kanál, v ktorom volanie vzniklo (widget, návrh odpovede na ticket, ťažba
+   * FAQ). Bez neho by štatistika kanála nevedela, čo stál (KANAL-statistika,
+   * 30. 10. 2026). Staršie riadky ho nemajú — kanál sa im dopočíta cez osobu
+   * z widgetu, nie zápisom.
+   */
+  channelKey?: string
 }
 
 export interface AiUsageRecord extends UsageActor {
@@ -70,6 +77,8 @@ async function collection() {
   indexReady ??= Promise.all([
     // Výpis za obdobie jednej organizácie, najnovšie hore.
     col.createIndex({ companyCode: 1, at: -1 }, { name: "ai_usage_company_at" }),
+    // Štatistika jedného kanála za obdobie.
+    col.createIndex({ companyCode: 1, channelKey: 1, at: -1 }, { name: "ai_usage_company_channel_at", partialFilterExpression: { channelKey: { $exists: true } } }),
     col.createIndex({ at: 1 }, { name: "ai_usage_ttl", expireAfterSeconds: AI_USAGE_RETENTION_DAYS * 24 * 3600 }),
   ]).catch(e => { indexReady = null; throw e })
   await indexReady
