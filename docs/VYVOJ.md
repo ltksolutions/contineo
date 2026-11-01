@@ -55,7 +55,7 @@ testovací šev vo verejnom rozhraní každého modulu, a to je presne šum, kto
 sa tu nerobí.
 
 **Dva štýly, vedome.** Staré suity v tvare `t("popis", podmienka)` sa
-**neprepisovali** — `tests/pomocnik.ts` ich len registruje do Vitestu. 2 200
+**neprepisovali** — `tests/helper.ts` ich len registruje do Vitestu. 2 200
 ručne prepísaných tvrdení je 2 200 príležitostí na preklep, a preklep v teste
 sa neprejaví zlyhaním, ale falošným pokojom. Nové testy sa píšu idiomaticky
 (`expect(...).toBe(...)`, `toMatchObject`, `resolves`): `t()` vie povedať len
