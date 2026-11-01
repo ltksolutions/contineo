@@ -27,6 +27,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
 import { markupChanges } from "@/lib/markupGuard"
+import { canRewritePdf } from "@/lib/llmRewrite"
 
 export const dynamic = "force-dynamic"
 
@@ -94,6 +95,13 @@ export default async function EditorPage({
     : d.originalFile ? { id: d.originalFile.id, name: d.originalFile.name, isPdf: d.originalFile.type === "pdf" }
     : null
   const isPdf = shown?.isPdf ?? false
+  /*
+   * Prepis skenu posiela modelu **pôvodný súbor**, nie PDF konceptu
+   * (`sendToModelAction`). Tlačidlo sa preto riadi pôvodným súborom, nie tým,
+   * čo je vľavo — inak sa pri koncepte z Markdownu ukázalo a po kliknutí
+   * skončilo chybou „Prepisovať sa dá len PDF" (Skúšobný poriadok, 1. 11. 2026).
+   */
+  const canRewriteScan = canRewritePdf(d.originalFile)
   const fileUrl = shown ? `/api/library/file/${encodeURIComponent(shown.id)}` : null
 
   return (
@@ -244,7 +252,7 @@ export default async function EditorPage({
           <SubmitButton className="button button--quiet" name="mode" value="clean">
             {t.clean}
           </SubmitButton>
-          {isPdf && (
+          {canRewriteScan && (
             <SubmitButton className="button button--quiet" name="mode" value="rewrite-scan">
               {t.rewriteScan}
             </SubmitButton>
@@ -259,7 +267,7 @@ export default async function EditorPage({
         <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
           {t.cleanNote}
         </p>
-        {isPdf && (
+        {canRewriteScan && (
           <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
             {t.rewriteScanNote}
           </p>
