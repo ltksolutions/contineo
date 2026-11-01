@@ -127,7 +127,10 @@ async function ask(ai: RewriteAi, message: { content: unknown }) {
   try {
     answer = await c.messages.stream({
       model: ai.model,
-      max_tokens: 32_000,
+      // 64 000 od 1. 11. 2026 (prechod zo Sonnet 4.5 na 5.5): novšie modely
+      // premýšľajú vždy a premýšľanie sa počíta do toho istého stropu.
+      // Pri 32 000 by dlhá norma skončila `rewrite.answerTruncated` skôr.
+      max_tokens: 64_000,
       system: INSTRUCTION,
       messages: [{ role: "user", content: message.content as never }],
     }).finalMessage()

@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prepis PDF na Claude Sonnet 5.5 (2026-11-01)
+
+Anthropic 30. 11. 2026 vyraďuje Claude Sonnet 4.5, na ktorom bežal prepis
+PDF. Predvolený model prepisu je **Claude Sonnet 5.5** (rovnaká cena ako
+Sonnet 5) a Sonnet 4.5 zmizol z ponuky v Organizácia › AI. Organizácia,
+ktorá ho mala uložený (SFZ), prejde na Sonnet 5.5 bez zmeny nastavenia.
+Strop výstupu prepisu je 64 000 tokenov — novší model premýšľa a
+premýšľanie sa doň počíta. Historická spotreba ukazuje ďalej názov
+„Claude Sonnet 4.5" a nacení sa starým cenníkom.
+
 ### Štatistika kanála pre board (2026-10-30, #510, #513, #514)
 
 - Kanál typu widget má časť **Štatistika** (Tickety · Štatistika ·

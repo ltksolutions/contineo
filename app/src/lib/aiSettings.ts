@@ -48,8 +48,9 @@ export const AI_MODELS: Record<AiPurpose, AiModelOption[]> = {
   utility: [
     { id: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5" },
   ],
+  // Sonnet 4.5 tu bol do 1. 11. 2026 — Anthropic ho 30. 11. vyraďuje.
+  // Uložená voľba ho prestane vyberať a padne na predvolený (`pickModel`).
   rewrite: [
-    { id: "claude-sonnet-4-5", label: "Claude Sonnet 4.5" },
     { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
     { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
   ],
@@ -63,12 +64,20 @@ export const AI_MODELS: Record<AiPurpose, AiModelOption[]> = {
 }
 
 /**
+ * Modely, ktoré z ponuky zmizli, ale ostali v spotrebe a v záznamoch
+ * prepisu. Len na názov — vybrať sa nedajú.
+ */
+const RETIRED_MODELS: AiModelOption[] = [
+  { id: "claude-sonnet-4-5", label: "Claude Sonnet 4.5" },
+]
+
+/**
  * Názov modelu pre človeka („Claude Opus 5.5"), nie identifikátor
  * (`claude-opus-5-5`). Neznámy model ostane identifikátorom — je to údaj
  * z behu, nie z ponuky, a môže byť starší než dnešný zoznam.
  */
 export function modelLabel(id: string): string {
-  for (const list of Object.values(AI_MODELS)) {
+  for (const list of [...Object.values(AI_MODELS), RETIRED_MODELS]) {
     const hit = list.find(m => m.id === id)
     if (hit) return hit.label
   }
@@ -80,7 +89,9 @@ export function defaultModels(): Record<AiPurpose, string> {
   return {
     answer: process.env.GENERATION_MODEL ?? "claude-sonnet-5",
     utility: process.env.UTILITY_MODEL ?? "claude-haiku-4-5-20251001",
-    rewrite: process.env.CMS_PREPIS_MODEL ?? "claude-sonnet-4-5",
+    // Ján 1. 11. 2026: Sonnet 5.5 namiesto vyraďovaného Sonnet 4.5 — rovnaká
+    // cena ako Sonnet 5, novší model.
+    rewrite: process.env.CMS_PREPIS_MODEL ?? "claude-sonnet-5-5",
     // Ján 11. 10. 2026: Opus 5.5 — prvá kontrola so Sonnet 5 mala 24 zo 42
     // nálezov slabých; Opus ~5,30 USD za 10 manuálov namiesto 3,05.
     compliance: process.env.COMPLIANCE_MODEL ?? "claude-opus-5-5",
