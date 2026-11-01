@@ -39,7 +39,7 @@ import {
   assignDocument, shiftFolder, saveFolderOrder,
 } from "@/lib/folders"
 import type { CodelistExtras } from "@/lib/codelists"
-import { rewritePdf } from "@/lib/llmRewrite"
+import { canRewritePdf, rewritePdf } from "@/lib/llmRewrite"
 import { aiForCompany } from "@/lib/aiSettings"
 import { recordAiUsage, usageRecord } from "@/lib/aiUsage"
 import { tidyStructure } from "@/lib/tidyStructure"
@@ -667,7 +667,7 @@ export async function sendToModelAction(fd: FormData) {
       ? await (async () => {
           const original = doc.originalFile as { id: string; type: string } | undefined
           if (!original) throw new LibraryError("library.noOriginalFile", "Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
-          if (original.type !== "pdf") {
+          if (!canRewritePdf(original)) {
             throw new LibraryError("library.onlyPdfRewrite", "Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
           }
           const s = await loadFile(self.companyCode, original.id)

@@ -40,6 +40,15 @@ export interface ModelDraft {
 
 export class RewriteError extends AppError {}
 
+/**
+ * Dá sa pôvodný súbor prepísať zo skenu? Rovnaká podmienka pre tlačidlo
+ * v editore aj pre akciu — keď sa rozídu, tlačidlo sľubuje prepis, ktorý
+ * akcia odmietne.
+ */
+export function canRewritePdf(original: { type?: string } | null | undefined): boolean {
+  return original?.type === "pdf"
+}
+
 /*
  * **Pozor na štruktúrne úrovne.** Prvá verzia zadania hovorila len „obnov
  * členenie" a model si to vyložil po svojom: skrátil „Článok 5" na „čl. 5",

@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Oprava: tlačidlo „Prepísať zo skenu" len pri pôvodnom PDF (2026-11-01)
+
+- Editor textu ukazoval tlačidlo podľa súboru vľavo, teda najprv podľa PDF
+  konceptu, kým akcia posiela modelu **pôvodný súbor**. Pri koncepte
+  z Markdownu (Skúšobný poriadok) sa tlačidlo ukázalo a po kliknutí skončilo
+  chybou „Prepisovať sa dá len PDF". Obe miesta teraz rozhoduje spoločná
+  `canRewritePdf()` v `lib/llmRewrite.ts`; test `tests/canRewritePdf.test.ts`.
+
 ### Dokumentácia: `docs/VYVOJ.md` a archív claude.ai projektu (2026-11-01, #519, #520)
 
 - **`docs/VYVOJ.md`** — nový referenčný dokument „Ako sa vyvíja

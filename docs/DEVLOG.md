@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-11-01 — Tlačidlo prepisu skenu sľubovalo, čo akcia nesplní
+
+Pri hľadaní dokumentu na overenie Sonnetu 5.5 vyšlo najavo, že editor textu
+a akcia sa pýtajú na iný súbor. Stránka ukazovala „Prepísať zo skenu", keď
+bolo vľavo PDF — a vľavo je od ADR-011 najprv PDF konceptu. Akcia však
+prepisuje pôvodný súbor. Skúšobný poriadok má koncept z Markdownu
+s vygenerovaným PDF, takže by tlačidlo dostal a kliknutie by skončilo chybou.
+
+Podmienka je teraz jedna funkcia (`canRewritePdf`) pre obe miesta. Na
+overenie modelu poslúži Revízny poriadok — najmenšie pôvodné PDF v SFZ.
+
+---
+
 ## 2026-11-01 — Koniec claude.ai projektu, know-how z pamäte do repa
 
 Podnet: Jánova otázka, či claude.ai projekt „Contineo" ešte treba, keď
