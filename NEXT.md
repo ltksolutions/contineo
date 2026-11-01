@@ -6,7 +6,11 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-10-30 popoludní** (štatistika kanála pre board #510, #513, #514; widget pozná predchádzajúce kolá rozhovoru #512, #515; fronta Na posúdenie s pohľadmi, štatistikou a predchádzajúcimi otázkami #508, #509, #511). Staršie dni sú v `docs/DEVLOG.md`.
+Posledná aktualizácia: **2026-11-01** (prepis PDF na Sonnet 5.5 #518;
+claude.ai projekt „Contineo" zrušený — archív #519, know-how z pamäte do
+`docs/VYVOJ.md` #520). Predtým 30. 10. popoludní (štatistika kanála #510,
+#513, #514; widget pozná predchádzajúce kolá #512, #515; fronta Na posúdenie
+#508, #509, #511). Staršie dni sú v `docs/DEVLOG.md`.
 
 ---
 
@@ -46,7 +50,9 @@ zapnuté, **kurz zatiaľ nikto nedokončil**. Kuriér (ADR-033) je vo fáze 1;
 živý rozhovor dvoch ľudí a ranný súhrn naostro neoverené.
 
 **AI a dizajn.** Prehľad spotreby AI (`/organisation/ai/overview`),
-spotreba nesie `channelKey` od 30. 10. Design system je záväzný (Ján
+spotreba nesie `channelKey` od 30. 10. Prepis PDF beží na **Sonnet 5.5**
+(#518, Sonnet 4.5 končí 30. 11.); prvý ostrý prepis po nasadení ešte
+neprebehol (`ai_usage`, `purpose: "pdf-rewrite"`). Design system je záväzný (Ján
 23. 10.); návrhy obrazoviek vznikajú ako artefakt *Design* (`docs/DESIGN.md`).
 Retencia (ADR-012) beží v režime `report`.
 
@@ -161,7 +167,8 @@ Nová chyba alebo nové varovanie je regresia, nie šum.
   prejde všetkými štyrmi brzdami a padne až v produkcii.
 - Stav, ktorý sa naživo nedá vyvolať bez zápisu, sa overuje testom
   vykreslenia s podvrhnutými dátami (`libraryDetailFlow`, `approvalsPage`).
-- `npm run build` zhodí bežiaci `npm run dev` (zdieľajú `.next`).
+- `npm run build` zhodí bežiaci `npm run dev` (zdieľajú `.next`). Toto
+  a ďalšie pasce, ktoré štyrom brzdám prejdú: `docs/VYVOJ.md`.
 - Pri záťaži stroja `npx vitest run --maxWorkers=3`.
 
 **Lokálne SFZ je na `http://sfz.localhost:3000`**, `localhost` je tenant
@@ -173,10 +180,13 @@ baseline (21. 10.) 0 errors, 0 warnings, 13 testov, 71 stránok.
 
 ## Mapa dokumentácie
 
-`CLAUDE.md` sú konvencie repozitára a rituály. **`NEXT.md` (tento súbor)** je
+`CLAUDE.md` sú konvencie repozitára a rituály. **`docs/VYVOJ.md`** je, ako sa
+vyvíja a overuje — pasce, ktoré brzdy nevidia. **`NEXT.md` (tento súbor)** je
 stav a ďalší krok. `docs/TODO.md` je dlhý backlog s odôvodneniami — čo sa
 nerobí a prečo. `docs/DEVLOG.md` je datovaný denník práce. `CHANGELOG.md` sú
 zmeny pre používateľa. **Rozhodnutia sú v `docs/decisions/`** (prijaté ADR,
 rozcestník v `README.md` toho priečinka, konvencia MADR) a `docs/OPEN_DECISIONS.md`
 (otvorené, očíslované `D1`, `D2`…). Plány `docs/D79_plan_*.md` a `docs/O7_plan_*.md`
 sú návrhy postupu, nie rozhodnutia, a zostávajú v `docs/`.
+`docs/archiv/` je archív (pamäť a dokumenty zrušeného claude.ai projektu,
+1. 11. 2026) — neudržiava sa a pri rozpore platí kód.

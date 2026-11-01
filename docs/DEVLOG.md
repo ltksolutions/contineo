@@ -10,6 +10,44 @@
 
 ---
 
+## 2026-11-01 — Koniec claude.ai projektu, know-how z pamäte do repa
+
+Podnet: Jánova otázka, či claude.ai projekt „Contineo" ešte treba, keď
+všetko beží cez repozitár a Claude Code. Overené: 12 projektových
+dokumentov boli stavové snímky zo 17.–27. 9. s novším protějškom v `docs/`,
+26 pamäťových súborov projektu sa od 27. 9. nemenilo. Rozhodnutie Jána:
+projekt zmazať, obsah predtým archivovať do repa (nie do lokálneho
+priečinka — tam by ho nikto nenašiel).
+
+**#519** — `docs/archiv/projekt-claude-2026-11-01/`: pamäť aj dokumenty
+doslovne, e-maily maskované. Je to archív, nie dokumentácia.
+
+**#520** — porovnanie pamäte proti `CLAUDE.md` a `docs/`: 18 z 26 súborov
+bolo pokrytých, zvyšok žil len v DEVLOG/TODO alebo nikde. Spoločný
+menovateľ: repo nemalo referenčný dokument pre know-how vývojára. Vznikol
+**`docs/VYVOJ.md`** (skripty a `import type`, testy nad DB, build verzus
+dev, git z pripojeného priečinka, `.env` a Vercel, pasce v kóde, model
+v pipeline). Do `ATLAS_SETUP.md` tri odseky (FCV, prázdny výsledok,
+neporovnateľné skóre), do `CLAUDE.md` dve odrážky i18n a odkaz — nič viac,
+aby ostal štíhly.
+
+**Čo stálo za to:** Ján sa spýtal, či doplnené veci neodporujú aktuálnemu
+stavu. Overenie proti kódu súbor po súbore našlo jednu chybu — pamäť zo
+septembra niesla `tests/pomocnik.ts`, dnes je to `tests/helper.ts`
+(`5f9547b`). Tematické porovnanie grepom to neodhalilo; odhalila to až
+kontrola existencie každého menovaného súboru. Pri prenose starších
+poznámok do dokumentácie je to povinný krok, nie voliteľný.
+
+A jedna pasca zo zoznamu vo `VYVOJ.md` sa predviedla naživo: prvý pokus
+o commit cez `osascript` spadol na slovenskej úvodzovke `„…"` s ASCII `"`
+v tele PR. Správa commitu aj telo PR odvtedy idú zo súboru (`-F`,
+`--body-file`).
+
+Mimo repa: CSV so 153 osobami SFZ z 27. 9. presunuté do Koša (Ján).
+Projekt v claude.ai maže Ján sám.
+
+---
+
 ## 2026-11-01 — Prepis PDF preč zo Sonnet 4.5
 
 Podnet: Anthropic 30. 11. vyraďuje `claude-sonnet-4-5`, od 30. 10. môže

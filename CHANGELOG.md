@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dokumentácia: `docs/VYVOJ.md` a archív claude.ai projektu (2026-11-01, #519, #520)
+
+- **`docs/VYVOJ.md`** — nový referenčný dokument „Ako sa vyvíja
+  a overuje": skripty cez `ts-hook.mjs` a povinné `import type`, testy
+  (Vitest, `vi.mock` nad DB, staré `t()` suity), build verzus dev server,
+  git z pripojeného priečinka, `.env` a premenné na Verceli, pasce v kóde,
+  práca s modelom v pipeline. `CLAUDE.md` naň odkazuje pod „Overenie pred
+  commitom".
+- `CLAUDE.md`, i18n: jazyk v `app/` sa berie z profilu osoby, nie z URL;
+  dátum v anglickej formulke so slovným mesiacom.
+- `docs/ATLAS_SETUP.md`, „Na čo si dať pozor": `VERSION` nie je `FCV`;
+  prázdny výsledok nie je dôkaz chyby stage; skóre rerank modelov sú
+  neporovnateľné.
+- `docs/archiv/projekt-claude-2026-11-01/` — archív pamäte a dokumentov
+  zrušeného claude.ai projektu „Contineo" (e-maily maskované). Archív,
+  nie dokumentácia.
+
 ### Prepis PDF na Claude Sonnet 5.5 (2026-11-01)
 
 Anthropic 30. 11. 2026 vyraďuje Claude Sonnet 4.5, na ktorom bežal prepis
