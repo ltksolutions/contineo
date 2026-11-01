@@ -79,6 +79,13 @@ niekto nájde, a nájde ho spravidla zákazník.
   ju človek videl (D28) — preklad sa nikdy spätne nemení.
 - Chýbajúci preklad **padá na slovenčinu**, nie na kľúč. Prázdne miesto alebo
   `pole.popis.nazov` na obrazovke je horšie než nepreložená veta.
+- **Jazyk v `app/` sa berie z profilu osoby, nie z adresy.** Žiadny
+  jazykový prefix v URL: `proxy.ts` je definovaný ako „všetko okrem", aby
+  bola nová stránka chránená automaticky, a jazykový segment v matcheri by
+  hrabal v jedinom mieste medzi internými smernicami a internetom.
+- **Dátum v anglickej formulke je so slovným mesiacom** (`1 September 2026`),
+  nikdy `toLocaleDateString` — znenie je dôkaz a nesmie závisieť od locale
+  servera ani od sporu o poradie čísel.
 
 ## Premenovanie súborov
 
@@ -293,6 +300,10 @@ npm run build         # prejde
 ```
 
 Databázové invarianty: `npm run check` (predtým `kontrola`).
+
+Pasce, ktoré týmto štyrom prejdú (skripty a `import type`, testy nad DB,
+build verzus dev server, `.env` a Vercel, git z pripojeného priečinka,
+opakované chyby v kóde): **`docs/VYVOJ.md`**.
 
 ### Čo tieto štyri brzdy nevidia
 

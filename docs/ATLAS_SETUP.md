@@ -259,6 +259,24 @@ Skript overí pripojenie, existenciu kolekcií, oba indexy a ich stav. Kým nevy
 
 **M0 má obmedzenia.** Žiadne zálohy, obmedzená priepustnosť. Na PoC v poriadku, na produkciu nie.
 
+**`VERSION` nie je `FCV`.** Po automatickom upgrade Atlasu beží binárka novej
+hlavnej verzie, ale `featureCompatibilityVersion` ostáva na predošlej (aby bol
+možný rollback) — a funkcie viazané na novú FCV sú vypnuté. Pri ladení „prečo
+mi tá nová vec nejde" pozerať FCV (`db.adminCommand({getParameter: 1,
+featureCompatibilityVersion: 1})`), nie `VERSION`.
+
+**Prázdny výsledok nie je dôkaz, že stage nefunguje.** Dotaz nad
+neexistujúcou kolekciou alebo indexom nevráti chybu, len nulu — kolekcia
+s úsekmi je `document_chunks`, nie `chunks`. `Unrecognized pipeline stage
+name` znamená, že server stage nepozná (verzia/FCV); prázdny výsledok
+znamená, že stage prešiel a chyba je v dátach, názve kolekcie alebo indexu.
+
+**Skóre z rôznych rerank modelov sa nedajú porovnávať.** Každý model má
+vlastnú kalibráciu; prechod `rerank-2` → `rerank-2.5`/`rerank-3` mení
+poradie v tretine top-5 (merané 2026-09-06, `scripts/rerank_compare.mjs`),
+ale ktorý je lepší, povie až meranie proti zlatej sade, nie prekryv. Limity
+TPM/RPM sú skupinové, takže zmena modelu nestojí kapacitu.
+
 ---
 
 ## 8. Ceny
