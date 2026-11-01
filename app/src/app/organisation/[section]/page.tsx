@@ -41,7 +41,7 @@ import Select from "@/components/Select"
 import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
 import { saveAiSettingsAction, deleteAiKeyAction } from "../actions"
-import { AI_MODELS, aiSettingsView } from "@/lib/aiSettings"
+import { AI_MODELS, aiSettingsView, modelLabel as modelName } from "@/lib/aiSettings"
 import ConnectorList from "../_connectors/ConnectorList"
 import ConnectorDetail from "../_connectors/ConnectorDetail"
 import { listConnectors, connectorById, connectorView, channelsUsingConnector } from "@/lib/connectors"
@@ -341,8 +341,6 @@ export default async function OrganisationSectionPage({
   const when = (d: Date) => new Intl.DateTimeFormat(locale, {
     timeZone: "Europe/Bratislava", day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
   }).format(d)
-  const modelName = (id: string) =>
-    Object.values(AI_MODELS).flat().find(m => m.id === id)?.label ?? id
   // „Claude Sonnet 5 — vstup 2 $ · výstup 10 $" (cena za milión tokenov dnes).
   const modelLabel = (id: string, label: string) => {
     const r = ratesForDate(id).sadzby

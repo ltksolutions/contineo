@@ -40,6 +40,19 @@ describe("aiSettings — kľúč a modely organizácie (D157)", () => {
     expect(r.models.rewrite).toBe(defaultModels().rewrite)
   })
 
+  // Anthropic vyraďuje Sonnet 4.5 30. 11. 2026. SFZ ho má v `ai.models.rewrite`
+  // uložený výslovne (5. 10.) — prepis musí prejsť na predvolený model, nie
+  // volať vyradený.
+  it("vyradený Sonnet 4.5 uložený pre prepis padá na predvolený model", () => {
+    const r = resolveAi({ provider: "anthropic", models: { rewrite: "claude-sonnet-4-5" } })
+    expect(r.models.rewrite).toBe("claude-sonnet-5-5")
+    expect(AI_MODELS.rewrite.map(m => m.id)).not.toContain("claude-sonnet-4-5")
+  })
+
+  it("predvolený model prepisu je Sonnet 5.5", () => {
+    expect(defaultModels().rewrite).toBe("claude-sonnet-5-5")
+  })
+
   it("každý model v ponuke má cenu v cenníku", () => {
     for (const list of Object.values(AI_MODELS)) {
       for (const m of list) expect(PRICELIST[m.id], m.id).toBeDefined()

@@ -10,6 +10,32 @@
 
 ---
 
+## 2026-11-01 — Prepis PDF preč zo Sonnet 4.5
+
+Podnet: Anthropic 30. 11. vyraďuje `claude-sonnet-4-5`, od 30. 10. môže
+vracať chyby. Zistenie z inej session sa potvrdilo v kóde aj v dátach:
+predvolený model prepisu bol 4.5, vo Verceli `CMS_PREPIS_MODEL` nie je
+a **SFZ má 4.5 v `tenants.ai.models.rewrite` uložený výslovne** (5. 10.).
+Zmena predvoleného modelu by teda sama nestačila.
+
+Nová ochrana nebola potrebná: `pickModel()` už nepoužije model mimo
+`AI_MODELS`. Stačilo 4.5 z ponuky vyradiť — test najprv ukázal, že
+uložený 4.5 sa ďalej volá, po zmene padá na Sonnet 5.5. Dáta v DB sa
+nemenili (Ján); pri ďalšom uložení nastavenia sa zapíše nový model aj do
+auditu.
+
+Dve veci navyše: `max_tokens` prepisu 32 000 → 64 000, lebo Sonnet 5.x
+premýšľa vždy a premýšľanie ide z toho istého stropu — dlhá norma by
+skôr skončila `rewrite.answerTruncated`. A `modelLabel()` dostal zoznam
+vyradených modelov, inak by historická spotreba ukazovala holé ID;
+dve kópie hľadania názvu (prehľad AI, Excel) teraz volajú `modelLabel()`.
+
+Neoverené: v `ai_usage` nie je ani jeden záznam `pdf-rewrite` — prepis od
+zavedenia spotreby nikto nespustil. Overí sa prvým prepisom po nasadení
+(`purpose: "pdf-rewrite"`, `model: "claude-sonnet-5-5"`).
+
+---
+
 ## 2026-10-30 — Stav projektu z NEXT.md (archív)
 
 > Časť „Kde sme teraz" z `NEXT.md` k 30. 10. 2026 popoludní, presunutá sem
