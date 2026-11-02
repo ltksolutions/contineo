@@ -27,7 +27,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import Select from "@/components/Select"
 import CategoryField from "@/components/CategoryField"
-import { PEOPLE_ROLE } from "@/lib/people"
+import { isOrgAdmin } from "@/lib/people"
 import ValueSelect, { withCodelistNote } from "@/components/ValueSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
@@ -202,7 +202,7 @@ export default async function NewDocumentPage({
         <CategoryField
           // FAQ nie je súbor — má vlastnú cestu (rozcestník vyššie, D179).
           options={codelistOptions("category", extras)}
-          canCreate={Boolean(ctx.person.roles?.includes(PEOPLE_ROLE))}
+          canCreate={isOrgAdmin(ctx.person)}
           language={ctx.person.language}
         />
         <div className="field">

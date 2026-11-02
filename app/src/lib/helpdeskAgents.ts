@@ -10,7 +10,7 @@
 import { currentTenant, currentPerson } from "./session"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
-import { isPeopleAdmin } from "./people"
+import { isOrgAdmin } from "./people"
 import { HELPDESK_ROLE, channelsForAgent, listChannels, type HelpdeskChannel } from "./channels"
 
 export type HelpdeskContext =
@@ -74,7 +74,7 @@ export async function channelsContext(): Promise<ChannelsContext> {
   const person = await currentPerson()
   if (!person) return { state: "not-signed-in" }
   if (person.companyCode !== tenant.companyCode) return { state: "forbidden" }
-  const isAdmin = isPeopleAdmin(person)
+  const isAdmin = isOrgAdmin(person)
   const agentChannels = isHelpdeskAgent(person) ? await channelsForAgent(tenant.companyCode, person.id) : []
   if (!isAdmin && !agentChannels.length) return { state: "forbidden" }
   const visible = isAdmin ? await listChannels(tenant.companyCode) : agentChannels

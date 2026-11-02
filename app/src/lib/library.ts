@@ -4,7 +4,7 @@
  * **Vlastná rola `content-admin`, nie `hr`.** Kto normy prideľuje, nie je
  * nutne ten istý človek, ktorý ich píše a nahráva — v zväze je to spravidla
  * legislatívec proti personalistovi. Je to ten istý dôvod, pre ktorý je
- * `hr` oddelené od `people-admin` (D46): rola má zodpovedať práci, nie tomu,
+ * `hr` oddelené od `admin` (D46): rola má zodpovedať práci, nie tomu,
  * kto bol náhodou po ruke pri nastavovaní.
  *
  * Rovnaký vzor ako `hrContext()`, `peopleContext()` a `organizaciaContext()`:

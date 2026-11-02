@@ -10,7 +10,7 @@
 import { notFound, redirect } from "next/navigation"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
-import { peopleContext, loadPersonById, ASSIGNABLE_ROLES } from "@/lib/people"
+import { peopleContext, loadPersonById, ASSIGNABLE_ROLES, normalizeRoles } from "@/lib/people"
 import { LEARNING_ROLE, learningEnabled } from "@/lib/learning"
 import { isHr } from "@/lib/hr"
 import { evidenceForPerson } from "@/lib/evidenceDb"
@@ -85,8 +85,8 @@ export default async function PersonDetailPage({
     Reťaz dôkazov na karte osoby (ADR-005, D67) — **ten istý komponent nad tou
     istou funkciou** ako `/hr/evidence`.
 
-    Podmienená rolou `hr`, nie `people-admin`. Kartu osoby spravuje
-    `people-admin`, ale reťaz dôkazov je údaj o tom, ako si človek plní
+    Podmienená rolou `hr`, nie `admin`. Kartu osoby spravuje
+    `admin`, ale reťaz dôkazov je údaj o tom, ako si človek plní
     povinnosti — a ten patrí personalistovi (D67). Kto smie meniť meno
     a oddelenie, nemá tým automaticky vidieť, čo kto otvoril a nepotvrdil.
     Väčšinou je to ten istý človek; keď nie je, rozhoduje rola, nie zvyk.
@@ -356,7 +356,7 @@ export default async function PersonDetailPage({
                 <div className="form-list">
                   {ASSIGNABLE_ROLES.filter(r => r !== LEARNING_ROLE || learningEnabled(ctx.tenant)).map(r => (
                     <label key={r} className="form-row select-row">
-                      <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
+                      <input type="checkbox" name="roles" value={r} defaultChecked={normalizeRoles(o.roles).includes(r)} />
                       <span className="form-row-main">{d.roles[r] ?? r}</span>
                     </label>
                   ))}

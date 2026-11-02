@@ -38,7 +38,7 @@ import { AppError } from "./appError"
 import { writeAudit } from "./audit"
 import { audienceMembers, audienceLabel, type Audience } from "./assignments"
 import { isHr } from "./hr"
-import { isPeopleAdmin } from "./people"
+import { isOrgAdmin } from "./people"
 import { isContentManager } from "./library"
 import type { Person } from "./persons"
 
@@ -384,7 +384,7 @@ export async function unreadThreadCount(companyCode: string, personId: string): 
 
 /** Hromadne píšu len role (D204): správca osôb, HR, správca obsahu. */
 export function canAnnounce(person: Pick<Person, "roles"> | null | undefined): boolean {
-  return isHr(person as Person) || isPeopleAdmin(person as Person) || isContentManager(person as Person)
+  return isHr(person as Person) || isOrgAdmin(person as Person) || isContentManager(person as Person)
 }
 
 /**

@@ -18,10 +18,11 @@ vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/session", () => ({ currentTenant: async () => null, currentPerson: async () => null }))
 vi.mock("@/lib/people", () => ({
   ASSIGNABLE_ROLES: ["hr", "content-admin"],
+  normalizeRoles: (roles?: string[]) => roles ?? [],
   peopleContext: async () => ({
     state: "ready",
     tenant: { companyCode: "SFZ", codelists: {}, modules: {} },
-    person: { id: "admin", email: "admin@sfz.sk", companyCode: "SFZ", language: "sk", roles: ["people-admin"] },
+    person: { id: "admin", email: "admin@sfz.sk", companyCode: "SFZ", language: "sk", roles: ["admin"] },
   }),
   loadPersonById: async () => ({
     id: "p1", companyCode: "SFZ", email: "eva@sfz.sk", fullName: "Eva Nová", firstName: "Eva", lastName: "Nová",

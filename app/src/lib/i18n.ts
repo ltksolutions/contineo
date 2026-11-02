@@ -2639,7 +2639,7 @@ interface Dictionary {
       complianceRequested: (title: string, label: string, documents: number) => string
       /** Kolo zrušené, lebo sa koncept po predložení zmenil — schvaľovateľom. */
       approvalCancelled: (title: string) => string
-      /** Správca osôb zmenil roly — dotknutej osobe. Názvy rolí už preložené. */
+      /** Administrátor zmenil roly — dotknutej osobe. Názvy rolí už preložené. */
       rolesChanged: (added: string[], removed: string[]) => string
     }
   }
@@ -4561,7 +4561,7 @@ interface Dictionary {
       categoryMissing: string
       /**
        * Nový druh priamo vo formulári (ZAKLAD-novy-druh-pri-nahravani,
-       * 2. 11. 2026) — len pre správcu číselníkov (správca osôb).
+       * 2. 11. 2026) — len pre správcu číselníkov (administrátor).
        */
       categoryCreate: (label: string) => string
       categoryNewTag: string
@@ -7120,7 +7120,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "courier.recipientUnknown": "Taká osoba v organizácii nie je alebo je vyradená.",
     "courier.noRecipients": "Oznam nemá komu ísť — vyberte publikum, v ktorom niekto je.",
     "courier.tooManyRecipients": "Oznam má priveľa príjemcov (najviac 500). Rozdeľte ho na viac oznamov.",
-    "courier.notAllowed": "Oznam skupine môže poslať len správca osôb, HR alebo správca obsahu.",
+    "courier.notAllowed": "Oznam skupine môže poslať len administrátor, HR alebo správca obsahu.",
     "ticket.notEmail": "Ticket nevznikol z e-mailu — nemá vlákno v schránke.",
     "ticket.emptyDraft": "Prázdny návrh sa uložiť nedá.",
     "ticket.emptyAnswer": "Prázdna odpoveď sa odoslať nedá.",
@@ -7881,7 +7881,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     roles: {
       hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
-      "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
+      admin: "Administrátor — spravuje osoby, oddelenia, číselníky a nastavenia organizácie",
+      // Pôvodné označenie (ADR-045) — v starých záznamoch auditu a kým beží migrácia.
+      "people-admin": "Administrátor — spravuje osoby, oddelenia, číselníky a nastavenia organizácie",
       "content-admin": "content-admin — nahráva a upravuje normy v knižnici",
       evaluator: "evaluator — posudzuje odpovede systému, keď niekto povie, že nesedia",
       dpo: "dpo — zodpovedná osoba: kontroluje právne základy, rozhoduje o námietkach",
@@ -8425,7 +8427,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       address: "Adresa servera",
       addressHint: "Túto adresu človek zadá vo svojom asistentovi; prihlási sa ako na portáli a povolí rozsah.",
       clientsHeading: "Pripojené aplikácie v organizácii",
-      clientsIntro: "Kto má pripojeného asistenta a odkedy. Správca osôb smie prístup odvolať komukoľvek; záznam o súhlase zostáva.",
+      clientsIntro: "Kto má pripojeného asistenta a odkedy. Administrátor smie prístup odvolať komukoľvek; záznam o súhlase zostáva.",
       noClients: "Nikto zatiaľ nemá pripojenú aplikáciu.",
       saved: "Nastavenie asistentov bolo uložené.",
       capsHeading: "Rozsah výsledkov hľadania",
@@ -12552,7 +12554,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "courier.recipientUnknown": "Taková osoba v organizaci není nebo je vyřazená.",
     "courier.noRecipients": "Oznámení nemá komu jít — vyberte publikum, ve kterém někdo je.",
     "courier.tooManyRecipients": "Oznámení má příliš mnoho příjemců (nejvýše 500). Rozdělte ho na více oznámení.",
-    "courier.notAllowed": "Oznámení skupině může poslat jen správce osob, HR nebo správce obsahu.",
+    "courier.notAllowed": "Oznámení skupině může poslat jen administrátor, HR nebo správce obsahu.",
     "ticket.notEmail": "Ticket nevznikl z e-mailu — nemá vlákno ve schránce.",
     "ticket.emptyDraft": "Prázdný návrh se uložit nedá.",
     "ticket.emptyAnswer": "Prázdná odpověď se odeslat nedá.",
@@ -13313,7 +13315,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     roles: {
       hr: "hr — přiděluje normy a vidí, kdo je nepotvrdil",
-      "people-admin": "people-admin — spravuje osoby (tato obrazovka)",
+      admin: "Administrátor — spravuje osoby, oddělení, číselníky a nastavení organizace",
+      "people-admin": "Administrátor — spravuje osoby, oddělení, číselníky a nastavení organizace",
       "content-admin": "content-admin — nahrává a upravuje normy v knihovně",
       evaluator: "evaluator — posuzuje odpovědi systému, když někdo řekne, že nesedí",
       dpo: "dpo — pověřenec: kontroluje právní základy, rozhoduje o námitkách",
@@ -13855,7 +13858,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       address: "Adresa serveru",
       addressHint: "Tuto adresu člověk zadá ve svém asistentovi; přihlásí se jako na portálu a povolí rozsah.",
       clientsHeading: "Připojené aplikace v organizaci",
-      clientsIntro: "Kdo má připojeného asistenta a odkdy. Správce osob smí přístup odvolat komukoli; záznam o souhlasu zůstává.",
+      clientsIntro: "Kdo má připojeného asistenta a odkdy. Administrátor smí přístup odvolat komukoli; záznam o souhlasu zůstává.",
       noClients: "Nikdo zatím nemá připojenou aplikaci.",
       saved: "Nastavení asistentů bylo uloženo.",
       capsHeading: "Rozsah výsledků hledání",
@@ -18734,7 +18737,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     roles: {
       hr: "hr — assigns documents and sees who has not acknowledged them",
-      "people-admin": "people-admin — manages people (this screen)",
+      admin: "Administrator — manages people, departments, code lists and organisation settings",
+      "people-admin": "Administrator — manages people, departments, code lists and organisation settings",
       "content-admin": "content-admin — uploads and edits documents in the library",
       evaluator: "evaluator — reviews the system's answers when someone says they are wrong",
       dpo: "dpo — data protection officer: reviews legal bases, decides on objections",
@@ -19276,7 +19280,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       address: "Server address",
       addressHint: "The person enters this address in their assistant, signs in as on the portal and grants the scope.",
       clientsHeading: "Connected apps in the organisation",
-      clientsIntro: "Who has an assistant connected and since when. The people administrator may revoke anyone's access; the consent record stays.",
+      clientsIntro: "Who has an assistant connected and since when. The administrator may revoke anyone's access; the consent record stays.",
       noClients: "Nobody has connected an application yet.",
       saved: "Assistant settings were saved.",
       capsHeading: "Search result size",

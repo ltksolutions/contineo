@@ -17,7 +17,7 @@ const { currentTenant, currentPerson, getCollection } = vi.hoisted(() => ({
 vi.mock("../src/lib/session", () => ({ currentTenant, currentPerson }))
 vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 
-import { peopleContext, isPeopleAdmin, savePerson, PEOPLE_ROLE, ASSIGNABLE_ROLES } from "../src/lib/people"
+import { peopleContext, isOrgAdmin, normalizeRoles, savePerson, ADMIN_ROLE, ASSIGNABLE_ROLES } from "../src/lib/people"
 import { HR_ROLE } from "../src/lib/hr"
 import { PLATFORM_ROLE } from "../src/lib/admin"
 import { CONTENT_ROLE } from "../src/lib/library"
@@ -48,7 +48,7 @@ function person(check: Partial<Person> = {}): Person {
     language: "sk",
     tracks: [],
     groups: [],
-    roles: [PEOPLE_ROLE],
+    roles: [ADMIN_ROLE],
     ...check,
   } as Person
 }
@@ -67,7 +67,7 @@ describe("brana spravy osob", () => {
   })
 
   it("rola `hr` sem nestačí", async () => {
-    // Sú to dve rôzne oprávnenia: `hr` je o obsahu, `people-admin` o prístupe.
+    // Sú to dve rôzne oprávnenia: `hr` je o obsahu, `admin` o prístupe.
     // V mnohých organizáciách to robia dvaja rôzni ľudia.
     currentTenant.mockResolvedValue(tenant())
     currentPerson.mockResolvedValue(person({ roles: [HR_ROLE] }))
@@ -100,9 +100,14 @@ describe("brana spravy osob", () => {
   })
 
   it("rolu má len ten, kto ju má vypísanú", () => {
-    expect(isPeopleAdmin(person())).toBe(true)
-    expect(isPeopleAdmin(person({ roles: [] }))).toBe(false)
-    expect(isPeopleAdmin(null)).toBe(false)
+    expect(isOrgAdmin(person())).toBe(true)
+    expect(isOrgAdmin(person({ roles: [] }))).toBe(false)
+    expect(isOrgAdmin(null)).toBe(false)
+  })
+
+  it("staré označenie people-admin sa uznáva, kým beží migrácia (ADR-045)", () => {
+    expect(isOrgAdmin(person({ roles: ["people-admin"] }))).toBe(true)
+    expect(normalizeRoles(["people-admin", "admin", "hr"])).toEqual(["admin", "hr"])
   })
 })
 
@@ -111,7 +116,7 @@ describe("co sa da priradit", () => {
     // Patrí tenantovi dodávateľa a má vlastnú cestu (`npm run admin`).
     expect(ASSIGNABLE_ROLES as readonly string[]).not.toContain(PLATFORM_ROLE)
     expect(ASSIGNABLE_ROLES as readonly string[])
-      .toEqual([HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE, "learning-admin", "helpdesk", "compliance"])
+      .toEqual([HR_ROLE, ADMIN_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE, "learning-admin", "helpdesk", "compliance"])
   })
 })
 

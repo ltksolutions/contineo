@@ -7,15 +7,16 @@
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { ASSIGNABLE_ROLES } from "../src/lib/people"
+import { ASSIGNABLE_ROLES, LEGACY_ADMIN_ROLE } from "../src/lib/people"
 import { PLATFORM_ROLE } from "../src/lib/admin"
 
 describe("npm run check pozná všetky roly z kódu", () => {
-  it("ZNAME_ROLE v check.mjs = ASSIGNABLE_ROLES + PLATFORM_ROLE", () => {
+  it("ZNAME_ROLE v check.mjs = ASSIGNABLE_ROLES + PLATFORM_ROLE + staré označenie administrátora", () => {
     const src = readFileSync(join(__dirname, "../scripts/check.mjs"), "utf8")
     const m = src.match(/const ZNAME_ROLE = new Set\(\[([^\]]*)\]\)/)
     expect(m, "ZNAME_ROLE sa v check.mjs nenašiel").toBeTruthy()
     const inScript = [...m![1].matchAll(/"([^"]+)"/g)].map(x => x[1]).sort()
-    expect(inScript).toEqual([...ASSIGNABLE_ROLES, PLATFORM_ROLE].sort())
+    // `people-admin` kód ešte uznáva (ADR-045); keď z neho vypadne, vypadne aj tu.
+    expect(inScript).toEqual([...ASSIGNABLE_ROLES, PLATFORM_ROLE, LEGACY_ADMIN_ROLE].sort())
   })
 })

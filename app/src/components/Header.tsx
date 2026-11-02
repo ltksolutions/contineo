@@ -126,7 +126,7 @@ export default function Header({
   photo?: string
   /** Vidí správu tenantov (D41 + D42 už overené na serveri). */
   isAdmin?: boolean
-  /** Má rolu `people-admin` vo vlastnej organizácii (D46). */
+  /** Má rolu `admin` vo vlastnej organizácii (D46). */
   isPeopleAdmin?: boolean
   /** Počet neprečítaných upozornení. Nula = zvonček bez odznaku. */
   notifications?: number
