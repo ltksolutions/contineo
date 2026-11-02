@@ -63,6 +63,12 @@ sú len doplnok. Texty sú po slovensky.
   Bublinu prehliadača potlačí `RequiredFieldsGuard` (layout) a dá fokus prvému chybnému
   poľu. Žiadna bublina, toast ani modálne okno.
 - Pilulky (`.tag`) sú len na čítanie, vo formulári nie. `.view-switch` do formulára nepatrí.
+- Založenie novej položky z výberu (ZAKLAD-novy-druh-pri-nahravani, 2. 11.): `Select`
+  s `onCreate` a `createLabel` — keď hľadanie nie je presne existujúca položka, posledný
+  riadok zoznamu je `li.select-item.select-create` „+ Pridať druh ‚…'" (farba organizácie,
+  čiara nad ním). Položka vzniká až s odoslaním formulára, nie kliknutím; podrobnosti
+  (úloha druhu) sa dopĺňajú pod poľom, nie v okne. Kto nesmie zakladať, vidí v
+  `.select-empty` vetu, kto položku pridá.
 
 ```jsx
 <fieldset className="form-group">

@@ -16,8 +16,10 @@ import { requestOnPublish } from "@/lib/complianceRequests"
 import { normalizeMeta, parseDate, metaCanonical, documentDraftIdentity, type VersionMeta } from "@/lib/versionMeta"
 import { redirect } from "next/navigation"
 import { tagsFromForm } from "@/lib/tagValues"
+import { categoryFromForm } from "@/lib/categoryValue"
 import { revalidatePath } from "next/cache"
 import { libraryContext, isContentManager } from "@/lib/library"
+import { PEOPLE_ROLE } from "@/lib/people"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
@@ -84,6 +86,11 @@ async function actor(): Promise<
      * kontrola.
      */
     canManageContent: boolean
+    /**
+     * Správca číselníkov (správca osôb, D55) — smie pri nahrávaní založiť
+     * nový druh (ZAKLAD-novy-druh-pri-nahravani).
+     */
+    canManageCodelists: boolean
   } | null
 > {
   const ctx = await libraryContext()
@@ -101,6 +108,7 @@ async function actor(): Promise<
         // znamenal, že dávkové preindexovanie prerezalo aj dokumenty
         // s vlastným profilom.
         canManageContent: isContentManager(ctx.person),
+        canManageCodelists: Boolean(ctx.person.roles?.includes(PEOPLE_ROLE)),
       }
     : null
 }
@@ -232,6 +240,9 @@ export async function uploadAction(fd: FormData) {
     // Zaškrtnuté + nové značky (ZAKLAD-vyber-skupin-a-znaciek); podobná nová
     // sa nepridá a hlásenie to povie (Q3).
     const tagged = await tagsFromForm(fd, self.companyCode, self.email, self.extras)
+    // Vybraný alebo nový druh (ZAKLAD-novy-druh-pri-nahravani); nový sa
+    // zakladá až tu, naraz s dokumentom (Q3).
+    const kind = await categoryFromForm(fd, self.companyCode, self.email, self.canManageCodelists, self.extras)
 
     // Organizácia je z prihláseného človeka, nie z formulára.
     const meta = checkMetadata({
@@ -244,11 +255,11 @@ export async function uploadAction(fd: FormData) {
       scope: fieldText(fd, "scope"),
       accessLevel: fieldText(fd, "accessLevel"),
       language: fieldText(fd, "language"),
-      category: fieldText(fd, "category") || undefined,
+      category: kind.category,
       tags: tagged.tags,
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       internalNumber: fieldText(fd, "internalNumber") || undefined,
-    }, self.extras)
+    }, kind.extras)
 
     // Táto obrazovka zakladá **nový** dokument. Keď kľúč už existuje, zápis
     // sa odmietne — dovtedy ticho prepísal koncept, metadáta aj pôvodný
@@ -264,10 +275,13 @@ export async function uploadAction(fd: FormData) {
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
     // a hľadať dokument v zozname je zbytočný krok.
     const skipped = tagged.similar.map(x => dictionary(self.language).valueSelect.similarSkipped(x.value, x.like))
+    const tu = dictionary(self.language).library.upload
     redirect(`/library/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent([
       v.warnings.length
         ? say(self.language).convertedWithWarnings(v.warnings.join(" "))
         : say(self.language).converted,
+      ...(kind.created ? [tu.categoryCreated(kind.created)] : []),
+      ...(kind.similar ? [tu.categorySimilar(kind.similar.value, kind.similar.like)] : []),
       ...skipped,
     ].join(" "))}`)
   } catch (e) {

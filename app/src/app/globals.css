@@ -1195,6 +1195,22 @@ html[data-theme="dark"] select.field-input {
 
 .select-item.is-highlighted { background: var(--surface-2); }
 
+/* Riadok „+ Pridať … ‚text'" na konci zoznamu (ZAKLAD-novy-druh-pri-nahravani,
+   2. 11. 2026, vzor Finder / Pripomienky): farba organizácie, oddelený čiarou
+   od výsledkov, aby sa nezamenil s existujúcou položkou. */
+.select-create {
+  color: var(--accent);
+  font-weight: 600;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 8px 8px;
+  margin-top: 4px;
+}
+.select-create .select-mark { font-size: 17px; }
+
+/* Pole Druh pri zakladaní nového druhu: návrat k výberu a úloha druhu pod ním. */
+.category-back { align-self: flex-start; }
+.category-role { margin-top: 8px; }
+
 .select-mark {
   width: 14px;
   flex: none;

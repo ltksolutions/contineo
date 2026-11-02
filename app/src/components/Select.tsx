@@ -57,6 +57,8 @@ export default function Select({
   searchPlaceholder,
   emptyText,
   language,
+  onCreate,
+  createLabel,
 }: {
   name: string
   options: SelectOption[]
@@ -82,6 +84,15 @@ export default function Select({
   emptyText?: string
   /** Jazyk prostredia — pre text v poli hľadania a prázdny výsledok. */
   language?: UiLanguage
+  /**
+   * Založenie novej položky z napísaného textu (ZAKLAD-novy-druh-pri-nahravani,
+   * 2. 11. 2026, vzor Finder / Pripomienky): keď hľadanie nie je presne
+   * existujúca položka, posledný riadok zoznamu je „+ Pridať … ‚text'".
+   * Čo sa s textom stane, rozhoduje volajúci — výber sám nič nezakladá.
+   */
+  onCreate?: (text: string) => void
+  /** Šablóna riadku so zástupným znakom `{text}` („Pridať druh „{text}“"). */
+  createLabel?: string
 }) {
   const tm = dictionary(language).multiSelect
   const [value, setValue] = useState(initial ?? (required ? "" : options[0]?.value) ?? "")
@@ -99,6 +110,16 @@ export default function Select({
     ? options.filter(o => fold(o.label).includes(q) || fold(o.path ?? "").includes(q))
     : options
   const selected = options.find(v => v.value === value) ?? (required ? undefined : options[0])
+  // Riadok „+ Pridať" je posledný a v klávesnici má index za výsledkami.
+  const createText = query.trim()
+  const canCreate = Boolean(onCreate && createLabel && withSearch && createText && !options.some(o => fold(o.label) === q))
+  const lastIndex = visible.length - 1 + (canCreate ? 1 : 0)
+
+  function create() {
+    setOpen(false)
+    setQuery("")
+    onCreate?.(createText)
+  }
 
   // Kliknutie mimo aj Escape zatvárajú. Bez toho zostane zoznam otvorený,
   // človek klikne inam a nechápe, prečo mu prekáža.
@@ -142,11 +163,12 @@ export default function Select({
       e.preventDefault()
       const v = visible[highlighted]
       if (v) pick(v)
+      else if (canCreate) create()
       return
     }
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      setHighlighted(i => Math.min(visible.length - 1, i + 1))
+      setHighlighted(i => Math.min(lastIndex, i + 1))
       return
     }
     if (e.key === "ArrowUp") {
@@ -228,6 +250,18 @@ export default function Select({
               </li>
             ))}
             {visible.length === 0 && <li className="select-empty">{emptyText ?? tm.nothingFound}</li>}
+            {canCreate && (
+              <li
+                role="option"
+                aria-selected={false}
+                className={`select-item select-create${highlighted === visible.length ? " is-highlighted" : ""}`}
+                onMouseEnter={() => setHighlighted(visible.length)}
+                onMouseDown={e => { e.preventDefault(); create() }}
+              >
+                <span className="select-mark" aria-hidden="true">+</span>
+                <span className="select-value"><span>{createLabel?.replace("{text}", createText)}</span></span>
+              </li>
+            )}
           </ul>
         </div>
       )}
