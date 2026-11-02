@@ -11,6 +11,7 @@ import "./globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import SessionProvider from "@/components/SessionProvider"
+import RequiredFieldsGuard from "@/components/RequiredFieldsGuard"
 import RouteProgress from "@/components/RouteProgress"
 import VersionNotice from "@/components/VersionNotice"
 import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
@@ -224,11 +225,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="sk">
       {/* Stĺpec s `min-height`, aby pätička na krátkej stránke sedela dole
           a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
-      <body style={{ ...tenantStyle(branding), ["--t-required" as string]: JSON.stringify(dictionary(language).common.required), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+      <body style={{ ...tenantStyle(branding), ["--t-required" as string]: JSON.stringify(dictionary(language).common.required), ["--t-required-missing" as string]: JSON.stringify(dictionary(language).common.requiredMissing), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <SessionProvider>
           {/* Nad hlavičkou a pred ňou: prúžok má byť vidieť od chvíle kliknutia,
               teda skôr, než sa vymení obsah pod ním. */}
           <RouteProgress />
+          <RequiredFieldsGuard />
           <Header
             branding={branding}
             email={email}

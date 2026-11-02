@@ -53,6 +53,15 @@ sú len doplnok. Texty sú po slovensky.
   `output.field-range-value`), natívny `input.field-range-input type="range"` (farba
   organizácie cez `accent-color`, terč 44 px), `.field-range-scale` (min a max), `.field-hint`.
   Presné číslo (suma, dátum, počet osôb) je `.field-input`, nie posuvník.
+- Povinné pole (ZAKLAD-chyba-povinneho-pola, od 2. 11.): stačí atribút `required`
+  (aj na komponente `Select`) — za popisom sa samo ukáže sivé „Povinné", ktoré ostáva
+  sivé aj pri chybe. Po pokuse o odoslanie (`:user-invalid`) má nevyplnené pole okraj
+  `--bad-fg` s podkladom `--bad-bg` a **pod poľom** `p.field-error` > `span.field-error-mark`
+  („!") + veta, čo doplniť; kým je chyba, nahrádza `.field-hint`. Pole bez vlastnej vety
+  dostane všeobecnú „Toto pole je povinné.". Pri tlačidle odoslania voliteľne
+  `p.form-summary` s `data-one` / `data-many` („Chýbajú povinné údaje: {names}.").
+  Bublinu prehliadača potlačí `RequiredFieldsGuard` (layout) a dá fokus prvému chybnému
+  poľu. Žiadna bublina, toast ani modálne okno.
 - Pilulky (`.tag`) sú len na čítanie, vo formulári nie. `.view-switch` do formulára nepatrí.
 
 ```jsx

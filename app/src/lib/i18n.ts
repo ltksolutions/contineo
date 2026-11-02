@@ -112,6 +112,17 @@ interface Dictionary {
     saveBarNote: string
     /** Sivé slovo za popisom povinného poľa (CSS `--t-required`, globals.css). */
     required: string
+    /**
+     * Všeobecný riadok chyby pod povinným poľom, ktoré nemá vlastnú vetu
+     * (`--t-required-missing`, globals.css).
+     */
+    requiredMissing: string
+    /**
+     * Súhrn pri tlačidle odoslania (`.form-summary`, Q3). **Šablóny s `{names}`,
+     * nie funkcie** — idú do `data-*` a číta ich klientsky `RequiredFieldsGuard`.
+     */
+    missingOne: string
+    missingMany: string
     moreActions: string
     /** Príklad zoznamu domén (jedna na riadok) — neutrálny. */
     domainsPlaceholder: string
@@ -4545,6 +4556,9 @@ interface Dictionary {
       titleNote: string
       /** Nápoveda pri Druhu: druh je typ dokumentu (D179), témy patria do značiek. */
       categoryNote: string
+      /** Riadok chyby pod poľom (ZAKLAD-chyba-povinneho-pola). */
+      titleMissing: string
+      categoryMissing: string
       /** Pod značkami: značky sú témy, nie typ dokumentu (D179). */
       tagsNote: string
       /**
@@ -5329,6 +5343,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   common: {
     saveBarNote: "Uloží všetky sekcie na tejto stránke.",
     required: "Povinné",
+    requiredMissing: "Toto pole je povinné.",
+    missingOne: "Chýba povinný údaj: {names}.",
+    missingMany: "Chýbajú povinné údaje: {names}.",
     moreActions: "Ďalšie akcie",
     domainsPlaceholder: "organizacia.sk\nmarketing.organizacia.sk",
     noticeConfirm: "Rozumiem",
@@ -9995,6 +10012,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objaví sa doslovne v potvrdzovacej formulke, takže nech je to celý úradný názov.",
       categoryNote: "Typ dokumentu — práve jeden. Podľa neho sa dokument zoskupuje v knižnici a vo filtroch a podľa neho sa bude riadiť aj členenie textu. Témy (napríklad Registrácia, ISSF) patria do značiek.",
+      titleMissing: "Zadajte názov dokumentu — celý úradný názov.",
+      categoryMissing: "Vyberte druh dokumentu.",
       tagsNote: "Značky sú témy — dokument ich môže mať viac a nič nespúšťajú. Typ dokumentu (smernica, zákon, manuál…) sa určuje Druhom, nie značkou.",
       kinds: {
         heading: "Ako dokument vznikne",
@@ -10747,6 +10766,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   common: {
     saveBarNote: "Uloží všechny sekce na této stránce.",
     required: "Povinné",
+    requiredMissing: "Toto pole je povinné.",
+    missingOne: "Chybí povinný údaj: {names}.",
+    missingMany: "Chybí povinné údaje: {names}.",
     moreActions: "Další akce",
     domainsPlaceholder: "organizace.cz\nmarketing.organizace.cz",
     noticeConfirm: "Rozumím",
@@ -15410,6 +15432,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objeví se doslovně v potvrzovací formulaci, ať je to tedy celý úřední název.",
       categoryNote: "Typ dokumentu — právě jeden. Podle něj se dokument seskupuje v knihovně a ve filtrech a podle něj se bude řídit i členění textu. Témata (například Registrace, ISSF) patří do štítků.",
+      titleMissing: "Zadejte název dokumentu — celý úřední název.",
+      categoryMissing: "Vyberte druh dokumentu.",
       tagsNote: "Štítky jsou témata — dokument jich může mít více a nic nespouštějí. Typ dokumentu (směrnice, zákon, manuál…) se určuje Druhem, ne štítkem.",
       kinds: {
         heading: "Jak dokument vznikne",
@@ -16162,6 +16186,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   common: {
     saveBarNote: "Saves every section on this page.",
     required: "Required",
+    requiredMissing: "This field is required.",
+    missingOne: "A required field is missing: {names}.",
+    missingMany: "Required fields are missing: {names}.",
     moreActions: "More actions",
     domainsPlaceholder: "example.com\nmarketing.example.com",
     noticeConfirm: "OK",
@@ -20811,6 +20838,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "It appears verbatim in the acknowledgement statement, so use the full official title.",
       categoryNote: "The document type — exactly one. It groups the document in the library and in filters, and it will also decide how the text is split. Topics (for example Registration, ISSF) belong in tags.",
+      titleMissing: "Enter the document title — the full official title.",
+      categoryMissing: "Choose the document type.",
       tagsNote: "Tags are topics — a document can have several and they trigger nothing. The document type (directive, law, manual…) is set by Kind, not by a tag.",
       kinds: {
         heading: "How a document is created",
