@@ -18,7 +18,6 @@ vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/session", () => ({ currentTenant: async () => null, currentPerson: async () => null }))
 vi.mock("@/lib/people", () => ({
   ASSIGNABLE_ROLES: ["hr", "content-admin"],
-  normalizeRoles: (roles?: string[]) => roles ?? [],
   peopleContext: async () => ({
     state: "ready",
     tenant: { companyCode: "SFZ", codelists: {}, modules: {} },

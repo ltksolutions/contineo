@@ -9,10 +9,9 @@
  * zásah do `persons`, preto **náhľad je predvolený** a zápis si treba vypýtať
  * prepínačom.
  *
- * **Poradie je dôležité.** Kód uznáva obe označenia naraz
- * (`LEGACY_ADMIN_ROLE` v `lib/people.ts`), takže sa dá nasadiť kedykoľvek
- * a migrovať potom. Keby sa uznávalo len nové, každý nezmigrovaný
- * administrátor by o prístup prišiel v okamihu nasadenia.
+ * **Poradie bolo dôležité.** Kód uznával obe označenia naraz, kým migrácia
+ * 2. 11. 2026 neprebehla; potom staré z kódu vypadlo a `npm run check` ho
+ * hlási. Skript ostáva na obnovu zo zálohy.
  *
  * Skript je **idempotentný**: kto už má nové označenie, sa nezmení, a keby
  * mal omylom obe, staré sa len odoberie. Záznamy auditu sa neprepisujú (D24) —
