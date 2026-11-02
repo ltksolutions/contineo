@@ -137,3 +137,11 @@ k návrhovému projektu „Contineo.app responzivny design".
 - Validácia `conventions.md`: `RequiredFieldsGuard` je menovaný, ale v balíku
   knižnice nie je (žije v layoute aplikácie). Ostatné nálezy boli falošné
   (`.xw-*`, prípony súborov, mená zo SwiftUI).
+- **3. 11.:** `RequiredFieldsGuard` pribudol do knižnice (PR 532) — čistý React,
+  vkladá sa raz na stránku. Driver: 13 nezmenených, 1 nový; náhľad `UploadForm`
+  overený skriptom v Playwrighte (klik na „Nahrať" → fokus na „Názov", súhrn
+  oboch polí, bez bubliny). Projekt Claude Design: 76 súborov + sentinel +
+  kotva; artefakt verzia 23 (66 súborov). Kotva v
+  `.design-sync/.cache/remote-sync.json` sa po nahratí neobnoví sama —
+  skopírovať do nej `ds-bundle/_ds_sync.json`, inak ďalší beh ukáže už nahrané
+  komponenty ako zmenené.
