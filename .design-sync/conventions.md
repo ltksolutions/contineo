@@ -60,8 +60,9 @@ sú len doplnok. Texty sú po slovensky.
   („!") + veta, čo doplniť; kým je chyba, nahrádza `.field-hint`. Pole bez vlastnej vety
   dostane všeobecnú „Toto pole je povinné.". Pri tlačidle odoslania voliteľne
   `p.form-summary` s `data-one` / `data-many` („Chýbajú povinné údaje: {names}.").
-  Bublinu prehliadača potlačí `RequiredFieldsGuard` (layout) a dá fokus prvému chybnému
-  poľu. Žiadna bublina, toast ani modálne okno.
+  Bublinu prehliadača potlačí `RequiredFieldsGuard` a dá fokus prvému chybnému poľu —
+  je v layoute aplikácie, nie v knižnici: návrh ho nekreslí ani nenapodobňuje, správanie
+  dodá aplikácia. Žiadna bublina, toast ani modálne okno.
 - Pilulky (`.tag`) sú len na čítanie, vo formulári nie. `.view-switch` do formulára nepatrí.
 - Založenie novej položky z výberu (ZAKLAD-novy-druh-pri-nahravani, 2. 11.): `Select`
   s `onCreate` a `createLabel` — keď hľadanie nie je presne existujúca položka, posledný
