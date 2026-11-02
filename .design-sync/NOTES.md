@@ -123,3 +123,17 @@ k návrhovému projektu „Contineo.app responzivny design".
 - Pri tomto behu sa `.ds-sync/` inštaloval nanovo vo worktree (esbuild,
   ts-morph, @types/react, playwright@1.63.0); `package-validate` prešiel
   s render-checkom.
+
+## Chyby formulára a nový druh pri nahrávaní (2. 11. 2026)
+- Pribudli `.field-error`, `.form-summary` (PR 523) a `.select-create`
+  (PR 526); `Select` má nové props `onCreate` a `createLabel` (šablóna
+  s `{text}`) — doplnené do `dtsPropsFor.Select` v `config.json`.
+- Driver s `--remote`: 13 komponentov nezmenených, nič na overenie,
+  13/13 náhľadov sa vykreslí. Projekt Claude Design: 71 súborov + sentinel
+  + kotva `_ds_sync.json`. Artefakt: verzia 21 (62 súborov, 0 mazaní).
+- Worktree potreboval `npx playwright install chromium-headless-shell`
+  (chýbal build 1243) a `npm init` v `.ds-sync` padol na neplatnom názve —
+  `package.json` treba napísať ručne.
+- Validácia `conventions.md`: `RequiredFieldsGuard` je menovaný, ale v balíku
+  knižnice nie je (žije v layoute aplikácie). Ostatné nálezy boli falošné
+  (`.xw-*`, prípony súborov, mená zo SwiftUI).
