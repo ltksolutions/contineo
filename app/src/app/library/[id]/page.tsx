@@ -42,6 +42,7 @@ import { carryOverCandidates, audienceRef, audienceLabel } from "@/lib/assignmen
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
+import CategoryField from "@/components/CategoryField"
 import MultiSelect from "@/components/MultiSelect"
 import ValueSelect, { SimilarWarning, withCodelistNote } from "@/components/ValueSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
@@ -61,7 +62,7 @@ import { autoVersionLabel } from "@/lib/versionLabel"
 import { assignHref } from "@/lib/libraryBulk"
 import type { VersionFile } from "@/lib/documents"
 import { textDiff, fixableVersions, closestVersion, draftIsFree, type DiffKind } from "@/lib/textFix"
-import { listPeople } from "@/lib/people"
+import { listPeople, isOrgAdmin } from "@/lib/people"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
 import PeopleSearch from "@/components/PeopleSearch"
 import LegalBasisForm from "@/components/LegalBasisForm"
@@ -1129,16 +1130,14 @@ export default async function DocumentDetailPage({
                     )}
                   </label>
 
-                  <div className="field">
-                    <span className="field-label">{t.category}</span>
-                    <Select language={language}
-                      name="category"
-                      options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]}
-                      initial={d.category ?? ""}
-                      fieldLabel={t.category}
-                      searchable
-                    />
-                  </div>
+                  {/* Nový druh aj pri úprave (ZAKLAD-novy-druh-pri-nahravani,
+                      3. 11. 2026) — len administrátor, vzniká pri uložení. */}
+                  <CategoryField
+                    options={codelistOptions("category", extras)}
+                    canCreate={isOrgAdmin(ctx.person)}
+                    language={language}
+                    editing={{ initial: d.category ?? "", unsetLabel: t.unset }}
+                  />
 
                   <div className="field">
                     <span className="field-label">{t.accessLevel}</span>
