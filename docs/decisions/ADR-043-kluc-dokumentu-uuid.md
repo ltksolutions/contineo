@@ -12,6 +12,7 @@ SPDX-License-Identifier: EUPL-1.2
 > **Prekonáva:** ADR-010 bod 1 (kľúč dokumentu ako slug z názvu, náhľad
 > a ručný kľúč vo formulári). Body 2 a 3 ADR-010 platia ďalej.
 > **Rozhodnutie:** D294
+> **Čiastočne prekonané:** [ADR-044](ADR-044-migracia-klucov-na-uuid.md) (2026-11-02) — aj existujúce dokumenty dostanú UUID, identifikátor sa prepíše všade.
 
 ---
 

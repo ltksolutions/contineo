@@ -13,7 +13,8 @@
  * **Poradie bránok** (každá ďalšia predpokladá predchádzajúcu):
  *
  *   1. doména patrí tenantovi, inak `404` (D29, D90),
- *   2. preklad starých adries (`legacyRoutes`),
+ *   2. preklad starých adries (`legacyRoutes`) a starých identifikátorov
+ *      dokumentov (`documentAliases`, ADR-044),
  *   3. verejné cesty,
  *   4. prihlásenie.
  *
@@ -31,6 +32,7 @@ import { legacyOrgSection } from "@/lib/orgSections"
 import { PATHNAME_HEADER } from "@/lib/appNav"
 import { isHostCheckExempt, isPublicPath } from "@/lib/publicRoutes"
 import { resolveTenant } from "@/lib/tenants"
+import { documentIdInPath, resolveDocumentAlias } from "@/lib/documentAliases"
 
 
 export async function proxy(req: NextRequest) {
@@ -41,12 +43,15 @@ export async function proxy(req: NextRequest) {
   //    najprv `307` na `/sign-in` a až stránka povedala `404`; cudzia doména
   //    sa tak dozvedela, že tu nejaká prihlasovacia cesta je. D29 hovorí,
   //    že sa nemá dozvedieť nič.
+  let companyCode: string | null = null
   if (!isHostCheckExempt(pathname)) {
     let known = true
     try {
       // Rovnaký zdroj hostiteľa ako `requestHostname()` v `session.ts`.
       const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
-      known = Boolean(await resolveTenant(host))
+      const tenant = await resolveTenant(host)
+      known = Boolean(tenant)
+      companyCode = tenant?.companyCode ?? null
     } catch (e) {
       // **Výpadok databázy neotvára prístup, len nerozhoduje tu.** Nechávame
       // dnešné správanie: brána prihlásenia nižšie aj každá stránka si tenanta
@@ -74,6 +79,24 @@ export async function proxy(req: NextRequest) {
   // Časť obrazovky z parametra na vlastnú cestu (`?edit=document` → `/edit`).
   const part = legacyQueryRoute(pathname, req.nextUrl.searchParams)
   if (part) return NextResponse.redirect(new URL(part, req.url), 307)
+  // Starý identifikátor dokumentu v adrese (`/library/sfz:stanovy/edit`) →
+  // nový UUID (ADR-044). Databáza sa pýta len pri identifikátore starého
+  // tvaru; organizácia je z domény, nie z adresy (D32). Pred bránou
+  // prihlásenia z toho istého dôvodu ako `legacyRoute` vyššie.
+  const old = companyCode ? documentIdInPath(pathname) : null
+  if (old && companyCode) {
+    try {
+      const newId = await resolveDocumentAlias(companyCode, old.id)
+      if (newId) {
+        const to = new URL(`/${old.prefix}/${encodeURIComponent(newId)}${old.rest}`, req.url)
+        to.search = req.nextUrl.search
+        return NextResponse.redirect(to, 307)
+      }
+    } catch (e) {
+      // Výpadok databázy: stránka povie 404 sama, nič sa neotvorí.
+      console.error("[proxy] starý identifikátor dokumentu sa nepodarilo preložiť:", e)
+    }
+  }
 
   if (isPublicPath(pathname)) return NextResponse.next()
 

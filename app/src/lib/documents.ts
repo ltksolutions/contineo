@@ -17,6 +17,7 @@
 
 import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
+import { resolveDocumentAlias } from "./documentAliases"
 import type {
   LegalBasis, LegalBasisChange, ResponsibleChange, ResponsiblePerson,
   LegalBasisEntry,
@@ -466,6 +467,12 @@ export function canSeeDocument(
  * Zámerne sa nerozlišuje „neexistuje" od „nesmieš" — inak by sa dalo
  * skúšaním identifikátorov zistiť, aké smernice iná organizácia má.
  */
+/** Dokument podľa starého identifikátora (ADR-044), alebo `null`. */
+async function loadDocumentByAlias(companyCode: string, oldId: string): Promise<DocumentRecord | null> {
+  const newId = await resolveDocumentAlias(companyCode, oldId)
+  return newId ? loadDocument(companyCode, newId) : null
+}
+
 export async function loadDocumentFor(
   person: { companyCode: string },
   documentId: string
@@ -473,7 +480,10 @@ export async function loadDocumentFor(
   if (!person?.companyCode) return null
   // Organizácia v podmienke dotazu (D90); `canSeeDocument()` ostáva ako druhá
   // poistka, nie ako jediná.
+  // Starý identifikátor (MCP klient si ho mohol zapamätať) sa preloží na
+  // nový — ADR-044. Stránky prekladá už `proxy.ts`.
   const doc = await loadDocument(person.companyCode, documentId)
+    ?? await loadDocumentByAlias(person.companyCode, documentId)
   if (!doc) return null
   return canSeeDocument(person, doc) ? doc : null
 }
