@@ -1,7 +1,7 @@
 /**
  * migrate_role_admin.mjs — `people-admin` → `admin` (ADR-045, 2. 11. 2026).
  *
- *     npm run migrate:role-admin              # náhľad
+ *     npm run migrate:role-admin              # náhľad (načíta .env.local)
  *     npm run migrate:role-admin -- --zapisat
  *
  * Rola dávno nespravuje len osoby — aj oddelenia, číselníky, nastavenia
