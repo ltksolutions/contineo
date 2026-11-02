@@ -1,8 +1,8 @@
 "use client"
 
 /**
- * Názov a kľúč položky číselníka — **kľúč sa predgeneruje z názvu**, rovnako
- * ako pri novom dokumente (`KeyPreview`, ADR-010). „Metodický pokyn" →
+ * Názov a kľúč položky číselníka — **kľúč sa predgeneruje z názvu**
+ * (ADR-010; kľúč dokumentu je od ADR-043 UUID, tu to neplatí). „Metodický pokyn" →
  * `metodicky_pokyn`.
  *
  * Kým človek do kľúča nezasiahne, kľúč nasleduje názov. Keď ho prepíše, už

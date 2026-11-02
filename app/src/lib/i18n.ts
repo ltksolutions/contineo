@@ -4543,19 +4543,6 @@ interface Dictionary {
       title: string
       titlePlaceholder: string
       titleNote: string
-      key: string
-      /** Náhľad identifikátora a ručný kľúč (NAHRAVANIE, úloha 4 / ADR-010). */
-      keyPreview: string
-      keyManualSummary: string
-      keyManualNote: string
-      /**
-       * **Šablóna, nie funkcia.** Klientsky komponent `KeyPreview` dosadí
-       * `{id}` sám. Funkcia by sa sem vrátiť nesmela: `/library/new` je
-       * serverový komponent a funkcia cez hranicu do klienta neprejde —
-       * React ju odmietne a stránka spadne celá, nie len tá hláška.
-       */
-      keyTaken: string
-      keysTaken: string
       /** Nápoveda pri Druhu: druh je typ dokumentu (D179), témy patria do značiek. */
       categoryNote: string
       /** Pod značkami: značky sú témy, nie typ dokumentu (D179). */
@@ -10007,12 +9994,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Názov",
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objaví sa doslovne v potvrdzovacej formulke, takže nech je to celý úradný názov.",
-      key: "Kľúč dokumentu",
-      keyPreview: "Identifikátor:",
-      keyManualSummary: "Zadať kľúč ručne",
-      keyManualNote: "Kľúč vzniká raz a nikdy sa nemení — žije v potvrdeniach, audite a exportoch. Premenovanie dokumentu ho nemení.",
-      keyTaken: "Identifikátor {id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.",
-      keysTaken: "Obsadené kľúče v tejto organizácii: ",
       categoryNote: "Typ dokumentu — práve jeden. Podľa neho sa dokument zoskupuje v knižnici a vo filtroch a podľa neho sa bude riadiť aj členenie textu. Témy (napríklad Registrácia, ISSF) patria do značiek.",
       tagsNote: "Značky sú témy — dokument ich môže mať viac a nič nespúšťajú. Typ dokumentu (smernica, zákon, manuál…) sa určuje Druhom, nie značkou.",
       kinds: {
@@ -15428,12 +15409,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Název",
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objeví se doslovně v potvrzovací formulaci, ať je to tedy celý úřední název.",
-      key: "Klíč dokumentu",
-      keyPreview: "Identifikátor:",
-      keyManualSummary: "Zadat klíč ručně",
-      keyManualNote: "Klíč vzniká jednou a nikdy se nemění — žije v potvrzeních, auditu a exportech. Přejmenování dokumentu ho nemění.",
-      keyTaken: "Identifikátor {id} je obsazený. Upravte název, nebo zadejte klíč ručně.",
-      keysTaken: "Obsazené klíče v této organizaci: ",
       categoryNote: "Typ dokumentu — právě jeden. Podle něj se dokument seskupuje v knihovně a ve filtrech a podle něj se bude řídit i členění textu. Témata (například Registrace, ISSF) patří do štítků.",
       tagsNote: "Štítky jsou témata — dokument jich může mít více a nic nespouštějí. Typ dokumentu (směrnice, zákon, manuál…) se určuje Druhem, ne štítkem.",
       kinds: {
@@ -20835,12 +20810,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Title",
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "It appears verbatim in the acknowledgement statement, so use the full official title.",
-      key: "Document key",
-      keyPreview: "Identifier:",
-      keyManualSummary: "Enter the key manually",
-      keyManualNote: "The key is created once and never changes — it lives in acknowledgements, the audit trail and exports. Renaming the document does not change it.",
-      keyTaken: "The identifier {id} is already taken. Change the title, or enter the key manually.",
-      keysTaken: "Keys already taken in this organisation: ",
       categoryNote: "The document type — exactly one. It groups the document in the library and in filters, and it will also decide how the text is split. Topics (for example Registration, ISSF) belong in tags.",
       tagsNote: "Tags are topics — a document can have several and they trigger nothing. The document type (directive, law, manual…) is set by Kind, not by a tag.",
       kinds: {

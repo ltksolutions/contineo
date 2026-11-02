@@ -1,6 +1,7 @@
 # ADR-010 — Metadáta bez ručných kľúčov
 
 > **Stav:** prijaté 2026-09-21
+> **Bod 1 prekonaný:** [ADR-043](ADR-043-kluc-dokumentu-uuid.md) (2026-11-02) — kľúč nového dokumentu je UUID, nie slug z názvu.
 > **Rozhodol:** Ján Letko
 > **Nadväzuje na:** D80 (`docs/D80_plan_novy_dokument_vs_nove_znenie.md`), D90
 > **Súvisiace:** `docs/OPEN_DECISIONS.md`, `docs/CISELNIKY_governance.md`, TODO sekcia **O21**

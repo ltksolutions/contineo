@@ -4,8 +4,8 @@
  * Názov organizácie a kód, ktorý z neho Contineo navrhne (ADR-010,
  * ADMIN.md úloha 1.4).
  *
- * **Návrh, nie automatika.** Na rozdiel od kľúča dokumentu (`KeyPreview`),
- * kde sa kľúč generuje ticho, tu je kód v poli a admin ho môže prepísať:
+ * **Návrh, nie automatika.** Na rozdiel od kľúča dokumentu, ktorý server
+ * vymyslí ticho (UUID, ADR-043), tu je kód v poli a admin ho môže prepísať:
  * organizácie svoju skratku spravidla už majú (`SFZ`, `StVPS`) a tá má
  * prednosť pred strojovým odvodením. Zakladanie tenantov je zriedkavé a robí
  * ho človek, ktorý skratku pozná.
@@ -38,7 +38,10 @@ export default function CompanyCodeField({
     codeNote: string
     codeNoteHighlight: string
     codeNoteAfter: string
-    /** Šablóna s `{code}`, nie funkcia — dôvod v `KeyPreview.tsx`. */
+    /**
+     * Šablóna s `{code}`, nie funkcia: funkcia cez hranicu server → klient
+     * neprejde a spadne celá stránka (`tests/clientLabels.test.ts`).
+     */
     taken: string
   }
 }) {

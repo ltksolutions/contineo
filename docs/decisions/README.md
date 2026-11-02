@@ -21,7 +21,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-007](ADR-007-oprava-textu-znenia.md) | Oprava textu publikovaného znenia bez novej verzie | ✅ schválené |
 | [ADR-008](ADR-008-zrusenie-zlatej-sady.md) | Zrušenie zlatej sady; kvalita sa meria z prevádzky | ✅ prijaté |
 | [ADR-009](ADR-009-on-prem-referencna-architektura.md) | Atlas ako základ, on-prem ako referenčná architektúra | ✅ prijaté |
-| [ADR-010](ADR-010-metadata-bez-rucnych-klucov.md) | Metadáta bez ručných kľúčov | ✅ prijaté |
+| [ADR-010](ADR-010-metadata-bez-rucnych-klucov.md) | Metadáta bez ručných kľúčov | ✅ prijaté · bod 1 (kľúč ako slug z názvu) prekonaný ADR-043 |
 | [ADR-011](ADR-011-pdf-ako-schvalovany-dokument.md) | Schvaľuje a potvrdzuje sa PDF; text je na vyhľadávanie | ✅ prijaté |
 | [ADR-012](ADR-012-retencia-dokazov-a-dpo.md) | Retencia reťaze dôkazov, rola DPO a námietka | ✅ prijaté |
 | [ADR-013](ADR-013-udaje-o-zneni.md) | Údaje o znení: autor, schválil, dátumy | ✅ prijaté · dodatok 1: „Prijal (orgán)" |
@@ -54,6 +54,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-040](ADR-040-register-zdrojov.md) | Register zdrojov: zdroje obsahu ako vlastná sekcia Organizácia → Zdroje (umelá inteligencia si nechá kľúč, modely, spotrebu), druh zdroja zo spoločnej schémy (súbor, schránka, MCP konektor, web/RSS) určuje, čo zdroj vie, adaptér je vlastnosť zdroja web (Legislatíva = web s adaptérom slov-lex, nie vlastný druh), register je spoločný tvar nad existujúcimi dátami a jediný vstup pre výber zdrojov, adresy sa prekladajú (D263–D267) · Dodatok 1: druh je zoznam, zdroj je detail — Zdroje → Web / RSS → Slov-Lex, id zdroja `slov-lex` namiesto `law` (D268) | ✅ prijaté · kroky 1–3 (crawler pre ďalšie weby a RSS otvorený), dodatky 1–2 |
 | [ADR-041](ADR-041-dokument-pre-pouzivatela.md) | Dokument pre bežného používateľa: jeden zoznam dokumentov podľa druhu bez ohľadu na zdroj (predpis z katalógu je druh Zákon), Prehľad z blokov Moje úlohy · Dokumenty · Organizácia (KPI dlaždice a „Pre vás" zanikajú), čitateľský detail s kartou údajov a prepínačom zverejnených znení `?version=` (bez Priečinka, Prístupu, Značiek a cudzích potvrdení), čitateľská adresa zákona `/documents/law/<actId>`, roly vidia na detaile len svoje (D270–D274) | ✅ prijaté · návrh `docs/design/ZAKLAD-prehlad-a-detail-pre-pouzivatela.md`, kroky B → C → A |
 | [ADR-042](ADR-042-widget-namiesto-formulara-pomoc.md) | Widget kanála ISSF Helpdesk namiesto formulára Pomoc v ISSF: správa helpdesku po dvoch neúspechoch, odkazom aj frázou; údaje z ISSF (`phone_number`, `context`, adresa stránky) pri tickete; potvrdenie e-mailom založí vlákno ticketu; formulár sa vypne v deň spustenia, `mailto` ako záloha; prílohy neskôr; osoba z widgetu je e-mailový kontakt, účet ISSF je údaj ticketu (D275–D280) · Dodatok 1: zmluva s cudzím systémom zmrazená, poloha tlačidla na ôsmich miestach (predvolene hore v strede, D286), veľkosť, texty a správanie ponuky helpdesku ako nastavenie kanála, zmena do 5 minút s náhľadom, formulár a stránka Pomoc zanikajú, odkazy „Pomoc“ otvárajú widget len v ISSF (D281–D285) · Dodatok 2: riadok otázky hore v strede, plachta 80 % × 80 %, nedávne otázky a vzory, widget vyká, výber jazyka, úvodný tip (D286–D291), zbalenie riadku na posúvateľné tlačidlo (D292), tip znova žiarovkou (D293) | ✅ prijaté · kroky 1–5, Dodatok 2 |
+| [ADR-043](ADR-043-kluc-dokumentu-uuid.md) | Kľúč nového dokumentu je náhodné UUID (`sfz:<32 hexa>`), nie slug z názvu; formulár identifikátor neukazuje ani nepýta; existujúce dokumenty si kľúč nechávajú (D24, adresa je zmluva); kľúče číselníkov, kurzov a trás ostávajú zo slugu (D294) · prekonáva ADR-010 bod 1 | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -66,6 +67,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-043**. Súbor `ADR-043-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-044**. Súbor `ADR-044-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
