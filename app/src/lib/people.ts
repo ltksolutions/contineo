@@ -42,21 +42,10 @@ import { COMPLIANCE_ROLE } from "./complianceAccess"
 /**
  * Administrátor organizácie — osoby, oddelenia, číselníky, nastavenia (D46, D55).
  * Do 2. 11. 2026 sa volal `people-admin`, hoci dávno nespravoval len osoby
- * (ADR-045).
+ * (ADR-045). Staré označenie migrácia z `persons` odstránila a kód ho
+ * neuznáva; `npm run check` ho hlási, keby sa vrátilo (napr. zo zálohy).
  */
 export const ADMIN_ROLE = "admin"
-/**
- * Pôvodné označenie. Uznáva sa, kým ho `scripts/migrate_role_admin.mjs`
- * neodstráni z `persons` — inak by každý nezmigrovaný administrátor prišiel
- * o prístup v okamihu nasadenia. Potom sa odtiaľto vymaže.
- */
-export const LEGACY_ADMIN_ROLE = "people-admin"
-
-/** Roly osoby so starým označením administrátora prepísaným na nové. */
-export function normalizeRoles(roles: readonly string[] | undefined): string[] {
-  return [...new Set((roles ?? []).map(r => (r === LEGACY_ADMIN_ROLE ? ADMIN_ROLE : r)))]
-}
-
 /**
  * Roly, ktoré sa dajú prideliť z tejto obrazovky. `learning-admin` sa na
  * obrazovke ukáže len pri zapnutom module Vzdelávanie (ADR-018) — pri
@@ -65,7 +54,7 @@ export function normalizeRoles(roles: readonly string[] | undefined): string[] {
 export const ASSIGNABLE_ROLES = [HR_ROLE, ADMIN_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE, LEARNING_ROLE, HELPDESK_ROLE, COMPLIANCE_ROLE] as const
 
 export function isOrgAdmin(person: Pick<Person, "roles"> | null): boolean {
-  return normalizeRoles(person?.roles).includes(ADMIN_ROLE)
+  return Boolean(person?.roles?.includes(ADMIN_ROLE))
 }
 
 export type PeopleContext =

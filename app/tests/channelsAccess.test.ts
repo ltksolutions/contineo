@@ -36,9 +36,9 @@ vi.mock("@/lib/tickets", async importOriginal => ({
 
 const { channelsContext } = await import("../src/lib/helpdeskAgents")
 
-const admin = { id: "admin", companyCode: "SFZ", roles: ["people-admin"], language: "sk" }
+const admin = { id: "admin", companyCode: "SFZ", roles: ["admin"], language: "sk" }
 const agent = { id: "agent", companyCode: "SFZ", roles: ["helpdesk"], language: "sk" }
-const both = { id: "agent", companyCode: "SFZ", roles: ["people-admin", "helpdesk"], language: "sk" }
+const both = { id: "agent", companyCode: "SFZ", roles: ["admin", "helpdesk"], language: "sk" }
 const nobody = { id: "x", companyCode: "SFZ", roles: [], language: "sk" }
 
 async function dispatch(key: string) {

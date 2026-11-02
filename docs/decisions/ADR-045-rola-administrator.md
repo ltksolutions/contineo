@@ -12,6 +12,8 @@ SPDX-License-Identifier: EUPL-1.2
 > **Nadväzuje na:** D46 (vlastná rola pre správu osôb), D55 (číselníky
 > organizácie), postup pri `spravca-obsahu` → `content-admin`.
 > **Rozhodnutie:** D296
+> **Vykonané:** 2026-11-02 — migrácia prepísala 3 osoby; staré označenie
+> z kódu vypadlo a `npm run check` ho hlási ako staré.
 
 ---
 

@@ -155,14 +155,18 @@ for (const d of documents) {
 // ako neznámu (stalo sa pri `dpo`, `learning-admin` a `helpdesk`).
 // Súlad s kódom stráži `tests/checkRoles.test.ts` — chýbajúca rola tam zhodí test,
 // nie až nočnú kontrolu (stalo sa aj pri `helpdesk`, 11. 10. 2026).
-const ZNAME_ROLE = new Set(["hr", "admin", "people-admin", "content-admin", "evaluator", "dpo", "learning-admin", "helpdesk", "compliance", "platform-admin"])
-const STARE_ROLE = new Set(["spravca-obsahu"])
+const ZNAME_ROLE = new Set(["hr", "admin", "content-admin", "evaluator", "dpo", "learning-admin", "helpdesk", "compliance", "platform-admin"])
+// Staré meno → príkaz migrácie. `people-admin` je `admin` od 2. 11. 2026 (ADR-045).
+const STARE_ROLE = new Map([
+  ["spravca-obsahu", "npm run migrate:role-content -- --zapisat"],
+  ["people-admin", "npm run migrate:role-admin -- --zapisat"],
+])
 for (const o of persons) {
   for (const r of o.roles ?? []) {
     check(
       STARE_ROLE.has(r),
       `${o.email} má staré označenie roly „${r}"`,
-      "kód ho už neuznáva, takže človek o prístup do knižnice prišiel — spusti `npm run migrate:role-content -- --zapisat`",
+      `kód ho už neuznáva, takže človek o prístup prišiel — spusti \`${STARE_ROLE.get(r)}\``,
     )
     check(
       !ZNAME_ROLE.has(r) && !STARE_ROLE.has(r),

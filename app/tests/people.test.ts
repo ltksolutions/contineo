@@ -17,7 +17,7 @@ const { currentTenant, currentPerson, getCollection } = vi.hoisted(() => ({
 vi.mock("../src/lib/session", () => ({ currentTenant, currentPerson }))
 vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 
-import { peopleContext, isOrgAdmin, normalizeRoles, savePerson, ADMIN_ROLE, ASSIGNABLE_ROLES } from "../src/lib/people"
+import { peopleContext, isOrgAdmin, savePerson, ADMIN_ROLE, ASSIGNABLE_ROLES } from "../src/lib/people"
 import { HR_ROLE } from "../src/lib/hr"
 import { PLATFORM_ROLE } from "../src/lib/admin"
 import { CONTENT_ROLE } from "../src/lib/library"
@@ -105,9 +105,8 @@ describe("brana spravy osob", () => {
     expect(isOrgAdmin(null)).toBe(false)
   })
 
-  it("staré označenie people-admin sa uznáva, kým beží migrácia (ADR-045)", () => {
-    expect(isOrgAdmin(person({ roles: ["people-admin"] }))).toBe(true)
-    expect(normalizeRoles(["people-admin", "admin", "hr"])).toEqual(["admin", "hr"])
+  it("staré označenie people-admin po migrácii neplatí (ADR-045)", () => {
+    expect(isOrgAdmin(person({ roles: ["people-admin"] }))).toBe(false)
   })
 })
 
