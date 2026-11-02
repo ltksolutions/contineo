@@ -52,6 +52,7 @@ export default async function NewDocumentPage({
   }>(await searchParams)
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
   const t = dictionary(ctx.person.language).library.upload
+  const tc = dictionary(ctx.person.language).common
   const tflow = dictionary(ctx.person.language).library.flow
   const extras = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)
@@ -181,8 +182,9 @@ export default async function NewDocumentPage({
         <label className="field upload-wide">
           <span className="field-label">{t.title}</span>
           <input className="field-input" name="title" defaultValue={title ?? ""} required
-            placeholder={t.titlePlaceholder} />
+            placeholder={t.titlePlaceholder} aria-describedby="title-error" />
           <span className="quiet field-hint">{t.titleNote}</span>
+          <p className="field-error" id="title-error"><span className="field-error-mark" aria-hidden="true">!</span>{t.titleMissing}</p>
         </label>
 
         {/*
@@ -204,6 +206,7 @@ export default async function NewDocumentPage({
             options={codelistOptions("category", extras)}
           />
           <span className="quiet field-hint">{t.categoryNote}</span>
+          <p className="field-error"><span className="field-error-mark" aria-hidden="true">!</span>{t.categoryMissing}</p>
         </label>
         <div className="field">
           <span className="field-label">{t.accessLevel}</span>
@@ -290,6 +293,10 @@ export default async function NewDocumentPage({
         </section>
 
         <div className="upload-submit">
+          {/* Súhrn chýbajúcich povinných polí (ZAKLAD-chyba-povinneho-pola,
+              Q3) — vetu skladá `RequiredFieldsGuard`, šablóny sú tu. */}
+          <p className="form-summary" role="status" aria-live="polite"
+            data-one={tc.missingOne} data-many={tc.missingMany} />
           <UploadSubmit labels={{ submit: t.submit, pending: t.submitPending, pickPdfFirst: t.pickPdfFirst }} />
         </div>
         <p className="quiet field-hint">{tflow.uploadNext}</p>

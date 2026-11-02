@@ -973,28 +973,63 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .field-input:user-invalid { border-color: var(--bad-fg); }
 
 /*
-  Nevyplnené povinné pole po pokuse o odoslanie (2. 11. 2026). Bublina
-  prehliadača („Vyplňte toto pole") je v Safari takmer neviditeľná a pri
-  dlhom formulári ukáže len prvé pole — preto sa pole povie aj samo:
-  červený okraj s podkladom (dvojica `--bad-fg`/`--bad-bg`, žiadna vlastná
-  farba ani hrúbka) a „Povinné" sa zmení na červené
-  „Povinné — vyplňte" (`--t-required-missing`). Vlastný `Select` stráži
-  povinnosť skrytým poľom `.select-required`; jeho stav sa prenáša na
-  tlačidlo cez `:has()`.
+  Nevyplnené povinné pole po pokuse o odoslanie (ZAKLAD-chyba-povinneho-pola,
+  2. 11. 2026, Q1–Q4 podľa odporúčania). Vzor SwiftUI: červený riadok
+  **priamo pod poľom**, nie bublina — tú `RequiredFieldsGuard` s JavaScriptom
+  potlačí, bez neho ostáva ako záloha.
+
+  - Pole: okraj a podklad dvojicou `--bad-fg`/`--bad-bg`, hrúbka 1 px ako
+    každé pole. Vlastný `Select` stráži povinnosť skrytým `.select-required`;
+    stav sa na tlačidlo prenáša cez `:has()`.
+  - Pod poľom `p.field-error` („!" + veta, čo doplniť), kým je chyba;
+    **nahrádza nápovedu** (Q2). Pole bez vlastnej vety dostane všeobecnú
+    `--t-required-missing` („Toto pole je povinné.").
+  - Popis ostáva so sivým „Povinné" (Q4) — chybu hovorí riadok pod poľom.
+  - Všetko stojí na `:user-invalid`, takže stav zmizne sám, keď človek pole
+    vyplní; nič sa neukladá.
 */
 .field-input:user-invalid,
 .select:has(> .select-required:user-invalid) > .select-button {
   border-color: var(--bad-fg);
   background: var(--bad-bg);
 }
-.field:has(> :is(input, select, textarea):user-invalid) > .field-label,
-.field:has(> .select > .select-required:user-invalid) > .field-label { color: var(--bad-fg); }
-.field:has(> :is(input, select, textarea):user-invalid) > .field-label::after,
-.field:has(> .select > .select-required:user-invalid) > .field-label::after {
-  content: var(--t-required-missing, "Povinné — vyplňte");
+
+.field-error {
+  display: none;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--fs-micro);
+  line-height: 1.45;
   color: var(--bad-fg);
-  font-weight: 600;
 }
+.field-error-mark {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--bad-fg);
+  color: var(--surface);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.field:has(> :is(input, select, textarea):user-invalid, > .select > .select-required:user-invalid) > .field-error { display: flex; }
+.field:has(> :is(input, select, textarea):user-invalid, > .select > .select-required:user-invalid) > .field-hint { display: none; }
+/* Pole bez vlastnej vety — všeobecná, bez značky (pseudo-prvok ju nevie). */
+.field:has(> :is(input, select, textarea):required:user-invalid, > .select > .select-required:user-invalid):not(:has(> .field-error))::after {
+  content: var(--t-required-missing, "Toto pole je povinné.");
+  font-size: var(--fs-micro);
+  color: var(--bad-fg);
+}
+
+/* Súhrn pri tlačidle odoslania (Q3) — vetu skladá `RequiredFieldsGuard`,
+   kým je vo formulári niečo `:user-invalid`. */
+.form-summary { margin: 0; font-size: var(--fs-small); font-weight: 600; color: var(--bad-fg); }
+.form-summary:empty, form:not(:has(:user-invalid)) .form-summary { display: none; }
 
 /*
   Dve krátke polia vedľa seba (meno a priezvisko, tituly). Na telefóne pod

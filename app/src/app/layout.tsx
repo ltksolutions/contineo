@@ -11,6 +11,7 @@ import "./globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import SessionProvider from "@/components/SessionProvider"
+import RequiredFieldsGuard from "@/components/RequiredFieldsGuard"
 import RouteProgress from "@/components/RouteProgress"
 import VersionNotice from "@/components/VersionNotice"
 import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
@@ -229,6 +230,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {/* Nad hlavičkou a pred ňou: prúžok má byť vidieť od chvíle kliknutia,
               teda skôr, než sa vymení obsah pod ním. */}
           <RouteProgress />
+          <RequiredFieldsGuard />
           <Header
             branding={branding}
             email={email}

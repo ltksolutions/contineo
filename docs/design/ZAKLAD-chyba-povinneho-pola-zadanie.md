@@ -11,7 +11,9 @@
 > (plochy 1440 / 834 / 390 svetlá a 390 tmavá; odchýlky `.field-error`,
 > `.is-invalid`, `.upload-summary` sú v `<helmet>` hlavnej plochy).
 >
-> **Stav:** čaká na návrh a rozhodnutie Q1–Q4.
+> **Stav: rozhodnuté 2. 11. 2026** — Q1–Q4 podľa odporúčania. Návrh:
+> `ZAKLAD-chyba-povinneho-pola.html` (hlavná plocha artefaktu), popis
+> implementácie: `ZAKLAD-chyba-povinneho-pola.md`.
 >
 > **Meradlo je design system Contineo** (`.design-sync/conventions.md`,
 > `app/src/app/globals.css`, `app/src/components/`). Čo v ňom chýba, návrh

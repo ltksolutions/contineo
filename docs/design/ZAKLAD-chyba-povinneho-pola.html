@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Nahrať dokument — chýbajúce povinné polia</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/tokens.css">
+<link rel="stylesheet" href="ds/contineo/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--ink)}a:hover{color:var(--accent-strong)}
+/* ODCHÝLKA 2 — v aplikácii :user-invalid (PR #523); na plátne trieda. */
+.field-input.is-invalid{border-color:var(--bad-fg);background:var(--bad-bg)}
+/* ODCHÝLKA 1 — riadok chyby pod poľom (SwiftUI: červený text pod TextField). */
+.field-error{display:flex;align-items:flex-start;gap:6px;margin:0;font-size:var(--fs-micro,12px);line-height:1.45;color:var(--bad-fg)}
+.field-error-mark{flex:none;display:inline-grid;place-items:center;width:16px;height:16px;margin-top:1px;border-radius:50%;background:var(--bad-fg);color:var(--surface);font-size:11px;font-weight:700;line-height:1}
+/* ODCHÝLKA 3 — súhrn pri tlačidle Nahrať. */
+.upload-summary{margin:0;font-size:var(--fs-small,13px);color:var(--bad-fg);font-weight:600}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="background: var(--bg); color: var(--ink); font-family: var(--font-sans); min-height: 100%; padding: 32px 16px 48px; box-sizing: border-box;">
+<div style="max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+
+  <nav class="quiet" aria-label="Cesta" style="font-size: 13px;"><a href="#">Knižnica</a> › Nahrať dokument</nav>
+  <div class="page-head">
+    <h1 class="page-title" style="margin: 0;">Nahrať dokument</h1>
+  </div>
+
+  <section class="form-group form-group--lg" style="margin: 0;">
+    <h2 class="form-group-head form-group-head--step" style="display: flex; align-items: center; gap: 10px;"><span aria-hidden="true" style="display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 14px;">1</span>Súbor</h2>
+    <div class="card form-group-body" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex: none; color: var(--muted);"><path d="M5 2.5h6.5L15 6v11.5H5z M11.5 2.5V6H15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+      <span style="flex: 1 1 200px; min-width: 0;"><b style="font-weight: 600;">Rozpis_sutazi_2026-2027.pdf</b> <span class="quiet">· 1,2 MB</span></span>
+      <a class="button button--quiet button--sm" href="#">Vybrať iný</a>
+    </div>
+  </section>
+
+  <section class="form-group form-group--lg" style="margin: 0;">
+    <h2 class="form-group-head form-group-head--step" style="display: flex; align-items: center; gap: 10px;"><span aria-hidden="true" style="display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 14px;">2</span>Metadáta</h2>
+    <div class="card form-group-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+
+      <label class="field" style="grid-column: 1 / -1;">
+        <span class="field-label">Názov <span style="margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--muted);">Povinné</span></span>
+        <input class="field-input is-invalid" name="title" value="" placeholder="napr. Súťažný poriadok futbalu" aria-invalid="true" aria-describedby="err-title" autofocus>
+        <p class="field-error" id="err-title"><span class="field-error-mark" aria-hidden="true">!</span>Zadajte názov dokumentu — celý úradný názov, objaví sa v potvrdzovacej formulke.</p>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Druh <span style="margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--muted);">Povinné</span></span>
+        <button type="button" class="field-input select-button is-invalid" aria-invalid="true" aria-describedby="err-kind" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;">
+          <span>—</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" style="color: var(--muted);"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <p class="field-error" id="err-kind"><span class="field-error-mark" aria-hidden="true">!</span>Vyberte druh dokumentu.</p>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Prístupnosť</span>
+        <button type="button" class="field-input select-button" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;">
+          <span>Interný (len prihlásení)</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" style="color: var(--muted);"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <span class="quiet field-hint">Interný vidia len ľudia organizácie.</span>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Jazyk dokumentu</span>
+        <button type="button" class="field-input select-button" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;">
+          <span>Slovenčina</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" style="color: var(--muted);"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <span class="quiet field-hint">Jazyk, v ktorom je norma napísaná.</span>
+      </label>
+
+      <details style="grid-column: 1 / -1;">
+        <summary style="font-weight: 600; cursor: pointer; min-height: 44px; display: flex; align-items: center;">Ďalšie údaje</summary>
+      </details>
+    </div>
+  </section>
+
+  <div style="display: flex; align-items: center; justify-content: flex-end; gap: 16px; flex-wrap: wrap;">
+    <p class="upload-summary" role="alert" style="flex: 1 1 240px; text-align: right;">Chýbajú 2 povinné údaje — Názov a Druh.</p>
+    <button type="submit" class="button" style="flex: 0 1 auto; min-height: 44px; min-width: 140px;">Nahrať</button>
+  </div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

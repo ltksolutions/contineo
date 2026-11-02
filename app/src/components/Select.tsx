@@ -161,12 +161,12 @@ export default function Select({
   return (
     <div className="select" ref={wrap}>
       <input type="hidden" name={name} value={value} form={form} />
-      {/* Povinnosť s JavaScriptom: prehliadač overí toto pole a bublinu
-          ukáže pri ňom. Nemá meno, takže sa neodošle. */}
+      {/* Povinnosť s JavaScriptom: prehliadač overí toto pole. Nemá meno,
+          takže sa neodošle. Fokus na tlačidlo dá `RequiredFieldsGuard` —
+          len prvému chybnému poľu formulára, nie poslednému výberu. */}
       {required && (
         <input className="select-required" tabIndex={-1} aria-hidden="true" required
-               value={value} onChange={() => {}} form={form}
-               onInvalid={() => button.current?.focus()} />
+               value={value} onChange={() => {}} form={form} />
       )}
 
       <button
