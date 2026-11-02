@@ -1,9 +1,9 @@
 /**
  * people.ts — správa osôb v organizácii (D46).
  *
- * **Vlastná rola `people-admin`, nie `hr`.** Sú to dve rôzne oprávnenia:
+ * **Vlastná rola `admin` (predtým `people-admin`), nie `hr`.** Sú to dve rôzne oprávnenia:
  * `hr` prideľuje normy a vidí, kto ich nepotvrdil — to je o obsahu.
- * `people-admin` zakladá a vyraďuje ľudí — to je o prístupe. V mnohých
+ * `admin` zakladá a vyraďuje ľudí — to je o prístupe. V mnohých
  * organizáciách to robia dvaja rôzni ľudia (personalista a IT), a spojiť ich
  * do jednej roly znamená, že IT správca zároveň uvidí, kto si neprečítal
  * disciplinárny poriadok.
@@ -39,17 +39,33 @@ import { DPO_ROLE } from "./dpo"
 import { LEARNING_ROLE } from "./learning"
 import { COMPLIANCE_ROLE } from "./complianceAccess"
 
-export const PEOPLE_ROLE = "people-admin"
+/**
+ * Administrátor organizácie — osoby, oddelenia, číselníky, nastavenia (D46, D55).
+ * Do 2. 11. 2026 sa volal `people-admin`, hoci dávno nespravoval len osoby
+ * (ADR-045).
+ */
+export const ADMIN_ROLE = "admin"
+/**
+ * Pôvodné označenie. Uznáva sa, kým ho `scripts/migrate_role_admin.mjs`
+ * neodstráni z `persons` — inak by každý nezmigrovaný administrátor prišiel
+ * o prístup v okamihu nasadenia. Potom sa odtiaľto vymaže.
+ */
+export const LEGACY_ADMIN_ROLE = "people-admin"
+
+/** Roly osoby so starým označením administrátora prepísaným na nové. */
+export function normalizeRoles(roles: readonly string[] | undefined): string[] {
+  return [...new Set((roles ?? []).map(r => (r === LEGACY_ADMIN_ROLE ? ADMIN_ROLE : r)))]
+}
 
 /**
  * Roly, ktoré sa dajú prideliť z tejto obrazovky. `learning-admin` sa na
  * obrazovke ukáže len pri zapnutom module Vzdelávanie (ADR-018) — pri
  * vypnutom ho formulár nesie skryto, aby sa uložením osoby nestratil.
  */
-export const ASSIGNABLE_ROLES = [HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE, LEARNING_ROLE, HELPDESK_ROLE, COMPLIANCE_ROLE] as const
+export const ASSIGNABLE_ROLES = [HR_ROLE, ADMIN_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE, LEARNING_ROLE, HELPDESK_ROLE, COMPLIANCE_ROLE] as const
 
-export function isPeopleAdmin(person: Person | null): boolean {
-  return Boolean(person?.roles?.includes(PEOPLE_ROLE))
+export function isOrgAdmin(person: Pick<Person, "roles"> | null): boolean {
+  return normalizeRoles(person?.roles).includes(ADMIN_ROLE)
 }
 
 export type PeopleContext =
@@ -71,7 +87,7 @@ export async function peopleContext(): Promise<PeopleContext> {
 
   const person = await currentPerson()
   if (!person) return { state: "not-signed-in" }
-  if (person.companyCode !== tenant.companyCode || !isPeopleAdmin(person)) {
+  if (person.companyCode !== tenant.companyCode || !isOrgAdmin(person)) {
     return { state: "forbidden" }
   }
   return { state: "ready", person, tenant }

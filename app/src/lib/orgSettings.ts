@@ -4,7 +4,7 @@
  * Rovnaký vzor ako `hrContext()` a `peopleContext()`: rola **a** príslušnosť
  * k tenantovi hostiteľa, obe naraz.
  *
- * Rola je `people-admin`, nie nová. Kto v organizácii zakladá a vyraďuje
+ * Rola je `admin`, nie nová. Kto v organizácii zakladá a vyraďuje
  * ľudí, je spravidla ten istý človek, ktorý vie, ako sa organizácia volá a aké
  * má logo — a každá ďalšia rola znamená nastavovať jedného človeka trikrát.
  *
@@ -14,7 +14,7 @@
  */
 
 import { currentTenant, currentPerson } from "./session"
-import { PEOPLE_ROLE } from "./people"
+import { isOrgAdmin } from "./people"
 import { DPO_ROLE } from "./dpo"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
@@ -37,7 +37,7 @@ export async function orgContext(): Promise<OrgContext> {
 
   const person = await currentPerson()
   if (!person) return { state: "not-signed-in" }
-  if (person.companyCode !== tenant.companyCode || !person.roles?.includes(PEOPLE_ROLE)) {
+  if (person.companyCode !== tenant.companyCode || !isOrgAdmin(person)) {
     return { state: "forbidden" }
   }
   return { state: "ready", person, tenant }
@@ -69,7 +69,7 @@ export async function orgPageContext(): Promise<OrgPageContext> {
   const person = await currentPerson()
   if (!person) return { state: "not-signed-in" }
   if (person.companyCode !== tenant.companyCode) return { state: "forbidden" }
-  const canAdmin = Boolean(person.roles?.includes(PEOPLE_ROLE))
+  const canAdmin = isOrgAdmin(person)
   const canEditGdpr = Boolean(person.roles?.includes(DPO_ROLE))
   if (!canAdmin && !canEditGdpr) return { state: "forbidden" }
   return { state: "ready", person, tenant, canAdmin, canEditGdpr }

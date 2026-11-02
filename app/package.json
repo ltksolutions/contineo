@@ -35,6 +35,7 @@
     "files:version-pdf": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/migrate_version_pdf.mjs",
     "migrate:fields": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_english_fields.mjs",
     "migrate:role-content": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_role_content.mjs",
+    "migrate:role-admin": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_role_admin.mjs",
     "migrate:eval-personid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_eval_personid.mjs",
     "chunking:compare": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/chunking_compare.mjs",
     "chunking:reindex": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/reindex_library.mjs",

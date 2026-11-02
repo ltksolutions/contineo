@@ -1,7 +1,7 @@
 /**
  * legalBasesDb.ts — správa číselníka právnych základov organizácie (D92).
  *
- * Spravuje ho správca organizácie (`orgContext()`, rola `people-admin`) —
+ * Spravuje ho správca organizácie (`orgContext()`, rola `admin`) —
  * tá istá obrazovka a rola ako ostatné číselníky organizácie. Pravidlá sú
  * v `legalBases.ts`; tu je len zápis a stopa v audite.
  *

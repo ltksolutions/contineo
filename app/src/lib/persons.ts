@@ -780,7 +780,7 @@ export async function upsertPersons(
             ich má ako povinné polia. Existujúcej sa tadiaľto nedotknú.
 
             **Prázdne `roles` sú bežný používateľ**, nie chýbajúca rola:
-            v Contineu je rola vždy nadstavba (`hr`, `people-admin`,
+            v Contineu je rola vždy nadstavba (`hr`, `admin`,
             `content`, `evaluator`), práva sa pridávajú, nie odoberajú. Kto
             má roly už nastavené, o ne importom nepríde — `roles` sem príde
             len vtedy, keď ich riadok naozaj nesie (rozhodnutie Jána

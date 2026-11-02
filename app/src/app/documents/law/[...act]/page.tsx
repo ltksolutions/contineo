@@ -25,7 +25,7 @@ import { lawDocumentsFor } from "@/lib/lawLibraryLink"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { codelistOptions } from "@/lib/codelists"
-import { PEOPLE_ROLE } from "@/lib/people"
+import { isOrgAdmin } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
@@ -71,7 +71,7 @@ export default async function LawActReaderPage({
   const date = (x: Date) => formatDate(x, language)
   const base = `/documents/law/${actId}`
   const manageHref = `/organisation/sources/web/${SLOV_LEX_SOURCE_ID}/${actId}`
-  const isPeopleAdmin = Boolean(person.roles?.includes(PEOPLE_ROLE))
+  const isPeopleAdmin = isOrgAdmin(person)
 
   const state = (v: (typeof versions)[number]): "now" | "past" | "later" => {
     if (v.effectiveFrom.getTime() > now.getTime()) return "later"

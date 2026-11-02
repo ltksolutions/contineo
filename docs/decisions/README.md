@@ -56,6 +56,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-042](ADR-042-widget-namiesto-formulara-pomoc.md) | Widget kanála ISSF Helpdesk namiesto formulára Pomoc v ISSF: správa helpdesku po dvoch neúspechoch, odkazom aj frázou; údaje z ISSF (`phone_number`, `context`, adresa stránky) pri tickete; potvrdenie e-mailom založí vlákno ticketu; formulár sa vypne v deň spustenia, `mailto` ako záloha; prílohy neskôr; osoba z widgetu je e-mailový kontakt, účet ISSF je údaj ticketu (D275–D280) · Dodatok 1: zmluva s cudzím systémom zmrazená, poloha tlačidla na ôsmich miestach (predvolene hore v strede, D286), veľkosť, texty a správanie ponuky helpdesku ako nastavenie kanála, zmena do 5 minút s náhľadom, formulár a stránka Pomoc zanikajú, odkazy „Pomoc“ otvárajú widget len v ISSF (D281–D285) · Dodatok 2: riadok otázky hore v strede, plachta 80 % × 80 %, nedávne otázky a vzory, widget vyká, výber jazyka, úvodný tip (D286–D291), zbalenie riadku na posúvateľné tlačidlo (D292), tip znova žiarovkou (D293) | ✅ prijaté · kroky 1–5, Dodatok 2 |
 | [ADR-043](ADR-043-kluc-dokumentu-uuid.md) | Kľúč nového dokumentu je náhodné UUID (`sfz:<32 hexa>`), nie slug z názvu; formulár identifikátor neukazuje ani nepýta; existujúce dokumenty si kľúč nechávajú (D24, adresa je zmluva); kľúče číselníkov, kurzov a trás ostávajú zo slugu (D294) · prekonáva ADR-010 bod 1 | ✅ prijaté · časť „existujúce si kľúč nechávajú" prekonaná ADR-044 |
 | [ADR-044](ADR-044-migracia-klucov-na-uuid.md) | Aj existujúce dokumenty dostanú kľúč UUID; identifikátor sa prepíše vo všetkých kolekciách vrátane dôkazných záznamov (jednorazová výnimka z D24, len pole identifikátora); dvojice starý → nový v `document_id_aliases`, staré adresy presmeruje `proxy.ts` (D295) · prekonáva časť ADR-043 | ✅ prijaté |
+| [ADR-045](ADR-045-rola-administrator.md) | Rola `people-admin` sa premenúva na `admin` („Administrátor"); kód uznáva obe, kým migrácia `persons.roles` neprebehne; audit sa neprepisuje (D296) | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -68,6 +69,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-045**. Súbor `ADR-045-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-046**. Súbor `ADR-046-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.

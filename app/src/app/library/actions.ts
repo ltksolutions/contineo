@@ -19,7 +19,7 @@ import { tagsFromForm } from "@/lib/tagValues"
 import { categoryFromForm } from "@/lib/categoryValue"
 import { revalidatePath } from "next/cache"
 import { libraryContext, isContentManager } from "@/lib/library"
-import { PEOPLE_ROLE } from "@/lib/people"
+import { isOrgAdmin } from "@/lib/people"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
@@ -108,7 +108,7 @@ async function actor(): Promise<
         // znamenal, že dávkové preindexovanie prerezalo aj dokumenty
         // s vlastným profilom.
         canManageContent: isContentManager(ctx.person),
-        canManageCodelists: Boolean(ctx.person.roles?.includes(PEOPLE_ROLE)),
+        canManageCodelists: isOrgAdmin(ctx.person),
       }
     : null
 }
