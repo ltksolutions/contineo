@@ -4559,6 +4559,18 @@ interface Dictionary {
       /** Riadok chyby pod poľom (ZAKLAD-chyba-povinneho-pola). */
       titleMissing: string
       categoryMissing: string
+      /**
+       * Nový druh priamo vo formulári (ZAKLAD-novy-druh-pri-nahravani,
+       * 2. 11. 2026) — len pre správcu číselníkov (správca osôb).
+       */
+      categoryCreate: (label: string) => string
+      categoryNewTag: string
+      categoryNewLabel: string
+      categoryNewHint: string
+      categoryPickExisting: string
+      categoryNoRight: string
+      categoryCreated: (label: string) => string
+      categorySimilar: (value: string, like: string) => string
       /** Pod značkami: značky sú témy, nie typ dokumentu (D179). */
       tagsNote: string
       /**
@@ -7135,6 +7147,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noFileChosen": "Nevybral si súbor.",
     "library.pdfRequired": "Schvaľovaná podoba musí byť PDF — ulož dokument vo Worde ako PDF.",
     "library.pdfOrMarkdownRequired": "Nahraj PDF, alebo zdroj vo formáte .md — z neho Contineo PDF vyrobí.",
+    "library.categoryNotAllowed": "Nový druh dokumentu môže pridať len správca číselníkov.",
     "library.sourceNotPdf": "Zdrojový súbor má byť upraviteľný (.docx, .xlsx, .md…), nie druhé PDF.",
     "library.uploadedFileNotFound": "Nahratý súbor sa nenašiel. Skús ho nahrať znova.",
     "library.draftPdfFailed": "Text je uložený, ale PDF konceptu sa nepodarilo vyrobiť — skúste to znova, kým sa koncept nepredloží na schválenie.",
@@ -10014,6 +10027,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryNote: "Typ dokumentu — práve jeden. Podľa neho sa dokument zoskupuje v knižnici a vo filtroch a podľa neho sa bude riadiť aj členenie textu. Témy (napríklad Registrácia, ISSF) patria do značiek.",
       titleMissing: "Zadajte názov dokumentu — celý úradný názov.",
       categoryMissing: "Vyberte druh dokumentu.",
+      categoryCreate: label => `Pridať druh „${label}“`,
+      categoryNewTag: "nový",
+      categoryNewLabel: "Názov nového druhu",
+      categoryNewHint: "Druh sa pridá do číselníka organizácie, keď stlačíte „Nahrať“.",
+      categoryPickExisting: "Vybrať existujúci",
+      categoryNoRight: "Nič sa nenašlo. Nový druh pridá správca číselníkov.",
+      categoryCreated: label => `Do číselníka pribudol druh „${label}“.`,
+      categorySimilar: (v, like) => `Druh „${v}“ sme nezaložili — podobá sa na „${like}“, dokument dostal ten.`,
       tagsNote: "Značky sú témy — dokument ich môže mať viac a nič nespúšťajú. Typ dokumentu (smernica, zákon, manuál…) sa určuje Druhom, nie značkou.",
       kinds: {
         heading: "Ako dokument vznikne",
@@ -12558,6 +12579,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noFileChosen": "Nevybral jsi soubor.",
     "library.pdfRequired": "Schvalovaná podoba musí být PDF — ulož dokument ve Wordu jako PDF.",
     "library.pdfOrMarkdownRequired": "Nahraj PDF, nebo zdroj ve formátu .md — z něj Contineo PDF vyrobí.",
+    "library.categoryNotAllowed": "Nový druh dokumentu může přidat jen správce číselníků.",
     "library.sourceNotPdf": "Zdrojový soubor má být upravitelný (.docx, .xlsx, .md…), ne druhé PDF.",
     "library.uploadedFileNotFound": "Nahraný soubor se nenašel. Zkus ho nahrát znovu.",
     "library.draftPdfFailed": "Text je uložen, ale PDF konceptu se nepodařilo vytvořit — zkuste to znovu, než se koncept předloží ke schválení.",
@@ -15434,6 +15456,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryNote: "Typ dokumentu — právě jeden. Podle něj se dokument seskupuje v knihovně a ve filtrech a podle něj se bude řídit i členění textu. Témata (například Registrace, ISSF) patří do štítků.",
       titleMissing: "Zadejte název dokumentu — celý úřední název.",
       categoryMissing: "Vyberte druh dokumentu.",
+      categoryCreate: label => `Přidat druh „${label}“`,
+      categoryNewTag: "nový",
+      categoryNewLabel: "Název nového druhu",
+      categoryNewHint: "Druh se přidá do číselníku organizace, když stisknete „Nahrát“.",
+      categoryPickExisting: "Vybrat existující",
+      categoryNoRight: "Nic se nenašlo. Nový druh přidá správce číselníků.",
+      categoryCreated: label => `Do číselníku přibyl druh „${label}“.`,
+      categorySimilar: (v, like) => `Druh „${v}“ jsme nezaložili — podobá se „${like}“, dokument dostal ten.`,
       tagsNote: "Štítky jsou témata — dokument jich může mít více a nic nespouštějí. Typ dokumentu (směrnice, zákon, manuál…) se určuje Druhem, ne štítkem.",
       kinds: {
         heading: "Jak dokument vznikne",
@@ -17970,6 +18000,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noFileChosen": "You did not choose a file.",
     "library.pdfRequired": "The version for approval must be a PDF — save the document from Word as PDF.",
     "library.pdfOrMarkdownRequired": "Upload a PDF, or a .md source — Contineo will generate the PDF from it.",
+    "library.categoryNotAllowed": "Only the code list administrator can add a new document type.",
     "library.sourceNotPdf": "The source file must be editable (.docx, .xlsx, .md…), not a second PDF.",
     "library.uploadedFileNotFound": "The uploaded file was not found. Try uploading it again.",
     "library.draftPdfFailed": "The text is saved, but the draft PDF could not be produced — try again before the draft is submitted for approval.",
@@ -20840,6 +20871,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryNote: "The document type — exactly one. It groups the document in the library and in filters, and it will also decide how the text is split. Topics (for example Registration, ISSF) belong in tags.",
       titleMissing: "Enter the document title — the full official title.",
       categoryMissing: "Choose the document type.",
+      categoryCreate: label => `Add type “${label}”`,
+      categoryNewTag: "new",
+      categoryNewLabel: "Name of the new type",
+      categoryNewHint: "The type is added to the organisation’s code list when you press “Upload”.",
+      categoryPickExisting: "Choose an existing one",
+      categoryNoRight: "Nothing found. A new type is added by the code list administrator.",
+      categoryCreated: label => `The type “${label}” was added to the code list.`,
+      categorySimilar: (v, like) => `We did not create the type “${v}” — it looks like “${like}”, so the document got that one.`,
       tagsNote: "Tags are topics — a document can have several and they trigger nothing. The document type (directive, law, manual…) is set by Kind, not by a tag.",
       kinds: {
         heading: "How a document is created",
