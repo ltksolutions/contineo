@@ -99,12 +99,16 @@ describe("metadata z formulara", () => {
     expect(m.tags).toEqual([])
   })
 
-  it("documentKey vznika zo nazvu, nie zo zaradenia (ADR-010)", () => {
-    // Zaradenie je kategoria: prvy dokument kategorie by kluc obsadil
-    // a identita dalsich by bola loz. Preto slug z nazvu.
-    expect(checkMetadata(base).documentKey).toBe("stanovy")
-    expect(checkMetadata({ ...base, title: "Pracovný poriadok SFZ", sectionKey: "poriadky" }).documentKey)
-      .toBe("pracovny_poriadok_sfz")
+  it("documentKey noveho dokumentu je UUID, nie zo zaradenia ani z nazvu (ADR-043)", () => {
+    // Zaradenie je kategoria (ADR-010), slug z nazvu po premenovani klame
+    // a dlhy nazov sa usekol (ADR-043). Preto nahodne UUID bez pomlciek.
+    const a = checkMetadata(base).documentKey
+    const b = checkMetadata({ ...base, title: "Pracovný poriadok SFZ", sectionKey: "poriadky" }).documentKey
+    expect(a).toMatch(/^[0-9a-f]{32}$/)
+    expect(b).toMatch(/^[0-9a-f]{32}$/)
+    expect(a).not.toBe(b)
+    // Existujuci dokument posiela svoj kluc dalej a ten sa nemeni.
+    expect(checkMetadata({ ...base, documentKey: "pracovny_poriadok_sfz" }).documentKey).toBe("pracovny_poriadok_sfz")
   })
 
   it("sectionKey je nepovinny (ADR-010); ked pride, overi sa ako doteraz", () => {
@@ -112,7 +116,7 @@ describe("metadata z formulara", () => {
     void _omit
     const m = checkMetadata(withoutSection)
     expect(m.sectionKey).toBe("")
-    expect(m.documentKey).toBe("stanovy")
+    expect(m.documentKey).toMatch(/^[0-9a-f]{32}$/)
     // Stary dokument so zaradenim ho pri uprave metadat nestrati.
     expect(checkMetadata({ ...base, sectionKey: "smernice" }).sectionKey).toBe("smernice")
     expect(() => checkMetadata({ ...base, sectionKey: "neexistujuce zaradenie" })).toThrow(CodelistError)

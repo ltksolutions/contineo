@@ -168,13 +168,10 @@ async function importOne(
       }, extras)
       documentId = existing.documentId
     } else {
-      // Kľúč z názvu článku; pri zrážke s iným dokumentom sa pridá skupina (projekt).
-      let key = slugifyKey(a.title).toLowerCase()
+      // Kľúč vymyslí `checkMetadata()` (UUID, ADR-043) — zrážka s iným
+      // dokumentom tak nehrozí. Článok sa páruje cez `externalId`, nie kľúčom.
       const base = { companyCode: c.companyCode, scope: input.scope, accessLevel: input.accessLevel, language: input.language, category: input.category, sourceType: "mcp", tags: input.tags ?? [], ownerDepartmentId: input.ownerDepartmentId, sectionKey: "" }
-      if (await col.countDocuments({ companyCode: c.companyCode, documentId: makeDocumentId({ companyCode: c.companyCode, documentKey: key }) }, { limit: 1 })) {
-        key = slugifyKey(`${a.group ?? "mcp"} ${a.title}`).toLowerCase()
-      }
-      meta = checkMetadata({ ...base, title: a.title, documentKey: key }, extras)
+      meta = checkMetadata({ ...base, title: a.title, documentKey: "" }, extras)
       documentId = makeDocumentId(meta)
     }
     const markdown = `# ${a.title}\n\n${a.text}\n`
