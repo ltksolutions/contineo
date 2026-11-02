@@ -13,7 +13,6 @@ import { treeOptions } from "@/lib/treeOptions"
 import Notice from "@/components/Notice"
 import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
 import UploadFiles from "@/components/UploadFiles"
-import KeyPreview from "@/components/KeyPreview"
 import VersionMetaFields from "@/components/VersionMetaFields"
 import PrefillNote from "@/components/PrefillNote"
 import { versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
@@ -30,8 +29,6 @@ import Select from "@/components/Select"
 import ValueSelect, { withCodelistNote } from "@/components/ValueSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
-import { getCollection } from "@/lib/mongodb"
-import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
@@ -50,8 +47,8 @@ export default async function NewDocumentPage({
     notFound()
   }
 
-  const { error, title, documentKey } = normalizeQuery<{
-    error?: string; title?: string; documentKey?: string
+  const { error, title } = normalizeQuery<{
+    error?: string; title?: string
   }>(await searchParams)
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
   const t = dictionary(ctx.person.language).library.upload
@@ -68,17 +65,6 @@ export default async function NewDocumentPage({
   const retry = Boolean(error || title)
   const tm = dictionary(ctx.person.language).versionMeta
   const metaOptions = await versionMetaSuggestions(ctx.tenant.companyCode)
-
-  // **Kľúče, ktoré organizácia už má.** Nahratie na obsadený kľúč sa odmietne
-  // (D80) — a dozvedieť sa to až po tom, čo človek vyplní formulár a nahrá
-  // súbor, je zbytočne neskoro. Zoznam je serverový zámerne: obrazovka nemá
-  // vyžadovať JavaScript kvôli nápovede.
-  const usedKeys = (await (await getCollection(DOCUMENTS_COLLECTION))
-    .find({ companyCode: ctx.tenant.companyCode }, { projection: { documentKey: 1 } })
-    .toArray() as unknown as { documentKey?: string }[])
-    .map(d => d.documentKey ?? "")
-    .filter(Boolean)
-    .sort()
 
   return (
     <AppShell language={ctx.person.language} title={t.heading}>
@@ -125,7 +111,6 @@ export default async function NewDocumentPage({
         error
         back={`/library/new?${new URLSearchParams({
           ...(title ? { title } : {}),
-          ...(documentKey ? { documentKey } : {}),
         }).toString()}`}
       />
 
@@ -190,27 +175,15 @@ export default async function NewDocumentPage({
           <div className="upload-grid">
 
         {/*
-          Kľúč sa negeneruje ručne (NAHRAVANIE, úloha 4 / ADR-010): pod
-          názvom je náhľad výsledného identifikátora, ručný kľúč je vedomý
-          krok za `<details>`. Bez skriptu náhľad nie je a kľúč doplní server.
+          Identifikátor sa vo formulári neukazuje ani nepýta (ADR-043): je to
+          náhodné UUID, ktoré vymyslí server. Človek píše len názov.
         */}
-        <KeyPreview
-          prefix={ctx.tenant.companyCode.toLowerCase()}
-          usedKeys={usedKeys}
-          initialTitle={title ?? ""}
-          initialKey={documentKey ?? ""}
-          labels={{
-            title: t.title,
-            titlePlaceholder: t.titlePlaceholder,
-            titleNote: t.titleNote,
-            preview: t.keyPreview,
-            manualSummary: t.keyManualSummary,
-            manualLabel: t.key,
-            manualNote: t.keyManualNote,
-            taken: t.keyTaken,
-            keysTaken: t.keysTaken,
-          }}
-        />
+        <label className="field upload-wide">
+          <span className="field-label">{t.title}</span>
+          <input className="field-input" name="title" defaultValue={title ?? ""} required
+            placeholder={t.titlePlaceholder} />
+          <span className="quiet field-hint">{t.titleNote}</span>
+        </label>
 
         {/*
           Druh je povinný a medzi hlavnými poľami (NAHRAVANIE, úloha 5 /

@@ -20,6 +20,7 @@
  * pri publikovaní, nie pri nahratí.
  */
 
+import { randomUUID } from "node:crypto"
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type VersionFile } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
@@ -27,7 +28,6 @@ import { cutForIndex, type ChunkCut } from "./chunkCut"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, versionFixProblem, fixableVersions, closestVersion, draftIsFree, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
-import { slugifyKey } from "./slug"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile, fileInfo, loadFile } from "./fileStore"
 import { convert, detectFileType, FILE_TYPE_LABEL, type FileType } from "./conversion"
@@ -182,6 +182,15 @@ export function makeDocumentId(meta: {
   return `${meta.companyCode}:${key}`.toLowerCase()
 }
 
+/**
+ * Kľúč nového dokumentu (ADR-043): UUID bez pomlčiek, 32 hexadecimálnych
+ * znakov. Bez pomlčiek zámerne — tvar tak sedí so spoločným `KEY_PATTERN`
+ * a identifikátor `sfz:<uuid>` netreba v adrese nijako kódovať.
+ */
+export function newDocumentKey(): string {
+  return randomUUID().replace(/-/g, "")
+}
+
 /** Overí metadáta z formulára proti číselníkom. Vyhadzuje `KniznicaError`. */
 export function checkMetadata(
   input: Partial<DocumentMetadata>,
@@ -192,15 +201,16 @@ export function checkMetadata(
 
   // Kľúč dokumentu nie je položka číselníka — je to identita. Overuje sa
   // tvarom (`KEY_PATTERN`), nie príslušnosťou do slovníka. Nevyplnený vzniká
-  // ako slug z názvu (ADR-010) — už NIE zo zaradenia: zaradenie je kategória
-  // a prvý dokument kategórie by kľúč obsadil, identita ďalších by bola lož.
+  // ako náhodné UUID (ADR-043) — nie zo zaradenia (kategória, ADR-010) ani
+  // z názvu: kľúč sa nemení s premenovaním, takže slug z názvu po čase
+  // klamal a pri dlhom úradnom názve bol ešte aj useknutý.
   // Zaradenie je od ADR-010 nepovinné: nové dokumenty ho nemajú (zoskupuje
   // Druh), staré ho nesú ďalej ako záložnú identitu (`makeDocumentId`).
   // Keď príde, overí sa proti číselníku ako doteraz — prázdne sa nevymýšľa.
   const sectionKey = (input.sectionKey ?? "").trim()
     ? checkValue("sectionKey", input.sectionKey ?? "")
     : ""
-  const documentKey = ((input.documentKey ?? "").trim() || slugifyKey(title)).toLowerCase()
+  const documentKey = ((input.documentKey ?? "").trim() || newDocumentKey()).toLowerCase()
   if (!KEY_PATTERN.test(documentKey)) {
     throw new LibraryError(
       "library.documentKeyShape",

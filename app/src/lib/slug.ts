@@ -1,13 +1,17 @@
 /**
- * Kľúč dokumentu z názvu (ADR-010).
+ * Kľúč z názvu — položky číselníka, kurzy, testy, súbory.
  *
  * Malé písmená bez diakritiky, medzery a interpunkcia na podčiarkovník:
- * „Pracovný poriadok SFZ" → `pracovny_poriadok_sfz`. Tvar sedí
- * s `KEY_PATTERN` (`codelists.ts`), takže čo tu vznikne, server prijme.
+ * „Metodický pokyn" → `metodicky_pokyn`. Tvar sedí s `KEY_PATTERN`
+ * (`codelists.ts`), takže čo tu vznikne, server prijme.
  *
- * Čistá funkcia bez závislostí zámerne — volá ju `checkMetadata()` na
- * serveri aj náhľad vo formulári v prehliadači, a obe strany musia dôjsť
- * k tomu istému kľúču. Keby existovali dve kópie, raz sa rozídu.
+ * **Kľúč dokumentu odtiaľto od ADR-043 nevzniká** — je to náhodné UUID
+ * (`newDocumentKey()` v `libraryWrite.ts`). Staré dokumenty si slug
+ * z názvu nechávajú.
+ *
+ * Čistá funkcia bez závislostí zámerne — volá ju server aj formulár
+ * v prehliadači (`KeyFromLabel`), a obe strany musia dôjsť k tomu istému
+ * kľúču. Keby existovali dve kópie, raz sa rozídu.
  */
 /**
  * Kľúč trasy onboardingu z názvu — to isté pravidlo, len s pomlčkou

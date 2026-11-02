@@ -200,11 +200,12 @@ export async function importFromSlovLex(
   const current = effectiveRow(rows, now)
   if (!current) throw new WebImportError("web.noVersion", `Predpis ${actNumber(ref)} nemá znenie účinné k dnešnému dňu.`)
   const fetched = await fetchVersion(ref, current)
-  const kind = fetched.version.title.split(" č.")[0] || "Predpis"
 
   const meta = checkMetadata({
     title: fetched.version.title,
-    documentKey: slugifyKey(`${kind} ${ref.number} ${ref.year}`),
+    // Kľúč vymyslí `checkMetadata()` (UUID, ADR-043). Predpis sa znova
+    // nezaloží cez `existingByAct()`, nie cez kľúč.
+    documentKey: "",
     sectionKey: "",
     companyCode, scope: input.scope, accessLevel: input.accessLevel, language: input.language, category: input.category,
     sourceType: "web", tags: input.tags ?? [], ownerDepartmentId: input.ownerDepartmentId,

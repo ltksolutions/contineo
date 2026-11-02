@@ -236,7 +236,8 @@ export async function uploadAction(fd: FormData) {
     // Organizácia je z prihláseného človeka, nie z formulára.
     const meta = checkMetadata({
       title: fieldText(fd, "title"),
-      documentKey: fieldText(fd, "documentKey"),
+      // Kľúč vymyslí server (UUID, ADR-043); formulár ho nepýta.
+      documentKey: "",
       // Zaradenie z formulára odišlo (ADR-010); nové dokumenty ho nemajú.
       sectionKey: "",
       companyCode: self.companyCode,
@@ -275,7 +276,6 @@ export async function uploadAction(fd: FormData) {
     const q = new URLSearchParams({
       error: errorMessage(e, self.language),
       title: fieldText(fd, "title"),
-      documentKey: fieldText(fd, "documentKey"),
     })
     redirect(`/library/new?${q.toString()}`)
   }
