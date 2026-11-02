@@ -961,6 +961,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   — prázdny formulár nemá kričať skôr, než sa ho niekto dotkne.
 */
 .field:has(> :is(input, select, textarea):required:enabled) > .field-label::after,
+.field:has(> .select > .select-required) > .field-label::after,
 .field--required > .field-label::after,
 .form-group--required > .form-group-head::after {
   content: var(--t-required, "Povinné");
@@ -970,6 +971,30 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   color: var(--muted);
 }
 .field-input:user-invalid { border-color: var(--bad-fg); }
+
+/*
+  Nevyplnené povinné pole po pokuse o odoslanie (2. 11. 2026). Bublina
+  prehliadača („Vyplňte toto pole") je v Safari takmer neviditeľná a pri
+  dlhom formulári ukáže len prvé pole — preto sa pole povie aj samo:
+  červený okraj s jemným podkladom a „Povinné" sa zmení na červené
+  „Povinné — vyplňte" (`--t-required-missing`). Vlastný `Select` stráži
+  povinnosť skrytým poľom `.select-required`; jeho stav sa prenáša na
+  tlačidlo cez `:has()`.
+*/
+.field-input:user-invalid,
+.select:has(> .select-required:user-invalid) > .select-button {
+  border-color: var(--bad-fg);
+  background: var(--bad-bg);
+  box-shadow: 0 0 0 1px var(--bad-fg);
+}
+.field:has(> :is(input, select, textarea):user-invalid) > .field-label,
+.field:has(> .select > .select-required:user-invalid) > .field-label { color: var(--bad-fg); }
+.field:has(> :is(input, select, textarea):user-invalid) > .field-label::after,
+.field:has(> .select > .select-required:user-invalid) > .field-label::after {
+  content: var(--t-required-missing, "Povinné — vyplňte");
+  color: var(--bad-fg);
+  font-weight: 600;
+}
 
 /*
   Dve krátke polia vedľa seba (meno a priezvisko, tituly). Na telefóne pod

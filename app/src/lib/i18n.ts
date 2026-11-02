@@ -112,6 +112,11 @@ interface Dictionary {
     saveBarNote: string
     /** Sivé slovo za popisom povinného poľa (CSS `--t-required`, globals.css). */
     required: string
+    /**
+     * To isté slovo, keď pole po pokuse o odoslanie zostalo prázdne
+     * (`--t-required-missing`) — červené, aby nebolo len v bubline prehliadača.
+     */
+    requiredMissing: string
     moreActions: string
     /** Príklad zoznamu domén (jedna na riadok) — neutrálny. */
     domainsPlaceholder: string
@@ -5342,6 +5347,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   common: {
     saveBarNote: "Uloží všetky sekcie na tejto stránke.",
     required: "Povinné",
+    requiredMissing: "Povinné — vyplňte",
     moreActions: "Ďalšie akcie",
     domainsPlaceholder: "organizacia.sk\nmarketing.organizacia.sk",
     noticeConfirm: "Rozumiem",
@@ -10766,6 +10772,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   common: {
     saveBarNote: "Uloží všechny sekce na této stránce.",
     required: "Povinné",
+    requiredMissing: "Povinné — vyplňte",
     moreActions: "Další akce",
     domainsPlaceholder: "organizace.cz\nmarketing.organizace.cz",
     noticeConfirm: "Rozumím",
@@ -16187,6 +16194,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   common: {
     saveBarNote: "Saves every section on this page.",
     required: "Required",
+    requiredMissing: "Required — please fill in",
     moreActions: "More actions",
     domainsPlaceholder: "example.com\nmarketing.example.com",
     noticeConfirm: "OK",

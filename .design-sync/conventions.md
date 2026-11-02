@@ -53,6 +53,10 @@ sú len doplnok. Texty sú po slovensky.
   `output.field-range-value`), natívny `input.field-range-input type="range"` (farba
   organizácie cez `accent-color`, terč 44 px), `.field-range-scale` (min a max), `.field-hint`.
   Presné číslo (suma, dátum, počet osôb) je `.field-input`, nie posuvník.
+- Povinné pole: stačí atribút `required` (aj na komponente `Select`) — za popisom sa
+  samo ukáže sivé „Povinné". Po pokuse o odoslanie (`:user-invalid`, od 2. 11.) má
+  nevyplnené pole červený okraj s podkladom `--bad-bg` a popis sa zmení na červené
+  „Povinné — vyplňte". Vlastné triedy chyby sa nepridávajú; bublina prehliadača nestačí.
 - Pilulky (`.tag`) sú len na čítanie, vo formulári nie. `.view-switch` do formulára nepatrí.
 
 ```jsx
