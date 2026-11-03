@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Oprava: úsek so spojenými článkami cituje všetky (2026-11-03)
+
+- Krátke články sa pri členení pripájajú k nasledujúcim, ale úsek niesol
+  nadpis len prvého. Hracie časy Niké ligy sa tak citovali ako
+  „1. Účastníci súťaže" a postup a zostup ako „17. Medzinárodný styk".
+  Úsek teraz nesie nadpisy všetkých článkov tej istej úrovne
+  („1. … · 2. … · 3. …", pri článkoch „čl. 17–18").
+- Z nadpisov zmizol únik Markdownu (`1\.` → `1.`), ktorý stál v citácii.
+- Dotknuté dokumenty treba preindexovať (`npm run chunking:reindex`).
+
 ### Oprava: import skriptom dáva novému dokumentu kľúč UUID (2026-11-03)
 
 - `scripts/import.mjs` bral kľúč nového dokumentu z `meta.json`
