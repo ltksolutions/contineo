@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from "vitest"
 import {
-  splitBlocks, cutByBoundaries, normalizeBoundaries, groupBlocks, boundariesFromChunks, boundaryDiff, groupTokens, headingText,
+  splitBlocks, cutByBoundaries, refOfSiblings, normalizeBoundaries, groupBlocks, boundariesFromChunks, boundaryDiff, groupTokens, headingText,
 } from "../src/lib/chunkBlocks"
 import { cutForIndex, manualCutFor, type ChunkCut } from "../src/lib/chunkCut"
 import { textFingerprint, chunkingFingerprint } from "../src/lib/chunkIdentity"
@@ -75,6 +75,19 @@ describe("cutByBoundaries", () => {
     expect(chunks[3].obsahujeTabulku).toBe(true)
     expect(chunks[3].text).toContain("Lehoty sú v tabuľke:\n\n| Úkon | Lehota |")
     expect(chunks.map(c => c.chunkIndex)).toEqual([0, 1, 2, 3])
+  })
+  it("úsek so spojenými krátkymi článkami nesie nadpisy všetkých", () => {
+    const md = "# B. ŠPORTOVO-TECHNICKÉ USTANOVENIA\n\n## 1. ÚČASTNÍCI SÚŤAŽE\n\nSú v adresári.\n\n## 2. VYŽREBOVANIE\n\nJe v ISSF.\n\n## 3. HRACIE DNI A HRACIE ČASY\n\nSobota 15:30.\n\n## 4. INFRAŠTRUKTÚRA\n\nŠtadióny."
+    const [first, second] = cutByBoundaries(md, [7])
+    expect(first.heading).toBe("1. ÚČASTNÍCI SÚŤAŽE · 2. VYŽREBOVANIE · 3. HRACIE DNI A HRACIE ČASY")
+    expect(first.articleRef).toBe(first.heading)
+    expect(second.articleRef).toBe("4. INFRAŠTRUKTÚRA")
+  })
+  it("spojené články citujú rozsahom, oddiel nad nimi sa nepočíta", () => {
+    const md = "## PRVÁ ČASŤ\n\n### Článok 17\n\nText.\n\n### Článok 18\n\n(1) Postup.\n\n### Článok 19\n\nĎalší."
+    const [c] = cutByBoundaries(md, [5])
+    expect(c.articleRef).toBe("čl. 17–18")
+    expect(c.heading).toBe("Článok 17 · Článok 18")
   })
   it("text bez nadpisu je preambula bez článku", () => {
     const [c] = cutByBoundaries("prvý odsek\n\ndruhý odsek", [])
@@ -186,5 +199,20 @@ describe("návrh AI — čisté funkcie", () => {
     const h = textFingerprint(manual)
     const r = (no: number, textHash: string) => ({ no, textHash }) as ChunkRound
     expect(roundsFor([r(1, h), r(2, "iný"), r(3, h)], manual).map(x => x.no)).toEqual([3, 1])
+  })
+})
+
+describe("headingText", () => {
+  it("odstráni únik Markdownu z čísla nadpisu", () => {
+    expect(headingText({ text: "## 12\\. SYSTÉM SÚŤAŽÍ" })).toBe("12. SYSTÉM SÚŤAŽÍ")
+    expect(headingText({ text: "## 3\\. TERMÍNY \\- TERMÍNOVÁ LISTINA" })).toBe("3. TERMÍNY - TERMÍNOVÁ LISTINA")
+  })
+})
+
+describe("refOfSiblings", () => {
+  it("rovnaký druh jednotky dá rozsah, iné nadpisy sa vymenujú", () => {
+    expect(refOfSiblings(["§ 3", "§ 4", "§ 5"])).toBe("§ 3–5")
+    expect(refOfSiblings(["príloha č. 1", "príloha č. 2"])).toBe("príloha č. 1–2")
+    expect(refOfSiblings(["čl. 2", "príloha č. 1"])).toBe("čl. 2 · príloha č. 1")
   })
 })

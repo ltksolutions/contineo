@@ -190,7 +190,9 @@ export function splitBlocks(markdown: string): TextBlock[] {
 
 /** Nadpis bez mriežok a tučného písma — „## **1.3 Stav**" → „1.3 Stav". */
 export function headingText(block: Pick<TextBlock, "text">): string {
-  return stripHeadingEmphasis(block.text).replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "").trim()
+  // Únik Markdownu („1\. ÚČASTNÍCI") je zápis, nie text — v citácii odpovede
+  // stál doslova (rozpis ÚLK, 3. 11. 2026).
+  return stripHeadingEmphasis(block.text).replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "").replace(/\\([\\`*_{}[\]()#+\-.!|])/g, "$1").trim()
 }
 
 /** Nadpis článku, § alebo prílohy — jednotka normy, ktorá má vlastný úsek (ADR-035). */
@@ -220,6 +222,17 @@ export function refFromHeading(heading: string): string {
   const annex = /^príloha\s*(?:č\.\s*)?(\d+[a-z]?)/iu.exec(h)
   if (annex) return `príloha č. ${annex[1]}`
   return h
+}
+
+/**
+ * Citácia úseku s viacerými článkami za sebou: „čl. 17–18", „§ 3–5";
+ * nadpisy bez čísla článku („1. Účastníci súťaže") sa vymenujú.
+ */
+export function refOfSiblings(refs: string[]): string {
+  const parts = refs.map(r => /^(čl\.|§|príloha č\.)\s(\S+)$/.exec(r))
+  const prefix = parts[0]?.[1]
+  if (prefix && parts.every(m => m?.[1] === prefix)) return `${prefix} ${parts[0]![2]}–${parts[parts.length - 1]![2]}`
+  return refs.join(" · ")
 }
 
 /** Hranice v poradí, bez duplicít, len platné indexy (1 … počet − 1). */
@@ -258,7 +271,8 @@ export function joinBlocks(blocks: TextBlock[]): string {
  * zapísalo rovnako ako rez profilom.
  *
  * - `heading`: nadpis, ktorým úsek začína, inak posledný nadpis pred ním
- *   (úsek pokračuje v časti, ktorá začala skôr);
+ *   (úsek pokračuje v časti, ktorá začala skôr); pri viacerých článkoch
+ *   tej istej úrovne v jednom úseku všetky, oddelené „ · ";
  * - `articleRef`: ten istý nadpis — pri manuáli je to miesto, kam citácia
  *   vedie („1.3 Stav podania"); bez nadpisu `null`;
  * - `typ`: `clanok`, keď úsek patrí pod nadpis, inak `preambula`;
@@ -298,15 +312,23 @@ export function cutByBoundaries(markdown: string, boundaries: number[], title = 
     // cituje prvý oddiel — nie názov dokumentu (ISSF-08, 16. 10. 2026:
     // citácia „1.1 Odkiaľ…" vyšla ako názov manuálu).
     const section = startsWithHeading && part[0].level === 1 ? part.slice(1).find(b => b.kind === "heading") : undefined
-    const heading = unit ? headingText(unit)
-      : section ? headingText(section)
-      : startsWithHeading ? headingText(part[0]) : lastHeading
+    const own = unit ?? section ?? (startsWithHeading ? part[0] : undefined)
+    // Krátke články sa pripájajú k nasledujúcim (`chunkHeadings.ts`, pravidlo 3).
+    // Úsek potom nesie všetky, nie len prvý — hracie časy Niké ligy (čl. 3)
+    // sa inak citovali ako „1. Účastníci súťaže" a otázka na ne bez slov
+    // z textu sa nenašla (rozpis ÚLK, 3. 11. 2026).
+    // Nadpis dokumentu, ktorým úsek začína, medzi ne nepatrí (`section` vyššie).
+    const candidates = section ? part.slice(1) : part
+    const siblings = own ? candidates.filter(b => b.kind === "heading" && b.level === own.level && (!unit || isUnitHeading(b))) : []
+    const heading = siblings.length > 1 ? siblings.map(headingText).join(" · ")
+      : own ? headingText(own) : lastHeading
     for (const b of part) if (b.kind === "heading") lastHeading = headingText(b)
     const name = heading ?? (firstHeading ? headingText(firstHeading) : null)
     const continued = !hasUnit[chunkIndex] && chunkIndex > 0
     const continuesNext = chunkIndex + 1 < groups.length && !hasUnit[chunkIndex + 1]
-    const baseRef = name ? refFromHeading(name) : null
-    const ods = baseRef && /^(?:čl\.|§)/.test(baseRef) && (continued || continuesNext) ? paragraphRange(part) : null
+    const baseRef = siblings.length > 1 ? refOfSiblings(siblings.map(b => refFromHeading(headingText(b))))
+      : name ? refFromHeading(name) : null
+    const ods = siblings.length <= 1 && baseRef && /^(?:čl\.|§)/.test(baseRef) && (continued || continuesNext) ? paragraphRange(part) : null
     // Kontext: názov dokumentu a nadradené nadpisy pred úsekom (bez nadpisu,
     // ktorým úsek začína — ten je v texte). Rovnaký tvar ako pri chunkeri.
     const context = [title, ...pathBefore(g[0])].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i)
