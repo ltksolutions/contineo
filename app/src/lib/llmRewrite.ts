@@ -208,9 +208,9 @@ export function answerText(blocks: { type: string; text?: string }[]): string {
 /**
  * Prečistí členenie už prevedeného Markdownu **modelom**.
  *
- * **Z rozhrania sa už nevolá** (2026-09-14). Tlačidlo „Prečistiť členenie"
- * beží na `tidyStructure()` — pravidlách bez modelu, bez limitu na dĺžku
- * a bez rizika, že sa zmenia slová normy. Dôvody sú v `tidyStructure.ts`.
+ * **Z rozhrania sa už nevolá** (2026-09-14). Členenie PDF dnes obnovuje
+ * prevod modelom s kontrolou slov (ADR-046); „Prečistiť členenie"
+ * na pravidlách bolo odstránené 3. 11. 2026.
  *
  * Funkcia zostáva, lebo na text, ktorý sa pravidlám vzpiera, môže byť raz
  * potrebná — ale nech je jasné, že dnes nie je zapojená a že jej limit
