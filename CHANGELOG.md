@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola prevodu: odrážka „o" a „Ø" nie je chýbajúce slovo (2026-11-03)
+
+- Word kreslí odrážky písmom Wingdings a textová vrstva PDF ich vydá ako
+  písmená „o" a „Ø". Prevod z nich robí zoznam, takže kontrola hlásila
+  chýbajúce slovo — pri Pravidlách futbalu 39 zo 78 nezhôd. Prvé „o"/„Ø"
+  riadku pred medzerou je teraz nepovinné (`CHECK_VERSION` 4).
+
 ### Prevod modelom: tabuľka v obrázku je tabuľka (2026-11-03)
 
 - Tabuľku vloženú do PDF ako obrázok model prepíše do tabuľky Markdownu

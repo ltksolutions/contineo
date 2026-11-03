@@ -70,7 +70,7 @@ export interface ConversionCheck {
   repeatedLines: string[]
 }
 
-export const CHECK_VERSION = 3
+export const CHECK_VERSION = 4
 
 /** Nezhody bližšie než toľko zhodných tokenov sa spoja do jednej. */
 const MERGE_GAP = 2
@@ -99,6 +99,17 @@ const TOKEN = /[\p{L}\p{N}]+|[.,;:?!()§%]/gu
 
 /** Riadok bez čísiel — hlavička „Strana 3 z 49" je na každej strane iná len číslom. */
 const lineShape = (line: string) => line.replace(/\d+/g, "#").replace(/\s+/g, " ").trim()
+
+/*
+ * Odrážka, ktorú textová vrstva vydá ako písmeno: Word kreslí „o" a „Ø"
+ * písmom Wingdings a pdf.js z nich spraví obyčajné „o" a „Ø". Prevod z nich
+ * správne urobí zoznam (`-`), takže slovo v Markdowne chýba. Pravidlá
+ * futbalu 3. 11. 2026: 39 zo 78 nezhôd boli práve tieto odrážky. Nepovinné
+ * je len prvé „slovo" riadku a len keď za ním nasleduje medzera — vypadnutá
+ * predložka „o" na začiatku riadku by tak prešla bez nezhody, čo je
+ * jednopísmenové riziko za desiatky zbytočných potvrdení.
+ */
+const BULLET_LETTER = /^[oOØø]\s/
 
 const PAGE_NUMBER = /^[-–—]?\s*(?:strana\s+)?\d{1,3}(?:\s*(?:\/|z|of)\s*\d{1,3})?\s*[-–—]?$/i
 
@@ -181,7 +192,9 @@ export function layerTokens(pages: LayerPage[], repeated: Set<string> = repeated
       while (!optional && /\p{Ll}-$/u.test(text) && j + 1 < lines.length && !lines[j + 1].optional && /^\p{Ll}/u.test(lines[j + 1].text)) {
         text = text.slice(0, -1) + lines[++j].text
       }
-      out.push(...lineTokens(text, i + 1, optional))
+      const tokens = lineTokens(text, i + 1, optional)
+      if (!optional && tokens.length > 1 && BULLET_LETTER.test(text)) tokens[0] = { ...tokens[0], optional: true }
+      out.push(...tokens)
     }
   })
   return out
