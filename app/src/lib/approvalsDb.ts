@@ -19,6 +19,7 @@ import { notifyPeople } from "./notifications"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { DOCUMENTS_COLLECTION, type VersionFile } from "./documents"
 import { documentDraftIdentity, metaProblem, normalizeMeta } from "./versionMeta"
+import { conversionBlocker } from "./conversionCheckDb"
 import {
   APPROVALS_COLLECTION, submitProblem, versionState, decideProblem, roundOutcome,
   type ApprovalRound, type ApproverDecision, type VersionState,
@@ -134,6 +135,13 @@ export async function submitForApproval(input: SubmitInput): Promise<ApprovalRou
     }
     if (documentDraftIdentity(doc) !== input.versionId) {
       throw new ApprovalError("approval.draftChanged", "Koncept sa medzitým zmenil — obnov stránku a predlož ho znova.")
+    }
+    // Text od modelu ide na schválenie, až keď človek potvrdil každú nezhodu
+    // s textovou vrstvou PDF (ADR-046, D300). Schvaľovateľ porovnáva PDF,
+    // nie slová — tie musí mať za sebou ten, kto koncept pripravil.
+    const blocker = await conversionBlocker(input.companyCode, input.documentId)
+    if (blocker) {
+      throw new ApprovalError(blocker.code, "Prevod modelom nie je dokončený alebo má nepotvrdené nezhody s originálom.", blocker.count ? { count: blocker.count } : {})
     }
   }
 

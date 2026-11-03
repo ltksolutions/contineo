@@ -18,16 +18,19 @@ import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate, dictionary } from "@/lib/i18n"
+import { formatDate, dictionary, errorText } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { createHash } from "node:crypto"
 import TextEditor from "@/components/TextEditor"
-import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
+import { saveTextAction, sendToModelAction, decideOnDraftAction, convertWithModelAction, confirmDifferencesAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
 import { markupChanges } from "@/lib/markupGuard"
 import { canRewritePdf } from "@/lib/llmRewrite"
+import { AppError } from "@/lib/appError"
+import { conversionProgress, type AiConversion } from "@/lib/aiConversionJob"
+import { freshConversionCheck, isConverting } from "@/lib/conversionCheckDb"
 
 export const dynamic = "force-dynamic"
 
@@ -65,9 +68,18 @@ export default async function EditorPage({
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const raw = (await col.findOne(
     { companyCode: ctx.tenant.companyCode, documentId },
-    { projection: { llmDraft: 1, pendingText: 1 } },
-  )) as { llmDraft?: { text: string; model: string; mode: string; at: Date }; pendingText?: { text?: string } } | null
+    { projection: { llmDraft: 1, pendingText: 1, aiConversion: 1 } },
+  )) as { llmDraft?: { text: string; model: string; mode: string; at: Date }; pendingText?: { text?: string }; aiConversion?: AiConversion | null } | null
   const draft = raw?.llmDraft
+  /*
+   * Prevod modelom a kontrola slov (ADR-046). Kontrola sa prepočíta, keď sa
+   * text od poslednej zmenil — človek po oprave hneď vidí, či nezhoda zmizla.
+   */
+  const job = raw?.aiConversion ?? null
+  const converting = isConverting(job)
+  const progress = conversionProgress(job)
+  const check = converting ? null : await freshConversionCheck(ctx.tenant.companyCode, documentId)
+  const openMinor = check ? check.open.filter(x => x.minor).length : 0
   /*
    * Uloženie zastavené strážcom zápisu (`markupGuard.ts`, 16. 10. 2026).
    * Zoznam sa počíta znova z uloženého textu, nie z adresy — keby sa koncept
@@ -102,6 +114,7 @@ export default async function EditorPage({
    * skončilo chybou „Prepisovať sa dá len PDF" (Skúšobný poriadok, 1. 11. 2026).
    */
   const canRewriteScan = canRewritePdf(d.originalFile)
+  const canConvert = d.originalFile?.type === "pdf" && !converting
   const fileUrl = shown ? `/api/library/file/${encodeURIComponent(shown.id)}` : null
 
   return (
@@ -123,6 +136,78 @@ export default async function EditorPage({
         <ul className="card" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: "var(--fs-body)" }}>
           {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
         </ul>
+      ) : null}
+
+      {converting && progress ? (
+        <div className="lnote lnote--info lnote--action" role="status" style={{ margin: "0 0 16px" }}>
+          <span className="lnote-mark" aria-hidden="true">i</span>
+          <span className="lnote-text">{t.convertRunning(Math.min(progress.step + 1, progress.steps), progress.steps)}</span>
+          <a className="button button--quiet button--sm" href={`/library/${encodeURIComponent(documentId)}/text`}>{t.convertRefresh}</a>
+        </div>
+      ) : job?.status === "failed" ? (
+        <div className="lnote lnote--warn" style={{ margin: "0 0 16px" }}>
+          <span className="lnote-mark" aria-hidden="true">!</span>
+          <span className="lnote-text">{t.convertFailed(errorText(new AppError(job.error ?? "conversion.failed", ""), language))}</span>
+        </div>
+      ) : null}
+
+      {check ? (
+        <section id="check" className="card" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.checkHeading}</h2>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+            {t.checkSummary(check.check.pdfWords, check.check.sameWords, check.open.length, openMinor)}
+          </p>
+          {check.open.length ? (
+            <>
+              <div className="lnote lnote--warn">
+                <span className="lnote-mark" aria-hidden="true">!</span>
+                <span className="lnote-text">{t.checkBlocking}</span>
+              </div>
+              {/*
+                Zoznam sa potvrdzuje po označení, nie kliknutím na každú
+                nezhodu zvlášť — pri 150 nezhodách by to bolo 150 obnovení
+                stránky. Drobné (len interpunkcia) idú naraz samostatným
+                tlačidlom; obsahové sa označujú vedome.
+              */}
+              <form action={confirmDifferencesAction} style={{ display: "grid", gap: 10 }}>
+                <input type="hidden" name="documentId" value={documentId} />
+                <div className="card form-group-body form-group-body--rows" style={{ maxHeight: "60vh", overflow: "auto" }}>
+                  <div className="form-list">
+                    {check.open.map(x => (
+                      <label key={x.id} className="form-row select-row">
+                        <input type="checkbox" name="ids" value={x.id} />
+                        <span className="form-row-main">
+                          <span>
+                            <span className="quiet">{t.checkPdf}: </span><code>{x.pdfText || t.checkNothing}</code>
+                            {" · "}
+                            <span className="quiet">{t.checkText}: </span><code>{x.mdText || t.checkNothing}</code>
+                          </span>
+                          <span className="form-row-sub">
+                            {x.before} … {x.after}
+                            {" · "}{t.checkPages(x.pages.join(", "))}{" · "}{t.checkLine(x.line)}
+                            {x.nearImage ? <>{" · "}{t.checkImage}</> : null}
+                            {x.minor ? <>{" · "}{t.checkMinor}</> : null}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <SubmitButton className="button button--quiet">{t.checkConfirmSelected}</SubmitButton>
+                  {openMinor ? (
+                    <SubmitButton className="button button--quiet" name="scope" value="minor">{t.checkConfirmMinor(openMinor)}</SubmitButton>
+                  ) : null}
+                </div>
+              </form>
+            </>
+          ) : (
+            <div className="lnote" role="status">
+              <span className="lnote-mark" aria-hidden="true">✓</span>
+              <span className="lnote-text">{t.checkAllConfirmed(check.confirmed.length)}</span>
+            </div>
+          )}
+        </section>
       ) : null}
 
       {markup.length ? (
@@ -163,14 +248,14 @@ export default async function EditorPage({
             ten údaj, ktorý musí sedieť.
           */}
           <div className="audit-head">
-            <span className="tag">{draft.mode === "rewrite-scan" ? t.modelDraft : t.ruleDraft}</span>
-            <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : t.modeClean}</strong>
+            <span className="tag">{draft.mode === "clean" ? t.ruleDraft : t.modelDraft}</span>
+            <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : draft.mode === "convert" ? t.modeConvert : t.modeClean}</strong>
             <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
               {t.draftMeta(draft.model, formatDate(draft.at, language), draft.text.length)}
             </span>
           </div>
           <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-            {draft.mode === "rewrite-scan" ? t.draftNoteBefore : t.ruleNoteBefore}
+            {draft.mode === "clean" ? t.ruleNoteBefore : t.draftNoteBefore}
             <strong>{t.draftNoteHighlight}</strong>{t.draftNoteAfter}
           </p>
           <textarea className="field-input editor-text" readOnly rows={14} value={draft.text} />
@@ -252,6 +337,11 @@ export default async function EditorPage({
           <SubmitButton className="button button--quiet" name="mode" value="clean">
             {t.clean}
           </SubmitButton>
+          {canConvert && (
+            <SubmitButton className="button button--quiet" formAction={convertWithModelAction}>
+              {t.convert}
+            </SubmitButton>
+          )}
           {canRewriteScan && (
             <SubmitButton className="button button--quiet" name="mode" value="rewrite-scan">
               {t.rewriteScan}
@@ -267,6 +357,11 @@ export default async function EditorPage({
         <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
           {t.cleanNote}
         </p>
+        {canConvert && (
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+            {t.convertNote}
+          </p>
+        )}
         {canRewriteScan && (
           <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
             {t.rewriteScanNote}
