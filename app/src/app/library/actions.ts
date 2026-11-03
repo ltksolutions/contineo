@@ -44,7 +44,6 @@ import type { CodelistExtras } from "@/lib/codelists"
 import { canRewritePdf, rewritePdf } from "@/lib/llmRewrite"
 import { aiForCompany } from "@/lib/aiSettings"
 import { recordAiUsage, usageRecord } from "@/lib/aiUsage"
-import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
@@ -653,27 +652,23 @@ export async function previewId(
 }
 
 /**
- * Pripraví návrh textu — **pravidlami, alebo modelom pri skene** (D53).
+ * Prepis skenu modelom (D53) — PDF bez textovej vrstvy.
  *
- * Dve cesty, a rozdiel medzi nimi je podstatný:
+ * Výsledok sa **neuloží do konceptu**, len vedľa neho ako návrh: bez textovej
+ * vrstvy nie je s čím porovnávať (ADR-046 kontrola slov tu nefunguje), takže
+ * tichú zmenu znenia by nikto nezachytil. PDF s textovou vrstvou prevádza
+ * `convertWithModelAction` s kontrolou slov.
  *
- * - `clean` — prečistenie členenia **bez modelu** (`tidyStructure`). Členenie
- *   sa v prevedenom PDF nestratilo, len nemá značky, takže na jeho obnovenie
- *   netreba stroj, ktorý prepisuje slová normy. Nemá limit na dĺžku a nemôže
- *   vrátiť polovicu dokumentu. Prečo sa to zmenilo, je v `tidyStructure.ts`.
- * - `rewrite-scan` — sken bez textovej vrstvy. Tam model nahradiť nevieme.
- *
- * Výsledok sa **neuloží do konceptu**, len vedľa neho ako návrh. Zmeniť
- * znenie normy strojom bez toho, aby to niekto videl, je presne ten druh
- * tichej zmeny, po ktorej sa o rok nedá povedať, čo v predpise vlastne stálo.
- * Platí to aj pre pravidlá — nie sú neomylnejšie než model, len sú verejné.
+ * „Prečistiť členenie" (pravidlá `tidyStructure`) bolo odstránené 3. 11. 2026
+ * (Ján: „dajme ho preč a radšej dajme info používateľovi, nech si aktivuje
+ * AI nastavenia") — pevné pravidlá ČASŤ/hlava/Článok sú šablóna a prevod
+ * modelom ich nahrádza.
  */
 export async function sendToModelAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
-  const mode = fieldText(fd, "mode")
   let message = ""
   let error = false
 
@@ -682,55 +677,32 @@ export async function sendToModelAction(fd: FormData) {
     const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
     if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
-    const draft = mode === "rewrite-scan"
-      ? await (async () => {
-          const original = doc.originalFile as { id: string; type: string } | undefined
-          if (!original) throw new LibraryError("library.noOriginalFile", "Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
-          if (!canRewritePdf(original)) {
-            throw new LibraryError("library.onlyPdfRewrite", "Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
-          }
-          const s = await loadFile(self.companyCode, original.id)
-          if (!s) throw new LibraryError("library.originalNotFound", "Pôvodný súbor sa nenašiel.")
-          // Kľúč a model prepisu z nastavenia organizácie (D157).
-          const ai = await aiForCompany(self.companyCode)
-          // Spotreba (D158): kto prepis spustil a ktorý dokument — názov
-          // dokumentu nie je osobný údaj, znenie otázky by bolo.
-          const who = await findPerson(self.companyCode, self.email)
-          return rewritePdf(s.data, {
-            apiKey: ai.apiKey,
-            model: ai.models.rewrite,
-            onUsage: (tokens, failed) => void recordAiUsage(usageRecord({
-              actor: {
-                companyCode: self.companyCode, personId: self.personId,
-                personName: who?.fullName ?? self.email, email: self.email,
-              },
-              purpose: "pdf-rewrite", subject: String(doc.title ?? id),
-              provider: "anthropic", model: ai.models.rewrite, keySource: ai.keySource, tokens, failed,
-            })),
-          })
-        })()
-      : await (async () => {
-          const text = String(doc.draftMarkdown ?? "").trim()
-          if (!text) throw new LibraryError("rewrite.emptyInput", "Niet čo prečisťovať — text je prázdny.")
-          const tidy = tidyStructure(text)
-          if (tidy.headings === 0) {
-            throw new LibraryError(
-              "library.noStructureFound",
-              "V texte sa nenašla ani jedna úroveň členenia (ČASŤ, hlava, Článok, príloha). " +
-              "Buď je text inak členený, alebo ho treba prepísať zo skenu.",
-            )
-          }
-          return {
-            text: tidy.markdown,
-            // Do záznamu sa píše, čím text vznikol. „Bez modelu" tu nie je
-            // ozdoba — o rok to je rozdiel medzi „stroj to prepísal"
-            // a „pravidlá to označkovali".
-            model: `bez modelu · pravidlá · nadpisov ${tidy.headings}, ` +
-                   `pätička ${tidy.removedFurniture} riadkov`,
-            mode: "clean" as const,
-            at: new Date(),
-          }
-        })()
+    const draft = await (async () => {
+      const original = doc.originalFile as { id: string; type: string } | undefined
+      if (!original) throw new LibraryError("library.noOriginalFile", "Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
+      if (!canRewritePdf(original)) {
+        throw new LibraryError("library.onlyPdfRewrite", "Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
+      }
+      const s = await loadFile(self.companyCode, original.id)
+      if (!s) throw new LibraryError("library.originalNotFound", "Pôvodný súbor sa nenašiel.")
+      // Kľúč a model prepisu z nastavenia organizácie (D157).
+      const ai = await aiForCompany(self.companyCode)
+      // Spotreba (D158): kto prepis spustil a ktorý dokument — názov
+      // dokumentu nie je osobný údaj, znenie otázky by bolo.
+      const who = await findPerson(self.companyCode, self.email)
+      return rewritePdf(s.data, {
+        apiKey: ai.apiKey,
+        model: ai.models.rewrite,
+        onUsage: (tokens, failed) => void recordAiUsage(usageRecord({
+          actor: {
+            companyCode: self.companyCode, personId: self.personId,
+            personName: who?.fullName ?? self.email, email: self.email,
+          },
+          purpose: "pdf-rewrite", subject: String(doc.title ?? id),
+          provider: "anthropic", model: ai.models.rewrite, keySource: ai.keySource, tokens, failed,
+        })),
+      })
+    })()
 
     await col.updateOne(
       { documentId: id, companyCode: self.companyCode },
@@ -742,27 +714,18 @@ export async function sendToModelAction(fd: FormData) {
       note: `${draft.mode} · ${draft.model} · ${draft.text.length} znakov`,
     })
 
-    message = mode === "rewrite-scan"
-      ? say(self.language).modelReturnedDraft
-      : say(self.language).rulesReturnedDraft
+    message = say(self.language).modelReturnedDraft
 
-    /*
-     * Upozornenie **len pri prepise modelom**, nie pri pravidlách.
-     * Prepis skenu trvá minúty a človek medzitým odchádza inam; prečistenie
-     * pravidlami je hotové skôr, než sa stránka prekreslí, a oznam o ňom by
-     * bol len riadok navyše v zozname.
-     */
-    if (mode === "rewrite-scan") {
-      await notify({
-        companyCode: self.companyCode,
-        personId: self.personId,
-        kind: "rewritten",
-        params: {
-          documentId: id,
-          documentTitle: String(doc.title ?? id),
-        },
-      })
-    }
+    // Prepis skenu trvá minúty a človek medzitým odchádza inam.
+    await notify({
+      companyCode: self.companyCode,
+      personId: self.personId,
+      kind: "rewritten",
+      params: {
+        documentId: id,
+        documentTitle: String(doc.title ?? id),
+      },
+    })
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true

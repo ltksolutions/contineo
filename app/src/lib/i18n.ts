@@ -4297,11 +4297,12 @@ interface Dictionary {
       llmNoteBefore: string
       llmNoteHighlight: string
       llmNoteAfter: string
-      clean: string
-      /** Že prečistenie beží na pravidlách, nie na modeli. */
-      cleanNote: string
       rewriteScan: string
       rewriteScanNote: string
+      /** Organizácia nemá kľúč AI — prevod modelom ani prepis skenu nejdú (Ján 3. 11. 2026). */
+      aiOff: string
+      aiOffAsk: string
+      aiOffLink: string
       /** Prevod PDF modelom s kontrolou slov (ADR-046). */
       convert: string
       convertNote: string
@@ -4341,7 +4342,6 @@ interface Dictionary {
       alreadyPublished: string
       published: (chunks: number, archived: number) => string
       modelReturnedDraft: string
-      rulesReturnedDraft: string
       draftAccepted: string
       draftDiscarded: string
       /** Po nahratí PDF: prevod modelom beží, alebo nie je nastavený (ADR-046). */
@@ -6952,7 +6952,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "conversion.zipNotOffice": "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré .doc a .xls sa prevádzať nedajú — ulož ich vo Worde alebo Exceli ako novší formát.",
     "conversion.unsupportedFormat": "Formát {format} zatiaľ nevieme previesť. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
     "rewrite.answerTruncated": "Model nestihol dopísať celý dokument — odpoveď je useknutá. Polovica predpisu sa použiť nedá; rozdeľ dokument a prepíš ho po častiach.",
-    "library.noStructureFound": "V texte sa nenašla ani jedna úroveň členenia (ČASŤ, hlava, Článok, príloha). Buď je text členený inak, alebo ide o sken a treba ho prepísať jazykovým modelom.",
     "conversion.pdfEngineFailed": "Toto PDF sa nepodarilo otvoriť. Buď je poškodené alebo zaheslované, alebo je chyba na našej strane — skúsenie znova nepomôže. Ozvi sa správcovi systému, podrobnosti sú v zázname.",
     "conversion.pdfNoText": "V tomto PDF nie je žiadny text — je to obrázok (sken). Prevod ho neprečíta. V editore ho môžeš dať prepísať jazykovým modelom, alebo si vypýtaj od autora pôvodný súbor.",
     "conversion.noText": "Súbor neobsahuje žiadny text.",
@@ -9821,13 +9820,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       markupKeep: "Uložiť s pôvodným zápisom",
       markupAccept: "Uložiť aj tak",
       llmHeading: "Pomoc pri texte",
-      llmNoteBefore: "Volá sa len takto — kliknutím. Výsledok sa uloží ako ",
+      llmNoteBefore: "PDF s textovou vrstvou prevedie model po nahratí sám a výsledok stráži kontrola slov nižšie. Prepis skenu sa uloží ako ",
       llmNoteHighlight: "návrh vedľa textu",
-      llmNoteAfter: ", nie doňho: model má zakázané meniť znenie, ale tichú zmenu v predpise by nikto nezachytil, keby sa zapisovala rovno.",
-      clean: "Prečistiť členenie",
-      cleanNote: "„Prečistiť členenie“ jazykový model nepoužíva. Text sa označkuje podľa pravidiel — ČASŤ, hlava, diel, Článok, príloha — a odstráni sa opakovaná pätička strany. Nemá to limit na dĺžku a nemení sa ani jedno slovo normy.",
+      llmNoteAfter: ", nie doňho: bez textovej vrstvy nie je s čím porovnávať, a tichú zmenu v predpise by nikto nezachytil.",
       rewriteScan: "Prepísať zo skenu",
       rewriteScanNote: "„Prepísať zo skenu“ pošle celé pôvodné PDF modelu. Má zmysel vtedy, keď PDF nemá textovú vrstvu alebo je prevod rozsypaný.",
+      aiOff: "Prevod modelom nie je zapnutý — organizácia nemá nastavený kľúč AI. Zapni ho v nastaveniach AI; potom sa každé PDF po nahratí prevedie modelom a skontroluje slovo po slove.",
+      aiOffAsk: "Prevod modelom nie je zapnutý — organizácia nemá nastavený kľúč AI. Požiadaj správcu organizácie, aby ho zapol v nastaveniach AI; potom sa každé PDF po nahratí prevedie modelom a skontroluje slovo po slove.",
+      aiOffLink: "Nastavenia AI",
       convert: "Previesť modelom",
       convertNote: "„Previesť modelom“ pošle PDF modelu: najprv ho celé analyzuje, potom ho prevedie po častiach podľa vlastnej analýzy, bez šablóny. Každé slovo výsledku sa porovná s textovou vrstvou PDF a nezhody potvrdíš tu, než pôjde koncept na schválenie.",
       convertPhaseAnalysis: (step, steps, from, to, pages) => `Krok ${step}${steps ? ` z ${steps}` : ""}: model číta ${from === 1 && to === pages ? `celé PDF (${pages} strán)` : `strany ${from}–${to} z ${pages}`} a opisuje, ako je dokument postavený.`,
@@ -9866,11 +9866,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Publikované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
         ` ${archived} starých archivovaných.`,
       modelReturnedDraft: "Model vrátil návrh. Porovnaj ho s doterajším textom a rozhodni sa.",
-      rulesReturnedDraft: "Členenie je prečistené. Porovnaj návrh s doterajším textom a rozhodni sa.",
       draftAccepted: "Návrh je teraz konceptom. Publikovanie je stále samostatný krok.",
       draftDiscarded: "Návrh zahodený.",
       conversionStarted: "Prevedené doslovne. Model dokument práve analyzuje a prevádza po častiach — keď dobehne, dostaneš upozornenie.",
-      conversionNoAi: "Prevedené doslovne — prevod modelom nie je nastavený (organizácia nemá kľúč AI).",
+      conversionNoAi: "Prevedené doslovne — prevod modelom nie je zapnutý. Zapne ho správca organizácie v Organizácia → AI.",
       differencesConfirmed: n => `Potvrdené nezhody: ${n}.`,
       assigned: "Zaradené.",
       bulkNothingSelected: "Neoznačili ste žiadny dokument.",
@@ -12426,7 +12425,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "conversion.zipNotOffice": "Toto je ZIP balík, ale ani docx, ani xlsx. Staré .doc a .xls převádět nelze — ulož je ve Wordu nebo Excelu jako novější formát.",
     "conversion.unsupportedFormat": "Formát {format} zatím neumíme převést. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
     "rewrite.answerTruncated": "Model nestihl dopsat celý dokument — odpověď je useknutá. Polovina předpisu se použít nedá; rozděl dokument a přepiš ho po částech.",
-    "library.noStructureFound": "V textu se nenašla ani jedna úroveň členění (ČÁST, hlava, Článek, příloha). Buď je text členěn jinak, nebo jde o sken a je třeba ho přepsat jazykovým modelem.",
     "conversion.pdfEngineFailed": "Toto PDF se nepodařilo otevřít. Buď je poškozené nebo zaheslované, nebo je chyba na naší straně — zkoušet znovu nepomůže. Ozvi se správci systému, podrobnosti jsou v záznamu.",
     "conversion.pdfNoText": "V tomto PDF není žádný text — je to obrázek (sken). Převod ho nepřečte. V editoru ho můžeš nechat přepsat jazykovým modelem, nebo si vyžádej od autora původní soubor.",
     "conversion.noText": "Soubor neobsahuje žádný text.",
@@ -15291,13 +15289,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       markupKeep: "Uložit s původním zápisem",
       markupAccept: "Uložit i tak",
       llmHeading: "Pomoc při textu",
-      llmNoteBefore: "Volá se jen takto — kliknutím. Výsledek se uloží jako ",
+      llmNoteBefore: "PDF s textovou vrstvou převede model po nahrání sám a výsledek hlídá kontrola slov níže. Přepis skenu se uloží jako ",
       llmNoteHighlight: "návrh vedle textu",
-      llmNoteAfter: ", ne do něj: model má zakázáno měnit znění, ale tichou změnu v předpisu by nikdo nezachytil, kdyby se zapisovala rovnou.",
-      clean: "Pročistit členění",
-      cleanNote: "„Pročistit členění“ jazykový model nepoužívá. Text se označkuje podle pravidel — ČÁST, hlava, díl, Článek, příloha — a odstraní se opakovaná patička stránky. Nemá to limit na délku a nemění se ani jedno slovo předpisu.",
+      llmNoteAfter: ", ne do něj: bez textové vrstvy není s čím porovnávat, a tichou změnu v předpisu by nikdo nezachytil.",
       rewriteScan: "Přepsat ze skenu",
       rewriteScanNote: "„Přepsat ze skenu“ pošle celé původní PDF modelu. Má smysl tehdy, když PDF nemá textovou vrstvu nebo je převod rozsypaný.",
+      aiOff: "Převod modelem není zapnutý — organizace nemá nastavený klíč AI. Zapni ho v nastavení AI; potom se každé PDF po nahrání převede modelem a zkontroluje slovo po slově.",
+      aiOffAsk: "Převod modelem není zapnutý — organizace nemá nastavený klíč AI. Požádej správce organizace, aby ho zapnul v nastavení AI; potom se každé PDF po nahrání převede modelem a zkontroluje slovo po slově.",
+      aiOffLink: "Nastavení AI",
       convert: "Převést modelem",
       convertNote: "„Převést modelem“ pošle PDF modelu: nejdřív ho celé analyzuje, potom ho převede po částech podle vlastní analýzy, bez šablony. Každé slovo výsledku se porovná s textovou vrstvou PDF a neshody potvrdíš tady, než půjde koncept ke schválení.",
       convertPhaseAnalysis: (step, steps, from, to, pages) => `Krok ${step}${steps ? ` z ${steps}` : ""}: model čte ${from === 1 && to === pages ? `celé PDF (${pages} stran)` : `strany ${from}–${to} z ${pages}`} a popisuje, jak je dokument postavený.`,
@@ -15336,11 +15335,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Publikováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
         ` ${archived} starých archivováno.`,
       modelReturnedDraft: "Model vrátil návrh. Porovnej ho s dosavadním textem a rozhodni se.",
-      rulesReturnedDraft: "Členění je pročištěné. Porovnej návrh s dosavadním textem a rozhodni se.",
       draftAccepted: "Návrh je teď konceptem. Publikování je stále samostatný krok.",
       draftDiscarded: "Návrh zahozen.",
       conversionStarted: "Převedeno doslovně. Model dokument právě analyzuje a převádí po částech — až doběhne, dostaneš upozornění.",
-      conversionNoAi: "Převedeno doslovně — převod modelem není nastavený (organizace nemá klíč AI).",
+      conversionNoAi: "Převedeno doslovně — převod modelem není zapnutý. Zapne ho správce organizace v Organizace → AI.",
       differencesConfirmed: n => `Potvrzené neshody: ${n}.`,
       assigned: "Zařazeno.",
       bulkNothingSelected: "Neoznačili jste žádný dokument.",
@@ -17888,7 +17886,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "conversion.zipNotOffice": "This is a ZIP archive, but neither docx nor xlsx. Legacy .doc and .xls cannot be converted — save them from Word or Excel in a newer format.",
     "conversion.unsupportedFormat": "We cannot convert {format} yet. Supported: .docx, .pdf, .xlsx, .md, .txt and .csv.",
     "rewrite.answerTruncated": "The model did not finish the document — the answer is truncated. Half a regulation is unusable; split the document and rewrite it in parts.",
-    "library.noStructureFound": "No structural level was found in the text (PART, chapter, Article, annex). Either the text is structured differently, or it is a scan and needs the language model to transcribe it.",
     "conversion.pdfEngineFailed": "This PDF could not be opened. It is either damaged or password-protected, or the fault is on our side — retrying will not help. Contact the system administrator; details are in the log.",
     "conversion.pdfNoText": "This PDF contains no text — it is an image (a scan). The conversion cannot read it. In the editor you can have the language model transcribe it, or ask the author for the original file.",
     "conversion.noText": "The file contains no text.",
@@ -20748,13 +20745,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       markupKeep: "Save with original markup",
       markupAccept: "Save anyway",
       llmHeading: "Text helpers",
-      llmNoteBefore: "It runs only like this — on a click. The result is saved as a ",
+      llmNoteBefore: "A PDF with a text layer is converted by the model on upload and guarded by the word check below. A scan transcription is saved as a ",
       llmNoteHighlight: "draft beside the text",
-      llmNoteAfter: ", not into it: the model is forbidden to change the wording, but a silent change in a regulation would go unnoticed if it were written straight in.",
-      clean: "Clean up the structure",
-      cleanNote: "“Clean up the structure” does not use the language model. The text is marked up by rules — PART, chapter, section, Article, annex — and the repeated page footer is removed. There is no length limit and not a single word of the regulation changes.",
+      llmNoteAfter: ", not into it: without a text layer there is nothing to compare against, and a silent change in a regulation would go unnoticed.",
       rewriteScan: "Transcribe from the scan",
       rewriteScanNote: "“Transcribe from the scan” sends the whole original PDF to the model. It makes sense when the PDF has no text layer or the conversion fell apart.",
+      aiOff: "Model conversion is off — the organisation has no AI key. Turn it on in the AI settings; every PDF will then be converted by the model after upload and checked word by word.",
+      aiOffAsk: "Model conversion is off — the organisation has no AI key. Ask the organisation administrator to turn it on in the AI settings; every PDF will then be converted by the model after upload and checked word by word.",
+      aiOffLink: "AI settings",
       convert: "Convert with the model",
       convertNote: "“Convert with the model” sends the PDF to the model: first it analyses the whole document, then converts it part by part following its own analysis, with no template. Every word of the result is compared with the PDF text layer and you confirm the differences here before the draft goes for approval.",
       convertPhaseAnalysis: (step, steps, from, to, pages) => `Step ${step}${steps ? ` of ${steps}` : ""}: the model is reading ${from === 1 && to === pages ? `the whole PDF (${pages} pages)` : `pages ${from}–${to} of ${pages}`} and describing how the document is built.`,
@@ -20792,11 +20790,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       published: (chunks, archived) =>
         `Published: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.`,
       modelReturnedDraft: "The model returned a draft. Compare it with the current text and decide.",
-      rulesReturnedDraft: "The structure has been cleaned up. Compare the draft with the current text and decide.",
       draftAccepted: "The draft is now the working text. Publishing is still a separate step.",
       draftDiscarded: "Draft discarded.",
       conversionStarted: "Converted literally. The model is now analysing the document and converting it part by part — you will be notified when it finishes.",
-      conversionNoAi: "Converted literally — model conversion is not configured (the organisation has no AI key).",
+      conversionNoAi: "Converted literally — model conversion is off. The organisation administrator turns it on under Organisation → AI.",
       differencesConfirmed: n => `Differences confirmed: ${n}.`,
       assigned: "Filed.",
       bulkNothingSelected: "You have not selected any document.",

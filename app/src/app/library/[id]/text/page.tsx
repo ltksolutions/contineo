@@ -12,6 +12,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { libraryDetail } from "@/lib/libraryRead"
 import { getCollection } from "@/lib/mongodb"
@@ -28,6 +29,8 @@ import AppShell from "@/components/AppShell"
 import SubmitButton from "@/components/SubmitButton"
 import { markupChanges } from "@/lib/markupGuard"
 import { canRewritePdf } from "@/lib/llmRewrite"
+import { aiForCompany } from "@/lib/aiSettings"
+import { isOrgAdmin } from "@/lib/people"
 import { AppError } from "@/lib/appError"
 import type { AiConversion } from "@/lib/aiConversionJob"
 import { conversionNote } from "@/lib/conversionNote"
@@ -114,8 +117,14 @@ export default async function EditorPage({
    * čo je vľavo — inak sa pri koncepte z Markdownu ukázalo a po kliknutí
    * skončilo chybou „Prepisovať sa dá len PDF" (Skúšobný poriadok, 1. 11. 2026).
    */
-  const canRewriteScan = canRewritePdf(d.originalFile)
-  const canConvert = d.originalFile?.type === "pdf" && !converting
+  /*
+   * Bez kľúča AI nejde ani prevod modelom, ani prepis skenu — namiesto
+   * tlačidiel, ktoré by skončili chybou, karta povie, kde sa AI zapína
+   * (Ján 3. 11. 2026, keď zmizlo „Prečistiť členenie").
+   */
+  const aiOn = Boolean((await aiForCompany(ctx.tenant.companyCode)).apiKey)
+  const canRewriteScan = aiOn && canRewritePdf(d.originalFile)
+  const canConvert = aiOn && d.originalFile?.type === "pdf" && !converting
   const fileUrl = shown ? `/api/library/file/${encodeURIComponent(shown.id)}` : null
 
   return (
@@ -245,6 +254,7 @@ export default async function EditorPage({
             ten údaj, ktorý musí sedieť.
           */}
           <div className="audit-head">
+            {/* „clean" už nevzniká (3. 11. 2026), ale uložené návrhy ho môžu mať. */}
             <span className="tag">{draft.mode === "clean" ? t.ruleDraft : t.modelDraft}</span>
             <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : draft.mode === "convert" ? t.modeConvert : t.modeClean}</strong>
             <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
@@ -324,47 +334,52 @@ export default async function EditorPage({
         </section>
       </div>
 
+      {!aiOn || canConvert || canRewriteScan ? (
       <section className="card" style={{ padding: 18, display: "grid", gap: 10, marginTop: 18 }}>
         <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.llmHeading}</h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-          {t.llmNoteBefore}<strong>{t.llmNoteHighlight}</strong>{t.llmNoteAfter}
-        </p>
-        <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <input type="hidden" name="documentId" value={documentId} />
-          <SubmitButton className="button button--quiet" name="mode" value="clean">
-            {t.clean}
-          </SubmitButton>
-          {canConvert && (
-            <SubmitButton className="button button--quiet" formAction={convertWithModelAction}>
-              {t.convert}
-            </SubmitButton>
-          )}
-          {canRewriteScan && (
-            <SubmitButton className="button button--quiet" name="mode" value="rewrite-scan">
-              {t.rewriteScan}
-            </SubmitButton>
-          )}
-        </form>
-        {/*
-          Ktoré tlačidlo volá model a ktoré nie, musí byť vidieť **pri nich**,
-          nie v návode. Prečistenie beží na pravidlách a nemení slová; prepis
-          zo skenu posiela dokument modelu. Pre toho, kto rozhoduje o znení
-          predpisu, je to rozdiel, ktorý má poznať pred kliknutím.
-        */}
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-          {t.cleanNote}
-        </p>
-        {canConvert && (
-          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-            {t.convertNote}
-          </p>
-        )}
-        {canRewriteScan && (
-          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-            {t.rewriteScanNote}
-          </p>
+        {!aiOn ? (
+          <div className="lnote lnote--info lnote--action">
+            <span className="lnote-mark" aria-hidden="true">i</span>
+            <span className="lnote-text">{isOrgAdmin(ctx.person) ? t.aiOff : t.aiOffAsk}</span>
+            {isOrgAdmin(ctx.person) && <Link className="button button--quiet button--sm" href="/organisation/ai">{t.aiOffLink}</Link>}
+          </div>
+        ) : (
+          <>
+            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
+              {t.llmNoteBefore}<strong>{t.llmNoteHighlight}</strong>{t.llmNoteAfter}
+            </p>
+            <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input type="hidden" name="documentId" value={documentId} />
+              {canConvert && (
+                <SubmitButton className="button button--quiet" formAction={convertWithModelAction}>
+                  {t.convert}
+                </SubmitButton>
+              )}
+              {canRewriteScan && (
+                <SubmitButton className="button button--quiet">
+                  {t.rewriteScan}
+                </SubmitButton>
+              )}
+            </form>
+            {/*
+              Čo ktoré tlačidlo pošle modelu, musí byť vidieť **pri nich**,
+              nie v návode — pre toho, kto rozhoduje o znení predpisu, je to
+              rozdiel, ktorý má poznať pred kliknutím.
+            */}
+            {canConvert && (
+              <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+                {t.convertNote}
+              </p>
+            )}
+            {canRewriteScan && (
+              <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+                {t.rewriteScanNote}
+              </p>
+            )}
+          </>
         )}
       </section>
+      ) : null}
     </div>
     </AppShell>
   )
