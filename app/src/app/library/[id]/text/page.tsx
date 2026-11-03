@@ -222,7 +222,7 @@ export default async function EditorPage({
                     <div key={item.ids.join(" ")} className="check-item">
                       <div className="check-item-head">
                         <b>{t.checkKind[item.kind]}</b>
-                        <span className="quiet">{item.toLine ? t.checkMovedLines(item.line, item.toLine) : t.checkLine(item.line)}</span>
+                        <span className="quiet">{item.toLine && item.toLine !== item.line ? t.checkMovedLines(item.line, item.toLine) : t.checkLine(item.line)}</span>
                       </div>
                       <dl className="check-compare">
                         {item.kind !== "image" ? (
@@ -234,7 +234,7 @@ export default async function EditorPage({
                         <dt>{t.checkText}</dt>
                         <dd>
                           {item.kind === "missing" ? excerpt(item.before, item.pdfText, item.after, t.checkNothing, true)
-                            : item.kind === "moved" ? excerpt(item.movedBefore ?? "", item.mdText, item.movedAfter ?? "", t.checkNothing)
+                            : item.kind === "moved" ? excerpt(item.movedBefore ?? item.before, item.mdText, item.movedAfter ?? item.after, t.checkNothing)
                             : excerpt(item.before, item.mdText, item.after, t.checkNothing)}
                         </dd>
                       </dl>
