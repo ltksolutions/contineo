@@ -7,7 +7,7 @@
  */
 import { describe, it, expect } from "vitest"
 import { parsePlan, fallbackParts, joinParts, tailOf, layerText, MAX_PART_PAGES } from "../src/lib/aiConversion"
-import { analysisWindows, conversionProgress, type AiConversion } from "../src/lib/aiConversionJob"
+import { analysisWindows, conversionPhase, type AiConversion } from "../src/lib/aiConversionJob"
 
 const plan = (parts: unknown) => "## Analýza\n\nČlenenie: body „7.“\n\n```json\n" + JSON.stringify({ parts }) + "\n```"
 
@@ -68,9 +68,14 @@ describe("skladanie", () => {
     expect(analysisWindows(230)).toEqual([{ from: 1, to: 100 }, { from: 101, to: 200 }, { from: 201, to: 230 }])
   })
 
-  it("priebeh: okná analýzy a časti", () => {
-    const job = { windows: [{ from: 1, to: 64 }], windowsDone: 1, parts: fallbackParts(64), done: ["x", "y"] } as unknown as AiConversion
-    expect(conversionProgress(job)).toEqual({ step: 3, steps: 17 })
-    expect(conversionProgress(null)).toBeNull()
+  it("priebeh: počet krokov je známy až po analýze", () => {
+    const base = { windows: [{ from: 1, to: 53 }], pageCount: 53, partsFromModel: true } as const
+    const job = (over: object) => ({ ...base, windowsDone: 0, parts: [], done: [], ...over }) as unknown as AiConversion
+    expect(conversionPhase(job({}))).toEqual({ kind: "analysis", step: 1, steps: null, from: 1, to: 53, pageCount: 53 })
+    const parts = fallbackParts(53)
+    expect(conversionPhase(job({ windowsDone: 1, parts, done: ["a", "b"] })))
+      .toEqual({ kind: "part", step: 4, steps: parts.length + 2, no: 3, of: parts.length, from: 9, to: 12, fromModel: true })
+    expect(conversionPhase(job({ windowsDone: 1, parts, done: parts.map(() => "x") })))
+      .toEqual({ kind: "finishing", step: parts.length + 2, steps: parts.length + 2 })
   })
 })

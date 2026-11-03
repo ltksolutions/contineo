@@ -22,10 +22,17 @@ const PARALLEL = 4
 
 async function work(): Promise<boolean> {
   const running = (await conversionsInProgress()).slice(0, PARALLEL)
-  const out = await Promise.all(running.map(r => continueConversion(r.companyCode, r.documentId).catch(e => {
-    console.error(`[conversion] ${r.companyCode}/${r.documentId}:`, e)
-    return false
-  })))
+  const out = await Promise.all(running.map(async r => {
+    const began = Date.now()
+    try {
+      const more = await continueConversion(r.companyCode, r.documentId)
+      console.log(`[conversion] ${r.companyCode}/${r.documentId}: ${more ? "krok hotový, pokračuje" : "bez kroku alebo koniec"} (${Math.round((Date.now() - began) / 1000)} s)`)
+      return more
+    } catch (e) {
+      console.error(`[conversion] ${r.companyCode}/${r.documentId}:`, e)
+      return false
+    }
+  }))
   // Reťaz pokračuje, len keď niektorý krok prebehol a beh ešte nie je hotový.
   // Krok, ktorý narazil na zámok iného, nevolá ďalej — ten druhý zavolá sám.
   return out.some(Boolean) || (await conversionsInProgress()).length > running.length
@@ -39,7 +46,10 @@ export async function GET(request: Request) {
   const origin = new URL(request.url).origin
   after(async () => {
     try {
-      if (await work()) await kick(origin, PATH)
+      if (await work()) {
+        console.log("[conversion] ďalší kúsok")
+        await kick(origin, PATH)
+      }
     } catch (e) {
       console.error("[conversion] kúsok zlyhal:", e)
     }

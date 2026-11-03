@@ -4305,7 +4305,13 @@ interface Dictionary {
       /** Prevod PDF modelom s kontrolou slov (ADR-046). */
       convert: string
       convertNote: string
-      convertRunning: (step: number, steps: number) => string
+      /** Priebeh krok po kroku (Ján 3. 11. 2026); `steps` je `null`, kým analýza nevie počet častí. */
+      convertPhaseAnalysis: (step: number, steps: number | null, from: number, to: number, pages: number) => string
+      convertPhasePart: (step: number, steps: number, no: number, of: number, from: number, to: number) => string
+      convertPhaseFinishing: (step: number, steps: number) => string
+      convertPlan: (parts: number, fromModel: boolean) => string
+      convertRetrying: (reason: string) => string
+      convertElapsed: (minutes: number) => string
       convertRefresh: string
       convertFailed: (reason: string) => string
       checkHeading: string
@@ -9824,7 +9830,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rewriteScanNote: "„Prepísať zo skenu“ pošle celé pôvodné PDF modelu. Má zmysel vtedy, keď PDF nemá textovú vrstvu alebo je prevod rozsypaný.",
       convert: "Previesť modelom",
       convertNote: "„Previesť modelom“ pošle PDF modelu: najprv ho celé analyzuje, potom ho prevedie po častiach podľa vlastnej analýzy, bez šablóny. Každé slovo výsledku sa porovná s textovou vrstvou PDF a nezhody potvrdíš tu, než pôjde koncept na schválenie.",
-      convertRunning: (step, steps) => `Prevod modelom beží na pozadí — krok ${step} z ${steps}. Dovtedy je koncept doslovný prevod; keď model dobehne, dostaneš upozornenie.`,
+      convertPhaseAnalysis: (step, steps, from, to, pages) => `Krok ${step}${steps ? ` z ${steps}` : ""}: model číta ${from === 1 && to === pages ? `celé PDF (${pages} strán)` : `strany ${from}–${to} z ${pages}`} a opisuje, ako je dokument postavený.`,
+      convertPhasePart: (step, steps, no, of, from, to) => `Krok ${step} z ${steps}: model prevádza strany ${from}–${to} (časť ${no} z ${of}).`,
+      convertPhaseFinishing: (step, steps) => `Krok ${step} z ${steps}: skladám časti a porovnávam každé slovo s textovou vrstvou PDF.`,
+      convertPlan: (parts, fromModel) => `Analýza rozdelila dokument na ${parts} ${parts < 5 ? "časti" : "častí"}${fromModel ? " podľa jeho štruktúry" : " rovnomerne"}.`,
+      convertRetrying: reason => `Posledný pokus zlyhal (${reason}), skúša sa znova.`,
+      convertElapsed: m => `Beží ${m < 1 ? "menej než minútu" : `${m} min`}. Koncept je zatiaľ doslovný prevod; keď model dobehne, stránka sa obnoví sama.`,
       convertRefresh: "Obnoviť",
       convertFailed: reason => `Prevod modelom sa nepodaril: ${reason} Ostáva doslovný prevod; znova to skúsiš tlačidlom „Previesť modelom“.`,
       checkHeading: "Kontrola slov s originálom",
@@ -15289,7 +15300,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rewriteScanNote: "„Přepsat ze skenu“ pošle celé původní PDF modelu. Má smysl tehdy, když PDF nemá textovou vrstvu nebo je převod rozsypaný.",
       convert: "Převést modelem",
       convertNote: "„Převést modelem“ pošle PDF modelu: nejdřív ho celé analyzuje, potom ho převede po částech podle vlastní analýzy, bez šablony. Každé slovo výsledku se porovná s textovou vrstvou PDF a neshody potvrdíš tady, než půjde koncept ke schválení.",
-      convertRunning: (step, steps) => `Převod modelem běží na pozadí — krok ${step} z ${steps}. Do té doby je koncept doslovný převod; až model doběhne, dostaneš upozornění.`,
+      convertPhaseAnalysis: (step, steps, from, to, pages) => `Krok ${step}${steps ? ` z ${steps}` : ""}: model čte ${from === 1 && to === pages ? `celé PDF (${pages} stran)` : `strany ${from}–${to} z ${pages}`} a popisuje, jak je dokument postavený.`,
+      convertPhasePart: (step, steps, no, of, from, to) => `Krok ${step} z ${steps}: model převádí strany ${from}–${to} (část ${no} z ${of}).`,
+      convertPhaseFinishing: (step, steps) => `Krok ${step} z ${steps}: skládám části a porovnávám každé slovo s textovou vrstvou PDF.`,
+      convertPlan: (parts, fromModel) => `Analýza rozdělila dokument na ${parts} ${parts < 5 ? "části" : "částí"}${fromModel ? " podle jeho struktury" : " rovnoměrně"}.`,
+      convertRetrying: reason => `Poslední pokus selhal (${reason}), zkouší se znovu.`,
+      convertElapsed: m => `Běží ${m < 1 ? "méně než minutu" : `${m} min`}. Koncept je zatím doslovný převod; až model doběhne, stránka se obnoví sama.`,
       convertRefresh: "Obnovit",
       convertFailed: reason => `Převod modelem se nepodařil: ${reason} Zůstává doslovný převod; znovu to zkusíš tlačítkem „Převést modelem“.`,
       checkHeading: "Kontrola slov s originálem",
@@ -20741,7 +20757,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rewriteScanNote: "“Transcribe from the scan” sends the whole original PDF to the model. It makes sense when the PDF has no text layer or the conversion fell apart.",
       convert: "Convert with the model",
       convertNote: "“Convert with the model” sends the PDF to the model: first it analyses the whole document, then converts it part by part following its own analysis, with no template. Every word of the result is compared with the PDF text layer and you confirm the differences here before the draft goes for approval.",
-      convertRunning: (step, steps) => `The model conversion is running in the background — step ${step} of ${steps}. Until then the draft is the literal conversion; you will be notified when the model finishes.`,
+      convertPhaseAnalysis: (step, steps, from, to, pages) => `Step ${step}${steps ? ` of ${steps}` : ""}: the model is reading ${from === 1 && to === pages ? `the whole PDF (${pages} pages)` : `pages ${from}–${to} of ${pages}`} and describing how the document is built.`,
+      convertPhasePart: (step, steps, no, of, from, to) => `Step ${step} of ${steps}: the model is converting pages ${from}–${to} (part ${no} of ${of}).`,
+      convertPhaseFinishing: (step, steps) => `Step ${step} of ${steps}: joining the parts and comparing every word with the PDF text layer.`,
+      convertPlan: (parts, fromModel) => `The analysis split the document into ${parts} parts${fromModel ? " following its structure" : " evenly"}.`,
+      convertRetrying: reason => `The last attempt failed (${reason}); retrying.`,
+      convertElapsed: m => `Running for ${m < 1 ? "less than a minute" : `${m} min`}. The draft is the literal conversion for now; the page refreshes by itself when the model finishes.`,
       convertRefresh: "Refresh",
       convertFailed: reason => `The model conversion failed: ${reason} The literal conversion stays; try again with “Convert with the model”.`,
       checkHeading: "Word check against the original",
