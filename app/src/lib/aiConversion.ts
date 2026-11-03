@@ -52,7 +52,7 @@ ${PROHIBITION}
 Neočakávaj žiadnu štruktúru vopred — každý dokument je iný. Opíš to, čo v ňom naozaj je:
 - úrovne členenia a ako sú v dokumente označené (doslovne, s príkladom z dokumentu) a ktorá úroveň je nadradená ktorej;
 - tabuľky: na ktorých stranách, či sú textom alebo obrázkom, ich stĺpce;
-- obrázky: na ktorých stranách a čo je na nich (text, tabuľka, schéma, logo, podpis);
+- obrázky: na ktorých stranách a čo je na nich (text, tabuľka, schéma, logo, podpis); tabuľku na obrázku uveď aj medzi tabuľkami, s jej stĺpcami;
 - hlavičky, päty, čísla strán a iné opakujúce sa prvky, ktoré do textu nepatria;
 - zvláštnosti sadzby, ktoré by prevodca mohol pokaziť (stĺpce, zalomené tabuľky, poznámky pod čiarou).
 
@@ -74,7 +74,8 @@ ${PROHIBITION}
 - Odseky, zoznamy a tabuľky vyjadri Markdownom; tabuľku ako tabuľku (| … |) s riadkom hlavičky.
 - Spoj riadky, ktoré rozdelilo zalomenie riadku alebo strany; slovo rozdelené spojovníkom na konci riadku spoj.
 - Hlavičky, päty a čísla strán vynechaj.
-- Text, ktorý je na obrázku (tabuľka, text), prepíš doslova.
+- Tabuľka vložená ako obrázok je tabuľka, nie obrázok: prepíš ju do tabuľky Markdownu (| … |) s riadkom hlavičky, bunku po bunke doslova, ako keby bola textom. Neopisuj ju odsekom „Obrázok v origináli:". Zlúčenú bunku zopakuj v každom riadku či stĺpci, ktorý pokrýva; prázdnu bunku nechaj prázdnu. Tabuľku, ktorá pokračuje na ďalšej strane, spoj do jednej a hlavičku nezopakuj.
+- Iný text, ktorý je na obrázku, prepíš doslova.
 - Logo, pás či iný ozdobný prvok, ktorý sa opakuje v hlavičke alebo päte strán, vynechaj — nie je to obsah.
 - Schému, diagram alebo nákres bez textu opíš v kurzíve odsekom, ktorý začína „Obrázok v origináli:". Napíš, čo zobrazuje a čo je na ňom podstatné: kto alebo čo kde stojí, smer pohybu, rozmery a značky, číslo a názov diagramu, ak ho má. Opis slúži na vyhľadávanie — človek podľa neho schému nájde, preto použi slová, ktorými by sa na situáciu pýtal. Nič, čo na obrázku nie je, nedopĺňaj.
 
