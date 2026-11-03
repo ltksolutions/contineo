@@ -36,6 +36,7 @@ import type { AiConversion } from "@/lib/aiConversionJob"
 import { conversionNote } from "@/lib/conversionNote"
 import ConversionProgress from "@/components/ConversionProgress"
 import { freshConversionCheck, isConverting } from "@/lib/conversionCheckDb"
+import { reviewDifferences } from "@/lib/conversionReview"
 
 export const dynamic = "force-dynamic"
 
@@ -47,6 +48,21 @@ export const dynamic = "force-dynamic"
  */
 function textKey(text: string): string {
   return `${text.length}:${createHash("sha256").update(text).digest("hex").slice(0, 12)}`
+}
+
+/**
+ * Veta okolo rozdielu s vyznačenými slovami (KNIZ-kontrola-slov Q3).
+ * `gone` — slovo z PDF, ktoré v texte chýba, prečiarknuté.
+ */
+function excerpt(before: string, marked: string, after: string, nothing: string, gone = false) {
+  if (!before && !marked && !after) return <span className="quiet">{nothing}</span>
+  return (
+    <>
+      {before ? <>…{before} </> : null}
+      {marked ? <mark className={gone ? "diff-mark diff-mark--gone" : "diff-mark"}>{marked}</mark> : null}
+      {after ? <> {after}…</> : null}
+    </>
+  )
 }
 
 export default async function EditorPage({
@@ -83,7 +99,10 @@ export default async function EditorPage({
   const job = raw?.aiConversion ?? null
   const converting = isConverting(job)
   const check = converting ? null : await freshConversionCheck(ctx.tenant.companyCode, documentId)
-  const openMinor = check ? check.open.filter(x => x.minor).length : 0
+  const review = reviewDifferences(check?.open ?? [])
+  const checkPdfUrl = check ? `/api/library/file/${encodeURIComponent(check.check.pdfFileId)}` : ""
+  /* Kotvy riadkov pre „Opraviť v texte" — bez JavaScriptu posunú aspoň k editoru (Q5). */
+  const checkLines = [...new Set(review.pages.flatMap(g => g.items.map(i => i.toLine ?? i.line)))]
   /*
    * Uloženie zastavené strážcom zápisu (`markupGuard.ts`, 16. 10. 2026).
    * Zoznam sa počíta znova z uloženého textu, nie z adresy — keby sa koncept
@@ -158,62 +177,88 @@ export default async function EditorPage({
       ) : null}
 
       {check ? (
-        <section id="check" className="card" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.checkHeading}</h2>
-          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-            {t.checkSummary(check.check.pdfWords, check.check.sameWords, check.open.length, openMinor)}
-          </p>
-          {check.open.length ? (
-            <>
+        <div id="check" style={{ display: "grid", gap: "var(--gap)", margin: "0 0 18px" }}>
+          <section className="card" style={{ padding: 18, display: "grid", gap: 12 }}>
+            <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.checkHeading}</h2>
+            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+              {t.checkSummary(check.check.pdfWords, check.check.sameWords, review.pages.reduce((n, g) => n + g.items.length, 0), review.minor.length)}
+            </p>
+            {check.open.length ? (
               <div className="lnote lnote--warn">
                 <span className="lnote-mark" aria-hidden="true">!</span>
                 <span className="lnote-text">{t.checkBlocking}</span>
               </div>
-              {/*
-                Zoznam sa potvrdzuje po označení, nie kliknutím na každú
-                nezhodu zvlášť — pri 150 nezhodách by to bolo 150 obnovení
-                stránky. Drobné (len interpunkcia) idú naraz samostatným
-                tlačidlom; obsahové sa označujú vedome.
-              */}
-              <form action={confirmDifferencesAction} style={{ display: "grid", gap: 10 }}>
-                <input type="hidden" name="documentId" value={documentId} />
-                <div className="card form-group-body form-group-body--rows" style={{ maxHeight: "60vh", overflow: "auto" }}>
-                  <div className="form-list">
-                    {check.open.map(x => (
-                      <label key={x.id} className="form-row select-row">
-                        <input type="checkbox" name="ids" value={x.id} />
-                        <span className="form-row-main">
-                          <span>
-                            <span className="quiet">{t.checkPdf}: </span><code>{x.pdfText || t.checkNothing}</code>
-                            {" · "}
-                            <span className="quiet">{t.checkText}: </span><code>{x.mdText || t.checkNothing}</code>
-                          </span>
-                          <span className="form-row-sub">
-                            {x.before} … {x.after}
-                            {" · "}{t.checkPages(x.pages.join(", "))}{" · "}{t.checkLine(x.line)}
-                            {x.nearImage ? <>{" · "}{t.checkImage}</> : null}
-                            {x.minor ? <>{" · "}{t.checkMinor}</> : null}
-                          </span>
-                        </span>
-                      </label>
-                    ))}
+            ) : (
+              <div className="lnote" role="status">
+                <span className="lnote-mark" aria-hidden="true">✓</span>
+                <span className="lnote-text">{t.checkAllConfirmed(check.confirmed.length)}</span>
+              </div>
+            )}
+          </section>
+          {/*
+            Jeden formulár, tlačidlo nesie odtlačky toho, čo potvrdzuje
+            (KNIZ-kontrola-slov Q2): položka, strana, alebo interpunkcia.
+            Okienka zmizli — v dlhom zozname sa zaškrtávali naslepo.
+          */}
+          {check.open.length ? (
+            <form action={confirmDifferencesAction} className="check-groups">
+              <input type="hidden" name="documentId" value={documentId} />
+              {review.pages.map(g => (
+                <section key={g.from} className="card check-page">
+                  <div className="check-page-head">
+                    <h3>{g.from ? t.checkPage(g.from, g.to) : t.checkPageUnknown}</h3>
+                    {g.from ? (
+                      <a className="button button--quiet button--sm" href={`${checkPdfUrl}#page=${g.from}`} target="_blank" rel="noreferrer">
+                        {t.checkOpenPdf(g.from)} ↗
+                      </a>
+                    ) : null}
+                    {g.items.length > 1 ? (
+                      <SubmitButton className="button button--quiet button--sm" name="ids" value={g.items.flatMap(i => i.ids).join(" ")}>
+                        {t.checkConfirmPage(g.items.length)}
+                      </SubmitButton>
+                    ) : null}
                   </div>
-                </div>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <SubmitButton className="button button--quiet">{t.checkConfirmSelected}</SubmitButton>
-                  {openMinor ? (
-                    <SubmitButton className="button button--quiet" name="scope" value="minor">{t.checkConfirmMinor(openMinor)}</SubmitButton>
-                  ) : null}
-                </div>
-              </form>
-            </>
-          ) : (
-            <div className="lnote" role="status">
-              <span className="lnote-mark" aria-hidden="true">✓</span>
-              <span className="lnote-text">{t.checkAllConfirmed(check.confirmed.length)}</span>
-            </div>
-          )}
-        </section>
+                  {g.items.map(item => (
+                    <div key={item.ids.join(" ")} className="check-item">
+                      <div className="check-item-head">
+                        <b>{t.checkKind[item.kind]}</b>
+                        <span className="quiet">{item.toLine ? t.checkMovedLines(item.line, item.toLine) : t.checkLine(item.line)}</span>
+                      </div>
+                      <dl className="check-compare">
+                        {item.kind !== "image" ? (
+                          <>
+                            <dt>{t.checkPdf}</dt>
+                            <dd>{item.kind === "added" ? excerpt(item.before, "", item.after, t.checkNothing) : excerpt(item.before, item.pdfText, item.after, t.checkNothing)}</dd>
+                          </>
+                        ) : null}
+                        <dt>{t.checkText}</dt>
+                        <dd>
+                          {item.kind === "missing" ? excerpt(item.before, item.pdfText, item.after, t.checkNothing, true)
+                            : item.kind === "moved" ? excerpt(item.movedBefore ?? "", item.mdText, item.movedAfter ?? "", t.checkNothing)
+                            : excerpt(item.before, item.mdText, item.after, t.checkNothing)}
+                        </dd>
+                      </dl>
+                      <p className="check-item-note quiet">{t.checkExplain[item.kind]}</p>
+                      <div className="check-actions">
+                        <SubmitButton className="button button--quiet button--sm" name="ids" value={item.ids.join(" ")}>{t.checkOk}</SubmitButton>
+                        <a className="button button--quiet button--sm" href={`#line-${item.toLine ?? item.line}`}>{t.checkFix}</a>
+                      </div>
+                    </div>
+                  ))}
+                </section>
+              ))}
+              {review.minor.length ? (
+                <section className="card check-minor">
+                  <div>
+                    <b>{t.checkMinorHeading(review.minor.length)}</b>
+                    <p className="quiet" style={{ margin: "2px 0 0", fontSize: "var(--fs-small)" }}>{t.checkMinorNote}</p>
+                  </div>
+                  <SubmitButton className="button button--quiet button--sm" name="scope" value="minor">{t.checkConfirmMinor(review.minor.length)}</SubmitButton>
+                </section>
+              ) : null}
+            </form>
+          ) : null}
+        </div>
       ) : null}
 
       {markup.length ? (
@@ -321,6 +366,7 @@ export default async function EditorPage({
               S odtlačkom v `key` sa editor znovu postaví práve vtedy, keď
               sa zmenil text na serveri — a pri obyčajnom prekreslení nie.
             */}
+            {checkLines.map(n => <span key={n} id={`line-${n}`} aria-hidden="true" />)}
             <TextEditor
               key={textKey(d.editableText)}
               name="markdown"

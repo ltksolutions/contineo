@@ -96,6 +96,14 @@ sú len doplnok. Texty sú po slovensky.
 - Hláška v obsahu: `div.lnote` (+ `.lnote--warn` / `.lnote--bad`) > `span.lnote-mark` („!", „✓")
   + `span.lnote-text`. Nie `.notice` (to je modálne okno).
   S akciou: `.lnote.lnote--action` + `button.button.button--sm` za textom (zalomí sa pod text).
+- Kontrola slov s originálom (od 3. 11., KNIZ-kontrola-slov): `.check-groups` > `section.card.check-page`
+  na každú stranu PDF — `.check-page-head` (`h3` „Strana 11", tiché „Otvoriť PDF na strane 11 ↗",
+  pri viacerých položkách tiché „Potvrdiť stranu (n)") a riadky `.check-item` > `.check-item-head`
+  (`b` druh: Presunuté / Iné slovo / Chýba v texte / Navyše v texte / Opis obrázka + `.quiet` riadok),
+  `dl.check-compare` (`dt` „V PDF" / „V texte", `dd` veta), `p.check-item-note.quiet` (čo skontrolovať)
+  a `.check-actions` s tichými `.button--sm` „Text je správny" a „Opraviť v texte". Slová, ktoré sa líšia,
+  sú `mark.diff-mark` (podčiarknuté na `--warn-bg`); chýbajúce `.diff-mark--gone` (prečiarknuté).
+  Interpunkcia naraz: `section.card.check-minor`. Žiadne zaškrtávacie okienka.
 - Krátky výber nad obrazovkou (popover): `<details>` > `summary.button.button--quiet.button--sm`
   s hodnotou („Zdroje: Knižnica ▾") + `form.filter-sheet-body.ask-scope-pop` s `.sheet-h`,
   riadkami `.form-row.select-row` a jediným plným `button.filter-sheet-apply`. Pod 640 px

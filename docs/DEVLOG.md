@@ -10,6 +10,17 @@
 
 ---
 
+## 2026-11-03 — Kontrola slov, ktorej nikto nerozumel
+
+Pri rozpise ÚLK prešiel prevod modelom bez chyby, ale kontrola slov ukázala
+27 riadkov typu „V PDF: `Bratislava` · V texte: nič" a Ján nevedel, čo má
+potvrdiť. Väčšina boli presuny buniek tabuľky na stranách 11–12 — tie isté
+slová raz ako „chýba", raz ako „navyše". Stroj to vedel, obrazovka to nepovedala.
+
+Najprv návrh v artefakte *Design* (KNIZ-kontrola-slov), potom kód. Párovanie
+presunov je čisto zobrazovacie — potvrdzuje sa ďalej po odtlačkoch nezhôd,
+takže uložené potvrdenia a brána schválenia sa nemenia.
+
 ## 2026-11-01 — Tlačidlo prepisu skenu sľubovalo, čo akcia nesplní
 
 Pri hľadaní dokumentu na overenie Sonnetu 5.5 vyšlo najavo, že editor textu

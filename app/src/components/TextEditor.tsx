@@ -111,6 +111,32 @@ export default function TextEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /*
+   * „Opraviť v texte" pri kontrole slov vedie na `#line-N` (KNIZ-kontrola-slov
+   * Q5). Riadok sa označí v režime Markdown — vo vizuálnom riadky Markdownu
+   * nemajú zodpovedajúce miesto.
+   */
+  useEffect(() => {
+    if (!ready || compact) return
+    const go = () => {
+      const m = /^#line-(\d+)$/.exec(window.location.hash)
+      const e = editor.current
+      if (!m || !e) return
+      const line = Number(m[1])
+      if (e.isWysiwygMode()) e.changeMode("markdown")
+      try {
+        e.setSelection([line, 1], [line + 1, 1])
+      } catch {
+        // Riadok za koncom textu (text sa medzitým skrátil) — stačí posunúť k editoru.
+      }
+      wrap.current?.scrollIntoView({ block: "start" })
+      e.focus()
+    }
+    go()
+    window.addEventListener("hashchange", go)
+    return () => window.removeEventListener("hashchange", go)
+  }, [ready, compact])
+
   return (
     <div className="editor-wrap">
       <input type="hidden" name={name} value={value} />

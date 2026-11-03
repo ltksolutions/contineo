@@ -7415,6 +7415,26 @@ span.domain-end { font-size: 12.5px; }
 .markup-list li { display: grid; gap: 3px; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: var(--fs-small); }
 .markup-list li:last-child { border-bottom: 0; }
 .markup-list code { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Kontrola slov s originálom (KNIZ-kontrola-slov, Ján 3. 11. 2026): rozdiely
+   zoskupené podľa strany PDF, každá položka povie, čo sa stalo, a má vlastné
+   potvrdenie. `.diff-mark` vyznačí slová, ktoré sa líšia — podčiarknutie nesie
+   rozdiel aj bez farby (WCAG 1.4.1); `--gone` je slovo z PDF, ktoré v texte chýba. */
+.check-groups { display: grid; gap: var(--gap); }
+.check-page { padding: 0; overflow: hidden; }
+.check-page-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px var(--card-pad); border-bottom: 1px solid var(--line); }
+.check-page-head h3 { margin: 0; font-size: var(--fs-lead); flex: 1 1 auto; }
+.check-item { display: grid; gap: 8px; padding: 14px var(--card-pad); border-bottom: 1px solid var(--line); }
+.check-item:last-child { border-bottom: 0; }
+.check-item-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: var(--fs-small); }
+.check-item-note { margin: 0; font-size: var(--fs-small); }
+.check-compare { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; align-items: baseline; margin: 0; }
+.check-compare dt { font-size: var(--fs-micro); color: var(--muted); }
+.check-compare dd { margin: 0; overflow-wrap: anywhere; }
+.check-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.check-minor { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px var(--card-pad); }
+.check-minor > div { flex: 1 1 280px; min-width: 0; }
+.diff-mark { background: var(--warn-bg); color: var(--ink); text-decoration: underline; text-decoration-color: var(--warn-fg); text-decoration-thickness: 2px; text-underline-offset: 3px; border-radius: 3px; padding: 0 2px; }
+.diff-mark--gone { text-decoration-line: line-through; }
 .parts { padding: 0; overflow: hidden; }
 .parts-head { display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--line); }
 .parts-head h2 { font-size: var(--fs-section); margin: 0; }

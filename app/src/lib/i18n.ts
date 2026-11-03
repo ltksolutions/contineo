@@ -4316,17 +4316,24 @@ interface Dictionary {
       convertRefresh: string
       convertFailed: (reason: string) => string
       checkHeading: string
-      checkSummary: (pdfWords: number, same: number, open: number, minor: number) => string
+      checkSummary: (pdfWords: number, same: number, places: number, minor: number) => string
       checkBlocking: string
       checkAllConfirmed: (n: number) => string
       checkPdf: string
       checkText: string
       checkNothing: string
-      checkPages: (pages: string) => string
+      checkPage: (from: number, to: number) => string
+      checkPageUnknown: string
+      checkOpenPdf: (page: number) => string
+      checkConfirmPage: (n: number) => string
       checkLine: (line: number) => string
-      checkImage: string
-      checkMinor: string
-      checkConfirmSelected: string
+      checkMovedLines: (from: number, to: number) => string
+      checkKind: Record<"moved" | "changed" | "missing" | "added" | "image", string>
+      checkExplain: Record<"moved" | "changed" | "missing" | "added" | "image", string>
+      checkOk: string
+      checkFix: string
+      checkMinorHeading: (n: number) => string
+      checkMinorNote: string
       checkConfirmMinor: (n: number) => string
     }
     /** Hlásenia serverových akcií — chodia späť cez `?msg=`. */
@@ -9839,18 +9846,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertRefresh: "Obnoviť",
       convertFailed: reason => `Prevod modelom sa nepodaril: ${reason} Ostáva doslovný prevod; znova to skúsiš tlačidlom „Previesť modelom“.`,
       checkHeading: "Kontrola slov s originálom",
-      checkSummary: (pdfWords, same, open, minor) => `Z ${pdfWords} slov PDF sedí ${same}. Nepotvrdené nezhody: ${open}, z toho len v interpunkcii ${minor}.`,
-      checkBlocking: "Koncept nejde na schválenie, kým nepotvrdíš každú nezhodu. Porovnaj ju s originálom vľavo; keď je text nesprávny, oprav ho v editore — po uložení sa kontrola prepočíta.",
-      checkAllConfirmed: n => `Všetky nezhody s originálom sú potvrdené (${n}).`,
+      checkSummary: (pdfWords, same, places, minor) => `Z ${pdfWords} slov PDF je v texte rovnako ${same}. Miesta na kontrolu: ${places}, rozdiely len v interpunkcii: ${minor}.`,
+      checkBlocking: "Text sme porovnali s PDF slovo po slove. Nižšie sú miesta, kde sa líšia. Pri každom sa pozri do PDF: ak je text správne, potvrď ho; ak nie, oprav ho v editore — po uložení sa kontrola prepočíta. Kým nie je všetko potvrdené, koncept nejde na schválenie.",
+      checkAllConfirmed: n => `Všetky rozdiely s originálom sú potvrdené (${n}). Koncept môže ísť na schválenie.`,
       checkPdf: "V PDF",
       checkText: "V texte",
       checkNothing: "nič",
-      checkPages: pages => `strana ${pages}`,
+      checkPage: (from, to) => from === to ? `Strana ${from}` : `Strana ${from}–${to}`,
+      checkPageUnknown: "Strana neurčená",
+      checkOpenPdf: page => `Otvoriť PDF na strane ${page}`,
+      checkConfirmPage: n => `Potvrdiť stranu (${n})`,
       checkLine: line => `riadok ${line}`,
-      checkImage: "pri obrázku — mohol to byť prepis z neho",
-      checkMinor: "len interpunkcia",
-      checkConfirmSelected: "Potvrdiť označené",
-      checkConfirmMinor: n => `Potvrdiť interpunkčné (${n})`,
+      checkMovedLines: (from, to) => `riadok ${from} → ${to}`,
+      checkKind: { moved: "Presunuté", changed: "Iné slovo", missing: "Chýba v texte", added: "Navyše v texte", image: "Opis obrázka" },
+      checkExplain: {
+        moved: "Rovnaké slová sú v texte na inom mieste — väčšinou iné poradie buniek v tabuľke. Skontroluj, či údaje v tabuľke patria tomu istému riadku ako v PDF.",
+        changed: "Na tomto mieste je v texte iné slovo než v PDF.",
+        missing: "V PDF je, v texte nie.",
+        added: "V texte je, v PDF nie — model mohol niečo doplniť.",
+        image: "Text pri obrázku, ktorý v PDF nie je ako text — model ho opísal alebo prepísal z obrázka, preto ho stroj neoverí. Sedí s tým, čo je na obrázku?",
+      },
+      checkOk: "Text je správny",
+      checkFix: "Opraviť v texte",
+      checkMinorHeading: n => `Len interpunkcia · ${n}`,
+      checkMinorNote: "Čiarka, dvojbodka alebo bodka navyše či chýba — slová sú rovnaké.",
+      checkConfirmMinor: n => `Potvrdiť interpunkciu (${n})`,
     },
     actions: {
       converted: "Prevedené. Prečítaj text a porovnaj ho s originálom.",
@@ -15308,18 +15328,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertRefresh: "Obnovit",
       convertFailed: reason => `Převod modelem se nepodařil: ${reason} Zůstává doslovný převod; znovu to zkusíš tlačítkem „Převést modelem“.`,
       checkHeading: "Kontrola slov s originálem",
-      checkSummary: (pdfWords, same, open, minor) => `Z ${pdfWords} slov PDF sedí ${same}. Nepotvrzené neshody: ${open}, z toho jen v interpunkci ${minor}.`,
-      checkBlocking: "Koncept nejde ke schválení, dokud nepotvrdíš každou neshodu. Porovnej ji s originálem vlevo; když je text nesprávný, oprav ho v editoru — po uložení se kontrola přepočítá.",
-      checkAllConfirmed: n => `Všechny neshody s originálem jsou potvrzené (${n}).`,
+      checkSummary: (pdfWords, same, places, minor) => `Z ${pdfWords} slov PDF je v textu stejně ${same}. Místa ke kontrole: ${places}, rozdíly jen v interpunkci: ${minor}.`,
+      checkBlocking: "Text jsme porovnali s PDF slovo po slově. Níže jsou místa, kde se liší. U každého se podívej do PDF: je-li text správně, potvrď ho; pokud ne, oprav ho v editoru — po uložení se kontrola přepočítá. Dokud není vše potvrzeno, koncept nejde ke schválení.",
+      checkAllConfirmed: n => `Všechny rozdíly s originálem jsou potvrzené (${n}). Koncept může jít ke schválení.`,
       checkPdf: "V PDF",
       checkText: "V textu",
       checkNothing: "nic",
-      checkPages: pages => `strana ${pages}`,
+      checkPage: (from, to) => from === to ? `Strana ${from}` : `Strana ${from}–${to}`,
+      checkPageUnknown: "Strana neurčena",
+      checkOpenPdf: page => `Otevřít PDF na straně ${page}`,
+      checkConfirmPage: n => `Potvrdit stranu (${n})`,
       checkLine: line => `řádek ${line}`,
-      checkImage: "u obrázku — mohl to být přepis z něj",
-      checkMinor: "jen interpunkce",
-      checkConfirmSelected: "Potvrdit označené",
-      checkConfirmMinor: n => `Potvrdit interpunkční (${n})`,
+      checkMovedLines: (from, to) => `řádek ${from} → ${to}`,
+      checkKind: { moved: "Přesunuto", changed: "Jiné slovo", missing: "Chybí v textu", added: "Navíc v textu", image: "Popis obrázku" },
+      checkExplain: {
+        moved: "Stejná slova jsou v textu na jiném místě — většinou jiné pořadí buněk v tabulce. Zkontroluj, zda údaje v tabulce patří ke stejnému řádku jako v PDF.",
+        changed: "Na tomto místě je v textu jiné slovo než v PDF.",
+        missing: "V PDF je, v textu ne.",
+        added: "V textu je, v PDF ne — model mohl něco doplnit.",
+        image: "Text u obrázku, který v PDF není jako text — model ho popsal nebo přepsal z obrázku, proto ho stroj neověří. Odpovídá tomu, co je na obrázku?",
+      },
+      checkOk: "Text je správně",
+      checkFix: "Opravit v textu",
+      checkMinorHeading: n => `Jen interpunkce · ${n}`,
+      checkMinorNote: "Čárka, dvojtečka nebo tečka navíc či chybí — slova jsou stejná.",
+      checkConfirmMinor: n => `Potvrdit interpunkci (${n})`,
     },
     actions: {
       converted: "Převedeno. Přečti text a porovnej ho s originálem.",
@@ -20764,17 +20797,30 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertRefresh: "Refresh",
       convertFailed: reason => `The model conversion failed: ${reason} The literal conversion stays; try again with “Convert with the model”.`,
       checkHeading: "Word check against the original",
-      checkSummary: (pdfWords, same, open, minor) => `${same} of ${pdfWords} PDF words match. Unconfirmed differences: ${open}, of which punctuation only: ${minor}.`,
-      checkBlocking: "The draft cannot go for approval until you confirm every difference. Compare it with the original on the left; if the text is wrong, fix it in the editor — the check is recomputed after saving.",
-      checkAllConfirmed: n => `All differences from the original are confirmed (${n}).`,
+      checkSummary: (pdfWords, same, places, minor) => `${same} of ${pdfWords} PDF words are the same in the text. Places to check: ${places}, punctuation-only differences: ${minor}.`,
+      checkBlocking: "The text was compared with the PDF word by word. Below are the places where they differ. For each one, look at the PDF: if the text is right, confirm it; if not, fix it in the editor — the check is recomputed after saving. Until everything is confirmed, the draft cannot go for approval.",
+      checkAllConfirmed: n => `All differences from the original are confirmed (${n}). The draft can go for approval.`,
       checkPdf: "In the PDF",
       checkText: "In the text",
       checkNothing: "nothing",
-      checkPages: pages => `page ${pages}`,
+      checkPage: (from, to) => from === to ? `Page ${from}` : `Pages ${from}–${to}`,
+      checkPageUnknown: "Page unknown",
+      checkOpenPdf: page => `Open the PDF at page ${page}`,
+      checkConfirmPage: n => `Confirm the page (${n})`,
       checkLine: line => `line ${line}`,
-      checkImage: "near an image — may be transcribed from it",
-      checkMinor: "punctuation only",
-      checkConfirmSelected: "Confirm selected",
+      checkMovedLines: (from, to) => `line ${from} → ${to}`,
+      checkKind: { moved: "Moved", changed: "Different word", missing: "Missing from the text", added: "Extra in the text", image: "Image description" },
+      checkExplain: {
+        moved: "The same words are elsewhere in the text — usually a different order of table cells. Check that the table data belong to the same row as in the PDF.",
+        changed: "The text has a different word here than the PDF.",
+        missing: "It is in the PDF but not in the text.",
+        added: "It is in the text but not in the PDF — the model may have added something.",
+        image: "Text next to an image that the PDF does not have as text — the model described or transcribed the image, so it cannot be checked automatically. Does it match the image?",
+      },
+      checkOk: "Text is correct",
+      checkFix: "Fix in the text",
+      checkMinorHeading: n => `Punctuation only · ${n}`,
+      checkMinorNote: "A comma, colon or full stop added or missing — the words are the same.",
       checkConfirmMinor: n => `Confirm punctuation (${n})`,
     },
     actions: {
