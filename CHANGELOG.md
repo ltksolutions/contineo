@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Oprava: „Len uložiť" si pamätá schvaľovateľov (2026-11-03)
+
+- Schvaľovatelia vybraní v príprave sa pri „Len uložiť" zahodili a formulár
+  ukázal znova tých z posledného kola. Výber sa teraz uloží pri koncepte
+  (`draftApprovers`) a pri zverejnení zmizne.
+
 ### Kontrola slov ako sledovanie zmien vo Worde (2026-11-03)
 
 - Každý rozdiel sa ukáže v **celom bloku** z textu — celý odsek, nadpis alebo

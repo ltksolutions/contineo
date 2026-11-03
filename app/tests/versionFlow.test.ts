@@ -3,7 +3,7 @@
  * odvodzuje z konceptu, kôl a pridelení, nikde sa neukladá.
  */
 import { describe, it, expect } from "vitest"
-import { versionFlow, lastPreparationRound, previousApproverIds, rejectedBy } from "../src/lib/versionFlow"
+import { versionFlow, lastPreparationRound, previousApproverIds, draftApproverIds, rejectedBy } from "../src/lib/versionFlow"
 import type { ApprovalRound } from "../src/lib/approvals"
 
 const round = (over: Partial<ApprovalRound>): ApprovalRound => ({
@@ -103,6 +103,24 @@ describe("previousApproverIds", () => {
 
   it("bez kôl nič", () => {
     expect(previousApproverIds([], [{ id: "a", email: "a@sfz.sk" }])).toEqual([])
+  })
+})
+
+describe("draftApproverIds", () => {
+  const people = [{ id: "p-marek", email: "marek@sfz.sk" }, { id: "p-agata", email: "agata@sfz.sk" }]
+  const last = round({ round: 2 })
+
+  it("uložený výber z „Len uložiť“ má prednosť pred posledným kolom", () => {
+    expect(draftApproverIds(["p-agata"], [[last]], people)).toEqual(["p-agata"])
+  })
+
+  it("prázdny uložený výber ostane prázdny, kto vypadol, sa vynechá", () => {
+    expect(draftApproverIds([], [[last]], people)).toEqual([])
+    expect(draftApproverIds(["p-gone", "p-agata"], [[last]], people)).toEqual(["p-agata"])
+  })
+
+  it("bez uloženého výberu ako doteraz z posledného kola", () => {
+    expect(draftApproverIds(null, [[last]], people)).toEqual(previousApproverIds([[last]], people))
   })
 })
 

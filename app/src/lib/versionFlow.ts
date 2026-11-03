@@ -105,6 +105,21 @@ export function previousApproverIds(
     .filter((id): id is string => Boolean(id))
 }
 
+/**
+ * Schvaľovatelia vo formulári prípravy: uložení pri „Len uložiť", inak
+ * z posledného kola (D110). Uložený zoznam má prednosť aj prázdny — človek
+ * ich odobral naschvál. Kto medzitým z výberu vypadol, sa vynechá.
+ */
+export function draftApproverIds(
+  saved: string[] | null | undefined,
+  rounds: Iterable<ApprovalRound[]>,
+  people: { id: string; email: string }[],
+): string[] {
+  if (!saved) return previousApproverIds(rounds, people)
+  const known = new Set(people.map(p => p.id))
+  return saved.filter(id => known.has(id))
+}
+
 /** Kto kolo zamietol; `null` = kolo stiahol predkladateľ. */
 export function rejectedBy(round: ApprovalRound) {
   return round.approvers.find(a => a.decision === "rejected") ?? null
