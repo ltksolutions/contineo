@@ -150,6 +150,8 @@ export interface LibraryDetail extends LibraryRow {
   draftMetaSuggestion?: VersionMeta | null
   /** Zodpovedná osoba určená v príprave (ADR-014, D109). */
   draftResponsible?: ResponsiblePerson | null
+  /** Schvaľovatelia vybraní v príprave (`persons.id`); `null` = ešte neuložení. */
+  draftApprovers?: string[] | null
   /** Právny základ určený v príprave (ADR-023, D139); `null` = ešte nie. */
   draftLegalBasis?: DraftLegalBasis | null
   /** Nový názov dokumentu z prípravy (ADR-015, D112); `null` = bez zmeny. */
@@ -748,6 +750,7 @@ export async function libraryDetail(
       ? normalizeMeta(d.draftMetaSuggestion as never)
       : d.draftMarkdown ? suggestMetaFromMarkdown(String(d.draftMarkdown)) : null,
     draftResponsible: (d.draftResponsible as ResponsiblePerson | null | undefined) ?? null,
+    draftApprovers: Array.isArray(d.draftApprovers) ? (d.draftApprovers as unknown[]).map(String) : null,
     draftLegalBasis: (d.draftLegalBasis as DraftLegalBasis | null | undefined)?.entries?.length
       ? d.draftLegalBasis as DraftLegalBasis
       : null,

@@ -22,7 +22,7 @@ import { libraryContext, isContentManager } from "@/lib/library"
 import { isOrgAdmin } from "@/lib/people"
 import { isRedirect } from "@/lib/redirects"
 import {
-  uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
+  uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftApprovers, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
   reindexVersion, reindexAllVersions, stagePendingText, pendingText, clearPendingText, fixText, loadVersionIntoDraft, saveDocumentParents, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile, fileInfo } from "@/lib/fileStore"
@@ -489,6 +489,11 @@ export async function prepareDraftAction(fd: FormData) {
           params: { documentId: id, documentTitle: await documentTitleFor(self.companyCode, id) },
         })
       }
+    }
+
+    // Schvaľovatelia — len keď ich formulár nesie (bez ľudí na výber nie).
+    if (fieldText(fd, "approversEditable") === "1") {
+      await saveDraftApprovers(self.companyCode, id, fd.getAll("approver").filter(v => typeof v === "string") as string[], self.email)
     }
 
     // Nový názov (ADR-015, D112) — len keď ho formulár nesie (pri zámku nie).

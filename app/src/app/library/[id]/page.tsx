@@ -55,7 +55,7 @@ import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
 import { Fragment, type CSSProperties, type ReactNode } from "react"
 import { textFingerprint } from "@/lib/chunkIdentity"
 import { documentDraftIdentity, metaLocked } from "@/lib/versionMeta"
-import { versionFlow, lastPreparationRound, previousApproverIds, rejectedBy } from "@/lib/versionFlow"
+import { versionFlow, lastPreparationRound, draftApproverIds, rejectedBy } from "@/lib/versionFlow"
 import FlowSteps from "@/components/FlowSteps"
 import PublishSubmit from "@/components/PublishSubmit"
 import { autoVersionLabel } from "@/lib/versionLabel"
@@ -356,7 +356,7 @@ export default async function DocumentDetailPage({
   const approvedRound = [...draftRounds].reverse().find(r => r.outcome === "approved") ?? null
   // Meno namiesto adresy tam, kde kolo nesie len adresu predkladateľa.
   const nameOf = (email: string) => people.find(p => p.email.toLowerCase() === email.toLowerCase())?.fullName ?? email
-  const prefilledApprovers = new Set(previousApproverIds(rounds.values(), approverChoices))
+  const prefilledApprovers = new Set(draftApproverIds(d.draftApprovers, rounds.values(), approverChoices))
   // Kolá sa číslujú na identite konceptu — po výmene PDF začína znova od 1.
   const nextRound = draftRounds.length + 1
   // Publiká na prenos pri zverejnení (krok 3) — všetko, čo mali doterajšie znenia.
@@ -1506,7 +1506,8 @@ export default async function DocumentDetailPage({
                 <div className="card form-group-body form-group-body--rows">
                 {approverChoices.length === 0 ? (
                   <p className="quiet">{t.approvalNoPeople}</p>
-                ) : (
+                ) : (<>
+                  <input type="hidden" name="approversEditable" value="1" />
                   <PeopleSearch
                     people={approverChoices}
                     name="approver"
@@ -1516,7 +1517,7 @@ export default async function DocumentDetailPage({
                     listLabel={tflow.approvers}
                     missing="approvers"
                   />
-                )}
+                </>)}
                 </div>
                 <p className="form-group-foot quiet">{tflow.approversPrefilled}</p>
               </fieldset>

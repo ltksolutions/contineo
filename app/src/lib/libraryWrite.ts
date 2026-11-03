@@ -737,6 +737,28 @@ export async function saveDraftResponsible(
 }
 
 /**
+ * Schvaľovatelia vybraní v príprave, kým sa koncept nepredloží.
+ *
+ * Bez toho „Len uložiť" výber zahodilo a formulár ukázal znova schvaľovateľov
+ * z posledného kola (Ján 3. 11. 2026). Je to rozpracovaný výber, nie dôkaz —
+ * meno v kole sa berie z osoby až pri predložení (D24), preto bez auditu.
+ */
+export async function saveDraftApprovers(
+  companyCode: string,
+  documentId: string,
+  personIds: string[],
+  actor: string,
+  now: Date = new Date(),
+): Promise<void> {
+  const ids = [...new Set(personIds.map(v => v.trim()).filter(Boolean))]
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  await col.updateOne(
+    { documentId, companyCode },
+    { $set: { draftApprovers: ids, updatedAt: now, updatedBy: actor } },
+  )
+}
+
+/**
  * Nový názov dokumentu v príprave nového znenia (ADR-015, D112).
  *
  * Pri platnom znení sa názov **mení len novým znením**: je doslova vo
@@ -1059,7 +1081,7 @@ export async function publish(
       },
       // Príprava sa skončila — zodpovedná osoba aj právny základ sú odteraz
       // pri znení.
-      $unset: { draftResponsible: "", draftTitle: "", draftLegalBasis: "" },
+      $unset: { draftResponsible: "", draftTitle: "", draftLegalBasis: "", draftApprovers: "" },
       $push: {
         versions: {
           versionId,
