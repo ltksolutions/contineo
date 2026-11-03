@@ -36,6 +36,61 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
   do Markdownu a označí riadok.
 - Nové triedy `.check-*` a `.diff-mark` v `globals.css` a `conventions.md`.
 
+### Editor textu: „Prečistiť členenie" preč, odkaz na zapnutie AI (2026-11-03, #540)
+
+- Tlačidlo „Prečistiť členenie" a `tidyStructure.ts` sú preč — pravidlá ČASŤ,
+  hlava, článok pri rozpisoch takmer nič nenašli; PDF dnes prevádza model.
+- Bez kľúča AI karta „Pomoc pri texte" povie, že prevod modelom nie je zapnutý:
+  administrátor dostane odkaz „Nastavenia AI", ostatní vetu, že majú požiadať
+  správcu. Tlačidlá, ktoré by skončili chybou, sa neukazujú.
+
+### Prevod PDF modelom s kontrolou slov (2026-11-03, ADR-046, #536, #538, #539)
+
+- Model po nahratí prevedie PDF s textovou vrstvou: najprv analýza celého
+  dokumentu, potom prevod po častiach (najviac 5 strán), beh na pozadí po
+  krokoch (`/api/cron/conversion`).
+- **Kontrola slov:** každé slovo výsledku sa strojovo porovná s textovou
+  vrstvou PDF. Koncept nejde na schválenie, kým správca obsahu nezhody
+  nepotvrdí alebo neopraví (`approval.conversionUnresolved`).
+- Priebeh krok po kroku bez obnovovania („Krok 6 z 13: model prevádza strany
+  21–25"); zastavená reťaz sa sama postrčí (#538).
+- Kontrola preskakuje HTML značky (`<br>`, `<u>`), úrovne nadpisov sú v celom
+  dokumente jednotné (#539).
+- Spotreba vo výkaze ako „Prevod PDF modelom", upozornenia `converted`
+  a `conversionFailed`.
+
+### Nový druh dokumentu priamo vo formulári (2026-11-02–03, #526, #534, #537)
+
+- Pri nahrávaní, úprave aj importe z konektora a zo Slov-Lexu ponúkne pole
+  **Druh** riadok „+ Pridať druh ‚…'" — len administrátorovi. Druh vznikne
+  v číselníku až pri uložení, podobný názov dostane existujúci druh
+  (`.select-create`, ZAKLAD-novy-druh-pri-nahravani).
+
+### Oprava: značka „len tu" sa dá dostať do číselníka (2026-11-03, #535)
+
+- Značka, ktorú mal dokument mimo číselníka, sa pri úprave nedala pridať —
+  „+ Pridať" sa pri presnej zhode skryl. Teraz ju zapíše do číselníka.
+
+### Rola „Administrátor" (2026-11-02, ADR-045, #527–#529)
+
+- `people-admin` je teraz `admin`, po slovensky „Administrátor": spravuje
+  osoby, oddelenia, číselníky a nastavenia organizácie. Tri osoby v SFZ
+  migrované, starý kľúč z kódu vypadol; audit sa neprepisuje.
+
+### Kľúč dokumentu je UUID (2026-11-02, ADR-043, ADR-044, #524, #525)
+
+- Nový dokument dostane `sfz:<UUID>` namiesto slugu z názvu; formulár kľúč
+  neukazuje ani nepýta.
+- Existujúcich 24 dokumentov migrovaných (4 609 záznamov v 17 kolekciách);
+  staré adresy `/library/<starý>/…` a `/documents/<starý>` presmerujú.
+
+### Povinné pole: chyba pod poľom (2026-11-02, ZAKLAD-chyba-povinneho-pola, #523, #532)
+
+- Nevyplnené povinné pole po odoslaní povie chybu **pod poľom** (`.field-error`),
+  nie v bubline prehliadača; fokus na prvé chybné pole a súhrn pri tlačidle
+  („Chýbajú povinné údaje: Názov, Druh."). `RequiredFieldsGuard` je aj
+  v knižnici design systému.
+
 ### Oprava: tlačidlo „Prepísať zo skenu" len pri pôvodnom PDF (2026-11-01)
 
 - Editor textu ukazoval tlačidlo podľa súboru vľavo, teda najprv podľa PDF

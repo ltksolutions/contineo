@@ -21,6 +21,43 @@ Najprv návrh v artefakte *Design* (KNIZ-kontrola-slov), potom kód. Párovanie
 presunov je čisto zobrazovacie — potvrdzuje sa ďalej po odtlačkoch nezhôd,
 takže uložené potvrdenia a brána schválenia sa nemenia.
 
+**Prvá verzia nestačila (#541, #542).** Zoskupenie podľa strany a presun ako
+jedna položka pomohli, ale pri presunoch v tabuľke Ján stále nevedel
+rozhodnúť: „toto naozaj neviem ako mám rozhodnúť". Prečo: PDF číta zalomenú
+bunku po riadkoch strany, takže telefón vedľa prvého riadku adresy vyzerá ako
+presunutý. Model bunky zložil správne; chyba bola v porovnávanom poradí, nie
+v texte. **#543** — presun v jednom riadku tabuľky nie je na rozhodnutie, ide
+medzi drobnosti s hromadným potvrdením (7 zo 14 položiek ÚLK).
+
+**Druhý raz to isté pri doplnených hlavičkách tabuliek.** Úryvok „…pár slov ·
+`Priezvisko a meno Bydlisko` · pár slov…" nehovoril, že je to hlavička nad
+zoznamom mien, ktorú si Markdown vyžaduje. Ján: ukázať to „ako Microsoft Word
+— zelené verzus červené prečiarknuté", v celom bloku. **#544** — každá položka
+kreslí celý odsek alebo tabuľku (dlhú skrátenú na ±3 riadky) so značkami
+`ins`/`del`. Po nasadení Ján všetko rozhodol: „bolo to čitateľné".
+
+**Čo si odniesť:** stroj vedel, *čo* sa líši, človek potreboval *kde v celku*.
+Pri ďalšom zobrazení rozdielov dvoch textov začať blokom so značkami, nie
+úryvkom. A čo je artefakt textovej vrstvy PDF (poradie buniek, opakovaná
+hlavička po zlome strany, odrážka „o" z Wordu), to človeku na rozhodnutie
+nedávať. Zvyšné nápady sú v `docs/TODO.md`, „Prevod PDF modelom a kontrola
+slov".
+
+Ráno pred tým (#536–#540, iné sessions): prevod PDF modelom s kontrolou slov
+(ADR-046), priebeh bez obnovovania, HTML značky v kontrole (31 → 22 nezhôd na
+ÚLK), „Prečistiť členenie" preč.
+
+## 2026-11-02 — Kľúč dokumentu UUID, rola Administrátor
+
+Slug z dlhého úradného názvu sa usekal a po premenovaní klamal — ADR-043
+(nový dokument UUID) a hneď ADR-044 (prepísať aj existujúce, jednorazová
+výnimka z D24 len pre identifikátor). Migrácia skenovala dáta, nie zoznam polí
+z kódu: 4 609 záznamov v 17 kolekciách; Ján ju spustil, všetkých 24 dokumentov
+má UUID. Rola `people-admin` → `admin` „Administrátor" (ADR-045) v dvoch
+krokoch: najprv kód uznáva obe označenia, po migrácii troch osôb starý kľúč
+vypadol. Pribudol nový druh priamo vo formulári a chyba povinného poľa pod
+poľom (ZAKLAD-chyba-povinneho-pola).
+
 ## 2026-11-01 — Tlačidlo prepisu skenu sľubovalo, čo akcia nesplní
 
 Pri hľadaní dokumentu na overenie Sonnetu 5.5 vyšlo najavo, že editor textu

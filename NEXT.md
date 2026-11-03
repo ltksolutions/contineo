@@ -6,11 +6,11 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-11-01** (prepis PDF na Sonnet 5.5 #518;
-claude.ai projekt „Contineo" zrušený — archív #519, know-how z pamäte do
-`docs/VYVOJ.md` #520). Predtým 30. 10. popoludní (štatistika kanála #510,
-#513, #514; widget pozná predchádzajúce kolá #512, #515; fronta Na posúdenie
-#508, #509, #511). Staršie dni sú v `docs/DEVLOG.md`.
+Posledná aktualizácia: **2026-11-03** (prevod PDF modelom s kontrolou slov
+ADR-046 #536–#544, rozpis ÚLK má všetky nezhody potvrdené; 2. 11. kľúč
+dokumentu UUID ADR-043/044, rola Administrátor ADR-045, nový druh vo
+formulári). Predtým 1. 11. (Sonnet 5.5 #518, `docs/VYVOJ.md` #520). Staršie
+dni sú v `docs/DEVLOG.md`.
 
 ---
 
@@ -49,10 +49,16 @@ potvrdzovanie, trasy a `/dpo` overené naostro. Vzdelávanie (ADR-018) je
 zapnuté, **kurz zatiaľ nikto nedokončil**. Kuriér (ADR-033) je vo fáze 1;
 živý rozhovor dvoch ľudí a ranný súhrn naostro neoverené.
 
+**Prevod PDF modelom** (ADR-046) beží: analýza, prevod po častiach na
+pozadí a **kontrola slov** proti textovej vrstve PDF, ktorá drží koncept pred
+schválením. Prvý ostrý prevod — rozpis ÚLK (53 strán) — má všetky nezhody
+potvrdené (3. 11.); rozdiely sa ukazujú ako sledovanie zmien vo Worde v celom
+bloku (#544). Kľúč dokumentu je UUID (ADR-043, ADR-044 — všetkých 24
+dokumentov migrovaných), rola `admin` „Administrátor" (ADR-045).
+
 **AI a dizajn.** Prehľad spotreby AI (`/organisation/ai/overview`),
-spotreba nesie `channelKey` od 30. 10. Prepis PDF beží na **Sonnet 5.5**
-(#518, Sonnet 4.5 končí 30. 11.); prvý ostrý prepis po nasadení ešte
-neprebehol (`ai_usage`, `purpose: "pdf-rewrite"`). Design system je záväzný (Ján
+spotreba nesie `channelKey` od 30. 10. Prepis skenu beží na **Sonnet 5.5**
+(#518, Sonnet 4.5 končí 30. 11.). Design system je záväzný (Ján
 23. 10.); návrhy obrazoviek vznikajú ako artefakt *Design* (`docs/DESIGN.md`).
 Retencia (ADR-012) beží v režime `report`.
 
@@ -61,7 +67,8 @@ Retencia (ADR-012) beží v režime `report`.
 **Widget v ISSF:** voliteľne vzory otázok kanála. Poslať `/design-sync`
 (pribudli triedy `.xw-*` vrátane `.xw-pill` a `.xw-help`, sekcia
 „Značka v pohybe a zvuku", „Vlákno ticketu" s `.thread-msg` a 30. 10.
-`.stat-tiles` a `.period-nav`).
+`.stat-tiles` a `.period-nav`; od behu 2. 11. pribudli `.check-*`
+a `ins`/`del.diff-mark` kontroly slov).
 
 **Dve overenia k manuálom** (kolo 2 je rozhodnuté a manuály zverejnené):
 pri zápisoch pre laikov (ISSF-05) — **podnet ŠTK poslaný 27. 10., čaká sa
@@ -92,7 +99,7 @@ licencií (Ján v exporte nebol).
 činnostiach prepísať do záznamu zväzu (C2, doplnené o Vzdelávanie
 a pohlavie), DPIA pred pilotom (C3), termín balančného testu (A3, A11).
 
-**Skúšobný poriadok `sfz:test_znenia`** — zmazať, keď kontrola asistenta
+**Skúšobný poriadok (znenia v indexe)**, pred migráciou `sfz:test_znenia` — zmazať, keď kontrola asistenta
 (`npm run versions:questions`) prejde na ostrú normu s viacerými zneniami.
 Skúšobná smernica je zmazaná (2. 10.).
 
@@ -116,14 +123,18 @@ počty v `retention[].helpdesk`).
 
 ## Najbližšie kroky
 
-1. **Fronta Na posúdenie:** posúdiť štyri čakajúce podnety (spokojnosť
+1. **Rozpis ÚLK poslať na schválenie** — kontrola slov už nebráni. Pri
+   najbližšom prevode iného PDF pozrieť, koľko položiek kontroly ostane
+   a či nejde zase o artefakt textovej vrstvy (`docs/TODO.md`, „Prevod PDF
+   modelom a kontrola slov").
+2. **Fronta Na posúdenie:** posúdiť štyri čakajúce podnety (spokojnosť
    kanála je 44 % — 9 × Nesedí za prvý týždeň, stojí za pozretie, na čo
    ľudia reagovali). Od 31. 10. pozrieť v štatistike kanála skutočný podiel
    „nenašlo sa". Staré tickety
    „Fwd:" od kolegov (7) — odpovedať pôvodnému pisateľovi ručne.
    **Poslať podnet legislatíve** (päť bodov); odpoveď ŠTK k ISSF-05
    a overenie s Oddelením vzdelávania trénerov.
-2. **Prejsť naživo** Prehľad, `/library` s prepínačom druhu, jeden dokument
+3. **Prejsť naživo** Prehľad, `/library` s prepínačom druhu, jeden dokument
    a jeden zákon (ADR-041, #450–#452 nasadené bez pohľadu v prehliadači).
    **Kontrola súladu Stanov proti Zákonu o športe:** existujúca kontrola
    „Stanovy SFZ proti zákonu o športe" z 23. 10. má 13 nerozhodnutých
@@ -131,12 +142,12 @@ počty v `retention[].helpdesk`).
    Nočný beh cronu katalógu je overený (žiadny koncept). **Nahrať
    licenčnú normu trénerov** — päť otázok o trénerských licenciách dnes
    nepokryje žiadny dokument.
-3. **Kuriér naostro:** živý rozhovor dvoch ľudí, ranný súhrn v logu
+4. **Kuriér naostro:** živý rozhovor dvoch ľudí, ranný súhrn v logu
    `courier-digest`, prvý oznam oddeleniu.
-4. **Prehľad AI:** zjednotiť meno procesov na pozadí pri zápise spotreby
+5. **Prehľad AI:** zjednotiť meno procesov na pozadí pri zápise spotreby
    (`docs/TODO.md`, „Spotreba AI: jedno meno"). Posuvník `.field-range`
    je v knižnici aj v artefakte design systému (`/design-sync` 25. 10., verzia 10).
-5. **Zdroje hľadania naostro:** jedna otázka so zaškrtnutým Sportnetom
+6. **Zdroje hľadania naostro:** jedna otázka so zaškrtnutým Sportnetom
    z plachty — hlavička „… a zo zdroja Sportnet dokumentácia", oznam po
    zmene výberu bez nového volania.
 
@@ -156,7 +167,7 @@ a to, čo tam nie je.
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline (30. 10.): **0 errors, 39 warnings, 3145 testov v 273 súboroch.**
+Baseline (3. 11.): **0 errors, 40 warnings, 3193 testov v 280 súboroch.**
 Nová chyba alebo nové varovanie je regresia, nie šum.
 
 - Pri zmene rozhrania aspoň jedna snímka na 390 px (tmavá) a 1440 px
