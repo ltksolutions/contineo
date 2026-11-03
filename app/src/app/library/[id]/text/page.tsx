@@ -29,7 +29,9 @@ import SubmitButton from "@/components/SubmitButton"
 import { markupChanges } from "@/lib/markupGuard"
 import { canRewritePdf } from "@/lib/llmRewrite"
 import { AppError } from "@/lib/appError"
-import { conversionProgress, type AiConversion } from "@/lib/aiConversionJob"
+import type { AiConversion } from "@/lib/aiConversionJob"
+import { conversionNote } from "@/lib/conversionNote"
+import ConversionProgress from "@/components/ConversionProgress"
 import { freshConversionCheck, isConverting } from "@/lib/conversionCheckDb"
 
 export const dynamic = "force-dynamic"
@@ -77,7 +79,6 @@ export default async function EditorPage({
    */
   const job = raw?.aiConversion ?? null
   const converting = isConverting(job)
-  const progress = conversionProgress(job)
   const check = converting ? null : await freshConversionCheck(ctx.tenant.companyCode, documentId)
   const openMinor = check ? check.open.filter(x => x.minor).length : 0
   /*
@@ -138,12 +139,8 @@ export default async function EditorPage({
         </ul>
       ) : null}
 
-      {converting && progress ? (
-        <div className="lnote lnote--info lnote--action" role="status" style={{ margin: "0 0 16px" }}>
-          <span className="lnote-mark" aria-hidden="true">i</span>
-          <span className="lnote-text">{t.convertRunning(Math.min(progress.step + 1, progress.steps), progress.steps)}</span>
-          <a className="button button--quiet button--sm" href={`/library/${encodeURIComponent(documentId)}/text`}>{t.convertRefresh}</a>
-        </div>
+      {converting && job ? (
+        <ConversionProgress documentId={documentId} initial={conversionNote(job, language)} refreshLabel={t.convertRefresh} />
       ) : job?.status === "failed" ? (
         <div className="lnote lnote--warn" style={{ margin: "0 0 16px" }}>
           <span className="lnote-mark" aria-hidden="true">!</span>

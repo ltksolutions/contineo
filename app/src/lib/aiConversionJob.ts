@@ -106,11 +106,29 @@ export function analysisWindows(pageCount: number): PagePart[] {
   return out
 }
 
-/** Stav behu pre obrazovku — `null`, keď prevod modelom nebežal. */
-export function conversionProgress(job: AiConversion | null | undefined): { step: number; steps: number } | null {
-  if (!job) return null
-  const steps = job.windows.length + (job.parts.length || 1)
-  return { step: Math.min(steps, job.windowsDone + job.done.length), steps }
+/**
+ * Čo beh práve robí — pre priebežný oznam v editore (Ján 3. 11. 2026:
+ * „priebežne ukazovať info o každom kroku, nečakať na Obnoviť").
+ * Počet krokov je známy až po analýze; dovtedy `steps` je `null`.
+ */
+export type ConversionPhase =
+  | { kind: "analysis"; step: number; steps: number | null; from: number; to: number; pageCount: number }
+  | { kind: "part"; step: number; steps: number; no: number; of: number; from: number; to: number; fromModel: boolean }
+  | { kind: "finishing"; step: number; steps: number }
+
+export function conversionPhase(job: AiConversion): ConversionPhase {
+  const known = job.windowsDone >= job.windows.length
+  const steps = known ? job.windows.length + job.parts.length + 1 : null
+  if (!known) {
+    const w = job.windows[job.windowsDone]
+    return { kind: "analysis", step: job.windowsDone + 1, steps, from: w.from, to: w.to, pageCount: job.pageCount }
+  }
+  const step = job.windows.length + job.done.length + 1
+  if (job.done.length < job.parts.length) {
+    const p = job.parts[job.done.length]
+    return { kind: "part", step, steps: steps!, no: job.done.length + 1, of: job.parts.length, from: p.from, to: p.to, fromModel: job.partsFromModel }
+  }
+  return { kind: "finishing", step: steps!, steps: steps! }
 }
 
 /**
