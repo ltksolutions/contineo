@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Citácia úseku so schémou vedie na stranu schémy (2026-11-03)
+
+- Úsek, ktorý opisuje schému („*Obrázok v origináli: …*"), si pamätá jej
+  stranu (`pageFigure`): prvú stranu s obrázkom obsahu medzi textom pred
+  opisom a za ním. Náhľad, odkaz „Schéma na strane N" aj „Otvoriť PDF"
+  vedú tam, nie na začiatok úseku. Pravidlá futbalu: 26 úsekov so schémou,
+  napr. „10. Bránka" je textom na s. 11, schéma na s. 12.
+- `CHUNKER_VERSION` 4 — knižnicu treba preindexovať.
+
 ### Kontrola prevodu: odrážka „o" a „Ø" nie je chýbajúce slovo (2026-11-03)
 
 - Word kreslí odrážky písmom Wingdings a textová vrstva PDF ich vydá ako

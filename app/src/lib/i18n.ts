@@ -976,6 +976,8 @@ interface Dictionary {
     sourcePages: (from: number, to: number) => string
     /** Samotné PDF na strane citácie, v novom okne. */
     openPdfPage: string
+    /** Citácia úseku, ktorý opisuje schému: odkaz na jej stranu. */
+    figurePage: (page: number) => string
     /** Popis náhľadu strany pre čítačku. */
     pageThumb: (page: number) => string
     /** Spodná plachta citácie na telefóne. */
@@ -6169,6 +6171,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     openInLibrary: "Otvoriť v knižnici",
     sourcePages: (from, to) => (from === to ? `Strana ${from}` : `Strany ${from}–${to}`),
     openPdfPage: "Otvoriť PDF",
+    figurePage: page => `Schéma na strane ${page}`,
     pageThumb: page => `Náhľad strany ${page} — otvoriť dokument na tejto strane`,
     citationOf: (n, total) => `Citácia ${n} z ${total}`,
     prev: "Predošlá",
@@ -11665,6 +11668,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     openInLibrary: "Otevřít v knihovně",
     sourcePages: (from, to) => (from === to ? `Strana ${from}` : `Strany ${from}–${to}`),
     openPdfPage: "Otevřít PDF",
+    figurePage: page => `Schéma na straně ${page}`,
     pageThumb: page => `Náhled strany ${page} — otevřít dokument na této straně`,
     citationOf: (n, total) => `Citace ${n} z ${total}`,
     prev: "Předchozí",
@@ -17151,6 +17155,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     openInLibrary: "Open in library",
     sourcePages: (from, to) => (from === to ? `Page ${from}` : `Pages ${from}–${to}`),
     openPdfPage: "Open PDF",
+    figurePage: page => `Diagram on page ${page}`,
     pageThumb: page => `Preview of page ${page} — open the document at this page`,
     citationOf: (n, total) => `Citation ${n} of ${total}`,
     prev: "Previous",

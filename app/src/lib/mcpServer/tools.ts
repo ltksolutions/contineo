@@ -39,7 +39,7 @@ import { lawActsFor, lawActText, lawActMarkdown } from "./law"
 import type { SearchCaps } from "./access"
 import { logMcpCall } from "./calls"
 import type { McpActor } from "./auth"
-import { documentPageHref } from "../pageLink"
+import { chunkPages, citedPage, documentPageHref } from "../pageLink"
 
 // ── Katalóg ─────────────────────────────────────────────────────────────────
 
@@ -166,7 +166,7 @@ export interface SearchHit {
   source: string
   url: string
   /** Strany PDF znenia, z ktorých úsek je; `url` potom vedie na prvú z nich. */
-  pages?: { from: number; to: number } | null
+  pages?: { from: number; to: number; figure?: number } | null
 }
 
 /**
@@ -176,6 +176,7 @@ export interface SearchHit {
 export function toHit(c: ChunkResult, origin: string): SearchHit {
   const source = c.law ? SLOV_LEX_SOURCE_ID : c.live ? c.live.connectorId : LIBRARY_SOURCE_ID
   const external = c.law?.url ?? (c.live ? c.document?.sourceUrl : undefined)
+  const pages = chunkPages(c)
   return {
     source,
     documentId: c.documentId,
@@ -186,8 +187,8 @@ export function toHit(c: ChunkResult, origin: string): SearchHit {
     versionLabel: c.version?.label ?? null,
     effectiveFrom: day(c.version?.effectiveFrom),
     sourceType: c.sourceType ?? null,
-    url: external || documentUrl(origin, c.documentId, typeof c.pageFrom === "number" ? { page: c.pageFrom, versionId: c.versionId } : undefined),
-    pages: typeof c.pageFrom === "number" ? { from: c.pageFrom, to: c.pageTo ?? c.pageFrom } : null,
+    url: external || documentUrl(origin, c.documentId, pages ? { page: citedPage(pages), versionId: c.versionId } : undefined),
+    pages,
   }
 }
 
@@ -498,7 +499,7 @@ export function registerTools(server: McpServer, actor: McpActor): void {
         // Dokument knižnice na portáli; Legislatíva a konektor majú vlastnú adresu.
         sourceType: s.sourceType ?? null,
         url: s.documentId && !/^(law|live):/.test(s.documentId)
-          ? documentUrl(actor.origin, s.documentId, s.pages ? { page: s.pages.from, versionId: s.versionId } : undefined)
+          ? documentUrl(actor.origin, s.documentId, s.pages ? { page: citedPage(s.pages), versionId: s.versionId } : undefined)
           : s.url ?? null,
         pages: s.pages ?? null,
       }))

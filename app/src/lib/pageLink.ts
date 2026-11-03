@@ -13,7 +13,25 @@
  * schému na inej strane.
  */
 
-export interface SourcePages { from: number; to: number }
+export interface SourcePages {
+  from: number
+  to: number
+  /** Strana schémy, ktorú úsek opisuje (`chunkPages.ts`). */
+  figure?: number
+}
+
+/** Strana, na ktorú citácia vedie: schéma, ak ju úsek opisuje, inak začiatok úseku. */
+export function citedPage(pages: SourcePages): number {
+  return pages.figure ?? pages.from
+}
+
+/** Strany úseku z polí uloženého úseku, alebo `null`, keď ich úsek nemá. */
+export function chunkPages(c: { pageFrom?: number; pageTo?: number; pageFigure?: number }): SourcePages | null {
+  if (typeof c.pageFrom !== "number") return null
+  const pages: SourcePages = { from: c.pageFrom, to: c.pageTo ?? c.pageFrom }
+  if (typeof c.pageFigure === "number") pages.figure = c.pageFigure
+  return pages
+}
 
 const query = (versionId?: string) => (versionId ? `?version=${encodeURIComponent(versionId)}` : "")
 
