@@ -4335,6 +4335,9 @@ interface Dictionary {
       checkMinorHeading: (n: number) => string
       checkMinorNote: string
       checkRowOrderHeading: (n: number) => string
+      checkRowsSkipped: (n: number) => string
+      checkLegendNew: string
+      checkLegendGone: string
       checkRowOrderNote: string
       checkConfirmRowOrder: (n: number) => string
       checkMovedRows: (from: string, to: string) => string
@@ -9875,6 +9878,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkMinorHeading: n => `Len interpunkcia · ${n}`,
       checkMinorNote: "Čiarka, dvojbodka alebo bodka navyše či chýba — slová sú rovnaké.",
       checkRowOrderHeading: n => `Poradie buniek v riadku tabuľky · ${n}`,
+      checkRowsSkipped: n => `… ${n} ${n === 1 ? "ďalší riadok" : n < 5 ? "ďalšie riadky" : "ďalších riadkov"}`,
+      checkLegendNew: "v texte navyše",
+      checkLegendGone: "v PDF, v texte chýba",
       checkRowOrderNote: "PDF číta zalomenú bunku po riadkoch strany, preto mu vyšlo iné poradie. Slová ostali v tom istom riadku tabuľky — nič sa nestratilo ani nepresunulo k inému človeku.",
       checkConfirmRowOrder: n => `Potvrdiť poradie (${n})`,
       checkMovedRows: (from, to) => `V PDF je pri riadku „${from}“, v texte pri riadku „${to}“. Skontroluj v PDF, ku ktorému riadku údaj patrí.`,
@@ -15361,6 +15367,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkMinorHeading: n => `Jen interpunkce · ${n}`,
       checkMinorNote: "Čárka, dvojtečka nebo tečka navíc či chybí — slova jsou stejná.",
       checkRowOrderHeading: n => `Pořadí buněk v řádku tabulky · ${n}`,
+      checkRowsSkipped: n => `… ${n} ${n === 1 ? "další řádek" : n < 5 ? "další řádky" : "dalších řádků"}`,
+      checkLegendNew: "v textu navíc",
+      checkLegendGone: "v PDF, v textu chybí",
       checkRowOrderNote: "PDF čte zalomenou buňku po řádcích strany, proto mu vyšlo jiné pořadí. Slova zůstala ve stejném řádku tabulky — nic se neztratilo ani nepřesunulo k jinému člověku.",
       checkConfirmRowOrder: n => `Potvrdit pořadí (${n})`,
       checkMovedRows: (from, to) => `V PDF je u řádku „${from}“, v textu u řádku „${to}“. Zkontroluj v PDF, ke kterému řádku údaj patří.`,
@@ -20834,6 +20843,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkMinorHeading: n => `Punctuation only · ${n}`,
       checkMinorNote: "A comma, colon or full stop added or missing — the words are the same.",
       checkRowOrderHeading: n => `Cell order within a table row · ${n}`,
+      checkRowsSkipped: n => `… ${n} more ${n === 1 ? "row" : "rows"}`,
+      checkLegendNew: "extra in the text",
+      checkLegendGone: "in the PDF, missing from the text",
       checkRowOrderNote: "The PDF reads a wrapped cell line by line across the page, so its order differs. The words stayed in the same table row — nothing was lost or moved to another person.",
       checkConfirmRowOrder: n => `Confirm the order (${n})`,
       checkMovedRows: (from, to) => `In the PDF it is in the row “${from}”, in the text in the row “${to}”. Check in the PDF which row it belongs to.`,
