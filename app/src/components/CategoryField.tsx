@@ -17,6 +17,9 @@
  * tam nepovinný (prvá voľba „— neurčené —"), predvyplnený súčasným
  * a nový vzniká pri „Uložiť údaje" — `saveDocumentMetadataAction` volá ten
  * istý `categoryFromForm`.
+ *
+ * Import z konektora a zo Slov-Lexu (3. 11. 2026) majú vlastné tlačidlo
+ * a predvolený druh — `initial` a `submitLabel`.
  */
 
 import { useState } from "react"
@@ -30,12 +33,18 @@ export default function CategoryField({
   canCreate,
   language,
   editing,
+  initial,
+  submitLabel,
 }: {
   options: SelectOption[]
   canCreate: boolean
   language: UiLanguage
   /** Úprava existujúceho dokumentu: súčasný druh a popis voľby „neurčené". */
   editing?: { initial: string; unsetLabel: string }
+  /** Predvolený druh, keď nejde o úpravu. */
+  initial?: string
+  /** Popis tlačidla, ktorým formulár odchádza — do nápovedy pri novom druhu. */
+  submitLabel?: string
 }) {
   const d = dictionary(language)
   const t = d.library.upload
@@ -54,7 +63,7 @@ export default function CategoryField({
           searchable
           fieldLabel={tl.category}
           options={editing ? [{ value: "", label: editing.unsetLabel }, ...options] : options}
-          initial={editing?.initial}
+          initial={editing?.initial ?? initial}
           emptyText={canCreate ? undefined : t.categoryNoRight}
           onCreate={canCreate ? setFresh : undefined}
           createLabel={t.categoryCreate("{text}")}
@@ -70,7 +79,7 @@ export default function CategoryField({
       <span className="field-label">{tl.category} <span className="quiet">· {t.categoryNewTag}</span></span>
       <input className="field-input" name="categoryNew" required autoFocus
         defaultValue={fresh} aria-label={t.categoryNewLabel} />
-      <span className="quiet field-hint">{editing ? t.categoryNewHintEdit : t.categoryNewHint}</span>
+      <span className="quiet field-hint">{editing ? t.categoryNewHintEdit : submitLabel ? t.categoryNewHintOn(submitLabel) : t.categoryNewHint}</span>
       <p className="field-error"><span className="field-error-mark" aria-hidden="true">!</span>{t.categoryMissing}</p>
       <button type="button" className="button button--quiet button--sm category-back" onClick={() => setFresh(null)}>
         {t.categoryPickExisting}

@@ -13,6 +13,8 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import Notice from "@/components/Notice"
 import Select from "@/components/Select"
+import CategoryField from "@/components/CategoryField"
+import { isOrgAdmin } from "@/lib/people"
 import ValueSelect, { withCodelistNote } from "@/components/ValueSelect"
 import SubmitButton from "@/components/SubmitButton"
 import AppShell from "@/components/AppShell"
@@ -50,7 +52,6 @@ export default async function WebImportPage({ searchParams }: { searchParams: Pr
   const tci = dictionary(language).library.connectorImport
   const tu = dictionary(language).library.upload
   const tf = dictionary(language).library.fields
-  const tl = dictionary(language).library.list
   const extras = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)
   const companyCode = ctx.tenant.companyCode
@@ -151,10 +152,9 @@ export default async function WebImportPage({ searchParams }: { searchParams: Pr
                       <span className="field-label">{tci.folder}</span>
                       <Select language={language} name="folderId" fieldLabel={tci.folder} initial="" options={[{ value: "", label: tci.folderNone }, ...folderOptions]} />
                     </div>
-                    <div className="field">
-                      <span className="field-label">{tl.category}</span>
-                      <Select language={language} name="category" fieldLabel={tl.category} initial={defaultCategory} options={categories} />
-                    </div>
+                    {/* Nový druh aj pri importe (ZAKLAD-novy-druh-pri-nahravani, 3. 11. 2026). */}
+                    <CategoryField options={categories} canCreate={isOrgAdmin(ctx.person)}
+                      language={language} initial={defaultCategory} submitLabel={t.import} />
                     <div className="field">
                       <span className="field-label">{tu.accessLevel}</span>
                       {/* Zákon je verejný — každý si ho prečíta aj na Slov-Lexe. */}
