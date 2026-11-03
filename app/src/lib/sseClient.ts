@@ -38,7 +38,7 @@ export interface AnswerSource {
   /** Znenie úseku — PDF strany sa otvára z tohto znenia, nie z dnešného. */
   versionId?: string
   /** Strany PDF, z ktorých úsek je. Chýba pri úsekoch bez PDF a spred 3. 11. 2026. */
-  pages?: { from: number; to: number }
+  pages?: { from: number; to: number; figure?: number }
   accessLevel?: string
   /**
    * Zhoda v troch stupňoch, **relatívne k najlepšiemu zdroju tej istej

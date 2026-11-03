@@ -197,9 +197,10 @@ export function newDocumentKey(): string {
  * na stranu so schémou, nie len na článok. Bez PDF alebo pri chybe sa strany
  * len nezapíšu: zverejnenie ani preindexovanie kvôli nim nesmie zlyhať.
  */
-/** `pageFrom`/`pageTo` úseku, len keď ich poznáme — chýbajúce pole je „nevieme". */
-function pageFields(r: PageRange | null | undefined): { pageFrom?: number; pageTo?: number } {
-  return r ? { pageFrom: r.from, pageTo: r.to } : {}
+/** `pageFrom`/`pageTo` (a `pageFigure`) úseku, len keď ich poznáme — chýbajúce pole je „nevieme". */
+function pageFields(r: PageRange | null | undefined): { pageFrom?: number; pageTo?: number; pageFigure?: number } {
+  if (!r) return {}
+  return r.figure ? { pageFrom: r.from, pageTo: r.to, pageFigure: r.figure } : { pageFrom: r.from, pageTo: r.to }
 }
 
 async function pagesForChunks(companyCode: string, pdf: VersionFile | null | undefined, markdown: string, chunks: Chunk[], title: string): Promise<(PageRange | null)[]> {

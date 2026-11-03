@@ -25,6 +25,7 @@ import type { QueryTime } from "./queryTime"
 import type { PriorTurn } from "./conversationContext"
 import type { TokenCounts } from "./pricing"
 import type { GeneratedCitation, TenantProfile } from "./providers/types"
+import { chunkPages } from "./pageLink"
 
 export interface GenerateOptions {
   query: string
@@ -139,7 +140,7 @@ export function buildSources(chunks: ChunkResult[]) {
     heading:     c.heading,
     versionId:   c.versionId,
     /** Strany PDF — citácia vedie na stranu so schémou, nie len na článok. */
-    pages:       typeof c.pageFrom === "number" ? { from: c.pageFrom, to: c.pageTo ?? c.pageFrom } : undefined,
+    pages:       chunkPages(c) ?? undefined,
     // Prenesené na klienta, aby sa dal overiť únik interného obsahu (eval D9).
     accessLevel: c.accessLevel,
     match:       matchLevel(c.score, best),
