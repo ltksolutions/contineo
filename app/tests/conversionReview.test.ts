@@ -54,3 +54,59 @@ describe("reviewDifferences", () => {
     expect(r.pages[0].items.map(i => i.ids[0])).toEqual(["e", "d"])
   })
 })
+
+describe("presuny v tabuľke", () => {
+  const md = [
+    "| Meno | Adresa | Telefón |",
+    "|---|---|---|",
+    "| MUDr. Pavel Malovič | amb. telových. lekárstva, Lehnice 15 | 0910 703 757 |",
+    "| MUDr. Robert Dinka | Nábr. Gen Svobodu, Bratislava | 0918 462 173 |",
+    "| MUDr. Michal Fečík | Lúčna 57 | 0908 801 549 |",
+  ].join("\n")
+
+  it("presun v jednom riadku tabuľky ide medzi drobnosti s bunkami riadku", () => {
+    const r = reviewDifferences([
+      diff({ id: "a", kind: "missing", pdfText: "0910 703 757", pages: [12], line: 3 }),
+      diff({ id: "b", kind: "added", mdText: "0910 703 757", pages: [12], line: 3 }),
+      diff({ id: "c", kind: "changed", pdfText: "0918 462 173 Bratislava", mdText: "Bratislava | 0918 462 173", pages: [11], line: 4 }),
+    ], md)
+    expect(r.pages).toEqual([])
+    expect(r.rowOrder.map(i => [i.ids, i.cells[0], i.marked])).toEqual([
+      [["a", "b"], "MUDr. Pavel Malovič", 2],
+      [["c"], "MUDr. Robert Dinka", -1],
+    ])
+  })
+
+  it("presun medzi riadkami ostáva položkou s menami riadkov", () => {
+    const r = reviewDifferences([
+      diff({ id: "a", kind: "missing", pdfText: "Bratislava", pages: [11], line: 5 }),
+      diff({ id: "b", kind: "added", mdText: "Bratislava", pages: [11], line: 4 }),
+    ], md)
+    expect(r.rowOrder).toEqual([])
+    expect(r.pages[0].items[0]).toEqual(expect.objectContaining({ kind: "moved", fromRow: "MUDr. Michal Fečík", toRow: "MUDr. Robert Dinka" }))
+  })
+
+  it("mimo tabuľky sa presun nemení", () => {
+    const r = reviewDifferences([
+      diff({ id: "a", kind: "missing", pdfText: "slovo", line: 1 }),
+      diff({ id: "b", kind: "added", mdText: "slovo", line: 1 }),
+    ], "Obyčajný odsek so slovo.")
+    expect(r.rowOrder).toEqual([])
+    expect(r.pages[0].items[0].kind).toBe("moved")
+  })
+})
+
+describe("presun na konci riadku tabuľky", () => {
+  it("medzera na začiatku ďalšieho riadku patrí riadku, ktorým okolie končí", () => {
+    const md = [
+      "| MUDr. Robert Dinka | Nábr. Gen Svobodu, Bratislava | 0918 462 173 |",
+      "| MUDr. Michal Fečík | Lúčna 57 | 0908 801 549 |",
+    ].join("\n")
+    const r = reviewDifferences([
+      diff({ id: "a", kind: "missing", pdfText: "Bratislava", before: "Svobodu, Bratislava 0918 462 173", after: "MUDr. Michal", line: 2 }),
+      diff({ id: "b", kind: "added", mdText: "Bratislava", before: "Nábr. Gen Svobodu,", after: "0918 462 173", line: 1 }),
+    ], md)
+    expect(r.pages).toEqual([])
+    expect(r.rowOrder[0].cells[0]).toBe("MUDr. Robert Dinka")
+  })
+})

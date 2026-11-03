@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola slov: poradie buniek v riadku tabuľky nie je na rozhodnutie (2026-11-03)
+
+- Presun, ktorý ostal v jednom riadku tabuľky (PDF číta zalomenú bunku po
+  riadkoch strany), ide medzi drobnosti s hromadným „Potvrdiť poradie (n)"
+  a ukáže sa ako riadok tabuľky po bunkách. Pri rozpise ÚLK 7 z 14 položiek.
+- Presun medzi riadkami ostáva položkou a povie mená riadkov („V PDF je pri
+  riadku …, v texte pri riadku …").
+
 ### Kontrola slov s originálom: čo sa stalo a čo potvrdzujem (2026-11-03, KNIZ-kontrola-slov)
 
 - Rozdiely textu a PDF sú zoskupené **podľa strany PDF** s odkazom „Otvoriť PDF
