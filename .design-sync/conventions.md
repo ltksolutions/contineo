@@ -170,9 +170,28 @@ Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.
 
 ## Citácia so stranou PDF (od 3. 11.)
 Citácia v odpovedi z úseku, ktorý pozná strany PDF (`pageFrom`, `pageTo`), má pod zdrojom riadok `.answer-citation-page`:
-- vľavo `a.page-thumb` — náhľad strany 72 px na bielom papieri (ako `.pdf-page`), kreslí ho `PdfPageThumb` z toho istého PDF znenia; kým nie je vykreslený, nesie číslo strany. Klik otvorí dokument v portáli na tej strane (`/documents/<id>?version=…#page-N`);
-- vpravo `.answer-citation-links` — „Strana N" / „Strany N–M" (ten istý cieľ) a „Otvoriť PDF" (samotné PDF na strane, nové okno). Odkazy majú terč 44 px.
+- vľavo `a.page-thumb` — náhľad strany 72 px na bielom papieri (ako `.pdf-page`), kreslí ho `PdfPageThumb` z toho istého PDF znenia; kým nie je vykreslený, nesie číslo strany;
+- vpravo `.answer-citation-links` — „Strana N" / „Strany N–M" / „Schéma na strane N". Odkaz má terč 44 px.
+- Náhľad aj odkaz vedú na dokument v portáli na tej strane (`/documents/<id>?version=…#page-N`) — bez JavaScriptu a novou kartou.
+  **Bežný klik otvorí prehliadač strán** (`CitationPage` → `PageViewer`, nižšie). „Otvoriť PDF" v citácii nie je — PDF v novej
+  karte prehliadač často stiahne (Ján 3. 11. 2026).
 - Riadok sa ani pod 640 px nedáva do stĺpca — náhľad má pevnú šírku. Citácia bez strán ostáva s odkazom „Otvoriť v knižnici".
+
+## Prehliadač strán PDF (od 3. 11., `PageViewer`)
+Strana citovaného znenia v plachte nad obrazovkou (SwiftUI `.sheet`) — človek ostáva pri odpovedi. Rovnaký tvar v portáli
+(`.page-viewer*`) aj vo widgete kanála (`.xw-viewer*`, plachta nad rozhovorom):
+- `.page-viewer-scrim` + `div.page-viewer[role=dialog]`: pod 640 px celá obrazovka, od 640 px okno `min(860px, 100vw − 48px)`
+  s odstupom 24 px, rádius 18 px.
+- Hlavička `.page-viewer-head`: `.page-viewer-title` (názov dokumentu tučne, pod ním „Strana N z M" tlmene, `aria-live`)
+  a zavretie `.page-viewer-close` 44 px.
+- Telo `.page-viewer-body` (podklad `--bg`, rolovanie) > `.page-viewer-paper` — biely papier ako `.page-thumb`, najviac 760 px,
+  kým sa strana nevykreslí pomer A4 a `.page-viewer-status` („Načítavam stranu…" / chyba).
+- Lišta `.page-viewer-bar` (dole v plachte — patrí plachte, nie obrazovke): tiché „← Predchádzajúca", „Ďalšia →",
+  vpravo `.page-viewer-bar-end` tiché „Otvoriť v knižnici" a „Stiahnuť PDF" (`?download=1`). Žiadne plné tlačidlo.
+- Esc, závoj alebo „×" zavrie a fokus sa vráti na odkaz; šípky vľavo/vpravo listujú.
+- Portál kreslí stranu pdf.js z toho istého PDF ako náhľad (`sharedDocument`); widget dostane obrázok zo servera
+  (`/api/widget/<kanál>/pdf?…&page=N&size=large`, WebP 1400 px) a počet strán z `&meta=1`. Vo widgete ostáva
+  odkaz „Stiahnuť PDF", nie „Otvoriť v knižnici" — človek z ISSF do knižnice nevidí.
 
 ## Externý widget kanála (od 27. 10., KANAL-widget-riadok-otazky)
 Widget kanála typu *widget* vložený v cudzom systéme (ISSF). Beží v Shadow DOM, preto ho
@@ -206,7 +225,7 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
 - Strana citovaného PDF pri zdroji (od 3. 11., KANAL-widget-strana): `li` v `.xw-src` nesie `.xw-src-page` —
   `a.xw-thumb` (náhľad 72 px ako `.page-thumb`: biely papier, kým sa obrázok nenačíta číslo strany `.xw-thumb-n`,
   po načítaní `.is-drawn`) a odkaz „Strana N" / „Strany N–M" / „Schéma na strane N" farbou organizácie, terč 44 px.
-  Oboje otvára PDF v novej karte na tej strane. Náhľad kreslí server (`/api/widget/<kanál>/pdf?…&page=N`), odkaz je
+  Bežný klik otvorí prehliadač strán `.xw-viewer` (pozri „Prehliadač strán PDF"), s modifikátorom PDF v novej karte. Náhľad kreslí server (`/api/widget/<kanál>/pdf?…&page=N`), odkaz je
   podpísaný kľúčom kanála (`widgetPdfLink.ts`) a len pre verejné znenia — človek z ISSF nie je prihlásený do intranetu.
 - Úvodný tip (`TipKit`, popover tip) pri prvej návšteve: `div.xw-tip[role=status]` pod zatvoreným widgetom (nad ním, keď
   dole nie je miesto: `.is-above`), šípka mieri na úchyt (`--tip-x`). `.xw-tip-head` (`.xw-tip-title` + `.xw-tip-close` 44 px),

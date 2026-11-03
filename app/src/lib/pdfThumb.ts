@@ -28,15 +28,33 @@ export const THUMB_PIXEL_WIDTH = 144
  */
 const STANDARD_FONTS = path.join(process.cwd(), "node_modules", "pdfjs-dist", "standard_fonts") + path.sep
 
-/** PNG strany `page` (od 1), `null`, keď taká strana nie je. */
-export async function renderPdfPageThumb(data: Uint8Array, page: number, width: number = THUMB_PIXEL_WIDTH): Promise<Buffer | null> {
+/** Šírka strany v prehliadači strán vo widgete — plachta má najviac 860 px, kreslí sa s rezervou pre ostré displeje. */
+export const PAGE_PIXEL_WIDTH = 1400
+
+async function openPdf(data: Uint8Array) {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
-  const task = pdfjs.getDocument({
+  return pdfjs.getDocument({
     data,
     useWorkerFetch: false,
     useSystemFonts: false,
     standardFontDataUrl: STANDARD_FONTS,
   })
+}
+
+/**
+ * Obrázok strany `page` (od 1), `null`, keď taká strana nie je.
+ *
+ * Náhľad ide ako PNG (malý a ostrý), celá strana pre prehliadač ako WebP —
+ * strana A4 v 1400 px je v PNG okolo 1 MB, vo WebP desatina a text ostáva
+ * čitateľný.
+ */
+export async function renderPdfPage(
+  data: Uint8Array,
+  page: number,
+  width: number = THUMB_PIXEL_WIDTH,
+  format: "png" | "webp" = "png",
+): Promise<Buffer | null> {
+  const task = await openPdf(data)
   try {
     const doc = await task.promise
     if (!Number.isInteger(page) || page < 1 || page > doc.numPages) return null
@@ -45,7 +63,17 @@ export async function renderPdfPageThumb(data: Uint8Array, page: number, width: 
     const viewport = p.getViewport({ scale })
     const canvas = createCanvas(Math.round(viewport.width), Math.round(viewport.height))
     await p.render({ canvas: canvas as never, canvasContext: canvas.getContext("2d") as never, viewport }).promise
-    return canvas.toBuffer("image/png")
+    return format === "webp" ? canvas.toBuffer("image/webp", 82) : canvas.toBuffer("image/png")
+  } finally {
+    await task.destroy()
+  }
+}
+
+/** Počet strán PDF — prehliadač strán podľa neho vypne „Ďalšia". */
+export async function pdfPageCount(data: Uint8Array): Promise<number> {
+  const task = await openPdf(data)
+  try {
+    return (await task.promise).numPages
   } finally {
     await task.destroy()
   }

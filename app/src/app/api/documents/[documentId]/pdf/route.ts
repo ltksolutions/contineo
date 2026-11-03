@@ -75,7 +75,8 @@ export async function GET(
     headers: {
       "Content-Type": "application/pdf",
       // `Content-Length` zámerne nie — odpoveď má zostať prúdom (D98).
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(file.name)}`,
+      // `?download=1` — „Stiahnuť PDF" v prehliadači strán (PageViewer).
+      "Content-Disposition": `${url.searchParams.get("download") === "1" ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(file.name)}`,
       "Cache-Control": "private, max-age=3600",
       "X-Content-Type-Options": "nosniff",
       ETag: `"${file.sha256}"`,

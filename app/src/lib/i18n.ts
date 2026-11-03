@@ -980,6 +980,13 @@ interface Dictionary {
     figurePage: (page: number) => string
     /** Popis náhľadu strany pre čítačku. */
     pageThumb: (page: number) => string
+    /** Prehliadač strán PDF z citácie (PageViewer, 3. 11. 2026). */
+    viewerPage: (page: number, pages: number) => string
+    viewerLoading: string
+    viewerFailed: string
+    prevPage: string
+    nextPage: string
+    downloadPdf: string
     /** Spodná plachta citácie na telefóne. */
     citationOf: (n: number, total: number) => string
     prev: string
@@ -2885,6 +2892,13 @@ interface Dictionary {
     figurePage: string
     /** Popis náhľadu strany pre čítačku. */
     pageThumb: string
+    /** Prehliadač strán (KANAL-widget-strana); `{page}`, `{pages}`. */
+    viewerPage: string
+    viewerLoading: string
+    viewerFailed: string
+    prevPage: string
+    nextPage: string
+    downloadPdf: string
     helpful: string
     notHelpful: string
     thanks: string
@@ -6179,6 +6193,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     openPdfPage: "Otvoriť PDF",
     figurePage: page => `Schéma na strane ${page}`,
     pageThumb: page => `Náhľad strany ${page} — otvoriť dokument na tejto strane`,
+    viewerPage: (page, pages) => (pages ? `Strana ${page} z ${pages}` : `Strana ${page}`),
+    viewerLoading: "Načítavam stranu…",
+    viewerFailed: "Stranu sa nepodarilo načítať.",
+    prevPage: "Predchádzajúca",
+    nextPage: "Ďalšia",
+    downloadPdf: "Stiahnuť PDF",
     citationOf: (n, total) => `Citácia ${n} z ${total}`,
     prev: "Predošlá",
     next: "Ďalšia",
@@ -8555,6 +8575,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourcePages: "Strany {from}–{to}",
     figurePage: "Schéma na strane {page}",
     pageThumb: "Náhľad strany {page} — otvoriť PDF na tejto strane",
+    viewerPage: "Strana {page} z {pages}",
+    viewerLoading: "Načítavam stranu…",
+    viewerFailed: "Stranu sa nepodarilo načítať.",
+    prevPage: "Predchádzajúca",
+    nextPage: "Ďalšia",
+    downloadPdf: "Stiahnuť PDF",
     helpful: "Pomohlo",
     notHelpful: "Nepomohlo",
     thanks: "Ďakujeme.",
@@ -11680,6 +11706,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     openPdfPage: "Otevřít PDF",
     figurePage: page => `Schéma na straně ${page}`,
     pageThumb: page => `Náhled strany ${page} — otevřít dokument na této straně`,
+    viewerPage: (page, pages) => (pages ? `Strana ${page} z ${pages}` : `Strana ${page}`),
+    viewerLoading: "Načítám stranu…",
+    viewerFailed: "Stranu se nepodařilo načíst.",
+    prevPage: "Předchozí",
+    nextPage: "Další",
+    downloadPdf: "Stáhnout PDF",
     citationOf: (n, total) => `Citace ${n} z ${total}`,
     prev: "Předchozí",
     next: "Další",
@@ -14053,6 +14085,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourcePages: "Strany {from}–{to}",
     figurePage: "Schéma na straně {page}",
     pageThumb: "Náhled strany {page} — otevřít PDF na této straně",
+    viewerPage: "Strana {page} z {pages}",
+    viewerLoading: "Načítám stranu…",
+    viewerFailed: "Stranu se nepodařilo načíst.",
+    prevPage: "Předchozí",
+    nextPage: "Další",
+    downloadPdf: "Stáhnout PDF",
     helpful: "Pomohlo",
     notHelpful: "Nepomohlo",
     thanks: "Děkujeme.",
@@ -17171,6 +17209,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     openPdfPage: "Open PDF",
     figurePage: page => `Diagram on page ${page}`,
     pageThumb: page => `Preview of page ${page} — open the document at this page`,
+    viewerPage: (page, pages) => (pages ? `Page ${page} of ${pages}` : `Page ${page}`),
+    viewerLoading: "Loading the page…",
+    viewerFailed: "The page could not be loaded.",
+    prevPage: "Previous",
+    nextPage: "Next",
+    downloadPdf: "Download PDF",
     citationOf: (n, total) => `Citation ${n} of ${total}`,
     prev: "Previous",
     next: "Next",
@@ -19542,6 +19586,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourcePages: "Pages {from}–{to}",
     figurePage: "Diagram on page {page}",
     pageThumb: "Preview of page {page} — open the PDF at this page",
+    viewerPage: "Page {page} of {pages}",
+    viewerLoading: "Loading the page…",
+    viewerFailed: "The page could not be loaded.",
+    prevPage: "Previous",
+    nextPage: "Next",
+    downloadPdf: "Download PDF",
     helpful: "Helpful",
     notHelpful: "Not helpful",
     thanks: "Thank you.",

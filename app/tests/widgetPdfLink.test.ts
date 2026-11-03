@@ -48,6 +48,8 @@ describe("widgetPageLinks", () => {
     const pdf = new URL(link!.pdf)
     expect(pdf.pathname).toBe("/api/widget/issf/pdf")
     expect(pdf.hash).toBe("#page=12")
+    expect(link!.thumb.startsWith(link!.base + "&")).toBe(true)
+    expect(link!.pdf.startsWith(link!.base + "#")).toBe(true)
     const thumb = new URL(link!.thumb)
     expect(thumb.searchParams.get("page")).toBe("12")
     const exp = Number(thumb.searchParams.get("e"))

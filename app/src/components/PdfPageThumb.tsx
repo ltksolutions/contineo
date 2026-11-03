@@ -16,14 +16,14 @@
  */
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type MouseEvent } from "react"
 import { pageRenderSize } from "@/lib/pdfPages"
 import { sharedDocument } from "./pdfjs"
 
 /** Šírka náhľadu v CSS px — musí sedieť s `.page-thumb` v `globals.css`. */
 const THUMB_WIDTH = 72
 
-export default function PdfPageThumb({ pdf, page, href, label }: {
+export default function PdfPageThumb({ pdf, page, href, label, onClick }: {
   /** Adresa PDF znenia bez kotvy (`pdfHref`). */
   pdf: string
   page: number
@@ -31,6 +31,8 @@ export default function PdfPageThumb({ pdf, page, href, label }: {
   href: string
   /** Popis pre čítačku („Náhľad strany 12"). */
   label: string
+  /** Klik — citácia ním otvára prehliadač strán (`CitationPage`). */
+  onClick?: (e: MouseEvent) => void
 }) {
   const boxRef = useRef<HTMLAnchorElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -83,7 +85,7 @@ export default function PdfPageThumb({ pdf, page, href, label }: {
   }, [near, pdf, page])
 
   return (
-    <Link ref={boxRef} href={href} className={`page-thumb${drawn ? " is-drawn" : ""}`} aria-label={label}>
+    <Link ref={boxRef} href={href} className={`page-thumb${drawn ? " is-drawn" : ""}`} aria-label={label} onClick={onClick}>
       <canvas ref={canvasRef} className="page-thumb-canvas" aria-hidden="true" />
       <span className="page-thumb-n" aria-hidden="true">{page}</span>
     </Link>

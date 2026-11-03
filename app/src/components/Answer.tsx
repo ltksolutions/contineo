@@ -19,8 +19,7 @@ import { answerKicker, scopeFromSources, type KickerScope } from "@/lib/answerKi
 import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18n"
 import { isAutoVersionLabel } from "@/lib/versionLabel"
 import { SkeletonText } from "./Skeleton"
-import PdfPageThumb from "./PdfPageThumb"
-import { citedPage, documentPageHref, pdfHref, pdfPageHref } from "@/lib/pageLink"
+import CitationPage from "./CitationPage"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
 export interface AnswerState {
@@ -269,29 +268,15 @@ export function AnswerAside({
                     {/* Strana PDF (Ján 3. 11. 2026): náhľad a odkaz na stranu
                         znenia, z ktorého úsek je. PDF sa dá otvoriť len so
                         znením (`?version=`), preto bez neho nič. */}
-                    {source?.documentId && !source.live && !source.law && source.pages && source.versionId ? (() => {
-                      // Strana schémy, ak ju úsek opisuje, inak začiatok úseku (`citedPage`).
-                      const page = citedPage(source.pages)
-                      const here = documentPageHref(source.documentId, page, source.versionId)
-                      return (
-                        <div className="answer-citation-page">
-                          <PdfPageThumb
-                            pdf={pdfHref(source.documentId, source.versionId)}
-                            page={page}
-                            href={here}
-                            label={t.pageThumb(page)}
-                          />
-                          <div className="answer-citation-links">
-                            <Link href={here}>
-                              {source.pages.figure ? t.figurePage(page) : t.sourcePages(source.pages.from, source.pages.to)}
-                            </Link>
-                            <a href={pdfPageHref(source.documentId, page, source.versionId)} target="_blank" rel="noopener">
-                              {t.openPdfPage}
-                            </a>
-                          </div>
-                        </div>
-                      )
-                    })() : source?.documentId && !source.live && (
+                    {source?.documentId && !source.live && !source.law && source.pages && source.versionId ? (
+                      <CitationPage
+                        documentId={source.documentId}
+                        versionId={source.versionId}
+                        pages={source.pages}
+                        title={c.documentTitle || source.title}
+                        language={language}
+                      />
+                    ) : source?.documentId && !source.live && (
                       <Link className="answer-citation-open" href={`/documents/${encodeURIComponent(source.documentId)}`}>
                         {t.openInLibrary}
                       </Link>

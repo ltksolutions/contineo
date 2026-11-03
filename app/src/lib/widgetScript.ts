@@ -237,6 +237,20 @@ export const WIDGET_CSS: string[] = [
   ".xw-thumb img{display:block;width:100%;height:auto}",
   ".xw-thumb-n{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:700;color:#6b7280}",
   ".xw-thumb.is-drawn .xw-thumb-n{display:none}",
+  ".xw-viewer{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;background:var(--surface)}",
+  ".xw-viewer[hidden]{display:none}",
+  ".xw-viewer-head{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 18px;border-bottom:1px solid var(--line)}",
+  ".xw-viewer-title{flex:1;min-width:0;display:grid}",
+  ".xw-viewer-title b{font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+  ".xw-viewer-title span{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}",
+  ".xw-viewer-body{flex:1;min-height:0;overflow:auto;padding:16px;background:var(--bg)}",
+  ".xw-viewer-paper{position:relative;max-width:760px;margin:0 auto;aspect-ratio:210/297;border-radius:4px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(0,0,0,.08)}",
+  ".xw-viewer-paper.is-drawn{aspect-ratio:auto}",
+  ".xw-viewer-paper img{display:block;width:100%;height:auto}",
+  ".xw-viewer-status{position:absolute;inset:0;display:grid;place-items:center;padding:16px;color:#6b7280;text-align:center}",
+  ".xw-viewer-paper.is-drawn .xw-viewer-status{display:none}",
+  ".xw-viewer-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}",
+  ".xw-viewer-bar-end{margin-left:auto}",
   ".xw-rate{display:flex;gap:8px;margin-top:12px;white-space:normal}",
   ".xw-sys{align-self:center;max-width:92%;color:var(--muted);font-size:13px;text-align:center}",
   ".xw-sys a{color:var(--accent)}",
@@ -561,7 +575,7 @@ function isOpen(){return sheet.classList.contains('is-open')}
 function openPanel(){hideTip();if(isOpen())return;sheet.classList.add('is-open');scrim.classList.add('is-open');dock.hidden=true;
   if(!started)loadHistory(first.input.value);
   setTimeout(function(){var t=started?more.input:first.input;t.focus();t.setSelectionRange(t.value.length,t.value.length)},40)}
-function closePanel(){sheet.classList.remove('is-open');scrim.classList.remove('is-open');dock.hidden=false;syncOwn();(compact?pill:launcher).focus()}
+function closePanel(){closeViewer();sheet.classList.remove('is-open');scrim.classList.remove('is-open');dock.hidden=false;syncOwn();(compact?pill:launcher).focus()}
 launcher.addEventListener('click',openPanel);
 
 /* Posúvanie za úchyt riadku alebo za celé zbalené tlačidlo. Miesto = podiel
@@ -673,16 +687,55 @@ function answerBox(){var a=el('div','xw-a');var h=el('span','xw-a-head');h.hidde
 /* Zdroje odpovede; pri citovanom znení PDF aj náhľad a odkaz na stranu
    (KANAL-widget-strana). \`links\` je v poradí zdrojov, podpísané serverom. */
 function showSources(box,sources,links){if(!sources.length)return;links=links||[];var s=el('div','xw-src',T.sources);var ul=el('ul');var seen={};
-  sources.forEach(function(x,i){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;var li=el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':''));var L=links[i];if(L&&L.pdf&&L.thumb)li.appendChild(pageRow(L));ul.appendChild(li)});s.appendChild(ul);box.appendChild(s)}
+  sources.forEach(function(x,i){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;var li=el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':''));var L=links[i];if(L&&L.pdf&&L.thumb)li.appendChild(pageRow(L,x.title||''));ul.appendChild(li)});s.appendChild(ul);box.appendChild(s)}
 /* Náhľad strany je obrázok zo servera; kým sa nenačíta (alebo keď zlyhá),
    je to biely papier s číslom strany — odkaz funguje v oboch prípadoch. */
-function pageRow(L){var r=el('div','xw-src-page');
+function pageRow(L,title){var r=el('div','xw-src-page');
   var label=L.figure?T.figurePage.replace('{page}',L.page):(L.from===L.to?T.sourcePage.replace('{page}',L.from):T.sourcePages.replace('{from}',L.from).replace('{to}',L.to));
   var a=el('a','xw-thumb');a.href=L.pdf;a.target='_blank';a.rel='noopener';a.setAttribute('aria-label',T.pageThumb.replace('{page}',L.page));
   var img=document.createElement('img');img.alt='';img.loading='lazy';img.decoding='async';
   img.addEventListener('load',function(){a.classList.add('is-drawn')});img.addEventListener('error',function(){img.remove()});img.src=L.thumb;
   var n=el('span','xw-thumb-n',String(L.page));n.setAttribute('aria-hidden','true');a.appendChild(img);a.appendChild(n);
-  var t=el('a',null,label);t.href=L.pdf;t.target='_blank';t.rel='noopener';r.appendChild(a);r.appendChild(t);return r}
+  var t=el('a',null,label);t.href=L.pdf;t.target='_blank';t.rel='noopener';
+  /* Bežný klik otvorí prehliadač strán; s modifikátorom ostáva PDF v novej karte. */
+  [a,t].forEach(function(x){x.addEventListener('click',function(e){if(e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();openViewer(L,title,x)})});
+  r.appendChild(a);r.appendChild(t);return r}
+/* Prehliadač strán (Ján 3. 11. 2026): strana citovaného PDF nad rozhovorom,
+   tvar ako PageViewer v Contineu. PDF otvorené v novej karte prehliadač často
+   stiahne a človek odíde z ISSF — tu ostáva v plachte. Stranu kreslí server
+   ako obrázok (\`&size=large\`), počet strán dá \`&meta=1\`. */
+var viewer=null,vw={};
+function openViewer(L,title,from){
+  if(!viewer){
+    viewer=el('div','xw-viewer');viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.tabIndex=-1;viewer.hidden=true;
+    var vh=el('div','xw-viewer-head');var vt=el('div','xw-viewer-title');vw.title=el('b');vw.n=el('span');vw.n.setAttribute('aria-live','polite');vt.appendChild(vw.title);vt.appendChild(vw.n);
+    var vc=el('button','xw-close','\\u00d7');vc.type='button';tx(vc,'close','aria-label');vc.addEventListener('click',closeViewer);vh.appendChild(vt);vh.appendChild(vc);
+    vw.body=el('div','xw-viewer-body');vw.paper=el('div','xw-viewer-paper');vw.status=el('p','xw-viewer-status');vw.paper.appendChild(vw.status);vw.body.appendChild(vw.paper);
+    var vb=el('div','xw-viewer-bar');vw.prev=el('button','button button--quiet');vw.prev.type='button';vw.next=el('button','button button--quiet');vw.next.type='button';
+    vw.prev.addEventListener('click',function(){showPage(vw.page-1)});vw.next.addEventListener('click',function(){showPage(vw.page+1)});
+    var ve=el('span','xw-viewer-bar-end');vw.dl=el('a','button button--quiet');ve.appendChild(vw.dl);
+    vb.appendChild(vw.prev);vb.appendChild(vw.next);vb.appendChild(ve);
+    viewer.appendChild(vh);viewer.appendChild(vw.body);viewer.appendChild(vb);
+    viewer.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeViewer()}else if(e.key==='ArrowLeft'){showPage(vw.page-1)}else if(e.key==='ArrowRight'){showPage(vw.page+1)}});
+    sheet.appendChild(viewer);
+  }
+  vw.L=L;vw.pages=0;vw.from=from;vw.title.textContent=title;
+  vw.dl.href=L.base+'&download=1';vw.dl.textContent=T.downloadPdf;vw.prev.textContent='\\u2190 '+T.prevPage;vw.next.textContent=T.nextPage+' \\u2192';
+  viewer.hidden=false;showPage(L.page);viewer.focus();
+  fetch(L.base+'&meta=1').then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.pages&&vw.L===L){vw.pages=j.pages;syncViewer()}}).catch(function(){});
+}
+function syncViewer(){vw.n.textContent=vw.pages?T.viewerPage.replace('{page}',vw.page).replace('{pages}',vw.pages):T.sourcePage.replace('{page}',vw.page);
+  vw.prev.disabled=vw.page<=1;vw.next.disabled=!!vw.pages&&vw.page>=vw.pages;viewer.setAttribute('aria-label',vw.title.textContent+' \\u2014 '+vw.n.textContent)}
+function showPage(n){if(!vw.L||n<1||(vw.pages&&n>vw.pages))return;vw.page=n;syncViewer();
+  var old=vw.paper.querySelector('img');if(old)old.remove();vw.paper.classList.remove('is-drawn');vw.status.textContent=T.viewerLoading;vw.status.setAttribute('role','status');
+  var img=document.createElement('img');img.alt=vw.n.textContent;img.decoding='async';
+  img.addEventListener('load',function(){if(vw.page===n)vw.paper.classList.add('is-drawn')});
+  img.addEventListener('error',function(){if(vw.page!==n)return;img.remove();vw.status.textContent=T.viewerFailed;vw.status.setAttribute('role','alert')});
+  img.src=vw.L.base+'&page='+n+'&size=large';vw.paper.insertBefore(img,vw.status);vw.body.scrollTop=0;
+  /* Ďalšia strana sa pripraví vopred — listovanie potom nečaká na server. */
+  if(!vw.pages||n<vw.pages){var pre=new Image();pre.src=vw.L.base+'&page='+(n+1)+'&size=large'}
+}
+function closeViewer(){if(!viewer||viewer.hidden)return;viewer.hidden=true;var f=vw.from;vw.L=null;if(f&&f.focus)f.focus()}
 function rateButtons(recordId,answerEl){
   var rate=el('div','xw-rate');var up=el('button','button button--quiet button--sm',T.helpful);up.type='button';var down=el('button','button button--quiet button--sm',T.notHelpful);down.type='button';
   function pick(v){up.disabled=down.disabled=true;(v===1?up:down).setAttribute('aria-pressed','true');

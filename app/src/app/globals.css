@@ -4550,6 +4550,21 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-thumb img{display:block;width:100%;height:auto}
 .xw-thumb-n{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:700;color:#6b7280}
 .xw-thumb.is-drawn .xw-thumb-n{display:none}
+/* Prehliadač strán vo widgete — tvar ako `.page-viewer`, plachta nad rozhovorom (3. 11. 2026). */
+.xw-viewer{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;background:var(--surface)}
+.xw-viewer[hidden]{display:none}
+.xw-viewer-head{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 18px;border-bottom:1px solid var(--line)}
+.xw-viewer-title{flex:1;min-width:0;display:grid}
+.xw-viewer-title b{font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xw-viewer-title span{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.xw-viewer-body{flex:1;min-height:0;overflow:auto;padding:16px;background:var(--bg)}
+.xw-viewer-paper{position:relative;max-width:760px;margin:0 auto;aspect-ratio:210/297;border-radius:4px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(0,0,0,.08)}
+.xw-viewer-paper.is-drawn{aspect-ratio:auto}
+.xw-viewer-paper img{display:block;width:100%;height:auto}
+.xw-viewer-status{position:absolute;inset:0;display:grid;place-items:center;padding:16px;color:#6b7280;text-align:center}
+.xw-viewer-paper.is-drawn .xw-viewer-status{display:none}
+.xw-viewer-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
+.xw-viewer-bar-end{margin-left:auto}
 .xw-rate{display:flex;gap:8px;margin-top:12px;white-space:normal}
 .xw-sys{align-self:center;max-width:92%;color:var(--muted);font-size:13px;text-align:center}
 .xw-sys a{color:var(--accent)}
@@ -4990,6 +5005,73 @@ details[open] > summary.answer-aside-title { margin-bottom: 10px; }
 .citation-sheet-text { font-size: 15.5px; line-height: 1.6; }
 .citation-sheet-nav { display: flex; gap: 8px; }
 .citation-sheet-nav .button { flex: 1; min-height: 44px; justify-content: center; }
+
+/* Prehliadač strán PDF z citácie (PageViewer, Ján 3. 11. 2026): plachta nad
+   obrazovkou ako SwiftUI `.sheet` — pod 640 px na celú obrazovku, od 640 px
+   okno 860 px v strede. Hore dokument a „Strana N z M", dole listovanie
+   a stiahnutie. Ten istý tvar má widget (`.xw-viewer*`). */
+.page-viewer-scrim { position: fixed; inset: 0; z-index: 59; background: rgba(17, 21, 28, 0.32); }
+.page-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+.page-viewer:focus { outline: none; }
+@media (min-width: 640px) {
+  .page-viewer {
+    inset: 24px;
+    width: min(860px, calc(100vw - 48px));
+    margin: 0 auto;
+    border-radius: 18px;
+    box-shadow: 0 18px 48px rgba(20, 28, 42, 0.28);
+    overflow: hidden;
+  }
+}
+.page-viewer-head { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 18px; border-bottom: 1px solid var(--line); }
+.page-viewer-title { flex: 1; min-width: 0; display: grid; }
+.page-viewer-title b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-viewer-title span { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.page-viewer-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.page-viewer-close:hover { background: var(--surface-2); }
+.page-viewer-body { flex: 1; min-height: 0; overflow: auto; padding: 16px; background: var(--bg); }
+.page-viewer-paper {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+  aspect-ratio: 210 / 297;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.page-viewer-paper.is-drawn { aspect-ratio: auto; }
+.page-viewer-paper canvas { display: block; width: 100%; height: auto; }
+.page-viewer-status { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; color: #6b7280; text-align: center; }
+.page-viewer-paper.is-drawn .page-viewer-status { display: none; }
+.page-viewer-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.page-viewer-bar-end { margin-left: auto; }
 
 @media (max-width: 639px) {
   .cite { min-width: 24px; height: 24px; }
