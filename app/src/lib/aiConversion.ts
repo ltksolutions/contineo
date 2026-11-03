@@ -132,6 +132,17 @@ export function tailOf(markdown: string, lines = TAIL_LINES): string {
   return markdown.trim().split("\n").slice(-lines).join("\n")
 }
 
+/**
+ * Nadpisy hotových častí s ich úrovňou — ďalšia časť v nich pokračuje.
+ * Bez toho sa úrovne medzi časťami rozišli (rozpis ÚLK 3. 11. 2026: body
+ * B.1–9 ako `###`, B.10–20 ako `##`). Nie je to šablóna: sú to nadpisy
+ * tohto dokumentu, ako ich model sám zvolil. Pri dlhom dokumente posledné.
+ */
+export function headingOutline(parts: string[], limit = 200): string {
+  const headings = parts.join("\n").split("\n").filter(l => /^#{1,6}\s/.test(l)).map(l => l.trim())
+  return headings.slice(-limit).join("\n")
+}
+
 /** Časti za sebou; prázdne sa vynechajú. */
 export function joinParts(parts: string[]): string {
   return parts.map(p => p.trim()).filter(Boolean).join("\n\n") + "\n"
@@ -180,7 +191,7 @@ export async function analyse(
 
 /** Prevod jednej časti — Markdown jej strán. */
 export async function convertPart(
-  pdf: Buffer, layer: LayerPage[], analysis: string, part: PagePart, previousTail: string, ai: RewriteAi,
+  pdf: Buffer, layer: LayerPage[], analysis: string, part: PagePart, previousTail: string, ai: RewriteAi, outline = "",
 ): Promise<string> {
   const pages = await slicePdf(pdf, part.from, part.to)
   const answer = await callModel(ai, {
@@ -192,9 +203,10 @@ export async function convertPart(
         text: [
           `Preveď strany ${part.from}–${part.to} z ${layer.length} (PDF vyššie obsahuje len tieto strany).`,
           `Analýza celého dokumentu:\n\n${analysis}`,
+          outline ? `Nadpisy, ktoré už prevedené časti majú. Pokračuj v rovnakých úrovniach — nadpis s rovnakým druhom označenia ako niektorý z nich dostane rovnakú úroveň (#, ##, ###):\n\n${outline}` : "",
           previousTail ? `Koniec predošlej časti (už prevedený — neopakuj ho, nadviaž):\n\n${previousTail}` : "Toto je začiatok dokumentu.",
           `Textová vrstva týchto strán:\n\n${layerText(layer, part.from, part.to)}`,
-        ].join("\n\n"),
+        ].filter(Boolean).join("\n\n"),
       },
     ],
   })

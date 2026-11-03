@@ -6,7 +6,7 @@
  * je bezpečné, lebo mení len to, kde model nadväzuje, nie text.
  */
 import { describe, it, expect } from "vitest"
-import { parsePlan, fallbackParts, joinParts, tailOf, layerText, MAX_PART_PAGES } from "../src/lib/aiConversion"
+import { parsePlan, fallbackParts, joinParts, tailOf, layerText, headingOutline, MAX_PART_PAGES } from "../src/lib/aiConversion"
 import { analysisWindows, conversionPhase, type AiConversion } from "../src/lib/aiConversionJob"
 
 const plan = (parts: unknown) => "## Analýza\n\nČlenenie: body „7.“\n\n```json\n" + JSON.stringify({ parts }) + "\n```"
@@ -56,6 +56,13 @@ describe("skladanie", () => {
   it("časti za sebou bez prázdnych, koniec pre nadviazanie", () => {
     expect(joinParts(["# A\n", "  ", "text"])).toBe("# A\n\ntext\n")
     expect(tailOf("1\n2\n3\n4", 2)).toBe("3\n4")
+  })
+
+  it("nadpisy hotových častí pre ďalšiu časť — len nadpisy, posledné", () => {
+    const parts = ["## B. USTANOVENIA\n\n### 1. ÚČASTNÍCI\ntext", "### 2. VYŽREBOVANIE\n#hashtag nie je nadpis"]
+    expect(headingOutline(parts)).toBe("## B. USTANOVENIA\n### 1. ÚČASTNÍCI\n### 2. VYŽREBOVANIE")
+    expect(headingOutline(parts, 1)).toBe("### 2. VYŽREBOVANIE")
+    expect(headingOutline([])).toBe("")
   })
 
   it("textová vrstva strán s označením obrázkov", () => {

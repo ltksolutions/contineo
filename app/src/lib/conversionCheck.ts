@@ -70,7 +70,7 @@ export interface ConversionCheck {
   repeatedLines: string[]
 }
 
-export const CHECK_VERSION = 1
+export const CHECK_VERSION = 2
 
 /** Nezhody bližšie než toľko zhodných tokenov sa spoja do jednej. */
 const MERGE_GAP = 2
@@ -169,6 +169,9 @@ export function layerTokens(pages: LayerPage[], repeated: Set<string> = repeated
 export function stripMarkup(line: string): string {
   if (/^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(line)) return ""   // oddeľovač tabuľky
   return line
+    // HTML značky, ktoré Markdown pustí (`<br>` v bunke tabuľky, `<u>`) —
+    // nie sú slová (rozpis ÚLK 3. 11. 2026: 14 z 31 nezhôd bolo „br" a „u").
+    .replace(/<\/?[a-zA-Z][a-zA-Z0-9]*(?:\s[^<>]*)?\/?>/g, " ")
     .replace(/^\s{0,3}#{1,6}\s+/, "")
     .replace(/^\s*(?:[-*+•▪➢]\s+|>\s?)/, "")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
