@@ -105,6 +105,9 @@ export interface ChunkResult {
   articleRef?: string | null
   heading?: string
   chunkIndex?: number
+  /** Strany PDF znenia, z ktorých úsek je (`chunkPages.ts`). Chýba pri úsekoch spred 3. 11. 2026. */
+  pageFrom?: number
+  pageTo?: number
   tags?: string[]
   /**
    * `"qa"` = úsek nevznikol z dokumentu, ale z **overenej odpovede** (D11).
@@ -192,7 +195,7 @@ function lookupDocument(scoreMeta: ScoreMeta): Document[] { return [
     $project: {
       text: 1, documentId: 1, versionId: 1,
       companyCode: 1, scope: 1, accessLevel: 1, language: 1,
-      articleRef: 1, heading: 1, chunkIndex: 1, tags: 1, chunkType: 1,
+      articleRef: 1, heading: 1, chunkIndex: 1, tags: 1, chunkType: 1, pageFrom: 1, pageTo: 1,
       sourceType: 1, derivedFrom: 1,
       embeddingModel: 1, isActive: 1, effectiveFrom: 1, effectiveTo: 1,
       document: 1,

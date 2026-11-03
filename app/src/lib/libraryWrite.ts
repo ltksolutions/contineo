@@ -30,7 +30,8 @@ import { textFixProblem, textDiff, versionFixProblem, fixableVersions, closestVe
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile, fileInfo, loadFile } from "./fileStore"
-import { convert, detectFileType, FILE_TYPE_LABEL, type FileType } from "./conversion"
+import { convert, detectFileType, pdfTextLayer, FILE_TYPE_LABEL, type FileType } from "./conversion"
+import { chunkPageRanges, type PageRange } from "./chunkPages"
 import { writeAudit, diff } from "./audit"
 import type { Chunk } from "./chunker.mjs"
 import { AppError } from "./appError"
@@ -189,6 +190,28 @@ export function makeDocumentId(meta: {
  */
 export function newDocumentKey(): string {
   return randomUUID().replace(/-/g, "")
+}
+
+/**
+ * Strany PDF znenia pre každý úsek (`chunkPages.ts`) — citácia potom vedie
+ * na stranu so schémou, nie len na článok. Bez PDF alebo pri chybe sa strany
+ * len nezapíšu: zverejnenie ani preindexovanie kvôli nim nesmie zlyhať.
+ */
+/** `pageFrom`/`pageTo` úseku, len keď ich poznáme — chýbajúce pole je „nevieme". */
+function pageFields(r: PageRange | null | undefined): { pageFrom?: number; pageTo?: number } {
+  return r ? { pageFrom: r.from, pageTo: r.to } : {}
+}
+
+async function pagesForChunks(companyCode: string, pdf: VersionFile | null | undefined, markdown: string, chunks: Chunk[], title: string): Promise<(PageRange | null)[]> {
+  if (!pdf?.id || pdf.type !== "pdf") return chunks.map(() => null)
+  try {
+    const file = await loadFile(companyCode, pdf.id)
+    if (!file) return chunks.map(() => null)
+    return chunkPageRanges(await pdfTextLayer(file.data), markdown, chunks.map(c => c.text), title)
+  } catch (e) {
+    console.error(`[library] strany úsekov sa nepodarilo zistiť (${pdf.id}):`, e)
+    return chunks.map(() => null)
+  }
 }
 
 /** Overí metadáta z formulára proti číselníkom. Vyhadzuje `KniznicaError`. */
@@ -1036,9 +1059,11 @@ export async function publish(
     console.error("[kuracia] archivacia overenych odpovedi zlyhala:", e)
   }
 
+  const pageRanges = await pagesForChunks(companyCode, draftPdf, markdown, chunks, String(draftTitle ?? doc.title ?? ""))
   await chunkCol.insertMany(
-    chunks.map(ch => ({
+    chunks.map((ch, i) => ({
       ...toDb(ch),
+      ...pageFields(pageRanges[i]),
       documentId,
       versionId,
       chunkingId,
@@ -1339,7 +1364,7 @@ export async function reindexVersion(
   if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
   const versions = (doc.versions ?? []) as {
-    versionId: string; label?: string; isActive?: boolean; markdown?: string; effectiveFrom?: Date | null
+    versionId: string; label?: string; isActive?: boolean; markdown?: string; effectiveFrom?: Date | null; pdf?: VersionFile | null
   }[]
   const version = versions.find(v => v.versionId === versionId)
   if (!version) throw new LibraryError("library.versionNotFound", "Také znenie tento dokument nemá.")
@@ -1433,8 +1458,10 @@ export async function reindexVersion(
     { $set: { isActive: false, effectiveTo: now } },
   )
 
+  const pageRanges = await pagesForChunks(companyCode, version.pdf, markdown, chunks, meta.title)
   await chunkCol.insertMany(
-    chunks.map(ch => ({
+    chunks.map((ch, i) => ({
+      ...pageFields(pageRanges[i]),
       chunkIndex: ch.chunkIndex,
       text: ch.text,
       heading: ch.heading,

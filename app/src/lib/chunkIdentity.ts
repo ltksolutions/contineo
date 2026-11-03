@@ -51,8 +51,9 @@ import type { Chunk } from "./chunker.mjs"
  * |---|---|
  * | 1 | pôvodný štruktúrny chunker (D1) |
  * | 2 | 2026-09-14: hlavičky v tvare Markdownu (`## čl. 5 — Názov`). Bez toho chunker nerozpoznal **ani jeden** článok v texte, ktorý prešiel prepisom cez jazykový model — a uložené úseky pritom mali 99 %. |
+ * | 3 | 2026-11-03: úsek nesie strany PDF (`pageFrom`, `pageTo`, `chunkPages.ts`). Rez sa nemení, ale bez preindexovania by staré úseky strany nikdy nedostali. |
  */
-export const CHUNKER_VERSION = 2
+export const CHUNKER_VERSION = 3
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 16)
 

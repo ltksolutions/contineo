@@ -19,6 +19,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { PDFDocumentLoadingTask, PDFPageProxy } from "pdfjs-dist/legacy/build/pdf.mjs"
 import { pageLabel, pageRenderSize } from "@/lib/pdfPages"
+import { pageFromHash } from "@/lib/pageLink"
+import { documentOptions, loadPdfJs } from "./pdfjs"
 
 export interface PdfPagesLabels {
   loading: string
@@ -35,32 +37,6 @@ interface PageInfo {
 }
 
 type Loaded = { href: string; pages: PageInfo[] } | { href: string; failed: true }
-
-/*
- * Pomocné súbory pdf.js (písma, CMapy, dekodéry obrázkov) kopíruje do
- * `public/pdfjs/` skript `scripts/copy_pdfjs_assets.mjs` pred `dev` aj
- * `build`. Bežné PDF z Wordu ich nepotrebuje — písma má vložené — ale PDF
- * s nevloženým písmom alebo so skenom v JPEG 2000 by bez nich vyšlo inak
- * než v originále, a potvrdzuje sa presne to, čo je na obrazovke.
- */
-const ASSETS = "/pdfjs/"
-
-/** Pracovný modul sa nastaví raz za život stránky. */
-let workerConfigured = false
-
-async function loadPdfJs() {
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
-  if (!workerConfigured) {
-    // Legacy zostava, nie moderná: moderná vyžaduje najnovší Safari a na
-    // starších iPhonoch by skončila chybou ešte pred prvou stranou.
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-      "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-      import.meta.url,
-    ).toString()
-    workerConfigured = true
-  }
-  return pdfjs
-}
 
 const noop = () => () => {}
 
@@ -113,7 +89,7 @@ function PdfPage({ info, index, count, containerWidth, label }: {
   }, [near, containerWidth, info, index])
 
   return (
-    <div ref={holderRef} className="pdf-page" style={{ aspectRatio: `${info.width} / ${info.height}` }}>
+    <div ref={holderRef} id={`page-${index + 1}`} className="pdf-page" style={{ aspectRatio: `${info.width} / ${info.height}` }}>
       <canvas ref={canvasRef} className="pdf-page-canvas" role="img" aria-label={pageLabel(label, index + 1, count)} />
     </div>
   )
@@ -134,14 +110,7 @@ export default function PdfPages({ href, labels }: { href: string; labels: PdfPa
       try {
         const pdfjs = await loadPdfJs()
         if (cancelled) return
-        task = pdfjs.getDocument({
-          url: href,
-          cMapUrl: `${ASSETS}cmaps/`,
-          cMapPacked: true,
-          standardFontDataUrl: `${ASSETS}standard_fonts/`,
-          wasmUrl: `${ASSETS}wasm/`,
-          iccUrl: `${ASSETS}iccs/`,
-        })
+        task = pdfjs.getDocument(documentOptions(href))
         const doc = await task.promise
         // Rozmery všetkých strán vopred: miesto na stránke je hneď také,
         // aké bude, a posuvník neskáče. `getPage` je lacné — nič nekreslí.
@@ -177,6 +146,23 @@ export default function PdfPages({ href, labels }: { href: string; labels: PdfPa
 
   const current = loaded?.href === href ? loaded : null
   const pages = current && "pages" in current ? current.pages : null
+
+  /*
+    Odkaz z citácie (`#page-12`, `pageLink.ts`). Prehliadač kotvu hľadá hneď
+    pri načítaní, keď strany ešte nie sú — posunie sa preto až po nich,
+    a znova pri zmene kotvy na tej istej stránke.
+  */
+  const pageCount = pages?.length ?? 0
+  useEffect(() => {
+    if (!pageCount) return
+    const go = () => {
+      const n = pageFromHash(window.location.hash)
+      if (n && n <= pageCount) document.getElementById(`page-${n}`)?.scrollIntoView({ block: "start" })
+    }
+    go()
+    window.addEventListener("hashchange", go)
+    return () => window.removeEventListener("hashchange", go)
+  }, [pageCount])
 
   return (
     <div ref={boxRef} className="pdf-pages">

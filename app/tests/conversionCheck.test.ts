@@ -5,7 +5,7 @@
  * medzery a delenie slov, nesmie meniť slová.
  */
 import { describe, it, expect } from "vitest"
-import { checkConversion, diffTokens, stripMarkup, unresolvedDifferences, type LayerPage } from "../src/lib/conversionCheck"
+import { checkConversion, contentImages, decorativeImages, diffTokens, stripMarkup, unresolvedDifferences, type LayerPage } from "../src/lib/conversionCheck"
 
 const page = (lines: string[], images = 0): LayerPage => ({ lines, images })
 
@@ -110,5 +110,25 @@ describe("porovnanie postupností", () => {
   it("oddeľovač tabuľky a nadpis sa zo značkovania vyzlečú", () => {
     expect(stripMarkup("| --- | :---: |")).toBe("")
     expect(stripMarkup("### **7.2 Úhrada**")).toBe("7.2 Úhrada")
+  })
+})
+
+describe("decorativeImages", () => {
+  it("logo v hlavičke každej strany je výzdoba, schéma nie", () => {
+    const pages = Array.from({ length: 10 }, (_, i) => ({ images: i === 4 ? 5 : 3 }))
+    expect(decorativeImages(pages)).toBe(3)
+    expect(contentImages(pages)).toEqual([0, 0, 0, 0, 2, 0, 0, 0, 0, 0])
+  })
+  it("titulná strana bez loga výzdobu nezruší", () => {
+    const pages = [{ images: 0 }, ...Array.from({ length: 9 }, () => ({ images: 2 }))]
+    expect(decorativeImages(pages)).toBe(2)
+  })
+  it("krátky dokument výzdobu nemá — obrázok na dvoch stranách je obsah", () => {
+    expect(decorativeImages([{ images: 1 }, { images: 1 }])).toBe(0)
+  })
+  it("nezhoda pri strane s logom už nie je „pri obrázku\"", () => {
+    const layer: LayerPage[] = Array.from({ length: 4 }, (_, i) => ({ lines: [`Strana ${i + 1} text predpisu`], images: 3 }))
+    const check = checkConversion(layer, "Strana 1 text predpisu\n\nStrana 2 text predpisu navyše\n\nStrana 3 text predpisu\n\nStrana 4 text predpisu")
+    expect(check.differences.map(d => d.nearImage)).toEqual([false])
   })
 })
