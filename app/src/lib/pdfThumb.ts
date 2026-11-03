@@ -7,12 +7,16 @@
  * 224-stranové PDF kvôli obrázku 72 px by bolo neúmerné. Server preto pošle
  * hotový obrázok a widget ho vloží ako `<img>`.
  *
- * Kreslí pdf.js samo cez `@napi-rs/canvas` (jeho voliteľná závislosť,
- * `NodeCanvasFactory`). Na Verceli ho treba priložiť do funkcie ručne —
- * `next.config.mjs`, rovnako ako pracovný modul pdf.js.
+ * Kreslí pdf.js do plátna z `@napi-rs/canvas`. Ten je **priama závislosť
+ * a importuje sa tu reťazcom v kóde**, nie len cez pdf.js: pdf.js si ho
+ * vyžiada `require` za behu, ktorý sledovanie závislostí nevidí, a na
+ * Verceli potom modul vo funkcii chýbal („Cannot find module
+ * '@napi-rs/canvas'", 3. 11. 2026). Import tu ho do funkcie priloží aj
+ * s binárkou pre platformu — a keď už je načítaný, nájde ho aj pdf.js.
  */
 
 import path from "node:path"
+import { createCanvas } from "@napi-rs/canvas"
 
 /** Šírka obrázka v px: náhľad má 72 CSS px, kreslí sa dvojnásobne pre ostré displeje. */
 export const THUMB_PIXEL_WIDTH = 144
@@ -39,11 +43,8 @@ export async function renderPdfPageThumb(data: Uint8Array, page: number, width: 
     const p = await doc.getPage(page)
     const scale = width / p.getViewport({ scale: 1 }).width
     const viewport = p.getViewport({ scale })
-    const factory = doc.canvasFactory as {
-      create(w: number, h: number): { canvas: { toBuffer(type: "image/png"): Buffer }; context: unknown }
-    }
-    const { canvas, context } = factory.create(Math.round(viewport.width), Math.round(viewport.height))
-    await p.render({ canvas: canvas as never, canvasContext: context as never, viewport }).promise
+    const canvas = createCanvas(Math.round(viewport.width), Math.round(viewport.height))
+    await p.render({ canvas: canvas as never, canvasContext: canvas.getContext("2d") as never, viewport }).promise
     return canvas.toBuffer("image/png")
   } finally {
     await task.destroy()
