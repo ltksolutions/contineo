@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prevod modelom: tabuľka v obrázku je tabuľka (2026-11-03)
+
+- Tabuľku vloženú do PDF ako obrázok model prepíše do tabuľky Markdownu
+  bunku po bunke, namiesto opisu „*Obrázok v origináli: …*". Zlúčené bunky
+  zopakuje, tabuľku cez dve strany spojí. Analýza dokumentu ich vedie medzi
+  tabuľkami. Platí pre nové prevody, uložené znenia sa nemenia.
+
 ### Citácia vedie na stranu PDF, s náhľadom (2026-11-03)
 
 - Úsek si pri zverejnení a preindexovaní zapamätá strany PDF, z ktorých je
