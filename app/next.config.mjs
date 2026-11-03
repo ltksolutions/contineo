@@ -68,11 +68,12 @@ const nextConfig = {
     // Písma a statické logá pre PDF certifikátu — čítajú sa z disku za behu.
     "/learning/[courseKey]/certificate/pdf": ["./assets/fonts/*.ttf", "./public/tenants/**"],
     /*
-     * Náhľad strany pre widget: pdf.js si `@napi-rs/canvas` vyžiada reťazcom
-     * za behu (`require` v `NodeCanvasFactory`) a ten zas binárku pre platformu
-     * — sledovanie závislostí nevidí ani jedno. Štandardné písma číta z disku.
+     * Náhľad strany pre widget (`lib/pdfThumb.ts`). `@napi-rs/canvas` sa
+     * priloží importom v kóde; samotné pravidlo nižšie ho 3. 11. 2026 do
+     * funkcie nedostalo. Ostáva ako poistka spolu so štandardnými písmami
+     * pdf.js, ktoré sa čítajú z disku.
      */
-    "/api/widget/[channel]/pdf": [
+    "/api/widget/**": [
       "./node_modules/@napi-rs/canvas/**",
       "./node_modules/@napi-rs/canvas-linux-x64-gnu/**",
       "./node_modules/pdfjs-dist/standard_fonts/**",
