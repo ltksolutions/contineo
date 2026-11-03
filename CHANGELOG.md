@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Widget kanála: náhľad a odkaz na stranu PDF (2026-11-03)
+
+- Zdroj odpovede vo widgete (ISSF) má pri citovanom znení náhľad strany
+  a odkaz „Strana N" / „Schéma na strane N", ktorý otvorí PDF na tej strane.
+- Človek z ISSF nie je prihlásený do intranetu, preto PDF aj náhľad idú cez
+  `/api/widget/<kanál>/pdf` s podpisom kanála (`widgetPdfLink.ts`): viaže
+  kanál, dokument a znenie, platí 30 dní a len pre verejné dokumenty.
+  História widgetu odkazy pri otvorení podpíše nanovo.
+- Náhľad kreslí server (`pdfThumb.ts`, pdf.js + `@napi-rs/canvas`), nie
+  prehliadač na cudzej stránke. Nové triedy `.xw-src-page`, `.xw-thumb`.
+
 ### Citácia úseku so schémou vedie na stranu schémy (2026-11-03)
 
 - Úsek, ktorý opisuje schému („*Obrázok v origináli: …*"), si pamätá jej

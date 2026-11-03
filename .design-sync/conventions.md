@@ -203,6 +203,11 @@ a test `widgetCss` stráži, že sa nerozídu. Vzorom je pole otázky v hlavičk
 - Rozhovor: `.xw-log` > `.xw-q` (otázka, farba organizácie), `.xw-a` (`.xw-a-head`, text `.xw-md` — Markdown odpovede ako `FormattedText`: odseky, `.xw-md-h` nadpisy, zoznamy, tučné —, `.xw-src`, `.xw-rate`
   s tichými `.button--sm`), `.xw-sys`; hľadanie `.xw-wait` (`.button-spinner` + „Hľadám…“) v karte odpovede; poďakovanie za hodnotenie a odoslaná správa helpdesku sú zelený `.lnote` so ✓ (`role="status"`), nie sivý `.xw-sys`; správa helpdesku `.xw-card` (`h3`, `.xw-muted`, `textarea`, plné „Odoslať helpdesku"
   + tiché „Zrušiť"). Pole pod rozhovorom `.xw-composer` > `.xw-composer-in` s tichým „Napísať helpdesku".
+- Strana citovaného PDF pri zdroji (od 3. 11., KANAL-widget-strana): `li` v `.xw-src` nesie `.xw-src-page` —
+  `a.xw-thumb` (náhľad 72 px ako `.page-thumb`: biely papier, kým sa obrázok nenačíta číslo strany `.xw-thumb-n`,
+  po načítaní `.is-drawn`) a odkaz „Strana N" / „Strany N–M" / „Schéma na strane N" farbou organizácie, terč 44 px.
+  Oboje otvára PDF v novej karte na tej strane. Náhľad kreslí server (`/api/widget/<kanál>/pdf?…&page=N`), odkaz je
+  podpísaný kľúčom kanála (`widgetPdfLink.ts`) a len pre verejné znenia — človek z ISSF nie je prihlásený do intranetu.
 - Úvodný tip (`TipKit`, popover tip) pri prvej návšteve: `div.xw-tip[role=status]` pod zatvoreným widgetom (nad ním, keď
   dole nie je miesto: `.is-above`), šípka mieri na úchyt (`--tip-x`). `.xw-tip-head` (`.xw-tip-title` + `.xw-tip-close` 44 px),
   dve vety (`p`, druhá `.xw-tip-move` s úchytom), `.xw-tip-actions` — plné `.button--sm` „Vyskúšať" a tiché „Rozumiem".

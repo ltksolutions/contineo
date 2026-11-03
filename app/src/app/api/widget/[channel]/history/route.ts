@@ -15,6 +15,9 @@
 import { NextResponse } from "next/server"
 import { widgetGate, widgetPreflight, corsHeaders } from "@/lib/widgetApi"
 import { widgetRecentQuestions, widgetAnswer, widgetHideQuestion } from "@/lib/askHistory"
+import { widgetSecret } from "@/lib/channels"
+import { requestHostname } from "@/lib/session"
+import { widgetPageLinks } from "@/lib/widgetPdfLink"
 
 export const dynamic = "force-dynamic"
 
@@ -38,7 +41,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
     const r = await widgetAnswer(companyCode, personId, id)
     if (!r) return NextResponse.json({ error: "not-found" }, { status: 404, headers })
     const sources = (r.sources ?? []).map(s => ({ title: s.title, articleRef: s.articleRef }))
-    return NextResponse.json({ id, question: r.question, answer: r.answer, sources, createdAt: r.createdAt }, { headers })
+    // Odkazy na strany sa podpíšu nanovo — starý by už mohol byť po platnosti.
+    const secret = widgetSecret(gate.channel)
+    const links = secret
+      ? widgetPageLinks(r.sources ?? [], { apiBase: `https://${await requestHostname()}`, channelKey: gate.channel.key, secret })
+      : []
+    return NextResponse.json({ id, question: r.question, answer: r.answer, sources, links, createdAt: r.createdAt }, { headers })
   }
   if (body.action === "hide") {
     const ok = await widgetHideQuestion(companyCode, personId, id)

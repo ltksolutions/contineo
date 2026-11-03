@@ -229,6 +229,14 @@ export const WIDGET_CSS: string[] = [
   ".xw-md-h{font-size:15.5px;font-weight:700}.xw-md>.xw-md-h{margin:18px 0 8px}.xw-md>.xw-md-h:first-child{margin-top:0}.xw-md-h--lg{font-size:16.5px}",
   ".xw-src{margin-top:10px;font-size:13px;color:var(--muted);white-space:normal}",
   ".xw-src ul{margin:4px 0 0;padding-left:18px}",
+  ".xw-src-page{display:flex;align-items:center;gap:12px;margin:6px 0 8px}",
+  ".xw-src-page>a:not(.xw-thumb){display:inline-flex;align-items:center;min-height:44px;color:var(--accent);font-weight:600}",
+  ".xw-thumb{position:relative;flex:0 0 72px;width:72px;min-height:44px;aspect-ratio:210/297;border-radius:4px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(0,0,0,.08);transition:box-shadow .12s}",
+  ".xw-thumb:hover,.xw-thumb:focus-visible{outline:none;box-shadow:0 0 0 2px var(--accent),0 1px 3px rgba(0,0,0,.08)}",
+  ".xw-thumb.is-drawn{aspect-ratio:auto}",
+  ".xw-thumb img{display:block;width:100%;height:auto}",
+  ".xw-thumb-n{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:700;color:#6b7280}",
+  ".xw-thumb.is-drawn .xw-thumb-n{display:none}",
   ".xw-rate{display:flex;gap:8px;margin-top:12px;white-space:normal}",
   ".xw-sys{align-self:center;max-width:92%;color:var(--muted);font-size:13px;text-align:center}",
   ".xw-sys a{color:var(--accent)}",
@@ -640,7 +648,7 @@ function renderHistory(items,filtered){
 function openSaved(id){
   api('history',{action:'open',id:id}).then(function(r){if(!r.ok)throw new Error('http');return r.json()}).then(function(j){
     start();log.appendChild(el('div','xw-q',j.question));var a=answerBox();renderMd(a.body,j.answer);lastQuestion=j.question;
-    showSources(a.box,j.sources||[]);conversation.push({recordId:id,question:j.question,verdict:null,answer:j.answer||''});rateButtons(id,a.box);syncOffer();scrollEnd();
+    showSources(a.box,j.sources||[],j.links||[]);conversation.push({recordId:id,question:j.question,verdict:null,answer:j.answer||''});rateButtons(id,a.box);syncOffer();scrollEnd();
   }).catch(function(e){start();sys(e&&e.message==='expired'?T.expired:T.error)});
 }
 
@@ -662,8 +670,19 @@ offerBtn.addEventListener('click',function(){offerEscalation(true)});
 escCancel.addEventListener('click',closeEscalation);
 
 function answerBox(){var a=el('div','xw-a');var h=el('span','xw-a-head');h.hidden=true;var b=el('div','xw-md');a.appendChild(h);a.appendChild(b);log.appendChild(a);return {box:a,head:h,body:b}}
-function showSources(box,sources){if(!sources.length)return;var s=el('div','xw-src',T.sources);var ul=el('ul');var seen={};
-  sources.forEach(function(x){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;ul.appendChild(el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':'')))});s.appendChild(ul);box.appendChild(s)}
+/* Zdroje odpovede; pri citovanom znení PDF aj náhľad a odkaz na stranu
+   (KANAL-widget-strana). \`links\` je v poradí zdrojov, podpísané serverom. */
+function showSources(box,sources,links){if(!sources.length)return;links=links||[];var s=el('div','xw-src',T.sources);var ul=el('ul');var seen={};
+  sources.forEach(function(x,i){var k=(x.title||'')+'|'+(x.articleRef||'');if(seen[k])return;seen[k]=1;var li=el('li',null,(x.title||'')+(x.articleRef?' ('+x.articleRef+')':''));var L=links[i];if(L&&L.pdf&&L.thumb)li.appendChild(pageRow(L));ul.appendChild(li)});s.appendChild(ul);box.appendChild(s)}
+/* Náhľad strany je obrázok zo servera; kým sa nenačíta (alebo keď zlyhá),
+   je to biely papier s číslom strany — odkaz funguje v oboch prípadoch. */
+function pageRow(L){var r=el('div','xw-src-page');
+  var label=L.figure?T.figurePage.replace('{page}',L.page):(L.from===L.to?T.sourcePage.replace('{page}',L.from):T.sourcePages.replace('{from}',L.from).replace('{to}',L.to));
+  var a=el('a','xw-thumb');a.href=L.pdf;a.target='_blank';a.rel='noopener';a.setAttribute('aria-label',T.pageThumb.replace('{page}',L.page));
+  var img=document.createElement('img');img.alt='';img.loading='lazy';img.decoding='async';
+  img.addEventListener('load',function(){a.classList.add('is-drawn')});img.addEventListener('error',function(){img.remove()});img.src=L.thumb;
+  var n=el('span','xw-thumb-n',String(L.page));n.setAttribute('aria-hidden','true');a.appendChild(img);a.appendChild(n);
+  var t=el('a',null,label);t.href=L.pdf;t.target='_blank';t.rel='noopener';r.appendChild(a);r.appendChild(t);return r}
 function rateButtons(recordId,answerEl){
   var rate=el('div','xw-rate');var up=el('button','button button--quiet button--sm',T.helpful);up.type='button';var down=el('button','button button--quiet button--sm',T.notHelpful);down.type='button';
   function pick(v){up.disabled=down.disabled=true;(v===1?up:down).setAttribute('aria-pressed','true');
@@ -680,7 +699,7 @@ function ask(q){
   log.appendChild(el('div','xw-q',q));
   var A=answerBox();var ran=null;
   var thinking=waiting(A.body);
-  var text='',sources=[],recordId=null;
+  var text='',sources=[],links=[],recordId=null;
   /* Posledné kolá toho istého okna — model vie, na čo otázka nadväzuje. */
   var history=conversation.slice(-3).map(function(c){return {question:c.question,answer:c.answer||''}});
   api('chat',{query:q,language:P.code,sources:on.slice(),history:history}).then(function(r){
@@ -694,6 +713,7 @@ function ask(q){
         if(ev.type==='scope'){ran=ev;A.head.textContent=ev.kicker||'';A.head.hidden=!ev.kicker}
         else if(ev.type==='token'){text+=ev.token;renderMd(A.body,text);thinking.remove();scrollEnd()}
         else if(ev.type==='done'){sources=ev.sources||[]}
+        else if(ev.type==='links'){links=ev.links||[]}
         else if(ev.type==='recorded'){recordId=ev.id}
         else if(ev.type==='error'){text=text||T.error;A.body.textContent=text}
       });
@@ -703,7 +723,7 @@ function ask(q){
   }).then(function(){
     thinking.remove();
     if(!text.trim()||!sources.length){A.body.textContent=T.noAnswer;negatives++;conversation.push({recordId:null,question:q,verdict:0,answer:''});if(negatives>=LOOK.escalateAfter)offerEscalation(false);return}
-    showSources(A.box,sources);
+    showSources(A.box,sources,links);
     conversation.push({recordId:recordId,question:q,verdict:null,answer:text});
     if(recordId)rateButtons(recordId,A.box);
     if(ran&&scopeBtn){

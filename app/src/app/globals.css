@@ -4541,6 +4541,15 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .xw-md-h{font-size:15.5px;font-weight:700}.xw-md>.xw-md-h{margin:18px 0 8px}.xw-md>.xw-md-h:first-child{margin-top:0}.xw-md-h--lg{font-size:16.5px}
 .xw-src{margin-top:10px;font-size:13px;color:var(--muted);white-space:normal}
 .xw-src ul{margin:4px 0 0;padding-left:18px}
+/* Strana citovaného PDF vo widgete: náhľad ako `.page-thumb` + odkaz (KANAL-widget-strana, 3. 11. 2026). */
+.xw-src-page{display:flex;align-items:center;gap:12px;margin:6px 0 8px}
+.xw-src-page>a:not(.xw-thumb){display:inline-flex;align-items:center;min-height:44px;color:var(--accent);font-weight:600}
+.xw-thumb{position:relative;flex:0 0 72px;width:72px;min-height:44px;aspect-ratio:210/297;border-radius:4px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(0,0,0,.08);transition:box-shadow .12s}
+.xw-thumb:hover,.xw-thumb:focus-visible{outline:none;box-shadow:0 0 0 2px var(--accent),0 1px 3px rgba(0,0,0,.08)}
+.xw-thumb.is-drawn{aspect-ratio:auto}
+.xw-thumb img{display:block;width:100%;height:auto}
+.xw-thumb-n{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:700;color:#6b7280}
+.xw-thumb.is-drawn .xw-thumb-n{display:none}
 .xw-rate{display:flex;gap:8px;margin-top:12px;white-space:normal}
 .xw-sys{align-self:center;max-width:92%;color:var(--muted);font-size:13px;text-align:center}
 .xw-sys a{color:var(--accent)}
