@@ -55,9 +55,9 @@
  * ## Metadáta
  *
  * Z `<základ>.meta.json` — názov súboru **nie je** dátový vstup.
- * Povinné: `title`, `sectionKey`, `companyCode`, `scope`, `accessLevel`,
- * `language`; nepovinné `documentKey` (inak sa berie `sectionKey`), `category`,
- * `tags`, `ownerDepartmentId`, `internalNumber` a ďalej to, čo na obrazovke
+ * Povinné: `title`, `companyCode`, `scope`, `accessLevel`, `language`;
+ * nepovinné `sectionKey` (zaradenie, ADR-010), `category`, `tags`,
+ * `ownerDepartmentId`, `internalNumber` a ďalej to, čo na obrazovke
  * nasleduje hneď po nahratí:
  *
  *   · `folder` — priečinok knižnice, `id` alebo názov (`assignDocument()`).
@@ -66,8 +66,18 @@
  *     Hľadá sa podľa e-mailu v organizácii, ukladá sa jej `persons.id`.
  *   · `author` — autor znenia (`versionMeta.author`, ADR-013).
  *
+ * ## Kľúč dokumentu
+ *
+ * Nový dokument dostane kľúč UUID (ADR-043) — rovnako ako z obrazovky.
+ * `documentKey` v metadátach nového dokumentu skript odmietne: 2. 11. 2026
+ * tadiaľto vznikol `sfz:rozpis_republikovych_sutazi` po migrácii ADR-044
+ * a musel sa prekľúčovať dodatočne. Opakovanému behu tej istej dávky bráni
+ * kontrola názvu — kľúč ju už nezastane, každý beh by dal nové UUID.
+ *
  * Pri `--nove-znenie` sa z metadát použije len identita (`companyCode`,
- * `documentKey`/`sectionKey`). Ostatné sa berie z existujúceho záznamu —
+ * `documentKey`/`sectionKey`). Starý kľúč spred migrácie sa preloží cez
+ * `document_id_aliases`, takže pôvodné `.meta.json` platia ďalej.
+ * Ostatné sa berie z existujúceho záznamu —
  * rovnako ako na obrazovke: nové znenie mení text, nie prístupnosť ani pôsobnosť.
  * Preto sa ignoruje aj `folder` (priečinok je vec dokumentu, nie znenia).
  * `responsibleEmail` a `author` patria konceptu, takže platia aj pre nové znenie.
@@ -81,6 +91,7 @@ import { basename, extname } from "node:path"
 import { getClient, getCollection } from "../src/lib/mongodb.ts"
 import { DOCUMENTS_COLLECTION } from "../src/lib/documents.ts"
 import { checkMetadata, makeDocumentId, uploadDocument, saveDraftResponsible } from "../src/lib/libraryWrite.ts"
+import { resolveDocumentAlias } from "../src/lib/documentAliases.ts"
 import { allFolders, assignDocument } from "../src/lib/folders.ts"
 import { detectFileType } from "../src/lib/conversion.ts"
 import { normalizeMeta, isEmptyMeta } from "../src/lib/versionMeta.ts"
@@ -232,6 +243,7 @@ const documents = await getCollection(DOCUMENTS_COLLECTION)
 const prepared = []
 const problems = []
 const seenIds = new Set()
+const seenTitles = new Set()
 
 for (const file of files) {
   try {
@@ -257,17 +269,31 @@ for (const file of files) {
     const actorProblem = await checkActor(companyCode)
     if (actorProblem) throw new Error(actorProblem)
 
-    const documentId = makeDocumentId(raw)
-    if (seenIds.has(documentId)) throw new Error(`${documentId} je v dávke dvakrát`)
-    seenIds.add(documentId)
-
-    // Organizácia ide do podmienky dotazu, nie do kontroly nad ním (D32, D90).
-    const existing = await documents.findOne({ documentId, companyCode })
-    if (mode === "new" && existing) {
-      throw new Error(`${documentId} už existuje — nové znenie sa nahráva s --nove-znenie`)
+    let documentId = null
+    let existing = null
+    if (mode === "version") {
+      // Organizácia ide do podmienky dotazu, nie do kontroly nad ním (D32, D90).
+      const wanted = makeDocumentId(raw)
+      existing = await documents.findOne({ documentId: wanted, companyCode })
+      if (!existing) {
+        const renamed = await resolveDocumentAlias(companyCode, wanted)
+        if (renamed) existing = await documents.findOne({ documentId: renamed, companyCode })
+      }
+      if (!existing) throw new Error(`${wanted} neexistuje — nový dokument sa nahráva bez --nove-znenie`)
+      documentId = String(existing.documentId)
+    } else {
+      if (String(raw.documentKey ?? "").trim()) {
+        throw new Error("documentKey patrí len k --nove-znenie — nový dokument dostane kľúč UUID (ADR-043)")
+      }
+      const title = String(raw.title ?? "").trim()
+      if (seenTitles.has(title.toLowerCase())) throw new Error(`„${title}" je v dávke dvakrát`)
+      seenTitles.add(title.toLowerCase())
+      const same = title ? await documents.findOne({ companyCode, title }, { projection: { documentId: 1 } }) : null
+      if (same) throw new Error(`„${title}" už existuje ako ${same.documentId} — nové znenie sa nahráva s --nove-znenie`)
     }
-    if (mode === "version" && !existing) {
-      throw new Error(`${documentId} neexistuje — nový dokument sa nahráva bez --nove-znenie`)
+    if (documentId) {
+      if (seenIds.has(documentId)) throw new Error(`${documentId} je v dávke dvakrát`)
+      seenIds.add(documentId)
     }
 
     const metaSource = mode === "version"
@@ -285,6 +311,7 @@ for (const file of files) {
         }
       : raw
     const meta = checkMetadata({ ...metaSource, companyCode }, tenantExtras(tenant))
+    documentId ??= makeDocumentId(meta)
 
     // Priečinok je vec dokumentu — pri novom znení sa nemení (ako metadáta).
     const folderWanted = String(raw.folder ?? "").trim()
