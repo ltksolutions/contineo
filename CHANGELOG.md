@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Prehliadač strán PDF v citácii — portál aj widget (2026-11-03)
+
+- Klik na náhľad strany alebo na „Strana N" v citácii otvorí plachtu so
+  stranou (`PageViewer`) namiesto PDF v novej karte, ktoré prehliadač často
+  stiahol. Hore dokument a „Strana N z M", dole listovanie, „Otvoriť
+  v knižnici" a „Stiahnuť PDF". Esc a šípky fungujú.
+- Widget kanála má ten istý prehliadač nad rozhovorom; stranu kreslí server
+  (`&size=large`, WebP 1400 px), počet strán `&meta=1`, stiahnutie
+  `&download=1`. Odkaz „Otvoriť PDF" v citácii portálu je preč.
+- Nové triedy `.page-viewer*` a `.xw-viewer*` (globals.css, conventions.md).
+
 ### Widget kanála: náhľad a odkaz na stranu PDF (2026-11-03)
 
 - Zdroj odpovede vo widgete (ISSF) má pri citovanom znení náhľad strany

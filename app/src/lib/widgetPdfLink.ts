@@ -58,6 +58,8 @@ export function verifyPdfLink(c: PdfLinkClaims, signature: string, secret: strin
 
 /** Čo widget potrebuje, aby pri zdroji nakreslil náhľad a odkaz na stranu. */
 export interface WidgetPageLink {
+  /** Podpísaná adresa bez strany — widget z nej skladá stranu, počet strán a stiahnutie. */
+  base: string
   /** PDF otvorené na citovanej strane (`#page=`). */
   pdf: string
   /** Náhľad citovanej strany (PNG). */
@@ -97,6 +99,7 @@ export function widgetPageLinks(
     const claims = { channelKey: input.channelKey, documentId: s.documentId, versionId: s.versionId, exp }
     const q = new URLSearchParams({ d: s.documentId, v: s.versionId, e: String(exp), s: signPdfLink(claims, input.secret) })
     return {
+      base: `${base}?${q}`,
       pdf: `${base}?${q}#page=${page}`,
       thumb: `${base}?${q}&page=${page}`,
       page, from, to,
