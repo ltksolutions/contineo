@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola slov ako sledovanie zmien vo Worde (2026-11-03)
+
+- Každý rozdiel sa ukáže v **celom bloku** z textu — celý odsek, nadpis alebo
+  tabuľka (dlhá skrátená na riadky okolo rozdielu) — namiesto úryvku pár slov.
+- Pridané slová sú **zelené podčiarknuté** (`ins`), slová z PDF, ktoré v texte
+  chýbajú, **červené prečiarknuté** (`del`) na mieste, kde v PDF boli.
+  Legenda pod hláškou. Doplnená hlavička tabuľky je tak zelená hlavička nad
+  menami, opakovaná hlavička po zlome strany prečiarknutá v tabuľke.
+- `lib/conversionBlock.ts`, test `tests/conversionBlock.test.ts`.
+
 ### Kontrola slov: poradie buniek v riadku tabuľky nie je na rozhodnutie (2026-11-03)
 
 - Presun, ktorý ostal v jednom riadku tabuľky (PDF číta zalomenú bunku po

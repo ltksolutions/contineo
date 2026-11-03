@@ -100,9 +100,13 @@ sú len doplnok. Texty sú po slovensky.
   na každú stranu PDF — `.check-page-head` (`h3` „Strana 11", tiché „Otvoriť PDF na strane 11 ↗",
   pri viacerých položkách tiché „Potvrdiť stranu (n)") a riadky `.check-item` > `.check-item-head`
   (`b` druh: Presunuté / Iné slovo / Chýba v texte / Navyše v texte / Opis obrázka + `.quiet` riadok),
-  `dl.check-compare` (`dt` „V PDF" / „V texte", `dd` veta), `p.check-item-note.quiet` (čo skontrolovať)
-  a `.check-actions` s tichými `.button--sm` „Text je správny" a „Opraviť v texte". Slová, ktoré sa líšia,
-  sú `mark.diff-mark` (podčiarknuté na `--warn-bg`); chýbajúce `.diff-mark--gone` (prečiarknuté).
+  celý blok z textu `.check-block` (odsek ako `p`, nadpis `p.check-block-h`, tabuľka
+  `.check-block--table` > `table.check-table`, dlhá skrátená na riadky okolo rozdielu s riadkom
+  „… n ďalších riadkov"), pri presune medzi blokmi dva `.check-place` so štítkom „V PDF" / „V texte",
+  `p.check-item-note.quiet` (čo skontrolovať) a `.check-actions` s tichými `.button--sm` „Text je
+  správny" a „Opraviť v texte". Zmeny ako sledovanie zmien vo Worde: pridané `ins.diff-mark`
+  (zelené `--ok-fg` na `--ok-bg`, podčiarknuté), vynechané z PDF `del.diff-mark.diff-mark--gone`
+  (červené `--bad-fg`, prečiarknuté). Legenda `p.check-legend` pod hláškou.
   Interpunkcia naraz: `section.card.check-minor`. Žiadne zaškrtávacie okienka.
   Presun v jednom riadku tabuľky (od 3. 11.) tiež naraz: `section.card.check-minor` so zoznamom
   `ul.check-rows` > `li` (strana `.quiet` + bunky riadku `span.check-cell`, oddelené „·",

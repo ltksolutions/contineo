@@ -37,6 +37,7 @@ import { conversionNote } from "@/lib/conversionNote"
 import ConversionProgress from "@/components/ConversionProgress"
 import { freshConversionCheck, isConverting } from "@/lib/conversionCheckDb"
 import { reviewDifferences } from "@/lib/conversionReview"
+import { itemBlocks, type Block, type Seg } from "@/lib/conversionBlock"
 
 export const dynamic = "force-dynamic"
 
@@ -50,18 +51,45 @@ function textKey(text: string): string {
   return `${text.length}:${createHash("sha256").update(text).digest("hex").slice(0, 12)}`
 }
 
-/**
- * Veta okolo rozdielu s vyznačenými slovami (KNIZ-kontrola-slov Q3).
- * `gone` — slovo z PDF, ktoré v texte chýba, prečiarknuté.
- */
-function excerpt(before: string, marked: string, after: string, nothing: string, gone = false) {
-  if (!before && !marked && !after) return <span className="quiet">{nothing}</span>
+/** Úseky bloku: nové slová `ins`, slová z PDF, ktoré v texte nie sú, `del` (ako sledovanie zmien). */
+function Segs({ segs }: { segs: Seg[] }) {
   return (
     <>
-      {before ? <>…{before} </> : null}
-      {marked ? <mark className={gone ? "diff-mark diff-mark--gone" : "diff-mark"}>{marked}</mark> : null}
-      {after ? <> {after}…</> : null}
+      {segs.map((s, i) => s.mark === "new" ? <ins key={i} className="diff-mark">{s.text}</ins>
+        : s.mark === "gone" ? <del key={i} className="diff-mark diff-mark--gone">{s.text}</del>
+        : <span key={i}>{s.text}</span>)}
     </>
+  )
+}
+
+/**
+ * Celý odsek alebo tabuľka z textu so zmenami v nej (Ján 3. 11. 2026: „ako
+ * Word — pôvodný a zmenený text, v celom bloku").
+ */
+function CheckBlock({ block, skipped }: { block: Block; skipped: (n: number) => string }) {
+  if (block.kind === "table") {
+    const cols = Math.max(block.head.length, ...block.rows.map(r => r.length), 1)
+    return (
+      <div className="check-block check-block--table">
+        <table className="check-table">
+          {block.head.length ? (
+            <thead><tr>{block.head.map((c, i) => <th key={i}><Segs segs={c} /></th>)}</tr></thead>
+          ) : null}
+          <tbody>
+            {block.skippedBefore ? <tr><td colSpan={cols} className="quiet">{skipped(block.skippedBefore)}</td></tr> : null}
+            {block.rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j}><Segs segs={c} /></td>)}</tr>)}
+            {block.skippedAfter ? <tr><td colSpan={cols} className="quiet">{skipped(block.skippedAfter)}</td></tr> : null}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+  return (
+    <div className="check-block">
+      {block.lines.map((l, i) => l.heading
+        ? <p key={i} className="check-block-h"><Segs segs={l.segs} /></p>
+        : <p key={i}><Segs segs={l.segs} /></p>)}
+    </div>
   )
 }
 
@@ -188,6 +216,12 @@ export default async function EditorPage({
                 <span className="lnote-mark" aria-hidden="true">!</span>
                 <span className="lnote-text">{t.checkBlocking}</span>
               </div>
+            ) : null}
+            {check.open.length ? (
+              <p className="check-legend">
+                <span><ins className="diff-mark">{t.checkLegendNew}</ins></span>
+                <span><del className="diff-mark diff-mark--gone">{t.checkLegendGone}</del></span>
+              </p>
             ) : (
               <div className="lnote" role="status">
                 <span className="lnote-mark" aria-hidden="true">✓</span>
@@ -224,20 +258,12 @@ export default async function EditorPage({
                         <b>{t.checkKind[item.kind]}</b>
                         <span className="quiet">{item.toLine && item.toLine !== item.line ? t.checkMovedLines(item.line, item.toLine) : t.checkLine(item.line)}</span>
                       </div>
-                      <dl className="check-compare">
-                        {item.kind !== "image" ? (
-                          <>
-                            <dt>{t.checkPdf}</dt>
-                            <dd>{item.kind === "added" ? excerpt(item.before, "", item.after, t.checkNothing) : excerpt(item.before, item.pdfText, item.after, t.checkNothing)}</dd>
-                          </>
-                        ) : null}
-                        <dt>{t.checkText}</dt>
-                        <dd>
-                          {item.kind === "missing" ? excerpt(item.before, item.pdfText, item.after, t.checkNothing, true)
-                            : item.kind === "moved" ? excerpt(item.movedBefore ?? item.before, item.mdText, item.movedAfter ?? item.after, t.checkNothing)
-                            : excerpt(item.before, item.mdText, item.after, t.checkNothing)}
-                        </dd>
-                      </dl>
+                      {itemBlocks(d.editableText, item).map((block, i, all) => (
+                        <div key={i} className="check-place">
+                          {all.length > 1 ? <span className="check-place-label quiet">{i === 0 ? t.checkPdf : t.checkText}</span> : null}
+                          <CheckBlock block={block} skipped={t.checkRowsSkipped} />
+                        </div>
+                      ))}
                       <p className="check-item-note quiet">{item.fromRow && item.toRow ? t.checkMovedRows(item.fromRow, item.toRow) : t.checkExplain[item.kind]}</p>
                       <div className="check-actions">
                         <SubmitButton className="button button--quiet button--sm" name="ids" value={item.ids.join(" ")}>{t.checkOk}</SubmitButton>
