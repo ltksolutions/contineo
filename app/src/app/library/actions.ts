@@ -54,6 +54,10 @@ import { markupChanges, restoreMarkup } from "@/lib/markupGuard"
 import { libraryDetail } from "@/lib/libraryRead"
 import { codelistOptions } from "@/lib/codelists"
 import { after } from "next/server"
+import { headers } from "next/headers"
+import { kick, originFromHeaders } from "@/lib/backgroundKick"
+import { startAiConversion } from "@/lib/aiConversionJob"
+import { confirmDifferences, freshConversionCheck, adoptConversionCheck } from "@/lib/conversionCheckDb"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { archiveDocument, restoreDocument, ArchiveError } from "@/lib/documentArchive"
 import { AppError } from "@/lib/appError"
@@ -269,7 +273,7 @@ export async function uploadAction(fd: FormData) {
       companyCode: self.companyCode, language: self.language, title: meta.title,
       documentLanguage: meta.language, effectiveFrom: versionMeta.effectiveFrom,
     }), self.email, "new", versionMeta)
-    scheduleChunkProposal(self, v.documentId)
+    const conversion = await startConversionAfterUpload(self, v.documentId)
 
     revalidatePath("/library")
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
@@ -280,6 +284,7 @@ export async function uploadAction(fd: FormData) {
       v.warnings.length
         ? say(self.language).convertedWithWarnings(v.warnings.join(" "))
         : say(self.language).converted,
+      ...conversionNote(conversion, self.language),
       ...(kind.created ? [tu.categoryCreated(kind.created)] : []),
       ...(kind.similar ? [tu.categorySimilar(kind.similar.value, kind.similar.like)] : []),
       ...skipped,
@@ -346,7 +351,7 @@ export async function uploadVersionAction(fd: FormData) {
       companyCode: self.companyCode, language: self.language, title: meta.title,
       documentLanguage: meta.language, effectiveFrom: versionMeta.effectiveFrom,
     }), self.email, "version", versionMeta)
-    scheduleChunkProposal(self, v.documentId)
+    const conversion = await startConversionAfterUpload(self, v.documentId)
 
     // **Porovnanie s platným znením hneď, nie až v editore.** Bez neho sa nedá
     // odlíšiť novela od znovunahratia toho istého PDF — a to je presne tá
@@ -356,7 +361,7 @@ export async function uploadVersionAction(fd: FormData) {
     const versions = (before.versions ?? []) as { isActive?: boolean; markdown?: string }[]
     const published = String(versions.find(x => x.isActive)?.markdown ?? "")
     const m = say(self.language)
-    const parts = [v.warnings.length ? m.convertedWithWarnings(v.warnings.join(" ")) : m.converted]
+    const parts = [v.warnings.length ? m.convertedWithWarnings(v.warnings.join(" ")) : m.converted, ...conversionNote(conversion, self.language)]
     if (published) {
       const d = textDiff(published, v.markdown)
       parts.push(d.added + d.removed === 0
@@ -779,11 +784,13 @@ export async function decideOnDraftAction(fd: FormData) {
   try {
     const col = await getCollection(DOCUMENTS_COLLECTION)
     const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
-    const draft = doc?.llmDraft as { text?: string } | undefined
+    const draft = doc?.llmDraft as { text?: string; mode?: string } | undefined
     if (!draft?.text) throw new LibraryError("library.noDraft", "Žiadny návrh tu nie je.")
 
     if (accept) {
       await saveDraft(self.companyCode, id, draft.text, `${self.email} (návrh modelu)`)
+      // Prijatý prevod modelom ide s kontrolou slov ako každý iný (ADR-046, D300).
+      if (draft.mode === "convert") await adoptConversionCheck(self.companyCode, id)
       message = say(self.language).draftAccepted
     } else {
       message = say(self.language).draftDiscarded
@@ -1654,6 +1661,100 @@ function scheduleChunkProposal(
       if (!(e instanceof AppError)) console.error("[návrh rezu] automatický návrh zlyhal:", e)
     }
   })
+}
+
+/** Názov druhu dokumentu pre návrh rezov — tak, ako ho vidí kurátor. */
+async function kindLabelOf(self: { companyCode: string; extras: CodelistExtras }, documentId: string): Promise<string | null> {
+  const state = await cutterState(self.companyCode, documentId)
+  if (!state?.category) return null
+  return codelistOptions("category", self.extras).find(o => o.value === state.category)?.label ?? state.category
+}
+
+/** Spustí prevod modelom a hneď prvý krok na pozadí (ADR-046, D301). */
+async function startConversion(
+  self: { companyCode: string; personId: string; email: string; extras: CodelistExtras },
+  documentId: string,
+): Promise<void> {
+  const who = await findPerson(self.companyCode, self.email)
+  await startAiConversion(
+    self.companyCode, documentId,
+    { email: self.email, personId: self.personId, personName: who?.fullName ?? self.email },
+    await kindLabelOf(self, documentId),
+  )
+  const origin = originFromHeaders(await headers())
+  after(() => kick(origin, "/api/cron/conversion"))
+}
+
+/**
+ * Po nahratí: PDF s textovou vrstvou prevedie model (D297), návrh rezov
+ * potom beží nad jeho textom (D302). Ostatné súbory a sken idú ako doteraz —
+ * doslovný prevod a návrh rezov hneď.
+ */
+async function startConversionAfterUpload(
+  self: { companyCode: string; personId: string; email: string; extras: CodelistExtras },
+  documentId: string,
+): Promise<"started" | "noAi" | "skipped"> {
+  try {
+    await startConversion(self, documentId)
+    return "started"
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[prevod modelom] spustenie zlyhalo:", e)
+    scheduleChunkProposal(self, documentId)
+    return e instanceof AppError && e.code === "rewrite.notConfigured" ? "noAi" : "skipped"
+  }
+}
+
+/** Veta do hlásenia po nahratí — bez kľúča AI to hlásenie povie (D297). */
+function conversionNote(result: "started" | "noAi" | "skipped", language: UiLanguage): string[] {
+  if (result === "started") return [say(language).conversionStarted]
+  if (result === "noAi") return [say(language).conversionNoAi]
+  return []
+}
+
+/** „Previesť modelom" v editore — aj pre koncepty spred ADR-046. */
+export async function convertWithModelAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    await startConversion(self, id)
+    message = say(self.language).conversionStarted
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  redirect(`/library/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Potvrdenie nezhôd prevodu s originálom (D300). Označené, alebo všetky
+ * len v interpunkcii naraz. Do auditu ide počet — nezhody sú pri koncepte.
+ */
+export async function confirmDifferencesAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    const ids = fieldText(fd, "scope") === "minor"
+      ? (await freshConversionCheck(self.companyCode, id))?.open.filter(d => d.minor).map(d => d.id) ?? []
+      : fd.getAll("ids").map(String)
+    const n = await confirmDifferences(self.companyCode, id, ids, self.email)
+    if (n) {
+      await writeAudit({
+        companyCode: self.companyCode, subject: "document", action: "conversion-confirmed",
+        actor: self.email, targetId: id, targetLabel: id, note: `${n} nezhôd`,
+      })
+    }
+    message = say(self.language).differencesConfirmed(n)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  redirect(`/library/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#check`)
 }
 
 /** „Navrhnúť rezy" / „Navrhnúť znova" s poznámkou „Čo nesedí". */

@@ -87,6 +87,10 @@ export type NotificationKind =
    * všimol, že mu pribudla alebo zmizla časť navigácie.
    */
   | "rolesChanged"
+  /** Prevod PDF modelom dobehol (ADR-046, D301) — tomu, kto ho spustil. */
+  | "converted"
+  /** Prevod PDF modelom sa vzdal; ostáva doslovný prevod (D301). */
+  | "conversionFailed"
 
 export interface NotificationParams {
   documentId?: string
@@ -139,6 +143,10 @@ export function notificationHref(
     case "draftResponsibleAssigned":
     case "lawVersionDraft":
       return documentId ? `/library/${encodeURIComponent(documentId)}` : null
+    case "converted":
+    case "conversionFailed":
+      // Rovno do editora — tam je výsledok a kontrola slov.
+      return documentId ? `/library/${encodeURIComponent(documentId)}/text` : null
     case "remindersSent":
       return "/hr/reminders"
     case "approvalCancelled":

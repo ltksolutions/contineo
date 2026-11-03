@@ -51,6 +51,8 @@ function sentence(language: UiLanguage, kind: string, params: NotificationParams
   switch (kind) {
     case "reindexed": return t.reindexed(title, params.count ?? 0)
     case "rewritten": return t.rewritten(title)
+    case "converted": return t.converted(title)
+    case "conversionFailed": return t.conversionFailed(title)
     case "remindersSent": return t.remindersSent(params.count ?? 0)
     case "versionPublished": return t.versionPublished(title, params.versionLabel ?? "")
     case "responsibleAssigned": return t.responsibleAssigned(title, params.versionLabel ?? "")

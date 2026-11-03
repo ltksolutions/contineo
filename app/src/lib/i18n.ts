@@ -2062,7 +2062,7 @@ interface Dictionary {
       onlyUnpriced: string
       clearFilter: string
       noPerson: string
-      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "markdown-clean" | "chunking-analysis" | "faq-mining" | "faq-review" | "compliance-review", { label: string; why: string }>
+      purposes: Record<"answer" | "query-rewrite" | "query-classify" | "pdf-rewrite" | "pdf-conversion" | "markdown-clean" | "chunking-analysis" | "faq-mining" | "faq-review" | "compliance-review", { label: string; why: string }>
     }
     branding: {
       name: string
@@ -2622,6 +2622,10 @@ interface Dictionary {
     kinds: {
       reindexed: (title: string, chunks: number) => string
       rewritten: (title: string) => string
+      /** Prevod PDF modelom dobehol (ADR-046). */
+      converted: (title: string) => string
+      /** Prevod PDF modelom sa vzdal — ostáva doslovný prevod. */
+      conversionFailed: (title: string) => string
       remindersSent: (count: number) => string
       versionPublished: (title: string, label: string) => string
       responsibleAssigned: (title: string, label: string) => string
@@ -4257,6 +4261,8 @@ interface Dictionary {
       /** Ten istý štítok, keď návrh nevyrobil model, ale pravidlá. */
       ruleDraft: string
       modeRewriteScan: string
+      /** Prevod PDF modelom (ADR-046) — druh návrhu, keď koncept medzitým niekto upravil. */
+      modeConvert: string
       modeClean: string
       draftMeta: (model: string, when: string, chars: number) => string
       draftNoteBefore: string
@@ -4296,6 +4302,25 @@ interface Dictionary {
       cleanNote: string
       rewriteScan: string
       rewriteScanNote: string
+      /** Prevod PDF modelom s kontrolou slov (ADR-046). */
+      convert: string
+      convertNote: string
+      convertRunning: (step: number, steps: number) => string
+      convertRefresh: string
+      convertFailed: (reason: string) => string
+      checkHeading: string
+      checkSummary: (pdfWords: number, same: number, open: number, minor: number) => string
+      checkBlocking: string
+      checkAllConfirmed: (n: number) => string
+      checkPdf: string
+      checkText: string
+      checkNothing: string
+      checkPages: (pages: string) => string
+      checkLine: (line: number) => string
+      checkImage: string
+      checkMinor: string
+      checkConfirmSelected: string
+      checkConfirmMinor: (n: number) => string
     }
     /** Hlásenia serverových akcií — chodia späť cez `?msg=`. */
     actions: {
@@ -4313,6 +4338,10 @@ interface Dictionary {
       rulesReturnedDraft: string
       draftAccepted: string
       draftDiscarded: string
+      /** Po nahratí PDF: prevod modelom beží, alebo nie je nastavený (ADR-046). */
+      conversionStarted: string
+      conversionNoAi: string
+      differencesConfirmed: (n: number) => string
       assigned: string
       /** Hromadné akcie: prázdny výber a výsledok dávky. */
       bulkNothingSelected: string
@@ -6894,6 +6923,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "Niektorý z vybraných schvaľovateľov tu nie je alebo je vyradený.",
     "approval.documentNotFound": "Taký dokument tu nie je.",
     "approval.pdfRequired": "Koncept nemá PDF — nahraj znenie znova aj s PDF. Schvaľuje sa PDF spolu s textom.",
+    "approval.conversionRunning": "Prevod modelom ešte beží — koncept sa dá predložiť, až keď dobehne.",
+    "approval.conversionUnresolved": "Text od modelu má nepotvrdené nezhody s originálom (počet: {count}) — potvrď ich v editore textu.",
+    "conversion.alreadyRunning": "Prevod modelom už beží.",
+    "conversion.onlyPdf": "Modelom sa prevádza len PDF — ostatné formáty majú štruktúru vlastnú.",
+    "conversion.noTextLayer": "PDF nemá textovú vrstvu — je to sken a nie je s čím porovnávať. Použi „Prepísať zo skenu“.",
+    "conversion.pdfMissing": "Pôvodné PDF sa nenašlo.",
+    "conversion.failed": "Volanie modelu opakovane zlyhalo.",
+    "conversion.noCheck": "Koncept nemá kontrolu slov.",
     "approval.draftChanged": "Koncept sa medzitým zmenil — obnov stránku a predlož ho znova.",
     "approval.reasonRequired": "Bez dôvodu sa kolo zrušiť nedá. O rok nikto nezistí, prečo skončilo.",
     "approval.nothingRunning": "Pre toto znenie nebeží žiadne kolo.",
@@ -7608,6 +7645,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "query-rewrite": { label: "Úprava otázky", why: "preformulovanie pred vyhľadávaním, aby sa našli správne články" },
         "query-classify": { label: "Výber spôsobu hľadania", why: "rozhodnutie medzi hľadaním podľa slov a podľa významu" },
         "pdf-rewrite": { label: "Prepis skenu PDF", why: "sken bez textovej vrstvy sa prepisuje do textu predpisu" },
+        "pdf-conversion": { label: "Prevod PDF modelom", why: "PDF po nahratí model analyzuje a prevedie do textu, každé slovo sa kontroluje proti PDF" },
         "markdown-clean": { label: "Úprava členenia textu", why: "obnovenie nadpisov a článkov v prevedenom texte" },
         "chunking-analysis": { label: "Analýza členenia", why: "návrh, ako dokument narezať na úseky pre vyhľadávanie" },
         "faq-mining": { label: "Ťažba otázok", why: "otázky z histórie schránky helpdesku pre návrhy do manuálov (ADR-030, ADR-034)" },
@@ -8216,6 +8254,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: (title, chunks) =>
         `Dokument „${title}" je preindexovaný — ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"}.`,
       rewritten: (title) => `Prepis dokumentu „${title}" modelom dobehol. Text si prečítaj, než ho prijmeš.`,
+      converted: (title) => `Prevod dokumentu „${title}" modelom dobehol. V editore textu potvrď nezhody s originálom.`,
+      conversionFailed: (title) => `Prevod dokumentu „${title}" modelom sa nepodaril — ostáva doslovný prevod. Dôvod je v editore textu.`,
       remindersSent: (count) =>
         `Rozposlané pripomienky: ${count} ${count === 1 ? "správa" : count < 5 ? "správy" : "správ"}.`,
       versionPublished: (title, label) => `Zverejnené znenie „${label}" dokumentu „${title}".`,
@@ -9743,6 +9783,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       modelDraft: "návrh modelu",
       ruleDraft: "návrh podľa pravidiel",
       modeRewriteScan: "prepis skenu",
+      modeConvert: "prevod modelom",
       modeClean: "prečistenie členenia",
       draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} znakov`,
       draftNoteBefore: "Model mal zakázané meniť znenie — ",
@@ -9779,6 +9820,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       cleanNote: "„Prečistiť členenie“ jazykový model nepoužíva. Text sa označkuje podľa pravidiel — ČASŤ, hlava, diel, Článok, príloha — a odstráni sa opakovaná pätička strany. Nemá to limit na dĺžku a nemení sa ani jedno slovo normy.",
       rewriteScan: "Prepísať zo skenu",
       rewriteScanNote: "„Prepísať zo skenu“ pošle celé pôvodné PDF modelu. Má zmysel vtedy, keď PDF nemá textovú vrstvu alebo je prevod rozsypaný.",
+      convert: "Previesť modelom",
+      convertNote: "„Previesť modelom“ pošle PDF modelu: najprv ho celé analyzuje, potom ho prevedie po častiach podľa vlastnej analýzy, bez šablóny. Každé slovo výsledku sa porovná s textovou vrstvou PDF a nezhody potvrdíš tu, než pôjde koncept na schválenie.",
+      convertRunning: (step, steps) => `Prevod modelom beží na pozadí — krok ${step} z ${steps}. Dovtedy je koncept doslovný prevod; keď model dobehne, dostaneš upozornenie.`,
+      convertRefresh: "Obnoviť",
+      convertFailed: reason => `Prevod modelom sa nepodaril: ${reason} Ostáva doslovný prevod; znova to skúsiš tlačidlom „Previesť modelom“.`,
+      checkHeading: "Kontrola slov s originálom",
+      checkSummary: (pdfWords, same, open, minor) => `Z ${pdfWords} slov PDF sedí ${same}. Nepotvrdené nezhody: ${open}, z toho len v interpunkcii ${minor}.`,
+      checkBlocking: "Koncept nejde na schválenie, kým nepotvrdíš každú nezhodu. Porovnaj ju s originálom vľavo; keď je text nesprávny, oprav ho v editore — po uložení sa kontrola prepočíta.",
+      checkAllConfirmed: n => `Všetky nezhody s originálom sú potvrdené (${n}).`,
+      checkPdf: "V PDF",
+      checkText: "V texte",
+      checkNothing: "nič",
+      checkPages: pages => `strana ${pages}`,
+      checkLine: line => `riadok ${line}`,
+      checkImage: "pri obrázku — mohol to byť prepis z neho",
+      checkMinor: "len interpunkcia",
+      checkConfirmSelected: "Potvrdiť označené",
+      checkConfirmMinor: n => `Potvrdiť interpunkčné (${n})`,
     },
     actions: {
       converted: "Prevedené. Prečítaj text a porovnaj ho s originálom.",
@@ -9797,6 +9856,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rulesReturnedDraft: "Členenie je prečistené. Porovnaj návrh s doterajším textom a rozhodni sa.",
       draftAccepted: "Návrh je teraz konceptom. Publikovanie je stále samostatný krok.",
       draftDiscarded: "Návrh zahodený.",
+      conversionStarted: "Prevedené doslovne. Model dokument práve analyzuje a prevádza po častiach — keď dobehne, dostaneš upozornenie.",
+      conversionNoAi: "Prevedené doslovne — prevod modelom nie je nastavený (organizácia nemá kľúč AI).",
+      differencesConfirmed: n => `Potvrdené nezhody: ${n}.`,
       assigned: "Zaradené.",
       bulkNothingSelected: "Neoznačili ste žiadny dokument.",
       bulkMoved: (moved) => `Presunuté: ${moved}.`,
@@ -12329,6 +12391,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "Někdo z vybraných schvalovatelů tu není nebo je vyřazený.",
     "approval.documentNotFound": "Takový dokument tu není.",
     "approval.pdfRequired": "Koncept nemá PDF — nahraj znění znovu i s PDF. Schvaluje se PDF spolu s textem.",
+    "approval.conversionRunning": "Převod modelem ještě běží — koncept lze předložit, až doběhne.",
+    "approval.conversionUnresolved": "Text od modelu má nepotvrzené neshody s originálem (počet: {count}) — potvrď je v editoru textu.",
+    "conversion.alreadyRunning": "Převod modelem už běží.",
+    "conversion.onlyPdf": "Modelem se převádí jen PDF — ostatní formáty mají strukturu vlastní.",
+    "conversion.noTextLayer": "PDF nemá textovou vrstvu — je to sken a není s čím porovnávat. Použij „Přepsat ze skenu“.",
+    "conversion.pdfMissing": "Původní PDF se nenašlo.",
+    "conversion.failed": "Volání modelu opakovaně selhalo.",
+    "conversion.noCheck": "Koncept nemá kontrolu slov.",
     "approval.draftChanged": "Koncept se mezitím změnil — obnov stránku a předlož ho znovu.",
     "approval.reasonRequired": "Bez důvodu kolo zrušit nelze. Za rok nikdo nezjistí, proč skončilo.",
     "approval.nothingRunning": "Pro toto znění neběží žádné kolo.",
@@ -13043,6 +13113,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "query-rewrite": { label: "Úprava dotazu", why: "přeformulování před vyhledáváním, aby se našly správné články" },
         "query-classify": { label: "Výběr způsobu hledání", why: "rozhodnutí mezi hledáním podle slov a podle významu" },
         "pdf-rewrite": { label: "Přepis skenu PDF", why: "sken bez textové vrstvy se přepisuje do textu předpisu" },
+        "pdf-conversion": { label: "Převod PDF modelem", why: "PDF po nahrání model analyzuje a převede do textu, každé slovo se kontroluje proti PDF" },
         "markdown-clean": { label: "Úprava členění textu", why: "obnovení nadpisů a článků v převedeném textu" },
         "chunking-analysis": { label: "Analýza členění", why: "návrh, jak dokument rozřezat na úseky pro vyhledávání" },
         "faq-mining": { label: "Těžba otázek", why: "otázky z historie schránky helpdesku pro návrhy do manuálů (ADR-030, ADR-034)" },
@@ -13648,6 +13719,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: (title, chunks) =>
         `Dokument „${title}" je přeindexovaný — ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"}.`,
       rewritten: (title) => `Přepis dokumentu „${title}" modelem doběhl. Text si přečti, než ho přijmeš.`,
+      converted: (title) => `Převod dokumentu „${title}" modelem doběhl. V editoru textu potvrď neshody s originálem.`,
+      conversionFailed: (title) => `Převod dokumentu „${title}" modelem se nepodařil — zůstává doslovný převod. Důvod je v editoru textu.`,
       remindersSent: (count) =>
         `Rozeslané připomínky: ${count} ${count === 1 ? "zpráva" : count < 5 ? "zprávy" : "zpráv"}.`,
       versionPublished: (title, label) => `Zveřejněné znění „${label}" dokumentu „${title}".`,
@@ -15174,6 +15247,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       modelDraft: "návrh modelu",
       ruleDraft: "návrh podle pravidel",
       modeRewriteScan: "přepis skenu",
+      modeConvert: "převod modelem",
       modeClean: "pročištění členění",
       draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} znaků`,
       draftNoteBefore: "Model měl zakázáno měnit znění — ",
@@ -15210,6 +15284,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       cleanNote: "„Pročistit členění“ jazykový model nepoužívá. Text se označkuje podle pravidel — ČÁST, hlava, díl, Článek, příloha — a odstraní se opakovaná patička stránky. Nemá to limit na délku a nemění se ani jedno slovo předpisu.",
       rewriteScan: "Přepsat ze skenu",
       rewriteScanNote: "„Přepsat ze skenu“ pošle celé původní PDF modelu. Má smysl tehdy, když PDF nemá textovou vrstvu nebo je převod rozsypaný.",
+      convert: "Převést modelem",
+      convertNote: "„Převést modelem“ pošle PDF modelu: nejdřív ho celé analyzuje, potom ho převede po částech podle vlastní analýzy, bez šablony. Každé slovo výsledku se porovná s textovou vrstvou PDF a neshody potvrdíš tady, než půjde koncept ke schválení.",
+      convertRunning: (step, steps) => `Převod modelem běží na pozadí — krok ${step} z ${steps}. Do té doby je koncept doslovný převod; až model doběhne, dostaneš upozornění.`,
+      convertRefresh: "Obnovit",
+      convertFailed: reason => `Převod modelem se nepodařil: ${reason} Zůstává doslovný převod; znovu to zkusíš tlačítkem „Převést modelem“.`,
+      checkHeading: "Kontrola slov s originálem",
+      checkSummary: (pdfWords, same, open, minor) => `Z ${pdfWords} slov PDF sedí ${same}. Nepotvrzené neshody: ${open}, z toho jen v interpunkci ${minor}.`,
+      checkBlocking: "Koncept nejde ke schválení, dokud nepotvrdíš každou neshodu. Porovnej ji s originálem vlevo; když je text nesprávný, oprav ho v editoru — po uložení se kontrola přepočítá.",
+      checkAllConfirmed: n => `Všechny neshody s originálem jsou potvrzené (${n}).`,
+      checkPdf: "V PDF",
+      checkText: "V textu",
+      checkNothing: "nic",
+      checkPages: pages => `strana ${pages}`,
+      checkLine: line => `řádek ${line}`,
+      checkImage: "u obrázku — mohl to být přepis z něj",
+      checkMinor: "jen interpunkce",
+      checkConfirmSelected: "Potvrdit označené",
+      checkConfirmMinor: n => `Potvrdit interpunkční (${n})`,
     },
     actions: {
       converted: "Převedeno. Přečti text a porovnej ho s originálem.",
@@ -15228,6 +15320,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rulesReturnedDraft: "Členění je pročištěné. Porovnej návrh s dosavadním textem a rozhodni se.",
       draftAccepted: "Návrh je teď konceptem. Publikování je stále samostatný krok.",
       draftDiscarded: "Návrh zahozen.",
+      conversionStarted: "Převedeno doslovně. Model dokument právě analyzuje a převádí po částech — až doběhne, dostaneš upozornění.",
+      conversionNoAi: "Převedeno doslovně — převod modelem není nastavený (organizace nemá klíč AI).",
+      differencesConfirmed: n => `Potvrzené neshody: ${n}.`,
       assigned: "Zařazeno.",
       bulkNothingSelected: "Neoznačili jste žádný dokument.",
       bulkMoved: (moved) => `Přesunuto: ${moved}.`,
@@ -17752,6 +17847,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "One of the chosen approvers is not here or has been deactivated.",
     "approval.documentNotFound": "No such document here.",
     "approval.pdfRequired": "The draft has no PDF — upload the version again with a PDF. The PDF is approved together with the text.",
+    "approval.conversionRunning": "The model conversion is still running — the draft can be submitted once it finishes.",
+    "approval.conversionUnresolved": "The model's text has unconfirmed differences from the original (count: {count}) — confirm them in the text editor.",
+    "conversion.alreadyRunning": "The model conversion is already running.",
+    "conversion.onlyPdf": "Only PDFs are converted with the model — other formats carry their own structure.",
+    "conversion.noTextLayer": "The PDF has no text layer — it is a scan and there is nothing to compare against. Use “Transcribe from the scan”.",
+    "conversion.pdfMissing": "The original PDF was not found.",
+    "conversion.failed": "Calling the model failed repeatedly.",
+    "conversion.noCheck": "The draft has no word check.",
     "approval.draftChanged": "The draft has changed in the meantime — reload the page and submit it again.",
     "approval.reasonRequired": "A round cannot be cancelled without a reason. A year from now nobody would know why it ended.",
     "approval.nothingRunning": "No round is running for this version.",
@@ -18466,6 +18569,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "query-rewrite": { label: "Question rewriting", why: "rephrasing before the search so the right articles are found" },
         "query-classify": { label: "Search mode choice", why: "deciding between word search and meaning search" },
         "pdf-rewrite": { label: "PDF scan transcription", why: "a scan without a text layer is transcribed into the regulation text" },
+        "pdf-conversion": { label: "PDF conversion by model", why: "after upload the model analyses the PDF and converts it to text; every word is checked against the PDF" },
         "markdown-clean": { label: "Text structure cleanup", why: "restoring headings and articles in converted text" },
         "chunking-analysis": { label: "Chunking analysis", why: "a proposal for splitting the document into chunks for search" },
         "faq-mining": { label: "Question mining", why: "questions from the helpdesk mailbox history for manual proposals (ADR-030, ADR-034)" },
@@ -19071,6 +19175,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: (title, chunks) =>
         `“${title}” has been reindexed — ${chunks} ${chunks === 1 ? "chunk" : "chunks"}.`,
       rewritten: (title) => `The model finished rewriting “${title}”. Read the text before you accept it.`,
+      converted: (title) => `The model finished converting “${title}”. Confirm the differences from the original in the text editor.`,
+      conversionFailed: (title) => `Converting “${title}” with the model failed — the literal conversion stays. The reason is in the text editor.`,
       remindersSent: (count) =>
         `Reminders sent: ${count} ${count === 1 ? "message" : "messages"}.`,
       versionPublished: (title, label) => `Published version “${label}” of “${title}”.`,
@@ -20592,6 +20698,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       modelDraft: "model draft",
       ruleDraft: "rule-based draft",
       modeRewriteScan: "scan transcription",
+      modeConvert: "model conversion",
       modeClean: "structure cleanup",
       draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} characters`,
       draftNoteBefore: "The model was forbidden to change the wording — ",
@@ -20628,6 +20735,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       cleanNote: "“Clean up the structure” does not use the language model. The text is marked up by rules — PART, chapter, section, Article, annex — and the repeated page footer is removed. There is no length limit and not a single word of the regulation changes.",
       rewriteScan: "Transcribe from the scan",
       rewriteScanNote: "“Transcribe from the scan” sends the whole original PDF to the model. It makes sense when the PDF has no text layer or the conversion fell apart.",
+      convert: "Convert with the model",
+      convertNote: "“Convert with the model” sends the PDF to the model: first it analyses the whole document, then converts it part by part following its own analysis, with no template. Every word of the result is compared with the PDF text layer and you confirm the differences here before the draft goes for approval.",
+      convertRunning: (step, steps) => `The model conversion is running in the background — step ${step} of ${steps}. Until then the draft is the literal conversion; you will be notified when the model finishes.`,
+      convertRefresh: "Refresh",
+      convertFailed: reason => `The model conversion failed: ${reason} The literal conversion stays; try again with “Convert with the model”.`,
+      checkHeading: "Word check against the original",
+      checkSummary: (pdfWords, same, open, minor) => `${same} of ${pdfWords} PDF words match. Unconfirmed differences: ${open}, of which punctuation only: ${minor}.`,
+      checkBlocking: "The draft cannot go for approval until you confirm every difference. Compare it with the original on the left; if the text is wrong, fix it in the editor — the check is recomputed after saving.",
+      checkAllConfirmed: n => `All differences from the original are confirmed (${n}).`,
+      checkPdf: "In the PDF",
+      checkText: "In the text",
+      checkNothing: "nothing",
+      checkPages: pages => `page ${pages}`,
+      checkLine: line => `line ${line}`,
+      checkImage: "near an image — may be transcribed from it",
+      checkMinor: "punctuation only",
+      checkConfirmSelected: "Confirm selected",
+      checkConfirmMinor: n => `Confirm punctuation (${n})`,
     },
     actions: {
       converted: "Converted. Read the text and compare it with the original.",
@@ -20645,6 +20770,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       rulesReturnedDraft: "The structure has been cleaned up. Compare the draft with the current text and decide.",
       draftAccepted: "The draft is now the working text. Publishing is still a separate step.",
       draftDiscarded: "Draft discarded.",
+      conversionStarted: "Converted literally. The model is now analysing the document and converting it part by part — you will be notified when it finishes.",
+      conversionNoAi: "Converted literally — model conversion is not configured (the organisation has no AI key).",
+      differencesConfirmed: n => `Differences confirmed: ${n}.`,
       assigned: "Filed.",
       bulkNothingSelected: "You have not selected any document.",
       bulkMoved: (moved) => `Moved: ${moved}.`,

@@ -34,6 +34,10 @@ Staré `.doc` a `.xls` sa odmietnu s návodom. Typ sa určuje **z obsahu
 a prípony**, nie z toho, čo tvrdí prehliadač: `content-type` z formulára posiela
 klient a pri `.docx` býva podľa systému čokoľvek.
 
+> **Od 3. 11. 2026 (ADR-046):** PDF s textovou vrstvou prevádza po nahratí
+> model a každé slovo sa strojovo kontroluje proti textovej vrstve. Odsek
+> nižšie platí ďalej pre skenované PDF a pre to, že ústup nie je tichý.
+
 **Model sa nevolá automaticky a nikdy nie ako ústup po zlyhaní.** Norma je
 text, podľa ktorého ľudia konajú a ktorý potvrdzujú; model vie potichu
 preštylizovať vetu alebo domyslieť chýbajúce slovo — a nikto si toho nemusí

@@ -16,6 +16,7 @@
  */
 
 import { AppError } from "./appError"
+import type { LayerPage } from "./conversionCheck"
 
 export type FileType = "markdown" | "docx" | "pdf" | "xlsx" | "text"
 
@@ -241,7 +242,22 @@ async function fromDocx(data: Buffer): Promise<ConversionResult> {
   return { markdown, method: "mammoth + turndown", warnings: warnings }
 }
 
-async function fromPdf(data: Buffer): Promise<ConversionResult> {
+/**
+ * Textová vrstva PDF po stranách — riadky v poradí a počet obrázkov.
+ *
+ * Je to **vzor**, s ktorým sa porovnáva prevod modelom (ADR-046, D299), aj
+ * podklad doslovného prevodu. Nič tu nehádame o štruktúre; len skladáme to,
+ * čo v PDF je:
+ *
+ *   · riadok podľa zvislej súradnice (PDF nemá riadky, má polohy);
+ *   · **medzera podľa medzery na strane**: PDF píše slovo často po kúskoch
+ *     a medzeru nekreslí, takže spojením kúskov vznikalo „komisiám" aj
+ *     „komis iám" podľa toho, kde sa kúsok zlomil (rozpis súťaží SFZ,
+ *     3. 11. 2026). Medzera je tam, kde je na strane voľné miesto;
+ *   · obrázky sa len spočítajú — text z obrázka (tabuľka vložená ako
+ *     obrázok) v textovej vrstve nie je a kontrola to má vedieť.
+ */
+export async function pdfTextLayer(data: Buffer): Promise<LayerPage[]> {
   /*
    * Zlyhanie **samotnej knižnice** dostane vlastný kód.
    *
@@ -286,40 +302,61 @@ async function fromPdf(data: Buffer): Promise<ConversionResult> {
     )
   }
 
-  const pageCount: string[] = []
+  const imageOps = new Set([pdfjs.OPS.paintImageXObject, pdfjs.OPS.paintInlineImageXObject, pdfjs.OPS.paintImageMaskXObject])
+  const pages: LayerPage[] = []
   for (let i = 1; i <= pdfDoc.numPages; i++) {
     const page = await pdfDoc.getPage(i)
     const content = await page.getTextContent()
     const lines: string[] = []
     let line = ""
     let lastY: number | null = null
+    let lastEnd: number | null = null
 
     for (const item of content.items) {
-      const p = item as { str?: string; transform?: number[]; hasEOL?: boolean }
+      const p = item as { str?: string; transform?: number[]; width?: number; height?: number; hasEOL?: boolean }
       if (typeof p.str !== "string") continue
       const y = p.transform?.[5] ?? null
-      // Nový riadok podľa zvislej súradnice: PDF nemá riadky, má polohy.
+      const x = p.transform?.[4] ?? null
       if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
         lines.push(line.trim())
         line = ""
+        lastEnd = null
       }
+      // Voľné miesto aspoň pätina výšky písma je medzera medzi slovami.
+      const size = Math.abs(p.height || p.transform?.[3] || 0)
+      if (lastEnd !== null && x !== null && size && x - lastEnd > size * 0.18 && !/\s$/.test(line) && !/^\s/.test(p.str)) line += " "
       line += p.str
+      lastEnd = x !== null && typeof p.width === "number" ? x + p.width : null
       if (p.hasEOL) {
         lines.push(line.trim())
         line = ""
+        lastEnd = null
       }
       lastY = y
     }
     if (line.trim()) lines.push(line.trim())
-    pageCount.push(lines.filter(Boolean).join("\n"))
-  }
 
+    let images = 0
+    try {
+      const ops = await page.getOperatorList()
+      for (const fn of ops.fnArray) if (imageOps.has(fn)) images++
+    } catch {
+      // Bez zoznamu operácií len nevieme o obrázkoch — text je platný aj tak.
+    }
+    pages.push({ lines: lines.filter(Boolean), images })
+  }
+  return pages
+}
+
+async function fromPdf(data: Buffer): Promise<ConversionResult> {
+  const layer = await pdfTextLayer(data)
+  const pageCount = layer.map(p => p.lines.join("\n"))
   const markdown = tidied(collapseBlanks(pageCount.join("\n\n")))
   const warnings: string[] = []
 
   // Skenované PDF má strany a nemá text. Nepodsúvame OCR ticho: text, ktorý
   // vyzerá správne a nie je, je pri norme horší než chýbajúci dokument.
-  const charsPerPage = markdown.length / Math.max(pdfDoc.numPages, 1)
+  const charsPerPage = markdown.length / Math.max(layer.length, 1)
   if (markdown.length === 0) {
     throw new ConversionError(
       "conversion.pdfNoText",
@@ -337,7 +374,7 @@ async function fromPdf(data: Buffer): Promise<ConversionResult> {
     "PDF nemá nadpisy ani zoznamy, len polohu textu — členenie treba doplniť v editore.",
   )
 
-  return { markdown, method: `pdfjs (${pdfDoc.numPages} strán)`, warnings: warnings }
+  return { markdown, method: `pdfjs (${layer.length} strán)`, warnings: warnings }
 }
 
 async function fromXlsx(data: Buffer): Promise<ConversionResult> {

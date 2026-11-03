@@ -100,6 +100,12 @@ export interface RewriteAi {
   model: string
   /** Spotreba do výkazu (D158). Volá sa aj pri neúspechu, s `failed`. */
   onUsage?: (tokens: Partial<TokenCounts>, failed?: boolean) => void
+  /**
+   * Beh na pozadí (ADR-046): strop jedného volania a bez opakovania v SDK —
+   * dve volania po 200 s by prekročili hranicu funkcie; zlyhaný krok
+   * zopakuje ďalší kúsok.
+   */
+  timeoutMs?: number
 }
 
 function client(ai: RewriteAi): Anthropic {
@@ -110,7 +116,7 @@ function client(ai: RewriteAi): Anthropic {
       "Prepis modelom nie je nastavený — chýba ANTHROPIC_API_KEY. Prevod v aplikácii funguje ďalej.",
     )
   }
-  return new Anthropic({ apiKey: key })
+  return ai.timeoutMs ? new Anthropic({ apiKey: key, maxRetries: 0, timeout: ai.timeoutMs }) : new Anthropic({ apiKey: key })
 }
 
 /**
@@ -131,6 +137,16 @@ function client(ai: RewriteAi): Anthropic {
  * a čaká sa na celú odpoveď — volajúci dostane to isté, čo dostával predtým.
  */
 async function ask(ai: RewriteAi, message: { content: unknown }) {
+  return callModel(ai, { system: INSTRUCTION, content: message.content })
+}
+
+/**
+ * Volanie modelu so zadaním od volajúceho — to isté ako `ask()` (prúdom,
+ * spotreba do výkazu, useknutá odpoveď je chyba), len s vlastným pokynom.
+ * Používa ho prevod PDF modelom (ADR-046), ktorý má dva kroky s dvomi
+ * rôznymi pokynmi.
+ */
+export async function callModel(ai: RewriteAi, message: { system: string; content: unknown }) {
   const c = client(ai)
   let answer
   try {
@@ -140,7 +156,7 @@ async function ask(ai: RewriteAi, message: { content: unknown }) {
       // premýšľajú vždy a premýšľanie sa počíta do toho istého stropu.
       // Pri 32 000 by dlhá norma skončila `rewrite.answerTruncated` skôr.
       max_tokens: 64_000,
-      system: INSTRUCTION,
+      system: message.system,
       messages: [{ role: "user", content: message.content as never }],
     }).finalMessage()
   } catch (e) {
@@ -178,7 +194,7 @@ async function ask(ai: RewriteAi, message: { content: unknown }) {
 }
 
 /** Zloží odpoveď z textových blokov a odreže obal ```markdown, keď ho pridá. */
-function answerText(blocks: { type: string; text?: string }[]): string {
+export function answerText(blocks: { type: string; text?: string }[]): string {
   const text = blocks
     .filter(b => b.type === "text" && typeof b.text === "string")
     .map(b => b.text as string)

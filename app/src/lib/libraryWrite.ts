@@ -444,6 +444,8 @@ export async function uploadDocument(
         updatedBy: actor,
       },
       $setOnInsert: { createdAt: now, createdBy: actor, status: "draft", versions: [] },
+      // Prevod modelom a kontrola slov patria predošlému súboru (ADR-046).
+      $unset: { aiConversion: "", conversionCheck: "", conversionConfirmed: "" },
     },
     { upsert: true },
   )

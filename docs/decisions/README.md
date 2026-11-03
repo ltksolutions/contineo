@@ -57,6 +57,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-043](ADR-043-kluc-dokumentu-uuid.md) | Kľúč nového dokumentu je náhodné UUID (`sfz:<32 hexa>`), nie slug z názvu; formulár identifikátor neukazuje ani nepýta; existujúce dokumenty si kľúč nechávajú (D24, adresa je zmluva); kľúče číselníkov, kurzov a trás ostávajú zo slugu (D294) · prekonáva ADR-010 bod 1 | ✅ prijaté · časť „existujúce si kľúč nechávajú" prekonaná ADR-044 |
 | [ADR-044](ADR-044-migracia-klucov-na-uuid.md) | Aj existujúce dokumenty dostanú kľúč UUID; identifikátor sa prepíše vo všetkých kolekciách vrátane dôkazných záznamov (jednorazová výnimka z D24, len pole identifikátora); dvojice starý → nový v `document_id_aliases`, staré adresy presmeruje `proxy.ts` (D295) · prekonáva časť ADR-043 | ✅ prijaté |
 | [ADR-045](ADR-045-rola-administrator.md) | Rola `people-admin` sa premenúva na `admin` („Administrátor"); kód uznáva obe, kým migrácia `persons.roles` neprebehne; audit sa neprepisuje (D296) | ✅ prijaté |
+| [ADR-046](ADR-046-prevod-pdf-modelom-s-kontrolou-slov.md) | PDF s textovou vrstvou prevádza po nahratí model: najprv analýza celého dokumentu, potom prevod po častiach bez šablón; každé slovo sa strojovo porovná s textovou vrstvou PDF a koncept nejde na schválenie, kým nie sú nezhody potvrdené; beh na pozadí po krokoch, bez tichého ústupu (D297–D302) · prekonáva časť D53 | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -69,6 +70,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-046**. Súbor `ADR-046-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-047**. Súbor `ADR-047-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
