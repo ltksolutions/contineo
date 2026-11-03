@@ -4596,6 +4596,8 @@ interface Dictionary {
       categoryNewTag: string
       categoryNewLabel: string
       categoryNewHint: string
+      /** To isté pri úprave dokumentu — druh vzniká pri „Uložiť údaje". */
+      categoryNewHintEdit: string
       categoryPickExisting: string
       categoryNoRight: string
       categoryCreated: (label: string) => string
@@ -10095,6 +10097,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryNewTag: "nový",
       categoryNewLabel: "Názov nového druhu",
       categoryNewHint: "Druh sa pridá do číselníka organizácie, keď stlačíte „Nahrať“.",
+      categoryNewHintEdit: "Druh sa pridá do číselníka organizácie, keď stlačíte „Uložiť údaje“.",
       categoryPickExisting: "Vybrať existujúci",
       categoryNoRight: "Nič sa nenašlo. Nový druh pridá správca číselníkov.",
       categoryCreated: label => `Do číselníka pribudol druh „${label}“.`,
@@ -15558,6 +15561,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryNewTag: "nový",
       categoryNewLabel: "Název nového druhu",
       categoryNewHint: "Druh se přidá do číselníku organizace, když stisknete „Nahrát“.",
+      categoryNewHintEdit: "Druh se přidá do číselníku organizace, když stisknete „Uložit údaje“.",
       categoryPickExisting: "Vybrat existující",
       categoryNoRight: "Nic se nenašlo. Nový druh přidá správce číselníků.",
       categoryCreated: label => `Do číselníku přibyl druh „${label}“.`,
@@ -21007,6 +21011,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryNewTag: "new",
       categoryNewLabel: "Name of the new type",
       categoryNewHint: "The type is added to the organisation’s code list when you press “Upload”.",
+      categoryNewHintEdit: "The type is added to the organisation’s code list when you press “Save details”.",
       categoryPickExisting: "Choose an existing one",
       categoryNoRight: "Nothing found. A new type is added by the code list administrator.",
       categoryCreated: label => `The type “${label}” was added to the code list.`,

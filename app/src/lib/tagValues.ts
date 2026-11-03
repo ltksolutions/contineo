@@ -8,13 +8,18 @@
  * bez názvu, a názov s diakritikou `checkValue` odmietol.
  *
  * Podobná nová značka (Q3) sa nezaloží; volajúci ju vráti ako varovanie.
+ *
+ * **Značka „len tu"** (na dokumente, ale nie v číselníku — z čias pred Q2):
+ * keď ju človek napíše ako novú, založí sa v číselníku s napísaným názvom
+ * (3. 11. 2026). Dovtedy ju server pokladal za existujúcu, len ju zaškrtol
+ * a do číselníka sa nedala dostať inak než cez Organizáciu.
  */
 
 import { readValues, splitSimilar } from "./valueSelect"
 import { slugifyKey } from "./slug"
 import { tagOptions } from "./libraryRead"
 import { addCodelistItem } from "./codelistsTenant"
-import { CodelistError, type CodelistExtras } from "./codelists"
+import { CodelistError, codelistOptions, type CodelistExtras } from "./codelists"
 
 export async function tagsFromForm(
   fd: FormData,
@@ -25,13 +30,18 @@ export async function tagsFromForm(
   const { picked, fresh, forced } = readValues(fd, "tags")
   const options = await tagOptions(companyCode, extras)
   const byKey = new Map(options.map(o => [o.value, o.label ?? o.value]))
+  const inCodelist = new Set(codelistOptions("tags", extras).map(o => o.value))
   const tags = picked.map(v => v.trim().toLowerCase())
-  // Nová hodnota, ktorej kľúč už existuje, je len zaškrtnutie existujúcej.
+  // Nová hodnota, ktorej kľúč už je v číselníku, je len zaškrtnutie existujúcej.
+  // Kľúč, ktorý je len na dokumentoch, sa do číselníka zapíše — presná zhoda,
+  // podobnosť sa nerieši.
   const unknown: string[] = []
+  const catalogue: string[] = []
   for (const label of fresh) {
     const key = slugifyKey(label)
     if (!key) continue
-    if (byKey.has(key)) tags.push(key)
+    if (inCodelist.has(key)) tags.push(key)
+    else if (byKey.has(key)) catalogue.push(label)
     else unknown.push(label)
   }
   const { keep, similar: near } = splitSimilar(unknown, [...byKey.values()], forced)
@@ -39,7 +49,7 @@ export async function tagsFromForm(
   // dá zaškrtnúť.
   const keyOf = new Map([...byKey].map(([k, label]) => [label, k]))
   const similar = near.map(x => ({ value: x.value, like: keyOf.get(x.like) ?? x.like }))
-  for (const label of keep) {
+  for (const label of [...catalogue, ...keep]) {
     const key = slugifyKey(label)
     try {
       await addCodelistItem(companyCode, "tags", key, label, actor)

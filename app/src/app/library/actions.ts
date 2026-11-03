@@ -952,16 +952,24 @@ export async function saveDocumentMetadataAction(fd: FormData) {
   try {
     const tagged = await tagsFromForm(fd, self.companyCode, self.email, self.extras)
     similar = tagged.similar
+    // Nový druh aj pri úprave (3. 11. 2026) — ten istý postup ako pri nahratí.
+    const kind = await categoryFromForm(fd, self.companyCode, self.email, self.canManageCodelists, self.extras)
     await saveMetadata(self.companyCode, id, {
       title: fieldText(fd, "title"),
       scope: fieldText(fd, "scope"),
       accessLevel: fieldText(fd, "accessLevel"),
       language: fieldText(fd, "language"),
-      category: fieldText(fd, "category") || undefined,
+      category: kind.category,
       tags: tagged.tags,
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       internalNumber: fieldText(fd, "internalNumber") || undefined,
-    }, self.email, self.extras)
+    }, self.email, kind.extras)
+    const tu = dictionary(self.language).library.upload
+    message = [
+      message,
+      ...(kind.created ? [tu.categoryCreated(kind.created)] : []),
+      ...(kind.similar ? [tu.categorySimilar(kind.similar.value, kind.similar.like)] : []),
+    ].join(" ")
     // Priečinok je od 24. 9. 2026 v tom istom formulári (rám
     // KNIZNICA-uprava-dokumentu, Q2). Presun ide cez `assignDocument()` —
     // ten istý auditný záznam ako samostatný presun; bez zmeny nezapíše nič.

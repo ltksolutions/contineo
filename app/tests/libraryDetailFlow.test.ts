@@ -43,6 +43,7 @@ vi.mock("@/lib/legalBases", () => ({ legalBasisOptions: () => [] }))
 vi.mock("@/lib/folders", () => ({ allFolders: async () => [], flattenTree: () => [] }))
 vi.mock("@/lib/departments", () => ({ allDepartments: async () => [], flattenTree: () => [] }))
 vi.mock("@/lib/people", () => ({
+  isOrgAdmin: (p: { roles?: string[] } | null) => Boolean(p?.roles?.includes("admin")),
   listPeople: async () => [
     { id: "p-jan", fullName: "Ján Letko", email: "jan@sfz.sk", status: "active" },
     { id: "p-marek", fullName: "Marek Horák", email: "marek@sfz.sk", status: "active", department: "Právne" },
@@ -224,6 +225,9 @@ describe("detail — postup znenia", () => {
     expect(html).toContain("novým znením")
     expect(html).toMatch(/<input type="hidden" name="title" value="Pracovný poriadok SFZ"\/>/)
     expect(html).toContain('name="folderId"')
+    // Druh ide cez `CategoryField` (3. 11. 2026) — nepovinný, s voľbou „neurčené".
+    expect(html).toContain('name="category"')
+    expect(html).toContain("— neurčené —")
   })
 
   it("krok 1 pri platnom znení ponúka nový názov", async () => {
