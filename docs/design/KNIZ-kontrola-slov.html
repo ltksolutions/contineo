@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Kontrola slov s originálom</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/contineo/tokens.css">
+<link rel="stylesheet" href="ds/contineo/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+/* ODCHÝLKA 1: vyznačené slovo, ktoré sa líši */
+.diff-mark{background:var(--warn-bg);color:var(--ink);text-decoration:underline;text-decoration-color:var(--warn-fg);text-decoration-thickness:2px;text-underline-offset:3px;border-radius:3px;padding:0 2px}
+/* ODCHÝLKA 2: slovo z PDF, ktoré v texte chýba */
+.diff-mark--gone{text-decoration:line-through;text-decoration-color:var(--warn-fg);text-decoration-thickness:2px}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: {{width}}; box-sizing: border-box; background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 14px; line-height: 1.5; padding: 0 0 48px">
+
+  <div style="border-bottom: 1px solid var(--line); background: var(--surface); padding: 10px 16px">
+    <nav aria-label="Cesta" style="max-width: 940px; margin: 0 auto; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px">
+      <a href="#" style="color: var(--muted); text-decoration: none">Knižnica</a><span aria-hidden="true">›</span>
+      <a href="#" style="color: var(--muted); text-decoration: none">Rozpis súťaže riadenej ÚLK 2026/2027</a><span aria-hidden="true">›</span>
+      <span style="color: var(--ink)">Text</span>
+    </nav>
+  </div>
+
+  <div style="max-width: 940px; margin: 0 auto; padding: 20px 16px 0; display: flex; flex-direction: column; gap: 14px">
+
+    <div class="page-head">
+      <h1 class="page-title" style="margin: 0">Text dokumentu</h1>
+    </div>
+
+    <section class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="font-size: var(--fs-section, 17px); margin: 0">Kontrola slov s originálom</h2>
+      <p class="quiet" style="margin: 0; font-size: 13px">22 392 slov z PDF, 22 237 v texte rovnako. <b style="color: var(--ink)">10 miest</b> sa líši obsahom, 11 len interpunkciou.</p>
+      <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+        <div class="lnote lnote--warn">
+          <span class="lnote-mark" aria-hidden="true">!</span>
+          <span class="lnote-text">Text sme porovnali s PDF slovo po slove. Nižšie sú miesta, kde sa líšia. Pri každom sa pozrite do PDF: ak je text správne, potvrďte ho; ak nie, opravte ho v editore. Kým nie sú všetky potvrdené, dokument nepôjde na schválenie.</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+        <div class="lnote" role="status">
+          <span class="lnote-mark" aria-hidden="true">✓</span>
+          <span class="lnote-text">Všetkých 10 miest a 11 rozdielov v interpunkcii je potvrdených. Dokument môžete poslať na schválenie.</span>
+        </div>
+      </sc-if>
+    </section>
+
+    <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+
+      <!-- Strana 1 -->
+      <section class="card" style="padding: 0; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line)">
+          <h3 style="margin: 0; font-size: 15px; flex: 1 1 auto">Strana 1</h3>
+          <a class="button button--quiet button--sm" href="#">Otvoriť PDF na strane 1 ↗</a>
+        </div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline">
+            <b style="font-size: 13px">Opis obrázka</b><span class="quiet" style="font-size: 12px">riadok 3</span>
+          </div>
+          <p style="margin: 0"><span class="diff-mark"><i>Obrázok v origináli: logo Únie ligových klubov</i></span></p>
+          <p class="quiet" style="margin: 0; font-size: 13px">Túto vetu dopísal model k obrázku. V PDF nie je ako text, preto ju stroj neoverí. Sedí s tým, čo je na obrázku?</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px">
+            <button type="button" class="button button--quiet button--sm">Text je správny</button>
+            <a class="button button--quiet button--sm" href="#">Opraviť v texte</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Strana 7 -->
+      <section class="card" style="padding: 0; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line)">
+          <h3 style="margin: 0; font-size: 15px; flex: 1 1 auto">Strana 7</h3>
+          <a class="button button--quiet button--sm" href="#">Otvoriť PDF na strane 7 ↗</a>
+        </div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline">
+            <b style="font-size: 13px">Iné slovo</b><span class="quiet" style="font-size: 12px">riadok 188</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; align-items: baseline">
+            <span class="quiet" style="font-size: 12px">V PDF</span><span>…hracia plocha s rozmerom najmenej 20 <span class="diff-mark">cm²</span> na…</span>
+            <span class="quiet" style="font-size: 12px">V texte</span><span>…hracia plocha s rozmerom najmenej 20 <span class="diff-mark">cm</span> na…</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px">
+            <button type="button" class="button button--quiet button--sm">Text je správny</button>
+            <a class="button button--quiet button--sm" href="#">Opraviť v texte</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Strana 11–12: presuny -->
+      <section class="card" style="padding: 0; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line)">
+          <h3 style="margin: 0; font-size: 15px; flex: 1 1 auto">Strana 11–12 <span class="quiet" style="font-weight: 400; font-size: 13px">· 6 presunov v tabuľke</span></h3>
+          <a class="button button--quiet button--sm" href="#">Otvoriť PDF na strane 11 ↗</a>
+          <button type="button" class="button button--quiet button--sm">Potvrdiť stranu (6)</button>
+        </div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--line)">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline">
+            <b style="font-size: 13px">Presunuté</b><span class="quiet" style="font-size: 12px">riadok 412 → 415</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; align-items: baseline">
+            <span class="quiet" style="font-size: 12px">V PDF</span><span>…Ambulancia telovýchovného lekárstva <span class="diff-mark">Bratislava</span> [telefón] sportreha gmail. com…</span>
+            <span class="quiet" style="font-size: 12px">V texte</span><span>…Ambulancia telovýchovného lekárstva | [telefón] | sportreha gmail. com | <span class="diff-mark">Bratislava</span></span>
+          </div>
+          <p class="quiet" style="margin: 0; font-size: 13px">Rovnaké slová sú v texte na inom mieste — väčšinou iné poradie buniek v tabuľke. Skontrolujte, či mesto, telefón a e-mail patria v tabuľke tomu istému riadku ako v PDF.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px">
+            <button type="button" class="button button--quiet button--sm">Text je správny</button>
+            <a class="button button--quiet button--sm" href="#">Opraviť v texte</a>
+          </div>
+        </div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--line)">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline">
+            <b style="font-size: 13px">Presunuté</b><span class="quiet" style="font-size: 12px">riadok 419 → 421</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; align-items: baseline">
+            <span class="quiet" style="font-size: 12px">V PDF</span><span>…[meno lekára] <span class="diff-mark">[telefón]</span> Ambulancia telovýchovného lekárstva…</span>
+            <span class="quiet" style="font-size: 12px">V texte</span><span>…[meno lekára] | Ambulancia telovýchovného lekárstva | <span class="diff-mark">[telefón]</span></span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px">
+            <button type="button" class="button button--quiet button--sm">Text je správny</button>
+            <a class="button button--quiet button--sm" href="#">Opraviť v texte</a>
+          </div>
+        </div>
+        <div style="padding: 12px 16px">
+          <a href="#" class="quiet" style="font-size: 13px">Ďalšie 4 presuny na tejto strane ▾</a>
+        </div>
+      </section>
+
+      <!-- Strana 26 -->
+      <section class="card" style="padding: 0; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line)">
+          <h3 style="margin: 0; font-size: 15px; flex: 1 1 auto">Strana 26</h3>
+          <a class="button button--quiet button--sm" href="#">Otvoriť PDF na strane 26 ↗</a>
+        </div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline">
+            <b style="font-size: 13px">Chýba v texte</b><span class="quiet" style="font-size: 12px">riadok 903</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; align-items: baseline">
+            <span class="quiet" style="font-size: 12px">V PDF</span><span>…rozhoduje komisia <span class="diff-mark">o</span> námietke do 7 dní…</span>
+            <span class="quiet" style="font-size: 12px">V texte</span><span>…rozhoduje komisia <span class="diff-mark diff-mark--gone">o</span> námietke do 7 dní…</span>
+          </div>
+          <p class="quiet" style="margin: 0; font-size: 13px">Slovo je v PDF, v texte nie.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px">
+            <button type="button" class="button button--quiet button--sm">Text je správny</button>
+            <a class="button button--quiet button--sm" href="#">Opraviť v texte</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Strana 41 -->
+      <section class="card" style="padding: 0; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line)">
+          <h3 style="margin: 0; font-size: 15px; flex: 1 1 auto">Strana 41</h3>
+          <a class="button button--quiet button--sm" href="#">Otvoriť PDF na strane 41 ↗</a>
+        </div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline">
+            <b style="font-size: 13px">Chýba v texte</b><span class="quiet" style="font-size: 12px">riadok 1 377</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; align-items: baseline">
+            <span class="quiet" style="font-size: 12px">V PDF</span><span><span class="diff-mark diff-mark--gone">Priezvisko a meno Tel. kontakt Bydlisko E mail</span></span>
+            <span class="quiet" style="font-size: 12px">V texte</span><span class="quiet">nič — tabuľka začína prvým riadkom údajov</span>
+          </div>
+          <p class="quiet" style="margin: 0; font-size: 13px">Celý riadok z PDF v texte chýba. Vyzerá to na hlavičku tabuľky — pridajte ju do tabuľky v editore.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px">
+            <button type="button" class="button button--quiet button--sm">Text je správny</button>
+            <a class="button button--quiet button--sm" href="#">Opraviť v texte</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interpunkcia -->
+      <section class="card" style="padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px">
+        <div style="flex: 1 1 280px; min-width: 0">
+          <b style="font-size: 14px">Len interpunkcia · 11 miest</b>
+          <p class="quiet" style="margin: 2px 0 0; font-size: 13px">Čiarka, dvojbodka alebo bodka navyše či chýba — slová sú rovnaké. Napr. „Peter Štefaňák" → „: Peter Štefaňák".</p>
+        </div>
+        <button type="button" class="button button--quiet button--sm">Potvrdiť interpunkciu (11)</button>
+      </section>
+
+    </div>
+    </sc-if>
+
+    <section class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="font-size: 17px; margin: 0">Editor textu</h2>
+      <p class="quiet" style="margin: 0; font-size: 13px">„Opraviť v texte" sem posunie a označí miesto v poli (Q5).</p>
+      <div style="height: 120px; border: 1px solid var(--control-line); border-radius: 10px; background: var(--surface)"></div>
+    </section>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"width":{"editor":"enum","options":["1440px","834px","390px"],"default":"1440px"},"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"done":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const done = this.props.done ?? false;
+    return { width: this.props.width ?? '1440px', theme: this.props.theme ?? 'light', done: done, open: !done };
+  }
+}
+</script>
+</body>
+</html>

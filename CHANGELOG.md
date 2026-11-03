@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kontrola slov s originálom: čo sa stalo a čo potvrdzujem (2026-11-03, KNIZ-kontrola-slov)
+
+- Rozdiely textu a PDF sú zoskupené **podľa strany PDF** s odkazom „Otvoriť PDF
+  na strane N". Každá položka má druh (Presunuté, Iné slovo, Chýba v texte,
+  Navyše v texte, Opis obrázka), vetu „V PDF" / „V texte" s vyznačenými
+  slovami a jednu vetu, čo skontrolovať.
+- **Presun** — ten istý text ako „chýba" a o kus nižšie „navyše" (bunky
+  tabuľky v inom poradí, rozpis ÚLK) — je jedna položka, nie dve
+  (`lib/conversionReview.ts`, test `tests/conversionReview.test.ts`).
+- Zaškrtávacie okienka nahradilo „Text je správny" pri položke, „Potvrdiť
+  stranu (n)" a „Potvrdiť interpunkciu (n)". „Opraviť v texte" prepne editor
+  do Markdownu a označí riadok.
+- Nové triedy `.check-*` a `.diff-mark` v `globals.css` a `conventions.md`.
+
 ### Oprava: tlačidlo „Prepísať zo skenu" len pri pôvodnom PDF (2026-11-01)
 
 - Editor textu ukazoval tlačidlo podľa súboru vľavo, teda najprv podľa PDF

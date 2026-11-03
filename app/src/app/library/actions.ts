@@ -1704,7 +1704,8 @@ export async function confirmDifferencesAction(fd: FormData) {
   try {
     const ids = fieldText(fd, "scope") === "minor"
       ? (await freshConversionCheck(self.companyCode, id))?.open.filter(d => d.minor).map(d => d.id) ?? []
-      : fd.getAll("ids").map(String)
+      // Tlačidlo položky, strany či presunu nesie odtlačky oddelené medzerou.
+      : fd.getAll("ids").flatMap(v => String(v).split(/\s+/)).filter(Boolean)
     const n = await confirmDifferences(self.companyCode, id, ids, self.email)
     if (n) {
       await writeAudit({
