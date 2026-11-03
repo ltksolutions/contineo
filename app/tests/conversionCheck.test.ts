@@ -16,6 +16,11 @@ describe("čo nie je nezhoda", () => {
     expect(checkConversion(pdf, md).differences).toEqual([])
   })
 
+  it('odrážka z Wingdings, ktorú textová vrstva vydá ako písmeno „o“ či „Ø“', () => {
+    const pdf = [page(["Rozhodca:", "o potrestá brankára", "Ø zapíska do píšťalky"])]
+    expect(checkConversion(pdf, "Rozhodca:\n\n- potrestá brankára\n- zapíska do píšťalky").differences).toEqual([])
+  })
+
   it("slovo rozdelené na konci riadku a slovo rozbité medzerou", () => {
     const pdf = [page(["v súlade s pod-", "mienkami komis iám"])]
     expect(checkConversion(pdf, "v súlade s podmienkami komisiám").differences).toEqual([])
@@ -50,6 +55,11 @@ describe("čo nie je nezhoda", () => {
 })
 
 describe("čo je nezhoda", () => {
+  it('„o“ uprostred riadku je slovo, nie odrážka', () => {
+    const pdf = [page(["rozhoduje o výsledku stretnutia"])]
+    expect(checkConversion(pdf, "rozhoduje výsledku stretnutia").differences).toHaveLength(1)
+  })
+
   it("iné slovo", () => {
     const r = checkConversion([page(["klub môže podať námietku"])], "klub musí podať námietku")
     expect(r.differences).toMatchObject([{ kind: "changed", pdfText: "môže", mdText: "musí", minor: false }])
