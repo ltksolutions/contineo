@@ -29,7 +29,12 @@ const nextConfig = {
    * dokumenty nahrávali skriptom, takže cesta cez rozhranie nebola nikdy
    * prejdená.
    */
-  serverExternalPackages: ["pdfjs-dist"],
+  /*
+   * `@napi-rs/canvas` — natívny modul, ktorým pdf.js kreslí náhľad strany
+   * pre widget (`lib/pdfThumb.ts`). Zabaliť sa nedá (`.node` súbor), načíta
+   * sa z `node_modules`.
+   */
+  serverExternalPackages: ["pdfjs-dist", "@napi-rs/canvas"],
 
   /*
    * …a jeho pracovný modul sa **musí priložiť do funkcie ručne**.
@@ -62,6 +67,16 @@ const nextConfig = {
     "/**": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
     // Písma a statické logá pre PDF certifikátu — čítajú sa z disku za behu.
     "/learning/[courseKey]/certificate/pdf": ["./assets/fonts/*.ttf", "./public/tenants/**"],
+    /*
+     * Náhľad strany pre widget: pdf.js si `@napi-rs/canvas` vyžiada reťazcom
+     * za behu (`require` v `NodeCanvasFactory`) a ten zas binárku pre platformu
+     * — sledovanie závislostí nevidí ani jedno. Štandardné písma číta z disku.
+     */
+    "/api/widget/[channel]/pdf": [
+      "./node_modules/@napi-rs/canvas/**",
+      "./node_modules/@napi-rs/canvas-linux-x64-gnu/**",
+      "./node_modules/pdfjs-dist/standard_fonts/**",
+    ],
   },
   /*
    * Bezpečnostné hlavičky (N4, `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`).

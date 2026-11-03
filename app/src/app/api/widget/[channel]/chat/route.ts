@@ -16,6 +16,9 @@ import { connectorCallbackUrl } from "@/lib/mcp/callbackUrl"
 import { widgetSources, pickWidgetSources, searchedScopeOf } from "@/lib/widgetSources"
 import { answerKicker, answerFrom } from "@/lib/answerKicker"
 import { brandingView } from "@/lib/tenants"
+import { requestHostname } from "@/lib/session"
+import { widgetSecret } from "@/lib/channels"
+import { widgetPageLinks } from "@/lib/widgetPdfLink"
 import { dictionary } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
@@ -59,6 +62,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
     kicker: answerKicker(searchedScope, org, language), from: answerFrom(searchedScope, org, language),
   }
 
+  // Náhľad a odkaz na stranu citovaného znenia (KANAL-widget-strana) — podpis
+  // kanála, lebo človek z ISSF nie je prihlásený do intranetu.
+  const secret = widgetSecret(gate.channel)
+  const apiBase = `https://${await requestHostname()}`
+  const pageLinks = secret
+    ? (sources: unknown[]) => widgetPageLinks(sources, { apiBase, channelKey: gate.channel.key, secret })
+    : undefined
+
   const stream = chatStream({
     companyCode: gate.tenant.companyCode,
     query,
@@ -72,7 +83,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ channel
     // Predchádzajúce kolá z toho istého okna widgetu; starý skript ich neposiela.
     history: parseHistory(body.history),
     callbackUrl: await connectorCallbackUrl(),
-  }).pipeThrough(recordingTransform({ question: query, personId: gate.person.id, companyCode: gate.tenant.companyCode, startedAt: Date.now(), searchedScope, channelName: gate.channel.name, channelKey: gate.channel.key, scopeEvent }))
+  }).pipeThrough(recordingTransform({ question: query, personId: gate.person.id, companyCode: gate.tenant.companyCode, startedAt: Date.now(), searchedScope, channelName: gate.channel.name, channelKey: gate.channel.key, scopeEvent, pageLinks }))
 
   return new Response(stream, {
     headers: { ...cors, "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },

@@ -2879,6 +2879,12 @@ interface Dictionary {
     send: string
     thinking: string
     sources: string
+    /** Strana citovaného PDF pri zdroji (KANAL-widget-strana); `{page}`, `{from}`, `{to}`. */
+    sourcePage: string
+    sourcePages: string
+    figurePage: string
+    /** Popis náhľadu strany pre čítačku. */
+    pageThumb: string
     helpful: string
     notHelpful: string
     thanks: string
@@ -8545,6 +8551,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     insert: "vložiť",
     thinking: "Hľadám v predpisoch…",
     sources: "Zdroje",
+    sourcePage: "Strana {page}",
+    sourcePages: "Strany {from}–{to}",
+    figurePage: "Schéma na strane {page}",
+    pageThumb: "Náhľad strany {page} — otvoriť PDF na tejto strane",
     helpful: "Pomohlo",
     notHelpful: "Nepomohlo",
     thanks: "Ďakujeme.",
@@ -14039,6 +14049,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     insert: "vložit",
     thinking: "Hledám v předpisech…",
     sources: "Zdroje",
+    sourcePage: "Strana {page}",
+    sourcePages: "Strany {from}–{to}",
+    figurePage: "Schéma na straně {page}",
+    pageThumb: "Náhled strany {page} — otevřít PDF na této straně",
     helpful: "Pomohlo",
     notHelpful: "Nepomohlo",
     thanks: "Děkujeme.",
@@ -19524,6 +19538,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     insert: "insert",
     thinking: "Searching the regulations…",
     sources: "Sources",
+    sourcePage: "Page {page}",
+    sourcePages: "Pages {from}–{to}",
+    figurePage: "Diagram on page {page}",
+    pageThumb: "Preview of page {page} — open the PDF at this page",
     helpful: "Helpful",
     notHelpful: "Not helpful",
     thanks: "Thank you.",

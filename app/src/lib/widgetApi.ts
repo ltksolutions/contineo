@@ -148,6 +148,11 @@ export function recordingTransform(input: {
   channelKey: string
   /** Prvá udalosť streamu: zdroje behu a hotová hlavička odpovede pre widget. */
   scopeEvent?: Record<string, unknown>
+  /**
+   * Podpísané odkazy na strany citovaných znení (`widgetPageLinks`) — pošlú
+   * sa hneď po `done` ako `{type:"links", links}`, v poradí zdrojov.
+   */
+  pageLinks?: (sources: unknown[]) => unknown[]
 }): TransformStream<Uint8Array, Uint8Array> {
   const dec = new TextDecoder()
   const enc = new TextEncoder()
@@ -166,6 +171,14 @@ export function recordingTransform(input: {
         // „Nenašlo sa" — nie je čo hodnotiť, ale do podielu zodpovedaných patrí.
         void recordUnanswered(input.companyCode, input.channelKey)
         return
+      }
+      if (input.pageLinks) {
+        try {
+          controller.enqueue(enc.encode(`data: ${JSON.stringify({ type: "links", links: input.pageLinks(sources) })}\n\n`))
+        } catch (e) {
+          // Odkazy sú doplnok — odpoveď a jej zápis idú ďalej aj bez nich.
+          console.error("[widget] odkazy na strany sa nepodarilo pripraviť:", e)
+        }
       }
       try {
         const id = await recordAnswer({
