@@ -29,7 +29,7 @@ import {
   ConversionError, MAX_FAILURES, isConverting, referenceLayer, storedCheck, type StoredCheck, type Confirmation,
 } from "./conversionCheckDb"
 import {
-  analyse, convertPart, joinParts, tailOf, MAX_PAGES_PER_CALL, type PagePart,
+  analyse, convertPart, joinParts, tailOf, headingOutline, MAX_PAGES_PER_CALL, type PagePart,
 } from "./aiConversion"
 import type { RewriteAi } from "./llmRewrite"
 import { textFingerprint } from "./chunkIdentity"
@@ -229,7 +229,7 @@ export async function continueConversion(companyCode: string, documentId: string
     if (job.done.length < job.parts.length) {
       const part = job.parts[job.done.length]
       const previous = job.done.length ? tailOf(job.done[job.done.length - 1]) : ""
-      const markdown = await convertPart(file.data, layer, job.analysis, part, previous, ai)
+      const markdown = await convertPart(file.data, layer, job.analysis, part, previous, ai, headingOutline(job.done))
       const done = [...job.done, markdown]
       await col.updateOne(mine, {
         $set: { "aiConversion.done": done, "aiConversion.failures": 0, "aiConversion.error": null, "aiConversion.updatedAt": new Date() },

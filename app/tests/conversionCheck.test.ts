@@ -21,6 +21,13 @@ describe("čo nie je nezhoda", () => {
     expect(checkConversion(pdf, "v súlade s podmienkami komisiám").differences).toEqual([])
   })
 
+  it("HTML značky v Markdowne — zalomenie v bunke, podčiarknutie", () => {
+    const pdf = [page(["Prezident Ivan Kozák mobil: +421 903", "e-mail: kozak@futbalulk.sk", "Pre všetkých platí:"])]
+    const md = "| Prezident | Ivan Kozák | mobil: +421 903<br>e-mail: kozak@futbalulk.sk |\n\n<u>Pre všetkých platí:</u>"
+    expect(checkConversion(pdf, md).differences).toEqual([])
+    expect(stripMarkup("a<br/>b < 5")).toBe("a b < 5")
+  })
+
   it("úvodzovky, pomlčky a odrážkové znaky", () => {
     const pdf = [page(["▪ „Majster SR“ – finále"])]
     expect(checkConversion(pdf, "- \"Majster SR\" - finále").differences).toEqual([])
