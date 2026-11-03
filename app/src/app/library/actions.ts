@@ -1727,21 +1727,26 @@ export async function importConnectorArticlesAction(fd: FormData) {
   const back = fieldText(fd, "back") || "/library/new/connector"
   let message: string
   try {
+    // Nový druh aj pri importe (3. 11. 2026) — ten istý postup ako pri nahratí.
+    const kind = await categoryFromForm(fd, self.companyCode, self.email, self.canManageCodelists, self.extras)
+    const tu = dictionary(self.language).library.upload
     const out = await importArticles(self.companyCode, {
       connectorId: fieldText(fd, "connectorId"),
       externalIds: fd.getAll("externalId").filter((x): x is string => typeof x === "string"),
       folderId: fieldText(fd, "folderId") || null,
-      category: fieldText(fd, "category"),
+      category: kind.category ?? "",
       accessLevel: fieldText(fd, "accessLevel") || "internal",
       language: fieldText(fd, "language") || "sk",
       scope: fieldText(fd, "scope") || "company",
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       tags: fd.getAll("tags").filter((x): x is string => typeof x === "string"),
-    }, self.email, self.language, self.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
+    }, self.email, self.language, kind.extras, await connectorCallbackUrl(), { actor: { personId: self.personId, personName: self.email } })
     // Návrh rezov ako po nahratí súboru (Q2 A) — pre každý nový koncept.
     for (const o of out) if ((o.result === "created" || o.result === "version") && o.documentId) scheduleChunkProposal(self, o.documentId)
     const n = (r: string) => out.filter(o => o.result === r).length
     message = t.done(n("created"), n("version"), n("unchanged"), n("failed"))
+    if (kind.created) message += " " + tu.categoryCreated(kind.created)
+    if (kind.similar) message += " " + tu.categorySimilar(kind.similar.value, kind.similar.like)
     const failed = out.filter(o => o.result === "failed")
     if (failed.length) message += " " + failed.map(o => `${o.title}: ${o.error ?? ""}`).join("; ")
     revalidatePath("/library")
@@ -1825,21 +1830,28 @@ export async function importWebDocumentAction(fd: FormData) {
   const address = fieldText(fd, "address")
   const back = `/library/new/web?${new URLSearchParams(address ? { address } : {}).toString()}`
   try {
+    // Nový druh aj pri importe (3. 11. 2026) — ten istý postup ako pri nahratí.
+    const kind = await categoryFromForm(fd, self.companyCode, self.email, self.canManageCodelists, self.extras)
+    const tu = dictionary(self.language).library.upload
     const out = await importFromSlovLex(self.companyCode, {
       address,
       folderId: fieldText(fd, "folderId") || null,
-      category: fieldText(fd, "category"),
+      category: kind.category ?? "",
       accessLevel: fieldText(fd, "accessLevel") || "internal",
       language: fieldText(fd, "language") || "sk",
       scope: fieldText(fd, "scope") || "company",
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       tags: fd.getAll("tags").filter((x): x is string => typeof x === "string"),
-    }, self.email, self.extras)
+    }, self.email, kind.extras)
     if (out.result === "created") scheduleChunkProposal(self, out.documentId)
     revalidatePath("/library")
-    const message = out.result === "exists"
-      ? t.exists
-      : t.done(out.effectiveFrom ? formatDate(new Date(out.effectiveFrom), self.language) : "", out.later.length)
+    const message = [
+      out.result === "exists"
+        ? t.exists
+        : t.done(out.effectiveFrom ? formatDate(new Date(out.effectiveFrom), self.language) : "", out.later.length),
+      ...(kind.created ? [tu.categoryCreated(kind.created)] : []),
+      ...(kind.similar ? [tu.categorySimilar(kind.similar.value, kind.similar.like)] : []),
+    ].join(" ")
     redirect(`/library/${encodeURIComponent(out.documentId)}?msg=${encodeURIComponent(message)}`)
   } catch (e) {
     if (isRedirect(e)) throw e
