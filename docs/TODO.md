@@ -869,6 +869,10 @@ nemenný), **Zaradenie sa zlučuje do Druhu** a `companyCode` pri zakladaní
 tenanta systém navrhne (iniciály + kolízna kontrola), admin potvrdí alebo
 prepíše. Dôvody v ADR; tu len práca.
 
+> **Bod 1 (slug z názvu) prekonaný** 2. 11. 2026: kľúč nového dokumentu je UUID
+> (ADR-043, #524), existujúce dokumenty migrované (ADR-044, #525), `KeyPreview`
+> zmazaný. Zvyšok tejto sekcie je história.
+
 **Krok 1 — náhľad kľúča (malé, samostatné):** ✅ 2026-09-21, PR 7 (`design/pr7-nahravanie`)
 - [x] slugify z názvu (`lib/slug.ts`, zdieľaná serverom aj klientom), živý náhľad `sfz:kluc` (`KeyPreview.tsx`), ručný kľúč za `<details>`, texty sk/cs/en
 - [x] varovanie na kolíziu pred odoslaním — proti zoznamu obsadených kľúčov načítanému pri otvorení; serverová brána ostáva
@@ -1027,6 +1031,20 @@ nie táto sekcia.
   nemenia (prevádzkový výkaz, 25 mesiacov ich zmaže TTL). Ak treba aj
   v Spotrebe zjednotiť staré mená, zobrazovať meno z registra podľa
   `personId` ako v Prehľade.
+
+### Prevod PDF modelom a kontrola slov (2026-11-03, ADR-046)
+
+- [ ] **Pokračovanie úrovní nadpisov overiť pri ďalšom prevode** (#539) — na
+  rozpise ÚLK sa prejaví až opätovným „Previesť modelom"; dnešný text vznikol
+  pred opravou.
+- [ ] **Odrážka „o" zo zoznamu vo Worde medzi drobnosti** — textová vrstva PDF
+  číta podúrovňovú odrážku Wordu ako písmeno „o" (rozpis ÚLK, s. 26) a
+  kontrola ho hlási ako „chýba v texte". **Odporúčanie:** samostatné „o" na
+  začiatku položky zoznamu brať ako drobnosť (ako interpunkciu); stojí za to,
+  keď sa to zopakuje pri druhom dokumente.
+- [ ] **Prvý ostrý prevod iného dokumentu než ÚLK** — kontrola slov je
+  vyladená na jednom rozpise; pri druhom pozrieť, koľko položiek ostane na
+  rozhodnutie a či niektoré nie sú zase strojový artefakt.
 
 ## P. Vzdelávanie — modul `learning` (zaradené 2026-09-27)
 
