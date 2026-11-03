@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Oprava: import skriptom dáva novému dokumentu kľúč UUID (2026-11-03)
+
+- `scripts/import.mjs` bral kľúč nového dokumentu z `meta.json`
+  (`documentKey`, inak `sectionKey`), takže 2. 11. po migrácii ADR-044
+  vznikol `sfz:rozpis_republikovych_sutazi`. Nový dokument teraz dostane
+  UUID ako z obrazovky; `documentKey` pri novom dokumente skript odmietne
+  a opakovanému importu bráni kontrola názvu.
+- `--nove-znenie` nájde dokument aj podľa starého kľúča cez
+  `document_id_aliases`.
+- Ten jeden dokument prekľúčovala migrácia ADR-044 (spustil Ján 3. 11.).
+
 ### Oprava: „Len uložiť" si pamätá schvaľovateľov (2026-11-03)
 
 - Schvaľovatelia vybraní v príprave sa pri „Len uložiť" zahodili a formulár
