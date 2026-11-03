@@ -972,6 +972,12 @@ interface Dictionary {
     /** Zbalené technické údaje — len rolám s hodnotením (Q2). */
     technical: string
     openInLibrary: string
+    /** Citácia so stranou PDF (od 3. 11. 2026): „Strana 12" alebo „Strany 12–13". */
+    sourcePages: (from: number, to: number) => string
+    /** Samotné PDF na strane citácie, v novom okne. */
+    openPdfPage: string
+    /** Popis náhľadu strany pre čítačku. */
+    pageThumb: (page: number) => string
     /** Spodná plachta citácie na telefóne. */
     citationOf: (n: number, total: number) => string
     prev: string
@@ -6161,6 +6167,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsPending: "Citácie pribudnú počas písania",
     technical: "Technické údaje",
     openInLibrary: "Otvoriť v knižnici",
+    sourcePages: (from, to) => (from === to ? `Strana ${from}` : `Strany ${from}–${to}`),
+    openPdfPage: "Otvoriť PDF",
+    pageThumb: page => `Náhľad strany ${page} — otvoriť dokument na tejto strane`,
     citationOf: (n, total) => `Citácia ${n} z ${total}`,
     prev: "Predošlá",
     next: "Ďalšia",
@@ -11654,6 +11663,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsPending: "Citace přibudou během psaní",
     technical: "Technické údaje",
     openInLibrary: "Otevřít v knihovně",
+    sourcePages: (from, to) => (from === to ? `Strana ${from}` : `Strany ${from}–${to}`),
+    openPdfPage: "Otevřít PDF",
+    pageThumb: page => `Náhled strany ${page} — otevřít dokument na této straně`,
     citationOf: (n, total) => `Citace ${n} z ${total}`,
     prev: "Předchozí",
     next: "Další",
@@ -17137,6 +17149,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsPending: "Citations appear while the answer is written",
     technical: "Technical details",
     openInLibrary: "Open in library",
+    sourcePages: (from, to) => (from === to ? `Page ${from}` : `Pages ${from}–${to}`),
+    openPdfPage: "Open PDF",
+    pageThumb: page => `Preview of page ${page} — open the document at this page`,
     citationOf: (n, total) => `Citation ${n} of ${total}`,
     prev: "Previous",
     next: "Next",

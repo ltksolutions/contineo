@@ -18,7 +18,7 @@
 
 import { PDFDocument } from "pdf-lib"
 import { callModel, answerText, type RewriteAi } from "./llmRewrite"
-import type { LayerPage } from "./conversionCheck"
+import { contentImages, type LayerPage } from "./conversionCheck"
 
 /** Strop strán na jedno volanie — model PDF nad 100 strán neprijme. */
 export const MAX_PAGES_PER_CALL = 100
@@ -74,17 +74,21 @@ ${PROHIBITION}
 - Odseky, zoznamy a tabuľky vyjadri Markdownom; tabuľku ako tabuľku (| … |) s riadkom hlavičky.
 - Spoj riadky, ktoré rozdelilo zalomenie riadku alebo strany; slovo rozdelené spojovníkom na konci riadku spoj.
 - Hlavičky, päty a čísla strán vynechaj.
-- Text, ktorý je na obrázku (tabuľka, text), prepíš doslova. Obrázok bez textu (schéma, logo) opíš jednou vetou v kurzíve, ktorá začína „Obrázok v origináli:".
+- Text, ktorý je na obrázku (tabuľka, text), prepíš doslova.
+- Logo, pás či iný ozdobný prvok, ktorý sa opakuje v hlavičke alebo päte strán, vynechaj — nie je to obsah.
+- Schému, diagram alebo nákres bez textu opíš v kurzíve odsekom, ktorý začína „Obrázok v origináli:". Napíš, čo zobrazuje a čo je na ňom podstatné: kto alebo čo kde stojí, smer pohybu, rozmery a značky, číslo a názov diagramu, ak ho má. Opis slúži na vyhľadávanie — človek podľa neho schému nájde, preto použi slová, ktorými by sa na situáciu pýtal. Nič, čo na obrázku nie je, nedopĺňaj.
 
 Odpovedz LEN samotným Markdownom zadaných strán, bez komentára pred ním či za ním.`
 
 /** Textová vrstva strán `from…to` ako text pre model. */
 export function layerText(layer: LayerPage[], from: number, to: number): string {
   const out: string[] = []
+  // Logo a pás v hlavičke každej strany sa nehlásia — model by ich opisoval.
+  const images = contentImages(layer)
   for (let p = from; p <= to; p++) {
     const page = layer[p - 1]
     if (!page) continue
-    out.push(`--- strana ${p}${page.images ? ` (obrázky: ${page.images})` : ""} ---`, ...page.lines)
+    out.push(`--- strana ${p}${images[p - 1] ? ` (obrázky: ${images[p - 1]})` : ""} ---`, ...page.lines)
   }
   return out.join("\n")
 }

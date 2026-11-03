@@ -39,6 +39,7 @@ import { lawActsFor, lawActText, lawActMarkdown } from "./law"
 import type { SearchCaps } from "./access"
 import { logMcpCall } from "./calls"
 import type { McpActor } from "./auth"
+import { documentPageHref } from "../pageLink"
 
 // ── Katalóg ─────────────────────────────────────────────────────────────────
 
@@ -93,8 +94,8 @@ function failure(message: string): CallToolResult {
   return { isError: true, content: [{ type: "text", text: message }] }
 }
 
-function documentUrl(origin: string, documentId: string): string {
-  return `${origin}/documents/${encodeURIComponent(documentId)}`
+function documentUrl(origin: string, documentId: string, at?: { page: number; versionId?: string }): string {
+  return at ? `${origin}${documentPageHref(documentId, at.page, at.versionId)}` : `${origin}/documents/${encodeURIComponent(documentId)}`
 }
 
 function day(d: Date | string | null | undefined): string | null {
@@ -164,6 +165,8 @@ export interface SearchHit {
   /** Zdroj vo výbere: `library`, `law` alebo id konektora (ADR-040 D266). */
   source: string
   url: string
+  /** Strany PDF znenia, z ktorých úsek je; `url` potom vedie na prvú z nich. */
+  pages?: { from: number; to: number } | null
 }
 
 /**
@@ -183,7 +186,8 @@ export function toHit(c: ChunkResult, origin: string): SearchHit {
     versionLabel: c.version?.label ?? null,
     effectiveFrom: day(c.version?.effectiveFrom),
     sourceType: c.sourceType ?? null,
-    url: external || documentUrl(origin, c.documentId),
+    url: external || documentUrl(origin, c.documentId, typeof c.pageFrom === "number" ? { page: c.pageFrom, versionId: c.versionId } : undefined),
+    pages: typeof c.pageFrom === "number" ? { from: c.pageFrom, to: c.pageTo ?? c.pageFrom } : null,
   }
 }
 
@@ -493,7 +497,10 @@ export function registerTools(server: McpServer, actor: McpActor): void {
         index: s.index, title: s.title, documentId: s.documentId ?? null, articleRef: s.articleRef ?? null, heading: s.heading ?? null,
         // Dokument knižnice na portáli; Legislatíva a konektor majú vlastnú adresu.
         sourceType: s.sourceType ?? null,
-        url: s.documentId && !/^(law|live):/.test(s.documentId) ? documentUrl(actor.origin, s.documentId) : s.url ?? null,
+        url: s.documentId && !/^(law|live):/.test(s.documentId)
+          ? documentUrl(actor.origin, s.documentId, s.pages ? { page: s.pages.from, versionId: s.versionId } : undefined)
+          : s.url ?? null,
+        pages: s.pages ?? null,
       }))
       const list = cited.map(s => `[${s.index}] ${s.title}${s.articleRef ? ` — ${s.articleRef}` : ""}${s.url ? ` · ${s.url}` : ""}`).join("\n")
       return text(`${outcome.answer.trim()}\n\nSources:\n${list}`, {

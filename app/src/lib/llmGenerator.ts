@@ -137,6 +137,9 @@ export function buildSources(chunks: ChunkResult[]) {
     url:         c.document?.sourceUrl,
     articleRef:  c.articleRef ?? undefined,
     heading:     c.heading,
+    versionId:   c.versionId,
+    /** Strany PDF — citácia vedie na stranu so schémou, nie len na článok. */
+    pages:       typeof c.pageFrom === "number" ? { from: c.pageFrom, to: c.pageTo ?? c.pageFrom } : undefined,
     // Prenesené na klienta, aby sa dal overiť únik interného obsahu (eval D9).
     accessLevel: c.accessLevel,
     match:       matchLevel(c.score, best),

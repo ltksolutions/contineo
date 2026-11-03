@@ -4879,6 +4879,35 @@ details[open] > summary.answer-aside-title { margin-bottom: 10px; }
 .answer-citation-text { font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
 .answer-citation-meta { font-size: 12px; color: var(--muted); line-height: 1.45; }
 .answer-citation-open { justify-self: start; font-size: 12.5px; font-weight: 600; }
+/* Citácia so stranou PDF (Ján 3. 11. 2026, conventions.md): náhľad strany
+   vľavo, odkazy „Strana N" a „Otvoriť PDF" vedľa. Riadok ostáva riadkom aj
+   na telefóne — náhľad má pevnú šírku a odkazy sa zmestia vedľa neho. */
+.answer-citation-page { display: flex; align-items: flex-start; gap: 12px; margin-top: 4px; }
+.answer-citation-links { display: grid; gap: 2px; min-width: 0; font-size: 12.5px; font-weight: 600; }
+.answer-citation-links a { display: inline-flex; align-items: center; min-height: 44px; }
+/* Náhľad strany: biely papier ako `.pdf-page`, 72 px široký (`PdfPageThumb`).
+   Kým sa strana nevykreslí, nesie jej číslo. */
+.page-thumb {
+  position: relative;
+  flex: 0 0 72px;
+  width: 72px;
+  min-height: 44px;
+  aspect-ratio: 210 / 297;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.12s;
+}
+.page-thumb:hover, .page-thumb:focus-visible { box-shadow: 0 0 0 2px var(--teal-700), 0 1px 3px rgba(0, 0, 0, 0.08); }
+.page-thumb.is-drawn { aspect-ratio: auto; }
+.page-thumb-canvas { display: block; width: 100%; height: auto; }
+.page-thumb:not(.is-drawn) .page-thumb-canvas { position: absolute; inset: 0; height: 100%; }
+.page-thumb-n {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 13px; font-weight: 700; color: #6b7280; font-variant-numeric: tabular-nums;
+}
+.page-thumb.is-drawn .page-thumb-n { display: none; }
 .answer-citations-pending {
   margin-top: 8px;
   padding: 12px 14px;

@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Citácia vedie na stranu PDF, s náhľadom (2026-11-03)
+
+- Úsek si pri zverejnení a preindexovaní zapamätá strany PDF, z ktorých je
+  (`pageFrom`, `pageTo`, `lib/chunkPages.ts`). Citácia v odpovedi ukáže
+  náhľad strany, odkaz „Strana N" na dokument v portáli presne na tej strane
+  (`#page-N`) a „Otvoriť PDF" na stranu v novom okne. Strany nesie aj MCP
+  (`search_library`, `ask`).
+- Kontrola prevodu a prevod modelom ignorujú obrázky, ktoré sú takmer na
+  každej strane (logá v hlavičke a päte). Model opisuje schémy a diagramy
+  odsekom „*Obrázok v origináli: …*", aby sa dali nájsť.
+- `CHUNKER_VERSION` 3 — celú knižnicu treba preindexovať
+  (`npm run chunking:reindex`), inak úseky strany nemajú.
+
 ### Oprava: úsek so spojenými článkami cituje všetky (2026-11-03)
 
 - Krátke články sa pri členení pripájajú k nasledujúcim, ale úsek niesol

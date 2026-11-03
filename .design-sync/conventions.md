@@ -168,6 +168,12 @@ Vzor SwiftUI `List` + `NavigationLink` a `.searchable` + `.searchScopes`.
 - Zoznam ticketov má prepínač pohľadu `.view-switch` Otvorené · Vybavené · Všetky; Vybavené sú odpovedané aj zavreté (nová správa pýtajúceho vráti oba do Otvorených).
 - Fronta Na posúdenie má prepínač `.view-switch.view-switch--fit` Čaká · Posúdené · Vyradené s počtom `.view-switch-count` (od 30. 10.). Rozhodnutý podnet je na čítanie: posudok štítkami `.tag` v `.eval-head`, overené znenie citátom `.quote`; vyradený má tiché „Vrátiť do fronty“. Predchádzajúce otázky tej istej osoby (do hodiny, z toho istého zdroja) sú citáty `.quote` nad otázkou podnetu, odpoveď k nim zbalená v `details.eval-ans` (od 30. 10.).
 
+## Citácia so stranou PDF (od 3. 11.)
+Citácia v odpovedi z úseku, ktorý pozná strany PDF (`pageFrom`, `pageTo`), má pod zdrojom riadok `.answer-citation-page`:
+- vľavo `a.page-thumb` — náhľad strany 72 px na bielom papieri (ako `.pdf-page`), kreslí ho `PdfPageThumb` z toho istého PDF znenia; kým nie je vykreslený, nesie číslo strany. Klik otvorí dokument v portáli na tej strane (`/documents/<id>?version=…#page-N`);
+- vpravo `.answer-citation-links` — „Strana N" / „Strany N–M" (ten istý cieľ) a „Otvoriť PDF" (samotné PDF na strane, nové okno). Odkazy majú terč 44 px.
+- Riadok sa ani pod 640 px nedáva do stĺpca — náhľad má pevnú šírku. Citácia bez strán ostáva s odkazom „Otvoriť v knižnici".
+
 ## Externý widget kanála (od 27. 10., KANAL-widget-riadok-otazky)
 Widget kanála typu *widget* vložený v cudzom systéme (ISSF). Beží v Shadow DOM, preto ho
 skript nesie celý (`lib/widgetScript.ts`, `WIDGET_CSS`); triedy `.xw-*` sú v `globals.css`

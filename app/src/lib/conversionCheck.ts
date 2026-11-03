@@ -70,7 +70,7 @@ export interface ConversionCheck {
   repeatedLines: string[]
 }
 
-export const CHECK_VERSION = 2
+export const CHECK_VERSION = 3
 
 /** Nezhody bližšie než toľko zhodných tokenov sa spoja do jednej. */
 const MERGE_GAP = 2
@@ -132,6 +132,28 @@ export function repeatedLines(pages: LayerPage[]): Set<string> {
   })
   const min = Math.min(REPEATED_MIN_PAGES, Math.max(2, pages.length))
   return new Set([...seen].filter(([, s]) => s.size >= min).map(([key]) => key))
+}
+
+/** Podiel strán, na ktorých musí obrázok byť, aby bol výzdobou strany. */
+const DECORATION_SHARE = 0.8
+
+/**
+ * Koľko obrázkov na strane je výzdoba — logo a pás v hlavičke a päte,
+ * ktoré sú na takmer každej strane. Je to najväčší počet, ktorý má aspoň
+ * 80 % strán. Pravidlá futbalu (3. 11. 2026) majú na každej z 224 strán tri
+ * také obrázky; bez odpočtu bola „strana s obrázkom" každá a nezhoda pri
+ * skutočnej schéme sa nedala odlíšiť od ostatných.
+ */
+export function decorativeImages(pages: Pick<LayerPage, "images">[]): number {
+  if (pages.length < REPEATED_MIN_PAGES) return 0
+  const counts = pages.map(p => p.images).sort((a, b) => b - a)
+  return counts[Math.ceil(pages.length * DECORATION_SHARE) - 1] ?? 0
+}
+
+/** Obrázky strán bez výzdoby — schémy, diagramy, fotografie. */
+export function contentImages(pages: Pick<LayerPage, "images">[]): number[] {
+  const decoration = decorativeImages(pages)
+  return pages.map(p => Math.max(0, p.images - decoration))
 }
 
 /** Tokeny jedného riadku. */
@@ -367,7 +389,7 @@ export function checkConversion(pages: LayerPage[], markdown: string): Conversio
     else hunks.push({ aStart: op.aStart, aEnd: op.aEnd, bStart: op.bStart, bEnd: op.bEnd })
   }
 
-  const imagePages = new Set(pages.map((p, i) => (p.images > 0 ? i + 1 : 0)).filter(Boolean))
+  const imagePages = new Set(contentImages(pages).map((n, i) => (n > 0 ? i + 1 : 0)).filter(Boolean))
   const differences: CheckDifference[] = []
   let changedWords = 0
   for (const h of hunks) {

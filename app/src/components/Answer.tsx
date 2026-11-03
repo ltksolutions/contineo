@@ -19,6 +19,8 @@ import { answerKicker, scopeFromSources, type KickerScope } from "@/lib/answerKi
 import { dictionary, formatDate, formatNumber, type UiLanguage } from "@/lib/i18n"
 import { isAutoVersionLabel } from "@/lib/versionLabel"
 import { SkeletonText } from "./Skeleton"
+import PdfPageThumb from "./PdfPageThumb"
+import { documentPageHref, pdfHref, pdfPageHref } from "@/lib/pageLink"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
 export interface AnswerState {
@@ -264,7 +266,27 @@ export function AnswerAside({
                     {/* Do knižnice, teda na znenie v aplikácii — nie na `url`,
                         to je originál mimo nej (`sourceUrl`). Živý zdroj
                         (ADR-029) v knižnici nie je — odkaz by viedol na 404. */}
-                    {source?.documentId && !source.live && (
+                    {/* Strana PDF (Ján 3. 11. 2026): náhľad a odkaz na stranu
+                        znenia, z ktorého úsek je. PDF sa dá otvoriť len so
+                        znením (`?version=`), preto bez neho nič. */}
+                    {source?.documentId && !source.live && !source.law && source.pages && source.versionId ? (
+                      <div className="answer-citation-page">
+                        <PdfPageThumb
+                          pdf={pdfHref(source.documentId, source.versionId)}
+                          page={source.pages.from}
+                          href={documentPageHref(source.documentId, source.pages.from, source.versionId)}
+                          label={t.pageThumb(source.pages.from)}
+                        />
+                        <div className="answer-citation-links">
+                          <Link href={documentPageHref(source.documentId, source.pages.from, source.versionId)}>
+                            {t.sourcePages(source.pages.from, source.pages.to)}
+                          </Link>
+                          <a href={pdfPageHref(source.documentId, source.pages.from, source.versionId)} target="_blank" rel="noopener">
+                            {t.openPdfPage}
+                          </a>
+                        </div>
+                      </div>
+                    ) : source?.documentId && !source.live && (
                       <Link className="answer-citation-open" href={`/documents/${encodeURIComponent(source.documentId)}`}>
                         {t.openInLibrary}
                       </Link>
