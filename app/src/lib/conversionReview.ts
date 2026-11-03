@@ -11,6 +11,14 @@
  *
  * Potvrdzuje sa stále po odtlačkoch nezhôd (`ids`), takže presun potvrdí obe
  * jeho polovice a uložené potvrdenia sa nemenia.
+ *
+ * **Presun v jednom riadku tabuľky nie je na rozhodnutie** (Ján 3. 11. 2026).
+ * Textová vrstva PDF číta tabuľku po riadkoch strany: adresa zalomená v bunke
+ * na dva riadky a telefón vedľa jej prvého riadku dajú „…lekárstva,
+ * 0910 703 757 Lehnice 15…". Model bunky zložil správne a kontrola to
+ * porovnala s rozhádzaným poradím. Slová aj riadok ostali — ide medzi drobnosti
+ * na hromadné potvrdenie a ukáže sa ako riadok tabuľky. Presun **medzi**
+ * riadkami ostáva položkou: tam môže telefón patriť inému človeku.
  */
 
 import type { CheckDifference } from "./conversionCheck"
@@ -32,6 +40,16 @@ export interface ReviewItem {
   line: number
   /** Pri presune riadok, kam sa text dostal. */
   toLine?: number
+  /** Presun medzi riadkami tabuľky: prvá bunka riadku podľa PDF a podľa textu. */
+  fromRow?: string
+  toRow?: string
+}
+
+/** Presun v jednom riadku tabuľky — riadok textu ako bunky. */
+export interface RowOrderItem extends ReviewItem {
+  cells: string[]
+  /** Bunka s presunutým textom (−1, keď sa nedá určiť). */
+  marked: number
 }
 
 export interface ReviewPage {
@@ -44,6 +62,16 @@ export interface Review {
   pages: ReviewPage[]
   /** Len interpunkcia — potvrdzuje sa naraz. */
   minor: CheckDifference[]
+  /** Iné poradie buniek v jednom riadku tabuľky — potvrdzuje sa naraz. */
+  rowOrder: RowOrderItem[]
+}
+
+/** Bunky riadku tabuľky Markdownu; `null`, keď riadok nie je riadok tabuľky. */
+export function tableCells(line: string | undefined): string[] | null {
+  const l = (line ?? "").trim()
+  if (!l.startsWith("|") || /^\|[\s:|-]+\|?$/.test(l)) return null
+  return l.replace(/^\|/, "").replace(/\|$/, "").split("|")
+    .map(c => c.replace(/<br\s*\/?>/gi, " / ").trim())
 }
 
 /** Slová bez interpunkcie a veľkosti písmen — podľa nich sa pozná presun. */
@@ -68,7 +96,7 @@ function single(d: CheckDifference): ReviewItem {
  * a „navyše" s tými istými slovami; páruje sa s najbližším riadkom, aby sa
  * pri opakovanom texte (telefónne čísla v tabuľke) nespojilo, čo k sebe nepatrí.
  */
-export function reviewDifferences(open: CheckDifference[]): Review {
+export function reviewDifferences(open: CheckDifference[], markdown = ""): Review {
   const minor = open.filter(d => d.minor)
   const rest = open.filter(d => !d.minor).sort((a, b) => a.line - b.line)
   const used = new Set<string>()
@@ -116,9 +144,30 @@ export function reviewDifferences(open: CheckDifference[]): Review {
     items.push(single(d))
   }
 
+  // Presuny v tabuľke: v jednom riadku idú medzi drobnosti, medzi riadkami
+  // dostanú mená riadkov (prvá bunka — pri tabuľke osôb meno).
+  const lines = markdown.split("\n")
+  const rowOrder: RowOrderItem[] = []
+  const kept: ReviewItem[] = []
+  for (const item of items) {
+    const toLine = item.toLine ?? item.line
+    // Medzera po vynechanom texte sa hlási riadkom slova za ňou. Keď PDF
+    // prečítalo bunku až za koncom riadku tabuľky, je to začiatok ďalšieho
+    // riadku — patrí však k riadku, ktorým okolie pred medzerou končí.
+    const tail = words(item.before).slice(-3).join(" ")
+    const atRowEnd = item.kind === "moved" && toLine < item.line && Boolean(tail)
+      && tableCells(lines[toLine - 1]) !== null && key(lines[toLine - 1]).endsWith(tail)
+    const line = atRowEnd ? toLine : item.line
+    const from = item.kind === "moved" ? tableCells(lines[line - 1]) : null
+    const to = from ? tableCells(lines[toLine - 1]) : null
+    if (from && to && toLine === line) rowOrder.push({ ...item, cells: from, marked: from.findIndex(c => key(c).includes(key(item.mdText))) })
+    else if (from && to) kept.push({ ...item, fromRow: from[0] || from.find(Boolean) || "", toRow: to[0] || to.find(Boolean) || "" })
+    else kept.push(item)
+  }
+
   // Skupina podľa prvej strany položky; rozsah skupiny je, čo jej položky pokrývajú.
   const groups = new Map<number, ReviewItem[]>()
-  for (const item of items) {
+  for (const item of kept) {
     const first = item.pages[0] ?? 0
     groups.set(first, [...(groups.get(first) ?? []), item])
   }
@@ -129,5 +178,5 @@ export function reviewDifferences(open: CheckDifference[]): Review {
       to: Math.max(from, ...list.flatMap(i => i.pages)),
       items: list.sort((a, b) => a.line - b.line),
     }))
-  return { pages, minor }
+  return { pages, minor, rowOrder }
 }

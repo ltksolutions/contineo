@@ -4334,6 +4334,10 @@ interface Dictionary {
       checkFix: string
       checkMinorHeading: (n: number) => string
       checkMinorNote: string
+      checkRowOrderHeading: (n: number) => string
+      checkRowOrderNote: string
+      checkConfirmRowOrder: (n: number) => string
+      checkMovedRows: (from: string, to: string) => string
       checkConfirmMinor: (n: number) => string
     }
     /** Hlásenia serverových akcií — chodia späť cez `?msg=`. */
@@ -9846,7 +9850,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertRefresh: "Obnoviť",
       convertFailed: reason => `Prevod modelom sa nepodaril: ${reason} Ostáva doslovný prevod; znova to skúsiš tlačidlom „Previesť modelom“.`,
       checkHeading: "Kontrola slov s originálom",
-      checkSummary: (pdfWords, same, places, minor) => `Z ${pdfWords} slov PDF je v texte rovnako ${same}. Miesta na kontrolu: ${places}, rozdiely len v interpunkcii: ${minor}.`,
+      checkSummary: (pdfWords, same, places, minor) => `Z ${pdfWords} slov PDF je v texte rovnako ${same}. Miesta na kontrolu: ${places}, drobnosti na hromadné potvrdenie: ${minor}.`,
       checkBlocking: "Text sme porovnali s PDF slovo po slove. Nižšie sú miesta, kde sa líšia. Pri každom sa pozri do PDF: ak je text správne, potvrď ho; ak nie, oprav ho v editore — po uložení sa kontrola prepočíta. Kým nie je všetko potvrdené, koncept nejde na schválenie.",
       checkAllConfirmed: n => `Všetky rozdiely s originálom sú potvrdené (${n}). Koncept môže ísť na schválenie.`,
       checkPdf: "V PDF",
@@ -9870,6 +9874,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkFix: "Opraviť v texte",
       checkMinorHeading: n => `Len interpunkcia · ${n}`,
       checkMinorNote: "Čiarka, dvojbodka alebo bodka navyše či chýba — slová sú rovnaké.",
+      checkRowOrderHeading: n => `Poradie buniek v riadku tabuľky · ${n}`,
+      checkRowOrderNote: "PDF číta zalomenú bunku po riadkoch strany, preto mu vyšlo iné poradie. Slová ostali v tom istom riadku tabuľky — nič sa nestratilo ani nepresunulo k inému človeku.",
+      checkConfirmRowOrder: n => `Potvrdiť poradie (${n})`,
+      checkMovedRows: (from, to) => `V PDF je pri riadku „${from}“, v texte pri riadku „${to}“. Skontroluj v PDF, ku ktorému riadku údaj patrí.`,
       checkConfirmMinor: n => `Potvrdiť interpunkciu (${n})`,
     },
     actions: {
@@ -15328,7 +15336,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertRefresh: "Obnovit",
       convertFailed: reason => `Převod modelem se nepodařil: ${reason} Zůstává doslovný převod; znovu to zkusíš tlačítkem „Převést modelem“.`,
       checkHeading: "Kontrola slov s originálem",
-      checkSummary: (pdfWords, same, places, minor) => `Z ${pdfWords} slov PDF je v textu stejně ${same}. Místa ke kontrole: ${places}, rozdíly jen v interpunkci: ${minor}.`,
+      checkSummary: (pdfWords, same, places, minor) => `Z ${pdfWords} slov PDF je v textu stejně ${same}. Místa ke kontrole: ${places}, drobnosti k hromadnému potvrzení: ${minor}.`,
       checkBlocking: "Text jsme porovnali s PDF slovo po slově. Níže jsou místa, kde se liší. U každého se podívej do PDF: je-li text správně, potvrď ho; pokud ne, oprav ho v editoru — po uložení se kontrola přepočítá. Dokud není vše potvrzeno, koncept nejde ke schválení.",
       checkAllConfirmed: n => `Všechny rozdíly s originálem jsou potvrzené (${n}). Koncept může jít ke schválení.`,
       checkPdf: "V PDF",
@@ -15352,6 +15360,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkFix: "Opravit v textu",
       checkMinorHeading: n => `Jen interpunkce · ${n}`,
       checkMinorNote: "Čárka, dvojtečka nebo tečka navíc či chybí — slova jsou stejná.",
+      checkRowOrderHeading: n => `Pořadí buněk v řádku tabulky · ${n}`,
+      checkRowOrderNote: "PDF čte zalomenou buňku po řádcích strany, proto mu vyšlo jiné pořadí. Slova zůstala ve stejném řádku tabulky — nic se neztratilo ani nepřesunulo k jinému člověku.",
+      checkConfirmRowOrder: n => `Potvrdit pořadí (${n})`,
+      checkMovedRows: (from, to) => `V PDF je u řádku „${from}“, v textu u řádku „${to}“. Zkontroluj v PDF, ke kterému řádku údaj patří.`,
       checkConfirmMinor: n => `Potvrdit interpunkci (${n})`,
     },
     actions: {
@@ -20797,7 +20809,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       convertRefresh: "Refresh",
       convertFailed: reason => `The model conversion failed: ${reason} The literal conversion stays; try again with “Convert with the model”.`,
       checkHeading: "Word check against the original",
-      checkSummary: (pdfWords, same, places, minor) => `${same} of ${pdfWords} PDF words are the same in the text. Places to check: ${places}, punctuation-only differences: ${minor}.`,
+      checkSummary: (pdfWords, same, places, minor) => `${same} of ${pdfWords} PDF words are the same in the text. Places to check: ${places}, minor differences to confirm at once: ${minor}.`,
       checkBlocking: "The text was compared with the PDF word by word. Below are the places where they differ. For each one, look at the PDF: if the text is right, confirm it; if not, fix it in the editor — the check is recomputed after saving. Until everything is confirmed, the draft cannot go for approval.",
       checkAllConfirmed: n => `All differences from the original are confirmed (${n}). The draft can go for approval.`,
       checkPdf: "In the PDF",
@@ -20821,6 +20833,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       checkFix: "Fix in the text",
       checkMinorHeading: n => `Punctuation only · ${n}`,
       checkMinorNote: "A comma, colon or full stop added or missing — the words are the same.",
+      checkRowOrderHeading: n => `Cell order within a table row · ${n}`,
+      checkRowOrderNote: "The PDF reads a wrapped cell line by line across the page, so its order differs. The words stayed in the same table row — nothing was lost or moved to another person.",
+      checkConfirmRowOrder: n => `Confirm the order (${n})`,
+      checkMovedRows: (from, to) => `In the PDF it is in the row “${from}”, in the text in the row “${to}”. Check in the PDF which row it belongs to.`,
       checkConfirmMinor: n => `Confirm punctuation (${n})`,
     },
     actions: {

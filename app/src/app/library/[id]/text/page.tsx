@@ -99,7 +99,7 @@ export default async function EditorPage({
   const job = raw?.aiConversion ?? null
   const converting = isConverting(job)
   const check = converting ? null : await freshConversionCheck(ctx.tenant.companyCode, documentId)
-  const review = reviewDifferences(check?.open ?? [])
+  const review = reviewDifferences(check?.open ?? [], d.editableText)
   const checkPdfUrl = check ? `/api/library/file/${encodeURIComponent(check.check.pdfFileId)}` : ""
   /* Kotvy riadkov pre „Opraviť v texte" — bez JavaScriptu posunú aspoň k editoru (Q5). */
   const checkLines = [...new Set(review.pages.flatMap(g => g.items.map(i => i.toLine ?? i.line)))]
@@ -181,7 +181,7 @@ export default async function EditorPage({
           <section className="card" style={{ padding: 18, display: "grid", gap: 12 }}>
             <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.checkHeading}</h2>
             <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-              {t.checkSummary(check.check.pdfWords, check.check.sameWords, review.pages.reduce((n, g) => n + g.items.length, 0), review.minor.length)}
+              {t.checkSummary(check.check.pdfWords, check.check.sameWords, review.pages.reduce((n, g) => n + g.items.length, 0), review.minor.length + review.rowOrder.length)}
             </p>
             {check.open.length ? (
               <div className="lnote lnote--warn">
@@ -238,7 +238,7 @@ export default async function EditorPage({
                             : excerpt(item.before, item.mdText, item.after, t.checkNothing)}
                         </dd>
                       </dl>
-                      <p className="check-item-note quiet">{t.checkExplain[item.kind]}</p>
+                      <p className="check-item-note quiet">{item.fromRow && item.toRow ? t.checkMovedRows(item.fromRow, item.toRow) : t.checkExplain[item.kind]}</p>
                       <div className="check-actions">
                         <SubmitButton className="button button--quiet button--sm" name="ids" value={item.ids.join(" ")}>{t.checkOk}</SubmitButton>
                         <a className="button button--quiet button--sm" href={`#line-${item.toLine ?? item.line}`}>{t.checkFix}</a>
@@ -247,6 +247,34 @@ export default async function EditorPage({
                   ))}
                 </section>
               ))}
+              {/*
+                Presun v jednom riadku tabuľky nie je na rozhodnutie (Ján
+                3. 11. 2026) — ukáže sa riadok z textu po bunkách, vyznačená
+                bunka je tá, ktorú PDF prečítalo inde.
+              */}
+              {review.rowOrder.length ? (
+                <section className="card check-minor">
+                  <div>
+                    <b>{t.checkRowOrderHeading(review.rowOrder.length)}</b>
+                    <p className="quiet" style={{ margin: "2px 0 0", fontSize: "var(--fs-small)" }}>{t.checkRowOrderNote}</p>
+                    <ul className="check-rows">
+                      {review.rowOrder.map(r => (
+                        <li key={r.ids.join(" ")}>
+                          <span className="quiet">{r.pages[0] ? t.checkPage(r.pages[0], r.pages[r.pages.length - 1]) : t.checkPageUnknown}</span>
+                          {r.cells.map((c, i) => (
+                            <span key={i} className="check-cell">
+                              {i === r.marked ? <mark className="diff-mark">{c}</mark> : c}
+                            </span>
+                          ))}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <SubmitButton className="button button--quiet button--sm" name="ids" value={review.rowOrder.flatMap(r => r.ids).join(" ")}>
+                    {t.checkConfirmRowOrder(review.rowOrder.length)}
+                  </SubmitButton>
+                </section>
+              ) : null}
               {review.minor.length ? (
                 <section className="card check-minor">
                   <div>

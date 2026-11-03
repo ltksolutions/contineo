@@ -104,6 +104,9 @@ sú len doplnok. Texty sú po slovensky.
   a `.check-actions` s tichými `.button--sm` „Text je správny" a „Opraviť v texte". Slová, ktoré sa líšia,
   sú `mark.diff-mark` (podčiarknuté na `--warn-bg`); chýbajúce `.diff-mark--gone` (prečiarknuté).
   Interpunkcia naraz: `section.card.check-minor`. Žiadne zaškrtávacie okienka.
+  Presun v jednom riadku tabuľky (od 3. 11.) tiež naraz: `section.card.check-minor` so zoznamom
+  `ul.check-rows` > `li` (strana `.quiet` + bunky riadku `span.check-cell`, oddelené „·",
+  presunutá bunka v `mark.diff-mark`).
 - Krátky výber nad obrazovkou (popover): `<details>` > `summary.button.button--quiet.button--sm`
   s hodnotou („Zdroje: Knižnica ▾") + `form.filter-sheet-body.ask-scope-pop` s `.sheet-h`,
   riadkami `.form-row.select-row` a jediným plným `button.filter-sheet-apply`. Pod 640 px
