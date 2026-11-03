@@ -75,7 +75,8 @@ export default function ValueSelect({
             const on = chosen.has(key(o.value))
             const only = on && (o.count ?? 0) <= 1
             return (
-              <label key={o.value} className="form-row select-row" data-value={`${name_(o)}\u0000${o.value}`}>
+              <label key={o.value} className="form-row select-row" data-value={`${name_(o)}\u0000${o.value}`}
+                data-uncatalogued={kind === "tags" && !o.label ? "" : undefined}>
                 <input type="checkbox" name={name} value={o.value} defaultChecked={on} />
                 <span className="form-row-main">
                   <span>{name_(o)}</span>

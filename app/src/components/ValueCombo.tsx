@@ -13,6 +13,9 @@
  *   pribudne „+ Pridať „…"". Ťuknutie alebo Enter vloží zaškrtnutý riadok
  *   (`${name}New`, server ho spracuje ako novú hodnotu) a pole vyprázdni.
  *   Pri presnej zhode Enter zaškrtne existujúci riadok.
+ * - **Značka mimo číselníka** (`data-uncatalogued`, „nie je v číselníku"):
+ *   presná zhoda s ňou „+ Pridať" neskryje — pridanie riadok zaškrtne a pošle
+ *   aj `${name}New`, server ju zapíše do číselníka (3. 11. 2026).
  *
  * Odfiltrované riadky sú len `hidden` — ostávajú vo formulári.
  */
@@ -65,7 +68,8 @@ export default function ValueCombo({ name, kind, empty, language }: {
   function change(q: string) {
     setQuery(q)
     filter(q)
-    setOffer(q.trim() !== "" && !exact(q))
+    const hit = exact(q)
+    setOffer(q.trim() !== "" && (!hit || hit.dataset.uncatalogued !== undefined))
   }
 
   function add() {
@@ -75,7 +79,10 @@ export default function ValueCombo({ name, kind, empty, language }: {
     if (hit) {
       const input = hit.querySelector("input")
       if (input) input.checked = true
-    } else if (!added.some(a => foldValue(a) === foldValue(v))) {
+    }
+    // Hodnota z číselníka sa len zaškrtne; nová a „len tu" idú aj ako `${name}New`.
+    const fresh = !hit || hit.dataset.uncatalogued !== undefined
+    if (fresh && !added.some(a => foldValue(a) === foldValue(v))) {
       setAdded(a => [...a, v])
     }
     change("")
