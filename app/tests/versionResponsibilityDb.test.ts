@@ -33,7 +33,7 @@ vi.mock("../src/lib/audit", async importOriginal => {
 })
 
 import {
-  setVersionLegalBasis, setVersionResponsible, setDraftLegalBasis, ResponsibilityError,
+  setVersionLegalBasis, setVersionResponsible, setDraftLegalBasis, ResponsibilityError, carryOverFromPublished,
 } from "../src/lib/versionResponsibilityDb"
 import { DOCUMENTS_COLLECTION } from "../src/lib/documents"
 import { PERSONS_COLLECTION } from "../src/lib/persons"
@@ -399,5 +399,38 @@ describe("právny základ v príprave (ADR-023, D139)", () => {
     await expect(setDraftLegalBasis({ ...base, legalBasisKeys: [] }))
       .rejects.toMatchObject({ code: "legalBasis.unknownKey" })
     expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+  })
+})
+
+describe("predvyplnenie nového znenia z platného (Ján 4. 11. 2026)", () => {
+  const NOW = new Date("2026-11-04T08:00:00Z")
+  const PLATNE = { responsiblePerson: GARANT, legalBases: [{ basis: "legal_obligation", key: "bozp", label: "BOZP", reference: null }] }
+
+  it("prenesie zodpovednú osobu s dnešným menom a základ z ponuky", async () => {
+    personsAre([{ id: "p-garant", fullName: "Garant Nové Meno", email: GARANT.email, status: "active" }])
+    collection(TENANTS_COLLECTION).findOne.mockResolvedValue({ companyCode: COMPANY })
+    const out = await carryOverFromPublished(COMPANY, doc(PLATNE), "spravca@futbalsfz.sk", NOW)
+    expect(out.draftResponsible).toEqual({ personId: "p-garant", fullName: "Garant Nové Meno", email: GARANT.email })
+    expect(out.draftLegalBasis?.entries.map(e => e.key)).toEqual(["bozp"])
+    expect(out.draftLegalBasis).toMatchObject({ at: NOW, by: "spravca@futbalsfz.sk" })
+  })
+
+  it("osobu, ktorá medzitým odišla, nepredvyplní", async () => {
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "inactive" }])
+    collection(TENANTS_COLLECTION).findOne.mockResolvedValue({ companyCode: COMPANY })
+    const out = await carryOverFromPublished(COMPANY, doc(PLATNE), "s@futbalsfz.sk", NOW)
+    expect(out.draftResponsible).toBeUndefined()
+    expect(out.draftLegalBasis).toBeDefined()
+  })
+
+  it("výber, ktorý koncept už má, neprepíše", async () => {
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    const rozpracovany = { ...doc(PLATNE), draftResponsible: { personId: "p-iny" }, draftLegalBasis: { entries: [] } }
+    expect(await carryOverFromPublished(COMPANY, rozpracovany, "s@futbalsfz.sk", NOW)).toEqual({})
+  })
+
+  it("bez platného znenia nepredvyplní nič", async () => {
+    expect(await carryOverFromPublished(COMPANY, { ...doc(), versions: [] }, "s@futbalsfz.sk", NOW)).toEqual({})
+    expect(await carryOverFromPublished(COMPANY, null, "s@futbalsfz.sk", NOW)).toEqual({})
   })
 })

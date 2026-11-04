@@ -8334,7 +8334,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   responsibility: {
     responsiblePerson: "Zodpovedná osoba",
-    responsibleNote: "Na ňu sa budú obracať ľudia, ktorí znenie potvrdzujú, a ona určí právny základ. Pri každom novom znení sa určuje znova — z predošlého sa nepreberá.",
+    responsibleNote: "Na ňu sa budú obracať ľudia, ktorí znenie potvrdzujú, a ona určí právny základ. Pri novom znení sa predvyplní z platného, ak tu osoba stále je — skontroluj ju.",
     choosePerson: "— vyber osobu —",
     noResponsible: "Znenie nemá určenú zodpovednú osobu.",
     inactiveResponsible: "Zodpovedná osoba už nie je aktívna — treba určiť novú.",
@@ -13844,7 +13844,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   responsibility: {
     responsiblePerson: "Odpovědná osoba",
-    responsibleNote: "Na ni se budou obracet lidé, kteří znění potvrzují, a ona určí právní základ. U každého nového znění se určuje znovu — z předchozího se nepřebírá.",
+    responsibleNote: "Na ni se budou obracet lidé, kteří znění potvrzují, a ona určí právní základ. U nového znění se předvyplní z platného, pokud tu osoba stále je — zkontroluj ji.",
     choosePerson: "— vyber osobu —",
     noResponsible: "Znění nemá určenou odpovědnou osobu.",
     inactiveResponsible: "Odpovědná osoba už není aktivní — je třeba určit novou.",
@@ -19345,7 +19345,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   responsibility: {
     responsiblePerson: "Responsible person",
-    responsibleNote: "People acknowledging this version will turn to this person, who also decides the legal basis. It is set again for every new version — never carried over from the previous one.",
+    responsibleNote: "People acknowledging this version will turn to this person, who also decides the legal basis. A new version pre-fills it from the current one if the person is still here — check it.",
     choosePerson: "— choose a person —",
     noResponsible: "This version has no responsible person.",
     inactiveResponsible: "The responsible person is no longer active — a new one needs to be set.",

@@ -39,8 +39,8 @@ import { publishBlock, APPROVALS_COLLECTION } from "./approvals"
 import { documentDraftIdentity, normalizeMeta, isEmptyMeta, suggestMetaFromMarkdown, metaLocked, type VersionMeta } from "./versionMeta"
 import { allDepartments } from "./departments"
 import { closeStaleRounds, versionStateFor } from "./approvalsDb"
-import { responsibleSnapshot } from "./versionResponsibilityDb"
-import { legalBasisFromDraft, type DraftLegalBasis } from "./versionResponsibility"
+import { responsibleSnapshot, carryOverFromPublished } from "./versionResponsibilityDb"
+import { legalBasisFromDraft, legalBasisFields, type DraftLegalBasis } from "./versionResponsibility"
 import { autoVersionLabel } from "./versionLabel"
 
 export const CHUNKS_COLLECTION = "document_chunks"
@@ -417,6 +417,9 @@ export async function uploadDocument(
   })
   const convertedFrom = source ?? pdf
 
+  // Zodpovedná osoba a právny základ z platného znenia (Ján 4. 11. 2026).
+  const carried = await carryOverFromPublished(meta.companyCode, existing, actor, now)
+
   // `originalFile` zostáva: je to súbor, **z ktorého vznikol text** — editor
   // ho ukazuje vedľa Markdownu a prepis zo skenu z neho číta.
   const original: OriginalFile = {
@@ -464,6 +467,7 @@ export async function uploadDocument(
         */
         draftMeta: versionMeta && !isEmptyMeta(versionMeta) ? versionMeta : null,
         draftMetaSuggestion: suggestMetaFromMarkdown(converted.markdown),
+        ...carried,
         updatedAt: now,
         updatedBy: actor,
       },
@@ -483,7 +487,9 @@ export async function uploadDocument(
     targetLabel: meta.title,
     note: `PDF · ${pdf.name}` +
       (source ? ` · zdroj ${FILE_TYPE_LABEL[converted.type]} · ${source.name}` : "") +
-      ` · ${converted.method}`,
+      ` · ${converted.method}` +
+      (carried.draftResponsible ? ` · zodpovedná osoba z platného znenia: ${carried.draftResponsible.fullName}` : "") +
+      (carried.draftLegalBasis ? ` · právny základ z platného znenia: ${legalBasisFields(carried.draftLegalBasis.entries).legalBasisLabel}` : ""),
   })
   // Nový koncept — kolo predošlého sa týka podoby, ktorá už neexistuje.
   await closeStaleRounds(meta.companyCode, documentId, actor)
