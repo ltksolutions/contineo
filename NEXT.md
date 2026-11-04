@@ -6,10 +6,10 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-11-03** (prevod PDF modelom s kontrolou slov
-ADR-046 #536–#544, rozpis ÚLK má všetky nezhody potvrdené; 2. 11. kľúč
-dokumentu UUID ADR-043/044, rola Administrátor ADR-045, nový druh vo
-formulári). Predtým 1. 11. (Sonnet 5.5 #518, `docs/VYVOJ.md` #520). Staršie
+Posledná aktualizácia: **2026-11-04** (Videoarchív v manuáloch ISSF-05
+a ISSF-00 na schválení; nové znenie predvyplní zodpovednú osobu a právny
+základ z platného, #556). Predtým 3. 11. (prevod PDF modelom s kontrolou slov
+ADR-046 #536–#544, citácia na stranu PDF aj vo widgete #549–#555). Staršie
 dni sú v `docs/DEVLOG.md`.
 
 ---
@@ -33,8 +33,11 @@ Naživo neoverené: povýšenie kolegu z widgetu pri prihlásení (#506).
 odpovedá podľa znenia platného k dňu (ADR-024), členenie zo štruktúry
 Markdownu (ADR-035), druhy a hierarchia dokumentov (ADR-034). Bežný
 používateľ vidí dokumenty, nie zdroje (ADR-041, #449–#452) — **naživo
-neoverené**. Manuály ISSF sú zverejnené všetky; v hlavičke ostal „Stav k:
-9. 10. 2026" — opraviť pri najbližšom znení.
+neoverené**. Manuály ISSF sú zverejnené všetky; **ISSF-05 (Videoarchív) a ISSF-00
+čakajú na schválenie** (Agáta Galková, od 4. 11.), v ostatných ostal
+„Stav k: 9. 10. 2026". Nové znenie predvyplní zodpovednú osobu a právny
+základ z platného (#556, dodatok D91). Citácia vedie na stranu PDF
+s náhľadom a prehliadačom strán, aj vo widgete ISSF (#549–#555).
 
 **Zdroje.** Register zdrojov (ADR-039), MCP konektory so Sportnetom ako
 živým zdrojom (ADR-029), katalóg legislatívy zo Slov-Lexu s nočným cronom
@@ -123,6 +126,10 @@ počty v `retention[].helpdesk`).
 
 ## Najbližšie kroky
 
+**Hneď:** manuály ISSF-05 a ISSF-00 na schválení — pred zverejnením
+určiť zodpovednú osobu (koncepty vznikli pred #556). Pri najbližšom novom
+znení overiť naživo, že sa osoba aj základ predvyplnili.
+
 1. **Rozpis ÚLK poslať na schválenie** — kontrola slov už nebráni. Pri
    najbližšom prevode iného PDF pozrieť, koľko položiek kontroly ostane
    a či nejde zase o artefakt textovej vrstvy (`docs/TODO.md`, „Prevod PDF
@@ -167,7 +174,7 @@ a to, čo tam nie je.
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline (3. 11.): **0 errors, 40 warnings, 3193 testov v 280 súboroch.**
+Baseline (4. 11.): **0 errors, 40 warnings, 3228 testov v 282 súboroch.**
 Nová chyba alebo nové varovanie je regresia, nie šum.
 
 - Pri zmene rozhrania aspoň jedna snímka na 390 px (tmavá) a 1440 px
