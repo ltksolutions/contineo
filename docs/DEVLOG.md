@@ -10,6 +10,38 @@
 
 ---
 
+## 2026-11-04 — Videoarchív v manuáloch ISSF a predvyplnené nové znenie
+
+Do manuálu ISSF-05 pribudla časť 6 „Videoarchív zápasov" podľa pomocníka
+Sportnet a do ISSF-00 zmienka o nej. Text Ján schválil po rozdiele vo
+Wordovom štýle; obe nové znenia sú predložené na schválenie s účinnosťou
+4. 11. (Agáta Galková). Zároveň sa opravil „Stav k" v ich hlavičke.
+
+**Sportnet nie je ISSF** — v texte to zaznieva výslovne: Videoarchív sa
+prihlasuje kontom Sportnet a osoba je v ňom SportnetID, nie registračné číslo.
+Zdroje si v jednom protirečili (článok z 2017: klubové práva len na domáce
+zápasy; novší: všetky zápasy klubu v súťaži) — použitý novší.
+
+**Nahrávanie cez obrazovku, nie skriptom.** Vstavaný prehliadač nemá
+nahratie súboru; súbor sa do poľa dostal cez `fetch` z lokálneho servera
+a `DataTransfer`, overený odtlačkom SHA-256. Pri tom sa ukázala chyba
+tlačidla („Najprv vyber PDF" aj pri `.md`) — v `docs/TODO.md`.
+
+**Na detaile ostala zodpovedná osoba prázdna**, hoci predošlé znenie ju
+malo — D91 ju zámerne nededil. Ján: predvyplniť všetko dostupné z platného.
+**#556** predvypĺňa osobu (len aktívnu) a právny základ (len z dnešnej
+ponuky číselníka); autor, schválil a schvaľovatelia sa predvypĺňali už.
+Obava z D91 — kontakt na človeka, ktorý odišiel — rieši kontrola aktívnej
+osoby, nie zákaz prenosu. D91 má dodatok.
+
+**Čo si odniesť:** pravidlo „nededí sa" chránilo pred jedným zlyhaním
+(odišlý garant) za cenu iného (zabudnutá osoba zastaví zverejnenie až na
+konci). Lepšie je prenos s kontrolou platnosti než zákaz prenosu.
+
+Večer 3. 11. (#545–#555, iné sessions): citácia vedie na stranu PDF
+s náhľadom, aj vo widgete ISSF a pri schémach; prehliadač strán v plachte;
+„Len uložiť" si pamätá schvaľovateľov; import skriptom s kľúčom UUID.
+
 ## 2026-11-03 — Kontrola slov, ktorej nikto nerozumel
 
 Pri rozpise ÚLK prešiel prevod modelom bez chyby, ale kontrola slov ukázala

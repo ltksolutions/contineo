@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nové znenie predvyplní zodpovednú osobu a právny základ z platného (2026-11-04, #556)
+
+- Pri nahratí nového znenia sa z platného prevezme zodpovedná osoba — len
+  keď je dnes aktívna, s dnešným menom — a právny základ, len položky dnešnej
+  ponuky číselníka s ich dnešným názvom a odkazom. Výber v rozpracovanom
+  koncepte sa neprepíše; audit nahratia pomenuje, čo sa prevzalo.
+- Autor, Schválil a schvaľovatelia sa predvypĺňali už predtým; dátumy nie.
+- Mení D91 („nededí sa") — dodatok v `docs/OPEN_DECISIONS.md`. Nápoveda pri
+  zodpovednej osobe upravená v sk/cs/en.
+
 ### Prehliadač strán PDF v citácii — portál aj widget (2026-11-03)
 
 - Klik na náhľad strany alebo na „Strana N" v citácii otvorí plachtu so
