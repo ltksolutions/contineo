@@ -20,7 +20,7 @@ import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import {
   canSetLegalBasis, legalBasesChoiceProblem, basesOf, legalBasisFields, responsibleChangeProblem,
-  sameBasisKeys, type ResponsiblePerson, type DraftLegalBasis,
+  sameBasisKeys, carriedLegalBasis, type ResponsiblePerson, type DraftLegalBasis,
 } from "./versionResponsibility"
 import { TENANTS_COLLECTION, type Tenant } from "./tenants"
 import { findLegalBasisOption, type LegalBasisOption } from "./legalBases"
@@ -64,6 +64,52 @@ export async function responsibleSnapshot(companyCode: string, personId: string)
     { projection: { id: 1, fullName: 1, email: 1 } },
   )
   return p ? { personId: p.id, fullName: p.fullName, email: p.email } : null
+}
+
+/**
+ * Čo sa pri novom znení **predvyplní z platného** — zodpovedná osoba
+ * a právny základ (rozhodnutie Jána 4. 11. 2026, mení D91).
+ *
+ * Pred tým sa obe zadávali pri každom novom znení znova a správca ich
+ * spravidla vyberal rovnaké; keď zabudol, koncept odišiel na schválenie bez
+ * zodpovednej osoby a zverejnenie sa zastavilo až na konci.
+ *
+ * - Osoba sa berie **dnešná** (`responsibleSnapshot`) — kto medzitým odišiel,
+ *   sa nepredvyplní a obava z D91 (kontakt na človeka, ktorý tam už nie je)
+ *   tým odpadá.
+ * - Pole, ktoré koncept už má, sa neprepisuje: druhé nahratie súboru do
+ *   rozpracovaného konceptu nesmie zahodiť výber, ktorý človek urobil.
+ * - Bez platného znenia (prvé nahratie) sa nič nepredvypĺňa.
+ */
+export async function carryOverFromPublished(
+  companyCode: string,
+  doc: Record<string, unknown> | null | undefined,
+  actor: string,
+  now: Date,
+): Promise<{ draftResponsible?: ResponsiblePerson; draftLegalBasis?: DraftLegalBasis }> {
+  if (!doc) return {}
+  const published = ((doc.versions ?? []) as Version[]).find(v => v.isActive)
+  if (!published) return {}
+  const out: { draftResponsible?: ResponsiblePerson; draftLegalBasis?: DraftLegalBasis } = {}
+
+  const personId = published.responsiblePerson?.personId
+  if (!doc.draftResponsible && personId) {
+    const person = await responsibleSnapshot(companyCode, personId)
+    if (person) out.draftResponsible = person
+  }
+
+  if (!doc.draftLegalBasis) {
+    const tenant = await (await getCollection<Tenant>(TENANTS_COLLECTION)).findOne(
+      { companyCode },
+      { projection: { legalBases: 1, legalBasesHidden: 1 } },
+    )
+    const basis = carriedLegalBasis(published, key => {
+      const o = findLegalBasisOption(tenant, key)
+      return o ? { basis: o.basis, key: o.key, label: o.label, reference: o.reference ?? null } : null
+    }, now, actor)
+    if (basis) out.draftLegalBasis = basis
+  }
+  return out
 }
 
 /**

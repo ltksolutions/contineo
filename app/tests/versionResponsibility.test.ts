@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest"
 import {
   canSetLegalBasis, isLegalBasis, legalBasisChoiceProblem, legalBasisProblem, responsibleChangeProblem,
-  tidyReference, MAX_LEGAL_REFERENCE, legalBasisFields, sameBasisKeys, legalBasisFromDraft, versionBasisTasks,
+  tidyReference, MAX_LEGAL_REFERENCE, legalBasisFields, sameBasisKeys, legalBasisFromDraft, versionBasisTasks, carriedLegalBasis,
 } from "../src/lib/versionResponsibility"
 
 const GARANT = { personId: "p-garant", fullName: "Garant Predpisu", email: "garant@futbalsfz.sk" }
@@ -194,6 +194,37 @@ describe("prenos základu z prípravy do znenia (ADR-023, D139)", () => {
   it("neznámy druh v uloženom koncepte sa neprenesie", () => {
     const zly = { basis: "consent", key: "x", label: "X", reference: null } as never
     expect(legalBasisFromDraft({ entries: [zly], at: AT, by: "g@futbalsfz.sk" })).toBeNull()
+  })
+})
+
+describe("právny základ predvyplnený z platného znenia (Ján 4. 11. 2026)", () => {
+  const AT = new Date("2026-11-04T08:00:00Z")
+  const BOZP = { basis: "legal_obligation" as const, key: "bozp", label: "BOZP", reference: "§ 7 zákona č. 124/2006 Z. z." }
+  const SMERNICA = { basis: "legitimate_interest" as const, key: "interna_smernica", label: "Interná smernica", reference: null }
+  const ponuka = (list: typeof BOZP[] | typeof SMERNICA[]) => (key: string) => (list as { key: string }[]).find(o => o.key === key) as never ?? null
+
+  it("prenesie položky z platného znenia s dnešným názvom a odkazom z číselníka", () => {
+    const dnes = { ...BOZP, label: "BOZP (nový názov)" }
+    const d = carriedLegalBasis({ legalBases: [BOZP, SMERNICA] }, ponuka([dnes, SMERNICA] as never), AT, "spravca@futbalsfz.sk")!
+    expect(d.entries.map(e => e.label)).toEqual(["BOZP (nový názov)", "Interná smernica"])
+    expect(d).toMatchObject({ at: AT, by: "spravca@futbalsfz.sk" })
+  })
+
+  it("skrytá alebo vyradená položka sa nepredvyplní", () => {
+    const d = carriedLegalBasis({ legalBases: [BOZP, SMERNICA] }, ponuka([SMERNICA]), AT, "s@futbalsfz.sk")!
+    expect(d.entries.map(e => e.key)).toEqual(["interna_smernica"])
+    expect(carriedLegalBasis({ legalBases: [BOZP] }, ponuka([SMERNICA]), AT, "s@futbalsfz.sk")).toBeNull()
+  })
+
+  it("znenie spred ADR-017 s jedným základom v starých poliach sa prečíta tiež", () => {
+    const d = carriedLegalBasis({ legalBasis: "legal_obligation", legalBasisKey: "bozp" }, ponuka([BOZP]), AT, "s@futbalsfz.sk")!
+    expect(d.entries).toHaveLength(1)
+  })
+
+  it("ručný základ bez kľúča ani znenie bez základu nič nepredvyplnia", () => {
+    expect(carriedLegalBasis({ legalBasis: "legal_obligation", legalBasisReference: "§ 1" }, ponuka([BOZP]), AT, "s@futbalsfz.sk")).toBeNull()
+    expect(carriedLegalBasis({}, ponuka([BOZP]), AT, "s@futbalsfz.sk")).toBeNull()
+    expect(carriedLegalBasis(null, ponuka([BOZP]), AT, "s@futbalsfz.sk")).toBeNull()
   })
 })
 

@@ -7,7 +7,12 @@
  * zo zväzu odišla a o novom znení rozhoduje niekto iný — možno z iného oddelenia.
  * Keby osoba visela na predpise, nové znenie by ju **zdedilo potichu** a na
  * obrazovke potvrdenia by ľudia videli kontakt na človeka, ktorý tam už nie je.
- * Preto sa pri každom novom znení zadáva znova a nič sa neprenáša.
+ * Preto osoba patrí zneniu, nie predpisu.
+ *
+ * **Od 4. 11. 2026 sa predvypĺňa** z platného znenia (rozhodnutie Jána) —
+ * osoba len vtedy, keď je dnes aktívna, základ len z dnešnej ponuky
+ * číselníka. Výber je v príprave vidieť a dá sa zmeniť; pri znení zostáva
+ * vlastný údaj, nie odkaz na predošlé (`carryOverFromPublished()`).
  *
  * Právny základ z rovnakého dôvodu: novela môže získať oporu v zákone (alebo ju
  * stratiť) a potvrdenie má niesť základ, ktorý platil pre **to** znenie (O15).
@@ -300,6 +305,36 @@ export function legalBasisFromDraft(draft: DraftLegalBasis | null | undefined): 
       inPreparation: true,
     }],
   }
+}
+
+/**
+ * Právny základ, ktorý sa **predvyplní** do nového znenia z platného
+ * (rozhodnutie Jána 4. 11. 2026, mení D91 „nededí sa").
+ *
+ * Novela predpisu má takmer vždy ten istý základ ako znenie, ktoré nahrádza —
+ * a kým ho niekto znova nevybral, pridelenie upozorňovalo na chýbajúci základ
+ * a zverejnenie ho nenieslo. Obava z D91 (tichý prenos) tu neplatí: výber je
+ * v príprave **vidieť** a zodpovedná osoba ho mení ako doteraz.
+ *
+ * Prenesú sa len položky, ktoré sú **dnes v ponuke** číselníka, a s jej
+ * dnešným názvom a odkazom — skrytá alebo vyradená položka sa do nového znenia
+ * vybrať nedá (D92), tak ju nemá ani návrh. Ručne zadaný základ spred
+ * číselníka (bez kľúča) sa neprenáša, má sa nahradiť položkou. `null`, keď
+ * nezostane nič.
+ */
+export function carriedLegalBasis(
+  version: Parameters<typeof basesOf>[0] | null | undefined,
+  option: (key: string) => LegalBasisEntry | null,
+  at: Date,
+  by: string,
+): DraftLegalBasis | null {
+  if (!version) return null
+  const entries = basesOf(version)
+    .map(e => (e.key ? option(e.key) : null))
+    .filter((e): e is LegalBasisEntry => Boolean(e) && isLegalBasis(e?.basis))
+  const unique = entries.filter((e, i) => entries.findIndex(x => x.key === e.key) === i)
+  if (unique.length === 0) return null
+  return { entries: legalBasisFields(unique).legalBases, at, by }
 }
 
 /**
